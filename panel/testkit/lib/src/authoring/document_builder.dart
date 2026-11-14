@@ -84,7 +84,8 @@ skir.TypeDisplay typeDisplay(
 ///
 /// It refines [parents], whose fields [authoredCatalog] adds to its own; it
 /// is concrete unless [open], or closed over [cases] when given; its [parameters] are bounded by the types
-/// listed under each name. It is ready unless [status] says otherwise,
+/// listed under each name, and those named in [derived] are derived, never
+/// chosen by a creator. It is ready unless [status] says otherwise,
 /// places by [placementField] when given and shows [display], the default
 /// display unless given.
 skir.PublishedType declaredRecord(
@@ -97,6 +98,7 @@ skir.PublishedType declaredRecord(
   List<Object>? cases,
   List<Object> parents = const [],
   Map<String, List<Object>> parameters = const {},
+  Set<String> derived = const {},
   skir.DeclarationStatus status = skir.DeclarationStatus.ready,
   skir.ValuePath? placementField,
   skir.TypeDisplay? display,
@@ -134,7 +136,7 @@ skir.PublishedType declaredRecord(
           key: skir.ParameterKey(owner: id, index: index),
           name: parameter,
           bounds: [for (final bound in bounds) typeTemplateOf(bound)],
-          derived: false,
+          derived: derived.contains(parameter),
         ),
     ],
     parents: [for (final parent in parents) _named(parent)],

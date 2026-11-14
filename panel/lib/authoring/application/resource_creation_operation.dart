@@ -50,7 +50,7 @@ final class _ResourceCreationOperation {
       if (chosen == null) throw const _CreationCancelled();
       request = request.copyWith(configuration: chosen);
     }
-    if (catalog.completeUse(request.configuration) == null ||
+    if (!catalog.isFullyChosen(request.configuration) ||
         !catalog
             .nominalDefinitions(request.configuration)
             .contains(request.type) ||

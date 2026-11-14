@@ -71,13 +71,8 @@ skir.DataValue _configuredValue(
 ) {
   final payload = skir.DataValue.createRecord(fields: record.fields);
   final configuration = record.configuration;
-  final complete = configuration.completeUse(
-    resources
-            .declaration(configuration.definition)
-            ?.definition
-            .parameters
-            .length ??
-        configuration.arguments.length,
+  final complete = configuration.completeUseIn(
+    resources.declaration(configuration.definition),
   );
   return switch (complete) {
     final value? => skir.DataValue.createNamed(

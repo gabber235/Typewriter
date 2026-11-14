@@ -742,7 +742,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
             .toExpressionBinding(),
         configuredValueBindingId: PortableExpressionBinding(
           value: projected.value,
-          schema: switch (completeUseOf(catalog, projected.configuration)) {
+          schema: switch (catalog?.completeUse(projected.configuration)) {
             final value? => CompletePortablePresentationBinding(
               skir.TypeUse.wrapNamed(value),
             ),

@@ -53,6 +53,18 @@ void main() {
     },
   );
 
+  testWidgets("a type whose only parameter is derived is offered for creation "
+      "under its own name", (tester) async {
+    final fixture = ResourceCreationFixture(derivedBookParameters: {"Bound"});
+    final panel = await tester.pumpPanel(adaServing(fixture.document()));
+    final controller = await panel.creationSearch();
+
+    final book = controller.creationOption(fixture.request("Book").type);
+
+    expect(book.disabledReason, isNull);
+    expect(book.label, "Book");
+  });
+
   testWidgets("a creation option reads the label, description, icon and "
       "color its type declares", (tester) async {
     final panel = await tester.pumpPanel(

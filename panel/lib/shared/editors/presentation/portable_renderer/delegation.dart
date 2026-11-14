@@ -335,7 +335,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     CheckedEditorCatalog? catalog,
     skir.TypeSelection? selection,
   ) => switch (selection) {
-    final selection? => switch (completeUseOf(catalog, selection)) {
+    final selection? => switch (catalog?.completeUse(selection)) {
       final value? => skir.TypeUse.wrapNamed(value),
       null => null,
     },

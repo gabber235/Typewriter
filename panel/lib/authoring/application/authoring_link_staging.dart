@@ -342,8 +342,7 @@ extension _AuthoringLinkStaging on AuthoringEdit {
     if (choice.containing.resource != target) return null;
     final targetRecord = _resources[target];
     if (targetRecord == null) return null;
-    final actual = completeUseOf(
-      catalog,
+    final actual = catalog?.completeUse(
       choice.prepared.recordContent.configuration,
     );
     if (actual == null) return null;

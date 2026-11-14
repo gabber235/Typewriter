@@ -828,7 +828,7 @@ void main() {
               icon: skir.Icon.wrapIconify("material-symbols:category"),
             ),
             value: skir.DataValue.createNamed(
-              actualType: completeUseOf(null, record.configuration)!,
+              actualType: document.catalog.completeUse(record.configuration)!,
               payload: skir.DataValue.createRecord(fields: record.fields),
             ),
           ),

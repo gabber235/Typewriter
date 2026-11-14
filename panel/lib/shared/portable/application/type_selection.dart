@@ -17,7 +17,7 @@ skir.TypeSelection selectionOfDefinition(skir.TypeDefinitionId definition) =>
 
 /// Reads and edits of a stored selection. A selection stores only the
 /// arguments a creator chose, keyed by parameter index and kept in parameter
-/// order. Whether it is complete depends on the parameter count of its
+/// order. Whether it is complete depends on the parameters of its
 /// definition, which the catalog answers.
 extension TypeSelectionArguments on skir.TypeSelection {
   /// Whether this is the default instance, which names no definition. The
@@ -48,16 +48,67 @@ extension TypeSelectionArguments on skir.TypeSelection {
     ],
   );
 
-  /// The fully applied type when every one of [parameterCount] parameters has
-  /// a chosen argument, otherwise null (the selection is not complete).
-  skir.NamedTypeUse? completeUse(int parameterCount) {
-    if (isUnknown) return null;
-    final chosen = <skir.TypeUse>[];
-    for (var index = 0; index < parameterCount; index++) {
-      final argument = chosenAt(index);
-      if (argument == null) return null;
-      chosen.add(argument);
+  /// The parameters of this selection's definition as [declaration], its
+  /// published declaration, lists them: none for a type a resource declares
+  /// (content declarations take no parameters), and null when the definition
+  /// is unknown.
+  List<skir.TypeParameter>? parametersIn(skir.PublishedType? declaration) =>
+      switch (declaration) {
+        final declaration? => declaration.definition.parameters.toList(
+          growable: false,
+        ),
+        null when definition.typeId is skir.TypeId_contentWrapper => const [],
+        null => null,
+      };
+
+  /// Whether a creator has chosen everything this selection needs, read
+  /// against [declaration]: an argument for every parameter that is not
+  /// derived. A derived parameter never counts as missing, and a stored
+  /// choice for one makes the selection invalid, as the realm refuses it.
+  bool isFullyChosenIn(skir.PublishedType? declaration) =>
+      switch (parametersIn(declaration)) {
+        final parameters? => _choosesFor(parameters),
+        null => false,
+      };
+
+  /// The fully applied type the creator's choices make, read against
+  /// [declaration], or null while one is missing. A definition with a derived
+  /// parameter has no such type here: its derived argument comes from the
+  /// resource that holds the selection, so only that resource's bound type is
+  /// complete.
+  skir.NamedTypeUse? completeUseIn(skir.PublishedType? declaration) {
+    final parameters = parametersIn(declaration);
+    if (parameters == null ||
+        parameters.any((parameter) => parameter.derived) ||
+        !_choosesFor(parameters)) {
+      return null;
     }
-    return skir.NamedTypeUse(definition: definition, arguments: chosen);
+    return skir.NamedTypeUse(
+      definition: definition,
+      arguments: [
+        for (var index = 0; index < parameters.length; index++)
+          chosenAt(index)!,
+      ],
+    );
+  }
+
+  /// Whether this selection chooses exactly what a creator chooses for
+  /// [parameters]: an argument for every parameter that is not derived, and
+  /// none for a derived parameter or for a position [parameters] does not
+  /// have.
+  bool _choosesFor(List<skir.TypeParameter> parameters) {
+    if (isUnknown) return false;
+    for (final argument in arguments) {
+      final position = argument.parameter;
+      if (position < 0 ||
+          position >= parameters.length ||
+          parameters[position].derived) {
+        return false;
+      }
+    }
+    for (final (index, parameter) in parameters.indexed) {
+      if (!parameter.derived && chosenAt(index) == null) return false;
+    }
+    return true;
   }
 }

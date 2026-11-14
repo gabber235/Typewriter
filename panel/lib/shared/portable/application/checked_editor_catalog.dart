@@ -99,14 +99,15 @@ final class CheckedEditorCatalog {
     return _pendingTypeName(selection);
   }
 
-  /// The fully applied type [selection] stands for, or null while a parameter
-  /// of its definition has no chosen argument. A definition the catalog does
-  /// not publish is complete when its stored arguments are contiguous.
+  /// Whether a creator has chosen everything [selection] needs: an argument
+  /// for every parameter of its definition that is not derived.
+  bool isFullyChosen(skir.TypeSelection selection) =>
+      selection.isFullyChosenIn(selected(selection));
+
+  /// The fully applied type the creator's choices in [selection] make, or
+  /// null while one is missing or a parameter of its definition is derived.
   skir.NamedTypeUse? completeUse(skir.TypeSelection selection) =>
-      selection.completeUse(
-        published(selection.definition)?.definition.parameters.length ??
-            selection.arguments.length,
-      );
+      selection.completeUseIn(selected(selection));
 
   String _namedTypeName(skir.NamedTypeUse type) {
     final name = typeDefinitionName(type.definition);
@@ -115,16 +116,22 @@ final class CheckedEditorCatalog {
     return "$name<${arguments.map(typeUseName).join(", ")}>";
   }
 
+  /// The name of [type] with the arguments a creator chooses, each chosen
+  /// one by name and each missing one as Unfilled. Derived parameters are not
+  /// chosen, so they are not shown.
   String _pendingTypeName(skir.TypeSelection type) {
     final name = typeDefinitionName(type.definition);
-    final count =
-        published(type.definition)?.definition.parameters.length ??
-        type.arguments.length;
-    if (count == 0) return name;
-    return "$name<${[for (var index = 0; index < count; index++) switch (type.chosenAt(index)) {
-        final value? => typeUseName(value),
-        null => "Unfilled",
-      }].join(", ")}>";
+    final chosen = [
+      for (final (index, parameter)
+          in (type.parametersIn(selected(type)) ?? const []).indexed)
+        if (!parameter.derived)
+          switch (type.chosenAt(index)) {
+            final value? => typeUseName(value),
+            null => "Unfilled",
+          },
+    ];
+    if (chosen.isEmpty) return name;
+    return "$name<${chosen.join(", ")}>";
   }
 
   String _scalarName(skir.ScalarKind scalar) => switch (scalar) {
@@ -477,6 +484,11 @@ final class CheckedEditorCatalog {
     if (index < 0 || index >= parameters.length) {
       return const TypeArgumentChoice.rejected(
         "The type argument position is invalid",
+      );
+    }
+    if (parameters[index].derived) {
+      return const TypeArgumentChoice.rejected(
+        "A derived type argument is never chosen",
       );
     }
     final chosen = skir.TypeSelection(
@@ -1055,12 +1067,3 @@ sealed class TypeArgumentChoice with _$TypeArgumentChoice {
   const factory TypeArgumentChoice.rejected(String message) =
       TypeArgumentRejected;
 }
-
-/// The fully applied type [selection] stands for, judged by [catalog] when
-/// there is one and by the stored arguments alone otherwise.
-skir.NamedTypeUse? completeUseOf(
-  CheckedEditorCatalog? catalog,
-  skir.TypeSelection selection,
-) =>
-    catalog?.completeUse(selection) ??
-    selection.completeUse(selection.arguments.length);

@@ -47,9 +47,16 @@ final class ResourceCreationFixture {
     );
   }
 
-  ResourceCreationFixture({bool abstractReport = false})
-    : generation = skir.CatalogGeneration(value: "creation:flow") {
-    _record("Book", {"title": _text, "pages": _named("Pages")});
+  /// [derivedBookParameters] gives the Book parameters it derives, which no
+  /// creator chooses.
+  ResourceCreationFixture({
+    bool abstractReport = false,
+    Set<String> derivedBookParameters = const {},
+  }) : generation = skir.CatalogGeneration(value: "creation:flow") {
+    _record("Book", {
+      "title": _text,
+      "pages": _named("Pages"),
+    }, derived: derivedBookParameters);
     _record("Page", {
       "name": _text,
       "book": _named("PageBook"),
@@ -149,11 +156,21 @@ final class ResourceCreationFixture {
     skir.RepresentationTemplate representation, {
     List<skir.EffectiveFieldTemplate> fields = const [],
     String? parent,
+    Set<String> derived = const {},
   }) {
     _types.add(
       publishedType(
         _id(name),
         representation: representation,
+        parameters: [
+          for (final (index, parameter) in derived.indexed)
+            skir.TypeParameter(
+              key: skir.ParameterKey(owner: _id(name), index: index),
+              name: parameter,
+              bounds: const [],
+              derived: true,
+            ),
+        ],
         parents: [if (parent != null) _template(parent)],
         fields: fields,
         display: skir.TypeDisplay(
@@ -175,6 +192,7 @@ final class ResourceCreationFixture {
     bool open = false,
     bool resource = true,
     String? parent,
+    Set<String> derived = const {},
   }) {
     _publish(
       name,
@@ -200,6 +218,7 @@ final class ResourceCreationFixture {
           ),
       ],
       parent: parent,
+      derived: derived,
     );
     if (resource) _resources.add(name);
   }

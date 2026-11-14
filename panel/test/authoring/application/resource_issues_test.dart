@@ -255,4 +255,35 @@ void main() {
       isNot(contains("unresolved_type")),
     );
   });
+
+  test("a resource whose only parameter is derived has no pending type", () {
+    final keyed = skir.ResourceId(value: "keyed");
+    final document = base
+        .withCatalogEntries(
+          types: [
+            declaredRecord(
+              "Keyed",
+              parameters: {"Bound": []},
+              derived: {"Bound"},
+            ),
+          ],
+        )
+        .changedRemotely(
+          (edit) => edit.create(
+            keyed,
+            skir.AuthoringRecord(
+              types: const [],
+              configuration: selectionOfDefinition(typeDefinition("Keyed")),
+              fields: const [],
+            ),
+          ),
+        );
+
+    final issues = ResourceIssues.evaluate(document: document);
+
+    expect(
+      issues.currentFor(keyed).map((issue) => issue.diagnostic.code),
+      isNot(contains("pending_type")),
+    );
+  });
 }

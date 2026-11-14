@@ -535,7 +535,7 @@ void main() {
     final original = base.scope.catalog!.snapshot;
     final record = base.document.resources.values.first;
     final type =
-        completeUseOf(null, record.configuration)?.definition ??
+        base.scope.catalog!.completeUse(record.configuration)?.definition ??
         (throw StateError("The nested collection fixture must be complete"));
     final nestedProvider = skir.PresentationId(
       namespace: "test",

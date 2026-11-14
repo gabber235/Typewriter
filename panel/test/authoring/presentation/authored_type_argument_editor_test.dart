@@ -72,7 +72,7 @@ void main() {
 
     final complete =
         switch (picked.result) {
-          final selection? => completeUseOf(null, selection),
+          final selection? => _pageKinds.completeUse(selection),
           null => null,
         } ??
         (throw TestFailure("Expected a complete resource selection"));
@@ -245,31 +245,16 @@ void main() {
       ),
       ..._rewards,
     ]);
-    skir.TypeSelection? requested;
-    await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        Scaffold(
-          body: AuthoredTypeArgumentEditor(
-            selection: selectionOfDefinition(testTypeId("Variable")),
-            catalog: catalog,
-            preview: (next) async {
-              requested = next;
-              return readyTypeArgumentPreview(catalog, next);
-            },
-            commit: (_) async => const EditStageResult.staged(EditGroupId(1)),
-          ),
-        ),
-      ),
+    final editor = await TypeArgumentEditorDriver.show(
+      tester,
+      selection: selectionOfDefinition(testTypeId("Variable")),
+      catalog: catalog,
     );
 
-    await tester.tap(find.text("Choose a type").first);
-    await tester.pumpAndSettle();
-    await TypeChooserDriver(tester).choose("CoinReward");
-    await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
-    await tester.pumpAndSettle();
+    await editor.chooseNext("CoinReward");
+    await editor.review();
 
-    final pending = switch (requested) {
+    final pending = switch (editor.requested) {
       final selection? when catalog.completeUse(selection) == null => selection,
       _ => throw TestFailure("Expected a pending selection"),
     };
@@ -277,5 +262,74 @@ void main() {
     expect(pending.chosenAt(0), isNotNull);
     expect(pending.chosenAt(1), isNull);
     expect(find.textContaining("Unfilled"), findsOneWidget);
+  });
+
+  testWidgets("a derived parameter gets no row and never counts as unfilled", (
+    tester,
+  ) async {
+    final editor = await TypeArgumentEditorDriver.show(
+      tester,
+      selection: selectionOfDefinition(testTypeId("Variable")),
+      catalog: authoredCatalog([
+        declaredRecord(
+          "Variable",
+          parameters: {
+            "T": ["Reward"],
+            "Bound": [],
+          },
+          derived: {"Bound"},
+        ),
+        ..._rewards,
+      ]),
+    );
+
+    expect(find.text("T"), findsOne);
+    expect(find.text("Bound"), findsNothing);
+    await editor.chooseNext("CoinReward");
+
+    expect(
+      find.textContaining("independent fields remain editable"),
+      findsNothing,
+    );
+    await editor.review();
+    expect(editor.requested?.arguments.map((argument) => argument.parameter), [
+      0,
+    ]);
+  });
+
+  testWidgets("composing a generic offers no choice for a derived parameter", (
+    tester,
+  ) async {
+    final catalog = authoredCatalog([
+      declaredRecord(
+        "Keyed",
+        parameters: {"T": [], "Bound": []},
+        derived: {"Bound"},
+      ),
+    ]);
+
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Builder(
+          builder: (context) => FilledButton(
+            onPressed: () => showAuthoredTypeUsePicker(
+              context,
+              title: "Choose payload type",
+              catalog: catalog,
+            ),
+            child: const Text("Choose payload"),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text("Choose payload"));
+    await tester.pumpAndSettle();
+    await TypeChooserDriver(tester).search("Keyed");
+    await tester.tap(find.text("Keyed<Unfilled>"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("T: Choose a type"), findsOne);
+    expect(find.textContaining("Bound"), findsNothing);
   });
 }

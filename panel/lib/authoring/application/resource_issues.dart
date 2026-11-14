@@ -145,12 +145,16 @@ abstract class ResourceIssues with _$ResourceIssues {
               problem.path,
             );
           }
-        case null:
+        case null when !document.catalog.isFullyChosen(record.configuration):
           local(
             "pending_type",
             "Resource ${id.value} has incomplete type arguments.",
             skir.ValuePath(segments: const []),
           );
+        case null:
+        // Every chosen argument is there and the rest are derived: the type
+        // is the resource's bound type, which this panel does not resolve, so
+        // there is nothing it can inspect.
       }
       for (final check in AuthoredRuleProjection.evaluate(
         draft: document,

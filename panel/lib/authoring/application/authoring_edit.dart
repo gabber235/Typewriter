@@ -359,10 +359,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
             catalog,
           ),
         );
-        final actual = completeUseOf(
-          catalog,
-          child.recordContent.configuration,
-        );
+        final actual = catalog?.completeUse(child.recordContent.configuration);
         if (actual == null ||
             !(catalog?.isReadableAs(
                   skir.TypeUse.wrapNamed(actual),
@@ -495,7 +492,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         "The prepared collection item does not match the requested type",
       );
     }
-    final actual = completeUseOf(catalog, prepared.recordContent.configuration);
+    final actual = catalog?.completeUse(prepared.recordContent.configuration);
     if (actual == null) {
       return const PortablePathUnavailable(
         "The prepared collection item is not a complete named value",
@@ -609,7 +606,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         "The prepared form does not match the requested type",
       );
     }
-    final actual = completeUseOf(catalog, prepared.recordContent.configuration);
+    final actual = catalog?.completeUse(prepared.recordContent.configuration);
     if (actual == null) {
       return const PortablePathUnavailable(
         "The prepared form is not a complete named value",
@@ -1119,7 +1116,7 @@ Iterable<LocatedInitializationFinding> _locatedInitializationFindings(
 ) sync* {
   final record = prepared.recordContent;
   final payload = skir.DataValue.createRecord(fields: record.fields);
-  final expected = switch (completeUseOf(catalog, record.configuration)) {
+  final expected = switch (catalog?.completeUse(record.configuration)) {
     final value? when base.path.segments.isNotEmpty =>
       skir.DataValue.createNamed(actualType: value, payload: payload),
     _ => payload,

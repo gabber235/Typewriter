@@ -63,7 +63,7 @@ AuthoringDocument compiledEntryNodeDocument({
     links: const [],
   );
   final elementSelection = selectionOfUse(elementType);
-  final bookType = completeUseOf(null, compiledSdkBookRecord.configuration)!;
+  final bookType = catalog.completeUse(compiledSdkBookRecord.configuration)!;
   final bookSelection = compiledSdkBookRecord.configuration;
   final bookPath = editorRootPath.field("book");
   skir.ValuePath bookMembershipPath(skir.ResourceId id) => skir.ValuePath(

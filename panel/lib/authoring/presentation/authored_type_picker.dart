@@ -207,20 +207,21 @@ final class _TypeUseCompositionPickerState
                 style: context.theme.textTheme.titleSmall,
               ),
               for (final item in parameters.indexed)
-                Padding(
-                  padding: EdgeInsets.only(top: context.spacing.space2),
-                  child: OutlinedButton(
-                    onPressed: () => _chooseNested(item.$1, item.$2.name),
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(switch (_selection.chosenAt(item.$1)) {
-                        final value? =>
-                          "${item.$2.name}: ${widget.catalog.typeUseName(value)}",
-                        null => "${item.$2.name}: Choose a type",
-                      }),
+                if (!item.$2.derived)
+                  Padding(
+                    padding: EdgeInsets.only(top: context.spacing.space2),
+                    child: OutlinedButton(
+                      onPressed: () => _chooseNested(item.$1, item.$2.name),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(switch (_selection.chosenAt(item.$1)) {
+                          final value? =>
+                            "${item.$2.name}: ${widget.catalog.typeUseName(value)}",
+                          null => "${item.$2.name}: Choose a type",
+                        }),
+                      ),
                     ),
                   ),
-                ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text("Allow no value"),

@@ -917,7 +917,9 @@ void main() {
     expect(requests, hasLength(1), reason: "No child fallback is prepared");
     expect(requests.single.recordSuppliedFields, isEmpty);
     expect(
-      completeUseOf(null, requests.single.recordSelection)!.definition,
+      fixture.draft.catalog!
+          .completeUse(requests.single.recordSelection)!
+          .definition,
       testTypeId("Action"),
     );
     final style =
