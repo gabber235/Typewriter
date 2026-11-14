@@ -41,7 +41,7 @@ Widget searchRootUseCase(BuildContext context) {
 SearchController<void> _controller(SearchSourceSnapshot snapshot) {
   return SearchController<void>(
     session: SearchSession(
-      source: StorySearchSource(snapshot),
+      source: storySearchSource(snapshot),
       interaction: SearchInteraction(
         activation: SearchActivation.command(
           resolve: (_) => storyOpenCommandId,

@@ -206,16 +206,33 @@ SearchQueryContext sourceQueryContext(
   return context;
 }
 
-/// A search source the test drives: it remembers every search, preview and
-/// selector completion, emits only the snapshots the test gives it, and
-/// answers previews and completions with what the test sets.
+/// A search source a test or story drives: it remembers every search,
+/// preview and selector completion, emits the snapshots the test gives it or
+/// its [answer] makes, and answers previews and completions with what the
+/// test sets.
 final class FakeSearchSource
     implements SearchSource, SearchSelectorCompletionSource {
   /// A source offering [selectors] that emits [initialSnapshot], when given,
-  /// as it initializes.
-  FakeSearchSource({this.selectors = const [], this.initialSnapshot});
+  /// as it initializes, and the [answer] to each query, when given.
+  FakeSearchSource({
+    this.selectors = const [],
+    this.initialSnapshot,
+    this.answer,
+    this.answerDelay = Duration.zero,
+  });
 
   final SearchSourceSnapshot? initialSnapshot;
+
+  /// The snapshot each query answers with: emitted as the source
+  /// initializes, unless [initialSnapshot] is given, and for every search.
+  final SearchSourceSnapshot Function(SearchQueryContext context)? answer;
+
+  /// How long a search takes to answer; meanwhile the last snapshot shows
+  /// as loading.
+  final Duration answerDelay;
+
+  SearchSourceSnapshot? _last;
+  Timer? _answerTimer;
 
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
@@ -228,7 +245,9 @@ final class FakeSearchSource
   final searches = <SearchQueryContext>[];
   final previewRequests = <SearchPreviewRequest>[];
   final completionRequests = <SearchSelectorCompletionRequest>[];
-  SearchPreviewRequestResult previewResult =
+
+  /// What every preview answers; null keeps previews loading forever.
+  SearchPreviewRequestResult? previewResult =
       const SearchPreviewRequestResult.data(data: "preview");
   SearchSelectorCompletionResult completionResult =
       const SearchSelectorCompletionResult();
@@ -240,12 +259,27 @@ final class FakeSearchSource
   @override
   void initialize(SearchQueryContext context) {
     initializeCount++;
-    if (initialSnapshot case final snapshot?) emitSnapshot(snapshot);
+    if (initialSnapshot ?? answer?.call(context) case final snapshot?) {
+      emitSnapshot(snapshot);
+    }
   }
 
   @override
   void search(SearchQueryContext context) {
     searches.add(context);
+    final answer = this.answer;
+    if (answer == null) return;
+    _answerTimer?.cancel();
+    if (answerDelay == Duration.zero) {
+      emitSnapshot(answer(context));
+      return;
+    }
+    emitSnapshot(
+      (_last ?? SearchSourceSnapshot.loading()).copyWith(
+        status: SearchSourceStatus.loading,
+      ),
+    );
+    _answerTimer = Timer(answerDelay, () => emitSnapshot(answer(context)));
   }
 
   @override
@@ -253,7 +287,7 @@ final class FakeSearchSource
     SearchPreviewRequest request,
   ) async {
     previewRequests.add(request);
-    return previewResult;
+    return previewResult ?? Completer<SearchPreviewRequestResult>().future;
   }
 
   @override
@@ -268,6 +302,8 @@ final class FakeSearchSource
 
   /// Emits [snapshot] to every listener.
   void emitSnapshot(SearchSourceSnapshot snapshot) {
+    if (_snapshots.isClosed) return;
+    _last = snapshot;
     _snapshots.add(snapshot);
   }
 
@@ -290,6 +326,7 @@ final class FakeSearchSource
   @override
   void dispose() {
     disposeCount++;
+    _answerTimer?.cancel();
     unawaited(_snapshots.close());
   }
 }
