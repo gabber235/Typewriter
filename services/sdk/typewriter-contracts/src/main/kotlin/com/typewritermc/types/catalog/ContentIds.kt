@@ -8,6 +8,7 @@ import com.typewritermc.types.VAR_TYPE_ID
 import com.typewritermc.types.declared
 import com.typewritermc.types.mapTypes
 import com.typewritermc.types.member
+import com.typewritermc.types.memberOwner
 import com.typewritermc.types.named
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -79,13 +80,16 @@ fun contentTypesOf(
         ): DerivedTarget = derived.derived(owner, key)
     }
 
-/** The content types a compiled artifact carries: declarations alone. It holds no values, so a field key finds nothing. */
-fun contentTypesOf(
-    declarations: List<TypeDefinition>,
-    derived: DerivedOrigin,
-): ContentTypes =
+/**
+ * The content types a compiled artifact carries: declarations alone. A derived id answers the declaration its owner's
+ * bind computed when the content was published, so the engine runs no bind. It holds no values, so a field key finds
+ * nothing.
+ */
+fun contentTypesOf(declarations: List<TypeDefinition>): ContentTypes =
     object : ContentTypes {
-        private val byOwner = declarations.groupBy { checkNotNull(it.id.contentOwner()) { "Only content declarations have an owner." } }
+        private val computed = declarations.filter { it.id.namesDerivedKey() }
+        private val byOwner =
+            (declarations - computed.toSet()).groupBy { checkNotNull(it.id.contentOwner()) { "Only content declarations have an owner." } }
 
         override fun written(owner: ResourceId): List<TypeDefinition> = byOwner[owner].orEmpty()
 
@@ -97,7 +101,11 @@ fun contentTypesOf(
         override fun derived(
             owner: ResourceId,
             key: String,
-        ): DerivedTarget = derived.derived(owner, key)
+        ): DerivedTarget {
+            val id = TypeDefinitionId.derived(owner, key)
+            val definition = computed.firstOrNull { it.id == id } ?: return DerivedTarget.Missing(DerivedFailure.NoBlock)
+            return DerivedTarget.Declared(definition, computed.filter { it.id.memberOwner == id })
+        }
     }
 
 /** The case of Var that holds a value as written. */

@@ -23,6 +23,13 @@ import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeSelection
 
 val DerivedTypesTest by testSuite {
+    test("published content answers a derived id from the declaration it carries, with no bind") {
+        val catalog = catalog(boardDefinition()).withContent(contentTypesOf(listOf(derivedRecord("gold" to TEXT))))
+
+        catalog.definition(DERIVED_V) shouldBe DeclarationStatus.READY
+        catalog.fieldsOf(DERIVED_V.use()) shouldBe listOf("gold")
+    }
+
     test("a derived parameter's argument is the type its resource derives") {
         val board = boardDefinition()
         val catalog = catalog(board).withContent(derives(DerivedTarget.Declared(derivedRecord("gold" to TEXT))))
@@ -83,7 +90,10 @@ val DerivedTypesTest by testSuite {
 
         catalog.definition(red) shouldBe DeclarationStatus.READY
         catalog.isNominalSubtype(red, DERIVED_V) shouldBe true
-        (catalog.declaration(DERIVED_V) as Resolution.Ready).value.representation.closedCases()?.map { it.definition } shouldBe listOf(red)
+        (catalog.declaration(DERIVED_V) as Resolution.Ready)
+            .value.representation
+            .closedCases()
+            ?.map { it.definition } shouldBe listOf(red)
     }
 
     test("a resource that derives nothing for a derived parameter has a missing derived type") {
@@ -92,7 +102,8 @@ val DerivedTypesTest by testSuite {
         val record = AuthoringRecord.partial(configuration = TypeSelection.of(board.id))
 
         catalog.unavailableCode(DERIVED_V) shouldBe "derived_type_missing"
-        record.missingContent(DERIVING_BOARD, catalog).map { it.problem.code to it.type } shouldContain ("derived_type_missing" to DERIVED_V)
+        record.missingContent(DERIVING_BOARD, catalog).map { it.problem.code to it.type } shouldContain
+            ("derived_type_missing" to DERIVED_V)
     }
 
     val origin = RuleOrigin(owner = id("board"), ordinal = 0)
@@ -140,7 +151,8 @@ val DerivedTypesTest by testSuite {
         val catalog = catalog(board).withContent(derives(DerivedTarget.Declared(derivedRecord("gold" to TEXT))))
         val chosen = TypeSelection.of(board.id, mapOf(0 to TEXT))
 
-        (catalog.typeOf(DERIVING_BOARD, chosen) as Resolution.Invalid).diagnostics.map { it.code } shouldBe listOf("derived_argument_chosen")
+        (catalog.typeOf(DERIVING_BOARD, chosen) as Resolution.Invalid).diagnostics.map { it.code } shouldBe
+            listOf("derived_argument_chosen")
         (catalog.authoredTypeOf(chosen) as Resolution.Invalid).diagnostics.map { it.code } shouldBe listOf("derived_argument_chosen")
     }
 
@@ -148,6 +160,7 @@ val DerivedTypesTest by testSuite {
         val written = derivedRecord("gold" to TEXT)
 
         listOf(written).declarationProblems(DERIVING_BOARD)[DERIVED_V].orEmpty() shouldContain "declaration_key"
-        AuthoringRecord.partial(types = listOf(written)).misfiledDeclarations(DERIVING_BOARD).map { it.code } shouldContain "declaration_key"
+        AuthoringRecord.partial(types = listOf(written)).misfiledDeclarations(DERIVING_BOARD).map { it.code } shouldContain
+            "declaration_key"
     }
 }

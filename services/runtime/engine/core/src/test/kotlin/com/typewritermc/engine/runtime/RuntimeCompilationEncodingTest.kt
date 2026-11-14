@@ -18,6 +18,7 @@ import com.typewritermc.engine.semanticDigest
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField
+import com.typewritermc.types.catalog.derived
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
 import com.typewritermc.types.toSkir
@@ -168,6 +169,14 @@ val RuntimeCompilationEncodingTest by testSuite {
         shouldThrow<IllegalArgumentException> {
             gateway().apply(publicationOf(admissionFacts(types = listOf(resourceDefinition, reward), payload = reward.id)))
         }.message shouldBe "Compiled content names a field key; the compiler expands them."
+    }
+
+    test("an artifact's derived declaration is admitted like a creator declaration, so only a later mismatch refuses it") {
+        val rows = contentRecord(TypeDefinitionId.derived(admissionPage, "V"), "gold" to payloadDefinition.id.use())
+        val changed = TypeDefinition.partial(id = resourceDefinition.id, representation = boolean)
+        shouldThrow<IllegalArgumentException> {
+            gateway().apply(publicationOf(admissionFacts(types = listOf(changed, rows, payloadDefinition), payload = rows.id)))
+        }.message shouldBe "Compiled runtime type facts do not equal the accepted declaration closure."
     }
 
     test("an artifact whose code type differs from the engine catalog is still refused") {
