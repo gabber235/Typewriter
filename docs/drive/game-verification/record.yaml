@@ -544,6 +544,9 @@ decided:
   - id: hold-out-hung-players
     what: "A. Hold it out (Recommended)"
     why: A player whose work hung leaves the pool until that work ends, is wiped again, then returns; nothing is cancelled. A replacement client keeps the same player name, so it would not escape the work; a player whose work never ends stays out for the rest of the run and the run says so
+  - id: keep-slice-4-built-decisions
+    what: "Keep, start slice 5 (Recommended)"
+    why: One Queue message per side by side group, a partner lost before its lease requeues alone, hold reasons apart from attempts, only acked clients watched, never ending hung work noted on the failing case
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -619,8 +622,8 @@ slices:
       Open: xtask can report a pass from a sibling session's run file when a test JVM is killed
       (slice 5).
   - id: retries-and-results
-    status: next
-    what: retries at the queue end, Flaky, quarantine, xtask gate on TestRun
+    status: building
+    what: retries at the queue end, Flaky, quarantine, xtask gate on TestRun (no run file, sibling run files), --only and --repeat, demonstrates, attempt steps with times and a measured breakdown of where time per requirement goes
     green: a flaky probe blocks the run
   - id: pixels
     status: queued
@@ -639,4 +642,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 4 done. Confirm its built decisions, then start slice 5 (retries and results, --only and --repeat, then measure where time per requirement goes).
+next: Slice 5 (retries and results) is building on feat/game-verification-slice-5. Accept it on evidence, show the time breakdown, then check in.
