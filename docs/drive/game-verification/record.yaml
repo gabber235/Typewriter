@@ -527,6 +527,9 @@ decided:
   - id: wipe-split-by-owner
     what: "A. Split by owner (Recommended)"
     why: The framework wipes vanilla and Paper player state (spike K's kinds plus recipes and advancements); each plugin resets what it owns (stored values, attached permissions, metadata it set, sessions, mail) through a reset hook the framework calls, later Typewriter's realm purge; no reflection; unseen kinds are proven by a query probe only the framework's own tests use
+  - id: keep-slice-3-built-decisions
+    what: "Keep them (Recommended)"
+    why: PlayerWipeEvent as the reset hook, Reclaim for back to back, regions never reused, attempts kept apart (players hidden, chat per attempt), Declined for requirements the pool can never run, pool size from -Pplaytest.clients
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
