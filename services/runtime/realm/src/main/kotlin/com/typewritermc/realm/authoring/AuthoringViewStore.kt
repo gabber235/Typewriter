@@ -70,6 +70,7 @@ data class AuthoringView internal constructor(
                 .flatMap { (id, record) ->
                     if (this.resources[id] === record) linkSlice(id).own else ResourceValueMapper.discover(mapOf(id to record))
                 }.associateBy(LinkOccurrence::id)
+                .immutableMapCopy()
         }
 
     /** [resource]'s slice judged once for this view with a plain reader over it. */
@@ -515,7 +516,7 @@ private class DefaultAuthoringLease(
         check(!closed.get()) { "The original read view lease is closed." }
         require(upsertedResources.keys.intersect(removedResources).isEmpty())
         val resources = immutableResources(root.resources + upsertedResources - removedResources)
-        return AuthoredReadView.Staged(root, resources) { discoverLinks(resources).immutableMapCopy() }
+        return root.staged(resources)
     }
 
     override fun close() {
