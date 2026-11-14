@@ -9,14 +9,25 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// [Selector] below registers itself, and the order is where
 /// those items sit on screen: top to bottom, then in reading direction.
 /// A surface that builds only some of its items, such as a graph that skips
-/// nodes off screen, passes [order] instead, so select all still reaches
-/// every item.
+/// nodes off screen, passes [order] instead when it knows their visible
+/// order, or [every] when it knows only which items it holds, so select all
+/// still reaches every item.
 class SelectionSurface extends HookConsumerWidget {
-  const SelectionSurface({required this.child, this.order, super.key});
+  const SelectionSurface({
+    required this.child,
+    this.order,
+    this.every,
+    super.key,
+  });
 
   /// Every item of the surface in visible order, for a surface that does
   /// not build them all; null orders the registered selectors by position.
   final List<SelectableIdentifier>? order;
+
+  /// Every item of the surface in any order, for a surface that does not
+  /// build them all nor know where they sit; ranges still follow the
+  /// registered selectors' positions. Ignored when [order] is given.
+  final List<SelectableIdentifier>? every;
   final Widget child;
 
   /// The surface around [context], or null outside every surface.
@@ -31,7 +42,9 @@ class SelectionSurface extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = useMemoized(SelectionSurfaceItems._).._explicit = order;
+    final items = useMemoized(SelectionSurfaceItems._)
+      .._explicit = order
+      .._every = every;
     return _SelectionSurfaceScope(
       items: items,
       child: ManagedActionSet(
@@ -47,9 +60,8 @@ class SelectionSurface extends HookConsumerWidget {
               intent: SelectEveryIntent,
               priority: -10,
               run: ActionRun.press(
-                (ref) => ref
-                    .read(selectionProvider.notifier)
-                    .selectEvery(items.order),
+                (ref) =>
+                    ref.read(selectionProvider.notifier).selectEvery(items.all),
               ),
             ),
         ],
@@ -66,6 +78,7 @@ final class SelectionSurfaceItems {
 
   final _registered = <BuildContext, SelectableIdentifier>{};
   List<SelectableIdentifier>? _explicit;
+  List<SelectableIdentifier>? _every;
 
   /// Adds the selector at [context] showing [id]; the returned callback
   /// removes it again.
@@ -78,7 +91,20 @@ final class SelectionSurfaceItems {
 
   /// Whether [id] is an item of this surface.
   bool contains(SelectableIdentifier id) =>
-      _explicit?.contains(id) ?? _registered.containsValue(id);
+      _explicit?.contains(id) ??
+      _every?.contains(id) ??
+      _registered.containsValue(id);
+
+  /// Every item of the surface, built or not, the ones on screen first in
+  /// visible order.
+  List<SelectableIdentifier> get all {
+    final placed = order;
+    return [
+      ...placed,
+      for (final id in _every ?? const <SelectableIdentifier>[])
+        if (!placed.contains(id)) id,
+    ];
+  }
 
   /// Every item of the surface in visible order.
   List<SelectableIdentifier> get order {

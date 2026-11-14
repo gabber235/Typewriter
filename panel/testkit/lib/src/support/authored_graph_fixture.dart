@@ -654,6 +654,7 @@ extension AuthoredGraphViews on AuthoredGraphFixture {
     GraphResizeCommit? onResize,
     ValueNotifier<bool>? readOnlySource,
     Map<Type, Action<Intent>>? actions,
+    bool farApart = false,
   }) async {
     final panel = await tester.pumpPanel(this.realm);
     final binding = workspace.attach(
@@ -718,7 +719,9 @@ extension AuthoredGraphViews on AuthoredGraphFixture {
                               for (final (index, entry) in entries.indexed)
                                 GraphElement(
                                   id: GraphIdentifier(entry.resource.value),
-                                  x: index * 6,
+                                  // Far apart, so the graph builds none
+                                  // until it pans to one.
+                                  x: index * (farApart ? 80 : 6),
                                   y: 0,
                                   width: 4,
                                   height: 1,

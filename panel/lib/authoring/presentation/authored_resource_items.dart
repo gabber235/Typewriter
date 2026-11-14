@@ -169,7 +169,20 @@ class _AuthoredResourcesLayoutState
               DeleteIntent: CallbackAction<DeleteIntent>(onInvoke: (_) => null),
           },
           child: SelectionOperationShortcuts(
-            child: SelectionSurface(child: widget.child),
+            child: SelectionSurface(
+              // A graph builds only the nodes near the screen; select all
+              // still reaches every member.
+              every: widget.view.layout == PortableResourcesLayoutKind.graph
+                  ? [
+                      for (final member in widget.view.members)
+                        AuthoringResourceIdentifier.inScope(
+                          widget.authoringScope,
+                          member.resource,
+                        ),
+                    ]
+                  : null,
+              child: widget.child,
+            ),
           ),
         ),
       ),
