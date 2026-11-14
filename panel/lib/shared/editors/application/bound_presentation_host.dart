@@ -9,25 +9,80 @@ typedef PortableBindingWriter =
       skir.DataValue value,
     );
 
+typedef PortableBindingItemsWriter =
+    FutureOr<PortablePresentationWriteResult> Function(
+      skir.ValuePath path,
+      List<skir.DataValue> values,
+    );
+
 /// Explicitly maps one backend owned editor value into a portable binding.
 ///
 /// The reader and writer are supplied by the feature that owns the backend
 /// data transfer object. This adapter never converts a legacy type catalog or
-/// infers a nominal schema from runtime values.
+/// infers a nominal schema from runtime values. A binding that stands for
+/// several selected items reads each of them through [readItems]. Its value
+/// is what they agree on: records and named values of one type agree field by
+/// field, and every part they disagree on is unfilled. The snapshot keeps
+/// every item's value so controls can tell where they differ.
 final class BoundPresentationBinding {
   const BoundPresentationBinding({
     required this.id,
     required this.use,
     required this.read,
+    this.readItems,
     this.write,
+    this.writeItems,
     this.owner,
     this.control,
   });
 
+  /// A binding that reads [owner] through [read].
+  ///
+  /// Over a [MultiEditOwner] it reads each selected owner with [read] as well,
+  /// so the binding is mixed wherever they disagree, and [write] reaches every
+  /// selected owner through the combined owner. With [at], the place in each
+  /// owner this binding edits, it also writes a different value to each
+  /// selected owner through [writeItems].
+  factory BoundPresentationBinding.owned({
+    required skir.ExpressionBindingId id,
+    required skir.TypeUse use,
+    required EditOwner owner,
+    required skir.DataValue Function(EditOwner owner) read,
+    skir.ValuePath? at,
+    PortableBindingWriter? write,
+    EditControl? control,
+  }) => BoundPresentationBinding(
+    id: id,
+    use: use,
+    owner: owner,
+    control: control,
+    read: (_) => read(owner),
+    readItems: owner is MultiEditOwner
+        ? () => [for (final item in owner.owners) read(item)]
+        : null,
+    write: write,
+    writeItems: owner is MultiEditOwner && at != null
+        ? (path, values) => owner
+              .updateEach(
+                skir.ValuePath(segments: [...at.segments, ...path.segments]),
+                values,
+              )
+              .toPortablePresentationResult(binding: id, sourcePath: at)
+        : null,
+  );
+
   final skir.ExpressionBindingId id;
   final skir.TypeUse use;
   final PortableBindingReader read;
+
+  /// Reads the value each selected item holds, when the binding stands for
+  /// several items.
+  final List<skir.DataValue> Function()? readItems;
   final PortableBindingWriter? write;
+
+  /// Writes the value at the same index to each selected item, in the order
+  /// [readItems] reads them.
+  final PortableBindingItemsWriter? writeItems;
 
   /// The backend editor source whose changes invalidate this binding.
   final Listenable? owner;
@@ -35,11 +90,29 @@ final class BoundPresentationBinding {
 
   bool get editable => write != null;
 
-  PortablePresentationBinding snapshot() => PortablePresentationBinding(
-    schema: PortablePresentationBindingSchema.complete(use),
-    value: read(skir.ValuePath(segments: const [])) ?? skir.DataValue.unfilled,
-    editable: editable,
-  );
+  /// Each selected item's value when they disagree, otherwise empty.
+  List<skir.DataValue> get _disagreeingItems {
+    final items = readItems?.call() ?? const <skir.DataValue>[];
+    return items.toSet().length > 1 ? List.unmodifiable(items) : const [];
+  }
+
+  /// The value a control edits: what the selected items agree on.
+  skir.DataValue? get current => switch (_disagreeingItems) {
+    [] => read(editorRootPath),
+    final items => items.agreement,
+  };
+
+  PortablePresentationBinding snapshot() {
+    final items = readItems?.call() ?? const <skir.DataValue>[];
+    return PortablePresentationBinding(
+      schema: PortablePresentationBindingSchema.complete(use),
+      value: items.toSet().length > 1
+          ? items.agreement
+          : read(editorRootPath) ?? skir.DataValue.unfilled,
+      editable: editable,
+      itemValues: List.unmodifiable(items),
+    );
+  }
 }
 
 /// Presents backend owned service drafts through the portable renderer.
@@ -51,7 +124,7 @@ final class BoundPresentationBinding {
 /// before calling the writer. Disposal releases binding controls and observer
 /// subscriptions; the feature retains ownership of the underlying draft.
 final class BoundPresentationHost extends ChangeNotifier
-    implements PortablePresentationHost {
+    implements PortablePresentationHost, PortableItemsWriteHost {
   BoundPresentationHost({
     required this.catalog,
     required this.root,
@@ -166,11 +239,46 @@ final class BoundPresentationHost extends ChangeNotifier
     skir.DataValue value, {
     required PortableInvocationContext context,
   }) async {
+    final rejected = _admit(reference, [value], context: context);
+    if (rejected != null) return rejected;
+    final result = await _bindings[reference.bindingId]!.write!(
+      reference.path,
+      value,
+    );
+    if (result is PortablePresentationWriteApplied && !_disposed) _changed();
+    return result;
+  }
+
+  @override
+  Future<PortablePresentationWriteResult> writeItems(
+    skir.BindingRef reference,
+    List<skir.DataValue> values, {
+    required PortableInvocationContext context,
+  }) async {
+    final writer = _bindings[reference.bindingId]?.writeItems;
+    if (writer == null) {
+      return _reject(
+        "This presentation binding cannot write each item",
+        target: reference,
+      );
+    }
+    final rejected = _admit(reference, values, context: context);
+    if (rejected != null) return rejected;
+    final result = await writer(reference.path, values);
+    if (result is PortablePresentationWriteApplied && !_disposed) _changed();
+    return result;
+  }
+
+  /// Why [values] may not be written at [reference], or null when they may.
+  PortablePresentationWriteResult? _admit(
+    skir.BindingRef reference,
+    List<skir.DataValue> values, {
+    required PortableInvocationContext context,
+  }) {
     if (!enabled || readOnly) {
       return _reject("This presentation is read only", target: reference);
     }
-    final writer = _bindings[reference.bindingId]?.write;
-    if (writer == null) {
+    if (_bindings[reference.bindingId]?.write == null) {
       return _reject(
         "This presentation binding is read only",
         target: reference,
@@ -179,9 +287,7 @@ final class BoundPresentationHost extends ChangeNotifier
     if (!context.isCurrent(
       reference,
       catalog.snapshot.generation,
-      _bindings[reference.bindingId]
-          ?.read(editorRootPath)
-          ?.editorValueAt(reference.path),
+      _bindings[reference.bindingId]?.current?.editorValueAt(reference.path),
     )) {
       return _reject(
         "The presentation value changed before this write",
@@ -189,15 +295,16 @@ final class BoundPresentationHost extends ChangeNotifier
       );
     }
     final expected = expectedType(reference, context: context);
-    if (expected == null || !catalog.admitsPortableValue(expected, value)) {
+    if (expected == null ||
+        !values.every(
+          (value) => catalog.admitsPortableValue(expected, value),
+        )) {
       return _reject(
         "The value does not match the binding type",
         target: reference,
       );
     }
-    final result = await writer(reference.path, value);
-    if (result is PortablePresentationWriteApplied && !_disposed) _changed();
-    return result;
+    return null;
   }
 
   @override
@@ -310,4 +417,54 @@ Map<skir.ExpressionBindingId, BoundPresentationBinding> _indexBindings(
     indexed[value.id] = value;
   }
   return Map.unmodifiable(indexed);
+}
+
+extension on List<skir.DataValue> {
+  /// What these values agree on: the value when they are all equal; a record
+  /// or a named value of one type made of what they agree on in each field;
+  /// otherwise unfilled.
+  skir.DataValue get agreement {
+    final first = this.first;
+    if (every((value) => value == first)) return first;
+    if (first case skir.DataValue_namedWrapper(value: final named)) {
+      final payloads = [
+        for (final value in this)
+          if (value case skir.DataValue_namedWrapper(:final value)
+              when value.actualType == named.actualType)
+            value.payload,
+      ];
+      if (payloads.length == length) {
+        return skir.DataValue.createNamed(
+          actualType: named.actualType,
+          payload: payloads.agreement,
+        );
+      }
+    }
+    if (first case skir.DataValue_recordWrapper(value: final record)) {
+      final names = [for (final field in record.fields) field.name];
+      final records = [
+        for (final value in this)
+          if (value case skir.DataValue_recordWrapper(:final value)
+              when listEquals([
+                for (final field in value.fields) field.name,
+              ], names))
+            value,
+      ];
+      if (records.length == length) {
+        return skir.DataValue.createRecord(
+          fields: [
+            for (final (index, name) in names.indexed)
+              skir.FieldValue(
+                name: name,
+                value: [
+                  for (final record in records)
+                    record.fields.elementAt(index).value,
+                ].agreement,
+              ),
+          ],
+        );
+      }
+    }
+    return skir.DataValue.unfilled;
+  }
 }

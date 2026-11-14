@@ -2,8 +2,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Applies panel wide Material component defaults to [base].
 ///
-/// [colors], [spacing], [shapes], and [states] must come from the same theme
-/// build. Keeping these inputs explicit prevents component defaults from
+/// [colors], [spacing], [shapes], [states], and [text] must come from the
+/// same theme build. Keeping these inputs explicit prevents component defaults from
 /// silently diverging from the extensions exposed to widgets.
 ThemeData applyComponentThemes(
   ThemeData base,
@@ -11,8 +11,17 @@ ThemeData applyComponentThemes(
   TypewriterSpacing spacing,
   TypewriterShapes shapes,
   TypewriterStateTokens states,
+  TypewriterText text,
 ) {
   final surfaceColor = colors.surface;
+  final ring = BorderSide(color: colors.focusRing, width: shapes.ringWidth);
+  // An empty check box or radio outlines in secondary content, never in the
+  // focus colour; the ring layer shows focus.
+  final unselectedSide = WidgetStateBorderSide.resolveWith(
+    (values) => values.contains(WidgetState.selected)
+        ? null
+        : BorderSide(color: colors.contentSecondary, width: 2),
+  );
   final input = InputDecorationTheme(
     contentPadding: EdgeInsets.symmetric(horizontal: spacing.space3),
     border: OutlineInputBorder(
@@ -27,9 +36,15 @@ ThemeData applyComponentThemes(
     ),
     filled: true,
     hoverColor: colors.shadow.withValues(alpha: 0.1),
-    errorStyle: base.textTheme.bodySmall?.copyWith(color: colors.danger),
+    errorStyle: text.sentenceSmall.copyWith(color: colors.dangerText),
     hintStyle: base.textTheme.bodyLarge?.copyWith(
-      color: colors.contentPrimary.withValues(alpha: 0.6),
+      color: colors.contentSecondary,
+    ),
+    // The ring layer hides while a field is typed in, so the field shows
+    // its own focused border.
+    focusedBorder: OutlineInputBorder(
+      borderRadius: shapes.mediumBorderRadius,
+      borderSide: ring,
     ),
     prefixIconColor: colors.contentPrimary.withValues(alpha: 0.6),
     errorBorder: OutlineInputBorder(
@@ -40,17 +55,14 @@ ThemeData applyComponentThemes(
       borderRadius: shapes.mediumBorderRadius,
       borderSide: BorderSide(color: colors.danger, width: 2),
     ),
-    helperStyle: base.textTheme.bodySmall?.copyWith(
-      color: colors.contentDisabled,
-      fontVariations: [.weight(300)],
-      fontStyle: .italic,
-      letterSpacing: 0.3,
-    ),
+    helperStyle: text.sentenceSmall.copyWith(color: colors.contentSecondary),
   );
-  ButtonStyle button(Color foreground) => ButtonStyle(
+  // The query suggestions and the drop chooser still list MenuItemButtons.
+  ButtonStyle menuItem(Color foreground) => ButtonStyle(
+    // Unavailable text keeps 4.5:1.
     foregroundColor: WidgetStateProperty.resolveWith(
       (values) => values.contains(WidgetState.disabled)
-          ? colors.contentDisabled
+          ? colors.contentSecondary
           : foreground,
     ),
     overlayColor: states.overlay(foreground),
@@ -60,12 +72,13 @@ ThemeData applyComponentThemes(
   );
   return base.copyWith(
     scaffoldBackgroundColor: colors.canvas,
-    hoverColor: colors.contentPrimary.withValues(alpha: states.hoverOpacity),
-    focusColor: colors.focusRing.withValues(alpha: states.focusOpacity),
-    highlightColor: colors.contentPrimary.withValues(
-      alpha: states.pressedOpacity,
-    ),
-    splashColor: colors.contentPrimary.withValues(alpha: states.pressedOpacity),
+    // The Material that stays draws no ink: a press is the Button's move and
+    // focus is the ring layer's ring, never a wash.
+    splashFactory: NoSplash.splashFactory,
+    hoverColor: Colors.transparent,
+    focusColor: Colors.transparent,
+    highlightColor: Colors.transparent,
+    splashColor: Colors.transparent,
     inputDecorationTheme: input,
     appBarTheme: AppBarTheme(
       backgroundColor: colors.canvas,
@@ -79,45 +92,18 @@ ThemeData applyComponentThemes(
     dialogTheme: DialogThemeData(
       backgroundColor: colors.surfaceRaised,
       shape: shapes.largeShape,
+      contentTextStyle: text.sentence.copyWith(color: colors.contentPrimary),
     ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: colors.surfaceRaised,
       modalBarrierColor: colors.scrim,
       shape: shapes.largeShape,
     ),
-    snackBarTheme: SnackBarThemeData(
-      backgroundColor: colors.surfaceEmphasized,
-      contentTextStyle: base.textTheme.bodyMedium?.copyWith(
-        color: colors.contentPrimary,
-      ),
-      shape: shapes.mediumShape,
-      behavior: SnackBarBehavior.floating,
-    ),
     dividerTheme: DividerThemeData(color: colors.divider, thickness: 1),
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: colors.selection,
       selectionColor: colors.selectionContainer,
       selectionHandleColor: colors.selection,
-    ),
-    tooltipTheme: TooltipThemeData(
-      preferBelow: false,
-      triggerMode: TooltipTriggerMode.longPress,
-      verticalOffset: spacing.space8,
-      waitDuration: 100.ms,
-      decoration: BoxDecoration(
-        color: colors.surfaceRaised,
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.16),
-            blurRadius: spacing.space1,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        borderRadius: shapes.mediumBorderRadius,
-      ),
-      textStyle: base.textTheme.bodySmall?.copyWith(
-        color: colors.contentPrimary,
-      ),
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: colors.brand,
@@ -134,53 +120,8 @@ ThemeData applyComponentThemes(
       textColor: colors.contentPrimary,
       iconColor: colors.contentSecondary,
     ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: button(colors.onBrand).copyWith(
-        backgroundColor: WidgetStateProperty.resolveWith(
-          (values) => values.contains(WidgetState.disabled)
-              ? colors.brand.withValues(alpha: states.disabledContainerOpacity)
-              : colors.brand,
-        ),
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: button(colors.onBrand).copyWith(
-        backgroundColor: WidgetStateProperty.resolveWith(
-          (values) => values.contains(WidgetState.disabled)
-              ? colors.brand.withValues(alpha: states.disabledContainerOpacity)
-              : colors.brand,
-        ),
-        elevation: WidgetStateProperty.resolveWith(
-          (values) => values.contains(WidgetState.disabled) ? 0 : 1,
-        ),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(style: button(colors.brand)),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: button(colors.brand).copyWith(
-        side: WidgetStateProperty.resolveWith(
-          (values) => BorderSide(
-            color: values.contains(WidgetState.disabled)
-                ? colors.brand.withValues(
-                    alpha: states.disabledContainerOpacity,
-                  )
-                : colors.brand,
-          ),
-        ),
-      ),
-    ),
-    iconButtonTheme: IconButtonThemeData(
-      style: button(colors.contentPrimary)
-          .copyWith(padding: const WidgetStatePropertyAll(EdgeInsets.zero)),
-    ),
-    floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: colors.brandContainer,
-      foregroundColor: colors.onBrandContainer,
-      disabledElevation: 0,
-      shape: shapes.largeShape,
-    ),
     menuButtonTheme: MenuButtonThemeData(
-      style: button(colors.contentPrimary).copyWith(
+      style: menuItem(colors.contentPrimary).copyWith(
         shape: WidgetStatePropertyAll(shapes.smallShape),
         padding: WidgetStatePropertyAll(
           EdgeInsets.symmetric(
@@ -192,17 +133,7 @@ ThemeData applyComponentThemes(
         textStyle: WidgetStatePropertyAll(base.textTheme.labelSmall),
       ),
     ),
-    menuTheme: MenuThemeData(
-      style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(colors.surfaceRaised),
-        shape: WidgetStatePropertyAll(shapes.mediumShape),
-        elevation: const WidgetStatePropertyAll(1),
-        visualDensity: VisualDensity.defaultDensityForPlatform(
-          defaultTargetPlatform,
-        ),
-        padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-      ),
-    ),
+    // The query bar's suggestion list reads this menu style.
     dropdownMenuTheme: DropdownMenuThemeData(
       inputDecorationTheme: input,
       menuStyle: MenuStyle(
@@ -233,7 +164,7 @@ ThemeData applyComponentThemes(
       ),
       indicatorAnimation: TabIndicatorAnimation.elastic,
       splashBorderRadius: BorderRadius.circular(100),
-      splashFactory: InkSplash.splashFactory,
+      splashFactory: NoSplash.splashFactory,
       labelPadding: EdgeInsets.symmetric(horizontal: spacing.space2),
     ),
     cardTheme: CardThemeData(
@@ -257,6 +188,7 @@ ThemeData applyComponentThemes(
       ),
       overlayColor: states.overlay(colors.brand),
       shape: shapes.smallShape,
+      side: unselectedSide,
     ),
     radioTheme: RadioThemeData(
       fillColor: WidgetStateProperty.resolveWith((values) {
@@ -270,6 +202,7 @@ ThemeData applyComponentThemes(
             : colors.contentSecondary;
       }),
       overlayColor: states.overlay(colors.brand),
+      side: unselectedSide,
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((values) {

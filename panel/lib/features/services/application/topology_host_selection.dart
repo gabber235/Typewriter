@@ -42,6 +42,9 @@ class _ServiceHostSelectable
   String get name => service?.displayName ?? host.hostId.id;
 
   @override
+  SelectableNoun get noun => const SelectableNoun(one: "host", many: "hosts");
+
+  @override
   List<SelectionCapability> get capabilities => [
     if (onUnbind case final unbind?)
       UnbindSelectionCapability(onUnbind: unbind),

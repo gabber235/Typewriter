@@ -36,29 +36,32 @@ class ErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Spacer(),
-          Expanded(
-            flex: 6,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.zoomIn,
-              child: const RiveAsset(
-                asset: "assets/robot_island.riv",
-                stateMachineName: "Motion",
+    return EnterRun(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Spacer(),
+            Expanded(
+              flex: 6,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.zoomIn,
+                child: const RiveAsset(
+                  asset: "assets/robot_island.riv",
+                  stateMachineName: "Motion",
+                ),
               ),
             ),
-          ),
-          SizedBox(height: context.spacing.space6),
-          Padding(
-            padding: EdgeInsets.all(context.spacing.space2),
-            child: Column(
-              spacing: context.spacing.space2,
-              children: [
-                Text(
+            SizedBox(height: context.spacing.space6),
+            Padding(
+              padding: EdgeInsets.all(context.spacing.space2),
+              child: Column(
+                spacing: context.spacing.space2,
+                children: [
+                  Enter(
+                    token: MotionToken.loadIn,
+                    child: Text(
                       title.isEmpty ? ErrorScreen.defaultTitle : title,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -68,16 +71,16 @@ class ErrorScreen extends StatelessWidget {
                           desktop: 40,
                         ),
                         fontWeight: FontWeight.bold,
-                        color: colors.error,
+                        color: context.colors.dangerText,
                       ),
-                    )
-                    .animate()
-                    .fadeIn(duration: 300.ms, delay: 100.ms)
-                    .slideY(begin: 0.1, end: 0),
-                Text(
+                    ),
+                  ),
+                  Enter(
+                    token: MotionToken.loadIn,
+                    child: Text(
                       "Something went wrong, please report this to the Typewriter discord.",
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      style: context.text.sentence.copyWith(
                         fontSize: context.responsive(
                           mobile: 14,
                           tablet: 16,
@@ -85,15 +88,15 @@ class ErrorScreen extends StatelessWidget {
                         ),
                         color: colors.onSurfaceVariant,
                       ),
-                    )
-                    .animate()
-                    .fadeIn(duration: 300.ms, delay: 200.ms)
-                    .slideY(begin: 0.1, end: 0),
-                if (message.isNotEmpty)
-                  SelectableText(
+                    ),
+                  ),
+                  if (message.isNotEmpty)
+                    Enter(
+                      token: MotionToken.loadIn,
+                      child: SelectableText(
                         message,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        style: context.text.sentence.copyWith(
                           fontSize: context.responsive(
                             mobile: 12,
                             tablet: 14,
@@ -101,21 +104,16 @@ class ErrorScreen extends StatelessWidget {
                           ),
                           color: colors.onSurface,
                         ),
-                      )
-                      .animate()
-                      .fadeIn(duration: 300.ms, delay: 300.ms)
-                      .slideY(begin: 0.1, end: 0),
-              ],
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          SizedBox(height: context.spacing.space6),
-          if (child != null)
-            child!
-                .animate()
-                .fadeIn(duration: 300.ms, delay: 300.ms)
-                .slideY(begin: 0.1, end: 0),
-          Spacer(),
-        ],
+            SizedBox(height: context.spacing.space6),
+            if (child != null) Enter(token: MotionToken.loadIn, child: child!),
+            Spacer(),
+          ],
+        ),
       ),
     );
   }
@@ -138,66 +136,64 @@ class SmallErrorScreen extends ErrorScreen {
 
   @override
   Widget build(BuildContext context) {
+    return EnterRun(
+      child: withIcon
+          ? LayoutBuilder(
+              builder: (context, constraints) {
+                return _buildContent(context, constraints.hasBoundedHeight);
+              },
+            )
+          : _buildContent(context, false),
+    );
+  }
+
+  /// The illustration is a square as wide as the space allows. When the
+  /// height is [bounded] it shrinks to the height the text leaves free, so
+  /// the title and message always fit.
+  Widget _buildContent(BuildContext context, bool bounded) {
+    const illustration = MouseRegion(
+      cursor: SystemMouseCursors.zoomIn,
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: RiveAsset(
+          asset: "assets/robot_island.riv",
+          stateMachineName: "Motion",
+        ),
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       spacing: context.spacing.space2,
       children: [
-        if (withIcon)
-          MouseRegion(
-            cursor: SystemMouseCursors.zoomIn,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final size = constraints.maxWidth == double.infinity
-                    ? constraints.maxHeight
-                    : constraints.maxWidth;
-                return SizedBox(
-                  width: size,
-                  height: size,
-                  child: const RiveAsset(
-                    asset: "assets/robot_island.riv",
-                    stateMachineName: "Motion",
-                  ),
-                );
-              },
+        if (withIcon && bounded)
+          const Flexible(child: illustration)
+        else if (withIcon)
+          illustration,
+        Enter(
+          token: MotionToken.loadIn,
+          child: Text(
+            title.isEmpty ? ErrorScreen.defaultTitle : title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              fontSize: context.responsive(mobile: 14, tablet: 16, desktop: 18),
+              fontWeight: FontWeight.bold,
+              color: context.colors.dangerText,
             ),
           ),
-        Text(
-              title.isEmpty ? ErrorScreen.defaultTitle : title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                fontSize: context.responsive(
-                  mobile: 14,
-                  tablet: 16,
-                  desktop: 18,
-                ),
-                fontWeight: FontWeight.bold,
-                color: context.colors.danger,
-              ),
-            )
-            .animate()
-            .fadeIn(duration: 300.ms, delay: 100.ms)
-            .slideY(begin: 0.1, end: 0),
-        Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                fontSize: context.responsive(
-                  mobile: 10,
-                  tablet: 12,
-                  desktop: 14,
-                ),
-                color: context.colors.contentSecondary,
-              ),
-            )
-            .animate()
-            .fadeIn(duration: 300.ms, delay: 200.ms)
-            .slideY(begin: 0.1, end: 0),
-        if (child != null)
-          child!
-              .animate()
-              .fadeIn(duration: 300.ms, delay: 300.ms)
-              .slideY(begin: 0.1, end: 0),
+        ),
+        Enter(
+          token: MotionToken.loadIn,
+          child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: context.text.sentence.copyWith(
+              fontSize: context.responsive(mobile: 10, tablet: 12, desktop: 14),
+              color: context.colors.contentSecondary,
+            ),
+          ),
+        ),
+        if (child != null) Enter(token: MotionToken.loadIn, child: child!),
       ],
     );
   }

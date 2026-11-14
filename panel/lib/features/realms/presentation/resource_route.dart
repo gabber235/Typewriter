@@ -96,6 +96,7 @@ class ResourceSurface extends ConsumerWidget {
     final main = Pane(
       id: "resource",
       primary: true,
+      openFocus: PaneOpenFocus.firstItem,
       borderRadius: context.shapes.largeBorderRadius,
       margin: EdgeInsets.only(
         top: context.spacing.space2,
@@ -117,10 +118,12 @@ class ResourceSurface extends ConsumerWidget {
                 ],
                 priority: 100,
                 icon: const Icon(Icons.add),
-                onInvoke: (_) => ref.createSelectedResource(
-                  context: context,
-                  type: creation.type,
-                  owner: creation.owner,
+                run: ActionRun.press(
+                  (_) => ref.createSelectedResource(
+                    context: context,
+                    type: creation.type,
+                    owner: creation.owner,
+                  ),
                 ),
               ),
           ],
@@ -140,15 +143,25 @@ class ResourceSurface extends ConsumerWidget {
               ),
               Expanded(
                 child: switch (creation) {
-                  final creation? => FloatingButton(
-                    icon: const Icon(Icons.add),
-                    label: creation.label,
-                    onPressed: () => ref.createSelectedResource(
-                      context: context,
-                      type: creation.type,
-                      owner: creation.owner,
-                    ),
-                    child: content,
+                  final creation? => Stack(
+                    children: [
+                      Positioned.fill(child: content),
+                      Positioned(
+                        right: context.spacing.space2,
+                        bottom: context.spacing.space2,
+                        child: Button(
+                          face: ButtonFace.floating,
+                          icon: const Icon(Icons.add),
+                          label: creation.label,
+                          busyLabel: "Creating",
+                          onPressed: () => ref.createSelectedResource(
+                            context: context,
+                            type: creation.type,
+                            owner: creation.owner,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   null => content,
                 },
@@ -245,7 +258,10 @@ class _SurfaceState extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return switch (ref.watch(workingAuthoringDocumentProvider(scope))) {
       AsyncValue(:final error?) => Center(
-        child: Text("Authoring is unavailable: $error"),
+        child: Text(
+          "Authoring is unavailable: $error",
+          style: context.text.sentence,
+        ),
       ),
       AsyncValue(hasValue: false) => const Center(
         child: CircularProgressIndicator(),
@@ -330,8 +346,8 @@ class ResourceHeading extends ConsumerWidget {
                       Text(
                         description,
                         overflow: TextOverflow.ellipsis,
-                        style: context.theme.textTheme.bodySmall?.copyWith(
-                          color: context.colors.contentDisabled,
+                        style: context.text.sentenceSmall.copyWith(
+                          color: context.colors.contentSecondary,
                         ),
                       ),
                   ],

@@ -205,12 +205,16 @@ class PortableDiagnosticPreview extends HookWidget {
     useEffect(() => tree.dispose, [tree]);
     useListenable(tree);
     useListenable(operations);
+    final presentation = tree.snapshot;
     return PortableDiagnosticScope(
       tree: tree,
-      placement: PortableDiagnosticPlacement.route(
-        diagnostics: const [],
-        outcomes: operations.value.outcomes.values,
-        presentation: tree.snapshot,
+      placement: _useRevealedPlacement(
+        PortableDiagnosticPlacement.route(
+          diagnostics: const [],
+          outcomes: operations.value.outcomes.values,
+          presentation: presentation,
+        ),
+        presentation,
       ),
       child: child,
     );
@@ -280,8 +284,65 @@ class _PortableDiagnosticBoundary extends HookWidget {
     );
     return PortableDiagnosticScope(
       tree: tree,
-      placement: placement,
+      placement: _useRevealedPlacement(placement, presentation),
       child: child,
     );
   }
+}
+
+/// What every reader of one diagnostic tree over [presentation] shows of
+/// the [routed] placement: one [PortableDiagnosticReveal] on one clock, so a
+/// field, its messages and the headers above it change together.
+PortableDiagnosticPlacement _useRevealedPlacement(
+  PortableDiagnosticPlacement routed,
+  PortableDiagnosticPresentation presentation,
+) {
+  final timing = useContext().timing;
+  // Controllers rather than timers, so a settling test steps through them.
+  final wait = useAnimationController(duration: timing.problemWait);
+  final linger = useAnimationController(duration: timing.doneShow);
+  final reveal = useRef<PortableDiagnosticReveal?>(null);
+  final changes = useState(0);
+  useEffect(() {
+    void waited(AnimationStatus status) {
+      if (status != AnimationStatus.completed) return;
+      reveal.value = reveal.value?.settle();
+      changes.value++;
+    }
+
+    void lingered(AnimationStatus status) {
+      if (status != AnimationStatus.completed) return;
+      reveal.value = reveal.value?.expire();
+      changes.value++;
+    }
+
+    wait.addStatusListener(waited);
+    linger.addStatusListener(lingered);
+    return () {
+      wait.removeStatusListener(waited);
+      linger.removeStatusListener(lingered);
+    };
+  }, [wait, linger]);
+
+  final mounted = presentation.nodes.keys.toSet();
+  final current = reveal.value;
+  if (current == null) {
+    reveal.value = PortableDiagnosticReveal.start(routed, mounted);
+  } else if (current.routed != routed || !setEquals(current.mounted, mounted)) {
+    final (reveal: next, :waits, :fixes) = current.observe(routed, mounted);
+    reveal.value = next;
+    // A wait of no length settles here: a controller would finish during
+    // this build and its listener may not rebuild then.
+    if (waits && timing.problemWait == Duration.zero) {
+      reveal.value = reveal.value!.settle();
+    } else if (waits) {
+      wait.forward(from: 0);
+    }
+    if (fixes && timing.doneShow == Duration.zero) {
+      reveal.value = reveal.value!.expire();
+    } else if (fixes) {
+      linger.forward(from: 0);
+    }
+  }
+  return reveal.value!.placement(presentation);
 }

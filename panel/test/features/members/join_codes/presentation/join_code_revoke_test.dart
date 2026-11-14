@@ -4,9 +4,11 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
+const _revokeOne = "Revoke this join code? Nobody new can join with it.";
+
 void main() {
-  testWidgets("a revoked join code is hidden while the revocation sends and "
-      "comes back when the backend refuses it", (tester) async {
+  testWidgets("a held revoke keeps the code listed while it sends, and a "
+      "refusal leaves it listed with the refusal under it", (tester) async {
     final code = skir.JoinCode(
       code: skir.recordId("join_code:abc123"),
       createdAt: DateTime.utc(2026),
@@ -23,22 +25,16 @@ void main() {
       "cloud.to.user.ada.organization.acme.members.join_codes.revoke",
       (_) => reply.future,
     );
-    expect(panel.shows("No active join codes"), isFalse);
 
-    await panel.tapOn(find.tooltip("Revoke join code"));
-    // The revocation keeps the panel busy until the reply below, so the
-    // next steps wait for what they need instead of settling.
-    const question = "Revoke this join code?";
-    final dialog = find.semantics
-        .byPredicate((node) => node.spoken.contains(question))
-        .evaluate()
-        .last
-        .route!;
-    await tester.tapAt(dialog.button("Revoke").screenRect.center);
-
-    await panel.eventually(
-      () => expect(panel.shows("No active join codes"), isTrue),
+    final gesture = await tester.startGesture(
+      tester.getCenter(
+        find.bySemanticsLabel(RegExp(RegExp.escape(_revokeOne))).last,
+      ),
     );
+    await panel.holdFor(1);
+    await gesture.up();
+    await tester.pump();
+    expect(panel.shows("No active join codes"), isFalse);
 
     reply.complete(
       skir.RevokeOrganizationJoinCodeResponse.serializer.toBytes(
@@ -48,9 +44,16 @@ void main() {
       ),
     );
     await panel.eventually(
-      () => expect(panel.shows("No active join codes"), isFalse),
+      () => expect(
+        find.descendant(
+          of: find.byType(HoldRow),
+          matching: find.byType(LabeledMessage),
+        ),
+        findsOneWidget,
+      ),
     );
     await panel.settle();
+    expect(panel.shows("No active join codes"), isFalse);
   });
 
   testWidgets("a revoked join code no longer shows on the new join code "
@@ -66,8 +69,7 @@ void main() {
     final link = clipboard.single;
     await panel.eventually(() => expect(panel.reads(link), isTrue));
 
-    await panel.tapOn(find.tooltip("Revoke join code"));
-    await panel.dialog.choose("Revoke", message: "Revoke this join code?");
+    await panel.holdButton(_revokeOne);
 
     await panel.eventually(
       () => expect(panel.shows("No active join codes"), isTrue),

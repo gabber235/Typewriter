@@ -9,7 +9,6 @@ void main() {
     (LogicalKeyboardKey.space, false, "toggle"),
     (LogicalKeyboardKey.space, true, "select all"),
     (LogicalKeyboardKey.escape, false, "clear"),
-    (LogicalKeyboardKey.delete, false, "remove selection"),
   ]) {
     testWidgets("${keyName(key, shifted: shifted)} on a selected "
         "member row invokes $invoked", (tester) async {
@@ -18,18 +17,46 @@ void main() {
       await row.press(key, shifted: shifted);
 
       expect(row.invoked, [invoked]);
-      expect(row.panel.dialog.showing("Remove Grace?"), isFalse);
     });
   }
 
-  testWidgets("Delete on an unselected member row asks before removing it", (
-    tester,
-  ) async {
-    final row = await tester.pumpMemberRow(_member, selected: false);
+  for (final selected in [true, false]) {
+    testWidgets(
+      "a brief Delete on ${selected ? "a selected" : "an "
+                "unselected"} member row neither removes nor asks",
+      (tester) async {
+        final row = await tester.pumpMemberRow(_member, selected: selected);
 
-    await row.press(LogicalKeyboardKey.delete);
+        await row.press(LogicalKeyboardKey.delete);
 
-    expect(row.panel.dialog.showing("Remove Grace?"), isTrue);
-    expect(row.invoked, isEmpty);
-  });
+        expect(row.invoked, isEmpty);
+        expect(row.panel.commandRuns.session.value, isNull);
+        expect(row.panel.dialog.showing("Remove Grace?"), isFalse);
+      },
+    );
+  }
+
+  for (final (selected, targets) in [
+    (true, ["Grace", "Linus"]),
+    (false, ["Grace"]),
+  ]) {
+    testWidgets(
+      "holding Delete on ${selected ? "a selected" : "an "
+                "unselected"} member row holds over ${targets.join(" and ")}",
+      (tester) async {
+        final row = await tester.pumpMemberRow(_member, selected: selected);
+
+        await row.panel.keyDown(LogicalKeyboardKey.delete);
+        await row.panel.holdFor(0.3);
+
+        expect(
+          row.panel.commandRuns.session.value?.attempt.outcome,
+          targets.length == 1
+              ? startsWith("Remove Grace?")
+              : startsWith("Remove 2 members?"),
+        );
+        await row.panel.keyUp(LogicalKeyboardKey.delete);
+      },
+    );
+  }
 }

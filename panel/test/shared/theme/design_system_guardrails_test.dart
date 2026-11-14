@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/architecture.dart";
 import "package:typewriter_testkit/testing.dart";
 
 final exemptions = <Exemption>[
@@ -17,11 +18,6 @@ final exemptions = <Exemption>[
     "lib/shared/interaction_mode/application/modes/insert_mode.dart",
     RegExp(r"Colors\.green"),
     "editor mode identity color",
-  ),
-  Exemption(
-    "lib/shared/selectables/operations/unbind_operation.dart",
-    RegExp(r"Colors\."),
-    "editor operation identity color",
   ),
   for (final path in [
     "lib/shared/editors/presentation/portable_renderer/expression_resolution.dart",
@@ -92,7 +88,6 @@ final exemptions = <Exemption>[
     "constructor fallback without a build context",
   ),
   for (final path in [
-    "lib/shared/shell/custom_appbar.dart",
     "lib/shared/shell/sidebar.dart",
     "lib/shared/shell/sidebar_links.dart",
     "lib/shared/graph/presentation/resizable_element.dart",
@@ -103,16 +98,11 @@ final exemptions = <Exemption>[
     "lib/features/members/presentation/role_multiselect_chips.dart",
     "lib/features/services/presentation/route.dart",
     "lib/features/organizations/presentation/join_organization.dart",
-    "lib/shared/ui/components/grid_selectable_card.dart",
-    "lib/shared/mutations/presentation/mutation_activity_button.dart",
-    "lib/shared/ui/components/focus_highlight.dart",
     "lib/shared/ui/components/depth_box.dart",
     "lib/shared/search/presentation/search_body.dart",
     "lib/features/realms/presentation/realm_suspension.dart",
     "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar.dart",
     "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar_selection_grid.dart",
-    "lib/shared/search/presentation/search_result_card.dart",
-    "lib/authoring/presentation/resource_drop_target.dart",
   ])
     Exemption(path, RegExp(r"Colors\.transparent"), "intentional transparency"),
   for (final path in [
@@ -169,6 +159,46 @@ final layoutSpacingExemptions = <Exemption>[
   ),
 ];
 
+/// Durations that keep time outside motion and that no skip rule can tell
+/// apart. They stay exempt for good.
+final timingExemptions = <Exemption>[
+  Exemption(
+    "lib/infrastructure/session/auth.dart",
+    RegExp(r"^Duration\("),
+    "token refresh margin in a refreshBefore closure",
+  ),
+  Exemption(
+    "lib/shared/editing/editing_workspace.dart",
+    RegExp(r"^Duration\("),
+    "retry backoff that doubles per attempt",
+  ),
+  Exemption(
+    "lib/shared/hooks/value_update_policy.dart",
+    RegExp(r"^Duration\("),
+    "coalescing window for value updates",
+  ),
+  Exemption(
+    "lib/shared/mutations/domain/mutation_activity_phase.dart",
+    RegExp(r"^Duration\("),
+    "how long saved feedback stays before a Timer dismisses it",
+  ),
+];
+
+/// The motion engine's own files, and the timing tokens the surfaces PR
+/// adds; nothing else is skipped by the motion and banned API scan.
+const motionEngine = [
+  "lib/shared/theme/motion.dart",
+  "lib/shared/theme/motion_timeline.dart",
+  "lib/shared/theme/typewriter_motion.dart",
+  "lib/shared/theme/typewriter_timing.dart",
+  "lib/shared/hooks/motion.dart",
+  "lib/shared/ui/components/motion/",
+];
+
+/// Files that still use a banned API, grouped by the PR that removes it.
+/// Each entry names the pattern it excuses; a PR empties its own group.
+final bannedExemptions = <Exemption>[];
+
 void main() {
   test("every exemption names an existing source file", () {
     expect([
@@ -176,6 +206,28 @@ void main() {
         if (!File(exemption.path).existsSync()) exemption.path,
     ], isEmpty);
   });
+
+  test(
+    "every motion and banned API exemption names a file that still needs it",
+    () {
+      expect([
+        for (final exemption in timingExemptions)
+          if (!File(exemption.path).existsSync() ||
+              motionLiteralViolations(
+                exemption.path,
+                File(exemption.path).readAsStringSync(),
+                const [],
+              ).isEmpty)
+            exemption.path,
+        for (final exemption in bannedExemptions)
+          if (!File(exemption.path).existsSync() ||
+              !exemption.pattern.hasMatch(
+                File(exemption.path).readAsStringSync(),
+              ))
+            "${exemption.path} (${exemption.pattern.pattern})",
+      ], isEmpty);
+    },
+  );
 
   test(
     "handwritten UI uses design system typography, colors, shapes, and spacing",
@@ -225,9 +277,83 @@ void main() {
           layoutSpacingViolations(path, source, layoutSpacingExemptions),
         );
       }
+      // Literal motion and banned APIs: every handwritten file under lib
+      // except the motion engine's own.
+      for (final file in Directory(
+        "lib",
+      ).listSync(recursive: true).whereType<File>()) {
+        final path = file.path.replaceAll(Platform.pathSeparator, "/");
+        if (!path.endsWith(".dart") ||
+            path.endsWith(".g.dart") ||
+            path.endsWith(".freezed.dart") ||
+            path.endsWith(".gr.dart") ||
+            path.contains("/skirout/") ||
+            motionEngine.any(path.startsWith)) {
+          continue;
+        }
+        final source = file.readAsStringSync();
+        violations
+          ..addAll(motionLiteralViolations(path, source, timingExemptions))
+          ..addAll(
+            bannedApiViolations(path, source, bannedPatterns, bannedExemptions),
+          );
+      }
       expect(violations, isEmpty, reason: violations.join("\n"));
     },
   );
+
+  test("buttons are built on the widgets layer", () {
+    final material = RegExp(
+      r"\b(TextButton|FilledButton|OutlinedButton|ElevatedButton|IconButton|FloatingActionButton|InkWell|InkResponse)(\.[a-z]+)?\(",
+    );
+    final violations = <String>[
+      for (final file in dartFiles("lib"))
+        for (final match in material.allMatches(file.readAsStringSync()))
+          "${file.path}: ${match.group(0)}",
+      for (final file in dartFiles("lib/shared/ui/components/button"))
+        if (file.readAsStringSync().contains("package:flutter/material.dart"))
+          "${file.path}: imports Material",
+    ];
+    expect(violations, isEmpty, reason: violations.join("\n"));
+  });
+
+  test("the panel uses only Lilex and IBM Plex Sans", () {
+    const allowed = {"Lilex", "IBMPlexSans"};
+    for (final brightness in Brightness.values) {
+      final theme = buildTheme(brightness);
+      final t = theme.textTheme;
+      final styles = [
+        t.displayLarge,
+        t.displayMedium,
+        t.displaySmall,
+        t.headlineLarge,
+        t.headlineMedium,
+        t.headlineSmall,
+        t.titleLarge,
+        t.titleMedium,
+        t.titleSmall,
+        t.bodyLarge,
+        t.bodyMedium,
+        t.bodySmall,
+        t.labelLarge,
+        t.labelMedium,
+        t.labelSmall,
+        theme.text.sentence,
+        theme.text.sentenceSmall,
+      ];
+      expect({
+        for (final style in styles) style!.fontFamily,
+      }, everyElement(isIn(allowed)));
+      expect(theme.text.sentence.fontFamily, "IBMPlexSans");
+      expect(t.labelLarge!.fontFamily, "Lilex");
+    }
+    for (final pubspec in ["pubspec.yaml", "widgetbook/pubspec.yaml"]) {
+      final families = RegExp(r"- family: (\w+)")
+          .allMatches(File(pubspec).readAsStringSync())
+          .map((match) => match.group(1));
+      expect(families.toSet(), allowed, reason: pubspec);
+    }
+  });
 
   test("a foreground chosen for any color stays readable on it", () {
     // Presentation and search colors come from authored content, so any

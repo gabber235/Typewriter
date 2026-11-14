@@ -8,10 +8,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// displayed background and can keep contrast correct during a transition.
 /// An explicit [foreground] interpolates instead. These options are exclusive.
 /// With neither option, an explicit fill derives contrast and no fill inherits.
-class SurfaceContainer extends ImplicitlyAnimatedWidget {
+class SurfaceContainer extends HookWidget {
   const SurfaceContainer({
     required this.decoration,
-    required super.duration,
+    required this.motion,
     required this.child,
     this.foreground,
     this.foregroundFor,
@@ -19,12 +19,14 @@ class SurfaceContainer extends ImplicitlyAnimatedWidget {
     this.padding,
     this.width,
     this.height,
-    super.curve,
-    super.onEnd,
     super.key,
   }) : assert(foreground == null || foregroundFor == null);
 
   final BoxDecoration decoration;
+
+  /// How a changed [decoration], [padding], size or [foreground] moves to its
+  /// new value; a change mid move continues from the value on screen.
+  final ResolvedMotion<Landing> motion;
   final Color? foreground;
   final Color Function(BuildContext, Color)? foregroundFor;
   final Color? secondaryForeground;
@@ -34,68 +36,39 @@ class SurfaceContainer extends ImplicitlyAnimatedWidget {
   final Widget child;
 
   @override
-  AnimatedWidgetBaseState<SurfaceContainer> createState() =>
-      _SurfaceContainerState();
-}
-
-class _SurfaceContainerState extends AnimatedWidgetBaseState<SurfaceContainer> {
-  DecorationTween? _decoration;
-  EdgeInsetsGeometryTween? _padding;
-  Tween<double>? _width;
-  Tween<double>? _height;
-  ColorTween? _foreground;
-
-  @override
-  void forEachTween(TweenVisitor<dynamic> visitor) {
-    _decoration = visitor(
-      _decoration,
-      widget.decoration,
-      (dynamic value) => DecorationTween(begin: value as BoxDecoration),
-    ) as DecorationTween?;
-    _padding = visitor(
-      _padding,
-      widget.padding,
-      (dynamic value) =>
-          EdgeInsetsGeometryTween(begin: value as EdgeInsetsGeometry),
-    ) as EdgeInsetsGeometryTween?;
-    _width = visitor(
-      _width,
-      widget.width,
-      (dynamic value) => Tween<double>(begin: value as double),
-    ) as Tween<double>?;
-    _height = visitor(
-      _height,
-      widget.height,
-      (dynamic value) => Tween<double>(begin: value as double),
-    ) as Tween<double>?;
-    _foreground = visitor(
-      _foreground,
-      widget.foreground,
-      (dynamic value) => ColorTween(begin: value as Color),
-    ) as ColorTween?;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final decoration =
-        (_decoration?.evaluate(animation) ?? widget.decoration)
-            as BoxDecoration;
-    final fill = decoration.color ?? Colors.transparent;
+    final shownDecoration = useMotionValue(
+      motion,
+      decoration,
+      lerp: (a, b, t) => BoxDecoration.lerp(a, b, t)!,
+    );
+    final shownPadding = useMotionValue(
+      motion,
+      padding,
+      lerp: EdgeInsetsGeometry.lerp,
+    );
+    final shownWidth = useMotionValue(motion, width, lerp: lerpDouble);
+    final shownHeight = useMotionValue(motion, height, lerp: lerpDouble);
+    final shownForeground = useMotionValue(
+      motion,
+      foreground,
+      lerp: Color.lerp,
+    );
+    final fill = shownDecoration.color ?? Colors.transparent;
     final effective = Color.alphaBlend(fill, Surface.colorOf(context));
-    final foreground =
-        widget.foregroundFor?.call(context, effective) ??
-        _foreground?.evaluate(animation) ??
-        (decoration.color == null ? null : effective.on(context));
     return Container(
-      decoration: decoration,
-      padding: _padding?.evaluate(animation),
-      width: _width?.evaluate(animation),
-      height: _height?.evaluate(animation),
+      decoration: shownDecoration,
+      padding: shownPadding,
+      width: shownWidth,
+      height: shownHeight,
       child: Surface(
         color: fill,
-        foreground: foreground,
-        secondaryForeground: widget.secondaryForeground,
-        child: widget.child,
+        foreground:
+            foregroundFor?.call(context, effective) ??
+            shownForeground ??
+            (shownDecoration.color == null ? null : effective.on(context)),
+        secondaryForeground: secondaryForeground,
+        child: child,
       ),
     );
   }

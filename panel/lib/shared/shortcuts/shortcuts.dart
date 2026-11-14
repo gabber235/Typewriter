@@ -1,7 +1,9 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+export "action_run.dart";
 export "action_shortcuts.dart";
 export "adaptive_single_activator.dart";
+export "command_runner.dart";
 export "shortcut.dart";
 
 /// The panel wide keyboard map used by `MaterialApp.router` and action sets.
@@ -9,9 +11,27 @@ export "shortcut.dart";
 /// Entries may use [AdaptiveSingleActivator] so control on one platform maps
 /// to meta on another. Intent based actions resolve their display activators
 /// through this map, which keeps registration and shortcut hints consistent.
+///
+/// A key the panel binds replaces Flutter's default binding for it, such as
+/// Control+Arrows, which Flutter binds to scrolling. Activators have no value
+/// equality, so the map would otherwise hold both, and [Shortcuts] takes the
+/// first match: the default.
 final typewriterShortcuts = <ShortcutActivator, Intent>{
-  ...WidgetsApp.defaultShortcuts,
+  for (final MapEntry(:key, :value) in WidgetsApp.defaultShortcuts.entries)
+    if (!_panelShortcuts.keys.any((own) => _sameKeys(own, key))) key: value,
+  ..._panelShortcuts,
+};
 
+bool _sameKeys(ShortcutActivator a, ShortcutActivator b) =>
+    a is SingleActivator &&
+    b is SingleActivator &&
+    a.trigger == b.trigger &&
+    a.control == b.control &&
+    a.shift == b.shift &&
+    a.alt == b.alt &&
+    a.meta == b.meta;
+
+final _panelShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.enter, shift: true): ActivateAllIntent(),
   SingleActivator(LogicalKeyboardKey.numpadEnter, shift: true):
       ActivateAllIntent(),
@@ -41,14 +61,6 @@ final typewriterShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.home): FirstItemIntent(),
   SingleActivator(LogicalKeyboardKey.end): LastItemIntent(),
 
-  SingleActivator(LogicalKeyboardKey.pageUp): ScrollIntent(
-    direction: AxisDirection.down,
-    type: ScrollIncrementType.page,
-  ),
-  SingleActivator(LogicalKeyboardKey.pageDown): ScrollIntent(
-    direction: AxisDirection.up,
-    type: ScrollIncrementType.page,
-  ),
   AdaptiveSingleActivator(LogicalKeyboardKey.keyU, control: true): ScrollIntent(
     direction: AxisDirection.up,
     type: ScrollIncrementType.page,
@@ -81,11 +93,6 @@ final typewriterShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.keyD): DeleteIntent(),
   SingleActivator(LogicalKeyboardKey.backspace): DeleteIntent(),
   SingleActivator(LogicalKeyboardKey.delete): DeleteIntent(),
-  SingleActivator(LogicalKeyboardKey.keyX): DeleteIntent(),
-  SingleActivator(LogicalKeyboardKey.keyD, shift: true): DeleteIntent(),
-  SingleActivator(LogicalKeyboardKey.backspace, shift: true): DeleteIntent(),
-  SingleActivator(LogicalKeyboardKey.delete, shift: true): DeleteIntent(),
-  SingleActivator(LogicalKeyboardKey.keyX, shift: true): DeleteIntent(),
 };
 
 final movementShortcuts = {

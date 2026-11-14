@@ -17,7 +17,29 @@ ActionShortcut numberedAction(int i, {ActionInvoke? onInvoke}) {
     description: "Action $i description",
     activators: [SingleActivator(_keys[i])],
     priority: i,
-    onInvoke: onInvoke,
+    run: onInvoke == null ? null : ActionRun.press(onInvoke),
+  );
+}
+
+/// A heavy hold command "Remove" over one target, done word "Removed",
+/// running [onEach] once the hold completes.
+ActionShortcut removeHoldCommand({void Function()? onEach}) {
+  return ActionShortcut(
+    id: "remove",
+    label: "Remove",
+    description: "Remove it",
+    activators: const [],
+    priority: 1,
+    run: ActionRun.hold(
+      HoldPlan<String>(
+        weight: HoldWeight.heavy,
+        verb: "Remove",
+        doneWord: "Removed",
+        targets: (_) => {"it"},
+        outcome: (_) => "Remove it? It does not come back.",
+        each: (_, _) => onEach?.call(),
+      ),
+    ),
   );
 }
 

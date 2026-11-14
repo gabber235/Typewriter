@@ -261,7 +261,6 @@ skir.HeaderItem headerButton(
   visibleIf: null,
   enabledIf: null,
   tone: skir.HeaderActionTone.neutral,
-  confirmation: null,
   placement: skir.HeaderActionPlacement.end,
 );
 
@@ -396,20 +395,36 @@ skir.PresentationElement toggleInputElement(skir.BindingRef binding) =>
           .toFrozen(),
     );
 
-/// A color input over [binding] without alpha and with nothing configured.
-skir.PresentationElement colorInputElement(skir.BindingRef binding) =>
-    skir.PresentationElement.wrapColorInput(
-      skir.ColorControl(
-        control: presentationControl(binding),
-        includeAlpha: false,
-        appearance: null,
-        content: null,
-        entry: null,
-        mappings: null,
-        popup: null,
-        options: null,
-      ),
-    );
+/// A date input over [binding], without a time and with nothing configured,
+/// labeled [label] when given.
+skir.PresentationElement dateInputElement(
+  skir.BindingRef binding, {
+  String? label,
+}) => skir.PresentationElement.wrapDateTimeInput(
+  (skir.DateTimeControl.mutable()
+        ..control = presentationControl(binding, label: label)
+        ..includeDate = true
+        ..includeTime = false)
+      .toFrozen(),
+);
+
+/// A color input over [binding] without alpha and with nothing configured,
+/// labeled [label] when given.
+skir.PresentationElement colorInputElement(
+  skir.BindingRef binding, {
+  String? label,
+}) => skir.PresentationElement.wrapColorInput(
+  skir.ColorControl(
+    control: presentationControl(binding, label: label),
+    includeAlpha: false,
+    appearance: null,
+    content: null,
+    entry: null,
+    mappings: null,
+    popup: null,
+    options: null,
+  ),
+);
 
 /// Node [id] laying out the resources of the configured value's `elements`
 /// field as a left to right graph whose items are [item].

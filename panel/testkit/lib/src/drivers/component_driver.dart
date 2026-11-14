@@ -44,6 +44,33 @@ abstract class ComponentDriver {
     );
   }
 
+  /// The spoken labels of [nodes], in their order, split into the sections
+  /// the user sees: a section ends wherever a separator line lies between
+  /// two neighbours.
+  List<List<String>> splitAtSeparators(List<SemanticsNode> nodes) {
+    final separators = find.byType(Separator);
+    final lines = [
+      for (var index = 0; index < separators.evaluate().length; index++)
+        tester.getRect(separators.at(index)),
+    ];
+    bool between(Rect above, Rect below) => lines.any(
+      (line) =>
+          line.center.dy >= above.bottom &&
+          line.center.dy <= below.top &&
+          line.left < below.right &&
+          line.right > below.left,
+    );
+    final sections = <List<String>>[];
+    Rect? previous;
+    for (final node in nodes) {
+      final rect = node.screenRect;
+      if (previous == null || between(previous, rect)) sections.add([]);
+      sections.last.add(node.spoken);
+      previous = rect;
+    }
+    return sections;
+  }
+
   /// Taps [target] and lets the panel react.
   ///
   /// Waits out the double tap timeout first: a component that also answers
@@ -60,11 +87,18 @@ abstract class ComponentDriver {
   ///
   /// Without [settle] the panel has not reacted yet when this returns, so
   /// the test can act again in the same frame, as a fast user does.
+  ///
+  /// With [repeated], the button may be heard twice because the action row
+  /// repeats the focused surface's command; the first one heard is used.
   Future<void> activateWithScreenReader(
     String label, {
     bool settle = true,
+    bool repeated = false,
   }) async {
-    final button = semanticsButton(label);
+    final button = switch ((repeated, semanticsButtons(label))) {
+      (true, [final first, _]) => first,
+      _ => semanticsButton(label),
+    };
     expect(
       button.isTappable,
       isTrue,
@@ -102,6 +136,9 @@ final class ContextMenuDriver extends ComponentDriver {
 
   /// The labels of the menu's entries, top to bottom.
   List<String> get entries => [for (final entry in _entries) entry.spoken];
+
+  /// The menu's entries in the sections its divider lines split them into.
+  List<List<String>> get sections => splitAtSeparators(_entries);
 
   /// Whether the entry [label] can be chosen.
   bool isEnabled(String label) => _entry(label).isEnabled;

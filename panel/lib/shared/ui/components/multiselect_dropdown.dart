@@ -33,7 +33,6 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
     this.actions,
     this.menuActions,
     this.surroundingActions,
-    this.menuStyle,
     this.placeholder,
     this.itemBuilder,
     super.key,
@@ -43,7 +42,7 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
   final InputFieldController? inputFieldController;
 
   /// All available items to select from.
-  final List<DropdownMenuEntry<T>> dropdownMenuEntries;
+  final List<MenuChoice<T>> dropdownMenuEntries;
 
   /// Currently selected items.
   final List<T> selectedItems;
@@ -63,14 +62,12 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
   /// Actions available when the surrounding has focus.
   final List<ActionShortcut>? surroundingActions;
 
-  /// Style of the dropdown menu.
-  final MenuStyle? menuStyle;
-
   /// Placeholder text for the dropdown's input.
   final String? placeholder;
 
   /// Optional builder to create a widget for each selected item.
-  /// If not provided, falls back to the entry's labelWidget, then to default styled text.
+  /// If not provided, falls back to the choice's content, then to default
+  /// styled text.
   final Widget Function(T item)? itemBuilder;
 
   double? getWidth(GlobalKey key) {
@@ -134,16 +131,25 @@ class SmallChip extends HookWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              color: color,
+              // A role colour is an authored hue, so its text tone is derived,
+              // including the chip's own tint.
+              color: context.colors.textOf(
+                color,
+                over: Color.alphaBlend(
+                  color.withValues(alpha: 0.15),
+                  Surface.colorOf(context),
+                ),
+              ),
               fontSize: 12,
               fontVariations: [FontVariation.weight(500)],
               height: 1.2,
             ),
           ),
           if (onDelete != null)
-            InkWell(
-              onTap: onDelete,
-              borderRadius: BorderRadius.circular(100),
+            Button(
+              face: ButtonFace.bare,
+              label: "Remove $label",
+              onPressed: onDelete,
               child: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: context.spacing.space2,

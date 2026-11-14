@@ -143,9 +143,6 @@ class _CollectionEntry extends StatelessWidget {
           controls,
           fallbackHeader: generatedHeader,
           initiallyNeedsRepair: initiallyNeedsRepair,
-          recoveryFocus: _CollectionRowContext.maybeOf(context)?.recoveryFocus,
-          disclosureFocus: _CollectionRowContext.maybeOf(context)
-              ?.disclosureFocus,
         ),
       ),
       CollectionEntryLayout.disclosure => _GeneratedCollectionDisclosure(
@@ -235,8 +232,6 @@ Widget _headerWithCollectionOperations(
   List<_SuppliedHeaderControl> parentControls, {
   required skir.PresentationHeader Function() fallbackHeader,
   required bool initiallyNeedsRepair,
-  FocusNode? recoveryFocus,
-  FocusNode? disclosureFocus,
 }) {
   final supplied = [...root.controls, ...parentControls];
   if (root.header == null) {
@@ -254,8 +249,6 @@ Widget _headerWithCollectionOperations(
     body: body,
     contained: true,
     collectionControls: supplied,
-    collectionRecoveryFocusNode: recoveryFocus,
-    collectionDisclosureFocusNode: disclosureFocus,
   );
 }
 
@@ -267,7 +260,6 @@ _SuppliedHeaderControl? _collectionAdd({
   required String fallbackLabel,
   required IconData fallbackIcon,
   required void Function(BuildContext) add,
-  FocusNode? focusNode,
 }) {
   if (!allowAdd) return null;
   return _SuppliedHeaderControl(
@@ -276,21 +268,27 @@ _SuppliedHeaderControl? _collectionAdd({
     build: (context) => _operationAppearance(
       content,
       mutationScope,
-      (states, style) => IconButton(
-        focusNode: focusNode,
-        statesController: states,
-        style: style,
-        tooltip: _operationText(
-          mutationScope,
-          content?.operationTooltip ?? content?.addLabel,
-          fallbackLabel,
-        ),
-        onPressed: mutationScope.canExecuteAction ? () => add(context) : null,
+      (states, style) => Button(
+        face: ButtonFace.icon,
         icon: _operationGlyph(
           content?.addIcon,
           mutationScope,
           Icon(fallbackIcon),
         ),
+        label: _operationText(
+          mutationScope,
+          content?.operationTooltip ?? content?.addLabel,
+          fallbackLabel,
+        ),
+        tooltip: _operationText(
+          mutationScope,
+          content?.operationTooltip ?? content?.addLabel,
+          fallbackLabel,
+        ),
+        color: _accentOf(style, null),
+        dense: _denseOf(style),
+        statesController: states,
+        onPressed: mutationScope.canExecuteAction ? () => add(context) : null,
       ),
       tooltip: false,
     ),
@@ -323,10 +321,6 @@ class _GeneratedCollectionDisclosure extends HookWidget {
       scope: scope,
       contained: true,
       collectionControls: collectionControls,
-      collectionRecoveryFocusNode: _CollectionRowContext.maybeOf(context)
-          ?.recoveryFocus,
-      collectionDisclosureFocusNode: _CollectionRowContext.maybeOf(context)
-          ?.disclosureFocus,
     );
   }
 }
@@ -348,13 +342,35 @@ extension CollectionMovement on PortablePresentationScope {
   }
 }
 
-class CollectionSequence extends StatelessWidget {
+/// The items of one editor collection on row entries: added items slide in
+/// with rowIn, removed ones squash shut with listOut, and a reorder moves
+/// items in place. [arrival] and [leave] are the service's item moves, read
+/// by the collection input before this widget builds. A leaving item stays
+/// as an extra, undraggable item, so visual and item indices differ while it
+/// leaves; data that arrives during a drag waits for the drop.
+/// Builds an entry's content while it stays and keeps its last content
+/// while it leaves: a removed item is no longer in the scope, so building
+/// it again would show a diagnostic instead of the item.
+Widget Function(RowEntry<T> entry, Widget Function() build) _useLastBuilt<T>(
+  List<RowEntry<T>> entries,
+) {
+  final built = useRef(<Object, Widget>{}).value;
+  final ids = {for (final entry in entries) entry.id};
+  built.removeWhere((id, _) => !ids.contains(id));
+  return (entry, build) => entry.phase == RowPhase.leaving
+      ? built[entry.id] ?? const SizedBox.shrink()
+      : built[entry.id] = build();
+}
+
+class CollectionSequence extends HookWidget {
   const CollectionSequence({
     required this.scope,
     required this.collection,
     required this.items,
     required this.allowReorder,
     required this.entryBuilder,
+    this.arrival,
+    this.leave,
     super.key,
   });
   final PortablePresentationScope scope;
@@ -362,81 +378,193 @@ class CollectionSequence extends StatelessWidget {
   final List<skir.ListItem> items;
   final bool allowReorder;
   final Widget Function(BuildContext, skir.ListItem, int) entryBuilder;
-
-  // ReorderableListView promotes this stable source key to its own global
-  // child key, preserving the editor through moves into its drag proxy.
-  Widget _entry(int index) => KeyedSubtree(
-    key: ValueKey(items[index].id.value),
-    child: Builder(
-      builder: (context) => entryBuilder(context, items[index], index),
-    ),
-  );
-
-  void _move(BuildContext context, skir.ItemId item, int destination) {
-    if (!allowReorder || !scope.canExecuteAction) return;
-    _CollectionInteractionScope.invalidateAncestors(context);
-    scope.moveCollectionItem(
-      collection: collection,
-      items: items,
-      item: item,
-      destination: destination,
-    );
-  }
+  final MotionOverride? arrival;
+  final MotionOverride? leave;
 
   @override
   Widget build(BuildContext context) {
-    if (!allowReorder) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [for (var i = 0; i < items.length; i++) _entry(i)],
+    // Data that arrives during a drag waits for the drop, so drag indices
+    // stay valid.
+    final dragging = useState(false);
+    final shown = useRef(items);
+    if (!dragging.value) shown.value = items;
+    final rows = useAnimatedRows(
+      items: shown.value,
+      identity: (item) => item.id.value,
+      arrival: arrival,
+      leave: leave,
+    );
+    final entries = rows.entries;
+    final lastBuilt = _useLastBuilt(entries);
+
+    // A visual index counts only items that stay.
+    int activeIndexAt(int visualIndex) => entries
+        .take(visualIndex)
+        .where((entry) => entry.phase != RowPhase.leaving)
+        .length;
+
+    void move(skir.ItemId item, int destination) {
+      if (!allowReorder || !scope.canExecuteAction) return;
+      final order = rows.items;
+      if (destination < 0 || destination >= order.length) return;
+      scope.moveCollectionItem(
+        collection: collection,
+        items: order,
+        item: item,
+        destination: destination,
       );
     }
-    return ReorderableListView.builder(
-      buildDefaultDragHandles: false,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: items.length,
-      itemBuilder: (_, index) => _entry(index),
-      proxyDecorator: (child, _, animation) => _collectionDragScopes(
-        context,
-        AnimatedBuilder(
-          animation: animation,
-          child: child,
-          builder: (context, child) => Material(
-            elevation: 6 * Curves.easeInOut.transform(animation.value),
-            child: child,
+
+    // ReorderableListView promotes the stable entry key to its own global
+    // child key, preserving the editor through moves into its drag proxy.
+    Widget visual(BuildContext context, int visualIndex) {
+      final entry = entries[visualIndex];
+      return _SequenceEntry(
+        key: ValueKey(entry.id),
+        visualIndex: visualIndex,
+        leaving: entry.phase == RowPhase.leaving,
+        move: (destination) => move(entry.item.id, destination),
+        child: RowEntryScope(
+          entry: entry,
+          // The editor owns its scroll, so rows have no SliverRowAnchor.
+          child: entry.motion(
+            entry.row(
+              // Editor rows hold fields, so a row is no stop: focus lands
+              // on its RowLanding control.
+              RowStop(
+                role: RowRole.holder,
+                child: Builder(
+                  builder: (context) => lastBuilt(
+                    entry,
+                    () => entryBuilder(
+                      context,
+                      entry.item,
+                      activeIndexAt(visualIndex),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            anchors: false,
           ),
         ),
+      );
+    }
+
+    if (!allowReorder) {
+      return RowFocusScope(
+        focus: rows.focus,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var index = 0; index < entries.length; index++)
+              visual(context, index),
+          ],
+        ),
+      );
+    }
+    return RowFocusScope(
+      focus: rows.focus,
+      child: ReorderableListView.builder(
+        buildDefaultDragHandles: false,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: entries.length,
+        itemBuilder: visual,
+        proxyDecorator: (child, _, animation) => _collectionDragScopes(
+          context,
+          AnimatedBuilder(
+            animation: animation,
+            child: child,
+            builder: (context, child) {
+              final lift = motionTimeline(
+                context,
+                MotionToken.press,
+              ).curve.transform(animation.value);
+              // The row lifts off the list while it is dragged.
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: context.shapes.mediumBorderRadius,
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.colors.shadow.withValues(
+                        alpha: .24 * lift,
+                      ),
+                      blurRadius: 16 * lift,
+                      offset: Offset(0, 6 * lift),
+                    ),
+                  ],
+                ),
+                child: child,
+              );
+            },
+          ),
+        ),
+        onReorderStart: (_) => dragging.value = true,
+        onReorderEnd: (_) => dragging.value = false,
+        onReorderItem: (from, to) {
+          final entry = entries[from];
+          if (entry.phase == RowPhase.leaving) return;
+          move(entry.item.id, activeIndexAt(to));
+        },
       ),
-      onReorderStart: (_) =>
-          _CollectionInteractionScope.invalidateAncestors(context),
-      onReorderItem: (from, to) => _move(context, items[from].id, to),
     );
   }
 
+  /// The reorder handle for the entry being built. Its drag index is the
+  /// entry's visual index, which differs from [index] while items leave.
   Widget handle(
     BuildContext context,
     int index,
     PortablePresentationScope itemScope, {
     Widget? icon,
     String? label,
-  }) => _AuthoredReorderHandle(
-    index: index,
-    label: label ?? "Reorder item ${index + 1}",
-    icon: icon,
-    enabled:
-        allowReorder && scope.canExecuteAction && itemScope.canExecuteAction,
-    canMoveEarlier: index > 0,
-    canMoveLater: index + 1 < items.length,
-    onMoveEarlier: () {
-      if (!itemScope.canExecuteAction) return;
-      _move(context, items[index].id, index - 1);
-    },
-    onMoveLater: () {
-      if (!itemScope.canExecuteAction) return;
-      _move(context, items[index].id, index + 1);
+  }) => Builder(
+    builder: (context) {
+      final entry = _SequenceEntry.of(context);
+      return _AuthoredReorderHandle(
+        index: entry.visualIndex,
+        label: label ?? "Reorder item ${index + 1}",
+        icon: icon,
+        enabled:
+            allowReorder &&
+            scope.canExecuteAction &&
+            itemScope.canExecuteAction &&
+            !entry.leaving,
+        canMoveEarlier: index > 0,
+        canMoveLater: index + 1 < items.length,
+        onMoveEarlier: () {
+          if (!itemScope.canExecuteAction) return;
+          entry.move(index - 1);
+        },
+        onMoveLater: () {
+          if (!itemScope.canExecuteAction) return;
+          entry.move(index + 1);
+        },
+      );
     },
   );
+}
+
+/// The entry's place in the visual list, read by its reorder handle.
+class _SequenceEntry extends InheritedWidget {
+  const _SequenceEntry({
+    required this.visualIndex,
+    required this.leaving,
+    required this.move,
+    required super.child,
+    super.key,
+  });
+  final int visualIndex;
+  final bool leaving;
+  final void Function(int destination) move;
+
+  static _SequenceEntry of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_SequenceEntry>()!;
+
+  @override
+  bool updateShouldNotify(_SequenceEntry oldWidget) =>
+      oldWidget.visualIndex != visualIndex || oldWidget.leaving != leaving;
 }
 
 // Flutter transports themes for a drag proxy, but portable scopes are not
@@ -447,14 +575,8 @@ Widget _collectionDragScopes(BuildContext source, Widget child) {
   source.visitAncestorElements((element) {
     final inherited = element.widget;
     switch (inherited) {
-      case _CollectionInteractionScope(:final owner):
-        wrappers.add(
-          (child) => _CollectionInteractionScope(owner: owner, child: child),
-        );
-      case _CollectionRowContext(:final binding):
-        wrappers.add(
-          (child) => _CollectionRowContext(binding: binding, child: child),
-        );
+      case RowFocusScope(:final focus):
+        wrappers.add((child) => RowFocusScope(focus: focus, child: child));
       case PortableDiagnosticScope(:final tree, :final placement):
         wrappers.add(
           (child) => PortableDiagnosticScope(
@@ -518,14 +640,9 @@ Widget _collectionDragScopes(BuildContext source, Widget child) {
             child: child,
           ),
         );
-      case _CollectionMenuInvocation(:final origin, :final row, :final close):
+      case _CollectionMenuInvocation(:final close):
         wrappers.add(
-          (child) => _CollectionMenuInvocation(
-            origin: origin,
-            row: row,
-            close: close,
-            child: child,
-          ),
+          (child) => _CollectionMenuInvocation(close: close, child: child),
         );
       default:
         break;
@@ -591,30 +708,8 @@ Widget _structuredMapBody({
   ],
 );
 
-extension _CollectionFocusCallers on PortablePresentationNodeRenderer {
-  void runGeneratedRemove({
-    required _CollectionRowBinding row,
-    required PortablePresentationScope scope,
-    required skir.EditorAction action,
-  }) {
-    final origin = row.focus?.captureOrigin(row.row);
-    final recovery = row.focus;
-    if (recovery == null) {
-      unawaited(scope.executeAction(action));
-      return;
-    }
-    unawaited(
-      recovery.removeLocal(
-        row: row.row,
-        scope: scope,
-        action: action,
-        origin: origin,
-      ),
-    );
-  }
-
+extension _CollectionRowParts on PortablePresentationNodeRenderer {
   _SuppliedHeaderControl generatedRemove({
-    required _CollectionRowBinding row,
     required PortablePresentationScope scope,
     required skir.EditorAction action,
     required skir.CollectionContent? content,
@@ -623,33 +718,45 @@ extension _CollectionFocusCallers on PortablePresentationNodeRenderer {
     build: (context) => _operationAppearance(
       content,
       scope,
-      (states, style) => IconButton(
-        statesController: states,
-        style: style,
-        focusNode: row.recoveryFocus,
-        tooltip: _operationText(
-          scope,
-          content?.operationTooltip ?? content?.removeLabel,
-          action is skir.EditorAction_localWrapper &&
-                  action.value is skir.LocalEditorAction_removeMapRowWrapper
-              ? "Remove row"
-              : "Remove item",
-        ),
-        onPressed: scope.canExecuteAction
-            ? () => runGeneratedRemove(row: row, scope: scope, action: action)
-            : null,
-        icon: _operationGlyph(
-          content?.removeIcon,
-          scope,
-          const Icon(Icons.delete_outline),
+      // After a remove, focus lands on this control in the next row.
+      (states, style) => RowLanding(
+        child: Button(
+          face: ButtonFace.icon,
+          icon: _operationGlyph(
+            content?.removeIcon,
+            scope,
+            const Icon(Icons.delete_outline),
+          ),
+          label: _operationText(
+            scope,
+            content?.operationTooltip ?? content?.removeLabel,
+            action is skir.EditorAction_localWrapper &&
+                    action.value is skir.LocalEditorAction_removeMapRowWrapper
+                ? "Remove row"
+                : "Remove item",
+          ),
+          tooltip: _operationText(
+            scope,
+            content?.operationTooltip ?? content?.removeLabel,
+            action is skir.EditorAction_localWrapper &&
+                    action.value is skir.LocalEditorAction_removeMapRowWrapper
+                ? "Remove row"
+                : "Remove item",
+          ),
+          color: _accentOf(style, null),
+          dense: _denseOf(style),
+          statesController: states,
+          onPressed: scope.canExecuteAction
+              ? () => unawaited(scope.executeAction(action))
+              : null,
         ),
       ),
       tooltip: false,
     ),
   );
 
-  Widget collectionRowWithFocus({
-    required skir.ItemId id,
+  /// The row's key is the entry id, given by CollectionSequence or _MapRows.
+  Widget collectionRow({
     required _CollectionEditorContinuation editor,
     required PortablePresentationScope scope,
     required skir.PresentationNode owner,
@@ -659,78 +766,35 @@ extension _CollectionFocusCallers on PortablePresentationNodeRenderer {
     required skir.EditorAction? permittedRemove,
     required skir.CollectionAppearance? appearance,
     required skir.CollectionContent? content,
-  }) => _MountedCollectionRow(
-    key: ValueKey(id.value),
-    row: id,
-    builder: (context, row) => _CollectionEntry(
-      editor: editor,
-      controls: [
-        ...controls,
-        if (permittedRemove != null)
-          generatedRemove(
-            row: row,
-            // The action targets the containing collection. Child presentation
-            // bindings may shadow its binding ID, so retain the source scope
-            // while applying the effective editor permissions.
-            scope: scope
-                .withEnabled(editor.scope.enabled)
-                .withReadOnly(editor.scope.readOnly),
-            action: permittedRemove,
-            content: content,
-          ),
-      ],
-      generatedHeader: generatedHeader,
-      initiallyNeedsRepair: initiallyNeedsRepair,
-      scope: scope,
-      owner: owner,
-      appearance: appearance,
-    ),
-  );
-
-  void runCollectionAdd({
-    required BuildContext context,
-    required void Function(BuildContext) add,
-  }) {
-    _CollectionInteractionScope.invalidateAncestors(context);
-    add(context);
-  }
-
-  void runCollectionClear({
-    required _CollectionRowBinding row,
-    required PortablePresentationScope scope,
-    required skir.BindingRef reference,
-    required skir.LinkOccurrence occurrence,
-  }) {
-    final origin = row.focus?.captureOrigin(row.row);
-    final recovery = row.focus;
-    if (recovery == null) {
-      unawaited(
-        scope.clearLinkedOccurrence(
-          reference: reference,
-          occurrence: occurrence,
+  }) => _CollectionEntry(
+    editor: editor,
+    controls: [
+      ...controls,
+      if (permittedRemove != null)
+        generatedRemove(
+          // The action targets the containing collection. Child presentation
+          // bindings may shadow its binding ID, so retain the source scope
+          // while applying the effective editor permissions.
+          scope: scope
+              .withEnabled(editor.scope.enabled)
+              .withReadOnly(editor.scope.readOnly),
+          action: permittedRemove,
+          content: content,
         ),
-      );
-      return;
-    }
-    unawaited(
-      recovery.clearLink(
-        row: row.row,
-        scope: scope,
-        reference: reference,
-        occurrence: occurrence,
-        origin: origin,
-      ),
-    );
-  }
+    ],
+    generatedHeader: generatedHeader,
+    initiallyNeedsRepair: initiallyNeedsRepair,
+    scope: scope,
+    owner: owner,
+    appearance: appearance,
+  );
 }
 
-extension _CollectionHeaderFocus on PortablePresentationNodeRenderer {
-  Widget collectionWithFocus({
+extension _CollectionHeaderParts on PortablePresentationNodeRenderer {
+  Widget collectionWithHeader({
     required PortablePresentationScope sourceScope,
     required PortablePresentationScope mutationScope,
     required skir.BindingRef reference,
-    required _CollectionRemovalKind removalKind,
-    required List<skir.ItemId> renderedOrder,
     required _ScopedCollectionHeader? sourceHeader,
     required skir.PresentationHeader Function() fallbackHeader,
     required WidgetBuilder buildBody,
@@ -742,45 +806,40 @@ extension _CollectionHeaderFocus on PortablePresentationNodeRenderer {
     required void Function(BuildContext) add,
     List<_SuppliedHeaderControl> parentRowControls = const [],
     Widget Function(_ScopedCollectionHeader, Widget)? headerBuilder,
-  }) => _MountedCollectionInteraction(
+  }) => KeyedSubtree(
     key: ValueKey(sourceScope.authoredAliases.resolve(reference)),
-    scope: sourceScope,
-    reference: reference,
-    removalKind: removalKind,
-    renderedOrder: renderedOrder,
-    builder: (context) {
-      final interaction = _CollectionInteractionScope.of(context);
-      final addControl = _collectionAdd(
-        allowAdd: allowAdd,
-        mutationScope: mutationScope,
-        content: content,
-        fallbackLabel: addLabel,
-        fallbackIcon: addIcon,
-        focusNode: interaction.addFocus,
-        add: (context) => runCollectionAdd(context: context, add: add),
-      );
-      // Own the header and Add inside the same mounted collection as its rows.
-      try {
-        final body = buildBody(context);
-        final scopedHeader = _ScopedCollectionHeader(
-          header: sourceHeader?.header,
-          scope: sourceHeader?.scope ?? sourceScope,
-          controls: [?addControl, ...parentRowControls],
+    child: Builder(
+      builder: (context) {
+        final addControl = _collectionAdd(
+          allowAdd: allowAdd,
+          mutationScope: mutationScope,
+          content: content,
+          fallbackLabel: addLabel,
+          fallbackIcon: addIcon,
+          add: add,
         );
-        if (headerBuilder != null) return headerBuilder(scopedHeader, body);
-        return _AuthoredPresentationHeader(
-          header: scopedHeader.header ?? fallbackHeader(),
-          scope: scopedHeader.scope,
-          body: body,
-          contained: contained,
-          collectionControls: scopedHeader.controls,
-        );
-      } on PresentationValueFailure catch (failure) {
-        return _diagnostic(failure.message);
-      } on FormatException catch (failure) {
-        return _diagnostic(failure.message);
-      }
-    },
+        try {
+          final body = buildBody(context);
+          final scopedHeader = _ScopedCollectionHeader(
+            header: sourceHeader?.header,
+            scope: sourceHeader?.scope ?? sourceScope,
+            controls: [?addControl, ...parentRowControls],
+          );
+          if (headerBuilder != null) return headerBuilder(scopedHeader, body);
+          return _AuthoredPresentationHeader(
+            header: scopedHeader.header ?? fallbackHeader(),
+            scope: scopedHeader.scope,
+            body: body,
+            contained: contained,
+            collectionControls: scopedHeader.controls,
+          );
+        } on PresentationValueFailure catch (failure) {
+          return _diagnostic(failure.message);
+        } on FormatException catch (failure) {
+          return _diagnostic(failure.message);
+        }
+      },
+    ),
   );
 }
 

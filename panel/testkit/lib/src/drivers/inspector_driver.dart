@@ -49,6 +49,72 @@ final class InspectorDriver extends ComponentDriver {
   /// Moves keyboard focus into the inspector by clicking its heading [text].
   Future<void> focusHeading(String text) => tapOn(heading(text));
 
+  /// Whether the field [label] says the selected items hold different values
+  /// in it: a mixed check, the word Mixed where its value goes, or the note
+  /// that a change replaces every selected value.
+  bool showsMixed(String label) {
+    return _field(label).any((node) {
+      final data = node.getSemanticsData();
+      final words = [
+        ...data.label.split("\n"),
+        ...data.hint.split("\n"),
+        data.value,
+      ];
+      return data.flagsCollection.isChecked == CheckedState.mixed ||
+          words.contains(mixedValueLabel) ||
+          words.contains(mixedValueReplacementMessage);
+    });
+  }
+
+  /// The semantics of the field [label] and everything inside it: the node
+  /// that reads [label] first, as a text field reads its label before its
+  /// value, or the frame around a switch or a choice.
+  List<SemanticsNode> _field(String label) {
+    final fields = find.semantics
+        .byPredicate((node) => node.spoken.split("\n").first == label)
+        .evaluate();
+    if (fields.isEmpty) {
+      throw TestFailure("The inspector shows no field $label");
+    }
+    return [
+      for (final field in fields) ...[field, ...field.descendants],
+    ];
+  }
+
+  /// Presses Tab until keyboard focus is inside the field [label]; fails
+  /// when [limit] presses never reach it, since then no keyboard user can.
+  Future<void> tabToField(String label, {int limit = 30}) async {
+    bool inside() => _field(label).any((node) => node.isFocused);
+    for (var tabs = 0; tabs < limit && !inside(); tabs++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+    }
+    expect(inside(), isTrue, reason: "Tab reaches $label");
+  }
+
+  /// Scrolls the inspector until the field [label] is in view, as a user
+  /// scrolls to a field before using it.
+  Future<void> reveal(String label) async {
+    final text = find.text(label, findRichText: true);
+    if (text.evaluate().isEmpty) {
+      throw TestFailure("The inspector shows no field $label");
+    }
+    await tester.ensureVisible(text.first);
+    await settle();
+  }
+
+  /// Clicks the control of the field [label], as a pointer user does after
+  /// scrolling to it.
+  Future<void> click(String label) async {
+    await reveal(label);
+    final control = _field(label).lastWhere(
+      (node) => node.isTappable,
+      orElse: () => throw TestFailure("The field $label takes no click"),
+    );
+    await tester.tapAt(control.screenRect.center);
+    await settle();
+  }
+
   /// Whether an inspector pane is open.
   bool get isOpen => panes.isNotEmpty;
 
@@ -91,6 +157,32 @@ final class InspectorDriver extends ComponentDriver {
   /// The operations the inspector offers as buttons, in reading order.
   List<String> get operations => [for (final button in _buttons) button.spoken];
 
+  /// The operations in the sections the inspector's divider lines split
+  /// them into.
+  List<List<String>> get operationSections => splitAtSeparators(_buttons);
+
+  /// How the operation button labeled [label] stands out: its face, which
+  /// only its look shows. A held button is heard as its outcome line, so
+  /// this takes the label it shows.
+  ButtonFace faceOf(String label) {
+    final buttons = find
+        .descendant(
+          of: find.byType(InspectorOperations),
+          matching: find.byWidgetPredicate(
+            (widget) => widget is Button && widget.label == label,
+          ),
+        )
+        .evaluate()
+        .map((element) => element.widget as Button)
+        .toList();
+    return switch (buttons) {
+      [final button] => button.face,
+      _ => throw TestFailure(
+        "Expected one button labeled $label, found ${buttons.length}",
+      ),
+    };
+  }
+
   /// Whether the operation button [label] can be pressed.
   bool isEnabled(String label) => _button(label).isEnabled;
 
@@ -98,35 +190,6 @@ final class InspectorDriver extends ComponentDriver {
   Future<void> run(String label) async {
     await tester.tapAt(_button(label).screenRect.center);
     await settle();
-  }
-
-  /// Presses the operation button [label] and confirms it with the button
-  /// [confirm], [label] by default, of the dialog asking [question].
-  ///
-  /// The confirmation keeps animating, so this lets frames pass instead of
-  /// waiting for the panel to settle.
-  Future<void> runConfirmed(
-    String label, {
-    required String question,
-    String? confirm,
-  }) async {
-    Future<void> frames() async {
-      for (var frame = 0; frame < 30; frame++) {
-        await tester.pump(const Duration(milliseconds: 50));
-      }
-    }
-
-    await tester.tapAt(_button(label).screenRect.center);
-    await frames();
-    final dialog =
-        find.semantics
-            .byPredicate((node) => node.spoken.contains(question))
-            .evaluate()
-            .lastOrNull
-            ?.route ??
-        (throw TestFailure("No dialog asks \"$question\""));
-    await tester.tapAt(dialog.button(confirm ?? label).screenRect.center);
-    await frames();
   }
 }
 

@@ -108,8 +108,9 @@ class _AuthoredResourceNavigatorState
       mainAxisSize: MainAxisSize.min,
       children: [
         if (appearance != null)
-          ListTile(
+          PanelRow(
             dense: true,
+            label: appearance.label,
             selected: widget.routedResource == widget.resource,
             leading: ResourceIcon(
               icon: appearance.icon,
@@ -121,7 +122,7 @@ class _AuthoredResourceNavigatorState
               overflow: TextOverflow.ellipsis,
               style: context.theme.textTheme.titleSmall,
             ),
-            onTap: () => open(widget.resource),
+            onPressed: () => open(widget.resource),
           ),
         navigator,
         if (binding.status case final message?) Text(message),

@@ -109,6 +109,17 @@ void main() {
       expect(bar.showsHelper, isFalse);
     });
 
+    testWidgets("with reduced motion the helper line opens at once", (
+      tester,
+    ) async {
+      final bar = await tester.showQueryBar(traits: const [reducedMotion]);
+
+      await bar.focus();
+
+      expect(bar.showsHelper, isTrue);
+      expect(bar.helperMentions("status:"), 1);
+    });
+
     testWidgets("opening suggestions keeps the query bar's height", (
       tester,
     ) async {
@@ -242,7 +253,7 @@ void main() {
             description: "Activate the containing input",
             intent: ActivateIntent,
             priority: 1,
-            onInvoke: (_) => containingActivations++,
+            run: ActionRun.press((_) => containingActivations++),
           ),
         ],
       );
@@ -342,7 +353,7 @@ void main() {
       tester,
     ) async {
       final bar = await tester.showQueryBar(query: "id:1 id:2");
-      final error = _colors.error;
+      final error = buildTheme(Brightness.light).colors.dangerText;
 
       final idStyles = bar.stylesOf("id");
       expect(idStyles, hasLength(greaterThanOrEqualTo(2)));

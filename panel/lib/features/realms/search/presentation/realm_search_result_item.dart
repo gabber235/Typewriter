@@ -59,8 +59,6 @@ class RealmSearchResultItem extends HookConsumerWidget {
         color: realmServiceRoleColor,
         onColor: realmServiceRoleColor.on(context),
         icon: const Icon(Icons.cloud_outlined),
-        focused: focused,
-        loading: loading,
       ),
       selected: selected,
       focused: focused,
@@ -70,12 +68,14 @@ class RealmSearchResultItem extends HookConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         spacing: context.spacing.space1,
         children: [
-          SearchResultTitle(title: realm.ownerHost.name.formatted),
+          SearchResultTitle(
+            title: realm.ownerHost.name.formatted,
+            working: loading,
+          ),
           TopologyStatusIndicator(
             label: status,
             tone: tone,
             color: realmServiceRoleColor,
-            highlighted: focused,
           ),
         ],
       ),

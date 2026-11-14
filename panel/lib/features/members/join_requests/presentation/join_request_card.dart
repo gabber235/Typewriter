@@ -5,8 +5,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Presents one moderation request and its transient interaction state.
 ///
 /// The card owns expansion and per request role selection. List selection is
-/// owned by [JoinRequestsList]. Approval and decline execute prepared repository
-/// commands through shared local work. The countdown clears selection only;
+/// owned by [JoinRequestsList]. Approval executes a prepared repository
+/// command through shared local work; declining holds, over the selection
+/// when it contains this request. The countdown clears selection only;
 /// the visibility projection separately filters expired rows using local time.
 class JoinRequestCard extends HookConsumerWidget {
   const JoinRequestCard({
@@ -16,7 +17,9 @@ class JoinRequestCard extends HookConsumerWidget {
     required this.onSelectAll,
     required this.onClearSelection,
     required this.hasSelection,
-    required this.onDeclineSelection,
+    required this.rows,
+    required this.selectedIds,
+    required this.nameOf,
     super.key,
   });
 
@@ -26,7 +29,12 @@ class JoinRequestCard extends HookConsumerWidget {
   final VoidCallback onSelectAll;
   final VoidCallback onClearSelection;
   final bool hasSelection;
-  final Future<void> Function() onDeclineSelection;
+
+  /// The request rows the list owns; the decline hold sends and refuses on
+  /// them.
+  final AnimatedRows<Object?> rows;
+  final Set<skir.RecordId> selectedIds;
+  final String? Function(skir.RecordId request) nameOf;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,6 +45,8 @@ class JoinRequestCard extends HookConsumerWidget {
 
     final expansibleController = useExpansibleController();
     useListenable(expansibleController);
+    // In a list the card is the stop, so Tab passes over its header.
+    final headerFocus = useFocusNode(skipTraversal: true);
 
     final backgroundColor = isSelected
         ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
@@ -50,26 +60,22 @@ class JoinRequestCard extends HookConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: Surface(
         color: backgroundColor,
-        child: Expansible(
+        child: GrowingCard(
           controller: expansibleController,
-          animationStyle: AnimationStyle(
-            duration: 500.ms,
-            curve: ElasticOutCurve(0.9),
-            reverseDuration: 20.ms,
-            reverseCurve: Curves.easeInCubic,
-          ),
-          headerBuilder: (context, animation) {
+          header: (context, animation) {
             return _buildMainContent(
               context,
               ref,
               theme,
               isDesktop,
               expansibleController,
+              headerFocus,
             );
           },
-          bodyBuilder: (context, animation) {
-            return ElasticMessageTransition(
-              animation: animation,
+          // Part of the row, so focus in it still counts as the card.
+          body: (context) {
+            return RowStop(
+              role: RowRole.part,
               child: JoinRequestApproval(
                 request: request,
                 selectedRoles: selectedRoles.value,
@@ -100,7 +106,18 @@ class JoinRequestCard extends HookConsumerWidget {
     ThemeData theme,
     bool isDesktop,
     ExpansibleController expansibleController,
+    FocusNode headerFocus,
   ) {
+    final inList = RowEntryScope.maybeOf(context) != null;
+    // One command for the card's key and its Decline buttons.
+    final decline = joinRequestDecline(
+      id: "decline_${request.requestId}",
+      label: hasSelection && isSelected ? "Decline requests" : "Decline",
+      targets: () =>
+          hasSelection && isSelected ? selectedIds : {request.requestId},
+      nameOf: nameOf,
+      rows: rows,
+    );
     return ManagedActionSet(
       shortcuts: [
         ActionShortcut.intent(
@@ -109,7 +126,7 @@ class JoinRequestCard extends HookConsumerWidget {
           description: "Toggle selection for this request",
           intent: ActivateIntent,
           priority: 1,
-          onInvoke: (_) => onSelectionChanged(!isSelected),
+          run: ActionRun.press((_) => onSelectionChanged(!isSelected)),
         ),
         ActionShortcut.intent(
           id: "select_all_join_requests_${request.requestId}",
@@ -117,27 +134,19 @@ class JoinRequestCard extends HookConsumerWidget {
           description: "Select all visible requests",
           intent: ActivateAllIntent,
           priority: 1,
-          onInvoke: (_) => onSelectAll(),
+          run: ActionRun.press((_) => onSelectAll()),
         ),
-        if (hasSelection)
+        // Esc steps out one level: first the card, then the selection.
+        if (hasSelection && !expansibleController.isExpanded)
           ActionShortcut.intent(
             id: "clear_join_request_selection_${request.requestId}",
             label: "Clear selection",
             description: "Clear selected requests",
             intent: DismissIntent,
             priority: 1,
-            onInvoke: (_) => onClearSelection(),
+            run: ActionRun.press((_) => onClearSelection()),
           ),
-        ActionShortcut.intent(
-          id: "decline_${request.requestId}",
-          label: "Decline",
-          description: "Decline this join request",
-          intent: DeleteIntent,
-          priority: 1,
-          onInvoke: (ref) => hasSelection && isSelected
-              ? onDeclineSelection()
-              : _confirmDeclineRequest(context, ref),
-        ),
+        decline,
         ActionShortcut(
           id: "accept_${request.requestId}",
           label: "Accept",
@@ -147,28 +156,41 @@ class JoinRequestCard extends HookConsumerWidget {
             SingleActivator(LogicalKeyboardKey.space),
           ],
           priority: 1,
-          onInvoke: (ref) {
+          run: ActionRun.press((ref) {
             expansibleController.toggle();
-          },
+          }),
         ),
       ],
-      child: InkWell(
-        onTap: () => onSelectionChanged(!isSelected),
+      // Inside the shortcuts, so Decline and Accept answer while the card is
+      // focused.
+      child: RowStop(
         borderRadius: context.shapes.mediumBorderRadius,
-        child: Padding(
-          padding: EdgeInsets.all(context.spacing.space4),
-          child: isDesktop
-              ? _buildDesktopLayout(context, ref, theme, expansibleController)
-              : JoinRequestResponsiveContent(
-                  request: request,
-                  isSelected: isSelected,
-                  isExpanded: expansibleController.isExpanded,
-                  onExpired: () {
-                    onSelectionChanged(false);
-                  },
-                  onDecline: () => _confirmDeclineRequest(context, ref),
-                  onToggle: () => expansibleController.toggle(),
-                ),
+        label: request.userName ?? request.userEmail ?? "Join request",
+        child: Button(
+          face: ButtonFace.bare,
+          label: isSelected ? "Deselect request" : "Select request",
+          focusNode: inList ? headerFocus : null,
+          onPressed: () => onSelectionChanged(!isSelected),
+          child: Padding(
+            padding: EdgeInsets.all(context.spacing.space4),
+            child: isDesktop
+                ? _buildDesktopLayout(
+                    context,
+                    theme,
+                    expansibleController,
+                    decline,
+                  )
+                : JoinRequestResponsiveContent(
+                    request: request,
+                    isSelected: isSelected,
+                    isExpanded: expansibleController.isExpanded,
+                    onExpired: () {
+                      onSelectionChanged(false);
+                    },
+                    decline: decline,
+                    onToggle: () => expansibleController.toggle(),
+                  ),
+          ),
         ),
       ),
     );
@@ -176,9 +198,9 @@ class JoinRequestCard extends HookConsumerWidget {
 
   Widget _buildDesktopLayout(
     BuildContext context,
-    WidgetRef ref,
     ThemeData theme,
     ExpansibleController expansibleController,
+    ActionShortcut decline,
   ) {
     return Row(
       children: [
@@ -222,49 +244,22 @@ class JoinRequestCard extends HookConsumerWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            LoadingButton.outlined(
-              onPressed: () => _confirmDeclineRequest(context, ref),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
-                side: BorderSide(
-                  color: theme.colorScheme.error.withValues(alpha: 0.5),
-                ),
-              ),
-              child: Text("Decline"),
+            CommandButton(
+              command: decline,
+              face: ButtonFace.outlined,
+              color: context.colors.dangerText,
+              label: "Decline",
             ),
             SizedBox(width: context.spacing.space2),
-            LoadingButton.filled(
-              onPressed: () {
-                expansibleController.toggle();
-              },
-              child: Text(
-                expansibleController.isExpanded ? "Cancel" : "Accept",
-              ),
+            Button(
+              face: ButtonFace.filled,
+              onPressed: expansibleController.toggle,
+              label: expansibleController.isExpanded ? "Cancel" : "Accept",
+              busyLabel: "Accepting",
             ),
           ],
         ),
       ],
-    );
-  }
-
-  /// Clears local selection on confirmation before submitting the decline.
-  Future<void> _confirmDeclineRequest(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    await showConfirmationDialogue(
-      context: context,
-      title: "Decline ${request.userName}'s request?",
-      content: "Are you sure you want to decline this join request?",
-      confirmText: "Decline",
-      confirmIcon: Fa6Solid.xmark,
-      onConfirm: () async {
-        onSelectionChanged(false);
-        await ref.executeMembership(
-          ref.membershipCommands.decline(request.requestId),
-          (response) => response.requireAccepted(),
-        );
-      },
     );
   }
 }

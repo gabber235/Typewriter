@@ -3,17 +3,14 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// What assistive technology reads while a command runs on a result.
 const searchResultWorkingSemanticLabel = "Working";
 
-/// Shows the icon or loading state that identifies a search result.
+/// Shows the icon that identifies a search result.
 ///
-/// [icon] is supplied by the result renderer. [focused] changes contrast for the
-/// active row, while [loading] replaces the icon without changing row identity.
+/// [icon] is supplied by the result renderer.
 class SearchResultIconTile extends StatelessWidget {
   const SearchResultIconTile({
     required this.color,
     required this.onColor,
     required this.icon,
-    this.focused = false,
-    this.loading = false,
     this.padding,
     super.key,
   });
@@ -21,23 +18,18 @@ class SearchResultIconTile extends StatelessWidget {
   final Color color;
   final Color onColor;
   final Widget icon;
-  final bool focused;
-  final bool loading;
 
   final EdgeInsets? padding;
 
   @override
   Widget build(BuildContext context) {
-    final surfaceColor = Surface.colorOf(context);
-    final surfaceBrightness = ThemeData.estimateBrightnessForColor(
-      surfaceColor,
-    );
     return AnimatedContainer(
-      duration: 180.ms,
+      duration: motionTimeline(context, MotionToken.ink).duration,
+      curve: motionTimeline(context, MotionToken.ink).curve,
       width: 50,
       height: 50,
       decoration: BoxDecoration(
-        color: focused ? color.onBrightness(surfaceBrightness.inverted) : color,
+        color: color,
         borderRadius: context.shapes.smallBorderRadius,
         boxShadow: [
           BoxShadow(
@@ -48,17 +40,9 @@ class SearchResultIconTile extends StatelessWidget {
         ],
       ),
       padding: padding ?? EdgeInsets.all(context.spacing.space2),
-      child: ElasticSwitcher(
-        child: loading
-            ? CircularProgressIndicator(
-                semanticsLabel: searchResultWorkingSemanticLabel,
-                color: focused ? color : onColor,
-                padding: EdgeInsets.all(context.spacing.space1),
-              )
-            : IconTheme(
-                data: IconThemeData(color: focused ? color : onColor),
-                child: icon,
-              ),
+      child: IconTheme(
+        data: IconThemeData(color: onColor),
+        child: icon,
       ),
     );
   }
@@ -66,17 +50,22 @@ class SearchResultIconTile extends StatelessWidget {
 
 /// Displays the primary result label, truncating it to one line.
 ///
+/// While a command runs on the result, [working] ripples the label's letters
+/// and assistive technology hears that it is working.
+///
 /// Deprecated definitions remain discoverable but receive a wavy strike through. The widget
 /// does not decide whether a result is deprecated; its caller maps domain metadata to [deprecated].
 class SearchResultTitle extends StatelessWidget {
   const SearchResultTitle({
     required this.title,
     this.deprecated = false,
+    this.working = false,
     super.key,
   });
 
   final String title;
   final bool deprecated;
+  final bool working;
 
   @override
   Widget build(BuildContext context) {
@@ -87,17 +76,24 @@ class SearchResultTitle extends StatelessWidget {
     final color = matchBrightness
         ? theme.colorScheme.onSurface
         : surfaceColor.on(context);
+    final style = Theme.of(context).textTheme.labelLarge?.copyWith(
+      color: color,
+      fontSize: 14,
+      height: 1.1,
+      decoration: deprecated ? TextDecoration.lineThrough : null,
+      decorationThickness: 2.8,
+      decorationColor: Theme.of(context).colorScheme.surface,
+      decorationStyle: TextDecorationStyle.wavy,
+    );
+    if (working) {
+      return Semantics(
+        label: searchResultWorkingSemanticLabel,
+        child: MotionLabel(title, rippling: true, style: style),
+      );
+    }
     return Text(
       title,
-      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-        color: color,
-        fontSize: 14,
-        height: 1.1,
-        decoration: deprecated ? TextDecoration.lineThrough : null,
-        decorationThickness: 2.8,
-        decorationColor: Theme.of(context).colorScheme.surface,
-        decorationStyle: TextDecorationStyle.wavy,
-      ),
+      style: style,
       overflow: TextOverflow.ellipsis,
       maxLines: 1,
     );
@@ -150,7 +146,8 @@ class SearchResultSoftChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: 300.ms,
+      duration: motionTimeline(context, MotionToken.ink).duration,
+      curve: motionTimeline(context, MotionToken.ink).curve,
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: ShapeDecoration(
         color: backgroundColor,
@@ -159,7 +156,8 @@ class SearchResultSoftChip extends StatelessWidget {
       child: AnimatedDefaultTextStyle(
         style: Theme.of(context).textTheme.bodySmall!
             .copyWith(fontSize: 10, color: foregroundColor),
-        duration: 300.ms,
+        duration: motionTimeline(context, MotionToken.ink).duration,
+        curve: motionTimeline(context, MotionToken.ink).curve,
         child: Text(label),
       ),
     );

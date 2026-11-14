@@ -264,40 +264,45 @@ class EditorTextField extends HookWidget {
         container: semanticLabel != null,
         label: semanticLabel,
         hint: semanticHint,
-        child: TextFormField(
-          statesController: statesController,
-          focusNode: focusNode,
-          autofocus: autofocus == EditorTextFieldAutoFocus.textField,
-          controller: controller,
-          validator: validator,
-          onEditingComplete:
-              onEditingComplete ?? surroundingFocusNode.requestFocus,
-          onFieldSubmitted: onSubmitted,
-          onChanged: (draft) {
-            ownTextChanges.value.add(draft);
-            onChanged?.call(draft);
-          },
-          style: style,
-          textCapitalization: textCapitalization,
-          enableSuggestions: enableSuggestions,
-          obscureText: obscureText,
-          maxLength: maxLength,
-          maxLengthEnforcement: maxLengthEnforcement,
-          textInputAction: isSingleLine
-              ? TextInputAction.done
-              : TextInputAction.newline,
-          textAlign: textAlign,
-          minLines: minLines,
-          maxLines: effectiveMaxLines,
-          keyboardType: isSingleLine ? keyboardType : TextInputType.multiline,
-          enabled: enabled,
-          readOnly: readOnly,
-          selectAllOnFocus: selectAllOnFocus,
-          inputFormatters: [
-            if (isSingleLine) FilteringTextInputFormatter.singleLineFormatter,
-            ...?inputFormatters,
-          ],
-          decoration: effectiveDecoration,
+        // Flutter's text input needs a Material above it; the field brings
+        // its own clear one, so no surface around it has to be Material.
+        child: Material(
+          type: MaterialType.transparency,
+          child: TextFormField(
+            statesController: statesController,
+            focusNode: focusNode,
+            autofocus: autofocus == EditorTextFieldAutoFocus.textField,
+            controller: controller,
+            validator: validator,
+            onEditingComplete:
+                onEditingComplete ?? surroundingFocusNode.requestFocus,
+            onFieldSubmitted: onSubmitted,
+            onChanged: (draft) {
+              ownTextChanges.value.add(draft);
+              onChanged?.call(draft);
+            },
+            style: style,
+            textCapitalization: textCapitalization,
+            enableSuggestions: enableSuggestions,
+            obscureText: obscureText,
+            maxLength: maxLength,
+            maxLengthEnforcement: maxLengthEnforcement,
+            textInputAction: isSingleLine
+                ? TextInputAction.done
+                : TextInputAction.newline,
+            textAlign: textAlign,
+            minLines: minLines,
+            maxLines: effectiveMaxLines,
+            keyboardType: isSingleLine ? keyboardType : TextInputType.multiline,
+            enabled: enabled,
+            readOnly: readOnly,
+            selectAllOnFocus: selectAllOnFocus,
+            inputFormatters: [
+              if (isSingleLine) FilteringTextInputFormatter.singleLineFormatter,
+              ...?inputFormatters,
+            ],
+            decoration: effectiveDecoration,
+          ),
         ),
       ),
     );

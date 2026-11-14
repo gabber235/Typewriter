@@ -14,13 +14,10 @@ class SidebarHeader extends StatelessWidget {
         left: context.spacing.space3,
         right: context.spacing.space3,
       ),
-      child: Row(
-        children: [
-          Text(
-            text.toUpperCase(),
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ],
+      // A long label wraps within the sidebar width.
+      child: Text(
+        text.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall,
       ),
     );
   }
@@ -51,6 +48,19 @@ class SidebarLink extends HookConsumerWidget {
       debugLabel: "SidebarLink-${text.snakeCase()}",
     );
     ref.watch(currentRouteProvider);
+    // Places the link in sidebar order, so a move between siblings comes
+    // from above or below.
+    final routeName = route.flattened.last.routeName;
+    final order = ref.read(sidebarOrderProvider);
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final box = context.mounted ? context.findRenderObject() : null;
+        if (box is RenderBox && box.hasSize) {
+          order.place(routeName, box.localToGlobal(Offset.zero).dy);
+        }
+      });
+      return () => order.remove(routeName);
+    }, [routeName]);
     final scope = StackRouterScope.of(context, watch: true);
     final router = scope?.controller;
     final selected =
@@ -68,18 +78,17 @@ class SidebarLink extends HookConsumerWidget {
       child: Material(
         color: backgroundColor,
         borderRadius: context.shapes.mediumBorderRadius,
-        child: InkWell(
+        child: Button(
+          face: ButtonFace.bare,
+          label: "",
           focusNode: focusNode,
-          onTap: router != null
+          onPressed: router != null
               ? () {
                   if (!selected) {
                     router.navigate(route);
                   }
                 }
               : null,
-          hoverColor: Theme.of(context).colorScheme.onSurface
-              .withValues(alpha: 0.1),
-          borderRadius: context.shapes.mediumBorderRadius,
           child: Padding(
             padding: EdgeInsets.symmetric(
               vertical: context.spacing.space2,
@@ -145,11 +154,10 @@ class ExternalSidebarLink extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         borderRadius: context.shapes.mediumBorderRadius,
-        child: InkWell(
-          onTap: uri.launchExternally,
-          hoverColor: Theme.of(context).colorScheme.onSurface
-              .withValues(alpha: 0.1),
-          borderRadius: context.shapes.mediumBorderRadius,
+        child: Button(
+          face: ButtonFace.bare,
+          label: "",
+          onPressed: uri.launchExternally,
           child: Padding(
             padding: EdgeInsets.symmetric(
               vertical: context.spacing.space2,

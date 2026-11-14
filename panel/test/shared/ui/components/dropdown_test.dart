@@ -88,27 +88,68 @@ void main() {
     );
   });
 
-  testWidgets("selection restores a visible field focus highlight", (
-    tester,
-  ) async {
+  testWidgets(
+    "selection returns focus to the field, ringed once a key is pressed",
+    (tester) async {
+      final controller = InputFieldController();
+      addTearDown(controller.dispose);
+      final panel = await tester.showComponent(ChoiceDropdown(controller));
+      await panel.tapOn(find.text("Alpha"));
+
+      await panel.tapOn(find.text("Beta").last);
+
+      expect(controller.surroundingFocusNode.hasPrimaryFocus, isTrue);
+      expect(
+        panel.ring.visible,
+        isFalse,
+        reason: "pointer focus shows no ring",
+      );
+      await panel.press(LogicalKeyboardKey.shiftLeft);
+      expect(
+        panel.ring.rect,
+        panel.rectOf(find.byType(InputFieldContainer).first),
+      );
+      expect(panel.shows("Unavailable"), isFalse);
+      expect(panel.shows("Beta"), isTrue);
+    },
+  );
+
+  testWidgets("typing jumps to a choice", (tester) async {
     final controller = InputFieldController();
     addTearDown(controller.dispose);
-    final panel = await tester.showComponent(ChoiceDropdown(controller));
-    await panel.tapOn(find.text("Alpha"));
-
-    await panel.tapOn(find.text("Beta").last);
-
-    expect(controller.surroundingFocusNode.hasPrimaryFocus, isTrue);
-    final highlight = tester.widget<FocusHighlight>(
-      find
-          .descendant(
-            of: find.byType(InputFieldContainer),
-            matching: find.byType(FocusHighlight),
-          )
-          .first,
+    String? chosen;
+    final panel = await tester.showComponent(
+      SizedBox(
+        width: 360,
+        child: Dropdown<String>(
+          inputFieldController: controller,
+          selected: "alpha",
+          dropdownMenuEntries: const [
+            MenuChoice(value: "alpha", label: "Alpha"),
+            MenuChoice(value: "beta", label: "Beta"),
+            MenuChoice(value: "gamma", label: "Gamma"),
+          ],
+          onSelected: (value) => chosen = value,
+        ),
+      ),
     );
-    expect(highlight.type, FocusType.focus);
-    expect(panel.shows("Unavailable"), isFalse);
-    expect(panel.shows("Beta"), isTrue);
+    await panel.tapOn(find.text("Alpha"));
+    await tester.enterText(find.text("Alpha"), "g");
+    await panel.settle();
+
+    // The one match is the choice Enter takes, marked for assistive
+    // technology as well as drawn.
+    expect(
+      find.semantics.byPredicate(
+        (node) =>
+            node.spoken == "Gamma" &&
+            node.getSemanticsData().flagsCollection.isSelected ==
+                Tristate.isTrue,
+      ),
+      findsOne,
+    );
+    await panel.press(LogicalKeyboardKey.enter);
+    expect(chosen, "gamma");
+    expect(controller.surroundingFocusNode.hasPrimaryFocus, isTrue);
   });
 }

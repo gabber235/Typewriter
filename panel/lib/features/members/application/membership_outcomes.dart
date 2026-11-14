@@ -52,7 +52,8 @@ extension DeclineOrganizationJoinRequestOutcome
 
 extension GenerateOrganizationJoinCodeOutcome
     on skir.GenerateOrganizationJoinCodeResponse {
-  SecretFieldRevealed requireAccepted() {
+  /// The generated code; the route needs its record id to announce focus.
+  skir.JoinCode requireAccepted() {
     switch (this) {
       case skir.GenerateOrganizationJoinCodeResponse_unknown():
         throw ApiException.unknownResponseMessage();
@@ -71,10 +72,7 @@ extension GenerateOrganizationJoinCodeOutcome
       case skir.GenerateOrganizationJoinCodeResponse_successWrapper(
         :final value,
       ):
-        return SecretFieldRevealed(
-          value: value.code.code.id,
-          expiresAt: value.code.expiresAt,
-        );
+        return value.code;
     }
   }
 }

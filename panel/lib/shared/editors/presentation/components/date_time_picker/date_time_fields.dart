@@ -127,9 +127,10 @@ class _TimeSeparator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = DefaultTextStyle.of(context).style.color;
+    // As tall as a time field, so the dots sit at its middle.
     return SizedBox(
       width: 28,
-      height: 52,
+      height: kMinInteractiveDimension,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

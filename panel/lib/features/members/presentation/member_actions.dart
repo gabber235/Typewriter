@@ -12,20 +12,21 @@ class BulkMemberActions extends HookConsumerWidget {
   const BulkMemberActions({
     required this.selectedCount,
     required this.selectedIds,
-    required this.onRemove,
+    required this.removal,
     required this.onUnselect,
     super.key,
   });
 
   final int selectedCount;
   final Set<skir.RecordId> selectedIds;
-  final VoidCallback onRemove;
+
+  /// The remove hold over the selected members.
+  final ActionShortcut removal;
   final ValueChanged<Set<skir.RecordId>> onUnselect;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     void onClearSelection() => onUnselect(selectedIds);
-    final theme = Theme.of(context);
     final bulkRoles = useState<List<skir.OrganizationRole>>([]);
     final isApplying = useState(false);
 
@@ -50,7 +51,9 @@ class BulkMemberActions extends HookConsumerWidget {
           onUnselect(ids);
         }
       } on ApiException catch (error) {
-        if (context.mounted) showErrorSnackBar(context, error.message);
+        if (context.mounted) {
+          context.reportFailure("Assign roles failed", detail: error.message);
+        }
       } on SubmissionException {
         // The shared activity retains unresolved delivery.
       } finally {
@@ -67,23 +70,16 @@ class BulkMemberActions extends HookConsumerWidget {
             description: "Apply roles to selected members",
             activators: const [SingleActivator(LogicalKeyboardKey.keyA)],
             priority: 2,
-            onInvoke: (_) => applyRoles(),
+            run: ActionRun.press((_) => applyRoles()),
           ),
-        ActionShortcut.intent(
-          id: "remove_bulk_members_key",
-          label: "Remove members",
-          description: "Remove selected members",
-          intent: DeleteIntent,
-          priority: 2,
-          onInvoke: (_) => onRemove(),
-        ),
+        removal,
         ActionShortcut.intent(
           id: "clear_bulk_members",
           label: "Clear selection",
           description: "Clear selected members",
           intent: DismissIntent,
           priority: 2,
-          onInvoke: (_) => onClearSelection(),
+          run: ActionRun.press((_) => onClearSelection()),
         ),
       ],
       child: Flex(
@@ -105,21 +101,18 @@ class BulkMemberActions extends HookConsumerWidget {
           if (context.isMobile) roleDropdown else Flexible(child: roleDropdown),
 
           if (bulkRoles.value.isNotEmpty)
-            FilledButton.icon(
-              onPressed: isApplying.value ? null : applyRoles,
+            Button(
+              face: ButtonFace.filled,
               icon: const Icon(Icons.check, size: 18),
-              label: const Text("Apply"),
+              label: "Apply",
+              onPressed: isApplying.value ? null : applyRoles,
             ),
-          OutlinedButton.icon(
-            onPressed: onRemove,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: theme.colorScheme.error,
-              side: BorderSide(
-                color: theme.colorScheme.error.withValues(alpha: 0.5),
-              ),
-            ),
+          CommandButton(
+            command: removal,
+            face: ButtonFace.outlined,
             icon: const Icon(Icons.person_remove_outlined, size: 18),
-            label: const Text("Remove"),
+            label: "Remove",
+            color: context.colors.dangerText,
           ),
         ],
       ),

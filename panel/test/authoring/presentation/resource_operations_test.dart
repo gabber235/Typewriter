@@ -1,4 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
@@ -9,22 +11,30 @@ void main() {
   const move = RealmOperation.moveTo();
   const delete = RealmOperation.delete();
 
-  testWidgets("menus lead with Open and Inspect, then list the operations by "
-      "group", (tester) async {
+  testWidgets("menus lead with Open and Inspect, then list the operations in "
+      "a section per group with a divider between sections", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       realm(books: [first, second]),
       operations(const [reveal, move, delete]),
     ]);
 
-    final entries = await panel.resources.row("First").operations.open();
+    final sections = await panel.resources
+        .row("First")
+        .operations
+        .openSections();
 
-    expect(entries, ["Open", "Inspect", "Duplicate", "Move to", "Delete"]);
+    // Delete holds, so it is heard as the outcome it states.
+    expect(sections, [
+      ["Open", "Inspect"],
+      ["Duplicate"],
+      ["Move to"],
+      ["Delete this resource and what it owns?"],
+    ]);
   });
 
-  testWidgets("the inspector offers the operations declared as buttons", (
-    tester,
-  ) async {
+  testWidgets("the inspector offers the operations declared as buttons in "
+      "the sections of the menu", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       realm(books: [first, second]),
@@ -33,8 +43,116 @@ void main() {
 
     await panel.resources.row("First").select();
 
-    expect(panel.inspector.operations, ["Open", "Duplicate", "Delete"]);
-    expect(panel.inspector.isEnabled("Delete"), isTrue);
+    // Delete holds, so it is heard as the outcome it states.
+    const heardDelete = "Delete this resource and what it owns?";
+    expect(panel.inspector.operationSections, [
+      ["Open"],
+      ["Duplicate"],
+      [heardDelete],
+    ]);
+    expect(panel.inspector.isEnabled(heardDelete), isTrue);
+  });
+
+  testWidgets("operations sent out of order are listed by group, then order, "
+      "in the menu and the inspector alike", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [
+        delete,
+        RealmOperation("Tag", group: skir.OperationGroup.organize, order: 20),
+        RealmOperation("Pin", group: skir.OperationGroup.organize, order: 10),
+        reveal,
+      ]),
+    ]);
+    const heardDelete = "Delete this resource and what it owns?";
+
+    await panel.resources.row("First").select();
+    final inspector = panel.inspector.operationSections;
+    final menu = await panel.resources.row("First").operations.openSections();
+
+    expect(menu, [
+      ["Open", "Inspect"],
+      ["Duplicate"],
+      ["Pin", "Tag"],
+      [heardDelete],
+    ]);
+    expect(inspector, [
+      ["Open"],
+      ["Duplicate"],
+      ["Pin", "Tag"],
+      [heardDelete],
+    ]);
+  });
+
+  testWidgets("a second operation declared filled shows flat beside the "
+      "first", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [
+        RealmOperation(
+          "Duplicate",
+          group: skir.OperationGroup.edit,
+          emphasis: skir.OperationEmphasis.filled,
+        ),
+        RealmOperation(
+          "Pin",
+          group: skir.OperationGroup.organize,
+          emphasis: skir.OperationEmphasis.filled,
+        ),
+      ]),
+    ]);
+
+    await panel.resources.row("First").select();
+
+    expect(panel.inspector.faceOf("Duplicate"), ButtonFace.filled);
+    expect(panel.inspector.faceOf("Pin"), ButtonFace.quiet);
+  });
+
+  testWidgets("Delete held by D lasts a permanent hold: kept just before it "
+      "ends, deleted once it ends", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
+    await panel.resources.row("First").select();
+    final permanent = panel.holdDurationOf(HoldWeight.permanent);
+
+    await panel.keyDown(LogicalKeyboardKey.keyD);
+    await panel.holdForTime(permanent - const Duration(milliseconds: 100));
+    expect(panel.world.requireRealm.prepares, 0);
+    await panel.holdForTime(const Duration(milliseconds: 150));
+    await panel.keyUp(LogicalKeyboardKey.keyD);
+
+    await panel.eventually(
+      () => expect(panel.resources.showing("First"), isFalse),
+    );
+  });
+
+  testWidgets("Delete held by the pointer on the inspector button lasts a "
+      "permanent hold", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
+    await panel.resources.row("First").select();
+    final permanent = panel.holdDurationOf(HoldWeight.permanent);
+
+    final pointer = await panel.pressButton(
+      "Delete this resource and what it owns?",
+    );
+    await panel.holdForTime(permanent - const Duration(milliseconds: 100));
+    expect(panel.world.requireRealm.prepares, 0);
+    await panel.holdForTime(const Duration(milliseconds: 150));
+    await pointer.up();
+    await panel.settle();
+
+    await panel.eventually(
+      () => expect(panel.resources.showing("First"), isFalse),
+    );
   });
 
   final openings = <String, Future<void> Function(PanelDriver panel)>{
@@ -79,31 +197,59 @@ void main() {
     expect(panel.focused, "title");
   });
 
-  testWidgets("the Delete key asks for the confirmation the Realm returns "
-      "and deletes only once confirmed", (tester) async {
+  testWidgets("Delete held on First deletes it and keeps Second", (
+    tester,
+  ) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       realm(books: [first, second]),
       operations(const [reveal, move, delete]),
     ]);
-    const question = "Delete the selected resources?";
 
     await panel.resources.row("First").select();
-    await panel.press(LogicalKeyboardKey.delete);
-    expect(panel.dialog.showing(question), isTrue);
-    await panel.dialog.choose("Cancel", message: question);
-    expect(panel.resources.showing("First"), isTrue);
+    await panel.holdKey(LogicalKeyboardKey.delete);
 
-    await panel.press(LogicalKeyboardKey.delete);
-    await panel.dialog.choose("Delete", message: question);
-
-    expect(panel.resources.showing("First"), isFalse);
+    await panel.eventually(
+      () => expect(panel.resources.showing("First"), isFalse),
+    );
     expect(panel.resources.showing("Second"), isTrue);
+    expect(find.byType(AlertDialog), findsNothing);
     await panel.eventually(
       () => expect(
         panel.world.requireRealm.document.resource(first.bookId),
         isNull,
       ),
+    );
+  });
+
+  testWidgets("Delete released early keeps First and never asks the Realm "
+      "to prepare", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
+
+    await panel.resources.row("First").select();
+    await panel.holdKey(LogicalKeyboardKey.delete, share: 0.4);
+
+    expect(panel.resources.showing("First"), isTrue);
+    expect(panel.world.requireRealm.prepares, 0);
+  });
+
+  testWidgets("Delete with two selected resources reads \"Delete 2 "
+      "resources and what they own?\" before the hold", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
+    await panel.resources.row("First").select();
+    await panel.resources.selectOnly([first.bookId, second.bookId]);
+
+    expect(
+      panel.holdHint("Delete 2 resources and what they own?"),
+      "Destructive. Long press to confirm",
     );
   });
 
@@ -124,6 +270,36 @@ void main() {
       panel.path,
       "/organization/acme/realm/main/resource/${first.bookId.value}",
     );
+  });
+
+  testWidgets("a held operation declared without a weight is a catalog "
+      "defect: the menu reports the operations unavailable", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations([
+        reveal,
+        RealmOperation(
+          "Archive",
+          group: skir.OperationGroup.destructive,
+          confirmation: RealmConfirmation(
+            one: "Archive this resource?",
+            many: "Archive {count} resources?",
+            weight: skir.OperationWeight.unknown,
+          ),
+        ),
+      ]),
+    ]);
+
+    final sections = await panel.resources
+        .row("First")
+        .operations
+        .openSections();
+
+    expect(sections, [
+      ["Open", "Inspect"],
+      ["Resource operations unavailable"],
+    ]);
   });
 
   testWidgets("a disabled operation shows its reason and does nothing", (
@@ -152,16 +328,14 @@ void main() {
     );
   });
 
-  testWidgets("a screen reader selects a Book in the Library and deletes it", (
-    tester,
-  ) async {
+  testWidgets("a screen reader selects a Book in the Library and its long "
+      "press on Delete deletes it", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       realm(books: [first, second]),
       operations(const [reveal, move, delete]),
     ]);
     await panel.openSurface(libraryId);
-    const question = "Delete the selected resources?";
 
     await panel.activateWithScreenReader("First");
 
@@ -170,9 +344,12 @@ void main() {
       Tristate.isTrue,
     );
     expect(panel.resources.selected, [first.bookId]);
-    await panel.activateWithScreenReader("Delete");
-    await panel.dialog.choose("Delete", message: question);
-    expect(panel.resources.showing("First"), isFalse);
+    await panel.longPressWithScreenReader(
+      "Delete this resource and what it owns?",
+    );
+    await panel.eventually(
+      () => expect(panel.resources.showing("First"), isFalse),
+    );
     expect(panel.resources.showing("Second"), isTrue);
   });
 

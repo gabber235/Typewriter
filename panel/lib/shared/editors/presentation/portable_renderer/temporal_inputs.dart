@@ -107,6 +107,7 @@ extension _PortableTemporalInputRendering on PortablePresentationNodeRenderer {
                   showDefaultIcon: false,
                   key: ValueKey("${node.nodeId}.input"),
                   value: timestamp,
+                  mixed: scope.isMixed(input.control.binding),
                   includeDate: date,
                   includeTime: time,
                   minimum: minimum,
@@ -240,7 +241,12 @@ extension _PortableTemporalInputRendering on PortablePresentationNodeRenderer {
               mainAxisSize: MainAxisSize.min,
               children: [
                 for (final direction in [-1, 1])
-                  IconButton(
+                  Button(
+                    face: ButtonFace.icon,
+                    icon: Icon(direction < 0 ? Icons.remove : Icons.add),
+                    label: direction < 0
+                        ? "Decrease duration"
+                        : "Increase duration",
                     tooltip: direction < 0
                         ? "Decrease duration"
                         : "Increase duration",
@@ -286,7 +292,6 @@ extension _PortableTemporalInputRendering on PortablePresentationNodeRenderer {
                             );
                           })
                         : null,
-                    icon: Icon(direction < 0 ? Icons.remove : Icons.add),
                   ),
               ],
             ),

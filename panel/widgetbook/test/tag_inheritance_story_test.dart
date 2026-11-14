@@ -52,7 +52,15 @@ void main() {
       knobs: {"Topology": "Branching"},
     );
 
-    Focus.of(tester.element(find.tooltip("Expand").last)).requestFocus();
+    // The button's own focus, inside its tooltip.
+    Focus.of(
+      tester.element(
+        find.descendant(
+          of: find.tooltip("Expand").last,
+          matching: find.byIcon(Icons.expand_more),
+        ),
+      ),
+    ).requestFocus();
     await panel.settle();
     await panel.press(LogicalKeyboardKey.enter);
 

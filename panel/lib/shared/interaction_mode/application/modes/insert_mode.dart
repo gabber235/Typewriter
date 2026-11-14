@@ -15,12 +15,11 @@ class InsertMode extends InteractionMode with ModeDisplay, ModeShortcut {
   String get name => "Insert";
 
   @override
-  Widget buildDisplay(BuildContext context) {
-    return ModeDisplayChip(
-      label: "Insert",
-      color: context.isDarkMode ? Colors.greenAccent : Colors.green,
-    );
-  }
+  ModeLook look(BuildContext context) => ModeLook(
+    label: "Insert",
+    tone: context.colors.brand,
+    icon: Icons.edit_rounded,
+  );
 
   @override
   List<ActionShortcut> getShortcuts() => [escapeToNormalAction()];

@@ -1,41 +1,34 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Actions shown while one or more visible codes are selected.
-/// Confirmation and submission remain in the route callback so this
-/// control can stay independent of the live projection.
+/// Actions shown while one or more visible codes are selected. The route
+/// builds the revoke hold over its rows, so this control stays independent
+/// of the live projection.
 class BulkJoinCodeActions extends StatelessWidget {
   const BulkJoinCodeActions({
     required this.selectedCount,
-    required this.onRevoke,
+    required this.revocation,
     required this.onClearSelection,
     super.key,
   });
 
   final int selectedCount;
-  final Future<void> Function() onRevoke;
+
+  /// The revoke hold over the selected codes.
+  final ActionShortcut revocation;
   final VoidCallback onClearSelection;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return ManagedActionSet(
       shortcuts: [
-        ActionShortcut.intent(
-          id: "revoke_bulk_join_codes_key",
-          label: "Revoke join codes",
-          description: "Revoke selected join codes",
-          intent: DeleteIntent,
-          priority: 2,
-          onInvoke: (_) => onRevoke(),
-        ),
+        revocation,
         ActionShortcut.intent(
           id: "clear_bulk_join_codes",
           label: "Clear selection",
           description: "Clear selected join codes",
           intent: DismissIntent,
           priority: 2,
-          onInvoke: (_) => onClearSelection(),
+          run: ActionRun.press((_) => onClearSelection()),
         ),
       ],
       child: Row(
@@ -46,16 +39,12 @@ class BulkJoinCodeActions extends StatelessWidget {
             selectedCount: selectedCount,
             onClearSelection: onClearSelection,
           ),
-          LoadingButton.outlinedIcon(
-            onPressed: onRevoke,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: theme.colorScheme.error,
-              side: BorderSide(
-                color: theme.colorScheme.error.withValues(alpha: 0.5),
-              ),
-            ),
+          CommandButton(
+            command: revocation,
+            face: ButtonFace.outlined,
+            color: context.colors.dangerText,
             icon: const Icon(Icons.link_off, size: 18),
-            label: const Text("Revoke All"),
+            label: "Revoke all",
           ),
         ],
       ),

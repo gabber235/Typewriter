@@ -9,9 +9,11 @@ import com.typewritermc.presentation.PresentationReference
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import skirout.editor.v1.operation.OperationAvailability
+import skirout.editor.v1.operation.OperationEmphasis
 import skirout.editor.v1.operation.OperationGroup
 import skirout.editor.v1.operation.OperationInspector
 import skirout.editor.v1.operation.OperationShortcut
+import skirout.editor.v1.operation.OperationWeight
 
 /**
  * An operation on every resource. Codegen emits the same contract per resource type, `XOperation<I>`, whose spec
@@ -56,10 +58,18 @@ interface OperationSpec<D : ResourceDraft, I> {
     /** Menu, inspector and drop appearance. The label defaults to the object name in sentence case. */
     fun appearance(body: OperationAppearanceScope.() -> Unit)
 
-    /** Asks before staging the prepared edit. */
+    /**
+     * The panel holds to confirm, showing the outcome line while the user holds: [one] for a
+     * single subject, [many] for several, where "{count}" stands for the number of subjects.
+     * Each line starts with the operation label, which the panel types as the verb. [weight]
+     * sets how long the hold takes: light when only the user's own unsent work is lost, heavy
+     * when someone else must act again, permanent when nothing can recover it. A destructive
+     * operation must confirm.
+     */
     fun confirm(
-        message: String,
-        body: OperationConfirmScope.() -> Unit = {},
+        weight: OperationWeight,
+        one: String,
+        many: String,
     )
 
     /** How input fields are offered by pickers and filled by drops. */
@@ -93,23 +103,23 @@ interface OperationAppearanceScope {
 
     fun icon(value: String)
 
-    /** Menu section and position. The destructive group implies the destructive tone. */
+    /**
+     * Section and position in the inspector and the context menu. The destructive group implies the destructive
+     * tone and requires a hold.
+     */
     fun group(
         value: OperationGroup,
         order: Int = 0,
     )
 
-    /** Inspector presence: a button with an emphasis, or hidden (menus, shortcuts and drops only). */
+    /** Inspector presence: shown as a button (the default), or hidden (menus, shortcuts and drops only). */
     fun inspector(value: OperationInspector)
-}
 
-@TypewriterDsl
-interface OperationConfirmScope {
-    /** Defaults to the label. */
-    fun title(value: String)
-
-    /** Confirm button text; defaults to the label. */
-    fun action(value: String)
+    /**
+     * How strongly the inspector button stands out; flat by default. Filled marks the pane's main action and
+     * outline the likely next step. The panel shows only the first filled operation filled.
+     */
+    fun emphasis(value: OperationEmphasis)
 }
 
 @TypewriterDsl

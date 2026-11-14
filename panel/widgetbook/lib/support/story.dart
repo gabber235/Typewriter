@@ -81,6 +81,35 @@ extension StoryKnobs on KnobsBuilder {
     return options[chosen]!;
   }
 
+  /// The Width segments over [widths], each a width by the name the knob
+  /// shows; returns the chosen width, the first one at start.
+  double width(Map<String, double> widths) {
+    final chosen = object.segmented<String>(
+      label: "Width",
+      options: widths.keys.toList(),
+      initialOption: widths.keys.first,
+    );
+    return widths[chosen]!;
+  }
+
+  /// The Motion segments: full motion, or the panel under reduced motion.
+  List<Trait> motion() => traits("Motion", {
+    "Full": const [],
+    "Reduced": const [reducedMotion],
+  });
+
+  /// A slider named [label] from 0 to 1, for a frame of a motion or a fill
+  /// a story freezes; returns the chosen value as an animation.
+  Animation<double> fraction(String label, {double initialValue = 0.5}) =>
+      AlwaysStoppedAnimation(
+        this.double.slider(
+          label: label,
+          initialValue: initialValue,
+          min: 0,
+          max: 1,
+        ),
+      );
+
   /// The seed story data is generated from; another seed reshuffles it, the
   /// same seed shows the same data on every reload.
   int seed({int initialValue = 1}) => this.int.slider(
@@ -118,4 +147,32 @@ extension FieldStoryKnobs on KnobsBuilder {
       max: 640,
     ),
   );
+}
+
+/// A rounded card of [color], the page's container surface by default, that
+/// a component story sets its subject on.
+class StoryCard extends StatelessWidget {
+  const StoryCard({
+    required this.child,
+    this.width,
+    this.height,
+    this.color,
+    super.key,
+  });
+
+  final double? width;
+  final double? height;
+  final Color? color;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color ?? context.colors.surfaceContainer,
+        borderRadius: context.shapes.mediumBorderRadius,
+      ),
+      child: SizedBox(width: width, height: height, child: child),
+    );
+  }
 }

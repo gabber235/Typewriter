@@ -2,52 +2,33 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Desktop row control for revoking one invitation code.
-/// The action hides after confirmation and submits through shared local work.
-/// Its local flag is not reset on failure, so it stays hidden until this widget
-/// state is recreated. Pending row visibility belongs to the activity projection.
-class JoinCodeRowActions extends HookConsumerWidget {
-  const JoinCodeRowActions({required this.code, super.key});
+/// Desktop row control for revoking one join code with a hold. While the
+/// revoke sends the row stays struck through; a refusal leaves it in place
+/// with its message.
+class JoinCodeRowActions extends StatelessWidget {
+  const JoinCodeRowActions({required this.code, required this.rows, super.key});
 
   final skir.JoinCode code;
 
+  /// The join code rows the tab owns.
+  final AnimatedRows<Object?> rows;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isRevoking = useState(false);
-
-    if (isRevoking.value) {
-      return const SizedBox.shrink();
-    }
-
+  Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
-      child: IconButton(
-        icon: Icon(Icons.link_off, size: 20, color: theme.colorScheme.error),
-        onPressed: () => _confirmRevokeCode(context, ref, isRevoking),
-        tooltip: "Revoke join code",
+      child: CommandButton(
+        face: ButtonFace.icon,
+        color: context.colors.danger,
+        icon: const Icon(Icons.link_off, size: 20),
+        label: "Revoke join code",
+        command: joinCodeRevocation(
+          id: "revoke_table_join_code_${code.code}",
+          label: "Revoke join code",
+          targets: () => {code.code},
+          rows: rows,
+        ),
       ),
-    );
-  }
-
-  Future<void> _confirmRevokeCode(
-    BuildContext context,
-    WidgetRef ref,
-    ValueNotifier<bool> isRevoking,
-  ) async {
-    await showConfirmationDialogue(
-      context: context,
-      title: "Revoke this join code?",
-      content: "Are you sure you want to revoke this join code? It will no longer work for new members.",
-      confirmText: "Revoke",
-      confirmIcon: Fa6Solid.link_slash,
-      onConfirm: () async {
-        isRevoking.value = true;
-        await ref.executeMembership(
-          ref.membershipCommands.revoke(code.code),
-          (response) => response.requireAccepted(),
-        );
-      },
     );
   }
 }

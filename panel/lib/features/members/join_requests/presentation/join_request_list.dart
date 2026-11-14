@@ -6,8 +6,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// The input list is the provider's read model. This widget owns only selected
 /// identifiers and list animation. It keeps selection intersected with visible
-/// requests, confirms bulk decline, and executes prepared repository commands
-/// through shared local work.
+/// requests. Bulk decline holds over the selected requests of the list's rows
+/// and tries every request; each refusal shows under its row.
 class JoinRequestsList extends HookConsumerWidget {
   const JoinRequestsList({required this.requests, super.key});
 
@@ -17,45 +17,23 @@ class JoinRequestsList extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIds = useState<Set<skir.RecordId>>({});
     final theme = Theme.of(context);
-    final isDecliningSelection = useRef(false);
-
-    /// Confirms and declines the currently selected visible requests.
-    ///
-    /// Decline is intentionally issued one request at a time because the wire
-    /// contract exposes a single request operation. A failed or uncertain
-    /// submission stops the loop. Pending removal visibility belongs to the
-    /// shared activity projection, rather than mutating the observed list.
-    Future<void> declineSelection() async {
-      if (isDecliningSelection.value) return;
-      final requestIds = requests.map((request) => request.requestId).toSet();
-      final idsToDecline = selectedIds.value.intersection(requestIds);
-      if (idsToDecline.isEmpty) {
-        selectedIds.value = {};
-        return;
-      }
-
-      isDecliningSelection.value = true;
-      try {
-        await showConfirmationDialogue(
-          context: context,
-          title: "Decline ${idsToDecline.length} request(s)?",
-          content: "Are you sure you want to decline these join requests?",
-          confirmText: "Decline All",
-          confirmIcon: Fa6Solid.xmark,
-          onConfirm: () async {
-            for (final id in idsToDecline) {
-              await ref.executeMembership(
-                ref.membershipCommands.decline(id),
-                (response) => response.requireAccepted(),
-              );
-            }
-            selectedIds.value = {};
-          },
-        );
-      } finally {
-        isDecliningSelection.value = false;
-      }
-    }
+    // One rows handle for the list and the bulk bar's decline hold.
+    final rows = useAnimatedRows(
+      items: requests,
+      identity: (request) => request.requestId,
+    );
+    String? nameOf(skir.RecordId id) =>
+        rows[id]?.item.userName ?? rows[id]?.item.userEmail;
+    final decline = joinRequestDecline(
+      id: "decline_bulk_join_requests_key",
+      label: "Decline requests",
+      priority: 2,
+      targets: () => selectedIds.value.intersection({
+        for (final request in rows.items) request.requestId,
+      }),
+      nameOf: nameOf,
+      rows: rows,
+    );
 
     useEffect(() {
       final requestIds = requests.map((request) => request.requestId).toSet();
@@ -65,19 +43,6 @@ class JoinRequestsList extends HookConsumerWidget {
       selectedIds.value = validSelection;
       return null;
     }, [requests, selectedIds]);
-
-    final animation = useSliverAnimatedList(
-      items: requests,
-      identity: (item) => item.requestId,
-      removedItemBuilder: (context, item, animation) => _child(
-        context,
-        item,
-        selectedIds,
-        declineSelection,
-        animation,
-        deleting: true,
-      ),
-    );
 
     if (requests.isEmpty) {
       return SliverFillRemaining(
@@ -103,88 +68,77 @@ class JoinRequestsList extends HookConsumerWidget {
       }
     }
 
-    return SliverStaggerScope(
-      sliver: SliverMainAxisGroup(
-        slivers: [
-          SliverFloatingHeader(
-            child: Container(
-              color: Surface.colorOf(context),
-              padding: const EdgeInsetsGeometry.symmetric(vertical: 12),
-              child: Flex(
-                direction: context.responsive(
-                  mobile: Axis.vertical,
-                  tablet: Axis.horizontal,
-                ),
-                spacing: context.spacing.space2,
-                crossAxisAlignment: context.responsive(
-                  mobile: CrossAxisAlignment.start,
-                  tablet: CrossAxisAlignment.center,
-                ),
-                children: [
-                  StaggerEntrance(
-                    child: SizedBox(
-                      height: 52,
-                      child: GestureDetector(
-                        onTap: handleSelectAll,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Checkbox(
-                              value: allSelected
-                                  ? true
-                                  : (someSelected ? null : false),
-                              tristate: true,
-                              onChanged: (value) => handleSelectAll(),
-                            ),
-                            Text(
-                              "Select all",
-                              style: Theme.of(context).textTheme.bodyMedium!
-                                  .copyWith(
-                                    fontVariations: [.weight(500)],
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverFloatingHeader(
+          child: Container(
+            color: Surface.colorOf(context),
+            padding: const EdgeInsetsGeometry.symmetric(vertical: 12),
+            child: Flex(
+              direction: context.responsive(
+                mobile: Axis.vertical,
+                tablet: Axis.horizontal,
+              ),
+              spacing: context.spacing.space2,
+              crossAxisAlignment: context.responsive(
+                mobile: CrossAxisAlignment.start,
+                tablet: CrossAxisAlignment.center,
+              ),
+              children: [
+                Enter(
+                  token: MotionToken.loadIn,
+                  child: SizedBox(
+                    height: 52,
+                    child: GestureDetector(
+                      onTap: handleSelectAll,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SelectionCheck(
+                            value: allSelected
+                                ? true
+                                : (someSelected ? null : false),
+                            onChanged: handleSelectAll,
+                          ),
+                          Text(
+                            "Select all",
+                            style: Theme.of(context).textTheme.bodyMedium!
+                                .copyWith(
+                                  fontVariations: [.weight(500)],
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  if (context.isMobile)
-                    BulkJoinRequestActions(
+                ),
+                if (context.isMobile)
+                  BulkJoinRequestActions(
+                    selectedCount: selectedIds.value.length,
+                    selectedIds: selectedIds.value,
+                    onClearSelection: () => selectedIds.value = {},
+                    decline: decline,
+                  )
+                else
+                  Flexible(
+                    child: BulkJoinRequestActions(
                       selectedCount: selectedIds.value.length,
                       selectedIds: selectedIds.value,
                       onClearSelection: () => selectedIds.value = {},
-                      onDecline: declineSelection,
-                    )
-                  else
-                    Flexible(
-                      child: BulkJoinRequestActions(
-                        selectedCount: selectedIds.value.length,
-                        selectedIds: selectedIds.value,
-                        onClearSelection: () => selectedIds.value = {},
-                        onDecline: declineSelection,
-                      ),
+                      decline: decline,
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
-          SliverAnimatedRows(
-            key: animation.key,
-            initialItemCount: animation.items.length,
-            itemBuilder: (context, index, animation) {
-              final request = requests[index];
-              return _child(
-                context,
-                request,
-                selectedIds,
-                declineSelection,
-                animation,
-              );
-            },
-          ),
-        ],
-      ),
+        ),
+        SliverAnimatedRows(
+          rows: rows,
+          itemBuilder: (context, entry) =>
+              _child(context, entry.item, selectedIds, rows, nameOf),
+        ),
+      ],
     );
   }
 
@@ -192,39 +146,31 @@ class JoinRequestsList extends HookConsumerWidget {
     BuildContext context,
     skir.OrganizationJoinRequest request,
     ValueNotifier<Set<skir.RecordId>> selectedIds,
-    Future<void> Function() onDeclineSelection,
-    Animation<double> animation, {
-    bool deleting = false,
-  }) {
-    return ExcludeInteraction(
-      key: ValueKey(request.requestId),
-      excluding: deleting,
-      child: ElasticTransition(
-        animation: animation,
-        child: StaggerEntrance(
-          child: Padding(
-            padding: EdgeInsets.only(bottom: context.spacing.space3),
-            child: JoinRequestCard(
-              request: request,
-              isSelected: selectedIds.value.contains(request.requestId),
-              onSelectionChanged: (selected) {
-                if (selected) {
-                  selectedIds.value = {...selectedIds.value, request.requestId};
-                } else {
-                  selectedIds.value = selectedIds.value
-                      .where((id) => id != request.requestId)
-                      .toSet();
-                }
-              },
-              onSelectAll: () => selectedIds.value = requests
-                  .map((request) => request.requestId)
-                  .toSet(),
-              onClearSelection: () => selectedIds.value = {},
-              hasSelection: selectedIds.value.isNotEmpty,
-              onDeclineSelection: onDeclineSelection,
-            ),
-          ),
-        ),
+    AnimatedRows<skir.OrganizationJoinRequest> rows,
+    String? Function(skir.RecordId request) nameOf,
+  ) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: context.spacing.space3),
+      child: JoinRequestCard(
+        request: request,
+        isSelected: selectedIds.value.contains(request.requestId),
+        onSelectionChanged: (selected) {
+          if (selected) {
+            selectedIds.value = {...selectedIds.value, request.requestId};
+          } else {
+            selectedIds.value = selectedIds.value
+                .where((id) => id != request.requestId)
+                .toSet();
+          }
+        },
+        onSelectAll: () => selectedIds.value = requests
+            .map((request) => request.requestId)
+            .toSet(),
+        onClearSelection: () => selectedIds.value = {},
+        hasSelection: selectedIds.value.isNotEmpty,
+        rows: rows,
+        selectedIds: selectedIds.value,
+        nameOf: nameOf,
       ),
     );
   }

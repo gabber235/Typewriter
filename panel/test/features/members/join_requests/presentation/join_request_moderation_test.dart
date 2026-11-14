@@ -26,8 +26,9 @@ final _editor = skir.OrganizationRole(
 );
 
 void main() {
-  testWidgets("a declined request is hidden while the decline sends, and "
-      "a refusal brings back what the backend holds now", (tester) async {
+  testWidgets("holding Decline keeps the request listed and struck through "
+      "while the decline sends, and a refusal leaves it listed with the "
+      "refusal under it", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       membershipBackend(joinRequests: [_request]),
@@ -38,66 +39,18 @@ void main() {
       (_) => reply.future,
     );
 
-    // The confirmation and the decline keep the panel busy until the reply
-    // below, so these steps wait for what they need instead of settling.
-    await tester.tap(find.text("Decline"));
-    const question = "Decline Grace's request?";
-    await panel.eventually(
-      () => expect(panel.dialog.showing(question), isTrue),
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.bySemanticsLabel(RegExp(r"^Decline Grace\?")).last),
     );
-    final dialog = find.semantics
-        .byPredicate((node) => node.spoken.contains(question))
-        .evaluate()
-        .last
-        .route!;
-    await tester.tapAt(dialog.button("Decline").screenRect.center);
+    await panel.holdFor(1);
+    await gesture.up();
+    await tester.pump();
 
-    await panel.eventually(() => expect(find.text("Grace"), findsNothing));
-
-    final linus = skir.OrganizationJoinRequest(
-      requestId: skir.recordId("request_to_join:linus"),
-      userId: skir.recordId("user:linus"),
-      userName: "Linus",
-      userEmail: "linus@typewriter.test",
-      userAvatarUrl: null,
-      requestedAt: DateTime.utc(2026),
-      expiresAt: DateTime.utc(2100),
+    expect(find.text("Grace"), findsOneWidget);
+    expect(
+      tester.textDecorationOf(find.text("Grace")),
+      TextDecoration.lineThrough,
     );
-    final member = skir.OrganizationMember(
-      userId: skir.recordId("user:ken"),
-      name: "Ken",
-      email: null,
-      avatarUrl: null,
-      roles: const [],
-      joinedAt: DateTime.utc(2026),
-    );
-    final members = panel.container.listen(
-      organizationMembersProvider,
-      (_, _) {},
-    );
-    addTearDown(members.close);
-    await panel.eventually(() => expect(members.read().value, isEmpty));
-    // Meanwhile the backend gained a request and a member.
-    panel.world.nats
-      ..registerHandler(
-        "$_scope.join_requests.watch",
-        (_) => skir.WatchOrganizationJoinRequestsResponse.serializer.toBytes(
-          skir.WatchOrganizationJoinRequestsResponse.wrapSnapshot(
-            skir.OrganizationJoinRequestsSnapshot(
-              sequence: 5,
-              values: [_request, linus],
-            ),
-          ),
-        ),
-      )
-      ..registerHandler(
-        "$_scope.watch",
-        (_) => skir.WatchOrganizationMembersResponse.serializer.toBytes(
-          skir.WatchOrganizationMembersResponse.wrapSnapshot(
-            skir.OrganizationMembersSnapshot(sequence: 5, values: [member]),
-          ),
-        ),
-      );
 
     reply.complete(
       skir.DeclineOrganizationJoinRequestResponse.serializer.toBytes(
@@ -106,12 +59,16 @@ void main() {
         ),
       ),
     );
-    await panel.eventually(() {
-      expect(find.text("Grace"), findsOneWidget);
-      expect(find.text("Linus"), findsOneWidget);
-      expect(members.read().value, [member]);
-    });
+    await panel.eventually(
+      () => expect(panel.messageUnder("Grace"), isNotNull),
+    );
     await panel.settle();
+    expect(find.text("Grace"), findsOneWidget);
+    expect(
+      tester.textDecorationOf(find.text("Grace")),
+      isNot(TextDecoration.lineThrough),
+    );
+    expect(panel.messageUnder("Grace"), "Request not found");
   });
 
   testWidgets("a request cannot be approved until a role is chosen", (
@@ -122,7 +79,14 @@ void main() {
       membership(roles: [_editor], joinRequests: [_request]),
     ], at: membersPage(const JoinRequestsRoute()));
 
-    await panel.tapOn(find.text("Accept"));
+    await panel.tapOn(
+      // The card's own button; the focused card also lists it in the
+      // action row.
+      find.descendant(
+        of: find.byType(JoinRequestCard),
+        matching: find.text("Accept"),
+      ),
+    );
 
     expect(semanticsLabeled("Confirm & Add Member").single.isEnabled, isFalse);
 

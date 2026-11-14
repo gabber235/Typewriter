@@ -9,17 +9,18 @@ const _icon =
     '<path fill="currentColor" d="M4 4h16v16H4z"/></svg>';
 
 void main() {
-  for (final (variant, buttonType) in [
-    (skir.ButtonVariant.filled, FilledButton),
-    (skir.ButtonVariant.outlined, OutlinedButton),
-    (skir.ButtonVariant.text, TextButton),
+  for (final (declared, face) in [
+    (skir.OperationEmphasis.filled, ButtonFace.filled),
+    (skir.OperationEmphasis.outline, ButtonFace.outlined),
+    (skir.OperationEmphasis.flat, ButtonFace.quiet),
   ]) {
     testWidgets(
-      "${variant.kind.name} shows the declared icon on the button and in the "
-      "context menu",
+      "${declared.kind.name} shows the declared icon on the button and in "
+      "the context menu",
       (tester) async {
         final presentation = skir.OperationPresentation(
-          inspector: skir.OperationInspector.wrapButton(variant),
+          inspector: skir.OperationInspector.shown,
+          emphasis: declared,
           shortcut: skir.OperationShortcut.delete,
           label: "Delete",
           description: "Delete the selected resources",
@@ -67,12 +68,17 @@ void main() {
             Consumer(
               builder: (context, ref, _) => ContextMenuRegion(
                 items: [operation.menuItem(ref)],
-                child: operation.inspectorButton(const []),
+                child: operation.inspectorButton(
+                  const [],
+                  emphasis: operation.emphasis,
+                ),
               ),
             ),
           ),
         );
-        final buttonFinder = find.byType(buttonType);
+        final buttonFinder = find.byWidgetPredicate(
+          (widget) => widget is Button && widget.face == face,
+        );
         expect(buttonFinder, findsOneWidget);
         expect(
           semanticsButton("Delete").getSemanticsData().hint,
@@ -81,15 +87,17 @@ void main() {
         expect(tester.widget<Icones>(find.byType(Icones)).icon, _icon);
         await tester.tap(buttonFinder, buttons: kSecondaryMouseButton);
         await tester.pumpAndSettle();
-        final menu = tester.widget<MenuItemButton>(find.byType(MenuItemButton));
-        expect(menu.leadingIcon, isA<Icones>());
-        expect((menu.leadingIcon! as Icones).icon, _icon);
+        // The button and the menu entry both show the declared icon.
+        expect(
+          tester.widgetList<Icones>(find.byType(Icones)).map((i) => i.icon),
+          [_icon, _icon],
+        );
         expect(tester.takeException(), isNull);
       },
     );
 
     testWidgets(
-      "${variant.kind.name} keeps keyboard activation and disabled reasons",
+      "${declared.kind.name} keeps keyboard activation and disabled reasons",
       (tester) async {
         var invocations = 0;
         Future<void> pump({
@@ -102,7 +110,8 @@ void main() {
               width: 160,
               child: ResourceOperationButton(
                 presentation: skir.OperationPresentation(
-                  inspector: skir.OperationInspector.wrapButton(variant),
+                  inspector: skir.OperationInspector.shown,
+                  emphasis: declared,
                   shortcut: null,
                   label: "An operation with a long label",
                   description: "Run this operation",
@@ -113,7 +122,15 @@ void main() {
                   tone: tone,
                 ),
                 disabledReason: disabledReason,
-                onInvoke: () => invocations++,
+                command: ActionShortcut(
+                  id: "resource_operation_button_test",
+                  label: "An operation with a long label",
+                  description: "Run this operation",
+                  activators: const [],
+                  priority: 0,
+                  show: false,
+                  run: ActionRun.press((_) => invocations++),
+                ),
               ),
             ),
           ),
@@ -130,7 +147,11 @@ void main() {
         final button = semanticsButton("An operation with a long label");
         expect(button.isEnabled, isFalse);
         expect(find.tooltip("This view is read only"), findsOneWidget);
-        await tester.tap(find.byType(buttonType));
+        await tester.tap(
+          find.byWidgetPredicate(
+            (widget) => widget is Button && widget.face == face,
+          ),
+        );
         await tester.pumpAndSettle();
         expect(invocations, 1);
 

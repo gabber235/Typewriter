@@ -27,4 +27,29 @@ void main() {
     expect(panel.shows("A service name that needs three lines"), isTrue);
     expect(panel.shows("Never"), isTrue);
   });
+
+  testWidgets("selecting a card fades its fill in with ink, not at once", (
+    tester,
+  ) async {
+    final panel = await tester.showComponent(
+      const GridSelectableCard(title: "Realm", baseColor: Colors.blue),
+    );
+    final before = await panel.fillAt(find.text("Realm"));
+
+    await tester.showComponent(
+      const GridSelectableCard(
+        title: "Realm",
+        baseColor: Colors.blue,
+        isSelected: true,
+      ),
+      settle: false,
+    );
+    await tester.pump(tester.settleTimeOf(MotionToken.ink) ~/ 3);
+    final during = await panel.fillAt(find.text("Realm"));
+
+    await panel.settle();
+    final after = await panel.fillAt(find.text("Realm"));
+    expect(during, isNot(before));
+    expect(during, isNot(after));
+  });
 }

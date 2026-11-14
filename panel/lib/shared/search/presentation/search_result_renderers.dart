@@ -84,10 +84,13 @@ class MissingSearchResultRendererRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    return PanelRow(
       dense: true,
       title: Text(result.title ?? result.id),
-      subtitle: Text("Missing renderer ${result.type.rowRendererId}"),
+      subtitle: Text(
+        "Missing renderer ${result.type.rowRendererId}",
+        style: context.text.sentenceSmall,
+      ),
     );
   }
 }

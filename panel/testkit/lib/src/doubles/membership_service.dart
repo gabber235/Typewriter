@@ -24,6 +24,7 @@ final class FakeMembershipService {
     List<skir.OrganizationJoinRequest>? joinRequests = const [],
     this.failure,
     this.commandFailure,
+    this.founders = const {},
   }) : _roles = roles == null ? null : [...roles],
        _members = members == null ? null : [...members],
        _codes = joinCodes == null ? null : [...joinCodes],
@@ -40,6 +41,10 @@ final class FakeMembershipService {
   /// What every command fails with, as when the service cannot be reached;
   /// null confirms every command.
   final Object? commandFailure;
+
+  /// The members the service refuses to remove, as it refuses to remove an
+  /// organization's founder.
+  final Set<skir.RecordId> founders;
 
   /// How long the service takes to answer a command.
   Duration latency = Duration.zero;
@@ -309,6 +314,12 @@ final class FakeMembershipService {
   skir.RemoveOrganizationMemberResponse _remove(
     skir.RemoveOrganizationMemberRequest request,
   ) {
+    if (founders.contains(request.userId)) {
+      return skir
+          .RemoveOrganizationMemberResponse.createFounderCannotBeRemovedError(
+        userId: request.userId,
+      );
+    }
     _members?.removeWhere((member) => member.userId == request.userId);
     return skir.RemoveOrganizationMemberResponse.createSuccess(
       event: _membersChanged([

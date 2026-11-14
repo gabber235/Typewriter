@@ -83,13 +83,13 @@ class UserMenu extends HookConsumerWidget {
       MenuItem(
         label: "Logout",
         icon: Icones(MaterialSymbols.logout),
-        color: Theme.of(context).colorScheme.error,
+        color: context.colors.dangerText,
         onPressed: () async {
           try {
             await ref.signOutVoluntarily(context);
           } on Object catch (_) {
             if (!context.mounted) return;
-            showErrorSnackBar(context, "Could not sign out. Please try again.");
+            context.reportFailure("Sign out failed", detail: "Try again.");
           }
         },
       ),
@@ -108,7 +108,8 @@ class UserMenu extends HookConsumerWidget {
         );
     final currentThemeMode = ref.watch(appearanceProvider);
 
-    final controller = useMenuController();
+    final controller = useMemoized(AnchoredPopupController.new);
+    useEffect(() => controller.dispose, [controller]);
     final focusNode = useFocusNode(debugLabel: "UserMenu");
 
     return userInfoAsync(
@@ -128,13 +129,14 @@ class UserMenu extends HookConsumerWidget {
         return ContextMenuRegion(
           items: _buildMenuItems(context, ref, currentThemeMode),
           enableGestures: false,
-          childFocusNode: focusNode,
           controller: controller,
           child: Material(
-            child: InkWell(
-              onTap: ContextMenuRegion.onPress(controller),
-              borderRadius: context.shapes.mediumBorderRadius,
+            child: Button(
+              face: ButtonFace.bare,
+              // The signed in user's name names the menu.
+              label: "",
               focusNode: focusNode,
+              onPressed: ContextMenuRegion.onPress(controller),
               child: Padding(
                 padding: EdgeInsets.all(
                   compact ? context.spacing.space2 : context.spacing.space3,

@@ -58,7 +58,6 @@ Widget secretFieldUseCase(BuildContext context) {
           generateButtonText: "Generate Join Code",
           regenerateButtonText: "New Join Code",
           copyButtonText: "Copy Join Code",
-          copiedSnackbarText: "Join code copied to clipboard",
         ),
       ),
     ),

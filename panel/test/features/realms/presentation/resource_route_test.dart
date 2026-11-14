@@ -134,11 +134,75 @@ void main() {
     // Search opens before the realm's new navigator pushes Library, which it
     // does a frame later, once its guards ran.
     await panel.activateWithScreenReader("Library", settle: false);
-    await panel.activateWithScreenReader("Search");
+    await panel.activateWithScreenReader("Search", repeated: true);
 
     expect(panel.routedResource, libraryId.value);
     expect(panel.queryBar.isFocused, isTrue, reason: "search keeps focus");
     await panel.queryBar.type("Route");
     expect(panel.queryBar.text, "Route");
+  });
+
+  for (final (kind, resource, field) in [
+    ("Page", intro, "name"),
+    ("Book", route, "title"),
+  ]) {
+    testWidgets("a $kind opens on its first field", (tester) async {
+      final panel = await tester.pumpPanel([
+        ...library,
+        window(const Size(1600, 1000)),
+      ]);
+      await panel.openSurface(resource);
+      expect(panel.field(field).isFocused, isTrue);
+    });
+  }
+
+  for (final (how, create) in [
+    ("N", (PanelDriver panel) => panel.press(LogicalKeyboardKey.keyN)),
+    (
+      "New page",
+      (PanelDriver panel) =>
+          panel.activateWithKeyboard(find.text("New page").first),
+    ),
+  ]) {
+    testWidgets("$how focuses the new page's name", (tester) async {
+      final panel = await tester.pumpPanel([
+        ...library,
+        window(const Size(1600, 1000)),
+      ]);
+      await panel.openSurface(route);
+      await create(panel);
+      await panel.eventually(() {
+        expect(panel.working.relations.children[route], hasLength(2));
+        // The new page's workspace; its side inspector shows a second
+        // name field.
+        expect(panel.focused, startsWith("name"));
+      });
+    });
+  }
+
+  testWidgets("typing a new page's name and pressing Enter keeps focus in "
+      "the name and opens nothing", (tester) async {
+    final panel = await tester.pumpPanel([
+      ...library,
+      window(const Size(1600, 1000)),
+    ]);
+    await panel.openSurface(route);
+    await panel.press(LogicalKeyboardKey.keyN);
+    await panel.eventually(() => expect(panel.focused, startsWith("name")));
+
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: "Chapter 12",
+        selection: TextSelection.collapsed(offset: 10),
+      ),
+    );
+    await panel.settle();
+    expect(panel.focused, startsWith("name"));
+
+    await panel.press(LogicalKeyboardKey.enter);
+    await panel.settle();
+
+    expect(panel.focused, startsWith("name"));
+    expect(panel.working.relations.children[route], hasLength(2));
   });
 }

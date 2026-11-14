@@ -20,18 +20,10 @@ class AnimatedStatusContent extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      ElasticMessageSwitcher(
-        duration: const Duration(milliseconds: 180),
-        reverseDuration: const Duration(milliseconds: 120),
-        sizeDuration: const Duration(milliseconds: 200),
-        child: icon,
-      ),
+      ElasticMessageSwitcher(child: icon),
       if (!compact)
         Flexible(
           child: ElasticMessageSwitcher(
-            duration: const Duration(milliseconds: 180),
-            reverseDuration: const Duration(milliseconds: 120),
-            sizeDuration: const Duration(milliseconds: 200),
             // An empty switcher stack would expand to its available width.
             child: label == null
                 ? const SizedBox.shrink()

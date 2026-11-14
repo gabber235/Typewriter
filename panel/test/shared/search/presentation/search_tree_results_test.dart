@@ -180,7 +180,9 @@ void main() {
       ], settle: false);
 
       await panel.search.show(source, [resultNode("beta")], settle: false);
-      expect(panel.search.result("Result alpha").isShown, isTrue);
+      // A leaving row is out of semantics but still paints.
+      expect(panel.search.result("Result alpha").isShown, isFalse);
+      expect(find.text("Result alpha", findRichText: true), findsOneWidget);
 
       await panel.settle();
       expect(panel.search.result("Result alpha").isShown, isFalse);
@@ -214,7 +216,11 @@ void main() {
       await tester.tap(find.text("Books"));
       await tester.pump();
 
-      expect(panel.search.result("Result alpha").isShown, isTrue);
+      // A leaving row is out of semantics but still paints.
+      expect(panel.search.result("Result alpha").isShown, isFalse);
+      expect(find.text("Result alpha", findRichText: true), findsOneWidget);
+      await panel.settle();
+      expect(find.text("Result alpha", findRichText: true), findsNothing);
     });
 
     testWidgets("removals and insertions together end in the new order", (

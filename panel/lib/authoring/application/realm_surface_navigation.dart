@@ -424,7 +424,10 @@ final class ResourceCreationNavigationIntent {
             resource: resource.resourceId,
             path: editorRootPath,
           ),
-          presentation: skir.PresentationRole.inspector,
+          // Any role: a Page opens as the workspace, where no inspector
+          // target exists.
+          presentation: null,
+          focus: RevealFocus.firstEmptyField,
           isCurrent: () => isCurrent,
         );
   }

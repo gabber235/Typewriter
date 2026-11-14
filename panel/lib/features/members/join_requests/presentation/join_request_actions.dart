@@ -13,18 +13,19 @@ class BulkJoinRequestActions extends HookConsumerWidget {
     required this.selectedCount,
     required this.selectedIds,
     required this.onClearSelection,
-    required this.onDecline,
+    required this.decline,
     super.key,
   });
 
   final int selectedCount;
   final Set<skir.RecordId> selectedIds;
   final VoidCallback onClearSelection;
-  final Future<void> Function() onDecline;
+
+  /// The decline hold over the selected requests.
+  final ActionShortcut decline;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final bulkRoles = useState<List<skir.OrganizationRole>>([]);
     final isAccepting = useState(false);
 
@@ -49,7 +50,9 @@ class BulkJoinRequestActions extends HookConsumerWidget {
           if (setEquals(selectedIds, ids)) onClearSelection();
         }
       } on ApiException catch (error) {
-        if (context.mounted) showErrorSnackBar(context, error.message);
+        if (context.mounted) {
+          context.reportFailure("Accept failed", detail: error.message);
+        }
       } on SubmissionException {
         // The shared activity retains unresolved delivery.
       } finally {
@@ -66,72 +69,54 @@ class BulkJoinRequestActions extends HookConsumerWidget {
             description: "Accept selected join requests",
             activators: const [SingleActivator(LogicalKeyboardKey.keyA)],
             priority: 2,
-            onInvoke: (_) => acceptSelected(),
+            run: ActionRun.press((_) => acceptSelected()),
           ),
-        ActionShortcut.intent(
-          id: "decline_bulk_join_requests_key",
-          label: "Decline requests",
-          description: "Decline selected join requests",
-          intent: DeleteIntent,
-          priority: 2,
-          onInvoke: (_) => onDecline(),
-        ),
+        decline,
         ActionShortcut.intent(
           id: "clear_bulk_join_requests",
           label: "Clear selection",
           description: "Clear selected join requests",
           intent: DismissIntent,
           priority: 2,
-          onInvoke: (_) => onClearSelection(),
+          run: ActionRun.press((_) => onClearSelection()),
         ),
       ],
-      child: AnimatedSize(
-        duration: 500.ms,
-        alignment: .topLeft,
-        curve: context.responsive(
-          mobile: ElasticOutCurve(0.9),
-          tablet: Curves.easeOutCubic,
-        ),
-        child: AnimatedSwitcher(
-          duration: 100.ms,
-          child: selectedIds.isEmpty
-              ? null
-              : Flex(
-                  direction: context.responsive(
-                    mobile: Axis.vertical,
-                    tablet: Axis.horizontal,
-                  ),
-                  spacing: context.responsive(mobile: 8.0, tablet: 4.0),
-                  crossAxisAlignment: context.responsive(
-                    mobile: CrossAxisAlignment.end,
-                    tablet: CrossAxisAlignment.center,
-                  ),
-                  children: [
-                    if (context.isMobile)
-                      roleDropdown
-                    else
-                      Flexible(child: roleDropdown),
-                    LoadingButton.filledIcon(
-                      onPressed: bulkRoles.value.isEmpty || isAccepting.value
-                          ? null
-                          : acceptSelected,
-                      icon: const Icon(Icons.check, size: 18),
-                      label: const Text("Accept All"),
-                    ),
-                    LoadingButton.outlinedIcon(
-                      onPressed: onDecline,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: theme.colorScheme.error,
-                        side: BorderSide(
-                          color: theme.colorScheme.error.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      icon: const Icon(Icons.close, size: 18),
-                      label: const Text("Decline All"),
-                    ),
-                  ],
+      child: AnimatedPresence(
+        child: selectedIds.isEmpty
+            ? null
+            : Flex(
+                direction: context.responsive(
+                  mobile: Axis.vertical,
+                  tablet: Axis.horizontal,
                 ),
-        ),
+                spacing: context.responsive(mobile: 8.0, tablet: 4.0),
+                crossAxisAlignment: context.responsive(
+                  mobile: CrossAxisAlignment.end,
+                  tablet: CrossAxisAlignment.center,
+                ),
+                children: [
+                  if (context.isMobile)
+                    roleDropdown
+                  else
+                    Flexible(child: roleDropdown),
+                  Button(
+                    face: ButtonFace.filled,
+                    onPressed: bulkRoles.value.isEmpty || isAccepting.value
+                        ? null
+                        : acceptSelected,
+                    icon: const Icon(Icons.check, size: 18),
+                    label: "Accept All",
+                    busyLabel: "Accepting",
+                  ),
+                  CommandButton(
+                    command: decline,
+                    face: ButtonFace.outlined,
+                    color: context.colors.dangerText,
+                    icon: const Icon(Icons.close, size: 18),
+                    label: "Decline all",
+                  ),
+                ],
+              ),
       ),
     );
   }

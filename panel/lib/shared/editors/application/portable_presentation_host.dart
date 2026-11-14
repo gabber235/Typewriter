@@ -52,6 +52,19 @@ abstract interface class PortablePresentationHost implements Listenable {
   void dispose();
 }
 
+/// A host whose bindings can stand for several selected items, writing a
+/// different value to each of them.
+abstract interface class PortableItemsWriteHost {
+  /// Writes the value at the same index of [values] to each selected item
+  /// behind [reference], in the order the binding's item values list them,
+  /// or to none of them.
+  Future<PortablePresentationWriteResult> writeItems(
+    skir.BindingRef reference,
+    List<skir.DataValue> values, {
+    required PortableInvocationContext context,
+  });
+}
+
 abstract interface class PortableCollectionMutationHost {
   Future<PortablePresentationWriteResult> addCollectionItem(
     skir.BindingRef reference, {
@@ -325,6 +338,7 @@ extension PortablePresentationRootInvocation on PortablePresentationHost {
             value: entry.value.value,
             location: entry.value.location,
             schema: entry.value.schema,
+            itemValues: entry.value.itemValues,
           ),
       },
       catalogGeneration: observation.catalog.snapshot.generation,

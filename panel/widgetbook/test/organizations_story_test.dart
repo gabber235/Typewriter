@@ -49,7 +49,8 @@ void main() {
   ) async {
     final panel = await tester.pumpStory(primarySearchButtonUseCase);
 
-    await tester.tap(panel.labeled("Search"));
+    // The action row repeats Search; both open the same search.
+    await tester.tap(panel.labeled("Search").first);
     await tester.runStory();
 
     await tester.enterText(find.byType(EditableText).last, "westeros");
@@ -89,4 +90,18 @@ void main() {
     );
     await tester.runStory();
   });
+
+  testWidgets(
+    "the organizations page keeps loading while its list has not arrived",
+    (tester) async {
+      final panel = await tester.pumpStory(
+        indexPageUseCase,
+        knobs: {"Organizations": "Loading"},
+        run: const Duration(seconds: 11),
+      );
+
+      expect(panel.shows("Loading Organizations..."), isTrue);
+      expect(panel.shows(ErrorScreen.defaultTitle), isFalse);
+    },
+  );
 }

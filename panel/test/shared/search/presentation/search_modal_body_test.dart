@@ -115,6 +115,39 @@ void main() {
     expect(panel.shows(searchLoadingSemanticLabel), isTrue);
   });
 
+  testWidgets(
+    "the first load progress runs along the query field's bottom edge, clear "
+    "of its rounded corners",
+    (tester) async {
+      final source = FakeSearchSource();
+      await tester.showSearch(
+        source,
+        results: body,
+        size: const Size(800, 700),
+      );
+
+      source.emitSnapshot(SearchSourceSnapshot.loading());
+      await tester.pump();
+
+      final bar = tester.getRect(
+        find.descendant(
+          of: find.byType(QueryBar),
+          matching: find.byType(EditorTextField),
+        ),
+      );
+      final progress = tester.getRect(find.byType(WorkingLine));
+      final corner = tester
+          .element(find.byType(QueryBar))
+          .shapes
+          .largeBorderRadius
+          .topLeft
+          .x;
+      expect(progress.bottom, closeTo(bar.bottom, 0.5));
+      expect(progress.left, greaterThanOrEqualTo(bar.left + corner));
+      expect(progress.right, lessThanOrEqualTo(bar.right - corner));
+    },
+  );
+
   testWidgets("keeps stale results without showing first load progress", (
     tester,
   ) async {

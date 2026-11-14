@@ -53,7 +53,7 @@ void main() {
       await panel.open("/organization/globex/services");
 
       await panel.eventually(() => expect(panel.path, "/"));
-      expect(find.text(_notAMember), findsOneWidget);
+      expect(panel.failures, [_notAMember]);
     });
 
     testWidgets(
@@ -66,7 +66,7 @@ void main() {
         await panel.open("/organization/globex/realm/main/resource/first");
 
         await panel.eventually(() => expect(panel.path, "/"));
-        expect(find.text(_notAMember), findsOneWidget);
+        expect(panel.failures, [_notAMember]);
       },
     );
 
@@ -82,10 +82,9 @@ void main() {
       await panel.settle();
 
       await panel.eventually(() => expect(panel.path, "/"));
-      expect(
-        find.text("You no longer have access to this organization."),
-        findsOneWidget,
-      );
+      expect(panel.failures, [
+        "You no longer have access to this organization.",
+      ]);
     });
 
     testWidgets("the organization in the address is the one the panel opens", (

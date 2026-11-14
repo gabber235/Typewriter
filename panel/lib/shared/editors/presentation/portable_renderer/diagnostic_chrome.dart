@@ -66,12 +66,9 @@ class PortableDiagnosticFrame extends HookWidget {
         diagnostics: local,
       ),
       builder: (context, summary, owner) {
-        final direct = {...summary.direct, ...local}.toList();
-        final effective = PortableDiagnosticSummary(
-          direct: direct,
-          descendants: summary.descendants,
-        );
-        final severity = effective.highestSeverity;
+        // The tree reveals what shows, so the tint, the label colour and
+        // the message change together with the headers above.
+        final severity = summary.highestSeverity;
         final color = severity?.color(context);
         final colors = context.theme.colorScheme;
         final fill = severity == skir.DiagnosticSeverity.error
@@ -125,9 +122,8 @@ class PortableDiagnosticFrame extends HookWidget {
             ),
             if (hasLabel) const SizedBox(height: 6),
             AnimatedContainer(
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : const Duration(milliseconds: 120),
+              duration: motionTimeline(context, MotionToken.ink).duration,
+              curve: motionTimeline(context, MotionToken.ink).curve,
               decoration: BoxDecoration(
                 color: fill ?? context.colors.surface.withValues(alpha: 0),
                 borderRadius: context.shapes.mediumBorderRadius,
@@ -145,7 +141,10 @@ class PortableDiagnosticFrame extends HookWidget {
                     onValidationChanged: reportParseMessage,
                     child: child,
                   ),
-                  PortableDiagnosticMessages(diagnostics: direct),
+                  PortableDiagnosticMessages(
+                    diagnostics: summary.direct,
+                    fixed: summary.fixed,
+                  ),
                 ],
               ),
             ),
@@ -176,53 +175,93 @@ class PortableControlDiagnostics extends InheritedWidget {
       onValidationChanged != old.onValidationChanged;
 }
 
+/// The messages under a control: each shown diagnostic types in, and
+/// [fixed] says Fixed in the success colour before the messages close. The
+/// diagnostic tree decides when each shows, see [PortableDiagnosticReveal].
 class PortableDiagnosticMessages extends StatelessWidget {
-  const PortableDiagnosticMessages({required this.diagnostics, super.key});
+  const PortableDiagnosticMessages({
+    required this.diagnostics,
+    this.fixed = false,
+    super.key,
+  });
   final List<PortablePresentationDiagnostic> diagnostics;
+  final bool fixed;
   @override
   Widget build(BuildContext context) {
+    final shown = diagnostics;
+    final padding = EdgeInsets.only(
+      top: context.spacing.space1,
+      left: context.spacing.space2,
+      right: context.spacing.space2,
+    );
     return ElasticMessageSwitcher(
-      child: diagnostics.isEmpty
-          ? const SizedBox.shrink()
-          : Padding(
-              key: ValueKey(PortableDiagnosticSummary(direct: diagnostics)),
-              padding: EdgeInsets.only(
-                top: context.spacing.space1,
-                left: context.spacing.space2,
-                right: context.spacing.space2,
-              ),
-              child: Semantics(
-                liveRegion: true,
-                label: diagnostics.map((item) => item.message).join("\n"),
-                child: ExcludeSemantics(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final diagnostic in diagnostics)
-                        Text(
-                          diagnostic.message,
-                          style: context.theme.textTheme.bodySmall?.copyWith(
-                            color: Color.alphaBlend(
-                              diagnostic.severity
-                                  .color(context)
-                                  .withValues(
-                                    alpha: context.isDarkMode ? 0.4 : 0.9,
-                                  ),
-                              Surface.colorOf(context).on(context),
-                            ),
-                          ),
-                        ),
-                    ],
+      child: switch (shown) {
+        [] when fixed => Padding(
+          key: const ValueKey("fixed"),
+          padding: padding,
+          child: Semantics(
+            liveRegion: true,
+            label: "Fixed",
+            child: ExcludeSemantics(
+              child: Row(
+                spacing: context.spacing.space1,
+                children: [
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    color: context.colors.success,
                   ),
-                ),
+                  MotionLabel(
+                    "Fixed",
+                    typesIn: true,
+                    style: context.text.sentenceSmall.copyWith(
+                      color: context.colors.successText,
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
+        ),
+        [] => const SizedBox.shrink(),
+        _ => Padding(
+          key: ValueKey(PortableDiagnosticSummary(direct: shown)),
+          padding: padding,
+          child: Semantics(
+            liveRegion: true,
+            label: shown.map((item) => item.message).join("\n"),
+            child: ExcludeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final diagnostic in shown)
+                    TypedParagraph(
+                      diagnostic.message,
+                      style: context.text.sentenceSmall.copyWith(
+                        color: Color.alphaBlend(
+                          diagnostic.severity
+                              .color(context)
+                              .withValues(
+                                alpha: context.isDarkMode ? 0.4 : 0.9,
+                              ),
+                          Surface.colorOf(context).on(context),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      },
     );
   }
 }
 
-class PortableDiagnosticHeaderMarker extends StatelessWidget {
+/// The mark a header carries for the problems inside it. It pops in with
+/// `capIn` when it appears; under reduced motion it appears in place.
+class PortableDiagnosticHeaderMarker extends HookWidget {
   const PortableDiagnosticHeaderMarker({required this.summary, super.key});
   final PortableDiagnosticSummary summary;
   @override
@@ -231,19 +270,29 @@ class PortableDiagnosticHeaderMarker extends StatelessWidget {
     final label = count == 1
         ? "1 field diagnostic"
         : "$count field diagnostics";
-    return Tooltip(
+    final arrive = resolveMotion(context, MotionToken.capIn);
+    final pop = useMotion(MotionToken.capIn, 1, initial: arrive.still ? 1 : 0);
+    final progress = pop.value;
+    return PanelTooltip(
       message: label,
       child: Semantics(
         label: label,
-        child: Icon(
-          switch (summary.highestSeverity?.kind) {
-            skir.DiagnosticSeverity_kind.informationConst => Icons.info_outline,
-            skir.DiagnosticSeverity_kind.warningConst =>
-              Icons.warning_amber_rounded,
-            _ => Icons.error_outline,
-          },
-          size: 18,
-          color: summary.highestSeverity?.color(context),
+        child: Transform.translate(
+          offset: Offset(0, arrive.landing.rise * (1 - progress)),
+          child: Opacity(
+            opacity: progress.clamp(0.0, 1.0),
+            child: Icon(
+              switch (summary.highestSeverity?.kind) {
+                skir.DiagnosticSeverity_kind.informationConst =>
+                  Icons.info_outline,
+                skir.DiagnosticSeverity_kind.warningConst =>
+                  Icons.warning_amber_rounded,
+                _ => Icons.error_outline,
+              },
+              size: 18,
+              color: summary.highestSeverity?.color(context),
+            ),
+          ),
         ),
       ),
     );
@@ -263,7 +312,7 @@ class PortablePresentationChrome extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tooltip = useMemoized(GlobalKey<TooltipState>.new);
+    final tooltip = useMemoized(GlobalKey<RawTooltipState>.new);
     final placement = PortableDiagnosticScope.of(context).placement;
     final expanded =
         role == skir.PresentationRole.workspace ||
@@ -290,7 +339,7 @@ class PortablePresentationChrome extends HookWidget {
       if (hasFocus && diagnostics.isNotEmpty) {
         tooltip.currentState?.ensureTooltipVisible();
       } else {
-        Tooltip.dismissAllToolTips();
+        RawTooltip.dismissAllToolTips();
       }
     }, [focus, diagnostics]);
     if (expanded) {
@@ -301,7 +350,10 @@ class PortablePresentationChrome extends HookWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: fill ? MainAxisSize.max : MainAxisSize.min,
             children: [
-              PortableDiagnosticMessages(diagnostics: diagnostics),
+              PortableDiagnosticMessages(
+                diagnostics: diagnostics,
+                fixed: placement.generalFixed,
+              ),
               if (fill) Expanded(child: child) else child,
             ],
           );
@@ -321,31 +373,18 @@ class PortablePresentationChrome extends HookWidget {
               visible: diagnostics.isNotEmpty,
               maintainState: true,
               child: IgnorePointer(
-                child: Tooltip(
-                  key: tooltip,
+                child: PanelTooltip(
+                  tooltipKey: tooltip,
                   message: diagnostics.map((item) => item.message).join("\n"),
                   triggerMode: TooltipTriggerMode.manual,
                   excludeFromSemantics: true,
-                  child: Semantics(
+                  child: Button(
+                    face: ButtonFace.icon,
+                    focusNode: focus,
                     label: label,
-                    child: IconButton(
-                      focusNode: focus,
-                      style: IconButton.styleFrom(
-                        minimumSize: const Size.square(20),
-                        maximumSize: const Size.square(20),
-                        fixedSize: const Size.square(20),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.standard,
-                        padding: const EdgeInsets.all(2),
-                      ),
-                      onPressed: () =>
-                          tooltip.currentState?.ensureTooltipVisible(),
-                      icon: Icon(
-                        icon,
-                        size: 16,
-                        color: severity?.color(context),
-                      ),
-                    ),
+                    onPressed: () =>
+                        tooltip.currentState?.ensureTooltipVisible(),
+                    icon: Icon(icon, size: 16, color: severity?.color(context)),
                   ),
                 ),
               ),

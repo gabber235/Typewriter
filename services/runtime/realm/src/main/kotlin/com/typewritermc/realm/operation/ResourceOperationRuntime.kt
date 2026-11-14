@@ -43,7 +43,6 @@ import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationCardinality
-import skirout.editor.v1.operation.OperationConfirmation
 import skirout.editor.v1.operation.ResolvedResourceOperation
 import skirout.editor.v1.operation.ResolvedResourceOperations
 import skirout.editor.v1.resource_operations.DropCandidates
@@ -65,7 +64,6 @@ import com.typewritermc.types.ResourceId as AuthorResourceId
 internal sealed interface OperationPreparationResult {
     data class Preview(
         val edit: PreparedEdit,
-        val confirmation: OperationConfirmation?,
         val selection: List<ResourceId>?,
     ) : OperationPreparationResult
 
@@ -221,7 +219,7 @@ internal class ResourceOperationRuntime(
             }
             try {
                 operation.prepare(invocation.targets, input, session)
-                OperationPreparationResult.Preview(edit.finish(), operation.definition.presentation.confirmation, session.selection)
+                OperationPreparationResult.Preview(edit.finish(), session.selection)
             } catch (needed: NeedsChoices) {
                 OperationPreparationResult.NeedsInput(input, needed.requests)
             } catch (unfinished: UnfinishedOperationInput) {

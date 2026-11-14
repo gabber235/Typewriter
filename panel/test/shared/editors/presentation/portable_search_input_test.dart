@@ -69,6 +69,8 @@ void main() {
     final panel = await fixture.show(tester);
     await panel.searchInput.open();
     await tester.tapAt(tester.getCenter(find.text("Map")));
+    // The write takes 40 milliseconds; wait it out before the panel settles.
+    await tester.pump(const Duration(milliseconds: 40));
     await panel.settle();
     expect(fixture.value.authoredString, "Map");
     expect(panel.searchInput.query.exists, isFalse);

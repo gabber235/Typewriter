@@ -16,11 +16,15 @@ final class AuthoringConflictNotice extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text("Saved values changed", style: context.theme.textTheme.titleSmall),
-        const Text("Your edits are still here. Review them before saving."),
+        Text(
+          "Your edits are still here. Review them before saving.",
+          style: context.text.sentence,
+        ),
         Align(
           alignment: Alignment.centerLeft,
-          child: TextButton(
-            onPressed: () => showDialog<void>(
+          child: Button(
+            label: "Review changes",
+            onPressed: () => showAdvancedDialog<void>(
               context: context,
               builder: (dialogContext) => AlertDialog(
                 title: const Text("Review changes"),
@@ -35,14 +39,20 @@ final class AuthoringConflictNotice extends StatelessWidget {
                   ),
                 ),
                 actions: [
-                  TextButton(
+                  Button(
+                    label: "Close",
+                    // Keep mine takes focus when the review offers it.
+                    autofocus:
+                        workspace
+                            .conflictReview(group)
+                            ?.comparison
+                            ?.canKeepMine !=
+                        true,
                     onPressed: () => Navigator.pop(dialogContext),
-                    child: const Text("Close"),
                   ),
                 ],
               ),
             ),
-            child: const Text("Review changes"),
           ),
         ),
       ],

@@ -181,15 +181,13 @@ final class PortableSearchInput extends HookWidget {
       leading: leading,
       trailing: suffix,
       child: Semantics(
-        button: true,
         enabled: editable,
-        label: "Activate search input",
-        child: InkWell(
+        child: Button(
           key: const ValueKey("authored_search_summary"),
+          face: ButtonFace.bare,
+          label: "Activate search input",
           focusNode: summaryFocus,
-          canRequestFocus: editable,
-          onTap: editable ? openSearch : null,
-          borderRadius: context.shapes.mediumBorderRadius,
+          onPressed: editable ? openSearch : null,
           child: InputDecorator(
             isEmpty: false,
             isFocused: summaryFocus.hasFocus,
@@ -203,9 +201,9 @@ final class PortableSearchInput extends HookWidget {
                             borderRadius: context.shapes.mediumBorderRadius,
                           ))
                       .copyWith(
-                        borderSide: FocusHighlight.focusBorder(
-                          context,
-                          FocusType.focus,
+                        borderSide: BorderSide(
+                          color: context.colors.focusRing,
+                          width: context.shapes.ringWidth,
                         ),
                       ),
               suffixIcon: inputContent?.leading == skir.InputAdornment.none
@@ -227,6 +225,24 @@ final class PortableSearchInput extends HookWidget {
         ),
       ),
     );
+    final grow = motionTimeline(context, MotionToken.loadIn);
+    // A zero length size change would land inside layout.
+    final grows = grow.duration != Duration.zero;
+    final field = editing.value && editable
+        ? TextFieldTapRegion(
+            child: SearchRoot.borrowed(
+              controller: controller,
+              child: _PortableSearchSurface(
+                placeholder: placeholder,
+                picker: picker,
+                scope: scope,
+                control: control,
+                style: style,
+                maximumExtent: (maximum ?? 320).clamp(80, 800),
+              ),
+            ),
+          )
+        : summary;
     final content = _controlFrame(
       control.control,
       control.appearance == null
@@ -260,31 +276,16 @@ final class PortableSearchInput extends HookWidget {
                     const SingleActivator(LogicalKeyboardKey.space),
                   ],
                   priority: 100,
-                  onInvoke: (_) => openSearch(),
+                  run: ActionRun.press((_) => openSearch()),
                 ),
             ],
-            child: AnimatedSize(
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : 300.ms,
-              curve: Curves.easeInOutCubic,
-              alignment: Alignment.topCenter,
-              child: editing.value && editable
-                  ? TextFieldTapRegion(
-                      child: SearchRoot.borrowed(
-                        controller: controller,
-                        child: _PortableSearchSurface(
-                          placeholder: placeholder,
-                          picker: picker,
-                          scope: scope,
-                          control: control,
-                          style: style,
-                          maximumExtent: (maximum ?? 320).clamp(80, 800),
-                        ),
-                      ),
-                    )
-                  : summary,
-            ),
+            child: grows
+                ? MotionSize(
+                    grow: MotionToken.loadIn,
+                    alignment: Alignment.topCenter,
+                    child: field,
+                  )
+                : field,
           ),
         ),
       ),
@@ -488,8 +489,8 @@ final class _PortableSearchSurface extends ConsumerWidget {
                 padding: EdgeInsets.all(context.spacing.space2),
                 child: Text(
                   feedback,
-                  style: context.theme.textTheme.bodySmall?.copyWith(
-                    color: context.colors.danger,
+                  style: context.text.sentenceSmall.copyWith(
+                    color: context.colors.dangerText,
                   ),
                 ),
               ),
@@ -519,7 +520,7 @@ final class _PortableSearchSurface extends ConsumerWidget {
                       ),
                     ],
                     show: false,
-                    onInvoke: (_) => navigate(direction),
+                    run: ActionRun.press((_) => navigate(direction)),
                   ),
               ],
               queryStyle: style.valueStyle,
@@ -623,7 +624,7 @@ final class _PortableSearchSurface extends ConsumerWidget {
                   };
                   return _PortableSearchResult(
                     highlighted: row.focused,
-                    child: Tooltip(
+                    child: PanelTooltip(
                       message: row.result.title ?? "",
                       child: result,
                     ),

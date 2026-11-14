@@ -2,8 +2,8 @@ part of "../portable_presentation_renderer.dart";
 
 /// Keeps authored actions in their lexical scope while merging only proven
 /// collection command equivalents. Disclosure retains the body and excludes
-/// collapsed focus. Removal focus is captured before a menu or confirmation
-/// opens, so closing it cannot invent a new recovery origin.
+/// collapsed focus. In a collection row, the disclosure and the first pinned
+/// action are its RowLanding, where focus lands after a removal.
 final class _AuthoredPresentationHeader extends HookWidget {
   const _AuthoredPresentationHeader({
     required this.header,
@@ -11,16 +11,12 @@ final class _AuthoredPresentationHeader extends HookWidget {
     required this.scope,
     this.contained = false,
     this.collectionControls = const [],
-    this.collectionRecoveryFocusNode,
-    this.collectionDisclosureFocusNode,
   });
   final skir.PresentationHeader header;
   final Widget body;
   final PortablePresentationScope scope;
   final bool contained;
   final List<_SuppliedHeaderControl> collectionControls;
-  final FocusNode? collectionRecoveryFocusNode;
-  final FocusNode? collectionDisclosureFocusNode;
 
   @override
   Widget build(BuildContext context) {
@@ -35,10 +31,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
       return null;
     }, [header.initiallyExpanded]);
     final expanded = controller.isExpanded;
-    void toggleExpanded() {
-      _CollectionInteractionScope.invalidateAncestors(context);
-      controller.toggle();
-    }
+    void toggleExpanded() => controller.toggle();
 
     return PortableDiagnosticAnchor(
       node: PortableDiagnosticNode(
@@ -93,10 +86,10 @@ final class _AuthoredPresentationHeader extends HookWidget {
                 vertical: context.spacing.space1,
               )
             : _presentationInsets(header.contentPadding);
+        // Colour and shape changes fade with ink.
+        final ink = motionTimeline(context, MotionToken.ink);
         final headerWidget = Material(
-          animationDuration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 120),
+          animationDuration: ink.duration,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(
               top: context.shapes.mediumRadius,
@@ -104,9 +97,10 @@ final class _AuthoredPresentationHeader extends HookWidget {
             ),
           ),
           color: context.colors.surface.withValues(alpha: 0),
-          child: InkWell(
-            onTap: collapsible && scope.enabled ? toggleExpanded : null,
-            borderRadius: context.shapes.mediumBorderRadius,
+          child: Button(
+            face: ButtonFace.bare,
+            label: "",
+            onPressed: collapsible && scope.enabled ? toggleExpanded : null,
             child: Padding(
               padding: header.headerPadding == null
                   ? EdgeInsets.symmetric(
@@ -122,9 +116,13 @@ final class _AuthoredPresentationHeader extends HookWidget {
                       before: [
                         if (collapsible)
                           _expandButton(expanded, toggleExpanded),
-                        ElasticSwitcher(
+                        // The marker pops in itself; the row only makes room.
+                        MotionSize(
+                          grow: MotionToken.loadIn,
+                          shrink: MotionToken.listOut,
+                          clipBehavior: Clip.none,
                           child: summary.isEmpty
-                              ? null
+                              ? const SizedBox.shrink()
                               : Padding(
                                   padding: EdgeInsets.only(
                                     right: context.spacing.space3,
@@ -191,13 +189,15 @@ final class _AuthoredPresentationHeader extends HookWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             headerWidget,
-            PortableDiagnosticMessages(diagnostics: summary.direct),
+            PortableDiagnosticMessages(
+              diagnostics: summary.direct,
+              fixed: summary.fixed,
+            ),
           ],
         );
         final content = AnimatedContainer(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 120),
+          duration: ink.duration,
+          curve: ink.curve,
           decoration: BoxDecoration(
             color:
                 fill?.withValues(alpha: 0.18) ??
@@ -211,31 +211,11 @@ final class _AuthoredPresentationHeader extends HookWidget {
             bottom: severity != null && expanded ? context.spacing.space1 : 0,
           ),
           child: collapsible
-              ? Expansible(
+              ? GrowingCard(
                   controller: controller,
-                  animationStyle: AnimationStyle(
-                    duration: MediaQuery.disableAnimationsOf(context)
-                        ? Duration.zero
-                        : const Duration(milliseconds: 240),
-                    curve: Curves.easeOut,
-                  ),
                   maintainState: true,
-                  headerBuilder: (context, animation) {
-                    return headerContent;
-                  },
-                  bodyBuilder: (context, animation) {
-                    return ExcludeFocus(
-                      excluding: !expanded,
-                      child: bodyWidget,
-                    );
-                  },
-                  expansibleBuilder: (context, header, body, animation) {
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [header, body],
-                    );
-                  },
+                  header: (context, _) => headerContent,
+                  body: (context) => bodyWidget,
                 )
               : Column(
                   mainAxisSize: MainAxisSize.min,
@@ -251,11 +231,14 @@ final class _AuthoredPresentationHeader extends HookWidget {
   }
 
   Widget _expandButton(bool expanded, VoidCallback toggleExpanded) {
-    return IconButton(
-      focusNode: collectionDisclosureFocusNode ?? collectionRecoveryFocusNode,
-      tooltip: expanded ? "Collapse" : "Expand",
-      onPressed: scope.enabled ? toggleExpanded : null,
-      icon: Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 18),
+    return RowLanding(
+      child: Button(
+        face: ButtonFace.icon,
+        icon: Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 18),
+        label: expanded ? "Collapse" : "Expand",
+        tooltip: expanded ? "Collapse" : "Expand",
+        onPressed: scope.enabled ? toggleExpanded : null,
+      ),
     );
   }
 
@@ -286,7 +269,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
   List<_AuthoredHeaderItem> _items(BuildContext context) {
     final resolved = <_AuthoredHeaderItem>[];
     var order = 0;
-    var recoveryAttached = false;
+    var landingPlaced = false;
     final contributed = collectionControls
         .map((item) => item.command)
         .nonNulls
@@ -341,56 +324,42 @@ final class _AuthoredPresentationHeader extends HookWidget {
           };
           final destructive =
               value.tone.kind == skir.HeaderActionTone_kind.destructiveConst;
-          final focusNode =
+          final landing =
               pinned &&
-                  !recoveryAttached &&
-                  header.initiallyExpanded == null &&
-                  enabled
-              ? collectionRecoveryFocusNode
-              : null;
-          recoveryAttached = recoveryAttached || focusNode != null;
+              !landingPlaced &&
+              header.initiallyExpanded == null &&
+              enabled;
+          landingPlaced = landingPlaced || landing;
           final button = Builder(
             builder: (buttonContext) {
-              void activate() => _invokeAction(
-                context,
-                buttonContext,
-                value.action,
-                value.confirmation,
-                destructive: destructive,
-              );
+              void activate() =>
+                  _invokeAction(context, buttonContext, value.action);
               final icon = iconName == null
                   ? const Icon(Icons.more_horiz, size: 18)
                   : Icones(iconName, size: 18);
               if (pinned) {
-                return IconButton(
-                  focusNode: focusNode,
+                final pinnedButton = Button(
+                  face: ButtonFace.icon,
                   tooltip: tooltip,
                   onPressed: enabled ? activate : null,
-                  style: destructive
-                      ? IconButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.error,
-                        )
-                      : null,
-                  icon: Semantics(label: label, child: icon),
+                  color: destructive ? context.colors.dangerText : null,
+                  icon: icon,
+                  label: label,
                 );
+                return landing ? RowLanding(child: pinnedButton) : pinnedButton;
               }
-              return TextButton.icon(
+              return Button(
                 onPressed: enabled ? activate : null,
-                style: destructive
-                    ? TextButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.error,
-                      )
-                    : null,
+                color: destructive ? context.colors.dangerText : null,
+                tooltip: tooltip,
                 icon: icon,
-                label: Text(label),
+                label: label,
               );
             },
           );
           resolved.add(
             _AuthoredHeaderItem(
-              widget: pinned
-                  ? button
-                  : Tooltip(message: tooltip, child: button),
+              widget: button,
               placement: placement,
               priority: _priority(value.priority),
               order: currentOrder,
@@ -436,12 +405,8 @@ final class _AuthoredPresentationHeader extends HookWidget {
                 semanticLabel: labelValue,
                 visualDensity: VisualDensity.compact,
                 onChanged: enabled
-                    ? (_) => _invokeAction(
-                        context,
-                        checkboxContext,
-                        value.action,
-                        value.confirmation,
-                      )
+                    ? (_) =>
+                          _invokeAction(context, checkboxContext, value.action)
                     : null,
               ),
             ),
@@ -450,12 +415,12 @@ final class _AuthoredPresentationHeader extends HookWidget {
             _AuthoredHeaderItem(
               widget: value.tooltip == null
                   ? enabledResult is _ResolvedFailure<bool>
-                        ? Tooltip(
+                        ? PanelTooltip(
                             message: enabledResult.message,
                             child: checkbox,
                           )
                         : checkbox
-                  : Tooltip(
+                  : PanelTooltip(
                       message: switch (_string(scope, value.tooltip!)) {
                         _ResolvedValue(:final value) => value,
                         _ResolvedFailure(:final message) => message,
@@ -554,7 +519,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
     skir.HeaderActionPlacement placement,
     int order,
   ) => _AuthoredHeaderItem(
-    widget: Tooltip(
+    widget: PanelTooltip(
       message: message,
       child: Icon(
         Icons.warning_amber_rounded,
@@ -595,7 +560,6 @@ final class _AuthoredPresentationHeader extends HookWidget {
     _AuthoredReorderTarget target, {
     required skir.ItemId? after,
   }) {
-    _CollectionInteractionScope.invalidateAncestors(context);
     scope.moveListItem(target.containing, target.item, after);
   }
 
@@ -623,93 +587,20 @@ final class _AuthoredPresentationHeader extends HookWidget {
     BuildContext declarationContext,
     BuildContext occurrenceContext,
     skir.EditorAction action,
-    skir.HeaderActionConfirmation? confirmation, {
-    bool destructive = false,
-  }) {
+  ) {
     final menu = _CollectionMenuInvocation.maybeOf(occurrenceContext);
-    final row = menu?.row ?? _CollectionRowContext.maybeOf(occurrenceContext);
-    final local =
-        row?.focus?.matchesLocalRemoval(row.row, scope, action) ?? false;
-    final origin = local
-        ? menu != null
-              ? menu.origin
-              : row?.focus?.captureOrigin(row.row)
-        : null;
-    unawaited(
-      _runAction(
-        declarationContext,
-        action,
-        confirmation,
-        destructive: destructive,
-        actionRow: row,
-        removalRow: local ? row : null,
-        removalOrigin: origin,
-        closeMenu: menu?.close,
-      ),
-    );
+    unawaited(_runAction(declarationContext, action, closeMenu: menu?.close));
   }
 
   Future<void> _runAction(
     BuildContext context,
-    skir.EditorAction editorAction,
-    skir.HeaderActionConfirmation? confirmation, {
-    bool destructive = false,
-    _CollectionRowBinding? actionRow,
-    _CollectionRowBinding? removalRow,
-    _CollectionActionOrigin? removalOrigin,
+    skir.EditorAction editorAction, {
     VoidCallback? closeMenu,
   }) async {
     closeMenu?.call();
-    if (confirmation != null) {
-      final title = _resolvedString(confirmation.title);
-      final message = _resolvedString(confirmation.message);
-      final label = _resolvedString(confirmation.confirmationLabel);
-      if (title == null || message == null || label == null) {
-        scope.reportStatus?.call("The action confirmation is unavailable");
-        return;
-      }
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text("Cancel"),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: destructive
-                  ? FilledButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                    )
-                  : null,
-              child: Text(label),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true) return;
-    }
     if (!context.mounted) return;
-    final recovery = removalRow?.focus;
-    if (recovery != null &&
-        recovery.matchesLocalRemoval(removalRow!.row, scope, editorAction)) {
-      if (closeMenu != null || confirmation != null) {
-        await WidgetsBinding.instance.endOfFrame;
-        if (!context.mounted) return;
-      }
-      await recovery.removeLocal(
-        row: removalRow.row,
-        scope: scope,
-        action: editorAction,
-        origin: removalOrigin,
-      );
-      return;
-    }
-    actionRow?.focus?.invalidateInteraction();
-    _CollectionInteractionScope.invalidateAncestors(context);
+    // A removal moves focus when its row leaves (RowFocus), after the menu
+    // handed focus back.
     await scope.executeAction(editorAction);
   }
 }

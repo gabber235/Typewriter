@@ -14,19 +14,22 @@ Widget loadingScreenUseCase(BuildContext context) {
     options: const ["Waiting for connection", "Authenticating User"],
     initialOption: "Waiting for connection",
   );
-  final reducedMotion = context.knobs.boolean(label: "Reduce motion");
   return Story(
-    const [],
-    at: PanelLocation.component(
-      Builder(
-        builder: (context) {
-          return MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(disableAnimations: reducedMotion),
-            child: LoadingScreen(title: title),
-          );
-        },
-      ),
-    ),
+    context.knobs.traits("Motion", {
+      "Full": const [],
+      "Reduced": const [reducedMotion],
+    }),
+    at: PanelLocation.component(LoadingScreen(title: title)),
+  );
+}
+
+/// The status line under the [LoadingScreen] heading as a
+/// [ConnectionScroller]: it ripples while the connection is pending, and
+/// stays level under reduced motion.
+@widgetbook.UseCase(name: "Default", type: ConnectionScroller)
+Widget connectionScrollerUseCase(BuildContext context) {
+  return Story(
+    context.knobs.motion(),
+    at: const PanelLocation.component(ConnectionScroller()),
   );
 }

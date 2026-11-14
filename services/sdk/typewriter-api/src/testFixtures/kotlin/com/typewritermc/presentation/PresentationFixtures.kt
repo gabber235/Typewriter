@@ -316,6 +316,25 @@ internal fun coordinateRow(): skirout.editor.v1.presentation.AxisChildrenElement
     return ((result.layout.singleFixed().element as PresentationElement.ChildrenWrapper).value as ChildrenElement.RowWrapper).value
 }
 
+/** The wire appearance of a list input over text items whose collection appearance [configure] sets. */
+internal fun collectionAppearance(configure: CollectionAppearanceScope.() -> Unit): skirout.editor.v1.presentation.CollectionAppearance {
+    val result =
+        DefaultPresentationRuntime().build(
+            PresentationBuildBinding(CompositeFixture.checked.presentationTemplate(), PresentationRole.WORKSPACE),
+        ) { build ->
+            with(CompositeFixture) {
+                build.textList().invoke {
+                    listInput {
+                        configure()
+                        items { textInput() }
+                    }
+                }
+            }
+        }
+    return (result.layout.singleFixed().element as PresentationElement.ListInputWrapper).value.appearance
+        ?: error("A list input always sends its appearance.")
+}
+
 /** A subject with list, set, map, named scalar and nested record fields that the composite editors bind into. */
 internal object CompositeFixture {
     val wrapperId = TypeDefinitionId.qualified("test", "Code")
@@ -348,18 +367,21 @@ internal object CompositeFixture {
         )
     val checked = catalog.ready(subjectId.use())
 
+    /** The subject's list of text, edited with text inputs. */
+    @Suppress("UNCHECKED_CAST")
+    fun PresentationBuildScope.textList(): PresentedField<List<String>, ListControl<TextControl>> =
+        field(
+            "list",
+            ListControl::class as kotlin.reflect.KClass<ListControl<TextControl>>,
+            mapOf(NestedPresentationSlot.Items to NestedPresentationScope(TextControl::class)),
+        )
+
     fun root(): PresentationBuildResult =
         DefaultPresentationRuntime().build(
             PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
         ) { build ->
             with(build) {
-                @Suppress("UNCHECKED_CAST")
-                val list: PresentedField<List<String>, ListControl<TextControl>> =
-                    field(
-                        "list",
-                        ListControl::class as kotlin.reflect.KClass<ListControl<TextControl>>,
-                        mapOf(NestedPresentationSlot.Items to NestedPresentationScope(TextControl::class)),
-                    )
+                val list = textList()
 
                 @Suppress("UNCHECKED_CAST")
                 val set: PresentedField<Set<String>, SetControl<TextControl>> =

@@ -9,8 +9,8 @@ import "package:typewriter_testkit/src/traits/services/services_data.dart";
 /// The open organization runs [services] and the runtime [topology], as the
 /// backend reports them over NATS.
 ///
-/// Like [backendOverNats], the panel's real organization list, topology and
-/// services projections run against [World.nats]; this trait answers their
+/// The panel's real organization list, topology and services projections
+/// run against [World.nats]; this trait answers their
 /// first requests with the signed in user's organizations, [topology] and
 /// [services]. Commands such as a rename or a host configuration reach the
 /// handlers the test registers, and changes arrive through

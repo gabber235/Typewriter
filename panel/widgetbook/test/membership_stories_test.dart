@@ -51,18 +51,12 @@ void main() {
     expect(panel.shows(name), isTrue);
 
     final requests = find.text("Decline").evaluate().length;
-    await tester.tap(find.text("Decline").first);
-    await tester.runStory();
-    final dialog = find.semantics
-        .byPredicate((node) => node.spoken.contains("request?"))
-        .evaluate()
-        .last
-        .route!;
-    await tester.tapAt(dialog.button("Decline").screenRect.center);
+    await panel.holdButton("Decline $name");
 
     await tester.eventually(
       () => expect(find.text("Decline"), findsNWidgets(requests - 1)),
     );
+    expect(panel.shows(name), isFalse);
     await tester.runStory();
   });
 }

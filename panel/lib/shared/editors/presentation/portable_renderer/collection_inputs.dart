@@ -27,20 +27,22 @@ extension _PortableCollectionInputRendering
     skir.SetControl control,
     PortablePresentationScope childScope, {
     Widget Function(_ScopedCollectionHeader, Widget)? headerBuilder,
-  }) => _renderSequenceInput(
-    context: context,
-    control: control.control,
-    itemPresentation: control.itemPresentation,
-    itemBinding: control.itemBinding,
-    indexBinding: null,
-    allowAdd: control.allowAdd,
-    allowRemove: control.allowRemove,
-    allowReorder: false,
-    childScope: childScope,
-    appearance: control.appearance,
-    content: control.content,
-    headerBuilder: headerBuilder,
-  );
+  }) => _knownChoices(childScope, control.control.binding) != null
+      ? _renderChoiceSetInput(control, childScope)
+      : _renderSequenceInput(
+          context: context,
+          control: control.control,
+          itemPresentation: control.itemPresentation,
+          itemBinding: control.itemBinding,
+          indexBinding: null,
+          allowAdd: control.allowAdd,
+          allowRemove: control.allowRemove,
+          allowReorder: false,
+          childScope: childScope,
+          appearance: control.appearance,
+          content: control.content,
+          headerBuilder: headerBuilder,
+        );
 
   Widget _renderSequenceInput({
     required BuildContext context,
@@ -56,6 +58,15 @@ extension _PortableCollectionInputRendering
     required skir.CollectionContent? content,
     Widget Function(_ScopedCollectionHeader, Widget)? headerBuilder,
   }) {
+    final differing = childScope.itemValues(control.binding);
+    if (differing.isNotEmpty) {
+      return _renderMixedCollection(
+        control,
+        childScope,
+        differing,
+        indexBinding == null ? "sets" : "lists",
+      );
+    }
     final current = childScope.read(control.binding);
     final items =
         current?.authoredItems?.toList() ??
@@ -70,12 +81,10 @@ extension _PortableCollectionInputRendering
       skir.PresentationElement_linkInputWrapper(:final value) => value,
       _ => null,
     };
-    final rendered = collectionWithFocus(
+    final rendered = collectionWithHeader(
       sourceScope: childScope,
       mutationScope: childScope,
       reference: control.binding,
-      removalKind: _CollectionRemovalKind.listItem,
-      renderedOrder: [for (final item in items) item.id],
       sourceHeader: _ScopedCollectionHeader(
         scope: childScope,
         header: node.header,
@@ -98,13 +107,15 @@ extension _PortableCollectionInputRendering
         ),
       ),
       headerBuilder: headerBuilder,
-      buildBody: (context) {
+      buildBody: (context) => _withItemMotion(appearance, (arrival, leave) {
         late final CollectionSequence sequence;
         sequence = CollectionSequence(
           scope: childScope,
           collection: control.binding,
           items: items,
           allowReorder: allowReorder,
+          arrival: arrival,
+          leave: leave,
           entryBuilder: (context, item, index) {
             final reference = skir.BindingRef(
               bindingId: control.binding.bindingId,
@@ -132,8 +143,7 @@ extension _PortableCollectionInputRendering
               itemBinding.id,
               itemScope,
             );
-            return collectionRowWithFocus(
-              id: item.id,
+            return collectionRow(
               editor: editor,
               scope: childScope,
               owner: node,
@@ -186,7 +196,7 @@ extension _PortableCollectionInputRendering
             ],
           ),
         );
-      },
+      }),
     );
     return linkControl == null && !_linksItems(childScope, control.binding)
         ? rendered
@@ -255,12 +265,45 @@ extension _PortableCollectionInputRendering
     await childScope.addCollectionItem(control.binding);
   }
 
+  /// Reads the service's item moves in the collection input's own build,
+  /// outside any hook build, so a bad override shows the presentation
+  /// diagnostic instead of Flutter's error widget.
+  Widget _withItemMotion(
+    skir.CollectionAppearance? appearance,
+    Widget Function(MotionOverride? arrival, MotionOverride? leave) build,
+  ) {
+    MotionReading<MotionOverride?> read(skir.PresentationTransition? move) =>
+        switch (move?.reading) {
+          null => const MotionReading.read(null),
+          MotionRead(:final value) => MotionReading.read(value),
+          MotionReadFailed(:final message) => MotionReading.failed(message),
+        };
+    return switch ((
+      read(appearance?.itemArrival),
+      read(appearance?.itemLeave),
+    )) {
+      (MotionReadFailed(:final message), _) ||
+      (_, MotionReadFailed(:final message)) => _diagnostic(message),
+      (MotionRead(value: final arrival), MotionRead(value: final leave)) =>
+        build(arrival, leave),
+    };
+  }
+
   Widget _renderMapInput(
     BuildContext context,
     skir.MapControl control,
     PortablePresentationScope childScope, {
     Widget Function(_ScopedCollectionHeader, Widget)? headerBuilder,
   }) {
+    final differing = childScope.itemValues(control.control.binding);
+    if (differing.isNotEmpty) {
+      return _renderMixedCollection(
+        control.control,
+        childScope,
+        differing,
+        "maps",
+      );
+    }
     final value = childScope.read(control.control.binding)?.authoredPayload;
     final rows = switch (value) {
       skir.DataValue_mapValueWrapper(:final value) => value.rows.toList(),
@@ -271,12 +314,10 @@ extension _PortableCollectionInputRendering
     if (rows == null || collection == null) {
       return _diagnostic("The map binding is unavailable");
     }
-    return collectionWithFocus(
+    return collectionWithHeader(
       sourceScope: childScope,
       mutationScope: childScope,
       reference: control.control.binding,
-      removalKind: _CollectionRemovalKind.mapRow,
-      renderedOrder: [for (final row in rows) row.id],
       sourceHeader: _ScopedCollectionHeader(
         scope: childScope,
         header: node.header,
@@ -291,29 +332,30 @@ extension _PortableCollectionInputRendering
       addIcon: Icons.add,
       add: (context) => childScope.addMapRow(control.control.binding),
       headerBuilder: headerBuilder,
-      buildBody: (context) => _decorateCollection(
-        control.control,
-        childScope,
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (rows.isEmpty)
-              _collectionEmpty(
-                context,
-                childScope,
-                control.content,
-                "No entries",
-              ),
-            for (final (index, row) in rows.indexed)
-              _renderMapRow(
-                context,
-                control,
-                row,
-                collection,
-                childScope,
-                rowIndex: index,
-              ),
-          ],
+      buildBody: (context) => _withItemMotion(
+        control.appearance,
+        (arrival, leave) => _decorateCollection(
+          control.control,
+          childScope,
+          _MapRows(
+            rows: rows,
+            arrival: arrival,
+            leave: leave,
+            empty: (context) => _collectionEmpty(
+              context,
+              childScope,
+              control.content,
+              "No entries",
+            ),
+            rowBuilder: (context, row, index) => _renderMapRow(
+              context,
+              control,
+              row,
+              collection,
+              childScope,
+              rowIndex: index,
+            ),
+          ),
         ),
       ),
     );
@@ -394,8 +436,7 @@ extension _PortableCollectionInputRendering
               );
       },
     );
-    return collectionRowWithFocus(
-      id: row.id,
+    return collectionRow(
       editor: editor,
       scope: childScope,
       owner: node,
@@ -537,3 +578,301 @@ Widget _operationAppearance(
       action(states, _operationButtonStyle(content)?.merge(style) ?? style),
   enabled: scope.enabled && !scope.readOnly,
 );
+
+/// Map rows on row entries: [CollectionSequence] without reordering.
+class _MapRows extends HookWidget {
+  const _MapRows({
+    required this.rows,
+    required this.arrival,
+    required this.leave,
+    required this.empty,
+    required this.rowBuilder,
+  });
+  final List<skir.MapRow> rows;
+  final MotionOverride? arrival;
+  final MotionOverride? leave;
+  final WidgetBuilder empty;
+  final Widget Function(BuildContext context, skir.MapRow row, int index)
+  rowBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    final animated = useAnimatedRows(
+      items: rows,
+      identity: (row) => row.id,
+      arrival: arrival,
+      leave: leave,
+    );
+    final entries = animated.entries;
+    final lastBuilt = _useLastBuilt(entries);
+    // A row's index counts only rows that stay.
+    int activeIndexAt(int visualIndex) => entries
+        .take(visualIndex)
+        .where((entry) => entry.phase != RowPhase.leaving)
+        .length;
+    return RowFocusScope(
+      focus: animated.focus,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // The empty state shows once the last leaving row is gone.
+          if (entries.isEmpty) empty(context),
+          for (final (visualIndex, entry) in entries.indexed)
+            RowEntryScope(
+              key: ValueKey(entry.id),
+              entry: entry,
+              // The editor owns its scroll, so rows have no SliverRowAnchor.
+              child: entry.motion(
+                entry.row(
+                  // Map rows hold fields: focus lands on their RowLanding.
+                  RowStop(
+                    role: RowRole.holder,
+                    child: lastBuilt(
+                      entry,
+                      () => rowBuilder(
+                        context,
+                        entry.item,
+                        activeIndexAt(visualIndex),
+                      ),
+                    ),
+                  ),
+                ),
+                anchors: false,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The set of known choices and the collections the selected items hold
+/// differently.
+extension _PortableChoiceSetRendering on PortablePresentationNodeRenderer {
+  /// The cases of the enum a set at [reference] holds, or null when its
+  /// items are not cases of one enum.
+  List<String>? _knownChoices(
+    PortablePresentationScope scope,
+    skir.BindingRef reference,
+  ) {
+    final catalog = scope.catalog;
+    final item = catalog?.namedUse(
+      catalog.collectionItemType(scope.expectedType(reference)),
+    );
+    return item == null ? null : catalog?.enumCases(item.definition);
+  }
+
+  /// Every case of the enum a set holds as an option to check, the same for
+  /// one item and for many.
+  Widget _renderChoiceSetInput(
+    skir.SetControl control,
+    PortablePresentationScope scope,
+  ) {
+    final reference = control.control.binding;
+    final catalog = scope.catalog!;
+    final setType = catalog.namedUse(scope.expectedType(reference));
+    final item = catalog.namedUse(
+      catalog.collectionItemType(scope.expectedType(reference)),
+    )!;
+    final selected = scope.selectedValues(reference);
+    final differing = scope.itemValues(reference);
+    return _controlFrame(
+      control.control,
+      scope,
+      _PortableChoiceSet(
+        key: ValueKey(node.nodeId),
+        choices: _knownChoices(scope, reference)!,
+        values: selected.isEmpty ? [scope.read(reference)] : selected,
+        enabled:
+            scope.enabled &&
+            !scope.readOnly &&
+            (differing.isEmpty || scope.canWriteItems(reference)),
+        choice: (name) => skir.DataValue.createNamed(
+          actualType: item.member(name),
+          payload: skir.DataValue.unit,
+        ),
+        withItems: (value, items) {
+          final set = skir.DataValue.createSetValue(items: items);
+          return value is skir.DataValue_namedWrapper
+              ? value.withAuthoredPayload(set)
+              : setType == null
+              ? set
+              : skir.DataValue.createNamed(actualType: setType, payload: set);
+        },
+        write: (values) => values.toSet().length == 1
+            ? scope.write(reference, values.first)
+            : scope.writeItems(reference, values),
+      ),
+      renderPrefix: true,
+    );
+  }
+
+  /// A list, set or map the selected items hold differently: how many
+  /// different [noun] there are, and an edit that gives every item the first
+  /// item's value to start from.
+  Widget _renderMixedCollection(
+    skir.BoundControl control,
+    PortablePresentationScope scope,
+    List<skir.DataValue?> differing,
+    String noun,
+  ) {
+    final first = differing.first;
+    return _controlFrame(
+      control,
+      scope,
+      Builder(
+        builder: (context) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: context.spacing.space1,
+          children: [
+            Text(
+              "$mixedValueLabel: ${differing.toSet().length} different $noun",
+            ),
+            const MixedValueMessage(),
+            Button(
+              face: ButtonFace.outlined,
+              icon: const Icon(Icons.edit_outlined),
+              label: "Edit",
+              onPressed: scope.enabled && !scope.readOnly && first != null
+                  ? () => scope.write(control.binding, first)
+                  : null,
+            ),
+          ],
+        ),
+      ),
+      renderPrefix: true,
+    );
+  }
+}
+
+/// The options of a set of known choices over the values each selected item
+/// holds.
+///
+/// A press on a choice only some items hold gives it to all of them, the
+/// next takes it from all, and the one after gives each item back what it
+/// held before. A choice all or none hold switches between the two.
+class _PortableChoiceSet extends HookWidget {
+  const _PortableChoiceSet({
+    required this.choices,
+    required this.values,
+    required this.enabled,
+    required this.choice,
+    required this.withItems,
+    required this.write,
+    super.key,
+  });
+
+  final List<String> choices;
+  final List<skir.DataValue?> values;
+  final bool enabled;
+  final skir.DataValue Function(String name) choice;
+  final skir.DataValue Function(
+    skir.DataValue? value,
+    List<skir.ListItem> items,
+  )
+  withItems;
+  final void Function(List<skir.DataValue> values) write;
+
+  /// A new item holding the choice [name] in [value], under the choice's own
+  /// name unless an item already has it.
+  skir.ListItem _item(skir.DataValue? value, String name) => skir.ListItem(
+    id: skir.ItemId(
+      value: value?.authoredItems?.any((item) => item.id.value == name) ?? false
+          ? const Uuid().v4()
+          : name,
+    ),
+    value: choice(name),
+  );
+
+  /// [value] holding the choice [name] at [place], or without it when
+  /// [place] is null.
+  skir.DataValue _placed(
+    skir.DataValue? value,
+    String name,
+    (int, skir.ListItem)? place,
+  ) {
+    final items = [
+      for (final item in value?.authoredItems ?? <skir.ListItem>[])
+        if (item.value.enumCaseName != name) item,
+    ];
+    if (place case (final at, final item)) {
+      items.insert(at.clamp(0, items.length), item);
+    }
+    return withItems(value, items);
+  }
+
+  static bool _holds(skir.DataValue? value, String name) =>
+      _held(value, name) != null;
+
+  /// Where [value] holds the choice [name], and the item that holds it.
+  static (int, skir.ListItem)? _held(skir.DataValue? value, String name) {
+    for (final (index, item) in (value?.authoredItems ?? []).indexed) {
+      if (item.value.enumCaseName == name) return (index, item);
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Where each item held a choice before the press that gave it to all,
+    // and the values the presses since then left, so a change from anywhere
+    // else forgets it.
+    final before = useRef(
+      <String, (List<(int, skir.ListItem)?>, List<skir.DataValue>)>{},
+    );
+    void press(String name) {
+      final held = [for (final value in values) _held(value, name)];
+      final all = held.every((place) => place != null);
+      final remembered = switch (before.value.remove(name)) {
+        (final places, final left) when listEquals(left, values) => places,
+        _ => null,
+      };
+      final List<(int, skir.ListItem)?> next;
+      if (remembered != null && !all) {
+        next = remembered;
+      } else if (all) {
+        next = [for (final _ in held) null];
+      } else {
+        next = [
+          for (final (index, place) in held.indexed)
+            place ??
+                (
+                  values[index]?.authoredItems?.length ?? 0,
+                  _item(values[index], name),
+                ),
+        ];
+      }
+      final written = [
+        for (final (index, value) in values.indexed)
+          _placed(value, name, next[index]),
+      ];
+      final places = remembered ?? (all ? null : held);
+      if (places != null &&
+          next != remembered &&
+          places.any((place) => place != null)) {
+        before.value[name] = (places, written);
+      }
+      write(written);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final name in choices)
+          () {
+            final count = values.where((value) => _holds(value, name)).length;
+            return CheckOption(
+              label: name,
+              value: count == values.length
+                  ? true
+                  : count == 0
+                  ? false
+                  : null,
+              detail: "$count of ${values.length}",
+              onPressed: enabled ? () => press(name) : null,
+            );
+          }(),
+      ],
+    );
+  }
+}

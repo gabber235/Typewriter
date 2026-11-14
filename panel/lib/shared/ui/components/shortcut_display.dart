@@ -106,59 +106,6 @@ class LogicalKeyBoardDisplay extends StatelessWidget {
   }
 }
 
-/// Cycles through [shortcuts], showing one shortcut at a time.
-///
-/// An empty list renders nothing. A single shortcut renders without a timer;
-/// multiple shortcuts advance after each [interval] and animate the replacement.
-class RotatingShortcuts extends HookWidget {
-  const RotatingShortcuts({
-    required this.shortcuts,
-    this.size = 12.0,
-    this.style = const KeyStyle.solid(),
-    this.interval = const Duration(seconds: 5),
-    super.key,
-  });
-
-  /// Shortcuts to present in order. An empty list renders nothing.
-  final List<ShortcutActivator> shortcuts;
-
-  final double size;
-  final KeyStyle style;
-
-  /// Delay between displayed shortcuts when there is more than one.
-  final Duration interval;
-
-  @override
-  Widget build(BuildContext context) {
-    if (shortcuts.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    if (shortcuts.length == 1) {
-      return ShortcutDisplay(
-        shortcut: shortcuts.first,
-        size: size,
-        style: style,
-      );
-    }
-
-    final index = useState(0);
-    useTimer(interval, (_) {
-      index.value = (index.value + 1) % shortcuts.length;
-    });
-
-    return ElasticSwitcher(
-      child: KeyedSubtree(
-        key: ValueKey<int>(index.value),
-        child: ShortcutDisplay(
-          shortcut: shortcuts[index.value % shortcuts.length],
-          size: size,
-          style: style,
-        ),
-      ),
-    );
-  }
-}
-
 /// Displays every key in one [ShortcutActivator] as a compact key sequence.
 ///
 /// Character activators append their character after the logical keys. The
@@ -204,6 +151,52 @@ class ShortcutDisplay extends StatelessWidget {
   }
 }
 
+/// Shows each of [shortcuts] in turn, one at a time, so a hint with several
+/// bindings (arrows, HJKL and Tab) teaches all of them.
+///
+/// An empty list renders nothing and a single shortcut never changes; with
+/// more, the next one replaces the shown one after each [interval].
+class RotatingShortcuts extends HookWidget {
+  const RotatingShortcuts({
+    required this.shortcuts,
+    this.size = 12,
+    this.style = const KeyStyle.solid(),
+    this.interval = const Duration(seconds: 5),
+    super.key,
+  });
+
+  /// Shortcuts to present in order.
+  final List<ShortcutActivator> shortcuts;
+  final double size;
+  final KeyStyle style;
+
+  /// How long each shortcut stays before the next replaces it.
+  final Duration interval;
+
+  @override
+  Widget build(BuildContext context) {
+    final index = useState(0);
+    useEffect(() {
+      if (shortcuts.length < 2) return null;
+      final timer = Timer.periodic(interval, (_) {
+        index.value = (index.value + 1) % shortcuts.length;
+      });
+      return timer.cancel;
+    }, [shortcuts.length, interval]);
+    if (shortcuts.isEmpty) return const SizedBox.shrink();
+    final shown = index.value % shortcuts.length;
+    final display = ShortcutDisplay(
+      shortcut: shortcuts[shown],
+      size: size,
+      style: style,
+    );
+    if (shortcuts.length == 1) return display;
+    return ElasticSwitcher(
+      child: KeyedSubtree(key: ValueKey(shown), child: display),
+    );
+  }
+}
+
 class _KeyDisplay extends StatelessWidget {
   const _KeyDisplay({required this.child, required this.style, this.size = 12});
   final Widget child;
@@ -239,8 +232,7 @@ class _KeyDisplay extends StatelessWidget {
 
     switch (style) {
       case SolidKeyStyle():
-        return AnimatedContainer(
-          duration: 200.ms,
+        return Container(
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: rounding,
@@ -258,8 +250,7 @@ class _KeyDisplay extends StatelessWidget {
           child: Surface(color: resolvedStyle.backgroundColor!, child: text),
         );
       case OutlineKeyStyle():
-        return AnimatedContainer(
-          duration: 200.ms,
+        return Container(
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: rounding,

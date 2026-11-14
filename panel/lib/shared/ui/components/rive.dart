@@ -145,10 +145,10 @@ class _RiveErrorWidget extends StatelessWidget {
           SizedBox(height: context.spacing.space2),
           Text(
             "Failed to load animation",
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            style: context.text.sentence.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: theme.colorScheme.error,
+              color: context.colors.dangerText,
             ),
             textAlign: TextAlign.center,
           ),

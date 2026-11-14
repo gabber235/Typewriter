@@ -24,7 +24,12 @@ void main() {
 
       Focus.of(tester.element(find.text(choice))).requestFocus();
       await panel.settle();
-      await panel.press(LogicalKeyboardKey.enter);
+      // Use saved loses the unsent changes, so Enter holds it.
+      if (choice == "Use saved") {
+        await panel.holdKey(LogicalKeyboardKey.enter);
+      } else {
+        await panel.press(LogicalKeyboardKey.enter);
+      }
 
       expect(panel.shows(choice), isFalse);
       expect(
@@ -69,7 +74,7 @@ void main() {
       isFalse,
     );
 
-    await panel.tapOn(find.text("Use saved"));
+    await panel.holdButton("Use saved");
 
     expect(panel.shows("Use saved"), isFalse);
     expect(panel.working.resource(questTag.tagId), isNull);

@@ -259,7 +259,8 @@ class _ServiceGraphNode extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final focusNode = useFocusNode();
+    // The card's entry exists: the graph builds its rows before its cards.
+    final focusNode = RowFocusScope.of(context).nodeOf(item.graphId)!;
     return Selector(
       selectableId: item.selectableId,
       focusNode: focusNode,

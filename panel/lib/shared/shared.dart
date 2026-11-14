@@ -13,6 +13,7 @@ export "inspector/inspector.dart";
 export "interaction_mode/interaction_mode.dart";
 export "mutations/mutations.dart";
 export "navigation/navigation.dart";
+export "notices/notices.dart";
 export "portable/portable.dart";
 export "search/search.dart";
 export "selectables/selectables.dart";

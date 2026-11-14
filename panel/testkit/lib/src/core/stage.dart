@@ -106,12 +106,23 @@ class _PanelStageState extends State<PanelStage> {
 
   @override
   Widget build(BuildContext context) {
-    return UncontrolledProviderScope(
-      container: _world.container,
-      child: switch (widget.at) {
-        ComponentLocation(:final child) => _ComponentShell(child: child),
-        _ => const TypewriterPanel(),
-      },
+    final panel = HoldLineLayoutScope(
+      layout: _world.holdLineLayout,
+      child: UncontrolledProviderScope(
+        container: _world.container,
+        child: switch (widget.at) {
+          ComponentLocation(:final child) => _ComponentShell(child: child),
+          _ => const TypewriterPanel(),
+        },
+      ),
+    );
+    if (!_world.reducedMotion) return panel;
+    final platform =
+        MediaQuery.maybeOf(context) ??
+        MediaQueryData.fromView(View.of(context));
+    return MediaQuery(
+      data: platform.copyWith(disableAnimations: true),
+      child: panel,
     );
   }
 }
@@ -125,13 +136,14 @@ class _ComponentShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final motion = ref.watch(motionTableProvider);
     return WorkSessionUnloadBoundary(
       child: EagerInitialization(
         child: MaterialApp(
           title: "Typewriter",
           debugShowCheckedModeBanner: false,
-          theme: buildTheme(Brightness.light),
-          darkTheme: buildTheme(Brightness.dark),
+          theme: buildTheme(Brightness.light, motion: motion),
+          darkTheme: buildTheme(Brightness.dark, motion: motion),
           themeMode: ref.watch(appearanceProvider),
           shortcuts: typewriterShortcuts,
           scrollBehavior: GlobalCustomScrollBehavior(),

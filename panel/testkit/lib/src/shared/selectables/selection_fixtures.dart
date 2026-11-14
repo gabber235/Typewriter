@@ -53,7 +53,10 @@ final class RecordingSelectionOperation extends SelectionOperation {
       MenuItem(label: name, onPressed: () => executeOn(ref));
 
   @override
-  Widget inspectorButton(List<Selectable> selection) => const SizedBox.shrink();
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) => const SizedBox.shrink();
 }
 
 /// A selectable card offering one recorded action, as features build them.
@@ -122,43 +125,14 @@ final class RecordingShortcutOperation extends ActivatorShortcutOperation {
   void executeOn(WidgetRef ref) => executions++;
 
   @override
-  Widget inspectorButton(List<Selectable> selection) => const SizedBox.shrink();
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) => const SizedBox.shrink();
 
   @override
   MenuItem menuItem(WidgetRef ref) =>
       MenuItem(label: name, onPressed: () => executeOn(ref));
-}
-
-/// A selectable whose only capability deletes it, counting nothing itself:
-/// the test passes the callback that records the deletion.
-final class DeletableSelectableIdentifier extends SelectableIdentifier {
-  DeletableSelectableIdentifier(this.onDelete);
-
-  final VoidCallback onDelete;
-
-  @override
-  String get id => "deletable";
-
-  @override
-  AsyncValue<Selectable> create(Ref ref) =>
-      AsyncData(DeletableSelectable(this));
-}
-
-/// The selectable a [DeletableSelectableIdentifier] resolves to.
-final class DeletableSelectable
-    extends Selectable<DeletableSelectableIdentifier> {
-  const DeletableSelectable(this.id);
-
-  @override
-  final DeletableSelectableIdentifier id;
-
-  @override
-  String get name => id.id;
-
-  @override
-  List<SelectionCapability> get capabilities => [
-    DeleteSelectionCapability(onDelete: id.onDelete),
-  ];
 }
 
 /// A shortcut operation whose activators are supplied by the test.
@@ -181,8 +155,10 @@ final class ShortcutTestOperation extends ActivatorShortcutOperation {
   FutureOr<void> executeOn(WidgetRef ref) {}
 
   @override
-  Widget inspectorButton(List<Selectable> selection) =>
-      throw UnimplementedError();
+  Widget inspectorButton(
+    List<Selectable> selection, {
+    required OperationEmphasis emphasis,
+  }) => throw UnimplementedError();
 
   @override
   MenuItem menuItem(WidgetRef ref) => throw UnimplementedError();

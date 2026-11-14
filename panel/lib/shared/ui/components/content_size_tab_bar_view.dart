@@ -17,7 +17,6 @@ class ContentSizeTabBarView extends StatefulWidget {
     this.controller,
     this.physics,
     this.dragStartBehavior = DragStartBehavior.start,
-    this.animationDuration = const Duration(milliseconds: 300),
   });
 
   /// This widget's selection and animation state.
@@ -45,9 +44,6 @@ class ContentSizeTabBarView extends StatefulWidget {
 
   /// {@macro flutter.widgets.scrollable.dragStartBehavior}
   final DragStartBehavior dragStartBehavior;
-
-  /// The duration used when synchronizing a page with a tab selection.
-  final Duration animationDuration;
 
   @override
   State<ContentSizeTabBarView> createState() => _ContentSizeTabBarViewState();
@@ -175,14 +171,15 @@ class _ContentSizeTabBarViewState extends State<ContentSizeTabBarView> {
   }
 
   Future<void> _moveToPage(int index) async {
-    if (MediaQuery.disableAnimationsOf(context)) {
+    final move = motionTimeline(context, MotionToken.surfaceIn);
+    if (move.isInstant) {
       _pageController.jumpToPage(index);
       return;
     }
     await _pageController.animateToPage(
       index,
-      duration: widget.animationDuration,
-      curve: Curves.easeOutCubic,
+      duration: move.duration,
+      curve: move.curve,
     );
   }
 
@@ -230,9 +227,10 @@ class _ContentSizeTabBarViewState extends State<ContentSizeTabBarView> {
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
       child: ExpandablePageView(
-        animationDuration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : widget.animationDuration,
+        animationDuration: motionTimeline(
+          context,
+          MotionToken.surfaceIn,
+        ).duration,
         dragStartBehavior: widget.dragStartBehavior,
         controller: _pageController,
         physics: widget.physics == null

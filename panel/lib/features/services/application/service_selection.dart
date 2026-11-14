@@ -103,6 +103,10 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
   String get name => service.displayName;
 
   @override
+  SelectableNoun get noun =>
+      const SelectableNoun(one: "service", many: "services");
+
+  @override
   List<SelectionCapability> get capabilities => [
     UnbindSelectionCapability(onUnbind: onUnbind),
   ];

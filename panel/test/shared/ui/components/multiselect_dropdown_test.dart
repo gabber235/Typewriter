@@ -16,13 +16,9 @@ void main() {
           MultiselectDropdown<String>(
             inputFieldController: field,
             dropdownMenuEntries: const [
-              DropdownMenuEntry(value: "alpha", label: "Alpha"),
-              DropdownMenuEntry(
-                value: "blocked",
-                label: "Blocked",
-                enabled: false,
-              ),
-              DropdownMenuEntry(value: "beta", label: "Beta"),
+              MenuChoice(value: "alpha", label: "Alpha"),
+              MenuChoice(value: "blocked", label: "Blocked", enabled: false),
+              MenuChoice(value: "beta", label: "Beta"),
             ],
             onSelectionChanged: (items) => selected
               ..clear()
@@ -69,8 +65,8 @@ void main() {
       at: PanelLocation.component(
         MultiselectDropdown<String>(
           dropdownMenuEntries: const [
-            DropdownMenuEntry(value: "alpha", label: "Alpha"),
-            DropdownMenuEntry(value: "beta", label: "Beta"),
+            MenuChoice(value: "alpha", label: "Alpha"),
+            MenuChoice(value: "beta", label: "Beta"),
           ],
           onSelectionChanged: (items) => selected = items,
         ),
@@ -101,7 +97,7 @@ void main() {
           inputFieldController: field,
           enabled: false,
           dropdownMenuEntries: const [
-            DropdownMenuEntry(value: "alpha", label: "Alpha"),
+            MenuChoice(value: "alpha", label: "Alpha"),
           ],
           onSelectionChanged: selected.addAll,
         ),
@@ -114,5 +110,34 @@ void main() {
 
     expect(selected, isEmpty);
     expect(find.text("Alpha"), findsNothing);
+  });
+
+  testWidgets("the choices leave into the field", (tester) async {
+    final field = InputFieldController();
+    addTearDown(field.dispose);
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        MultiselectDropdown<String>(
+          inputFieldController: field,
+          dropdownMenuEntries: const [
+            MenuChoice(value: "alpha", label: "Alpha"),
+            MenuChoice(value: "beta", label: "Beta"),
+          ],
+          onSelectionChanged: (_) {},
+        ),
+      ),
+    );
+    field.requestInputFocus();
+    await tester.pumpAndSettle();
+    expect(find.text("Alpha"), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump();
+    // The choices go back into the field; they do not vanish.
+    expect(find.text("Alpha"), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text("Alpha"), findsNothing);
+    expect(field.surroundingFocusNode.hasPrimaryFocus, isTrue);
   });
 }

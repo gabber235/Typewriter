@@ -41,6 +41,31 @@ extension _PortableSliderInputRendering on PortablePresentationNodeRenderer {
           },
         ) ??
         (expected == null ? skir.DataValue.wrapFloat(next) : null);
+    final differing = childScope.itemValues(slider.control.binding);
+    if (differing.isNotEmpty) {
+      final enabled = childScope.enabled && !childScope.readOnly;
+      return _controlFrame(
+        slider.control,
+        slider.appearance == null
+            ? childScope
+            : childScope.withAppearance(slider.appearance!),
+        MixedSlider(
+          min: minimum,
+          max: maximum,
+          divisions: divisions,
+          start: _dataNumber(differing.first?.authoredPayload) ?? minimum,
+          onChanged: enabled
+              ? (next) {
+                  final value = replacement(next);
+                  if (value != null) {
+                    childScope.writePayload(slider.control.binding, value);
+                  }
+                }
+              : null,
+        ),
+        renderPrefix: true,
+      );
+    }
     if (current == skir.DataValue.unfilled) {
       final initial = replacement(minimum);
       if (initial == null) {
@@ -57,19 +82,17 @@ extension _PortableSliderInputRendering on PortablePresentationNodeRenderer {
               .toFrozen(),
           (context, states, style, resolved) => Align(
             alignment: AlignmentDirectional.centerStart,
-            child: OutlinedButton.icon(
-              key: ValueKey("${node.nodeId}.input"),
+            child: Button(
+              face: ButtonFace.outlined,
+              icon: const Icon(Icons.tune),
+              label: "Set to ${_displayNumber(minimum)}",
+              color: _accentOf(style, skir.ButtonVariant.outlined),
+              dense: _denseOf(style),
               statesController: states,
-              style: style,
               onPressed: childScope.enabled && !childScope.readOnly
                   ? () =>
                         childScope.writePayload(slider.control.binding, initial)
                   : null,
-              icon: const Icon(Icons.tune),
-              label: Text(
-                "Set to ${_displayNumber(minimum)}",
-                textAlign: resolved.alignment,
-              ),
             ),
           ),
           enabled: childScope.enabled && !childScope.readOnly,

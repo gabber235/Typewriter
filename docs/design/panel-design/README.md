@@ -12,7 +12,7 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 | Motion feel | Character is required; fast but neutral is rejected; exits never bounce |
 | Motion mix | Panel toggle, dialog, and focus move from key strike; new row, button press, and Saved from the machine |
 | Keyboard | Visible modes; everything works without a pointer |
-| Destructive | Undo for book content, hold for permanent actions, no bypass |
+| Destructive | Undo for book content, hold for actions that lose work or make someone else act again, no bypass |
 | Layout | The active pane lifts; bottom key hints stay |
 | Hover | Things rise with one overshoot and no shadow; key caps strike up; buttons with a key always show it |
 | Loading | Loaded rows ripple upwards from below |
@@ -21,10 +21,17 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 | Actions | As context specific as possible |
 | Alignment | Trials of three options per element, to check the rules against the maintainer's feel |
 | Holds | Discard, Use saved, and Decline need a hold; Publish and cancelling one's own request are one press |
+| Hold weight | A hold lasts as long as its weight: light 1.2 s (Discard draft), heavy 1.8 s (Remove member, Decline, Revoke, Unbind), permanent 2.6 s (deleting a Realm resource). A held button sinks 1 to 4 px, scales to 0.95, trembles once late in the hold, and springs back typing its done word for 1.3 s (`holdDoneShow`). Filled buttons fill black at 28 percent, flat and outlined ones red at 16 percent |
+| Operation sections | Operations are ordered by group, then order; each group is a section with a divider, the same list in the inspector and the context menu. Kotlin declares each operation's emphasis (flat, outline, filled); the panel shows the first filled one filled and the rest flat. Destructive operations get their own section and are held |
 | Fix order | Broken motion on everyday actions is fixed first, with focus and keys |
 | Motion from services | Named moves as the easy default; developers keep full control over duration and curve; good motion controls in the realm make it easy to add |
 | Others' changes | Values wave slowly; adds and removes use their usual moves plus a chip with who and why, later an avatar |
 | Voice | Between plain and playful: jokes where possible, literal English when it matters |
+| Character | Professional and fun, never sterile; a change that removes something names the character that replaces it |
+| Inspector source | Headings, fields, operations and concepts are declared in Kotlin whenever possible, so extensions can shape them |
+| Keyboard tests | Every built or redone element has a widget test that uses it by keyboard alone, without Tab |
+| Teaching | Concept words explain themselves through a rich tooltip and empty states; no tours |
+| Material | Controls, popovers, tooltips, dialogs and grow or shrink are built on Flutter's widgets layer; Material stays only where Flutter has no primitive yet (text input, selection, Scaffold, tabs) and moves as each one ships |
 
 ## Choices by the author, not confirmed
 
@@ -41,7 +48,7 @@ The maintainer chose what each behaviour looks like. These rules for when each o
 - Focus targets after each action.
 - Which feedback each situation gets, and where.
 - Waits: the 300 ms and 5 s limits, doorway versus skeleton, and refreshing without motion.
-- Bulk actions, the 800 ms hold, and showing the hold after preparation.
+- Bulk actions, and showing the hold after preparation.
 - Moves that repeat fast, and which move wins when several play together.
 - Scroll anchoring.
 - Filled action placement, and per row actions.
@@ -105,24 +112,16 @@ Measured at `c5db6eb2f` on 2026-11-05. Counts come from searches. Remove a row w
 
 | Sev | Today | Where |
 |---|---|---|
-| 4 | Shift+D, Shift+X, and Shift+Backspace delete with no question and no undo; D then Enter deletes, since Delete has focus. Read from code, not run | `shortcuts.dart:81-88`, `popups.dart:151,191` |
 | 3 | Emails and join code URLs unblur only on pointer hover | `blur_reveal.dart:4`, `member_table.dart:257`, `join_code_table.dart:230`, `join_code_card.dart:133` |
 | 3 | Graph canvas has no keyboard pan; starting a resource drag is pointer only | `graph.dart:328`, `resource_drop_target.dart:593` |
-| 3 | Focus ring is grey and hidden at 450 px and below | `color_scheme.dart:92`, `focus_highlight.dart:127` |
 | 3 | No shortcut help surface; command list coverage not measured | `search_shortcuts.dart:60` |
 | 3 | `Ctrl+N` and `Ctrl+Esc` cannot reach the page | `shortcuts.dart:31,37` |
 | 2 | A means create in the resource editor and Apply roles on members; X is an extra alias for remove | `resource_route.dart:115`, `member_actions.dart:68`, `shortcuts.dart:85` |
 | 3 | Single key commands cannot be turned off or remapped | `shortcuts.dart`, `normal_mode.dart` |
 | 3 | Nothing turns semantics on for web; not run with a screen reader | `web/index.html` |
-| 3 | Sidebar takes 1000 ms; 750 ms hover scale and tree insert | `sidebar_shell.dart:34`, `animation.dart:7`, `search_tree_animated_body.dart:25` |
-| 3 | `#009FFF` as text on white is 2.84:1 | `color_scheme.dart:6` |
 | 3 | Filled New page on every tree row, overlapping labels, one more floating | Story `resourcesurface/routed-resource/Routed-resource=Book` |
 | 3 | Selected chip reads weaker than Disabled | Story `controlsshowcase/default` |
 | 3 | Unlabelled close button; two more to check | `modal_header.dart:50`, `join_organization.dart:259`, `diagnostic_chrome.dart:333` |
-| 2 | 35 durations, elastic at 27 sites, no tokens; 19 of 21 `flutter_animate` files ignore reduced motion | `panel/lib` |
-| 2 | Decorative loops: rotating messages, key hints, secret text | `text_scroller.dart:11`, `shortcut_display.dart:118`, `secret_field_displays.dart:35` |
-| 2 | One elastic curve in both directions on the sidebar | `sidebar_shell.dart:34` |
-| 2 | Active pane is tracked but not shown | `panes.dart:339` |
 | 2 | Title and content edges differ: Members 262 and 254, Library 290 and 254, Services 262 and 248 | Stories |
 | 2 | Accent and warning are both `Colors.orange`; role colours are raw Material | `color_scheme.dart:7,10`, `service_projection.dart:3-6` |
 | 2 | Six icon sets, some fetched at runtime | `icons.dart:6` |
@@ -132,8 +131,8 @@ Measured at `c5db6eb2f` on 2026-11-05. Counts come from searches. Remove a row w
 | 2 | 11 raw `AlertDialog`s, 3 menu systems, 2 empty states, 3 private spinners | `panel/lib` |
 | 2 | 29 literal `EdgeInsets`, 40 literal radii, `fontSize` on 59 lines outside the theme | `panel/lib` |
 | 2 | Guardrail exemptions allow raw role colours and `unbind_operation.dart`, and name unused seed colours | `design_system_guardrails_test.dart` |
-| 2 | No guards for motion tokens, icon set, reserved keys, or focus contrast; no golden tests | `panel/` |
-| 1 | "item(s)", and "unbindd" from a joined string | `delete_operation.dart:50`, `operations.dart:201` |
+| 2 | No guards for the icon set or reserved keys; no golden tests | `panel/` |
+| 1 | "unbindd" from a joined string | `operations.dart:201` |
 
 Not measured: how anything feels in the real panel, screen reader output, text scale above 1.4, and Rive mascots.
 

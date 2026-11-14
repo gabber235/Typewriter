@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "selectable.freezed.dart";
+
 /// Describes an action or affordance available for one selectable.
 ///
 /// Capabilities are data owned by the selectable. Selection operations inspect
@@ -33,5 +35,37 @@ abstract class Selectable<I extends SelectableIdentifier> {
 
   I get id;
   String get name;
+
+  /// What kind of thing this is, as the inspector counts several of them.
+  SelectableNoun get noun;
   List<SelectionCapability> get capabilities;
+}
+
+/// The word for one kind of selectable, in the singular and the plural.
+///
+/// Selectables of one kind share an equal noun, so a selection of several
+/// is counted by its kind ("2 members") or, when kinds differ, as [item].
+@freezed
+abstract class SelectableNoun with _$SelectableNoun {
+  const factory SelectableNoun({required String one, required String many}) =
+      _SelectableNoun;
+
+  const SelectableNoun._();
+
+  /// The noun a selection of mixed kinds is counted by.
+  static const item = SelectableNoun(one: "item", many: "items");
+
+  /// [count] of this kind, with the word that number takes: "1 member",
+  /// "3 members".
+  String count(int count) => "$count ${count == 1 ? one : many}";
+}
+
+/// Counting a selection by its kind.
+extension SelectionNoun on Iterable<Selectable> {
+  /// The one noun every item shares, or [SelectableNoun.item] when kinds
+  /// differ.
+  SelectableNoun get noun {
+    final nouns = map((item) => item.noun).toSet();
+    return nouns.length == 1 ? nouns.single : SelectableNoun.item;
+  }
 }

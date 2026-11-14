@@ -91,7 +91,8 @@ class Selector extends HookConsumerWidget {
     final isSelected = ref.watch(isSelectedProvider(selectableId));
     final isFocused = useState(false);
     final isHovered = useState(false);
-    final controller = useMenuController();
+    final controller = useMemoized(AnchoredPopupController.new);
+    useEffect(() => controller.dispose, [controller]);
     final anchorKey = useGlobalKey();
     final pendingContextPosition = useState<Offset?>(null);
     final contextTargets = useState<List<SelectableIdentifier>?>(null);
@@ -153,20 +154,19 @@ class Selector extends HookConsumerWidget {
         if (selected.hasError || operations.isEmpty) return;
         final anchor = anchorKey.currentContext?.findRenderObject();
         if (anchor is! RenderBox || !anchor.attached) return;
-        controller.open(position: anchor.globalToLocal(position));
+        controller.openAt(anchor.globalToLocal(position));
       });
       return () => active = false;
     }, [pendingContextPosition.value, selection, selected, source]);
 
-    final focusAnimation = useAnimationController(
-      duration: 200.ms,
-      initialValue: 0.0,
-    );
-
+    // Gaining focus presses the item in and lets it come back, with press.
+    final press = resolveMotion(context, MotionToken.press);
+    final focusPulse = useMotionController();
     useEffect(() {
-      if (!isFocused.value) return null;
-      if (focusAnimation.isAnimating) return null;
-      focusAnimation.forward(from: 0.0);
+      if (!isFocused.value || !focusPulse.settled) return null;
+      focusPulse.to(1, press).whenCompleteOrCancel(() {
+        if (context.mounted) focusPulse.to(0, press);
+      });
       return null;
     }, [isFocused.value]);
 
@@ -182,7 +182,6 @@ class Selector extends HookConsumerWidget {
           selected: isSelected,
           child: ContextMenuRegion(
             key: anchorKey,
-            childFocusNode: focusNode,
             onClose: () => contextTargets.value = null,
             items: selectionOperationMenuItems(operations, ref),
             enableGestures: false,
@@ -213,63 +212,56 @@ class Selector extends HookConsumerWidget {
               ),
               child: SelectableScope(
                 id: selectableId,
-                child: FocusableActionDetector(
-                  focusNode: focusNode,
-                  shortcuts: {
-                    ...shortcuts,
-                    const SingleActivator(LogicalKeyboardKey.contextMenu):
-                        const SelectorContextMenuIntent(),
-                    const SingleActivator(LogicalKeyboardKey.f10, shift: true):
-                        const SelectorContextMenuIntent(),
-                  },
-                  onShowHoverHighlight: (hover) => isHovered.value = hover,
-                  mouseCursor: SystemMouseCursors.click,
-                  actions: {
-                    SelectorContextMenuIntent:
-                        CallbackAction<SelectorContextMenuIntent>(
-                          onInvoke: (_) {
-                            final anchor = anchorKey.currentContext
-                                ?.findRenderObject();
-                            if (anchor is RenderBox && anchor.attached) {
-                              activateContext(
-                                anchor.localToGlobal(
-                                  anchor.size.center(Offset.zero),
-                                ),
-                              );
-                            }
-                            return null;
-                          },
-                        ),
-                    ActivateIntent: CallbackAction(onInvoke: (_) => activate()),
-                    ActivateAllIntent: CallbackAction(
-                      onInvoke: (_) => activate(isMultiSelect: true),
-                    ),
-                  },
-                  child: PixelScaleTransition(
-                    pixelScale: TweenSequence<double>([
-                      TweenSequenceItem<double>(
-                        tween: Tween<double>(
-                          begin: 0,
-                          end: 15,
-                        ).curved(Curves.easeInOutCubicEmphasized),
-                        weight: .5,
+                // Space or Enter presses the item and selects it once let
+                // go, as a button acts; Escape cancels.
+                child: KeyPress(
+                  child: FocusableActionDetector(
+                    focusNode: focusNode,
+                    shortcuts: {
+                      ...shortcuts,
+                      const SingleActivator(LogicalKeyboardKey.contextMenu):
+                          const SelectorContextMenuIntent(),
+                      const SingleActivator(
+                        LogicalKeyboardKey.f10,
+                        shift: true,
+                      ): const SelectorContextMenuIntent(),
+                    },
+                    onShowHoverHighlight: (hover) => isHovered.value = hover,
+                    mouseCursor: SystemMouseCursors.click,
+                    actions: {
+                      SelectorContextMenuIntent:
+                          CallbackAction<SelectorContextMenuIntent>(
+                            onInvoke: (_) {
+                              final anchor = anchorKey.currentContext
+                                  ?.findRenderObject();
+                              if (anchor is RenderBox && anchor.attached) {
+                                activateContext(
+                                  anchor.localToGlobal(
+                                    anchor.size.center(Offset.zero),
+                                  ),
+                                );
+                              }
+                              return null;
+                            },
+                          ),
+                      ActivateIntent: CallbackAction(
+                        onInvoke: (_) => activate(),
                       ),
-                      TweenSequenceItem<double>(
-                        tween: Tween<double>(
-                          begin: 15,
-                          end: 0,
-                        ).curved(Curves.easeInOut),
-                        weight: .5,
+                      ActivateAllIntent: CallbackAction(
+                        onInvoke: (_) => activate(isMultiSelect: true),
                       ),
-                    ]).animate(focusAnimation),
-                    child: HookBuilder(
-                      builder: (context) {
-                        return builder(
-                          isSelected,
-                          isFocused.value,
-                          isHovered.value,
-                        );
-                      },
+                    },
+                    child: PixelScaleTransition(
+                      pixelScale: focusPulse.drive(Tween(begin: 0, end: 15)),
+                      child: HookBuilder(
+                        builder: (context) {
+                          return builder(
+                            isSelected,
+                            isFocused.value,
+                            isHovered.value,
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),

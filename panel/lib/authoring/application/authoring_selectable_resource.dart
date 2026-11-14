@@ -86,6 +86,10 @@ final class AuthoringSelectableResource
   @override
   String get name => appearance.label;
 
+  @override
+  SelectableNoun get noun =>
+      const SelectableNoun(one: "resource", many: "resources");
+
   Color get color => appearance.accentColor;
 
   @override

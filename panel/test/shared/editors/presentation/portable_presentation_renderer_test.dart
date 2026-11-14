@@ -40,7 +40,7 @@ void main() {
       expect(find.tooltip("Add item"), findsOneWidget);
       expect(
         tester
-            .getSemantics(find.widgetWithText(FilledButton, "Prefix insertion"))
+            .getSemantics(find.widgetWithText(Button, "Prefix insertion"))
             .getSemanticsData()
             .hasAction(SemanticsAction.tap),
         isTrue,
@@ -170,6 +170,8 @@ void main() {
           itemRadius: null,
           itemTransition: null,
           itemShadows: const [],
+          itemArrival: null,
+          itemLeave: null,
         ),
         content: skir.CollectionContent(
           removeLabel: textLiteral("Remove coordinate"),
@@ -1348,9 +1350,8 @@ void main() {
     expect(host.writes, isEmpty);
   });
 
-  testWidgets("narrow headers move trailing actions into overflow", (
-    tester,
-  ) async {
+  testWidgets("narrow headers move trailing actions into an overflow menu "
+      "that leaves into More actions", (tester) async {
     final host = documentHost(
       _overflowHeaderNode,
       bindings: _integerBinding,
@@ -1381,8 +1382,79 @@ void main() {
         ),
       ),
     ]);
+    // Reopened and dismissed, the menu goes back into its button rather
+    // than vanishing, and focus returns to the button.
+    final shown = find.tooltip("Action 5");
+    final hidden = shown.evaluate().length;
+    await panel.tapOn(find.tooltip("More actions"));
+    expect(shown, findsNWidgets(hidden + 1));
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump();
+    expect(shown, findsNWidgets(hidden + 1));
+    await panel.settle();
+    expect(shown, findsNWidgets(hidden));
+    expect(panel.focused, "More actions");
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    "a portable menu moves with the keys and leaves into its button",
+    (tester) async {
+      skir.EditorAction setTo(int value) => skir.EditorAction.wrapLocal(
+        skir.LocalEditorAction.createSetValue(
+          target: _reference,
+          value: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger(value.toString()),
+          ),
+        ),
+      );
+      final menu = presentationNode(
+        "menu",
+        skir.PresentationElement.createMenu(
+          label: textLiteral("Choose a value"),
+          items: [
+            for (final value in [1, 2])
+              skir.MenuItem(
+                itemId: "set.$value",
+                label: textLiteral("Set $value"),
+                action: setTo(value),
+                icon: null,
+                description: null,
+                enabledIf: null,
+                disabledReason: null,
+                separator: false,
+              ),
+          ],
+          appearance: null,
+          popup: null,
+        ),
+      );
+      final host = documentHost(
+        menu,
+        bindings: _integerBinding,
+        expected: _integerType,
+      );
+      final panel = await tester.showRenderer(host);
+
+      await panel.tapOn(find.tooltip("Choose a value"));
+      expect(panel.focused, "Set 1");
+      await panel.press(LogicalKeyboardKey.arrowDown);
+      expect(panel.focused, "Set 2");
+      await panel.press(LogicalKeyboardKey.enter);
+      expect(host.actions, [setTo(2)]);
+      expect(find.text("Set 1"), findsNothing);
+      expect(panel.focused, "Choose a value");
+
+      await panel.tapOn(find.tooltip("Choose a value"));
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pump();
+      // The menu goes back into its button; it does not vanish.
+      expect(find.text("Set 1"), findsOneWidget);
+      await panel.settle();
+      expect(find.text("Set 1"), findsNothing);
+      expect(panel.focused, "Choose a value");
+    },
+  );
 
   testWidgets("renders published icon values with resolved styling", (
     tester,
@@ -2047,7 +2119,7 @@ void main() {
     expect(find.tooltip("Add entry"), findsOneWidget);
     expect(
       find.byWidgetPredicate(
-        (widget) => widget is IconButton && widget.tooltip == "Add entry",
+        (widget) => widget is Button && widget.tooltip == "Add entry",
       ),
       findsOneWidget,
     );
@@ -2756,7 +2828,6 @@ final _overflowHeaderNode = skir.PresentationNode(
           visibleIf: null,
           enabledIf: null,
           tone: skir.HeaderActionTone.neutral,
-          confirmation: null,
           placement: skir.HeaderActionPlacement.end,
         ),
     ],

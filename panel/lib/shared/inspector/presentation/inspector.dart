@@ -68,64 +68,38 @@ class MobileInspector extends HookConsumerWidget {
   const MobileInspector({required this.child, super.key});
   final Widget child;
 
-  void _runAnimation(
-    bool hasSelection,
-    DraggableScrollableController controller,
-  ) {
-    if (hasSelection) {
-      controller.animateTo(0.1, duration: 750.ms, curve: ElasticOutCurve(0.8));
-    } else {
-      controller.animateTo(
-        0.0,
-        duration: 400.ms,
-        curve: Curves.fastEaseInToSlowEaseOut,
-      );
-    }
-  }
+  static const _peek = 0.1;
+  static const _full = 0.9;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasSelection = ref.watch(hasInspectableSelectionProvider);
     final controller = useDraggableScrollableController();
 
-    // Ensure that after a resize the modal will show up. Reads the selection
-    // when it fires: one captured at mount would close a sheet the user
-    // opened in the meantime, and closing clears the selection.
-    useTimer(
-      200.ms,
-      (timer) =>
-          _runAnimation(ref.read(hasInspectableSelectionProvider), controller),
-      repeat: false,
-    );
+    // After layout the sheet's controller is attached. Reads the selection
+    // when it fires: closing clears the selection.
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        final open = ref.read(hasInspectableSelectionProvider);
+        controller.settleTo(context, open ? _peek : 0);
+      });
+      return null;
+    }, [controller, hasSelection, MediaQuery.sizeOf(context).width]);
 
-    useEffect(
-      () {
-        if (!controller.isAttached) {
-          return null;
-        } else {
-          _runAnimation(hasSelection, controller);
-        }
-        return null;
-      },
-      [
-        controller,
-        controller.isAttached,
-        hasSelection,
-        MediaQuery.of(context).size.width,
-      ],
+    final pad = motionTimeline(
+      context,
+      hasSelection ? MotionToken.surfaceIn : MotionToken.panelOut,
     );
-
     return Stack(
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
             return AnimatedPadding(
-              duration: hasSelection ? 750.ms : 400.ms,
-              curve: hasSelection
-                  ? ElasticOutCurve(0.8)
-                  : Curves.fastEaseInToSlowEaseOut,
+              duration: pad.duration,
+              curve: pad.curve,
               padding: EdgeInsets.only(
-                bottom: hasSelection ? constraints.maxHeight * 0.1 : 0,
+                bottom: hasSelection ? constraints.maxHeight * _peek : 0,
               ),
               child: child,
             );
@@ -139,54 +113,59 @@ class MobileInspector extends HookConsumerWidget {
             }
             return false;
           },
-          child: DraggableScrollableSheet(
-            initialChildSize: 0.0,
-            minChildSize: 0.0,
-            maxChildSize: 0.9,
-            shouldCloseOnMinExtent: true,
-            snapSizes: [0.1, 0.9],
-            snap: true,
-            controller: controller,
-            snapAnimationDuration: 200.ms,
-            builder: (context, scrollController) {
-              final surfaceColor = Theme.of(context).colorScheme.surface;
+          child: NotificationListener<ScrollEndNotification>(
+            // A released drag settles with the same tokens, not the
+            // framework's snap curve.
+            onNotification: (_) {
+              controller.settleNearest(context, const [0.0, _peek, _full]);
+              return false;
+            },
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.0,
+              minChildSize: 0.0,
+              maxChildSize: _full,
+              shouldCloseOnMinExtent: true,
+              controller: controller,
+              builder: (context, scrollController) {
+                final surfaceColor = Theme.of(context).colorScheme.surface;
 
-              return Semantics(
-                label: InspectorScaffold.semanticsLabel,
-                container: true,
-                explicitChildNodes: true,
-                child: Surface(
-                  color: surfaceColor,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: surfaceColor,
-                      borderRadius: context.shapes.mediumBorderRadius,
-                    ),
-                    child: Section(
-                      child: CustomScrollView(
-                        controller: scrollController,
-                        slivers: [
-                          const SliverPersistentHeader(
-                            pinned: true,
-                            delegate: DraggableSheetHandleDelegate(),
-                          ),
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                left: context.spacing.space3,
-                                right: context.spacing.space3,
-                                bottom: context.spacing.space3,
-                              ),
-                              child: _InspectorContent(),
+                return Semantics(
+                  label: InspectorScaffold.semanticsLabel,
+                  container: true,
+                  explicitChildNodes: true,
+                  child: Surface(
+                    color: surfaceColor,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: surfaceColor,
+                        borderRadius: context.shapes.mediumBorderRadius,
+                      ),
+                      child: Section(
+                        child: CustomScrollView(
+                          controller: scrollController,
+                          slivers: [
+                            const SliverPersistentHeader(
+                              pinned: true,
+                              delegate: DraggableSheetHandleDelegate(),
                             ),
-                          ),
-                        ],
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  left: context.spacing.space3,
+                                  right: context.spacing.space3,
+                                  bottom: context.spacing.space3,
+                                ),
+                                child: _InspectorContent(),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -223,6 +202,10 @@ class DesktopInspector extends HookConsumerWidget {
         );
         final minSize = min(kInspectorMinSize, maxSize);
         final effectiveSize = size.clamp(minSize, maxSize);
+        // Arrival is surfaceIn, leave is panelOut; a drag still jumps.
+        final arrive = motionTimeline(context, MotionToken.surfaceIn);
+        final leave = motionTimeline(context, MotionToken.panelOut);
+        final move = hasSelection ? arrive : leave;
 
         return Row(
           children: [
@@ -250,8 +233,8 @@ class DesktopInspector extends HookConsumerWidget {
                   begin: previousSelection != null ? 8 : 3,
                   end: 3,
                 ),
-                duration: 750.ms,
-                curve: Curves.fastEaseInToSlowEaseOut,
+                duration: leave.duration,
+                curve: leave.curve,
                 builder: (context, width, _) => SizedBox(width: width),
               ),
             ManagedActionSet(
@@ -273,7 +256,7 @@ class DesktopInspector extends HookConsumerWidget {
                     ),
                   ],
                   priority: -1,
-                  onInvoke: (ref) {
+                  run: ActionRun.press((ref) {
                     final step = HardwareKeyboard.instance.isShiftPressed
                         ? kInspectorResizeLargeStep
                         : kInspectorResizeSmallStep;
@@ -282,7 +265,7 @@ class DesktopInspector extends HookConsumerWidget {
                       maxSize,
                     );
                     ref.read(inspectorSizeProvider.notifier).size(newSize);
-                  },
+                  }),
                   show: false,
                 ),
                 ActionShortcut(
@@ -299,7 +282,7 @@ class DesktopInspector extends HookConsumerWidget {
                     ),
                   ],
                   priority: -1,
-                  onInvoke: (ref) {
+                  run: ActionRun.press((ref) {
                     final step = HardwareKeyboard.instance.isShiftPressed
                         ? kInspectorResizeLargeStep
                         : kInspectorResizeSmallStep;
@@ -308,7 +291,7 @@ class DesktopInspector extends HookConsumerWidget {
                       maxSize,
                     );
                     ref.read(inspectorSizeProvider.notifier).size(newSize);
-                  },
+                  }),
                   show: false,
                 ),
                 ActionShortcut(
@@ -330,10 +313,8 @@ class DesktopInspector extends HookConsumerWidget {
                   bottom: margin.bottom,
                 ),
                 child: AnimatedPadding(
-                  duration: hasSelection ? 1000.ms : 750.ms,
-                  curve: hasSelection
-                      ? ElasticOutCurve(0.9)
-                      : Curves.fastEaseInToSlowEaseOut,
+                  duration: move.duration,
+                  curve: move.curve,
                   padding: hasSelection
                       ? EdgeInsets.only(left: margin.left, right: margin.right)
                       : EdgeInsets.zero,
@@ -350,13 +331,9 @@ class DesktopInspector extends HookConsumerWidget {
                         margin: EdgeInsets.zero,
                         child: AnimatedContainer(
                           duration: isDragging.value
-                              ? 0.ms
-                              : hasSelection
-                              ? 1000.ms
-                              : 750.ms,
-                          curve: hasSelection
-                              ? ElasticOutCurve(0.9)
-                              : Curves.fastEaseInToSlowEaseOut,
+                              ? Duration.zero
+                              : move.duration,
+                          curve: move.curve,
                           width: hasSelection ? effectiveSize : 0,
                           height: double.infinity,
                           child: ClipRect(
@@ -397,6 +374,7 @@ class _InspectorContent extends HookConsumerWidget {
     final session = ref.watch(inspectionSessionProvider);
 
     final selection = ref.watch(selectionProvider);
+    final inspected = ref.watch(inspectedSelectionProvider).value ?? const [];
     return PresentationEnvironment(
       host: HostContext(selectionCount: selection.length)
           .within(PresentationEnvironment.hostOf(context)),
@@ -410,6 +388,7 @@ class _InspectorContent extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: context.spacing.space3,
             children: [
+              if (inspected.length > 1) InspectorCountHeading(inspected),
               ?body,
               for (var index = 0; index < hosts.length; index++)
                 PortablePresentationRenderer(
@@ -422,6 +401,28 @@ class _InspectorContent extends HookConsumerWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Names how many things the inspector shows together and what they are:
+/// "2 members", or "4 items" when their kinds differ.
+///
+/// The count types its changed letters as the selection grows or shrinks.
+class InspectorCountHeading extends StatelessWidget {
+  const InspectorCountHeading(this.selection, {super.key});
+
+  final List<Selectable> selection;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      header: true,
+      child: MotionLabel(
+        selection.noun.count(selection.length),
+        typesIn: true,
+        style: Theme.of(context).textTheme.headlineSmall,
       ),
     );
   }
@@ -447,13 +448,22 @@ class InspectorOperations extends HookConsumerWidget {
 
     if (operations.isEmpty) return const SizedBox.shrink();
 
+    // The sections and order of the context menu; the pane keeps one filled
+    // button at most.
+    final sections = operations.sections;
+    final emphases = sections.flattened.shownEmphases;
+    var index = 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       spacing: context.spacing.space3,
       children: [
         const SectionTitle(title: "Operations"),
-        for (final operation in operations) operation.inspectorButton(selected),
+        for (final (number, section) in sections.indexed) ...[
+          if (number > 0) const Separator(),
+          for (final operation in section)
+            operation.inspectorButton(selected, emphasis: emphases[index++]),
+        ],
       ],
     );
   }

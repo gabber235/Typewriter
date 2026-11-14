@@ -214,11 +214,8 @@ final class AuthoredGraphFixture {
               _ => null,
             },
             presentation: skir.OperationPresentation(
-              inspector: skir.OperationInspector.wrapButton(
-                operation == "delete"
-                    ? skir.ButtonVariant.filled
-                    : skir.ButtonVariant.outlined,
-              ),
+              inspector: skir.OperationInspector.shown,
+              emphasis: skir.OperationEmphasis.outline,
               shortcut: operation == "delete"
                   ? skir.OperationShortcut.delete
                   : null,
@@ -565,7 +562,6 @@ final class AuthoredGraphFixture {
       invocationId: request.invocation.invocationId,
       inputRevision: request.inputRevision,
       edit: edit.prepare(),
-      confirmation: null,
       selection: skir.OperationSelectionEffect.unchanged,
     );
   }

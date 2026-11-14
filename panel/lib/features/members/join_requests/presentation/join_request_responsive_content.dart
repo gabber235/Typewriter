@@ -4,16 +4,17 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Mobile and tablet body for one join request card.
 ///
-/// This widget adapts layout only. Selection, expiry cleanup, decline
-/// confirmation, and expansion remain callbacks owned by the card and list so
-/// responsive rendering cannot create a second state owner.
+/// This widget adapts layout only. Selection, expiry cleanup and expansion
+/// remain callbacks owned by the card and list, and the decline hold is the
+/// card's command, so responsive rendering cannot create a second state
+/// owner.
 class JoinRequestResponsiveContent extends StatelessWidget {
   const JoinRequestResponsiveContent({
     required this.request,
     required this.isSelected,
     required this.isExpanded,
     required this.onExpired,
-    required this.onDecline,
+    required this.decline,
     required this.onToggle,
     super.key,
   });
@@ -21,11 +22,10 @@ class JoinRequestResponsiveContent extends StatelessWidget {
   final bool isSelected;
   final bool isExpanded;
   final VoidCallback onExpired;
-  final VoidCallback onDecline;
+  final ActionShortcut decline;
   final VoidCallback onToggle;
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -40,28 +40,9 @@ class JoinRequestResponsiveContent extends StatelessWidget {
             ),
             SizedBox(width: context.spacing.space3),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 2,
-                children: [
-                  if (request.userName != null)
-                    Text(
-                      request.userName!,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontVariations: [.weight(600)],
-                        fontSize: 15,
-                      ),
-                    ),
-                  if (request.userEmail != null)
-                    Text(
-                      request.userEmail!,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 13,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
+              child: PersonSummary(
+                name: request.userName,
+                email: request.userEmail,
               ),
             ),
           ],
@@ -76,22 +57,19 @@ class JoinRequestResponsiveContent extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
-                onPressed: onDecline,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                  side: BorderSide(
-                    color: theme.colorScheme.error.withValues(alpha: 0.5),
-                  ),
-                ),
-                child: Text("Decline"),
+              child: CommandButton(
+                command: decline,
+                face: ButtonFace.outlined,
+                label: "Decline",
+                color: context.colors.dangerText,
               ),
             ),
             SizedBox(width: context.spacing.space2),
             Expanded(
-              child: FilledButton(
+              child: Button(
+                face: ButtonFace.filled,
+                label: isExpanded ? "Cancel" : "Accept",
                 onPressed: onToggle,
-                child: Text(isExpanded ? "Cancel" : "Accept"),
               ),
             ),
           ],

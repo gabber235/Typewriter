@@ -3,7 +3,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class _PaneRegistration {
   _PaneRegistration({required this.scope});
 
-  final FocusScopeNode scope;
+  final _PaneScopeNode scope;
   late int sequence;
   String id = "";
   bool enabled = true;
@@ -43,6 +43,31 @@ class _PaneScopeNode extends FocusScopeNode {
 
   @override
   bool get skipTraversal => super.skipTraversal || traversalDescendants.isEmpty;
+
+  // An empty pane that holds focus itself, as on an empty page, hands Tab
+  // and Shift+Tab to the scope around it, which moves on from the pane as
+  // if Tab had skipped it.
+  bool get _holdsItself =>
+      hasPrimaryFocus &&
+      traversalDescendants.isEmpty &&
+      enclosingScope?.context != null;
+
+  @override
+  bool nextFocus() =>
+      _holdsItself ? enclosingScope!.nextFocus() : super.nextFocus();
+
+  @override
+  bool previousFocus() =>
+      _holdsItself ? enclosingScope!.previousFocus() : super.previousFocus();
+
+  /// Moves focus into the pane, as a pane key does: back to what last held
+  /// focus in it, else to its first item, else to its first control, else
+  /// to the pane itself, which then holds nothing to act on.
+  void land() {
+    final target =
+        focusedChild ?? firstItem ?? traversalDescendants.firstOrNull;
+    (target ?? this).requestFocus();
+  }
 }
 
 class _PaneSnapshot {
@@ -71,6 +96,9 @@ class _PaneCoordinator extends ChangeNotifier {
 
   int get eligibleCount => _eligibleCount;
 
+  /// The pane that last held focus, which lifts while others sink back.
+  final active = ValueNotifier<_PaneRegistration?>(null);
+
   void register(_PaneRegistration pane) {
     if (!_registrations.add(pane)) return;
     pane
@@ -83,6 +111,12 @@ class _PaneCoordinator extends ChangeNotifier {
     if (!_registrations.remove(pane)) return;
     if (identical(pane.coordinator, this)) pane.coordinator = null;
     if (identical(_lastActive, pane)) _lastActive = null;
+    if (identical(active.value, pane)) {
+      // A pane leaves while the tree tears down; the others settle after.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_disposed && identical(active.value, pane)) active.value = null;
+      });
+    }
     scheduleNotification();
   }
 
@@ -91,7 +125,9 @@ class _PaneCoordinator extends ChangeNotifier {
   }
 
   void markActive(_PaneRegistration pane) {
-    if (_registrations.contains(pane)) _lastActive = pane;
+    if (!_registrations.contains(pane)) return;
+    _lastActive = pane;
+    active.value = pane;
   }
 
   void scheduleNotification() {
@@ -134,7 +170,7 @@ class _PaneCoordinator extends ChangeNotifier {
       if (target == null) continue;
 
       _lastActive = target.registration;
-      target.registration.scope.requestFocus();
+      target.registration.scope.land();
     }
     if (_pendingDirections.isNotEmpty && !_navigationScheduled) {
       queueNavigation(_pendingDirections.removeAt(0));
@@ -166,6 +202,7 @@ class _PaneCoordinator extends ChangeNotifier {
     _disposed = true;
     _pendingDirections.clear();
     _registrations.clear();
+    active.dispose();
     super.dispose();
   }
 }
@@ -243,43 +280,160 @@ class _PaneCoordinatorScope extends InheritedWidget {
 /// [enabled] to exclude the pane from directional navigation while retaining
 /// its content. [trapFocus] controls whether keyboard traversal wraps inside
 /// the pane. Navigation uses the rendered region's bounds rather than the
-/// bounds of an individual child.
+/// bounds of an individual child. [openFocus] sets where focus goes when the
+/// pane opens.
 class Pane extends StatefulWidget {
   const Pane({
     required this.id,
     required this.child,
     this.primary = false,
     this.enabled = true,
-    this.highlightOnFocus = true,
     this.trapFocus = true,
     this.margin = const EdgeInsets.all(8),
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
+    this.openFocus = PaneOpenFocus.none,
     super.key,
   });
   final String id;
   final Widget child;
   final bool primary;
   final bool enabled;
-  final bool highlightOnFocus;
   final bool trapFocus;
   final EdgeInsetsGeometry? margin;
   final BorderRadiusGeometry? borderRadius;
+  final PaneOpenFocus openFocus;
+
+  /// Tells the pane around [context] that an item mounted, so a primary
+  /// pane still waiting for its first item can focus it. [RowStop],
+  /// PortableLocationTarget and the graph call it.
+  static void offerOpenFocus(BuildContext context) =>
+      context.findAncestorStateOfType<_PaneState>()?._offer();
+
+  /// Whether open focus of the pane around [context] just put focus on
+  /// [node]; answers true once. The graph uses it to keep its view still
+  /// when the page opens on a card.
+  static bool takeOpenLanding(BuildContext context, FocusNode node) =>
+      context.findAncestorStateOfType<_PaneState>()?._takeLanding(node) ??
+      false;
 
   @override
   State<Pane> createState() => _PaneState();
+}
+
+/// Where focus goes when a [Pane] opens.
+enum PaneOpenFocus {
+  /// Opening leaves focus where it is (shell panes, sidebars, footers).
+  none,
+
+  /// The first item in tree order, else the first traversable control, else
+  /// the pane itself until one of those arrives, until the first key or
+  /// pointer press.
+  firstItem,
 }
 
 class _PaneState extends State<Pane> {
   late final _PaneScopeNode _scope;
   late final _PaneRegistration _registration;
   _PaneCoordinator? _coordinator;
-  FocusType _focusType = FocusType.none;
+  bool _openPending = false;
+  bool _openScheduled = false;
+
+  // What open focus put focus on.
+  FocusNode? _placed;
+
+  // Focus when the page opened, such as the sidebar link pressed.
+  FocusNode? _before;
+
+  // The node open focus last moved focus to, until someone takes it.
+  FocusNode? _landing;
 
   @override
   void initState() {
     super.initState();
     _scope = _PaneScopeNode(debugLabel: "Pane-${widget.id}");
     _registration = _PaneRegistration(scope: _scope);
+    if (widget.openFocus == PaneOpenFocus.firstItem) {
+      _openPending = true;
+      _before = FocusManager.instance.primaryFocus;
+      HardwareKeyboard.instance.addHandler(_keyPressed);
+      GestureBinding.instance.pointerRouter.addGlobalRoute(_pointer);
+      _scheduleOpen();
+    }
+  }
+
+  void _offer() => _scheduleOpen();
+
+  bool _takeLanding(FocusNode node) {
+    if (_landing != node) return false;
+    _landing = null;
+    return true;
+  }
+
+  void _scheduleOpen() {
+    if (!_openPending || _openScheduled) return;
+    _openScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openScheduled = false;
+      _open();
+    });
+    WidgetsBinding.instance.scheduleFrame();
+  }
+
+  void _open() {
+    if (!_openPending || !mounted) return;
+    final route = ModalRoute.of(context);
+    // Retried when the route becomes current again.
+    if (route != null && !route.isCurrent) return;
+    final primary = FocusManager.instance.primaryFocus;
+    // A request earlier in this frame already chose a node in the pane;
+    // primary focus follows it only in a microtask.
+    final chosen = _scope.focusedChild;
+    if (chosen != null && chosen != primary && chosen != _placed) {
+      return _endOpen();
+    }
+    // Focus in a text field is someone writing, never focus left over from
+    // the link that opened the page.
+    final writing =
+        primary?.context?.findAncestorWidgetOfExactType<EditableText>() != null;
+    final free =
+        !writing &&
+        (primary == null ||
+            // Once open focus placed a node, focus back on the opener was
+            // chosen, not left over.
+            primary == _before && _placed == null ||
+            primary == _placed ||
+            primary == _scope ||
+            primary is FocusScopeNode && _scope.ancestors.contains(primary));
+    // A reveal, an autofocus field or a popup chose focus.
+    if (!free) return _endOpen();
+    final item = _scope.firstItem;
+    // Nothing to act on yet, while content loads, or ever, on an empty page:
+    // the pane itself holds focus, so pane keys still start from it. An
+    // item that mounts offers again and takes over.
+    final target = item ?? _scope.traversalDescendants.firstOrNull ?? _scope;
+    if (target != primary) {
+      _landing = target;
+      target.requestFocus();
+    }
+    _placed = target;
+    // A fallback control yields to a first item that arrives later.
+    if (item != null) _endOpen();
+  }
+
+  bool _keyPressed(KeyEvent event) {
+    if (event is KeyDownEvent) _endOpen();
+    return false;
+  }
+
+  void _pointer(PointerEvent event) {
+    if (event is PointerDownEvent) _endOpen();
+  }
+
+  void _endOpen() {
+    if (!_openPending) return;
+    _openPending = false;
+    HardwareKeyboard.instance.removeHandler(_keyPressed);
+    GestureBinding.instance.pointerRouter.removeGlobalRoute(_pointer);
   }
 
   @override
@@ -319,10 +473,13 @@ class _PaneState extends State<Pane> {
           : TraversalEdgeBehavior.parentScope
       ..directionalTraversalEdgeBehavior = TraversalEdgeBehavior.stop;
     _coordinator?.paneUpdated(_registration);
+    // The route may have become current again.
+    _scheduleOpen();
   }
 
   @override
   void dispose() {
+    _endOpen();
     _coordinator?.unregister(_registration);
     _scope.dispose();
     super.dispose();
@@ -330,28 +487,28 @@ class _PaneState extends State<Pane> {
 
   @override
   Widget build(BuildContext context) {
-    Widget result = FocusScope(
-      node: _scope,
-      // Explicit, since the widget otherwise copies the node's computed
-      // skipTraversal back into it and an empty first frame would stick.
-      skipTraversal: false,
-      onFocusChange: (focused) {
-        if (focused) _coordinator?.markActive(_registration);
-        final type = FocusHighlighting.primaryAndChild(_scope);
-        if (mounted && type != _focusType) setState(() => _focusType = type);
-      },
-      child: widget.child,
+    // The ring wraps the pane only while the scope itself holds focus, as
+    // an empty pane does; a focused descendant is ringed by its own target.
+    Widget result = RingTarget(
+      borderRadius: widget.borderRadius ?? BorderRadius.zero,
+      child: FocusScope(
+        node: _scope,
+        // Explicit, since the widget otherwise copies the node's computed
+        // skipTraversal back into it and an empty first frame would stick.
+        skipTraversal: false,
+        onFocusChange: (focused) {
+          if (focused) _coordinator?.markActive(_registration);
+        },
+        // Each pane runs the load of its content once.
+        child: EnterRun(child: widget.child),
+      ),
     );
-    if (widget.highlightOnFocus) {
-      result = FocusHighlight(
-        type: _focusType,
+    // The ring target sits inside the lift, so the ring scales with the pane.
+    if (_coordinator case final coordinator?) {
+      result = _PaneLift(
+        coordinator: coordinator,
+        registration: _registration,
         borderRadius: widget.borderRadius,
-        size: widget.enabled ? 2 : 0,
-        child: result,
-      );
-    } else if (widget.borderRadius != null) {
-      result = DecoratedBox(
-        decoration: BoxDecoration(borderRadius: widget.borderRadius),
         child: result,
       );
     }
@@ -515,5 +672,58 @@ class NavigationAction extends Action<NavigatePaneIntent> {
   Object? invoke(NavigatePaneIntent intent) {
     callback(intent.direction);
     return null;
+  }
+}
+
+/// Lifts the focused pane by paneFocus and sinks the others back, once two
+/// or more panes can take focus. It only paints: hit testing and the
+/// geometry directional navigation reads keep the layout rect.
+class _PaneLift extends HookWidget {
+  const _PaneLift({
+    required this.coordinator,
+    required this.registration,
+    required this.borderRadius,
+    required this.child,
+  });
+
+  final _PaneCoordinator coordinator;
+  final _PaneRegistration registration;
+  final BorderRadiusGeometry? borderRadius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = useValueListenable(coordinator.active);
+    useListenable(coordinator);
+    final lifts = coordinator.eligibleCount > 1 && active != null;
+    final isActive = identical(active, registration);
+    final landing = context.motion.spec(MotionToken.paneFocus).landing;
+    final scale = useMotion(
+      MotionToken.paneFocus,
+      !lifts
+          ? 1.0
+          : isActive
+          ? landing.active
+          : landing.inactive,
+      initial: 1.0,
+    );
+    final wash = useMotion(
+      MotionToken.paneFocus,
+      lifts && isActive ? 1.0 : 0.0,
+      initial: 0.0,
+    );
+    return Transform.scale(
+      scale: scale.value,
+      child: DecoratedBox(
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          borderRadius: borderRadius,
+          color: context.colors.contentPrimary.withValues(
+            alpha: landing.wash * wash.value.clamp(0.0, 1.0),
+          ),
+        ),
+        child: child,
+      ),
+    );
   }
 }

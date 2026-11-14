@@ -420,9 +420,8 @@ void main() {
       expect(fixture.value, skir.DataValue.wrapFloat(1.51));
     },
   );
-  testWidgets("toggle options preserve native checkbox keyboard operation", (
-    tester,
-  ) async {
+  testWidgets("a checkbox toggle flips when Space is let go, and Escape while "
+      "Space is down keeps its value", (tester) async {
     final fixture = EditedValue.scalar(
       skir.DataValue.wrapBoolean(true),
       skir.ScalarKind.boolean,
@@ -447,7 +446,19 @@ void main() {
       lessThanOrEqualTo(tester.getRect(find.text("Visible")).left),
     );
     await panel.press(LogicalKeyboardKey.tab);
-    await panel.press(LogicalKeyboardKey.space);
+
+    await panel.keyDown(LogicalKeyboardKey.space);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await panel.keyUp(LogicalKeyboardKey.space);
+    expect(fixture.value, skir.DataValue.wrapBoolean(true));
+
+    await panel.keyDown(LogicalKeyboardKey.space);
+    expect(
+      fixture.value,
+      skir.DataValue.wrapBoolean(true),
+      reason: "key down only presses",
+    );
+    await panel.keyUp(LogicalKeyboardKey.space);
     expect(fixture.value, skir.DataValue.wrapBoolean(false));
     expect(find.text("Hidden"), findsOneWidget);
   });

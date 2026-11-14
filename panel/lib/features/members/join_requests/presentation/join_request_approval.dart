@@ -35,7 +35,7 @@ class JoinRequestApproval extends StatelessWidget {
             description: "Confirm adding member",
             intent: PrimaryActionIntent,
             priority: 1,
-            onInvoke: (ref) => onConfirm(),
+            run: ActionRun.press((ref) => onConfirm()),
           ),
       ],
       child: Column(
@@ -71,10 +71,12 @@ class JoinRequestApproval extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    LoadingButton.filledIcon(
+                    Button(
+                      face: ButtonFace.filled,
                       onPressed: selectedRoles.isEmpty ? null : onConfirm,
                       icon: const Icon(Icons.check, size: 18),
-                      label: Text("Confirm & Add Member"),
+                      label: "Confirm & Add Member",
+                      busyLabel: "Adding",
                     ),
                   ],
                 ),

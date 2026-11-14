@@ -11,8 +11,9 @@ typedef ActionInvoke = FutureOr<void> Function(WidgetRef ref);
 ///
 /// Use the activator constructor for local keys that are not part of the panel
 /// map. Use [ActionShortcut.intent] when the action should share the panel's
-/// canonical key map. An action is callable only when it has both a callback
-/// and at least one activator. IDs are global within the current provider and
+/// canonical key map. [run] says what pressing does: one press or a hold. An
+/// action with no run is disabled, and a key invokes it only when it has at
+/// least one activator. IDs are global within the current provider and
 /// higher priority wins in the visible registry when mounted sets share an ID.
 /// Keyboard dispatch follows Flutter's nearest shortcut and action scopes.
 @freezed
@@ -25,7 +26,7 @@ abstract class ActionShortcut with _$ActionShortcut {
     required List<ShortcutActivator> activators,
     required int priority,
     Widget? icon,
-    ActionInvoke? onInvoke,
+    ActionRun? run,
     @Default(true) bool show,
     @Default(true) bool registerShortcut,
     GlobalKey? owner,
@@ -39,7 +40,7 @@ abstract class ActionShortcut with _$ActionShortcut {
     required Type intent,
     required int priority,
     Widget? icon,
-    ActionInvoke? onInvoke,
+    ActionRun? run,
     @Default(true) bool show,
     @Default(true) bool registerShortcut,
     GlobalKey? owner,
@@ -47,10 +48,11 @@ abstract class ActionShortcut with _$ActionShortcut {
 
   const ActionShortcut._();
 
-  /// Whether this action has enough information to be invoked.
-  bool get canInvoke {
-    return onInvoke != null && shortcuts.isNotEmpty;
-  }
+  /// Whether pressing does anything; a key is not required.
+  bool get canPress => run != null;
+
+  /// Whether a key can invoke it.
+  bool get canInvoke => canPress && shortcuts.isNotEmpty;
 
   List<ShortcutActivator> get shortcuts {
     return switch (this) {
@@ -173,9 +175,12 @@ class ManagedActionSet extends HookConsumerWidget {
 
 /// Installs callable actions in Flutter's [Shortcuts] and [Actions] layers.
 ///
-/// The widget registers only actions with callbacks and enabled registration.
-/// Intent actions reuse [typewriterShortcuts], while activator actions define
-/// their own local key map.
+/// The widget registers only actions with a run and enabled registration.
+/// Every key press goes through the panel's [CommandRunner], the same run a
+/// Button bound to the command uses. A hold starts on key down only, from an
+/// activator registered without repeats. Intent actions reuse
+/// [typewriterShortcuts], while activator actions define their own local key
+/// map.
 class RegisteredActionShortcuts extends HookConsumerWidget {
   const RegisteredActionShortcuts({
     required this.shortcuts,
@@ -188,33 +193,59 @@ class RegisteredActionShortcuts extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final regKey = useGlobalKey(debugLabel: "ShortcutActionSet");
+    final runs = CommandRunnerScope.of(context);
     final callableShortcuts = useMemoized(
       () => shortcuts.where((s) => s.canInvoke && s.registerShortcut).toList(),
       [shortcuts],
     );
+    // Keeps each offered command's run while this set is mounted.
+    useEffect(() {
+      final releases = [
+        for (final action in callableShortcuts) runs.retain(action.id),
+      ];
+      return () {
+        for (final release in releases) {
+          release();
+        }
+      };
+    }, [runs, callableShortcuts]);
+    final presses = callableShortcuts.where((s) => s.run is PressRun);
+    final held = callableShortcuts.where((s) => s.run is HoldRun);
 
     return Shortcuts(
       key: regKey,
       shortcuts: {
-        for (final action
-            in callableShortcuts.whereType<ActivatorActionShortcut>())
+        for (final action in presses.whereType<ActivatorActionShortcut>())
           for (final activator in action.activators)
             activator: _ActionIntent(action),
-        for (final action
-            in callableShortcuts.whereType<IntentActionShortcut>())
+        for (final action in presses.whereType<IntentActionShortcut>())
           for (final activator in action.shortcuts)
             activator: typewriterShortcuts[activator]!,
+        // A hold starts on key down only. Without repeats, a key still down
+        // after success never starts a hold on the row that took focus.
+        for (final action in held)
+          for (final activator in action.shortcuts)
+            activator.withoutRepeats(): _HoldIntent(action, activator),
       },
       child: Actions(
         actions: {
           _ActionIntent: CallbackAction<_ActionIntent>(
-            onInvoke: (intent) {
-              return intent.action.onInvoke!.call(ref);
-            },
+            // Every key press goes through CommandRuns, the same run a
+            // Button bound to this command uses.
+            onInvoke: (intent) => runs.press(intent.action, ref),
           ),
-          for (final action
-              in callableShortcuts.whereType<IntentActionShortcut>())
-            action.intent: action.createCallbackAction(ref),
+          _HoldIntent: CallbackAction<_HoldIntent>(
+            onInvoke: (intent) => runs.start(
+              intent.action,
+              ref,
+              HoldInput.key(
+                keys: {...?intent.activator.triggers},
+                focus: FocusManager.instance.primaryFocus,
+              ),
+            ),
+          ),
+          for (final action in presses.whereType<IntentActionShortcut>())
+            action.intent: action.createCallbackAction(ref, runs),
         },
         child: child,
       ),
@@ -225,6 +256,27 @@ class RegisteredActionShortcuts extends HookConsumerWidget {
 class _ActionIntent extends Intent {
   const _ActionIntent(this.action);
   final ActionShortcut action;
+}
+
+class _HoldIntent extends Intent {
+  const _HoldIntent(this.action, this.activator);
+  final ActionShortcut action;
+  final ShortcutActivator activator;
+}
+
+extension on ShortcutActivator {
+  ShortcutActivator withoutRepeats() => switch (this) {
+    final SingleActivator activator => SingleActivator(
+      activator.trigger,
+      control: activator.control,
+      shift: activator.shift,
+      alt: activator.alt,
+      meta: activator.meta,
+      numLock: activator.numLock,
+      includeRepeats: false,
+    ),
+    _ => throw UnsupportedError("A hold needs a single key activator: $this"),
+  };
 }
 
 final _intentActionFactories =
@@ -252,12 +304,13 @@ final _intentActionFactories =
     };
 
 extension on IntentActionShortcut {
-  Action<Intent> createCallbackAction(WidgetRef ref) {
+  // Presses through CommandRuns, so the key and a bound Button share one run.
+  Action<Intent> createCallbackAction(WidgetRef ref, CommandRunner runs) {
     final factory = _intentActionFactories[intent];
     if (factory == null) {
       throw UnsupportedError("No callback action factory for $intent.");
     }
-    return factory(onInvoke!, ref);
+    return factory((ref) => runs.press(this, ref), ref);
   }
 }
 

@@ -1,0 +1,30 @@
+id: dart-material-widget
+valid:
+  - |
+    Widget build(BuildContext context) => Button(
+      label: "Copy",
+      onPressed: copy,
+    );
+  - |
+    Widget build(BuildContext context) => Surface(child: Text(name));
+  - |
+    final materialLabel = "Material";
+  - |
+    Widget build(BuildContext context) => TextField(controller: name);
+invalid:
+  - |
+    Widget build(BuildContext context) => ElevatedButton(
+      onPressed: copy,
+      child: const Text("Copy"),
+    );
+  - |
+    Widget build(BuildContext context) => Material(child: child);
+  - |
+    void ask(BuildContext context) => showDialog<void>(
+      context: context,
+      builder: (context) => const AlertDialog(),
+    );
+  - |
+    Widget build(BuildContext context) => InkWell(onTap: open, child: child);
+  - |
+    Widget build(BuildContext context) => Tooltip(message: "Copy", child: child);

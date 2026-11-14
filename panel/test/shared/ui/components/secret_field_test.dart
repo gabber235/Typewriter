@@ -35,7 +35,8 @@ void main() {
 
     await panel.eventually(() => expect(panel.reads(secret), isTrue));
     expect(clipboard, [secret]);
-    expect(panel.shows("Copied to clipboard"), isTrue);
+    // The generate button says it copied, in place of a toast.
+    expect(find.text("Copied"), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 31));
     await panel.settle();
@@ -54,9 +55,10 @@ void main() {
     await panel.tapOn(find.text("Generate"));
 
     await panel.eventually(() => expect(panel.reads(secret), isTrue));
-    expect(panel.shows("Could not copy to the clipboard"), isTrue);
-    expect(panel.shows("Failed to generate"), isFalse);
-    expect(panel.shows("Copied to clipboard"), isFalse);
+    expect(panel.failures, [
+      "Generate failed. Could not copy to the clipboard",
+    ]);
+    expect(find.text("Copied"), findsNothing);
     expect(find.text("Copy"), findsOneWidget);
   });
 
@@ -83,6 +85,7 @@ void main() {
     await panel.tapOn(find.text("Copy"));
 
     expect(clipboard, [secret]);
+    expect(find.text("Copied"), findsOneWidget);
   });
 
   testWidgets("a secret without expiry stays revealed", (tester) async {

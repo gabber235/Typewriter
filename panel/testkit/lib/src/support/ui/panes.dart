@@ -34,7 +34,6 @@ final class PlacedPane extends StatelessWidget {
         id: id,
         enabled: enabled,
         primary: primary,
-        highlightOnFocus: false,
         margin: EdgeInsets.zero,
         child: ElevatedButton(onPressed: () {}, child: Text(button)),
       ),

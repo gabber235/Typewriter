@@ -9,137 +9,39 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// shared local work. Row identity is the user's record id, allowing animated
 /// updates to follow members across live add, update, and remove events.
 class MembersTable extends HookConsumerWidget {
-  const MembersTable({
-    required this.members,
-    required this.selectedIds,
-    required this.onRemoveSelection,
-    super.key,
-  });
+  const MembersTable({required this.selection, super.key});
 
-  final List<skir.OrganizationMember> members;
-  final ValueNotifier<Set<skir.RecordId>> selectedIds;
-  final Future<void> Function() onRemoveSelection;
+  final SelectableRows<skir.OrganizationMember> selection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    final focusedMemberId = useState<skir.RecordId?>(null);
-    final animated = useAnimatedTable(
-      items: members,
-      identity: (member) => member.userId,
-      removedItemBuilder: (context, member, animation) => _buildMemberRow(
+    final members = selection.rows.items;
+
+    return SelectionTable<skir.OrganizationMember>(
+      selection: selection,
+      idOf: (member) => member.userId,
+      noun: "members",
+      labels: const ["Member", "Roles"],
+      columnWidths: const {
+        0: FixedColumnWidth(48),
+        1: IntrinsicColumnWidth(),
+        2: FlexColumnWidth(1),
+        3: FixedColumnWidth(80),
+      },
+      emptyBuilder: (context) => EmptyState(
+        title: "No members yet",
+        description: "Invite someone to get started!",
+        icon: MaterialSymbols.groups_2_rounded,
+      ),
+      rowBuilder: (context, entry) => _buildMemberRow(
         context,
         ref,
-        member,
-        selectedIds.value.contains(member.userId),
-        focusedMemberId,
+        entry.item,
+        members,
+        selection.selectedIds.value.contains(entry.id),
         theme,
-      ),
-    );
-
-    final allSelected =
-        members.isNotEmpty && selectedIds.value.length == members.length;
-    final someSelected =
-        selectedIds.value.isNotEmpty &&
-        selectedIds.value.length < members.length;
-
-    return SliverFillRemaining(
-      child: AnimatedTable(
-        key: animated.key,
-        initialItemCount: animated.items.length,
-        columnWidths: const {
-          0: FixedColumnWidth(48),
-          1: IntrinsicColumnWidth(),
-          2: FlexColumnWidth(1),
-          3: FixedColumnWidth(80),
-        },
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        headerRows: [
-          TableRow(
-            decoration: BoxDecoration(color: Surface.colorOf(context)),
-            children: [
-              TableCell(
-                verticalAlignment: TableCellVerticalAlignment.middle,
-                child: StaggerEntrance(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.spacing.space2,
-                      vertical: context.spacing.space3,
-                    ),
-                    child: Checkbox(
-                      value: allSelected ? true : (someSelected ? null : false),
-                      tristate: true,
-                      onChanged: (value) {
-                        if (allSelected || someSelected) {
-                          selectedIds.value = {};
-                        } else {
-                          selectedIds.value = members
-                              .map((m) => m.userId)
-                              .toSet();
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              _headerCell(context, theme, "Member"),
-              _headerCell(context, theme, "Roles"),
-              const TableCell(child: SizedBox.shrink()),
-            ],
-          ),
-        ],
-        emptyBuilder: (context) => EmptyState(
-          title: "No members yet",
-          description: "Invite someone to get started!",
-          icon: MaterialSymbols.groups_2_rounded,
-        ),
-        transitionBuilder: (context, animation, child) {
-          return ElasticTransition(animation: animation, child: child);
-        },
-        tableBuilder: (context, table) => Surface(
-          color: Surface.colorOf(context),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: context.shapes.mediumBorderRadius,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: table,
-          ),
-        ),
-        rowBuilder: (context, index, animation) {
-          final member = animated.items[index];
-          return _buildMemberRow(
-            context,
-            ref,
-            member,
-            selectedIds.value.contains(member.userId),
-            focusedMemberId,
-            theme,
-          );
-        },
-      ),
-    );
-  }
-
-  TableCell _headerCell(BuildContext context, ThemeData theme, String label) {
-    return TableCell(
-      child: StaggerEntrance(
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.spacing.space2,
-            vertical: context.spacing.space3,
-          ),
-          child: Text(
-            label,
-            style: theme.textTheme.bodyMedium!.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -148,80 +50,79 @@ class MembersTable extends HookConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     skir.OrganizationMember member,
+    List<skir.OrganizationMember> members,
     bool isSelected,
-    ValueNotifier<skir.RecordId?> focusedMemberId,
     ThemeData theme,
   ) {
-    final isFocused = focusedMemberId.value == member.userId;
-
     void toggleSelection() {
       if (isSelected) {
-        selectedIds.value = selectedIds.value
+        selection.selectedIds.value = selection.selectedIds.value
             .where((id) => id != member.userId)
             .toSet();
         return;
       }
-      selectedIds.value = {...selectedIds.value, member.userId};
+      selection.selectedIds.value = {
+        ...selection.selectedIds.value,
+        member.userId,
+      };
     }
 
-    void updateFocus(bool focused) {
-      if (focused) {
-        focusedMemberId.value = member.userId;
-      } else if (focusedMemberId.value == member.userId) {
-        focusedMemberId.value = null;
-      }
-    }
-
-    Widget withShortcuts(Widget child) => MemberTableRowShortcuts(
-      member: member,
-      onToggleSelection: toggleSelection,
-      onSelectAll: () =>
-          selectedIds.value = members.map((m) => m.userId).toSet(),
-      onClearSelection: () => selectedIds.value = {},
-      isSelected: isSelected,
-      hasSelection: selectedIds.value.isNotEmpty,
-      onRemoveSelection: onRemoveSelection,
-      onRemoveFromSelection: () => selectedIds.value = selectedIds.value
-          .where((id) => id != member.userId)
-          .toSet(),
-      onFocusChange: updateFocus,
-      child: child,
-    );
+    final name = member.name ?? member.email ?? "Member";
+    Widget withShortcuts(Widget child, {RowRole role = RowRole.part}) =>
+        MemberTableRowShortcuts(
+          member: member,
+          onToggleSelection: toggleSelection,
+          onSelectAll: () => selection.selectedIds.value = members
+              .map((m) => m.userId)
+              .toSet(),
+          onClearSelection: () => selection.selectedIds.value = {},
+          isSelected: isSelected,
+          hasSelection: selection.selectedIds.value.isNotEmpty,
+          rows: selection.rows,
+          selectedIds: selection.selectedIds.value,
+          nameOf: (id) => selection.rows[id]?.item.name,
+          // Inside the shortcuts, so they answer while the row is focused.
+          child: RowStop(
+            role: role,
+            bounds: RingBounds.tableRow,
+            borderRadius: context.shapes.mediumBorderRadius,
+            label: role == RowRole.stop ? name : null,
+            child: child,
+          ),
+        );
 
     return TableRow(
       key: ValueKey(member.userId),
       decoration: BoxDecoration(
+        // Fill means selected; the ring layer shows focus.
         color: isSelected
-            ? theme.colorScheme.primaryContainer.withValues(
-                alpha: isFocused ? 0.24 : 0.12,
-              )
-            : isFocused
-            ? theme.colorScheme.secondaryContainer.withValues(alpha: 0.12)
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.12)
             : Colors.transparent,
       ),
       children: [
         TableCell(
           verticalAlignment: TableCellVerticalAlignment.middle,
-          child: StaggerEntrance(
-            child: withShortcuts(
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.space2,
-                  vertical: context.spacing.space3,
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  shape: CircleBorder(),
-                  child: InkWell(
-                    customBorder: CircleBorder(),
-                    onTap: toggleSelection,
-                    child: SelectableAvatar(
-                      avatarUrl:
-                          member.avatarUrl?.nullIfEmpty ??
-                          "$userIconUrl&seed=${member.userId}",
-                      isSelected: isSelected,
-                      radius: 16,
-                    ),
+          child: withShortcuts(
+            role: RowRole.stop,
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.spacing.space2,
+                vertical: context.spacing.space3,
+              ),
+              // The row stop takes Space; the avatar is no second stop.
+              child: ExcludeFocus(
+                child: Button(
+                  face: ButtonFace.bare,
+                  label: isSelected
+                      ? "Deselect ${member.name ?? member.email ?? "member"}"
+                      : "Select ${member.name ?? member.email ?? "member"}",
+                  onPressed: toggleSelection,
+                  child: SelectableAvatar(
+                    avatarUrl:
+                        member.avatarUrl?.nullIfEmpty ??
+                        "$userIconUrl&seed=${member.userId}",
+                    isSelected: isSelected,
+                    radius: 16,
                   ),
                 ),
               ),
@@ -229,28 +130,28 @@ class MembersTable extends HookConsumerWidget {
           ),
         ),
         TableCell(
-          child: StaggerEntrance(
-            child: withShortcuts(
-              Material(
-                color: Colors.transparent,
-                borderRadius: context.shapes.mediumBorderRadius,
-                child: InkWell(
-                  borderRadius: context.shapes.mediumBorderRadius,
-                  onTap: toggleSelection,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.spacing.space2,
-                      vertical: context.spacing.space3,
-                    ),
-                    child: Column(
+          child: withShortcuts(
+            ExcludeFocus(
+              child: Button(
+                face: ButtonFace.bare,
+                label: "",
+                onPressed: toggleSelection,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.spacing.space2,
+                    vertical: context.spacing.space3,
+                  ),
+                  // Read the theme here, inside the row, so a sending row's
+                  // struck text theme reaches the name and email.
+                  child: Builder(
+                    builder: (context) => Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (member.name != null)
                           Text(
                             member.name!,
-                            style: theme.textTheme.bodyMedium!.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium!
+                                .copyWith(fontWeight: FontWeight.w500),
                             overflow: TextOverflow.ellipsis,
                           ),
                         if (member.email != null)
@@ -258,10 +159,13 @@ class MembersTable extends HookConsumerWidget {
                             blurSigma: 3,
                             child: Text(
                               member.email!,
-                              style: theme.textTheme.bodyMedium!.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontSize: 13,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium!
+                                  .copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontSize: 13,
+                                  ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -274,37 +178,41 @@ class MembersTable extends HookConsumerWidget {
           ),
         ),
         TableCell(
-          child: StaggerEntrance(
-            child: withShortcuts(
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.space2,
-                  vertical: context.spacing.space2,
-                ),
-                child: RoleMultiselectDropdown(
-                  selectedRoles: member.roles.toList(),
-                  onRolesChanged: (newRoles) {
-                    ref
-                        .executeMembership(
-                          ref.membershipCommands.updateRoles([
-                            member.userId,
-                          ], newRoles),
-                          (response) => response.requireAccepted(),
-                        )
-                        .catchApiExceptionsAndDisplay(context);
-                  },
-                  placeholder: "Select roles",
-                ),
+          child: withShortcuts(
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.spacing.space2,
+                vertical: context.spacing.space2,
+              ),
+              child: RoleMultiselectDropdown(
+                selectedRoles: member.roles.toList(),
+                onRolesChanged: (newRoles) =>
+                    ref.assignMemberRoles(context, member.userId, newRoles),
+                placeholder: "Select roles",
               ),
             ),
           ),
         ),
         TableCell(
-          child: StaggerEntrance(
-            child: withShortcuts(MemberRowActions(member: member)),
+          child: withShortcuts(
+            MemberRowActions(member: member, rows: selection.rows),
           ),
         ),
       ],
     );
+  }
+}
+
+/// Gives one member a new set of roles, showing a failure where it happened.
+extension MemberRoleAssignment on WidgetRef {
+  void assignMemberRoles(
+    BuildContext context,
+    skir.RecordId memberId,
+    List<skir.OrganizationRole> roles,
+  ) {
+    executeMembership(
+      membershipCommands.updateRoles([memberId], roles),
+      (response) => response.requireAccepted(),
+    ).catchApiExceptionsAndDisplay(context);
   }
 }

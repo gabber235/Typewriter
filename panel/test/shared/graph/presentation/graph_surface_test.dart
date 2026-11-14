@@ -135,7 +135,6 @@ void main() {
               : HookBuilder(
                   builder: (context) {
                     controller = useGraphViewportController(
-                      tickerProvider: useSingleTickerProvider(),
                       initialTransform: Matrix4.identity(),
                     );
                     return const SizedBox();

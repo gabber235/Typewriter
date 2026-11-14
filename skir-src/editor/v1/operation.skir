@@ -3,10 +3,7 @@
 // current availability against a working observation. Authoring preparation stays separate from
 // labels, grouping, gestures, and drop metadata.
 
-import {
-  ButtonVariant,
-  HeaderActionTone,
-} from "editor/v1/presentation.skir";
+import { HeaderActionTone } from "editor/v1/presentation.skir";
 import {
   CapabilityId,
   PresentationId,
@@ -29,20 +26,47 @@ struct OperationTargets(84130002) {
   cardinality: OperationCardinality = 1;
 }
 
-/// Menu sections, in display order.
+/// Sections of the inspector and the context menu, in display order. The panel draws a divider
+/// between sections.
 enum OperationGroup(84130003) {
   edit = 1;
   organize = 2;
   destructive = 3;
 }
 
+/// A declared hold: the one line the panel shows while the user holds,
+/// stating the outcome with a real plural. outcome_many carries "{count}",
+/// which the panel fills with the number of targets.
+/// Example: "Delete this resource and what it owns?" and
+/// "Delete {count} resources and what they own?".
 struct OperationConfirmation(84130004) {
-  title: string = 0;
-  message: string = 1;
-  confirmation_label: string = 2;
+  outcome_one: string = 0;
+  outcome_many: string = 1;
+  /// How long the hold takes, by what the operation loses.
+  weight: OperationWeight = 2;
 }
 
-struct OperationPresentation(84130005) {
+/// The weight of a hold. A heavier action holds longer.
+enum OperationWeight(84130005) {
+  /// Loses only the user's own unsent work, such as discarding a draft.
+  light = 1;
+  /// Makes someone else act again, such as removing a member.
+  heavy = 2;
+  /// Cannot be recovered, such as deleting a Realm resource.
+  permanent = 3;
+}
+
+/// How strongly an operation's inspector button stands out. The panel shows at most one filled
+/// button per pane: the first filled operation in display order, and every later one flat.
+enum OperationEmphasis(84130006) {
+  flat = 1;
+  /// The likely next step.
+  outline = 2;
+  /// The pane's main action.
+  filled = 3;
+}
+
+struct OperationPresentation(84130007) {
   label: string = 0;
   description: string = 1;
   icon: string = 2;
@@ -50,19 +74,22 @@ struct OperationPresentation(84130005) {
   order: int32 = 4;
   /// Destructive for the destructive group, neutral otherwise.
   tone: HeaderActionTone = 5;
+  /// The hold that confirms the operation. Every destructive operation declares one.
   confirmation: OperationConfirmation? = 6;
   /// Inspector presence. Menus, shortcuts and drops ignore it.
   inspector: OperationInspector = 7;
   /// The keyboard gesture that invokes this operation on the selection, if any.
   shortcut: OperationShortcut? = 8;
+  /// The inspector button's emphasis. Menus ignore it.
+  emphasis: OperationEmphasis = 9;
 }
 
-struct OperationInputDefinition(84130006) {
+struct OperationInputDefinition(84130008) {
   type: TypeUse = 0;
   presentation: PresentationId? = 1;
 }
 
-struct ResourceOperationDefinition(84130007) {
+struct ResourceOperationDefinition(84130009) {
   id: ResourceOperationId = 0;
   presentation: OperationPresentation = 1;
   targets: OperationTargets = 2;
@@ -74,40 +101,40 @@ struct ResourceOperationDefinition(84130007) {
 
 /// hidden omits an affordance, disabled retains its explanation, and enabled permits attempting
 /// dispatch. Availability is evaluated against current working facts and must be rechecked at preparation.
-enum OperationAvailability(84130008) {
+enum OperationAvailability(84130010) {
   hidden = 1;
   disabled: string = 2;
   enabled = 3;
 }
 
-struct ResolvedResourceOperation(84130009) {
+struct ResolvedResourceOperation(84130011) {
   definition: ResourceOperationDefinition = 0;
   availability: OperationAvailability = 1;
 }
 
 /// Applicable operations ordered by group, then order, then identity.
-struct ResolvedResourceOperations(84130010) {
+struct ResolvedResourceOperations(84130012) {
   operations: [ResolvedResourceOperation] = 0;
 }
 
-enum OperationCardinality(84130011) {
+enum OperationCardinality(84130013) {
   single = 1;
   selection = 2;
 }
 
-/// Inspector presence of an operation.
-enum OperationInspector(84130012) {
+/// Inspector presence of an operation. A shown operation is a button in its declared emphasis.
+enum OperationInspector(84130014) {
   hidden = 1;
-  button: ButtonVariant = 2;
+  shown = 2;
 }
 
 /// The input field a drop fills with the resource dropped onto, and the hover hint.
-struct OperationDrop(84130013) {
+struct OperationDrop(84130015) {
   input: ValuePath = 0;
   hint: string = 1;
 }
 
 /// Keyboard gestures an operation can claim.
-enum OperationShortcut(84130014) {
+enum OperationShortcut(84130016) {
   delete = 1;
 }

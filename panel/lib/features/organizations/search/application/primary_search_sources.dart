@@ -90,7 +90,7 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
           hostContext: HostContext(
             activeResource: ref.read(routedResourceProvider(scope)),
           ),
-        ).debounced(100.ms).cached(),
+        ).debounced(const Duration(milliseconds: 100)).cached(),
       ]);
       commands.addAll([
         ...openAuthoringCommands(organizationId, realmId),

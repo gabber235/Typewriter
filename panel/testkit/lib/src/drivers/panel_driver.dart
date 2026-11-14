@@ -9,6 +9,8 @@ import "package:typewriter_testkit/src/drivers/graph/graph_driver.dart";
 import "package:typewriter_testkit/src/drivers/inspector_driver.dart";
 import "package:typewriter_testkit/src/drivers/semantics.dart";
 import "package:typewriter_testkit/src/drivers/shared/field_driver.dart";
+import "package:typewriter_testkit/src/drivers/shared/presentation_header_driver.dart";
+import "package:typewriter_testkit/src/drivers/shared/ring_driver.dart";
 import "package:typewriter_testkit/src/drivers/shared/selectable_driver.dart";
 
 /// The whole panel as its user sees it, over the [world] it runs against.
@@ -36,6 +38,10 @@ final class PanelDriver extends ComponentDriver {
   /// The text field the user reads as [label].
   FieldDriver field(String label) => FieldDriver(tester, label);
 
+  /// The presentation header card the user reads as [title].
+  PresentationHeaderDriver header(String title) =>
+      PresentationHeaderDriver(tester, title);
+
   /// The text field at [index] in reading order, for fields without a label.
   FieldDriver fieldAt(int index) => FieldDriver.at(tester, index);
 
@@ -51,6 +57,33 @@ final class PanelDriver extends ComponentDriver {
   /// The dialog in front of the panel.
   DialogDriver get dialog => DialogDriver(tester);
 
+  /// The theme the panel draws with.
+  ThemeData get theme => Theme.of(tester.element(find.byType(Scaffold).first));
+
+  /// The focus ring over the panel.
+  RingDriver get ring => RingDriver(tester);
+
+  /// Where the one widget [target] finds is on screen.
+  Rect rectOf(Finder target) => tester.getRect(target);
+
+  /// The style [text] is drawn with, as a label or inside a field.
+  TextStyle renderedStyle(String text) {
+    final paragraph = find.byWidgetPredicate(
+      (widget) => widget is RichText && widget.text.toPlainText() == text,
+    );
+    if (paragraph.evaluate().isNotEmpty) {
+      return tester.widget<RichText>(paragraph.first).text.style!;
+    }
+    final field = find.byWidgetPredicate(
+      (widget) => widget is EditableText && widget.controller.text == text,
+    );
+    if (field.evaluate().isEmpty) throw TestFailure("Nothing shows $text");
+    return tester.widget<EditableText>(field.first).style;
+  }
+
+  /// The font family [text] is drawn in.
+  String? renderedFont(String text) => renderedStyle(text).fontFamily;
+
   /// What assistive technology reads for the control that has keyboard
   /// focus, or null.
   String? get focused {
@@ -65,6 +98,35 @@ final class PanelDriver extends ComponentDriver {
         .evaluate();
     // The label assistive technology reads, with what merged into it.
     return nodes.isEmpty ? null : nodes.last.spoken;
+  }
+
+  /// Whether the control that holds keyboard focus shows [target], for a
+  /// control that reads no name of its own.
+  bool focusShows(Finder target) {
+    final control = FocusManager.instance.primaryFocus?.context;
+    if (control == null) return false;
+    return find
+        .descendant(
+          of: find.byElementPredicate((element) => element == control),
+          matching: target,
+        )
+        .evaluate()
+        .isNotEmpty;
+  }
+
+  /// The item of the list, table or graph row that holds keyboard focus,
+  /// on the row itself or in a control inside it, or null. For a table,
+  /// whose rows lose their semantics once a row above them leaves (a
+  /// Flutter table defect), where [focused] cannot read the row.
+  Object? get focusedRow {
+    for (
+      FocusNode? node = FocusManager.instance.primaryFocus;
+      node != null;
+      node = node.parent
+    ) {
+      if (node case RowFocusNode(:final entry)) return entry.item;
+    }
+    return null;
   }
 
   /// Whether keyboard focus is on the control [label] or on the unlabeled
@@ -114,6 +176,27 @@ final class PanelDriver extends ComponentDriver {
     expect(hasFocusOn(label), isTrue, reason: "Tab reaches $label");
   }
 
+  /// What Tab reaches over [limit] presses, in order: each control's label,
+  /// else its hint, else its tooltip, empty for one that reads nothing.
+  Future<List<String>> tabOrder({required int limit}) async {
+    final reached = <String>[];
+    for (var tabs = 0; tabs < limit; tabs++) {
+      await press(LogicalKeyboardKey.tab);
+      final nodes = find.semantics
+          .byPredicate((node) => node.isFocused)
+          .evaluate();
+      final data = nodes.isEmpty ? null : nodes.last.getSemanticsData();
+      reached.add(
+        [data?.label, data?.hint, data?.tooltip].firstWhere(
+              (text) => text != null && text.isNotEmpty,
+              orElse: () => "",
+            ) ??
+            "",
+      );
+    }
+    return reached;
+  }
+
   /// Presses [key] on the keyboard.
   Future<void> press(LogicalKeyboardKey key) async {
     await tester.sendKeyEvent(key);
@@ -131,6 +214,23 @@ final class PanelDriver extends ComponentDriver {
     await tester.sendKeyEvent(key);
     await tester.sendKeyUpEvent(modifier);
     await settle();
+  }
+
+  /// Presses [key] while Control is held on every platform, as the pane
+  /// keys Control+Arrows and Control+H, J, L are.
+  Future<void> pressControl(LogicalKeyboardKey key) async {
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(key);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await settle();
+  }
+
+  /// Opens the sidebar link [label] the way a keyboard user does: Control+H
+  /// to the sidebar, Tab to the link, then Enter.
+  Future<void> openFromSidebar(String label) async {
+    await pressControl(LogicalKeyboardKey.keyH);
+    await tabTo(label);
+    await press(LogicalKeyboardKey.enter);
   }
 
   /// Presses [key] while Shift is held.

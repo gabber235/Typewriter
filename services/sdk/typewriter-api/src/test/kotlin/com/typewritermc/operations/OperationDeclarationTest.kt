@@ -34,11 +34,12 @@ import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationCardinality
 import skirout.editor.v1.operation.OperationDrop
+import skirout.editor.v1.operation.OperationEmphasis
 import skirout.editor.v1.operation.OperationGroup
 import skirout.editor.v1.operation.OperationInspector
 import skirout.editor.v1.operation.OperationShortcut
+import skirout.editor.v1.operation.OperationWeight
 import skirout.editor.v1.operation.ResourceOperationDefinition
-import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.HeaderActionTone
 import skirout.editor.v1.resource_operations.PreparationChoice
 import skirout.editor.v1.resource_operations.PreparationChoiceAnswer
@@ -56,35 +57,69 @@ import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 
 val OperationDeclarationTest by testSuite {
-    test("a destructive group gives the destructive tone whatever the button variant") {
-        listOf(ButtonVariant.FILLED, ButtonVariant.OUTLINED, ButtonVariant.TEXT).forEach { variant ->
+    test("a destructive group gives the destructive tone whatever the emphasis") {
+        listOf(OperationEmphasis.FILLED, OperationEmphasis.OUTLINE, OperationEmphasis.FLAT).forEach { emphasis ->
             val declaration =
                 collect<Unit> {
                     appearance {
                         icon("mdi:delete-outline")
                         group(OperationGroup.DESTRUCTIVE, order = 3)
-                        inspector(OperationInspector.ButtonWrapper(variant))
+                        emphasis(emphasis)
                     }
                     gestures { shortcut(OperationShortcut.DELETE) }
-                    confirm("Remove these?") { action("Remove") }
+                    confirm(OperationWeight.PERMANENT, one = "Remove this?", many = "Remove {count} of these?")
                     prepare { }
                 }
             val appearance = bind(declaration).single().presentation
             appearance.tone shouldBe HeaderActionTone.DESTRUCTIVE
-            (appearance.inspector as OperationInspector.ButtonWrapper).value shouldBe variant
+            appearance.emphasis shouldBe emphasis
         }
     }
 
-    test("a confirmation is titled with the operation label and confirms with the declared action") {
+    test("an operation that declares no emphasis is a flat button in the inspector") {
+        val appearance = bind(collect<Unit> { prepare { } }).single().presentation
+
+        appearance.emphasis shouldBe OperationEmphasis.FLAT
+        appearance.inspector shouldBe OperationInspector.SHOWN
+    }
+
+    test("a declared confirmation publishes its one and many lines and its weight unchanged") {
+        listOf(OperationWeight.LIGHT, OperationWeight.HEAVY, OperationWeight.PERMANENT).forEach { weight ->
+            val declaration =
+                collect<Unit> {
+                    confirm(weight, one = "Remove this?", many = "Remove {count} of these?")
+                    prepare { }
+                }
+            val confirmation = requireNotNull(bind(declaration).single().presentation.confirmation)
+
+            confirmation.outcomeOne shouldBe "Remove this?"
+            confirmation.outcomeMany shouldBe "Remove {count} of these?"
+            confirmation.weight shouldBe weight
+        }
+    }
+
+    test("a destructive operation without a hold is refused at declaration") {
         val declaration =
             collect<Unit> {
-                confirm("Remove these?") { action("Remove") }
+                appearance { group(OperationGroup.DESTRUCTIVE) }
                 prepare { }
             }
-        val confirmation = requireNotNull(bind(declaration).single().presentation.confirmation)
+        declaration.failure?.message!! shouldContain "holds to confirm"
+    }
 
-        confirmation.title shouldBe "Example operation"
-        confirmation.confirmationLabel shouldBe "Remove"
+    test("a blank confirmation line, or a many line without {count}, is rejected at declaration") {
+        listOf(
+            Triple("", "Remove {count} of these?", "states its outcome"),
+            Triple("Remove this?", " ", "states its outcome"),
+            Triple("Remove this?", "Remove these?", "{count}"),
+        ).forEach { (one, many, reason) ->
+            val declaration =
+                collect<Unit> {
+                    confirm(OperationWeight.HEAVY, one = one, many = many)
+                    prepare { }
+                }
+            declaration.failure?.message!! shouldContain reason
+        }
     }
 
     test("the core catalog publishes every core operation for any resource with labels from object names") {
@@ -98,6 +133,14 @@ val OperationDeclarationTest by testSuite {
         definitions.values.all { it.targets.subject == skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE } shouldBe true
         definitions.getValue("LinkWithDuplicate").targets.cardinality shouldBe OperationCardinality.SINGLE
         definitions.getValue("Delete").presentation.shortcut shouldBe OperationShortcut.DELETE
+        // Delete is outlined, so a pane's main action (such as New page) stays its one filled button.
+        definitions.getValue("Delete").presentation.emphasis shouldBe OperationEmphasis.OUTLINE
+        // Deleting a resource and what it owns cannot be recovered.
+        definitions
+            .getValue("Delete")
+            .presentation
+            .confirmation
+            ?.weight shouldBe OperationWeight.PERMANENT
         val searches =
             assembly.editorCatalog.capabilities.mapNotNull { capability ->
                 (capability as? skirout.editor.v1.capability.CapabilityDefinition.SearchWrapper)?.value?.capabilityId

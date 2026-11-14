@@ -116,7 +116,10 @@ class ColorPickerSurface extends HookConsumerWidget {
                     spacing: context.spacing.space3,
                     children: [
                       if (replacing)
-                        const Text("Choose one replacement color."),
+                        Text(
+                          "Choose one replacement color.",
+                          style: context.text.sentence,
+                        ),
                       SizedBox(
                         height: 180,
                         child: ClipRRect(
@@ -185,7 +188,12 @@ class ColorPickerSurface extends HookConsumerWidget {
                           ),
                           const Spacer(),
                           if (showCopyAction)
-                            IconButton(
+                            Button(
+                              face: ButtonFace.icon,
+                              icon: const Icones(
+                                MaterialSymbols.content_copy_rounded,
+                              ),
+                              label: "Copy color",
                               tooltip: "Copy color",
                               onPressed: () => Clipboard.setData(
                                 ClipboardData(
@@ -194,11 +202,17 @@ class ColorPickerSurface extends HookConsumerWidget {
                                   ),
                                 ),
                               ),
-                              icon: const Icones(
-                                MaterialSymbols.content_copy_rounded,
-                              ),
                             ),
-                          IconButton(
+                          Button(
+                            face: ButtonFace.icon,
+                            icon: Icones(
+                              library.favorites.contains(color.argbValue)
+                                  ? MaterialSymbols.star_rounded
+                                  : MaterialSymbols.star_outline_rounded,
+                            ),
+                            label: library.favorites.contains(color.argbValue)
+                                ? "Remove from favorites"
+                                : "Add to favorites",
                             tooltip: library.favorites.contains(color.argbValue)
                                 ? "Remove from favorites"
                                 : "Add to favorites",
@@ -207,18 +221,14 @@ class ColorPickerSurface extends HookConsumerWidget {
                                     color.argbValue,
                                   )
                                 : null,
-                            icon: Icones(
-                              library.favorites.contains(color.argbValue)
-                                  ? MaterialSymbols.star_rounded
-                                  : MaterialSymbols.star_outline_rounded,
-                            ),
                           ),
                         ],
                       ),
                       if (warnsAboutAlpha)
-                        const Admonition.warning(
+                        Admonition.warning(
                           child: Text(
                             "This opaque editor will set alpha to FF when the color changes.",
+                            style: context.text.sentence,
                           ),
                         ),
                       ColorFields(

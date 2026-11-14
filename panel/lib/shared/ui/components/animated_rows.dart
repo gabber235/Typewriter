@@ -1,181 +1,673 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// One row of an animated collection, in the order the rows are shown.
-class AnimatedRow<R> {
-  AnimatedRow({required this.index, required this.animation, this.controller});
+part "animated_rows.freezed.dart";
+part "row_focus.dart";
 
-  /// The row's logical index among the rows that have not been removed.
-  int index;
-  Animation<double> animation;
+/// How a row came to be on screen; fixed for the row's life.
+enum RowArrival {
+  /// Present when the content loaded; it joins the load run.
+  load,
 
-  /// The controller while the row animates; null once it has settled.
-  AnimationController? controller;
-  bool outgoing = false;
-
-  /// Builds the row while it leaves, since its data is already gone.
-  R Function(BuildContext context, Animation<double> animation)? removedBuilder;
+  /// Added after the load; it slides in with rowIn.
+  insert,
 }
 
-/// The rows of an animated collection and the animations that move them in and
-/// out. Row indices are logical active indices: a row that is leaving stays in
-/// [rows] until its reverse animation completes, without taking up an index.
-///
-/// The state owns every controller. Each one is disposed exactly once, by the
-/// animation that finishes it or by [dispose], whichever comes first. The two
-/// can meet in one frame: the web engine runs a frame's two halves without
-/// flushing microtasks between them, so the collection can leave the tree after
-/// an animation ended and before the code awaiting that animation runs.
-mixin AnimatedRows<W extends StatefulWidget, R> on TickerProviderStateMixin<W> {
-  /// Every row on screen, with leaving rows where they were.
-  @protected
-  final List<AnimatedRow<R>> rows = [];
-  bool _disposed = false;
+/// Where a row is in its life on screen.
+enum RowPhase {
+  /// Added after the load; sliding in with rowIn.
+  arriving,
 
-  /// The number of rows the collection starts with.
-  @protected
-  int get initialRowCount;
+  /// In place.
+  present,
+
+  /// Gone from the data; squashing shut with listOut.
+  leaving,
+}
+
+/// Where the command a user ran on the row stands; independent of
+/// [RowPhase].
+enum RowRun {
+  /// No command runs.
+  idle,
+
+  /// A removal command runs or has succeeded and the data has not dropped
+  /// the item yet. The row is struck through and busy, and stays so while
+  /// it leaves.
+  sending,
+
+  /// The last hold on the row was refused; the row stays in place with its
+  /// message until it sends again.
+  refused,
+}
+
+/// Why the last hold on a row was refused.
+@freezed
+abstract class HoldFailure with _$HoldFailure {
+  const factory HoldFailure({required String message}) = _HoldFailure;
+}
+
+/// One row of an animated list, keyed by its item's identity.
+/// [useAnimatedRows] creates it when the identity first appears and
+/// disposes it once the row has left. Per row state of later work lands
+/// here as typed fields, each disposed in [_dispose].
+final class RowEntry<T> {
+  RowEntry._({
+    required this.id,
+    required this._item,
+    required this.arrival,
+    required this.presence,
+    required RowFocus focusOwner,
+  }) : _phase = arrival == RowArrival.load
+           ? RowPhase.present
+           : RowPhase.arriving,
+       _slides = arrival == RowArrival.insert {
+    focus = RowFocusNode._(this, focusOwner);
+  }
+
+  /// The identity given to [useAnimatedRows]; the row's only id.
+  final Object id;
+
+  /// How the row came to be on screen.
+  final RowArrival arrival;
+
+  /// Presence from 0 (gone) to 1 (in place). One controller for the row's
+  /// life; it ticks only while the row moves.
+  final MotionController presence;
+
+  /// The row's focus node. [RowStop] puts it in the tree.
+  late final RowFocusNode focus;
+
+  // The part cells of a table row; each RowStop of the part role adds and
+  // removes its own.
+  final _parts = <_RowPartNode>[];
+
+  /// The latest item with this identity; kept while the row leaves.
+  T get item => _item;
+  T _item;
+
+  /// Presence on screen; only the data and the motion move it.
+  RowPhase get phase => _phase;
+  RowPhase _phase;
+
+  /// The user's command on the row; only [AnimatedRows.sending] and
+  /// [AnimatedRows.refuse] move it.
+  RowRun get run => _run;
+  RowRun _run = RowRun.idle;
+
+  /// The last refusal; set with [RowRun.refused], cleared when the row
+  /// sends.
+  HoldFailure? get failure => _failure;
+  HoldFailure? _failure;
+
+  /// How many times this row has jammed; [Jam] shakes once per increase.
+  int get jams => _jams;
+  int _jams = 0;
+
+  /// Whether the row was still arriving when it started to leave.
+  bool get leftWhileArriving => _leftWhileArriving;
+  bool _leftWhileArriving = false;
+
+  // Which look [presence] drives: the slide of rowIn, the squash of
+  // listOut, or both for a row removed mid arrival. A row that comes back
+  // while it leaves turns around in the look it left with.
+  bool _slides;
+  bool _squashes = false;
+
+  void _dispose() {
+    focus.dispose();
+    presence.dispose();
+  }
+}
+
+/// Builds the content of one list row; the mechanic adds motion and the
+/// sending look.
+typedef AnimatedRowBuilder<T> = Widget Function(
+  BuildContext context,
+  RowEntry<T> entry,
+);
+
+/// Builds the cells of one table row; the mechanic adds motion and the
+/// sending look.
+typedef AnimatedTableRowBuilder<T> = TableRow Function(
+  BuildContext context,
+  RowEntry<T> entry,
+);
+
+/// The rows of one animated list in screen order, leaving rows where they
+/// were. [useAnimatedRows] owns it; [AnimatedTable], [SliverAnimatedRows]
+/// and the editor collections render it.
+final class AnimatedRows<T> implements HoldRows {
+  AnimatedRows._(this._hook);
+
+  final _AnimatedRowsHookState<T> _hook;
+
+  /// Every row on screen in order, leaving rows included.
+  List<RowEntry<T>> get entries => List.unmodifiable(_hook._entries);
+
+  /// The items in the data, in order: every entry that is not leaving.
+  List<T> get items => [
+    for (final entry in _hook._entries)
+      if (entry.phase != RowPhase.leaving) entry.item,
+  ];
+
+  /// The row of [id] while it is on screen.
+  RowEntry<T>? operator [](Object id) => _hook._byId[id];
+
+  /// Whether a row was ever on screen. An empty state arrives with rowIn
+  /// after the last row left, with loadIn otherwise.
+  bool get everHadRows => _hook._everHadRows;
+
+  /// Where focus goes when rows of this list leave or arrive.
+  RowFocus get focus => _hook._focus;
 
   @override
-  void initState() {
-    super.initState();
-    for (var index = 0; index < initialRowCount; index++) {
-      rows.add(AnimatedRow(index: index, animation: kAlwaysCompleteAnimation));
-    }
+  List<Object> get order => focus.order;
+
+  @override
+  Object? get focusedId => focus.focusedId;
+
+  @override
+  void focusId(Object id) => focus.focusId(id);
+
+  /// Runs [command] with the rows of [ids] sending: they stay in place,
+  /// struck through and busy, and ignore input. When [command] fails their
+  /// run returns to idle with no motion and the error is rethrown. When it
+  /// succeeds they stay sending until their items leave the data, then play
+  /// listOut.
+  @override
+  Future<R> sending<R>(Iterable<Object> ids, Future<R> Function() command) =>
+      _hook._sending(ids.toSet(), command);
+
+  /// Refuses the rows in [messages] in one rebuild: each leaves sending,
+  /// shows its message, and the first in screen order jams. Rows that are
+  /// gone or leaving are skipped.
+  @override
+  void refuse(Map<Object, String> messages) => _hook._refuse(messages);
+}
+
+/// Keeps one entry per identity of [items]. Rows present when [ready] is
+/// first true join the load run, so a tab creates its rows once, above its
+/// data builder, with the data or nothing while it loads, and hands the
+/// same rows to its list, its table and its bulk bar. Later rows arrive
+/// with rowIn; an identity that leaves [items] squashes shut with listOut,
+/// and one that comes back while leaving turns around from where it is. A
+/// reorder moves rows in place with no motion. [identity] must be unique
+/// among [items]; a duplicate throws an [ArgumentError] and leaves the rows
+/// as they were. [arrival] and [leave] are a service's overrides of rowIn
+/// and listOut; null plays the tokens. [focus] is passed by a parent that
+/// announces creates from outside the list; without it the hook owns one.
+AnimatedRows<T> useAnimatedRows<T>({
+  required List<T> items,
+  required Object Function(T item) identity,
+  bool ready = true,
+  MotionOverride? arrival,
+  MotionOverride? leave,
+  RowFocus? focus,
+}) {
+  final vsync = useTickerProvider();
+  return use(
+    _AnimatedRowsHook<T>(items, identity, ready, arrival, leave, vsync, focus),
+  );
+}
+
+class _AnimatedRowsHook<T> extends Hook<AnimatedRows<T>> {
+  const _AnimatedRowsHook(
+    this.items,
+    this.identity,
+    this.ready,
+    this.arrival,
+    this.leave,
+    this.vsync,
+    this.focus,
+  );
+
+  final List<T> items;
+  final Object Function(T item) identity;
+  final bool ready;
+  final MotionOverride? arrival;
+  final MotionOverride? leave;
+  final TickerProvider vsync;
+  final RowFocus? focus;
+
+  @override
+  _AnimatedRowsHookState<T> createState() => _AnimatedRowsHookState<T>();
+}
+
+/// Owns every entry and its controller. Each controller is disposed exactly
+/// once, by the leave that finishes it or by [dispose]. The two can meet in
+/// one frame: the web engine runs a frame's two halves without flushing
+/// microtasks between them, so the list can leave the tree after a move
+/// ended and before the code awaiting that move runs; a finished leave
+/// checks [_disposed] first.
+class _AnimatedRowsHookState<T>
+    extends HookState<AnimatedRows<T>, _AnimatedRowsHook<T>> {
+  late final _rows = AnimatedRows<T>._(this);
+  final _entries = <RowEntry<T>>[];
+  final _byId = <Object, RowEntry<T>>{};
+  bool _everHadRows = false;
+  bool _loaded = false;
+  bool _disposed = false;
+  late final RowFocus _focus = hook.focus ?? (_ownFocus = RowFocus());
+  RowFocus? _ownFocus;
+
+  @override
+  void initHook() {
+    super.initHook();
+    _focus._rows = _rows;
+    _sync();
   }
 
-  /// Inserts an active row at [index] and animates it in.
-  ///
-  /// The builder receives the new logical index. A still animating outgoing row
-  /// does not consume an active index.
-  void insertItem(
-    int index, {
-    Duration duration = const Duration(milliseconds: 300),
-  }) {
-    assert(index >= 0 && index <= _activeCount);
-    final controller = AnimationController(duration: duration, vsync: this);
-    final visualIndex = _visualIndexForInsertion(index);
-    setState(() {
-      rows.insert(
-        visualIndex,
-        AnimatedRow(
-          index: index,
-          animation: controller,
-          controller: controller,
-        ),
+  // Runs during the owner's build, which follows, so it mutates without
+  // setState. A caller may change its list in place, so every build syncs.
+  @override
+  void didUpdateHook(_AnimatedRowsHook<T> oldHook) {
+    super.didUpdateHook(oldHook);
+    assert(
+      identical(oldHook.focus, hook.focus),
+      "A list keeps one RowFocus for its life",
+    );
+    _sync();
+  }
+
+  void _sync() {
+    if (!hook.ready) return;
+    final ids = [for (final item in hook.items) hook.identity(item)];
+    if (ids.toSet().length != ids.length) {
+      throw ArgumentError.value(
+        ids,
+        "items",
+        "Animated row identities must be unique",
       );
-      _reindexActiveRows();
-    });
-    controller.forward().then<void>((_) {
-      if (_disposed || !rows.any((row) => row.controller == controller)) return;
-      setState(() {
-        rows.firstWhere((row) => row.controller == controller)
-          ..animation = kAlwaysCompleteAnimation
-          ..controller = null;
-      });
-      controller.dispose();
-    });
+    }
+    // The first data after loading is the load, not an arrival.
+    final arrival = _loaded ? RowArrival.insert : RowArrival.load;
+    _loaded = true;
+    final present = [
+      for (final (index, item) in hook.items.indexed)
+        _present(ids[index], item, arrival),
+    ];
+    final kept = present.toSet();
+    final leaving = [
+      for (final entry in _entries)
+        if (!kept.contains(entry) && entry.phase != RowPhase.leaving) entry,
+    ];
+    // Focus moves before any leaving row rebuilds, against the order before
+    // the change.
+    _focus._leaving({for (final entry in leaving) entry.id});
+    leaving.forEach(_leave);
+    final merged = _merge(present, kept);
+    _entries
+      ..clear()
+      ..addAll(merged);
+    // A create announced before the row arrived, even before the load.
+    _focus._arrived();
   }
 
-  /// Removes the active row at [index], keeping [builder] alive for the reverse
-  /// animation.
-  void removeItem(
-    int index,
-    R Function(BuildContext context, Animation<double> animation) builder, {
-    Duration duration = const Duration(milliseconds: 300),
-  }) {
-    assert(index >= 0 && index < _activeCount);
-    final row = rows.firstWhere((row) => !row.outgoing && row.index == index);
-    final controller =
-        row.controller ??
-        AnimationController(duration: duration, value: 1, vsync: this);
+  RowEntry<T> _present(Object id, T item, RowArrival arrival) {
+    final entry = _byId[id];
+    if (entry == null) {
+      _everHadRows = true;
+      final added = _byId[id] = RowEntry<T>._(
+        id: id,
+        item: item,
+        arrival: arrival,
+        presence: MotionController(
+          vsync: hook.vsync,
+          value: arrival == RowArrival.load ? 1 : 0,
+        ),
+        focusOwner: _focus,
+      );
+      _focus._watch(added.focus);
+      if (arrival == RowArrival.insert) {
+        _play(added, RowPhase.arriving, MotionToken.rowIn, hook.arrival, 1);
+      }
+      return added;
+    }
+    entry._item = item;
+    if (entry.phase == RowPhase.leaving) {
+      // Back in the data: the item was not removed after all.
+      entry._run = RowRun.idle;
+      _play(entry, RowPhase.arriving, MotionToken.rowIn, hook.arrival, 1);
+    }
+    return entry;
+  }
+
+  void _leave(RowEntry<T> entry) {
+    final arriving = entry.phase == RowPhase.arriving;
+    entry
+      .._leftWhileArriving = arriving
+      .._squashes = true;
+    // A row removed mid arrival slides back towards its origin as it
+    // squashes; a settled row only squashes.
+    if (!arriving) entry._slides = false;
+    _play(entry, RowPhase.leaving, MotionToken.listOut, hook.leave, 0);
+  }
+
+  // A later phase retargets the same controller, which leaves this future
+  // uncompleted.
+  void _play(
+    RowEntry<T> entry,
+    RowPhase phase,
+    MotionToken<Landing> token,
+    MotionOverride? override,
+    double target,
+  ) {
+    entry._phase = phase;
+    entry.presence
+        .to(target, resolveMotion(context, token, override: override))
+        .then<void>((_) {
+          if (_disposed || entry.phase != phase || _byId[entry.id] != entry) {
+            return;
+          }
+          if (phase == RowPhase.arriving) {
+            setState(() {
+              entry
+                .._phase = RowPhase.present
+                .._squashes = false;
+            });
+            return;
+          }
+          setState(() {
+            _entries.remove(entry);
+            _byId.remove(entry.id);
+          });
+          entry._dispose();
+        });
+  }
+
+  // Present rows take the order of the data; each leaving row stays right
+  // after the row that preceded it on screen.
+  List<RowEntry<T>> _merge(List<RowEntry<T>> present, Set<RowEntry<T>> kept) {
+    final leavingAfter = <RowEntry<T>?, List<RowEntry<T>>>{};
+    RowEntry<T>? previous;
+    for (final entry in _entries) {
+      if (kept.contains(entry)) {
+        previous = entry;
+      } else {
+        (leavingAfter[previous] ??= []).add(entry);
+      }
+    }
+    return [
+      ...?leavingAfter[null],
+      for (final entry in present) ...[entry, ...?leavingAfter[entry]],
+    ];
+  }
+
+  // Only the run moves here; presence is never touched, so a refusal moves
+  // nothing.
+  Future<R> _sending<R>(Set<Object> ids, Future<R> Function() command) async {
+    final sent = [
+      for (final entry in _entries)
+        if (ids.contains(entry.id) && entry.phase != RowPhase.leaving) entry,
+    ];
+    for (final entry in sent) {
+      final row = entry.focus;
+      // A control inside a sending row hands focus to the row, which keeps
+      // it.
+      if (row.hasFocus && !row.hasPrimaryFocus && row.canRequestFocus) {
+        row.requestFocus();
+      }
+    }
     setState(() {
-      row
-        ..outgoing = true
-        ..removedBuilder = builder
-        ..controller = controller
-        ..animation = controller;
-      _reindexActiveRows();
+      for (final entry in sent) {
+        // A new send clears the row's last refusal.
+        entry
+          .._run = RowRun.sending
+          .._failure = null;
+      }
     });
-    controller.reverse().then<void>((_) {
-      if (_disposed || !rows.contains(row)) return;
-      setState(() => rows.remove(row));
-      controller.dispose();
-    });
-  }
-
-  int get _activeCount => rows.where((row) => !row.outgoing).length;
-
-  int _visualIndexForInsertion(int index) {
-    var activeIndex = 0;
-    for (var visualIndex = 0; visualIndex < rows.length; visualIndex++) {
-      if (rows[visualIndex].outgoing) continue;
-      if (activeIndex == index) return visualIndex;
-      activeIndex++;
-    }
-    return rows.length;
-  }
-
-  void _reindexActiveRows() {
-    var index = 0;
-    for (final row in rows) {
-      if (row.outgoing) continue;
-      row.index = index++;
+    try {
+      return await command();
+    } catch (_) {
+      if (!_disposed) {
+        setState(() {
+          for (final entry in sent) {
+            if (entry.run == RowRun.sending) entry._run = RowRun.idle;
+          }
+        });
+      }
+      rethrow;
     }
   }
+
+  void _refuse(Map<Object, String> messages) {
+    if (_disposed) return;
+    setState(() {
+      var jammed = false;
+      for (final entry in _entries) {
+        final message = messages[entry.id];
+        if (message == null || entry.phase == RowPhase.leaving) continue;
+        entry
+          .._run = RowRun.refused
+          .._failure = HoldFailure(message: message);
+        if (!jammed) {
+          entry._jams++;
+          jammed = true;
+        }
+      }
+    });
+  }
+
+  @override
+  AnimatedRows<T> build(BuildContext context) => _rows;
 
   @override
   void dispose() {
     _disposed = true;
-    for (final row in rows) {
-      row.controller?.dispose();
+    _focus._detach(_rows);
+    for (final entry in _byId.values) {
+      entry._dispose();
     }
+    _ownFocus?.dispose();
     super.dispose();
   }
-}
-
-/// Builds one active row of an [SliverAnimatedRows]. The animation is complete
-/// for settled rows and runs forward for inserted rows.
-typedef SliverAnimatedRowBuilder = Widget Function(
-  BuildContext context,
-  int index,
-  Animation<double> animation,
-);
-
-/// A sliver list that animates rows in and out, the sliver form of
-/// [AnimatedTable].
-///
-/// Flutter's `SliverAnimatedList` is not used because it disposes a finished
-/// row's controller a second time when the list leaves the tree in that frame
-/// (flutter/flutter#192533); see [AnimatedRows]. Callers own the data source and keep it consistent with
-/// the state methods.
-class SliverAnimatedRows extends StatefulWidget {
-  const SliverAnimatedRows({
-    required this.initialItemCount,
-    required this.itemBuilder,
-    super.key,
-  }) : assert(initialItemCount >= 0);
-
-  final int initialItemCount;
-  final SliverAnimatedRowBuilder itemBuilder;
 
   @override
-  SliverAnimatedRowsState createState() => SliverAnimatedRowsState();
+  String get debugLabel => "useAnimatedRows";
 }
 
-class SliverAnimatedRowsState extends State<SliverAnimatedRows>
-    with TickerProviderStateMixin, AnimatedRows<SliverAnimatedRows, Widget> {
-  @override
-  int get initialRowCount => widget.initialItemCount;
-
-  Widget _buildRow(BuildContext context, int visualIndex) {
-    final row = rows[visualIndex];
-    return row.outgoing
-        ? row.removedBuilder!(context, row.animation)
-        : widget.itemBuilder(context, row.index, row.animation);
+/// The motion and sending look every renderer of [AnimatedRows] applies.
+extension RowEntryMotion on RowEntry<Object?> {
+  /// Cell motion: [content] with the row's arrival and leave, applied to
+  /// every cell of a table row and once to a list row. The shape is the
+  /// same in every phase, so a row that starts leaving keeps its element
+  /// tree. [anchors] false keeps the row out of an enclosing
+  /// [SliverRowAnchor], for lists that own no scroll.
+  Widget motion(Widget content, {bool anchors = true}) {
+    final moving = Leave(
+      progress: _squashes ? presence : kAlwaysCompleteAnimation,
+      child: Enter(
+        token: arrival == RowArrival.load
+            ? MotionToken.loadIn
+            : MotionToken.rowIn,
+        progress: arrival == RowArrival.load
+            ? null
+            : (_slides ? presence : kAlwaysCompleteAnimation),
+        group: this,
+        child: _Quiet(
+          quiet: phase == RowPhase.leaving || run == RowRun.sending,
+          child: _SendingText(sending: run == RowRun.sending, child: content),
+        ),
+      ),
+    );
+    if (!anchors) return moving;
+    return RowAnchorMarker(id: id, child: moving);
   }
 
+  /// The per row hook point: applied exactly once per row by every list
+  /// renderer, inside [motion], around the whole row: the sending look and
+  /// the hold (fill, outcome line, jam and refusal message).
+  Widget row(Widget child) {
+    return HoldRow(
+      entry: this,
+      child: _SendingFill(sending: run == RowRun.sending, child: child),
+    );
+  }
+
+  /// The per row hook point of a table, whose rows are not widgets: the
+  /// TableRow decoration. [AnimatedTable] applies it once per row. It
+  /// carries the sending look and the hold fill.
+  Decoration? rowDecoration(BuildContext context, Decoration? source) {
+    final base = run == RowRun.sending
+        ? _sendingDecoration(context, source)
+        : source;
+    final runs = CommandRunsScope.maybeOf(context);
+    if (runs == null) return base;
+    return HoldFillDecoration.of(
+      context,
+      amount: RowHoldAmount(runs, id),
+      base: base,
+    );
+  }
+
+  /// The rest of a table row's hold (outcome line, jam, refusal message),
+  /// applied once per row by [AnimatedTable] to the cell its lineColumn
+  /// names.
+  Widget rowLine(Widget content) =>
+      HoldRow(entry: this, paintsFill: false, child: content);
+
+  Decoration? _sendingDecoration(BuildContext context, Decoration? source) {
+    final fill = Theme.of(context).colorScheme.onSurface
+        .withValues(alpha: context.stateTokens.pressedOpacity);
+    return switch (source) {
+      BoxDecoration(:final color?) => source.copyWith(
+        color: Color.alphaBlend(fill, color),
+      ),
+      BoxDecoration() => source.copyWith(color: fill),
+      null => BoxDecoration(color: fill),
+      _ => source,
+    };
+  }
+}
+
+// A sending row reads as pressed in, like a held key, with its text struck
+// through: the fill is onSurface at the pressed opacity, the text onSurface
+// at the disabled foreground opacity. The look lands at once; the hold that
+// sent the command already moved. The text is per cell, so a table strikes
+// every cell; the fill is per row.
+class _SendingText extends StatelessWidget {
+  const _SendingText({required this.sending, required this.child});
+
+  final bool sending;
+  final Widget child;
+
   @override
-  Widget build(BuildContext context) => SliverList(
-    delegate: SliverChildBuilderDelegate(_buildRow, childCount: rows.length),
-  );
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final faded = theme.colorScheme.onSurface.withValues(
+      alpha: context.stateTokens.disabledForegroundOpacity,
+    );
+    // Text styled from the text theme does not inherit the default style,
+    // so the text theme strikes too. The Theme stays in the tree either way:
+    // adding it only while sending would remount the row and drop its focus.
+    return Theme(
+      data: sending
+          ? theme.copyWith(
+              textTheme: theme.textTheme.apply(
+                decoration: TextDecoration.lineThrough,
+                bodyColor: faded,
+                displayColor: faded,
+              ),
+            )
+          : theme,
+      child: DefaultTextStyle.merge(
+        style: sending
+            ? DefaultTextStyle.of(context).style.copyWith(
+                decoration: TextDecoration.lineThrough,
+                color: faded,
+              )
+            : null,
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Semantics, pointer and traversal off for a leaving or sending row. Focus
+/// is never taken away here: ExcludeFocus would unfocus a focused
+/// descendant, and a sending row keeps its focus.
+class _Quiet extends StatelessWidget {
+  const _Quiet({required this.quiet, required this.child});
+
+  final bool quiet;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      excluding: quiet,
+      child: Focus(
+        canRequestFocus: false,
+        skipTraversal: true,
+        includeSemantics: false,
+        descendantsAreTraversable: !quiet,
+        child: IgnorePointer(ignoring: quiet, child: child),
+      ),
+    );
+  }
+}
+
+class _SendingFill extends StatelessWidget {
+  const _SendingFill({required this.sending, required this.child});
+
+  final bool sending;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: sending
+            ? onSurface.withValues(alpha: context.stateTokens.pressedOpacity)
+            : null,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// A sliver list that animates the rows of [rows] in and out, the sliver
+/// form of [AnimatedTable]. Flutter's `SliverAnimatedList` is not used: it
+/// disposes a finished row's controller a second time when the list leaves
+/// the tree in that frame (flutter/flutter#192533).
+class SliverAnimatedRows<T> extends StatelessWidget {
+  const SliverAnimatedRows({
+    required this.rows,
+    required this.itemBuilder,
+    super.key,
+  });
+
+  final AnimatedRows<T> rows;
+  final AnimatedRowBuilder<T> itemBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = rows.entries;
+    return RowFocusScope(
+      focus: rows.focus,
+      child: SliverRowAnchor(
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final entry = entries[index];
+              return RowEntryScope(
+                key: ValueKey(entry.id),
+                entry: entry,
+                child: entry.motion(entry.row(itemBuilder(context, entry))),
+              );
+            },
+            childCount: entries.length,
+            // A row keeps its element when rows above it change.
+            findChildIndexCallback: (key) {
+              final index = entries.indexWhere(
+                (entry) => ValueKey(entry.id) == key,
+              );
+              return index < 0 ? null : index;
+            },
+          ),
+        ),
+      ),
+    );
+  }
 }

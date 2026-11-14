@@ -19,17 +19,13 @@ Widget resourceOperationButtonStory(BuildContext context) {
     label: "Long extension label",
     initialValue: false,
   );
-  final variant = context.knobs.object.dropdown(
-    label: "Button variant",
-    options: [
-      skir.ButtonVariant.filled,
-      skir.ButtonVariant.outlined,
-      skir.ButtonVariant.text,
-    ],
+  final emphasis = context.knobs.object.dropdown(
+    label: "Emphasis",
+    options: OperationEmphasis.values,
     labelBuilder: (value) => switch (value) {
-      skir.ButtonVariant.filled => "Filled",
-      skir.ButtonVariant.outlined => "Outlined",
-      _ => "Text",
+      OperationEmphasis.filled => "Filled",
+      OperationEmphasis.outline => "Outline",
+      OperationEmphasis.flat => "Flat",
     },
   );
   final destructive = context.knobs.boolean(label: "Destructive tone");
@@ -40,7 +36,8 @@ Widget resourceOperationButtonStory(BuildContext context) {
         width: 260,
         child: ResourceOperationButton(
           presentation: skir.OperationPresentation(
-            inspector: skir.OperationInspector.wrapButton(variant),
+            inspector: skir.OperationInspector.shown,
+            emphasis: emphasis.declared,
             shortcut: destructive ? skir.OperationShortcut.delete : null,
             label: longLabel
                 ? "Generate dialogue variations for this selection"
@@ -59,7 +56,15 @@ Widget resourceOperationButtonStory(BuildContext context) {
             confirmation: null,
           ),
           disabledReason: enabled ? null : "The inverse reference is full",
-          onInvoke: () {},
+          command: ActionShortcut(
+            id: "story_resource_operation",
+            label: "Run operation",
+            description: "Run the declared operation for this selection",
+            activators: const [],
+            priority: 0,
+            show: false,
+            run: ActionRun.press((_) {}),
+          ),
         ),
       ),
     ),

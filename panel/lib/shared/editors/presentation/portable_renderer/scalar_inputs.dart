@@ -25,6 +25,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
   }) {
     final current = scope.read(control.binding)?.authoredPayload;
     if (current == null) return _diagnostic("The $name binding is unavailable");
+    final mixed = scope.isMixed(control.binding);
     return _controlFrame(
       control,
       appearance == null ? scope : scope.withAppearance(appearance),
@@ -82,6 +83,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                       value: current == skir.DataValue.unfilled
                           ? null
                           : current,
+                      mixed: mixed,
                       name: name,
                       icon: icon,
                       enabled: scope.enabled,
@@ -96,7 +98,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                         hintText:
                             _entryPlaceholder(content, scope) ??
                             "Enter a $name",
-                        helperText: current == skir.DataValue.unfilled
+                        helperText: current == skir.DataValue.unfilled && !mixed
                             ? "This value is Unfilled"
                             : null,
                         prefixIcon: externalLeading ? null : leading,
@@ -249,12 +251,17 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                       ],
                       style: style.valueStyle,
                       textAlign: style.alignment,
-                      decoration: style.decoration.copyWith(
-                        hintText:
-                            _entryPlaceholder(input.content, scope) ??
-                            "Enter text",
-                        suffixIcon: outsideSuffix ? null : suffix,
-                      ),
+                      decoration: () {
+                        final decoration = style.decoration.copyWith(
+                          hintText:
+                              _entryPlaceholder(input.content, scope) ??
+                              "Enter text",
+                          suffixIcon: outsideSuffix ? null : suffix,
+                        );
+                        return scope.isMixed(input.control.binding)
+                            ? decoration.forMixedValue
+                            : decoration;
+                      }(),
                       prefix: outsideLeading ? null : leading,
                       selectAllOnFocus: input.entry?.selectAllOnFocus ?? false,
                       onChanged: (text) =>
@@ -397,7 +404,10 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
               mainAxisSize: MainAxisSize.min,
               children: [
                 for (final direction in [-1, 1])
-                  IconButton(
+                  Button(
+                    face: ButtonFace.icon,
+                    icon: Icon(direction < 0 ? Icons.remove : Icons.add),
+                    label: direction < 0 ? "Decrease" : "Increase",
                     tooltip: direction < 0 ? "Decrease" : "Increase",
                     onPressed: scope.enabled && !scope.readOnly
                         ? () => mutate((fresh) {
@@ -461,7 +471,6 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                             return replacement;
                           })
                         : null,
-                    icon: Icon(direction < 0 ? Icons.remove : Icons.add),
                   ),
               ],
             )
@@ -533,14 +542,14 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
           }),
         if (scope.read(input.control.binding)?.authoredPayload ==
             skir.DataValue.unfilled)
-          TextButton(
+          Button(
+            label: "Use empty bytes",
             onPressed: scope.enabled && !scope.readOnly
                 ? () => scope.writePayload(
                     input.control.binding,
                     skir.DataValue.wrapBytes(skir.ByteString.empty),
                   )
                 : null,
-            child: const Text("Use empty bytes"),
           ),
       ],
     );

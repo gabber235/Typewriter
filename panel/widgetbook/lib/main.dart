@@ -5,7 +5,6 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "main.directories.g.dart";
 
 void main() {
-  Animate.restartOnHotReload = true;
   debugTracePostFrameCallbacks = true;
 
   runApp(const TypewriterWidgetbook());
