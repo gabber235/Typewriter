@@ -54,7 +54,6 @@ import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.record
 import com.typewritermc.types.template
-import com.typewritermc.types.type
 import com.typewritermc.types.use
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
@@ -85,7 +84,7 @@ import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValuePath
 import java.math.BigInteger
@@ -338,9 +337,9 @@ fun main(args: Array<String>) {
             val contributions = deployment.providers.contributions
             val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture")))
             requirement("the loaded artifact publishes the display and search key in the editor catalog") {
-                contributions.displays.single().provider.target shouldBe ResourceTarget.type(ExampleDefinition.id.namedTemplate())
+                contributions.displays.single().provider.target shouldBe ResourceMatch.DefinitionWrapper(ExampleDefinition.id)
                 assembly.editorCatalog.resourceDisplays.single().target shouldBe
-                    skirout.editor.v1.type_catalog.ResourceTarget.TypeWrapper(ExampleDefinition.id.template())
+                    skirout.editor.v1.type_catalog.ResourceMatch.DefinitionWrapper(ExampleDefinition.id)
                 assembly.editorCatalog.types.single { it.definition.id == ExampleDefinition.id }.searchKey shouldBe "example"
             }
             requirement("a sealed type made only of objects and an enum read and write natively through a record field") {

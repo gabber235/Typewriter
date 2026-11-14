@@ -419,7 +419,7 @@ authoredLinkCollection({
   );
   final checked = CheckedEditorCatalog(
     testCatalogSnapshot(
-      resourceDisplays: [nameResourceDisplay(rootTemplate)],
+      resourceDisplays: [nameResourceDisplay(rootDefinition)],
       generation: skir.CatalogGeneration(value: "catalog:links"),
       types: [
         publishedType(

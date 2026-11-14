@@ -87,7 +87,7 @@ final class RealmOperation {
           declaration: "com.typewritermc.operations.$name",
         ),
         targets: skir.OperationTargets(
-          subject: skir.ResourceTarget.anyResource,
+          subject: skir.ResourceMatch.anyResource,
           cardinality: skir.OperationCardinality.selection,
         ),
         capability: capability,

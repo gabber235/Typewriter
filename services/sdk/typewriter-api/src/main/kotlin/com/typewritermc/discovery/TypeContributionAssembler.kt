@@ -131,7 +131,7 @@ sealed interface CatalogCallback {
     ) : CatalogCallback
 
     data class Display(
-        val target: skirout.editor.v1.type_catalog.ResourceTarget,
+        val target: skirout.editor.v1.type_catalog.ResourceMatch,
     ) : CatalogCallback
 }
 

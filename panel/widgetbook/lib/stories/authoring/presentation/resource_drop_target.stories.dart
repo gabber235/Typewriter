@@ -190,7 +190,7 @@ skir.ResourceOperationDefinition _definition(
     declaration: "com.typewritermc.operations.$name",
   ),
   targets: skir.OperationTargets(
-    subject: skir.ResourceTarget.anyResource,
+    subject: skir.ResourceMatch.anyResource,
     cardinality: skir.OperationCardinality.selection,
   ),
   capability: skir.CapabilityId(value: "operations:$name"),

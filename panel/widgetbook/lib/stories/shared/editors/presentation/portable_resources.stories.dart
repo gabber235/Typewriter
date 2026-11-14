@@ -276,10 +276,7 @@ _PageFixture _pageFixture() {
   ];
   final snapshot = skir.EditorCatalog(
     resourceDisplays: [
-      for (final type in [entryType, cueType])
-        nameResourceDisplay(
-          skir.TypeTemplate.createNamed(definition: type, arguments: const []),
-        ),
+      for (final type in [entryType, cueType]) nameResourceDisplay(type),
     ],
     resourceOperations: const [],
     generation: generation,

@@ -22,13 +22,13 @@ import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.kernel.v1.resource_id.ResourceId
 
 /** One published resource display with its formulas checked against the catalog that published them. */
 class CheckedResourceDisplay(
-    val target: ResourceTarget,
+    val target: ResourceMatch,
     val label: ExpressionNode,
     val accent: ExpressionNode,
     val icon: ExpressionNode,
@@ -41,7 +41,7 @@ class CheckedResourceDisplay(
 /**
  * The resource displays of one catalog generation and the published types their formulas read.
  *
- * [displayFor] picks the display whose target type is the most specific nominal supertype of a resource's type. When
+ * [displayFor] picks the display whose target definition is the most specific nominal supertype of a resource's type. When
  * no typed display applies, or two unrelated ones apply equally, the any resource display applies. Editors apply the
  * same rule to the published formulas.
  */
@@ -49,8 +49,8 @@ class ResourceDisplayCatalog(
     val displays: List<CheckedResourceDisplay> = emptyList(),
     types: List<PublishedType> = emptyList(),
 ) {
-    private val anyResource = displays.firstOrNull { it.target == ResourceTarget.ANY_RESOURCE }
-    private val typed = displays.filter { it.target is ResourceTarget.TypeWrapper }
+    private val anyResource = displays.firstOrNull { it.target == ResourceMatch.ANY_RESOURCE }
+    private val typed = displays.filter { it.target is ResourceMatch.DefinitionWrapper }
     private val types = types.associateBy { it.definition.id }
 
     /** The published type of [definition], or null when this catalog publishes no such type. */
@@ -102,7 +102,7 @@ class ResourceDisplayCatalog(
 }
 
 private val CheckedResourceDisplay.targetDefinition: TypeDefinitionId
-    get() = (target as ResourceTarget.TypeWrapper).template.definition
+    get() = (target as ResourceMatch.DefinitionWrapper).value
 
 /** Display formulas name a resource from a few fields; this bounds a pathological formula, not a real one. */
 private val DISPLAY_BUDGET = EvaluationBudget(maxSteps = 10_000, maxCollectionItems = 1_000)

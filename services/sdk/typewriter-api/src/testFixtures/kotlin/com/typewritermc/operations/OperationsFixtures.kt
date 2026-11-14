@@ -49,7 +49,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.LinkTarget
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -65,7 +65,7 @@ internal fun <I> collect(
     collectOperation<ResourceDraft, I>(
         origin = origin("fixture.ExampleOperation", artifact = "fixture"),
         declaration = "fixture.ExampleOperation",
-        target = ResourceTarget.ANY_RESOURCE,
+        target = ResourceMatch.ANY_RESOURCE,
         subjects = AnyResourceSubjects,
         input = input,
         defaultLabel = "Example operation",

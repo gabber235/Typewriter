@@ -788,13 +788,13 @@ skir.ExpressionNode _number(double value) =>
 /// library resources are named exactly as Realm names them.
 final _libraryDisplays = [
   for (final display in compiledSdkControlCatalog.resourceDisplays)
-    if (display.target == skir.ResourceTarget.anyResource)
+    if (display.target == skir.ResourceMatch.anyResource)
       display
     else
       for (final name
           in _displayStandIns[_displayTarget(display)] ?? const <String>[])
         skir.ResourceDisplayFormulas(
-          target: skir.ResourceTarget.wrapType(_template(name)),
+          target: skir.ResourceMatch.wrapDefinition(_definition(name)),
           label: display.label,
           accent: display.accent,
           icon: display.icon,
@@ -835,10 +835,7 @@ final _displayStandIns = {
 
 skir.TypeDefinitionId? _displayTarget(skir.ResourceDisplayFormulas display) =>
     switch (display.target) {
-      skir.ResourceTarget_typeWrapper(
-        value: skir.TypeTemplate_namedWrapper(:final value),
-      ) =>
-        value.definition,
+      skir.ResourceMatch_definitionWrapper(:final value) => value,
       _ => null,
     };
 

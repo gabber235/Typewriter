@@ -4,6 +4,7 @@ import com.typewritermc.types.named
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.ResolvedField
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
@@ -59,3 +60,55 @@ fun CheckedCatalog.isSelectionReadableAs(
         is ResourceType.Complete -> isReadableAs(type.checked.use, expected)
         is ResourceType.Partial -> knownApplications(selection).any { isReadableAs(it.use, expected) }
     }
+
+/** Whether a resource fits a [ResourceMatch]: yes, no, or not until a creator chooses more arguments. */
+enum class Fit { YES, NO, UNDECIDED }
+
+/**
+ * Whether a resource configured by [selection] fits [match]; every place that names resources asks this. With an [owner],
+ * a type reads what that resource's binds compute; without one, only the creator's choices, as a bind's own reads must.
+ * A definition reads only the configured definition, so it fits before any argument is known; a type the choices do not
+ * fix yet is [Fit.UNDECIDED] while the definition could still become it.
+ */
+fun CheckedCatalog.fits(
+    selection: TypeSelection,
+    match: ResourceMatch,
+    owner: ResourceId?,
+): Fit =
+    when (match) {
+        ResourceMatch.ANY_RESOURCE -> {
+            Fit.YES
+        }
+
+        is ResourceMatch.DefinitionWrapper -> {
+            isNominalSubtype(selection.definition, match.value).asFit()
+        }
+
+        is ResourceMatch.TypeWrapper -> {
+            val expected = TypeUse.NamedWrapper(match.value)
+            val resolved = if (owner == null) authoredTypeOf(selection) else typeOf(owner, selection)
+            when (val type = (resolved as? Resolution.Ready)?.value) {
+                null -> {
+                    Fit.NO
+                }
+
+                is ResourceType.Complete -> {
+                    isReadableAs(type.checked.use, expected).asFit()
+                }
+
+                is ResourceType.Partial -> {
+                    when {
+                        knownApplications(selection).any { isReadableAs(it.use, expected) } -> Fit.YES
+                        isNominalSubtype(type.definition, match.value.definition) -> Fit.UNDECIDED
+                        else -> Fit.NO
+                    }
+                }
+            }
+        }
+
+        else -> {
+            throw IllegalArgumentException("Unknown resource match.")
+        }
+    }
+
+private fun Boolean.asFit(): Fit = if (this) Fit.YES else Fit.NO

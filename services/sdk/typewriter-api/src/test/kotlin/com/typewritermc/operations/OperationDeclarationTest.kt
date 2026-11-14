@@ -49,7 +49,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.LinkTarget
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -95,7 +95,7 @@ val OperationDeclarationTest by testSuite {
         // Labels come from the object name in words; an owner suffix names the drop target, so it is dropped.
         definitions.getValue("MoveToOwner").presentation.label shouldBe "Move to"
         definitions.getValue("LinkWithDuplicate").presentation.label shouldBe "Link with duplicate"
-        definitions.values.all { it.targets.subject == skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE } shouldBe true
+        definitions.values.all { it.targets.subject == skirout.editor.v1.type_catalog.ResourceMatch.ANY_RESOURCE } shouldBe true
         definitions.getValue("LinkWithDuplicate").targets.cardinality shouldBe OperationCardinality.SINGLE
         definitions.getValue("Delete").presentation.shortcut shouldBe OperationShortcut.DELETE
         val searches =

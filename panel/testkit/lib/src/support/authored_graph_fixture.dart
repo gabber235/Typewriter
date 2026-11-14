@@ -574,7 +574,7 @@ final class AuthoredGraphFixture {
 const fixtureOperations = ["moveToOwner", "linkWith", "delete"];
 
 final fixtureOperationTargets = skir.OperationTargets(
-  subject: skir.ResourceTarget.anyResource,
+  subject: skir.ResourceMatch.anyResource,
   cardinality: skir.OperationCardinality.selection,
 );
 

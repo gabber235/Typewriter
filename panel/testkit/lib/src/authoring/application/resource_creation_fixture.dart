@@ -457,7 +457,7 @@ final class ResourceCreationFixture {
             ("Page", "name"),
           ])
             skir.ResourceDisplayFormulas(
-              target: skir.ResourceTarget.wrapType(_named(type)),
+              target: skir.ResourceMatch.wrapDefinition(_id(type)),
               label: skir.ExpressionNode.createInput(
                 binding: configuredValueBindingId,
                 path: editorRootPath.field(field),

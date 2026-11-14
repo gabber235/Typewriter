@@ -478,9 +478,19 @@ struct DeclarationOwner(84180094) {
   local_identity: string = 1;
 }
 
-/// Which resources a display or operation applies to: every application of one type template,
-/// or every resource when nothing more specific is declared.
-enum ResourceTarget(84180095) {
-  type: TypeTemplate = 1;
-  any_resource = 2;
+/// Which resources fit a place that names resources: a link, an endpoint, an operation, a display or a draft.
+/// `definition` fits a resource of that definition or a nominal subtype, whatever its arguments; `type` fits a
+/// resource readable as that application.
+enum ResourceMatch(84180095) {
+  any_resource = 1;
+  definition: TypeDefinitionId = 2;
+  type: NamedTypeUse = 3;
+}
+
+/// A [ResourceMatch] inside a type definition, where `type` may be or name the definition's parameters; it resolves to
+/// a named type.
+enum ResourceMatchTemplate(84180096) {
+  any_resource = 1;
+  definition: TypeDefinitionId = 2;
+  type: TypeTemplate = 3;
 }

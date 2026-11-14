@@ -28,7 +28,7 @@ import {
   RelationFamilyId,
   RelationId,
   RelativeFieldPattern,
-  ResourceTarget,
+  ResourceMatch,
   RuleId,
   RuleOrigin,
   TypeDefinition,
@@ -45,7 +45,7 @@ import { Icon } from "kernel/v1/icon.skir";
 /// Name, accent and icon formulas for resources of [target]. Each formula reads only the subject
 /// resource: its fields and its published type through the configured value binding.
 struct ResourceDisplayFormulas(84060001) {
-  target: ResourceTarget = 0;
+  target: ResourceMatch = 0;
   label: ExpressionNode = 1;
   accent: ExpressionNode = 2;
   icon: ExpressionNode = 3;
