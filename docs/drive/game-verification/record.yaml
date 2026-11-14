@@ -553,6 +553,9 @@ decided:
   - id: flaky-proof-in-unit-tests
     what: "A. Unit tests and evidence (Recommended)"
     why: VerdictTest and the gate tests cover the rule and the real run proof with a temporary FLAKY-1 stays recorded; no hidden requirement path in the runner
+  - id: measure-lease-time-beside-slice-6
+    what: "C. Both in parallel (Recommended)"
+    why: Grant to lease costs about 1.2 s per requirement with an unknown cause; a subagent splits it into timed parts and only reports while slice 6 builds, and the fix is chosen afterwards
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -644,7 +647,7 @@ slices:
       grant to lease step (wipe plus the move into the region) takes a median of about 1.2 s, against
       about 18 ms for the wipe itself in spike K; probes take a median of 64 ms, windows 52 ms, inputs 16 ms.
   - id: pixels
-    status: queued
+    status: building
     what: A4 on demand, goldens on devenv Mesa
     green: an entity behind a wall is not seen; a sidebar golden
   - id: restart-paper
@@ -660,4 +663,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Choose between finding the 1.2 s grant to lease cost and starting slice 6 (pixels).
+next: Slice 6 (pixels) builds on feat/game-verification-slice-6; beside it, proto/gv-lease-time splits the 1.2 s grant to lease into timed parts and only reports.
