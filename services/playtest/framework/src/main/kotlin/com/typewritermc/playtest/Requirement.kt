@@ -7,9 +7,6 @@ import de.infix.testBalloon.framework.core.aroundAll
 import de.infix.testBalloon.framework.core.invocation
 import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.supervisorScope
 
 /**
  * The compartment every game requirement registers in. Its tests start at once and each waits in the
@@ -62,15 +59,15 @@ internal fun TestSuiteScope.attempts(
 ) {
     require(players >= 1) { "$id claims $players players; a requirement claims at least 1" }
     test("$id $sentence") {
-        session(id).attempt(testId = "$id $sentence", requirement = id, players = players, bodies = bodies)
+        session(id).attempt(PoolSession.Planned(testId = "$id $sentence", requirement = id, players = players, bodies = bodies))
     }
 }
 
 /**
- * Registers one requirement whose [bodies] run at the same time, each as an attempt of its own on one
- * player, reported as cases of their own; once all ended, [afterward] runs as one more attempt on
- * [afterwardPlayers]. Only the framework's own test kit runs attempts side by side, to prove what one
- * attempt does never changes another's verdict.
+ * Registers one requirement whose [bodies] run side by side, each as an attempt of its own on one
+ * player, reported as cases of their own: the pool claims and leases their players at the same moment.
+ * Once all ended, [afterward] runs as one more attempt on [afterwardPlayers]. Only the framework's own
+ * test kit runs attempts side by side, to prove what one attempt does never changes another's verdict.
  */
 @TestRegistering
 internal fun TestSuiteScope.sideBySide(
@@ -83,21 +80,19 @@ internal fun TestSuiteScope.sideBySide(
     val count = bodies.size + if (afterward == null) 0 else 1
     test("$id $sentence") {
         val session = session(id)
-        // Every attempt runs to its own end, so one failing never cancels the others' verdicts.
         val failures =
-            supervisorScope {
-                bodies
-                    .mapIndexed { index, body ->
-                        async {
-                            runCatching {
-                                session.attempt("$id $sentence (attempt ${index + 1} of $count)", id, players = 1, bodies = listOf(body))
-                            }.exceptionOrNull()
-                        }
-                    }.awaitAll()
-                    .filterNotNull()
-            }
+            session
+                .sideBySide(
+                    bodies.mapIndexed { index, body ->
+                        PoolSession.Planned("$id $sentence (attempt ${index + 1} of $count)", id, players = 1, bodies = listOf(body))
+                    },
+                ).filterNotNull()
         failures.firstOrNull()?.let { first -> throw first.also { failures.drop(1).forEach(it::addSuppressed) } }
-        afterward?.let { session.attempt("$id $sentence (attempt $count of $count)", id, afterwardPlayers, listOf(it)) }
+        afterward?.let {
+            session.attempt(
+                PoolSession.Planned("$id $sentence (attempt $count of $count)", id, afterwardPlayers, listOf(it)),
+            )
+        }
     }
 }
 

@@ -68,4 +68,33 @@ val RunRecordsTest by testSuite {
             .map { it.requirement } shouldBe
             listOf("WINDOW-1")
     }
+
+    test("a player still out at the end of the run is named on the case whose work hung on it") {
+        val records = RunRecords(clock = { 1_000 })
+        val file = Files.createTempDirectory("run-records").resolve("test_run.json")
+        val hung = "HUNG-1 work still running 1 s after it began fails the attempt"
+        records.record(
+            "run-1",
+            Submit(1, hung, "HUNG-1", 1),
+            Result(1, 1_500, "gv-1's work \"Ledger lookup\" hung", "WorkRequirements.kt:30"),
+        )
+        records.record("run-1", Submit(2, "PROBE-1 a chat line reaches the player", "PROBE-1", 1), Result(2, 420, null, null))
+
+        records.write(
+            "run-1",
+            file,
+            stillOut =
+                mapOf(hung to "gv-1 stayed out of the pool for the rest of the run: its work \"Ledger lookup\" never ended."),
+        )
+
+        val cases = TestRun.serializer.fromJsonCode(Files.readString(file)).cases
+        cases[0].attempts.single().outcome shouldBe
+            Outcome.createFailed(
+                message =
+                    "gv-1's work \"Ledger lookup\" hung\n" +
+                        "gv-1 stayed out of the pool for the rest of the run: its work \"Ledger lookup\" never ended.",
+                firstBroken = "WorkRequirements.kt:30",
+            )
+        cases[1].attempts.single().outcome shouldBe Outcome.PASSED
+    }
 }

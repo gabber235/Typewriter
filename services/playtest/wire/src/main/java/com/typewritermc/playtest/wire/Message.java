@@ -23,8 +23,14 @@ public sealed interface Message {
     /** Pool to session: the game cannot run; every requirement of the session fails with this reason. */
     record Refused(String reason) implements Message {}
 
-    /** Session to pool: run one attempt of a requirement once {@code players} players are free. */
-    record Submit(long submission, String testId, String requirement, int players) implements Message {}
+    /** One attempt of a requirement to run once {@code players} players are free. */
+    record Submit(long submission, String testId, String requirement, int players) {}
+
+    /**
+     * Session to pool: run these attempts side by side. The pool claims the players of all of them at
+     * the same moment and leases them at the same moment, each as an attempt of its own.
+     */
+    record Queue(List<Submit> together) implements Message {}
 
     /**
      * Session to pool: the submission's attempt goes on with the same players, released and claimed
@@ -246,6 +252,15 @@ public sealed interface Message {
      * attempt fails and the pool starts a new client for the player.
      */
     record ClientLost(String player, String reason) implements PlayerEvent {}
+
+    /**
+     * Paper to pool: {@code player}'s client acked nothing for 5 s of wall clock while behind, after tick
+     * {@code lastAcked}; it holds back no tick any more and counts as lost.
+     */
+    record ClientStalled(String player, int lastAcked) implements Message {}
+
+    /** Paper to pool: {@code player}'s work {@code work}, reported hung earlier, ended. */
+    record HungEnded(String player, String work) implements Message {}
 
     /** Pool to Paper: from now on a tick runs only when the step policy grants it. */
     record Stepping() implements Message {}

@@ -11,12 +11,14 @@ import com.typewritermc.playtest.wire.Message.ChatLine
 import com.typewritermc.playtest.wire.Message.Claim
 import com.typewritermc.playtest.wire.Message.Claimed
 import com.typewritermc.playtest.wire.Message.ClientLost
+import com.typewritermc.playtest.wire.Message.ClientStalled
 import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.Declined
 import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
 import com.typewritermc.playtest.wire.Message.Entity
 import com.typewritermc.playtest.wire.Message.Hello
+import com.typewritermc.playtest.wire.Message.HungEnded
 import com.typewritermc.playtest.wire.Message.Input
 import com.typewritermc.playtest.wire.Message.InputDone
 import com.typewritermc.playtest.wire.Message.Item
@@ -46,6 +48,7 @@ import com.typewritermc.playtest.wire.Message.ProbeSpawn
 import com.typewritermc.playtest.wire.Message.ProbeTeleport
 import com.typewritermc.playtest.wire.Message.ProbeWork
 import com.typewritermc.playtest.wire.Message.Query
+import com.typewritermc.playtest.wire.Message.Queue
 import com.typewritermc.playtest.wire.Message.Ready
 import com.typewritermc.playtest.wire.Message.Reclaim
 import com.typewritermc.playtest.wire.Message.Refused
@@ -90,8 +93,13 @@ val WireTest by testSuite {
             listOf<Message>(
                 Hello(Role.CLIENT, "gv-1"),
                 Refused("Paper stopped while starting; see pool/paper/logs/latest.log"),
-                Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1),
-                Submit(8, "GROUP-1 a line sent to the members of a group reaches each member", "GROUP-1", 3),
+                Queue(listOf(Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1))),
+                Queue(
+                    listOf(
+                        Submit(8, "LOST-1 a client that crashes fails its own attempt (attempt 1 of 3)", "LOST-1", 1),
+                        Submit(9, "LOST-1 a client that crashes fails its own attempt (attempt 2 of 3)", "LOST-1", 1),
+                    ),
+                ),
                 Declined(8, "GROUP-1 claims 3 players, but the pool holds 1"),
                 Reclaim(8),
                 Lease(7, listOf(Player("gv-1", player), Player("gv-2", UUID(1, 2))), Region(-1_024, 2_048)),
@@ -125,6 +133,8 @@ val WireTest by testSuite {
                 WorkHung("gv-1", "Ledger lookup", 1_204),
                 PlayerLeft("gv-2", "TIMED_OUT"),
                 ClientLost("gv-2", "its process exited with code 137"),
+                ClientStalled("gv-3", 2_048),
+                HungEnded("gv-1", "Ledger lookup"),
                 StepUntil(player, 1_214, 5),
                 StopStepping(player),
                 Stepping(),

@@ -17,6 +17,7 @@ import com.typewritermc.playtest.wire.Message.Probe
 import com.typewritermc.playtest.wire.Message.ProbeAction
 import com.typewritermc.playtest.wire.Message.ProbeDone
 import com.typewritermc.playtest.wire.Message.Query
+import com.typewritermc.playtest.wire.Message.Queue
 import com.typewritermc.playtest.wire.Message.Reclaim
 import com.typewritermc.playtest.wire.Message.Refused
 import com.typewritermc.playtest.wire.Message.Result
@@ -28,6 +29,9 @@ import com.typewritermc.playtest.wire.Wire
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -103,30 +107,76 @@ internal class PoolSession private constructor(
 
     fun nextBarrier(): Int = barriers.incrementAndGet()
 
+    /** One attempt of a requirement to run: [bodies] in order on [players] players. */
+    class Planned(
+        val testId: String,
+        val requirement: String,
+        val players: Int,
+        val bodies: List<suspend RequirementScope.() -> Unit>,
+    )
+
     /**
-     * Runs one attempt of a requirement: waits for its lease and runs [bodies] in order, then reports the
-     * outcome. Before each body after the first, the pool releases and claims the same players again, as
-     * the next attempt would get them: wiped and in a new region.
+     * Runs one attempt of a requirement: waits for its lease and runs its bodies in order, then reports
+     * the outcome. Before each body after the first, the pool releases and claims the same players
+     * again, as the next attempt would get them: wiped and in a new region.
      */
-    suspend fun attempt(
-        testId: String,
-        requirement: String,
-        players: Int,
-        bodies: List<suspend RequirementScope.() -> Unit>,
-    ) {
-        val submission = submissions.incrementAndGet()
-        val code =
-            bodies
-                .first()
-                .javaClass.protectionDomain.codeSource
-                ?.location
-        var attempt = lease(submission, code) { send(Submit(submission, testId, requirement, players)) }
+    suspend fun attempt(planned: Planned) {
+        sideBySide(listOf(planned)).single()?.let { throw it }
+    }
+
+    /**
+     * Runs [planned] side by side, each as an attempt of its own: the pool claims and leases all their
+     * players at the same moment. Every attempt runs to its own end; returns why each failed, or null.
+     */
+    suspend fun sideBySide(planned: List<Planned>): List<Throwable?> {
+        val leasings =
+            planned.map {
+                submissions.incrementAndGet() to
+                    Leasing(
+                        it.bodies
+                            .first()
+                            .javaClass.protectionDomain.codeSource
+                            ?.location,
+                    )
+            }
+        for ((submission, leasing) in leasings) {
+            leases[submission] = leasing
+            broken?.let(leasing.attempt::completeExceptionally)
+        }
+        try {
+            send(Queue(planned.zip(leasings) { it, (submission, _) -> Submit(submission, it.testId, it.requirement, it.players) }))
+        } catch (unavailable: GameUnavailable) {
+            leasings.forEach { (_, leasing) -> leasing.attempt.completeExceptionally(unavailable) }
+        }
+        return supervisorScope {
+            planned
+                .zip(leasings) { it, (submission, leasing) -> async { runAttempt(submission, leasing, it) } }
+                .awaitAll()
+        }
+    }
+
+    /** Runs [planned]'s bodies once [leasing] holds its lease; returns why the attempt failed, or null. */
+    private suspend fun runAttempt(
+        submission: Long,
+        leasing: Leasing,
+        planned: Planned,
+    ): Throwable? {
+        var attempt =
+            try {
+                leasing.attempt.await()
+            } catch (
+                @Suppress("TooGenericExceptionCaught") unleased: Throwable,
+            ) {
+                return unleased
+            } finally {
+                leases.remove(submission)
+            }
         val started = System.nanoTime()
         var failure: Throwable? = null
-        for ((index, body) in bodies.withIndex()) {
+        for ((index, body) in planned.bodies.withIndex()) {
             if (index > 0) {
                 attempt.players.forEach { attempts.remove(it.name) }
-                attempt = lease(submission, code) { send(Reclaim(submission)) }
+                attempt = lease(submission, leasing.requirementCode) { send(Reclaim(submission)) }
             }
             failure = settle(submission, attempt, run(attempt, body))
             if (failure != null) break
@@ -144,7 +194,7 @@ internal class PoolSession private constructor(
                 },
             ),
         )
-        failure?.let { throw it }
+        return failure
     }
 
     /** Waits for the lease of [submission] that [ask] asks the pool for. */

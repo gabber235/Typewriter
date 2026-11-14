@@ -8,7 +8,6 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import java.nio.file.Path
 
 /**
  * [player]'s work [name] runs off Paper's main thread for [millis] of wall clock, counted as any plugin
@@ -22,11 +21,11 @@ suspend fun RequirementScope.work(
 ): Mark = probe.work(player, name, millis, then)
 
 /**
- * Registers a requirement of the framework's own test kit that runs [busy] and [other] at the same time,
- * each as an attempt of its own on a player of its own; once both ended, [afterward] runs as one more
- * attempt on [afterwardPlayers]. [other] starts only once [busy] holds its lease, and completes the
- * deferred it gets once its window waits for ticks, see [cueOnceOpen]; [busy] awaits it, so what [busy]
- * does next happens while that window runs.
+ * Registers a requirement of the framework's own test kit that runs [busy] and [other] side by side, each
+ * as an attempt of its own on a player of its own, leased at the same moment; once both ended,
+ * [afterward] runs as one more attempt on [afterwardPlayers]. [other] completes the deferred it gets
+ * once its window waits for ticks, see [cueOnceOpen]; [busy] awaits it, so what [busy] does next happens
+ * while that window runs.
  */
 @TestRegistering
 fun TestSuiteScope.alongside(
@@ -37,37 +36,8 @@ fun TestSuiteScope.alongside(
     afterwardPlayers: Int = 1,
     afterward: (suspend RequirementScope.() -> Unit)? = null,
 ) {
-    val busyLeased = CompletableDeferred<Unit>()
     val waiting = CompletableDeferred<Unit>()
-    // The pool may lease the two attempts at different times; the cues hold only while both run.
-    val bodies: List<suspend RequirementScope.() -> Unit> =
-        listOf(
-            {
-                busyLeased.complete(Unit)
-                busy(waiting)
-            },
-            {
-                busyLeased.await()
-                other(waiting)
-            },
-        )
-    sideBySide(id, sentence, bodies, afterwardPlayers, afterward)
-}
-
-/** Ends [player]'s client process at once, as a crash would; the pool notices and replaces the client. */
-fun RequirementScope.crashClient(player: GamePlayer) {
-    val gameDir = PlaytestSettings.fromSystemProperties().poolDir.resolve("client-${player.name}")
-    val client =
-        ProcessHandle.allProcesses().toList().firstOrNull { process ->
-            val arguments =
-                process
-                    .info()
-                    .arguments()
-                    .orElse(arrayOf())
-                    .toList()
-            arguments.zipWithNext().any { (flag, value) -> flag == "--gameDir" && Path.of(value) == gameDir }
-        }
-    checkNotNull(client) { "no client process plays ${player.name} in $gameDir" }.destroyForcibly()
+    sideBySide(id, sentence, listOf({ busy(waiting) }, { other(waiting) }), afterwardPlayers, afterward)
 }
 
 /**

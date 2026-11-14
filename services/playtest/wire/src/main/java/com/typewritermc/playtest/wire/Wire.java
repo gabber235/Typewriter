@@ -3,17 +3,6 @@ package com.typewritermc.playtest.wire;
 import com.typewritermc.playtest.wire.Message.AimAtBlockStep;
 import com.typewritermc.playtest.wire.Message.AimAtEntityStep;
 import com.typewritermc.playtest.wire.Message.BarrierSeen;
-import com.typewritermc.playtest.wire.Message.Kind;
-import com.typewritermc.playtest.wire.Message.ProbeMark;
-import com.typewritermc.playtest.wire.Message.ProbeWork;
-import com.typewritermc.playtest.wire.Message.Settle;
-import com.typewritermc.playtest.wire.Message.Settled;
-import com.typewritermc.playtest.wire.Message.WorkHung;
-import com.typewritermc.playtest.wire.Message.PlayerLeft;
-import com.typewritermc.playtest.wire.Message.ClientLost;
-import com.typewritermc.playtest.wire.Message.Marks;
-import com.typewritermc.playtest.wire.Message.Query;
-import com.typewritermc.playtest.wire.Message.Reclaim;
 import com.typewritermc.playtest.wire.Message.Block;
 import com.typewritermc.playtest.wire.Message.BlockPos;
 import com.typewritermc.playtest.wire.Message.ButtonStep;
@@ -21,12 +10,15 @@ import com.typewritermc.playtest.wire.Message.Camera;
 import com.typewritermc.playtest.wire.Message.ChatLine;
 import com.typewritermc.playtest.wire.Message.Claim;
 import com.typewritermc.playtest.wire.Message.Claimed;
+import com.typewritermc.playtest.wire.Message.ClientLost;
+import com.typewritermc.playtest.wire.Message.ClientStalled;
 import com.typewritermc.playtest.wire.Message.Connect;
 import com.typewritermc.playtest.wire.Message.Declined;
 import com.typewritermc.playtest.wire.Message.End;
 import com.typewritermc.playtest.wire.Message.Ended;
 import com.typewritermc.playtest.wire.Message.Entity;
 import com.typewritermc.playtest.wire.Message.Hello;
+import com.typewritermc.playtest.wire.Message.HungEnded;
 import com.typewritermc.playtest.wire.Message.Input;
 import com.typewritermc.playtest.wire.Message.InputDone;
 import com.typewritermc.playtest.wire.Message.InputStep;
@@ -34,10 +26,13 @@ import com.typewritermc.playtest.wire.Message.Item;
 import com.typewritermc.playtest.wire.Message.Joined;
 import com.typewritermc.playtest.wire.Message.Key;
 import com.typewritermc.playtest.wire.Message.KeyStep;
+import com.typewritermc.playtest.wire.Message.Kind;
 import com.typewritermc.playtest.wire.Message.Lease;
+import com.typewritermc.playtest.wire.Message.Marks;
 import com.typewritermc.playtest.wire.Message.Perceived;
 import com.typewritermc.playtest.wire.Message.Perception;
 import com.typewritermc.playtest.wire.Message.Player;
+import com.typewritermc.playtest.wire.Message.PlayerLeft;
 import com.typewritermc.playtest.wire.Message.PointAtSlotStep;
 import com.typewritermc.playtest.wire.Message.Probe;
 import com.typewritermc.playtest.wire.Message.ProbeAction;
@@ -48,11 +43,16 @@ import com.typewritermc.playtest.wire.Message.ProbeDone;
 import com.typewritermc.playtest.wire.Message.ProbeFill;
 import com.typewritermc.playtest.wire.Message.ProbeGameMode;
 import com.typewritermc.playtest.wire.Message.ProbeGive;
+import com.typewritermc.playtest.wire.Message.ProbeMark;
 import com.typewritermc.playtest.wire.Message.ProbePacketEntity;
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot;
 import com.typewritermc.playtest.wire.Message.ProbeSpawn;
 import com.typewritermc.playtest.wire.Message.ProbeTeleport;
+import com.typewritermc.playtest.wire.Message.ProbeWork;
+import com.typewritermc.playtest.wire.Message.Query;
+import com.typewritermc.playtest.wire.Message.Queue;
 import com.typewritermc.playtest.wire.Message.Ready;
+import com.typewritermc.playtest.wire.Message.Reclaim;
 import com.typewritermc.playtest.wire.Message.Refused;
 import com.typewritermc.playtest.wire.Message.Region;
 import com.typewritermc.playtest.wire.Message.Release;
@@ -61,6 +61,8 @@ import com.typewritermc.playtest.wire.Message.ResetDone;
 import com.typewritermc.playtest.wire.Message.Result;
 import com.typewritermc.playtest.wire.Message.Role;
 import com.typewritermc.playtest.wire.Message.ScrollStep;
+import com.typewritermc.playtest.wire.Message.Settle;
+import com.typewritermc.playtest.wire.Message.Settled;
 import com.typewritermc.playtest.wire.Message.StepUntil;
 import com.typewritermc.playtest.wire.Message.Stepping;
 import com.typewritermc.playtest.wire.Message.StopStepping;
@@ -70,6 +72,7 @@ import com.typewritermc.playtest.wire.Message.TypeInChatStep;
 import com.typewritermc.playtest.wire.Message.WaitStep;
 import com.typewritermc.playtest.wire.Message.WalkToStep;
 import com.typewritermc.playtest.wire.Message.Watch;
+import com.typewritermc.playtest.wire.Message.WorkHung;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -104,11 +107,14 @@ public final class Wire {
                 string(body, hello.name());
             }
             case Refused refused -> string(body, refused.reason());
-            case Submit submit -> {
-                body.writeLong(submit.submission());
-                string(body, submit.testId());
-                string(body, submit.requirement());
-                body.writeInt(submit.players());
+            case Queue queue -> {
+                body.writeInt(queue.together().size());
+                for (Submit submit : queue.together()) {
+                    body.writeLong(submit.submission());
+                    string(body, submit.testId());
+                    string(body, submit.requirement());
+                    body.writeInt(submit.players());
+                }
             }
             case Declined declined -> {
                 body.writeLong(declined.submission());
@@ -173,6 +179,14 @@ public final class Wire {
             case ClientLost lost -> {
                 string(body, lost.player());
                 string(body, lost.reason());
+            }
+            case ClientStalled stalled -> {
+                string(body, stalled.player());
+                body.writeInt(stalled.lastAcked());
+            }
+            case HungEnded ended -> {
+                string(body, ended.player());
+                string(body, ended.work());
             }
             case ProbeDone done -> {
                 body.writeLong(done.request());
@@ -264,7 +278,7 @@ public final class Wire {
         return switch (message) {
             case Hello m -> 0;
             case Refused m -> 1;
-            case Submit m -> 2;
+            case Queue m -> 2;
             case Lease m -> 3;
             case Result m -> 4;
             case End m -> 5;
@@ -296,6 +310,8 @@ public final class Wire {
             case WorkHung m -> 31;
             case PlayerLeft m -> 32;
             case ClientLost m -> 33;
+            case ClientStalled m -> 34;
+            case HungEnded m -> 35;
         };
     }
 
@@ -303,7 +319,12 @@ public final class Wire {
         return switch (type) {
             case 0 -> new Hello(role(in.readUnsignedByte()), string(in));
             case 1 -> new Refused(string(in));
-            case 2 -> new Submit(in.readLong(), string(in), string(in), in.readInt());
+            case 2 -> {
+                int count = count(in);
+                var together = new ArrayList<Submit>(count);
+                for (int i = 0; i < count; i++) together.add(new Submit(in.readLong(), string(in), string(in), in.readInt()));
+                yield new Queue(List.copyOf(together));
+            }
             case 3 -> {
                 long submission = in.readLong();
                 int count = count(in);
@@ -363,6 +384,8 @@ public final class Wire {
             case 31 -> new WorkHung(string(in), string(in), in.readInt());
             case 32 -> new PlayerLeft(string(in), string(in));
             case 33 -> new ClientLost(string(in), string(in));
+            case 34 -> new ClientStalled(string(in), in.readInt());
+            case 35 -> new HungEnded(string(in), string(in));
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
     }

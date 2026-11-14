@@ -2,44 +2,39 @@ package com.typewritermc.playtest.requirements
 
 import com.typewritermc.playtest.ClientLost
 import com.typewritermc.playtest.GameCompartment
-import com.typewritermc.playtest.WindowMissed
-import com.typewritermc.playtest.alongside
 import com.typewritermc.playtest.chat
+import com.typewritermc.playtest.clientLostAlongside
 import com.typewritermc.playtest.crashClient
-import com.typewritermc.playtest.cueOnceOpen
+import com.typewritermc.playtest.freezeClient
 import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.string.shouldContain
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 val LostClientRequirements by testSuite(compartment = { GameCompartment }) {
-    alongside(
+    clientLostAlongside(
         "LOST-1",
         "a client that crashes fails its own attempt with the reason, the attempt beside it keeps its verdicts, and a new client serves later attempts",
-        busy = { otherWaits ->
-            probe.chat(player, "Hello")
-            otherWaits.await()
+    ) {
+        crashClient(player)
 
-            crashClient(player)
+        val lost = shouldThrow<ClientLost> { within(10.ticks) { player sees chat("Goodbye") } }
 
-            val lost = shouldThrow<ClientLost> { within(10.ticks) { player sees chat("Goodbye") } }
-            lost.report shouldContain "${player.name}'s client was lost: its "
-        },
-        other = { waiting ->
-            val hello = probe.chat(player, "Hello")
+        lost.report shouldContain "${player.name}'s client was lost: its "
+    }
 
-            val missed = cueOnceOpen(waiting) { shouldThrow<WindowMissed> { within(20.ticks) { player sees chat("Goodbye") } } }
+    clientLostAlongside(
+        "FROZEN-1",
+        "a client that stops acking fails its own attempt within 10 s with the reason, the attempt beside it keeps its verdicts, and a new client serves later attempts",
+    ) {
+        val frozenAt = TimeSource.Monotonic.markNow()
 
-            missed.report shouldContain
-                "${player.name} did not see chat \"Goodbye\" within 20 ticks (ticks ${hello.tick + 1} to ${hello.tick + 20})"
-            within(10.ticks) { player sees chat("Hello") }
-        },
-        // The whole pool, so this attempt runs only once the crashed client's replacement is ready.
-        afterwardPlayers = 4,
-        afterward = {
-            probe.chat(players, "Fresh")
+        val lost = freezeClient(player) { shouldThrow<ClientLost> { within(10.ticks) { player sees chat("Goodbye") } } }
 
-            within(10.ticks) { players.forEach { it sees chat("Fresh") } }
-        },
-    )
+        frozenAt.elapsedNow() shouldBeLessThan 10.seconds
+        lost.report shouldContain "${player.name}'s client was lost: it acked no tick for 5 s"
+    }
 }

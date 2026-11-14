@@ -4,6 +4,7 @@ import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.WindowMissed
 import com.typewritermc.playtest.WorkHung
 import com.typewritermc.playtest.alongside
+import com.typewritermc.playtest.backToBack
 import com.typewritermc.playtest.chat
 import com.typewritermc.playtest.cueOnceOpen
 import com.typewritermc.playtest.requirement
@@ -14,6 +15,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
@@ -84,6 +86,28 @@ val WorkRequirements by testSuite(compartment = { GameCompartment }) {
             missed.report shouldContain
                 "${player.name} did not see chat \"Goodbye\" within 20 ticks (ticks ${hello.tick + 1} to ${hello.tick + 20})"
             within(10.ticks) { player sees chat("Hello") }
+        },
+    )
+
+    val leakBegan = AtomicReference<TimeSource.Monotonic.ValueTimeMark>()
+    backToBack(
+        "LEAK-1",
+        "hung work that ends after its attempt never reaches the next attempt on its player, who waits out of the pool until the work ends",
+        first = {
+            leakBegan.set(TimeSource.Monotonic.markNow())
+            work(player, "Ledger lookup", millis = 4_000, then = "Ledger late")
+
+            shouldThrow<WorkHung> { within(4.ticks) { player sees chat("Ledger late") } }
+        },
+        then = {
+            probe.chat(player, "Hello")
+
+            within(400.ticks) {
+                player sees chat("Hello")
+                player.never sees chat("Ledger late")
+            }
+            // The window outlasted the work, so a line it sent in this attempt would have shown.
+            leakBegan.get().elapsedNow() shouldBeGreaterThan 4.seconds
         },
     )
 }

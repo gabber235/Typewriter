@@ -14,7 +14,7 @@ import java.util.function.LongSupplier;
  * <p>Work lets the next tick to start after its begin run, since Bukkit's async scheduler starts a task
  * only at that tick's heartbeat, and holds every tick after it until it ends. Work that still runs
  * {@link #HUNG_NANOS} after it began is hung: reported once, it holds no tick from then on, and it is
- * never cancelled.
+ * never cancelled; once it ends, that is reported once too, so its player can come back to the pool.
  */
 final class WorkLedger {
     /** How long work may run before it is reported as hung. */
@@ -44,14 +44,22 @@ final class WorkLedger {
         /** The work is done; ending it again does nothing. */
         void end() {
             synchronized (WorkLedger.this) {
-                counted.remove(this);
+                if (counted.remove(this)) return;
+                if (hung.remove(this)) ended.add(this);
             }
+        }
+
+        private Hung report() {
+            return new Hung(player, playerName, name, beganAfter);
         }
     }
 
     private final LongSupplier nanos;
     // Work that is neither ended nor hung, in begin order.
     private final List<Entry> counted = new ArrayList<>();
+    // Hung work that still runs, and hung work that ended since the last report.
+    private final List<Entry> hung = new ArrayList<>();
+    private final List<Entry> ended = new ArrayList<>();
     private int lastEnded = -1;
     private int running = -1;
 
@@ -94,15 +102,23 @@ final class WorkLedger {
         return true;
     }
 
+    /** The hung work that ended since the last call, each reported once. */
+    synchronized List<Hung> ended() {
+        var reports = ended.stream().map(Entry::report).toList();
+        ended.clear();
+        return reports;
+    }
+
     /** The work that became hung since the last call, each reported once. */
     synchronized List<Hung> hung() {
         long now = nanos.getAsLong();
-        var hung = new ArrayList<Hung>();
+        var reports = new ArrayList<Hung>();
         counted.removeIf(entry -> {
             if (now - entry.beganNanos < HUNG_NANOS) return false;
-            hung.add(new Hung(entry.player, entry.playerName, entry.name, entry.beganAfter));
+            hung.add(entry);
+            reports.add(entry.report());
             return true;
         });
-        return hung;
+        return reports;
     }
 }

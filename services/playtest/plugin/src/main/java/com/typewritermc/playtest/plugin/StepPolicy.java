@@ -32,6 +32,8 @@ import java.util.function.Predicate;
  * work holds it, so work takes no ticks from any attempt's windows; work that hangs is reported and
  * holds no tick from then on. An attempt is settled once its players' work is quiet, stepping on
  * meanwhile so work handed to Bukkit's async scheduler can start.
+ *
+ * <p>A client that {@link Acks} finds stalled holds back no tick from then on, and counts as lost.
  */
 final class StepPolicy {
     /** Step pings carry the tick plus this, so they never collide with a barrier. */
@@ -62,7 +64,6 @@ final class StepPolicy {
     private final Set<UUID> claimed = new HashSet<>();
     private final List<Settling> settling = new ArrayList<>();
     private final Map<UUID, Window> windows = new HashMap<>();
-    private final Map<UUID, Integer> acked = new HashMap<>();
     private final Set<UUID> busy = new HashSet<>();
     private final List<Delivery> deliveries = new ArrayList<>();
     private final BiConsumer<UUID, Integer> sendBarrier;
@@ -70,6 +71,9 @@ final class StepPolicy {
     private final Consumer<Runnable> queueOnMain;
     private final WorkLedger work;
     private final Consumer<WorkLedger.Hung> reportHung;
+    private final Consumer<WorkLedger.Hung> reportEnded;
+    private final Acks acks;
+    private final Consumer<Acks.Stalled> reportStalled;
     private int lastEnded = -1;
     private long lastIdleTick;
 
@@ -79,18 +83,27 @@ final class StepPolicy {
      * @param queueOnMain queues a task behind every task the main thread holds, even from the main thread
      * @param work the work plugins count for each player
      * @param reportHung tells the player's attempt that its work hung
+     * @param reportEnded tells the pool that work reported hung ended
+     * @param acks the tick each client acked last
+     * @param reportStalled tells the pool that a client stalled
      */
     StepPolicy(
             BiConsumer<UUID, Integer> sendBarrier,
             Predicate<UUID> nothingLeftToSend,
             Consumer<Runnable> queueOnMain,
             WorkLedger work,
-            Consumer<WorkLedger.Hung> reportHung) {
+            Consumer<WorkLedger.Hung> reportHung,
+            Consumer<WorkLedger.Hung> reportEnded,
+            Acks acks,
+            Consumer<Acks.Stalled> reportStalled) {
         this.sendBarrier = sendBarrier;
         this.nothingLeftToSend = nothingLeftToSend;
         this.queueOnMain = queueOnMain;
         this.work = work;
         this.reportHung = reportHung;
+        this.reportEnded = reportEnded;
+        this.acks = acks;
+        this.reportStalled = reportStalled;
     }
 
     /** The tick that ended last; a stimulus between ticks takes effect from the next one. */
@@ -100,6 +113,7 @@ final class StepPolicy {
 
     void tickEnded(int tick) {
         lastEnded = tick;
+        acks.tickEnded(tick);
         for (Delivery delivery : deliveries) {
             if (tick <= delivery.ranAfter) continue;
             for (UUID player : delivery.waiting) {
@@ -113,7 +127,7 @@ final class StepPolicy {
 
     /** The player's client ran and perceived [tick]; [busy] while it runs an input that needs further ticks. */
     void acked(UUID player, int tick, boolean busy) {
-        acked.merge(player, tick, Math::max);
+        acks.acked(player, tick);
         if (busy) this.busy.add(player);
         else this.busy.remove(player);
     }
@@ -134,7 +148,7 @@ final class StepPolicy {
         claimed.remove(player);
         windows.remove(player);
         busy.remove(player);
-        acked.remove(player);
+        acks.lose(player);
         for (Delivery delivery : deliveries) delivery.waiting.remove(player);
     }
 
@@ -157,15 +171,20 @@ final class StepPolicy {
     }
 
     /**
-     * One idle pass between ticks: reports hung work, finishes deliveries and settled attempts, grants
-     * the next tick or sends barriers.
+     * One idle pass between ticks: reports hung work, ended hung work and stalled clients, finishes
+     * deliveries and settled attempts, grants the next tick or sends barriers.
      */
     void run() {
         if (Step.pending()) return;
         work.hung().forEach(reportHung);
+        work.ended().forEach(reportEnded);
+        for (Acks.Stalled stalled : acks.stalled()) {
+            lose(stalled.player());
+            reportStalled.accept(stalled);
+        }
         for (Iterator<Delivery> open = deliveries.iterator(); open.hasNext(); ) {
             Delivery delivery = open.next();
-            delivery.waiting.removeIf(player -> acked.getOrDefault(player, -1) >= delivery.confirmedBy.getOrDefault(player, UNCONFIRMED));
+            delivery.waiting.removeIf(player -> acks.lastAcked(player) >= delivery.confirmedBy.getOrDefault(player, UNCONFIRMED));
             if (!delivery.waiting.isEmpty()) continue;
             open.remove();
             delivery.done.run();
@@ -201,7 +220,7 @@ final class StepPolicy {
 
     private boolean allAcked(Set<UUID> players) {
         for (UUID player : players) {
-            if (acked.getOrDefault(player, -1) < lastEnded) return false;
+            if (acks.lastAcked(player) < lastEnded) return false;
         }
         return true;
     }

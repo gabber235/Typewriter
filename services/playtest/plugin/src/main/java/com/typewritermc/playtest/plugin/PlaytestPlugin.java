@@ -7,7 +7,9 @@ import com.typewritermc.playtest.wire.Link;
 import com.typewritermc.playtest.wire.Message;
 import com.typewritermc.playtest.wire.Message.Claim;
 import com.typewritermc.playtest.wire.Message.Claimed;
+import com.typewritermc.playtest.wire.Message.ClientStalled;
 import com.typewritermc.playtest.wire.Message.Hello;
+import com.typewritermc.playtest.wire.Message.HungEnded;
 import com.typewritermc.playtest.wire.Message.Kind;
 import com.typewritermc.playtest.wire.Message.Marks;
 import com.typewritermc.playtest.wire.Message.PlayerLeft;
@@ -56,7 +58,14 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
 
     private final WorkLedger work = PlayerWork.LEDGER;
     private final StepPolicy policy = new StepPolicy(
-            this::sendBarrier, PlaytestPlugin::nothingLeftToSend, task -> MinecraftServer.getServer().scheduleOnMain(task), work, this::reportHung);
+            this::sendBarrier,
+            PlaytestPlugin::nothingLeftToSend,
+            task -> MinecraftServer.getServer().scheduleOnMain(task),
+            work,
+            this::reportHung,
+            this::reportEnded,
+            new Acks(System::nanoTime),
+            this::reportStalled);
     private final Wipe wipe = new Wipe();
     private final Owned owned = new Owned(this);
     private final Probes probes = new Probes(this, this::mark);
@@ -211,6 +220,20 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private void reportHung(WorkLedger.Hung hung) {
         getLogger().warning(hung.playerName() + "'s work \"" + hung.name() + "\" began after tick " + hung.beganAfter() + " and still runs after 1 s; it holds no more ticks.");
         pool.send(new WorkHung(hung.playerName(), hung.name(), hung.beganAfter()));
+    }
+
+    /** Work reported hung ended; the pool lets its player back. */
+    private void reportEnded(WorkLedger.Hung hung) {
+        getLogger().info(hung.playerName() + "'s hung work \"" + hung.name() + "\" ended.");
+        pool.send(new HungEnded(hung.playerName(), hung.name()));
+    }
+
+    /** The client acked nothing for 5 s while behind; it holds back no tick and the pool replaces it. */
+    private void reportStalled(Acks.Stalled stalled) {
+        Player player = Bukkit.getPlayer(stalled.player());
+        if (player == null) return;
+        getLogger().warning(player.getName() + "'s client acked no tick for 5 s after tick " + stalled.lastAcked() + "; it holds no more ticks.");
+        pool.send(new ClientStalled(player.getName(), stalled.lastAcked()));
     }
 
     private void sendBarrier(UUID id, int barrier) {

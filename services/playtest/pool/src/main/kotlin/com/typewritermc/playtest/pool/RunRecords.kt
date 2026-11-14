@@ -56,10 +56,25 @@ internal class RunRecords(
             )
     }
 
-    /** Writes [run] as a `TestRun` into [file], replacing what an earlier session of the run wrote. */
+    /** This case with [note] joined to its failure. */
+    private fun TestCase.noting(note: String): TestCase =
+        copy(
+            attempts =
+                attempts.map { attempt ->
+                    val failed = (attempt.outcome as? Outcome.FailedWrapper)?.value ?: return@map attempt
+                    attempt.copy(outcome = Outcome.createFailed(message = "${failed.message}\n$note", firstBroken = failed.firstBroken))
+                },
+        )
+
+    /**
+     * Writes [run] as a `TestRun` into [file], replacing what an earlier session of the run wrote. Each
+     * note in [stillOut] joins the failure of the case its test id names: a player that case's hung
+     * work keeps out of the pool.
+     */
     fun write(
         run: String,
         file: Path,
+        stillOut: Map<String, String> = mapOf(),
     ) {
         val record = runs.getOrPut(run) { Run(clock()) }
         val testRun =
@@ -68,7 +83,7 @@ internal class RunRecords(
                 commit = "",
                 startedAtMillis = record.startedAtMillis,
                 attemptPolicy = AttemptPolicy.ExactlyWrapper(1),
-                cases = record.cases,
+                cases = record.cases.map { case -> stillOut[case.id]?.let { note -> case.noting(note) } ?: case },
             )
         Files.createDirectories(file.toAbsolutePath().parent)
         val partial = file.resolveSibling("${file.fileName}.partial")
