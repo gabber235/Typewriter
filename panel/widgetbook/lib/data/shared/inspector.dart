@@ -6,7 +6,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-/// A member who is online, unmuted, a builder on the red team.
+/// A member who is online, unmuted, a builder on the red team, titled and
+/// rewarded with coins.
 final storyAda = RecordSelectableIdentifier(
   id: "ada",
   fields: {
@@ -16,10 +17,18 @@ final storyAda = RecordSelectableIdentifier(
     RecordField.role: skir.DataValue.wrapStringValue("builder"),
     RecordField.color: skir.DataValue.wrapInteger(0xFF009688.toString()),
     RecordField.joined: skir.DataValue.wrapTimestamp(DateTime.utc(2025, 3, 4)),
+    RecordField.spawn: recordSpawn(world: "workshop", height: 70),
+    RecordField.title: recordTitle("Architect"),
+    RecordField.reward: recordCoins(40),
+    RecordField.perks: recordPerks(["build", "chat"]),
+    RecordField.tags: recordTags(["redstone", "trains"]),
+    RecordField.scores: recordScores({"parkour": 12}),
+    RecordField.volume: skir.DataValue.wrapInteger("80"),
   },
 );
 
-/// A member who is offline and muted, a moderator on the blue team.
+/// A member who is offline and muted, a moderator on the blue team, without
+/// a title and rewarded with a badge.
 final storyGrace = RecordSelectableIdentifier(
   id: "grace",
   fields: {
@@ -30,6 +39,12 @@ final storyGrace = RecordSelectableIdentifier(
     RecordField.team: skir.DataValue.wrapStringValue("blue"),
     RecordField.color: skir.DataValue.wrapInteger(0xFFFF9800.toString()),
     RecordField.joined: skir.DataValue.wrapTimestamp(DateTime.utc(2025, 9, 1)),
+    RecordField.spawn: recordSpawn(world: "workshop", height: 64),
+    RecordField.reward: recordBadge("Helper"),
+    RecordField.perks: recordPerks(["chat"]),
+    RecordField.tags: recordTags(["moderation"]),
+    RecordField.scores: recordScores({"parkour": 9, "pvp": 3}),
+    RecordField.volume: skir.DataValue.wrapInteger("25"),
   },
 );
 

@@ -250,12 +250,18 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   /// stands for several items that disagree there; empty when they agree or
   /// the binding stands for one item.
   List<skir.DataValue?> itemValues(skir.BindingRef reference) {
-    final items = bindings[reference.bindingId]?.itemValues ?? const [];
-    final values = [
-      for (final item in items) item.editorValueAt(reference.path),
-    ];
+    final values = selectedValues(reference);
     return values.toSet().length > 1 ? values : const [];
   }
+
+  /// The value each selected item holds at [reference], whether or not they
+  /// agree; empty when the binding stands for one item.
+  List<skir.DataValue?> selectedValues(skir.BindingRef reference) => [
+    for (final item
+        in bindings[reference.bindingId]?.itemValues ??
+            const <skir.DataValue>[])
+      item.editorValueAt(reference.path),
+  ];
 
   /// Whether the selected items behind [reference] hold different values.
   bool isMixed(skir.BindingRef reference) => itemValues(reference).isNotEmpty;
@@ -362,6 +368,42 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
           value: read(reference),
         ),
         operation: () => apply(reference, value),
+      ),
+    );
+  }
+
+  /// Whether [writeItems] can write a different value to each selected item
+  /// behind [reference].
+  bool canWriteItems(skir.BindingRef reference) =>
+      enabled &&
+      !readOnly &&
+      host is PortableItemsWriteHost &&
+      !projectedWriters.containsKey(reference.bindingId);
+
+  /// Writes the value at the same index of [values] to each selected item
+  /// behind [reference], in the order [selectedValues] lists them.
+  void writeItems(skir.BindingRef reference, List<skir.DataValue> values) {
+    if (host case final PortableItemsWriteHost target
+        when canWriteItems(reference)) {
+      _writeItems(target, reference, values);
+    }
+  }
+
+  void _writeItems(
+    PortableItemsWriteHost target,
+    skir.BindingRef reference,
+    List<skir.DataValue> values,
+  ) {
+    final address = diagnosticTarget(reference);
+    final context = invocation;
+    unawaited(
+      operations.run(
+        key: PortableOperationKey.write(address),
+        input: PortableDiagnosticObservation(
+          target: address,
+          value: read(reference),
+        ),
+        operation: () => target.writeItems(reference, values, context: context),
       ),
     );
   }
@@ -644,6 +686,10 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
         id: PortableExpressionBinding(
           value: value,
           location: location,
+          itemValues: [
+            for (final item in source.itemValues)
+              item.editorValueAt(reference.path) ?? skir.DataValue.unfilled,
+          ],
           schema:
               declared ??
               (reference.path.segments.isEmpty

@@ -27,7 +27,14 @@ enum RecordField {
   role("Role"),
   team("Team"),
   color("Color"),
-  joined("Joined");
+  joined("Joined"),
+  spawn("Spawn"),
+  title("Title"),
+  reward("Reward"),
+  perks("Perks"),
+  tags("Tags"),
+  scores("Scores"),
+  volume("Volume");
 
   const RecordField(this.label);
 
@@ -43,8 +50,113 @@ enum RecordField {
     RecordField.team => skir.DataValue.wrapStringValue("red"),
     RecordField.color => skir.DataValue.wrapInteger(0xFF2196F3.toString()),
     RecordField.joined => skir.DataValue.wrapTimestamp(DateTime.utc(2026)),
+    RecordField.spawn => recordSpawn(world: "lobby", height: 64),
+    RecordField.title => recordTitle(null),
+    RecordField.reward => recordCoins(0),
+    RecordField.perks => recordPerks(const []),
+    RecordField.tags => recordTags(const []),
+    RecordField.scores => recordScores(const {}),
+    RecordField.volume => skir.DataValue.wrapInteger("50"),
   };
 }
+
+/// A [RecordField.spawn]: a record of the [world] and the [height] an item
+/// starts at, edited field by field.
+skir.DataValue recordSpawn({required String world, required int height}) =>
+    skir.DataValue.createNamed(
+      actualType: _spawnUse,
+      payload: skir.DataValue.createRecord(
+        fields: [
+          skir.FieldValue(
+            name: "world",
+            value: skir.DataValue.wrapStringValue(world),
+          ),
+          skir.FieldValue(
+            name: "height",
+            value: skir.DataValue.wrapInteger("$height"),
+          ),
+        ],
+      ),
+    );
+
+/// A [RecordField.title]: [title], or no title at all when null.
+skir.DataValue recordTitle(String? title) => title == null
+    ? skir.DataValue.null_
+    : skir.DataValue.wrapStringValue(title);
+
+/// A [RecordField.reward] of [amount] coins.
+skir.DataValue recordCoins(int amount) => skir.DataValue.createNamed(
+  actualType: _coinsUse,
+  payload: skir.DataValue.createRecord(
+    fields: [
+      skir.FieldValue(
+        name: "amount",
+        value: skir.DataValue.wrapInteger("$amount"),
+      ),
+    ],
+  ),
+);
+
+/// A [RecordField.reward] of the badge [name].
+skir.DataValue recordBadge(String name) => skir.DataValue.createNamed(
+  actualType: _badgeUse,
+  payload: skir.DataValue.createRecord(
+    fields: [
+      skir.FieldValue(
+        name: "name",
+        value: skir.DataValue.wrapStringValue(name),
+      ),
+    ],
+  ),
+);
+
+/// The perks a [RecordField.perks] can hold, a set of known choices.
+const recordPerkChoices = ["build", "fly", "chat"];
+
+/// A [RecordField.perks] holding [perks], each one of [recordPerkChoices].
+skir.DataValue recordPerks(Iterable<String> perks) =>
+    skir.DataValue.createNamed(
+      actualType: _perksUse,
+      payload: skir.DataValue.createSetValue(
+        items: [
+          for (final perk in perks)
+            skir.ListItem(
+              id: skir.ItemId(value: perk),
+              value: enumValue(_perkDefinition, perk),
+            ),
+        ],
+      ),
+    );
+
+/// A [RecordField.tags] listing [tags] in order.
+skir.DataValue recordTags(Iterable<String> tags) => skir.DataValue.createNamed(
+  actualType: _tagsUse,
+  payload: skir.DataValue.createListValue(
+    items: [
+      for (final (index, tag) in tags.indexed)
+        skir.ListItem(
+          id: skir.ItemId(value: "tag$index"),
+          value: skir.DataValue.wrapStringValue(tag),
+        ),
+    ],
+  ),
+);
+
+/// A [RecordField.scores] mapping each game to its score.
+skir.DataValue recordScores(Map<String, int> scores) =>
+    skir.DataValue.createNamed(
+      actualType: _scoresUse,
+      payload: skir.DataValue.createMapValue(
+        rows: [
+          for (final MapEntry(key: game, value: score) in scores.entries)
+            skir.MapRow(
+              id: skir.ItemId(value: game),
+              key: skir.DataValue.wrapStringValue(game),
+              value: skir.DataValue.wrapInteger("$score"),
+            ),
+        ],
+      ),
+    );
 
 /// The choices of [RecordField.role], a dropdown since it has more than
 /// three.
@@ -59,7 +171,9 @@ const recordRoles = {
 const recordTeams = {"red": "Red", "blue": "Blue"};
 
 /// An item whose data is a record of [RecordField]s, one control per field:
-/// text, number, switch, check, dropdown, segmented choice, color and date.
+/// text, number, switch, check, dropdown, segmented choice, color, date, a
+/// nested record, a nullable text, a polymorphic reward, a set of known
+/// choices, a list, a map and a slider.
 ///
 /// Several selected items are edited together in the inspector through one
 /// combined editor, as members or services are.
@@ -197,6 +311,7 @@ BoundPresentationHost _recordFieldsHost(EditOwner owner) =>
             id: field._binding,
             use: field._use,
             owner: owner,
+            at: editorRootPath.field(field.name),
             read: (owner) =>
                 owner.value(editorRootPath.field(field.name)).valueOrNull ??
                 skir.DataValue.unfilled,
@@ -229,21 +344,51 @@ extension on RecordField {
   skir.BoundControl get _control =>
       presentationControl(_reference, label: label);
 
-  skir.ScalarKind get _kind => switch (this) {
+  static final _text = skir.ScalarKind.text;
+  static final _integer = skir.ScalarKind.createInteger(
+    width: skir.IntegerWidth.signedThirtyTwo,
+  );
+
+  skir.TypeTemplate get _template => switch (this) {
     RecordField.nickname ||
     RecordField.role ||
-    RecordField.team => skir.ScalarKind.text,
-    RecordField.level => skir.ScalarKind.createInteger(
-      width: skir.IntegerWidth.signedThirtyTwo,
+    RecordField.team => skir.TypeTemplate.wrapScalar(_text),
+    RecordField.level ||
+    RecordField.volume => skir.TypeTemplate.wrapScalar(_integer),
+    RecordField.online ||
+    RecordField.muted => skir.TypeTemplate.wrapScalar(skir.ScalarKind.boolean),
+    RecordField.color => skir.TypeTemplate.wrapScalar(
+      skir.ScalarKind.createInteger(width: skir.IntegerWidth.unsignedThirtyTwo),
     ),
-    RecordField.online || RecordField.muted => skir.ScalarKind.boolean,
-    RecordField.color => skir.ScalarKind.createInteger(
-      width: skir.IntegerWidth.unsignedThirtyTwo,
+    RecordField.joined => skir.TypeTemplate.wrapScalar(
+      skir.ScalarKind.timestamp,
     ),
-    RecordField.joined => skir.ScalarKind.timestamp,
+    RecordField.title => skir.TypeTemplate.createNullable(
+      value: skir.TypeTemplate.wrapScalar(_text),
+    ),
+    RecordField.spawn => typeTemplateOf(_spawnDefinition),
+    RecordField.reward => typeTemplateOf(_rewardDefinition),
+    RecordField.perks => typeTemplateOf(_perksDefinition),
+    RecordField.tags => typeTemplateOf(_tagsDefinition),
+    RecordField.scores => typeTemplateOf(_scoresDefinition),
   };
 
-  skir.TypeUse get _use => skir.TypeUse.wrapScalar(_kind);
+  skir.TypeUse get _use => switch (_template) {
+    skir.TypeTemplate_scalarWrapper(:final value) => skir.TypeUse.wrapScalar(
+      value,
+    ),
+    skir.TypeTemplate_nullableWrapper() => skir.TypeUse.createNullable(
+      value: skir.TypeUse.wrapScalar(_text),
+    ),
+    skir.TypeTemplate_namedWrapper(:final value) => skir.TypeUse.createNamed(
+      definition: value.definition,
+      arguments: const [],
+    ),
+    _ => throw StateError("$this has no type"),
+  };
+
+  skir.BindingRef _at(String field) =>
+      skir.BindingRef(bindingId: _binding, path: editorRootPath.field(field));
 
   skir.PresentationElement get _element => switch (this) {
     RecordField.nickname => textInputElement(_reference, label: label),
@@ -254,7 +399,127 @@ extension on RecordField {
     RecordField.team => _select(recordTeams),
     RecordField.color => colorInputElement(_reference, label: label),
     RecordField.joined => dateInputElement(_reference, label: label),
+    RecordField.spawn => skir.PresentationElement.wrapRecordInput(
+      skir.RecordControl(
+        control: _control,
+        fieldPresentation: presentationColumn("record.spawn.fields", [
+          presentationNode(
+            "record.spawn.world",
+            textInputElement(_at("world"), label: "World"),
+          ),
+          presentationNode(
+            "record.spawn.height",
+            numericInputElement(_at("height"), label: "Height"),
+          ),
+        ]),
+        appearance: null,
+        content: null,
+      ),
+    ),
+    RecordField.title => skir.PresentationElement.wrapNullableInput(
+      skir.NullableControl(
+        control: _control,
+        valuePresentation: presentationNode(
+          "record.title.text",
+          textInputElement(_reference, label: "Title text"),
+        ),
+        emptyText: null,
+        clearLabel: null,
+      ),
+    ),
+    RecordField.reward => skir.PresentationElement.wrapPolymorphicInput(
+      (skir.PolymorphicControl.mutable()
+            ..control = _control
+            ..concreteTypes = [
+              _concrete(_coinsUse, "Coins", "amount", "Amount"),
+              _concrete(_badgeUse, "Badge", "name", "Badge name"),
+            ])
+          .toFrozen(),
+    ),
+    RecordField.perks => skir.PresentationElement.wrapSetInput(
+      (skir.SetControl.mutable()
+            ..control = _control
+            ..allowAdd = true
+            ..allowRemove = true
+            ..itemBinding = _item)
+          .toFrozen(),
+    ),
+    RecordField.tags => skir.PresentationElement.wrapListInput(
+      (skir.ListControl.mutable()
+            ..control = _control
+            ..itemPresentation = presentationNode(
+              "record.tags.item",
+              textInputElement(
+                skir.BindingRef(bindingId: _item.id, path: editorRootPath),
+              ),
+            )
+            ..allowAdd = true
+            ..allowRemove = true
+            ..itemBinding = _item
+            ..indexBinding = skir.BindingDeclaration(
+              id: skir.ExpressionBindingId(value: "record.$name.index"),
+              type: skir.TypeTemplate.wrapScalar(_integer),
+            ))
+          .toFrozen(),
+    ),
+    RecordField.scores => skir.PresentationElement.wrapMapInput(
+      (skir.MapControl.mutable()
+            ..control = _control
+            ..allowAdd = true
+            ..allowRemove = true
+            ..keyBinding = _item
+            ..valueBinding = skir.BindingDeclaration(
+              id: skir.ExpressionBindingId(value: "record.$name.value"),
+              type: skir.TypeTemplate.wrapScalar(_integer),
+            ))
+          .toFrozen(),
+    ),
+    RecordField.volume => skir.PresentationElement.wrapSliderInput(
+      skir.SliderControl(
+        control: _control,
+        minimum: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapInteger("0"),
+        ),
+        maximum: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapInteger("100"),
+        ),
+        divisions: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapInteger("100"),
+        ),
+        appearance: null,
+        mappings: null,
+        options: null,
+      ),
+    ),
   };
+
+  skir.BindingDeclaration get _item => skir.BindingDeclaration(
+    id: skir.ExpressionBindingId(value: "record.$name.item"),
+    type: switch (this) {
+      RecordField.perks => typeTemplateOf(_perkDefinition),
+      _ => skir.TypeTemplate.wrapScalar(_text),
+    },
+  );
+
+  skir.ConcreteTypePresentation _concrete(
+    skir.NamedTypeUse type,
+    String typeLabel,
+    String field,
+    String fieldLabel,
+  ) => skir.ConcreteTypePresentation(
+    concreteType: skir.TypeUse.wrapNamed(type),
+    label: textLiteral(typeLabel),
+    presentation: presentationNode(
+      "record.$name.$field",
+      (field == "amount" ? numericInputElement : textInputElement)(
+        skir.BindingRef(
+          bindingId: configuredValueBindingId,
+          path: editorRootPath.field(field),
+        ),
+        label: fieldLabel,
+      ),
+    ),
+  );
 
   skir.PresentationElement _toggle(skir.TogglePresentation presentation) =>
       skir.PresentationElement.wrapToggleInput(
@@ -289,14 +554,30 @@ extension on RecordField {
       );
 }
 
-final _recordDefinition = skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(namespace: "testkit", name: "record"),
+skir.TypeDefinitionId _testkitType(String name) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "testkit", name: name),
   revision: 1,
 );
-final _recordUse = skir.NamedTypeUse(
-  definition: _recordDefinition,
-  arguments: const [],
-);
+
+skir.NamedTypeUse _useOf(skir.TypeDefinitionId definition) =>
+    skir.NamedTypeUse(definition: definition, arguments: const []);
+
+final _recordDefinition = _testkitType("record");
+final _recordUse = _useOf(_recordDefinition);
+final _spawnDefinition = _testkitType("spawn");
+final _spawnUse = _useOf(_spawnDefinition);
+final _rewardDefinition = _testkitType("reward");
+final _coinsDefinition = _testkitType("coins");
+final _coinsUse = _useOf(_coinsDefinition);
+final _badgeDefinition = _testkitType("badge");
+final _badgeUse = _useOf(_badgeDefinition);
+final _perkDefinition = _testkitType("perk");
+final _perksDefinition = _testkitType("perks");
+final _perksUse = _useOf(_perksDefinition);
+final _tagsDefinition = _testkitType("tags");
+final _tagsUse = _useOf(_tagsDefinition);
+final _scoresDefinition = _testkitType("scores");
+final _scoresUse = _useOf(_scoresDefinition);
 final _recordCatalog = CheckedEditorCatalog(
   testCatalogSnapshot(
     generation: skir.CatalogGeneration(value: "testkit:record"),
@@ -304,9 +585,49 @@ final _recordCatalog = CheckedEditorCatalog(
       declaredRecord(
         _recordDefinition,
         fields: {
-          for (final field in RecordField.values)
-            field.name: skir.TypeTemplate.wrapScalar(field._kind),
+          for (final field in RecordField.values) field.name: field._template,
         },
+      ),
+      declaredRecord(
+        _spawnDefinition,
+        fields: {
+          "world": skir.ScalarKind.text,
+          "height": skir.ScalarKind.createInteger(
+            width: skir.IntegerWidth.signedThirtyTwo,
+          ),
+        },
+      ),
+      declaredRecord(
+        _rewardDefinition,
+        cases: [_coinsDefinition, _badgeDefinition],
+      ),
+      declaredRecord(
+        _coinsDefinition,
+        fields: {
+          "amount": skir.ScalarKind.createInteger(
+            width: skir.IntegerWidth.signedThirtyTwo,
+          ),
+        },
+        parents: [_rewardDefinition],
+      ),
+      declaredRecord(
+        _badgeDefinition,
+        fields: {"name": skir.ScalarKind.text},
+        parents: [_rewardDefinition],
+      ),
+      ...declaredEnum(_perkDefinition, recordPerkChoices),
+      declaredCollection(
+        _perksDefinition,
+        _perkDefinition,
+        kind: skir.CollectionKind.set_,
+      ),
+      declaredCollection(_tagsDefinition, skir.ScalarKind.text),
+      declaredMap(
+        _scoresDefinition,
+        key: skir.ScalarKind.text,
+        value: skir.ScalarKind.createInteger(
+          width: skir.IntegerWidth.signedThirtyTwo,
+        ),
       ),
     ],
   ),

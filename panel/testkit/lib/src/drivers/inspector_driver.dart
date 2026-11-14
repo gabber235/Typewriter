@@ -92,8 +92,21 @@ final class InspectorDriver extends ComponentDriver {
     expect(inside(), isTrue, reason: "Tab reaches $label");
   }
 
-  /// Clicks the control of the field [label], as a pointer user does.
+  /// Scrolls the inspector until the field [label] is in view, as a user
+  /// scrolls to a field before using it.
+  Future<void> reveal(String label) async {
+    final text = find.text(label, findRichText: true);
+    if (text.evaluate().isEmpty) {
+      throw TestFailure("The inspector shows no field $label");
+    }
+    await tester.ensureVisible(text.first);
+    await settle();
+  }
+
+  /// Clicks the control of the field [label], as a pointer user does after
+  /// scrolling to it.
   Future<void> click(String label) async {
+    await reveal(label);
     final control = _field(label).lastWhere(
       (node) => node.isTappable,
       orElse: () => throw TestFailure("The field $label takes no click"),

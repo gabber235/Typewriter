@@ -37,3 +37,28 @@ Widget mixedSwitchTileUseCase(BuildContext context) {
     ),
   );
 }
+
+/// The [MixedSlider] a slider becomes when the selected items hold different
+/// numbers: a striped track without a thumb. A click or a drag sets the
+/// value under the pointer for every item; an arrow key steps from the first
+/// item's value.
+@widgetbook.UseCase(name: "Default", type: MixedSlider)
+Widget mixedSliderUseCase(BuildContext context) {
+  final enabled = context.knobs.boolean(label: "Enabled", initialValue: true);
+  final divisions = context.knobs.boolean(label: "Steps of ten");
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(
+        width: 320,
+        child: MixedSlider(
+          min: 0,
+          max: 100,
+          start: 30,
+          divisions: divisions ? 10 : null,
+          onChanged: enabled ? (_) {} : null,
+        ),
+      ),
+    ),
+  );
+}

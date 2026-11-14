@@ -60,6 +60,9 @@ extension _PortableStructuredInputRendering
         childScope.enabled &&
         !childScope.readOnly &&
         childScope.canExecuteAction;
+    // Selected items holding different kinds show no kind and no fields.
+    final mixed =
+        selected == null && childScope.isMixed(control.control.binding);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: _collectionSpacing(context, control.appearance),
@@ -121,7 +124,9 @@ extension _PortableStructuredInputRendering
                         childScope,
                         const Icon(Icons.category_outlined),
                       ),
-                      label: selected == null
+                      label: mixed
+                          ? mixedValueLabel
+                          : selected == null
                           ? _entryPlaceholder(
                                   control.inputContent,
                                   childScope,
@@ -162,6 +167,7 @@ extension _PortableStructuredInputRendering
             ),
           ),
         ),
+        if (mixed) const MixedValueMessage(),
         if (nested != null)
           _configuredCollectionBody(
             selected!.presentation!,
@@ -199,7 +205,27 @@ extension _PortableStructuredInputRendering
     if (current == null) {
       return _diagnostic("The nullable control binding is unavailable");
     }
-    final isNull = current.authoredPayload == skir.DataValue.null_;
+    bool empty(skir.DataValue? value) =>
+        value?.authoredPayload == skir.DataValue.null_;
+    final differing = childScope.itemValues(nullable.control.binding);
+    if (differing.any(empty)) {
+      // Some selected items hold a value and others none: setting it gives
+      // every item the value the first one that holds a value has.
+      final held = differing.firstWhere((value) => !empty(value));
+      return _compositeControlContent(
+        nullable.control,
+        childScope,
+        MixedSwitchTile(
+          title:
+              _fieldLabel(nullable.control, childScope) ??
+              const Text(mixedValueLabel),
+          onPressed: childScope.enabled && !childScope.readOnly && held != null
+              ? () => childScope.write(nullable.control.binding, held)
+              : null,
+        ),
+      );
+    }
+    final isNull = empty(current);
     if (isNull) {
       return _compositeControlContent(
         nullable.control,

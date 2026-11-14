@@ -297,4 +297,61 @@ void main() {
       expect(source.hasWork, isFalse);
     },
   );
+
+  test("each selected owner takes its own value, or none of them does", () {
+    final session = testWorkSession();
+    final rejected = skir.DataValue.wrapStringValue("Rejected");
+    final first = identifiedOwner(session, "first");
+    final second = identifiedOwner(
+      session,
+      "second",
+      persistence: ScriptedValuePersistence(
+        key: const EditorResourceKey(scope: null, identity: "second"),
+        current: FakeEditorSnapshot(
+          textSnapshot().document,
+          validation: (path, value) => value == rejected
+              ? EditorMutationResult.invalid([
+                  EditorDiagnostic(
+                    code: EditorDiagnosticCode.invalidValue,
+                    message: "Rejected",
+                    path: path,
+                  ),
+                ])
+              : EditorMutationResult.applied(value),
+        ),
+        commit: (capture) async =>
+            MutationSuccess(revision: 2, value: capture.rootValue),
+      ),
+    );
+    final selection = MultiEditOwner(
+      owners: [first, second],
+      rootType: first.rootType,
+      catalog: first.catalog,
+    );
+    addTearDown(selection.dispose);
+
+    expect(
+      selection.updateEach(editorRootPath, [
+        skir.DataValue.wrapStringValue("First"),
+        skir.DataValue.wrapStringValue("Second"),
+      ]),
+      isA<AppliedEditorMutation>(),
+    );
+    expect(
+      selection.updateEach(editorRootPath, [
+        skir.DataValue.wrapStringValue("Changed"),
+        rejected,
+      ]),
+      isA<InvalidEditorMutation>(),
+    );
+
+    expect(
+      first.value(editorRootPath).valueOrNull,
+      skir.DataValue.wrapStringValue("First"),
+    );
+    expect(
+      second.value(editorRootPath).valueOrNull,
+      skir.DataValue.wrapStringValue("Second"),
+    );
+  });
 }

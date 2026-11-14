@@ -21,23 +21,70 @@ final class EditingStageHold {
 /// Local admission is a cohort operation. Persistence keeps its real boundaries.
 final class SelectionEditingCoordinator {
   const SelectionEditingCoordinator();
+
+  /// Sets [value] at [path] on every owner, or on none of them.
   EditorMutationResult update(
     List<EditOwner> owners,
     skir.ValuePath path,
     skir.DataValue value,
+  ) => _admitted(owners, () {
+    final validation = owners
+        .map((owner) => owner.validate(path, value))
+        .aggregateEditorMutationsFor(path);
+    if (validation is! AppliedEditorMutation) return (validation, null);
+    return (
+      null,
+      () => owners
+          .map((owner) => owner.update(path, validation.value))
+          .aggregateEditorMutationsFor(path),
+    );
+  });
+
+  /// Sets the value at the same index of [values] at [path] on each owner,
+  /// or on none of them, as a set of choices changes one choice on items
+  /// whose other choices differ.
+  EditorMutationResult updateEach(
+    List<EditOwner> owners,
+    skir.ValuePath path,
+    List<skir.DataValue> values,
+  ) {
+    if (values.length != owners.length) {
+      throw ArgumentError.value(values, "values", "Needs one per owner");
+    }
+    return _admitted(owners, () {
+      final validations = [
+        for (final (index, owner) in owners.indexed)
+          owner.validate(path, values[index]),
+      ];
+      final validation = validations._aggregateEach(path);
+      if (validation is! AppliedEditorMutation) return (validation, null);
+      return (
+        null,
+        () => [
+          for (final (index, owner) in owners.indexed)
+            owner.update(
+              path,
+              (validations[index] as AppliedEditorMutation).value,
+            ),
+        ]._aggregateEach(path),
+      );
+    });
+  }
+
+  /// Holds every owner's stage while [admit] validates the change, then
+  /// applies it and rolls every owner back when one does not take it.
+  EditorMutationResult _admitted(
+    List<EditOwner> owners,
+    (EditorMutationResult?, EditorMutationResult Function()?) Function() admit,
   ) {
     final holds = [
       for (final owner in owners)
         if (owner case final EditingStageOwner staged) staged.holdStage(),
     ];
     try {
-      final validation = owners
-          .map((owner) => owner.validate(path, value))
-          .aggregateEditorMutationsFor(path);
-      if (validation is! AppliedEditorMutation) return validation;
-      final result = owners
-          .map((owner) => owner.update(path, validation.value))
-          .aggregateEditorMutationsFor(path);
+      final (rejected, apply) = admit();
+      if (rejected != null) return rejected;
+      final result = apply!();
       if (result is! AppliedEditorMutation) {
         for (final hold in holds) {
           hold.rollback();
@@ -49,6 +96,23 @@ final class SelectionEditingCoordinator {
         hold.release();
       }
     }
+  }
+}
+
+extension on List<EditorMutationResult> {
+  /// The results of a change that sets a different value on each owner:
+  /// applied when every owner took its value, else what went wrong.
+  EditorMutationResult _aggregateEach(skir.ValuePath path) {
+    final invalid = whereType<InvalidEditorMutation>();
+    if (invalid.isNotEmpty) {
+      return EditorMutationResult.invalid([
+        for (final result in invalid) ...result.diagnostics,
+      ]);
+    }
+    if (any((result) => result is! AppliedEditorMutation)) {
+      return const EditorMutationResult.conflict();
+    }
+    return first;
   }
 }
 
