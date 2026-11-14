@@ -122,7 +122,7 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
 }
 
 final class _ServiceIdentityPortableSurface
-    implements PortableMultiInspectionSurface {
+    extends ValueEditingInspectionSurface {
   const _ServiceIdentityPortableSurface(this.target);
 
   @override

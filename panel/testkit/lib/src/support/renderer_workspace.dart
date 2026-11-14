@@ -8,6 +8,7 @@ import "package:typewriter_testkit/src/drivers/finders.dart";
 import "package:typewriter_testkit/src/drivers/semantics.dart";
 import "package:typewriter_testkit/src/shared/editors/presentation/resource_display_fixture.dart";
 import "package:typewriter_testkit/src/shared/editors/presentation_builders.dart";
+import "package:typewriter_testkit/src/support/held_realm_editing.dart";
 import "package:typewriter_testkit/src/support/portable_operations.dart";
 import "package:typewriter_testkit/src/shared/editors/catalog_fixture.dart";
 
@@ -31,28 +32,14 @@ final class RendererWorkspace {
       },
       links: links,
     );
-    realm = FakeRealm(
-      scope: AuthoringScope(
-        organizationId: skir.recordId("organization:renderer"),
-        realmId: skir.recordId("realm_instance:renderer"),
-      ),
-      name: "Renderer",
-      document: document,
-    )..holdSaves = true;
-    final submissions = ScopedWorkSession();
-    addTearDown(submissions.dispose);
-    workspace = RealmEditing(
-      persistence: realm.persistence,
-      submissions: submissions,
-      initial: document,
-    );
+    final held = heldRealmEditing(document, id: "renderer", name: "Renderer");
+    realm = held.realm;
+    workspace = held.workspace;
     binding = workspace.attach(
       RendererWorkspace.resource,
       policy: EditorCommitPolicy.applyResource,
     );
     addTearDown(binding.detach);
-    addTearDown(workspace.dispose);
-    addTearDown(realm.close);
   }
 
   /// The resource the workspace edits.

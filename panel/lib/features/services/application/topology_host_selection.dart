@@ -74,7 +74,7 @@ class _ServiceHostSelectable
 }
 
 final class _ServiceHostConfigurationPortableSurface
-    implements PortableMultiInspectionSurface {
+    extends ValueEditingInspectionSurface {
   const _ServiceHostConfigurationPortableSurface({
     required this.selectable,
     required this.target,

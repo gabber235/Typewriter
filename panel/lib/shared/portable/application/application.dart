@@ -42,6 +42,7 @@ export "portable_presentation_document.dart";
 export "portable_scalar_admission.dart";
 export "portable_text_sizing.dart";
 export "portable_value_admission.dart";
+export "portable_value_agreement.dart";
 export "portable_value_defaults.dart";
 export "portable_value_tree.dart";
 export "portable_values.dart";

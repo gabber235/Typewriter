@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/data/authoring/shared_editing.dart";
 import "package:widgetbook_workspace/stories/authoring/presentation/realm_story.dart";
 import "package:widgetbook_workspace/support/story.dart";
 
@@ -30,6 +31,34 @@ Widget authoredResourceEditorUseCase(BuildContext context) {
         child: RealmEditingScene(
           builder: (context, workspace, commands) => AuthoredResourceInspection(
             resource: message.resource,
+            workspace: workspace,
+            commands: commands,
+            commitPolicy: EditorCommitPolicy.applyResource,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Two pages of one Book edited together, as the inspector shows a
+/// selection of both: their different names show as mixed, and a new name
+/// renames both in one save.
+@widgetbook.UseCase(name: "Two pages together", type: AuthoredResourceEditor)
+Widget authoredResourcesTogetherUseCase(BuildContext context) {
+  final [first, ...others] = sharedEditingPages;
+  return Story(
+    [
+      signedIn(ada, organization: acme),
+      realm(books: [sharedEditingBook], pages: sharedEditingPages),
+    ],
+    at: PanelLocation.component(
+      SizedBox(
+        width: 520,
+        child: RealmEditingScene(
+          builder: (context, workspace, commands) => AuthoredResourceInspection(
+            resource: first.pageId,
+            editedWith: [for (final page in others) page.pageId],
             workspace: workspace,
             commands: commands,
             commitPolicy: EditorCommitPolicy.applyResource,

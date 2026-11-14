@@ -708,14 +708,15 @@ extension _PortableChoiceSetRendering on PortablePresentationNodeRenderer {
   }
 
   /// A list, set or map the selected items hold differently: how many
-  /// different [noun] there are, and an edit that gives every item the first
-  /// item's value to start from.
+  /// different [noun] there are, and, when [editable], an edit that gives
+  /// every item the first item's value to start from.
   Widget _renderMixedCollection(
     skir.BoundControl control,
     PortablePresentationScope scope,
     List<skir.DataValue?> differing,
-    String noun,
-  ) {
+    String noun, {
+    bool editable = true,
+  }) {
     final first = differing.first;
     return _controlFrame(
       control,
@@ -729,14 +730,15 @@ extension _PortableChoiceSetRendering on PortablePresentationNodeRenderer {
               "$mixedValueLabel: ${differing.toSet().length} different $noun",
             ),
             const MixedValueMessage(),
-            Button(
-              face: ButtonFace.outlined,
-              icon: const Icon(Icons.edit_outlined),
-              label: "Edit",
-              onPressed: scope.enabled && !scope.readOnly && first != null
-                  ? () => scope.write(control.binding, first)
-                  : null,
-            ),
+            if (editable)
+              Button(
+                face: ButtonFace.outlined,
+                icon: const Icon(Icons.edit_outlined),
+                label: "Edit",
+                onPressed: scope.enabled && !scope.readOnly && first != null
+                    ? () => scope.write(control.binding, first)
+                    : null,
+              ),
           ],
         ),
       ),

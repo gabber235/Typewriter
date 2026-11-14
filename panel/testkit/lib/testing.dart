@@ -15,6 +15,7 @@ export "src/authoring/compiled_entry_graph.dart";
 export "src/authoring/compiled_inheritance_section.dart";
 export "src/authoring/edit_expectations.dart";
 export "src/authoring/link_choices_fixture.dart";
+export "src/authoring/shared_editing_fixture.dart";
 export "src/authoring/map_entries_fixture.dart";
 export "src/authoring/realm_world.dart";
 export "src/core/eventually.dart";

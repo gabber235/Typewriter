@@ -11,6 +11,7 @@ final class AuthoredResourceInspection extends StatefulWidget {
     required this.resource,
     required this.workspace,
     required this.commands,
+    this.editedWith = const [],
     this.role = skir.PresentationRole.inspector,
     this.commitPolicy = EditorCommitPolicy.autosaveChanges,
     this.openResource,
@@ -19,6 +20,10 @@ final class AuthoredResourceInspection extends StatefulWidget {
   });
 
   final skir.ResourceId resource;
+
+  /// The other resources of the same kind edited together with [resource]
+  /// in one form; empty for one resource.
+  final List<skir.ResourceId> editedWith;
   final RealmEditing workspace;
   final AuthoredResourceCommands commands;
   final skir.PresentationRole role;
@@ -41,11 +46,14 @@ final class _AuthoredResourceInspectionState
   @override
   void initState() {
     super.initState();
-    _binding = widget.workspace.attach(
-      widget.resource,
-      policy: widget.commitPolicy,
-    )..addListener(_updated);
+    _binding = _attach();
   }
+
+  RealmEditingBinding _attach() => widget.workspace.attach(
+    widget.resource,
+    editedWith: widget.editedWith,
+    policy: widget.commitPolicy,
+  )..addListener(_updated);
 
   void _updated() {
     if (mounted) setState(() {});
@@ -56,14 +64,12 @@ final class _AuthoredResourceInspectionState
     super.didUpdateWidget(oldWidget);
     if (widget.workspace != oldWidget.workspace ||
         widget.resource != oldWidget.resource ||
+        !listEquals(widget.editedWith, oldWidget.editedWith) ||
         widget.commitPolicy != oldWidget.commitPolicy) {
       _binding
         ..removeListener(_updated)
         ..detach();
-      _binding = widget.workspace.attach(
-        widget.resource,
-        policy: widget.commitPolicy,
-      )..addListener(_updated);
+      _binding = _attach();
     }
   }
 
@@ -77,16 +83,20 @@ final class _AuthoredResourceInspectionState
 
   @override
   Widget build(BuildContext context) {
-    final relatedWork = widget.workspace.hasWorkFor(widget.resource);
-    final configuration = _binding.document
-        .resource(widget.resource)
-        ?.configuration;
+    final resources = [widget.resource, ...widget.editedWith];
+    final relatedWork = resources.any(widget.workspace.hasWorkFor);
+    // Type arguments change through a preview of one resource.
+    final configuration = widget.editedWith.isEmpty
+        ? _binding.document.resource(widget.resource)?.configuration
+        : null;
     final needsReview = _binding.phase?.needsReview ?? false;
     final editor = _editor(
       widget.role,
       enabled:
           widget.workspace.state.available &&
-          _binding.document.entry(widget.resource) != null,
+          resources.every(
+            (resource) => _binding.document.entry(resource) != null,
+          ),
       readOnly: !_binding.control.canEdit,
     );
 
@@ -179,6 +189,7 @@ final class _AuthoredResourceInspectionState
   }) => AuthoredResourceEditor(
     key: ValueKey(role),
     resource: widget.resource,
+    editedWith: widget.editedWith,
     document: _binding.document,
     edit: _binding,
     role: role,

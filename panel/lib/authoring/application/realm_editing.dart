@@ -64,17 +64,26 @@ final class RealmEditing implements Listenable {
     );
   }
 
+  /// Opens a form on [resource], or on [resource] and [editedWith] together
+  /// when several resources of one kind are edited as one: every change then
+  /// reaches all of them in one group, saved all or nothing.
   RealmEditingBinding attach(
     skir.ResourceId resource, {
+    List<skir.ResourceId> editedWith = const [],
     EditorCommitPolicy policy = EditorCommitPolicy.autosaveChanges,
   }) => RealmEditingBinding(
     this,
     resource,
     workspace.createGroup(
-      label: "Edit ${resource.value}",
-      key: resource,
+      label: editedWith.isEmpty
+          ? "Edit ${resource.value}"
+          : "Edit ${editedWith.length + 1} resources",
+      key: editedWith.isEmpty
+          ? resource
+          : _SharedFormKey({resource, ...editedWith}),
       policy: policy,
     ),
+    editedWith: editedWith,
   );
   EditStageResult edit({
     required String label,
@@ -216,4 +225,19 @@ final class RealmEditing implements Listenable {
   void removeListener(VoidCallback listener) =>
       workspace.removeListener(listener);
   void dispose() => workspace.dispose();
+}
+
+/// Names the one form that edits a set of resources together, whatever order
+/// they were selected in.
+final class _SharedFormKey {
+  const _SharedFormKey(this.resources);
+
+  final Set<skir.ResourceId> resources;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _SharedFormKey && setEquals(other.resources, resources);
+
+  @override
+  int get hashCode => Object.hashAllUnordered(resources);
 }

@@ -271,7 +271,7 @@ class RecordSelectable
       InspectionContent(host: _recordFieldsHost(owners.editor(target)));
 }
 
-final class _RecordFieldsSurface implements PortableMultiInspectionSurface {
+final class _RecordFieldsSurface extends ValueEditingInspectionSurface {
   const _RecordFieldsSurface(this.target);
 
   @override

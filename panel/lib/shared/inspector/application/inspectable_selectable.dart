@@ -2,13 +2,13 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// One backend owned projection that can participate in a shared inspection.
+/// One projection a selected item offers for a shared inspection: when every
+/// selected item offers a compatible surface with the same root type and
+/// catalog snapshot, the inspector shows one inspection for all of them.
 ///
 /// The checked type information is shared by admission and presentation.
 abstract interface class PortableMultiInspectionSurface {
   Object get id;
-
-  ValueEditingRegistration get target;
 
   skir.TypeUse get rootType;
 
@@ -16,10 +16,48 @@ abstract interface class PortableMultiInspectionSurface {
 
   bool isCompatibleWith(PortableMultiInspectionSurface other);
 
+  /// Builds the one inspection [members] share. [members] holds the
+  /// compatible surface of every selected item in selection order, this
+  /// surface first; editors made while building register with [context].
+  InspectionContent buildShared(
+    List<PortableMultiInspectionSurface> members,
+    InspectionBuildContext context,
+  );
+}
+
+/// A surface over a local value draft. The selected drafts combine into one
+/// owner that reads what they agree on and writes every one of them, and
+/// [buildHost] presents that owner.
+abstract class ValueEditingInspectionSurface
+    implements PortableMultiInspectionSurface {
+  const ValueEditingInspectionSurface();
+
+  ValueEditingRegistration get target;
+
   PortablePresentationHost buildHost(
     List<PortableMultiInspectionSurface> members,
     EditOwner combinedOwner,
   );
+
+  @override
+  InspectionContent buildShared(
+    List<PortableMultiInspectionSurface> members,
+    InspectionBuildContext context,
+  ) {
+    final owners =
+        (Set<ValueEditing>.identity()..addAll(
+              members.cast<ValueEditingInspectionSurface>().map(
+                (surface) => context.owners.editor(surface.target),
+              ),
+            ))
+            .toList();
+    final combined = context.multiEditorForOwners(
+      owners,
+      rootType: rootType,
+      catalog: catalog,
+    );
+    return InspectionContent(host: buildHost(members, combined));
+  }
 }
 
 /// A selectable resource that can be represented in the inspector.

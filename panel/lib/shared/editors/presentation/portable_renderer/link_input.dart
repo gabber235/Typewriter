@@ -25,6 +25,18 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
           if (row.selectable) row.resource: row,
       };
     }
+    final differing = childScope.itemValues(control.control.binding);
+    // Copying one item's links to the others would skip their counterparts,
+    // so differing link lists offer no edit of their own.
+    if (differing.any((value) => value?.authoredItems != null)) {
+      return _renderMixedCollection(
+        control.control,
+        childScope,
+        differing,
+        "link lists",
+        editable: false,
+      );
+    }
     final items = childScope
         .read(control.control.binding)
         ?.authoredItems
@@ -397,10 +409,22 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = _controlStyle(context, scope, control.inputAppearance);
     final value = scope.read(reference);
-    final link = value?.authoredLink;
+    // Selected resources linking differently show that they differ; clearing
+    // clears each one's link.
+    final mixed = scope.isMixed(reference);
+    final link = mixed ? null : value?.authoredLink;
+    final cleared = mixed
+        ? scope
+              .selectedValues(reference)
+              .map((selected) => selected?.authoredLink)
+              .nonNulls
+              .firstOrNull
+        : link;
     final enabled = scope.enabled && !scope.readOnly;
     final selectedRow = link == null ? null : candidates?[link.target.resource];
-    final summary = link == null
+    final summary = mixed
+        ? const Text(mixedValueLabel, overflow: TextOverflow.ellipsis)
+        : link == null
         ? Text(
             _entryPlaceholder(control.inputContent, scope) ??
                 _operationText(
@@ -449,7 +473,7 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                 (states, style) => _linkChooseButton(
                   scope,
                   control,
-                  linked: link != null,
+                  linked: cleared != null,
                   states: states,
                   style: style,
                   onPressed: enabled
@@ -465,7 +489,7 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                 ),
                 tooltip: false,
               ),
-              if (link != null)
+              if (cleared != null)
                 _operationAppearance(
                   control.content,
                   scope,
@@ -481,11 +505,11 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                                 reference: reference,
                                 occurrence: skir.LinkOccurrence(
                                   id: skir.LinkOccurrenceId(
-                                    endpoint: link.endpoint,
+                                    endpoint: cleared.endpoint,
                                     location: location,
                                   ),
                                   source: location.resource,
-                                  target: link.target,
+                                  target: cleared.target,
                                 ),
                               ),
                             );
@@ -504,7 +528,12 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
       control.inputAppearance == null
           ? scope
           : scope.withAppearance(control.inputAppearance!),
-      content,
+      mixed
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [content, const MixedValueMessage()],
+            )
+          : content,
     );
     if (_CollectionInlineEditor.contains(context)) return framedContent;
     return Padding(

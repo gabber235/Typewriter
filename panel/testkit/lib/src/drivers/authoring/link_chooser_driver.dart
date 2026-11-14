@@ -24,9 +24,10 @@ final class LinkChooserDriver extends ComponentDriver {
   final RealmEditingBinding binding;
 
   /// Serves [document] in a Realm, opens editing of the resource holding
-  /// [source] and shows the link control of [source], [readOnly] or not,
-  /// preparing new counterparts through [prepareValue]. The control's link
-  /// field builder is [linkFieldBuilder] when given.
+  /// [source], together with [editedWith] when given, and shows the link
+  /// control of [source], [readOnly] or not, preparing new counterparts
+  /// through [prepareValue]. The control's link field builder is
+  /// [linkFieldBuilder] when given.
   static Future<LinkChooserDriver> show(
     WidgetTester tester,
     AuthoringDocument document, {
@@ -34,6 +35,7 @@ final class LinkChooserDriver extends ComponentDriver {
     Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
     prepareValue,
     Widget Function(BuildContext, skir.ValueLocation, Widget)? linkFieldBuilder,
+    List<skir.ResourceId> editedWith = const [],
     bool readOnly = false,
   }) async {
     final world = testWorld(adaServing(document));
@@ -42,7 +44,13 @@ final class LinkChooserDriver extends ComponentDriver {
     );
     final opening = world.openRealmEditing();
     await tester.pumpAndSettle();
-    final binding = (await opening).form(source.resource);
+    final editing = await opening;
+    final binding = editing.attach(
+      source.resource,
+      editedWith: editedWith,
+      policy: EditorCommitPolicy.applyResource,
+    );
+    addTearDown(binding.detach);
     final root = skir.ExpressionBindingId(value: "configured_value");
     final budget = skir.EvaluationBudget(
       maxSteps: 100,
@@ -50,6 +58,7 @@ final class LinkChooserDriver extends ComponentDriver {
     );
     final host = AuthoredPresentationHost(
       resource: source.resource,
+      editedWith: editedWith,
       source: binding.document,
       material: skir.PresentationMaterial.defaultInstance,
       role: skir.PresentationRole.workspace,
@@ -99,17 +108,7 @@ final class LinkChooserDriver extends ComponentDriver {
                 ),
                 scope: PortablePresentationScope(
                   operations: testPortableOperations(),
-                  bindings: {
-                    root: PortableExpressionBinding(
-                      value: skir.DataValue.createRecord(
-                        fields: document.resource(source.resource)!.fields,
-                      ),
-                      location: skir.ValueLocation(
-                        resource: source.resource,
-                        path: skir.ValuePath(segments: const []),
-                      ),
-                    ),
-                  },
+                  bindings: {root: host.rootInvocation.bindings[root]!},
                   budget: budget,
                   catalog: document.catalog,
                   host: host,

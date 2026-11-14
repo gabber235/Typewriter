@@ -1,5 +1,3 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Composes the selected resources into one inspector presentation graph.
@@ -113,7 +111,7 @@ final class InspectionSession extends ChangeNotifier {
         .toList();
     if (candidates.any((surfaces) => surfaces.isEmpty)) return null;
 
-    final plans = <_PortableMultiInspectionPlan>[];
+    final plans = <List<PortableMultiInspectionSurface>>[];
     for (final id in candidates.first.keys) {
       final members = [for (final surfaces in candidates) ?surfaces[id]];
       if (members.length != selection.length) continue;
@@ -127,50 +125,29 @@ final class InspectionSession extends ChangeNotifier {
       }
       final rootType = members.first.rootType;
       if (members.any((candidate) => candidate.rootType != rootType)) continue;
-      final catalog = _mergePortableCatalogs(members);
-      if (catalog == null) continue;
-      plans.add(
-        _PortableMultiInspectionPlan(
-          members: members,
-          rootType: rootType,
-          catalog: catalog,
-        ),
-      );
+      if (!_sharePortableCatalog(members)) continue;
+      plans.add(members);
     }
     if (plans.isEmpty) return null;
 
-    final hosts = <PortablePresentationHost>[];
-    for (final plan in plans) {
-      final owners =
-          (Set<ValueEditing>.identity()..addAll(
-                plan.members.map(
-                  (surface) => context.owners.editor(surface.target),
-                ),
-              ))
-              .toList();
-      final combined = context.multiEditorForOwners(
-        owners,
-        rootType: plan.rootType,
-        catalog: plan.catalog,
-      );
-      final host = plan.members.first.buildHost(plan.members, combined);
-      context.ownHosts(InspectionContent(host: host));
-      hosts.add(host);
-    }
-    return InspectionContent(
-      host: hosts.first,
-      additionalHosts: hosts.skip(1).toList(),
-    );
+    return _combined([
+      for (final members in plans)
+        context.ownHosts(members.first.buildShared(members, context)),
+    ]);
   }
 
   InspectionContent _buildStructural(
     List<InspectableSelectable> selection,
     InspectionBuildContext context,
   ) {
-    final contents = <InspectionContent>[];
-    for (final item in selection) {
-      contents.add(context.ownHosts(item.buildInspection(context.owners)));
-    }
+    return _combined([
+      for (final item in selection)
+        context.ownHosts(item.buildInspection(context.owners)),
+    ]);
+  }
+
+  /// [contents] shown together: their bodies in order, then their hosts.
+  InspectionContent _combined(List<InspectionContent> contents) {
     final bodies = contents.map((content) => content.body).nonNulls.toList();
     final hosts = [
       for (final content in contents)
@@ -209,27 +186,11 @@ Map<Object, PortableMultiInspectionSurface> _indexPortableSurfaces(
   return indexed;
 }
 
-CheckedEditorCatalog? _mergePortableCatalogs(
-  List<PortableMultiInspectionSurface> surfaces,
-) {
+bool _sharePortableCatalog(List<PortableMultiInspectionSurface> surfaces) {
   final catalog = surfaces.first.catalog;
   return surfaces.every(
-        (surface) => surface.catalog.snapshot == catalog.snapshot,
-      )
-      ? catalog
-      : null;
-}
-
-final class _PortableMultiInspectionPlan {
-  const _PortableMultiInspectionPlan({
-    required this.members,
-    required this.rootType,
-    required this.catalog,
-  });
-
-  final List<PortableMultiInspectionSurface> members;
-  final skir.TypeUse rootType;
-  final CheckedEditorCatalog catalog;
+    (surface) => surface.catalog.snapshot == catalog.snapshot,
+  );
 }
 
 /// Restores a resource selection and its route without retaining an inspector.
