@@ -46,7 +46,7 @@ final class AuthoringConflictComparison extends HookWidget {
             weight: HoldWeight.light,
             targets: (_) => {review},
             verb: "Use saved",
-            doneWord: "Used saved",
+            doneWord: "Kept saved",
             outcome: (_) => review.comparisonFacts.length == 1
                 ? "Use saved? Your change to 1 value in this group is lost."
                 : "Use saved? Your changes to "
