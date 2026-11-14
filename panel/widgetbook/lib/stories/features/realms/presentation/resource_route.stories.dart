@@ -32,6 +32,30 @@ Widget resourceSurfaceUseCase(BuildContext context) {
   );
 }
 
+/// A surface in select mode: two of its resources were added to the
+/// selection one by one, so every resource shows its check, on and off.
+@widgetbook.UseCase(name: "Select mode", type: ResourceSurface)
+Widget resourceSurfaceSelectModeUseCase(BuildContext context) {
+  final routed = context.knobs.object.segmented(
+    label: "Routed resource",
+    options: const ["Book", "Library"],
+    initialOption: "Book",
+  );
+  final chosen = routed == "Book"
+      ? [showcasePage.pageId, skir.ResourceId(value: "page:market")]
+      : [showcaseBook.bookId];
+  return realmStory(
+    context,
+    target: SurfaceTarget.resource(routed: _routed(routed)),
+    traits: [
+      selected([
+        for (final resource in chosen)
+          AuthoringResourceIdentifier.inScope(showcaseScope, resource),
+      ], selecting: true),
+    ],
+  );
+}
+
 /// The page a resource's address opens: its surface, or that it is gone.
 @widgetbook.UseCase(name: "Resource address", type: ResourcePage)
 Widget resourcePageUseCase(BuildContext context) {

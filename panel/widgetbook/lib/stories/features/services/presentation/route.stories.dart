@@ -84,6 +84,26 @@ Widget servicesInspectorUseCase(BuildContext context) {
   ], at: _servicesRoute);
 }
 
+/// The services page in select mode: two cards were added to the selection
+/// one by one, so every card shows its check, on and off.
+@widgetbook.UseCase(name: "Select mode", type: ServicesPage)
+Widget servicesSelectModeUseCase(BuildContext context) {
+  final scenario = completeTopologyScenario();
+  final topology = scenario.topology;
+  return Story([
+    signedIn(ada, organization: acme),
+    servicesService(services: scenario.services, topology: topology),
+    selected([
+      ServiceHostIdentifier(topology.hosts.first.hostId),
+      RealmInstanceIdentifier(topology.realms.first.realmId),
+    ], selecting: true),
+    ...context.knobs.traits("Window", {
+      "Desktop": const [],
+      "Compact": const [compact],
+    }),
+  ], at: _servicesRoute);
+}
+
 /// How the inspector story names [host] among the resources it can select.
 String hostOption(skir.ServiceHost host) =>
     "Host ${host.hostId.id}, ${hostRuntimeStatusLabel(host.state.status)}";
