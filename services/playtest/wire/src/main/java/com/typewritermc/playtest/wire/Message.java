@@ -112,7 +112,10 @@ public sealed interface Message {
         PERSISTENT_DATA,
         /** A time of day or weather the player sees instead of the world's. */
         PLAYER_TIME,
-        /** Boss bars shown to the player. */
+        /**
+         * Boss bars shown to the player that Paper can list: every adventure bar and every keyed Bukkit
+         * bar. A Bukkit bar without a key is the plugin's that created it, which hides it on the wipe.
+         */
         BOSS_BAR,
         /** Recipes the player's recipe book holds. */
         RECIPES,
@@ -122,6 +125,62 @@ public sealed interface Message {
         GAME_MODE,
         /** A selected hotbar slot other than the first. */
         HELD_SLOT,
+        /** An open container, or any other screen Paper opened for the player, such as a sign editor. */
+        OPEN_CONTAINER,
+        /** A vehicle the player rides, passengers riding the player, and parrots on its shoulders. */
+        RIDING,
+        /** Whether the player may fly and flies, and whether flying lets it take fall damage. */
+        FLIGHT,
+        /** The player's walking and flying speed. */
+        SPEED,
+        /** Base values of the player's attributes other than a new player's, and modifiers on them. */
+        ATTRIBUTES,
+        /** Health below the maximum, and hearts the client scales. */
+        HEALTH,
+        /** Food level, saturation and exhaustion, and the rates at which food heals or starves the player. */
+        FOOD,
+        /** Air below the maximum, and a maximum other than vanilla's. */
+        AIR,
+        /** Fire ticks, and fire the player shows without burning. */
+        FIRE,
+        /** Freeze ticks, and a lock that keeps them. */
+        FREEZE,
+        /** The last damage the player took, who killed it, and how long it stays immune after a hit. */
+        COMBAT,
+        /** Where the player last died, and the score its death screen shows. */
+        DEATH,
+        /** Values of the player's statistics: blocks mined, items crafted, mobs killed and the rest. */
+        STATISTICS,
+        /** A bed or respawn anchor the player respawns at. */
+        SPAWN_POINT,
+        /** A compass target a plugin set for the player. */
+        COMPASS,
+        /** Item cooldowns, the portal cooldown and the experience pickup cooldown. */
+        COOLDOWNS,
+        /**
+         * Flags a plugin sets on the player as an entity: invulnerable, silent, without gravity, not
+         * collidable, unable to pick up items, without physics, ignored for sleeping, not counted for
+         * spawning, sneaking, sprinting, or held in a fixed pose.
+         */
+        ENTITY_FLAGS,
+        /**
+         * How others see the player: its display name, its name, order, header and footer in the player
+         * list, glowing, invisible, arrows and stingers in its body, its locator bar colour and profile
+         * properties such as a skin.
+         */
+        APPEARANCE,
+        /** Scoreboard tags on the player. */
+        TAGS,
+        /** A world border the player sees instead of the world's. */
+        WORLD_BORDER,
+        /** View, send and simulation distances set for the player instead of the world's. */
+        VIEW_DISTANCE,
+        /** The warden warning level a shrieker raised for the player, and its cooldown. */
+        WARDEN,
+        /** Having seen the credits, which a new player sees when it first leaves the End. */
+        CREDITS,
+        /** The seed that picks the player's enchanting table offers. */
+        ENCHANTMENT_SEED,
         /** A value a plugin stores for the player in a file. */
         STORED_VALUE,
         /** A permission a plugin stores for the player in a file. */

@@ -57,6 +57,7 @@ final class Owned implements Listener {
     }
 
     /** Leaves a mark of [kind] on the player, as an earlier attempt could. */
+    @SuppressWarnings("deprecation") // Paper deprecates metadata, which plugins still set and this kind stands for.
     void mark(Player player, Kind kind) {
         UUID id = player.getUniqueId();
         switch (kind) {

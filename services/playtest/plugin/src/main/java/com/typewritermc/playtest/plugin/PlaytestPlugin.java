@@ -49,7 +49,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private static final String STEP_ACK = "playtest:step";
 
     private final StepPolicy policy = new StepPolicy(this::sendBarrier, PlaytestPlugin::nothingLeftToSend, task -> MinecraftServer.getServer().scheduleOnMain(task));
-    private final Wipe wipe = new Wipe(this);
+    private final Wipe wipe = new Wipe();
     private final Owned owned = new Owned(this);
     private final Probes probes = new Probes(this::mark);
     private final Attempts attempts = new Attempts(this);
