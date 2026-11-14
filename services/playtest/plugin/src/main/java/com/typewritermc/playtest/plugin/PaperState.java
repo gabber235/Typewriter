@@ -331,7 +331,7 @@ enum PaperState {
     COMBAT {
         @Override
         void wipe(Player player) {
-            // The API declares this call with an annotation the plugin does not compile against; Paper's own class does not.
+            // Bukkit's Entity.setLastDamageCause is deprecated for removal and internal; the server's own player clears it.
             ((CraftPlayer) player).setLastDamageCause(null);
             player.setLastDamage(0);
             player.setKiller(null);

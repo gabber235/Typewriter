@@ -530,9 +530,9 @@ decided:
   - id: keep-slice-3-built-decisions
     what: "Keep them (Recommended)"
     why: PlayerWipeEvent as the reset hook, Reclaim for back to back, regions never reused, attempts kept apart (players hidden, chat per attempt), Declined for requirements the pool can never run, pool size from -Pplaytest.clients
-  - id: fix-craftplayer-cast-cause
-    what: "A. Fix the cause (Recommended)"
-    why: Add the missing annotation library to the plugin's compile classpath and call the public setLastDamageCause; no cast to CraftPlayer
+  - id: last-damage-cause-server-call
+    what: "A. Server call, fix comment (Recommended)"
+    why: Bukkit's Entity.setLastDamageCause is deprecated for removal and internal, so the wipe keeps calling the server's own player, like its other wipes; replaces an earlier pick made on the belief that a public API existed
   - id: slice-4-not-yet
     what: "Not yet"
     why: The developer paused before slice 4
@@ -591,8 +591,8 @@ slices:
       requirement; one enum, PaperState, holds each kind's wipe, mark and check. Plugin owned:
       keyless boss bars, custom cooldown groups and anything that exists only as packets a plugin
       sent. Leaked state breaks unrelated requirements (ENTITY-3 failed in the red run). Open: a
-      plugin registered attribute cannot be removed; the setLastDamageCause call casts to CraftPlayer
-      because an annotation is missing from the plugin's compile classpath (asked); the game suite
+      plugin registered attribute cannot be removed; the setLastDamageCause call uses the server's own
+      player because the Bukkit method is deprecated for removal; the game suite
       still takes no --only or --repeat (slice 5).
   - id: done-and-hung-work
     status: next
@@ -619,4 +619,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Fix the CraftPlayer cast at its cause. Slice 4 waits for the developer.
+next: Slice 4 (done and hung work, a dead client) waits for the developer.
