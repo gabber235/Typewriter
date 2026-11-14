@@ -15,7 +15,7 @@ extension SheetMotion on DraggableScrollableController {
     );
     _settling[this] = true;
     try {
-      if (timeline.duration == Duration.zero) {
+      if (timeline.isInstant) {
         jumpTo(target);
       } else {
         await animateTo(

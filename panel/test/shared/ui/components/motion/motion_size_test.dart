@@ -34,4 +34,20 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(tester.getSize(find.byType(MotionSize)).height, 80);
   });
+
+  testWidgets("typed text stays when reduced motion turns on and off", (
+    tester,
+  ) async {
+    const field = TextField();
+    await tester.showComponent(const MotionSizeStage(height: 40, child: field));
+    await tester.enterText(find.byType(TextField), "kept");
+
+    for (final reduced in [true, false]) {
+      await tester.showComponent(
+        MotionSizeStage(height: 40, reduced: reduced, child: field),
+      );
+
+      expect(find.text("kept"), findsOneWidget, reason: "reduced: $reduced");
+    }
+  });
 }

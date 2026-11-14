@@ -648,24 +648,31 @@ extension MotionTimes on WidgetTester {
   }
 }
 
-/// A [MotionSize] around a box [height] tall at the top left, under
-/// reduced motion when [reduced].
+/// A [MotionSize] around a box [height] tall at the top left, holding
+/// [child], under reduced motion when [reduced]. Turning [reduced] on or off
+/// keeps every widget of the stage in place.
 final class MotionSizeStage extends StatelessWidget {
   const MotionSizeStage({
     required this.height,
     this.reduced = false,
+    this.child,
     super.key,
   });
 
   final double height;
   final bool reduced;
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {
-    final size = MotionSize(child: SizedBox(width: 100, height: height));
     return Align(
       alignment: Alignment.topLeft,
-      child: reduced ? ReducedMotion(child: size) : size,
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: reduced),
+        child: MotionSize(
+          child: SizedBox(width: 100, height: height, child: child),
+        ),
+      ),
     );
   }
 }

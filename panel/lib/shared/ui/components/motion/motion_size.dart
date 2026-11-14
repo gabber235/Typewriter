@@ -7,7 +7,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Every size change goes through it instead of a raw `AnimatedSize`: an
 /// `AnimatedSize` with a zero duration finishes its animation inside its
 /// own layout and marks itself for layout again, which throws.
-class MotionSize extends StatelessWidget {
+class MotionSize extends StatefulWidget {
   const MotionSize({
     required this.child,
     this.grow = MotionToken.surfaceIn,
@@ -24,10 +24,20 @@ class MotionSize extends StatelessWidget {
   final Clip clipBehavior;
 
   @override
+  State<MotionSize> createState() => _MotionSizeState();
+}
+
+class _MotionSizeState extends State<MotionSize> {
+  // The child moves out of the AnimatedSize when reduced motion turns on,
+  // and back in when it turns off; its key carries the child's state along.
+  final _child = GlobalKey();
+
+  @override
   Widget build(BuildContext context) {
-    final growing = motionTimeline(context, grow);
-    if (growing.duration == Duration.zero) return child;
-    final shrinking = switch (shrink) {
+    final child = KeyedSubtree(key: _child, child: widget.child);
+    final growing = motionTimeline(context, widget.grow);
+    if (growing.isInstant) return child;
+    final shrinking = switch (widget.shrink) {
       final token? => motionTimeline(context, token),
       null => growing,
     };
@@ -35,8 +45,8 @@ class MotionSize extends StatelessWidget {
       duration: growing.duration,
       reverseDuration: shrinking.duration,
       curve: growing.curve,
-      alignment: alignment,
-      clipBehavior: clipBehavior,
+      alignment: widget.alignment,
+      clipBehavior: widget.clipBehavior,
       child: child,
     );
   }

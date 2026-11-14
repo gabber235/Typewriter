@@ -12,6 +12,11 @@ final class MotionTimeline {
   final Duration duration;
   final Curve curve;
 
+  /// Whether this timeline jumps: framework animations given its zero
+  /// duration finish at once, and some APIs reject it, so callers jump
+  /// instead of animating.
+  bool get isInstant => duration == Duration.zero;
+
   /// Arrive with this timeline and leave with [leave].
   AnimationStyle styleWith(MotionTimeline leave) => AnimationStyle(
     duration: duration,

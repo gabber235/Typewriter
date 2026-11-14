@@ -29,7 +29,7 @@ class ModeChip extends HookWidget {
         move.curve.transform(controller.value).clamp(0, 1),
       )!;
       to.value = fill;
-      if (move.duration == Duration.zero) {
+      if (move.isInstant) {
         controller.value = 1;
       } else {
         controller.forward(from: 0);

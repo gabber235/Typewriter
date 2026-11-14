@@ -38,7 +38,7 @@ class _DirectionalContentSwitcherState
     // panelOut.
     final enter = motionTimeline(context, MotionToken.loadIn);
     // Without motion the new content replaces the old at once.
-    if (enter.duration == Duration.zero) return widget.child;
+    if (enter.isInstant) return widget.child;
     final currentKey = widget.child.key;
     final direction = _direction.toDouble();
 

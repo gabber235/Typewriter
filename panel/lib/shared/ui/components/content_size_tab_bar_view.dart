@@ -172,7 +172,7 @@ class _ContentSizeTabBarViewState extends State<ContentSizeTabBarView> {
 
   Future<void> _moveToPage(int index) async {
     final move = motionTimeline(context, MotionToken.surfaceIn);
-    if (move.duration == Duration.zero) {
+    if (move.isInstant) {
       _pageController.jumpToPage(index);
       return;
     }
