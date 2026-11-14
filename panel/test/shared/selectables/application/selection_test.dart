@@ -3,229 +3,163 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  group("Selection state machine", () {
-    test("single select on empty selection adds item", () {
+  final a = TestSelectableIdentifier(id: "A");
+  final b = TestSelectableIdentifier(id: "B");
+  final c = TestSelectableIdentifier(id: "C");
+  final d = TestSelectableIdentifier(id: "D");
+  final e = TestSelectableIdentifier(id: "E");
+  final order = [a, b, c, d, e];
+
+  group("a plain choice", () {
+    test("selects only that item, without checks", () {
       final container = ProviderContainer.test();
+      final selection = container.read(selectionProvider.notifier)
+        ..toggle(a)
+        ..toggle(b)
+        ..selectOnly(c);
 
-      final idA = TestSelectableIdentifier(id: "A");
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
+      expect(container.read(selectionProvider), [c]);
+      expect(container.read(selectModeProvider), isFalse);
 
-      expect(container.read(selectionProvider), [idA]);
+      selection.selectOnly(c);
+      expect(container.read(selectionProvider), [
+        c,
+      ], reason: "choosing the selected item again keeps it selected");
+    });
+  });
+
+  group("a toggle", () {
+    test("adds or removes one item and shows checks", () {
+      final container = ProviderContainer.test();
+      final selection = container.read(selectionProvider.notifier)
+        ..selectOnly(a)
+        ..toggle(b);
+
+      expect(container.read(selectionProvider), [a, b]);
+      expect(container.read(selectModeProvider), isTrue);
+
+      selection.toggle(a);
+      expect(container.read(selectionProvider), [b]);
+      expect(container.read(selectModeProvider), isTrue);
     });
 
-    test("single select replaces existing selection", () {
+    test("removing the last item ends select mode", () {
       final container = ProviderContainer.test();
-
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
-      container
-          .read(selectionProvider.notifier)
-          .select(idB, isMultiSelect: false);
-
-      expect(container.read(selectionProvider), [idB]);
-    });
-
-    test("single select on already selected sole item clears selection", () {
-      final container = ProviderContainer.test();
-
-      final idA = TestSelectableIdentifier(id: "A");
-
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
+      container.read(selectionProvider.notifier)
+        ..toggle(a)
+        ..toggle(a);
 
       expect(container.read(selectionProvider), isEmpty);
+      expect(container.read(selectModeProvider), isFalse);
+    });
+  });
+
+  group("a range", () {
+    test("selects from the anchor to the item in visible order", () {
+      final container = ProviderContainer.test();
+      container.read(selectionProvider.notifier)
+        ..selectOnly(b)
+        ..selectRange(d, order: order);
+
+      expect(container.read(selectionProvider), [b, c, d]);
+      expect(container.read(selectModeProvider), isTrue);
     });
 
-    test("single select on already selected item with multiple keeps only that item", () {
+    test("moves its far end while the anchor stays", () {
       final container = ProviderContainer.test();
+      container.read(selectionProvider.notifier)
+        ..selectOnly(c)
+        ..selectRange(e, order: order)
+        ..selectRange(a, order: order);
 
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-
-      container.read(selectionProvider.notifier).selectAll([idA, idB]);
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
-
-      expect(container.read(selectionProvider), [idA]);
+      expect(container.read(selectionProvider), [a, b, c]);
     });
 
-    test("multi-select adds to existing selection", () {
+    test("keeps items toggled before its anchor", () {
       final container = ProviderContainer.test();
+      container.read(selectionProvider.notifier)
+        ..selectOnly(a)
+        ..toggle(c)
+        ..selectRange(e, order: order);
 
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
-      container
-          .read(selectionProvider.notifier)
-          .select(idB, isMultiSelect: true);
-
-      expect(container.read(selectionProvider), [idA, idB]);
+      expect(container.read(selectionProvider), [a, c, d, e]);
     });
 
-    test("multi-select on already selected item removes it", () {
+    test("starts at the item itself with no anchor on the surface", () {
       final container = ProviderContainer.test();
+      final elsewhere = TestSelectableIdentifier(id: "elsewhere");
+      container.read(selectionProvider.notifier)
+        ..selectOnly(elsewhere)
+        ..selectRange(d, order: order, from: b);
 
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
+      expect(container.read(selectionProvider), [b, c, d]);
+    });
+  });
 
-      container.read(selectionProvider.notifier).selectAll([idA, idB]);
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: true);
+  group("select every item", () {
+    test("selects the whole surface, then clears it when pressed again", () {
+      final container = ProviderContainer.test();
+      final selection = container.read(selectionProvider.notifier)
+        ..selectOnly(b)
+        ..selectEvery(order);
 
-      expect(container.read(selectionProvider), [idB]);
+      expect(container.read(selectionProvider), order);
+      expect(container.read(selectModeProvider), isTrue);
+
+      selection.selectEvery(order);
+      expect(container.read(selectionProvider), isEmpty);
+      expect(container.read(selectModeProvider), isFalse);
+    });
+  });
+
+  group("other changes", () {
+    test("clearing ends select mode", () {
+      final container = ProviderContainer.test();
+      container.read(selectionProvider.notifier)
+        ..toggle(a)
+        ..clear();
+
+      expect(container.read(selectionProvider), isEmpty);
+      expect(container.read(selectModeProvider), isFalse);
     });
 
-    test("selectAll replaces selection by default", () {
+    test("selectAll replaces the selection by default, without checks", () {
       final container = ProviderContainer.test();
+      container.read(selectionProvider.notifier)
+        ..toggle(a)
+        ..selectAll([b, c]);
 
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-      final idC = TestSelectableIdentifier(id: "C");
-
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
-      container.read(selectionProvider.notifier).selectAll([idB, idC]);
-
-      expect(container.read(selectionProvider), [idB, idC]);
+      expect(container.read(selectionProvider), [b, c]);
+      expect(container.read(selectModeProvider), isFalse);
     });
 
     test("selectAll appends when replaceCurrentSelection is false", () {
       final container = ProviderContainer.test();
+      container.read(selectionProvider.notifier)
+        ..selectAll([a])
+        ..selectAll([b, c], replaceCurrentSelection: false);
 
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
-      container.read(selectionProvider.notifier).selectAll([
-        idB,
-      ], replaceCurrentSelection: false);
-
-      expect(container.read(selectionProvider), [idA, idB]);
+      expect(container.read(selectionProvider), [a, b, c]);
     });
 
-    test("unselect removes specific item", () {
+    test("unselecting removes only the named items", () {
       final container = ProviderContainer.test();
+      container.read(selectionProvider.notifier)
+        ..selectAll([a, b, c, d])
+        ..unselect(b)
+        ..unselect(e)
+        ..unselectAll([a, d]);
 
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-
-      container.read(selectionProvider.notifier).selectAll([idA, idB]);
-      container.read(selectionProvider.notifier).unselect(idA);
-
-      expect(container.read(selectionProvider), [idB]);
+      expect(container.read(selectionProvider), [c]);
     });
 
-    test("unselect on non-existent item is no-op", () {
+    test("unselecting the last item ends select mode", () {
       final container = ProviderContainer.test();
+      container.read(selectionProvider.notifier)
+        ..toggle(a)
+        ..unselect(a);
 
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
-      container.read(selectionProvider.notifier).unselect(idB);
-
-      expect(container.read(selectionProvider), [idA]);
-    });
-
-    test("unselectAll removes multiple items", () {
-      final container = ProviderContainer.test();
-
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-      final idC = TestSelectableIdentifier(id: "C");
-
-      container.read(selectionProvider.notifier).selectAll([idA, idB, idC]);
-      container.read(selectionProvider.notifier).unselectAll([idA, idC]);
-
-      expect(container.read(selectionProvider), [idB]);
-    });
-
-    test("clear empties selection", () {
-      final container = ProviderContainer.test();
-
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-
-      container.read(selectionProvider.notifier).selectAll([idA, idB]);
-      container.read(selectionProvider.notifier).clear();
-
-      expect(container.read(selectionProvider), isEmpty);
-    });
-  });
-
-  group("Selection with HardwareKeyboard", () {
-    testWidgets("select defaults to single-select when shift not pressed", (
-      tester,
-    ) async {
-      final container = (await tester.pumpPanel(
-        const [],
-        at: const PanelLocation.component(SizedBox()),
-      )).container;
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-
-      container.read(selectionProvider.notifier).select(idA);
-      container.read(selectionProvider.notifier).select(idB);
-
-      expect(container.read(selectionProvider), [idB]);
-    });
-
-    testWidgets("select defaults to multi-select when shift is pressed", (
-      tester,
-    ) async {
-      final container = (await tester.pumpPanel(
-        const [],
-        at: const PanelLocation.component(SizedBox()),
-      )).container;
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-
-      container.read(selectionProvider.notifier).select(idA);
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-      container.read(selectionProvider.notifier).select(idB);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-
-      expect(container.read(selectionProvider), [idA, idB]);
-    });
-
-    testWidgets("shift released returns to single-select behavior", (
-      tester,
-    ) async {
-      final container = (await tester.pumpPanel(
-        const [],
-        at: const PanelLocation.component(SizedBox()),
-      )).container;
-      final idA = TestSelectableIdentifier(id: "A");
-      final idB = TestSelectableIdentifier(id: "B");
-      final idC = TestSelectableIdentifier(id: "C");
-
-      container.read(selectionProvider.notifier).select(idA);
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-      container.read(selectionProvider.notifier).select(idB);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-      container.read(selectionProvider.notifier).select(idC);
-
-      expect(container.read(selectionProvider), [idC]);
+      expect(container.read(selectModeProvider), isFalse);
     });
   });
 }

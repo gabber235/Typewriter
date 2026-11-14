@@ -7,7 +7,8 @@ part "selection.g.dart";
 /// Selection is independent from keyboard focus. Focus identifies the item
 /// receiving keyboard input, while this provider represents the items acted on
 /// by the inspector and batch operations. Widgets mutate this state through
-/// the methods below; resolved selectable objects are derived by [Selected].
+/// the methods below; resolved selectable objects are derived by [Selected],
+/// and whether items show their checks by [SelectMode].
 @riverpod
 class Selection extends _$Selection {
   @override
@@ -23,47 +24,129 @@ class Selection extends _$Selection {
     return true;
   }
 
-  /// Toggles [selectable] using single selection or additive selection rules.
-  ///
-  /// When [isMultiSelect] is omitted, the current Shift key state chooses the
-  /// mode. Repeating a sole item in single selection clears it. Repeating an
-  /// item in multi selection removes it. The resulting list preserves the
-  /// order in which items were added.
-  void select(SelectableIdentifier selectable, {bool? isMultiSelect}) {
-    final selected = state.contains(selectable);
-    final multiSelect =
-        isMultiSelect ?? HardwareKeyboard.instance.isShiftPressed;
+  /// The item the next range starts from: the last item chosen plainly or
+  /// toggled.
+  SelectableIdentifier? _anchor;
 
-    state = switch ((selected, multiSelect)) {
-      (true, true) => state.where((s) => s != selectable).toList(),
-      (true, false) => state.length > 1 ? [selectable] : [],
-      (false, true) => [...state, selectable],
-      (false, false) => [selectable],
-    };
+  /// What stays selected beside a range: the selection when the anchor was
+  /// set, without the anchor itself.
+  List<SelectableIdentifier> _base = const [];
+
+  /// Selects only [selectable], the way a plain click does to inspect it,
+  /// and ends select mode.
+  void selectOnly(SelectableIdentifier selectable) {
+    _anchor = selectable;
+    _base = const [];
+    _set([selectable], selecting: false);
+  }
+
+  /// Adds [selectable] when it is not selected and removes it when it is,
+  /// keeping the rest, and shows the checks of select mode.
+  void toggle(SelectableIdentifier selectable) {
+    final next = state.contains(selectable)
+        ? state.where((s) => s != selectable).toList()
+        : [...state, selectable];
+    _anchor = selectable;
+    _base = next.where((s) => s != selectable).toList();
+    _set(next, selecting: true);
+  }
+
+  /// Selects every item of [order] from the anchor to [to], beside what was
+  /// selected when the anchor was set, and shows the checks of select mode.
+  ///
+  /// [order] is the surface's visible order. When the anchor is not on that
+  /// surface, the range starts from [from], the item focus left, or else
+  /// from [to] itself, and replaces the selection.
+  void selectRange(
+    SelectableIdentifier to, {
+    required List<SelectableIdentifier> order,
+    SelectableIdentifier? from,
+  }) {
+    if (!order.contains(_anchor)) {
+      _anchor = from ?? to;
+      _base = const [];
+    }
+    final start = order.indexOf(_anchor!);
+    final end = order.indexOf(to);
+    final range = start < 0 || end < 0
+        ? [to]
+        : order.sublist(min(start, end), max(start, end) + 1);
+    _set([
+      for (final item in _base)
+        if (!range.contains(item)) item,
+      ...range,
+    ], selecting: true);
+  }
+
+  /// Selects every item of [order], one surface in its visible order, and
+  /// shows the checks of select mode; with all of them selected already it
+  /// clears the selection instead.
+  void selectEvery(List<SelectableIdentifier> order) {
+    if (order.isNotEmpty && order.every(state.contains)) {
+      clear();
+      return;
+    }
+    _set(order, selecting: true);
   }
 
   /// Replaces the selection with [selectables], or appends them when
-  /// [replaceCurrentSelection] is false.
+  /// [replaceCurrentSelection] is false. Replacing ends select mode, as
+  /// choosing one item to inspect does.
   void selectAll(
     List<SelectableIdentifier> selectables, {
     bool replaceCurrentSelection = true,
   }) {
-    state = replaceCurrentSelection ? selectables : [...state, ...selectables];
+    _set(
+      replaceCurrentSelection ? selectables : [...state, ...selectables],
+      selecting: replaceCurrentSelection ? false : null,
+    );
   }
 
   /// Removes [selectable] if it is currently selected.
   void unselect(SelectableIdentifier selectable) {
-    state = state.where((s) => s != selectable).toList();
+    _set(state.where((s) => s != selectable).toList());
   }
 
   /// Removes every identifier in [selectables] from the current selection.
   void unselectAll(List<SelectableIdentifier> selectables) {
-    state = state.where((s) => !selectables.contains(s)).toList();
+    _set(state.where((s) => !selectables.contains(s)).toList());
   }
 
   /// Clears all selected identifiers without changing focus.
   void clear() {
-    state = [];
+    _set(const []);
+  }
+
+  /// Every change goes through here, so an empty selection always ends
+  /// select mode; [selecting] starts or ends it, and null keeps it.
+  void _set(List<SelectableIdentifier> next, {bool? selecting}) {
+    state = next;
+    if (next.isEmpty) {
+      _anchor = null;
+      _base = const [];
+    }
+    ref.read(selectModeProvider.notifier)._follow(next, selecting: selecting);
+  }
+}
+
+/// Whether the selection is in select mode, so every selectable shows its
+/// check.
+///
+/// An add gesture (Space, a Command or Control click, a Shift click, Shift
+/// with an arrow, select all) starts it. A plain click, which selects one
+/// item to inspect it, ends it, and so does an empty selection. Only
+/// [Selection] changes it.
+@riverpod
+class SelectMode extends _$SelectMode {
+  @override
+  bool build() {
+    return false;
+  }
+
+  /// Follows the selection becoming [selection]: [selecting] starts or ends
+  /// select mode, null keeps it, and an empty selection always ends it.
+  void _follow(List<SelectableIdentifier> selection, {bool? selecting}) {
+    state = selection.isNotEmpty && (selecting ?? state);
   }
 }
 

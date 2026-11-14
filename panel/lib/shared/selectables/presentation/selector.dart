@@ -53,6 +53,15 @@ final class _SelectableFocusNode extends FocusNode {
 /// keyboard focus independently, and [builder] receives both states so callers
 /// can render their distinction. Activation dispatches the shared selector
 /// intent before updating the canonical selection.
+///
+/// Every selectable follows one model. A plain click or Enter selects only
+/// this item. Command+click on Apple platforms, Control+click elsewhere, or
+/// Space adds or removes it. Shift+click selects the range from the anchor to
+/// it, and Shift with an arrow moves focus and extends that range, both in
+/// the visible order of the nearest [SelectionSurface], where the selector
+/// registers itself. Control+click on Apple platforms opens the context menu.
+/// In select mode the item reads as checked or not, and a [SelectorCheck] in
+/// [builder] shows its check.
 class Selector extends HookConsumerWidget {
   const Selector({
     required this.selectableId,
@@ -96,8 +105,14 @@ class Selector extends HookConsumerWidget {
     final anchorKey = useGlobalKey();
     final pendingContextPosition = useState<Offset?>(null);
     final contextTargets = useState<List<SelectableIdentifier>?>(null);
+    final selecting = ref.watch(selectModeProvider);
     final selection = ref.watch(selectionProvider);
     final selected = ref.watch(selectedProvider);
+    final surface = SelectionSurface.maybeOf(context);
+    useEffect(() => surface?.register(context, selectableId), [
+      surface,
+      selectableId,
+    ]);
 
     final source = SelectionOperationsRoot.of(context);
     final captured = contextTargets.value;
@@ -116,26 +131,79 @@ class Selector extends HookConsumerWidget {
 
     void activateContext(Offset globalPosition) {
       if (!ref.read(selectionProvider).contains(selectableId)) {
-        ref.read(selectionProvider.notifier).selectAll([selectableId]);
+        ref.read(selectionProvider.notifier).selectOnly(selectableId);
       }
       contextTargets.value = List.of(ref.read(selectionProvider));
       focusNode.requestFocus();
       pendingContextPosition.value = globalPosition;
     }
 
-    void activate({bool? isMultiSelect}) {
+    // Announces the choice to the surface, then changes the selection.
+    void choose(
+      void Function(Selection selection) change, {
+      required bool throughTap,
+    }) {
       Actions.maybeInvoke(
         context,
         SelectedSelectorIntent(
           selectableId: selectableId,
           focusNode: focusNode,
-          throughTap: false,
-          throughActivateIntent: true,
+          throughTap: throughTap,
+          throughActivateIntent: !throughTap,
         ),
       );
-      ref
-          .read(selectionProvider.notifier)
-          .select(selectableId, isMultiSelect: isMultiSelect);
+      change(ref.read(selectionProvider.notifier));
+    }
+
+    List<SelectableIdentifier> order() => surface?.order ?? [selectableId];
+
+    // The modifiers held now: Shift selects a range, Command or Control
+    // toggles, and Control on Apple platforms asks for the context menu.
+    ({bool range, bool toggle, bool menu}) modifiers() {
+      final keyboard = HardwareKeyboard.instance;
+      return (
+        range: keyboard.isShiftPressed,
+        toggle: hasOverrideDown,
+        menu: isApple && keyboard.isControlPressed,
+      );
+    }
+
+    // The modifiers held when the pointer went down. A tap resolves only
+    // once a double tap is ruled out, and the user has often let go of the
+    // modifier by then.
+    final pressed = useRef<({bool range, bool toggle, bool menu})?>(null);
+
+    void tap(TapUpDetails details) {
+      final held = pressed.value ?? modifiers();
+      pressed.value = null;
+      if (controller.isOpen) return controller.close();
+      if (held.menu) return activateContext(details.globalPosition);
+      choose(throughTap: true, (selection) {
+        if (held.range) {
+          selection.selectRange(selectableId, order: order());
+        } else if (held.toggle) {
+          selection.toggle(selectableId);
+        } else {
+          selection.selectOnly(selectableId);
+        }
+      });
+      focusNode.requestFocus();
+    }
+
+    void extend(TraversalDirection direction) {
+      final at = focusNode.context;
+      if (at == null) return;
+      // The move is the one a plain arrow makes here; the range follows
+      // once focus has landed, which a request applies in a microtask.
+      Actions.maybeInvoke(at, DirectionalFocusIntent(direction));
+      Future.microtask(() {
+        if (!context.mounted) return;
+        final to = SelectableScope.primaryFocusedId() ?? selectableId;
+        final items = SelectionSurface.ofPrimaryFocus()?.order ?? order();
+        ref
+            .read(selectionProvider.notifier)
+            .selectRange(to, order: items, from: selectableId);
+      });
     }
 
     useEffect(() {
@@ -180,87 +248,92 @@ class Selector extends HookConsumerWidget {
         child: Semantics(
           button: true,
           selected: isSelected,
+          checked: selecting ? isSelected : null,
           child: ContextMenuRegion(
             key: anchorKey,
             onClose: () => contextTargets.value = null,
             items: selectionOperationMenuItems(operations, ref),
             enableGestures: false,
             controller: controller,
-            child: GestureDetector(
-              onSecondaryTapUp: (details) =>
-                  activateContext(details.globalPosition),
-              onLongPressStart: (details) =>
-                  activateContext(details.globalPosition),
-              onDoubleTap: onDoubleTap,
-              onTapUp: ContextMenuRegion.onTapUp(
-                controller,
-                onContextTap: (details) =>
+            child: Listener(
+              onPointerDown: (_) => pressed.value = modifiers(),
+              child: GestureDetector(
+                onSecondaryTapUp: (details) =>
                     activateContext(details.globalPosition),
-                orElse: (_) {
-                  Actions.maybeInvoke(
-                    context,
-                    SelectedSelectorIntent(
-                      selectableId: selectableId,
+                onLongPressStart: (details) =>
+                    activateContext(details.globalPosition),
+                onDoubleTap: onDoubleTap,
+                onTapUp: tap,
+                child: SelectableScope(
+                  id: selectableId,
+                  // Space or Enter presses the item and acts once let go, as
+                  // a button acts; Escape cancels.
+                  child: KeyPress(
+                    child: FocusableActionDetector(
                       focusNode: focusNode,
-                      throughTap: true,
-                      throughActivateIntent: false,
-                    ),
-                  );
-                  ref.read(selectionProvider.notifier).select(selectableId);
-                  focusNode.requestFocus();
-                },
-              ),
-              child: SelectableScope(
-                id: selectableId,
-                // Space or Enter presses the item and selects it once let
-                // go, as a button acts; Escape cancels.
-                child: KeyPress(
-                  child: FocusableActionDetector(
-                    focusNode: focusNode,
-                    shortcuts: {
-                      ...shortcuts,
-                      const SingleActivator(LogicalKeyboardKey.contextMenu):
-                          const SelectorContextMenuIntent(),
-                      const SingleActivator(
-                        LogicalKeyboardKey.f10,
-                        shift: true,
-                      ): const SelectorContextMenuIntent(),
-                    },
-                    onShowHoverHighlight: (hover) => isHovered.value = hover,
-                    mouseCursor: SystemMouseCursors.click,
-                    actions: {
-                      SelectorContextMenuIntent:
-                          CallbackAction<SelectorContextMenuIntent>(
-                            onInvoke: (_) {
-                              final anchor = anchorKey.currentContext
-                                  ?.findRenderObject();
-                              if (anchor is RenderBox && anchor.attached) {
-                                activateContext(
-                                  anchor.localToGlobal(
-                                    anchor.size.center(Offset.zero),
-                                  ),
-                                );
-                              }
-                              return null;
+                      shortcuts: {
+                        ...shortcuts,
+                        const SingleActivator(LogicalKeyboardKey.contextMenu):
+                            const SelectorContextMenuIntent(),
+                        const SingleActivator(
+                          LogicalKeyboardKey.f10,
+                          shift: true,
+                        ): const SelectorContextMenuIntent(),
+                      },
+                      onShowHoverHighlight: (hover) => isHovered.value = hover,
+                      mouseCursor: SystemMouseCursors.click,
+                      actions: {
+                        SelectorContextMenuIntent:
+                            CallbackAction<SelectorContextMenuIntent>(
+                              onInvoke: (_) {
+                                final anchor = anchorKey.currentContext
+                                    ?.findRenderObject();
+                                if (anchor is RenderBox && anchor.attached) {
+                                  activateContext(
+                                    anchor.localToGlobal(
+                                      anchor.size.center(Offset.zero),
+                                    ),
+                                  );
+                                }
+                                return null;
+                              },
+                            ),
+                        ActivateIntent: CallbackAction<ActivateIntent>(
+                          onInvoke: (_) => choose(
+                            throughTap: false,
+                            (selection) => selection.selectOnly(selectableId),
+                          ),
+                        ),
+                        ToggleIntent: CallbackAction<ToggleIntent>(
+                          onInvoke: (_) => choose(
+                            throughTap: false,
+                            (selection) => selection.toggle(selectableId),
+                          ),
+                        ),
+                        ExtendSelectionIntent:
+                            CallbackAction<ExtendSelectionIntent>(
+                              onInvoke: (intent) => extend(intent.direction),
+                            ),
+                      },
+                      child: PixelScaleTransition(
+                        pixelScale: focusPulse.drive(Tween(begin: 0, end: 15)),
+                        child: _SelectorStateScope(
+                          selected: isSelected,
+                          selecting: selecting,
+                          toggle: () => choose(
+                            throughTap: true,
+                            (selection) => selection.toggle(selectableId),
+                          ),
+                          child: HookBuilder(
+                            builder: (context) {
+                              return builder(
+                                isSelected,
+                                isFocused.value,
+                                isHovered.value,
+                              );
                             },
                           ),
-                      ActivateIntent: CallbackAction(
-                        onInvoke: (_) => activate(),
-                      ),
-                      ActivateAllIntent: CallbackAction(
-                        onInvoke: (_) => activate(isMultiSelect: true),
-                      ),
-                    },
-                    child: PixelScaleTransition(
-                      pixelScale: focusPulse.drive(Tween(begin: 0, end: 15)),
-                      child: HookBuilder(
-                        builder: (context) {
-                          return builder(
-                            isSelected,
-                            isFocused.value,
-                            isHovered.value,
-                          );
-                        },
+                        ),
                       ),
                     ),
                   ),
@@ -291,4 +364,82 @@ class SelectedSelectorIntent extends Intent {
 
   /// Whether the activation originated from Flutter's activate intent.
   final bool throughActivateIntent;
+}
+
+/// What the nearest [Selector] shows, for its [SelectorCheck].
+class _SelectorStateScope extends InheritedWidget {
+  const _SelectorStateScope({
+    required this.selected,
+    required this.selecting,
+    required this.toggle,
+    required super.child,
+  });
+
+  final bool selected;
+  final bool selecting;
+  final VoidCallback toggle;
+
+  @override
+  bool updateShouldNotify(_SelectorStateScope oldWidget) =>
+      selected != oldWidget.selected || selecting != oldWidget.selecting;
+}
+
+/// Where a [SelectorCheck] puts the check beside its item.
+enum SelectorCheckPlacement {
+  /// Before a row's content, which moves aside as the check grows in.
+  leading,
+
+  /// Over a card's top start corner.
+  corner,
+}
+
+/// The check of the nearest [Selector]'s item: it grows in while the
+/// selection is in select mode and shows whether the item is selected.
+///
+/// Clicking the check adds or removes the item, as Command or Control+click
+/// does. The item stays the one focus stop and already reads as checked, so
+/// the check takes no focus and says nothing itself.
+class SelectorCheck extends StatelessWidget {
+  const SelectorCheck({
+    required this.child,
+    this.placement = SelectorCheckPlacement.leading,
+    super.key,
+  });
+
+  final SelectorCheckPlacement placement;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context
+        .dependOnInheritedWidgetOfExactType<_SelectorStateScope>();
+    final check = MotionSize(
+      alignment: AlignmentDirectional.topStart,
+      child: state == null || !state.selecting
+          ? const SizedBox.shrink()
+          : ExcludeSemantics(
+              child: ExcludeFocus(
+                child: SelectionCheck(
+                  value: state.selected,
+                  onChanged: state.toggle,
+                ),
+              ),
+            ),
+    );
+    return switch (placement) {
+      SelectorCheckPlacement.leading => Row(
+        children: [
+          check,
+          Expanded(child: child),
+        ],
+      ),
+      SelectorCheckPlacement.corner => Stack(
+        fit: StackFit.passthrough,
+        children: [
+          child,
+          PositionedDirectional(top: 0, start: 0, child: check),
+        ],
+      ),
+    };
+  }
 }

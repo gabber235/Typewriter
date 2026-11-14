@@ -41,6 +41,9 @@ bool selectionShortcutsEnabled(Ref ref) =>
 /// through [dialogShortcutsProvider]. With nothing selected it is not
 /// offered, so Escape reaches what is around it, such as a dialog that
 /// closes.
+///
+/// A [SelectionSurface] offers it too, closer to its items than the page
+/// route, whose own disabled dismiss action would otherwise swallow Escape.
 @riverpod
 List<ActionShortcut> selectionClearingShortcuts(Ref ref) => [
   if (ref.watch(selectionShortcutsEnabledProvider) &&
@@ -48,27 +51,13 @@ List<ActionShortcut> selectionClearingShortcuts(Ref ref) => [
     _unselectSelection,
 ];
 
-/// Clears the selection, or narrows a multi selection to the focused item.
+/// Clears the whole selection, which also ends select mode.
 final _unselectSelection = ActionShortcut.intent(
   id: "normal_unselect_selection",
-  label: "Unselect Selection",
-  description: "Unselect the currently selected item",
+  label: "Clear Selection",
+  description: "Clear the selection",
   intent: DismissIntent,
   priority: -11,
   show: false,
-  run: ActionRun.press((ref) {
-    final focused = SelectableScope.primaryFocusedId();
-    if (focused == null) {
-      ref.read(selectionProvider.notifier).clear();
-      return;
-    }
-
-    final selection = ref.read(selectionProvider);
-    if (selection.isEmpty) return;
-    if (selection.length == 1) {
-      ref.read(selectionProvider.notifier).clear();
-      return;
-    }
-    ref.read(selectionProvider.notifier).select(focused, isMultiSelect: false);
-  }),
+  run: ActionRun.press((ref) => ref.read(selectionProvider.notifier).clear()),
 );

@@ -259,7 +259,7 @@ void main() {
       expect(panel.container.read(selectionProvider), [second]);
       await panel.pressShifted(LogicalKeyboardKey.tab);
       expect(panel.focused, "entry:source");
-      await panel.pressShifted(LogicalKeyboardKey.enter);
+      await panel.press(LogicalKeyboardKey.space);
       expect(panel.container.read(selectionProvider).toSet(), {source, second});
 
       await panel.pressShifted(LogicalKeyboardKey.f10);

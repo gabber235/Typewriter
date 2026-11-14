@@ -32,10 +32,22 @@ bool _sameKeys(ShortcutActivator a, ShortcutActivator b) =>
     a.meta == b.meta;
 
 final _panelShortcuts = <ShortcutActivator, Intent>{
+  // Join codes still select all with these; selectables use Control or
+  // Command+A. They go once members move onto the shared selection model.
   SingleActivator(LogicalKeyboardKey.enter, shift: true): ActivateAllIntent(),
   SingleActivator(LogicalKeyboardKey.numpadEnter, shift: true):
       ActivateAllIntent(),
   SingleActivator(LogicalKeyboardKey.space, shift: true): ActivateAllIntent(),
+  AdaptiveSingleActivator(LogicalKeyboardKey.keyA, control: true):
+      SelectEveryIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
+      ExtendSelectionIntent(TraversalDirection.up),
+  SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+      ExtendSelectionIntent(TraversalDirection.down),
+  SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
+      ExtendSelectionIntent(TraversalDirection.left),
+  SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
+      ExtendSelectionIntent(TraversalDirection.right),
 
   AdaptiveSingleActivator(
     LogicalKeyboardKey.enter,
@@ -108,6 +120,26 @@ final movementShortcuts = {
 /// Activates every currently applicable action in the focused context.
 class ActivateAllIntent extends Intent {
   const ActivateAllIntent();
+}
+
+/// Selects every item of the focused surface, or clears the selection when
+/// all of them are selected.
+class SelectEveryIntent extends Intent {
+  const SelectEveryIntent();
+}
+
+/// Moves focus one item in [direction] and extends the selection range from
+/// its anchor to the item focus reaches.
+class ExtendSelectionIntent extends Intent {
+  const ExtendSelectionIntent(this.direction);
+
+  final TraversalDirection direction;
+}
+
+/// Toggles the focused thing: Space on a selectable adds it to the
+/// selection or removes it, where Enter chooses it alone.
+class ToggleIntent extends Intent {
+  const ToggleIntent();
 }
 
 /// Intentionally discards the current edit, unlike [DismissIntent] which

@@ -6,10 +6,12 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// With [onPress], the caller follows each step and acts on
 /// [PressStep.release] itself, as [Button] does. Without it, a key press
-/// starts only on a focused control with an enabled [ActivateIntent], and its
-/// release invokes that intent there, so a check, a row or a form toggle acts
-/// on key up instead of on key down. A key with a modifier held belongs to a
-/// shortcut, such as Shift+Space adding to a selection, and passes through.
+/// starts only on a focused control with an enabled intent for its key, and
+/// its release invokes that intent there, so a check, a row or a form toggle
+/// acts on key up instead of on key down. Space invokes [ToggleIntent] where
+/// the control has one, such as a selectable row adding itself to the
+/// selection, and [ActivateIntent] otherwise; Enter invokes [ActivateIntent].
+/// A key with a modifier held belongs to a shortcut and passes through.
 class KeyPress extends HookWidget {
   const KeyPress({
     required this.child,
@@ -36,6 +38,8 @@ class KeyPress extends HookWidget {
   Widget build(BuildContext context) {
     // The focus the held press started on; null while no key presses.
     final pressing = useRef<FocusNode?>(null);
+    // What letting the held key go invokes at that focus.
+    final releasing = useRef<Intent>(const ActivateIntent());
 
     void ends(PressStep step) {
       final from = pressing.value;
@@ -48,7 +52,7 @@ class KeyPress extends HookWidget {
       if (onPress case final follow?) {
         follow(outcome);
       } else if (outcome == PressStep.release && from.context != null) {
-        Actions.maybeInvoke(from.context!, const ActivateIntent());
+        Actions.maybeInvoke(from.context!, releasing.value);
       }
     }
 
@@ -57,15 +61,20 @@ class KeyPress extends HookWidget {
       return null;
     }, [enabled]);
 
-    bool canStart(FocusNode? focus) {
-      if (onPress != null) return true;
+    // The enabled intent the key invokes at [focus], or null for none.
+    Intent? intentAt(FocusNode? focus, LogicalKeyboardKey key) {
       final at = focus?.context;
-      if (at == null) return false;
-      const intent = ActivateIntent();
-      // Typed as Intent: a CallbackAction<Intent> registered for
-      // ActivateIntent cannot be found as an Action<ActivateIntent>.
-      final action = Actions.maybeFind<Intent>(at, intent: intent);
-      return action != null && action.isEnabled(intent);
+      if (at == null) return null;
+      for (final intent in [
+        if (key == LogicalKeyboardKey.space) const ToggleIntent(),
+        const ActivateIntent(),
+      ]) {
+        // Typed as Intent: a CallbackAction<Intent> registered for an
+        // intent cannot be found as an Action of that intent's type.
+        final action = Actions.maybeFind<Intent>(at, intent: intent);
+        if (action != null && action.isEnabled(intent)) return intent;
+      }
+      return null;
     }
 
     KeyEventResult keys(FocusNode node, KeyEvent event) {
@@ -86,7 +95,11 @@ class KeyPress extends HookWidget {
           return KeyEventResult.ignored;
         case KeyDownEvent() when pressing.value == null:
           final focus = FocusManager.instance.primaryFocus;
-          if (!canStart(focus)) return KeyEventResult.ignored;
+          if (onPress == null) {
+            final intent = intentAt(focus, key);
+            if (intent == null) return KeyEventResult.ignored;
+            releasing.value = intent;
+          }
           pressing.value = focus;
           onPress?.call(PressStep.start);
         case KeyUpEvent() when pressing.value != null:
