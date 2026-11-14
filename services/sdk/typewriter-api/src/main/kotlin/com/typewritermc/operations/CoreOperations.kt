@@ -15,7 +15,7 @@ object Delete : ResourceOperation<Unit> {
         appearance {
             icon("mdi:delete-outline")
             group(OperationGroup.DESTRUCTIVE)
-            emphasis(OperationEmphasis.FILLED)
+            emphasis(OperationEmphasis.OUTLINE)
         }
         confirm(
             OperationWeight.PERMANENT,

@@ -96,14 +96,18 @@ void main() {
           group: skir.OperationGroup.edit,
           emphasis: skir.OperationEmphasis.filled,
         ),
-        delete,
+        RealmOperation(
+          "Pin",
+          group: skir.OperationGroup.organize,
+          emphasis: skir.OperationEmphasis.filled,
+        ),
       ]),
     ]);
 
     await panel.resources.row("First").select();
 
     expect(panel.inspector.faceOf("Duplicate"), ButtonFace.filled);
-    expect(panel.inspector.faceOf("Delete"), ButtonFace.quiet);
+    expect(panel.inspector.faceOf("Pin"), ButtonFace.quiet);
   });
 
   testWidgets("Delete held by D lasts a permanent hold: kept just before it "

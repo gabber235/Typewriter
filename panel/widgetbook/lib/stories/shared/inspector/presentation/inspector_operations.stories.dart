@@ -45,7 +45,8 @@ Widget inspectorOperationsUseCase(BuildContext context) {
           RealmOperation.delete(),
         ]),
       ],
-      // Duplicate asks to be filled too; only the first filled one is.
+      // Duplicate and Pin both ask to be filled; only the first filled one
+      // is.
       "Two": [
         operations(const [
           RealmOperation(
@@ -53,7 +54,12 @@ Widget inspectorOperationsUseCase(BuildContext context) {
             group: skir.OperationGroup.edit,
             emphasis: skir.OperationEmphasis.filled,
           ),
-          _pin,
+          RealmOperation(
+            "Pin",
+            group: skir.OperationGroup.organize,
+            order: 10,
+            emphasis: skir.OperationEmphasis.filled,
+          ),
           _tag,
           RealmOperation.moveTo(),
           RealmOperation.delete(),

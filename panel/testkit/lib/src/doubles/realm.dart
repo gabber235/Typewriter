@@ -45,12 +45,12 @@ final class RealmOperation {
 
   /// Deletes the selected resources once the user holds as long as a
   /// permanent action; bound to the delete key and shown as a destructive
-  /// filled button.
+  /// outlined button, as the core Delete declares it.
   const RealmOperation.delete({String? disabledBecause})
     : this(
         "Delete",
         group: skir.OperationGroup.destructive,
-        emphasis: skir.OperationEmphasis.filled,
+        emphasis: skir.OperationEmphasis.outline,
         shortcut: skir.OperationShortcut.delete,
         confirmation: const RealmConfirmation(
           one: "Delete this resource and what it owns?",

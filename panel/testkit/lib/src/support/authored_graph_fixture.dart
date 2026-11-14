@@ -215,9 +215,7 @@ final class AuthoredGraphFixture {
             },
             presentation: skir.OperationPresentation(
               inspector: skir.OperationInspector.shown,
-              emphasis: operation == "delete"
-                  ? skir.OperationEmphasis.filled
-                  : skir.OperationEmphasis.outline,
+              emphasis: skir.OperationEmphasis.outline,
               shortcut: operation == "delete"
                   ? skir.OperationShortcut.delete
                   : null,

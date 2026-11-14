@@ -133,6 +133,8 @@ val OperationDeclarationTest by testSuite {
         definitions.values.all { it.targets.subject == skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE } shouldBe true
         definitions.getValue("LinkWithDuplicate").targets.cardinality shouldBe OperationCardinality.SINGLE
         definitions.getValue("Delete").presentation.shortcut shouldBe OperationShortcut.DELETE
+        // Delete is outlined, so a pane's main action (such as New page) stays its one filled button.
+        definitions.getValue("Delete").presentation.emphasis shouldBe OperationEmphasis.OUTLINE
         // Deleting a resource and what it owns cannot be recovered.
         definitions
             .getValue("Delete")
