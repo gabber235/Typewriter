@@ -571,6 +571,12 @@ decided:
   - id: measure-lease-time-beside-slice-6
     what: "C. Both in parallel (Recommended)"
     why: Grant to lease costs about 1.2 s per requirement with an unknown cause; a subagent splits it into timed parts and only reports while slice 6 builds, and the fix is chosen afterwards
+  - id: lease-time-fixes
+    what: "Fixes 1, 2 and 3"
+    why: The test Paper turns off the chunk send and load caps, a claim waits only for the chunks the client draws plus the neighbour ring it needs to draw them, and Paper loads the next few regions during earlier attempts; regions are still never reused
+  - id: free-clients-in-step
+    what: "Keep free clients in step (Recommended)"
+    why: A free client fell up to 235 ticks behind and stalled every attempt once claimed; every player gets step pings, one rule, lost clients still go after 5 s
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -678,4 +684,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 6 builds. Choose which lease time fixes to build (send cap off, wait only for drawn chunks, regions ahead) and how to remove the catch up tail.
+next: Slice 6 builds; beside it, the lease time fixes (caps off, drawn chunks plus ring, regions ahead, free clients in step) build on feat/game-verification-lease-time.
