@@ -21,6 +21,28 @@ ActionShortcut numberedAction(int i, {ActionInvoke? onInvoke}) {
   );
 }
 
+/// A heavy hold command "Remove" over one target, done word "Removed",
+/// running [onEach] once the hold completes.
+ActionShortcut removeHoldCommand({void Function()? onEach}) {
+  return ActionShortcut(
+    id: "remove",
+    label: "Remove",
+    description: "Remove it",
+    activators: const [],
+    priority: 1,
+    run: ActionRun.hold(
+      HoldPlan<String>(
+        weight: HoldWeight.heavy,
+        verb: "Remove",
+        doneWord: "Removed",
+        targets: (_) => {"it"},
+        outcome: (_) => "Remove it? It does not come back.",
+        each: (_, _) => onEach?.call(),
+      ),
+    ),
+  );
+}
+
 /// A focused surface offering [actions], above the action row the panel
 /// shows them in, [rowWidth] or 1000 wide.
 final class ActionSurface extends StatelessWidget {

@@ -90,23 +90,7 @@ void main() {
       const [],
       at: PanelLocation.component(
         CommandButton(
-          command: ActionShortcut(
-            id: "remove",
-            label: "Remove",
-            description: "Remove it",
-            activators: const [],
-            priority: 1,
-            run: ActionRun.hold(
-              HoldPlan<String>(
-                weight: HoldWeight.heavy,
-                verb: "Remove",
-                doneWord: "Removed",
-                targets: (_) => {"it"},
-                outcome: (_) => "Remove it? It does not come back.",
-                each: (_, _) => removed++,
-              ),
-            ),
-          ),
+          command: removeHoldCommand(onEach: () => removed++),
           label: "Remove",
         ),
       ),
@@ -128,26 +112,7 @@ void main() {
     final panel = await tester.pumpPanel(
       const [],
       at: PanelLocation.component(
-        CommandButton(
-          command: ActionShortcut(
-            id: "remove",
-            label: "Remove",
-            description: "Remove it",
-            activators: const [],
-            priority: 1,
-            run: ActionRun.hold(
-              HoldPlan<String>(
-                weight: HoldWeight.heavy,
-                verb: "Remove",
-                doneWord: "Removed",
-                targets: (_) => {"it"},
-                outcome: (_) => "Remove it? It does not come back.",
-                each: (_, _) {},
-              ),
-            ),
-          ),
-          label: "Remove",
-        ),
+        CommandButton(command: removeHoldCommand(), label: "Remove"),
       ),
     );
 
@@ -167,23 +132,7 @@ void main() {
       const [],
       at: PanelLocation.component(
         CommandButton(
-          command: ActionShortcut(
-            id: "remove",
-            label: "Remove",
-            description: "Remove it",
-            activators: const [],
-            priority: 1,
-            run: ActionRun.hold(
-              HoldPlan<String>(
-                weight: HoldWeight.heavy,
-                verb: "Remove",
-                doneWord: "Removed",
-                targets: (_) => {"it"},
-                outcome: (_) => "Remove it? It does not come back.",
-                each: (_, _) {},
-              ),
-            ),
-          ),
+          command: removeHoldCommand(),
           face: ButtonFace.outlined,
           label: "Remove",
         ),
@@ -222,23 +171,7 @@ void main() {
         const [],
         at: PanelLocation.component(
           CommandButton(
-            command: ActionShortcut(
-              id: "remove",
-              label: "Remove",
-              description: "Remove it",
-              activators: const [],
-              priority: 1,
-              run: ActionRun.hold(
-                HoldPlan<String>(
-                  weight: HoldWeight.heavy,
-                  verb: "Remove",
-                  doneWord: "Removed",
-                  targets: (_) => {"it"},
-                  outcome: (_) => "Remove it? It does not come back.",
-                  each: (_, _) {},
-                ),
-              ),
-            ),
+            command: removeHoldCommand(),
             face: face,
             label: "Remove",
           ),
