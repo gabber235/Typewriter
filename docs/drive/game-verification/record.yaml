@@ -541,6 +541,9 @@ decided:
   - id: frozen-client-5s
     what: "A. 5 s framework limit (Recommended)"
     why: A client that has not acked for 5 s of wall clock counts as lost; about 18 times the worst stall seen, and provable by freezing a client
+  - id: hold-out-hung-players
+    what: "A. Hold it out (Recommended)"
+    why: A player whose work hung leaves the pool until that work ends, is wiped again, then returns; nothing is cancelled. A replacement client keeps the same player name, so it would not escape the work; a player whose work never ends stays out for the rest of the run and the run says so
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
