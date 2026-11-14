@@ -249,40 +249,20 @@ class Button extends HookWidget {
     }, [enabled]);
 
     // Keys: Space or Enter down starts a press and splashes from the middle;
-    // key up releases it; Escape cancels it. With a modifier held the key
-    // belongs to a shortcut, such as Ctrl+Enter publishing.
-    KeyEventResult keys(FocusNode node, KeyEvent event) {
-      final key = event.logicalKey;
-      final activator =
-          key == LogicalKeyboardKey.space ||
-          key == LogicalKeyboardKey.enter ||
-          key == LogicalKeyboardKey.numpadEnter;
-      final keyPress = pressing.value == PressSource.key;
-      if (key == LogicalKeyboardKey.escape && keyPress) {
-        if (event is KeyDownEvent) pressEnds(PressStep.cancel);
-        return KeyEventResult.handled;
-      }
-      if (!activator || !enabled) return KeyEventResult.ignored;
-      final keyboard = HardwareKeyboard.instance;
-      final modified =
-          keyboard.isControlPressed ||
-          keyboard.isMetaPressed ||
-          keyboard.isAltPressed ||
-          keyboard.isShiftPressed;
-      switch (event) {
-        case KeyDownEvent() when modified:
-          return KeyEventResult.ignored;
-        case KeyDownEvent():
+    // key up releases it; Escape or focus leaving cancels it. With a
+    // modifier held the key belongs to a shortcut, such as Ctrl+Enter
+    // publishing.
+    void keyPress(PressStep step) {
+      switch (step) {
+        case PressStep.start:
           final box = context.findRenderObject();
           pressStarts(
             PressSource.key,
             box is RenderBox ? box.size.center(Offset.zero) : Offset.zero,
           );
-        case KeyUpEvent() when keyPress:
-          pressEnds(PressStep.release);
-        case _:
+        case PressStep.release || PressStep.cancel:
+          pressEnds(step, only: PressSource.key);
       }
-      return KeyEventResult.handled;
     }
 
     final press = resolveMotion(context, MotionToken.press);
@@ -364,22 +344,16 @@ class Button extends HookWidget {
             },
           );
 
-    Widget result = Focus(
-      canRequestFocus: false,
-      skipTraversal: true,
-      onKeyEvent: keys,
+    Widget result = KeyPress(
+      enabled: enabled,
+      onPress: keyPress,
       child: FocusableActionDetector(
         focusNode: focusNode,
         autofocus: autofocus,
         mouseCursor: enabled
             ? SystemMouseCursors.click
             : SystemMouseCursors.basic,
-        onFocusChange: (on) {
-          states.update(WidgetState.focused, on);
-          // A key press ends when focus leaves, since its key up goes
-          // elsewhere.
-          if (!on) pressEnds(PressStep.cancel, only: PressSource.key);
-        },
+        onFocusChange: (on) => states.update(WidgetState.focused, on),
         actions: {
           ActivateIntent: CallbackAction<ActivateIntent>(
             onInvoke: (_) => activate(),

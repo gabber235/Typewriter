@@ -17,6 +17,7 @@ export "button/button.dart";
 export "button/button_content.dart";
 export "button/button_controller.dart";
 export "button/button_controller_hook.dart";
+export "button/key_press.dart";
 export "button/press_ink.dart";
 export "centered_sliver_main_axis_group.dart";
 export "command_button.dart";

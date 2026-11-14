@@ -5,10 +5,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// list where only some rows are.
 ///
 /// The check fills with the accent as it turns on; it never adds an
-/// outline. [onChanged] runs on a click, Space or Enter; without it the
-/// check is heard as unavailable and takes no focus. Inside a row that
-/// owns selection keys, wrap it in [ExcludeFocus] so the row stays the
-/// one focus stop.
+/// outline. [onChanged] runs on a click, or when Space or Enter is let go;
+/// without it the check is heard as unavailable and takes no focus. Inside
+/// a row that owns selection keys, wrap it in [ExcludeFocus] so the row
+/// stays the one focus stop.
 class SelectionCheck extends HookWidget {
   const SelectionCheck({
     required this.value,
@@ -43,45 +43,45 @@ class SelectionCheck extends HookWidget {
       checked: value ?? false,
       mixed: value == null,
       enabled: enabled,
-      child: FocusableActionDetector(
+      // Space or Enter presses the check and flips it once let go, as a
+      // button acts.
+      child: KeyPress(
         enabled: enabled,
-        autofocus: autofocus,
-        mouseCursor: enabled
-            ? SystemMouseCursors.click
-            : SystemMouseCursors.basic,
-        shortcuts: const {
-          SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-          SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-          SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
-        },
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: (_) => onChanged?.call(),
-          ),
-        },
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onChanged,
-          child: SizedBox.square(
-            dimension: _target,
-            child: Center(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: fill,
-                  borderRadius: BorderRadius.circular(context.shapes.small),
-                ),
-                child: SizedBox.square(
-                  dimension: _box,
-                  child: Opacity(
-                    opacity: t,
-                    child: Transform.scale(
-                      scale: 0.6 + 0.4 * t,
-                      child: Icon(
-                        value == null
-                            ? Icons.remove_rounded
-                            : Icons.check_rounded,
-                        size: 14,
-                        color: fill.contrastingForeground,
+        child: FocusableActionDetector(
+          enabled: enabled,
+          autofocus: autofocus,
+          mouseCursor: enabled
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
+          actions: {
+            ActivateIntent: CallbackAction<ActivateIntent>(
+              onInvoke: (_) => onChanged?.call(),
+            ),
+          },
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onChanged,
+            child: SizedBox.square(
+              dimension: _target,
+              child: Center(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: fill,
+                    borderRadius: BorderRadius.circular(context.shapes.small),
+                  ),
+                  child: SizedBox.square(
+                    dimension: _box,
+                    child: Opacity(
+                      opacity: t,
+                      child: Transform.scale(
+                        scale: 0.6 + 0.4 * t,
+                        child: Icon(
+                          value == null
+                              ? Icons.remove_rounded
+                              : Icons.check_rounded,
+                          size: 14,
+                          color: fill.contrastingForeground,
+                        ),
                       ),
                     ),
                   ),

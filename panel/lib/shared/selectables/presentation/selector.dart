@@ -212,48 +212,56 @@ class Selector extends HookConsumerWidget {
               ),
               child: SelectableScope(
                 id: selectableId,
-                child: FocusableActionDetector(
-                  focusNode: focusNode,
-                  shortcuts: {
-                    ...shortcuts,
-                    const SingleActivator(LogicalKeyboardKey.contextMenu):
-                        const SelectorContextMenuIntent(),
-                    const SingleActivator(LogicalKeyboardKey.f10, shift: true):
-                        const SelectorContextMenuIntent(),
-                  },
-                  onShowHoverHighlight: (hover) => isHovered.value = hover,
-                  mouseCursor: SystemMouseCursors.click,
-                  actions: {
-                    SelectorContextMenuIntent:
-                        CallbackAction<SelectorContextMenuIntent>(
-                          onInvoke: (_) {
-                            final anchor = anchorKey.currentContext
-                                ?.findRenderObject();
-                            if (anchor is RenderBox && anchor.attached) {
-                              activateContext(
-                                anchor.localToGlobal(
-                                  anchor.size.center(Offset.zero),
-                                ),
-                              );
-                            }
-                            return null;
-                          },
-                        ),
-                    ActivateIntent: CallbackAction(onInvoke: (_) => activate()),
-                    ActivateAllIntent: CallbackAction(
-                      onInvoke: (_) => activate(isMultiSelect: true),
-                    ),
-                  },
-                  child: PixelScaleTransition(
-                    pixelScale: focusPulse.drive(Tween(begin: 0, end: 15)),
-                    child: HookBuilder(
-                      builder: (context) {
-                        return builder(
-                          isSelected,
-                          isFocused.value,
-                          isHovered.value,
-                        );
-                      },
+                // Space or Enter presses the item and selects it once let
+                // go, as a button acts; Escape cancels.
+                child: KeyPress(
+                  child: FocusableActionDetector(
+                    focusNode: focusNode,
+                    shortcuts: {
+                      ...shortcuts,
+                      const SingleActivator(LogicalKeyboardKey.contextMenu):
+                          const SelectorContextMenuIntent(),
+                      const SingleActivator(
+                        LogicalKeyboardKey.f10,
+                        shift: true,
+                      ): const SelectorContextMenuIntent(),
+                    },
+                    onShowHoverHighlight: (hover) => isHovered.value = hover,
+                    mouseCursor: SystemMouseCursors.click,
+                    actions: {
+                      SelectorContextMenuIntent:
+                          CallbackAction<SelectorContextMenuIntent>(
+                            onInvoke: (_) {
+                              final anchor = anchorKey.currentContext
+                                  ?.findRenderObject();
+                              if (anchor is RenderBox && anchor.attached) {
+                                activateContext(
+                                  anchor.localToGlobal(
+                                    anchor.size.center(Offset.zero),
+                                  ),
+                                );
+                              }
+                              return null;
+                            },
+                          ),
+                      ActivateIntent: CallbackAction(
+                        onInvoke: (_) => activate(),
+                      ),
+                      ActivateAllIntent: CallbackAction(
+                        onInvoke: (_) => activate(isMultiSelect: true),
+                      ),
+                    },
+                    child: PixelScaleTransition(
+                      pixelScale: focusPulse.drive(Tween(begin: 0, end: 15)),
+                      child: HookBuilder(
+                        builder: (context) {
+                          return builder(
+                            isSelected,
+                            isFocused.value,
+                            isHovered.value,
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),

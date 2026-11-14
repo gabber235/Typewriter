@@ -37,7 +37,7 @@ void main() {
     (LogicalKeyboardKey.space, "Space"),
     (LogicalKeyboardKey.enter, "Enter"),
   ]) {
-    testWidgets("$name flips the focused check", (tester) async {
+    testWidgets("$name flips the focused check when let go", (tester) async {
       final value = ValueNotifier<bool?>(false);
       addTearDown(value.dispose);
       final panel = await tester.showComponent(
@@ -52,13 +52,37 @@ void main() {
         ),
       );
 
-      await tester.sendKeyEvent(key);
+      await tester.sendKeyDownEvent(key);
+      await panel.settle();
+      expect(value.value, isFalse, reason: "key down only presses");
+      await tester.sendKeyUpEvent(key);
       await panel.settle();
       expect(value.value, isTrue);
 
       await tester.sendKeyEvent(key);
       await panel.settle();
       expect(value.value, isFalse);
+    });
+
+    testWidgets("Escape while $name is down leaves the check as it was", (
+      tester,
+    ) async {
+      var changes = 0;
+      final panel = await tester.showComponent(
+        SelectionCheck(
+          value: false,
+          semanticLabel: "Select all",
+          autofocus: true,
+          onChanged: () => changes++,
+        ),
+      );
+
+      await tester.sendKeyDownEvent(key);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.sendKeyUpEvent(key);
+      await panel.settle();
+
+      expect(changes, 0);
     });
   }
 

@@ -52,6 +52,8 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
           final interactivePrefix = _interactiveAdornment(
             scope.associationFor(input.control).prefix?.node,
           );
+          // The toggle flips when Space or Enter is let go, as a button acts,
+          // instead of on key down.
           return _controlSurface(
             style,
             _entryComposition(
@@ -116,7 +118,7 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
                       onChanged: enabled ? change : null,
                     ),
             ),
-          );
+          ).pressedByKeys;
         },
       ),
     );

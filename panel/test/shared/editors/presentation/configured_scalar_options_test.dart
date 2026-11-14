@@ -451,6 +451,45 @@ void main() {
     expect(fixture.value, skir.DataValue.wrapBoolean(false));
     expect(find.text("Hidden"), findsOneWidget);
   });
+  for (final presentation in [
+    skir.TogglePresentation.checkbox,
+    skir.TogglePresentation.switch_,
+  ]) {
+    testWidgets("a ${presentation.kind.name} toggles when Space is let go, "
+        "and Escape while it is down keeps the value", (tester) async {
+      final fixture = EditedValue.scalar(
+        skir.DataValue.wrapBoolean(true),
+        skir.ScalarKind.boolean,
+      );
+      final input =
+          (skir.ToggleControl.mutable()
+                ..control = fixture.control
+                ..options =
+                    (skir.ToggleInteractionOptions.mutable()
+                          ..presentation = presentation)
+                        .toFrozen())
+              .toFrozen();
+      final panel = await fixture.show(
+        tester,
+        skir.PresentationElement.wrapToggleInput(input),
+      );
+      await panel.press(LogicalKeyboardKey.tab);
+
+      await panel.keyDown(LogicalKeyboardKey.space);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await panel.keyUp(LogicalKeyboardKey.space);
+      expect(fixture.value, skir.DataValue.wrapBoolean(true));
+
+      await panel.keyDown(LogicalKeyboardKey.space);
+      expect(
+        fixture.value,
+        skir.DataValue.wrapBoolean(true),
+        reason: "key down only presses",
+      );
+      await panel.keyUp(LogicalKeyboardKey.space);
+      expect(fixture.value, skir.DataValue.wrapBoolean(false));
+    });
+  }
   testWidgets("slider arrow keys step by one division", (tester) async {
     final fixture = EditedValue.scalar(
       skir.DataValue.wrapFloat(40),
