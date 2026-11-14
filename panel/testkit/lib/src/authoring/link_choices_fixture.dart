@@ -12,9 +12,10 @@ final class LinkChoicesFixture {
     bool directCollection = false,
     bool abstractWrapper = false,
     bool nestedCollection = false,
+    bool wrapperCollection = false,
   }) {
     final wrapper = abstractWrapper ? "AbstractWrapper" : "Wrapper";
-    final linked = directCollection || nestedCollection;
+    final linked = directCollection || nestedCollection || wrapperCollection;
     final emptyLinks = typedValue(
       "Links",
       skir.DataValue.createListValue(items: const []),
@@ -22,7 +23,14 @@ final class LinkChoicesFixture {
     skir.AuthoringResource node(String id, skir.DataValue wrapperValue) =>
         authoredRecord(id, {
           "source": skir.DataValue.unfilled,
-          "wrapper": directCollection ? emptyLinks : wrapperValue,
+          "wrapper": directCollection
+              ? emptyLinks
+              : wrapperCollection
+              ? typedValue(
+                  "Wrappers",
+                  skir.DataValue.createListValue(items: const []),
+                )
+              : wrapperValue,
         }, type: typeUse("Node"));
     final saved = authoredDoc(
       [
@@ -43,11 +51,16 @@ final class LinkChoicesFixture {
         [
           if (abstractWrapper) declaredRecord("AbstractWrapper", open: true),
           declaredCollection("Links", "TargetLink"),
+          if (wrapperCollection) declaredCollection("Wrappers", wrapper),
           declaredRecord(
             "Node",
             fields: {
               "source": "SourceLink",
-              "wrapper": directCollection ? "Links" : wrapper,
+              "wrapper": directCollection
+                  ? "Links"
+                  : wrapperCollection
+                  ? "Wrappers"
+                  : wrapper,
             },
           ),
           declaredRecord(
@@ -98,7 +111,9 @@ final class LinkChoicesFixture {
               owner: directCollection ? "Node" : "Wrapper",
               path: [
                 "wrapper",
-                directCollection ? skir.FieldPatternSegment.items : "back",
+                if (directCollection || wrapperCollection)
+                  skir.FieldPatternSegment.items,
+                if (!directCollection) "back",
               ],
               target: incompatibleInverse ? wrapper : "Node",
             ),

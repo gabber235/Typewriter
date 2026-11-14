@@ -6,7 +6,15 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     skir.TextContent content,
     PortablePresentationScope childScope,
   ) {
-    final value = _string(childScope, content.value);
+    // A text of one input the selected items hold differently says so.
+    final value = switch (content.value) {
+      skir.ExpressionNode_inputWrapper(value: final input)
+          when childScope.isMixed(
+            skir.BindingRef(bindingId: input.binding, path: input.path),
+          ) =>
+        const _ResolvedValue(mixedValueLabel),
+      final expression => _string(childScope, expression),
+    };
     if (value case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }

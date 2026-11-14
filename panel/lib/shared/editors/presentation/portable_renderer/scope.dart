@@ -680,9 +680,13 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     }
     return copyWith(
       bindings: {
-        ...(id == configuredValueBindingId
-            ? bindings.withSubjectAt(location, _appearanceOf)
-            : bindings),
+        // The root of a value several items share keeps the subject that
+        // stands for all of them.
+        ...(id != configuredValueBindingId
+            ? bindings
+            : source.itemValues.isNotEmpty && reference.path.segments.isEmpty
+            ? bindings
+            : bindings.withSubjectAt(location, _appearanceOf)),
         id: PortableExpressionBinding(
           value: value,
           location: location,

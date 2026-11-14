@@ -262,6 +262,51 @@ void main() {
       ], unorderedEquals([fixture.existingTarget, fixture.emptyTarget]));
     });
 
+    testWidgets("creating counterparts while linking several resources makes "
+        "a counterpart record for each of them", (tester) async {
+      final fixture = LinkChoicesFixture(wrapperCollection: true);
+      final editing = SharedAuthoredEditing(
+        fixture.draft.toDocument(),
+        resources: [fixture.source.resource, fixture.existingTarget],
+        prepareValue: (request) async => preparedRecord(request, [
+          skir.FieldValue(name: "back", value: skir.DataValue.unfilled),
+          skir.FieldValue(name: "label", value: textValue("new")),
+        ]),
+      );
+      final plan = (editing.host.planLink(
+        editing.location(["source"]),
+        context: editing.context,
+      ) as PortableLinkPlanReady).plans.single;
+      final target = plan.targets.singleWhere(
+        (choice) => choice.resource == fixture.emptyTarget,
+      );
+
+      final result = await editing.host.connectLink(
+        plan: plan,
+        target: target,
+        counterpart: PortableLinkCounterpartRequest.created(
+          target.creatable.single,
+        ),
+        context: editing.context,
+      );
+      expect(result, isA<PortablePresentationWriteApplied>());
+
+      final saved = await editing.saved(tester);
+      final wrappers = saved
+          .valueAt(valueAt(fixture.emptyTarget, ["wrapper"]))!
+          .authoredItems!;
+      expect(
+        wrappers.map(
+          (wrapper) => wrapper.value
+              .authoredField("back")
+              ?.authoredLink
+              ?.target
+              .resource,
+        ),
+        unorderedEquals([fixture.source.resource, fixture.existingTarget]),
+      );
+    });
+
     testWidgets("clearing a link clears it on every selected resource", (
       tester,
     ) async {
@@ -298,6 +343,93 @@ void main() {
         saved.links.where((link) => link.second == fixture.existingTarget),
         isEmpty,
       );
+    });
+  });
+
+  group("subject", () {
+    final story = book("Harbor");
+    final docks = page("Docks", book: story);
+    final lighthouse = page("Lighthouse", book: story);
+
+    testWidgets("several resources are no one resource: their identity is "
+        "unfilled and each one's stays known", (tester) async {
+      final editing = SharedAuthoredEditing(
+        realmDocument(books: [story], pages: [docks, lighthouse]),
+        resources: [docks.pageId, lighthouse.pageId],
+      );
+
+      final subject = editing
+          .host
+          .document
+          .bindings[presentationSubjectIdentifierBindingId]!;
+      expect(subject.value, skir.DataValue.unfilled);
+      expect(subject.itemValues, [
+        docks.pageId.toExpressionValue(),
+        lighthouse.pageId.toExpressionValue(),
+      ]);
+    });
+
+    testWidgets("a name the selected resources hold differently shows "
+        "mixed", (tester) async {
+      final editing = SharedAuthoredEditing(
+        realmDocument(books: [story], pages: [docks, lighthouse]),
+        resources: [docks.pageId, lighthouse.pageId],
+      );
+
+      await tester.showComponent(
+        editing.render(
+          presentationNode(
+            "name",
+            skir.PresentationElement.wrapText(
+              (skir.TextContent.mutable()
+                    ..value = skir.ExpressionNode.createInput(
+                      binding: presentationSubjectAppearanceBindingId,
+                      path: editorRootPath.field("label"),
+                    ))
+                  .toFrozen(),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text(mixedValueLabel), findsOneWidget);
+      expect(find.text("Docks"), findsNothing);
+    });
+
+    testWidgets("a resources layout of several resources says it works on "
+        "one at a time and edits none of them", (tester) async {
+      final other = book("Tides");
+      final editing = SharedAuthoredEditing(
+        realmDocument(books: [story, other], pages: [docks]),
+        resources: [story.bookId, other.bookId],
+      );
+
+      final projection = editing.host.projectResources(
+        editing.at(["pages"]),
+        context: editing.context,
+      );
+      expect(projection.members, isEmpty);
+      expect(projection.unavailable, "Works on one book at a time");
+
+      final moved = editing.host.moveGraphNodes([
+        PortableGraphPositionChange(docks.pageId, 4, 4),
+      ], context: editing.context);
+      expect(moved, isA<PortablePresentationWriteRejected>());
+      final removed = editing.host.removeMember(
+        PortableResourceMember(
+          resource: docks.pageId,
+          occurrence: skir.LinkOccurrence.defaultInstance,
+          link: skir.DataValue.unfilled,
+          resourceProjection: editing.host.projectResource(
+            docks.pageId,
+            context: editing.context,
+          )!,
+        ),
+        delete: true,
+        context: editing.context,
+      );
+      expect(removed, isA<PortablePresentationWriteRejected>());
+      expect(editing.workspace.hasPendingWork, isFalse);
     });
   });
 }

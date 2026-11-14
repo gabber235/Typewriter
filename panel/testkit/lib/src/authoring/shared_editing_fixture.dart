@@ -6,6 +6,7 @@ import "package:typewriter_testkit/src/authoring/document_builder.dart";
 import "package:typewriter_testkit/src/doubles/realm.dart";
 import "package:typewriter_testkit/src/authoring/application/catalog_fixtures.dart";
 import "package:typewriter_testkit/src/support/held_realm_editing.dart";
+import "package:typewriter_testkit/src/support/portable_operations.dart";
 
 /// Several authored resources of one kind edited together, the way the
 /// inspector edits a selection: one Realm editing binding and one
@@ -74,6 +75,20 @@ final class SharedAuthoredEditing {
   /// address it.
   skir.ValueLocation location(List<String> fields) =>
       host.location(at(fields), context: context)!;
+
+  /// [node] rendered over the shared presentation, as the inspector renders
+  /// the host's layout.
+  Widget render(skir.PresentationNode node) => PortablePresentationNodeRenderer(
+    node: node,
+    scope: PortablePresentationScope(
+      operations: testPortableOperations(),
+      bindings: context.bindings,
+      budget: host.document.budget,
+      catalog: host.document.catalog,
+      queries: host.document.queries,
+      host: host,
+    ),
+  );
 
   /// Saves the staged work and returns the one edit the Realm received.
   Future<skir.PreparedEdit> save(WidgetTester tester) async {

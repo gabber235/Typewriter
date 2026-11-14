@@ -145,17 +145,19 @@ final class AuthoredPresentationHost extends ChangeNotifier
       resourceDiagnostics: diagnosticsFor,
       root: material.layout,
       bindings: {
-        presentationSubjectIdentifierBindingId: PortablePresentationBinding(
-          schema: CompletePortablePresentationBinding(
-            skir.TypeUse.wrapNamed(skir.resourceIdType),
-          ),
-          value: resource.toExpressionValue(),
+        // Several resources are no one resource: the subject is what they
+        // agree on, and each one's own identity and name stay known.
+        presentationSubjectIdentifierBindingId: _shared(
+          skir.TypeUse.wrapNamed(skir.resourceIdType),
+          [for (final id in resources) id.toExpressionValue()],
+          whole: true,
         ),
-        presentationSubjectAppearanceBindingId: PortablePresentationBinding(
-          schema: CompletePortablePresentationBinding(
-            skir.TypeUse.wrapNamed(canonicalReadModels.resourceAppearanceUse),
-          ),
-          value: checked.appearanceOf(record).toExpressionValue(),
+        presentationSubjectAppearanceBindingId: _shared(
+          skir.TypeUse.wrapNamed(canonicalReadModels.resourceAppearanceUse),
+          [
+            for (final each in records)
+              checked.appearanceOf(each).toExpressionValue(),
+          ],
         ),
         if (schema != null)
           configuredValueBindingId: PortablePresentationBinding(
@@ -366,6 +368,23 @@ final class AuthoredPresentationHost extends ChangeNotifier
     skir.BindingRef reference, {
     required PortableInvocationContext context,
   }) => _addMapRow(reference, context: context);
+
+  /// A read only binding of [use] standing for [values], one per resource
+  /// this host edits. Its value is what they agree on; a [whole] value, such
+  /// as an identity, is unfilled unless they are all equal.
+  PortablePresentationBinding _shared(
+    skir.TypeUse use,
+    List<skir.DataValue> values, {
+    bool whole = false,
+  }) => PortablePresentationBinding(
+    schema: CompletePortablePresentationBinding(use),
+    value: !whole
+        ? values.agreement
+        : values.toSet().length == 1
+        ? values.first
+        : skir.DataValue.unfilled,
+    itemValues: editedWith.isEmpty ? const [] : values,
+  );
 
   /// Where a change at [target] applies: the same path in every resource
   /// this host edits when [target] is in [resource], otherwise [target]

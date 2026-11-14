@@ -23,6 +23,16 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
       context: childScope.invocation,
     );
     if (projection.problem case final message?) return _diagnostic(message);
+    if (projection.unavailable case final reason?) {
+      return Builder(
+        builder: (context) => Text(
+          reason,
+          style: context.text.sentence.copyWith(
+            color: context.colors.contentSecondary,
+          ),
+        ),
+      );
+    }
     final members = _orderedMembers(element, projection.members, childScope);
     if (members == null) {
       return _diagnostic("The resources order is unavailable");
