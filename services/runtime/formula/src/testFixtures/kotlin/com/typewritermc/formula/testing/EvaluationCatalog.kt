@@ -25,7 +25,7 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.ContentTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.catalog.DerivedOrigin
+import com.typewritermc.types.catalog.DerivedFailure
 import com.typewritermc.types.catalog.DerivedTarget
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.content
@@ -157,7 +157,7 @@ val evaluationCatalog: CheckedCatalog =
             override fun derived(
                 owner: ResourceId,
                 key: String,
-            ): DerivedTarget = DerivedOrigin.NONE.derived(owner, key)
+            ): DerivedTarget = DerivedTarget.Missing(DerivedFailure.NoBlock)
         },
     )
 

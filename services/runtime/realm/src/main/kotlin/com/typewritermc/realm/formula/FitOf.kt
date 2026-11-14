@@ -47,7 +47,7 @@ internal data class FitOf(
 }
 
 /** Whether this location is [other] or sits under it. */
-private fun ValueLocation.isWithin(other: ValueLocation): Boolean =
+internal fun ValueLocation.isWithin(other: ValueLocation): Boolean =
     resource == other.resource && path.segments.size >= other.path.segments.size &&
         path.segments.subList(0, other.path.segments.size) == other.path.segments
 

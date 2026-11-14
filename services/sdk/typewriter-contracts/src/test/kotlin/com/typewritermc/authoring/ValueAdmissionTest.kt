@@ -3,7 +3,7 @@ package com.typewritermc.authoring
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.ContentTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.catalog.DerivedOrigin
+import com.typewritermc.types.catalog.DerivedFailure
 import com.typewritermc.types.catalog.DerivedTarget
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField
@@ -77,7 +77,7 @@ val ValueAdmissionTest by testSuite {
                 override fun derived(
                     owner: ResourceId,
                     key: String,
-                ): DerivedTarget = DerivedOrigin.NONE.derived(owner, key)
+                ): DerivedTarget = DerivedTarget.Missing(DerivedFailure.NoBlock)
             },
         )
     val at = ValueLocation.of(ResourceId(value = "holder"))

@@ -1,6 +1,7 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoredReads
+import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.runExtension
 import com.typewritermc.formula.BindBuilder
 import com.typewritermc.formula.graph.GraphKey
@@ -10,7 +11,6 @@ import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.catalog.DerivedTarget
 import com.typewritermc.types.catalog.derived
 import com.typewritermc.types.toTemplate
-import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.RecordForm
@@ -19,12 +19,13 @@ import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.kernel.v1.resource_id.ResourceId
+import java.util.concurrent.CancellationException
 
 /**
  * What the bind registered for [owner]'s type parameter [key] computes from [owner]'s content, run on this reader. The
  * bind reads [owner] through the type its creator's choices give, so it never needs the type it computes; reading that
  * type anyway, here or through another resource, is a loop, which the caller answers: the query graph through
- * [DerivedTypeOf.onCycle], a reader outside it through [BindRunner].
+ * [DerivedTypeOf.onCycle], a reader outside it through [ViewBinds].
  */
 internal fun CapturedAuthoringReads.boundType(
     owner: ResourceId,
@@ -74,60 +75,72 @@ internal data class DerivedTypeOf(
         )
 }
 
+/** What one bind computed and every fact it read on the way, so a reader that takes the answer can take its evidence. */
+internal data class BoundAnswer(
+    val target: DerivedTarget,
+    val inputs: Set<InputIdentity>,
+)
+
 /**
- * What binds compute over one view, for readers outside the query graph. Each bind runs once, on [reads], a reader of its
- * own whose catalog asks this runner back, so its health never mixes with a caller's. A bind that needs its own result
- * through any chain of binds answers a loop through every owner on that chain, as [DerivedTypeOf.onCycle] does. Callers
- * on any thread share one runner; it runs one bind at a time, since its reader requires serialized use.
+ * What binds compute over one view state, for readers outside the query graph: each bind runs once, whichever reader
+ * asks, and its answer keeps the facts it read, so every reader that takes it records them as its own evidence.
+ *
+ * A bind runs on [reads], a reader of its own whose catalog asks these binds back, so its health never mixes with a
+ * caller's. A bind that needs its own result answers a loop through every bind from its first entry up, and those binds
+ * stop where they are, as the query graph unwinds a cycle to its head; a caller of the head carries on with the loop
+ * answer. Callers on any thread share one instance; it runs one bind at a time, since its reader requires serialized use.
  */
-internal class BindRunner(
-    private val reads: CapturedAuthoringReads,
-) : DerivedOrigin {
-    private val answers = mutableMapOf<Pair<ResourceId, String>, DerivedTarget>()
-    private val running = mutableListOf<Pair<ResourceId, String>>()
-    private val loops = mutableMapOf<Pair<ResourceId, String>, Set<ResourceId>>()
+internal class ViewBinds(
+    view: AuthoredReadView,
+) : ObservationRecorder {
+    private val reads by lazy { CapturedAuthoringReads(view, this) }
+    private val answers = mutableMapOf<Pair<ResourceId, String>, BoundAnswer>()
+    private val running = mutableListOf<Pair<Pair<ResourceId, String>, MutableSet<InputIdentity>>>()
+
+    /** What these binds compute, as a catalog asks it, with no reader to record the facts. */
+    val origin = DerivedOrigin { owner, key -> answer(owner, key).target }
 
     @Synchronized
-    override fun derived(
+    fun answer(
         owner: ResourceId,
         key: String,
-    ): DerivedTarget {
+    ): BoundAnswer {
         val bind = owner to key
-        answers[bind]?.let { return it }
-        val entered = running.indexOf(bind)
+        answers[bind]?.let { known -> return known.also { it.inputs.forEach(::observe) } }
+        val entered = running.indexOfFirst { it.first == bind }
         if (entered >= 0) {
-            // Every bind from the first entry of this one upward waits on this answer, so each is on the loop.
             val cycle = running.subList(entered, running.size).toList()
-            val owners = cycle.flatMapTo(mutableSetOf()) { loops[it].orEmpty() + it.first }
-            cycle.forEach { loops[it] = owners }
-            return loop(owners)
+            val loop = DerivedTarget.Missing(DerivedFailure.Loop(cycle.map { it.first.first }.distinct().sortedBy { it.value }))
+            cycle.forEach { (member, inputs) -> answers[member] = BoundAnswer(loop, inputs.toSet()) }
+            throw BindLoop(bind)
         }
-        running += bind
-        val computed =
-            try {
-                reads.boundType(owner, key)
-            } finally {
-                running.removeLast()
-            }
-        return (loops.remove(bind)?.let(::loop) ?: computed).also { answers[bind] = it }
+        running += bind to linkedSetOf()
+        return try {
+            val target = reads.boundType(owner, key)
+            BoundAnswer(target, running.last().second.toSet()).also { answers[bind] = it }
+        } catch (loop: BindLoop) {
+            if (loop.head != bind) throw loop
+            answers.getValue(bind)
+        } finally {
+            running.removeLast()
+        }
     }
 
-    /** Sorted, so the answer is equal whichever member a caller asked first. */
-    private fun loop(owners: Set<ResourceId>): DerivedTarget = DerivedTarget.Missing(DerivedFailure.Loop(owners.sortedBy { it.value }))
-}
+    /** A fact a running bind read is evidence for that bind and for every bind waiting on it. */
+    override fun observe(identity: InputIdentity) {
+        running.forEach { it.second += identity }
+    }
 
-/**
- * What binds compute over the view [view] gives, for a view that may not exist yet when its catalog is built: the runner
- * and its reader are made on the first answer.
- */
-internal fun bindsOver(view: () -> AuthoredReadView): DerivedOrigin {
-    val runner by lazy { CapturedAuthoringReads(view()).derivedTypes }
-    return DerivedOrigin { owner, key -> runner.derived(owner, key) }
-}
+    override fun derivedTypes(reads: CapturedAuthoringReads): DerivedOrigin = origin
 
-/** What binds compute over [resources], read against this view. The links of [resources] are found on the first answer. */
-internal fun AuthoringView.boundTypesOver(resources: Map<ResourceId, AuthoringRecord>): DerivedOrigin =
-    bindsOver { AuthoredReadView.Staged(this, resources, ResourceValueMapper.discover(resources).associateBy { it.id }) }
+    /**
+     * Unwinds every bind on a loop to its [head]. A cancellation, so extension code and the reads under it pass it on
+     * instead of reporting it as their own failure.
+     */
+    private class BindLoop(
+        val head: Pair<ResourceId, String>,
+    ) : CancellationException("A bind needs its own result.")
+}
 
 /** The record one bind computes, kept apart until the bind finishes, so a bind that fails adds nothing. */
 private class BoundRecord(

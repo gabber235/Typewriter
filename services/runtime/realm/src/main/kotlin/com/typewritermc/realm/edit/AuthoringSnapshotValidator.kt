@@ -6,12 +6,12 @@ import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.root
+import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.formula.isWithin
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.catalog.contentOwner
-import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.types.catalog.misfiledDeclarations
 import com.typewritermc.types.catalog.misfits
 import com.typewritermc.types.catalog.namesDerivedKey
@@ -37,8 +37,8 @@ internal class AuthoringSnapshotValidator(
     private val catalog: CheckedCatalog,
     private val savedCatalog: CheckedCatalog,
     private val contracts: List<RelationContract>,
-    /** What binds compute over a set of resources, read against the view the change started from. */
-    private val boundTypesOver: (Map<ResourceId, AuthoringRecord>) -> DerivedOrigin,
+    /** The view the change started from: what binds compute over a set of resources is read against it. */
+    private val saved: AuthoringView,
 ) {
     /**
      * Validates the same affected graph boundary for replay and caller supplied working overlays. [before] holds the
@@ -70,7 +70,7 @@ internal class AuthoringSnapshotValidator(
                                 catalog
                             } else {
                                 val asBefore = resources + (id to record.copy(types = previous.types))
-                                catalog.withContent(contentTypesOf(asBefore::get, boundTypesOver(asBefore)))
+                                catalog.withContent(saved.staged(asBefore).content)
                             }
                         val alone = projectAlone(id, previous, resources, ownAsBefore)
                         previous.misfits(id, savedCatalog) { savedFit(id) } +
@@ -108,19 +108,16 @@ internal class AuthoringSnapshotValidator(
 private fun List<ValueProblem>.on(resource: ResourceId): List<ValueProblem> = filter { it.location.resource == resource }
 
 /**
- * These misfits without the problems only a type [owner]'s own binds compute causes: that type is extension output, not
- * a choice the write made, so its failure shows as a finding on [owner] and blocks publish but never refuses the write.
- * A problem stays when any misfit with it names another type, since a use of another resource's computed type is a
- * choice and stays refused like a use of any missing type. A misfit that names no type rides with its problem.
+ * These misfits without the ones a type [owner]'s own binds compute causes: each misfit naming such a type, and whatever
+ * sits under a value of it. That type is extension output, not a choice the write made, so its failure shows as a
+ * finding on [owner] and blocks publish but never refuses the write. A misfit naming another resource's computed type
+ * stays, so a new use of it is refused like a use of any missing type, and one [owner] already had is not.
  */
 private fun List<Misfit>.withoutOwnBinds(owner: ResourceId): List<Misfit> {
-    val own =
-        groupBy { it.problem }
-            .filterValues { misfits ->
-                val types = misfits.mapNotNull { it.type }
-                types.isNotEmpty() && types.all { it.namesDerivedKey() && it.contentOwner() == owner }
-            }.keys
-    return filterNot { it.problem in own }
+    val own = filter { misfit -> misfit.type?.let { it.namesDerivedKey() && it.contentOwner() == owner } == true }.toSet()
+    // A use at the root names the type from the configuration, not a value, so nothing sits under it.
+    val values = own.map { it.problem.location }.filter { it.path.segments.isNotEmpty() }
+    return filterNot { misfit -> misfit in own || values.any { misfit.problem.location.isWithin(it) } }
 }
 
 /** A resource with more than one owner, where one of its ownership links has an affected end. */

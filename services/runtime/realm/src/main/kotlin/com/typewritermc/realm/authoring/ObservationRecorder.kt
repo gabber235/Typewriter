@@ -2,7 +2,6 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.types.catalog.DerivedOrigin
-import java.util.IdentityHashMap
 
 /** The one seam between a read and what it means: a reader reports each fact it read here. */
 internal interface ObservationRecorder {
@@ -27,14 +26,12 @@ internal class DefaultObservationRecorder : ObservationRecorder {
         observed += identity
     }
 
-    private val runners = IdentityHashMap<AuthoredReadView, Pair<Long, BindRunner>>()
-
-    /**
-     * One runner per view revision, whose reader shares this recorder: a bind runs once per revision, whichever reader
-     * asks, and what it reads is evidence for this recorder's guard too.
-     */
-    override fun derivedTypes(reads: CapturedAuthoringReads): DerivedOrigin {
-        runners[reads.view]?.takeIf { it.first == reads.revision }?.let { return it.second }
-        return BindRunner(reads.sibling()).also { runners[reads.view] = reads.revision to it }
-    }
+    /** What the view's binds compute: each runs once per view state, and what it read is evidence for this recorder too. */
+    override fun derivedTypes(reads: CapturedAuthoringReads): DerivedOrigin =
+        DerivedOrigin { owner, key ->
+            reads.view.binds
+                .answer(owner, key)
+                .also { it.inputs.forEach(::observe) }
+                .target
+        }
 }

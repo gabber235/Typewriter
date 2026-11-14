@@ -8,16 +8,13 @@ import com.typewritermc.authoring.with
 import com.typewritermc.engine.pages.StaticPage
 import com.typewritermc.engine.pages.StaticPageDefinition
 import com.typewritermc.library.PageElements
+import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.edit.WorkingViewEditContext
+import com.typewritermc.realm.formula.FitOf
 import com.typewritermc.testing.routes.FixtureBoard
 import com.typewritermc.testing.routes.FixtureBoardDefinition
 import com.typewritermc.testing.routes.FixtureColumn
 import com.typewritermc.testing.routes.FixtureColumnDefinition
-import com.typewritermc.testing.routes.FixtureContested
-import com.typewritermc.testing.routes.FixtureContestedDefinition
-import com.typewritermc.testing.routes.FixtureLedger
-import com.typewritermc.testing.routes.FixtureLedgerDefinition
-import com.typewritermc.testing.routes.FixtureMirror
-import com.typewritermc.testing.routes.FixtureMirrorDefinition
 import com.typewritermc.types.Ref
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.derived
@@ -27,8 +24,11 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.type_catalog.ChosenArgument
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
@@ -44,58 +44,43 @@ fun column(
 
 /**
  * Creates a board named [name] with [columns] on the realm's static page and commits it. A creator chose nothing, unless
- * [chosen] chooses arguments.
+ * [chosen] chooses arguments; [rows] gives the board's rows from its row type.
  */
 suspend fun RealmFixture.commitBoard(
     name: String,
     vararg columns: FixtureColumn,
     chosen: List<ChosenArgument> = emptyList(),
+    rows: (TypeUse) -> List<DataValue> = { emptyList() },
 ): Creation =
-    commitBound(FixtureBoardDefinition.id, parameters = 1, chosen) { id, page ->
-        FixtureBoard<Nothing>(page, GraphPlacement(), name, columns.toList()) to mapOf("rows" to rowsOf(id))
-    }
-
-/** Creates a mirror named [name], whose bind selects every mirror, its own resource included. */
-suspend fun RealmFixture.commitMirror(name: String): Creation =
-    commitBound(FixtureMirrorDefinition.id, parameters = 1) { id, page ->
-        FixtureMirror<Nothing>(page, GraphPlacement(), name) to mapOf("rows" to rowsOf(id))
-    }
-
-/** Creates a contested entry named [name], whose `V` two providers bind. */
-suspend fun RealmFixture.commitContested(name: String): Creation =
-    commitBound(FixtureContestedDefinition.id, parameters = 1) { id, page ->
-        FixtureContested<Nothing>(page, GraphPlacement(), name) to mapOf("rows" to rowsOf(id))
-    }
-
-/** Creates a ledger named [name] whose creator chose [about] for its `T`; its bind fails while [failing]. */
-suspend fun RealmFixture.commitLedger(
-    name: String,
-    about: TypeUse,
-    failing: Boolean = false,
-): Creation =
-    commitBound(FixtureLedgerDefinition.id, parameters = 2, listOf(ChosenArgument(parameter = 0, type = about))) { id, page ->
-        FixtureLedger<Nothing, Nothing>(page, GraphPlacement(), name, failing) to mapOf("rows" to rowsOf(id))
-    }
+    commitBound(
+        FixtureBoardDefinition.id,
+        chosen = chosen,
+        rows = rows,
+    ) { page -> FixtureBoard<Nothing>(page, GraphPlacement(), name, columns.toList()) }
 
 /**
- * Creates the element [build] makes on the realm's static page and commits it with only the [chosen] arguments. The code
- * catalog cannot encode a type a resource computes, so the element encodes with every one of its [parameters] as a
- * number, then each list [build] names holds an empty list of its real item type.
+ * Creates the entry [element] makes on the realm's static page, of a type with a computed `V` and a `rows: List<V>`
+ * field, and commits it with only the [chosen] arguments. [rows] gives its rows from the row type it computes.
+ *
+ * The code catalog cannot encode a type a resource computes, so the entry encodes with every one of its [parameters] as
+ * a number, then its rows are rewritten as a list of its computed row type. This stays while the encoder only knows code
+ * types; once it encodes a derived type argument, the entry can encode as what it is.
  */
-private suspend fun RealmFixture.commitBound(
+suspend fun RealmFixture.commitBound(
     definition: TypeDefinitionId,
-    parameters: Int,
+    parameters: Int = 1,
     chosen: List<ChosenArgument> = emptyList(),
-    build: (ResourceId, Ref<PageElements.Element, StaticPage>) -> Pair<Any, Map<String, TypeUse>>,
+    rows: (TypeUse) -> List<DataValue> = { emptyList() },
+    element: (Ref<PageElements.Element, StaticPage>) -> Any,
 ): Creation {
     val (id, reply) =
         commitElement { id ->
             val page = resources.typesOf(StaticPageDefinition.id).single()
-            val (element, lists) = build(id, Ref(page.toResourceId()))
-            lists.entries
-                .fold(encoder.record(definition.namedUse(List(parameters) { intUse }).use, element)) { record, (field, item) ->
-                    record.with(field, DataValue.named(StandardTypes.list.namedUse(listOf(item)), DataValue.listValue(emptyList())))
-                }.copy(configuration = TypeSelection(definition = definition, arguments = chosen))
+            val items = rows(rowsOf(id)).mapIndexed { index, value -> ListItem(id = ItemId(value = "row-$index"), value = value) }
+            encoder
+                .record(definition.namedUse(List(parameters) { intUse }).use, element(Ref(page.toResourceId())))
+                .with("rows", DataValue.named(StandardTypes.list.namedUse(listOf(rowsOf(id))), DataValue.listValue(items)))
+                .copy(configuration = TypeSelection(definition = definition, arguments = chosen))
         }
     return Creation(id, reply)
 }
@@ -119,3 +104,25 @@ fun RealmFixture.rowFields(board: ResourceId): List<Pair<String, TypeUse>> =
 
 /** What [board] wrote down for its types: the declarations it holds and the arguments its selection chose. */
 fun RealmFixture.writtenFor(board: ResourceId): List<Any> = record(board).let { it.types + it.configuration.arguments }
+
+/** How often [resource]'s fit was judged so far. */
+internal fun RealmFixture.fitRuns(resource: ResourceId): Long = graphRuns.runsOf(FitOf(resource))
+
+/**
+ * An edit an operation prepared after reading what [holder]'s value means, not yet committed: it renames [holder] to
+ * [name]. What the operation read stands as its expectations. When [readElsewhereFirst], another reader of the same
+ * view read it first, so the operation takes what that reader already computed.
+ */
+internal suspend fun RealmFixture.renameAfterReadingTypeOf(
+    holder: ResourceId,
+    name: String,
+    readElsewhereFirst: Boolean = false,
+): PreparedEdit =
+    views.capture().use { lease ->
+        WorkingViewEditContext(lease.root, "read-type").run {
+            if (readElsewhereFirst) CapturedAuthoringReads(capturedReads.view).resourceBinding(holder)
+            capturedReads.resourceBinding(holder)
+            checkedSet(ValueLocation.of(holder, ValuePath.root.field("name")), DataValue.StringValueWrapper(name))
+            finish()
+        }
+    }

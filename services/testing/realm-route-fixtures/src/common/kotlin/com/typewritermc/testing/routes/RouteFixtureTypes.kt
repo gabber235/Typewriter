@@ -185,10 +185,14 @@ data class FixtureBoard<V>(
 /** The column name that makes [FixtureBoardRows] fail, as an extension's own bug would. */
 const val FAILING_COLUMN = "fail"
 
-/** A board's row type: one field per named column. A column without a name adds nothing; [FAILING_COLUMN] throws. */
+/**
+ * A board's row type: one field per named column. A column without a name adds nothing; [FAILING_COLUMN] throws. A board
+ * also exports its columns, so a formula naming it reads them through a hook on the board itself.
+ */
 @TypewriterDynamicProvider
 object FixtureBoardRows : DynamicProvider {
     override fun Dynamics.register() {
+        each(FixtureBoardDefinition.id) { exports { value(FixtureBoardFields.columns) } }
         bind(FixtureBoardBind.V) { board ->
             val columns = board.columns.orNull() ?: return@bind
             columns.items().orNull().orEmpty().forEach { item ->

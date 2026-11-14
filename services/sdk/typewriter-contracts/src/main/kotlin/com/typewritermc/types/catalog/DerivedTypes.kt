@@ -29,11 +29,6 @@ fun interface DerivedOrigin {
         owner: ResourceId,
         key: String,
     ): DerivedTarget
-
-    companion object {
-        /** A view in which no resource derives anything, so every derived id is missing. */
-        val NONE: DerivedOrigin = DerivedOrigin { _, _ -> DerivedTarget.Missing(DerivedFailure.NoBlock) }
-    }
 }
 
 /** What a derived key leads to. */

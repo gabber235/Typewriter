@@ -138,9 +138,6 @@ class CapturedAuthoringReads internal constructor(
     /** What the binds of this reader's catalog compute, as its recorder answers them. */
     internal val derivedTypes: DerivedOrigin get() = recorder.derivedTypes(this)
 
-    /** Another reader of the same view and recorder, with its own health and counters. */
-    internal fun sibling(): CapturedAuthoringReads = CapturedAuthoringReads(view, recorder, predicates, limits, readContext)
-
     private var reads = 0L
     private var checkTuples = 0L
     private val missing = linkedSetOf<ValueLocation>()
