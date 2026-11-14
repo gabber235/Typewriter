@@ -297,39 +297,41 @@ void main() {
     ]);
   });
 
-  testWidgets("composing a generic offers no choice for a derived parameter", (
-    tester,
-  ) async {
-    final catalog = authoredCatalog([
-      declaredRecord(
-        "Keyed",
-        parameters: {"T": [], "Bound": []},
-        derived: {"Bound"},
-      ),
-    ]);
+  testWidgets(
+    "a type use offers no generic with a derived parameter, since no owner computes it",
+    (tester) async {
+      final catalog = authoredCatalog([
+        declaredRecord(
+          "Keyed",
+          parameters: {"T": [], "Bound": []},
+          derived: {"Bound"},
+        ),
+        declaredRecord("List", parameters: {"T": []}),
+      ]);
 
-    await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        Builder(
-          builder: (context) => FilledButton(
-            onPressed: () => showAuthoredTypeUsePicker(
-              context,
-              title: "Choose payload type",
-              catalog: catalog,
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Builder(
+            builder: (context) => FilledButton(
+              onPressed: () => showAuthoredTypeUsePicker(
+                context,
+                title: "Choose payload type",
+                catalog: catalog,
+              ),
+              child: const Text("Choose payload"),
             ),
-            child: const Text("Choose payload"),
           ),
         ),
-      ),
-    );
-    await tester.tap(find.text("Choose payload"));
-    await tester.pumpAndSettle();
-    await TypeChooserDriver(tester).search("Keyed");
-    await tester.tap(find.text("Keyed<Unfilled>"));
-    await tester.pumpAndSettle();
+      );
+      await tester.tap(find.text("Choose payload"));
+      await tester.pumpAndSettle();
+      final chooser = TypeChooserDriver(tester);
 
-    expect(find.text("T: Choose a type"), findsOne);
-    expect(find.textContaining("Bound"), findsNothing);
-  });
+      await chooser.search("Keyed");
+      expect(chooser.result("Keyed<Unfilled>"), findsNothing);
+      await chooser.search("List");
+      expect(chooser.result("List<Unfilled>"), findsOneWidget);
+    },
+  );
 }

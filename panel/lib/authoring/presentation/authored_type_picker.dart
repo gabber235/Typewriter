@@ -73,6 +73,9 @@ List<AuthoredTypeUseCandidate> _typeUseSearchCandidates(
   final candidates = <AuthoredTypeUseCandidate>[];
   for (final published in catalog.snapshot.types) {
     if (published.status != skir.DeclarationStatus.ready) continue;
+    // A derived parameter is computed by the resource that owns it, and a
+    // type use has no owner, so such a generic could never complete here.
+    if (published.definition.parameters.any((p) => p.derived)) continue;
     final selection = catalog.beginSelection(published.definition.id);
     if (selection == skir.TypeSelection.defaultInstance) continue;
     candidates.add(AuthoredTypeUseCandidate.selection(selection));
