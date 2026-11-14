@@ -1,6 +1,5 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
@@ -33,15 +32,17 @@ import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.configuration.kind
 import com.typewritermc.configuration.name
 import com.typewritermc.expression.operations.HostFailure
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.realm.catalog.ViewCatalogLease
 import com.typewritermc.realm.catalog.code
-import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.types.actualType
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
+import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResourceType
+import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
@@ -121,16 +122,24 @@ class CapturedAuthoringReads internal constructor(
      */
     internal val viewCatalog: ViewCatalogLease
         get() {
-            val revision = (view as? AuthoredReadView.Working)?.revision ?: 0L
             builtCatalog?.takeIf { it.first == revision }?.let { return it.second }
             val resources = view.resources
-            return ViewCatalogLease(view.original.catalog.code, contentTypesOf(resources::get, recorder.derivedTypes(this), ::observe)).also {
+            return ViewCatalogLease(view.original.catalog.code, contentTypesOf(resources::get, derivedTypes, ::observe)).also {
                 builtCatalog =
                     revision to it
             }
         }
 
     internal val typeCatalog: CheckedCatalog get() = viewCatalog.checked
+
+    /** The revision of the view this reader reads: a working view counts its staged writes, any other view stays at 0. */
+    internal val revision: Long get() = (view as? AuthoredReadView.Working)?.revision ?: 0L
+
+    /** What the binds of this reader's catalog compute, as its recorder answers them. */
+    internal val derivedTypes: DerivedOrigin get() = recorder.derivedTypes(this)
+
+    /** Another reader of the same view and recorder, with its own health and counters. */
+    internal fun sibling(): CapturedAuthoringReads = CapturedAuthoringReads(view, recorder, predicates, limits, readContext)
 
     private var reads = 0L
     private var checkTuples = 0L
@@ -914,25 +923,6 @@ class CapturedAuthoringReads internal constructor(
     internal fun record(id: ResourceId): AuthoringRecord? {
         observe(InputIdentity.Resource(id))
         return view.resources[id]
-    }
-
-    private val binding = mutableSetOf<TypeDefinitionId>()
-
-    /**
-     * Runs [run] as the bind that computes [id] on this reader, or answers [onLoop] when that bind already runs here: a
-     * bind that needs what it computes, directly or through other binds, would read through itself.
-     */
-    internal fun <T> running(
-        id: TypeDefinitionId,
-        onLoop: () -> T,
-        run: () -> T,
-    ): T {
-        if (!binding.add(id)) return onLoop()
-        return try {
-            run()
-        } finally {
-            binding -= id
-        }
     }
 
     /**

@@ -8,11 +8,11 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.joinToCode
-import com.typewritermc.codegen.TypewriterApi as Api
 import com.typewritermc.types.catalog.BindKey
 import com.typewritermc.types.codegen.SdkDeclaration
 import com.typewritermc.types.codegen.SdkEmitter
 import skirout.editor.v1.type_catalog.ParameterKey
+import com.typewritermc.codegen.TypewriterApi as Api
 
 /**
  * `XBind`: one handle per type parameter of a concrete resource class, named like the parameter. A bind registered for

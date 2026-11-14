@@ -5,6 +5,7 @@ import com.typewritermc.realm.authoring.RealmQuery
 import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.types.catalog.CONTENT_TYPE_PROBLEMS
+import com.typewritermc.types.catalog.DerivedFailure
 import com.typewritermc.types.catalog.misfits
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -23,7 +24,8 @@ internal data class FitOf(
     override fun compute(): List<ContentFinding> {
         val authored = tracked()
         val record = authored.record(resource) ?: return emptyList()
-        val all = record.misfits(resource, authored.viewCatalog.checked) { reads.read(ProjectionAt(resource)).fit }
+        val catalog = authored.viewCatalog.checked
+        val all = record.misfits(resource, catalog) { reads.read(ProjectionAt(resource)).fit }
         // One finding per gone or invalid type, at its outermost use. What sits at or under a use of it is its
         // consequence and is not shown; a misfit elsewhere still is.
         val uses = all.filter { it.problem.code in CONTENT_TYPE_PROBLEMS }
@@ -39,7 +41,7 @@ internal data class FitOf(
                 } else {
                     emptyList()
                 }
-            misfit.problem.toFinding(related)
+            misfit.problem.toFinding(related, misfit.type?.let(catalog::derivedFailure))
         }
     }
 }
@@ -49,11 +51,24 @@ private fun ValueLocation.isWithin(other: ValueLocation): Boolean =
     resource == other.resource && path.segments.size >= other.path.segments.size &&
         path.segments.subList(0, other.path.segments.size) == other.path.segments
 
-/** The finding a creator sees at the use; a gone type has no name left to give. */
-private fun ValueProblem.toFinding(related: List<ValueLocation>): ContentFinding =
-    when (code) {
-        "content_alias_loop" -> ContentFinding(code, "The custom type used here is defined by itself.", location, related)
-        "content_type_missing" -> ContentFinding(code, "A custom type used here no longer exists.", location, related)
-        in CONTENT_TYPE_PROBLEMS -> ContentFinding(code, "The custom type used here is not valid ($code).", location, related)
+/** The finding a creator sees at the use; a gone type has no name left to give, and a computed one says why it failed. */
+private fun ValueProblem.toFinding(
+    related: List<ValueLocation>,
+    failure: DerivedFailure?,
+): ContentFinding =
+    when {
+        failure != null -> ContentFinding(code, failure.message(), location, related)
+        code == "content_alias_loop" -> ContentFinding(code, "The custom type used here is defined by itself.", location, related)
+        code == "content_type_missing" -> ContentFinding(code, "A custom type used here no longer exists.", location, related)
+        code in CONTENT_TYPE_PROBLEMS -> ContentFinding(code, "The custom type used here is not valid ($code).", location, related)
         else -> ContentFinding("value_mismatch", "This value does not fit its type ($code).", location)
+    }
+
+/** What a creator reads about a computed type that leads nowhere; a failed bind gives its own words. */
+private fun DerivedFailure.message(): String =
+    when (this) {
+        DerivedFailure.NoBlock -> "No bind computes the type used here."
+        is DerivedFailure.Conflict -> "More than one bind computes the type used here, so none decides it."
+        is DerivedFailure.Loop -> "The type used here is computed from itself."
+        is DerivedFailure.Failed -> "The type used here could not be computed: $message"
     }

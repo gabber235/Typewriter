@@ -6,6 +6,8 @@ import com.typewritermc.authoring.append
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.checking.InputIdentity
+import com.typewritermc.discovery.DynamicHook
+import com.typewritermc.discovery.runExtension
 import com.typewritermc.formula.DynamicBuilder
 import com.typewritermc.formula.ExportBuilder
 import com.typewritermc.formula.FormulaFailure
@@ -28,8 +30,6 @@ import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.extensions
 import com.typewritermc.realm.authoring.ownershipRelations
 import com.typewritermc.realm.authoring.tracked
-import com.typewritermc.discovery.DynamicHook
-import com.typewritermc.discovery.runExtension
 import com.typewritermc.types.field
 import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.type_catalog.DataValue

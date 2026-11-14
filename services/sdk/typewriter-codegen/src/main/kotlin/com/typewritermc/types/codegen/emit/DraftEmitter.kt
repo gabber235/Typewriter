@@ -91,8 +91,7 @@ internal object DraftEmitter : SdkEmitter {
                                 "binding.actualType?.let·{·%T(it)·}·?:·%T(listOf(binding.location))",
                                 Api.AvailabilityAvailable,
                                 Api.AvailabilityUnavailable,
-                            )
-                            .build(),
+                            ).build(),
                     ).build(),
             ).apply {
                 if (resource) {

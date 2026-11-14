@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.registrar.runtime
 
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.protocol.skir.fromBoundedBytes
 import com.typewritermc.services.libs.http.core.HttpError
 import com.typewritermc.services.libs.http.core.HttpMethod
@@ -17,7 +18,6 @@ import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
 import com.typewritermc.services.libs.telemetry.ErrorSlug
-import com.typewritermc.failures.rethrowExceptional
 import skirout.service.v1.identity.IssueServiceIdentityRequest
 import skirout.service.v1.identity.IssueServiceIdentityResponse
 import java.net.URI

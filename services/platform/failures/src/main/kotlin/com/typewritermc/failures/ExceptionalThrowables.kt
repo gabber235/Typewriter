@@ -1,8 +1,8 @@
 package com.typewritermc.failures
 
-import java.util.concurrent.CancellationException
 import java.util.Collections
 import java.util.IdentityHashMap
+import java.util.concurrent.CancellationException
 
 /**
  * Finds cancellation or fatal runtime failure through cause and suppressed exception graphs.

@@ -111,7 +111,12 @@ internal fun AuthoringCatalogLease.placementLocation(
     id: ResourceId,
     record: AuthoringRecord,
 ): ValueLocation? {
-    val type = checked.completeTypeOf(id, record.configuration)?.use?.named?.definition ?: return null
+    val type =
+        checked
+            .completeTypeOf(id, record.configuration)
+            ?.use
+            ?.named
+            ?.definition ?: return null
     return placementFields[type]?.let { ValueLocation.of(id, it) }
 }
 

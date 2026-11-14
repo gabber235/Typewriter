@@ -1,7 +1,5 @@
 package com.typewritermc.realm.edit
 
-import com.typewritermc.types.catalog.DerivedOrigin
-import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.authoring.Misfit
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
@@ -11,10 +9,12 @@ import com.typewritermc.authoring.root
 import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.catalog.contentOwner
-import com.typewritermc.types.catalog.derivedKey
+import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.types.catalog.misfiledDeclarations
 import com.typewritermc.types.catalog.misfits
+import com.typewritermc.types.catalog.namesDerivedKey
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.record
@@ -108,12 +108,18 @@ internal class AuthoringSnapshotValidator(
 private fun List<ValueProblem>.on(resource: ResourceId): List<ValueProblem> = filter { it.location.resource == resource }
 
 /**
- * These misfits without the ones a type [owner]'s own binds compute causes: that type is extension output, not a choice
- * the write made, so its failure shows as a finding on [owner] and blocks publish but never refuses the write. A use of
- * another resource's computed type is a choice, and stays refused like a use of any missing type.
+ * These misfits without the problems only a type [owner]'s own binds compute causes: that type is extension output, not
+ * a choice the write made, so its failure shows as a finding on [owner] and blocks publish but never refuses the write.
+ * A problem stays when any misfit with it names another type, since a use of another resource's computed type is a
+ * choice and stays refused like a use of any missing type. A misfit that names no type rides with its problem.
  */
 private fun List<Misfit>.withoutOwnBinds(owner: ResourceId): List<Misfit> {
-    val own = filter { misfit -> misfit.type?.let { it.derivedKey() != null && it.contentOwner() == owner } == true }.map { it.problem }.toSet()
+    val own =
+        groupBy { it.problem }
+            .filterValues { misfits ->
+                val types = misfits.mapNotNull { it.type }
+                types.isNotEmpty() && types.all { it.namesDerivedKey() && it.contentOwner() == owner }
+            }.keys
     return filterNot { it.problem in own }
 }
 

@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.registrar.storage
 
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.services.libs.registrar.CredentialLoadResult
 import com.typewritermc.services.libs.registrar.CredentialStorage
 import com.typewritermc.services.libs.registrar.CredentialStorageError
@@ -9,7 +10,6 @@ import com.typewritermc.services.libs.registrar.RedactedSecret
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
-import com.typewritermc.failures.rethrowExceptional
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

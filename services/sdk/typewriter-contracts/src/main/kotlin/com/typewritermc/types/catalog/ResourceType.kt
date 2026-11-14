@@ -59,7 +59,3 @@ fun CheckedCatalog.isSelectionReadableAs(
         is ResourceType.Complete -> isReadableAs(type.checked.use, expected)
         is ResourceType.Partial -> knownApplications(selection).any { isReadableAs(it.use, expected) }
     }
-
-/** The complete type the creator's choices in [selection] make, or null while one is missing or it does not resolve. */
-fun CheckedCatalog.completeAuthoredTypeOf(selection: TypeSelection): CheckedType? =
-    ((authoredTypeOf(selection) as? Resolution.Ready)?.value as? ResourceType.Complete)?.checked

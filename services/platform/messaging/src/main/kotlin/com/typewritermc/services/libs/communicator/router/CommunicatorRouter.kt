@@ -1,5 +1,7 @@
 package com.typewritermc.services.libs.communicator.router
 
+import com.typewritermc.failures.findExceptional
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
 import com.typewritermc.services.libs.communicator.address.MessageAddress
@@ -41,8 +43,6 @@ import com.typewritermc.services.libs.telemetry.MessagingAttributeKeys
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.SluggedException
 import com.typewritermc.services.libs.telemetry.consumerSpan
-import com.typewritermc.failures.findExceptional
-import com.typewritermc.failures.rethrowExceptional
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators

@@ -1,5 +1,6 @@
 package com.typewritermc.loader.rollout
 
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.HostedArtifactManifest
@@ -28,7 +29,6 @@ import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
-import com.typewritermc.failures.rethrowExceptional
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable

@@ -23,31 +23,31 @@ import skirout.kernel.v1.resource_id.ResourceId
 /**
  * What the bind registered for [owner]'s type parameter [key] computes from [owner]'s content, run on this reader. The
  * bind reads [owner] through the type its creator's choices give, so it never needs the type it computes; reading that
- * type anyway, here or through another resource, is a loop.
+ * type anyway, here or through another resource, is a loop, which the caller answers: the query graph through
+ * [DerivedTypeOf.onCycle], a reader outside it through [BindRunner].
  */
 internal fun CapturedAuthoringReads.boundType(
     owner: ResourceId,
     key: String,
 ): DerivedTarget {
     val definition = record(owner)?.configuration?.definition ?: return DerivedTarget.Missing(DerivedFailure.NoBlock)
-    val binds = view.original.catalog.code.extensions.binds.filter { it.key.owner == definition && it.key.name == key }
+    val binds =
+        view.original.catalog.code.extensions.binds
+            .filter { it.key.owner == definition && it.key.name == key }
     val bind =
         when (binds.size) {
             0 -> return DerivedTarget.Missing(DerivedFailure.NoBlock)
             1 -> binds.single()
             else -> return DerivedTarget.Missing(DerivedFailure.Conflict(binds.map { it.origin }))
         }
-    val id = TypeDefinitionId.derived(owner, key)
-    return running(id, onLoop = { DerivedTarget.Missing(DerivedFailure.Loop(listOf(owner))) }) {
-        val binding =
-            authoredBinding(owner)
-                ?: return@running DerivedTarget.Missing(DerivedFailure.Failed(bind.origin, "The resource's own type does not resolve."))
-        val record = BoundRecord(this, id)
-        runExtension({
-            bind.run(record, binding)
-            DerivedTarget.Declared(record.definition())
-        }) { failure -> DerivedTarget.Missing(DerivedFailure.Failed(bind.origin, failure.message ?: failure::class.simpleName.orEmpty())) }
-    }
+    val binding =
+        authoredBinding(owner)
+            ?: return DerivedTarget.Missing(DerivedFailure.Failed(bind.origin, "The resource's own type does not resolve."))
+    val record = BoundRecord(this, TypeDefinitionId.derived(owner, key))
+    return runExtension({
+        bind.run(record, binding)
+        DerivedTarget.Declared(record.definition())
+    }) { failure -> DerivedTarget.Missing(DerivedFailure.Failed(bind.origin, failure.message ?: failure::class.simpleName.orEmpty())) }
 }
 
 /**
@@ -74,20 +74,60 @@ internal data class DerivedTypeOf(
         )
 }
 
-/** What [owner]'s bind under [key] computes in this view, run on a fresh reader, so callers on any thread share it. */
-internal fun AuthoringView.boundType(
-    owner: ResourceId,
-    key: String,
-): DerivedTarget = CapturedAuthoringReads(AuthoredReadView.Original(this)).boundType(owner, key)
+/**
+ * What binds compute over one view, for readers outside the query graph. Each bind runs once, on [reads], a reader of its
+ * own whose catalog asks this runner back, so its health never mixes with a caller's. A bind that needs its own result
+ * through any chain of binds answers a loop through every owner on that chain, as [DerivedTypeOf.onCycle] does. Callers
+ * on any thread share one runner; it runs one bind at a time, since its reader requires serialized use.
+ */
+internal class BindRunner(
+    private val reads: CapturedAuthoringReads,
+) : DerivedOrigin {
+    private val answers = mutableMapOf<Pair<ResourceId, String>, DerivedTarget>()
+    private val running = mutableListOf<Pair<ResourceId, String>>()
+    private val loops = mutableMapOf<Pair<ResourceId, String>, Set<ResourceId>>()
+
+    @Synchronized
+    override fun derived(
+        owner: ResourceId,
+        key: String,
+    ): DerivedTarget {
+        val bind = owner to key
+        answers[bind]?.let { return it }
+        val entered = running.indexOf(bind)
+        if (entered >= 0) {
+            // Every bind from the first entry of this one upward waits on this answer, so each is on the loop.
+            val cycle = running.subList(entered, running.size).toList()
+            val owners = cycle.flatMapTo(mutableSetOf()) { loops[it].orEmpty() + it.first }
+            cycle.forEach { loops[it] = owners }
+            return loop(owners)
+        }
+        running += bind
+        val computed =
+            try {
+                reads.boundType(owner, key)
+            } finally {
+                running.removeLast()
+            }
+        return (loops.remove(bind)?.let(::loop) ?: computed).also { answers[bind] = it }
+    }
+
+    /** Sorted, so the answer is equal whichever member a caller asked first. */
+    private fun loop(owners: Set<ResourceId>): DerivedTarget = DerivedTarget.Missing(DerivedFailure.Loop(owners.sortedBy { it.value }))
+}
 
 /**
- * What binds compute over [resources], read against this view: each answer runs on a fresh reader of a staged view of
- * [resources], so callers on any thread share it. The links of [resources] are found once, on the first answer.
+ * What binds compute over the view [view] gives, for a view that may not exist yet when its catalog is built: the runner
+ * and its reader are made on the first answer.
  */
-internal fun AuthoringView.boundTypesOver(resources: Map<ResourceId, AuthoringRecord>): DerivedOrigin {
-    val links by lazy { ResourceValueMapper.discover(resources).associateBy { it.id } }
-    return DerivedOrigin { owner, key -> CapturedAuthoringReads(AuthoredReadView.Staged(this, resources, links)).boundType(owner, key) }
+internal fun bindsOver(view: () -> AuthoredReadView): DerivedOrigin {
+    val runner by lazy { CapturedAuthoringReads(view()).derivedTypes }
+    return DerivedOrigin { owner, key -> runner.derived(owner, key) }
 }
+
+/** What binds compute over [resources], read against this view. The links of [resources] are found on the first answer. */
+internal fun AuthoringView.boundTypesOver(resources: Map<ResourceId, AuthoringRecord>): DerivedOrigin =
+    bindsOver { AuthoredReadView.Staged(this, resources, ResourceValueMapper.discover(resources).associateBy { it.id }) }
 
 /** The record one bind computes, kept apart until the bind finishes, so a bind that fails adds nothing. */
 private class BoundRecord(
@@ -111,5 +151,8 @@ private class BoundRecord(
     }
 
     fun definition(): TypeDefinition =
-        TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = fields.toList(), form = RecordForm.CONCRETE))
+        TypeDefinition.partial(
+            id = id,
+            representation = RepresentationTemplate.createRecord(fields = fields.toList(), form = RecordForm.CONCRETE),
+        )
 }

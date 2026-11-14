@@ -47,7 +47,12 @@ val TypeValidationTest by testSuite {
                 Rejection("Parameter index must not be negative.") { ParameterKey(owner = ownerType, index = -1).requireValid() },
             "a blank parameter name" to
                 Rejection("Type parameter name must not be blank.") {
-                    TypeParameter(key = ParameterKey(owner = ownerType, index = 0), name = "", bounds = emptyList(), derived = false).requireValid()
+                    TypeParameter(
+                        key = ParameterKey(owner = ownerType, index = 0),
+                        name = "",
+                        bounds = emptyList(),
+                        derived = false,
+                    ).requireValid()
                 },
             "a blank field name" to
                 Rejection(
@@ -73,12 +78,19 @@ val TypeValidationTest by testSuite {
                 Rejection("Type argument parameter 0 is chosen twice.") {
                     TypeSelection(
                         definition = ownerType,
-                        arguments = listOf(ChosenArgument(parameter = 0, type = ScalarKind.TEXT.use), ChosenArgument(parameter = 0, type = ScalarKind.TEXT.use)),
+                        arguments =
+                            listOf(
+                                ChosenArgument(parameter = 0, type = ScalarKind.TEXT.use),
+                                ChosenArgument(parameter = 0, type = ScalarKind.TEXT.use),
+                            ),
                     ).requireValid()
                 },
             "a type selection that chooses a negative parameter" to
                 Rejection("Type argument parameter -1 is negative.") {
-                    TypeSelection(definition = ownerType, arguments = listOf(ChosenArgument(parameter = -1, type = ScalarKind.TEXT.use))).requireValid()
+                    TypeSelection(
+                        definition = ownerType,
+                        arguments = listOf(ChosenArgument(parameter = -1, type = ScalarKind.TEXT.use)),
+                    ).requireValid()
                 },
         )
 

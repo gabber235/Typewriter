@@ -499,7 +499,9 @@ internal fun CatalogAssembly.diagnosticCodes(type: TypeDefinitionId): List<Strin
 /** The display label of [record], held by a resource named [owner]. */
 internal fun CatalogAssembly.label(
     record: AuthoringRecord,
-    owner: skirout.kernel.v1.resource_id.ResourceId = skirout.kernel.v1.resource_id.ResourceId(value = "labelled"),
+    owner: skirout.kernel.v1.resource_id.ResourceId =
+        skirout.kernel.v1.resource_id
+            .ResourceId(value = "labelled"),
 ): String? =
     with(com.typewritermc.expression.FixtureReads) {
         displays.label(owner, record, checked)

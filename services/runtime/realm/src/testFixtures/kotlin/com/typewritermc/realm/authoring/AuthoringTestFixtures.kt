@@ -143,7 +143,10 @@ internal class TestCatalogLease private constructor(
         ): ExtensionCatalog =
             (
                 collected
-                    ?: CollectedExtensions { collectExtensions(checks, configuration, CollectedDynamics.NONE, providers) }.also { collected = it }
+                    ?: CollectedExtensions { collectExtensions(checks, configuration, CollectedDynamics.NONE, providers) }.also {
+                        collected =
+                            it
+                    }
             ).value
 
         @Synchronized

@@ -153,7 +153,10 @@ internal class OwnershipClosureCompiler(
                         "Resource readiness belongs to another captured catalog."
                     }
                     val actual =
-                        snapshot.catalog.checked.completeTypeOf(id, record.configuration)?.use?.named
+                        snapshot.catalog.checked
+                            .completeTypeOf(id, record.configuration)
+                            ?.use
+                            ?.named
                             ?: error("Ready resource has a pending configuration.")
                     check(
                         actual == state.binding.actual &&

@@ -433,8 +433,14 @@ val RelationSynchronizationTest by testSuite {
     test("a new inverse whose type is still pending is refused at its collection") {
         val generic = TypeDefinitionId.qualified("test", "generic_wrapper")
         val genericWrapper =
-            definitions { record(generic, parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = generic, index = 0), name = "T"))) }
-        val catalog = DefinitionCatalog(nodeDefinitions(childItem = WRAPPER) + genericWrapper, listOf(nestedRelation(EndpointCardinality.MANY)))
+            definitions {
+                record(
+                    generic,
+                    parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = generic, index = 0), name = "T")),
+                )
+            }
+        val catalog =
+            DefinitionCatalog(nodeDefinitions(childItem = WRAPPER) + genericWrapper, listOf(nestedRelation(EndpointCardinality.MANY)))
         RealmFixture.of(catalog, mapOf(source to node(), target to node())).use { realm ->
             val pending =
                 CounterpartChoice.createNew(

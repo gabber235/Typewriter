@@ -2,6 +2,7 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.text
 import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoices
@@ -17,7 +18,6 @@ import com.typewritermc.realm.operation.OperationResolutionFailure
 import com.typewritermc.realm.operation.ResourceOperationRuntime
 import com.typewritermc.realm.operation.StaleOperationObservation
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.toResourceId

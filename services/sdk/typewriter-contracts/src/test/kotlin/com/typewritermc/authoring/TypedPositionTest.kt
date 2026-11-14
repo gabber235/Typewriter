@@ -133,7 +133,8 @@ val TypedPositionTest by testSuite {
     }
 
     test("a nullable field keeps its nullable declared type while it holds a value") {
-        (record.typedAt(holderResource, ValuePath.root.field("spare"), catalog) as TypedPosition.Value).declared shouldBe coin.use().nullable()
+        (record.typedAt(holderResource, ValuePath.root.field("spare"), catalog) as TypedPosition.Value).declared shouldBe
+            coin.use().nullable()
         record.authoredTypeAt(holderResource, ValuePath.root.field("spare"), catalog) shouldBe coin.use()
     }
 

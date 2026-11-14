@@ -1,10 +1,10 @@
 package com.typewritermc.realm.catalog
 
+import com.typewritermc.types.NativeBindingRegistry
+import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.ContentTypes
 import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.catalog.contentTypesOf
-import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.catalog.CheckedCatalog
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.kernel.v1.resource_id.ResourceId
 

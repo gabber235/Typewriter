@@ -5,6 +5,7 @@ import com.surrealdb.RecordId
 import com.surrealdb.Surreal
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompiledArtifact
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.forReply
@@ -14,7 +15,6 @@ import com.typewritermc.realm.storage.encodeSkir
 import com.typewritermc.realm.storage.inTransaction
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.mainSpanScope
-import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.unknownVariant
 import io.opentelemetry.context.Context

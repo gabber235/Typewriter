@@ -1,5 +1,6 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.editorCatalogWatch
 import com.typewritermc.realm.catalog.RealmCatalogStore
@@ -9,7 +10,6 @@ import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
-import com.typewritermc.failures.rethrowExceptional
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart

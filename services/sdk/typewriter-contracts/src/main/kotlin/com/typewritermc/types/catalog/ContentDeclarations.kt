@@ -244,7 +244,11 @@ private fun AuthoringRecord.derivedDefinitions(
     catalog: CheckedCatalog,
 ): Sequence<TypeDefinitionId> {
     val definition = (catalog.declaration(configuration.definition) as? Resolution.Ready)?.value ?: return emptySequence()
-    return definition.derivedArguments(owner).values.asSequence().flatMap { it.referencedDefinitions() }
+    return definition
+        .derivedArguments(owner)
+        .values
+        .asSequence()
+        .flatMap { it.referencedDefinitions() }
 }
 
 /**

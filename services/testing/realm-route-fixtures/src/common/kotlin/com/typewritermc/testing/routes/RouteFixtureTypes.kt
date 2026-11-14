@@ -1,5 +1,6 @@
 package com.typewritermc.testing.routes
 
+import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.GraphLayout
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
@@ -11,6 +12,9 @@ import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
 import com.typewritermc.capability.RealmCommandContext
 import com.typewritermc.capability.RealmCommandOutcome
 import com.typewritermc.capability.RealmComputationContext
+import com.typewritermc.checking.DraftType
+import com.typewritermc.checking.ResourceTypeMatch
+import com.typewritermc.checking.TypedSelection
 import com.typewritermc.elements.Entry
 import com.typewritermc.engine.pages.StaticEntry
 import com.typewritermc.engine.pages.StaticPage
@@ -31,10 +35,10 @@ import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.TypewriterTypeImports
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.use
-import skirout.editor.v1.type_catalog.IntegerWidth
-import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.capability.NotificationSeverity
 import skirout.editor.v1.capability.PanelInstruction
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ScalarKind
 
 /*
  * Pages and entries for Realm route tests that the core catalog lacks, because core declares no concrete page. They
@@ -195,6 +199,79 @@ object FixtureBoardRows : DynamicProvider {
             }
         }
     }
+}
+
+/** An entry whose bind selects every mirror, its own resource included, so computing its type needs that type. */
+@TypewriterType(id = "0fe5ad25b675426f940020b90b336303")
+data class FixtureMirror<V>(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+    val rows: List<V> = emptyList(),
+) : StaticEntry
+
+/** A mirror's row type: one count field, computed after binding every mirror, which reads each mirror's own type. */
+@TypewriterDynamicProvider
+object FixtureMirrorRows : DynamicProvider {
+    override fun Dynamics.register() {
+        bind(FixtureMirrorBind.V) {
+            val mirrors = select(TypedSelection(BareDraft(ResourceTypeMatch.Definition(FixtureMirrorDefinition.id)))).knownMatches
+            field("mirrors", integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use, hasDefault = mirrors.isNotEmpty())
+        }
+    }
+}
+
+/** An entry whose `V` two providers bind, so neither decides it. */
+@TypewriterType(id = "329cd2749bf347ffbed6f98fe80e0b69")
+data class FixtureContested<V>(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+    val rows: List<V> = emptyList(),
+) : StaticEntry
+
+/** One of the two binds of [FixtureContested]'s `V`. */
+@TypewriterDynamicProvider
+object FixtureContestedFirst : DynamicProvider {
+    override fun Dynamics.register() {
+        bind(FixtureContestedBind.V) { field("first", ScalarKind.TEXT.use) }
+    }
+}
+
+/** The other bind of [FixtureContested]'s `V`. */
+@TypewriterDynamicProvider
+object FixtureContestedSecond : DynamicProvider {
+    override fun Dynamics.register() {
+        bind(FixtureContestedBind.V) { field("second", ScalarKind.TEXT.use) }
+    }
+}
+
+/** An entry whose `T` a creator chooses, held by no field, and whose row type `V` its bind computes. */
+@TypewriterType(id = "6d2f9b4a8e1c4f37b05a3c9e7d1f2b84")
+data class FixtureLedger<T, V>(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+    val failing: Boolean = false,
+    val rows: List<V> = emptyList(),
+) : StaticEntry
+
+/** A ledger's row type: one text field, or a failure while the ledger is [FixtureLedger.failing]. */
+@TypewriterDynamicProvider
+object FixtureLedgerRows : DynamicProvider {
+    override fun Dynamics.register() {
+        bind(FixtureLedgerBind.V) { ledger ->
+            check(ledger.failing.orNull() != true) { "The fixture ledger fails." }
+            field("note", ScalarKind.TEXT.use)
+        }
+    }
+}
+
+/** A draft type that reads a matched resource as its bare binding. */
+private class BareDraft(
+    override val match: ResourceTypeMatch,
+) : DraftType<DraftBinding> {
+    override fun bind(binding: DraftBinding): DraftBinding = binding
 }
 
 /** Providers formula tests pass the route fixtures' code types to. */

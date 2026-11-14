@@ -1,5 +1,6 @@
 package com.typewritermc.loader.artifact
 
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.artifact.ProducerMetadata
 import com.typewritermc.loader.api.artifact.PublishResult
@@ -21,7 +22,6 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
 import com.typewritermc.services.libs.filetransfer.blob.StoreResult
-import com.typewritermc.failures.rethrowExceptional
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull

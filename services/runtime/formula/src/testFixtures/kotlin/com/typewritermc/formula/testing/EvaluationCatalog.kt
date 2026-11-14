@@ -24,9 +24,9 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.ContentTypes
+import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.catalog.DerivedTarget
-import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField

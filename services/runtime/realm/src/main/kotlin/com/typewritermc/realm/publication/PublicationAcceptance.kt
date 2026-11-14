@@ -9,12 +9,12 @@ import com.typewritermc.authoring.root
 import com.typewritermc.checking.diagnostics
 import com.typewritermc.checking.locations
 import com.typewritermc.checking.reason
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CapturedCheckReport
 import com.typewritermc.realm.checking.RealmCheckRuntime
-import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.catalog.Resolution
@@ -193,7 +193,9 @@ internal class AuthoringAcceptance(
                         )
                     own.forEach { evidence[it.id] = witness }
                 }
-                val type = snapshot.root.catalog.checked.typeOf(id, record.configuration)
+                val type =
+                    snapshot.root.catalog.checked
+                        .typeOf(id, record.configuration)
                 if ((type as? Resolution.Ready)?.value is ResourceType.Partial) {
                     findings +=
                         publicationDiagnostic(

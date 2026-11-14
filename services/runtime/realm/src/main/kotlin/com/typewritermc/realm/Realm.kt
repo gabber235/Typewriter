@@ -6,6 +6,7 @@ import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.RuntimeCleanupOwner
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.protocol.transport.RealmRouteScope
@@ -50,7 +51,6 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.services.libs.utils.closeAll
-import com.typewritermc.failures.rethrowExceptional
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart

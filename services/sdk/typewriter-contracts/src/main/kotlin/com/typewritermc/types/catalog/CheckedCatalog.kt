@@ -143,6 +143,9 @@ interface CheckedCatalog {
 
     /** [use] with every field key replaced by where its chain leads. The code catalog has none, so it answers [use]. */
     fun expand(use: TypeUse): TypeUse
+
+    /** Why the derived id [id], or a member of one, stands in as the error type; null when it leads somewhere or is no derived id. */
+    fun derivedFailure(id: TypeDefinitionId): DerivedFailure?
 }
 
 /** This template with each parameter replaced by its use in [arguments]; invalid at the first parameter [arguments] leaves unbound. */
@@ -225,6 +228,9 @@ class DefaultCheckedCatalog private constructor(
             }
         }
     }
+
+    override fun derivedFailure(id: TypeDefinitionId): DerivedFailure? =
+        (content?.takeIf { id.namesDerivedKey() }?.target(id) as? ContentTarget.Missing)?.failure
 
     override fun declaration(id: TypeDefinitionId): Resolution<TypeDefinition> {
         val expanded = content?.expandId(id) ?: id
@@ -350,7 +356,12 @@ class DefaultCheckedCatalog private constructor(
         if (definition.parameters.any { it.derived && it.key in chosen }) return invalid(selection.definition, "derived_argument_chosen")
         val arguments = chosen + derived(definition)
         if (arguments.size == definition.parameters.size) {
-            return when (val resolved = resolve(selection.definition.namedUse(definition.parameters.map { arguments.getValue(it.key) }).use)) {
+            return when (
+                val resolved =
+                    resolve(
+                        selection.definition.namedUse(definition.parameters.map { arguments.getValue(it.key) }).use,
+                    )
+            ) {
                 is Resolution.Invalid -> resolved
                 is Resolution.Ready -> Resolution.Ready(ResourceType.Complete(resolved.value))
             }
@@ -372,7 +383,10 @@ class DefaultCheckedCatalog private constructor(
 
                     is ResourceType.Partial -> {
                         val definition = checkNotNull(lookup(selection.definition))
-                        knownPartialApplications(definition, checkNotNull(chosenArguments(selection, definition)).mapValues { expand(it.value) })
+                        knownPartialApplications(
+                            definition,
+                            checkNotNull(chosenArguments(selection, definition)).mapValues { expand(it.value) },
+                        )
                     }
                 }
             }
@@ -635,11 +649,23 @@ class DefaultCheckedCatalog private constructor(
         definition: TypeDefinition,
         bindings: Map<ParameterKey, TypeUse>,
     ): Resolution<ResourceType> {
-        for (argument in bindings.values) {
-            val resolution = resolve(argument)
-            if (resolution is Resolution.Invalid) return resolution
-        }
-        val pending = definition.parameters.withIndex().filter { it.value.key !in bindings }.map { ArgumentLocation(index = it.index) }
+        bindings.values.firstNotNullOfOrNull { resolve(it) as? Resolution.Invalid }?.let { return it }
+        boundViolation(definition, bindings)?.let { return it }
+        val pending =
+            definition.parameters
+                .withIndex()
+                .filter { it.value.key !in bindings }
+                .map { ArgumentLocation(index = it.index) }
+        val partialFields = collectPartialFields(definition, bindings, linkedSetOf())
+        if (partialFields is Resolution.Invalid) return partialFields
+        return partialSchema((partialFields as Resolution.Ready).value, bindings, pending).map { ResourceType.Partial(definition.id, it) }
+    }
+
+    /** Why a chosen argument of [definition] breaks a bound its other chosen [bindings] already fix, or null when none does. */
+    private fun boundViolation(
+        definition: TypeDefinition,
+        bindings: Map<ParameterKey, TypeUse>,
+    ): Resolution.Invalid? {
         for (parameter in definition.parameters) {
             val actual = bindings[parameter.key] ?: continue
             for (bound in parameter.bounds) {
@@ -655,12 +681,18 @@ class DefaultCheckedCatalog private constructor(
                 }
             }
         }
-        val partialFields = collectPartialFields(definition, bindings, linkedSetOf())
-        if (partialFields is Resolution.Invalid) return partialFields
-        partialFields as Resolution.Ready
+        return null
+    }
+
+    /** [fields] split into those [bindings] already type and those that wait on a [pending] argument. */
+    private fun partialSchema(
+        fields: List<FieldDeclaration>,
+        bindings: Map<ParameterKey, TypeUse>,
+        pending: List<ArgumentLocation>,
+    ): Resolution<PartialSchema> {
         val known = mutableListOf<ResolvedField>()
         val dependent = mutableListOf<DependentField>()
-        for (field in partialFields.value) {
+        for (field in fields) {
             val missing =
                 field.type
                     .parameterKeys()
@@ -674,9 +706,7 @@ class DefaultCheckedCatalog private constructor(
                 dependent += DependentField(owner = field.owner, type = field.type, missing = missing)
             }
         }
-        return Resolution.Ready(
-            ResourceType.Partial(definition.id, PartialSchema(knownFields = known, dependentFields = dependent, pendingArguments = pending)),
-        )
+        return Resolution.Ready(PartialSchema(knownFields = known, dependentFields = dependent, pendingArguments = pending))
     }
 
     private fun resolveRepresentation(
@@ -1100,29 +1130,38 @@ private class ContentLayer(
     ): ContentTarget {
         val member = (id.typeId as? TypeId.MemberWrapper)?.value
         if (member != null && id.namesIndirectKey()) {
-            val owner = TypeDefinitionId(typeId = member.owner, revision = id.revision)
-            return when (val found = target(owner, visiting)) {
-                is ContentTarget.Declared -> found.member(member.name)
-                is ContentTarget.Plain -> ContentTarget.Missing()
-                is ContentTarget.Missing, ContentTarget.Loop -> found
-            }
+            return memberTarget(TypeDefinitionId(typeId = member.owner, revision = id.revision), member.name, visiting)
         }
         val owner = checkNotNull(id.contentOwner())
-        id.fieldKey()?.let { field ->
-            if (id in visiting) return ContentTarget.Loop
-            val held = source.heldType(owner, field) ?: return ContentTarget.Missing()
-            return follow(held, visiting + id)
-        }
-        id.derivedKey()?.let { key ->
-            if (id in visiting) return ContentTarget.Loop
-            return when (val derived = source.derived(owner, key)) {
-                is DerivedTarget.Declared -> ContentTarget.Declared(derived.definition, listOf(derived.definition) + derived.cases)
-                is DerivedTarget.Plain -> follow(derived.use, visiting + id)
-                is DerivedTarget.Missing -> ContentTarget.Missing(derived.failure.code)
-            }
-        }
+        if (id.namesIndirectKey() && id in visiting) return ContentTarget.Loop
+        id.fieldKey()?.let { field -> return source.heldType(owner, field)?.let { follow(it, visiting + id) } ?: ContentTarget.Missing() }
+        id.derivedKey()?.let { key -> return derivedTarget(id, source.derived(owner, key), visiting) }
         return source.written(owner).firstOrNull { it.id == id }?.let { ContentTarget.Declared(it) } ?: ContentTarget.Missing()
     }
+
+    /** The case [name] of what [owner] leads to; an alias has no cases of its own. */
+    private fun memberTarget(
+        owner: TypeDefinitionId,
+        name: String,
+        visiting: Set<TypeDefinitionId>,
+    ): ContentTarget =
+        when (val found = target(owner, visiting)) {
+            is ContentTarget.Declared -> found.member(name)
+            is ContentTarget.Plain -> ContentTarget.Missing()
+            is ContentTarget.Missing, ContentTarget.Loop -> found
+        }
+
+    /** Where the derived id [id] leads, given what its owner's bind computed. */
+    private fun derivedTarget(
+        id: TypeDefinitionId,
+        derived: DerivedTarget,
+        visiting: Set<TypeDefinitionId>,
+    ): ContentTarget =
+        when (derived) {
+            is DerivedTarget.Declared -> ContentTarget.Declared(derived.definition, listOf(derived.definition) + derived.cases)
+            is DerivedTarget.Plain -> follow(derived.use, visiting + id)
+            is DerivedTarget.Missing -> ContentTarget.Missing(derived.failure.code, derived.failure)
+        }
 
     /** Where a held or derived [use] leads: on through a bare content id, or a plain alias of anything else. */
     private fun follow(
@@ -1214,7 +1253,10 @@ private class ContentLayer(
         val structural = structuralProblems()
         return associate { definition ->
             definition.id to
-                (structural[definition.id].orEmpty() + listOfNotNull("declaration_has_parameters".takeIf { definition.parameters.isNotEmpty() }))
+                (
+                    structural[definition.id].orEmpty() +
+                        listOfNotNull("declaration_has_parameters".takeIf { definition.parameters.isNotEmpty() })
+                )
         }.filterValues { it.isNotEmpty() }
     }
 
@@ -1255,9 +1297,10 @@ private sealed interface ContentTarget {
 
     data object Loop : ContentTarget
 
-    /** Nothing there; [code] says why the id stands in as the error type. */
+    /** Nothing there; [code] says why the id stands in as the error type, and [failure] why a derived id does. */
     data class Missing(
         val code: String = "content_type_missing",
+        val failure: DerivedFailure? = null,
     ) : ContentTarget
 }
 

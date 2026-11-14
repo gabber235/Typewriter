@@ -1,6 +1,5 @@
 package com.typewritermc.realm.edit
 
-import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
@@ -15,6 +14,7 @@ import com.typewritermc.realm.authoring.boundTypesOver
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.formula.withRealmReferences
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.types.catalog.misfiledDeclarations
 import com.typewritermc.types.catalog.withoutUnreachableTypes
 import com.typewritermc.types.endpoint

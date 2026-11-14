@@ -33,10 +33,9 @@ class DynamicHook internal constructor(
 class BindHook internal constructor(
     val origin: RuleOrigin,
     val key: BindKey,
-    val match: ResourceTypeMatch,
     private val bind: BindBuilder.(DraftBinding) -> Unit,
 ) {
-    /** Runs this bind on the resource [binding] binds; a caller binds through [match] first. */
+    /** Runs this bind on [binding], the root of a resource of [BindKey.owner] bound to the type its creator's choices give. */
     fun run(
         builder: BindBuilder,
         binding: DraftBinding,
@@ -87,7 +86,7 @@ internal fun collectDynamics(
             collector.binds.forEach { bind ->
                 when (val rejection = bind.rejection(owned, declared)) {
                     null -> binds += bind
-                    else -> failures += DynamicRegistrationFailure(owned, rejection.first, IllegalArgumentException(rejection.second))
+                    else -> failures += rejection
                 }
             }
         }) { failure -> failures += DynamicRegistrationFailure(owned, "dynamic_registration_failed", failure) }
@@ -105,19 +104,27 @@ internal fun OwnedTypeDeclaration.withBinds(bound: Set<BindKey>): OwnedTypeDecla
 private fun TypeDefinition.withBinds(bound: Set<BindKey>): TypeDefinition =
     copy(parameters = parameters.map { if (BindKey(id, it.name) in bound) it.copy(derived = true) else it })
 
-/** Why load drops this bind, as a code and a message, or null when it may compute its parameter. */
+/** The failure load drops this bind of [owned] for, or null when it may compute its parameter. */
 private fun BindHook.rejection(
     owned: OwnedDynamic,
     declared: Map<TypeDefinitionId, List<OwnedTypeDeclaration>>,
-): Pair<String, String>? {
+): DynamicRegistrationFailure? {
     val owners = declared[key.owner].orEmpty()
-    return when {
-        owners.none { declaration -> declaration.definition.parameters.any { it.name == key.name } } ->
-            "bind_unknown_parameter" to "No declared type ${key.owner} has a type parameter ${key.name}."
-        owners.none { it.origin.artifact == owned.origin.artifact } ->
-            "bind_foreign_type" to "Only the artifact that declares ${key.owner} may bind its parameter ${key.name}."
-        else -> null
-    }
+    val (code, message) =
+        when {
+            owners.none { declaration -> declaration.definition.parameters.any { it.name == key.name } } -> {
+                "bind_unknown_parameter" to "No declared type ${key.owner} has a type parameter ${key.name}."
+            }
+
+            owners.none { it.origin.artifact == owned.origin.artifact } -> {
+                "bind_foreign_type" to "Only the artifact that declares ${key.owner} may bind its parameter ${key.name}."
+            }
+
+            else -> {
+                return null
+            }
+        }
+    return DynamicRegistrationFailure(owned, code, IllegalArgumentException(message))
 }
 
 private class DynamicCollector(
@@ -145,6 +152,6 @@ private class DynamicCollector(
         bind: BindBuilder.(D) -> Unit,
     ) {
         val key = parameter.key
-        binds += BindHook(owned.ruleOrigin, key, ResourceTypeMatch.Definition(key.owner)) { binding -> bind(parameter.draft.bind(binding)) }
+        binds += BindHook(owned.ruleOrigin, key) { binding -> bind(parameter.draft.bind(binding)) }
     }
 }

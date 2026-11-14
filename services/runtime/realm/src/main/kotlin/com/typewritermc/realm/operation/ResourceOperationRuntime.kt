@@ -11,6 +11,7 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.operations.AuthoringGraphFacts
 import com.typewritermc.operations.BoundResourceOperation
 import com.typewritermc.operations.NeedsChoices
@@ -30,7 +31,6 @@ import com.typewritermc.realm.authoring.RealmGraphFacts
 import com.typewritermc.realm.authoring.RelationReads
 import com.typewritermc.realm.edit.AuthoringPlanRejected
 import com.typewritermc.realm.edit.WorkingViewEditContext
-import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.closedUse

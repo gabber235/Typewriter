@@ -4,6 +4,7 @@ import com.surrealdb.Surreal
 import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.text
+import com.typewritermc.failures.findExceptional
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewDelta
@@ -24,7 +25,6 @@ import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
-import com.typewritermc.failures.findExceptional
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.unknownVariant
 import io.opentelemetry.api.OpenTelemetry

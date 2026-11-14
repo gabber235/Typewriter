@@ -1,7 +1,7 @@
 package com.typewritermc.loader.artifact
 
-import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.failures.findExceptional
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi

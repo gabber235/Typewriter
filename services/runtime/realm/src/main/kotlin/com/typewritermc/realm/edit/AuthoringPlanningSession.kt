@@ -84,7 +84,8 @@ internal class AuthoringPlanningSession(
     val stagedCatalog: AuthoringCatalogLease get() = catalogWith(emptyMap())
 
     /** The catalog over what is staged now with [upserts] written over it, for a record whose values need its own declarations. */
-    fun catalogWith(upserts: Map<ResourceId, AuthoringRecord>): AuthoringCatalogLease = (staged + upserts).let { resources -> baseline.catalog.over(resources, baseline.boundTypesOver(resources)) }
+    fun catalogWith(upserts: Map<ResourceId, AuthoringRecord>): AuthoringCatalogLease =
+        (staged + upserts).let { resources -> baseline.catalog.over(resources, baseline.boundTypesOver(resources)) }
 
     private val removed = linkedSetOf<ResourceId>()
     val resources: Map<ResourceId, AuthoringRecord> = Collections.unmodifiableMap(staged)

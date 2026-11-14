@@ -8,7 +8,6 @@ import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
-
 /**
  * The plans for what load rejected among the dynamic providers' registrations, adding to [leases] each provider whose
  * hooks and binds the catalog may call into.

@@ -3,11 +3,11 @@ package com.typewritermc.realm.checking
 import com.typewritermc.authoring.Availability
 import com.typewritermc.checking.CheckContext
 import com.typewritermc.checking.DiagnosticReporter
+import com.typewritermc.discovery.runExtension
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.ViewReadHealth
 import com.typewritermc.realm.catalog.CheckPlan
 import com.typewritermc.realm.formula.ContentFinding
-import com.typewritermc.discovery.runExtension
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.diagnostic.Diagnostic

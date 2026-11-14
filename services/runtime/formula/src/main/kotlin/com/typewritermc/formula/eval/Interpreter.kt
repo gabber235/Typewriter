@@ -1,5 +1,6 @@
 package com.typewritermc.formula.eval
 
+import com.typewritermc.discovery.runExtension
 import com.typewritermc.formula.FormulaCall
 import com.typewritermc.formula.FormulaFailure
 import com.typewritermc.formula.FormulaFailureException
@@ -37,7 +38,6 @@ import com.typewritermc.formula.check.TypeTest
 import com.typewritermc.formula.check.When
 import com.typewritermc.formula.graph.DeepStacks
 import com.typewritermc.formula.syntax.BinaryOperator
-import com.typewritermc.discovery.runExtension
 import com.typewritermc.types.EvaluationValues
 import com.typewritermc.types.Ref
 import com.typewritermc.types.StandardTypes

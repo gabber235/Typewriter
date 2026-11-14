@@ -449,7 +449,12 @@ val TypeSystemFoundationTest by testSuite {
                 id = familyId,
                 parameters =
                     listOf(
-                        TypeParameter(key = parameter, name = "T", bounds = listOf(familyId.template(listOf(parameter.template))), derived = false),
+                        TypeParameter(
+                            key = parameter,
+                            name = "T",
+                            bounds = listOf(familyId.template(listOf(parameter.template))),
+                            derived = false,
+                        ),
                     ),
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
             )

@@ -492,7 +492,7 @@ private fun viewOver(
     build: (ViewCatalogLease) -> AuthoringView,
 ): AuthoringView {
     lateinit var view: AuthoringView
-    view = build(catalog.over(resources) { owner, key -> view.boundType(owner, key) })
+    view = build(catalog.over(resources, bindsOver { AuthoredReadView.Original(view) }))
     return view
 }
 

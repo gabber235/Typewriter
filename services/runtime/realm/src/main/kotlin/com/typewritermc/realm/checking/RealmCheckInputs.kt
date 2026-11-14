@@ -9,10 +9,10 @@ import com.typewritermc.authoring.boundPath
 import com.typewritermc.checking.CheckEvaluation
 import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.CheckRecipe
+import com.typewritermc.discovery.runExtension
 import com.typewritermc.expression.operations.HostFailure
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.expectedType
-import com.typewritermc.discovery.runExtension
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.Diagnostic

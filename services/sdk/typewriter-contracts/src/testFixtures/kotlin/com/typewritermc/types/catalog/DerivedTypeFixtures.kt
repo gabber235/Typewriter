@@ -71,4 +71,6 @@ fun derives(target: DerivedTarget): ContentTypes =
 
 /** The field names of [use] in this catalog. */
 fun CheckedCatalog.fieldsOf(use: TypeUse): List<String> =
-    (resolve(use) as Resolution.Ready).value.schema.fields.map { it.key }
+    (resolve(use) as Resolution.Ready)
+        .value.schema.fields
+        .map { it.key }

@@ -1,6 +1,7 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.ReadContext
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.formula.graph.StaleRevision
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
@@ -9,7 +10,6 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
-import com.typewritermc.failures.rethrowExceptional
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineDispatcher

@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.communicator.nats
 
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.transfer.Assembly
@@ -30,7 +31,6 @@ import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.communicator.transport.TransportResult
 import com.typewritermc.services.libs.communicator.transport.TransportSubscription
-import com.typewritermc.failures.rethrowExceptional
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.coroutineScope

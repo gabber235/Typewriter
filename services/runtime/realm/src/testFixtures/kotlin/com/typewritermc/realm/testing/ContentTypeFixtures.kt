@@ -594,8 +594,7 @@ fun RealmFixture.resolvedSchema(use: TypeUse): CheckedType =
     viewCatalog.resolve(use).shouldBeInstanceOf<Resolution.Ready<CheckedType>>().value
 
 /** The type argument of the Definition [resource]. */
-fun RealmFixture.typeArgumentOf(resource: ResourceId): TypeUse =
-    checkNotNull(record(resource).configuration.chosen(0))
+fun RealmFixture.typeArgumentOf(resource: ResourceId): TypeUse = checkNotNull(record(resource).configuration.chosen(0))
 
 /** The saved view's catalog: the code catalog plus every saved declaration. */
 val RealmFixture.viewCatalog: CheckedCatalog get() = views.read { view -> view.catalog.checked }
