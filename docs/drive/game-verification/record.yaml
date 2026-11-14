@@ -568,6 +568,18 @@ slices:
     status: building
     what: claims, regions with relative spots, never checks, full wipe, leave like the pause menu, rotation between test JVMs, matched view distance, no chat toast
     green: a group of 3; no leak in 17 kinds
+    evidence: [commits ca7937f18 c25684983 d6382fcbe 69f3fbb49 95bae3945, "cargo xtask e2e game on 95bae3945: 45 passed, .xtask/results/game/test_run.json"]
+    taught: >-
+      Four clients run up to four attempts at once, each in a region of its own, with head
+      reservation for groups; a pool of one declines a group of 3 with its reason. Every gameTest
+      task of a build shares one pool, which takes turns between them. The wipe is split by owner:
+      the framework wipes 18 vanilla and Paper kinds (spike K's plus recipes, advancements, game mode,
+      held slot), and plugins reset their own through PlayerWipeEvent. A back to back fixture
+      (Reclaim) proves each kind, and every kind failed with its wipe off. Vanilla grants the
+      crafting table recipe and its advancement at once, so those checks look for one marked item.
+      Still open in this slice: health, food, flight, attributes, spawn point and statistics are not
+      wiped yet (sent back). Keyless boss bars belong to the plugin's reset hook. The game suite
+      still takes no --only or --repeat (slice 5).
   - id: done-and-hung-work
     status: queued
     what: per player quiet in the step, 1 s hung report
@@ -593,4 +605,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 3 (pool of 4 and groups) is building on feat/game-verification-slice-3. Accept it on evidence, then check in and start slice 4.
+next: Slice 3 closes its wipe gap (health, food, flight, attributes, spawn point, statistics). Then accept it, confirm its built decisions, and start slice 4.
