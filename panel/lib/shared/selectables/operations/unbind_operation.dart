@@ -50,6 +50,7 @@ class UnbindOperation extends IntentShortcutOperation {
           selectable.id,
       },
       verb: "Unbind",
+      doneWord: "Unbound",
       outcome: (targets) => targets.length == 1
           ? "Unbind this service? It disconnects straight away."
           : "Unbind ${targets.length} services? "

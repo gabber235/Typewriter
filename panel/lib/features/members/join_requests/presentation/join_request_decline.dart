@@ -26,6 +26,7 @@ ActionShortcut joinRequestDecline({
         rows: rows,
         targets: (_) => targets(),
         verb: "Decline",
+        doneWord: "Declined",
         outcome: (targets) => targets.length == 1
             ? "Decline ${nameOf(targets.single) ?? "this request"}? "
                   "They must ask again to join."

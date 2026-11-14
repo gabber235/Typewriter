@@ -83,6 +83,182 @@ void main() {
     );
   });
 
+  testWidgets("Escape while Enter holds a focused hold button cancels the "
+      "hold, though Enter stays down past its time", (tester) async {
+    var removed = 0;
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        CommandButton(
+          command: ActionShortcut(
+            id: "remove",
+            label: "Remove",
+            description: "Remove it",
+            activators: const [],
+            priority: 1,
+            run: ActionRun.hold(
+              HoldPlan<String>(
+                weight: HoldWeight.heavy,
+                verb: "Remove",
+                doneWord: "Removed",
+                targets: (_) => {"it"},
+                outcome: (_) => "Remove it? It does not come back.",
+                each: (_, _) => removed++,
+              ),
+            ),
+          ),
+          label: "Remove",
+        ),
+      ),
+    );
+    await panel.tabTo("Remove it? It does not come back.");
+
+    await panel.keyDown(LogicalKeyboardKey.enter);
+    await panel.holdFor(0.4);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await panel.holdFor(1);
+    await panel.keyUp(LogicalKeyboardKey.enter);
+
+    expect(removed, 0);
+    expect(panel.shows("Removed"), isFalse);
+  });
+
+  testWidgets("a completed hold types its done word, and the label returns "
+      "once holdDoneShow passed", (tester) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        CommandButton(
+          command: ActionShortcut(
+            id: "remove",
+            label: "Remove",
+            description: "Remove it",
+            activators: const [],
+            priority: 1,
+            run: ActionRun.hold(
+              HoldPlan<String>(
+                weight: HoldWeight.heavy,
+                verb: "Remove",
+                doneWord: "Removed",
+                targets: (_) => {"it"},
+                outcome: (_) => "Remove it? It does not come back.",
+                each: (_, _) {},
+              ),
+            ),
+          ),
+          label: "Remove",
+        ),
+      ),
+    );
+
+    await panel.holdButton("Remove");
+
+    expect(panel.shows("Removed"), isTrue);
+    final shown = tester.element(find.byType(CommandButton)).timing;
+    await tester.pump(shown.holdDoneShow);
+    await panel.settle();
+    expect(panel.shows("Removed"), isFalse);
+    expect(panel.shows("Remove"), isTrue);
+  });
+
+  testWidgets("a held button sinks and shrinks as the hold fills, trembles "
+      "late in it, and springs back once it completes", (tester) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        CommandButton(
+          command: ActionShortcut(
+            id: "remove",
+            label: "Remove",
+            description: "Remove it",
+            activators: const [],
+            priority: 1,
+            run: ActionRun.hold(
+              HoldPlan<String>(
+                weight: HoldWeight.heavy,
+                verb: "Remove",
+                doneWord: "Removed",
+                targets: (_) => {"it"},
+                outcome: (_) => "Remove it? It does not come back.",
+                each: (_, _) {},
+              ),
+            ),
+          ),
+          face: ButtonFace.outlined,
+          label: "Remove",
+        ),
+      ),
+    );
+    final face = find.byType(Button);
+    final rest = tester.getRect(face);
+
+    final gesture = await panel.pressButton("Remove");
+    await panel.holdFor(0.5);
+    final half = tester.getRect(face);
+    // A quarter into the tremble window, where its swing is widest.
+    await panel.holdFor(0.385);
+    final trembling = tester.getRect(face);
+    await panel.holdFor(1);
+    await gesture.up();
+    await panel.settle();
+
+    expect(half.center.dy, greaterThan(rest.center.dy + 1), reason: "sinks");
+    expect(half.width, lessThan(rest.width * 0.98), reason: "shrinks");
+    expect(
+      (trembling.center.dx - rest.center.dx).abs(),
+      greaterThan(1),
+      reason: "trembles sideways",
+    );
+    expect(tester.getRect(face), rest, reason: "springs back");
+  });
+
+  for (final (face, black) in [
+    (ButtonFace.filled, true),
+    (ButtonFace.outlined, false),
+  ]) {
+    testWidgets("a held ${face.name} button fills "
+        "${black ? "black" : "red"}", (tester) async {
+      final panel = await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          CommandButton(
+            command: ActionShortcut(
+              id: "remove",
+              label: "Remove",
+              description: "Remove it",
+              activators: const [],
+              priority: 1,
+              run: ActionRun.hold(
+                HoldPlan<String>(
+                  weight: HoldWeight.heavy,
+                  verb: "Remove",
+                  doneWord: "Removed",
+                  targets: (_) => {"it"},
+                  outcome: (_) => "Remove it? It does not come back.",
+                  each: (_, _) {},
+                ),
+              ),
+            ),
+            face: face,
+            label: "Remove",
+          ),
+        ),
+      );
+      final button = find.byType(CommandButton);
+      final shown = tester.element(button);
+      final fill = black ? shown.holdFillOnFilledColor : shown.holdFillColor;
+      final other = black ? shown.holdFillColor : shown.holdFillOnFilledColor;
+
+      final gesture = await panel.pressButton("Remove");
+      await panel.holdFor(0.5);
+
+      expect(tester.renderObject(button), paints..rect(color: fill));
+      expect(tester.renderObject(button), isNot(paints..rect(color: other)));
+      await gesture.up();
+      await panel.settle();
+    });
+  }
+
   testWidgets("a press command runs once on tap and shows its key cap", (
     tester,
   ) async {

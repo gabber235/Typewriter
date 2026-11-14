@@ -13,6 +13,7 @@ void main() {
     final plan = HoldPlan<String>(
       weight: HoldWeight.heavy,
       verb: "Remove",
+      doneWord: "Removed",
       rows: source.rows,
       targets: (_) => {"2", "0", "1"},
       outcome: (ids) => "Remove ${ids.length} rows?",

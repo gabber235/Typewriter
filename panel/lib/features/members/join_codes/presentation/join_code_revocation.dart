@@ -26,6 +26,7 @@ ActionShortcut joinCodeRevocation({
         rows: rows,
         targets: (_) => targets(),
         verb: "Revoke",
+        doneWord: "Revoked",
         outcome: (targets) => targets.length == 1
             ? "Revoke this join code? Nobody new can join with it."
             : "Revoke ${targets.length} join codes? "

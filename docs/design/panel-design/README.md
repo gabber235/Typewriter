@@ -21,7 +21,7 @@ Choices and findings for the web panel's design. Instructions live in the `panel
 | Actions | As context specific as possible |
 | Alignment | Trials of three options per element, to check the rules against the maintainer's feel |
 | Holds | Discard, Use saved, and Decline need a hold; Publish and cancelling one's own request are one press |
-| Hold weight | A hold lasts as long as its weight: light 1.2 s (Discard draft), heavy 1.8 s (Remove member, Decline, Revoke, Unbind), permanent 2.6 s (deleting a Realm resource). A held button sinks 1 to 4 px, scales to 0.95, trembles once late in the hold, and springs back with its done word. Filled buttons fill black at 28 percent, flat and outlined ones red at 16 percent |
+| Hold weight | A hold lasts as long as its weight: light 1.2 s (Discard draft), heavy 1.8 s (Remove member, Decline, Revoke, Unbind), permanent 2.6 s (deleting a Realm resource). A held button sinks 1 to 4 px, scales to 0.95, trembles once late in the hold, and springs back typing its done word for 1.3 s (`holdDoneShow`). Filled buttons fill black at 28 percent, flat and outlined ones red at 16 percent |
 | Operation sections | Operations are ordered by group, then order; each group is a section with a divider, the same list in the inspector and the context menu. Kotlin declares each operation's emphasis (flat, outline, filled); the panel shows the first filled one filled and the rest flat. Destructive operations get their own section and are held |
 | Fix order | Broken motion on everyday actions is fixed first, with focus and keys |
 | Motion from services | Named moves as the easy default; developers keep full control over duration and curve; good motion controls in the realm make it easy to add |

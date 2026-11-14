@@ -141,25 +141,31 @@ class HoldFill extends StatelessWidget {
     final press = context.motion.spec(MotionToken.press).landing;
     final color = this.color ?? context.holdFillColor;
     final radius = borderRadius ?? BorderRadius.circular(context.shapes.medium);
-    Widget painted(double amount) => CustomPaint(
-      painter: _HoldFillPainter(
-        amount: amount,
-        color: color,
-        radius: radius,
-        inPlace: inPlace,
-        direction: Directionality.of(context),
+    final fill = this.fill;
+    // The same widgets wrap the child whether it is held, pressed or at
+    // rest, so a hold starting or ending keeps the child's state: a held
+    // button's press and its done word.
+    return Transform.translate(
+      // Pressed in, still: the press landing's sink with no travel.
+      offset: Offset(0, pressed ? press.sink : 0),
+      child: AnimatedBuilder(
+        animation: fill ?? kAlwaysDismissedAnimation,
+        builder: (context, child) => CustomPaint(
+          painter: _HoldFillPainter(
+            amount: switch (fill) {
+              final fill? => fill.value.clamp(0.0, 1.0),
+              null => pressed ? 1 : 0,
+            },
+            color: color,
+            radius: radius,
+            inPlace: inPlace,
+            direction: Directionality.of(context),
+          ),
+          child: child,
+        ),
+        child: child,
       ),
-      child: child,
     );
-    final body = fill == null
-        ? (pressed ? painted(1) : child)
-        : AnimatedBuilder(
-            animation: fill!,
-            builder: (context, _) => painted(fill!.value.clamp(0.0, 1.0)),
-          );
-    if (!pressed) return body;
-    // Pressed in, still: the press landing's sink with no travel.
-    return Transform.translate(offset: Offset(0, press.sink), child: body);
   }
 }
 

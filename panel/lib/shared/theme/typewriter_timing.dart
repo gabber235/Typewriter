@@ -10,6 +10,7 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
     this.longPressDelay = const Duration(milliseconds: 180),
     this.typeAheadReset = const Duration(milliseconds: 700),
     this.doneShow = const Duration(milliseconds: 900),
+    this.holdDoneShow = const Duration(milliseconds: 1300),
     this.problemWait = const Duration(milliseconds: 350),
   });
 
@@ -32,6 +33,10 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
   /// worked, a field message saying Fixed.
   final Duration doneShow;
 
+  /// How long a held button types its done word once the hold's work is
+  /// done, Removed or Revoked, before its label returns.
+  final Duration holdDoneShow;
+
   /// How long a field waits after its value changed before it says what is
   /// wrong with it, so typing does not flash a problem at every letter.
   final Duration problemWait;
@@ -44,6 +49,7 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
     Duration? longPressDelay,
     Duration? typeAheadReset,
     Duration? doneShow,
+    Duration? holdDoneShow,
     Duration? problemWait,
   }) {
     return TypewriterTiming(
@@ -53,6 +59,7 @@ class TypewriterTiming extends ThemeExtension<TypewriterTiming> {
       longPressDelay: longPressDelay ?? this.longPressDelay,
       typeAheadReset: typeAheadReset ?? this.typeAheadReset,
       doneShow: doneShow ?? this.doneShow,
+      holdDoneShow: holdDoneShow ?? this.holdDoneShow,
       problemWait: problemWait ?? this.problemWait,
     );
   }

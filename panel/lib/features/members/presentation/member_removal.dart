@@ -29,6 +29,7 @@ ActionShortcut memberRemoval({
         rows: rows,
         targets: (_) => targets(),
         verb: "Remove",
+        doneWord: "Removed",
         outcome: (targets) => targets.length == 1
             ? "Remove ${nameOf(targets.single) ?? "this member"}? "
                   "They lose access straight away."

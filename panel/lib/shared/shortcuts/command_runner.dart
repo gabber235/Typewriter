@@ -14,6 +14,10 @@ sealed class HoldInput with _$HoldInput {
   /// A pointer hold: lifting or cancelling [pointer] ends it.
   const factory HoldInput.pointer(int pointer) = PointerHoldInput;
 
+  /// A key press on a focused button, which the button ends itself through
+  /// `CommandRuns.release` when the press is released or cancelled.
+  const factory HoldInput.button() = ButtonHoldInput;
+
   /// A screen reader long press, which confirms at once.
   const factory HoldInput.assistive() = AssistiveHoldInput;
 }

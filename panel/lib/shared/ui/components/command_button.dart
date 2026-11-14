@@ -1,12 +1,5 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// The keys that press a focused button.
-final _activators = {
-  LogicalKeyboardKey.enter,
-  LogicalKeyboardKey.numpadEnter,
-  LogicalKeyboardKey.space,
-};
-
 /// A button that presses its command. Key and button share one command, so
 /// pressing either presses both: a key hold fills this button too, and a
 /// key press shows it busy.
@@ -14,8 +7,12 @@ final _activators = {
 /// A press command runs on tap through [CommandRuns]. A hold command never
 /// runs on tap: a pointer, or Enter or Space on the focused button, held for
 /// the hold token of its weight runs it, and a screen reader's long press
-/// confirms it at once. Without a run, or when not [enabled], it is
-/// unavailable. While held it gives way with [HoldPress].
+/// confirms it at once. The Button's key press drives a key hold: releasing
+/// the key, Escape or focus leaving lets go. A pointer hold stays on a
+/// Listener, which lets go when a mouse leaves the button or a touch drifts
+/// into a scroll, finer than the tap gesture's slop. Once done it types the
+/// plan's done word for `holdDoneShow`. Without a run, or when not
+/// [enabled], it is unavailable. While held it gives way with [HoldPress].
 class CommandButton extends HookConsumerWidget {
   const CommandButton({
     required this.command,
@@ -41,7 +38,8 @@ class CommandButton extends HookConsumerWidget {
   /// The word a press run types while it runs: Publishing.
   final String? busyLabel;
 
-  /// The word a finished run types, such as Copied.
+  /// The word a finished press run types, such as Copied. A hold types its
+  /// plan's done word instead.
   final String? doneLabel;
 
   /// What a screen reader hears after the label, such as "Destructive".
@@ -85,15 +83,18 @@ class CommandButton extends HookConsumerWidget {
     final down = useRef<Offset?>(null);
     // The pointer holding this button, if any.
     final pointer = useRef<int?>(null);
+    // Whether the Button's key press holds the command now.
+    final keyHolding = useRef(false);
     // A hold button hides the Button's own semantics, so it reports focus
     // itself; Enter or Space held while focused holds the command.
     final focus = useFocusNode(debugLabel: "CommandButton ${command.id}");
     final focused = useListenableSelector(focus, () => focus.hasFocus);
-    // A pointer hold this button started ends with it; a key hold or another
-    // button's hold of the same command goes on.
+    // A hold this button started ends with it; another button's or a
+    // shortcut's hold of the same command goes on.
     useEffect(
       () => () {
         if (pointer.value case final held?) runs.release(held);
+        if (keyHolding.value) runs.release();
       },
       [runs],
     );
@@ -120,28 +121,33 @@ class CommandButton extends HookConsumerWidget {
 
     // Bound to the command: the Button reads the command's run state from
     // CommandRuns and keeps no controller of its own.
-    Widget faceWith(VoidCallback? onPressed, {VoidCallback? onKeyPressStart}) =>
-        Button(
-          label: label,
-          busyLabel: busyLabel,
-          doneLabel: doneLabel,
-          icon: shownIcon,
-          face: face,
-          color: color,
-          hint: hint,
-          tooltip: tooltip,
-          controller: state,
-          focusNode: focus,
-          onPressed: onPressed,
-          onKeyPressStart: onKeyPressStart,
-        );
+    Widget faceWith(
+      VoidCallback? onPressed, {
+      void Function(PressStep step, PressSource source)? onPress,
+      String? doneLabel,
+      Duration? doneShow,
+    }) => Button(
+      label: label,
+      busyLabel: busyLabel,
+      doneLabel: doneLabel,
+      doneShow: doneShow,
+      icon: shownIcon,
+      face: face,
+      color: color,
+      hint: hint,
+      tooltip: tooltip,
+      controller: state,
+      focusNode: focus,
+      onPressed: onPressed,
+      onPress: onPress,
+    );
 
     switch (run) {
       case null:
-        return faceWith(null);
+        return faceWith(null, doneLabel: doneLabel);
       case PressRun():
         // The same path as the key: one run, refused while it runs.
-        return faceWith(() => runs.press(command, ref));
+        return faceWith(() => runs.press(command, ref), doneLabel: doneLabel);
       case final HoldRun hold:
         void start(PointerDownEvent event) {
           if (busy) return;
@@ -154,12 +160,19 @@ class CommandButton extends HookConsumerWidget {
           runs.start(command, ref, HoldInput.pointer(event.pointer));
         }
 
-        // Starts on the Button's key down, with the keys held then.
-        void keyHold() {
-          final keys = HardwareKeyboard.instance.logicalKeysPressed
-              .intersection(_activators);
-          if (keys.isEmpty) return;
-          runs.start(command, ref, HoldInput.key(keys: keys, focus: focus));
+        // A key press on the Button drives the hold: it starts it, and its
+        // release or cancel (key up, Escape, focus leaving) lets go.
+        void keyHold(PressStep step, PressSource source) {
+          if (source != PressSource.key) return;
+          switch (step) {
+            case PressStep.start:
+              keyHolding.value = true;
+              runs.start(command, ref, const HoldInput.button());
+            case PressStep.release || PressStep.cancel:
+              if (!keyHolding.value) return;
+              keyHolding.value = false;
+              runs.release();
+          }
         }
 
         return Semantics(
@@ -211,11 +224,13 @@ class CommandButton extends HookConsumerWidget {
                   // With rows, the rows show the run; the button shows it
                   // only for a hold that paints on itself.
                   pressed: busy && hold.plan.rows == null,
-                  // The Listener owns a pointer hold and keyHold a key
-                  // hold; the face never runs work on a press.
+                  // The Listener owns a pointer hold and the Button's key
+                  // press a key hold; the face never runs work on a press.
                   child: faceWith(
-                    busy ? null : () {},
-                    onKeyPressStart: busy ? null : keyHold,
+                    null,
+                    onPress: keyHold,
+                    doneLabel: hold.plan.doneWord,
+                    doneShow: context.timing.holdDoneShow,
                   ),
                 ),
               ),

@@ -21,7 +21,6 @@ class HoldWeights extends HookWidget {
             CommandButton(
               command: command,
               label: command.label,
-              doneLabel: _doneWord[weight],
               face: switch (weight) {
                 HoldWeight.light => ButtonFace.quiet,
                 HoldWeight.heavy => ButtonFace.outlined,
@@ -75,6 +74,7 @@ ActionShortcut _command(HoldWeight weight) => ActionShortcut(
       weight: weight,
       targets: (_) => {weight},
       verb: _label[weight]!.split(" ").first,
+      doneWord: _doneWord[weight]!,
       outcome: (_) => _outcome[weight]!,
       each: (_, _) {},
     ),

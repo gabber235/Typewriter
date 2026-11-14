@@ -31,6 +31,15 @@ enum ButtonFace {
   };
 }
 
+/// Where a press of a [Button] comes from.
+enum PressSource { pointer, key }
+
+/// One step of a press of a [Button]. A press starts, then ends once: it is
+/// released inside, and the button acts, or it is cancelled and nothing
+/// happens. Escape, the pointer leaving or being cancelled, focus leaving
+/// and the button becoming unavailable cancel it.
+enum PressStep { start, release, cancel }
+
 /// The one button of the panel, built on the widgets layer.
 ///
 /// It rises on hover with `hoverIn` and `hoverOut`, sinks with `press` while
@@ -55,7 +64,8 @@ class Button extends HookWidget {
     this.statesController,
     this.child,
     this.dense = false,
-    this.onKeyPressStart,
+    this.onPress,
+    this.doneShow,
     super.key,
   });
 
@@ -74,14 +84,21 @@ class Button extends HookWidget {
   /// button instead of a toast.
   final String? doneLabel;
 
+  /// How long [doneLabel] stays before the label returns: a held button's
+  /// done word stays `holdDoneShow`. Long enough to read by default.
+  final Duration? doneShow;
+
   /// Sync or async. While a returned Future runs the button is busy and
   /// refuses another press; an Exception jams it and is reported. Null makes
   /// the button unavailable.
   final FutureOr<void> Function()? onPressed;
 
-  /// Runs when Space or Enter goes down on the focused button, before
-  /// [onPressed] runs on key up; a hold starts here.
-  final VoidCallback? onKeyPressStart;
+  /// Follows every press through its steps, for a caller that drives its
+  /// own action from the press, as a hold does: it starts with
+  /// [PressStep.start] and ends with [PressStep.release] or
+  /// [PressStep.cancel]. A button with [onPress] and no [onPressed] is
+  /// available and acts on nothing itself.
+  final void Function(PressStep step, PressSource source)? onPress;
   final ButtonFace face;
   final Widget? icon;
   final String? tooltip;
@@ -132,7 +149,10 @@ class Button extends HookWidget {
       seen.value = successes;
       if (doneLabel == null) return null;
       done.value = true;
-      final timer = Timer(_doneReadTimeout, () => done.value = false);
+      final timer = Timer(
+        doneShow ?? _doneReadTimeout,
+        () => done.value = false,
+      );
       return timer.cancel;
     }, [successes]);
     useEffect(() {
@@ -158,21 +178,20 @@ class Button extends HookWidget {
     final current = useValueListenable(states);
 
     final busy = run.isLoading;
-    final enabled = bound ? onPressed != null && !busy : run.canTrigger;
+    final acts = onPressed != null || onPress != null;
+    final enabled = bound
+        ? acts && !busy
+        : run.canTrigger || (onPressed == null && onPress != null);
     final unavailable = !enabled && !busy;
-    // A press held while the button stops taking presses ends with it.
-    useEffect(() {
-      if (!enabled) states.update(WidgetState.pressed, false);
-      return null;
-    }, [enabled]);
     final pressed =
         busy || unavailable || current.contains(WidgetState.pressed);
     final hovered = !pressed && current.contains(WidgetState.hovered);
 
     void activate() {
-      if (!enabled) return;
+      final press = onPressed;
+      if (!enabled || press == null) return;
       if (bound) {
-        onPressed!();
+        press();
       } else {
         run.handlePress();
       }
@@ -196,22 +215,46 @@ class Button extends HookWidget {
 
     void splashEnds() => drain.to(1, drainMotion);
 
-    // Keys: Space or Enter down presses and splashes from the middle; key up
-    // acts; Escape while held cancels. With a modifier held the key belongs
-    // to a shortcut, such as Ctrl+Enter publishing.
-    final keyHeld = useRef(false);
+    // The one press lifecycle, for pointer and key alike: a press starts,
+    // then is released inside, which acts, or is cancelled, which does not.
+    // [onPress] follows every step.
+    final pressing = useRef<PressSource?>(null);
+    void pressStarts(PressSource source, Offset at) {
+      if (pressing.value != null) return;
+      pressing.value = source;
+      states.update(WidgetState.pressed, true);
+      splashFrom(at);
+      onPress?.call(PressStep.start, source);
+    }
+
+    void pressEnds(PressStep step, {PressSource? only}) {
+      final source = pressing.value;
+      if (source == null || (only != null && source != only)) return;
+      pressing.value = null;
+      states.update(WidgetState.pressed, false);
+      splashEnds();
+      onPress?.call(step, source);
+      if (step == PressStep.release) activate();
+    }
+
+    // A press held while the button stops taking presses is cancelled.
+    useEffect(() {
+      if (!enabled) pressEnds(PressStep.cancel);
+      return null;
+    }, [enabled]);
+
+    // Keys: Space or Enter down starts a press and splashes from the middle;
+    // key up releases it; Escape cancels it. With a modifier held the key
+    // belongs to a shortcut, such as Ctrl+Enter publishing.
     KeyEventResult keys(FocusNode node, KeyEvent event) {
       final key = event.logicalKey;
       final activator =
           key == LogicalKeyboardKey.space ||
           key == LogicalKeyboardKey.enter ||
           key == LogicalKeyboardKey.numpadEnter;
-      if (key == LogicalKeyboardKey.escape && keyHeld.value) {
-        if (event is KeyDownEvent) {
-          keyHeld.value = false;
-          states.update(WidgetState.pressed, false);
-          splashEnds();
-        }
+      final keyPress = pressing.value == PressSource.key;
+      if (key == LogicalKeyboardKey.escape && keyPress) {
+        if (event is KeyDownEvent) pressEnds(PressStep.cancel);
         return KeyEventResult.handled;
       }
       if (!activator || !enabled) return KeyEventResult.ignored;
@@ -225,18 +268,13 @@ class Button extends HookWidget {
         case KeyDownEvent() when modified:
           return KeyEventResult.ignored;
         case KeyDownEvent():
-          keyHeld.value = true;
-          onKeyPressStart?.call();
-          states.update(WidgetState.pressed, true);
           final box = context.findRenderObject();
-          splashFrom(
+          pressStarts(
+            PressSource.key,
             box is RenderBox ? box.size.center(Offset.zero) : Offset.zero,
           );
-        case KeyUpEvent() when keyHeld.value:
-          keyHeld.value = false;
-          states.update(WidgetState.pressed, false);
-          splashEnds();
-          activate();
+        case KeyUpEvent() when keyPress:
+          pressEnds(PressStep.release);
         case _:
       }
       return KeyEventResult.handled;
@@ -331,7 +369,12 @@ class Button extends HookWidget {
         mouseCursor: enabled
             ? SystemMouseCursors.click
             : SystemMouseCursors.basic,
-        onFocusChange: (on) => states.update(WidgetState.focused, on),
+        onFocusChange: (on) {
+          states.update(WidgetState.focused, on);
+          // A key press ends when focus leaves, since its key up goes
+          // elsewhere.
+          if (!on) pressEnds(PressStep.cancel, only: PressSource.key);
+        },
         actions: {
           ActivateIntent: CallbackAction<ActivateIntent>(
             onInvoke: (_) => activate(),
@@ -347,24 +390,17 @@ class Button extends HookWidget {
             behavior: HitTestBehavior.opaque,
             excludeFromSemantics: true,
             onTapDown: enabled
-                ? (details) {
-                    states.update(WidgetState.pressed, true);
-                    splashFrom(details.localPosition);
-                  }
+                ? (details) =>
+                      pressStarts(PressSource.pointer, details.localPosition)
                 : null,
+            // The tap gesture cancels when the pointer drifts past the slop
+            // or another gesture wins it.
             onTapCancel: enabled
-                ? () {
-                    states.update(WidgetState.pressed, false);
-                    splashEnds();
-                  }
+                ? () => pressEnds(PressStep.cancel, only: PressSource.pointer)
                 : null,
             onTapUp: enabled
-                ? (_) {
-                    states.update(WidgetState.pressed, false);
-                    splashEnds();
-                  }
+                ? (_) => pressEnds(PressStep.release, only: PressSource.pointer)
                 : null,
-            onTap: enabled ? activate : null,
             child: Semantics(
               button: label.isNotEmpty,
               enabled: enabled,
@@ -402,7 +438,7 @@ class Button extends HookWidget {
     result = Jam(failures: run.failures, shape: shape, child: result);
     // A bare row or card with nothing to do shows its content alone, not
     // pressed in; a named one is still read as an unavailable button.
-    if (face == ButtonFace.bare && onPressed == null) {
+    if (face == ButtonFace.bare && !acts) {
       result = label.isEmpty
           ? child!
           : Semantics(button: true, enabled: false, label: label, child: child);

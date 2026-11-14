@@ -44,6 +44,7 @@ final class HoldPlan<K extends Object> {
   const HoldPlan({
     required this.weight,
     required this.verb,
+    required String this.doneWord,
     required this._targets,
     required this._outcome,
     required FutureOr<void> Function(WidgetRef ref, K target) this._each,
@@ -59,6 +60,7 @@ final class HoldPlan<K extends Object> {
     required this._targets,
     required this._outcome,
     required Future<void> Function(WidgetRef ref, Set<K> targets) work,
+    this.doneWord,
   }) : _each = null,
        _all = work,
        rows = null;
@@ -68,6 +70,11 @@ final class HoldPlan<K extends Object> {
 
   /// The word that types itself first in the outcome line: Remove.
   final String verb;
+
+  /// The word its button types once the hold's work is done: Removed. It
+  /// stays `holdDoneShow`, then the label returns. Null types nothing, as
+  /// for a Realm operation, which declares no done word.
+  final String? doneWord;
 
   /// The rows the targets are in, or null for a hold that paints on its
   /// button.

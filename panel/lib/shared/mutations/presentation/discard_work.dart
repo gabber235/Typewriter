@@ -21,6 +21,7 @@ ActionShortcut discardWork({
         weight: HoldWeight.light,
         targets: (_) => {entry},
         verb: "Discard",
+        doneWord: "Discarded",
         outcome: (_) => "Discard $label? Your unsaved changes are lost.",
         each: (_, entry) {
           if (!discard(entry)) {
