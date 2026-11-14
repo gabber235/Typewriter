@@ -3,7 +3,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class _PaneRegistration {
   _PaneRegistration({required this.scope});
 
-  final FocusScopeNode scope;
+  final _PaneScopeNode scope;
   late int sequence;
   String id = "";
   bool enabled = true;
@@ -43,6 +43,31 @@ class _PaneScopeNode extends FocusScopeNode {
 
   @override
   bool get skipTraversal => super.skipTraversal || traversalDescendants.isEmpty;
+
+  // An empty pane that holds focus itself, as on an empty page, hands Tab
+  // and Shift+Tab to the scope around it, which moves on from the pane as
+  // if Tab had skipped it.
+  bool get _holdsItself =>
+      hasPrimaryFocus &&
+      traversalDescendants.isEmpty &&
+      enclosingScope?.context != null;
+
+  @override
+  bool nextFocus() =>
+      _holdsItself ? enclosingScope!.nextFocus() : super.nextFocus();
+
+  @override
+  bool previousFocus() =>
+      _holdsItself ? enclosingScope!.previousFocus() : super.previousFocus();
+
+  /// Moves focus into the pane, as a pane key does: back to what last held
+  /// focus in it, else to its first item, else to its first control, else
+  /// to the pane itself, which then holds nothing to act on.
+  void land() {
+    final target =
+        focusedChild ?? firstItem ?? traversalDescendants.firstOrNull;
+    (target ?? this).requestFocus();
+  }
 }
 
 class _PaneSnapshot {
@@ -145,7 +170,7 @@ class _PaneCoordinator extends ChangeNotifier {
       if (target == null) continue;
 
       _lastActive = target.registration;
-      target.registration.scope.requestFocus();
+      target.registration.scope.land();
     }
     if (_pendingDirections.isNotEmpty && !_navigationScheduled) {
       queueNavigation(_pendingDirections.removeAt(0));
@@ -300,8 +325,9 @@ enum PaneOpenFocus {
   /// Opening leaves focus where it is (shell panes, sidebars, footers).
   none,
 
-  /// The first item in tree order, else the first traversable control,
-  /// until the first key or pointer press.
+  /// The first item in tree order, else the first traversable control, else
+  /// the pane itself until one of those arrives, until the first key or
+  /// pointer press.
   firstItem,
 }
 
@@ -381,9 +407,10 @@ class _PaneState extends State<Pane> {
     // A reveal, an autofocus field or a popup chose focus.
     if (!free) return _endOpen();
     final item = _scope.firstItem;
-    final target = item ?? _scope.traversalDescendants.firstOrNull;
-    // Content still loading; an item that mounts offers again.
-    if (target == null) return;
+    // Nothing to act on yet, while content loads, or ever, on an empty page:
+    // the pane itself holds focus, so pane keys still start from it. An
+    // item that mounts offers again and takes over.
+    final target = item ?? _scope.traversalDescendants.firstOrNull ?? _scope;
     if (target != primary) {
       _landing = target;
       target.requestFocus();

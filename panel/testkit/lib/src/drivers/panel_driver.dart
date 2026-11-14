@@ -211,6 +211,23 @@ final class PanelDriver extends ComponentDriver {
     await settle();
   }
 
+  /// Presses [key] while Control is held on every platform, as the pane
+  /// keys Control+Arrows and Control+H, J, L are.
+  Future<void> pressControl(LogicalKeyboardKey key) async {
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(key);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await settle();
+  }
+
+  /// Opens the sidebar link [label] the way a keyboard user does: Control+H
+  /// to the sidebar, Tab to the link, then Enter.
+  Future<void> openFromSidebar(String label) async {
+    await pressControl(LogicalKeyboardKey.keyH);
+    await tabTo(label);
+    await press(LogicalKeyboardKey.enter);
+  }
+
   /// Presses [key] while Shift is held.
   ///
   /// Without [settle] no frame runs before this returns, so the test can

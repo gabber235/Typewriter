@@ -19,6 +19,7 @@ Widget selectionTableUseCase(BuildContext context) {
     builder: (selection) => SelectionTable<skir.OrganizationMember>(
       selection: selection,
       idOf: (member) => member.userId,
+      noun: "members",
       labels: const ["Name", "Email"],
       columnWidths: const {
         0: FixedColumnWidth(48),

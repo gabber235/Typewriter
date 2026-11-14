@@ -22,6 +22,7 @@ class SelectionTable<T> extends StatelessWidget {
   const SelectionTable({
     required this.selection,
     required this.idOf,
+    required this.noun,
     required this.labels,
     required this.columnWidths,
     required this.emptyBuilder,
@@ -34,6 +35,10 @@ class SelectionTable<T> extends StatelessWidget {
 
   /// The id a row is selected by.
   final skir.RecordId Function(T item) idOf;
+
+  /// What the rows are, in the plural, such as `members`; a screen reader
+  /// reads the select all checkbox as "Select all [noun]".
+  final String noun;
 
   /// The labelled columns between the checkbox and the actions column.
   final List<String> labels;
@@ -73,6 +78,7 @@ class SelectionTable<T> extends StatelessWidget {
                     padding: cellPadding,
                     child: SelectionCheck(
                       value: allSelected ? true : (someSelected ? null : false),
+                      semanticLabel: "Select all $noun",
                       onChanged: () =>
                           selectedIds.value = allSelected || someSelected
                           ? {}

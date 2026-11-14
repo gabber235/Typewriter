@@ -21,6 +21,7 @@ class JoinCodesTable extends HookConsumerWidget {
     return SelectionTable<skir.JoinCode>(
       selection: selection,
       idOf: (code) => code.code,
+      noun: "join codes",
       labels: const ["Join Code", "Type", "Expires"],
       hasScrollBody: false,
       columnWidths: const {

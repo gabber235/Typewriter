@@ -22,6 +22,7 @@ class MembersTable extends HookConsumerWidget {
     return SelectionTable<skir.OrganizationMember>(
       selection: selection,
       idOf: (member) => member.userId,
+      noun: "members",
       labels: const ["Member", "Roles"],
       columnWidths: const {
         0: FixedColumnWidth(48),
