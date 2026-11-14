@@ -268,6 +268,36 @@ void main() {
     );
   });
 
+  testWidgets("a held operation declared without a weight is a catalog "
+      "defect: the menu reports the operations unavailable", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations([
+        reveal,
+        RealmOperation(
+          "Archive",
+          group: skir.OperationGroup.destructive,
+          confirmation: RealmConfirmation(
+            one: "Archive this resource?",
+            many: "Archive {count} resources?",
+            weight: skir.OperationWeight.unknown,
+          ),
+        ),
+      ]),
+    ]);
+
+    final sections = await panel.resources
+        .row("First")
+        .operations
+        .openSections();
+
+    expect(sections, [
+      ["Open", "Inspect"],
+      ["Resource operations unavailable"],
+    ]);
+  });
+
   testWidgets("a disabled operation shows its reason and does nothing", (
     tester,
   ) async {

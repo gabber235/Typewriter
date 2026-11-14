@@ -109,11 +109,6 @@ void main() {
             SizedBox(
               width: 160,
               child: ResourceOperationButton(
-                emphasis: switch (declared) {
-                  skir.OperationEmphasis.filled => OperationEmphasis.filled,
-                  skir.OperationEmphasis.outline => OperationEmphasis.outline,
-                  _ => OperationEmphasis.flat,
-                },
                 presentation: skir.OperationPresentation(
                   inspector: skir.OperationInspector.shown,
                   emphasis: declared,

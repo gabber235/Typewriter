@@ -35,14 +35,9 @@ Widget resourceOperationButtonStory(BuildContext context) {
       SizedBox(
         width: 260,
         child: ResourceOperationButton(
-          emphasis: emphasis,
           presentation: skir.OperationPresentation(
             inspector: skir.OperationInspector.shown,
-            emphasis: switch (emphasis) {
-              OperationEmphasis.filled => skir.OperationEmphasis.filled,
-              OperationEmphasis.outline => skir.OperationEmphasis.outline,
-              OperationEmphasis.flat => skir.OperationEmphasis.flat,
-            },
+            emphasis: emphasis.declared,
             shortcut: destructive ? skir.OperationShortcut.delete : null,
             label: longLabel
                 ? "Generate dialogue variations for this selection"

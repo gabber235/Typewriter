@@ -26,6 +26,12 @@ Future<skir.ResolvedResourceOperations> resourceOperations(
     }
     switch (result) {
       case skir.ResolveResourceOperationsResult_resolvedWrapper(:final value):
+        for (final operation in value.operations) {
+          if (operation.definition.presentation.confirmation
+              case final confirmation?) {
+            _holdWeightOf(confirmation, operation.definition.id);
+          }
+        }
         return value;
       case skir.ResolveResourceOperationsResult_staleObservationErrorWrapper():
         await workspace.refreshConfirmed();
@@ -206,11 +212,7 @@ class ResourceSelectionOperation extends ShortcutableOperation {
   int get order => operation.definition.presentation.order;
   @override
   OperationEmphasis get emphasis =>
-      switch (operation.definition.presentation.emphasis) {
-        skir.OperationEmphasis.filled => OperationEmphasis.filled,
-        skir.OperationEmphasis.outline => OperationEmphasis.outline,
-        _ => OperationEmphasis.flat,
-      };
+      operation.definition.presentation.emphasis.inPanel;
   @override
   bool canExecuteOn(List<Selectable> selection) => true;
 
@@ -265,12 +267,7 @@ class ResourceSelectionOperation extends ShortcutableOperation {
       // reports its own failures.
       final confirmation? => ActionRun.hold(
         HoldPlan<skir.ResourceId>.all(
-          weight: switch (confirmation.weight) {
-            skir.OperationWeight.light => HoldWeight.light,
-            skir.OperationWeight.permanent => HoldWeight.permanent,
-            // A Realm that sends no weight holds as heavy, the middle.
-            _ => HoldWeight.heavy,
-          },
+          weight: _holdWeightOf(confirmation, operation.definition.id),
           targets: (_) => invocation.targets.toSet(),
           verb: name,
           outcome: (targets) => targets.length == 1
@@ -321,8 +318,11 @@ class ResourceSelectionOperation extends ShortcutableOperation {
     List<Selectable> selection, {
     required OperationEmphasis emphasis,
   }) => ResourceOperationButton(
-    presentation: operation.definition.presentation,
-    emphasis: emphasis,
+    presentation: emphasis == this.emphasis
+        ? operation.definition.presentation
+        : (operation.definition.presentation.toMutable()
+                ..emphasis = emphasis.declared)
+              .toFrozen(),
     disabledReason: disabledReason,
     command: shortcut,
   );
@@ -418,6 +418,39 @@ Future<void> openAuthoredResource(
       .read(realmSurfaceNavigationProvider)
       .open(resource.scope, resource.resourceId);
 }
+
+/// The panel's emphasis for a declared one.
+extension DeclaredOperationEmphasis on skir.OperationEmphasis {
+  OperationEmphasis get inPanel => switch (this) {
+    skir.OperationEmphasis.filled => OperationEmphasis.filled,
+    skir.OperationEmphasis.outline => OperationEmphasis.outline,
+    _ => OperationEmphasis.flat,
+  };
+}
+
+/// The declared emphasis for one the panel shows.
+extension ShownOperationEmphasis on OperationEmphasis {
+  skir.OperationEmphasis get declared => switch (this) {
+    OperationEmphasis.filled => skir.OperationEmphasis.filled,
+    OperationEmphasis.outline => skir.OperationEmphasis.outline,
+    OperationEmphasis.flat => skir.OperationEmphasis.flat,
+  };
+}
+
+/// The hold weight [confirmation] declares. Every declaration states one, so
+/// a missing weight is a defect in the catalog: it fails resolution, and the
+/// operations show as unavailable.
+HoldWeight _holdWeightOf(
+  skir.OperationConfirmation confirmation,
+  skir.ResourceOperationId operation,
+) => switch (confirmation.weight.kind) {
+  skir.OperationWeight_kind.lightConst => HoldWeight.light,
+  skir.OperationWeight_kind.heavyConst => HoldWeight.heavy,
+  skir.OperationWeight_kind.permanentConst => HoldWeight.permanent,
+  skir.OperationWeight_kind.unknown => throw StateError(
+    "Operation ${operation.declaration} declares no confirmation weight",
+  ),
+};
 
 final class _UnavailableResourceOperation extends SelectionOperation {
   const _UnavailableResourceOperation(this.name);
