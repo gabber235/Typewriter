@@ -2,6 +2,7 @@ package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.Message
 import com.typewritermc.playtest.wire.Message.InputStep
+import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Perception
 import com.typewritermc.playtest.wire.Message.ProbeAction
 import com.typewritermc.playtest.wire.Message.Region
@@ -64,6 +65,9 @@ internal class Attempt(
         players: List<GamePlayer>,
         action: ProbeAction,
     ): Mark = Mark(session.probe(players, action))
+
+    /** The kinds of state [player] carries a mark of, as Paper sees them. */
+    suspend fun query(player: GamePlayer): List<Kind> = session.query(player)
 
     /** [player]'s client runs [steps]; the mark is the tick after which its first event reached the client. */
     suspend fun input(

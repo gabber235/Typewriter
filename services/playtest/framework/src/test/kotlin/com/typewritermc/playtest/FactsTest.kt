@@ -143,4 +143,13 @@ val FactsTest by testSuite {
         anyChat().shownAs(arrived, before) shouldBe "chat \"Bank: 1\""
         anyChat().shownIn(onlyOld, before) shouldBe false
     }
+
+    test("any toast is text a toast draws, named by that text, and no other text counts") {
+        val toast = perception(103, texts = listOf(Text("chat", "Hello"), Text("toast", "New Recipe(s) Unlocked!")))
+        val onlyChat = perception(103, texts = listOf(Text("chat", "New Recipe(s) Unlocked!")))
+
+        anyToast().shownIn(toast, before) shouldBe true
+        anyToast().shownAs(toast, before) shouldBe "toast \"New Recipe(s) Unlocked!\""
+        anyToast().shownIn(onlyChat, before) shouldBe false
+    }
 }

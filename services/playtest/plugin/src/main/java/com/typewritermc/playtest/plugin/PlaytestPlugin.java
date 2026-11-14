@@ -7,8 +7,11 @@ import com.typewritermc.playtest.wire.Message;
 import com.typewritermc.playtest.wire.Message.Claim;
 import com.typewritermc.playtest.wire.Message.Claimed;
 import com.typewritermc.playtest.wire.Message.Hello;
+import com.typewritermc.playtest.wire.Message.Kind;
+import com.typewritermc.playtest.wire.Message.Marks;
 import com.typewritermc.playtest.wire.Message.Probe;
 import com.typewritermc.playtest.wire.Message.ProbeDone;
+import com.typewritermc.playtest.wire.Message.Query;
 import com.typewritermc.playtest.wire.Message.Region;
 import com.typewritermc.playtest.wire.Message.Release;
 import com.typewritermc.playtest.wire.Message.Role;
@@ -46,7 +49,9 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private static final String STEP_ACK = "playtest:step";
 
     private final StepPolicy policy = new StepPolicy(this::sendBarrier, PlaytestPlugin::nothingLeftToSend, task -> MinecraftServer.getServer().scheduleOnMain(task));
-    private final Probes probes = new Probes();
+    private final Wipe wipe = new Wipe(this);
+    private final Owned owned = new Owned(this);
+    private final Probes probes = new Probes(this::mark);
     private final Attempts attempts = new Attempts(this);
     private Link pool;
 
@@ -64,6 +69,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(probes, this);
         Bukkit.getPluginManager().registerEvents(attempts, this);
+        Bukkit.getPluginManager().registerEvents(owned, this);
         Bukkit.getMessenger().registerIncomingPluginChannel(this, STEP_ACK, (channel, player, bytes) -> {
             UUID id = player.getUniqueId();
             var ack = ByteBuffer.wrap(bytes);
@@ -97,6 +103,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
                 if (failure == null) policy.deliver(probe.players(), () -> pool.send(new ProbeDone(probe.request(), ranAfter, null)));
                 else pool.send(new ProbeDone(probe.request(), ranAfter, failure));
             }
+            case Query query -> pool.send(marks(query));
             case StepUntil step -> policy.stepUntil(step.player(), step.tick(), step.barrier());
             case StopStepping stop -> policy.stop(stop.player());
             default -> getLogger().severe("The game pool sent " + message + ", which Paper never receives");
@@ -105,8 +112,9 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
 
     /**
      * Gives the attempt its players: they hold back every tick from now on, see only one another, lose
-     * what earlier probes gave them alone, and stand at the middle of the attempt's region. The claim is
-     * done once each of their clients holds all of it.
+     * what earlier probes gave them alone, are wiped (Paper's state here, each plugin's own on the
+     * {@link PlayerWipeEvent}), and stand at the middle of the attempt's region. The claim is done once
+     * each of their clients holds all of it.
      */
     private void claim(Claim claim) {
         var players = online(claim.players());
@@ -117,6 +125,10 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         attempts.claim(claim.attempt(), claim.players());
         policy.claim(claim.players());
         probes.forget(players.online());
+        for (Player player : players.online()) {
+            wipe.wipe(player);
+            Bukkit.getPluginManager().callEvent(new PlayerWipeEvent(player));
+        }
         Location middle = middle(players.online().getFirst().getWorld(), claim.region());
         for (Player player : players.online()) {
             player.setVelocity(new Vector());
@@ -125,6 +137,24 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         }
         policy.deliver(claim.players(), () -> pool.send(new Claimed(claim.attempt(), null)));
     }
+
+    /** Leaves a mark of [kind] on the player: Paper keeps some kinds, this plugin the others. */
+    private void mark(Player player, Kind kind) {
+        if (Wipe.KINDS.contains(kind)) wipe.mark(player, kind);
+        else owned.mark(player, kind);
+    }
+
+    /** Answers which kinds the queried player carries a mark of. */
+    private Marks marks(Query query) {
+        Player player = Bukkit.getPlayer(query.player());
+        if (player == null) return new Marks(query.request(), List.of(), "the player " + query.player() + " is not online");
+        var marked = new ArrayList<Kind>();
+        for (Kind kind : Kind.values()) {
+            if (Wipe.KINDS.contains(kind) ? wipe.marked(player, kind) : owned.marked(player, kind)) marked.add(kind);
+        }
+        return new Marks(query.request(), List.copyOf(marked), null);
+    }
+
 
     /** Where a claim puts the attempt's players: on the ground at the middle of the region. */
     private static Location middle(World world, Region region) {

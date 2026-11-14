@@ -21,6 +21,13 @@ public sealed interface Message {
     /** Session to pool: run one attempt of a requirement once {@code players} players are free. */
     record Submit(long submission, String testId, String requirement, int players) implements Message {}
 
+    /**
+     * Session to pool: the submission's attempt goes on with the same players, released and claimed
+     * again as the next attempt would get them: wiped, in a new region. The pool answers with a new
+     * {@link Lease}. Only the framework's own test kit sends it, to prove the wipe.
+     */
+    record Reclaim(long submission) implements Message {}
+
     /** Pool to session: the pool can never run the submission; {@code reason} says why. */
     record Declined(long submission, String reason) implements Message {}
 
@@ -77,6 +84,59 @@ public sealed interface Message {
 
     /** Session to Paper: the player's window is decided; run no more ticks for it. */
     record StopStepping(UUID player) implements Message {}
+
+    /**
+     * Session to Paper: which kinds of state {@code player} still carries a mark of. Paper answers with
+     * {@link Marks}. Only the framework's own test kit asks, for kinds no player can see.
+     */
+    record Query(long request, UUID player) implements Message {}
+
+    /** Paper to session: the kinds the player carries a mark of; {@code failure} is null when Paper could look. */
+    record Marks(long request, List<Kind> marked, String failure) implements Message {}
+
+    /**
+     * A kind of per player state an attempt can leave behind for the next attempt on the same player.
+     * Paper's wipe clears the vanilla and Paper kinds; each plugin resets the kinds it owns when Paper
+     * wipes a player, here the framework's own Paper plugin.
+     */
+    enum Kind {
+        /** Teams on the main scoreboard the player belongs to, and its scores. */
+        SCOREBOARD,
+        /** Items in the player's ender chest. */
+        ENDER_CHEST,
+        /** Potion effects on the player. */
+        EFFECTS,
+        /** Experience levels and progress. */
+        EXPERIENCE,
+        /** Keys in the player's persistent data container. */
+        PERSISTENT_DATA,
+        /** A time of day or weather the player sees instead of the world's. */
+        PLAYER_TIME,
+        /** Boss bars shown to the player. */
+        BOSS_BAR,
+        /** Recipes the player's recipe book holds. */
+        RECIPES,
+        /** Advancement criteria the player earned. */
+        ADVANCEMENTS,
+        /** A game mode other than the server's default. */
+        GAME_MODE,
+        /** A selected hotbar slot other than the first. */
+        HELD_SLOT,
+        /** A value a plugin stores for the player in a file. */
+        STORED_VALUE,
+        /** A permission a plugin stores for the player in a file. */
+        STORED_PERMISSION,
+        /** A permission a plugin attached to the online player. */
+        ATTACHED_PERMISSION,
+        /** Metadata a plugin set on the player. */
+        METADATA,
+        /** A session a plugin keeps for the player, with its history. */
+        SESSION,
+        /** Mail a plugin queued for the player. */
+        MAIL,
+        /** A hold a plugin keeps for a short grace after it ends, which a new one would adopt. */
+        HOLD
+    }
 
     /**
      * Pool to Paper: {@code players} belong to attempt {@code attempt} from now on. Paper wipes each of
@@ -196,6 +256,12 @@ public sealed interface Message {
 
     /** Paper cancels every break of the block at {@code at}, as a protection plugin would. */
     record ProbeCancelBreaking(BlockPos at) implements WorldAction {}
+
+    /**
+     * The player carries a mark of {@code kind}, as an earlier attempt could leave it. Only the
+     * framework's own test kit sends it, to prove the wipe clears every kind.
+     */
+    record ProbeMark(Kind kind) implements PlayerAction {}
 
     /** One step of an {@link Input}. Keys are named as {@link Key} names them. */
     sealed interface InputStep {}

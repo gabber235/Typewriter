@@ -9,11 +9,15 @@ import com.typewritermc.playtest.wire.Message.Hello
 import com.typewritermc.playtest.wire.Message.Input
 import com.typewritermc.playtest.wire.Message.InputDone
 import com.typewritermc.playtest.wire.Message.InputStep
+import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Lease
+import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Probe
 import com.typewritermc.playtest.wire.Message.ProbeAction
 import com.typewritermc.playtest.wire.Message.ProbeDone
+import com.typewritermc.playtest.wire.Message.Query
+import com.typewritermc.playtest.wire.Message.Reclaim
 import com.typewritermc.playtest.wire.Message.Refused
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
@@ -70,6 +74,7 @@ internal class PoolSession private constructor(
     private val leases = ConcurrentHashMap<Long, Leasing>()
     private val probes = ConcurrentHashMap<Long, CompletableDeferred<ProbeDone>>()
     private val inputs = ConcurrentHashMap<Long, CompletableDeferred<InputDone>>()
+    private val queries = ConcurrentHashMap<Long, CompletableDeferred<Marks>>()
     private val attempts = ConcurrentHashMap<String, Attempt>()
     private val ended = CompletableDeferred<Unit>()
 
@@ -93,40 +98,34 @@ internal class PoolSession private constructor(
 
     fun nextBarrier(): Int = barriers.incrementAndGet()
 
-    /** Runs one attempt of a requirement: waits for its lease, runs [body] and reports the outcome. */
+    /**
+     * Runs one attempt of a requirement: waits for its lease and runs [bodies] in order, then reports the
+     * outcome. Before each body after the first, the pool releases and claims the same players again, as
+     * the next attempt would get them: wiped and in a new region.
+     */
     suspend fun attempt(
         testId: String,
         requirement: String,
         players: Int,
-        body: suspend RequirementScope.() -> Unit,
+        bodies: List<suspend RequirementScope.() -> Unit>,
     ) {
         val submission = submissions.incrementAndGet()
-        val leasing =
-            Leasing(
-                body.javaClass.protectionDomain.codeSource
-                    ?.location,
-            )
-        leases[submission] = leasing
-        broken?.let { leasing.attempt.completeExceptionally(it) }
-        val attempt =
-            try {
-                send(Submit(submission, testId, requirement, players))
-                leasing.attempt.await()
-            } finally {
-                leases.remove(submission)
-            }
+        val code =
+            bodies
+                .first()
+                .javaClass.protectionDomain.codeSource
+                ?.location
+        var attempt = lease(submission, code) { send(Submit(submission, testId, requirement, players)) }
         val started = System.nanoTime()
-        val failure =
-            try {
-                RequirementScope(attempt).body()
-                null
-            } catch (cancelled: CancellationException) {
-                cancelled
-            } catch (
-                @Suppress("TooGenericExceptionCaught") failed: Throwable,
-            ) {
-                failed
+        var failure: Throwable? = null
+        for ((index, body) in bodies.withIndex()) {
+            if (index > 0) {
+                attempt.players.forEach { attempts.remove(it.name) }
+                attempt = lease(submission, code) { send(Reclaim(submission)) }
             }
+            failure = run(attempt, body)
+            if (failure != null) break
+        }
         attempt.players.forEach { attempts.remove(it.name) }
         val millis = (System.nanoTime() - started) / 1_000_000
         send(
@@ -141,6 +140,47 @@ internal class PoolSession private constructor(
             ),
         )
         failure?.let { throw it }
+    }
+
+    /** Waits for the lease of [submission] that [ask] asks the pool for. */
+    private suspend fun lease(
+        submission: Long,
+        code: URL?,
+        ask: () -> Unit,
+    ): Attempt {
+        val leasing = Leasing(code)
+        leases[submission] = leasing
+        broken?.let { leasing.attempt.completeExceptionally(it) }
+        return try {
+            ask()
+            leasing.attempt.await()
+        } finally {
+            leases.remove(submission)
+        }
+    }
+
+    /** Runs [body] on [attempt]; returns why it failed, or null. */
+    private suspend fun run(
+        attempt: Attempt,
+        body: suspend RequirementScope.() -> Unit,
+    ): Throwable? =
+        try {
+            RequirementScope(attempt).body()
+            null
+        } catch (cancelled: CancellationException) {
+            cancelled
+        } catch (
+            @Suppress("TooGenericExceptionCaught") failed: Throwable,
+        ) {
+            failed
+        }
+
+    /** The kinds of state [player] carries a mark of, as Paper sees them. */
+    suspend fun query(player: GamePlayer): List<Kind> {
+        val request = requests.incrementAndGet()
+        val answer = waitFor(queries, request) { send(Query(request, player.uuid)) }
+        answer.failure()?.let { throw ProbeFailed(it) }
+        return answer.marked()
     }
 
     /** Paper runs [action] for [players]; returns, once each of their clients holds its effect, the tick after which it ran. */
@@ -219,6 +259,10 @@ internal class PoolSession private constructor(
                 inputs[message.request()]?.complete(message)
             }
 
+            is Marks -> {
+                queries[message.request()]?.complete(message)
+            }
+
             is Perceived -> {
                 deliver(message.player()) { Attempt.Event.Perceived(it, message.perception()) }
             }
@@ -254,6 +298,7 @@ internal class PoolSession private constructor(
         leases.values.forEach { it.attempt.completeExceptionally(cause) }
         probes.values.forEach { it.completeExceptionally(cause) }
         inputs.values.forEach { it.completeExceptionally(cause) }
+        queries.values.forEach { it.completeExceptionally(cause) }
         attempts.values.forEach { it.fail(cause) }
         ended.completeExceptionally(cause)
     }

@@ -13,11 +13,14 @@ import com.typewritermc.playtest.wire.Message.Input
 import com.typewritermc.playtest.wire.Message.InputDone
 import com.typewritermc.playtest.wire.Message.Joined
 import com.typewritermc.playtest.wire.Message.Lease
+import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Player
 import com.typewritermc.playtest.wire.Message.Probe
 import com.typewritermc.playtest.wire.Message.ProbeDone
+import com.typewritermc.playtest.wire.Message.Query
 import com.typewritermc.playtest.wire.Message.Ready
+import com.typewritermc.playtest.wire.Message.Reclaim
 import com.typewritermc.playtest.wire.Message.Refused
 import com.typewritermc.playtest.wire.Message.Region
 import com.typewritermc.playtest.wire.Message.Release
@@ -149,7 +152,7 @@ internal class Pool(
     private val waiting = mutableMapOf<Pair<Peer, Long>, Submit>()
     private val attempts = mutableMapOf<Long, Attempt>()
     private val attemptOf = mutableMapOf<String, Attempt>()
-    private val probes = mutableMapOf<Long, Routed<Long>>()
+    private val requests = mutableMapOf<Long, Routed<Long>>()
     private val inputs = mutableMapOf<Long, Routed<Long>>()
     private val barriers = mutableMapOf<Int, Routed<Int>>()
     private lateinit var game: Game
@@ -158,7 +161,7 @@ internal class Pool(
     private var failure: String? = null
     private var sawSession = false
     private var nextAttempt = 0L
-    private var nextProbe = 0L
+    private var nextRequest = 0L
     private var nextInput = 0L
     private var nextBarrier = 0
 
@@ -262,6 +265,10 @@ internal class Pool(
                 session.send(Ended())
             }
 
+            is Reclaim -> {
+                reclaim(session, message)
+            }
+
             is Result -> {
                 val attempt =
                     attempts.values.firstOrNull { it.session == session && it.submit.submission() == message.submission() } ?: return
@@ -305,9 +312,11 @@ internal class Pool(
         if (named.isEmpty() || !named.all { holds(session, it) }) return
         when (message) {
             is Probe -> {
-                val routed = Probe(++nextProbe, message.players(), message.action())
-                probes[routed.request()] = Routed(session, message.request())
-                paper?.send(routed)
+                toPaper(session, message.request()) { Probe(it, message.players(), message.action()) }
+            }
+
+            is Query -> {
+                toPaper(session, message.request()) { Query(it, message.player()) }
             }
 
             is StepUntil -> {
@@ -335,10 +344,22 @@ internal class Pool(
         }
     }
 
+    /** Sends Paper the message [routed] builds with a pool wide request id, remembering which session asked as [request]. */
+    private fun toPaper(
+        session: Peer,
+        request: Long,
+        routed: (Long) -> Message,
+    ) {
+        val id = ++nextRequest
+        requests[id] = Routed(session, request)
+        paper?.send(routed(id))
+    }
+
     /** The players a message for the game acts on, or null for a message a session never sends. */
     private fun playersNamedBy(message: Message): List<UUID>? =
         when (message) {
             is Probe -> message.players()
+            is Query -> listOf(message.player())
             is StepUntil -> listOf(message.player())
             is StopStepping -> listOf(message.player())
             is Input -> listOf(message.player())
@@ -353,7 +374,8 @@ internal class Pool(
 
     private fun fromPaper(message: Message) {
         when (message) {
-            is ProbeDone -> probes.remove(message.request())?.let { it.session.send(ProbeDone(it.id, message.tick(), message.failure())) }
+            is ProbeDone -> requests.remove(message.request())?.let { it.session.send(ProbeDone(it.id, message.tick(), message.failure())) }
+            is Marks -> requests.remove(message.request())?.let { it.session.send(Marks(it.id, message.marked(), message.failure())) }
             is Claimed -> attempts[message.attempt()]?.let { claimed(it, message.failure()) }
             else -> System.err.println("Paper sent ${message.javaClass.simpleName}, which Paper never sends")
         }
@@ -461,22 +483,49 @@ internal class Pool(
         if (failure != null || !ready) return
         for (grant in claims.grants()) {
             val submit = waiting.remove(grant.session to grant.submission) ?: continue
-            val attempt = Attempt(++nextAttempt, grant.session, submit, grant.players, regions.next())
-            attempts[attempt.id] = attempt
-            attempt.players.forEach { attemptOf[it.name()] = attempt }
-            System.err.println(
-                "Attempt ${attempt.id}: ${submit.testId()} on ${attempt.players.joinToString { it.name() }} in ${attempt.region}",
-            )
-            paper?.send(Claim(attempt.id, attempt.players.map { it.uuid() }, attempt.region))
+            claim(grant.session, submit, grant.players)
         }
     }
 
+    /** Paper claims [players] for a new attempt of [submit]: it wipes them and puts them in a region no attempt used before. */
+    private fun claim(
+        session: Peer,
+        submit: Submit,
+        players: List<Player>,
+    ) {
+        val attempt = Attempt(++nextAttempt, session, submit, players, regions.next())
+        attempts[attempt.id] = attempt
+        attempt.players.forEach { attemptOf[it.name()] = attempt }
+        System.err.println(
+            "Attempt ${attempt.id}: ${submit.testId()} on ${attempt.players.joinToString { it.name() }} in ${attempt.region}",
+        )
+        paper?.send(Claim(attempt.id, attempt.players.map { it.uuid() }, attempt.region))
+    }
+
+    /**
+     * The submission's attempt goes on with the same players: Paper releases and claims them again, as
+     * the next attempt would get them, and the session gets a new lease.
+     */
+    private fun reclaim(
+        session: Peer,
+        reclaim: Reclaim,
+    ) {
+        val attempt = attempts.values.firstOrNull { it.session == session && it.submit.submission() == reclaim.submission() } ?: return
+        end(attempt)
+        claim(session, attempt.submit, attempt.players)
+    }
+
     private fun release(attempt: Attempt) {
+        end(attempt)
+        claims.release(attempt.players)
+        lend()
+    }
+
+    /** The attempt is over for Paper: its players no longer hold back ticks, and their records reach nobody. */
+    private fun end(attempt: Attempt) {
         attempts.remove(attempt.id)
         attempt.players.forEach { attemptOf.remove(it.name()) }
         paper?.send(Release(attempt.id))
-        claims.release(attempt.players)
-        lend()
     }
 
     private fun clientOf(player: UUID): Client? = clients.firstOrNull { it.player.uuid() == player }

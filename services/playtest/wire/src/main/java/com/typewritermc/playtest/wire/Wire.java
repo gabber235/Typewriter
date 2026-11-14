@@ -3,6 +3,11 @@ package com.typewritermc.playtest.wire;
 import com.typewritermc.playtest.wire.Message.AimAtBlockStep;
 import com.typewritermc.playtest.wire.Message.AimAtEntityStep;
 import com.typewritermc.playtest.wire.Message.BarrierSeen;
+import com.typewritermc.playtest.wire.Message.Kind;
+import com.typewritermc.playtest.wire.Message.ProbeMark;
+import com.typewritermc.playtest.wire.Message.Marks;
+import com.typewritermc.playtest.wire.Message.Query;
+import com.typewritermc.playtest.wire.Message.Reclaim;
 import com.typewritermc.playtest.wire.Message.Block;
 import com.typewritermc.playtest.wire.Message.BlockPos;
 import com.typewritermc.playtest.wire.Message.ButtonStep;
@@ -102,6 +107,17 @@ public final class Wire {
             case Declined declined -> {
                 body.writeLong(declined.submission());
                 string(body, declined.reason());
+            }
+            case Reclaim reclaim -> body.writeLong(reclaim.submission());
+            case Query query -> {
+                body.writeLong(query.request());
+                uuid(body, query.player());
+            }
+            case Marks marks -> {
+                body.writeLong(marks.request());
+                body.writeInt(marks.marked().size());
+                for (Kind kind : marks.marked()) body.writeByte(kind.ordinal());
+                optional(body, marks.failure());
             }
             case Lease lease -> {
                 body.writeLong(lease.submission());
@@ -251,6 +267,9 @@ public final class Wire {
             case Claimed m -> 23;
             case Release m -> 24;
             case Declined m -> 25;
+            case Reclaim m -> 26;
+            case Query m -> 27;
+            case Marks m -> 28;
         };
     }
 
@@ -304,6 +323,15 @@ public final class Wire {
             case 23 -> new Claimed(in.readLong(), optional(in));
             case 24 -> new Release(in.readLong());
             case 25 -> new Declined(in.readLong(), string(in));
+            case 26 -> new Reclaim(in.readLong());
+            case 27 -> new Query(in.readLong(), uuid(in));
+            case 28 -> {
+                long request = in.readLong();
+                int count = count(in);
+                var marked = new ArrayList<Kind>(count);
+                for (int i = 0; i < count; i++) marked.add(kind(in.readUnsignedByte()));
+                yield new Marks(request, List.copyOf(marked), optional(in));
+            }
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
     }
@@ -366,6 +394,10 @@ public final class Wire {
                 optional(out, spawn.onHit());
                 optional(out, spawn.onClick());
             }
+            case ProbeMark mark -> {
+                out.writeByte(10);
+                out.writeByte(mark.kind().ordinal());
+            }
             case ProbePacketEntity entity -> {
                 out.writeByte(9);
                 uuid(out, entity.uuid());
@@ -403,6 +435,7 @@ public final class Wire {
             case 7 -> new ProbeCancelBreaking(blockPos(in));
             case 8 -> new ProbeCommand(string(in), strings(in), string(in));
             case 9 -> new ProbePacketEntity(uuid(in), string(in), in.readDouble(), in.readDouble(), in.readDouble(), in.readFloat(), optional(in), optional(in));
+            case 10 -> new ProbeMark(kind(in.readUnsignedByte()));
             default -> throw new WireException("probe action " + kind + " is no action this build knows");
         };
     }
@@ -466,6 +499,12 @@ public final class Wire {
             case 8 -> new WalkToStep(in.readDouble(), in.readDouble(), in.readInt());
             default -> throw new WireException("input step " + kind + " is no step this build knows");
         };
+    }
+
+    private static Kind kind(int ordinal) throws WireException {
+        var kinds = Kind.values();
+        if (ordinal >= kinds.length) throw new WireException("kind " + ordinal + " is no kind of state this build knows");
+        return kinds[ordinal];
     }
 
     private static Key key(int ordinal) throws WireException {

@@ -62,6 +62,24 @@ fun anyChat(): Perceivable =
         ) = perception.chat().firstOrNull { it.tick() > stimulus.tick }
     }
 
+/** Any text a toast draws in the corner of the screen: `player.never sees anyToast()`. */
+fun anyToast(): Perceivable =
+    object : Perceivable {
+        override val description = "any toast"
+
+        override fun shownIn(
+            perception: Perception,
+            stimulus: Stimulus,
+        ) = drawn(perception) != null
+
+        override fun shownAs(
+            perception: Perception,
+            stimulus: Stimulus,
+        ) = drawn(perception)?.let { "toast \"${it.text()}\"" } ?: description
+
+        private fun drawn(perception: Perception) = perception.texts().firstOrNull { it.element() == "toast" }
+    }
+
 /** The command suggestion list shows exactly [names], top to bottom. */
 fun suggestions(vararg names: String): Perceivable =
     fact("suggestions ${names.joinToString()}") { perception, _ ->

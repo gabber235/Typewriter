@@ -2,6 +2,7 @@ package com.typewritermc.playtest.plugin;
 
 import com.destroystokyo.paper.event.player.PlayerUseUnknownEntityEvent;
 import com.typewritermc.playtest.wire.Message.BlockPos;
+import com.typewritermc.playtest.wire.Message.Kind;
 import com.typewritermc.playtest.wire.Message.PlayerAction;
 import com.typewritermc.playtest.wire.Message.ProbeAction;
 import com.typewritermc.playtest.wire.Message.ProbeCancelBreaking;
@@ -10,6 +11,7 @@ import com.typewritermc.playtest.wire.Message.ProbeCommand;
 import com.typewritermc.playtest.wire.Message.ProbeFill;
 import com.typewritermc.playtest.wire.Message.ProbeGameMode;
 import com.typewritermc.playtest.wire.Message.ProbeGive;
+import com.typewritermc.playtest.wire.Message.ProbeMark;
 import com.typewritermc.playtest.wire.Message.ProbePacketEntity;
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot;
 import com.typewritermc.playtest.wire.Message.ProbeSpawn;
@@ -24,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import net.kyori.adventure.text.Component;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
@@ -81,6 +84,12 @@ final class Probes implements Listener {
     private final Map<Integer, PacketEntity> packetEntities = new HashMap<>();
     private final Set<Location> unbreakable = new HashSet<>();
     private final Map<String, SuggestingCommand> commands = new HashMap<>();
+    private final BiConsumer<Player, Kind> mark;
+
+    /** [mark] leaves a mark of a kind of state on a player, for the framework's own test kit. */
+    Probes(BiConsumer<Player, Kind> mark) {
+        this.mark = mark;
+    }
 
     /**
      * Runs [action]: an action on a player for each of [players], an action on the world once, in their
@@ -131,6 +140,10 @@ final class Probes implements Listener {
             }
             case ProbePacketEntity entity -> packetEntity(player, entity);
             case ProbeCommand command -> command(player, command);
+            case ProbeMark marked -> {
+                mark.accept(player, marked.kind());
+                yield null;
+            }
         };
     }
 

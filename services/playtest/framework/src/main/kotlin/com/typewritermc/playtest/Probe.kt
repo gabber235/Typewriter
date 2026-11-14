@@ -1,5 +1,6 @@
 package com.typewritermc.playtest
 
+import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.ProbeAction
 import com.typewritermc.playtest.wire.Message.ProbeCancelBreaking
 import com.typewritermc.playtest.wire.Message.ProbeChat
@@ -7,6 +8,7 @@ import com.typewritermc.playtest.wire.Message.ProbeCommand
 import com.typewritermc.playtest.wire.Message.ProbeFill
 import com.typewritermc.playtest.wire.Message.ProbeGameMode
 import com.typewritermc.playtest.wire.Message.ProbeGive
+import com.typewritermc.playtest.wire.Message.ProbeMark
 import com.typewritermc.playtest.wire.Message.ProbePacketEntity
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot
 import com.typewritermc.playtest.wire.Message.ProbeSpawn
@@ -20,8 +22,8 @@ enum class GameMode { SURVIVAL, CREATIVE, ADVENTURE, SPECTATOR }
  * The framework's Paper probe: arrangements and stimuli that run inside Paper, between ticks. Each call
  * returns once the clients of the players it concerns hold what it caused, so the next stimulus finds it
  * there, and becomes the anchor of the windows after it. Positions count from the middle of the
- * attempt's region. Until the attempt's wipe exists, a requirement arranges everything it relies on
- * about its players, since earlier attempts leave their inventories and modes behind.
+ * attempt's region. Every attempt finds its players wiped, as players who never played, so a
+ * requirement arranges only what it needs beyond that.
  */
 class Probe internal constructor(
     private val attempt: Attempt,
@@ -158,6 +160,12 @@ class Probe internal constructor(
         attempt.watch(blocks = listOf(), entities = listOf(entity))
         return entity
     }
+
+    /** [player] carries a mark of [kind], as an earlier attempt could leave it; for the framework's own test kit. */
+    internal suspend fun mark(
+        player: GamePlayer,
+        kind: Kind,
+    ): Mark = run(listOf(player), ProbeMark(kind))
 
     private suspend fun run(
         players: List<GamePlayer>,

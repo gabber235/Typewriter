@@ -22,7 +22,9 @@ import com.typewritermc.playtest.wire.Message.Item
 import com.typewritermc.playtest.wire.Message.Joined
 import com.typewritermc.playtest.wire.Message.Key
 import com.typewritermc.playtest.wire.Message.KeyStep
+import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Lease
+import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Perception
 import com.typewritermc.playtest.wire.Message.Player
@@ -35,11 +37,14 @@ import com.typewritermc.playtest.wire.Message.ProbeDone
 import com.typewritermc.playtest.wire.Message.ProbeFill
 import com.typewritermc.playtest.wire.Message.ProbeGameMode
 import com.typewritermc.playtest.wire.Message.ProbeGive
+import com.typewritermc.playtest.wire.Message.ProbeMark
 import com.typewritermc.playtest.wire.Message.ProbePacketEntity
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot
 import com.typewritermc.playtest.wire.Message.ProbeSpawn
 import com.typewritermc.playtest.wire.Message.ProbeTeleport
+import com.typewritermc.playtest.wire.Message.Query
 import com.typewritermc.playtest.wire.Message.Ready
+import com.typewritermc.playtest.wire.Message.Reclaim
 import com.typewritermc.playtest.wire.Message.Refused
 import com.typewritermc.playtest.wire.Message.Region
 import com.typewritermc.playtest.wire.Message.Release
@@ -82,6 +87,7 @@ val WireTest by testSuite {
                 Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1),
                 Submit(8, "GROUP-1 a line sent to the members of a group reaches each member", "GROUP-1", 3),
                 Declined(8, "GROUP-1 claims 3 players, but the pool holds 1"),
+                Reclaim(8),
                 Lease(7, listOf(Player("gv-1", player), Player("gv-2", UUID(1, 2))), Region(-1_024, 2_048)),
                 Result(7, 1_250, null, null),
                 Result(8, 90, "gv-1 did not see chat \"Hello\"", "ProbeRequirements.kt:14"),
@@ -97,6 +103,10 @@ val WireTest by testSuite {
                 Probe(10, listOf(player), ProbeSpawn(UUID(5, 6), "minecraft:pig", 0.5, 100.0, 3.5, 0f, null, "Oink")),
                 Probe(11, listOf(player), ProbeCancelBreaking(BlockPos(0, 101, 2))),
                 Probe(12, listOf(player), ProbeCommand("warp", listOf("spawn", "spire", "shop"), "Warping to")),
+                Probe(13, listOf(player), ProbeMark(Kind.HOLD)),
+                Query(14, player),
+                Marks(14, listOf(Kind.SCOREBOARD, Kind.HOLD), null),
+                Marks(15, listOf(), "the player gv-2 is not online"),
                 ProbeDone(3, 1_204, null),
                 ProbeDone(4, 1_205, "no item minecraft:spyglas"),
                 Claim(9, listOf(player, UUID(1, 2)), Region(1_024, -1_024)),

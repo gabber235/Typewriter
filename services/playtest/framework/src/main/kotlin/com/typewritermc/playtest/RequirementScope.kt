@@ -34,7 +34,7 @@ enum class Button(
  * south of it, whichever part of the world the region lies in.
  */
 class RequirementScope internal constructor(
-    private val attempt: Attempt,
+    internal val attempt: Attempt,
 ) {
     /** The players the attempt claimed, in a fixed order: `val (member, partner, outsider) = players`. */
     val players: List<GamePlayer> = attempt.players

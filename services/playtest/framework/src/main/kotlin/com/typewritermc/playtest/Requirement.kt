@@ -43,6 +43,19 @@ fun TestSuiteScope.requirement(
     sentence: String,
     players: Int = 1,
     body: suspend RequirementScope.() -> Unit,
+) = attempts(id, sentence, players, listOf(body))
+
+/**
+ * Registers one requirement whose attempt runs [bodies] in order; before each body after the first the
+ * pool releases and claims the same players again, as the next attempt would get them. Only the
+ * framework's own test kit runs more than one body, to prove the wipe.
+ */
+@TestRegistering
+internal fun TestSuiteScope.attempts(
+    @TestElementName id: String,
+    sentence: String,
+    players: Int,
+    bodies: List<suspend RequirementScope.() -> Unit>,
 ) {
     require(players >= 1) { "$id claims $players players; a requirement claims at least 1" }
     test("$id $sentence") {
@@ -50,6 +63,6 @@ fun TestSuiteScope.requirement(
             checkNotNull(
                 currentSession,
             ) { "$id is not in the GameCompartment: register requirements in testSuite(compartment = { GameCompartment })" }
-        session.getOrThrow().attempt(testId = "$id $sentence", requirement = id, players = players, body = body)
+        session.getOrThrow().attempt(testId = "$id $sentence", requirement = id, players = players, bodies = bodies)
     }
 }
