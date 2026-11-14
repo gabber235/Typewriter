@@ -622,9 +622,21 @@ slices:
       Open: xtask can report a pass from a sibling session's run file when a test JVM is killed
       (slice 5).
   - id: retries-and-results
-    status: building
+    status: done
     what: retries at the queue end, Flaky, quarantine, xtask gate on TestRun (no run file, sibling run files), --only and --repeat, demonstrates, attempt steps with times and a measured breakdown of where time per requirement goes
     green: a flaky probe blocks the run
+    evidence: [commit 443541aab, "cargo xtask e2e game on 443541aab: 82 passed (67 happy path, 11 failure, 4 edge case), .xtask/results/game/test_run.json", "three fresh full runs and --repeat 3 green in the slice thread"]
+    taught: >-
+      A failed attempt runs again at the queue end, up to 4 attempts; a pass after a failure is Flaky
+      and fails both the mirror test (body frame first) and the xtask gate; GameUnavailable and
+      refusals never retry; side by side groups retry whole. Quarantine runs once and never blocks. A
+      killed test JVM now records its unfinished cases as failed and xtask exits 1, so a sibling's run
+      file can no longer pass a run. The verdict rule lives twice: Kotlin decides retries and fails the
+      mirror test, Rust judges every runner's run file for the gate. The flaky end to end proof used a
+      temporary FLAKY-1 outside the repo. Each attempt records steps with times. With all tests submitted
+      at once, the queue wait is about 96% of an attempt; of the time an attempt holds its players, the
+      grant to lease step (wipe plus the move into the region) takes a median of about 1.2 s, against
+      about 18 ms for the wipe itself in spike K; probes take a median of 64 ms, windows 52 ms, inputs 16 ms.
   - id: pixels
     status: queued
     what: A4 on demand, goldens on devenv Mesa
@@ -642,4 +654,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 5 (retries and results) is building on feat/game-verification-slice-5. Accept it on evidence, show the time breakdown, then check in.
+next: Slice 5 done. Confirm its built decisions and the flaky proof, then choose between finding the 1.2 s grant to lease cost and starting slice 6 (pixels).
