@@ -66,6 +66,7 @@ class Button extends HookWidget {
     this.dense = false,
     this.onPress,
     this.doneShow,
+    this.splashes = true,
     super.key,
   });
 
@@ -126,6 +127,10 @@ class Button extends HookWidget {
 
   /// A compact face, 8 px smaller each way, for authored compact density.
   final bool dense;
+
+  /// Whether a press splashes. A hold button passes false, so its hold fill
+  /// is its only press feedback.
+  final bool splashes;
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +210,7 @@ class Button extends HookWidget {
     final drain = useMotionController(initial: 1);
     final inkAt = useRef(Offset.zero);
     void splashFrom(Offset at) {
-      if (!splash.travels || face == ButtonFace.bare) return;
+      if (!splashes || !splash.travels || face == ButtonFace.bare) return;
       inkAt.value = at;
       drain.jumpTo(0);
       grow

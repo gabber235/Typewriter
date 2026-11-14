@@ -126,6 +126,7 @@ class CommandButton extends HookConsumerWidget {
       void Function(PressStep step, PressSource source)? onPress,
       String? doneLabel,
       Duration? doneShow,
+      bool splashes = true,
     }) => Button(
       label: label,
       busyLabel: busyLabel,
@@ -140,6 +141,7 @@ class CommandButton extends HookConsumerWidget {
       focusNode: focus,
       onPressed: onPressed,
       onPress: onPress,
+      splashes: splashes,
     );
 
     switch (run) {
@@ -226,9 +228,12 @@ class CommandButton extends HookConsumerWidget {
                   pressed: busy && hold.plan.rows == null,
                   // The Listener owns a pointer hold and the Button's key
                   // press a key hold; the face never runs work on a press.
+                  // The fill is the only press feedback, so it never
+                  // splashes.
                   child: faceWith(
                     null,
                     onPress: keyHold,
+                    splashes: false,
                     doneLabel: hold.plan.doneWord,
                     doneShow: context.timing.holdDoneShow,
                   ),
