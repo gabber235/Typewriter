@@ -231,6 +231,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | A wait | `MotionLabel` rippling the status word, `Shimmer` | `CircularProgressIndicator` |
 | A failure at a control | `Jam` around it; `Button` does this itself | A shake of your own, a red border |
 | Text that changes or appears | `MotionLabel` | Swapping the whole text |
+| A box that grows or shrinks with its content | `MotionSize` | `AnimatedSize`, which throws under reduced motion |
 | A message that changes or appears and may wrap | `TypedParagraph` | `MotionLabel`, which keeps one line |
 | A field problem | `PortableDiagnosticMessages`: waits `problemWait` after the last edit, types in, says Fixed for `doneShow` when cleared | Showing it at every keystroke |
 | A menu or popover | `AnchoredPopup`, `ContextMenuRegion` (on `RawMenuAnchor`) | `PopupMenuButton`, `MenuAnchor`, `DropdownMenu` |
