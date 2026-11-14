@@ -28,19 +28,47 @@ void main() {
     await panel.field("Title").type("Find the lantern");
     await tester.runStory();
 
-    // One keystroke, then a pause shorter than the edit's own debounce
-    // plus the wait before a problem shows.
-    tester.testTextInput.updateEditingValue(
-      const TextEditingValue(
-        text: "Fi",
-        selection: TextSelection.collapsed(offset: 2),
-      ),
-    );
-    await tester.runStory(duration: const Duration(milliseconds: 450));
+    // One keystroke, then a pause shorter than the wait before its problem
+    // shows.
+    panel.field("Title").keystroke("Fi");
+    await tester.runStory(duration: const Duration(milliseconds: 300));
     expect(panel.shows(_shortTitle), isFalse);
 
     await tester.runStory();
     expect(panel.shows(_shortTitle), isTrue);
+  });
+
+  testWidgets("the quest stays clear while a new title problem waits, then "
+      "tints with it", (tester) async {
+    final panel = await tester.pumpStory(portableFieldValidationUseCase);
+    await panel.field("Title").type("Find the lantern");
+    await tester.runStory();
+    expect(panel.header("Quest").tinted, isFalse);
+
+    panel.field("Title").keystroke("Fi");
+    await tester.runStory(duration: const Duration(milliseconds: 300));
+    expect(panel.shows(_shortTitle), isFalse);
+    expect(panel.header("Quest").tinted, isFalse);
+
+    await tester.runStory();
+    expect(panel.shows(_shortTitle), isTrue);
+    expect(panel.header("Quest").tinted, isTrue);
+  });
+
+  testWidgets("the quest marks a new title problem together with its "
+      "message", (tester) async {
+    final panel = await tester.pumpStory(portableFieldValidationUseCase);
+    await panel.field("Title").type("Find the lantern");
+    await tester.runStory();
+    expect(panel.header("Quest").marked, isFalse);
+
+    panel.field("Title").keystroke("Fi");
+    await tester.runStory(duration: const Duration(milliseconds: 300));
+    expect(panel.header("Quest").marked, isFalse);
+
+    await tester.runStory();
+    expect(panel.shows(_shortTitle), isTrue);
+    expect(panel.header("Quest").marked, isTrue);
   });
 
   testWidgets("a corrected title says Fixed, then its message closes", (
@@ -49,12 +77,7 @@ void main() {
     final panel = await tester.pumpStory(portableFieldValidationUseCase);
 
     await panel.field("Title").focus();
-    tester.testTextInput.updateEditingValue(
-      const TextEditingValue(
-        text: "Find the lantern",
-        selection: TextSelection.collapsed(offset: 16),
-      ),
-    );
+    panel.field("Title").keystroke("Find the lantern");
     await tester.runStory(duration: const Duration(milliseconds: 400));
     expect(panel.shows("Fixed"), isTrue);
     expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);

@@ -116,9 +116,13 @@ final class _AuthoredPresentationHeader extends HookWidget {
                       before: [
                         if (collapsible)
                           _expandButton(expanded, toggleExpanded),
-                        ElasticSwitcher(
+                        // The marker pops in itself; the row only makes room.
+                        MotionSize(
+                          grow: MotionToken.loadIn,
+                          shrink: MotionToken.listOut,
+                          clipBehavior: Clip.none,
                           child: summary.isEmpty
-                              ? null
+                              ? const SizedBox.shrink()
                               : Padding(
                                   padding: EdgeInsets.only(
                                     right: context.spacing.space3,
@@ -185,7 +189,10 @@ final class _AuthoredPresentationHeader extends HookWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             headerWidget,
-            PortableDiagnosticMessages(diagnostics: summary.direct),
+            PortableDiagnosticMessages(
+              diagnostics: summary.direct,
+              fixed: summary.fixed,
+            ),
           ],
         );
         final content = AnimatedContainer(

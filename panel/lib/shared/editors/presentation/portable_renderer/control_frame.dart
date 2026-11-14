@@ -145,7 +145,10 @@ Widget _controlAssociation(
               if (effectiveLabel != null || description != null)
                 const SizedBox(height: 6),
               _compositeControlContent(control, scope, child),
-              PortableDiagnosticMessages(diagnostics: summary.direct),
+              PortableDiagnosticMessages(
+                diagnostics: summary.direct,
+                fixed: summary.fixed,
+              ),
             ],
           ),
         );

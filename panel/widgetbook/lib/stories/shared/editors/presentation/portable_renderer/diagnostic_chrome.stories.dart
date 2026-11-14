@@ -53,7 +53,8 @@ Widget portableDiagnosticMessagesUseCase(BuildContext context) {
 }
 
 /// [diagnostics] under a title field, with buttons that clear and report
-/// them again.
+/// them again. It keeps the times a diagnostic tree keeps: a report shows
+/// after the `problemWait` timing and Fixed lasts the `doneShow` timing.
 class PortableDiagnosticMessagesStory extends HookWidget {
   const PortableDiagnosticMessagesStory({
     required this.diagnostics,
@@ -67,6 +68,42 @@ class PortableDiagnosticMessagesStory extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final reported = useState(true);
+    final shown = useState(true);
+    final fixed = useState(false);
+    final timing = context.timing;
+    final wait = useAnimationController(duration: timing.problemWait);
+    final linger = useAnimationController(duration: timing.doneShow);
+    useEffect(() {
+      void waited(AnimationStatus status) {
+        if (status == AnimationStatus.completed) shown.value = true;
+      }
+
+      void lingered(AnimationStatus status) {
+        if (status == AnimationStatus.completed) fixed.value = false;
+      }
+
+      wait.addStatusListener(waited);
+      linger.addStatusListener(lingered);
+      return () {
+        wait.removeStatusListener(waited);
+        linger.removeStatusListener(lingered);
+      };
+    }, [wait, linger]);
+    void fix() {
+      reported.value = false;
+      shown.value = false;
+      fixed.value = true;
+      wait.stop();
+      linger.forward(from: 0);
+    }
+
+    void report() {
+      reported.value = true;
+      fixed.value = false;
+      linger.stop();
+      wait.forward(from: 0);
+    }
+
     return SizedBox(
       width: width,
       child: Column(
@@ -77,19 +114,17 @@ class PortableDiagnosticMessagesStory extends HookWidget {
           Row(
             spacing: 8,
             children: [
-              Button(
-                label: "Fix",
-                onPressed: reported.value ? () => reported.value = false : null,
-              ),
+              Button(label: "Fix", onPressed: reported.value ? fix : null),
               Button(
                 label: "Report",
-                onPressed: reported.value ? null : () => reported.value = true,
+                onPressed: reported.value ? null : report,
               ),
             ],
           ),
           const EditorTextField(text: "Go", semanticLabel: "Title"),
           PortableDiagnosticMessages(
-            diagnostics: reported.value ? diagnostics : const [],
+            diagnostics: shown.value ? diagnostics : const [],
+            fixed: fixed.value,
           ),
         ],
       ),

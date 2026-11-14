@@ -9,6 +9,7 @@ import "package:typewriter_testkit/src/drivers/graph/graph_driver.dart";
 import "package:typewriter_testkit/src/drivers/inspector_driver.dart";
 import "package:typewriter_testkit/src/drivers/semantics.dart";
 import "package:typewriter_testkit/src/drivers/shared/field_driver.dart";
+import "package:typewriter_testkit/src/drivers/shared/presentation_header_driver.dart";
 import "package:typewriter_testkit/src/drivers/shared/ring_driver.dart";
 import "package:typewriter_testkit/src/drivers/shared/selectable_driver.dart";
 
@@ -36,6 +37,10 @@ final class PanelDriver extends ComponentDriver {
 
   /// The text field the user reads as [label].
   FieldDriver field(String label) => FieldDriver(tester, label);
+
+  /// The presentation header card the user reads as [title].
+  PresentationHeaderDriver header(String title) =>
+      PresentationHeaderDriver(tester, title);
 
   /// The text field at [index] in reading order, for fields without a label.
   FieldDriver fieldAt(int index) => FieldDriver.at(tester, index);
