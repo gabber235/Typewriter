@@ -17,6 +17,8 @@ import com.typewritermc.playtest.wire.Message.Input
 import com.typewritermc.playtest.wire.Message.InputDone
 import com.typewritermc.playtest.wire.Message.Joined
 import com.typewritermc.playtest.wire.Message.Lease
+import com.typewritermc.playtest.wire.Message.Look
+import com.typewritermc.playtest.wire.Message.Looked
 import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Player
@@ -209,7 +211,6 @@ internal class Pool(
     private val attempts = mutableMapOf<Long, Attempt>()
     private val attemptOf = mutableMapOf<String, Attempt>()
     private val requests = mutableMapOf<Long, Routed<Long>>()
-    private val inputs = mutableMapOf<Long, Routed<Long>>()
     private val barriers = mutableMapOf<Int, Routed<Int>>()
     private lateinit var game: Game
     private var paper: Peer? = null
@@ -219,7 +220,6 @@ internal class Pool(
     private var nextAttempt = 0L
     private var nextTogether = 0L
     private var nextRequest = 0L
-    private var nextInput = 0L
     private var nextBarrier = 0
 
     // Every client was ready once: the game booted, and from then on the pool lends players.
@@ -383,11 +383,11 @@ internal class Pool(
         if (named.isEmpty() || !named.all { holds(session, it) }) return
         when (message) {
             is Probe -> {
-                toPaper(session, message.request()) { Probe(it, message.players(), message.action()) }
+                route(paper, session, message.request()) { Probe(it, message.players(), message.action()) }
             }
 
             is Query -> {
-                toPaper(session, message.request()) { Query(it, message.player()) }
+                route(paper, session, message.request()) { Query(it, message.player()) }
             }
 
             is StepUntil -> {
@@ -397,9 +397,7 @@ internal class Pool(
             }
 
             is Input -> {
-                val routed = Input(++nextInput, message.player(), message.steps())
-                inputs[routed.request()] = Routed(session, message.request())
-                clientOf(message.player())?.peer?.send(routed)
+                route(clientOf(message.player())?.peer, session, message.request()) { Input(it, message.player(), message.steps()) }
             }
 
             is StopStepping -> {
@@ -410,20 +408,25 @@ internal class Pool(
                 clientOf(message.player())?.peer?.send(message)
             }
 
+            is Look -> {
+                route(clientOf(message.player())?.peer, session, message.request()) { Look(it, message.player(), message.entities()) }
+            }
+
             // playersNamedBy turned every other message away above.
             else -> {}
         }
     }
 
-    /** Sends Paper the message [routed] builds with a pool wide request id, remembering which session asked as [request]. */
-    private fun toPaper(
+    /** Sends [peer] the message [routed] builds with a pool wide request id, remembering which session asked as [request]. */
+    private fun route(
+        peer: Peer?,
         session: Peer,
         request: Long,
         routed: (Long) -> Message,
     ) {
         val id = ++nextRequest
         requests[id] = Routed(session, request)
-        paper?.send(routed(id))
+        peer?.send(routed(id))
     }
 
     /** The players a message for the game acts on, or null for a message a session never sends. */
@@ -435,6 +438,7 @@ internal class Pool(
             is StopStepping -> listOf(message.player())
             is Input -> listOf(message.player())
             is Watch -> listOf(message.player())
+            is Look -> listOf(message.player())
             else -> null
         }
 
@@ -457,7 +461,7 @@ internal class Pool(
         }
     }
 
-    /** Paper answered [request]: the session that sent it gets [answer] under its own request id. */
+    /** Paper or a client answered [request]: the session that sent it gets [answer] under its own request id. */
     private fun answer(
         request: Long,
         answer: (Long) -> Message,
@@ -492,7 +496,11 @@ internal class Pool(
             }
 
             is InputDone -> {
-                inputs.remove(message.request())?.let { it.session.send(InputDone(it.id, message.tick(), message.failure())) }
+                answer(message.request()) { InputDone(it, message.tick(), message.failure()) }
+            }
+
+            is Looked -> {
+                answer(message.request()) { Looked(it) }
             }
 
             else -> {

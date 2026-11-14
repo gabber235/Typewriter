@@ -4,6 +4,7 @@ import com.typewritermc.playtest.Window.Verdict.Missed
 import com.typewritermc.playtest.Window.Verdict.Open
 import com.typewritermc.playtest.Window.Verdict.Passed
 import com.typewritermc.playtest.wire.Message.ChatLine
+import com.typewritermc.playtest.wire.Message.Entity
 import com.typewritermc.playtest.wire.Message.Item
 import com.typewritermc.playtest.wire.Message.Text
 import com.typewritermc.playtest.wire.camera
@@ -114,6 +115,17 @@ val WindowTest by testSuite {
         val missed = window.barrierSeen(steve, 7).shouldBeInstanceOf<Missed>()
 
         missed.report shouldContain "At tick 105 gv-1 perceived nothing"
+    }
+
+    test("the failure of a check about an entity reports what the frame showed of it at the window's last tick") {
+        val zombie = EntityRef(UUID(0, 7), "minecraft:zombie")
+        val window = Window(anchor = 100, length = 5.ticks, barrier = 7, checks = listOf(Check(steve, entity(zombie).visible())))
+        window.perceived(steve, perception(101, entities = listOf(Entity(UUID(0, 7), false, null, 0))))
+
+        val missed = window.barrierSeen(steve, 7).shouldBeInstanceOf<Missed>()
+
+        missed.report shouldContain "gv-1 did not see entity zombie visible within 5 ticks"
+        missed.report shouldContain "At tick 105 gv-1 perceived entity zombie drawn, owning 0 pixels."
     }
 
     test("a barrier of another window changes nothing") {

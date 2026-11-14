@@ -92,8 +92,9 @@ class Probe internal constructor(
     }
 
     /**
-     * An entity of [type] stands still at [x], [y], [z] facing [yaw], and every player of the attempt
-     * watches it. When a player hits it, its name tag shows [onHit]; when a player uses it, [onClick].
+     * An entity of [type] stands still at [x], [y], [z] facing [yaw], [invisible] as the invisibility
+     * effect makes it, and every player of the attempt watches it. When a player hits it, its name tag
+     * shows [onHit]; when a player uses it, [onClick].
      */
     suspend fun spawn(
         type: String,
@@ -101,9 +102,10 @@ class Probe internal constructor(
         y: Double,
         z: Double,
         yaw: Float = 0f,
+        invisible: Boolean = false,
         onHit: String? = null,
         onClick: String? = null,
-    ): EntityRef = spawn(attempt.players, type, x, y, z, yaw, packetOnly = false, onHit, onClick)
+    ): EntityRef = spawn(attempt.players, type, x, y, z, yaw, packetOnly = false, invisible, onHit, onClick)
 
     /**
      * An entity of [type] that only [player]'s client knows, as Paper never holds it, standing still at
@@ -118,7 +120,7 @@ class Probe internal constructor(
         yaw: Float = 0f,
         onHit: String? = null,
         onClick: String? = null,
-    ): EntityRef = spawn(listOf(player), type, x, y, z, yaw, packetOnly = true, onHit, onClick)
+    ): EntityRef = spawn(listOf(player), type, x, y, z, yaw, packetOnly = true, invisible = false, onHit, onClick)
 
     /** Paper cancels every break of [block], as a protection plugin would. */
     suspend fun cancelBreaking(block: BlockRef): Mark = run(attempt.players, ProbeCancelBreaking(attempt.region.world(block.at)))
@@ -146,6 +148,7 @@ class Probe internal constructor(
         z: Double,
         yaw: Float,
         packetOnly: Boolean,
+        invisible: Boolean,
         onHit: String?,
         onClick: String?,
     ): EntityRef {
@@ -155,7 +158,7 @@ class Probe internal constructor(
             if (packetOnly) {
                 ProbePacketEntity(entity.uuid, entity.type, worldX, y, worldZ, yaw, onHit, onClick)
             } else {
-                ProbeSpawn(entity.uuid, entity.type, worldX, y, worldZ, yaw, onHit, onClick)
+                ProbeSpawn(entity.uuid, entity.type, worldX, y, worldZ, yaw, invisible, onHit, onClick)
             }
         run(players, action)
         attempt.watch(blocks = listOf(), entities = listOf(entity))

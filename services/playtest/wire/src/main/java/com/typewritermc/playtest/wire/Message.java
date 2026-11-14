@@ -17,6 +17,11 @@ public sealed interface Message {
         String player();
     }
 
+    /** The answer to the session's request {@code request}: a probe, a query, an input or a look. */
+    sealed interface Reply extends Message {
+        long request();
+    }
+
     /** The first message on every connection to the pool. */
     record Hello(Role role, String name) implements Message {}
 
@@ -105,7 +110,7 @@ public sealed interface Message {
      * tick, and its players' clients now hold all it caused. {@code failure} is null when it ran, or says
      * why it could not.
      */
-    record ProbeDone(long request, int tick, String failure) implements Message {}
+    record ProbeDone(long request, int tick, String failure) implements Reply {}
 
     /**
      * Session to Paper: run ticks, each once the player acked the one before, until {@code tick} has
@@ -123,7 +128,7 @@ public sealed interface Message {
     record Query(long request, UUID player) implements Message {}
 
     /** Paper to session: the kinds the player carries a mark of; {@code failure} is null when Paper could look. */
-    record Marks(long request, List<Kind> marked, String failure) implements Message {}
+    record Marks(long request, List<Kind> marked, String failure) implements Reply {}
 
     /**
      * A kind of per player state an attempt can leave behind for the next attempt on the same player.
@@ -322,13 +327,25 @@ public sealed interface Message {
      * ended, so the input shows from the next tick. {@code failure} is null when every step ran, or
      * says which step could not, for example an aim that left something else under the crosshair.
      */
-    record InputDone(long request, int tick, String failure) implements Message {}
+    record InputDone(long request, int tick, String failure) implements Reply {}
 
     /**
      * Session to the player's client: from now on every record also carries these blocks and entities,
      * which an arrangement put in front of the player. A reset ends every watch.
      */
     record Watch(UUID player, List<BlockPos> blocks, List<UUID> entities) implements Message {}
+
+    /**
+     * Session to the player's client: from now on every record also says how many pixels each of
+     * {@code entities} owns, whenever the frame draws it: the client draws that tick's frame for real,
+     * once with and once without the entity, and counts the pixels that differ. An empty list ends
+     * the look; a reset ends it too. The client answers with {@link Looked} once a record measured
+     * that way, or ended, went out.
+     */
+    record Look(long request, UUID player, List<UUID> entities) implements Message {}
+
+    /** Client to session: the look took effect; every record from now on measures what it names. */
+    record Looked(long request) implements Reply {}
 
     /** Client to session: what the player perceives changed. */
     record Perceived(String player, Perception perception) implements PlayerEvent {}
@@ -383,11 +400,12 @@ public sealed interface Message {
     record ProbeFill(BlockPos from, BlockPos to, String block) implements WorldAction {}
 
     /**
-     * An entity {@code uuid} of {@code type} stands still at this position, facing {@code yaw}. When a
-     * player hits it, its name tag shows {@code onHit}; when a player uses it, {@code onClick}; null
-     * leaves that reaction out.
+     * An entity {@code uuid} of {@code type} stands still at this position, facing {@code yaw}, and
+     * {@code invisible} as the invisibility effect makes it. When a player hits it, its name tag shows
+     * {@code onHit}; when a player uses it, {@code onClick}; null leaves that reaction out.
      */
-    record ProbeSpawn(UUID uuid, String type, double x, double y, double z, float yaw, String onHit, String onClick) implements WorldAction {}
+    record ProbeSpawn(UUID uuid, String type, double x, double y, double z, float yaw, boolean invisible, String onHit, String onClick)
+        implements WorldAction {}
 
     /** Paper cancels every break of the block at {@code at}, as a protection plugin would. */
     record ProbeCancelBreaking(BlockPos at) implements WorldAction {}
@@ -485,8 +503,11 @@ public sealed interface Message {
     record Block(BlockPos at, String block, boolean seen, int changed) {}
 
     /**
-     * A watched entity the frame draws after culling: whether it shows the red hurt tint, and the name
-     * tag drawn above it, or null.
+     * A watched entity the frame draws after culling: whether it shows the red hurt tint, the name tag
+     * drawn above it, or null, and how many pixels of the frame it owns: those that differ when the
+     * frame is drawn without it. {@code pixels} is {@link #UNMEASURED} unless a look names the entity.
      */
-    record Entity(UUID uuid, boolean hurt, String name) {}
+    record Entity(UUID uuid, boolean hurt, String name, int pixels) {
+        public static final int UNMEASURED = -1;
+    }
 }

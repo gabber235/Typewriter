@@ -52,6 +52,7 @@ final class Perceiver {
     private static final Set<UUID> watchedEntities = new LinkedHashSet<>();
     private static final Map<BlockPos, Change> changes = new HashMap<>();
     private static final Map<UUID, Entity> drawnEntities = new LinkedHashMap<>();
+    private static final Map<UUID, Integer> ownedPixels = new HashMap<>();
     private static int depth;
     private static GuiFrame frame = new GuiFrame(0, 0);
     private static String itemElement;
@@ -62,6 +63,7 @@ final class Perceiver {
     private static Perception lastSent;
     private static boolean forced;
     private static boolean resetPending;
+    private static boolean muted;
 
     private Perceiver() {}
 
@@ -88,13 +90,37 @@ final class Perceiver {
         forced = true;
     }
 
+    /** The next frame perceives and sends its record, changed or not. */
+    static void force() {
+        forced = true;
+    }
+
     static boolean forced() {
         return forced;
+    }
+
+    /**
+     * While muted, what a frame extracts is not what the player perceives: {@link Looks} extracts the
+     * same frame again without an entity, and nothing of it may reach the record.
+     */
+    static void mute(boolean mute) {
+        muted = mute;
+    }
+
+    /** Whether the frame draws {@code entity}, a watched one. */
+    static boolean draws(UUID entity) {
+        return drawnEntities.containsKey(entity);
+    }
+
+    /** The frame drawn without {@code entity} showed {@code pixels} pixels in another colour. */
+    static void owns(UUID entity, int pixels) {
+        ownedPixels.put(entity, pixels);
     }
 
     static void beginFrame(Minecraft mc) {
         frame = new GuiFrame(mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
         drawnEntities.clear();
+        ownedPixels.clear();
         scoped = false;
     }
 
@@ -106,6 +132,7 @@ final class Perceiver {
             lastSent = perception;
         }
         forced = false;
+        Looks.recordSent();
         if (resetPending) {
             resetPending = false;
             PlaytestClient.send(new ResetDone());
@@ -165,7 +192,7 @@ final class Perceiver {
         var entities = new ArrayList<Entity>();
         for (UUID uuid : watchedEntities) {
             Entity drawn = drawnEntities.get(uuid);
-            if (drawn != null) entities.add(drawn);
+            if (drawn != null) entities.add(new Entity(uuid, drawn.hurt(), drawn.name(), ownedPixels.getOrDefault(uuid, Entity.UNMEASURED)));
         }
         return entities;
     }
@@ -184,13 +211,15 @@ final class Perceiver {
 
     /** The frame draws {@code entity} after culling, as {@code state}. */
     static void onEntity(net.minecraft.world.entity.Entity entity, EntityRenderState state) {
+        if (muted) return;
         if (!watchedEntities.contains(entity.getUUID())) return;
         boolean hurt = state instanceof LivingEntityRenderState living && living.hasRedOverlay;
         String name = state.nameTag == null ? null : state.nameTag.getString();
-        drawnEntities.put(entity.getUUID(), new Entity(entity.getUUID(), hurt, name));
+        drawnEntities.put(entity.getUUID(), new Entity(entity.getUUID(), hurt, name, Entity.UNMEASURED));
     }
 
     static void onText(GuiTextRenderState state) {
+        if (muted) return;
         ScreenRectangle box = state.bounds();
         if (box == null) return;
         var text = (GuiTextRenderStateAccessor) (Object) state;
@@ -203,6 +232,7 @@ final class Perceiver {
     }
 
     static void onElement(GuiElementRenderState state) {
+        if (muted) return;
         ScreenRectangle box = state.bounds();
         if (box == null) return;
         if (selectionFrame) frame.selection(box.left(), box.top(), box.right(), box.bottom());
@@ -215,10 +245,12 @@ final class Perceiver {
 
     /** The GUI starts drawing {@code stack} as an item; its render state follows. */
     static void onItemStack(ItemStack stack) {
+        if (muted) return;
         itemStack = stack;
     }
 
     static void onItem(GuiItemRenderState state) {
+        if (muted) return;
         ItemStack stack = itemStack;
         itemStack = null;
         ScreenRectangle box = state.bounds();
@@ -240,10 +272,12 @@ final class Perceiver {
     }
 
     static void onSpyglass() {
+        if (muted) return;
         scoped = true;
     }
 
     static void onBlur() {
+        if (muted) return;
         frame.blur();
     }
 

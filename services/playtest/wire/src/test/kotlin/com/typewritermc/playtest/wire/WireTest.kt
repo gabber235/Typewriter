@@ -30,6 +30,8 @@ import com.typewritermc.playtest.wire.Message.Key
 import com.typewritermc.playtest.wire.Message.KeyStep
 import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Lease
+import com.typewritermc.playtest.wire.Message.Look
+import com.typewritermc.playtest.wire.Message.Looked
 import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Perception
@@ -134,7 +136,7 @@ val WireTest by testSuite {
                 Probe(7, listOf(player), ProbeSelectSlot(8)),
                 Probe(8, listOf(player), ProbeFill(BlockPos(-2, 99, -2), BlockPos(2, 99, 6), "minecraft:oak_leaves[persistent=true]")),
                 Probe(9, listOf(player), ProbePacketEntity(UUID(3, 4), "minecraft:villager", 0.5, 100.0, 3.5, 180f, "Ouch", null)),
-                Probe(10, listOf(player), ProbeSpawn(UUID(5, 6), "minecraft:pig", 0.5, 100.0, 3.5, 0f, null, "Oink")),
+                Probe(10, listOf(player), ProbeSpawn(UUID(5, 6), "minecraft:pig", 0.5, 100.0, 3.5, 0f, true, null, "Oink")),
                 Probe(11, listOf(player), ProbeCancelBreaking(BlockPos(0, 101, 2))),
                 Probe(12, listOf(player), ProbeCommand("warp", listOf("spawn", "spire", "shop"), "Warping to")),
                 Probe(13, listOf(player), ProbeMark(Kind.HOLD)),
@@ -183,6 +185,9 @@ val WireTest by testSuite {
                 InputDone(13, 1_220, null),
                 InputDone(14, 1_221, "gv-1 aimed at the villager, but the crosshair is on the block at 0 101 2"),
                 Watch(player, listOf(BlockPos(0, 101, 2)), listOf(UUID(3, 4))),
+                Look(15, player, listOf(UUID(3, 4), UUID(5, 6))),
+                Look(16, player, listOf()),
+                Looked(15),
                 Perceived(
                     "gv-1",
                     Perception(
@@ -195,7 +200,7 @@ val WireTest by testSuite {
                             Block(BlockPos(0, 101, 2), "minecraft:air", true, 1_204),
                             Block(BlockPos(1, 101, 2), "minecraft:stone", false, -1),
                         ),
-                        listOf(Entity(UUID(3, 4), true, "Ouch"), Entity(UUID(5, 6), false, null)),
+                        listOf(Entity(UUID(3, 4), true, "Ouch", 1_404), Entity(UUID(5, 6), false, null, Entity.UNMEASURED)),
                     ),
                 ),
                 Perceived("gv-1", Perception(0, listOf(), listOf(), null, listOf(), listOf(), listOf())),

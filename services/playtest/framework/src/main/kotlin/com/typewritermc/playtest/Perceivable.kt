@@ -23,6 +23,16 @@ interface Perceivable {
         perception: Perception,
         stimulus: Stimulus,
     ): String = description
+
+    /**
+     * The entities whose visible pixels this fact reads. While a window checks it, the player's client
+     * draws each tick's frame for real, with and without each of them, so only a fact that names some
+     * pays for drawn frames.
+     */
+    val pixelsOf: List<EntityRef> get() = listOf()
+
+    /** What [perception] shows of the thing this fact is about, for a report, or null when its texts say enough. */
+    fun observed(perception: Perception): String? = null
 }
 
 /**
@@ -170,6 +180,46 @@ class EntityFacts internal constructor(
 
     /** The frame draws the entity with a name tag holding [name]. */
     fun named(name: String): Perceivable = drawn("entity $entity named \"$name\"") { it.name()?.contains(name) == true }
+
+    /**
+     * The frame draws the entity, whether or not any of it shows: it passed culling, so it may still
+     * stand behind a wall or be fully transparent. [visible] says whether the player can see it.
+     */
+    fun drawn(): Perceivable = drawn("entity $entity drawn") { true }
+
+    /**
+     * The frame draws the entity and at least [pixels] of its pixels are its own: drawn once more
+     * without it, that many pixels show another colour. A wall, full transparency or a screen in front
+     * of it leaves it none. Only this fact makes the client draw frames for real.
+     */
+    fun visible(pixels: Int = VISIBLE_PIXELS): Perceivable =
+        object : Perceivable {
+            override val description =
+                if (pixels == VISIBLE_PIXELS) "entity $entity visible" else "entity $entity visible, owning at least $pixels pixels"
+
+            override val pixelsOf = listOf(entity)
+
+            override fun shownIn(
+                perception: Perception,
+                stimulus: Stimulus,
+            ) = drawnAs(perception)?.let { it.pixels() >= pixels } == true
+
+            override fun observed(perception: Perception): String {
+                val drawn = drawnAs(perception)
+                return when {
+                    drawn == null -> "entity $entity not drawn"
+                    drawn.pixels() == Entity.UNMEASURED -> "entity $entity drawn, its pixels not counted"
+                    else -> "entity $entity drawn, owning ${drawn.pixels()} pixels"
+                }
+            }
+        }
+
+    private companion object {
+        /** Enough pixels to make out a small entity at a distance, few enough that a sliver past a wall counts. */
+        const val VISIBLE_PIXELS = 30
+    }
+
+    private fun drawnAs(perception: Perception): Entity? = perception.entities().firstOrNull { it.uuid() == entity.uuid }
 
     private fun drawn(
         description: String,

@@ -12,6 +12,8 @@ import com.typewritermc.playtest.wire.Message.InputDone
 import com.typewritermc.playtest.wire.Message.InputStep
 import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Lease
+import com.typewritermc.playtest.wire.Message.Look
+import com.typewritermc.playtest.wire.Message.Looked
 import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Probe
@@ -21,6 +23,7 @@ import com.typewritermc.playtest.wire.Message.Query
 import com.typewritermc.playtest.wire.Message.Queue
 import com.typewritermc.playtest.wire.Message.Reclaim
 import com.typewritermc.playtest.wire.Message.Refused
+import com.typewritermc.playtest.wire.Message.Reply
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
 import com.typewritermc.playtest.wire.Message.Settle
@@ -80,9 +83,7 @@ internal class PoolSession private constructor(
     private val requests = AtomicLong()
     private val barriers = AtomicInteger()
     private val leases = ConcurrentHashMap<Long, Leasing>()
-    private val probes = ConcurrentHashMap<Long, CompletableDeferred<ProbeDone>>()
-    private val inputs = ConcurrentHashMap<Long, CompletableDeferred<InputDone>>()
-    private val queries = ConcurrentHashMap<Long, CompletableDeferred<Marks>>()
+    private val replies = ConcurrentHashMap<Long, CompletableDeferred<Reply>>()
     private val settles = ConcurrentHashMap<Long, CompletableDeferred<Settled>>()
     private val attempts = ConcurrentHashMap<String, Attempt>()
     private val ended = CompletableDeferred<Unit>()
@@ -252,8 +253,7 @@ internal class PoolSession private constructor(
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<Kind> {
-        val request = requests.incrementAndGet()
-        val answer = waitFor(queries, request) { send(Query(request, player.uuid)) }
+        val answer = request<Marks> { request -> Query(request, player.uuid) }
         answer.failure()?.let { throw ProbeFailed(it) }
         return answer.marked()
     }
@@ -263,8 +263,7 @@ internal class PoolSession private constructor(
         players: List<GamePlayer>,
         action: ProbeAction,
     ): Int {
-        val request = requests.incrementAndGet()
-        val done = waitFor(probes, request) { send(Probe(request, players.map { it.uuid }, action)) }
+        val done = request<ProbeDone> { request -> Probe(request, players.map { it.uuid }, action) }
         done.failure()?.let { throw ProbeFailed(it) }
         return done.tick()
     }
@@ -274,10 +273,20 @@ internal class PoolSession private constructor(
         player: GamePlayer,
         steps: List<InputStep>,
     ): Int {
-        val request = requests.incrementAndGet()
-        val done = waitFor(inputs, request) { send(Input(request, player.uuid, steps)) }
+        val done = request<InputDone> { request -> Input(request, player.uuid, steps) }
         done.failure()?.let { throw InputFailed(it) }
         return done.tick()
+    }
+
+    /**
+     * [player]'s client counts the pixels each of [entities] owns in every record from now on, until
+     * the next look; returns once a record measured that way went out, so every later one does too.
+     */
+    suspend fun look(
+        player: GamePlayer,
+        entities: List<EntityRef>,
+    ) {
+        request<Looked> { request -> Look(request, player.uuid, entities.map { it.uuid }) }
     }
 
     /** Ends the session: the pool writes this session's cases into the run file. */
@@ -285,6 +294,12 @@ internal class PoolSession private constructor(
         send(End(settings.run, settings.testRun.toString(), RunPlan.current.policy))
         ended.await()
         socket.close()
+    }
+
+    /** Sends the request [message] builds from a fresh request id and returns its [Reply]. */
+    private suspend inline fun <reified T : Reply> request(crossinline message: (Long) -> Message): T {
+        val request = requests.incrementAndGet()
+        return waitFor(replies, request) { send(message(request)) } as T
     }
 
     private suspend fun <T> waitFor(
@@ -326,16 +341,8 @@ internal class PoolSession private constructor(
                 leases[message.submission()]?.attempt?.completeExceptionally(RequirementDeclined(message.reason()))
             }
 
-            is ProbeDone -> {
-                probes[message.request()]?.complete(message)
-            }
-
-            is InputDone -> {
-                inputs[message.request()]?.complete(message)
-            }
-
-            is Marks -> {
-                queries[message.request()]?.complete(message)
+            is Reply -> {
+                replies[message.request()]?.complete(message)
             }
 
             is Message.PlayerEvent -> {
@@ -377,9 +384,7 @@ internal class PoolSession private constructor(
     private fun fail(cause: GameUnavailable) {
         broken = cause
         leases.values.forEach { it.attempt.completeExceptionally(cause) }
-        probes.values.forEach { it.completeExceptionally(cause) }
-        inputs.values.forEach { it.completeExceptionally(cause) }
-        queries.values.forEach { it.completeExceptionally(cause) }
+        replies.values.forEach { it.completeExceptionally(cause) }
         settles.values.forEach { it.completeExceptionally(cause) }
         attempts.values.forEach { it.fail(cause) }
         ended.completeExceptionally(cause)

@@ -231,6 +231,7 @@ final class Probes implements Listener {
             ((CraftEntity) entity).getHandle().setUUID(spawn.uuid());
             entity.setSilent(true);
             entity.setPersistent(true);
+            entity.setInvisible(spawn.invisible());
             if (entity instanceof LivingEntity living) {
                 living.setAI(false);
                 living.setRemoveWhenFarAway(false);

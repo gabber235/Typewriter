@@ -163,6 +163,12 @@ internal class Attempt(
         says: String,
     ): Mark = step("input ${player.name} $says") { Mark(unlessLost { session.input(player, steps) }) }.also { ran(it.tick) }
 
+    /** [player]'s client counts the pixels of [entities] in every record from now on; an empty list ends it. */
+    suspend fun look(
+        player: GamePlayer,
+        entities: List<EntityRef>,
+    ) = unlessLost { session.look(player, entities) }
+
     /** The answer of [call], unless a client of the attempt is lost first: a lost client never answers. */
     private suspend fun <T> unlessLost(call: suspend () -> T): T =
         coroutineScope {

@@ -134,9 +134,18 @@ class RequirementScope internal constructor(
         // What the players perceived since the attempt began counts too: a window opened late still
         // sees the records of every tick after its stimulus.
         var verdict: Window.Verdict = Window.Verdict.Open
+        // Only a check that reads pixels makes its player's client draw: from the look on, each record
+        // counts them, and the look ends with the window.
+        val looks =
+            (declared.checks + declared.nevers)
+                .groupBy({ it.player }, { it.fact.pixelsOf })
+                .mapValues { (_, entities) -> entities.flatten().distinct() }
+                .filterValues { it.isNotEmpty() }
         try {
+            looks.forEach { (player, entities) -> attempt.look(player, entities) }
             attempt.timeline.filter { it !is Attempt.Event.Failed }.forEach { verdict = rules.judge(it) }
             if (verdict == Window.Verdict.Open) verdict = rules.stepUntilDecided(checked)
+            looks.keys.forEach { attempt.look(it, listOf()) }
         } finally {
             attempt.took(opened, says(window, verdict, mark, ranBefore, declared))
         }

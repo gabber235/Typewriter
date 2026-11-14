@@ -122,9 +122,13 @@ internal class Window(
                 )
             }
             open.map { it.player }.distinct().forEach { player ->
-                val texts = lastSeen[player]?.texts().orEmpty()
+                val last = lastSeen[player]
+                val texts = last?.texts().orEmpty()
                 val shown = if (texts.isEmpty()) "nothing" else texts.joinToString { "${it.element()} \"${it.text()}\"" }
                 append("At tick $end ${player.name} perceived $shown.\n")
+                open.filter { it.player == player }.mapNotNull { check -> last?.let(check.fact::observed) }.distinct().forEach {
+                    append("At tick $end ${player.name} perceived $it.\n")
+                }
             }
         }.trimEnd()
 }

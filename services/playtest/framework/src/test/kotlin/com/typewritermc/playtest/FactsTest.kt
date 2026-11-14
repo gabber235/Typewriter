@@ -130,18 +130,62 @@ val FactsTest by testSuite {
     test("an entity is hurt or named only while the frame draws it so") {
         val pig = EntityRef(UUID(0, 7), "minecraft:pig")
 
-        entity(pig).hurt().shownIn(perception(104, entities = listOf(Entity(UUID(0, 7), true, null))), before) shouldBe true
-        entity(pig).hurt().shownIn(perception(104, entities = listOf(Entity(UUID(0, 7), false, null))), before) shouldBe false
-        entity(pig).named("Oink").shownIn(perception(104, entities = listOf(Entity(UUID(0, 7), false, "Oink"))), before) shouldBe true
-        entity(pig).named("Oink").shownIn(perception(104, entities = listOf(Entity(UUID(0, 7), false, "Pig"))), before) shouldBe false
+        fun drawing(
+            hurt: Boolean,
+            name: String?,
+        ) = perception(104, entities = listOf(Entity(UUID(0, 7), hurt, name, Entity.UNMEASURED)))
+
+        entity(pig).hurt().shownIn(drawing(hurt = true, name = null), before) shouldBe true
+        entity(pig).hurt().shownIn(drawing(hurt = false, name = null), before) shouldBe false
+        entity(pig).named("Oink").shownIn(drawing(hurt = false, name = "Oink"), before) shouldBe true
+        entity(pig).named("Oink").shownIn(drawing(hurt = false, name = "Pig"), before) shouldBe false
     }
 
     test("an entity the frame does not draw shows nothing") {
         val pig = EntityRef(UUID(0, 7), "minecraft:pig")
-        val other = perception(104, entities = listOf(Entity(UUID(0, 8), true, "Oink")))
+        val other = perception(104, entities = listOf(Entity(UUID(0, 8), true, "Oink", Entity.UNMEASURED)))
 
         entity(pig).hurt().shownIn(other, before) shouldBe false
         entity(pig).named("Oink").shownIn(other, before) shouldBe false
+        entity(pig).drawn().shownIn(other, before) shouldBe false
+        entity(pig).visible().shownIn(other, before) shouldBe false
+    }
+
+    test("an entity the frame draws is drawn however few of its pixels show") {
+        val zombie = EntityRef(UUID(0, 7), "minecraft:zombie")
+
+        fun owning(pixels: Int) = perception(104, entities = listOf(Entity(UUID(0, 7), false, null, pixels)))
+
+        entity(zombie).drawn().shownIn(owning(0), before) shouldBe true
+        entity(zombie).drawn().shownIn(owning(Entity.UNMEASURED), before) shouldBe true
+    }
+
+    test("an entity is visible once it owns at least 30 pixels of the frame, or as many as the check asks") {
+        val zombie = EntityRef(UUID(0, 7), "minecraft:zombie")
+
+        fun owning(pixels: Int) = perception(104, entities = listOf(Entity(UUID(0, 7), false, null, pixels)))
+
+        entity(zombie).visible().shownIn(owning(30), before) shouldBe true
+        entity(zombie).visible().shownIn(owning(29), before) shouldBe false
+        entity(zombie).visible().shownIn(owning(0), before) shouldBe false
+        entity(zombie).visible(pixels = 30_000).shownIn(owning(38_803), before) shouldBe true
+        entity(zombie).visible(pixels = 30_000).shownIn(owning(22_169), before) shouldBe false
+    }
+
+    test("an entity whose pixels were not counted is not visible") {
+        val zombie = EntityRef(UUID(0, 7), "minecraft:zombie")
+
+        val unmeasured = perception(104, entities = listOf(Entity(UUID(0, 7), false, null, Entity.UNMEASURED)))
+
+        entity(zombie).visible().shownIn(unmeasured, before) shouldBe false
+    }
+
+    test("a report names how many pixels an entity owned, or that the frame did not draw it") {
+        val zombie = EntityRef(UUID(0, 7), "minecraft:zombie")
+
+        entity(zombie).visible().observed(perception(104, entities = listOf(Entity(UUID(0, 7), false, null, 0)))) shouldBe
+            "entity zombie drawn, owning 0 pixels"
+        entity(zombie).visible().observed(perception(104)) shouldBe "entity zombie not drawn"
     }
 
     test("any chat is a line that arrived after the stimulus, drawn or not, and is named by that line") {

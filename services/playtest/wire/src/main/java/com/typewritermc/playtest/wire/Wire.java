@@ -31,6 +31,8 @@ import com.typewritermc.playtest.wire.Message.Key;
 import com.typewritermc.playtest.wire.Message.KeyStep;
 import com.typewritermc.playtest.wire.Message.Kind;
 import com.typewritermc.playtest.wire.Message.Lease;
+import com.typewritermc.playtest.wire.Message.Look;
+import com.typewritermc.playtest.wire.Message.Looked;
 import com.typewritermc.playtest.wire.Message.Marks;
 import com.typewritermc.playtest.wire.Message.Perceived;
 import com.typewritermc.playtest.wire.Message.Perception;
@@ -228,6 +230,12 @@ public final class Wire {
                 body.writeInt(watch.entities().size());
                 for (UUID entity : watch.entities()) uuid(body, entity);
             }
+            case Look look -> {
+                body.writeLong(look.request());
+                uuid(body, look.player());
+                uuids(body, look.entities());
+            }
+            case Looked looked -> body.writeLong(looked.request());
             case StepUntil step -> {
                 uuid(body, step.player());
                 body.writeInt(step.tick());
@@ -330,6 +338,8 @@ public final class Wire {
             case ClientStalled m -> 34;
             case HungEnded m -> 35;
             case RegionsAhead m -> 36;
+            case Look m -> 37;
+            case Looked m -> 38;
         };
     }
 
@@ -407,6 +417,8 @@ public final class Wire {
             case 34 -> new ClientStalled(string(in), in.readInt());
             case 35 -> new HungEnded(string(in), string(in));
             case 36 -> new RegionsAhead(regions(in));
+            case 37 -> new Look(in.readLong(), uuid(in), uuids(in));
+            case 38 -> new Looked(in.readLong());
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
     }
@@ -485,6 +497,7 @@ public final class Wire {
                 out.writeDouble(spawn.y());
                 out.writeDouble(spawn.z());
                 out.writeFloat(spawn.yaw());
+                out.writeBoolean(spawn.invisible());
                 optional(out, spawn.onHit());
                 optional(out, spawn.onClick());
             }
@@ -531,7 +544,7 @@ public final class Wire {
             case 3 -> new ProbeGive(in.readInt(), string(in), in.readInt());
             case 4 -> new ProbeSelectSlot(in.readInt());
             case 5 -> new ProbeFill(blockPos(in), blockPos(in), string(in));
-            case 6 -> new ProbeSpawn(uuid(in), string(in), in.readDouble(), in.readDouble(), in.readDouble(), in.readFloat(), optional(in), optional(in));
+            case 6 -> new ProbeSpawn(uuid(in), string(in), in.readDouble(), in.readDouble(), in.readDouble(), in.readFloat(), in.readBoolean(), optional(in), optional(in));
             case 7 -> new ProbeCancelBreaking(blockPos(in));
             case 8 -> new ProbeCommand(string(in), strings(in), string(in));
             case 9 -> new ProbePacketEntity(uuid(in), string(in), in.readDouble(), in.readDouble(), in.readDouble(), in.readFloat(), optional(in), optional(in));
@@ -657,6 +670,7 @@ public final class Wire {
             uuid(out, entity.uuid());
             out.writeBoolean(entity.hurt());
             optional(out, entity.name());
+            out.writeInt(entity.pixels());
         }
     }
 
@@ -679,7 +693,7 @@ public final class Wire {
         for (int i = 0; i < blockCount; i++) blocks.add(new Block(blockPos(in), string(in), in.readBoolean(), in.readInt()));
         int entityCount = count(in);
         var entities = new ArrayList<Entity>(entityCount);
-        for (int i = 0; i < entityCount; i++) entities.add(new Entity(uuid(in), in.readBoolean(), optional(in)));
+        for (int i = 0; i < entityCount; i++) entities.add(new Entity(uuid(in), in.readBoolean(), optional(in), in.readInt()));
         return new Perception(tick, List.copyOf(texts), List.copyOf(chat), camera, List.copyOf(items), List.copyOf(blocks), List.copyOf(entities));
     }
 

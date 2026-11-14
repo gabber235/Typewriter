@@ -36,7 +36,7 @@ public final class Hooks {
     public static void render(Minecraft mc, GameRenderer renderer) {
         switch (Frames.mode()) {
             case DRAW -> renderer.render();
-            case PERCEIVE -> NoDraw.render(mc);
+            case PERCEIVE -> Looks.perceive(mc, renderer);
             case SKIP -> {}
         }
         Frames.end();
@@ -113,5 +113,10 @@ public final class Hooks {
 
     public static void entityDrawn(Entity entity, EntityRenderState state) {
         Perceiver.onEntity(entity, state);
+    }
+
+    /** Whether the frame extracting now leaves {@code entity} out, as if it stood nowhere in view. */
+    public static boolean hidden(Entity entity) {
+        return Looks.hides(entity.getUUID());
     }
 }
