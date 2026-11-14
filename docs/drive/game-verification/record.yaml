@@ -535,6 +535,12 @@ decided:
     why: Bukkit's Entity.setLastDamageCause is deprecated for removal and internal, so the wipe keeps calling the server's own player, like its other wipes; replaces an earlier pick made on the belief that a public API existed
   - id: start-slice-4
     what: You can start slice 4
+  - id: claim-side-by-side-together
+    what: "A. Claim them together (Recommended)"
+    why: The pool grants side by side attempts' players at the same moment; holding one while the partner queued behind a group of 4 deadlocked run 4
+  - id: frozen-client-5s
+    what: "A. 5 s framework limit (Recommended)"
+    why: A client that has not acked for 5 s of wall clock counts as lost; about 18 times the worst stall seen, and provable by freezing a client
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
