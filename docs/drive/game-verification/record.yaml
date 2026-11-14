@@ -603,11 +603,23 @@ slices:
       player because the Bukkit method is deprecated for removal; the game suite
       still takes no --only or --repeat (slice 5).
   - id: done-and-hung-work
-    status: building
+    status: done
     what: per player quiet in the step, 1 s hung report, a dead client fails its attempt and is replaced; Paper side counting only (the test side hook stays open for layers 3 and 6)
     green: an async lookup passes; a hung one is reported; a killed client fails only its attempt
+    evidence: [commits 25e49ff86 071c99eef, "cargo xtask e2e game on 071c99eef: 82 passed, .xtask/results/game/test_run.json"]
+    taught: >-
+      Plugins report work per player through a public PlayerWork API; the next tick waits while it
+      runs, and work past 1 s fails its attempt. Side by side attempts travel in one Queue message and
+      get their leases together. Claims tracks why a player is out (lost client, hung work) apart from
+      the attempt holding it. A client silent for 5 s is lost and replaced; in a stepped Paper the
+      keepalive timeout never fires, so the 5 s limit is the only bound short of the watchdog. A hung
+      player sits out until its work ends; work that never ends is noted on the failing case. Each
+      rule was seen failing first. LEAK-1 depends on timing (work must outlast the next reclaim).
+      Long windows step at 13 to 33 ms per tick. Median per requirement unchanged (about 1.2 s).
+      Open: xtask can report a pass from a sibling session's run file when a test JVM is killed
+      (slice 5).
   - id: retries-and-results
-    status: queued
+    status: next
     what: retries at the queue end, Flaky, quarantine, xtask gate on TestRun
     green: a flaky probe blocks the run
   - id: pixels
@@ -627,4 +639,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 4 (done and hung work) is building on feat/game-verification-slice-4. Watch the time per requirement (median 1.3 s for wipe requirements, 0.1 to 0.8 s for the rest). Accept slice 4 on evidence, then check in.
+next: Slice 4 done. Confirm its built decisions, then start slice 5 (retries and results, --only and --repeat, then measure where time per requirement goes).
