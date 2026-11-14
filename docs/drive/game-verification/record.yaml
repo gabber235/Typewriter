@@ -533,9 +533,8 @@ decided:
   - id: last-damage-cause-server-call
     what: "A. Server call, fix comment (Recommended)"
     why: Bukkit's Entity.setLastDamageCause is deprecated for removal and internal, so the wipe keeps calling the server's own player, like its other wipes; replaces an earlier pick made on the belief that a public API existed
-  - id: slice-4-not-yet
-    what: "Not yet"
-    why: The developer paused before slice 4
+  - id: start-slice-4
+    what: You can start slice 4
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -595,9 +594,9 @@ slices:
       player because the Bukkit method is deprecated for removal; the game suite
       still takes no --only or --repeat (slice 5).
   - id: done-and-hung-work
-    status: next
-    what: per player quiet in the step, 1 s hung report
-    green: an async lookup passes; a hung one is reported
+    status: building
+    what: per player quiet in the step, 1 s hung report, a dead client fails its attempt and is replaced; Paper side counting only (the test side hook stays open for layers 3 and 6)
+    green: an async lookup passes; a hung one is reported; a killed client fails only its attempt
   - id: retries-and-results
     status: queued
     what: retries at the queue end, Flaky, quarantine, xtask gate on TestRun
@@ -619,4 +618,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 4 (done and hung work, a dead client) waits for the developer.
+next: Slice 4 (done and hung work) is building on feat/game-verification-slice-4. Watch the time per requirement (median 1.3 s for wipe requirements, 0.1 to 0.8 s for the rest). Accept slice 4 on evidence, then check in.
