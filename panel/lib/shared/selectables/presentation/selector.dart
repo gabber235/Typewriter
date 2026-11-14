@@ -60,8 +60,8 @@ final class _SelectableFocusNode extends FocusNode {
 /// it, and Shift with an arrow moves focus and extends that range, both in
 /// the visible order of the nearest [SelectionSurface], where the selector
 /// registers itself. Control+click on Apple platforms opens the context menu.
-/// In select mode the item reads as checked or not, and a [SelectorCheck] in
-/// [builder] shows its check.
+/// In select mode, on a surface holding a selected item, the item reads as
+/// checked or not, and a [SelectorCheck] in [builder] shows its check.
 class Selector extends HookConsumerWidget {
   const Selector({
     required this.selectableId,
@@ -105,10 +105,14 @@ class Selector extends HookConsumerWidget {
     final anchorKey = useGlobalKey();
     final pendingContextPosition = useState<Offset?>(null);
     final contextTargets = useState<List<SelectableIdentifier>?>(null);
-    final selecting = ref.watch(selectModeProvider);
     final selection = ref.watch(selectionProvider);
     final selected = ref.watch(selectedProvider);
     final surface = SelectionSurface.maybeOf(context);
+    // Select mode shows checks only on a surface holding a selected item,
+    // so the rest of the page stays as it was.
+    final selecting =
+        ref.watch(selectModeProvider) &&
+        (surface == null ? isSelected : selection.any(surface.contains));
     useEffect(() => surface?.register(context, selectableId), [
       surface,
       selectableId,

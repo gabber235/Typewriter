@@ -109,3 +109,15 @@ final class SelectionSurfaceCase {
   @override
   String toString() => name;
 }
+
+/// Reading and choosing the cards of [TwoSelectionSurfaces].
+extension TwoSelectionSurfacesDriving on PanelDriver {
+  /// The card named [name].
+  SelectableDriver card(String name) => SelectableDriver(tester, name);
+
+  /// The cards of [surface] showing the check of select mode.
+  List<String> checkedOn(String surface) => [
+    for (final name in TwoSelectionSurfaces.surfaces[surface]!)
+      if (card(name).showsCheck) name,
+  ];
+}

@@ -3,6 +3,57 @@ import "package:typewriter_testkit/src/drivers/panel_driver.dart";
 
 import "test_selectable.dart";
 
+/// Two selection surfaces side by side, Left and Right, each holding two
+/// selectable cards named after their surface: Left 1, Left 2, Right 1 and
+/// Right 2.
+final class TwoSelectionSurfaces extends StatelessWidget {
+  const TwoSelectionSurfaces({super.key});
+
+  /// The card names of each surface, in visible order.
+  static const surfaces = {
+    "Left": ["Left 1", "Left 2"],
+    "Right": ["Right 1", "Right 2"],
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return SelectionOperationsRoot(
+      source: const RegisteredSelectionOperations([]),
+      child: Row(
+        children: [
+          for (final cards in surfaces.values)
+            Expanded(
+              child: SelectionSurface(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [for (final name in cards) _SurfaceCard(name)],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SurfaceCard extends HookWidget {
+  const _SurfaceCard(this.name);
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final focus = useFocusNode();
+    final target = useMemoized(() => TestSelectableIdentifier(id: name));
+    return Selector(
+      selectableId: target,
+      focusNode: focus,
+      builder: (selected, focused, hovered) =>
+          SelectorCheck(child: SizedBox(height: 48, child: Text(name))),
+    );
+  }
+}
+
 /// A target whose selectable stays loading until [resolve] runs, or stays
 /// in whatever [result] the test assigns (for example an error).
 final class DeferredSelectableIdentifier extends TestSelectableIdentifier {

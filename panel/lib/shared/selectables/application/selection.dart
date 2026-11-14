@@ -129,8 +129,8 @@ class Selection extends _$Selection {
   }
 }
 
-/// Whether the selection is in select mode, so every selectable shows its
-/// check.
+/// Whether the selection is in select mode, so the selectables of every
+/// surface holding a selected item show their check.
 ///
 /// An add gesture (Space, a Command or Control click, a Shift click, Shift
 /// with an arrow, select all) starts it. A plain click, which selects one

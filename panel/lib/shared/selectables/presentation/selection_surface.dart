@@ -76,6 +76,10 @@ final class SelectionSurfaceItems {
     };
   }
 
+  /// Whether [id] is an item of this surface.
+  bool contains(SelectableIdentifier id) =>
+      _explicit?.contains(id) ?? _registered.containsValue(id);
+
   /// Every item of the surface in visible order.
   List<SelectableIdentifier> get order {
     if (_explicit case final explicit?) return explicit;

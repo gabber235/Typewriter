@@ -102,7 +102,7 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | Placing an action | Attach it to the smallest thing it acts on: the focused row, then the selection, then the pane, then the page | 2 |
 | One key matches at several levels | The most specific level wins | 2 |
 | Both a focused row and a selection exist | Act on the selection if it contains the focused row, otherwise on the focused row | 3 |
-| Something can be selected | Use `Selector` inside a `SelectionSurface`. A plain click or Enter selects only it, without checks. Cmd+click on macOS, Ctrl+click elsewhere, or Space adds or removes it; Shift+click or Shift+Arrows select the range from the anchor in the surface's visible order. From the first add until the selection is empty, every item shows its check (`SelectorCheck`); a plain click ends that. Esc clears the whole selection | 3 |
+| Something can be selected | Use `Selector` inside a `SelectionSurface`. A plain click or Enter selects only it, without checks. Cmd+click on macOS, Ctrl+click elsewhere, or Space adds or removes it; Shift+click or Shift+Arrows select the range from the anchor in the surface's visible order. From the first add until the selection is empty, every item of a surface holding a selected item shows its check (`SelectorCheck`), and other surfaces stay as they were; a plain click ends that. Esc clears the whole selection | 3 |
 | An action cannot work here | Leave it out of key hints and the command list, which list the most specific actions first | 2 |
 | Moving around | Tab between controls and groups, arrows and H, J, K, L inside them, Esc out one level | 2 |
 | Only touch is available | Hide key caps, key hints, and the mode chip | 2 |

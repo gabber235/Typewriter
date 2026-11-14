@@ -161,4 +161,21 @@ void main() {
       });
     });
   }
+
+  testWidgets("checks show only on surfaces holding a selected item", (
+    tester,
+  ) async {
+    final panel = await tester.showComponent(const TwoSelectionSurfaces());
+    await panel.card("Left 1").toggle();
+    expect(panel.checkedOn("Left"), ["Left 1", "Left 2"]);
+    expect(panel.checkedOn("Right"), isEmpty);
+
+    await panel.card("Right 2").toggle();
+    expect(panel.checkedOn("Left"), ["Left 1", "Left 2"]);
+    expect(panel.checkedOn("Right"), ["Right 1", "Right 2"]);
+
+    await panel.card("Left 1").toggle();
+    expect(panel.checkedOn("Left"), isEmpty);
+    expect(panel.checkedOn("Right"), ["Right 1", "Right 2"]);
+  });
 }
