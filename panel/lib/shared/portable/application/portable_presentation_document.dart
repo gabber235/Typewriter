@@ -27,6 +27,10 @@ sealed class PortablePresentationBindingSchema
 
 /// One observed value and its schema, editability and optional resource origin.
 /// Writes pass through `PortablePresentationHost` rather than mutating this value.
+///
+/// A binding that stands for several selected items which disagree has an
+/// unfilled [value] and keeps each item's value in [itemValues], so a control
+/// can show where they differ.
 @freezed
 abstract class PortablePresentationBinding with _$PortablePresentationBinding {
   const factory PortablePresentationBinding({
@@ -34,6 +38,7 @@ abstract class PortablePresentationBinding with _$PortablePresentationBinding {
     required skir.DataValue value,
     @Default(false) bool editable,
     skir.ValueLocation? location,
+    @Default([]) List<skir.DataValue> itemValues,
   }) = _PortablePresentationBinding;
 }
 

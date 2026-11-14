@@ -25,6 +25,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
   }) {
     final current = scope.read(control.binding)?.authoredPayload;
     if (current == null) return _diagnostic("The $name binding is unavailable");
+    final mixed = scope.isMixed(control.binding);
     return _controlFrame(
       control,
       appearance == null ? scope : scope.withAppearance(appearance),
@@ -82,6 +83,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                       value: current == skir.DataValue.unfilled
                           ? null
                           : current,
+                      mixed: mixed,
                       name: name,
                       icon: icon,
                       enabled: scope.enabled,
@@ -96,7 +98,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                         hintText:
                             _entryPlaceholder(content, scope) ??
                             "Enter a $name",
-                        helperText: current == skir.DataValue.unfilled
+                        helperText: current == skir.DataValue.unfilled && !mixed
                             ? "This value is Unfilled"
                             : null,
                         prefixIcon: externalLeading ? null : leading,
@@ -249,12 +251,17 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                       ],
                       style: style.valueStyle,
                       textAlign: style.alignment,
-                      decoration: style.decoration.copyWith(
-                        hintText:
-                            _entryPlaceholder(input.content, scope) ??
-                            "Enter text",
-                        suffixIcon: outsideSuffix ? null : suffix,
-                      ),
+                      decoration: () {
+                        final decoration = style.decoration.copyWith(
+                          hintText:
+                              _entryPlaceholder(input.content, scope) ??
+                              "Enter text",
+                          suffixIcon: outsideSuffix ? null : suffix,
+                        );
+                        return scope.isMixed(input.control.binding)
+                            ? decoration.forMixedValue
+                            : decoration;
+                      }(),
                       prefix: outsideLeading ? null : leading,
                       selectAllOnFocus: input.entry?.selectAllOnFocus ?? false,
                       onChanged: (text) =>

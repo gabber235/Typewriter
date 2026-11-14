@@ -246,6 +246,20 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     return host?.read(reference, context: invocation);
   }
 
+  /// The value each selected item holds at [reference], when the binding
+  /// stands for several items that disagree there; empty when they agree or
+  /// the binding stands for one item.
+  List<skir.DataValue?> itemValues(skir.BindingRef reference) {
+    final items = bindings[reference.bindingId]?.itemValues ?? const [];
+    final values = [
+      for (final item in items) item.editorValueAt(reference.path),
+    ];
+    return values.toSet().length > 1 ? values : const [];
+  }
+
+  /// Whether the selected items behind [reference] hold different values.
+  bool isMixed(skir.BindingRef reference) => itemValues(reference).isNotEmpty;
+
   skir.ValueLocation? location(skir.BindingRef reference) {
     return host?.location(reference, context: invocation);
   }

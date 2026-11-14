@@ -38,40 +38,9 @@ class DateTimePickerField extends HookConsumerWidget {
     this.popupConstraints,
     this.enabled = true,
     this.readOnly = false,
+    this.mixed = false,
     super.key,
-  }) : mixed = false;
-
-  const DateTimePickerField.mixed({
-    required this.includeDate,
-    required this.includeTime,
-    required this.onChanged,
-    this.onCleared,
-    this.onInteractionStart,
-    this.onInteractionCommit,
-    this.showPicker = true,
-    this.minimum,
-    this.maximum,
-    this.timeIncrementMilliseconds,
-    this.popupPadding,
-    this.popupColor,
-    this.popupShape,
-    this.decoration,
-    this.style,
-    this.textAlign = TextAlign.start,
-    this.selectAllOnFocus = false,
-    this.showDefaultIcon = true,
-    this.statesController,
-    this.onCommittedDone,
-    this.onPickerCommitted,
-    this.display,
-    this.validator,
-    this.overlayConfig,
-    this.popupConstraints,
-    this.enabled = true,
-    this.readOnly = false,
-    super.key,
-  }) : value = null,
-       mixed = true;
+  }) : assert(!mixed || value == null);
 
   final bool showPicker;
   final DateTime? minimum;
@@ -296,9 +265,7 @@ class DateTimePickerField extends HookConsumerWidget {
               ),
           ],
           decoration: (decoration ?? const InputDecoration()).copyWith(
-            hintText: mixed
-                ? "Multiple values"
-                : decoration?.hintText ?? format,
+            hintText: mixed ? mixedValueLabel : decoration?.hintText ?? format,
             helperText: !mixed && currentValue == null
                 ? "This value is Unfilled"
                 : null,

@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/data/shared/inspector.dart";
 import "package:widgetbook_workspace/support/story.dart";
 
 final _lostVillage = Book(
@@ -111,4 +112,36 @@ Widget mobileInspectorUseCase(BuildContext context) {
 @widgetbook.UseCase(name: "Default", type: InspectorOperations)
 Widget inspectorOperationsUseCase(BuildContext context) {
   return Story(_selection(context));
+}
+
+/// The inspector editing several members together: [InspectorCountHeading]
+/// names how many there are, and every field they hold differently shows as
+/// mixed until a change sets it for all of them.
+@widgetbook.UseCase(name: "Default", type: InspectorCountHeading)
+Widget inspectorCountHeadingUseCase(BuildContext context) {
+  return Story(
+    [
+      ...context.knobs.traits("Selection", {
+        "One member": [
+          selected([storyAda]),
+        ],
+        "Two members who differ": [
+          selected([storyAda, storyGrace]),
+        ],
+        "Two members who agree": [
+          selected([storyAda, storyLin]),
+        ],
+        "Three members": [
+          selected([storyAda, storyGrace, storyLin]),
+        ],
+      }, initial: "Two members who differ"),
+    ],
+    at: const PanelLocation.component(
+      SizedBox(
+        width: 1600,
+        height: 900,
+        child: InspectorScaffold(child: SizedBox.expand()),
+      ),
+    ),
+  );
 }

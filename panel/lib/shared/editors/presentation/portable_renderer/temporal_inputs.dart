@@ -107,6 +107,7 @@ extension _PortableTemporalInputRendering on PortablePresentationNodeRenderer {
                   showDefaultIcon: false,
                   key: ValueKey("${node.nodeId}.input"),
                   value: timestamp,
+                  mixed: scope.isMixed(input.control.binding),
                   includeDate: date,
                   includeTime: time,
                   minimum: minimum,

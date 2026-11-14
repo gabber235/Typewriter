@@ -325,6 +325,7 @@ extension PortablePresentationRootInvocation on PortablePresentationHost {
             value: entry.value.value,
             location: entry.value.location,
             schema: entry.value.schema,
+            itemValues: entry.value.itemValues,
           ),
       },
       catalogGeneration: observation.catalog.snapshot.generation,

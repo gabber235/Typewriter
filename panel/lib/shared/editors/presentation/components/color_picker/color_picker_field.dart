@@ -5,9 +5,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The bound editor owns the color and receives every valid change through
 /// [onChanged]. This field owns only picker visibility and interaction
 /// boundaries. Opening begins an interaction, ordinary dismissal commits it,
-/// and every dismissal preserves the current value. The mixed constructor
-/// keeps differing bound values distinct until the caller
-/// chooses a replacement color. Supply [onCleared] to allow empty text to
+/// and every dismissal preserves the current value. [mixed] keeps differing
+/// bound values distinct until the caller chooses a replacement color. Supply [onCleared] to allow empty text to
 /// remove the value.
 class ColorPickerField extends HookConsumerWidget {
   const ColorPickerField({
@@ -42,43 +41,9 @@ class ColorPickerField extends HookConsumerWidget {
     this.readOnly = false,
     this.semanticLabel,
     this.semanticHint,
+    this.mixed = false,
     super.key,
-  }) : mixed = false;
-
-  const ColorPickerField.mixed({
-    required this.includeAlpha,
-    required this.onChanged,
-    this.onCleared,
-    this.onInteractionStart,
-    this.onInteractionCommit,
-    this.editingFormat = ColorFieldFormat.hex,
-    this.pickerFormat,
-    this.showSwatch = true,
-    this.showFormatSelector = true,
-    this.showCopyAction = true,
-    this.offeredSwatches = const [],
-    this.popupPadding,
-    this.popupColor,
-    this.popupShape,
-    this.decoration,
-    this.style,
-    this.textAlign = TextAlign.start,
-    this.selectAllOnFocus = false,
-    this.showDefaultIcon = true,
-    this.statesController,
-    this.onCommittedDone,
-    this.onPickerCommitted,
-    this.display,
-    this.validator,
-    this.overlayConfig,
-    this.popupConstraints,
-    this.enabled = true,
-    this.readOnly = false,
-    this.semanticLabel,
-    this.semanticHint,
-    super.key,
-  }) : color = null,
-       mixed = true;
+  }) : assert(!mixed || color == null);
 
   final ColorFieldFormat editingFormat;
   final ColorFieldFormat? pickerFormat;
@@ -326,7 +291,7 @@ class ColorPickerField extends HookConsumerWidget {
               ),
           ],
           decoration: (decoration ?? const InputDecoration()).copyWith(
-            hintText: mixed ? "Multiple colors" : decoration?.hintText,
+            hintText: mixed ? mixedValueLabel : decoration?.hintText,
             helperText: !mixed && currentColor == null
                 ? "This value is Unfilled"
                 : null,

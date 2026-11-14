@@ -49,6 +49,59 @@ final class InspectorDriver extends ComponentDriver {
   /// Moves keyboard focus into the inspector by clicking its heading [text].
   Future<void> focusHeading(String text) => tapOn(heading(text));
 
+  /// Whether the field [label] says the selected items hold different values
+  /// in it: a mixed check, the word Mixed where its value goes, or the note
+  /// that a change replaces every selected value.
+  bool showsMixed(String label) {
+    return _field(label).any((node) {
+      final data = node.getSemanticsData();
+      final words = [
+        ...data.label.split("\n"),
+        ...data.hint.split("\n"),
+        data.value,
+      ];
+      return data.flagsCollection.isChecked == CheckedState.mixed ||
+          words.contains(mixedValueLabel) ||
+          words.contains(mixedValueReplacementMessage);
+    });
+  }
+
+  /// The semantics of the field [label] and everything inside it: the node
+  /// that reads [label] first, as a text field reads its label before its
+  /// value, or the frame around a switch or a choice.
+  List<SemanticsNode> _field(String label) {
+    final fields = find.semantics
+        .byPredicate((node) => node.spoken.split("\n").first == label)
+        .evaluate();
+    if (fields.isEmpty) {
+      throw TestFailure("The inspector shows no field $label");
+    }
+    return [
+      for (final field in fields) ...[field, ...field.descendants],
+    ];
+  }
+
+  /// Presses Tab until keyboard focus is inside the field [label]; fails
+  /// when [limit] presses never reach it, since then no keyboard user can.
+  Future<void> tabToField(String label, {int limit = 30}) async {
+    bool inside() => _field(label).any((node) => node.isFocused);
+    for (var tabs = 0; tabs < limit && !inside(); tabs++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+    }
+    expect(inside(), isTrue, reason: "Tab reaches $label");
+  }
+
+  /// Clicks the control of the field [label], as a pointer user does.
+  Future<void> click(String label) async {
+    final control = _field(label).lastWhere(
+      (node) => node.isTappable,
+      orElse: () => throw TestFailure("The field $label takes no click"),
+    );
+    await tester.tapAt(control.screenRect.center);
+    await settle();
+  }
+
   /// Whether an inspector pane is open.
   bool get isOpen => panes.isNotEmpty;
 

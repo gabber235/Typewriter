@@ -43,16 +43,20 @@ sealed class PortableExpressionResult with _$PortableExpressionResult {
 
 /// A value bound for evaluation. A [location] makes reads through the binding
 /// authored reads; [schema] is the binding's declared type, when known.
+/// [itemValues] holds each selected item's value when the binding stands for
+/// several items that disagree, and is empty otherwise.
 final class PortableExpressionBinding {
   const PortableExpressionBinding({
     required this.value,
     this.location,
     this.schema,
+    this.itemValues = const [],
   });
 
   final skir.DataValue value;
   final skir.ValueLocation? location;
   final PortablePresentationBindingSchema? schema;
+  final List<skir.DataValue> itemValues;
 }
 
 /// Evaluates portable expression trees against bindings, with the generated

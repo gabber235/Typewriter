@@ -127,6 +127,7 @@ normalizePresentationBindings({
               value: entry.value.value,
               location: entry.value.location,
               schema: entry.value.schema,
+              itemValues: entry.value.itemValues,
             ),
         }
         .withPresentationEnvironment(surface)

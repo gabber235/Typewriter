@@ -13,20 +13,51 @@ typedef PortableBindingWriter =
 ///
 /// The reader and writer are supplied by the feature that owns the backend
 /// data transfer object. This adapter never converts a legacy type catalog or
-/// infers a nominal schema from runtime values.
+/// infers a nominal schema from runtime values. A binding that stands for
+/// several selected items reads each of them through [readItems]; where they
+/// disagree its snapshot is unfilled and keeps every item's value.
 final class BoundPresentationBinding {
   const BoundPresentationBinding({
     required this.id,
     required this.use,
     required this.read,
+    this.readItems,
     this.write,
     this.owner,
     this.control,
   });
 
+  /// A binding that reads [owner] through [read].
+  ///
+  /// Over a [MultiEditOwner] it reads each selected owner with [read] as well,
+  /// so the binding is mixed wherever they disagree, and [write] reaches every
+  /// selected owner through the combined owner.
+  factory BoundPresentationBinding.owned({
+    required skir.ExpressionBindingId id,
+    required skir.TypeUse use,
+    required EditOwner owner,
+    required skir.DataValue Function(EditOwner owner) read,
+    PortableBindingWriter? write,
+    EditControl? control,
+  }) => BoundPresentationBinding(
+    id: id,
+    use: use,
+    owner: owner,
+    control: control,
+    read: (_) => read(owner),
+    readItems: owner is MultiEditOwner
+        ? () => [for (final item in owner.owners) read(item)]
+        : null,
+    write: write,
+  );
+
   final skir.ExpressionBindingId id;
   final skir.TypeUse use;
   final PortableBindingReader read;
+
+  /// Reads the value each selected item holds, when the binding stands for
+  /// several items.
+  final List<skir.DataValue> Function()? readItems;
   final PortableBindingWriter? write;
 
   /// The backend editor source whose changes invalidate this binding.
@@ -35,11 +66,28 @@ final class BoundPresentationBinding {
 
   bool get editable => write != null;
 
-  PortablePresentationBinding snapshot() => PortablePresentationBinding(
-    schema: PortablePresentationBindingSchema.complete(use),
-    value: read(skir.ValuePath(segments: const [])) ?? skir.DataValue.unfilled,
-    editable: editable,
-  );
+  /// Each selected item's value when they disagree, otherwise empty.
+  List<skir.DataValue> get _disagreeingItems {
+    final items = readItems?.call() ?? const <skir.DataValue>[];
+    return items.toSet().length > 1 ? List.unmodifiable(items) : const [];
+  }
+
+  /// The value a control edits: unfilled where selected items disagree.
+  skir.DataValue? get current => _disagreeingItems.isEmpty
+      ? read(editorRootPath)
+      : skir.DataValue.unfilled;
+
+  PortablePresentationBinding snapshot() {
+    final items = _disagreeingItems;
+    return PortablePresentationBinding(
+      schema: PortablePresentationBindingSchema.complete(use),
+      value: items.isEmpty
+          ? read(editorRootPath) ?? skir.DataValue.unfilled
+          : skir.DataValue.unfilled,
+      editable: editable,
+      itemValues: items,
+    );
+  }
 }
 
 /// Presents backend owned service drafts through the portable renderer.
@@ -179,9 +227,7 @@ final class BoundPresentationHost extends ChangeNotifier
     if (!context.isCurrent(
       reference,
       catalog.snapshot.generation,
-      _bindings[reference.bindingId]
-          ?.read(editorRootPath)
-          ?.editorValueAt(reference.path),
+      _bindings[reference.bindingId]?.current?.editorValueAt(reference.path),
     )) {
       return _reject(
         "The presentation value changed before this write",
