@@ -44,32 +44,50 @@ fun column(
 ) = FixtureColumn(name, number)
 
 /**
- * Creates a board named [name] with [columns] on the realm's static page and commits it. A creator chose nothing, unless
- * [chosen] chooses arguments; [rows] gives the board's rows from its row type.
+ * Creates a board named [name] with [columns] on the realm's static page and commits it. A creator chose nothing; [rows]
+ * gives the board's rows from its row type.
  */
 suspend fun RealmFixture.commitBoard(
     name: String,
     vararg columns: FixtureColumn,
-    chosen: List<ChosenArgument> = emptyList(),
     rows: (TypeUse) -> List<DataValue> = { emptyList() },
 ): Creation =
-    commitBound(
-        FixtureBoardDefinition.id,
-        chosen = chosen,
-        rows = rows,
-    ) { page -> FixtureBoard<Nothing>(page, GraphPlacement(), name, columns.toList()) }
+    commitBound(FixtureBoardDefinition.id, rows = rows) { page -> FixtureBoard<Nothing>(page, GraphPlacement(), name, columns.toList()) }
+
+/** A board named [name] with [columns] on the realm's static page, before it is saved. */
+fun RealmFixture.board(
+    name: String,
+    vararg columns: FixtureColumn,
+): FixtureBoard<Nothing> {
+    val page = resources.typesOf(StaticPageDefinition.id).single()
+    return FixtureBoard(Ref(page.toResourceId()), GraphPlacement(), name, columns.toList())
+}
+
+/**
+ * Commits a board named [name] with [columns] as a client would send it that also chooses its computed row type as
+ * [choice], which no creator may: the board encodes as what it is, and the choice joins its stored selection.
+ */
+suspend fun RealmFixture.commitBoardChoosing(
+    name: String,
+    choice: ChosenArgument,
+    vararg columns: FixtureColumn,
+): Creation {
+    val (id, reply) =
+        commitElement {
+            encoder
+                .record(TypeSelection(definition = FixtureBoardDefinition.id, arguments = emptyList()), board(name, *columns))
+                .copy(configuration = TypeSelection(definition = FixtureBoardDefinition.id, arguments = listOf(choice)))
+        }
+    return Creation(id, reply)
+}
 
 /**
  * Creates the entry [element] makes on the realm's static page, of a type with a computed `V` and a `rows: List<V>`
- * field, and commits it with only the [chosen] arguments. [rows] gives its rows from the row type it computes.
- *
- * The code catalog cannot encode a type a resource computes, so the entry encodes with every one of its [parameters] as
- * a number, then its rows are rewritten as a list of its computed row type. This stays while the encoder only knows code
- * types; once it encodes a derived type argument, the entry can encode as what it is.
+ * field, and commits it with only the [chosen] arguments. The entry encodes while `V` is still open, so its rows wait for
+ * that type; [rows] then gives them from the row type it computes.
  */
 suspend fun RealmFixture.commitBound(
     definition: TypeDefinitionId,
-    parameters: Int = 1,
     chosen: List<ChosenArgument> = emptyList(),
     rows: (TypeUse) -> List<DataValue> = { emptyList() },
     element: (Ref<PageElements.Element, StaticPage>) -> Any,
@@ -79,9 +97,8 @@ suspend fun RealmFixture.commitBound(
             val page = resources.typesOf(StaticPageDefinition.id).single()
             val items = rows(rowsOf(id)).mapIndexed { index, value -> ListItem(id = ItemId(value = "row-$index"), value = value) }
             encoder
-                .record(definition.namedUse(List(parameters) { intUse }).use, element(Ref(page.toResourceId())))
+                .record(TypeSelection(definition = definition, arguments = chosen), element(Ref(page.toResourceId())))
                 .with("rows", DataValue.named(StandardTypes.list.namedUse(listOf(rowsOf(id))), DataValue.listValue(items)))
-                .copy(configuration = TypeSelection(definition = definition, arguments = chosen))
         }
     return Creation(id, reply)
 }

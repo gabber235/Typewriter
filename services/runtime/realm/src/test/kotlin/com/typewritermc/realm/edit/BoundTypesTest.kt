@@ -2,13 +2,16 @@ package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.engine.pages.Definition
 import com.typewritermc.realm.routeFixtureCatalog
+import com.typewritermc.realm.testing.board
 import com.typewritermc.realm.testing.column
 import com.typewritermc.realm.testing.commit
 import com.typewritermc.realm.testing.commitBoard
+import com.typewritermc.realm.testing.commitBoardChoosing
 import com.typewritermc.realm.testing.commitBound
 import com.typewritermc.realm.testing.commitDefinition
 import com.typewritermc.realm.testing.commitScoredRow
@@ -40,6 +43,7 @@ import com.typewritermc.realm.testing.textUse
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.realm.testing.writtenFor
 import com.typewritermc.testing.routes.FAILING_COLUMN
+import com.typewritermc.testing.routes.FixtureBoardDefinition
 import com.typewritermc.testing.routes.FixtureContested
 import com.typewritermc.testing.routes.FixtureContestedDefinition
 import com.typewritermc.testing.routes.FixtureLedger
@@ -60,6 +64,7 @@ import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.type_catalog.ChosenArgument
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 
@@ -130,7 +135,6 @@ val BoundTypesTest by testSuite {
 
             commitBound(
                 FixtureLedgerDefinition.id,
-                parameters = 2,
                 chosen = listOf(ChosenArgument(parameter = 0, type = rowsOf(board))),
             ) { page ->
                 FixtureLedger<Nothing, Nothing>(page, GraphPlacement(), "ledger", failing = true)
@@ -144,7 +148,6 @@ val BoundTypesTest by testSuite {
             val ledger =
                 commitBound(
                     FixtureLedgerDefinition.id,
-                    parameters = 2,
                     chosen = listOf(ChosenArgument(parameter = 0, type = rowsOf(board))),
                 ) { page ->
                     FixtureLedger<Nothing, Nothing>(page, GraphPlacement(), "ledger")
@@ -223,9 +226,27 @@ val BoundTypesTest by testSuite {
         }
     }
 
+    test("a board encodes before its row type exists: it chooses nothing, and its rows wait for that type") {
+        withSetup(staticPage, catalog = routeFixtureCatalog) {
+            val record =
+                encoder.record(
+                    TypeSelection(definition = FixtureBoardDefinition.id, arguments = emptyList()),
+                    board("scores", column("gold")),
+                )
+
+            record.configuration.arguments.shouldBeEmpty()
+            record.fieldMap["name"] shouldBe DataValue.StringValueWrapper("scores")
+            record.fieldMap["rows"] shouldBe DataValue.UNFILLED
+        }
+    }
+
     test("a creator cannot choose a parameter a bind computes") {
         withSetup(staticPage, catalog = routeFixtureCatalog) {
-            commitBoard("chosen", column("gold"), chosen = listOf(ChosenArgument(parameter = 0, type = intUse))).reply.shouldBeRejected()
+            commitBoardChoosing(
+                "chosen",
+                ChosenArgument(parameter = 0, type = intUse),
+                column("gold"),
+            ).reply.shouldBeRejected("derived_argument_chosen")
         }
     }
 

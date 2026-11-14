@@ -5,6 +5,7 @@ import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.payload
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
@@ -38,4 +39,23 @@ class CatalogEncoder(
         val payload = encoded.payload as DataValue.RecordWrapper
         return AuthoringRecord.of(TypeSelection.of(encoded.actualType), payload.value)
     }
+
+    /**
+     * The saved record of a resource whose native value is [value] and whose creator chose [selection]. While an argument
+     * is open, such as one the resource's own content computes once saved, each field that waits on it is unfilled.
+     */
+    fun record(
+        selection: TypeSelection,
+        value: Any,
+    ): AuthoringRecord =
+        when (val type = checked.authoredTypeOf(selection).ready()) {
+            is ResourceType.Complete -> {
+                val encoded = encode(type.checked.use, value) as DataValue.NamedWrapper
+                AuthoringRecord.of(selection, (encoded.payload as DataValue.RecordWrapper).value)
+            }
+
+            is ResourceType.Partial -> {
+                AuthoringRecord.of(selection, bindings.encodePartial(type, value))
+            }
+        }
 }

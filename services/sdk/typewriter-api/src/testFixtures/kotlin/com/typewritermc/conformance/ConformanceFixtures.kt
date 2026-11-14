@@ -288,6 +288,8 @@ internal class SamplingPlan(
     }
 
     override fun construct(supplied: Map<FieldOwner, Any?>): Any = error("Initialization sampling builds no instance.")
+
+    override fun read(value: Any): Map<FieldOwner, Any?> = error("Initialization sampling reads no instance.")
 }
 
 internal class PlanFactory(

@@ -336,7 +336,7 @@ internal class RelationValueSynchronizer(
                 val named = record.authoredTypeAt(location.resource, location.path, catalog).namedType()
                 val values = record.collectionValue(collection, catalog, problems)?.itemsOrNull()
                 if (named == null) {
-                    problems += ValueProblem(location = location, code = "expected_named_link")
+                    problems += unnamedLinkProblems(location, record)
                     return
                 }
                 if (values == null) return
@@ -359,10 +359,24 @@ internal class RelationValueSynchronizer(
         }
         val named = current?.namedType() ?: record.authoredTypeAt(location.resource, location.path, catalog).namedType()
         if (named == null) {
-            problems += ValueProblem(location = location, code = "expected_named_link")
+            problems += unnamedLinkProblems(location, record)
             return
         }
         update(resources, location, DataValue.named(named, DataValue.createLink(endpoint = endpoint, target = target)), problems)
+    }
+
+    /**
+     * Why a link at [location] of [record] has no named type: the problems of the record's own type when that does not
+     * resolve, such as an argument its creator may not choose, otherwise expected_named_link for the position itself.
+     */
+    private fun unnamedLinkProblems(
+        location: ValueLocation,
+        record: AuthoringRecord,
+    ): List<ValueProblem> {
+        val own = (catalog.typeOf(location.resource, record.configuration) as? Resolution.Invalid)?.diagnostics.orEmpty()
+        return own
+            .map { ValueProblem(location = ValueLocation.of(location.resource), code = it.code) }
+            .ifEmpty { listOf(ValueProblem(location = location, code = "expected_named_link")) }
     }
 
     private fun appendDirectLink(
@@ -385,7 +399,7 @@ internal class RelationValueSynchronizer(
         val location = collection.item(item)
         val named = record.authoredTypeAt(location.resource, location.path, catalog).namedType()
         if (named == null) {
-            problems += ValueProblem(location = location, code = "expected_named_link")
+            problems += unnamedLinkProblems(location, record)
             return null
         }
         insert(
