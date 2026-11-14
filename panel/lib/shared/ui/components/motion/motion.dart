@@ -5,6 +5,7 @@ library;
 export "enter.dart";
 export "hold_fill.dart";
 export "leave.dart";
+export "motion_size.dart";
 export "page_arrival.dart";
 export "panel_switcher.dart";
 export "ring.dart";

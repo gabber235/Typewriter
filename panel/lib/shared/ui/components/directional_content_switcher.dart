@@ -37,23 +37,14 @@ class _DirectionalContentSwitcherState
     // leaves at once. The size grows with surfaceIn and shrinks with
     // panelOut.
     final enter = motionTimeline(context, MotionToken.loadIn);
-    final grow = motionTimeline(context, MotionToken.surfaceIn);
-    final shrink = motionTimeline(context, MotionToken.panelOut);
-    // Without motion the new content replaces the old at once. A zero
-    // duration AnimatedSize would restart its animation during layout and
-    // fail as soon as the content changes size.
-    if (enter.duration == Duration.zero || grow.duration == Duration.zero) {
-      return widget.child;
-    }
+    // Without motion the new content replaces the old at once.
+    if (enter.duration == Duration.zero) return widget.child;
     final currentKey = widget.child.key;
     final direction = _direction.toDouble();
 
-    return AnimatedSize(
-      duration: grow.duration,
-      reverseDuration: shrink.duration,
-      curve: grow.curve,
+    return MotionSize(
+      shrink: MotionToken.panelOut,
       alignment: Alignment.topCenter,
-      clipBehavior: Clip.hardEdge,
       child: ClipRect(
         child: AnimatedSwitcher(
           duration: enter.duration,

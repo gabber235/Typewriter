@@ -29,7 +29,6 @@ class LabeledMessage extends StatelessWidget {
 
     final textColor = textStyle.color;
 
-    final grow = motionTimeline(context, MotionToken.loadIn);
     final content = _LabeledMessageRender(
       label: hasLabel
           ? Text(
@@ -50,12 +49,9 @@ class LabeledMessage extends StatelessWidget {
             )
           : null,
     );
-    // A zero length size change would land inside layout.
-    if (grow.duration == Duration.zero) return content;
-    return AnimatedSize(
+    return MotionSize(
+      grow: MotionToken.loadIn,
       alignment: Alignment.topLeft,
-      duration: grow.duration,
-      curve: grow.curve,
       child: content,
     );
   }

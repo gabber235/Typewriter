@@ -280,9 +280,8 @@ final class PortableSearchInput extends HookWidget {
                 ),
             ],
             child: grows
-                ? AnimatedSize(
-                    duration: grow.duration,
-                    curve: grow.curve,
+                ? MotionSize(
+                    grow: MotionToken.loadIn,
                     alignment: Alignment.topCenter,
                     child: field,
                   )

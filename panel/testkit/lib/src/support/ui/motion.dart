@@ -647,3 +647,25 @@ extension MotionTimes on WidgetTester {
     return elapsed;
   }
 }
+
+/// A [MotionSize] around a box [height] tall at the top left, under
+/// reduced motion when [reduced].
+final class MotionSizeStage extends StatelessWidget {
+  const MotionSizeStage({
+    required this.height,
+    this.reduced = false,
+    super.key,
+  });
+
+  final double height;
+  final bool reduced;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MotionSize(child: SizedBox(width: 100, height: height));
+    return Align(
+      alignment: Alignment.topLeft,
+      child: reduced ? ReducedMotion(child: size) : size,
+    );
+  }
+}

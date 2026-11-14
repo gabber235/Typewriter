@@ -32,12 +32,9 @@ class ElasticMessageSwitcher extends StatelessWidget {
       },
       child: child,
     );
-    // A zero length size change would land inside layout.
-    if (arrive.duration == Duration.zero) return content;
-    return AnimatedSize(
-      duration: arrive.duration,
+    return MotionSize(
+      grow: MotionToken.loadIn,
       alignment: Alignment.topCenter,
-      curve: arrive.curve,
       child: content,
     );
   }

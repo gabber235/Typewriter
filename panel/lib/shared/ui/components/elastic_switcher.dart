@@ -26,11 +26,8 @@ class ElasticSwitcher extends StatelessWidget {
       ),
       child: child,
     );
-    // A zero length size change would land inside layout.
-    if (arrive.duration == Duration.zero) return content;
-    return AnimatedSize(
-      duration: arrive.duration,
-      curve: arrive.curve,
+    return MotionSize(
+      grow: MotionToken.loadIn,
       clipBehavior: Clip.none,
       child: content,
     );

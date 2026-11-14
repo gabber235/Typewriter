@@ -106,17 +106,8 @@ class JoinCodeSettings extends HookConsumerWidget {
           ),
         ),
 
-        AnimatedSize(
-          // Grows with surfaceIn and shrinks with panelOut.
-          duration: motionTimeline(context, MotionToken.surfaceIn).duration,
-          reverseDuration: motionTimeline(
-            context,
-            MotionToken.panelOut,
-          ).duration,
-          curve: motionTimeline(
-            context,
-            isExpanded.value ? MotionToken.surfaceIn : MotionToken.panelOut,
-          ).curve,
+        MotionSize(
+          shrink: MotionToken.panelOut,
           alignment: Alignment.topLeft,
           child: isExpanded.value
               ? Container(

@@ -8,8 +8,6 @@ class _QueryBarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final grow = motionTimeline(context, MotionToken.surfaceIn);
-    final shrink = motionTimeline(context, MotionToken.panelOut);
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,17 +91,11 @@ class _QueryBarView extends StatelessWidget {
     );
     return ManagedActionSet(
       shortcuts: controller.shortcuts,
-      // Without motion the size follows the content at once. A zero duration
-      // AnimatedSize completes its animation inside its own layout and fails.
-      child: grow.duration == Duration.zero
-          ? content
-          : AnimatedSize(
-              duration: grow.duration,
-              reverseDuration: shrink.duration,
-              curve: grow.curve,
-              alignment: Alignment.topCenter,
-              child: content,
-            ),
+      child: MotionSize(
+        shrink: MotionToken.panelOut,
+        alignment: Alignment.topCenter,
+        child: content,
+      ),
     );
   }
 }

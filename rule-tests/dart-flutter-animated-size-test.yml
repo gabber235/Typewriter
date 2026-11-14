@@ -1,0 +1,13 @@
+id: dart-flutter-animated-size
+valid:
+  - |
+    Widget build(BuildContext context) => MotionSize(
+      alignment: Alignment.topCenter,
+      child: const SizedBox(),
+    );
+invalid:
+  - |
+    Widget build(BuildContext context) => AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      child: const SizedBox(),
+    );
