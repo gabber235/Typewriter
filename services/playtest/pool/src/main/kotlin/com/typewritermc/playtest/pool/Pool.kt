@@ -58,6 +58,8 @@ fun main() {
     Files.createDirectories(settings.poolDir)
     val lockFile = FileChannel.open(settings.poolDir.resolve("pool.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
     val lock = lockFile.tryLock() ?: exitProcess(0)
+    // Every starter appends its output to the log; the pool that holds the lock empties it, so the log holds this run alone.
+    FileChannel.open(settings.poolDir.resolve("pool.log"), StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
     val portFile = settings.poolDir.resolve("pool.port")
     ServerSocket(0, BACKLOG, InetAddress.getLoopbackAddress()).use { server ->
         val pool = Pool(settings, server)
