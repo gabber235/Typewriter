@@ -12,6 +12,11 @@ public sealed interface Message {
     /** Who opened a connection to the pool. */
     enum Role { SESSION, PAPER, CLIENT }
 
+    /** What happened to {@code player}, for the session whose attempt holds that player. */
+    sealed interface PlayerEvent extends Message {
+        String player();
+    }
+
     /** The first message on every connection to the pool. */
     record Hello(Role role, String name) implements Message {}
 
@@ -213,6 +218,35 @@ public sealed interface Message {
     /** Pool to Paper: the attempt ended; its players no longer hold back ticks and their windows close. */
     record Release(long attempt) implements Message {}
 
+    /**
+     * The attempt's body ended; it is done once the work its players' plugins count is quiet. Session to
+     * pool with {@code id} the session's submission, pool to Paper with {@code id} the attempt. Answered
+     * with {@link Settled} once no player of the attempt has work that is neither ended nor hung.
+     */
+    record Settle(long id) implements Message {}
+
+    /** Paper to pool with {@code id} the attempt, pool to session with {@code id} the submission: see {@link Settle}. */
+    record Settled(long id) implements Message {}
+
+    /**
+     * Paper to the session holding {@code player}: the player's work {@code work}, which began after
+     * tick {@code beganAfter}, still ran 1 s later. Paper never cancels it and lets it hold no more
+     * ticks; the attempt fails.
+     */
+    record WorkHung(String player, String work, int beganAfter) implements PlayerEvent {}
+
+    /**
+     * Paper to pool: {@code player} left Paper, for {@code reason}; a claimed player no longer holds back
+     * any tick.
+     */
+    record PlayerLeft(String player, String reason) implements Message {}
+
+    /**
+     * Pool to the session holding {@code player}: the player's client is lost, for {@code reason}; the
+     * attempt fails and the pool starts a new client for the player.
+     */
+    record ClientLost(String player, String reason) implements PlayerEvent {}
+
     /** Pool to Paper: from now on a tick runs only when the step policy grants it. */
     record Stepping() implements Message {}
 
@@ -255,13 +289,13 @@ public sealed interface Message {
     record Watch(UUID player, List<BlockPos> blocks, List<UUID> entities) implements Message {}
 
     /** Client to session: what the player perceives changed. */
-    record Perceived(String player, Perception perception) implements Message {}
+    record Perceived(String player, Perception perception) implements PlayerEvent {}
 
     /**
      * Client to session: the barrier arrived, after every record of the ticks before it. Paper sends a
      * barrier once the window's last tick ran, so its echo closes the window.
      */
-    record BarrierSeen(String player, int barrier) implements Message {}
+    record BarrierSeen(String player, int barrier) implements PlayerEvent {}
 
     /** A block position in the world. */
     record BlockPos(int x, int y, int z) {}
@@ -321,6 +355,13 @@ public sealed interface Message {
      * framework's own test kit sends it, to prove the wipe clears every kind.
      */
     record ProbeMark(Kind kind) implements PlayerAction {}
+
+    /**
+     * The player's work {@code name} runs off the main thread for {@code millis} of wall clock, counted
+     * as any plugin counts its work, then sends {@code chat} as a chat line. Only the framework's own
+     * test kit sends it, to prove ticks wait for counted work and hung work is reported.
+     */
+    record ProbeWork(String name, int millis, String chat) implements PlayerAction {}
 
     /** One step of an {@link Input}. Keys are named as {@link Key} names them. */
     sealed interface InputStep {}

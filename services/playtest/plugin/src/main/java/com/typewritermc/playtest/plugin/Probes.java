@@ -16,6 +16,7 @@ import com.typewritermc.playtest.wire.Message.ProbePacketEntity;
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot;
 import com.typewritermc.playtest.wire.Message.ProbeSpawn;
 import com.typewritermc.playtest.wire.Message.ProbeTeleport;
+import com.typewritermc.playtest.wire.Message.ProbeWork;
 import com.typewritermc.playtest.wire.Message.WorldAction;
 import io.papermc.paper.adventure.PaperAdventure;
 import java.util.HashMap;
@@ -59,6 +60,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import org.jspecify.annotations.Nullable;
 
@@ -84,10 +86,12 @@ final class Probes implements Listener {
     private final Map<Integer, PacketEntity> packetEntities = new HashMap<>();
     private final Set<Location> unbreakable = new HashSet<>();
     private final Map<String, SuggestingCommand> commands = new HashMap<>();
+    private final Plugin plugin;
     private final BiConsumer<Player, Kind> mark;
 
     /** [mark] leaves a mark of a kind of state on a player, for the framework's own test kit. */
-    Probes(BiConsumer<Player, Kind> mark) {
+    Probes(Plugin plugin, BiConsumer<Player, Kind> mark) {
+        this.plugin = plugin;
         this.mark = mark;
     }
 
@@ -144,6 +148,10 @@ final class Probes implements Listener {
                 mark.accept(player, marked.kind());
                 yield null;
             }
+            case ProbeWork work -> {
+                work(player, work);
+                yield null;
+            }
         };
     }
 
@@ -159,6 +167,22 @@ final class Probes implements Listener {
             known.forEach(packetEntities::remove);
             player.updateCommands();
         }
+    }
+
+    /**
+     * Runs the work on Bukkit's async scheduler as a plugin would, counted from the moment it is handed
+     * over. An interrupt would cancel it before its chat line; nothing here interrupts it.
+     */
+    private void work(Player player, ProbeWork work) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, PlayerWork.task(player, work.name(), () -> {
+            try {
+                Thread.sleep(work.millis());
+            } catch (InterruptedException cancelled) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            player.sendMessage(Component.text(work.chat()));
+        }));
     }
 
     private static @Nullable String gameMode(Player player, String mode) {

@@ -60,9 +60,13 @@ final class Stepper {
     /**
      * A step ping arrived, inside the client's packet handling and so between frames. The clock switches
      * to stepping here, on the render thread before the frame reads it: switched from another thread, a
-     * frame in flight could read the real clock after the switch and lose part of the first step.
+     * frame in flight could read the real clock after the switch and lose part of the first step. Until
+     * the player is in the world the client ignores step pings: a client that joins a Paper that steps
+     * already, replacing a lost one, loads the world on its own clock, since a stepped client draws no
+     * frame of the loading screen.
      */
     static void onStepPing(int tick) {
+        if (!Session.joined()) return;
         if (!stepping) {
             virtualNanos = Util.getNanos();
             Util.setTimeSource(() -> virtualNanos);

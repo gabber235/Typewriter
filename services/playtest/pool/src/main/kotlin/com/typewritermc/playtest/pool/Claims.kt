@@ -31,6 +31,7 @@ internal class Claims<S, P>(
 
     private val turns = mutableMapOf<S, Turn>()
     private val free = players.toMutableSet()
+    private val lost = mutableSetOf<P>()
     private var clock = 0L
 
     /** [session]'s [submission] waits for [count] players. */
@@ -44,9 +45,20 @@ internal class Claims<S, P>(
         turns.getOrPut(session) { Turn(clock++) }.waiting.addLast(Waiting(submission, count))
     }
 
-    /** The attempt holding [released] ended; they are free for the next claim. */
+    /** The attempt holding [released] ended; they are free for the next claim, except players whose client is lost. */
     fun release(released: List<P>) {
-        free += released
+        free += released.filterNot { it in lost }
+    }
+
+    /** [player]'s client is lost: no claim gets the player until its new client is [restored][restore]. */
+    fun lose(player: P) {
+        lost += player
+        free -= player
+    }
+
+    /** [player]'s new client is ready: the player is free again. */
+    fun restore(player: P) {
+        if (lost.remove(player)) free += player
     }
 
     /** [session] is gone, and so are its waiting claims. */

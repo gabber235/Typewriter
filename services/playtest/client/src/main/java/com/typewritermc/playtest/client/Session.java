@@ -17,6 +17,11 @@ final class Session {
 
     private Session() {}
 
+    /** Whether the player is in the world and the pool heard so. */
+    static boolean joined() {
+        return joined;
+    }
+
     static void connect(String host, int port) {
         Session.host = host;
         Session.port = port;

@@ -1,6 +1,7 @@
 package com.typewritermc.playtest.plugin;
 
 import com.destroystokyo.paper.event.server.ServerTickEndEvent;
+import com.destroystokyo.paper.event.server.ServerTickStartEvent;
 import com.typewritermc.playtest.agent.Step;
 import com.typewritermc.playtest.wire.Link;
 import com.typewritermc.playtest.wire.Message;
@@ -9,15 +10,19 @@ import com.typewritermc.playtest.wire.Message.Claimed;
 import com.typewritermc.playtest.wire.Message.Hello;
 import com.typewritermc.playtest.wire.Message.Kind;
 import com.typewritermc.playtest.wire.Message.Marks;
+import com.typewritermc.playtest.wire.Message.PlayerLeft;
 import com.typewritermc.playtest.wire.Message.Probe;
 import com.typewritermc.playtest.wire.Message.ProbeDone;
 import com.typewritermc.playtest.wire.Message.Query;
 import com.typewritermc.playtest.wire.Message.Region;
 import com.typewritermc.playtest.wire.Message.Release;
 import com.typewritermc.playtest.wire.Message.Role;
+import com.typewritermc.playtest.wire.Message.Settle;
+import com.typewritermc.playtest.wire.Message.Settled;
 import com.typewritermc.playtest.wire.Message.StepUntil;
 import com.typewritermc.playtest.wire.Message.Stepping;
 import com.typewritermc.playtest.wire.Message.StopStepping;
+import com.typewritermc.playtest.wire.Message.WorkHung;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -37,6 +42,7 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
@@ -48,10 +54,12 @@ import org.bukkit.util.Vector;
 public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private static final String STEP_ACK = "playtest:step";
 
-    private final StepPolicy policy = new StepPolicy(this::sendBarrier, PlaytestPlugin::nothingLeftToSend, task -> MinecraftServer.getServer().scheduleOnMain(task));
+    private final WorkLedger work = PlayerWork.LEDGER;
+    private final StepPolicy policy = new StepPolicy(
+            this::sendBarrier, PlaytestPlugin::nothingLeftToSend, task -> MinecraftServer.getServer().scheduleOnMain(task), work, this::reportHung);
     private final Wipe wipe = new Wipe();
     private final Owned owned = new Owned(this);
-    private final Probes probes = new Probes(this::mark);
+    private final Probes probes = new Probes(this, this::mark);
     private final Attempts attempts = new Attempts(this);
     private Link pool;
 
@@ -103,6 +111,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
                 if (failure == null) policy.deliver(probe.players(), () -> pool.send(new ProbeDone(probe.request(), ranAfter, null)));
                 else pool.send(new ProbeDone(probe.request(), ranAfter, failure));
             }
+            case Settle settle -> policy.settle(attempts.players(settle.id()), () -> pool.send(new Settled(settle.id())));
             case Query query -> pool.send(marks(query));
             case StepUntil step -> policy.stepUntil(step.player(), step.tick(), step.barrier());
             case StopStepping stop -> policy.stop(stop.player());
@@ -173,12 +182,35 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         return new Online(List.copyOf(online), null);
     }
 
+    /**
+     * A player left: its client crashed, froze until Paper timed it out, or quit. It holds back no tick
+     * from now on, and the pool replaces its client.
+     */
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        policy.lose(player.getUniqueId());
+        if (pool != null) pool.send(new PlayerLeft(player.getName(), event.getReason().name()));
+    }
+
+    @EventHandler
+    public void onTickStart(ServerTickStartEvent event) {
+        work.tickStarted(event.getTickNumber());
+    }
+
     @EventHandler
     public void onTickEnd(ServerTickEndEvent event) {
+        work.tickEnded(event.getTickNumber());
         policy.tickEnded(event.getTickNumber());
         if (!Step.on) return;
         var ping = new ClientboundPingPacket(StepPolicy.STEP_BASE + event.getTickNumber());
         for (Player player : Bukkit.getOnlinePlayers()) ((CraftPlayer) player).getHandle().connection.send(ping);
+    }
+
+    /** The player's attempt fails with the hung work; Paper never cancels it. */
+    private void reportHung(WorkLedger.Hung hung) {
+        getLogger().warning(hung.playerName() + "'s work \"" + hung.name() + "\" began after tick " + hung.beganAfter() + " and still runs after 1 s; it holds no more ticks.");
+        pool.send(new WorkHung(hung.playerName(), hung.name(), hung.beganAfter()));
     }
 
     private void sendBarrier(UUID id, int barrier) {

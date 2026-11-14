@@ -13,6 +13,7 @@ import com.typewritermc.playtest.wire.Message.ProbePacketEntity
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot
 import com.typewritermc.playtest.wire.Message.ProbeSpawn
 import com.typewritermc.playtest.wire.Message.ProbeTeleport
+import com.typewritermc.playtest.wire.Message.ProbeWork
 import java.util.UUID
 
 /** A player's game mode. */
@@ -166,6 +167,17 @@ class Probe internal constructor(
         player: GamePlayer,
         kind: Kind,
     ): Mark = run(listOf(player), ProbeMark(kind))
+
+    /**
+     * [player]'s work [name] runs off Paper's main thread for [millis] of wall clock, counted as a
+     * plugin counts its work, then sends [chat] as a chat line; for the framework's own test kit.
+     */
+    internal suspend fun work(
+        player: GamePlayer,
+        name: String,
+        millis: Int,
+        chat: String,
+    ): Mark = run(listOf(player), ProbeWork(name, millis, chat))
 
     private suspend fun run(
         players: List<GamePlayer>,

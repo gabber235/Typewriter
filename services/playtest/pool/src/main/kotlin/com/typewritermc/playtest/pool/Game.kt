@@ -15,11 +15,12 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.writeText
 
-/** One game process the pool started, and the log it writes to. */
+/** One game process the pool started, and the log it writes to; [player] for a client. */
 internal class Part(
     val name: String,
     val process: Process,
     val log: Path,
+    val player: String? = null,
 )
 
 /** A virtual X display and the Xvfb process that serves it. */
@@ -50,13 +51,48 @@ internal enum class InputPath(
  * them over the wire once they are up.
  */
 internal class Game private constructor(
+    private val settings: PoolSettings,
+    private val poolPort: Int,
     val paperPort: Int,
-    val parts: List<Part>,
+    private val input: InputPath,
+    private val displays: Map<String, Display>,
+    started: List<Part>,
 ) {
+    private val running = started.toMutableList()
+    private var lost = 0
+
+    /** Every part that runs now, a replaced client's new process in place of its old one. */
+    val parts: List<Part> @Synchronized get() = running.toList()
+
+    /** A lost client's [replacement], and where the lost client's log is kept. */
+    class Replaced(
+        val replacement: Part,
+        val lostLog: Path,
+    )
+
+    /**
+     * Ends [player]'s client process, whatever state it is in, keeps its folder as `client-<player>-lost-<n>`
+     * for its log, and starts a new client in a fresh folder, which joins as the same player.
+     */
+    @Synchronized
+    fun replaceClient(player: String): Replaced {
+        running.filter { it.player == player }.forEach {
+            it.process.destroyForcibly()
+            it.process.waitFor(STOP_SECONDS, TimeUnit.SECONDS)
+            running -= it
+        }
+        val kept = settings.poolDir.resolve("client-$player-lost-${++lost}")
+        Files.move(settings.poolDir.resolve("client-$player"), kept)
+        val replacement = startClient(settings, poolPort, player, input, displays[player])
+        running += replacement
+        return Replaced(replacement, kept.resolve("console.log"))
+    }
+
     /** Stops every part: asks first, then forces whatever still runs. */
     fun stop() {
-        parts.forEach { it.process.destroy() }
-        parts.forEach { if (!it.process.waitFor(STOP_SECONDS, TimeUnit.SECONDS)) it.process.destroyForcibly() }
+        val all = parts
+        all.forEach { it.process.destroy() }
+        all.forEach { if (!it.process.waitFor(STOP_SECONDS, TimeUnit.SECONDS)) it.process.destroyForcibly() }
     }
 
     companion object {
@@ -67,17 +103,32 @@ internal class Game private constructor(
             poolPort: Int,
             players: List<String>,
         ): Game {
+            // The folders of clients an earlier run lost are that run's evidence, not this one's.
+            Files
+                .list(settings.poolDir)
+                .use { dirs ->
+                    dirs.filter { it.fileName.toString().matches(Regex("client-.+-lost-\\d+")) }.toList()
+                }.forEach { remove(it) }
             val paperPort = freePort()
             val paper = startPaper(settings, poolPort, paperPort)
             val started = mutableListOf(paper)
+            val input = InputPath.here()
+            val displays = mutableMapOf<String, Display>()
             runCatching {
-                val input = InputPath.here()
                 for (player in players) {
-                    val display = if (input == InputPath.XTEST) startDisplay(settings, player).also { started += it.part } else null
+                    val display =
+                        if (input == InputPath.XTEST) {
+                            startDisplay(settings, player).also {
+                                started += it.part
+                                displays[player] = it
+                            }
+                        } else {
+                            null
+                        }
                     started += startClient(settings, poolPort, player, input, display)
                 }
             }.onFailure { started.forEach { it.process.destroyForcibly() } }.getOrThrow()
-            return Game(paperPort, started)
+            return Game(settings, poolPort, paperPort, input, displays, started)
         }
 
         /**
@@ -179,7 +230,7 @@ internal class Game private constructor(
 
                     InputPath.XTEST -> mapOf("DISPLAY" to checkNotNull(display).name)
                 }
-            return launch("Client $player", command, dir, environment)
+            return launch("Client $player", command, dir, environment, player)
         }
 
         private fun launch(
@@ -187,6 +238,7 @@ internal class Game private constructor(
             command: List<String>,
             dir: Path,
             environment: Map<String, String>,
+            player: String? = null,
         ): Part {
             val log = dir.resolve("console.log")
             val builder =
@@ -196,7 +248,7 @@ internal class Game private constructor(
                     .redirectOutput(log.toFile())
                     .redirectInput(ProcessBuilder.Redirect.from(File("/dev/null")))
             builder.environment().putAll(environment)
-            return Part(name, builder.start(), log)
+            return Part(name, builder.start(), log, player)
         }
 
         // An empty world over one bedrock layer: a player waits on the ground while probes step Paper. Paper
@@ -227,6 +279,10 @@ internal class Game private constructor(
                 .substringAfter(':')
                 .trim()
                 .toInt()
+
+        /** Removes [dir] and all in it. */
+        @OptIn(ExperimentalPathApi::class)
+        private fun remove(dir: Path) = dir.deleteRecursively()
 
         /** Empties [dir]. Links into the patched Paper are removed, never followed. */
         @OptIn(ExperimentalPathApi::class)

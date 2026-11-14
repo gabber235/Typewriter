@@ -7,6 +7,9 @@ import de.infix.testBalloon.framework.core.aroundAll
 import de.infix.testBalloon.framework.core.invocation
 import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.supervisorScope
 
 /**
  * The compartment every game requirement registers in. Its tests start at once and each waits in the
@@ -59,10 +62,46 @@ internal fun TestSuiteScope.attempts(
 ) {
     require(players >= 1) { "$id claims $players players; a requirement claims at least 1" }
     test("$id $sentence") {
-        val session =
-            checkNotNull(
-                currentSession,
-            ) { "$id is not in the GameCompartment: register requirements in testSuite(compartment = { GameCompartment })" }
-        session.getOrThrow().attempt(testId = "$id $sentence", requirement = id, players = players, bodies = bodies)
+        session(id).attempt(testId = "$id $sentence", requirement = id, players = players, bodies = bodies)
     }
 }
+
+/**
+ * Registers one requirement whose [bodies] run at the same time, each as an attempt of its own on one
+ * player, reported as cases of their own; once all ended, [afterward] runs as one more attempt on
+ * [afterwardPlayers]. Only the framework's own test kit runs attempts side by side, to prove what one
+ * attempt does never changes another's verdict.
+ */
+@TestRegistering
+internal fun TestSuiteScope.sideBySide(
+    @TestElementName id: String,
+    sentence: String,
+    bodies: List<suspend RequirementScope.() -> Unit>,
+    afterwardPlayers: Int = 1,
+    afterward: (suspend RequirementScope.() -> Unit)? = null,
+) {
+    val count = bodies.size + if (afterward == null) 0 else 1
+    test("$id $sentence") {
+        val session = session(id)
+        // Every attempt runs to its own end, so one failing never cancels the others' verdicts.
+        val failures =
+            supervisorScope {
+                bodies
+                    .mapIndexed { index, body ->
+                        async {
+                            runCatching {
+                                session.attempt("$id $sentence (attempt ${index + 1} of $count)", id, players = 1, bodies = listOf(body))
+                            }.exceptionOrNull()
+                        }
+                    }.awaitAll()
+                    .filterNotNull()
+            }
+        failures.firstOrNull()?.let { first -> throw first.also { failures.drop(1).forEach(it::addSuppressed) } }
+        afterward?.let { session.attempt("$id $sentence (attempt $count of $count)", id, afterwardPlayers, listOf(it)) }
+    }
+}
+
+private fun session(id: String): PoolSession =
+    checkNotNull(
+        currentSession,
+    ) { "$id is not in the GameCompartment: register requirements in testSuite(compartment = { GameCompartment })" }.getOrThrow()

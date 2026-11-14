@@ -49,6 +49,11 @@ final class Attempts implements Listener {
         }
     }
 
+    /** The players of [attempt], none once it ended. */
+    List<UUID> players(long attempt) {
+        return players.getOrDefault(attempt, List.of());
+    }
+
     /** The attempt ended; returns its players, who stay hidden from every later attempt's players. */
     List<UUID> release(long attempt) {
         List<UUID> released = Objects.requireNonNullElse(players.remove(attempt), List.of());

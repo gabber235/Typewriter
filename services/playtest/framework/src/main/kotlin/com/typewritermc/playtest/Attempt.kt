@@ -7,7 +7,11 @@ import com.typewritermc.playtest.wire.Message.Perception
 import com.typewritermc.playtest.wire.Message.ProbeAction
 import com.typewritermc.playtest.wire.Message.Region
 import com.typewritermc.playtest.wire.Message.Watch
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.selects.select
 import java.net.URL
 
 /**
@@ -35,10 +39,21 @@ internal class Attempt(
             override val player: GamePlayer,
             val id: Int,
         ) : Event
+
+        /**
+         * The attempt fails because of [player], wherever the body waits: its counted work hung
+         * ([WorkHung]) or its client was lost ([ClientLost]).
+         */
+        data class Failed(
+            override val player: GamePlayer,
+            val failure: AssertionError,
+        ) : Event
     }
 
     private val incoming = Channel<Event>(Channel.UNLIMITED)
     private val received = mutableListOf<Event>()
+    private val lost = CompletableDeferred<ClientLost>()
+    private val thrown = mutableSetOf<AssertionError>()
 
     /** Every event the body has taken so far, in arrival order. */
     val timeline: List<Event> get() = received
@@ -46,6 +61,7 @@ internal class Attempt(
     /** Hands an event of one of [players] to the attempt; called by the session's reader. */
     fun deliver(event: Event) {
         incoming.trySend(if (event is Event.Perceived) event.copy(perception = region.local(event.perception)) else event)
+        ((event as? Event.Failed)?.failure as? ClientLost)?.let(lost::complete)
     }
 
     /** Ends the streams: the connection to the pool broke with [cause]. */
@@ -56,6 +72,18 @@ internal class Attempt(
     /** The next event of any leased player, kept in the timeline. */
     suspend fun nextEvent(): Event = incoming.receive().also { received += it }
 
+    /**
+     * Why the attempt fails that the body never met: failures that arrived but that no wait threw.
+     * Takes every event that arrived into the timeline; for after the body ended.
+     */
+    fun untakenFailures(): List<AssertionError> =
+        generateSequence { incoming.tryReceive().getOrNull() }
+            .toList()
+            .also { received += it }
+            .filterIsInstance<Event.Failed>()
+            .map { it.failure }
+            .filter { it !in thrown }
+
     fun send(message: Message) = session.send(message)
 
     fun nextBarrier(): Int = session.nextBarrier()
@@ -64,16 +92,30 @@ internal class Attempt(
     suspend fun probe(
         players: List<GamePlayer>,
         action: ProbeAction,
-    ): Mark = Mark(session.probe(players, action))
+    ): Mark = Mark(unlessLost { session.probe(players, action) })
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
-    suspend fun query(player: GamePlayer): List<Kind> = session.query(player)
+    suspend fun query(player: GamePlayer): List<Kind> = unlessLost { session.query(player) }
 
     /** [player]'s client runs [steps]; the mark is the tick after which its first event reached the client. */
     suspend fun input(
         player: GamePlayer,
         steps: List<InputStep>,
-    ): Mark = Mark(session.input(player, steps))
+    ): Mark = Mark(unlessLost { session.input(player, steps) })
+
+    /** The answer of [call], unless a client of the attempt is lost first: a lost client never answers. */
+    private suspend fun <T> unlessLost(call: suspend () -> T): T =
+        coroutineScope {
+            val answer = async { call() }
+            select {
+                answer.onAwait { it }
+                lost.onAwait { failure ->
+                    answer.cancel()
+                    thrown += failure
+                    throw failure
+                }
+            }
+        }
 
     /** Every leased player's client watches these from now on. */
     fun watch(

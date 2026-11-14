@@ -10,6 +10,7 @@ import com.typewritermc.playtest.wire.Message.Camera
 import com.typewritermc.playtest.wire.Message.ChatLine
 import com.typewritermc.playtest.wire.Message.Claim
 import com.typewritermc.playtest.wire.Message.Claimed
+import com.typewritermc.playtest.wire.Message.ClientLost
 import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.Declined
 import com.typewritermc.playtest.wire.Message.End
@@ -28,6 +29,7 @@ import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Perception
 import com.typewritermc.playtest.wire.Message.Player
+import com.typewritermc.playtest.wire.Message.PlayerLeft
 import com.typewritermc.playtest.wire.Message.PointAtSlotStep
 import com.typewritermc.playtest.wire.Message.Probe
 import com.typewritermc.playtest.wire.Message.ProbeCancelBreaking
@@ -42,6 +44,7 @@ import com.typewritermc.playtest.wire.Message.ProbePacketEntity
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot
 import com.typewritermc.playtest.wire.Message.ProbeSpawn
 import com.typewritermc.playtest.wire.Message.ProbeTeleport
+import com.typewritermc.playtest.wire.Message.ProbeWork
 import com.typewritermc.playtest.wire.Message.Query
 import com.typewritermc.playtest.wire.Message.Ready
 import com.typewritermc.playtest.wire.Message.Reclaim
@@ -53,6 +56,8 @@ import com.typewritermc.playtest.wire.Message.ResetDone
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
 import com.typewritermc.playtest.wire.Message.ScrollStep
+import com.typewritermc.playtest.wire.Message.Settle
+import com.typewritermc.playtest.wire.Message.Settled
 import com.typewritermc.playtest.wire.Message.StepUntil
 import com.typewritermc.playtest.wire.Message.Stepping
 import com.typewritermc.playtest.wire.Message.StopStepping
@@ -62,6 +67,7 @@ import com.typewritermc.playtest.wire.Message.TypeInChatStep
 import com.typewritermc.playtest.wire.Message.WaitStep
 import com.typewritermc.playtest.wire.Message.WalkToStep
 import com.typewritermc.playtest.wire.Message.Watch
+import com.typewritermc.playtest.wire.Message.WorkHung
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -104,6 +110,7 @@ val WireTest by testSuite {
                 Probe(11, listOf(player), ProbeCancelBreaking(BlockPos(0, 101, 2))),
                 Probe(12, listOf(player), ProbeCommand("warp", listOf("spawn", "spire", "shop"), "Warping to")),
                 Probe(13, listOf(player), ProbeMark(Kind.HOLD)),
+                Probe(14, listOf(player), ProbeWork("Ledger lookup", 120, "Ledger ready")),
                 Query(14, player),
                 Marks(14, listOf(Kind.SCOREBOARD, Kind.HOLD), null),
                 Marks(15, listOf(), "the player gv-2 is not online"),
@@ -113,6 +120,11 @@ val WireTest by testSuite {
                 Claimed(9, null),
                 Claimed(10, "the player gv-2 is not online"),
                 Release(9),
+                Settle(9),
+                Settled(9),
+                WorkHung("gv-1", "Ledger lookup", 1_204),
+                PlayerLeft("gv-2", "TIMED_OUT"),
+                ClientLost("gv-2", "its process exited with code 137"),
                 StepUntil(player, 1_214, 5),
                 StopStepping(player),
                 Stepping(),

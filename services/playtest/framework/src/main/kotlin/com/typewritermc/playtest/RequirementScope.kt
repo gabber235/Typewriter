@@ -99,8 +99,10 @@ class RequirementScope internal constructor(
 
     /**
      * Passes once every check of [checks] held in a tick of the window, the [window] ticks after the
-     * last stimulus. Fails with [WindowMissed] once those ticks ran and a check never held. Ticks run
-     * only while a window waits, so a pass costs no more ticks than the truth needs.
+     * last stimulus. Fails with [WindowMissed] once those ticks ran and a check never held, and with
+     * [WorkHung] or [ClientLost] as soon as work a plugin counted for a player of the attempt hangs or
+     * a player's client is lost. Ticks run only
+     * while a window waits, so a pass costs no more ticks than the truth needs.
      */
     suspend fun within(
         window: Ticks,
@@ -114,11 +116,19 @@ class RequirementScope internal constructor(
         // What the players perceived since the attempt began counts too: a window opened late still
         // sees the records of every tick after its stimulus.
         var verdict: Window.Verdict = Window.Verdict.Open
-        attempt.timeline.forEach { verdict = rules.judge(it) }
+        attempt.timeline.filter { it !is Attempt.Event.Failed }.forEach { verdict = rules.judge(it) }
         if (verdict == Window.Verdict.Open) {
             checked.forEach { attempt.send(StepUntil(it.uuid, rules.end, rules.barrier)) }
-            while (verdict == Window.Verdict.Open) verdict = rules.judge(attempt.nextEvent())
-            checked.forEach { attempt.send(StopStepping(it.uuid)) }
+            try {
+                while (verdict == Window.Verdict.Open) {
+                    val event = attempt.nextEvent()
+                    // Hung work or a lost client fails the attempt at once, whatever the window would decide.
+                    if (event is Attempt.Event.Failed) throw event.failure
+                    verdict = rules.judge(event)
+                }
+            } finally {
+                checked.forEach { attempt.send(StopStepping(it.uuid)) }
+            }
         }
         val missed = verdict as? Window.Verdict.Missed ?: return
         throw WindowMissed(missed.report, at)
@@ -128,6 +138,7 @@ class RequirementScope internal constructor(
         when (event) {
             is Attempt.Event.Perceived -> perceived(event.player, event.perception)
             is Attempt.Event.Barrier -> barrierSeen(event.player, event.id)
+            is Attempt.Event.Failed -> error("a failure of the attempt is thrown where the body takes it; no window judges it")
         }
 }
 

@@ -118,4 +118,30 @@ val ClaimsTest by testSuite {
 
         claims.grants().single().players shouldBe listOf("gv-1", "gv-2")
     }
+
+    test("a player whose client is lost goes to no claim, not even once its attempt ends, until its new client is ready") {
+        val claims = Claims<String, String>(listOf("gv-1", "gv-2"))
+        claims.submit("module", 1, 1)
+        claims.grants()
+
+        claims.lose("gv-1")
+        claims.release(listOf("gv-1"))
+        claims.submit("module", 2, 1)
+        claims.submit("module", 3, 1)
+
+        claims.grants() shouldContainExactly listOf(Grant("module", 2L, listOf("gv-2")))
+        claims.restore("gv-1")
+        claims.grants() shouldContainExactly listOf(Grant("module", 3L, listOf("gv-1")))
+    }
+
+    test("a group that needs a lost player's place waits for its new client") {
+        val claims = Claims<String, String>(pool)
+        claims.lose("gv-3")
+        claims.submit("module", 1, 4)
+
+        claims.grants().shouldBeEmpty()
+        claims.restore("gv-3")
+
+        claims.grants().single().players shouldBe pool
+    }
 }

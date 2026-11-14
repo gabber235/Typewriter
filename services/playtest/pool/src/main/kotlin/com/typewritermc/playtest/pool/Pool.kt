@@ -4,6 +4,7 @@ import com.typewritermc.playtest.wire.Message
 import com.typewritermc.playtest.wire.Message.BarrierSeen
 import com.typewritermc.playtest.wire.Message.Claim
 import com.typewritermc.playtest.wire.Message.Claimed
+import com.typewritermc.playtest.wire.Message.ClientLost
 import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.Declined
 import com.typewritermc.playtest.wire.Message.End
@@ -16,6 +17,7 @@ import com.typewritermc.playtest.wire.Message.Lease
 import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Player
+import com.typewritermc.playtest.wire.Message.PlayerLeft
 import com.typewritermc.playtest.wire.Message.Probe
 import com.typewritermc.playtest.wire.Message.ProbeDone
 import com.typewritermc.playtest.wire.Message.Query
@@ -28,11 +30,14 @@ import com.typewritermc.playtest.wire.Message.Reset
 import com.typewritermc.playtest.wire.Message.ResetDone
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
+import com.typewritermc.playtest.wire.Message.Settle
+import com.typewritermc.playtest.wire.Message.Settled
 import com.typewritermc.playtest.wire.Message.StepUntil
 import com.typewritermc.playtest.wire.Message.Stepping
 import com.typewritermc.playtest.wire.Message.StopStepping
 import com.typewritermc.playtest.wire.Message.Submit
 import com.typewritermc.playtest.wire.Message.Watch
+import com.typewritermc.playtest.wire.Message.WorkHung
 import com.typewritermc.playtest.wire.Wire
 import java.io.BufferedInputStream
 import java.io.DataInputStream
@@ -112,13 +117,18 @@ internal class Pool(
         data object BootTimedOut : Event
     }
 
-    /** One warm client and its player. */
+    /**
+     * One warm client and its player. A lost client's player waits for a new client of the same name,
+     * which is [ready] once it steps with Paper.
+     */
     private class Client(
         val player: Player,
     ) {
+        var part: Part? = null
         var peer: Peer? = null
         var joined = false
         var ready = false
+        var lost = false
     }
 
     /**
@@ -165,13 +175,15 @@ internal class Pool(
     private var nextInput = 0L
     private var nextBarrier = 0
 
-    private val ready: Boolean get() = clients.all { it.ready }
+    // Every client was ready once: the game booted, and from then on the pool lends players.
+    private var booted = false
 
     fun run() {
         thread(name = "playtest-pool-accept", isDaemon = true) { accept() }
         game = Game.start(settings, server.localPort, clients.map { it.player.name() })
         game.parts.forEach { part ->
-            thread(name = "playtest-pool-${part.name}", isDaemon = true) { part.process.waitFor().also { events.put(Event.Exited(part)) } }
+            watch(part)
+            clients.firstOrNull { it.player.name() == part.player }?.part = part
         }
         thread(name = "playtest-pool-boot", isDaemon = true) {
             Thread.sleep(TimeUnit.SECONDS.toMillis(BOOT_SECONDS))
@@ -199,11 +211,11 @@ internal class Pool(
             }
 
             is Event.Exited -> {
-                fail("${event.part.name} exited with code ${event.part.process.exitValue()}; see ${event.part.log}")
+                exited(event.part)
             }
 
             Event.BootTimedOut -> {
-                if (!ready) {
+                if (!booted) {
                     fail(
                         "the game was not ready within $BOOT_SECONDS s; see ${game.parts.joinToString { it.log.toString() }}",
                     )
@@ -269,9 +281,12 @@ internal class Pool(
                 reclaim(session, message)
             }
 
+            is Settle -> {
+                attemptOf(session, message.id())?.let { paper?.send(Settle(it.id)) }
+            }
+
             is Result -> {
-                val attempt =
-                    attempts.values.firstOrNull { it.session == session && it.submit.submission() == message.submission() } ?: return
+                val attempt = attemptOf(session, message.submission()) ?: return
                 runs.record(session.hello.name(), attempt.submit, message)
                 release(attempt)
             }
@@ -374,11 +389,22 @@ internal class Pool(
 
     private fun fromPaper(message: Message) {
         when (message) {
-            is ProbeDone -> requests.remove(message.request())?.let { it.session.send(ProbeDone(it.id, message.tick(), message.failure())) }
-            is Marks -> requests.remove(message.request())?.let { it.session.send(Marks(it.id, message.marked(), message.failure())) }
+            is ProbeDone -> answer(message.request()) { ProbeDone(it, message.tick(), message.failure()) }
+            is Marks -> answer(message.request()) { Marks(it, message.marked(), message.failure()) }
             is Claimed -> attempts[message.attempt()]?.let { claimed(it, message.failure()) }
+            is Settled -> attempts[message.id()]?.let { it.session.send(Settled(it.submit.submission())) }
+            is WorkHung -> attemptOf[message.player()]?.session?.send(message)
+            is PlayerLeft -> clientNamed(message.player())?.let { lost(it, "its player left Paper (${message.reason().lowercase()})") }
             else -> System.err.println("Paper sent ${message.javaClass.simpleName}, which Paper never sends")
         }
+    }
+
+    /** Paper answered [request]: the session that sent it gets [answer] under its own request id. */
+    private fun answer(
+        request: Long,
+        answer: (Long) -> Message,
+    ) {
+        requests.remove(request)?.let { it.session.send(answer(it.id)) }
     }
 
     private fun fromClient(
@@ -392,8 +418,7 @@ internal class Pool(
             }
 
             is Ready -> {
-                client.ready = true
-                lend()
+                ready(client)
             }
 
             is ResetDone -> {
@@ -472,7 +497,11 @@ internal class Pool(
                 attempts.values.filter { it.session == peer }.forEach(::release)
             }
 
-            Role.PAPER, Role.CLIENT -> {
+            Role.CLIENT -> {
+                clients.firstOrNull { it.peer == peer }?.let { lost(it, "its connection to the pool closed") }
+            }
+
+            Role.PAPER -> {
                 fail("$peer closed its pool connection; see ${game.parts.joinToString { it.log.toString() }}")
             }
         }
@@ -480,7 +509,7 @@ internal class Pool(
 
     /** Starts every attempt whose players are free: Paper claims them in a region no attempt used before. */
     private fun lend() {
-        if (failure != null || !ready) return
+        if (failure != null || !booted) return
         for (grant in claims.grants()) {
             val submit = waiting.remove(grant.session to grant.submission) ?: continue
             claim(grant.session, submit, grant.players)
@@ -510,7 +539,7 @@ internal class Pool(
         session: Peer,
         reclaim: Reclaim,
     ) {
-        val attempt = attempts.values.firstOrNull { it.session == session && it.submit.submission() == reclaim.submission() } ?: return
+        val attempt = attemptOf(session, reclaim.submission()) ?: return
         end(attempt)
         claim(session, attempt.submit, attempt.players)
     }
@@ -527,6 +556,71 @@ internal class Pool(
         attempt.players.forEach { attemptOf.remove(it.name()) }
         paper?.send(Release(attempt.id))
     }
+
+    /** A game part ended: a client's is lost and replaced, Paper's ends the game. A replaced client's old part ends unheard. */
+    private fun exited(part: Part) {
+        val reason = "${part.name} exited with code ${part.process.exitValue()}; see ${part.log}"
+        if (part.player == null) return fail(reason)
+        clientNamed(part.player)?.takeIf { it.part === part }?.let { lost(it, "its process exited with code ${part.process.exitValue()}") }
+    }
+
+    /**
+     * [client] crashed, froze until Paper timed its player out, or left: its attempt fails with [cause]
+     * and the lost client's log, Paper already holds back no tick for it, and the pool starts a new
+     * client for the player. Until that one is ready, no claim gets the player. An attempt still being
+     * claimed goes back in line.
+     */
+    private fun lost(
+        client: Client,
+        cause: String,
+    ) {
+        if (client.lost || failure != null) return
+        val name = client.player.name()
+        client.lost = true
+        client.ready = false
+        client.peer?.close()
+        client.peer = null
+        claims.lose(client.player)
+        val replaced = game.replaceClient(name)
+        client.part = replaced.replacement.also(::watch)
+        val reason = "$cause; see ${replaced.lostLog}"
+        System.err.println("The client of $name is lost: $reason. A new one starts.")
+        attemptOf[name]?.let { attempt ->
+            if (attempt.started) {
+                attempt.session.send(ClientLost(name, reason))
+            } else {
+                end(attempt)
+                claims.release(attempt.players)
+                claims.submit(attempt.session, attempt.submit.submission(), attempt.submit.players())
+                waiting[attempt.session to attempt.submit.submission()] = attempt.submit
+            }
+        }
+        lend()
+    }
+
+    /** [client] steps with Paper: a new client in place of a lost one frees its player again. */
+    private fun ready(client: Client) {
+        client.ready = true
+        if (client.lost) {
+            client.lost = false
+            claims.restore(client.player)
+        }
+        if (clients.all { it.ready }) booted = true
+        lend()
+    }
+
+    /** Reports into the loop once [part]'s process ends. */
+    private fun watch(part: Part) {
+        thread(name = "playtest-pool-${part.name}", isDaemon = true) { part.process.waitFor().also { events.put(Event.Exited(part)) } }
+    }
+
+    private fun clientNamed(name: String): Client? = clients.firstOrNull { it.player.name() == name }
+
+    /** The attempt [session] runs for [submission], if it still runs. */
+    private fun attemptOf(
+        session: Peer,
+        submission: Long,
+    ): Attempt? = attempts.values.firstOrNull { it.session == session && it.submit.submission() == submission }
 
     private fun clientOf(player: UUID): Client? = clients.firstOrNull { it.player.uuid() == player }
 

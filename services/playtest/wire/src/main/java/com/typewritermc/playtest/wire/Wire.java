@@ -5,6 +5,12 @@ import com.typewritermc.playtest.wire.Message.AimAtEntityStep;
 import com.typewritermc.playtest.wire.Message.BarrierSeen;
 import com.typewritermc.playtest.wire.Message.Kind;
 import com.typewritermc.playtest.wire.Message.ProbeMark;
+import com.typewritermc.playtest.wire.Message.ProbeWork;
+import com.typewritermc.playtest.wire.Message.Settle;
+import com.typewritermc.playtest.wire.Message.Settled;
+import com.typewritermc.playtest.wire.Message.WorkHung;
+import com.typewritermc.playtest.wire.Message.PlayerLeft;
+import com.typewritermc.playtest.wire.Message.ClientLost;
 import com.typewritermc.playtest.wire.Message.Marks;
 import com.typewritermc.playtest.wire.Message.Query;
 import com.typewritermc.playtest.wire.Message.Reclaim;
@@ -153,6 +159,21 @@ public final class Wire {
                 optional(body, claimed.failure());
             }
             case Release release -> body.writeLong(release.attempt());
+            case Settle settle -> body.writeLong(settle.id());
+            case Settled settled -> body.writeLong(settled.id());
+            case WorkHung hung -> {
+                string(body, hung.player());
+                string(body, hung.work());
+                body.writeInt(hung.beganAfter());
+            }
+            case PlayerLeft left -> {
+                string(body, left.player());
+                string(body, left.reason());
+            }
+            case ClientLost lost -> {
+                string(body, lost.player());
+                string(body, lost.reason());
+            }
             case ProbeDone done -> {
                 body.writeLong(done.request());
                 body.writeInt(done.tick());
@@ -270,6 +291,11 @@ public final class Wire {
             case Reclaim m -> 26;
             case Query m -> 27;
             case Marks m -> 28;
+            case Settle m -> 29;
+            case Settled m -> 30;
+            case WorkHung m -> 31;
+            case PlayerLeft m -> 32;
+            case ClientLost m -> 33;
         };
     }
 
@@ -332,6 +358,11 @@ public final class Wire {
                 for (int i = 0; i < count; i++) marked.add(kind(in.readUnsignedByte()));
                 yield new Marks(request, List.copyOf(marked), optional(in));
             }
+            case 29 -> new Settle(in.readLong());
+            case 30 -> new Settled(in.readLong());
+            case 31 -> new WorkHung(string(in), string(in), in.readInt());
+            case 32 -> new PlayerLeft(string(in), string(in));
+            case 33 -> new ClientLost(string(in), string(in));
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
     }
@@ -419,6 +450,12 @@ public final class Wire {
                 strings(out, command.suggestions());
                 string(out, command.answer());
             }
+            case ProbeWork work -> {
+                out.writeByte(11);
+                string(out, work.name());
+                out.writeInt(work.millis());
+                string(out, work.chat());
+            }
         }
     }
 
@@ -436,6 +473,7 @@ public final class Wire {
             case 8 -> new ProbeCommand(string(in), strings(in), string(in));
             case 9 -> new ProbePacketEntity(uuid(in), string(in), in.readDouble(), in.readDouble(), in.readDouble(), in.readFloat(), optional(in), optional(in));
             case 10 -> new ProbeMark(kind(in.readUnsignedByte()));
+            case 11 -> new ProbeWork(string(in), in.readInt(), string(in));
             default -> throw new WireException("probe action " + kind + " is no action this build knows");
         };
     }

@@ -21,10 +21,14 @@ import com.typewritermc.playtest.wire.Message.Reclaim
 import com.typewritermc.playtest.wire.Message.Refused
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
+import com.typewritermc.playtest.wire.Message.Settle
+import com.typewritermc.playtest.wire.Message.Settled
 import com.typewritermc.playtest.wire.Message.Submit
 import com.typewritermc.playtest.wire.Wire
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.DataInputStream
@@ -75,6 +79,7 @@ internal class PoolSession private constructor(
     private val probes = ConcurrentHashMap<Long, CompletableDeferred<ProbeDone>>()
     private val inputs = ConcurrentHashMap<Long, CompletableDeferred<InputDone>>()
     private val queries = ConcurrentHashMap<Long, CompletableDeferred<Marks>>()
+    private val settles = ConcurrentHashMap<Long, CompletableDeferred<Settled>>()
     private val attempts = ConcurrentHashMap<String, Attempt>()
     private val ended = CompletableDeferred<Unit>()
 
@@ -123,7 +128,7 @@ internal class PoolSession private constructor(
                 attempt.players.forEach { attempts.remove(it.name) }
                 attempt = lease(submission, code) { send(Reclaim(submission)) }
             }
-            failure = run(attempt, body)
+            failure = settle(submission, attempt, run(attempt, body))
             if (failure != null) break
         }
         attempt.players.forEach { attempts.remove(it.name) }
@@ -174,6 +179,23 @@ internal class PoolSession private constructor(
         ) {
             failed
         }
+
+    /**
+     * Waits until the work plugins count for the attempt's players is quiet, so none of it reaches the
+     * next attempt on those players; returns why the attempt failed: hung work or a lost client the
+     * body never met first, else [failure].
+     */
+    private suspend fun settle(
+        submission: Long,
+        attempt: Attempt,
+        failure: Throwable?,
+    ): Throwable? {
+        // A cancelled body still ends its attempt, so the pool hears the result and frees its players.
+        withContext(NonCancellable) { waitFor(settles, submission) { send(Settle(submission)) } }
+        val untaken = attempt.untakenFailures().firstOrNull() ?: return failure
+        failure?.let(untaken::addSuppressed)
+        return untaken
+    }
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<Kind> {
@@ -263,12 +285,12 @@ internal class PoolSession private constructor(
                 queries[message.request()]?.complete(message)
             }
 
-            is Perceived -> {
-                deliver(message.player()) { Attempt.Event.Perceived(it, message.perception()) }
+            is Message.PlayerEvent -> {
+                deliver(message)
             }
 
-            is BarrierSeen -> {
-                deliver(message.player()) { Attempt.Event.Barrier(it, message.barrier()) }
+            is Settled -> {
+                settles[message.id()]?.complete(message)
             }
 
             is Refused -> {
@@ -285,12 +307,18 @@ internal class PoolSession private constructor(
         }
     }
 
-    /** Hands the attempt that holds [player] the event [of] builds for that player; nobody holds a released player. */
-    private fun deliver(
-        player: String,
-        of: (GamePlayer) -> Attempt.Event,
-    ) {
-        attempts[player]?.let { it.deliver(of(it.player(player))) }
+    /** Hands [message] to the attempt that holds its player; nobody holds a released player. */
+    private fun deliver(message: Message.PlayerEvent) {
+        val attempt = attempts[message.player()] ?: return
+        val player = attempt.player(message.player())
+        attempt.deliver(
+            when (message) {
+                is Perceived -> Attempt.Event.Perceived(player, message.perception())
+                is BarrierSeen -> Attempt.Event.Barrier(player, message.barrier())
+                is Message.WorkHung -> Attempt.Event.Failed(player, WorkHung(player.name, message.work(), message.beganAfter()))
+                is Message.ClientLost -> Attempt.Event.Failed(player, ClientLost(player.name, message.reason()))
+            },
+        )
     }
 
     private fun fail(cause: GameUnavailable) {
@@ -299,6 +327,7 @@ internal class PoolSession private constructor(
         probes.values.forEach { it.completeExceptionally(cause) }
         inputs.values.forEach { it.completeExceptionally(cause) }
         queries.values.forEach { it.completeExceptionally(cause) }
+        settles.values.forEach { it.completeExceptionally(cause) }
         attempts.values.forEach { it.fail(cause) }
         ended.completeExceptionally(cause)
     }
