@@ -80,10 +80,7 @@ void main() {
     await panel.selectAll([kai, lin]);
 
     expect(panel.inspector.showsMixed(RecordField.nickname.label), isTrue);
-    // Equal lists and maps edit as they do for one item, which needs value
-    // locations a combined editor does not have, so they show no field here.
-    final listed = {RecordField.tags, RecordField.scores};
-    for (final field in RecordField.values.skip(1).whereNot(listed.contains)) {
+    for (final field in RecordField.values.skip(1)) {
       expect(
         panel.inspector.showsMixed(field.label),
         isFalse,
@@ -337,20 +334,111 @@ void main() {
     expect(panel.inspector.showsMixed(RecordField.scores.label), isTrue);
   });
 
-  testWidgets("editing differing lists starts from the first member's", (
+  testWidgets("editing differing lists starts from the first member's rows", (
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
     await panel.selectAll([kai, mira]);
 
     await panel.inspector.click(RecordField.tags.label);
+    await panel.inspector.reveal("Tag");
+    await panel.field("Tag").type("green");
 
     await panel.eventually(() {
       for (final item in [kai, mira]) {
         expect(
           panel.heldBy(item, RecordField.tags),
-          recordTags(["red", "fast"]),
+          recordTags(["green", "fast"]),
         );
+      }
+    });
+  });
+
+  testWidgets("a list the members agree on edits as rows for all of them", (
+    tester,
+  ) async {
+    final panel = await tester.pumpDesktopInspector();
+    await panel.selectAll([kai, lin]);
+
+    await panel.inspector.reveal("Tag");
+    await panel.field("Tag").type("blue");
+    await panel.eventually(() {
+      for (final item in [kai, lin]) {
+        expect(
+          panel.heldBy(item, RecordField.tags),
+          recordTags(["blue", "fast"]),
+        );
+      }
+    });
+
+    // The last row's remove, since a click takes the last control named so.
+    await panel.inspector.click("Remove item");
+    await panel.eventually(() {
+      for (final item in [kai, lin]) {
+        expect(panel.heldBy(item, RecordField.tags), recordTags(["blue"]));
+      }
+    });
+  });
+
+  testWidgets("the keyboard adds a row to every member's list", (tester) async {
+    final panel = await tester.pumpDesktopInspector();
+    await panel.selectAll([kai, lin]);
+
+    await panel.inspector.tabToField("Add item");
+    await panel.press(LogicalKeyboardKey.enter);
+
+    await panel.eventually(() {
+      final held = panel.heldBy(kai, RecordField.tags);
+      expect(held.authoredItems?.map((item) => item.value), [
+        skir.DataValue.wrapStringValue("red"),
+        skir.DataValue.wrapStringValue("fast"),
+        skir.DataValue.wrapStringValue(""),
+      ]);
+      expect(panel.heldBy(lin, RecordField.tags), held);
+    });
+  });
+
+  testWidgets("a map the members agree on adds and edits rows for all", (
+    tester,
+  ) async {
+    final panel = await tester.pumpDesktopInspector();
+    await panel.selectAll([kai, lin]);
+
+    await panel.inspector.reveal("Score");
+    await panel.field("Score").type("8");
+    await panel.eventually(() {
+      for (final item in [kai, lin]) {
+        expect(
+          panel.heldBy(item, RecordField.scores),
+          recordScores({"pvp": 8}),
+        );
+      }
+    });
+
+    await panel.inspector.click("Add entry");
+    await panel.eventually(() {
+      final held = panel.heldBy(kai, RecordField.scores);
+      expect(held.authoredPayload, isA<skir.DataValue_mapValueWrapper>());
+      expect(
+        (held.authoredPayload as skir.DataValue_mapValueWrapper).value.rows,
+        hasLength(2),
+      );
+      expect(panel.heldBy(lin, RecordField.scores), held);
+    });
+  });
+
+  testWidgets("choosing a reward kind gives every member a new reward", (
+    tester,
+  ) async {
+    final panel = await tester.pumpDesktopInspector();
+    await panel.selectAll([kai, nova]);
+
+    await panel.inspector.reveal("Coins");
+    await panel.tapOn(panel.inspector.labeled("Coins"));
+
+    await panel.eventually(() {
+      for (final item in [kai, nova]) {
+        expect(panel.heldBy(item, RecordField.reward), recordCoins(0));
       }
     });
   });

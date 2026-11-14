@@ -92,14 +92,17 @@ final class InspectorDriver extends ComponentDriver {
     expect(inside(), isTrue, reason: "Tab reaches $label");
   }
 
-  /// Scrolls the inspector until the field [label] is in view, as a user
-  /// scrolls to a field before using it.
+  /// Scrolls the inspector until the field or button [label] is in view, as
+  /// a user scrolls to a control before using it.
   Future<void> reveal(String label) async {
-    final text = find.text(label, findRichText: true);
-    if (text.evaluate().isEmpty) {
+    final shown = [
+      find.text(label, findRichText: true),
+      find.bySemanticsLabel(label),
+    ].firstWhereOrNull((finder) => finder.evaluate().isNotEmpty);
+    if (shown == null) {
       throw TestFailure("The inspector shows no field $label");
     }
-    await tester.ensureVisible(text.first);
+    await tester.ensureVisible(shown.first);
     await settle();
   }
 

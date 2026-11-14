@@ -451,6 +451,7 @@ extension on RecordField {
               "record.tags.item",
               textInputElement(
                 skir.BindingRef(bindingId: _item.id, path: editorRootPath),
+                label: "Tag",
               ),
             )
             ..allowAdd = true
@@ -465,11 +466,25 @@ extension on RecordField {
     RecordField.scores => skir.PresentationElement.wrapMapInput(
       (skir.MapControl.mutable()
             ..control = _control
+            ..keyPresentation = presentationNode(
+              "record.scores.key",
+              textInputElement(
+                skir.BindingRef(bindingId: _item.id, path: editorRootPath),
+                label: "Game",
+              ),
+            )
+            ..valuePresentation = presentationNode(
+              "record.scores.value",
+              numericInputElement(
+                skir.BindingRef(bindingId: _value, path: editorRootPath),
+                label: "Score",
+              ),
+            )
             ..allowAdd = true
             ..allowRemove = true
             ..keyBinding = _item
             ..valueBinding = skir.BindingDeclaration(
-              id: skir.ExpressionBindingId(value: "record.$name.value"),
+              id: _value,
               type: skir.TypeTemplate.wrapScalar(_integer),
             ))
           .toFrozen(),
@@ -492,6 +507,9 @@ extension on RecordField {
       ),
     ),
   };
+
+  skir.ExpressionBindingId get _value =>
+      skir.ExpressionBindingId(value: "record.$name.value");
 
   skir.BindingDeclaration get _item => skir.BindingDeclaration(
     id: skir.ExpressionBindingId(value: "record.$name.item"),

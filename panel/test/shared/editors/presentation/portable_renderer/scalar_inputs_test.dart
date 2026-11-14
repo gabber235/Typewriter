@@ -340,10 +340,7 @@ void main() {
                 ],
               ),
             ),
-            location: skir.ValueLocation(
-              resource: location.resource,
-              path: skir.ValuePath(segments: const []),
-            ),
+            location: host.document.bindings[_rootBinding]!.location,
             schema: PortablePresentationBindingSchema.complete(
               skir.TypeUse.createNamed(definition: root, arguments: const []),
             ),

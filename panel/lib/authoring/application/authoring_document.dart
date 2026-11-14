@@ -54,8 +54,7 @@ abstract class AuthoringDocument
     for (final entry in entries.entries) entry.key: entry.value.content,
   });
   @override
-  skir.DataValue defaultValue(skir.TypeUse? type) =>
-      _AuthoringDefaults(catalog).forType(type);
+  skir.DataValue defaultValue(skir.TypeUse? type) => catalog.defaultValue(type);
   @override
   PortablePathResult<skir.DataValue> read(skir.ValueLocation location) =>
       resource(location.resource)?.readAt(location.path) ??
