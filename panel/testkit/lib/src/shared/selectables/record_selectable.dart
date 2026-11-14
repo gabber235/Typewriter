@@ -252,29 +252,8 @@ extension on RecordField {
     RecordField.muted => _toggle(skir.TogglePresentation.checkbox),
     RecordField.role => _select(recordRoles),
     RecordField.team => _select(recordTeams),
-    RecordField.color => skir.PresentationElement.wrapColorInput(
-      skir.ColorControl(
-        control: _control,
-        includeAlpha: false,
-        appearance: null,
-        content: null,
-        entry: null,
-        mappings: null,
-        popup: null,
-        options: null,
-      ),
-    ),
-    RecordField.joined => skir.PresentationElement.createDateTimeInput(
-      control: _control,
-      includeDate: true,
-      includeTime: false,
-      appearance: null,
-      content: null,
-      entry: null,
-      mappings: null,
-      popup: null,
-      options: null,
-    ),
+    RecordField.color => colorInputElement(_reference, label: label),
+    RecordField.joined => dateInputElement(_reference, label: label),
   };
 
   skir.PresentationElement _toggle(skir.TogglePresentation presentation) =>
@@ -294,24 +273,19 @@ extension on RecordField {
       );
 
   skir.PresentationElement _select(Map<String, String> choices) =>
-      skir.PresentationElement.createSelectInput(
-        control: _control,
-        options: [
-          for (final MapEntry(key: value, value: label) in choices.entries)
-            skir.SelectOption(
-              optionId: value,
-              label: textLiteral(label),
-              value: textLiteral(value),
-              content: null,
-              enabledIf: null,
-              disabledReason: null,
-            ),
-        ],
-        allowCustomValue: false,
-        appearance: null,
-        content: null,
-        popup: null,
-        optionsConfig: null,
+      skir.PresentationElement.wrapSelectInput(
+        (skir.SelectControl.mutable()
+              ..control = _control
+              ..options = [
+                for (final MapEntry(key: value, value: label)
+                    in choices.entries)
+                  (skir.SelectOption.mutable()
+                        ..optionId = value
+                        ..label = textLiteral(label)
+                        ..value = textLiteral(value))
+                      .toFrozen(),
+              ])
+            .toFrozen(),
       );
 }
 

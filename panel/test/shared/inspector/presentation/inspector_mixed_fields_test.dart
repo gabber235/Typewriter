@@ -6,33 +6,34 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  final ada = RecordSelectableIdentifier(
-    id: "ada",
+  // Two members who differ in every field, and a third who agrees with the
+  // first on all but the nickname.
+  final kai = RecordSelectableIdentifier(
+    id: "kai",
     fields: {
-      RecordField.nickname: skir.DataValue.wrapStringValue("Ada"),
-      RecordField.level: skir.DataValue.wrapInteger("12"),
+      RecordField.role: skir.DataValue.wrapStringValue("admin"),
       RecordField.online: skir.DataValue.wrapBoolean(true),
-      RecordField.role: skir.DataValue.wrapStringValue("builder"),
-      RecordField.color: skir.DataValue.wrapInteger(0xFF009688.toString()),
-      RecordField.joined: skir.DataValue.wrapTimestamp(DateTime.utc(2025, 3)),
+      RecordField.joined: skir.DataValue.wrapTimestamp(DateTime.utc(2024, 5)),
+      RecordField.nickname: skir.DataValue.wrapStringValue("Kai"),
+      RecordField.color: skir.DataValue.wrapInteger("4283215696"),
+      RecordField.level: skir.DataValue.wrapInteger("3"),
     },
   );
-  final grace = RecordSelectableIdentifier(
-    id: "grace",
+  final mira = RecordSelectableIdentifier(
+    id: "mira",
     fields: {
-      RecordField.nickname: skir.DataValue.wrapStringValue("Grace"),
-      RecordField.level: skir.DataValue.wrapInteger("7"),
-      RecordField.muted: skir.DataValue.wrapBoolean(true),
-      RecordField.role: skir.DataValue.wrapStringValue("moderator"),
       RecordField.team: skir.DataValue.wrapStringValue("blue"),
-      RecordField.color: skir.DataValue.wrapInteger(0xFFFF9800.toString()),
-      RecordField.joined: skir.DataValue.wrapTimestamp(DateTime.utc(2025, 9)),
+      RecordField.muted: skir.DataValue.wrapBoolean(true),
+      RecordField.level: skir.DataValue.wrapInteger("40"),
+      RecordField.joined: skir.DataValue.wrapTimestamp(DateTime.utc(2024, 11)),
+      RecordField.color: skir.DataValue.wrapInteger("4288423856"),
+      RecordField.nickname: skir.DataValue.wrapStringValue("Mira"),
     },
   );
   final lin = RecordSelectableIdentifier(
     id: "lin",
     fields: {
-      ...ada.fields,
+      ...kai.fields,
       RecordField.nickname: skir.DataValue.wrapStringValue("Lin"),
     },
   );
@@ -41,7 +42,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([ada, grace]);
+    await panel.selectAll([kai, mira]);
 
     for (final field in RecordField.values) {
       expect(panel.inspector.showsMixed(field.label), isTrue, reason: "$field");
@@ -52,7 +53,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([ada, lin]);
+    await panel.selectAll([kai, lin]);
 
     expect(panel.inspector.showsMixed(RecordField.nickname.label), isTrue);
     for (final field in RecordField.values.skip(1)) {
@@ -68,13 +69,13 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([ada, grace]);
+    await panel.selectAll([kai, mira]);
 
     await panel.inspector.tabToField(RecordField.online.label);
     await panel.press(LogicalKeyboardKey.space);
 
     await panel.eventually(() {
-      for (final item in [ada, grace]) {
+      for (final item in [kai, mira]) {
         expect(
           panel.heldBy(item, RecordField.online),
           skir.DataValue.wrapBoolean(true),
@@ -88,12 +89,12 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([ada, grace]);
+    await panel.selectAll([kai, mira]);
 
     await panel.inspector.click(RecordField.muted.label);
 
     await panel.eventually(() {
-      for (final item in [ada, grace]) {
+      for (final item in [kai, mira]) {
         expect(
           panel.heldBy(item, RecordField.muted),
           skir.DataValue.wrapBoolean(true),
@@ -107,12 +108,12 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([ada, grace]);
+    await panel.selectAll([kai, mira]);
 
     await panel.tapOn(panel.inspector.labeled("Blue"));
 
     await panel.eventually(() {
-      for (final item in [ada, grace]) {
+      for (final item in [kai, mira]) {
         expect(
           panel.heldBy(item, RecordField.team),
           skir.DataValue.wrapStringValue("blue"),
@@ -126,12 +127,12 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([ada, grace]);
+    await panel.selectAll([kai, mira]);
 
     await panel.field(RecordField.level.label).type("30");
 
     await panel.eventually(() {
-      for (final item in [ada, grace]) {
+      for (final item in [kai, mira]) {
         expect(
           panel.heldBy(item, RecordField.level),
           skir.DataValue.wrapInteger("30"),
