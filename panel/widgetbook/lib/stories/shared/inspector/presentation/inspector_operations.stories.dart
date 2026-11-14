@@ -21,6 +21,12 @@ const _pin = RealmOperation(
   order: 10,
   emphasis: skir.OperationEmphasis.outline,
 );
+const _filledPin = RealmOperation(
+  "Pin",
+  group: skir.OperationGroup.organize,
+  order: 10,
+  emphasis: skir.OperationEmphasis.filled,
+);
 const _tag = RealmOperation(
   "Tag",
   group: skir.OperationGroup.organize,
@@ -54,12 +60,7 @@ Widget inspectorOperationsUseCase(BuildContext context) {
             group: skir.OperationGroup.edit,
             emphasis: skir.OperationEmphasis.filled,
           ),
-          RealmOperation(
-            "Pin",
-            group: skir.OperationGroup.organize,
-            order: 10,
-            emphasis: skir.OperationEmphasis.filled,
-          ),
+          _filledPin,
           _tag,
           RealmOperation.moveTo(),
           RealmOperation.delete(),
