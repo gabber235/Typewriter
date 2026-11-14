@@ -547,6 +547,12 @@ decided:
   - id: keep-slice-4-built-decisions
     what: "Keep, start slice 5 (Recommended)"
     why: One Queue message per side by side group, a partner lost before its lease requeues alone, hold reasons apart from attempts, only acked clients watched, never ending hung work noted on the failing case
+  - id: keep-slice-5-built-decisions
+    what: "Keep them (Recommended)"
+    why: Kotlin decides retries and fails the mirror test, Rust judges every runner's run file for the gate; each rule has its own unit tests
+  - id: flaky-proof-in-unit-tests
+    what: "A. Unit tests and evidence (Recommended)"
+    why: VerdictTest and the gate tests cover the rule and the real run proof with a temporary FLAKY-1 stays recorded; no hidden requirement path in the runner
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -654,4 +660,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 5 done. Confirm its built decisions and the flaky proof, then choose between finding the 1.2 s grant to lease cost and starting slice 6 (pixels).
+next: Choose between finding the 1.2 s grant to lease cost and starting slice 6 (pixels).
