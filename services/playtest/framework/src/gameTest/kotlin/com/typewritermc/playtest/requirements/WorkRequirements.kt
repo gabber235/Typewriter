@@ -1,5 +1,6 @@
 package com.typewritermc.playtest.requirements
 
+import com.typewritermc.playtest.Demonstrates
 import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.WindowMissed
 import com.typewritermc.playtest.WorkHung
@@ -33,6 +34,7 @@ val WorkRequirements by testSuite(compartment = { GameCompartment }) {
     requirement(
         "HUNG-1",
         "work still running 1 s after it began fails the attempt, naming the work, the player and its tick, and is never cancelled",
+        demonstrates = Demonstrates.FAILURE,
     ) {
         val began = work(player, "Ledger lookup", millis = 1_500, then = "Ledger late")
 
@@ -47,6 +49,7 @@ val WorkRequirements by testSuite(compartment = { GameCompartment }) {
     alongside(
         "ALONGSIDE-1",
         "one attempt's slow work holds the ticks of the attempt beside it, whose window still counts exactly its ticks",
+        Demonstrates.EDGE_CASE,
         busy = { otherWaits ->
             otherWaits.await()
             work(player, "Ledger lookup", millis = 300, then = "Ledger ready")
@@ -69,6 +72,7 @@ val WorkRequirements by testSuite(compartment = { GameCompartment }) {
     alongside(
         "ALONGSIDE-2",
         "hung work fails only its own attempt, while the attempt beside it keeps its verdicts",
+        Demonstrates.FAILURE,
         busy = { otherWaits ->
             otherWaits.await()
             work(player, "Ledger lookup", millis = 1_500, then = "Ledger late")
@@ -93,6 +97,7 @@ val WorkRequirements by testSuite(compartment = { GameCompartment }) {
     backToBack(
         "LEAK-1",
         "hung work that ends after its attempt never reaches the next attempt on its player, who waits out of the pool until the work ends",
+        demonstrates = Demonstrates.FAILURE,
         first = {
             leakBegan.set(TimeSource.Monotonic.markNow())
             work(player, "Ledger lookup", millis = 4_000, then = "Ledger late")

@@ -2,6 +2,7 @@ package com.typewritermc.playtest.requirements
 
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
+import com.typewritermc.playtest.Demonstrates
 import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.GameMode
 import com.typewritermc.playtest.block
@@ -22,7 +23,7 @@ val BlockRequirements by testSuite(compartment = { GameCompartment }) {
         within(30.ticks) { player sees block(leaves).gone() }
     }
 
-    requirement("BREAK-2", "leaves whose break is cancelled come back") {
+    requirement("BREAK-2", "leaves whose break is cancelled come back", demonstrates = Demonstrates.EDGE_CASE) {
         probe.fill(BlockPos(-2, 99, -2), BlockPos(2, 99, 8), "stone")
         probe.teleport(player, 0.5, 100.0, 0.5)
         probe.gameMode(player, GameMode.SURVIVAL)

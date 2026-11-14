@@ -2,6 +2,8 @@ package com.typewritermc.playtest.wire
 
 import com.typewritermc.playtest.wire.Message.AimAtBlockStep
 import com.typewritermc.playtest.wire.Message.AimAtEntityStep
+import com.typewritermc.playtest.wire.Message.AttemptPolicy
+import com.typewritermc.playtest.wire.Message.AttemptStep
 import com.typewritermc.playtest.wire.Message.BarrierSeen
 import com.typewritermc.playtest.wire.Message.Block
 import com.typewritermc.playtest.wire.Message.BlockPos
@@ -14,6 +16,7 @@ import com.typewritermc.playtest.wire.Message.ClientLost
 import com.typewritermc.playtest.wire.Message.ClientStalled
 import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.Declined
+import com.typewritermc.playtest.wire.Message.Demonstrates
 import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
 import com.typewritermc.playtest.wire.Message.Entity
@@ -93,19 +96,35 @@ val WireTest by testSuite {
             listOf<Message>(
                 Hello(Role.CLIENT, "gv-1"),
                 Refused("Paper stopped while starting; see pool/paper/logs/latest.log"),
-                Queue(listOf(Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1))),
+                Queue(listOf(Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH))),
                 Queue(
                     listOf(
-                        Submit(8, "LOST-1 a client that crashes fails its own attempt (attempt 1 of 3)", "LOST-1", 1),
-                        Submit(9, "LOST-1 a client that crashes fails its own attempt (attempt 2 of 3)", "LOST-1", 1),
+                        Submit(8, "LOST-1 a client that crashes fails its own attempt (attempt 1 of 3)", "LOST-1", 1, Demonstrates.FAILURE),
+                        Submit(
+                            9,
+                            "LOST-1 a client that crashes fails its own attempt (attempt 2 of 3)",
+                            "LOST-1",
+                            1,
+                            Demonstrates.EDGE_CASE,
+                        ),
                     ),
                 ),
                 Declined(8, "GROUP-1 claims 3 players, but the pool holds 1"),
                 Reclaim(8),
                 Lease(7, listOf(Player("gv-1", player), Player("gv-2", UUID(1, 2))), Region(-1_024, 2_048)),
-                Result(7, 1_250, null, null),
-                Result(8, 90, "gv-1 did not see chat \"Hello\"", "ProbeRequirements.kt:14"),
-                End("run-1", "/tmp/results/test_run.json"),
+                Result(7, 1_250, null, null, listOf()),
+                Result(
+                    8,
+                    90,
+                    "gv-1 did not see chat \"Hello\"",
+                    "ProbeRequirements.kt:14",
+                    listOf(
+                        AttemptStep(1_700_000_000_000, 12, "probe Chat[text=Hello]"),
+                        AttemptStep(1_700_000_000_012, 70, "window of 5 ticks missed at tick 5, stepped 5"),
+                    ),
+                ),
+                End("run-1", "/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.RERUN_FAILURES, 4)),
+                End("run-2", "/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.EXACTLY, 3)),
                 Ended(),
                 Probe(3, listOf(player, UUID(1, 2)), ProbeChat("Hello")),
                 Probe(4, listOf(player), ProbeGameMode("survival")),

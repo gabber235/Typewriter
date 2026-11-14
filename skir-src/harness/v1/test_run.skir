@@ -39,8 +39,8 @@ struct Attempt(85010004) {
   // Where this attempt's evidence lies, relative to the folder of the run file; empty for
   // that folder itself.
   folder: string;
-  // What a scenario did and checked, in order, for the captions of its recording. Empty for
-  // tests that report no steps.
+  // What a scenario did and checked, in order, for the captions of its recording and to see
+  // where an attempt's time goes. Empty for tests that report no steps.
   steps: [Step];
   // Where a scenario's taps landed, for the markers of its recording.
   taps: [Tap];
@@ -53,6 +53,8 @@ struct Step(85010005) {
   // The user signed in when the step started.
   actor: string?;
   says: string;
+  // How long the step took, from `at_millis` until it returned.
+  duration_millis: int64;
 }
 
 // One tap, in pixels of the recorded screen.

@@ -31,7 +31,7 @@ internal class Window(
     nevers: List<Check> = listOf(),
 ) {
     init {
-        require(checks.isNotEmpty()) { "a window needs a positive check: without one it could never fail" }
+        if (checks.isEmpty()) throw RequirementRefused("a window needs a positive check: without one it could never fail")
     }
 
     val end: Int = anchor + length.count
@@ -53,6 +53,7 @@ internal class Window(
         ) : Verdict
 
         data class Missed(
+            val tick: Int,
             val report: String,
         ) : Verdict
     }
@@ -82,7 +83,7 @@ internal class Window(
         lastSeen[player]?.takeIf { it.tick() <= anchor }?.let { judge(player, it, at = anchor + 1) }
         if (verdict != Verdict.Open) return verdict
         waitingFor -= player
-        if (waitingFor.isEmpty()) verdict = if (open.isEmpty()) Verdict.Passed(heldUntil) else Verdict.Missed(report())
+        if (waitingFor.isEmpty()) verdict = if (open.isEmpty()) Verdict.Passed(heldUntil) else Verdict.Missed(end, report())
         return verdict
     }
 
@@ -97,6 +98,7 @@ internal class Window(
         if (broken != null) {
             verdict =
                 Verdict.Missed(
+                    at,
                     "${player.name} saw ${broken.fact.shownAs(
                         perception,
                         stimulus,

@@ -2,6 +2,8 @@ package com.typewritermc.playtest.wire;
 
 import com.typewritermc.playtest.wire.Message.AimAtBlockStep;
 import com.typewritermc.playtest.wire.Message.AimAtEntityStep;
+import com.typewritermc.playtest.wire.Message.AttemptPolicy;
+import com.typewritermc.playtest.wire.Message.AttemptStep;
 import com.typewritermc.playtest.wire.Message.BarrierSeen;
 import com.typewritermc.playtest.wire.Message.Block;
 import com.typewritermc.playtest.wire.Message.BlockPos;
@@ -14,6 +16,7 @@ import com.typewritermc.playtest.wire.Message.ClientLost;
 import com.typewritermc.playtest.wire.Message.ClientStalled;
 import com.typewritermc.playtest.wire.Message.Connect;
 import com.typewritermc.playtest.wire.Message.Declined;
+import com.typewritermc.playtest.wire.Message.Demonstrates;
 import com.typewritermc.playtest.wire.Message.End;
 import com.typewritermc.playtest.wire.Message.Ended;
 import com.typewritermc.playtest.wire.Message.Entity;
@@ -114,6 +117,7 @@ public final class Wire {
                     string(body, submit.testId());
                     string(body, submit.requirement());
                     body.writeInt(submit.players());
+                    body.writeByte(submit.demonstrates().ordinal());
                 }
             }
             case Declined declined -> {
@@ -145,10 +149,18 @@ public final class Wire {
                 body.writeLong(result.durationMillis());
                 optional(body, result.failure());
                 optional(body, result.firstBroken());
+                body.writeInt(result.steps().size());
+                for (AttemptStep step : result.steps()) {
+                    body.writeLong(step.atMillis());
+                    body.writeLong(step.durationMillis());
+                    string(body, step.says());
+                }
             }
             case End end -> {
                 string(body, end.run());
                 string(body, end.testRunFile());
+                body.writeByte(end.policy().kind().ordinal());
+                body.writeInt(end.policy().attempts());
             }
             case Probe probe -> {
                 body.writeLong(probe.request());
@@ -322,7 +334,9 @@ public final class Wire {
             case 2 -> {
                 int count = count(in);
                 var together = new ArrayList<Submit>(count);
-                for (int i = 0; i < count; i++) together.add(new Submit(in.readLong(), string(in), string(in), in.readInt()));
+                for (int i = 0; i < count; i++) {
+                    together.add(new Submit(in.readLong(), string(in), string(in), in.readInt(), demonstrates(in.readUnsignedByte())));
+                }
                 yield new Queue(List.copyOf(together));
             }
             case 3 -> {
@@ -332,8 +346,8 @@ public final class Wire {
                 for (int i = 0; i < count; i++) players.add(new Player(string(in), uuid(in)));
                 yield new Lease(submission, List.copyOf(players), region(in));
             }
-            case 4 -> new Result(in.readLong(), in.readLong(), optional(in), optional(in));
-            case 5 -> new End(string(in), string(in));
+            case 4 -> new Result(in.readLong(), in.readLong(), optional(in), optional(in), steps(in));
+            case 5 -> new End(string(in), string(in), new AttemptPolicy(policyKind(in.readUnsignedByte()), in.readInt()));
             case 6 -> new Ended();
             case 7 -> new Probe(in.readLong(), uuids(in), action(in));
             case 8 -> new ProbeDone(in.readLong(), in.readInt(), optional(in));
@@ -388,6 +402,25 @@ public final class Wire {
             case 35 -> new HungEnded(string(in), string(in));
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
+    }
+
+    private static List<AttemptStep> steps(DataInputStream in) throws IOException {
+        int count = count(in);
+        var steps = new ArrayList<AttemptStep>(count);
+        for (int i = 0; i < count; i++) steps.add(new AttemptStep(in.readLong(), in.readLong(), string(in)));
+        return List.copyOf(steps);
+    }
+
+    private static Demonstrates demonstrates(int ordinal) throws WireException {
+        var all = Demonstrates.values();
+        if (ordinal >= all.length) throw new WireException("demonstrates " + ordinal + " is nothing this build knows a case to demonstrate");
+        return all[ordinal];
+    }
+
+    private static AttemptPolicy.Kind policyKind(int ordinal) throws WireException {
+        var kinds = AttemptPolicy.Kind.values();
+        if (ordinal >= kinds.length) throw new WireException("attempt policy " + ordinal + " is no policy this build knows");
+        return kinds[ordinal];
     }
 
     private static Role role(int ordinal) throws WireException {

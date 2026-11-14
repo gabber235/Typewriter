@@ -182,7 +182,7 @@ val WindowTest by testSuite {
     }
 
     test("a window without a check is refused, since it could never fail") {
-        val refusal = shouldThrow<IllegalArgumentException> { Window(anchor = 100, length = 5.ticks, barrier = 7, checks = listOf()) }
+        val refusal = shouldThrow<RequirementRefused> { Window(anchor = 100, length = 5.ticks, barrier = 7, checks = listOf()) }
 
         refusal.message shouldContain "positive check"
     }
@@ -244,7 +244,7 @@ val WindowTest by testSuite {
 
     test("a window with only never checks is refused, since a requirement needs one positive check") {
         val refusal =
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<RequirementRefused> {
                 Window(anchor = 100, length = 5.ticks, barrier = 7, checks = listOf(), nevers = listOf(alexHearsNothing))
             }
 

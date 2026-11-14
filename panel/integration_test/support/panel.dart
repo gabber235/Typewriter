@@ -81,16 +81,22 @@ final class Panel {
     _proof = null;
     // `cargo xtask e2e` reads this line when a run stops before it reports.
     debugPrint("scenario step: $says");
+    final at = DateTime.now().millisecondsSinceEpoch;
+    final actor = _user;
+    // Listed before it runs, so a step that never returns is still the last one a report names.
+    final index = steps.length;
     steps.add(
-      results.Step(
-        atMillis: DateTime.now().millisecondsSinceEpoch,
-        actor: _user,
-        says: says,
-      ),
+      results.Step(atMillis: at, actor: actor, says: says, durationMillis: 0),
     );
     try {
       return await act();
     } finally {
+      steps[index] = results.Step(
+        atMillis: at,
+        actor: actor,
+        says: says,
+        durationMillis: DateTime.now().millisecondsSinceEpoch - at,
+      );
       _inStep = false;
     }
   }

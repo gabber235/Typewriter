@@ -1,5 +1,6 @@
 package com.typewritermc.playtest
 
+import com.typewritermc.playtest.wire.Message
 import de.infix.testBalloon.framework.core.TestCompartment
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.TestSuiteScope
@@ -7,6 +8,9 @@ import de.infix.testBalloon.framework.core.aroundAll
 import de.infix.testBalloon.framework.core.invocation
 import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
+
+/** What a requirement's case demonstrates: the path it exists for, a failure it reports, or an edge it holds at. */
+typealias Demonstrates = Message.Demonstrates
 
 /**
  * The compartment every game requirement registers in. Its tests start at once and each waits in the
@@ -35,15 +39,18 @@ private var currentSession: Result<PoolSession>? = null
 /**
  * Registers one requirement as one testBalloon test named "[id] [sentence]". Its body runs in this
  * test JVM once the pool has [players] free, each wiped and standing in a region of the world that is
- * the attempt's own.
+ * the attempt's own. A failed attempt goes to the end of the pool's line and runs again on warm
+ * clients, up to 4 attempts in total; a pass after a failure is flaky and fails the test like a
+ * failure. [demonstrates] says what the case shows, in the run file.
  */
 @TestRegistering
 fun TestSuiteScope.requirement(
     @TestElementName id: String,
     sentence: String,
     players: Int = 1,
+    demonstrates: Demonstrates = Demonstrates.HAPPY_PATH,
     body: suspend RequirementScope.() -> Unit,
-) = attempts(id, sentence, players, listOf(body))
+) = attempts(id, sentence, players, demonstrates, listOf(body))
 
 /**
  * Registers one requirement whose attempt runs [bodies] in order; before each body after the first the
@@ -55,44 +62,67 @@ internal fun TestSuiteScope.attempts(
     @TestElementName id: String,
     sentence: String,
     players: Int,
+    demonstrates: Demonstrates,
     bodies: List<suspend RequirementScope.() -> Unit>,
 ) {
     require(players >= 1) { "$id claims $players players; a requirement claims at least 1" }
-    test("$id $sentence") {
-        session(id).attempt(PoolSession.Planned(testId = "$id $sentence", requirement = id, players = players, bodies = bodies))
+    register(id, sentence, RequirementCode.of(bodies.first())) { session ->
+        session.attempt(PoolSession.Planned("$id $sentence", id, players, demonstrates, bodies))
     }
 }
 
 /**
- * Registers one requirement whose [bodies] run side by side, each as an attempt of its own on one
- * player, reported as cases of their own: the pool claims and leases their players at the same moment.
- * Once all ended, [afterward] runs as one more attempt on [afterwardPlayers]. Only the framework's own
- * test kit runs attempts side by side, to prove what one attempt does never changes another's verdict.
+ * Registers one requirement whose bodies, made afresh for each attempt by [bodies], run side by side,
+ * each as an attempt of its own on one player, reported as cases of their own: the pool claims and
+ * leases their players at the same moment. Once all ended, [afterward] runs as one more attempt on
+ * [afterwardPlayers]. Only the framework's own test kit runs attempts side by side, to prove what one
+ * attempt does never changes another's verdict.
  */
 @TestRegistering
 internal fun TestSuiteScope.sideBySide(
     @TestElementName id: String,
     sentence: String,
-    bodies: List<suspend RequirementScope.() -> Unit>,
+    demonstrates: Demonstrates,
+    bodies: () -> List<suspend RequirementScope.() -> Unit>,
     afterwardPlayers: Int = 1,
     afterward: (suspend RequirementScope.() -> Unit)? = null,
 ) {
-    val count = bodies.size + if (afterward == null) 0 else 1
-    test("$id $sentence") {
-        val session = session(id)
+    register(id, sentence, RequirementCode.of(bodies)) { session ->
+        val made = bodies()
+        val count = made.size + if (afterward == null) 0 else 1
         val failures =
             session
                 .sideBySide(
-                    bodies.mapIndexed { index, body ->
-                        PoolSession.Planned("$id $sentence (attempt ${index + 1} of $count)", id, players = 1, bodies = listOf(body))
+                    made.mapIndexed { index, body ->
+                        PoolSession.Planned("$id $sentence (attempt ${index + 1} of $count)", id, 1, demonstrates, listOf(body))
                     },
                 ).filterNotNull()
-        failures.firstOrNull()?.let { first -> throw first.also { failures.drop(1).forEach(it::addSuppressed) } }
-        afterward?.let {
-            session.attempt(
-                PoolSession.Planned("$id $sentence (attempt $count of $count)", id, afterwardPlayers, listOf(it)),
-            )
-        }
+        failures.firstOrNull()?.let { first -> first.also { failures.drop(1).forEach(it::addSuppressed) } }
+            ?: afterward?.let {
+                session.attempt(
+                    PoolSession.Planned("$id $sentence (attempt $count of $count)", id, afterwardPlayers, demonstrates, listOf(it)),
+                )
+            }
+    }
+}
+
+/**
+ * Registers the test "[id] [sentence]" when the run selects it: it makes the requirement's attempts as
+ * the run's policy asks, each with [attempt], which returns why it failed or null, and ends as their
+ * verdict says.
+ */
+private fun TestSuiteScope.register(
+    id: String,
+    sentence: String,
+    code: RequirementCode,
+    attempt: suspend (PoolSession) -> Throwable?,
+) {
+    val plan = RunPlan.current
+    val testId = "$id $sentence"
+    if (!plan.runs(id, testId)) return
+    test(testId) {
+        val session = session(id)
+        plan.policy.attempt(plan.quarantines(id, testId)) { attempt(session) }.conclude(code)
     }
 }
 

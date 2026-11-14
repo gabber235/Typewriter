@@ -1,6 +1,7 @@
 package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.Message
+import com.typewritermc.playtest.wire.Message.AttemptStep
 import com.typewritermc.playtest.wire.Message.BarrierSeen
 import com.typewritermc.playtest.wire.Message.Declined
 import com.typewritermc.playtest.wire.Message.End
@@ -39,7 +40,6 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
 import java.net.Socket
-import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -54,7 +54,7 @@ class GameUnavailable(
 /** The pool can never run this requirement, for example since it claims more players than the pool holds. */
 class RequirementDeclined(
     message: String,
-) : AssertionError(message)
+) : RequirementRefused(message)
 
 /** A probe could not arrange what the requirement asked for; [message] says why. */
 class ProbeFailed(
@@ -95,7 +95,7 @@ internal class PoolSession private constructor(
      * so the records that follow the lease find it.
      */
     private class Leasing(
-        val requirementCode: URL?,
+        val requirementCode: RequirementCode,
     ) {
         val attempt = CompletableDeferred<Attempt>()
     }
@@ -112,17 +112,17 @@ internal class PoolSession private constructor(
         val testId: String,
         val requirement: String,
         val players: Int,
+        val demonstrates: Demonstrates,
         val bodies: List<suspend RequirementScope.() -> Unit>,
     )
 
     /**
      * Runs one attempt of a requirement: waits for its lease and runs its bodies in order, then reports
      * the outcome. Before each body after the first, the pool releases and claims the same players
-     * again, as the next attempt would get them: wiped and in a new region.
+     * again, as the next attempt would get them: wiped and in a new region. Returns why it failed, or
+     * null.
      */
-    suspend fun attempt(planned: Planned) {
-        sideBySide(listOf(planned)).single()?.let { throw it }
-    }
+    suspend fun attempt(planned: Planned): Throwable? = sideBySide(listOf(planned)).single()
 
     /**
      * Runs [planned] side by side, each as an attempt of its own: the pool claims and leases all their
@@ -130,21 +130,19 @@ internal class PoolSession private constructor(
      */
     suspend fun sideBySide(planned: List<Planned>): List<Throwable?> {
         val leasings =
-            planned.map {
-                submissions.incrementAndGet() to
-                    Leasing(
-                        it.bodies
-                            .first()
-                            .javaClass.protectionDomain.codeSource
-                            ?.location,
-                    )
-            }
+            planned.map { submissions.incrementAndGet() to Leasing(RequirementCode.of(it.bodies.first())) }
         for ((submission, leasing) in leasings) {
             leases[submission] = leasing
             broken?.let(leasing.attempt::completeExceptionally)
         }
         try {
-            send(Queue(planned.zip(leasings) { it, (submission, _) -> Submit(submission, it.testId, it.requirement, it.players) }))
+            send(
+                Queue(
+                    planned.zip(
+                        leasings,
+                    ) { it, (submission, _) -> Submit(submission, it.testId, it.requirement, it.players, it.demonstrates) },
+                ),
+            )
         } catch (unavailable: GameUnavailable) {
             leasings.forEach { (_, leasing) -> leasing.attempt.completeExceptionally(unavailable) }
         }
@@ -173,12 +171,14 @@ internal class PoolSession private constructor(
             }
         val started = System.nanoTime()
         var failure: Throwable? = null
+        val steps = mutableListOf<AttemptStep>()
         for ((index, body) in planned.bodies.withIndex()) {
             if (index > 0) {
                 attempt.players.forEach { attempts.remove(it.name) }
                 attempt = lease(submission, leasing.requirementCode) { send(Reclaim(submission)) }
             }
-            failure = settle(submission, attempt, run(attempt, body))
+            failure = settle(submission, attempt, run(attempt, body))?.let(attempt::located)
+            steps += attempt.steps
             if (failure != null) break
         }
         attempt.players.forEach { attempts.remove(it.name) }
@@ -187,11 +187,12 @@ internal class PoolSession private constructor(
             Result(
                 submission,
                 millis,
-                failure?.let(::describe),
+                failure?.described,
                 failure?.let {
                     attempt.requirementLine(it.stackTrace)
                         ?: (it as? WindowMissed)?.at
                 },
+                steps,
             ),
         )
         return failure
@@ -200,7 +201,7 @@ internal class PoolSession private constructor(
     /** Waits for the lease of [submission] that [ask] asks the pool for. */
     private suspend fun lease(
         submission: Long,
-        code: URL?,
+        code: RequirementCode,
         ask: () -> Unit,
     ): Attempt {
         val leasing = Leasing(code)
@@ -241,7 +242,9 @@ internal class PoolSession private constructor(
         failure: Throwable?,
     ): Throwable? {
         // A cancelled body still ends its attempt, so the pool hears the result and frees its players.
+        val at = System.currentTimeMillis()
         withContext(NonCancellable) { waitFor(settles, submission) { send(Settle(submission)) } }
+        attempt.took(at, "settle ${attempt.players.joinToString { it.name }}")
         val untaken = attempt.untakenFailures().firstOrNull() ?: return failure
         failure?.let(untaken::addSuppressed)
         return untaken
@@ -279,7 +282,7 @@ internal class PoolSession private constructor(
 
     /** Ends the session: the pool writes this session's cases into the run file. */
     suspend fun end() {
-        send(End(settings.run, settings.testRun.toString()))
+        send(End(settings.run, settings.testRun.toString(), RunPlan.current.policy))
         ended.await()
         socket.close()
     }
@@ -402,8 +405,5 @@ internal class PoolSession private constructor(
             thread(name = "playtest-session", isDaemon = true) { session.read() }
             return session
         }
-
-        private fun describe(failure: Throwable): String =
-            if (failure is AssertionError) failure.message ?: failure.toString() else failure.toString()
     }
 }

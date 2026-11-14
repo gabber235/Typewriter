@@ -23,8 +23,14 @@ public sealed interface Message {
     /** Pool to session: the game cannot run; every requirement of the session fails with this reason. */
     record Refused(String reason) implements Message {}
 
-    /** One attempt of a requirement to run once {@code players} players are free. */
-    record Submit(long submission, String testId, String requirement, int players) {}
+    /** What a requirement's case demonstrates: the path it exists for, a failure it reports, or an edge it holds at. */
+    enum Demonstrates { HAPPY_PATH, FAILURE, EDGE_CASE }
+
+    /**
+     * One attempt of a requirement to run once {@code players} players are free. Every attempt of one
+     * requirement case carries the same {@code testId}, so they land in one case of the run file.
+     */
+    record Submit(long submission, String testId, String requirement, int players, Demonstrates demonstrates) {}
 
     /**
      * Session to pool: run these attempts side by side. The pool claims the players of all of them at
@@ -62,13 +68,27 @@ public sealed interface Message {
     record Lease(long submission, List<Player> players, Region region) implements Message {}
 
     /**
-     * Session to pool: the attempt ended and its players are free again. {@code failure} is null for a
-     * pass; {@code firstBroken} names the requirement line that failed, when it is known.
+     * One thing an attempt did: it began at {@code atMillis}, Unix milliseconds, and took
+     * {@code durationMillis}. {@code says} starts with what kind of thing it was: claim, wipe, probe,
+     * input, window or settle.
      */
-    record Result(long submission, long durationMillis, String failure, String firstBroken) implements Message {}
+    record AttemptStep(long atMillis, long durationMillis, String says) {}
 
-    /** Session to pool: the session is done; the pool writes its run into {@code testRunFile}. */
-    record End(String run, String testRunFile) implements Message {}
+    /**
+     * Session to pool: the attempt ended and its players are free again. {@code failure} is null for a
+     * pass; {@code firstBroken} names the requirement line that failed, when it is known. {@code steps}
+     * are what the attempt's bodies did, in order.
+     */
+    record Result(long submission, long durationMillis, String failure, String firstBroken, List<AttemptStep> steps)
+        implements Message {}
+
+    /** How a run makes its requirements' attempts: failed ones again, up to {@code attempts} in total, or each exactly {@code attempts} times. */
+    record AttemptPolicy(Kind kind, int attempts) {
+        public enum Kind { RERUN_FAILURES, EXACTLY }
+    }
+
+    /** Session to pool: the session is done; the pool writes its run, made under {@code policy}, into {@code testRunFile}. */
+    record End(String run, String testRunFile, AttemptPolicy policy) implements Message {}
 
     /** Pool to session: the run file is written. */
     record Ended() implements Message {}

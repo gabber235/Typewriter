@@ -15,9 +15,10 @@ fun TestSuiteScope.backToBack(
     @TestElementName id: String,
     sentence: String,
     players: Int = 1,
+    demonstrates: Demonstrates = Demonstrates.HAPPY_PATH,
     first: suspend RequirementScope.() -> Unit,
     then: suspend RequirementScope.() -> Unit,
-) = attempts(id, sentence, players, listOf(first, then))
+) = attempts(id, sentence, players, demonstrates, listOf(first, then))
 
 /** [player] carries a mark of [kind], as an earlier attempt could leave it. */
 suspend fun RequirementScope.mark(

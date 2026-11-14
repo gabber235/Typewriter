@@ -160,6 +160,23 @@ pub fn requirement_run(requirement: &str, id: &str, outcome: Outcome) -> TestRun
     reported
 }
 
+/// A game run under `policy` with one case per requirement, `<REQ> the requirement`, whose
+/// attempts had these outcomes, in order.
+pub fn game_run(policy: AttemptPolicy, cases: &[(&str, &[Outcome])]) -> TestRun {
+    TestRun {
+        runner: Runner::Game,
+        attempt_policy: policy,
+        cases: cases
+            .iter()
+            .map(|(requirement, outcomes)| TestCase {
+                requirement: Some((*requirement).to_owned()),
+                ..case(&format!("{requirement} the requirement"), outcomes)
+            })
+            .collect(),
+        ..TestRun::default()
+    }
+}
+
 /// A components run under `policy` whose cases made `attempts`, in order.
 pub fn attempted(policy: AttemptPolicy, attempts: &[Outcome]) -> TestRun {
     TestRun {
@@ -234,6 +251,7 @@ pub fn scenario_step(at_millis: i64, actor: Option<&str>, says: &str) -> Scenari
         at_millis,
         actor: actor.map(str::to_owned),
         says: says.to_owned(),
+        duration_millis: 0,
         _unrecognized: None,
     }
 }

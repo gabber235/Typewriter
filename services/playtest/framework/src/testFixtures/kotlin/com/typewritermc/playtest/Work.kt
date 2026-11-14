@@ -25,20 +25,28 @@ suspend fun RequirementScope.work(
  * as an attempt of its own on a player of its own, leased at the same moment; once both ended,
  * [afterward] runs as one more attempt on [afterwardPlayers]. [other] completes the deferred it gets
  * once its window waits for ticks, see [cueOnceOpen]; [busy] awaits it, so what [busy] does next happens
- * while that window runs.
+ * while that window runs. Each attempt of the requirement gets a deferred of its own.
  */
 @TestRegistering
 fun TestSuiteScope.alongside(
     @TestElementName id: String,
     sentence: String,
+    demonstrates: Demonstrates = Demonstrates.HAPPY_PATH,
     busy: suspend RequirementScope.(otherWaits: Deferred<Unit>) -> Unit,
     other: suspend RequirementScope.(waiting: CompletableDeferred<Unit>) -> Unit,
     afterwardPlayers: Int = 1,
     afterward: (suspend RequirementScope.() -> Unit)? = null,
-) {
-    val waiting = CompletableDeferred<Unit>()
-    sideBySide(id, sentence, listOf({ busy(waiting) }, { other(waiting) }), afterwardPlayers, afterward)
-}
+) = sideBySide(
+    id,
+    sentence,
+    demonstrates,
+    {
+        val waiting = CompletableDeferred<Unit>()
+        listOf({ busy(waiting) }, { other(waiting) })
+    },
+    afterwardPlayers,
+    afterward,
+)
 
 /**
  * Runs [window], a `within`, and completes [waiting] as soon as the window asked Paper for its ticks,

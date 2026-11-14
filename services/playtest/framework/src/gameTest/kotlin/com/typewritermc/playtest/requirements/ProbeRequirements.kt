@@ -2,6 +2,7 @@ package com.typewritermc.playtest.requirements
 
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
+import com.typewritermc.playtest.Demonstrates
 import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.GameMode
 import com.typewritermc.playtest.block
@@ -17,7 +18,11 @@ val ProbeRequirements by testSuite(compartment = { GameCompartment }) {
         within(10.ticks) { player sees chat("Hello") }
     }
 
-    requirement("PROBE-2", "the first input after a far teleport acts on the world around the new spot") {
+    requirement(
+        "PROBE-2",
+        "the first input after a far teleport acts on the world around the new spot",
+        demonstrates = Demonstrates.EDGE_CASE,
+    ) {
         // Far from the middle of the region, where the claim put the player, so no chunk around it was
         // loaded or sent before this teleport.
         probe.fill(BlockPos(298, 99, 1), BlockPos(302, 99, 9), "stone")

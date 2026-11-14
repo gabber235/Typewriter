@@ -4,8 +4,8 @@
 //! passes, and passing after a failure makes it flaky, which gates like a failure: the rerun tells
 //! a test that fails sometimes from one that always fails, and only a test that always passes is
 //! trusted. Under `Exactly` any failed attempt fails the case. A case listed in [`QUARANTINE`] still runs and is reported but
-//! does not gate; each entry names a reason and an issue, and every report lists the quarantined
-//! cases so they cannot be forgotten.
+//! does not gate; each entry names a case by its id or by its requirement, a reason and an issue,
+//! and every report lists the quarantined cases so they cannot be forgotten.
 
 use std::fs;
 use std::io::Write;
@@ -48,9 +48,26 @@ impl Quarantine {
         toml::from_str(&text).with_context(|| format!("{} is invalid", path.display()))
     }
 
-    fn entry(&self, runner: &Runner, case: &str) -> Option<&QuarantinedCase> {
-        let id = format!("{}/{case}", runner_name(runner));
-        self.cases.iter().find(|entry| entry.id == id)
+    /// The cases of `runner` the quarantine holds, as their entries name them: a case id or a
+    /// requirement. A runner that retries inside its own run, such as the game pool, gets these.
+    pub fn held(&self, runner: &Runner) -> Vec<&str> {
+        let prefix = format!("{}/", runner_name(runner));
+        self.cases
+            .iter()
+            .filter_map(|entry| entry.id.strip_prefix(&prefix))
+            .collect()
+    }
+
+    /// The entry that holds `case` of `runner`: one naming its id, or the requirement it
+    /// demonstrates, which holds every case of that requirement.
+    fn entry(&self, runner: &Runner, case: &TestCase) -> Option<&QuarantinedCase> {
+        let prefix = format!("{}/", runner_name(runner));
+        self.cases.iter().find(|entry| {
+            entry
+                .id
+                .strip_prefix(&prefix)
+                .is_some_and(|name| name == case.id || case.requirement.as_deref() == Some(name))
+        })
     }
 }
 
@@ -77,7 +94,7 @@ pub fn verdict(run: &TestRun, case: &TestCase, quarantine: &Quarantine) -> Resul
     Ok(
         match (
             failed,
-            quarantine.entry(&run.runner, &case.id),
+            quarantine.entry(&run.runner, case),
             &run.attempt_policy,
         ) {
             (0, _, _) => Verdict::Passed,
@@ -158,19 +175,7 @@ pub fn attempts(
         .filter(|limit| *limit > 0)
         .context("an attempt policy needs at least one attempt")?;
     let first = run(1, selection)?;
-    let unmatched: Vec<&str> = selection
-        .iter()
-        .filter(|id| {
-            !first
-                .cases
-                .iter()
-                .any(|case| case.id == **id || case.requirement.as_ref() == Some(*id))
-        })
-        .map(String::as_str)
-        .collect();
-    if !unmatched.is_empty() {
-        bail!("no case matches {}", unmatched.join(", "));
-    }
+    selection_matches(&first, selection)?;
     let mut folded = TestRun {
         attempt_policy: policy.clone(),
         ..first
@@ -185,7 +190,7 @@ pub fn attempts(
                     case.attempts
                         .last()
                         .is_some_and(|last| !matches!(last.outcome, Outcome::Passed))
-                        && quarantine.entry(&folded.runner, &case.id).is_none()
+                        && quarantine.entry(&folded.runner, case).is_none()
                 })
                 .map(|case| case.id.clone())
                 .collect(),
@@ -221,6 +226,23 @@ pub fn attempts(
         }
     }
     Ok(folded)
+}
+
+/// Fails when an id of `selection` names no case of `run`.
+pub fn selection_matches(run: &TestRun, selection: &[String]) -> Result<()> {
+    let unmatched: Vec<&str> = selection
+        .iter()
+        .filter(|id| {
+            !run.cases
+                .iter()
+                .any(|case| case.id == **id || case.requirement.as_ref() == Some(*id))
+        })
+        .map(String::as_str)
+        .collect();
+    if !unmatched.is_empty() {
+        bail!("no case matches {}", unmatched.join(", "));
+    }
+    Ok(())
 }
 
 /// Reads the `TestRun` at `path`.
@@ -331,7 +353,7 @@ pub fn report(
                 writeln!(out, "{}: flaky, failed {attempts}{see}", case.id)?;
                 flaky.push(case.id.as_str());
             }
-            Verdict::Quarantined => match quarantine.entry(&run.runner, &case.id) {
+            Verdict::Quarantined => match quarantine.entry(&run.runner, case) {
                 Some(entry) => writeln!(
                     out,
                     "{}: quarantined ({}, issue #{}), failed {attempts}{see}",
@@ -378,7 +400,8 @@ pub fn runner_name(runner: &Runner) -> &'static str {
 mod tests {
     use super::*;
     use crate::test_support::{
-        attempted, case, failed, once, outcomes, quarantining, report_text, run, unknown,
+        attempted, case, failed, once, outcomes, quarantining, report_text, requirement_run, run,
+        unknown,
     };
 
     #[test]
@@ -636,6 +659,44 @@ mod tests {
         )
         .unwrap_err();
         assert_eq!(error.to_string(), "no case matches CONN-9");
+    }
+
+    #[test]
+    fn a_quarantine_entry_names_a_case_by_its_id_or_by_its_requirement() {
+        let mut held = attempted(AttemptPolicy::RerunFailures(4), &[failed("x")]);
+        held.runner = Runner::Game;
+        held.cases[0].id = "WINDOW-1 a check that never holds fails".to_owned();
+        held.cases[0].requirement = Some("WINDOW-1".to_owned());
+        for entry in [
+            "game/WINDOW-1",
+            "game/WINDOW-1 a check that never holds fails",
+        ] {
+            let verdict = verdict(&held, &held.cases[0], &quarantining(entry)).unwrap();
+            assert_eq!(verdict, Verdict::Quarantined, "{entry}");
+        }
+        let verdict = verdict(&held, &held.cases[0], &quarantining("game/WINDOW-2")).unwrap();
+        assert_eq!(verdict, Verdict::Failed);
+    }
+
+    #[test]
+    fn a_quarantine_lists_the_cases_it_holds_for_one_runner() {
+        let quarantine: Quarantine = toml::from_str(
+            "[[case]]\nid = \"game/WINDOW-1\"\nreason = \"r\"\nissue = 1\n\
+             [[case]]\nid = \"panel/CONN-1\"\nreason = \"r\"\nissue = 2\n\
+             [[case]]\nid = \"game/HUNG-1\"\nreason = \"r\"\nissue = 3\n",
+        )
+        .unwrap();
+        assert_eq!(quarantine.held(&Runner::Game), ["WINDOW-1", "HUNG-1"]);
+    }
+
+    #[test]
+    fn a_selection_names_each_case_by_its_id_or_its_requirement() {
+        let reported = requirement_run("CONN-1", "[CONN-1] Reconnects", Outcome::Passed);
+        let selected = ["CONN-1".to_owned(), "[CONN-1] Reconnects".to_owned()];
+        assert!(selection_matches(&reported, &selected).is_ok());
+        let error =
+            selection_matches(&reported, &["CONN-2".to_owned(), "AUTH-1".to_owned()]).unwrap_err();
+        assert_eq!(error.to_string(), "no case matches CONN-2, AUTH-1");
     }
 
     #[test]

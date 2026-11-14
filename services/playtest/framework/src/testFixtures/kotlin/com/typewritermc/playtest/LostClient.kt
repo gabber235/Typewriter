@@ -21,6 +21,7 @@ fun TestSuiteScope.clientLostAlongside(
 ) = alongside(
     id,
     sentence,
+    Demonstrates.FAILURE,
     busy = { otherWaits ->
         probe.chat(player, "Hello")
         otherWaits.await()

@@ -1,6 +1,8 @@
 package com.typewritermc.playtest.pool
 
 import build.skir.JsonFlavor
+import com.typewritermc.playtest.wire.Message
+import com.typewritermc.playtest.wire.Message.AttemptStep
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Submit
 import skirout.harness.v1.test_run.Attempt
@@ -8,55 +10,138 @@ import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.test_run.Demonstrates
 import skirout.harness.v1.test_run.Outcome
 import skirout.harness.v1.test_run.Runner
+import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.test_run.TestCase
 import skirout.harness.v1.test_run.TestRun
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
-/** The attempts of every run the pool served, kept per run id until the run's session asks for its file. */
+/**
+ * The attempts of every run the pool served, kept per run id. Every attempt of one case, a requirement
+ * retried or repeated, lands in that case. A session's end writes its run's file, and the file is
+ * written again whenever a later session of the run ends or leaves without ending, so the last file
+ * holds every attempt the run made.
+ */
 internal class RunRecords(
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private class Run(
         val startedAtMillis: Long,
     ) {
-        val cases = mutableListOf<TestCase>()
+        val cases = linkedMapOf<String, TestCase>()
+
+        /** Where the run's file goes and how its attempts were made, once a session of the run ended. */
+        var file: Path? = null
+        var policy: Message.AttemptPolicy? = null
     }
 
     private val runs = mutableMapOf<String, Run>()
 
     /** A session of [run] joined; the run starts with its first session. */
     fun started(run: String) {
-        runs.getOrPut(run) { Run(clock()) }
+        runOf(run)
     }
 
+    /**
+     * One attempt of [submit] ended with [result]. Its steps are the pool's own, [claimed] (waiting for
+     * its players, their wipe), then what its bodies did.
+     */
     fun record(
         run: String,
         submit: Submit,
         result: Result,
+        claimed: List<AttemptStep> = listOf(),
     ) {
         val outcome = result.failure()?.let { Outcome.createFailed(message = it, firstBroken = result.firstBroken()) } ?: Outcome.PASSED
+        add(run, submit, outcome, result.durationMillis(), (claimed + result.steps()).sortedBy { it.atMillis() })
+    }
+
+    /**
+     * A session of [run] left before [unfinished] ended: each gets a failed attempt saying [reason], and
+     * the run's file is written again once a session of the run named it.
+     */
+    fun abandoned(
+        run: String,
+        unfinished: List<Submit>,
+        reason: String,
+        stillOut: Map<String, String> = mapOf(),
+    ) {
+        unfinished.forEach { add(run, it, Outcome.createFailed(message = reason, firstBroken = null), 0, listOf()) }
+        val record = runOf(run)
+        val file = record.file ?: return
+        val policy = record.policy ?: return
+        write(record, file, policy, stillOut)
+    }
+
+    /**
+     * A session of [run] ended: writes the run, made under [policy], as a `TestRun` into [file],
+     * replacing what an earlier session of the run wrote. Each note in [stillOut] joins the failure of
+     * the case its test id names: a player that case's hung work keeps out of the pool.
+     */
+    fun ended(
+        run: String,
+        file: Path,
+        policy: Message.AttemptPolicy,
+        stillOut: Map<String, String> = mapOf(),
+    ) {
+        val record = runOf(run)
+        record.file = file
+        record.policy = policy
+        write(record, file, policy, stillOut)
+    }
+
+    private fun runOf(run: String): Run = runs.getOrPut(run) { Run(clock()) }
+
+    private fun add(
+        run: String,
+        submit: Submit,
+        outcome: Outcome,
+        durationMillis: Long,
+        steps: List<AttemptStep>,
+    ) {
         val attempt =
             Attempt(
                 outcome = outcome,
                 span = null,
-                durationMillis = result.durationMillis(),
+                durationMillis = durationMillis,
                 artifacts = listOf(),
                 folder = "",
-                steps = listOf(),
+                steps = steps.map { Step(atMillis = it.atMillis(), actor = null, says = it.says(), durationMillis = it.durationMillis()) },
                 taps = listOf(),
             )
-        runs.getOrPut(run) { Run(clock()) }.cases +=
-            TestCase(
-                id = submit.testId(),
-                requirement = submit.requirement(),
-                demonstrates = Demonstrates.HAPPY_PATH,
-                attempts = listOf(attempt),
-            )
+        val cases = runOf(run).cases
+        cases[submit.testId()] =
+            cases[submit.testId()]?.let { case -> case.copy(attempts = case.attempts + attempt) }
+                ?: TestCase(
+                    id = submit.testId(),
+                    requirement = submit.requirement(),
+                    demonstrates = submit.demonstrates().inRun,
+                    attempts = listOf(attempt),
+                )
     }
 
-    /** This case with [note] joined to its failure. */
+    private fun write(
+        record: Run,
+        file: Path,
+        policy: Message.AttemptPolicy,
+        stillOut: Map<String, String>,
+    ) {
+        val testRun =
+            TestRun(
+                runner = Runner.GAME,
+                commit = "",
+                startedAtMillis = record.startedAtMillis,
+                attemptPolicy = policy.inRun,
+                cases = record.cases.values.map { case -> stillOut[case.id]?.let { note -> case.noting(note) } ?: case },
+            )
+        Files.createDirectories(file.toAbsolutePath().parent)
+        val partial = file.resolveSibling("${file.fileName}.partial")
+        Files.writeString(partial, TestRun.serializer.toJsonCode(testRun, JsonFlavor.READABLE))
+        Files.move(partial, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+    }
+
+    /** This case with [note] joined to each failure. */
     private fun TestCase.noting(note: String): TestCase =
         copy(
             attempts =
@@ -66,28 +151,18 @@ internal class RunRecords(
                 },
         )
 
-    /**
-     * Writes [run] as a `TestRun` into [file], replacing what an earlier session of the run wrote. Each
-     * note in [stillOut] joins the failure of the case its test id names: a player that case's hung
-     * work keeps out of the pool.
-     */
-    fun write(
-        run: String,
-        file: Path,
-        stillOut: Map<String, String> = mapOf(),
-    ) {
-        val record = runs.getOrPut(run) { Run(clock()) }
-        val testRun =
-            TestRun(
-                runner = Runner.GAME,
-                commit = "",
-                startedAtMillis = record.startedAtMillis,
-                attemptPolicy = AttemptPolicy.ExactlyWrapper(1),
-                cases = record.cases.map { case -> stillOut[case.id]?.let { note -> case.noting(note) } ?: case },
-            )
-        Files.createDirectories(file.toAbsolutePath().parent)
-        val partial = file.resolveSibling("${file.fileName}.partial")
-        Files.writeString(partial, TestRun.serializer.toJsonCode(testRun, JsonFlavor.READABLE))
-        Files.move(partial, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-    }
+    private val Message.Demonstrates.inRun: Demonstrates
+        get() =
+            when (this) {
+                Message.Demonstrates.HAPPY_PATH -> Demonstrates.HAPPY_PATH
+                Message.Demonstrates.FAILURE -> Demonstrates.FAILURE
+                Message.Demonstrates.EDGE_CASE -> Demonstrates.EDGE_CASE
+            }
+
+    private val Message.AttemptPolicy.inRun: AttemptPolicy
+        get() =
+            when (kind()) {
+                Message.AttemptPolicy.Kind.RERUN_FAILURES -> AttemptPolicy.RerunFailuresWrapper(attempts())
+                Message.AttemptPolicy.Kind.EXACTLY -> AttemptPolicy.ExactlyWrapper(attempts())
+            }
 }

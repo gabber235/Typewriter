@@ -52,38 +52,50 @@ class RequirementScope internal constructor(
      * ticks. While the chat stays open with that text, a suggestion request that got no answer for 6
      * ticks makes the client retype the last character, as a person does when no list shows.
      */
-    suspend fun GamePlayer.typeInChat(text: String): Mark = input(TypeInChatStep(text))
+    suspend fun GamePlayer.typeInChat(text: String): Mark = input("types \"$text\" in chat", TypeInChatStep(text))
 
     /** Presses and releases [key]. */
-    suspend fun GamePlayer.press(key: Key): Mark = input(KeyStep(key, true), KeyStep(key, false))
+    suspend fun GamePlayer.press(key: Key): Mark = input("presses $key", KeyStep(key, true), KeyStep(key, false))
 
     /** Holds [key] down for [ticks] client ticks. */
     suspend fun GamePlayer.hold(
         key: Key,
         ticks: Ticks,
-    ): Mark = input(KeyStep(key, true), WaitStep(ticks.count), KeyStep(key, false))
+    ): Mark = input("holds $key for ${ticks.count} ticks", KeyStep(key, true), WaitStep(ticks.count), KeyStep(key, false))
 
     /** Presses and releases [button]. */
-    suspend fun GamePlayer.click(button: Button): Mark = input(ButtonStep(button.number, true), ButtonStep(button.number, false))
+    suspend fun GamePlayer.click(button: Button): Mark =
+        input("clicks $button", ButtonStep(button.number, true), ButtonStep(button.number, false))
 
     /** Holds [button] down for [ticks] client ticks. */
     suspend fun GamePlayer.hold(
         button: Button,
         ticks: Ticks,
-    ): Mark = input(ButtonStep(button.number, true), WaitStep(ticks.count), ButtonStep(button.number, false))
+    ): Mark =
+        input(
+            "holds $button for ${ticks.count} ticks",
+            ButtonStep(button.number, true),
+            WaitStep(ticks.count),
+            ButtonStep(button.number, false),
+        )
 
     /** Turns the mouse wheel by [notches]; negative scrolls down, toward the next hotbar slot. */
-    suspend fun GamePlayer.scroll(notches: Int): Mark = input(ScrollStep(notches))
+    suspend fun GamePlayer.scroll(notches: Int): Mark = input("scrolls $notches notches", ScrollStep(notches))
 
     /** Turns the view with the mouse until the crosshair rests on [entity]; fails when it lands elsewhere. */
-    suspend fun GamePlayer.aimAt(entity: EntityRef): Mark = input(AimAtEntityStep(entity.uuid))
+    suspend fun GamePlayer.aimAt(entity: EntityRef): Mark = input("aims at entity ${entity.uuid}", AimAtEntityStep(entity.uuid))
 
     /** Turns the view with the mouse until the crosshair rests on [block]; fails when it lands elsewhere. */
-    suspend fun GamePlayer.aimAt(block: BlockRef): Mark = input(AimAtBlockStep(attempt.region.world(block.at)))
+    suspend fun GamePlayer.aimAt(block: BlockRef): Mark = input("aims at block ${block.at}", AimAtBlockStep(attempt.region.world(block.at)))
 
     /** Moves the pointer over the open screen's slot for the player's inventory [slot] and clicks it. */
     suspend fun GamePlayer.clickInventorySlot(slot: Int): Mark =
-        input(PointAtSlotStep(slot), ButtonStep(Button.LEFT.number, true), ButtonStep(Button.LEFT.number, false))
+        input(
+            "clicks inventory slot $slot",
+            PointAtSlotStep(slot),
+            ButtonStep(Button.LEFT.number, true),
+            ButtonStep(Button.LEFT.number, false),
+        )
 
     /**
      * Faces [x], [z] and holds the forward key until the player stands within half a block of it, or
@@ -93,9 +105,12 @@ class RequirementScope internal constructor(
         x: Double,
         z: Double,
         limit: Ticks = 80.ticks,
-    ): Mark = input(WalkToStep(attempt.region.worldX(x), attempt.region.worldZ(z), limit.count))
+    ): Mark = input("walks to $x, $z", WalkToStep(attempt.region.worldX(x), attempt.region.worldZ(z), limit.count))
 
-    private suspend fun GamePlayer.input(vararg steps: InputStep): Mark = attempt.input(this, steps.toList()).also { anchor = it }
+    private suspend fun GamePlayer.input(
+        says: String,
+        vararg steps: InputStep,
+    ): Mark = attempt.input(this, steps.toList(), says).also { anchor = it }
 
     /**
      * Passes once every check of [checks] held in a tick of the window, the [window] ticks after the
@@ -108,30 +123,72 @@ class RequirementScope internal constructor(
         window: Ticks,
         checks: WindowChecks.() -> Unit,
     ) {
+        attempt.called()
         val at = attempt.requirementLine(Throwable().stackTrace)
-        val mark = checkNotNull(anchor) { "within needs a stimulus before it; its window counts from the last one" }
+        val mark = anchor ?: throw RequirementRefused("within needs a stimulus before it; its window counts from the last one")
         val declared = WindowChecks().apply(checks)
         val rules = Window(mark.tick, window, attempt.nextBarrier(), declared.checks, declared.nevers)
         val checked = (declared.checks + declared.nevers).map { it.player }.distinct()
+        val opened = System.currentTimeMillis()
+        val ranBefore = attempt.ranUntil
         // What the players perceived since the attempt began counts too: a window opened late still
         // sees the records of every tick after its stimulus.
         var verdict: Window.Verdict = Window.Verdict.Open
-        attempt.timeline.filter { it !is Attempt.Event.Failed }.forEach { verdict = rules.judge(it) }
-        if (verdict == Window.Verdict.Open) {
-            checked.forEach { attempt.send(StepUntil(it.uuid, rules.end, rules.barrier)) }
-            try {
-                while (verdict == Window.Verdict.Open) {
-                    val event = attempt.nextEvent()
-                    // Hung work or a lost client fails the attempt at once, whatever the window would decide.
-                    if (event is Attempt.Event.Failed) throw event.failure
-                    verdict = rules.judge(event)
-                }
-            } finally {
-                checked.forEach { attempt.send(StopStepping(it.uuid)) }
-            }
+        try {
+            attempt.timeline.filter { it !is Attempt.Event.Failed }.forEach { verdict = rules.judge(it) }
+            if (verdict == Window.Verdict.Open) verdict = rules.stepUntilDecided(checked)
+        } finally {
+            attempt.took(opened, says(window, verdict, mark, ranBefore, declared))
         }
         val missed = verdict as? Window.Verdict.Missed ?: return
         throw WindowMissed(missed.report, at)
+    }
+
+    /**
+     * The window's step: how it ended, at which of its ticks, how many ticks Paper ran for it beyond
+     * those the attempt already knew had run, and its checks.
+     */
+    private fun says(
+        window: Ticks,
+        verdict: Window.Verdict,
+        mark: Mark,
+        ranBefore: Int,
+        declared: WindowChecks,
+    ): String {
+        val decided =
+            when (verdict) {
+                is Window.Verdict.Passed -> verdict.tick
+                is Window.Verdict.Missed -> verdict.tick
+                Window.Verdict.Open -> attempt.ranUntil
+            }
+        attempt.ran(decided)
+        val how =
+            when (verdict) {
+                is Window.Verdict.Passed -> "held at tick ${decided - mark.tick}"
+                is Window.Verdict.Missed -> "missed at tick ${decided - mark.tick}"
+                Window.Verdict.Open -> "ended by a failure at tick ${decided - mark.tick}"
+            }
+        val checks =
+            declared.checks.map { "${it.player.name} sees ${it.fact.description}" } +
+                declared.nevers.map { "${it.player.name} never sees ${it.fact.description}" }
+        return "window of ${window.count} ticks $how, stepped ${maxOf(0, decided - maxOf(ranBefore, mark.tick))}: ${checks.joinToString()}"
+    }
+
+    /** Paper runs the window's ticks for [checked] until the window decides, then stops running them. */
+    private suspend fun Window.stepUntilDecided(checked: List<GamePlayer>): Window.Verdict {
+        checked.forEach { attempt.send(StepUntil(it.uuid, end, barrier)) }
+        try {
+            var verdict: Window.Verdict = Window.Verdict.Open
+            while (verdict == Window.Verdict.Open) {
+                val event = attempt.nextEvent()
+                // Hung work or a lost client fails the attempt at once, whatever the window would decide.
+                if (event is Attempt.Event.Failed) throw event.failure
+                verdict = judge(event)
+            }
+            return verdict
+        } finally {
+            checked.forEach { attempt.send(StopStepping(it.uuid)) }
+        }
     }
 
     private fun Window.judge(event: Attempt.Event): Window.Verdict =

@@ -1,5 +1,4 @@
 import com.typewritermc.buildlogic.servicesDirectory
-import com.typewritermc.buildlogic.xtaskResults
 import java.util.UUID
 
 // Game requirements: tests in the `gameTest` source set run against real Minecraft clients on a
@@ -71,18 +70,31 @@ abstract class GameParts : CommandLineArgumentProvider {
 
     @get:Internal abstract val testRun: Property<String>
 
+    /** The requirements the run runs, by id or test id, comma separated; every one when absent. */
+    @get:Internal abstract val only: Property<String>
+
+    /** Attempts of each requirement; absent, a failed attempt runs again up to 4 in total. */
+    @get:Internal abstract val repeat: Property<String>
+
+    /** The requirements the quarantine holds: they run once and never block. */
+    @get:Internal abstract val quarantine: Property<String>
+
     override fun asArguments() =
-        mapOf(
-            "poolDir" to poolDir.get(),
-            "poolClasspath" to pool.asPath,
-            "java" to java.get(),
-            "paper" to paper.singleFile.path,
-            "agent" to agent.singleFile.path,
-            "plugin" to plugin.singleFile.path,
-            "clientLaunch" to clientLaunch.singleFile.path,
-            "clients" to clients.get().toString(),
-            "run" to runId.get(),
-            "testRun" to testRun.get(),
+        (
+            mapOf(
+                "poolDir" to poolDir.get(),
+                "poolClasspath" to pool.asPath,
+                "java" to java.get(),
+                "paper" to paper.singleFile.path,
+                "agent" to agent.singleFile.path,
+                "plugin" to plugin.singleFile.path,
+                "clientLaunch" to clientLaunch.singleFile.path,
+                "clients" to clients.get().toString(),
+                "run" to runId.get(),
+                "testRun" to testRun.get(),
+            ) +
+                listOf("only" to only, "repeat" to repeat, "quarantine" to quarantine)
+                    .mapNotNull { (name, value) -> value.orNull?.let { name to it } }
         ).map { (name, value) -> "-Dplaytest.$name=$value" }
 }
 
@@ -93,6 +105,9 @@ tasks.register<Test>("gameTest") {
     classpath = gameTest.runtimeClasspath
     // The game's state lives outside Gradle's view, so a game run is never up to date.
     outputs.upToDateWhen { false }
+    // A run that selects requirements may select none of this project's; `cargo xtask e2e game` fails a
+    // selected id that matches no case of the run file instead.
+    failOnNoDiscoveredTests.set(providers.gradleProperty("playtest.only").map { false }.orElse(true))
     usesService(gameRun)
     jvmArgumentProviders +=
         objects.newInstance<GameParts>().apply {
@@ -106,6 +121,10 @@ tasks.register<Test>("gameTest") {
             clients.set(providers.gradleProperty("playtest.clients").map(String::toInt).orElse(4))
             runId.set(gameRun.map { it.id })
             poolDir.set(servicesDirectory.resolve("build/playtest/pool").path)
-            testRun.set(xtaskResults.resolve("game/test_run.json").path)
+            // `cargo xtask e2e game` names the run file it gates on; other runs keep theirs in the build.
+            testRun.set(providers.gradleProperty("playtest.testRun").orElse(servicesDirectory.resolve("build/playtest/test_run.json").path))
+            only.set(providers.gradleProperty("playtest.only"))
+            repeat.set(providers.gradleProperty("playtest.repeat"))
+            quarantine.set(providers.gradleProperty("playtest.quarantine"))
         }
 }
