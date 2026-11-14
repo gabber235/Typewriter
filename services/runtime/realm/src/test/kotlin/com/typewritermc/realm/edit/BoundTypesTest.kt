@@ -11,6 +11,7 @@ import com.typewritermc.realm.testing.commit
 import com.typewritermc.realm.testing.commitBoard
 import com.typewritermc.realm.testing.commitBound
 import com.typewritermc.realm.testing.commitDefinition
+import com.typewritermc.realm.testing.commitScoredRow
 import com.typewritermc.realm.testing.computedVar
 import com.typewritermc.realm.testing.conflictingFacts
 import com.typewritermc.realm.testing.errorCodesOn
@@ -86,10 +87,7 @@ val BoundTypesTest by testSuite {
 
     test("a value of a board's row type that no longer fits its columns gets a finding on its holder") {
         withSetup(staticPage, catalog = routeFixtureCatalog) {
-            val board = commitBoard("scores", column("gold", number = true)).created()
-            val row = rowsOf(board)
-            val holder =
-                commitDefinition("best", plainType(row)) { plainVar(row, recordValue(row, "gold" to DataValue.integer(1))) }.created()
+            val (board, _, holder) = commitScoredRow()
             errorCodesOn(holder).shouldBeEmpty()
 
             commit(setColumns(board, column("gold"))).shouldBeCommitted()
@@ -110,10 +108,7 @@ val BoundTypesTest by testSuite {
 
     test("a value of a board's row type gets a finding once the board's bind starts failing") {
         withSetup(staticPage, catalog = routeFixtureCatalog) {
-            val board = commitBoard("scores", column("gold", number = true)).created()
-            val row = rowsOf(board)
-            val holder =
-                commitDefinition("best", plainType(row)) { plainVar(row, recordValue(row, "gold" to DataValue.integer(1))) }.created()
+            val (board, _, holder) = commitScoredRow()
 
             commit(setColumns(board, column(FAILING_COLUMN))).shouldBeCommitted()
 
@@ -236,13 +231,7 @@ val BoundTypesTest by testSuite {
 
     test("a value of a board's row type is judged again only when an edit changes that row type") {
         withSetup(staticPage, catalog = routeFixtureCatalog) {
-            val board = commitBoard("scores", column("gold", number = true)).created()
-            val row = rowsOf(board)
-            val holder =
-                commitDefinition(
-                    "best",
-                    plainType(row),
-                ) { plainVar(row, recordValue(row, "gold" to DataValue.integer(1))) }.created()
+            val (board, _, holder) = commitScoredRow()
             settle()
             val judged = fitRuns(holder)
 
@@ -268,13 +257,7 @@ val BoundTypesTest by testSuite {
 
     test("one commit that changes a board's columns and a value of its row type judges the value by the new columns") {
         withSetup(staticPage, catalog = routeFixtureCatalog) {
-            val board = commitBoard("scores", column("gold", number = true)).created()
-            val row = rowsOf(board)
-            val holder =
-                commitDefinition(
-                    "best",
-                    plainType(row),
-                ) { plainVar(row, recordValue(row, "gold" to DataValue.integer(1))) }.created()
+            val (board, row, holder) = commitScoredRow()
 
             commit(
                 setColumns(board, column("gold", number = true), column("note")),
@@ -312,13 +295,7 @@ val BoundTypesTest by testSuite {
 
     test("an operation that read what a board's row type means goes stale when the board's columns change") {
         withSetup(staticPage, catalog = routeFixtureCatalog) {
-            val board = commitBoard("scores", column("gold", number = true)).created()
-            val row = rowsOf(board)
-            val holder =
-                commitDefinition(
-                    "best",
-                    plainType(row),
-                ) { plainVar(row, recordValue(row, "gold" to DataValue.integer(1))) }.created()
+            val (board, _, holder) = commitScoredRow()
             val stale = renameAfterReadingTypeOf(holder, "renamed")
 
             commit(setColumns(board, column("gold"))).shouldBeCommitted()
@@ -329,13 +306,7 @@ val BoundTypesTest by testSuite {
 
     test("an operation that takes a row type another reader computed first still conflicts when the board's columns change") {
         withSetup(staticPage, catalog = routeFixtureCatalog) {
-            val board = commitBoard("scores", column("gold", number = true)).created()
-            val row = rowsOf(board)
-            val holder =
-                commitDefinition(
-                    "best",
-                    plainType(row),
-                ) { plainVar(row, recordValue(row, "gold" to DataValue.integer(1))) }.created()
+            val (board, _, holder) = commitScoredRow()
             val stale = renameAfterReadingTypeOf(holder, "renamed", readElsewhereFirst = true)
 
             commit(setColumns(board, column("gold"))).shouldBeCommitted()
@@ -346,13 +317,7 @@ val BoundTypesTest by testSuite {
 
     test("a published board and a value of its row type reach the engine, which computes no row type itself") {
         withSetup(staticPage, catalog = routeFixtureCatalog) {
-            val board = commitBoard("scores", column("gold", number = true)).created()
-            val row = rowsOf(board)
-            val holder =
-                commitDefinition(
-                    "best",
-                    plainType(row),
-                ) { plainVar(row, recordValue(row, "gold" to DataValue.integer(7))) }.created()
+            val (board, _, holder) = commitScoredRow(7)
 
             val published = publishToEngine()
 

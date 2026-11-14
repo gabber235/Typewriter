@@ -18,6 +18,7 @@ import com.typewritermc.testing.routes.FixtureColumnDefinition
 import com.typewritermc.types.Ref
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.derived
+import com.typewritermc.types.integer
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
@@ -83,6 +84,24 @@ suspend fun RealmFixture.commitBound(
                 .copy(configuration = TypeSelection(definition = definition, arguments = chosen))
         }
     return Creation(id, reply)
+}
+
+/** A board, the row type it computes, and a definition whose value is one row of that type. */
+data class ScoredRow(
+    val board: ResourceId,
+    val row: TypeUse,
+    val holder: ResourceId,
+)
+
+/**
+ * Commits a board "scores" with one number column "gold", then a definition "best" whose value is a row of the board's
+ * row type with [gold] in that column.
+ */
+suspend fun RealmFixture.commitScoredRow(gold: Long = 1): ScoredRow {
+    val board = commitBoard("scores", column("gold", number = true)).created()
+    val row = rowsOf(board)
+    val holder = commitDefinition("best", plainType(row)) { plainVar(row, recordValue(row, "gold" to DataValue.integer(gold))) }.created()
+    return ScoredRow(board, row, holder)
 }
 
 /** Replaces the columns of [board] with [columns]. */
