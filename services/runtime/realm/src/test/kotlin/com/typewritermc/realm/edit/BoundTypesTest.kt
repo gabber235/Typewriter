@@ -306,7 +306,7 @@ val BoundTypesTest by testSuite {
                     ),
                 ),
             ).shouldBeCommitted()
-            errorCodesOn(holder) shouldContain "unknown_field"
+            errorCodesOn(holder) shouldContain "value_mismatch"
         }
     }
 
