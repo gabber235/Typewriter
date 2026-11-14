@@ -51,11 +51,14 @@ void main() {
       "keyboard working:", () {
     final empty = [signedIn(ada, organization: acme), membershipService()];
 
-    // Each page opens from a sibling, as a keyboard user reaches it.
-    for (final (link, sibling) in [
-      ("Join Requests", membersPage()),
-      ("Join Codes", membersPage()),
-      ("Members", membersPage(const JoinCodesRoute())),
+    // Each page opens from a sibling, as a keyboard user reaches it. Tab
+    // reaches the first control after the page: the Search command of the
+    // pages with no control of their own, and on Join Codes the Advanced
+    // options toggle of the join code card.
+    for (final (link, sibling, control) in [
+      ("Join Requests", membersPage(), "Search"),
+      ("Join Codes", membersPage(), "Advanced options"),
+      ("Members", membersPage(const JoinCodesRoute()), "Search"),
     ]) {
       testWidgets("Control+Left on $link returns to its link", (tester) async {
         final panel = await tester.pumpPanel(empty, at: sibling);
@@ -67,15 +70,14 @@ void main() {
         expect(panel.focused, link);
       });
 
-      testWidgets("Tab on $link reaches a control", (tester) async {
+      testWidgets("Tab on $link reaches $control", (tester) async {
         final panel = await tester.pumpPanel(empty, at: sibling);
         await panel.openFromSidebar(link);
         await panel.eventually(() => expect(panel.path, pages[link]));
 
         await panel.press(LogicalKeyboardKey.tab);
 
-        expect(panel.focused, isNotNull);
-        expect(panel.focused, isNotEmpty);
+        expect(panel.focusShows(find.text(control)), isTrue);
       });
     }
   });
