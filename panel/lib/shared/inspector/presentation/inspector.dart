@@ -374,6 +374,7 @@ class _InspectorContent extends HookConsumerWidget {
     final session = ref.watch(inspectionSessionProvider);
 
     final selection = ref.watch(selectionProvider);
+    final inspected = ref.watch(inspectedSelectionProvider).value ?? const [];
     return PresentationEnvironment(
       host: HostContext(selectionCount: selection.length)
           .within(PresentationEnvironment.hostOf(context)),
@@ -387,6 +388,7 @@ class _InspectorContent extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: context.spacing.space3,
             children: [
+              if (inspected.length > 1) InspectorCountHeading(inspected),
               ?body,
               for (var index = 0; index < hosts.length; index++)
                 PortablePresentationRenderer(
@@ -399,6 +401,28 @@ class _InspectorContent extends HookConsumerWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Names how many things the inspector shows together and what they are:
+/// "2 members", or "4 items" when their kinds differ.
+///
+/// The count types its changed letters as the selection grows or shrinks.
+class InspectorCountHeading extends StatelessWidget {
+  const InspectorCountHeading(this.selection, {super.key});
+
+  final List<Selectable> selection;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      header: true,
+      child: MotionLabel(
+        selection.noun.count(selection.length),
+        typesIn: true,
+        style: Theme.of(context).textTheme.headlineSmall,
       ),
     );
   }

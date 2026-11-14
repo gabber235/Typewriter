@@ -92,6 +92,9 @@ final class _OperationSelectable
   String get name => id.name;
 
   @override
+  SelectableNoun get noun => SelectableNoun.item;
+
+  @override
   List<SelectionCapability> get capabilities => [id.capability];
 
   @override

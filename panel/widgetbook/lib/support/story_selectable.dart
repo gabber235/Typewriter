@@ -29,5 +29,8 @@ final class StorySelectable extends Selectable<StorySelectableIdentifier> {
   final String name;
 
   @override
+  SelectableNoun get noun => SelectableNoun.item;
+
+  @override
   List<SelectionCapability> get capabilities => const [];
 }

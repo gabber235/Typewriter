@@ -26,11 +26,18 @@ skir.DataValue? testData(Ref ref, String id) =>
     ref.watch(testSelectableDataProvider)[id];
 
 class TestSelectableIdentifier extends SelectableIdentifier {
-  TestSelectableIdentifier({required this.id, this.color = Colors.redAccent});
+  TestSelectableIdentifier({
+    required this.id,
+    this.color = Colors.redAccent,
+    this.noun = const SelectableNoun(one: "test item", many: "test items"),
+  });
 
   @override
   final String id;
   final Color color;
+
+  /// The kind the inspector counts this item by.
+  final SelectableNoun noun;
 
   @override
   int get hashCode => id.hashCode;
@@ -87,7 +94,13 @@ class TestSelectableIdentifier extends SelectableIdentifier {
       },
     );
     return AsyncValue.data(
-      TestSelectable(resource: resource, id: this, data: data, color: color),
+      TestSelectable(
+        resource: resource,
+        id: this,
+        data: data,
+        color: color,
+        noun: noun,
+      ),
     );
   }
 
@@ -101,9 +114,13 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
     required this.id,
     required this.data,
     required this.color,
+    required this.noun,
   });
 
   final ValueEditPersistence resource;
+
+  @override
+  final SelectableNoun noun;
 
   @override
   final TestSelectableIdentifier id;
