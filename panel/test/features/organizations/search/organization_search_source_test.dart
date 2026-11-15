@@ -9,11 +9,10 @@ void main() {
 
   test("an empty search lists every organization and Create "
       "Organization", () async {
+    final list = DrivenList<List<skir.Organization>>();
+    await list.emit([acme, globex]);
     final results = resultsOf(
-      await firstSnapshot<AsyncValue<List<skir.Organization>>>(
-        organizationsSearchSource,
-        AsyncData([acme, globex]),
-      ),
+      await firstSnapshot(organizationsSearchSource, list),
     );
 
     expect(
@@ -23,12 +22,10 @@ void main() {
   });
 
   test("Create Organization is found by its name", () async {
+    final list = DrivenList<List<skir.Organization>>();
+    await list.emit([acme]);
     final results = resultsOf(
-      await firstSnapshot<AsyncValue<List<skir.Organization>>>(
-        organizationsSearchSource,
-        AsyncData([acme]),
-        query: "create",
-      ),
+      await firstSnapshot(organizationsSearchSource, list, query: "create"),
     );
 
     expect(results.map((result) => result.type), [
@@ -38,9 +35,12 @@ void main() {
 
   test("while organizations reload, the known ones stay listed and marked "
       "stale", () async {
-    final snapshot = await firstSnapshot<AsyncValue<List<skir.Organization>>>(
+    final list = DrivenList<List<skir.Organization>>();
+    await list.emit([acme]);
+    await list.changeScope();
+    final snapshot = await firstSnapshot(
       organizationsSearchSource,
-      reloadingFrom([acme]),
+      list,
       query: "acme",
     );
 

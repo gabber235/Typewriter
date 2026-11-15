@@ -21,9 +21,11 @@ void main() {
   );
 
   test("a search lists the Realms whose name matches", () async {
-    final snapshot = await firstSnapshot<AsyncValue<List<skir.RealmInstance>>>(
+    final list = DrivenList<List<skir.RealmInstance>>();
+    await list.emit([stories, maps]);
+    final snapshot = await firstSnapshot(
       realmsSearchSource,
-      AsyncData([stories, maps]),
+      list,
       query: "stories",
     );
 
@@ -39,9 +41,11 @@ void main() {
   });
 
   test("a topology that fails to load is reported as a Realms error", () async {
-    final snapshot = await firstSnapshot<AsyncValue<List<skir.RealmInstance>>>(
+    final list = DrivenList<List<skir.RealmInstance>>();
+    await list.fail(StateError("Topology unreachable"));
+    final snapshot = await firstSnapshot(
       realmsSearchSource,
-      AsyncError(StateError("Topology unreachable"), StackTrace.empty),
+      list,
       query: "stories",
     );
 
@@ -54,12 +58,9 @@ void main() {
   });
 
   test("an empty search lists every Realm", () async {
-    final results = resultsOf(
-      await firstSnapshot<AsyncValue<List<skir.RealmInstance>>>(
-        realmsSearchSource,
-        AsyncData([stories, maps]),
-      ),
-    );
+    final list = DrivenList<List<skir.RealmInstance>>();
+    await list.emit([stories, maps]);
+    final results = resultsOf(await firstSnapshot(realmsSearchSource, list));
 
     expect(
       results.map((result) => result.title),
@@ -69,9 +70,12 @@ void main() {
 
   test("a topology that fails after loading keeps its Realms listed beside "
       "the error", () async {
-    final snapshot = await firstSnapshot<AsyncValue<List<skir.RealmInstance>>>(
+    final list = DrivenList<List<skir.RealmInstance>>();
+    await list.emit([stories]);
+    await list.fail(StateError("Topology unreachable"));
+    final snapshot = await firstSnapshot(
       realmsSearchSource,
-      failedAfter([stories], StateError("Topology unreachable")),
+      list,
       query: "stories",
     );
 

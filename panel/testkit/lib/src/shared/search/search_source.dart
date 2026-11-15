@@ -349,29 +349,77 @@ Widget innerActionRow({
   ),
 );
 
-/// A list that loaded [value] and now loads again after its scope changed,
-/// still holding [value], as a provider holds it while it rebuilds.
-AsyncValue<T> reloadingFrom<T>(T value) =>
-    // ignore: invalid_use_of_internal_member
-    AsyncLoading<T>().copyWithPrevious(AsyncData(value), isRefresh: false);
+/// A live list a test drives through the transitions a provider makes: it
+/// loads, holds values, loads again when its scope changes, and fails. The
+/// states come from a real provider, so a value the list held stays in its
+/// loading and failed states as it does in the panel.
+final class DrivenList<T> {
+  DrivenList() {
+    addTearDown(_container.dispose);
+    _container.listen(
+      _provider,
+      (_, next) => _states.value = next,
+      fireImmediately: true,
+    );
+  }
 
-/// A list that loaded [value] and then failed with [error], still holding
-/// [value], as a provider holds it after a failed reload.
-AsyncValue<T> failedAfter<T>(T value, Object error) =>
-    // ignore: invalid_use_of_internal_member
-    AsyncError<T>(error, StackTrace.empty).copyWithPrevious(AsyncData(value));
+  final _container = ProviderContainer();
+  final _scope = NotifierProvider<_ListScope, int>(_ListScope.new);
+  late final _provider = StreamProvider<T>((ref) {
+    ref.watch(_scope);
+    final controller = StreamController<T>();
+    ref.onDispose(controller.close);
+    _controller = controller;
+    return controller.stream;
+  });
+  late StreamController<T> _controller;
+  final _states = ValueNotifier<AsyncValue<T>>(const AsyncLoading());
 
-/// The first snapshot the source [create] builds over a list holding [list]
-/// answers [query] with; the list and the source are disposed after the
-/// test.
+  /// The list's state, as a search source reads it.
+  ValueListenable<AsyncValue<T>> get states => _states;
+
+  /// The list holds [value].
+  Future<void> emit(T value) async {
+    _controller.add(value);
+    await _settle();
+  }
+
+  /// The list fails with [error], keeping any value it held.
+  Future<void> fail(Object error) async {
+    _controller.addError(error);
+    await _settle();
+  }
+
+  /// The list's scope changes, such as the organization it belongs to, so
+  /// it loads again while still holding its last value.
+  Future<void> changeScope() async {
+    _container.read(_scope.notifier).next();
+    await _settle();
+  }
+
+  Future<void> _settle() async {
+    await _container.pump();
+    await Future<void>.delayed(Duration.zero);
+  }
+}
+
+final class _ListScope extends Notifier<int> {
+  @override
+  int build() {
+    return 0;
+  }
+
+  void next() => state++;
+}
+
+/// The first snapshot the source [create] builds over [list] answers
+/// [query] with; the source is disposed after the test.
 Future<SearchSourceSnapshot> firstSnapshot<T>(
-  SearchSource Function(ValueListenable<T> list) create,
-  T list, {
+  SearchSource Function(ValueListenable<AsyncValue<T>> list) create,
+  DrivenList<T> list, {
   String query = "",
 }) async {
-  final listenable = ValueNotifier<T>(list);
-  addTearDown(listenable.dispose);
-  final source = create(listenable);
+  final source = create(list.states);
   addTearDown(source.dispose);
   source.initialize(
     query.isEmpty
