@@ -97,17 +97,12 @@ class Selection extends _$Selection {
     _set(order, selecting: true);
   }
 
-  /// Replaces the selection with [selectables], or appends them when
-  /// [replaceCurrentSelection] is false. Replacing ends select mode, as
-  /// choosing one item to inspect does.
-  void selectAll(
-    List<SelectableIdentifier> selectables, {
-    bool replaceCurrentSelection = true,
-  }) {
-    _set(
-      replaceCurrentSelection ? selectables : [...state, ...selectables],
-      selecting: replaceCurrentSelection ? false : null,
-    );
+  /// Replaces the selection with [selectables] and ends select mode, as
+  /// choosing one item to inspect does, such as opening a resource or
+  /// landing on the items an operation made. Unlike [selectEvery] it never
+  /// clears.
+  void replace(List<SelectableIdentifier> selectables) {
+    _set(selectables, selecting: false);
   }
 
   /// Removes [selectable] if it is currently selected.

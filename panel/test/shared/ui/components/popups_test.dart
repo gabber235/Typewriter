@@ -27,7 +27,7 @@ void main() {
         ),
       ),
     );
-    panel.container.read(selectionProvider.notifier).selectAll([selected]);
+    panel.container.read(selectionProvider.notifier).replace([selected]);
 
     await tester.tap(find.text("Open"));
     await tester.pumpAndSettle();

@@ -14,7 +14,7 @@ void main() {
   ) async {
     final (:panel, draft: _) = await tester.openDraftActivity(host);
 
-    panel.container.read(selectionProvider.notifier).selectAll([host]);
+    panel.container.read(selectionProvider.notifier).replace([host]);
     await panel.settle();
 
     expect(panel.shows("Open work"), isFalse);
@@ -50,7 +50,7 @@ void main() {
 
   test("matching selection on another route is not the destination", () {
     final container = testWorld(const []).container;
-    container.read(selectionProvider.notifier).selectAll([host]);
+    container.read(selectionProvider.notifier).replace([host]);
     final destination = InspectorDestination(
       container: container,
       router: container.read(appRouterProvider),

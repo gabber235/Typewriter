@@ -11,7 +11,7 @@ void main() {
   ) async {
     final panel = await tester.pumpDesktopInspector();
 
-    panel.container.read(selectionProvider.notifier).selectAll([
+    panel.container.read(selectionProvider.notifier).replace([
       TestSelectableIdentifier(id: "ada", noun: member),
       TestSelectableIdentifier(id: "grace", noun: member),
     ]);
@@ -23,7 +23,7 @@ void main() {
   testWidgets("items of different kinds are counted as items", (tester) async {
     final panel = await tester.pumpDesktopInspector();
 
-    panel.container.read(selectionProvider.notifier).selectAll([
+    panel.container.read(selectionProvider.notifier).replace([
       TestSelectableIdentifier(id: "ada", noun: member),
       TestSelectableIdentifier(id: "lobby", noun: service),
       TestSelectableIdentifier(id: "grace", noun: member),
@@ -36,7 +36,7 @@ void main() {
   testWidgets("one item shows no count", (tester) async {
     final panel = await tester.pumpDesktopInspector();
 
-    panel.container.read(selectionProvider.notifier).selectAll([
+    panel.container.read(selectionProvider.notifier).replace([
       TestSelectableIdentifier(id: "ada", noun: member),
     ]);
     await panel.settle();

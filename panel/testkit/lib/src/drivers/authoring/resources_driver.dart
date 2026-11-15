@@ -45,7 +45,7 @@ final class ResourcesDriver extends ComponentDriver {
   /// Selects exactly [resources], the way another part of the panel does.
   Future<void> selectOnly(List<skir.ResourceId> resources) async {
     final scope = world.requireRealm.scope;
-    world.container.read(selectionProvider.notifier).selectAll([
+    world.container.read(selectionProvider.notifier).replace([
       for (final resource in resources)
         AuthoringResourceIdentifier.inScope(scope, resource),
     ]);

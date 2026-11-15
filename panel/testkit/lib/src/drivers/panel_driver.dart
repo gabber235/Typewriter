@@ -162,8 +162,8 @@ final class PanelDriver extends ComponentDriver {
 
   /// Makes [selection] the selection, the way choosing those items does,
   /// and lets the panel react.
-  Future<void> selectAll(List<SelectableIdentifier> selection) async {
-    container.read(selectionProvider.notifier).selectAll(selection);
+  Future<void> replaceSelection(List<SelectableIdentifier> selection) async {
+    container.read(selectionProvider.notifier).replace(selection);
     await settle();
   }
 

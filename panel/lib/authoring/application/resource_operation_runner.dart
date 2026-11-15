@@ -300,7 +300,7 @@ final class ResourceOperationRunner {
             "The result selection references an absent resource",
           );
         }
-        ref.read(selectionProvider.notifier).selectAll([
+        ref.read(selectionProvider.notifier).replace([
           for (final resource in value)
             AuthoringResourceIdentifier.inScope(scope, resource),
         ]);

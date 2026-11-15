@@ -168,7 +168,7 @@ void main() {
     ) async {
       final panel = await tester.pumpPanel(_gabbe);
 
-      panel.container.read(selectionProvider.notifier).selectAll([
+      panel.container.read(selectionProvider.notifier).replace([
         ServiceIdentifier(_service.serviceId),
         ServiceHostIdentifier(_host.hostId),
       ]);
@@ -199,7 +199,7 @@ void main() {
         ),
       ]);
 
-      panel.container.read(selectionProvider.notifier).selectAll([
+      panel.container.read(selectionProvider.notifier).replace([
         ServiceHostIdentifier(_host.hostId),
         ServiceHostIdentifier(skir.recordId("service_host:paper_backup")),
       ]);

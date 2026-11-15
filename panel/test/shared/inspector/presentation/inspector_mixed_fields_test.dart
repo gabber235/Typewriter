@@ -66,7 +66,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
 
     for (final field in RecordField.values) {
       expect(panel.inspector.showsMixed(field.label), isTrue, reason: "$field");
@@ -77,7 +77,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, lin]);
+    await panel.replaceSelection([kai, lin]);
 
     expect(panel.inspector.showsMixed(RecordField.nickname.label), isTrue);
     for (final field in RecordField.values.skip(1)) {
@@ -93,7 +93,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
 
     await panel.inspector.tabToField(RecordField.online.label);
     await panel.press(LogicalKeyboardKey.space);
@@ -113,7 +113,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
 
     await panel.inspector.click(RecordField.muted.label);
 
@@ -132,7 +132,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
 
     await panel.tapOn(panel.inspector.labeled("Blue"));
 
@@ -151,7 +151,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
 
     await panel.field(RecordField.level.label).type("30");
 
@@ -169,7 +169,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, sol]);
+    await panel.replaceSelection([kai, sol]);
 
     expect(panel.inspector.showsMixed("World"), isFalse);
     expect(panel.inspector.showsMixed("Height"), isTrue);
@@ -191,7 +191,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
     expect(panel.inspector.showsMixed(RecordField.title.label), isTrue);
 
     await panel.inspector.click(RecordField.title.label);
@@ -207,7 +207,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([mira, kai]);
+    await panel.replaceSelection([mira, kai]);
 
     await panel.inspector.tabToField(RecordField.title.label);
     await panel.press(LogicalKeyboardKey.space);
@@ -223,7 +223,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
     expect(panel.inspector.showsMixed("Amount"), isTrue);
 
     await panel.inspector.reveal("Amount");
@@ -240,7 +240,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, nova]);
+    await panel.replaceSelection([kai, nova]);
 
     expect(panel.inspector.showsMixed(RecordField.reward.label), isTrue);
     expect(panel.inspector.texts, isNot(contains("Amount")));
@@ -250,7 +250,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
     expect(panel.inspector.showsMixed("build"), isTrue);
     expect(panel.inspector.showsMixed("fly"), isFalse);
     expect(panel.inspector.texts, contains("build\n1 of 2"));
@@ -287,7 +287,7 @@ void main() {
 
   testWidgets("the keyboard checks a perk for every member", (tester) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
 
     await panel.inspector.tabToField("build");
     await panel.press(LogicalKeyboardKey.space);
@@ -304,7 +304,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai]);
+    await panel.replaceSelection([kai]);
 
     await panel.inspector.click("chat");
 
@@ -320,7 +320,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira, lin]);
+    await panel.replaceSelection([kai, mira, lin]);
 
     expect(
       panel.inspector.texts,
@@ -338,7 +338,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
 
     await panel.inspector.click(RecordField.tags.label);
     await panel.inspector.reveal("Tag");
@@ -358,7 +358,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, lin]);
+    await panel.replaceSelection([kai, lin]);
 
     await panel.inspector.reveal("Tag");
     await panel.field("Tag").type("blue");
@@ -382,7 +382,7 @@ void main() {
 
   testWidgets("the keyboard adds a row to every member's list", (tester) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, lin]);
+    await panel.replaceSelection([kai, lin]);
 
     await panel.inspector.tabToField("Add item");
     await panel.press(LogicalKeyboardKey.enter);
@@ -402,7 +402,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, lin]);
+    await panel.replaceSelection([kai, lin]);
 
     await panel.inspector.reveal("Score");
     await panel.field("Score").type("8");
@@ -431,7 +431,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, nova]);
+    await panel.replaceSelection([kai, nova]);
 
     await panel.inspector.reveal("Coins");
     await panel.tapOn(panel.inspector.labeled("Coins"));
@@ -447,7 +447,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([mira, kai]);
+    await panel.replaceSelection([mira, kai]);
 
     await panel.inspector.tabToField(RecordField.scores.label);
     await panel.press(LogicalKeyboardKey.enter);
@@ -466,7 +466,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
     expect(panel.inspector.showsMixed(RecordField.volume.label), isTrue);
 
     await panel.inspector.click(RecordField.volume.label);
@@ -485,7 +485,7 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([kai, mira]);
+    await panel.replaceSelection([kai, mira]);
 
     await panel.inspector.tabToField(RecordField.volume.label);
     await panel.press(LogicalKeyboardKey.arrowRight);

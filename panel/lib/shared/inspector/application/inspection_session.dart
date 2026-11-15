@@ -268,7 +268,7 @@ final class InspectorDestination extends WorkDestination {
     if (_selection.closed) return;
     if (router.currentPath != path) await router.navigatePath(path);
     if (identity case final SelectableIdentifier selected) {
-      container.read(selectionProvider.notifier).selectAll([selected]);
+      container.read(selectionProvider.notifier).replace([selected]);
     }
   }
 

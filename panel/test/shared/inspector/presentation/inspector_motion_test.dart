@@ -15,7 +15,7 @@ void main() {
       ),
     );
 
-    panel.container.read(selectionProvider.notifier).selectAll([
+    panel.container.read(selectionProvider.notifier).replace([
       TestSelectableIdentifier(id: "test-item"),
     ]);
     await tester.pump();

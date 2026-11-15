@@ -32,7 +32,7 @@ final class _Selected extends Trait {
     final subscription = started.container.listen(selectionProvider, (_, _) {});
     started.addCleanup(subscription.close);
     final notifier = started.container.read(selectionProvider.notifier);
-    if (!selecting) return notifier.selectAll(selection);
+    if (!selecting) return notifier.replace(selection);
     selection.forEach(notifier.toggle);
   });
 }

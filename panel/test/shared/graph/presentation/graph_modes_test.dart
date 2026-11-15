@@ -16,7 +16,7 @@ void main() {
         graphNode("a", focusNode: focus),
         graphNode("b", x: 3, y: 4, cells: 1),
       ], resizable: true);
-      panel.container.read(selectionProvider.notifier).selectAll([
+      panel.container.read(selectionProvider.notifier).replace([
         for (final id in selected) TestSelectableIdentifier(id: id),
       ]);
       focus.requestFocus();
@@ -44,7 +44,7 @@ void main() {
         graphNode("a", focusNode: focus),
         graphNode("b", x: 3, y: 4, cells: 1),
       ], resizable: true);
-      panel.container.read(selectionProvider.notifier).selectAll([
+      panel.container.read(selectionProvider.notifier).replace([
         for (final id in selected) TestSelectableIdentifier(id: id),
       ]);
       focus.requestFocus();

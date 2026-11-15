@@ -18,7 +18,7 @@ void main() {
       final idA = TestSelectableIdentifier(id: "A");
       final idB = TestSelectableIdentifier(id: "B");
 
-      container.read(selectionProvider.notifier).selectAll([idA, idB]);
+      container.read(selectionProvider.notifier).replace([idA, idB]);
 
       final selected = container.read(selectedProvider);
 
@@ -33,7 +33,7 @@ void main() {
       final idA = TestSelectableIdentifier(id: "A");
       const loadingId = LoadingSelectableIdentifier("loading");
 
-      container.read(selectionProvider.notifier).selectAll([idA, loadingId]);
+      container.read(selectionProvider.notifier).replace([idA, loadingId]);
 
       final selected = container.read(selectedProvider);
 
