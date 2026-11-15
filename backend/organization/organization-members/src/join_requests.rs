@@ -2,7 +2,8 @@
 //!
 //! The organization and user request views are separate projections with separate sequences.
 //! Approval changes both request and membership state in one database transaction, then publishes
-//! organization and user events for reconciliation. Decline removes one request from both views.
+//! organization and user events for reconciliation. Decline removes a selection of requests from
+//! both views. Each mutation applies to its complete selection or to none of it.
 
 use otel_wasi::ResultWithSlug;
 use serde::{Deserialize, Serialize};
@@ -10,7 +11,7 @@ use wasmcloud_utils::database::organization::projections::{
     JoinRequestProjection, OrganizationMemberProjection,
 };
 use wasmcloud_utils::{
-    database::{RecordId, TransactionOutcome, transaction_query},
+    database::{RecordId, transaction_query},
     skir::base::organization::v1::{join_request::*, member::OrganizationMember},
     skir_transaction_outcome,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds, RecordIdKeyIdentity},
@@ -25,11 +26,42 @@ struct ApprovalRecord {
     user_organizations_sequence: i64,
 }
 
+/// One request to approve and its new member's roles, as the database function reads it.
+#[derive(Debug, Serialize)]
+struct ApprovalRequestRecord {
+    request: RecordId,
+    roles: Vec<RecordId>,
+}
+
+/// One declined request and the sequence of its user's request view after the decline.
 #[derive(Debug, Deserialize)]
 struct DeclinedRequest {
-    request: JoinRequestProjection,
-    organization_sequence: i64,
+    id: RecordId,
+    user: RecordId,
     user_sequence: i64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "outcome", rename_all = "kebab-case")]
+enum DeclineOutcome {
+    Declined {
+        declined: Vec<DeclinedRequest>,
+        organization_sequence: i64,
+    },
+    RequestNotFoundError {
+        request_ids: Vec<RecordId>,
+    },
+    InvalidSelectionError,
+}
+
+impl DeclineOutcome {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Declined { .. } => "declined",
+            Self::RequestNotFoundError { .. } => "request-not-found-error",
+            Self::InvalidSelectionError => "invalid-selection-error",
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -44,7 +76,9 @@ enum ApprovalOutcome {
         request_ids: Vec<RecordId>,
     },
     InvalidSelectionError,
-    RolesRequiredError,
+    RolesRequiredError {
+        request_ids: Vec<RecordId>,
+    },
     RolesNotFoundError {
         role_ids: Vec<RecordId>,
     },
@@ -62,7 +96,7 @@ impl ApprovalOutcome {
             Self::Approved { .. } => "approved",
             Self::RequestNotFoundError { .. } => "request-not-found-error",
             Self::InvalidSelectionError => "invalid-selection-error",
-            Self::RolesRequiredError => "roles-required-error",
+            Self::RolesRequiredError { .. } => "roles-required-error",
             Self::RolesNotFoundError { .. } => "roles-not-found-error",
             Self::RolesNotAssignableError { .. } => "roles-not-assignable-error",
             Self::UserAlreadyMemberError { .. } => "user-already-member-error",
@@ -93,12 +127,13 @@ pub async fn handle_watch(
     .await
 }
 
-/// Approves all selected pending requests with one shared role selection.
+/// Approves all selected pending requests, each with its own role selection.
 ///
-/// The database transaction validates request freshness, role existence and assignability, duplicate
-/// users, and existing memberships before creating memberships and deleting requests. Any invalid
-/// selection rejects the complete batch. Success returns events for the organization request and
-/// member projections, while each affected user also receives request and organization changes.
+/// The database transaction validates request freshness, that every request has roles, role
+/// existence and assignability, duplicate users, and existing memberships before creating
+/// memberships and deleting requests. Any invalid approval rejects the complete batch. Success
+/// returns events for the organization request and member projections, while each affected user
+/// also receives request and organization changes.
 #[tracing::instrument(skip_all)]
 pub async fn handle_approve(
     scope: wasmcloud_utils::transport::OrganizationActorScope,
@@ -106,41 +141,45 @@ pub async fn handle_approve(
 ) -> Result<ApproveOrganizationJoinRequestsResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
     let org_id = scope.organization.as_str();
-    wasmcloud_utils::validate_record_ids!(
-        ApproveOrganizationJoinRequestsResponse,
-        req.request_ids,
-        "request_to_join"
-    );
-    wasmcloud_utils::validate_record_ids!(
-        ApproveOrganizationJoinRequestsResponse,
-        req.role_ids,
-        "organization_role"
-    );
-    let request_ids = req.request_ids.clone();
-    let role_ids = req.role_ids.clone();
+    for approval in &req.approvals {
+        wasmcloud_utils::validate_record_ids!(
+            ApproveOrganizationJoinRequestsResponse,
+            approval.request_id,
+            "request_to_join"
+        );
+        wasmcloud_utils::validate_record_ids!(
+            ApproveOrganizationJoinRequestsResponse,
+            approval.role_ids,
+            "organization_role"
+        );
+    }
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string(),
-        "request.result_count" = request_ids.len() as i64,
-        "role.result_count" = role_ids.len() as i64
+        "request.result_count" = req.approvals.len() as i64
     );
-    let request_record_ids = request_ids.as_slice().into_surreal_record_ids();
     let organization_id = RecordId::new("organization", org_id);
+    let approvals: Vec<ApprovalRequestRecord> = req
+        .approvals
+        .iter()
+        .map(|approval| ApprovalRequestRecord {
+            request: RecordId::from(&approval.request_id),
+            roles: approval.role_ids.as_slice().into_surreal_record_ids(),
+        })
+        .collect();
 
-    let db_role_ids = role_ids.as_slice().into_surreal_record_ids();
     let result = transaction_query!(
         ApprovalOutcome,
         r#"
         BEGIN TRANSACTION;
 
-        RETURN fn::organization::members::approve_requests($org, $requests, $roles);
+        RETURN fn::organization::members::approve_requests($org, $approvals);
 
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("requests", request_record_ids)
+    .bind("approvals", approvals)
     .bind("org", organization_id)
-    .bind("roles", db_role_ids)
     .execute()
     .await
     .error_with_slug("join-request-approve-query-failed")?
@@ -158,7 +197,9 @@ pub async fn handle_approve(
             ApprovalOutcome::RequestNotFoundError { request_ids } => {
                 request_ids: request_ids.into_skir_record_ids()
             },
-            ApprovalOutcome::RolesRequiredError => {},
+            ApprovalOutcome::RolesRequiredError { request_ids } => {
+                request_ids: request_ids.into_skir_record_ids()
+            },
             ApprovalOutcome::InvalidSelectionError => {},
             ApprovalOutcome::RolesNotFoundError { role_ids } => {
                 role_ids: role_ids.into_skir_record_ids()
@@ -285,64 +326,71 @@ async fn publish_user_approval(
     })
 }
 
-/// Declines one unexpired join request.
+/// Declines every selected unexpired join request in one transaction.
 ///
-/// The transaction deletes the request and advances the request sequence for both its organization
-/// and user. The organization event is returned to the caller; the matching user event is published
-/// separately so both projections can converge.
+/// An empty or repeated selection, or any missing or expired request, rejects the complete
+/// selection. The transaction deletes the requests, advances the organization request sequence
+/// once and each user's request sequence. The organization event is returned to the caller; each
+/// user event is published separately so both projections can converge.
 #[tracing::instrument(skip_all)]
 pub async fn handle_decline(
     scope: wasmcloud_utils::transport::OrganizationActorScope,
-    req: DeclineOrganizationJoinRequestRequest,
-) -> Result<DeclineOrganizationJoinRequestResponse, otel_wasi::Error> {
+    req: DeclineOrganizationJoinRequestsRequest,
+) -> Result<DeclineOrganizationJoinRequestsResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
     let org_id = scope.organization.as_str();
     wasmcloud_utils::validate_record_ids!(
-        DeclineOrganizationJoinRequestResponse,
-        req.request_id,
+        DeclineOrganizationJoinRequestsResponse,
+        req.request_ids,
         "request_to_join"
     );
-    let request_id = req.request_id.clone();
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string(),
-        "request.id" = request_id.key.to_string()
+        "request.result_count" = req.request_ids.len() as i64
     );
-    let request_record_id = RecordId::from(&request_id);
     let organization_id = RecordId::new("organization", org_id);
 
-    let row = transaction_query!(
-        Option<DeclinedRequest>,
+    let result = transaction_query!(
+        DeclineOutcome,
         r#"
         BEGIN TRANSACTION;
         RETURN {
-            LET $r = SELECT
-            id,
-            in.* AS user,
-            out.* AS organization,
-            requested_at,
-            expires_at
-                FROM $request
+            IF array::is_empty($requests) OR array::len(array::distinct($requests)) != array::len($requests) {
+                RETURN { outcome: 'invalid-selection-error' }
+            };
+
+            LET $pending = SELECT id, in AS user FROM $requests
                 WHERE out = $org
                 AND expires_at > time::now();
+            LET $missing = array::complement($requests, $pending.id);
+            IF array::len($missing) > 0 {
+                RETURN { outcome: 'request-not-found-error', request_ids: $missing }
+            };
 
-            IF array::len($r) = 0 { RETURN NONE };
-            DELETE $r.id;
+            FOR $request IN $pending {
+                DELETE $request.id;
+                UPDATE ONLY $request.user SET join_requests_sequence += 1;
+            };
             LET $organization_sequence = UPDATE ONLY $org SET join_requests_sequence += 1
-                RETURN VALUE join_requests_sequence;
-            LET $user_sequence = UPDATE ONLY $r[0].user.id SET join_requests_sequence += 1
                 RETURN VALUE join_requests_sequence;
 
             RETURN {
-                request: $r[0],
-                organization_sequence: $organization_sequence,
-                user_sequence: $user_sequence
+                outcome: 'declined',
+                declined: $pending.map(|$request| {
+                    RETURN {
+                        id: $request.id,
+                        user: $request.user,
+                        user_sequence: (SELECT VALUE join_requests_sequence FROM ONLY $request.user)
+                    };
+                }),
+                organization_sequence: $organization_sequence
             };
         };
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("request", request_record_id)
+    .bind("requests", req.request_ids.as_slice().into_surreal_record_ids())
     .bind("org", organization_id)
     .execute()
     .await
@@ -350,26 +398,42 @@ pub async fn handle_decline(
     .decode()
     .error_with_slug("join-request-decline-result-parse-failed")?;
 
-    if let TransactionOutcome::Rejected(error) = &row {
-        otel_wasi::main_attribute!("join_request.outcome" = error.message().to_owned());
-    }
-
-    let row = wasmcloud_utils::skir_domain_result!(DeclineOrganizationJoinRequestResponse, row,
-        "request-not-found-error" => { request_id: request_id.clone() }
+    let result =
+        wasmcloud_utils::skir_domain_result!(DeclineOrganizationJoinRequestsResponse, result);
+    otel_wasi::main_attribute!("join_request.outcome" = result.as_str());
+    let (declined, organization_sequence) = skir_transaction_outcome!(
+        DeclineOrganizationJoinRequestsResponse,
+        result,
+        success DeclineOutcome::Declined { declined, organization_sequence } => (declined, organization_sequence),
+        errors {
+            DeclineOutcome::RequestNotFoundError { request_ids } => {
+                request_ids: request_ids.into_skir_record_ids()
+            },
+            DeclineOutcome::InvalidSelectionError => {},
+        }
     );
 
-    let Some(row) = row else {
-        otel_wasi::main_attribute!("join_request.outcome" = "request_not_found");
-        return Ok(skir_variant!(
-            DeclineOrganizationJoinRequestResponse::RequestNotFoundError { request_id }
-        ));
-    };
+    let event = publish_declines(org_id, declined, organization_sequence).await?;
+    Ok(skir_variant!(
+        DeclineOrganizationJoinRequestsResponse::Success { event }
+    ))
+}
 
+/// Publishes the removal of every declined request to the organization request view, and to each
+/// applicant's own request view, returning the organization event.
+async fn publish_declines(
+    org_id: &str,
+    declined: Vec<DeclinedRequest>,
+    organization_sequence: i64,
+) -> Result<OrganizationJoinRequestsChanged, otel_wasi::Error> {
     let event = OrganizationJoinRequestsChanged {
-        sequence: row.organization_sequence,
-        changes: vec![OrganizationJoinRequestsChange::Remove(Box::new(
-            request_id.clone(),
-        ))],
+        sequence: organization_sequence,
+        changes: declined
+            .iter()
+            .map(|request| {
+                OrganizationJoinRequestsChange::Remove(Box::new(request.id.clone().into()))
+            })
+            .collect(),
         ..Default::default()
     };
     wasmcloud_utils::transport_routes::OrganizationJoinRequestsWatchRoute::delivery(
@@ -377,20 +441,18 @@ pub async fn handle_decline(
     )
     .persist(event.clone())
     .await?;
-    let user_event = UserJoinRequestsChanged {
-        sequence: row.user_sequence,
-        changes: vec![UserJoinRequestsChange::Remove(Box::new(request_id))],
-        ..Default::default()
-    };
-    let user_id = row.request.user.id.key.raw_identity()?;
-    wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
-        &wasmcloud_utils::transport::UserScope::try_from(user_id)?,
-    )
-    .persist(user_event)
-    .await?;
+    for request in declined {
+        let user_event = UserJoinRequestsChanged {
+            sequence: request.user_sequence,
+            changes: vec![UserJoinRequestsChange::Remove(Box::new(request.id.into()))],
+            ..Default::default()
+        };
+        wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
+            &wasmcloud_utils::transport::UserScope::try_from(request.user.key.raw_identity()?)?,
+        )
+        .persist(user_event)
+        .await?;
+    }
 
-    otel_wasi::main_attribute!("join_request.outcome" = "declined");
-    Ok(skir_variant!(
-        DeclineOrganizationJoinRequestResponse::Success { event }
-    ))
+    Ok(event)
 }

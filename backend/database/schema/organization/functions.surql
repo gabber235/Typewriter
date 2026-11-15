@@ -61,14 +61,15 @@ DEFINE FUNCTION OVERWRITE fn::account::organization::teams(
     RETURN [];
 };
 
--- Replaces assignable roles for the whole selection while retaining each member's protected roles.
--- Default roles are used only when the combined selection would otherwise be empty. All targets
--- and the remaining founder role holders are checked before any membership is changed.
+-- Replaces each selected member's assignable roles with that member's own requested roles while
+-- retaining their protected roles. Default roles are used only when a member's combined roles would
+-- otherwise be empty. All targets and the remaining founder role holders are checked before any
+-- membership is changed.
 DEFINE FUNCTION OVERWRITE fn::organization::members::update_roles(
     $org: record<organization>,
-    $users: array<record<user>>,
-    $roles: array<record<organization_role>>
+    $assignments: array<object>
 ) {
+    LET $users = $assignments.map(|$assignment| $assignment.user);
     IF array::is_empty($users) OR array::len(array::distinct($users)) != array::len($users) {
         RETURN {
             outcome: 'invalid-selection-error'
@@ -87,10 +88,11 @@ DEFINE FUNCTION OVERWRITE fn::organization::members::update_roles(
         }
     };
 
+    LET $roles = array::distinct(array::flatten($assignments.map(|$assignment| $assignment.roles)));
     LET $requested = SELECT *
         FROM $roles
         WHERE organization = $org;
-    LET $missing = array::complement(array::distinct($roles), $requested.id);
+    LET $missing = array::complement($roles, $requested.id);
 
     IF array::len($missing) > 0 {
         RETURN {
@@ -104,16 +106,19 @@ DEFINE FUNCTION OVERWRITE fn::organization::members::update_roles(
         WHERE organization = $org AND default_role;
 
     LET $changes = $members.map(|$member| {
+        LET $wanted = array::distinct(
+            array::flatten($assignments.filter(|$assignment| $assignment.user = $member.in).map(|$assignment| $assignment.roles))
+        );
         LET $protected = SELECT VALUE id
             FROM $member.roles
             WHERE !assignable;
-        LET $effective = array::distinct(array::union($roles, $protected));
+        LET $effective = array::distinct(array::union($wanted, $protected));
 
         RETURN {
             id: $member.id,
             user_id: $member.in,
             roles: IF array::is_empty($effective) { $defaults } ELSE { $effective },
-            forbidden: (SELECT VALUE id FROM $requested WHERE !assignable AND id NOT IN $protected)
+            forbidden: (SELECT VALUE id FROM $requested WHERE !assignable AND id IN $wanted AND id NOT IN $protected)
         };
     });
 
@@ -180,11 +185,14 @@ DEFINE FUNCTION OVERWRITE fn::organization::members::update_roles(
     RETURN $result;
 } PERMISSIONS NONE;
 
+-- Approves each selected request with that request's own roles, creating the memberships and
+-- removing the requests. Every request, role, and user is checked before any state changes, so an
+-- invalid approval rejects the complete selection.
 DEFINE FUNCTION OVERWRITE fn::organization::members::approve_requests(
     $org: record<organization>,
-    $requests: array<record<request_to_join>>,
-    $roles: array<record<organization_role>>
+    $approvals: array<object>
 ) {
+    LET $requests = $approvals.map(|$approval| $approval.request);
     IF array::is_empty($requests) OR array::len(array::distinct($requests)) != array::len($requests) {
         RETURN {
             outcome: 'invalid-selection-error'
@@ -214,12 +222,16 @@ DEFINE FUNCTION OVERWRITE fn::organization::members::approve_requests(
         }
     };
 
-    IF array::is_empty($roles) {
+    LET $roleless = $approvals.filter(|$approval| array::is_empty($approval.roles));
+
+    IF array::len($roleless) > 0 {
         RETURN {
-            outcome: 'roles-required-error'
+            outcome: 'roles-required-error',
+            request_ids: $roleless.request
         }
     };
 
+    LET $roles = array::distinct(array::flatten($approvals.map(|$approval| $approval.roles)));
     LET $requested = SELECT *
         FROM $roles
         WHERE organization = $org;
@@ -256,7 +268,10 @@ DEFINE FUNCTION OVERWRITE fn::organization::members::approve_requests(
 
     FOR $pending_request IN $pending {
         LET $user = $pending_request.user.id;
-        RELATE $user->member_of->$org SET roles = $roles;
+        LET $granted = array::distinct(
+            array::flatten($approvals.filter(|$approval| $approval.request = $pending_request.id).map(|$approval| $approval.roles))
+        );
+        RELATE $user->member_of->$org SET roles = $granted;
         DELETE $pending_request.id;
         UPDATE ONLY $user SET
             organizations_sequence += 1,

@@ -213,7 +213,7 @@ actor = "root"
 sql = """
 RETURN {
 LET $before = SELECT in, roles FROM member_of WHERE out = organization:acme;
-LET $result = fn::organization::members::update_roles(organization:acme, [user:bob, user:absent], [organization_role:acme_member]);
+LET $result = fn::organization::members::update_roles(organization:acme, [{ user: user:bob, roles: [organization_role:acme_member] }, { user: user:absent, roles: [organization_role:acme_member] }]);
 RETURN $result.outcome = 'user-not-found-error'
     AND $result.user_ids = [user:absent]
     AND $before = (SELECT in, roles FROM member_of WHERE out = organization:acme);
@@ -230,10 +230,34 @@ kind = "sql_expect"
 actor = "root"
 sql = """
 RETURN {
-LET $result = fn::organization::members::update_roles(organization:acme, [user:alice, user:bob], [organization_role:acme_member]);
+LET $result = fn::organization::members::update_roles(organization:acme, [{ user: user:alice, roles: [organization_role:acme_member] }, { user: user:bob, roles: [organization_role:acme_member] }]);
 RETURN $result.outcome = 'updated' AND array::len($result.members) = 2
     AND $result.sequence = 1 AND organization:acme.members_sequence = 1
     AND fn::organization::founder_member(user:alice, organization:acme);
+};
+"""
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "role_batch_gives_each_member_its_own_roles"
+kind = "sql_expect"
+actor = "root"
+sql = """
+RETURN {
+    LET $writer = (SELECT VALUE id FROM organization_role WHERE organization = organization:acme AND name = 'writer')[0];
+    LET $result = fn::organization::members::update_roles(organization:acme, [
+        { user: user:alice, roles: [$writer] },
+        { user: user:bob, roles: [organization_role:acme_member, $writer] }
+    ]);
+    LET $alice = (SELECT VALUE roles FROM member_of WHERE in = user:alice AND out = organization:acme)[0];
+    LET $bob = (SELECT VALUE roles FROM member_of WHERE in = user:bob AND out = organization:acme)[0];
+    RETURN $result.outcome = 'updated'
+        AND fn::organization::founder_member(user:alice, organization:acme)
+        AND $writer IN $alice AND organization_role:acme_member NOT IN $alice
+        AND $writer IN $bob AND organization_role:acme_member IN $bob;
 };
 """
 allow = true
@@ -247,7 +271,7 @@ kind = "sql_expect"
 actor = "root"
 sql = """
 RETURN {
-LET $result = fn::organization::members::update_roles(organization:acme, [user:bob, user:bob], [organization_role:acme_member]);
+LET $result = fn::organization::members::update_roles(organization:acme, [{ user: user:bob, roles: [organization_role:acme_member] }, { user: user:bob, roles: [organization_role:acme_member] }]);
 RETURN $result.outcome = 'invalid-selection-error';
 };
 """
@@ -264,8 +288,27 @@ sql = """
 RETURN {
 CREATE user:approval_dave SET name = "Approval Dave";
 RELATE user:approval_dave->request_to_join:batch_dave->organization:acme;
-LET $result = fn::organization::members::approve_requests(organization:acme, [request_to_join:batch_dave, request_to_join:absent], [organization_role:acme_member]);
+LET $result = fn::organization::members::approve_requests(organization:acme, [{ request: request_to_join:batch_dave, roles: [organization_role:acme_member] }, { request: request_to_join:absent, roles: [organization_role:acme_member] }]);
 RETURN $result.outcome = 'request-not-found-error' AND request_to_join:batch_dave.id != NONE
+    AND !fn::organization::member(user:approval_dave, organization:acme);
+};
+"""
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "approval_rejects_request_without_roles_without_consuming_others"
+kind = "sql_expect"
+actor = "root"
+sql = """
+RETURN {
+CREATE user:approval_carol SET name = "Approval Carol";
+RELATE user:approval_carol->request_to_join:batch_carol->organization:acme;
+LET $result = fn::organization::members::approve_requests(organization:acme, [{ request: request_to_join:batch_dave, roles: [organization_role:acme_member] }, { request: request_to_join:batch_carol, roles: [] }]);
+RETURN $result.outcome = 'roles-required-error' AND $result.request_ids = [request_to_join:batch_carol]
+    AND request_to_join:batch_dave.id != NONE
     AND !fn::organization::member(user:approval_dave, organization:acme);
 };
 """
@@ -280,11 +323,9 @@ kind = "sql_expect"
 actor = "root"
 sql = """
 RETURN {
-    CREATE user:approval_carol SET name = "Approval Carol";
-    RELATE user:approval_carol->request_to_join:batch_carol->organization:acme;
     LET $join_requests_before = organization:acme.join_requests_sequence;
     LET $members_before = organization:acme.members_sequence;
-    LET $result = fn::organization::members::approve_requests(organization:acme, [request_to_join:batch_dave, request_to_join:batch_carol], [organization_role:acme_member]);
+    LET $result = fn::organization::members::approve_requests(organization:acme, [{ request: request_to_join:batch_dave, roles: [organization_role:acme_member] }, { request: request_to_join:batch_carol, roles: [organization_role:acme_member] }]);
     RETURN $result.outcome = 'approved' AND array::len($result.approvals) = 2
         AND $result.join_requests_sequence = $join_requests_before + 1
         AND $result.members_sequence = $members_before + 1
@@ -305,12 +346,36 @@ path = ""
 equals = true
 
 [[cases]]
+name = "approval_batch_gives_each_member_its_own_roles"
+kind = "sql_expect"
+actor = "root"
+sql = """
+RETURN {
+    LET $writer = (SELECT VALUE id FROM organization_role WHERE organization = organization:acme AND name = 'writer')[0];
+    CREATE user:approval_erin SET name = "Approval Erin";
+    CREATE user:approval_finn SET name = "Approval Finn";
+    RELATE user:approval_erin->request_to_join:batch_erin->organization:acme;
+    RELATE user:approval_finn->request_to_join:batch_finn->organization:acme;
+    LET $result = fn::organization::members::approve_requests(organization:acme, [{ request: request_to_join:batch_erin, roles: [organization_role:acme_member] }, { request: request_to_join:batch_finn, roles: [$writer, organization_role:acme_member] }]);
+    LET $erin = (SELECT VALUE roles FROM member_of WHERE in = user:approval_erin AND out = organization:acme)[0];
+    LET $finn = (SELECT VALUE roles FROM member_of WHERE in = user:approval_finn AND out = organization:acme)[0];
+    RETURN $result.outcome = 'approved'
+        AND $erin = [organization_role:acme_member]
+        AND array::sort($finn) = array::sort([$writer, organization_role:acme_member]);
+};
+"""
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
 name = "role_batch_resolves_empty_selection_defaults_per_member"
 kind = "sql_expect"
 actor = "root"
 sql = """
 RETURN {
-    LET $result = fn::organization::members::update_roles(organization:acme, [user:alice, user:bob], []);
+    LET $result = fn::organization::members::update_roles(organization:acme, [{ user: user:alice, roles: [] }, { user: user:bob, roles: [] }]);
     LET $bob = (SELECT * FROM member_of WHERE in = user:bob AND out = organization:acme)[0];
     RETURN $result.outcome = 'updated' AND fn::organization::founder_member(user:alice, organization:acme)
         AND array::len($bob.roles) > 0
@@ -330,7 +395,7 @@ sql = """
 RETURN {
     LET $founder = (SELECT VALUE id FROM organization_role WHERE organization = organization:acme AND name = 'founder')[0];
     LET $before = SELECT in, roles FROM member_of WHERE out = organization:acme;
-    LET $result = fn::organization::members::update_roles(organization:acme, [user:alice, user:bob], [$founder]);
+    LET $result = fn::organization::members::update_roles(organization:acme, [{ user: user:alice, roles: [$founder] }, { user: user:bob, roles: [$founder] }]);
     RETURN $result.outcome = 'roles-not-assignable-error' AND $result.user_ids = [user:bob]
         AND $before = (SELECT in, roles FROM member_of WHERE out = organization:acme);
 };

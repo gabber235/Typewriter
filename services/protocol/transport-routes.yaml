@@ -122,7 +122,7 @@ routes:
     server: { component: organization-members }
     flow:
       kind: unary
-      method: "organization/v1/member.skir:RemoveOrganizationMember"
+      method: "organization/v1/member.skir:RemoveOrganizationMembers"
       operation: organization.members.remove
       request: user.{user}.organization.{organization}.members.remove
 
@@ -156,7 +156,7 @@ routes:
     server: { component: organization-members }
     flow:
       kind: unary
-      method: "organization/v1/join_request.skir:DeclineOrganizationJoinRequest"
+      method: "organization/v1/join_request.skir:DeclineOrganizationJoinRequests"
       operation: organization.members.join_requests.decline
       request: user.{user}.organization.{organization}.members.join_requests.decline
 
@@ -190,7 +190,7 @@ routes:
     server: { component: organization-members }
     flow:
       kind: unary
-      method: "organization/v1/join_codes.skir:RevokeOrganizationJoinCode"
+      method: "organization/v1/join_codes.skir:RevokeOrganizationJoinCodes"
       operation: organization.members.join_codes.revoke
       request: user.{user}.organization.{organization}.members.join_codes.revoke
 

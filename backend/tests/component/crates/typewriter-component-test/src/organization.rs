@@ -9,16 +9,19 @@ use wasmcloud_utils::skir::base::{
     organization::v1::{
         join_codes::{
             GenerateOrganizationJoinCodeRequest, GenerateOrganizationJoinCodeRequest_AutoAccept,
-            GenerateOrganizationJoinCodeRequest_Expiration,
+            GenerateOrganizationJoinCodeRequest_Expiration, RevokeOrganizationJoinCodesRequest,
+            RevokeOrganizationJoinCodesResponse,
         },
         join_request::{
             ApproveOrganizationJoinRequestsRequest, ApproveOrganizationJoinRequestsResponse,
-            OrganizationJoinRequestsChange, OrganizationJoinRequestsChanged,
-            UserJoinRequestsChange, UserJoinRequestsChanged,
+            DeclineOrganizationJoinRequestsRequest, DeclineOrganizationJoinRequestsResponse,
+            OrganizationJoinRequestApproval, OrganizationJoinRequestsChange,
+            OrganizationJoinRequestsChanged, UserJoinRequestsChange, UserJoinRequestsChanged,
         },
         member::{
-            OrganizationMembersChange, OrganizationMembersChanged,
-            UpdateOrganizationMemberRolesRequest, UpdateOrganizationMemberRolesResponse,
+            OrganizationMemberRoleAssignment, OrganizationMembersChange,
+            OrganizationMembersChanged, UpdateOrganizationMemberRolesRequest,
+            UpdateOrganizationMemberRolesResponse,
         },
         organization::{
             CreateOrganizationRequest, CreateOrganizationResponse, UserOrganizationsChange,
@@ -130,40 +133,105 @@ pub async fn join_transaction<F>(
     }
 }
 
-/// `member` approves `requests` of `organization`, handing out `roles`.
+/// `member` approves each request of `organization` in `approvals`, handing out its own roles, in
+/// one change.
 pub async fn approve_join_requests<F>(
     context: &TestContext<F>,
     member: &StackUser,
     organization: &Organization,
-    requests: Vec<RecordId>,
-    roles: Vec<RecordId>,
+    approvals: Vec<(RecordId, Vec<RecordId>)>,
 ) -> Result<ApproveOrganizationJoinRequestsResponse> {
     context
         .request(
             from_member(member, organization, "members.join_requests.approve"),
             &ApproveOrganizationJoinRequestsRequest {
-                request_ids: requests,
-                role_ids: roles,
+                approvals: approvals
+                    .into_iter()
+                    .map(|(request_id, role_ids)| OrganizationJoinRequestApproval {
+                        request_id,
+                        role_ids,
+                        ..Default::default()
+                    })
+                    .collect(),
                 ..Default::default()
             },
         )
         .await
 }
 
-/// `member` gives the members `users` of `organization` the roles `roles`.
-pub async fn update_member_roles<F>(
+/// `member` declines the `requests` of `organization`, in one change.
+pub async fn decline_join_requests<F>(
+    context: &TestContext<F>,
+    member: &StackUser,
+    organization: &Organization,
+    requests: Vec<RecordId>,
+) -> Result<DeclineOrganizationJoinRequestsResponse> {
+    context
+        .request(
+            from_member(member, organization, "members.join_requests.decline"),
+            &DeclineOrganizationJoinRequestsRequest {
+                request_ids: requests,
+                ..Default::default()
+            },
+        )
+        .await
+}
+
+/// `member` revokes the join `codes` of `organization`, in one change.
+pub async fn revoke_join_codes<F>(
+    context: &TestContext<F>,
+    member: &StackUser,
+    organization: &Organization,
+    codes: Vec<RecordId>,
+) -> Result<RevokeOrganizationJoinCodesResponse> {
+    context
+        .request(
+            from_member(member, organization, "members.join_codes.revoke"),
+            &RevokeOrganizationJoinCodesRequest {
+                code_ids: codes,
+                ..Default::default()
+            },
+        )
+        .await
+}
+
+/// `member` removes the `users` from `organization`, in one change.
+pub async fn remove_members<F>(
     context: &TestContext<F>,
     member: &StackUser,
     organization: &Organization,
     users: Vec<RecordId>,
-    roles: Vec<RecordId>,
+) -> Result<RemoveOrganizationMembersResponse> {
+    context
+        .request(
+            from_member(member, organization, "members.remove"),
+            &RemoveOrganizationMembersRequest {
+                user_ids: users,
+                ..Default::default()
+            },
+        )
+        .await
+}
+
+/// `member` gives each member of `organization` in `assignments` its own roles, in one change.
+pub async fn update_member_roles<F>(
+    context: &TestContext<F>,
+    member: &StackUser,
+    organization: &Organization,
+    assignments: Vec<(RecordId, Vec<RecordId>)>,
 ) -> Result<UpdateOrganizationMemberRolesResponse> {
     context
         .request(
             from_member(member, organization, "members.update"),
             &UpdateOrganizationMemberRolesRequest {
-                user_ids: users,
-                role_ids: roles,
+                assignments: assignments
+                    .into_iter()
+                    .map(|(user_id, role_ids)| OrganizationMemberRoleAssignment {
+                        user_id,
+                        role_ids,
+                        ..Default::default()
+                    })
+                    .collect(),
                 ..Default::default()
             },
         )

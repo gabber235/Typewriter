@@ -42,12 +42,17 @@ method WatchOrganizationMembers(
   snapshot: OrganizationMembersSnapshot;
 } = 920301;
 
-// Applies one assignable role selection to every selected member in one transaction.
+// The assignable roles one member should hold after a role update.
+struct OrganizationMemberRoleAssignment(82030005) {
+  user_id: RecordId;
+  role_ids: [RecordId];
+}
+
+// Applies each member's own assignable role selection in one transaction.
 // Protected roles remain assigned. Any invalid target rejects the complete selection, so the response never describes a partial update.
 method UpdateOrganizationMemberRoles(
   struct {
-    user_ids: [RecordId];
-    role_ids: [RecordId];
+    assignments: [OrganizationMemberRoleAssignment];
   }
 ): enum {
   internal_error: InternalError;
@@ -80,12 +85,12 @@ method UpdateOrganizationMemberRoles(
   invalid_record_id_error: InvalidRecordIdError;
 } = 920302;
 
-// Removes one membership and publishes the corresponding organization change.
-// The original founder cannot be removed while the organization exists. Other members cannot be
-// removed if that would leave no holder of the founder role.
-method RemoveOrganizationMember(
+// Removes every selected membership in one transaction and publishes the corresponding organization change.
+// The original founder cannot be removed while the organization exists. Members cannot be removed if
+// that would leave no holder of the founder role. Any invalid target rejects the complete selection.
+method RemoveOrganizationMembers(
   struct {
-    user_id: RecordId;
+    user_ids: [RecordId];
   }
 ): enum {
   internal_error: InternalError;
@@ -94,14 +99,16 @@ method RemoveOrganizationMember(
     event: OrganizationMembersChanged;
   };
 
-  /// User is not a member.
+  /// Users are not members.
   user_not_member_error: struct {
-    user_id: RecordId;
+    user_ids: [RecordId];
   };
   /// Founder cannot be removed.
   founder_cannot_be_removed_error: struct {
-    user_id: RecordId;
+    user_ids: [RecordId];
   };
+  /// Selection must contain distinct targets.
+  invalid_selection_error: struct {};
 
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
