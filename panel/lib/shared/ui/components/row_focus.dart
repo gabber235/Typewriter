@@ -334,9 +334,26 @@ class RowStop extends HookWidget {
     this.bounds = RingBounds.self,
     this.label,
     super.key,
-  });
+  }) : childAttachesFocus = false;
+
+  /// The stop of a row whose [child] attaches the row's focus node itself,
+  /// as a Selector given [RowEntry.focus] does: the row keeps its ring and
+  /// its place as the pane's first item, and the child owns focus, keys and
+  /// semantics.
+  const RowStop.attachedByChild({
+    required this.child,
+    this.borderRadius,
+    this.bounds = RingBounds.self,
+    super.key,
+  }) : role = RowRole.stop,
+       onActivate = null,
+       label = null,
+       childAttachesFocus = true;
 
   final RowRole role;
+
+  /// Whether [child] attaches the row's focus node instead of this stop.
+  final bool childAttachesFocus;
 
   /// What a screen reader announces when the stop takes focus, for a row
   /// whose own content forms separate semantics nodes: the member's name.
@@ -381,6 +398,13 @@ class RowStop extends HookWidget {
         skipTraversal: true,
         descendantsAreTraversable: scope!.partsTraversable,
         includeSemantics: false,
+        child: child,
+      );
+    }
+    if (childAttachesFocus) {
+      return RingTarget(
+        borderRadius: borderRadius ?? BorderRadius.zero,
+        bounds: bounds,
         child: child,
       );
     }
@@ -457,6 +481,34 @@ class RowLanding extends HookWidget {
 
 final class _LandingNode extends FocusNode {
   _LandingNode() : super(canRequestFocus: false, skipTraversal: true);
+}
+
+/// Marks [child] as a field, so moving into its pane lands on the field's
+/// first control ahead of the pane's buttons, as on the first row of a
+/// list.
+class FieldLanding extends HookWidget {
+  const FieldLanding({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final node = useMemoized(
+      () => ItemFocusNode(
+        debugLabel: "Field",
+        canRequestFocus: false,
+        skipTraversal: true,
+      ),
+    );
+    useEffect(() => node.dispose, [node]);
+    return Focus(
+      focusNode: node,
+      canRequestFocus: false,
+      skipTraversal: true,
+      includeSemantics: false,
+      child: child,
+    );
+  }
 }
 
 /// The first item under a focus scope, where open focus lands.

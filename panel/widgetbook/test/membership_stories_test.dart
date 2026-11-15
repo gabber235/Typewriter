@@ -1,3 +1,4 @@
+import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/features/members/join_codes/presentation/route.stories.dart";
@@ -50,13 +51,11 @@ void main() {
     );
     expect(panel.shows(name), isTrue);
 
-    final requests = find.text("Decline").evaluate().length;
-    await panel.holdButton("Decline $name");
+    await tester.tap(find.text(name));
+    await panel.settle();
+    await panel.holdKey(LogicalKeyboardKey.delete);
 
-    await tester.eventually(
-      () => expect(find.text("Decline"), findsNWidgets(requests - 1)),
-    );
-    expect(panel.shows(name), isFalse);
+    await tester.eventually(() => expect(panel.shows(name), isFalse));
     await tester.runStory();
   });
 }

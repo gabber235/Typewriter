@@ -60,6 +60,21 @@ abstract class ValueEditingInspectionSurface
   }
 }
 
+/// One inspection a selected item offers to share with other selected items
+/// without a portable editor: when every selected item offers a compatible
+/// surface with the same [id], the inspector shows one inspection for all
+/// of them, such as the roles several members hold.
+abstract interface class SharedInspectionSurface {
+  Object get id;
+
+  bool isCompatibleWith(SharedInspectionSurface other);
+
+  /// Builds the one inspection [members] share. [members] holds the
+  /// compatible surface of every selected item in selection order, this
+  /// surface first.
+  InspectionContent buildShared(List<SharedInspectionSurface> members);
+}
+
 /// A selectable resource that can be represented in the inspector.
 ///
 /// This is the read only inspection boundary. Implementations create a
@@ -72,6 +87,10 @@ abstract class InspectableSelectable<I extends SelectableIdentifier>
 
   List<PortableMultiInspectionSurface> get portableMultiInspectionSurfaces =>
       const [];
+
+  /// Inspections this item shares with other selected items without a
+  /// portable editor; used when no portable surface is shared.
+  List<SharedInspectionSurface> get sharedInspectionSurfaces => const [];
 
   /// Builds the graph and optional resource header for this resource.
   InspectionContent buildInspection(InspectionBindingScope owners);

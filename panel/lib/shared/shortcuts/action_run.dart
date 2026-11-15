@@ -32,7 +32,7 @@ enum HoldWeight {
 /// What a hold does to its targets, typed by their identity [K].
 ///
 /// [rows] are explicit: target order, the sending look, refusals and focus
-/// come from them, never from where the key was pressed, so a bulk bar
+/// come from them, never from where the key was pressed, so the inspector
 /// outside the list's RowFocusScope holds the same rows as the list. Every
 /// function typed by [K] stays private; CommandRuns gets an untyped
 /// [HoldTry], so a plan stored as `HoldPlan<Object>` never calls a function
@@ -49,11 +49,14 @@ final class HoldPlan<K extends Object> {
     required this._outcome,
     required FutureOr<void> Function(WidgetRef ref, K target) this._each,
     this.rows,
-  }) : _all = null;
+  }) : _all = null,
+       _rowsOf = null;
 
-  /// Runs [work] once over every target, for an action that cannot fail one
-  /// target at a time (a Realm operation). It has no rows; a failure jams
-  /// the command's buttons.
+  /// Runs [work] once over every target, for an action that succeeds or
+  /// fails for all of its targets together (a Realm operation, a batch
+  /// command). With [rows], every target row is sending while it runs and
+  /// a failure refuses all of them with its message; without rows a
+  /// failure jams the command's buttons.
   const HoldPlan.all({
     required this.weight,
     required this.verb,
@@ -61,9 +64,10 @@ final class HoldPlan<K extends Object> {
     required this._outcome,
     required Future<void> Function(WidgetRef ref, Set<K> targets) work,
     this.doneWord,
+    this.rows,
+    this._rowsOf,
   }) : _each = null,
-       _all = work,
-       rows = null;
+       _all = work;
 
   /// How long the hold takes.
   final HoldWeight weight;
@@ -79,6 +83,14 @@ final class HoldPlan<K extends Object> {
   /// The rows the targets are in, or null for a hold that paints on its
   /// button.
   final HoldRows? rows;
+
+  /// Finds the rows when the hold starts, for a plan built before its rows
+  /// are known, such as an operation the inspector offers for the rows of
+  /// the page beside it. [rows] wins when both are given.
+  final HoldRows? Function(WidgetRef ref)? _rowsOf;
+
+  /// Whether the hold shows on rows rather than on its button.
+  bool get showsOnRows => rows != null || _rowsOf != null;
 
   final Set<K> Function(WidgetRef ref) _targets;
   final String Function(Set<K> targets) _outcome;
@@ -97,6 +109,7 @@ final class HoldPlan<K extends Object> {
   HoldTry? begin(WidgetRef ref) {
     final picked = _targets(ref);
     if (picked.isEmpty) return null;
+    final rows = this.rows ?? _rowsOf?.call(ref);
     final order = rows?.order ?? const <Object>[];
     final ids = List<K>.unmodifiable([
       ...order.whereType<K>().where(picked.contains),

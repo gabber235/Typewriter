@@ -38,7 +38,7 @@ final panelModules = PanelModuleGraph({
   "authoring": ["shared/inspector"],
   "features/auth": ["shared/shell"],
   "features/services": ["shared/inspector", "shared/shell"],
-  "features/members": ["shared/shell"],
+  "features/members": ["shared/inspector", "shared/shell"],
   "features/realms": ["authoring", "features/services"],
   "features/organizations": ["features/realms", "features/members"],
   "app": ["features/auth", "features/organizations"],

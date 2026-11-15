@@ -2,13 +2,13 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Coordinates the live member projection with shared selection state.
+/// Shows the live member projection as the window allows: a table, or a
+/// list of cards on narrow windows, and its loading and failure states.
 ///
-/// Selection is local UI state and is intersected with the last rendered member
-/// ids, so removed members leave it and refused members stay selected. The
-/// bulk remove holds over the selected members of the tab's rows, which show
-/// each send and refusal. This widget also chooses the table or tablet list
-/// and projection error UI.
+/// Members are selected through the shared selection; the inspector shows
+/// and edits the selected members. The tab publishes its rows, so a remove
+/// held from the inspector or the context menu sends and refuses on them,
+/// and members that leave the live list leave the selection.
 class MembersTab extends HookConsumerWidget {
   const MembersTab({super.key});
 
@@ -16,78 +16,35 @@ class MembersTab extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final membersAsync = ref.watch(organizationMembersProvider);
-    // One rows handle per tab, above the data builder: the table, the tablet
-    // list and the bulk bar's remove hold share it. Members present when
-    // the data first arrives join the load run.
+    // One rows handle per tab, above the data builder: the table and the
+    // card list share it. Members present when the data first arrives join
+    // the load run.
     final rows = useAnimatedRows(
       items: membersAsync.value ?? const <skir.OrganizationMember>[],
       identity: (member) => member.userId,
       ready: membersAsync.hasValue,
     );
-    final selectedIds = useState<Set<skir.RecordId>>({});
-    final liveMembers = useRef<List<skir.OrganizationMember>>([]);
-
-    useEffect(() {
-      final memberIds = liveMembers.value
-          .map((member) => member.userId)
-          .toSet();
-      final validSelection = selectedIds.value.intersection(memberIds);
-      if (validSelection.length == selectedIds.value.length) return null;
-      selectedIds.value = validSelection;
-      return null;
-    }, [liveMembers.value, selectedIds.value]);
-
-    // The bulk bar's key and Remove button hold over the tab's rows, so the
-    // targets' order, sending look and focus come from the lists' rows.
-    final removal = memberRemoval(
-      id: "remove_bulk_members_key",
-      label: "Remove members",
-      priority: 2,
-      targets: () => selectedIds.value.intersection({
-        for (final member in rows.items) member.userId,
-      }),
-      nameOf: (id) => rows[id]?.item.name,
+    ref.useMembershipRows<MemberIdentifier>(
+      list: MembershipList.members,
       rows: rows,
+      live: membersAsync.value
+          ?.map((member) => MemberIdentifier(member.userId))
+          .toSet(),
     );
 
-    final selection = SelectableRows(rows: rows, selectedIds: selectedIds);
     return SliverMainAxisGroup(
       slivers: [
         SliverPadding(
           padding: const EdgeInsetsGeometry.symmetric(vertical: 12),
-          sliver: SliverMainAxisGroup(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Text(
-                  "Current Members",
-                  style: theme.textTheme.titleMedium,
-                ),
-              ),
-              PinnedHeaderSliver(
-                child: AnimatedPresence(
-                  child: selectedIds.value.isEmpty
-                      ? null
-                      : BulkMemberActions(
-                          selectedCount: selectedIds.value.length,
-                          selectedIds: selectedIds.value,
-                          removal: removal,
-                          onUnselect: (ids) => selectedIds.value = selectedIds
-                              .value
-                              .difference(ids),
-                        ),
-                ),
-              ),
-            ],
+          sliver: SliverToBoxAdapter(
+            child: Text("Current Members", style: theme.textTheme.titleMedium),
           ),
         ),
         membersAsync(
           name: "Members",
-          builder: (members) {
-            liveMembers.value = members;
-            return context.isDesktop
-                ? MembersTable(selection: selection)
-                : MembersTabletList(selection: selection);
-          },
+          builder: (members) => context.isDesktop
+              ? MembersTable(rows: rows)
+              : MembersCardList(rows: rows),
           loading: (_) => const _MembersLoadingShimmer(),
           error: (title, message) => SliverFillRemaining(
             child: Padding(

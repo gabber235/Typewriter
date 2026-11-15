@@ -25,14 +25,28 @@ void main() {
     await panel.eventually(() => expect(panel.focused, contains("Erin")));
   });
 
-  testWidgets("accepting Dennis by keys focuses Erin", (tester) async {
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      membershipService(roles: [role("Editor")], joinRequests: [dennis, erin]),
-    ], at: membersPage(const JoinRequestsRoute()));
-    await panel.press(LogicalKeyboardKey.keyA);
-    await panel.tapOn(find.text("Editor"));
-    await panel.activateWithKeyboard(find.text("Confirm & Add Member"));
-    await panel.eventually(() => expect(panel.focused, contains("Erin")));
-  });
+  testWidgets(
+    "accepting Dennis by keys, with a role chosen in the inspector, focuses Erin",
+    (tester) async {
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        membershipService(
+          roles: [role("Editor")],
+          joinRequests: [dennis, erin],
+        ),
+      ], at: membersPage(const JoinRequestsRoute()));
+      await panel.press(LogicalKeyboardKey.space);
+      await panel.pressControl(LogicalKeyboardKey.keyL);
+      expect(
+        panel.focusShows(find.text("Editor")),
+        isTrue,
+        reason: "${panel.focused}",
+      );
+      await panel.press(LogicalKeyboardKey.space);
+      await panel.pressControl(LogicalKeyboardKey.keyH);
+      expect(panel.focused, contains("Dennis"));
+      await panel.press(LogicalKeyboardKey.keyA);
+      await panel.eventually(() => expect(panel.focused, contains("Erin")));
+    },
+  );
 }

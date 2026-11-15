@@ -8,10 +8,9 @@ void main() {
   final ken = member("Ken");
   const refusal = "Organization founder cannot be removed";
 
-  testWidgets("a bulk remove the backend refuses for Grace and Linus keeps "
-      "them listed with their messages, jams Grace and focuses her", (
-    tester,
-  ) async {
+  testWidgets("a remove of three the backend refuses for Grace and Linus "
+      "removes none, puts the refusal under Grace and Linus, jams Grace and "
+      "focuses her", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       membershipService(
@@ -46,16 +45,16 @@ void main() {
       );
     }
 
-    await panel.eventually(() => expect(panel.shows("Ken"), isFalse));
+    await panel.eventually(() => expect(panel.messageUnder("Grace"), refusal));
     await panel.settle();
-    for (final name in ["Grace", "Linus"]) {
-      expect(panel.shows(name), isTrue);
+    for (final name in ["Grace", "Linus", "Ken"]) {
+      expect(panel.shows(name), isTrue, reason: "$name stays a member");
       expect(
         tester.textDecorationOf(find.text(name).first),
         isNot(TextDecoration.lineThrough),
       );
-      expect(panel.messageUnder(name), refusal);
     }
+    expect(panel.messageUnder("Linus"), refusal);
     expect(panel.focusedRow, grace);
 
     await panel.keyDown(LogicalKeyboardKey.keyD);

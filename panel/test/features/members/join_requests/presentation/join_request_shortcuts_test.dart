@@ -14,42 +14,6 @@ final _request = joinRequest(
 );
 
 void main() {
-  testWidgets("Escape in the bulk join request actions clears the "
-      "selection", (tester) async {
-    final calls = <String>[];
-    final panel = await tester.pumpPanel(
-      [signedIn(ada, organization: acme), membership()],
-      at: PanelLocation.component(
-        HookBuilder(
-          builder: (context) {
-            final rows = useAnimatedRows(
-              items: const <skir.OrganizationJoinRequest>[],
-              identity: (request) => request.requestId,
-            );
-            return BulkJoinRequestActions(
-              selectedCount: 1,
-              selectedIds: {_request.requestId},
-              onClearSelection: () => calls.add("clear"),
-              decline: joinRequestDecline(
-                id: "decline_bulk",
-                label: "Decline requests",
-                priority: 2,
-                targets: () => {_request.requestId},
-                nameOf: (_) => "Grace",
-                rows: rows,
-              ),
-            );
-          },
-        ),
-      ),
-    );
-    await panel.press(LogicalKeyboardKey.tab);
-
-    await panel.press(LogicalKeyboardKey.escape);
-
-    expect(calls, ["clear"]);
-  });
-
   for (final (name, share, declines) in [
     ("holding Delete on the focused request declines it", 1.0, 1),
     ("releasing Delete early keeps the request", 0.5, 0),
@@ -62,9 +26,9 @@ void main() {
       var sent = 0;
       panel.world.nats.registerHandler(_declineSubject, (_) {
         sent++;
-        return skir.DeclineOrganizationJoinRequestResponse.serializer.toBytes(
-          skir.DeclineOrganizationJoinRequestResponse.createRequestNotFoundError(
-            requestId: _request.requestId,
+        return skir.DeclineOrganizationJoinRequestsResponse.serializer.toBytes(
+          skir.DeclineOrganizationJoinRequestsResponse.createRequestNotFoundError(
+            requestIds: [_request.requestId],
           ),
         );
       });

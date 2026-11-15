@@ -32,12 +32,6 @@ bool _sameKeys(ShortcutActivator a, ShortcutActivator b) =>
     a.meta == b.meta;
 
 final _panelShortcuts = <ShortcutActivator, Intent>{
-  // Join codes still select all with these; selectables use Control or
-  // Command+A. They go once members move onto the shared selection model.
-  SingleActivator(LogicalKeyboardKey.enter, shift: true): ActivateAllIntent(),
-  SingleActivator(LogicalKeyboardKey.numpadEnter, shift: true):
-      ActivateAllIntent(),
-  SingleActivator(LogicalKeyboardKey.space, shift: true): ActivateAllIntent(),
   AdaptiveSingleActivator(LogicalKeyboardKey.keyA, control: true):
       SelectEveryIntent(),
   SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
@@ -116,11 +110,6 @@ final movementShortcuts = {
   [LogicalKeyboardKey.arrowRight, LogicalKeyboardKey.keyL]:
       TraversalDirection.right,
 };
-
-/// Activates every currently applicable action in the focused context.
-class ActivateAllIntent extends Intent {
-  const ActivateAllIntent();
-}
 
 /// Selects every item of the focused surface, or clears the selection when
 /// all of them are selected.

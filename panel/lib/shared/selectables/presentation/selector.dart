@@ -70,8 +70,13 @@ class Selector extends HookConsumerWidget {
     this.onFocusChange,
     this.onDoubleTap,
     this.shortcuts = const {},
+    this.link,
     super.key,
   });
+
+  /// Lets [SelectorLinkRegion]s outside this selector, such as the other
+  /// cells of a table row, take the same pointer gestures.
+  final SelectorLink? link;
 
   /// Identifier changed by taps and keyboard activation.
   final SelectableIdentifier selectableId;
@@ -209,6 +214,19 @@ class Selector extends HookConsumerWidget {
             .selectRange(to, order: items, from: selectableId);
       });
     }
+
+    link?._target = (
+      owner: context,
+      down: () => pressed.value = modifiers(),
+      tap: tap,
+      context: activateContext,
+    );
+    useEffect(() {
+      final current = link;
+      return () {
+        current?._release(context);
+      };
+    }, [link]);
 
     useEffect(() {
       final position = pendingContextPosition.value;
@@ -351,6 +369,61 @@ class Selector extends HookConsumerWidget {
   }
 }
 
+/// Joins widgets outside a [Selector] to its pointer gestures: the cells of a
+/// table row beside the cell that holds the selector.
+///
+/// One link belongs to one selector; each [SelectorLinkRegion] holding it
+/// selects, toggles, extends and opens the context menu as a press on the
+/// selector itself does.
+final class SelectorLink {
+  /// The gestures of the selector holding the link, and that selector's
+  /// context; null while no selector holds it.
+  ({
+    BuildContext owner,
+    VoidCallback down,
+    void Function(TapUpDetails details) tap,
+    void Function(Offset globalPosition) context,
+  })?
+  _target;
+
+  /// Lets go of the selector of [owner], unless another selector holds the
+  /// link by now.
+  void _release(BuildContext owner) {
+    if (_target?.owner == owner) _target = null;
+  }
+}
+
+/// Takes the pointer gestures of the [Selector] that holds [link].
+class SelectorLinkRegion extends StatelessWidget {
+  const SelectorLinkRegion({
+    required this.link,
+    required this.child,
+    super.key,
+  });
+
+  final SelectorLink link;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: Listener(
+        onPointerDown: (_) => link._target?.down(),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (details) => link._target?.tap(details),
+          onSecondaryTapUp: (details) =>
+              link._target?.context(details.globalPosition),
+          onLongPressStart: (details) =>
+              link._target?.context(details.globalPosition),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
 /// Describes how a selector activation entered the shared action pipeline.
 class SelectedSelectorIntent extends Intent {
   const SelectedSelectorIntent({
@@ -403,7 +476,7 @@ enum SelectorCheckPlacement {
 /// Clicking the check adds or removes the item, as Command or Control+click
 /// does. The item stays the one focus stop and already reads as checked, so
 /// the check takes no focus and says nothing itself.
-class SelectorCheck extends StatelessWidget {
+class SelectorCheck extends HookWidget {
   const SelectorCheck({
     required this.child,
     this.placement = SelectorCheckPlacement.leading,
@@ -417,19 +490,30 @@ class SelectorCheck extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context
         .dependOnInheritedWidgetOfExactType<_SelectorStateScope>();
-    final check = MotionSize(
-      alignment: AlignmentDirectional.topStart,
-      child: state == null || !state.selecting
-          ? const SizedBox.shrink()
-          : ExcludeSemantics(
-              child: ExcludeFocus(
-                child: SelectionCheck(
-                  value: state.selected,
-                  onChanged: state.toggle,
+    // The check's share of its size follows the motion, intrinsic size
+    // included, so a column sized to its content grows and shrinks with
+    // the check instead of jumping to its final width.
+    final shown = useMotion(
+      MotionToken.surfaceIn,
+      state != null && state.selecting ? 1 : 0,
+    ).value.clamp(0.0, 1.0);
+    final check = shown == 0
+        ? const SizedBox.shrink()
+        : ClipRect(
+            child: Align(
+              alignment: AlignmentDirectional.topStart,
+              widthFactor: shown,
+              heightFactor: shown,
+              child: ExcludeSemantics(
+                child: ExcludeFocus(
+                  child: SelectionCheck(
+                    value: state?.selected ?? false,
+                    onChanged: state?.toggle,
+                  ),
                 ),
               ),
             ),
-    );
+          );
     return switch (placement) {
       SelectorCheckPlacement.leading => Row(
         children: [

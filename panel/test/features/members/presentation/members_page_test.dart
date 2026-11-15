@@ -82,24 +82,6 @@ void main() {
     }
   });
 
-  for (final (route, label) in [
-    (const MemberListRoute(), "Select all members"),
-    (const JoinCodesRoute(), "Select all join codes"),
-  ]) {
-    testWidgets("a screen reader reads the table's select all checkbox as "
-        "$label", (tester) async {
-      await tester.pumpPanel(page, at: membersPage(route));
-
-      final checkboxes = find.semantics.byPredicate(
-        (node) =>
-            node.getSemanticsData().flagsCollection.isChecked !=
-            CheckedState.none,
-      );
-      // The first check box is the header's, before any row's.
-      expect(checkboxes.evaluate().first.spoken, label);
-    });
-  }
-
   testWidgets("the mouse alone moves from the members list to each sibling "
       "page and back", (tester) async {
     final panel = await tester.pumpPanel(page, at: membersPage());

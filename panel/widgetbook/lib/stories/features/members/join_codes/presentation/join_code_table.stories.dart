@@ -14,7 +14,25 @@ Widget joinCodesTableUseCase(BuildContext context) {
     label: "Join codes",
     make: storyJoinCodes,
     identity: (code) => code.code,
+    selectable: (code) => JoinCodeIdentifier(code.code),
     traits: (codes) => [membership(roles: storyRoles, joinCodes: codes)],
-    builder: (selection) => JoinCodesTable(selection: selection),
+    builder: (rows) => JoinCodesTable(rows: rows),
+  );
+}
+
+/// The join code cards of touch layouts: a tap selects a code and the
+/// inspector shows Copy and Revoke; in select mode every card shows its
+/// check.
+@widgetbook.UseCase(name: "Default", type: JoinCodesCardList)
+Widget joinCodesCardListUseCase(BuildContext context) {
+  return selectableRowsStory(
+    context,
+    label: "Join codes",
+    make: storyJoinCodes,
+    identity: (code) => code.code,
+    selectable: (code) => JoinCodeIdentifier(code.code),
+    traits: (codes) => [membership(roles: storyRoles, joinCodes: codes)],
+    windows: listWindows,
+    builder: (rows) => JoinCodesCardList(rows: rows),
   );
 }

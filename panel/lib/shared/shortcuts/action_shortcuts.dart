@@ -283,8 +283,6 @@ final _intentActionFactories =
     <Type, Action<Intent> Function(ActionInvoke onInvoke, WidgetRef ref)>{
       ActivateIntent: (onInvoke, ref) =>
           CallbackAction<ActivateIntent>(onInvoke: (_) => onInvoke(ref)),
-      ActivateAllIntent: (onInvoke, ref) =>
-          CallbackAction<ActivateAllIntent>(onInvoke: (_) => onInvoke(ref)),
       SelectEveryIntent: (onInvoke, ref) =>
           CallbackAction<SelectEveryIntent>(onInvoke: (_) => onInvoke(ref)),
       CancelIntent: (onInvoke, ref) =>

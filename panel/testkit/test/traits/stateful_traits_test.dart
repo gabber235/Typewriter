@@ -24,7 +24,7 @@ void main() {
       ];
       final first = testWorld(traits);
       await first.nats.answer(
-        skir.RevokeOrganizationJoinCodeRequest(codeId: _code.code)
+        skir.RevokeOrganizationJoinCodesRequest(codeIds: [_code.code])
             .operation(userId: ada.id, organizationId: acme.organizationId),
       );
 

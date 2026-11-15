@@ -2,44 +2,40 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// The one Remove member command: row key, row icon, card key and button,
-/// bulk key and button all build it.
+/// The one Remove member command: the row key and icon, and the operation
+/// the inspector and the context menu offer, all build it.
 ///
-/// [rows] are the members rows MembersTab owns: each member's row is
-/// sending while its remove runs, and a refusal stays on its row. Removed
-/// members leave the live list, and refused members stay selected.
+/// Every target leaves in one change or none does. Their rows, from [rows]
+/// or else [rowsOf] when the hold starts, are sending while it runs, and a
+/// refusal stays on each of them; removed members leave the live list.
 ActionShortcut memberRemoval({
   required String id,
   required String label,
-  required Set<skir.RecordId> Function() targets,
-  required AnimatedRows<Object?> rows,
-  required String? Function(skir.RecordId member) nameOf,
+  required Set<skir.RecordId> Function(WidgetRef ref) targets,
+  required String? Function(WidgetRef ref, skir.RecordId member) nameOf,
+  HoldRows? rows,
+  HoldRows? Function(WidgetRef ref)? rowsOf,
   int priority = 1,
 }) {
-  return ActionShortcut.intent(
+  // The member must ask to join again, so the hold is heavy.
+  return membershipHold(
     id: id,
     label: label,
     description: "Remove from the organization",
-    intent: DeleteIntent,
+    targets: targets,
+    nameOf: nameOf,
+    rows: rows,
+    rowsOf: rowsOf,
     priority: priority,
-    run: ActionRun.hold(
-      HoldPlan<skir.RecordId>(
-        // The member must ask to join again.
-        weight: HoldWeight.heavy,
-        rows: rows,
-        targets: (_) => targets(),
-        verb: "Remove",
-        doneWord: "Removed",
-        outcome: (targets) => targets.length == 1
-            ? "Remove ${nameOf(targets.single) ?? "this member"}? "
-                  "They lose access straight away."
-            : "Remove ${targets.length} members? "
-                  "They lose access straight away.",
-        each: (ref, member) => ref.executeMembership(
-          ref.membershipCommands.remove(member),
-          (response) => response.requireAccepted(),
-        ),
-      ),
+    verb: "Remove",
+    doneWord: "Removed",
+    outcomeOne: (name) =>
+        "Remove ${name ?? "this member"}? They lose access straight away.",
+    outcomeMany: (count) =>
+        "Remove $count members? They lose access straight away.",
+    work: (ref, members) => ref.executeMembership(
+      ref.membershipCommands.remove(members),
+      (response) => response.requireAccepted(),
     ),
   );
 }

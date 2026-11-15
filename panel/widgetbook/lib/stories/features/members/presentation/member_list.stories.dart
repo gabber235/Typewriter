@@ -8,7 +8,8 @@ import "package:widgetbook_workspace/support/story.dart";
 
 /// The live member list without its page: a table on desktop, cards on
 /// smaller windows, a skeleton while loading and the failure when the
-/// membership service is unreachable. Selecting members shows the bulk bar.
+/// membership service is unreachable. A click selects a member and Space
+/// adds one, showing every row's check.
 @widgetbook.UseCase(name: "Default", type: MembersTab)
 Widget membersTabUseCase(BuildContext context) {
   final amount = context.knobs.object.dropdown(

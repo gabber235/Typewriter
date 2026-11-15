@@ -209,3 +209,22 @@ extension PumpDesktopInspector on WidgetTester {
     ),
   );
 }
+
+/// Text of the page beside the inspector.
+extension PageBesideInspector on PanelDriver {
+  /// Every [text] the page shows outside the inspector, such as a member's
+  /// name in a list while the inspector shows the same member.
+  Finder onPage(String text) => find.byElementPredicate((element) {
+    final widget = element.widget;
+    if (widget is! Text || widget.data != text) return false;
+    var inInspector = false;
+    element.visitAncestorElements((ancestor) {
+      final semantics = ancestor.widget;
+      inInspector =
+          semantics is Semantics &&
+          semantics.properties.label == InspectorScaffold.semanticsLabel;
+      return !inInspector;
+    });
+    return !inInspector;
+  }, description: 'text "$text" outside the inspector');
+}

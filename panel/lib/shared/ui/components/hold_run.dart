@@ -12,13 +12,29 @@ abstract class HoldResult with _$HoldResult {
 /// Runs the work of a completed hold. [ref] answers the ref to run each step
 /// with: the one that began the hold while it is mounted.
 ///
-/// Work over every target runs once. Work per target runs in list order and
+/// Work over every target runs once; with rows, every target row is sending
+/// while it runs and a failure refuses all of them. Work per target runs in list order and
 /// keeps going past a refusal; with rows, every target row is sending for
 /// the whole run (one call), and the refused ones are refused on their
 /// entries afterwards.
 Future<HoldResult> runHold(HoldTry attempt, WidgetRef Function() ref) async {
   if (attempt.all case final all?) {
-    await all(ref());
+    final rows = attempt.rows;
+    if (rows == null) {
+      await all(ref());
+      return const HoldResult();
+    }
+    try {
+      await rows.sending(attempt.ids, () => all(ref()));
+    } on UnconfirmedFailure {
+      // Uncertain delivery belongs to the save status.
+      return const HoldResult();
+    } on Object catch (error, stack) {
+      final message = failureMessage(error, stack);
+      final failures = {for (final id in attempt.ids) id: message};
+      rows.refuse(failures);
+      return HoldResult(failures: failures);
+    }
     return const HoldResult();
   }
   final each = attempt.each!;

@@ -53,20 +53,24 @@ final class MembershipResourceRepository {
     return session.requireUserId();
   }
 
+  /// Approves every request in [approvals], each with the roles its new
+  /// member receives, in one all or nothing change.
   PreparedCommit<skir.ApproveOrganizationJoinRequestsResponse> approve(
-    Iterable<skir.RecordId> requestIds,
-    List<skir.OrganizationRole> roles,
+    Map<skir.RecordId, List<skir.OrganizationRole>> approvals,
   ) {
-    final ids = List<skir.RecordId>.unmodifiable(requestIds);
-    final selectedRoles = List<skir.OrganizationRole>.unmodifiable(roles);
     final request = skir.ApproveOrganizationJoinRequestsRequest(
-      requestIds: ids,
-      roleIds: selectedRoles.map((role) => role.roleId),
+      approvals: [
+        for (final MapEntry(key: requestId, value: roles) in approvals.entries)
+          skir.OrganizationJoinRequestApproval(
+            requestId: requestId,
+            roleIds: roles.map((role) => role.roleId),
+          ),
+      ],
     );
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
       label: "Approve membership",
-      resources: {for (final id in ids) (organization, id)},
+      resources: {for (final id in approvals.keys) (organization, id)},
       onResponse: (response) async {
         checkActive();
         if (response
@@ -80,22 +84,23 @@ final class MembershipResourceRepository {
     );
   }
 
-  PreparedCommit<skir.DeclineOrganizationJoinRequestResponse> decline(
-    skir.RecordId requestId,
+  /// Declines every request in [requestIds] in one all or nothing change.
+  PreparedCommit<skir.DeclineOrganizationJoinRequestsResponse> decline(
+    Iterable<skir.RecordId> requestIds,
   ) {
-    final submissionId = uuid.v4();
-    final request = skir.DeclineOrganizationJoinRequestRequest(
-      requestId: requestId,
+    final ids = List<skir.RecordId>.unmodifiable(requestIds);
+    final request = skir.DeclineOrganizationJoinRequestsRequest(
+      requestIds: ids,
     );
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
-      submissionId: submissionId,
+      submissionId: uuid.v4(),
       label: "Decline membership",
-      resources: {(organization, requestId)},
+      resources: {for (final id in ids) (organization, id)},
       onResponse: (response) async {
         checkActive();
         if (response
-            case skir.DeclineOrganizationJoinRequestResponse_successWrapper(
+            case skir.DeclineOrganizationJoinRequestsResponse_successWrapper(
               :final value,
             )) {
           _requests.add(value.event);
@@ -136,20 +141,21 @@ final class MembershipResourceRepository {
     );
   }
 
-  PreparedCommit<skir.RevokeOrganizationJoinCodeResponse> revoke(
-    skir.RecordId codeId,
+  /// Revokes every code in [codeIds] in one all or nothing change.
+  PreparedCommit<skir.RevokeOrganizationJoinCodesResponse> revoke(
+    Iterable<skir.RecordId> codeIds,
   ) {
-    final submissionId = uuid.v4();
-    final request = skir.RevokeOrganizationJoinCodeRequest(codeId: codeId);
+    final ids = List<skir.RecordId>.unmodifiable(codeIds);
+    final request = skir.RevokeOrganizationJoinCodesRequest(codeIds: ids);
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
-      submissionId: submissionId,
+      submissionId: uuid.v4(),
       label: "Revoke join code",
-      resources: {(organization, codeId)},
+      resources: {for (final id in ids) (organization, id)},
       onResponse: (response) async {
         checkActive();
         if (response
-            case skir.RevokeOrganizationJoinCodeResponse_successWrapper(
+            case skir.RevokeOrganizationJoinCodesResponse_successWrapper(
               :final value,
             )) {
           _codes.add(value.event);
@@ -158,22 +164,26 @@ final class MembershipResourceRepository {
     );
   }
 
+  /// Gives each member in [assignments] its own assignable roles, keeping
+  /// protected roles, in one all or nothing change.
   PreparedCommit<skir.UpdateOrganizationMemberRolesResponse> updateRoles(
-    Iterable<skir.RecordId> memberIds,
-    List<skir.OrganizationRole> requestedRoles,
+    Map<skir.RecordId, List<skir.OrganizationRole>> assignments,
   ) {
-    final ids = List<skir.RecordId>.unmodifiable(memberIds);
-    final roles = List<skir.OrganizationRole>.unmodifiable(requestedRoles);
     final request = skir.UpdateOrganizationMemberRolesRequest(
-      userIds: ids,
-      roleIds: roles
-          .where((role) => role.assignable)
-          .map((role) => role.roleId),
+      assignments: [
+        for (final MapEntry(key: userId, value: roles) in assignments.entries)
+          skir.OrganizationMemberRoleAssignment(
+            userId: userId,
+            roleIds: roles
+                .where((role) => role.assignable)
+                .map((role) => role.roleId),
+          ),
+      ],
     );
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
       label: "Update member roles",
-      resources: {for (final id in ids) (organization, id)},
+      resources: {for (final id in assignments.keys) (organization, id)},
       onResponse: (response) async {
         checkActive();
         if (response
@@ -186,17 +196,19 @@ final class MembershipResourceRepository {
     );
   }
 
-  PreparedCommit<skir.RemoveOrganizationMemberResponse> remove(
-    skir.RecordId memberId,
+  /// Removes every member in [memberIds] in one all or nothing change.
+  PreparedCommit<skir.RemoveOrganizationMembersResponse> remove(
+    Iterable<skir.RecordId> memberIds,
   ) {
-    final request = skir.RemoveOrganizationMemberRequest(userId: memberId);
+    final ids = List<skir.RecordId>.unmodifiable(memberIds);
+    final request = skir.RemoveOrganizationMembersRequest(userIds: ids);
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
       label: "Remove member",
-      resources: {(organization, memberId)},
+      resources: {for (final id in ids) (organization, id)},
       onResponse: (response) async {
         checkActive();
-        if (response case skir.RemoveOrganizationMemberResponse_successWrapper(
+        if (response case skir.RemoveOrganizationMembersResponse_successWrapper(
           :final value,
         )) {
           _members.add(value.event);

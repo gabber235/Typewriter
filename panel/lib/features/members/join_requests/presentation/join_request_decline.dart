@@ -2,41 +2,43 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// The one Decline command: card key and button, bulk key and button.
+/// The one Decline command: the card key, and the operation the inspector
+/// and the context menu offer, all build it.
 ///
-/// Every request is tried; each refusal shows under its row in [rows].
+/// Every target is declined in one change or none is. Their rows, from
+/// [rows] or else [rowsOf] when the hold starts, are sending while it runs,
+/// and a refusal stays on each of them.
 ActionShortcut joinRequestDecline({
   required String id,
   required String label,
-  required Set<skir.RecordId> Function() targets,
-  required AnimatedRows<Object?> rows,
-  required String? Function(skir.RecordId request) nameOf,
+  required Set<skir.RecordId> Function(WidgetRef ref) targets,
+  required String? Function(WidgetRef ref, skir.RecordId request) nameOf,
+  HoldRows? rows,
+  HoldRows? Function(WidgetRef ref)? rowsOf,
   int priority = 1,
 }) {
-  return ActionShortcut.intent(
+  // They must ask again to join, so the hold is heavy.
+  return membershipHold(
     id: id,
     label: label,
     description: "Decline so they must ask again",
-    intent: DeleteIntent,
+    targets: targets,
+    nameOf: nameOf,
+    rows: rows,
+    rowsOf: rowsOf,
     priority: priority,
-    run: ActionRun.hold(
-      HoldPlan<skir.RecordId>(
-        // They must ask again to join.
-        weight: HoldWeight.heavy,
-        rows: rows,
-        targets: (_) => targets(),
-        verb: "Decline",
-        doneWord: "Declined",
-        outcome: (targets) => targets.length == 1
-            ? "Decline ${nameOf(targets.single) ?? "this request"}? "
-                  "They must ask again to join."
-            : "Decline ${targets.length} requests? "
-                  "They must ask again to join.",
-        each: (ref, request) => ref.executeMembership(
-          ref.membershipCommands.decline(request),
-          (response) => response.requireAccepted(),
-        ),
-      ),
-    ),
+    verb: "Decline",
+    doneWord: "Declined",
+    outcomeOne: (name) =>
+        "Decline ${name ?? "this request"}? They must ask again to join.",
+    outcomeMany: (count) =>
+        "Decline $count requests? They must ask again to join.",
+    work: (ref, requests) async {
+      await ref.executeMembership(
+        ref.membershipCommands.decline(requests),
+        (response) => response.requireAccepted(),
+      );
+      ref.read(joinRequestGrantsProvider.notifier).forget(requests);
+    },
   );
 }

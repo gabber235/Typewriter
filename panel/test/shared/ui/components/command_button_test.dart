@@ -8,23 +8,24 @@ void main() {
     signedIn(ada, organization: acme),
     membershipService(joinCodes: codes),
   ];
-  const revokeAll = "Revoke 2 join codes? Nobody new can join with them.";
+  const revokeBoth = "Revoke 2 join codes? Nobody new can join with them.";
 
-  testWidgets("holding Revoke all for the full hold revokes both codes", (
-    tester,
-  ) async {
-    final panel = await tester.pumpPanel(
-      traits,
-      at: membersPage(const JoinCodesRoute()),
-    );
-    await panel.pressShifted(LogicalKeyboardKey.space);
+  testWidgets(
+    "holding Revoke on both selected codes for the full hold revokes both",
+    (tester) async {
+      final panel = await tester.pumpPanel(
+        traits,
+        at: membersPage(const JoinCodesRoute()),
+      );
+      await panel.pressControl(LogicalKeyboardKey.keyA);
 
-    await panel.holdButton(revokeAll);
+      await panel.holdButton(revokeBoth);
 
-    await panel.eventually(
-      () => expect(panel.shows("No active join codes"), isTrue),
-    );
-  });
+      await panel.eventually(
+        () => expect(panel.shows("No active join codes"), isTrue),
+      );
+    },
+  );
 
   for (final (way, share, kind, drift) in [
     ("releasing early", 0.5, PointerDeviceKind.mouse, null),
@@ -41,22 +42,28 @@ void main() {
         traits,
         at: membersPage(const JoinCodesRoute()),
       );
-      await panel.pressShifted(LogicalKeyboardKey.space);
+      await panel.pressControl(LogicalKeyboardKey.keyA);
 
-      await panel.holdButton(revokeAll, share: share, kind: kind, drift: drift);
+      await panel.holdButton(
+        revokeBoth,
+        share: share,
+        kind: kind,
+        drift: drift,
+      );
 
       expect(panel.shows("No active join codes"), isFalse);
     });
   }
 
-  testWidgets("Enter held on a focused Revoke all revokes both codes once "
-      "the hold fills", (tester) async {
+  testWidgets("Enter held on a focused Revoke for both selected codes revokes "
+      "both once the hold fills", (tester) async {
     final panel = await tester.pumpPanel(
       traits,
       at: membersPage(const JoinCodesRoute()),
     );
-    await panel.pressShifted(LogicalKeyboardKey.space);
-    await panel.tabTo(revokeAll, limit: 30);
+    await panel.pressControl(LogicalKeyboardKey.keyA);
+    await panel.pressControl(LogicalKeyboardKey.keyL);
+    await panel.tabTo(revokeBoth);
 
     await panel.holdKey(LogicalKeyboardKey.enter, share: 0.4);
     expect(panel.shows("No active join codes"), isFalse);
@@ -67,21 +74,24 @@ void main() {
     );
   });
 
-  testWidgets("a screen reader hears what Revoke all does and its long press "
-      "revokes both codes", (tester) async {
-    final panel = await tester.pumpPanel(
-      traits,
-      at: membersPage(const JoinCodesRoute()),
-    );
-    await panel.pressShifted(LogicalKeyboardKey.space);
+  testWidgets(
+    "a screen reader hears what Revoke on both selected codes does and "
+    "its long press revokes both",
+    (tester) async {
+      final panel = await tester.pumpPanel(
+        traits,
+        at: membersPage(const JoinCodesRoute()),
+      );
+      await panel.pressControl(LogicalKeyboardKey.keyA);
 
-    expect(panel.holdHint(revokeAll), "Long press to confirm");
-    await panel.longPressWithScreenReader(revokeAll);
+      expect(panel.holdHint(revokeBoth), "Long press to confirm");
+      await panel.longPressWithScreenReader(revokeBoth);
 
-    await panel.eventually(
-      () => expect(panel.shows("No active join codes"), isTrue),
-    );
-  });
+      await panel.eventually(
+        () => expect(panel.shows("No active join codes"), isTrue),
+      );
+    },
+  );
 
   testWidgets("Escape while Enter holds a focused hold button cancels the "
       "hold, though Enter stays down past its time", (tester) async {

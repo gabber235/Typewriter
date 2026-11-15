@@ -37,9 +37,9 @@ void main() {
     expect(panel.shows("No active join codes"), isFalse);
 
     reply.complete(
-      skir.RevokeOrganizationJoinCodeResponse.serializer.toBytes(
-        skir.RevokeOrganizationJoinCodeResponse.createCodeNotFoundError(
-          codeId: code.code,
+      skir.RevokeOrganizationJoinCodesResponse.serializer.toBytes(
+        skir.RevokeOrganizationJoinCodesResponse.createCodeNotFoundError(
+          codeIds: [code.code],
         ),
       ),
     );
@@ -76,5 +76,72 @@ void main() {
     );
     expect(panel.reads(link), isFalse);
     expect(find.text("Copy Join Code"), findsNothing);
+  });
+
+  group("two selected codes are revoked together", () {
+    final first = joinCode("first");
+    final second = joinCode("second");
+    final third = joinCode("third");
+    final page = [
+      signedIn(ada, organization: acme),
+      membershipService(joinCodes: [first, second, third]),
+    ];
+
+    testWidgets("with the keyboard alone, by holding Delete", (tester) async {
+      final panel = await tester.pumpPanel(
+        page,
+        at: membersPage(const JoinCodesRoute()),
+      );
+
+      await panel.press(LogicalKeyboardKey.space);
+      await panel.press(LogicalKeyboardKey.keyJ);
+      await panel.press(LogicalKeyboardKey.space);
+      expect(panel.inspector.heading("2 join codes"), findsOneWidget);
+      await panel.holdKey(LogicalKeyboardKey.delete);
+
+      await panel.eventually(() {
+        expect(find.textContaining(first.code.id), findsNothing);
+        expect(find.textContaining(second.code.id), findsNothing);
+      });
+      expect(find.textContaining(third.code.id), findsWidgets);
+    });
+
+    testWidgets("with the mouse alone, by holding Revoke in the inspector", (
+      tester,
+    ) async {
+      final panel = await tester.pumpPanel(
+        page,
+        at: membersPage(const JoinCodesRoute()),
+      );
+
+      await panel.item(joinCodeUrl(first.code)).toggle();
+      await panel.item(joinCodeUrl(second.code)).toggle();
+      await panel.holdButton("Revoke 2 join codes?");
+
+      await panel.eventually(() {
+        expect(find.textContaining(first.code.id), findsNothing);
+        expect(find.textContaining(second.code.id), findsNothing);
+      });
+      expect(find.textContaining(third.code.id), findsWidgets);
+    });
+  });
+
+  testWidgets("the inspector copies the selected join code", (tester) async {
+    final clipboard = tester.recordClipboard();
+    final code = joinCode("spring");
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      membershipService(joinCodes: [code]),
+    ], at: membersPage(const JoinCodesRoute()));
+
+    await panel.item(joinCodeUrl(code.code)).select();
+    await panel.tapOn(
+      find.descendant(
+        of: find.byType(JoinCodeInspection),
+        matching: find.text("Copy Join Code"),
+      ),
+    );
+
+    expect(clipboard, [joinCodeUrl(code.code)]);
   });
 }

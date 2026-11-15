@@ -150,11 +150,11 @@ final class FakeMembershipService {
       _generate,
     );
     command(
-      skir.RevokeOrganizationJoinCodeRequest.defaultInstance.operation(
+      skir.RevokeOrganizationJoinCodesRequest.defaultInstance.operation(
         userId: user,
         organizationId: organization,
       ),
-      skir.RevokeOrganizationJoinCodeRequest.serializer,
+      skir.RevokeOrganizationJoinCodesRequest.serializer,
       _revoke,
     );
     command(
@@ -166,11 +166,11 @@ final class FakeMembershipService {
       _approve,
     );
     command(
-      skir.DeclineOrganizationJoinRequestRequest.defaultInstance.operation(
+      skir.DeclineOrganizationJoinRequestsRequest.defaultInstance.operation(
         userId: user,
         organizationId: organization,
       ),
-      skir.DeclineOrganizationJoinRequestRequest.serializer,
+      skir.DeclineOrganizationJoinRequestsRequest.serializer,
       _decline,
     );
     command(
@@ -182,11 +182,11 @@ final class FakeMembershipService {
       _updateRoles,
     );
     command(
-      skir.RemoveOrganizationMemberRequest.defaultInstance.operation(
+      skir.RemoveOrganizationMembersRequest.defaultInstance.operation(
         userId: user,
         organizationId: organization,
       ),
-      skir.RemoveOrganizationMemberRequest.serializer,
+      skir.RemoveOrganizationMembersRequest.serializer,
       _remove,
     );
   }
@@ -215,27 +215,34 @@ final class FakeMembershipService {
     );
   }
 
-  skir.RevokeOrganizationJoinCodeResponse _revoke(
-    skir.RevokeOrganizationJoinCodeRequest request,
+  skir.RevokeOrganizationJoinCodesResponse _revoke(
+    skir.RevokeOrganizationJoinCodesRequest request,
   ) {
-    _codes?.removeWhere((code) => code.code == request.codeId);
-    return skir.RevokeOrganizationJoinCodeResponse.createSuccess(
+    _codes?.removeWhere((code) => request.codeIds.contains(code.code));
+    return skir.RevokeOrganizationJoinCodesResponse.createSuccess(
       event: _codesChanged([
-        skir.OrganizationJoinCodesChange.wrapRemove(request.codeId),
+        for (final id in request.codeIds)
+          skir.OrganizationJoinCodesChange.wrapRemove(id),
       ]),
     );
   }
 
+  /// The roles of this organization whose ids are in [ids].
+  List<skir.OrganizationRole> _rolesOf(Iterable<skir.RecordId> ids) => [
+    for (final role in _roles ?? const <skir.OrganizationRole>[])
+      if (ids.contains(role.roleId)) role,
+  ];
+
   skir.ApproveOrganizationJoinRequestsResponse _approve(
     skir.ApproveOrganizationJoinRequestsRequest request,
   ) {
-    final roles = [
-      for (final role in _roles ?? const <skir.OrganizationRole>[])
-        if (request.roleIds.contains(role.roleId)) role,
-    ];
+    final rolesOf = {
+      for (final approval in request.approvals)
+        approval.requestId: _rolesOf(approval.roleIds),
+    };
     final approvals = [
       for (final joinRequest in [...?_requests])
-        if (request.requestIds.contains(joinRequest.requestId))
+        if (rolesOf[joinRequest.requestId] case final roles?)
           skir.ApprovedOrganizationJoinRequest(
             requestId: joinRequest.requestId,
             member: skir.OrganizationMember(
@@ -249,7 +256,7 @@ final class FakeMembershipService {
           ),
     ];
     _requests?.removeWhere(
-      (joinRequest) => request.requestIds.contains(joinRequest.requestId),
+      (joinRequest) => rolesOf.containsKey(joinRequest.requestId),
     );
     _members?.addAll(approvals.map((approval) => approval.member));
     return skir.ApproveOrganizationJoinRequestsResponse.createSuccess(
@@ -265,37 +272,44 @@ final class FakeMembershipService {
     );
   }
 
-  skir.DeclineOrganizationJoinRequestResponse _decline(
-    skir.DeclineOrganizationJoinRequestRequest request,
+  skir.DeclineOrganizationJoinRequestsResponse _decline(
+    skir.DeclineOrganizationJoinRequestsRequest request,
   ) {
     _requests?.removeWhere(
-      (joinRequest) => joinRequest.requestId == request.requestId,
+      (joinRequest) => request.requestIds.contains(joinRequest.requestId),
     );
-    return skir.DeclineOrganizationJoinRequestResponse.createSuccess(
+    return skir.DeclineOrganizationJoinRequestsResponse.createSuccess(
       event: _requestsChanged([
-        skir.OrganizationJoinRequestsChange.wrapRemove(request.requestId),
+        for (final id in request.requestIds)
+          skir.OrganizationJoinRequestsChange.wrapRemove(id),
       ]),
     );
   }
 
+  /// Gives each assigned member its own roles and keeps its protected ones,
+  /// as the organization does.
   skir.UpdateOrganizationMemberRolesResponse _updateRoles(
     skir.UpdateOrganizationMemberRolesRequest request,
   ) {
-    final roles = [
-      for (final role in _roles ?? const <skir.OrganizationRole>[])
-        if (request.roleIds.contains(role.roleId)) role,
-    ];
+    final assigned = {
+      for (final assignment in request.assignments)
+        assignment.userId: _rolesOf(assignment.roleIds),
+    };
     final updated = <skir.OrganizationMember>[];
     final members = _members;
     if (members != null) {
       for (final (index, member) in members.indexed) {
-        if (!request.userIds.contains(member.userId)) continue;
+        final roles = assigned[member.userId];
+        if (roles == null) continue;
         final next = skir.OrganizationMember(
           userId: member.userId,
           name: member.name,
           email: member.email,
           avatarUrl: member.avatarUrl,
-          roles: roles,
+          roles: [
+            ...member.roles.where((role) => !role.assignable),
+            ...roles.where((role) => role.assignable),
+          ],
           joinedAt: member.joinedAt,
         );
         members[index] = next;
@@ -311,19 +325,22 @@ final class FakeMembershipService {
     );
   }
 
-  skir.RemoveOrganizationMemberResponse _remove(
-    skir.RemoveOrganizationMemberRequest request,
+  /// Removes every member of the request, or none when one is a founder.
+  skir.RemoveOrganizationMembersResponse _remove(
+    skir.RemoveOrganizationMembersRequest request,
   ) {
-    if (founders.contains(request.userId)) {
+    final protected = request.userIds.where(founders.contains).toList();
+    if (protected.isNotEmpty) {
       return skir
-          .RemoveOrganizationMemberResponse.createFounderCannotBeRemovedError(
-        userId: request.userId,
+          .RemoveOrganizationMembersResponse.createFounderCannotBeRemovedError(
+        userIds: protected,
       );
     }
-    _members?.removeWhere((member) => member.userId == request.userId);
-    return skir.RemoveOrganizationMemberResponse.createSuccess(
+    _members?.removeWhere((member) => request.userIds.contains(member.userId));
+    return skir.RemoveOrganizationMembersResponse.createSuccess(
       event: _membersChanged([
-        skir.OrganizationMembersChange.wrapRemove(request.userId),
+        for (final id in request.userIds)
+          skir.OrganizationMembersChange.wrapRemove(id),
       ]),
     );
   }

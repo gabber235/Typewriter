@@ -188,7 +188,7 @@ final class AnimatedRows<T> implements HoldRows {
 /// Keeps one entry per identity of [items]. Rows present when [ready] is
 /// first true join the load run, so a tab creates its rows once, above its
 /// data builder, with the data or nothing while it loads, and hands the
-/// same rows to its list, its table and its bulk bar. Later rows arrive
+/// same rows to its list, its table and its holds. Later rows arrive
 /// with rowIn; an identity that leaves [items] squashes shut with listOut,
 /// and one that comes back while leaving turns around from where it is. A
 /// reorder moves rows in place with no motion. [identity] must be unique

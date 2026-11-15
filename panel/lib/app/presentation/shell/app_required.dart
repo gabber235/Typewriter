@@ -18,7 +18,10 @@ class AppRequiredWidgets extends HookWidget {
     return RealmNavigationBoundary(
       child: SelectionOperationsRoot(
         source: const AuthoringSelectionOperations(
-          RegisteredSelectionOperations(coreSelectionOperations),
+          RegisteredSelectionOperations([
+            ...coreSelectionOperations,
+            ...membershipSelectionOperations,
+          ]),
         ),
         child: GlobalCursorController(
           child: GlobalPaneNavigator(

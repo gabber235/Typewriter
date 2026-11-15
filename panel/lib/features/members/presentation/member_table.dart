@@ -2,205 +2,173 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Desktop member projection with bulk selection and inline role editing.
+/// The members as a table: avatar, name and email, inline roles, and a
+/// remove button on each row.
 ///
-/// The table does not own membership data. It renders the provider snapshot,
-/// keeps selection and focus transient, and submits repository commands through
-/// shared local work. Row identity is the user's record id, allowing animated
-/// updates to follow members across live add, update, and remove events.
+/// The table renders the rows [MembersTab] owns. Each row selects through
+/// the shared selection, so the inspector shows the selected members.
 class MembersTable extends HookConsumerWidget {
-  const MembersTable({required this.selection, super.key});
+  const MembersTable({required this.rows, super.key});
 
-  final SelectableRows<skir.OrganizationMember> selection;
+  final AnimatedRows<skir.OrganizationMember> rows;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
-    final members = selection.rows.items;
-
     return SelectionTable<skir.OrganizationMember>(
-      selection: selection,
-      idOf: (member) => member.userId,
-      noun: "members",
+      rows: rows,
+      selectableOf: (member) => MemberIdentifier(member.userId),
+      labelOf: (member) => member.displayName,
       labels: const ["Member", "Roles"],
       columnWidths: const {
-        0: FixedColumnWidth(48),
+        0: IntrinsicColumnWidth(),
         1: IntrinsicColumnWidth(),
         2: FlexColumnWidth(1),
         3: FixedColumnWidth(80),
       },
-      emptyBuilder: (context) => EmptyState(
+      emptyBuilder: (context) => const EmptyState(
         title: "No members yet",
         description: "Invite someone to get started!",
         icon: MaterialSymbols.groups_2_rounded,
       ),
-      rowBuilder: (context, entry) => _buildMemberRow(
-        context,
-        ref,
-        entry.item,
-        members,
-        selection.selectedIds.value.contains(entry.id),
-        theme,
+      shortcutsOf: (member) => [memberRowRemoval(member, rows)],
+      leadingBuilder: (context, member, selected) => SelectableAvatar(
+        avatarUrl:
+            member.avatarUrl?.nullIfEmpty ??
+            "$userIconUrl&seed=${member.userId}",
+        isSelected: selected,
+        radius: 16,
       ),
-    );
-  }
-
-  TableRow _buildMemberRow(
-    BuildContext context,
-    WidgetRef ref,
-    skir.OrganizationMember member,
-    List<skir.OrganizationMember> members,
-    bool isSelected,
-    ThemeData theme,
-  ) {
-    void toggleSelection() {
-      if (isSelected) {
-        selection.selectedIds.value = selection.selectedIds.value
-            .where((id) => id != member.userId)
-            .toSet();
-        return;
-      }
-      selection.selectedIds.value = {
-        ...selection.selectedIds.value,
-        member.userId,
-      };
-    }
-
-    final name = member.name ?? member.email ?? "Member";
-    Widget withShortcuts(Widget child, {RowRole role = RowRole.part}) =>
-        MemberTableRowShortcuts(
-          member: member,
-          onToggleSelection: toggleSelection,
-          onSelectAll: () => selection.selectedIds.value = members
-              .map((m) => m.userId)
-              .toSet(),
-          onClearSelection: () => selection.selectedIds.value = {},
-          isSelected: isSelected,
-          hasSelection: selection.selectedIds.value.isNotEmpty,
-          rows: selection.rows,
-          selectedIds: selection.selectedIds.value,
-          nameOf: (id) => selection.rows[id]?.item.name,
-          // Inside the shortcuts, so they answer while the row is focused.
-          child: RowStop(
-            role: role,
-            bounds: RingBounds.tableRow,
-            borderRadius: context.shapes.mediumBorderRadius,
-            label: role == RowRole.stop ? name : null,
-            child: child,
-          ),
-        );
-
-    return TableRow(
-      key: ValueKey(member.userId),
-      decoration: BoxDecoration(
-        // Fill means selected; the ring layer shows focus.
-        color: isSelected
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.12)
-            : Colors.transparent,
-      ),
-      children: [
-        TableCell(
-          verticalAlignment: TableCellVerticalAlignment.middle,
-          child: withShortcuts(
-            role: RowRole.stop,
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.space2,
-                vertical: context.spacing.space3,
-              ),
-              // The row stop takes Space; the avatar is no second stop.
-              child: ExcludeFocus(
-                child: Button(
-                  face: ButtonFace.bare,
-                  label: isSelected
-                      ? "Deselect ${member.name ?? member.email ?? "member"}"
-                      : "Select ${member.name ?? member.email ?? "member"}",
-                  onPressed: toggleSelection,
-                  child: SelectableAvatar(
-                    avatarUrl:
-                        member.avatarUrl?.nullIfEmpty ??
-                        "$userIconUrl&seed=${member.userId}",
-                    isSelected: isSelected,
-                    radius: 16,
-                  ),
-                ),
-              ),
+      cellsBuilder: (context, member) => [
+        SelectionTableCell(
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: context.spacing.space2,
+              vertical: context.spacing.space3,
             ),
-          ),
-        ),
-        TableCell(
-          child: withShortcuts(
-            ExcludeFocus(
-              child: Button(
-                face: ButtonFace.bare,
-                label: "",
-                onPressed: toggleSelection,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.spacing.space2,
-                    vertical: context.spacing.space3,
-                  ),
-                  // Read the theme here, inside the row, so a sending row's
-                  // struck text theme reaches the name and email.
-                  child: Builder(
-                    builder: (context) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (member.name != null)
-                          Text(
-                            member.name!,
-                            style: Theme.of(context).textTheme.bodyMedium!
-                                .copyWith(fontWeight: FontWeight.w500),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        if (member.email != null)
-                          BlurReveal(
-                            blurSigma: 3,
-                            child: Text(
-                              member.email!,
-                              style: Theme.of(context).textTheme.bodyMedium!
-                                  .copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                    fontSize: 13,
-                                  ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      ],
+            // Read the theme here, inside the row, so a sending row's struck
+            // text theme reaches the name and email.
+            child: Builder(
+              builder: (context) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (member.name case final name?)
+                    Text(
+                      name,
+                      style: Theme.of(context).textTheme.bodyMedium!
+                          .copyWith(fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ),
+                  if (member.email case final email?)
+                    BlurReveal(
+                      blurSigma: 3,
+                      child: Text(
+                        email,
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
         ),
-        TableCell(
-          child: withShortcuts(
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.space2,
-                vertical: context.spacing.space2,
-              ),
-              child: RoleMultiselectDropdown(
-                selectedRoles: member.roles.toList(),
-                onRolesChanged: (newRoles) =>
-                    ref.assignMemberRoles(context, member.userId, newRoles),
-                placeholder: "Select roles",
-              ),
+        SelectionTableCell.controls(
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: context.spacing.space2,
+              vertical: context.spacing.space2,
+            ),
+            child: RoleMultiselectDropdown(
+              selectedRoles: member.roles.toList(),
+              onRolesChanged: (roles) =>
+                  ref.assignMemberRoles(context, member.userId, roles),
+              placeholder: "Select roles",
             ),
           ),
         ),
-        TableCell(
-          child: withShortcuts(
-            MemberRowActions(member: member, rows: selection.rows),
+        SelectionTableCell.controls(
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
+            child: CommandButton(
+              face: ButtonFace.icon,
+              color: context.colors.danger,
+              icon: const Icon(Icons.person_remove_outlined, size: 20),
+              label: "Remove member",
+              command: memberRowRemoval(member, rows),
+            ),
           ),
         ),
       ],
     );
   }
+}
+
+/// The members as cards for touch layouts: avatar, name and email. A tap
+/// selects the member, and the inspector shows their roles and Remove.
+class MembersCardList extends StatelessWidget {
+  const MembersCardList({required this.rows, super.key});
+
+  final AnimatedRows<skir.OrganizationMember> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return SelectionCardList<skir.OrganizationMember>(
+      rows: rows,
+      selectableOf: (member) => MemberIdentifier(member.userId),
+      labelOf: (member) => member.displayName,
+      emptyBuilder: (context) => const EmptyState(
+        icon: MaterialSymbols.groups_2_rounded,
+        title: "No members yet",
+        description: "Invite someone to get started!",
+      ),
+      shortcutsOf: (member) => [memberRowRemoval(member, rows)],
+      contentBuilder: (context, member, selected) => Row(
+        spacing: context.spacing.space3,
+        children: [
+          SelectableAvatar(
+            avatarUrl:
+                member.avatarUrl?.nullIfEmpty ??
+                "$userIconUrl&seed=${member.userId}",
+            isSelected: selected,
+            radius: 20,
+          ),
+          Expanded(
+            child: PersonSummary(name: member.name, email: member.email),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The Remove member command of [member]'s row: its key and its button. It
+/// removes the selection when the selection holds the member, otherwise the
+/// member alone.
+ActionShortcut memberRowRemoval(
+  skir.OrganizationMember member,
+  AnimatedRows<skir.OrganizationMember> rows,
+) {
+  return memberRemoval(
+    id: "remove_member_${member.userId}",
+    label: "Remove member",
+    targets: (ref) => {
+      for (final id
+          in ref
+              .selectionOrRow(MemberIdentifier(member.userId))
+              .whereType<MemberIdentifier>())
+        id.userId,
+    },
+    nameOf: (_, id) => rows[id]?.item.displayName,
+    rows: rows,
+  );
+}
+
+/// What a member is called on screen.
+extension MemberDisplayName on skir.OrganizationMember {
+  String get displayName => name ?? email ?? "Member";
 }
 
 /// Gives one member a new set of roles, showing a failure where it happened.
@@ -211,7 +179,7 @@ extension MemberRoleAssignment on WidgetRef {
     List<skir.OrganizationRole> roles,
   ) {
     executeMembership(
-      membershipCommands.updateRoles([memberId], roles),
+      membershipCommands.updateRoles({memberId: roles}),
       (response) => response.requireAccepted(),
     ).catchApiExceptionsAndDisplay(context);
   }

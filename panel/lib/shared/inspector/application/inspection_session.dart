@@ -95,6 +95,9 @@ final class InspectionSession extends ChangeNotifier {
     if (_buildSharedPortable(selection, context) case final content?) {
       return context.ownHosts(content);
     }
+    if (_buildShared(selection) case final content?) {
+      return context.ownHosts(content);
+    }
 
     return _buildStructural(selection, context);
   }
@@ -109,31 +112,65 @@ final class InspectionSession extends ChangeNotifier {
               _indexPortableSurfaces(item.portableMultiInspectionSurfaces),
         )
         .toList();
-    if (candidates.any((surfaces) => surfaces.isEmpty)) return null;
-
-    final plans = <List<PortableMultiInspectionSurface>>[];
-    for (final id in candidates.first.keys) {
-      final members = [for (final surfaces in candidates) ?surfaces[id]];
-      if (members.length != selection.length) continue;
-      final first = members.first;
-      if (members.any(
-        (candidate) =>
-            !first.isCompatibleWith(candidate) ||
-            !candidate.isCompatibleWith(first),
-      )) {
-        continue;
-      }
-      final rootType = members.first.rootType;
-      if (members.any((candidate) => candidate.rootType != rootType)) continue;
-      if (!_sharePortableCatalog(members)) continue;
-      plans.add(members);
-    }
+    final plans = [
+      for (final members
+          in _groupsInEvery<Object, PortableMultiInspectionSurface>(
+            candidates,
+            (first, other) =>
+                first.isCompatibleWith(other) && other.isCompatibleWith(first),
+          ))
+        if (members.every(
+              (candidate) => candidate.rootType == members.first.rootType,
+            ) &&
+            _sharePortableCatalog(members))
+          members,
+    ];
     if (plans.isEmpty) return null;
 
     return _combined([
       for (final members in plans)
         context.ownHosts(members.first.buildShared(members, context)),
     ]);
+  }
+
+  InspectionContent? _buildShared(List<InspectableSelectable> selection) {
+    final candidates = [
+      for (final item in selection)
+        {
+          for (final surface in item.sharedInspectionSurfaces)
+            surface.id: surface,
+        },
+    ];
+    final contents = [
+      for (final members in _groupsInEvery<Object, SharedInspectionSurface>(
+        candidates,
+        (first, other) =>
+            first.isCompatibleWith(other) && other.isCompatibleWith(first),
+      ))
+        members.first.buildShared(members),
+    ];
+    return contents.isEmpty ? null : _combined(contents);
+  }
+
+  /// The surfaces that every item of a selection offers under one id, one
+  /// group per id, each in selection order, keeping only groups whose
+  /// surfaces are all [compatible] with the first. None when an item offers
+  /// no surface.
+  List<List<S>> _groupsInEvery<K, S extends Object>(
+    List<Map<K, S>> candidates,
+    bool Function(S first, S other) compatible,
+  ) {
+    if (candidates.isEmpty || candidates.any((surfaces) => surfaces.isEmpty)) {
+      return const [];
+    }
+    return [
+      for (final id in candidates.first.keys)
+        if ([for (final surfaces in candidates) ?surfaces[id]]
+            case final members
+            when members.length == candidates.length &&
+                members.every((member) => compatible(members.first, member)))
+          members,
+    ];
   }
 
   InspectionContent _buildStructural(

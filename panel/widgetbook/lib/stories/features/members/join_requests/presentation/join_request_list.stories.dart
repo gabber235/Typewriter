@@ -6,8 +6,8 @@ import "package:widgetbook_workspace/data/features/membership.dart";
 import "package:widgetbook_workspace/data/features/organization.dart";
 import "package:widgetbook_workspace/support/story.dart";
 
-/// The request cards under a Select all row; selecting requests shows roles
-/// to accept them with, Accept All and Decline all. The second request has a
+/// The request cards: a click or Space selects requests, and the inspector
+/// shows the roles to grant, Accept and Decline. The second request has a
 /// very long name and is about to expire.
 @widgetbook.UseCase(name: "Default", type: JoinRequestsList)
 Widget joinRequestsListUseCase(BuildContext context) {
@@ -18,6 +18,11 @@ Widget joinRequestsListUseCase(BuildContext context) {
   return Story(
     [
       membership(roles: storyRoles, joinRequests: requests),
+      ...selectionOf(
+        context.knobs.selection(),
+        requests,
+        (request) => JoinRequestIdentifier(request.requestId),
+      ),
       ...context.knobs.windows(),
       ...context.knobs.motion(),
     ],

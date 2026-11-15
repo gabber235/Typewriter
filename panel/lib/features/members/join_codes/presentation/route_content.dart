@@ -2,11 +2,12 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Coordinates join code generation, live projection display, selection, and
-/// bulk revocation for the route. It keeps transient UI intent locally while
+/// Coordinates join code generation and the live projection display for
+/// the route. It keeps transient UI intent locally while
 /// [OrganizationJoinCodes] remains the owner of server backed code state.
-/// Bulk revocation holds over the selected codes of the tab's rows and tries
-/// every code; each refusal shows under its row.
+/// Codes are selected through the shared selection; the tab publishes its
+/// rows, so a revoke held from the inspector or the context menu sends and
+/// refuses on them, and codes that leave the live list leave the selection.
 class JoinCodesTab extends HookConsumerWidget {
   const JoinCodesTab({super.key});
 
@@ -14,8 +15,8 @@ class JoinCodesTab extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final codesAsync = ref.watch(visibleOrganizationJoinCodesProvider);
-    // One rows handle per tab, above the data builder: the table, the card
-    // list and the bulk bar's revoke hold share it.
+    // One rows handle per tab, above the data builder: the table and the
+    // card list share it.
     // Generate announces its code here, before or after the code arrives.
     final codeFocus = useRowFocus(debugLabel: "Join codes");
     final rows = useAnimatedRows(
@@ -24,10 +25,15 @@ class JoinCodesTab extends HookConsumerWidget {
       ready: codesAsync.hasValue,
       focus: codeFocus,
     );
+    ref.useMembershipRows<JoinCodeIdentifier>(
+      list: MembershipList.joinCodes,
+      rows: rows,
+      live: codesAsync.value
+          ?.map((code) => JoinCodeIdentifier(code.code))
+          .toSet(),
+    );
     final rolesAsync = ref.watch(organizationRolesProvider);
-    final selectedCodes = useState<Set<skir.RecordId>>({});
     final joinCodeOptions = useState(const JoinCodeOptions());
-    final liveCodes = useRef<List<skir.JoinCode>>([]);
 
     // The card reveals the code it generated until the code leaves the
     // authoritative list, by revocation or by its single use; a new key then
@@ -45,27 +51,6 @@ class JoinCodesTab extends HookConsumerWidget {
       generatedCodeCard.value++;
     });
 
-    useEffect(() {
-      final codeIds = liveCodes.value.map((code) => code.code).toSet();
-      final validSelection = selectedCodes.value.intersection(codeIds);
-      if (validSelection.length == selectedCodes.value.length) return null;
-
-      selectedCodes.value = selectedCodes.value.intersection(codeIds);
-      return null;
-    }, [liveCodes.value, selectedCodes.value]);
-
-    // The bulk bar's key and Revoke all button hold over the tab's rows.
-    final revocation = joinCodeRevocation(
-      id: "revoke_bulk_join_codes_key",
-      label: "Revoke join codes",
-      priority: 2,
-      targets: () => selectedCodes.value.intersection({
-        for (final code in rows.items) code.code,
-      }),
-      rows: rows,
-    );
-
-    final selection = SelectableRows(rows: rows, selectedIds: selectedCodes);
     return SliverMainAxisGroup(
       slivers: [
         SliverToBoxAdapter(
@@ -122,36 +107,18 @@ class JoinCodesTab extends HookConsumerWidget {
         ),
         SliverPadding(
           padding: const EdgeInsetsGeometry.symmetric(vertical: 12),
-          sliver: SliverMainAxisGroup(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Text(
-                  "Active Join Codes",
-                  style: theme.textTheme.titleMedium,
-                ),
-              ),
-              PinnedHeaderSliver(
-                child: AnimatedPresence(
-                  child: selectedCodes.value.isEmpty
-                      ? null
-                      : BulkJoinCodeActions(
-                          selectedCount: selectedCodes.value.length,
-                          revocation: revocation,
-                          onClearSelection: () => selectedCodes.value = {},
-                        ),
-                ),
-              ),
-            ],
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              "Active Join Codes",
+              style: theme.textTheme.titleMedium,
+            ),
           ),
         ),
         codesAsync(
           name: "Join Codes",
-          builder: (codes) {
-            liveCodes.value = codes;
-            return context.isDesktop
-                ? JoinCodesTable(selection: selection)
-                : JoinCodesCardList(selection: selection);
-          },
+          builder: (codes) => context.isDesktop
+              ? JoinCodesTable(rows: rows)
+              : JoinCodesCardList(rows: rows),
           loading: (_) => const _JoinCodesLoadingShimmer(),
           error: (title, message) => SliverFillRemaining(
             child: Padding(

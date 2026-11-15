@@ -1,7 +1,8 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// The frame of one membership page: a primary pane that opens on the first
-/// row, a page heading and the page's [tab] below it.
+/// row, a page heading and the page's [tab] below it, all one
+/// [SelectionSurface] for the rows the tab shows.
 class MembershipPage extends StatelessWidget {
   const MembershipPage({
     required this.id,
@@ -20,24 +21,28 @@ class MembershipPage extends StatelessWidget {
   final Widget tab;
 
   @override
-  Widget build(BuildContext context) => Pane(
-    id: id,
-    primary: true,
-    openFocus: PaneOpenFocus.firstItem,
-    child: Section(
-      margin: EdgeInsets.zero,
-      child: CustomScrollView(
-        primary: true,
-        slivers: [
-          SliverToBoxAdapter(
-            child: PageHeading(title: title, subtext: subtext),
+  Widget build(BuildContext context) {
+    return Pane(
+      id: id,
+      primary: true,
+      openFocus: PaneOpenFocus.firstItem,
+      child: Section(
+        margin: EdgeInsets.zero,
+        child: SelectionSurface(
+          child: CustomScrollView(
+            primary: true,
+            slivers: [
+              SliverToBoxAdapter(
+                child: PageHeading(title: title, subtext: subtext),
+              ),
+              SliverPadding(
+                padding: EdgeInsets.all(context.spacing.space6),
+                sliver: tab,
+              ),
+            ],
           ),
-          SliverPadding(
-            padding: EdgeInsets.all(context.spacing.space6),
-            sliver: tab,
-          ),
-        ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
