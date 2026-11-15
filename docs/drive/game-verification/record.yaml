@@ -601,6 +601,12 @@ decided:
   - id: ring-proof-probe-3
     what: "Tighten PROBE-3 (Recommended)"
     why: PROBE-3 passes even without the neighbour ring; checking on the first tick after the move, with and without the ring, shows whether the ring is needed, without a build change
+  - id: wipe-resets-blends
+    what: "A. The wipe resets them (Recommended)"
+    why: A golden frame showed the place the player came from, because the client blends sky, fog, rain level and rain fog over ticks (a rain fade lasts about 100 ticks); the client wipe resets them, proven back to back like every other wipe kind
+  - id: draw-at-end-of-tick
+    what: "Draw at end of tick (Recommended)"
+    why: The stepped clock drew at partial tick 0, so every blended value and entity position showed the previous tick; drawing at partial tick 1 makes a frame and a perception record show the same tick
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -708,4 +714,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Lease time fixes merged (e5f88a238). Slice 6 finishes goldens; after it merges, pin the client graphics and tighten PROBE-3.
+next: Slice 6 finishes goldens with the wipe resetting blends and frames drawn at the end of the tick; then pin render distance 2 and tighten PROBE-3.
