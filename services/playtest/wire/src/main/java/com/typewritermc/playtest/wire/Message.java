@@ -231,7 +231,7 @@ public sealed interface Message {
     /**
      * Pool to Paper: {@code players} belong to attempt {@code attempt} from now on. Paper wipes each of
      * them, puts them in the attempt's {@code region}, shows them only to one another, and from now on
-     * runs a tick only once each of their clients ran the tick before. It answers with {@link Claimed}.
+     * holds back ticks for the work their plugins count. It answers with {@link Claimed}.
      */
     record Claim(long attempt, List<UUID> players, Region region) implements Message {}
 
@@ -241,7 +241,14 @@ public sealed interface Message {
      */
     record Claimed(long attempt, String failure) implements Message {}
 
-    /** Pool to Paper: the attempt ended; its players no longer hold back ticks and their windows close. */
+    /**
+     * Pool to Paper: the regions the next claims get, in the order they get them, sent once Paper connects
+     * and again after every claim. Paper loads the ground around each ahead of time and keeps it loaded
+     * until the attempt in that region ends, so a claim finds its chunks ready.
+     */
+    record RegionsAhead(List<Region> regions) implements Message {}
+
+    /** Pool to Paper: the attempt ended; its players' work no longer holds back ticks and their windows close. */
     record Release(long attempt) implements Message {}
 
     /**
@@ -262,8 +269,8 @@ public sealed interface Message {
     record WorkHung(String player, String work, int beganAfter) implements PlayerEvent {}
 
     /**
-     * Paper to pool: {@code player} left Paper, for {@code reason}; a claimed player no longer holds back
-     * any tick.
+     * Paper to pool: {@code player} left Paper, for {@code reason}; its client no longer holds back any
+     * tick.
      */
     record PlayerLeft(String player, String reason) implements Message {}
 

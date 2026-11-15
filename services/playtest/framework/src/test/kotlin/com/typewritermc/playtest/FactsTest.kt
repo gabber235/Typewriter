@@ -118,6 +118,15 @@ val FactsTest by testSuite {
             false
     }
 
+    test("a block shows as placed once the player perceives it drawn, however long ago it was placed") {
+        val stone = BlockRef(BlockPos(104, 101, 2), "minecraft:stone")
+        val at = WireBlockPos(104, 101, 2)
+
+        block(stone).shown().shownIn(perception(106, blocks = listOf(Block(at, "minecraft:stone", true, -1))), before) shouldBe true
+        block(stone).shown().shownIn(perception(106, blocks = listOf(Block(at, "minecraft:stone", false, -1))), before) shouldBe false
+        block(stone).shown().shownIn(perception(106, blocks = listOf(Block(at, "minecraft:air", true, 105))), before) shouldBe false
+    }
+
     test("an entity is hurt or named only while the frame draws it so") {
         val pig = EntityRef(UUID(0, 7), "minecraft:pig")
 

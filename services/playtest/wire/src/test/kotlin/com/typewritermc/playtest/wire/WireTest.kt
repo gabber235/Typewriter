@@ -56,6 +56,7 @@ import com.typewritermc.playtest.wire.Message.Ready
 import com.typewritermc.playtest.wire.Message.Reclaim
 import com.typewritermc.playtest.wire.Message.Refused
 import com.typewritermc.playtest.wire.Message.Region
+import com.typewritermc.playtest.wire.Message.RegionsAhead
 import com.typewritermc.playtest.wire.Message.Release
 import com.typewritermc.playtest.wire.Message.Reset
 import com.typewritermc.playtest.wire.Message.ResetDone
@@ -147,6 +148,7 @@ val WireTest by testSuite {
                 Claimed(9, null),
                 Claimed(10, "the player gv-2 is not online"),
                 Release(9),
+                RegionsAhead(listOf(Region(-1_024, -1_024), Region(-1_024, 0))),
                 Settle(9),
                 Settled(9),
                 WorkHung("gv-1", "Ledger lookup", 1_204),

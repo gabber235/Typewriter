@@ -1,6 +1,5 @@
 package com.typewritermc.playtest.plugin;
 
-import com.typewritermc.playtest.agent.Step;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -18,10 +18,10 @@ import java.util.function.Predicate;
  * Decides when the stepped Paper runs its next tick. Main thread only, between ticks.
  *
  * <p>While a player waits in a window, its client runs an input that needs ticks, or a probe's effect is
- * on its way to it, the next tick runs once every claimed player's client, and every such player's,
- * acked the tick that ended last, so server and every attempt's clients move one tick at a time and a
- * claimed client never lags behind. Once a window's last tick ended and was acked, the player gets the
- * window's barrier. With none of these, Paper still ticks once a second, or its watchdog stops it and
+ * on its way to it, the next tick runs once every client acked the tick that ended last, claimed or
+ * free, so server and clients move one tick at a time and no client lags behind: a free client that fell
+ * behind would hold back every attempt once claimed. Once a window's last tick ended and was acked, the
+ * player gets the window's barrier. With none of these, Paper still ticks once a second, or its watchdog stops it and
  * keepalives stop.
  *
  * <p>A probe's effect reached its player once a tick after the probe ended with nothing left to send to
@@ -61,6 +61,8 @@ final class StepPolicy {
     /** An attempt whose body ended, waiting until its [players]' counted work is quiet. */
     private record Settling(Set<UUID> players, Runnable done) {}
 
+    private final BooleanSupplier tickPending;
+    private final Runnable grantTick;
     private final Set<UUID> claimed = new HashSet<>();
     private final List<Settling> settling = new ArrayList<>();
     private final Map<UUID, Window> windows = new HashMap<>();
@@ -78,6 +80,8 @@ final class StepPolicy {
     private long lastIdleTick;
 
     /**
+     * @param tickPending whether a granted tick has not started yet
+     * @param grantTick grants Paper one more tick
      * @param nothingLeftToSend whether Paper has nothing more to send the player, now or from work in
      *     flight off the main thread
      * @param queueOnMain queues a task behind every task the main thread holds, even from the main thread
@@ -88,6 +92,8 @@ final class StepPolicy {
      * @param reportStalled tells the pool that a client stalled
      */
     StepPolicy(
+            BooleanSupplier tickPending,
+            Runnable grantTick,
             BiConsumer<UUID, Integer> sendBarrier,
             Predicate<UUID> nothingLeftToSend,
             Consumer<Runnable> queueOnMain,
@@ -96,6 +102,8 @@ final class StepPolicy {
             Consumer<WorkLedger.Hung> reportEnded,
             Acks acks,
             Consumer<Acks.Stalled> reportStalled) {
+        this.tickPending = tickPending;
+        this.grantTick = grantTick;
         this.sendBarrier = sendBarrier;
         this.nothingLeftToSend = nothingLeftToSend;
         this.queueOnMain = queueOnMain;
@@ -132,12 +140,12 @@ final class StepPolicy {
         else this.busy.remove(player);
     }
 
-    /** [players] belong to an attempt: from now on no tick runs before each of their clients ran the one before. */
+    /** [players] belong to an attempt: from now on the work their plugins count holds back ticks. */
     void claim(Collection<UUID> players) {
         claimed.addAll(players);
     }
 
-    /** [players]' attempt ended: they hold back no tick and their windows close without a barrier. */
+    /** [players]' attempt ended: their work holds back no tick and their windows close without a barrier. */
     void release(Collection<UUID> players) {
         claimed.removeAll(players);
         players.forEach(windows::remove);
@@ -175,7 +183,7 @@ final class StepPolicy {
      * deliveries and settled attempts, grants the next tick or sends barriers.
      */
     void run() {
-        if (Step.pending()) return;
+        if (tickPending.getAsBoolean()) return;
         work.hung().forEach(reportHung);
         work.ended().forEach(reportEnded);
         for (Acks.Stalled stalled : acks.stalled()) {
@@ -200,14 +208,11 @@ final class StepPolicy {
             long now = System.nanoTime();
             if (now - lastIdleTick >= IDLE_TICK_NANOS) {
                 lastIdleTick = now;
-                Step.grant();
+                grantTick.run();
             }
             return;
         }
-        if (!allAcked(claimed) || !allAcked(windows.keySet()) || !allAcked(busy)) return;
-        for (Delivery delivery : deliveries) {
-            if (!allAcked(delivery.waiting)) return;
-        }
+        if (!acks.allCaughtUp()) return;
         for (Iterator<Map.Entry<UUID, Window>> open = windows.entrySet().iterator(); open.hasNext(); ) {
             var window = open.next();
             if (lastEnded >= window.getValue().until()) {
@@ -215,13 +220,6 @@ final class StepPolicy {
                 open.remove();
             }
         }
-        if (!windows.isEmpty() || !busy.isEmpty() || !deliveries.isEmpty() || !settling.isEmpty()) Step.grant();
-    }
-
-    private boolean allAcked(Set<UUID> players) {
-        for (UUID player : players) {
-            if (acks.lastAcked(player) < lastEnded) return false;
-        }
-        return true;
+        if (!windows.isEmpty() || !busy.isEmpty() || !deliveries.isEmpty() || !settling.isEmpty()) grantTick.run();
     }
 }

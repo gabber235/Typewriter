@@ -17,6 +17,7 @@ import com.typewritermc.playtest.wire.Message.Probe;
 import com.typewritermc.playtest.wire.Message.ProbeDone;
 import com.typewritermc.playtest.wire.Message.Query;
 import com.typewritermc.playtest.wire.Message.Region;
+import com.typewritermc.playtest.wire.Message.RegionsAhead;
 import com.typewritermc.playtest.wire.Message.Release;
 import com.typewritermc.playtest.wire.Message.Role;
 import com.typewritermc.playtest.wire.Message.Settle;
@@ -58,6 +59,8 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
 
     private final WorkLedger work = PlayerWork.LEDGER;
     private final StepPolicy policy = new StepPolicy(
+            Step::pending,
+            Step::grant,
             this::sendBarrier,
             PlaytestPlugin::nothingLeftToSend,
             task -> MinecraftServer.getServer().scheduleOnMain(task),
@@ -70,6 +73,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private final Owned owned = new Owned(this);
     private final Probes probes = new Probes(this, this::mark);
     private final Attempts attempts = new Attempts(this);
+    private final GroundAhead ground = new GroundAhead(this);
     private Link pool;
 
     @Override
@@ -111,7 +115,11 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         switch (message) {
             case Stepping stepping -> Step.on = true;
             case Claim claim -> claim(claim);
-            case Release release -> policy.release(attempts.release(release.attempt()));
+            case Release release -> {
+                policy.release(attempts.release(release.attempt()));
+                ground.release(release.attempt());
+            }
+            case RegionsAhead ahead -> ground.load(ahead.regions());
             case Probe probe -> {
                 int ranAfter = policy.lastEnded();
                 var players = online(probe.players());
@@ -129,8 +137,8 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     }
 
     /**
-     * Gives the attempt its players: they hold back every tick from now on, see only one another, lose
-     * what earlier probes gave them alone, are wiped (Paper's state here, each plugin's own on the
+     * Gives the attempt its players: their counted work holds back ticks from now on, they see only one
+     * another, lose what earlier probes gave them alone, are wiped (Paper's state here, each plugin's own on the
      * {@link PlayerWipeEvent}), and stand at the middle of the attempt's region. The claim is done once
      * each of their clients holds all of it.
      */
@@ -141,6 +149,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
             return;
         }
         attempts.claim(claim.attempt(), claim.players());
+        ground.claim(claim.attempt(), claim.region());
         policy.claim(claim.players());
         probes.forget(players.online());
         for (Player player : players.online()) {
@@ -242,20 +251,22 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     }
 
     /**
-     * Whether Paper has sent the player everything the client shows: every chunk around the player within
-     * the client's own view distance, and the command tree, which Paper builds on a pool of its own and
-     * sends from a task that pool queues on the main thread once done. Paper may send chunks further out,
-     * nearest first; the client draws none of them.
+     * Whether Paper has sent the player everything the client shows: every chunk the client draws, the
+     * ring of neighbours it needs before it meshes them, and the command tree, which Paper builds on a pool
+     * of its own and sends from a task that pool queues on the main thread once done. The client draws as
+     * far as the lower of its own render distance and the radius Paper sends it; Paper may send chunks
+     * further out, nearest first, which the client never draws.
      */
     private static boolean nothingLeftToSend(UUID id) {
         Player player = Bukkit.getPlayer(id);
         if (player == null) return true;
         var commands = (ThreadPoolExecutor) Commands.COMMAND_SENDING_POOL;
         if (commands.getActiveCount() > 0 || !commands.getQueue().isEmpty()) return false;
-        // The test Paper's chunk loader applies around the player's chunk, at the distance the client draws.
+        // The client's effective render distance: Options.getEffectiveRenderDistance caps its own by the radius Paper sends.
         int radius = Math.min(player.getSendViewDistance(), player.getClientViewDistance());
         int centerX = player.getLocation().getBlockX() >> 4;
         int centerZ = player.getLocation().getBlockZ() >> 4;
+        // With neighbours, the view holds every chunk the client draws and the 8 around each, which it needs to mesh one.
         for (int x = centerX - radius - 1; x <= centerX + radius + 1; x++) {
             for (int z = centerZ - radius - 1; z <= centerZ + radius + 1; z++) {
                 if (ChunkTrackingView.isWithinDistance(centerX, centerZ, radius, x, z, true) && !player.isChunkSent(Chunk.getChunkKey(x, z))) return false;

@@ -58,6 +58,7 @@ import com.typewritermc.playtest.wire.Message.Ready;
 import com.typewritermc.playtest.wire.Message.Reclaim;
 import com.typewritermc.playtest.wire.Message.Refused;
 import com.typewritermc.playtest.wire.Message.Region;
+import com.typewritermc.playtest.wire.Message.RegionsAhead;
 import com.typewritermc.playtest.wire.Message.Release;
 import com.typewritermc.playtest.wire.Message.Reset;
 import com.typewritermc.playtest.wire.Message.ResetDone;
@@ -177,6 +178,10 @@ public final class Wire {
                 optional(body, claimed.failure());
             }
             case Release release -> body.writeLong(release.attempt());
+            case RegionsAhead ahead -> {
+                body.writeInt(ahead.regions().size());
+                for (Region region : ahead.regions()) region(body, region);
+            }
             case Settle settle -> body.writeLong(settle.id());
             case Settled settled -> body.writeLong(settled.id());
             case WorkHung hung -> {
@@ -324,6 +329,7 @@ public final class Wire {
             case ClientLost m -> 33;
             case ClientStalled m -> 34;
             case HungEnded m -> 35;
+            case RegionsAhead m -> 36;
         };
     }
 
@@ -400,6 +406,7 @@ public final class Wire {
             case 33 -> new ClientLost(string(in), string(in));
             case 34 -> new ClientStalled(string(in), in.readInt());
             case 35 -> new HungEnded(string(in), string(in));
+            case 36 -> new RegionsAhead(regions(in));
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
     }
@@ -693,6 +700,13 @@ public final class Wire {
 
     private static Region region(DataInputStream in) throws IOException {
         return new Region(in.readInt(), in.readInt());
+    }
+
+    private static List<Region> regions(DataInputStream in) throws IOException {
+        int count = count(in);
+        var values = new ArrayList<Region>(count);
+        for (int i = 0; i < count; i++) values.add(region(in));
+        return List.copyOf(values);
     }
 
     private static void uuids(DataOutputStream out, List<UUID> values) throws IOException {

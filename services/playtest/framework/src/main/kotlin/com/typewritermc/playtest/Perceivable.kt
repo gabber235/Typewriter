@@ -138,6 +138,13 @@ class BlockFacts internal constructor(
     /** The block changed to [id] after the stimulus, and the player perceives it so. */
     fun becomes(id: String): Perceivable = changedTo("block $block becomes $id", id.id())
 
+    /** The player perceives the block as placed: its chunk drawn and the block in view. */
+    fun shown(): Perceivable =
+        fact("block $block shown") { perception, _ ->
+            val at = WireBlockPos(block.at.x, block.at.y, block.at.z)
+            perception.blocks().any { it.at() == at && it.block() == block.block && it.seen() }
+        }
+
     /** The block changed to air after the stimulus, and the player perceives the gap. */
     fun gone(): Perceivable = changedTo("block $block gone", "minecraft:air")
 

@@ -29,6 +29,7 @@ import com.typewritermc.playtest.wire.Message.Ready
 import com.typewritermc.playtest.wire.Message.Reclaim
 import com.typewritermc.playtest.wire.Message.Refused
 import com.typewritermc.playtest.wire.Message.Region
+import com.typewritermc.playtest.wire.Message.RegionsAhead
 import com.typewritermc.playtest.wire.Message.Release
 import com.typewritermc.playtest.wire.Message.Reset
 import com.typewritermc.playtest.wire.Message.ResetDone
@@ -196,7 +197,7 @@ internal class Pool(
     private val clients =
         (1..settings.clients).map { Client(Player("gv-$it", UUID.nameUUIDFromBytes("OfflinePlayer:gv-$it".toByteArray()))) }
     private val claims = Claims<Peer, Player>(clients.map { it.player })
-    private val regions = Regions()
+    private val regions = Regions(ahead = settings.clients)
     private val runs = RunRecords()
     private val sessions = mutableSetOf<Peer>()
     private val queued = mutableMapOf<Pair<Peer, Long>, Queued>()
@@ -281,6 +282,7 @@ internal class Pool(
 
             Role.PAPER -> {
                 paper = peer
+                peer.send(RegionsAhead(regions.ahead()))
                 clients.forEach { connect(it) }
             }
 
@@ -606,7 +608,10 @@ internal class Pool(
         claimed.groupBy({ it.first }, { it.second }).values.forEach { group -> group.forEach { it.group = group } }
     }
 
-    /** Paper claims [players] for a new attempt of [submit]: it wipes them and puts them in a region no attempt used before. */
+    /**
+     * Paper claims [players] for a new attempt of [submit]: it wipes them and puts them in a region no
+     * attempt used before, and hears which regions the claims after it get.
+     */
     private fun claim(
         session: Peer,
         submit: Submit,
@@ -620,6 +625,7 @@ internal class Pool(
             "Attempt ${attempt.id}: ${submit.testId()} on ${attempt.players.joinToString { it.name() }} in ${attempt.region}",
         )
         paper?.send(Claim(attempt.id, attempt.players.map { it.uuid() }, attempt.region))
+        paper?.send(RegionsAhead(regions.ahead()))
         return attempt
     }
 
@@ -698,7 +704,7 @@ internal class Pool(
         lend()
     }
 
-    /** The attempt is over for Paper: its players no longer hold back ticks, and their records reach nobody. */
+    /** The attempt is over for Paper: its players' work no longer holds back ticks, and their records reach nobody. */
     private fun end(attempt: Attempt) {
         attempts.remove(attempt.id)
         attempt.players.forEach { attemptOf.remove(it.name()) }

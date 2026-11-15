@@ -53,6 +53,14 @@ final class Acks {
         return acked.getOrDefault(player, -1);
     }
 
+    /** Whether every watched client acked the tick that ended last. */
+    boolean allCaughtUp() {
+        for (int last : acked.values()) {
+            if (last < lastEnded) return false;
+        }
+        return true;
+    }
+
     /** [player] left Paper; its client is watched no more. */
     void lose(UUID player) {
         acked.remove(player);
