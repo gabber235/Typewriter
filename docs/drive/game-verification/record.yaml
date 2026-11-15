@@ -652,6 +652,12 @@ decided:
   - id: rules-per-paper
     what: "Yes, one per Paper (Recommended)"
     why: The restart Paper has a rules class while the shared Paper's rules sit in about 8 branches in Pool; every Paper gets a rules object and Pool forwards each event to its server's rules
+  - id: watch-with-the-probe
+    what: "A. Watch with the probe (Recommended)"
+    why: SEEN-1 and SEEN-4 drifted between 2 and 4 ticks because Watch and Look went over the pool link after the probe was done; Paper sends the watch on the player's own connection ahead of the spawn so the check holds when the entity shows; the cost of starting looks at the probe is measured first
+  - id: find-tab-1-cause
+    what: "Find the cause (Recommended)"
+    why: TAB-1's first window took 1 to 9 ticks under load, close to its window; measure, then a choice
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -784,4 +790,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: The slice 7 builder gives the shared Paper a rules object; steadiness finishes; then slice 8 (coverage and clips).
+next: Steadiness sends the watch with the probe and finds why TAB-1 drifts; the shared Paper gets its rules object; then slice 8.
