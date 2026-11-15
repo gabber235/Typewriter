@@ -65,7 +65,7 @@ pub mod transport_routes;
 ///
 /// # Example
 /// ```rust,ignore
-/// validate_record_ids!(DeleteOrganizationResponse, request.organization_id, "organization");
+/// validate_record_ids!(SubmitUserJoinRequestResponse, request.code, "organization_join_code");
 /// ```
 #[macro_export]
 macro_rules! validate_record_ids {

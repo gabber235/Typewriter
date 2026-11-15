@@ -1,4 +1,5 @@
-// Organization data is the user's organization list projection. It is updated when membership is created or removed.
+// Organization data is the user's organization list projection. It is updated when membership is created or removed,
+// and when a member renames the organization or changes its icon.
 // The sequence belongs to the user view, not to the organization member view.
 
 import {
@@ -8,10 +9,12 @@ import {
 import { RecordId } from "kernel/v1/record_id.skir";
 
 // Organization display data exposed in a user's organization list.
+// The founder is the member who created the organization; only the founder may delete it.
 struct Organization(82040001) {
   organization_id: RecordId;
   name: string;
   logo_url: string;
+  founder_id: RecordId;
 }
 
 // Current organizations visible to one user and that user's organization list sequence.
@@ -22,6 +25,7 @@ struct UserOrganizationsSnapshot(82040002) {
 
 enum UserOrganizationsChange(82040003) {
   add: Organization;
+  update: Organization;
   remove: RecordId;
 }
 
@@ -47,16 +51,102 @@ method CreateOrganization(
   };
 } = 920401;
 
-// Deletes an organization by identity after validating the record identifier.
-method DeleteOrganization(
+// One requested change to an organization's display data. An absent field keeps its stored value.
+struct OrganizationUpdate(82040005) {
+  organization_id: RecordId;
+  name: string?;
+  logo_url: string?;
+}
+
+// Why one update in a refused batch was not applied.
+enum OrganizationUpdateRefusal(82040006) {
+  /// Organization not found.
+  organization_not_found_error: struct {};
+
+  /// Organization name is invalid.
+  name_invalid_error: struct {};
+
+  /// Another organization already uses this name.
+  name_taken_error: struct {};
+
+  /// Organization icon address is invalid.
+  logo_url_invalid_error: struct {};
+
+  /// The same organization appears more than once in the batch.
+  duplicate_error: struct {};
+
+  /// Record IDs from an unexpected table.
+  invalid_record_id_error: InvalidRecordIdError;
+}
+
+// One update that kept its batch from being applied.
+struct RefusedOrganizationUpdate(82040007) {
+  organization_id: RecordId;
+  reason: OrganizationUpdateRefusal;
+}
+
+// Renames organizations or changes their icons as one all or nothing batch; a single update is a batch of one.
+// Any member may update an organization they belong to; an organization the caller is not a member of is not found.
+// Names are unique across organizations, so a name another organization holds is refused as taken.
+// success lists the resulting organizations in request order with the caller's organization list change; every other
+// member receives the same update on their own organization list.
+// refused_error lists every item that kept the batch from applying; nothing changed.
+method UpdateOrganizations(
   struct {
-    organization_id: RecordId;
+    updates: [OrganizationUpdate];
   }
 ): enum {
   internal_error: InternalError;
 
-  success: struct {};
+  success: struct {
+    organizations: [Organization];
+    event: UserOrganizationsChanged;
+  };
+
+  /// One or more updates were refused; nothing changed.
+  refused_error: [RefusedOrganizationUpdate];
+} = 920402;
+
+// Why one deletion in a refused batch was not applied.
+enum OrganizationDeleteRefusal(82040008) {
+  /// Organization not found.
+  organization_not_found_error: struct {};
+
+  /// Only the founder can delete this organization.
+  founder_required_error: struct {};
+
+  /// The same organization appears more than once in the batch.
+  duplicate_error: struct {};
 
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
-} = 920402;
+}
+
+// One deletion that kept its batch from being applied.
+struct RefusedOrganizationDelete(82040009) {
+  organization_id: RecordId;
+  reason: OrganizationDeleteRefusal;
+}
+
+// Deletes organizations as one all or nothing batch; a single deletion is a batch of one.
+// Only an organization's founder may delete it; an organization the caller is not a member of is not found.
+// Deleting removes every membership, pending join request, join code and role of the organization. Its services are
+// unbound and keep running, together with their hosts and realms, which belong to the service and not to the
+// organization.
+// success carries the caller's organization list change; every other member receives the removal on their own
+// organization list, and each person with a pending request receives its removal on their join request list.
+// refused_error lists every item that kept the batch from applying; nothing changed.
+method DeleteOrganizations(
+  struct {
+    organization_ids: [RecordId];
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: struct {
+    event: UserOrganizationsChanged;
+  };
+
+  /// One or more deletions were refused; nothing changed.
+  refused_error: [RefusedOrganizationDelete];
+} = 920403;
