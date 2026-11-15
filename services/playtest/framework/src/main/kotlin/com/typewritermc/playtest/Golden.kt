@@ -199,9 +199,9 @@ sealed interface GoldenVerdict {
 }
 
 /**
- * Compares [frame], drawn by [renderer], with [golden] when there is one. Only the [pinned] renderer
- * checks; there a golden another renderer drew, as one from before a Mesa upgrade, fails until it is
- * approved again. [image] is the golden's own frame when it is at hand; only then can a difference
+ * Compares [frame], drawn by [renderer], with [golden]. Only the [pinned] renderer checks; there a
+ * golden never approved, or one another renderer drew, as before a Mesa upgrade, fails until it is
+ * approved. [image] is the golden's own frame when it is at hand; only then can a difference
  * show where it lies.
  */
 fun judge(
@@ -214,7 +214,7 @@ fun judge(
     if (!pinned.drew(renderer)) {
         return GoldenVerdict.NotChecked("this machine draws with ${renderer.named}, not the pinned renderer ($pinned)")
     }
-    if (golden == null) return GoldenVerdict.NotChecked("no golden is approved yet")
+    if (golden == null) return GoldenVerdict.Differs("no golden is approved yet", null)
     if (golden.renderer != renderer) {
         return GoldenVerdict.Differs(
             "the golden was drawn by ${golden.renderer.named}, and the pinned renderer draws with ${renderer.named}: " +

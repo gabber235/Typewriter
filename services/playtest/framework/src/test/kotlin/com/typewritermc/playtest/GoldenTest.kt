@@ -98,8 +98,9 @@ val GoldenTest by testSuite {
             "(Vulkan on llvmpipe, Mesa 26.2.5, Linux, amd64)"
     }
 
-    test("a golden never approved is not checked") {
-        judge(null, null, sidebar, runner, pinned) shouldBe GoldenVerdict.NotChecked("no golden is approved yet")
+    test("on the pinned renderer, a golden never approved fails; off it, it is not checked") {
+        judge(null, null, sidebar, runner, pinned) shouldBe GoldenVerdict.Differs("no golden is approved yet", null)
+        judge(null, null, sidebar, mac, pinned).shouldBeInstanceOf<GoldenVerdict.NotChecked>()
     }
 
     test("a frame read back from its PNG holds the same pixels") {

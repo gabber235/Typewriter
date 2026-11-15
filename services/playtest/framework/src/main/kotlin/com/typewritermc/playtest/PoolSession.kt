@@ -73,7 +73,7 @@ class InputFailed(
     message: String,
 ) : AssertionError(message)
 
-/** The player's frame is not the golden it names; [message] says how and where the frame and its diff lie. */
+/** The player's frame is not the golden it names, or none is approved; [message] says how and where the frame and its diff lie. */
 class GoldenDiffers(
     message: String,
 ) : AssertionError(message)

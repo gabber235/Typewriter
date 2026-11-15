@@ -200,7 +200,8 @@ internal class Attempt(
     /**
      * [player]'s frame, as the client holds it now, is the golden [name]: the frame and what an approve
      * needs go into the attempt's evidence, and on the pinned renderer it is compared with the approved
-     * golden; another renderer notes it as not checked. A frame that differs fails the attempt.
+     * golden; another renderer notes it as not checked. A frame that differs, or has no golden there,
+     * fails the attempt.
      */
     suspend fun golden(
         player: GamePlayer,
@@ -224,9 +225,9 @@ internal class Attempt(
             is GoldenVerdict.Differs -> {
                 val diff = verdict.diff?.let { marked -> evidence.file("$name.diff.png").also(marked::writePng) }
                 diff?.let { evidence.screenshots += it.fileName.toString() }
-                took(at, "$says differs: ${verdict.reason}")
+                took(at, "$says fails: ${verdict.reason}")
                 throw GoldenDiffers(
-                    "${player.name}'s frame differs from golden $name: ${verdict.reason}. The frame is $png" +
+                    "${player.name}'s frame fails golden $name: ${verdict.reason}. The frame is $png" +
                         (diff?.let { ", its diff $it" } ?: "") +
                         "; `cargo xtask goldens approve` makes it the golden when the change is meant.",
                 )

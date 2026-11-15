@@ -43,14 +43,15 @@ val ProbeRequirements by testSuite(compartment = { GameCompartment }) {
     ) {
         // The client draws the 5 by 5 chunks around its own (render distance 2, which the custom graphics
         // preset keeps) and meshes a chunk only once its 8 neighbours arrived, so the corner chunk 2 chunks
-        // away on both axes shows only once the chunk 3 away on both axes arrived, the farthest one a claim
-        // waits for.
+        // away on both axes shows only once the chunk 3 away on both axes arrived, the farthest one a
+        // teleport waits for, so the corner shows on the first tick after the teleport is done.
         probe.fill(BlockPos(298, 99, 6), BlockPos(302, 99, 10), "stone")
         val corner = probe.block(BlockPos(330, 101, 40), "stone")
         probe.teleport(player, 300.5, 100.0, 8.5, yaw = -42.5f)
-        // The teleport is done once the client holds what it needs; this probe changes nothing and marks then.
+        // The teleport is done once the client holds what it needs, which may take it several ticks; this
+        // probe changes nothing and marks the tick it is done in.
         probe.gameMode(player, GameMode.CREATIVE)
 
-        within(2.ticks) { player sees block(corner).shown() }
+        within(1.ticks) { player sees block(corner).shown() }
     }
 }

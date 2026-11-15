@@ -129,9 +129,9 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   new frame and diff (2026-11-06). Goldens are exact on the pinned runner platform (spike F).
 - The **pinned renderer** is Vulkan through llvmpipe on Linux amd64 with the Mesa devenv ships
   (2026-11-15). devenv exports that release as `PLAYTEST_MESA`, and the game framework owns the pin
-  and its one match rule. On the pinned renderer a golden another renderer drew (the Mesa before an
-  upgrade) fails and asks for a fresh approve; any other machine reports "not checked" with its
-  renderer. Each captured frame's candidate says whether the pinned renderer drew it, and
+  and its one match rule. On the pinned renderer a golden never approved, or one another renderer drew
+  (the Mesa before an upgrade), fails with the approve command; any other machine reports "not
+  checked" with its renderer. Each captured frame's candidate says whether the pinned renderer drew it, and
   `cargo xtask goldens approve` refuses any it did not. A nixpkgs Mesa upgrade fails every golden, and
   the upgrade pull request approves them again.
 - **Selection** is testBalloon's (2026-11-15): `cargo xtask e2e game --only` passes each id as a test
