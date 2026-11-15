@@ -52,4 +52,40 @@ void main() {
       ],
     ]);
   });
+
+  testWidgets("a choice given back returns to where each item held it", (
+    tester,
+  ) async {
+    var held = [
+      {"writer", "editor"},
+      {"reader"},
+    ];
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        StatefulBuilder(
+          builder: (context, setState) => SizedBox(
+            width: 320,
+            child: CheckOptionSet<String>(
+              choices: const [CheckChoice(key: "writer", label: "Writer")],
+              held: held,
+              onChanged: (next) => setState(() => held = next),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    for (var press = 0; press < 3; press++) {
+      await panel.tapOn(find.text("Writer"));
+    }
+
+    expect(
+      [for (final set in held) set.toList()],
+      [
+        ["writer", "editor"],
+        ["reader"],
+      ],
+    );
+  });
 }
