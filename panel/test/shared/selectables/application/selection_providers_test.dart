@@ -63,6 +63,19 @@ void main() {
       expect(container.read(selectModeProvider), isTrue);
     });
 
+    test("stays selected while its resource never held it, as before its "
+        "data arrived", () async {
+      final container = ProviderContainer.test();
+      final early = TestSelectableIdentifier(id: "early");
+      container.listen(selectionProvider, (_, _) {});
+      container.read(testSelectablesGoneProvider.notifier).remove("early");
+      container.read(selectionProvider.notifier).replace([early]);
+
+      await pumpEventQueue();
+
+      expect(container.read(selectionProvider), [early]);
+    });
+
     test("stays selected while its resource is still loading", () async {
       final container = ProviderContainer.test();
       const loading = LoadingSelectableIdentifier("loading");

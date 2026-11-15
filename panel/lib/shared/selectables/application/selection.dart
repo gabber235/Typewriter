@@ -11,11 +11,13 @@ part "selection.g.dart";
 /// and whether items show their checks by [SelectMode].
 ///
 /// This is the one place an item that disappears leaves the selection: an
-/// item leaves once its resource has loaded and no longer holds it, as when
-/// someone else deletes it or a hold removes it. An item whose resource is
-/// loading or failing stays, and so does every item a refused change left
-/// in place, such as the held back items of a refused batch, so the user can
-/// try again. Nothing else prunes the selection.
+/// item its resource held leaves once the resource no longer holds it, as
+/// when someone else deletes it or a hold removes it. An item whose
+/// resource is loading or failing stays, and so does every item a refused
+/// change left in place, such as the held back items of a refused batch, so
+/// the user can try again. An item its resource never held yet, such as one
+/// selected before its organization's data arrived, stays until it appears.
+/// Nothing else prunes the selection.
 @riverpod
 class Selection extends _$Selection {
   @override
@@ -147,11 +149,15 @@ class Selection extends _$Selection {
       if (!selection.contains(id)) _watched.remove(id)!.close();
     }
     for (final id in selection) {
+      // Whether the resource held the item since it was selected; only an
+      // item that was there can disappear.
+      var held = false;
       _watched[id] ??= ref.listen(selectableResolutionProvider(id), (
         _,
         resolution,
       ) {
-        if (resolution.error is! SelectableNotFoundException) return;
+        if (resolution.hasValue) held = true;
+        if (!held || resolution.error is! SelectableNotFoundException) return;
         // The resolution may change while the tree builds, where no
         // provider may change; the item leaves right after.
         scheduleMicrotask(() {
@@ -235,7 +241,7 @@ bool isSelected(Ref ref, SelectableIdentifier selectable) {
 ///
 /// This provider is the boundary between selection state and resource state.
 /// It preserves the order of [selectionProvider] and leaves out an item its
-/// resource no longer holds, which [Selection] then lets go. It returns
+/// resource does not hold, which [Selection] lets go once it disappeared. It returns
 /// loading or error state when any other identifier cannot resolve, and
 /// publishes a complete list only after every one of them has resolved.
 @riverpod
