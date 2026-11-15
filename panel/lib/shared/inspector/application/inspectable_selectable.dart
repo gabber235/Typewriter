@@ -2,46 +2,64 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// One projection a selected item offers for a shared inspection: when every
-/// selected item offers a compatible surface with the same root type and
-/// catalog snapshot, the inspector shows one inspection for all of them.
-///
-/// The checked type information is shared by admission and presentation.
-abstract interface class PortableMultiInspectionSurface {
+/// One inspection a selected item offers to share with other selected items:
+/// when every selected item offers a compatible surface with the same [id],
+/// the inspector shows one inspection for all of them, such as the roles
+/// several members hold or the fields several resources of one type agree on.
+abstract interface class SharedInspectionSurface {
   Object get id;
 
-  skir.TypeUse get rootType;
-
-  CheckedEditorCatalog get catalog;
-
-  bool isCompatibleWith(PortableMultiInspectionSurface other);
+  bool isCompatibleWith(SharedInspectionSurface other);
 
   /// Builds the one inspection [members] share. [members] holds the
   /// compatible surface of every selected item in selection order, this
   /// surface first; editors made while building register with [context].
   InspectionContent buildShared(
-    List<PortableMultiInspectionSurface> members,
+    List<SharedInspectionSurface> members,
     InspectionBuildContext context,
   );
+}
+
+/// A shared surface presented by a portable editor. Surfaces share only when
+/// they agree on [rootType] and the [catalog] snapshot, so admission and
+/// presentation check one type; [sharesEditorWith] adds what else they must
+/// agree on.
+abstract class PortableInspectionSurface implements SharedInspectionSurface {
+  const PortableInspectionSurface();
+
+  skir.TypeUse get rootType;
+
+  CheckedEditorCatalog get catalog;
+
+  /// Whether [other], already of the same root type and catalog snapshot,
+  /// edits together with this surface.
+  bool sharesEditorWith(PortableInspectionSurface other);
+
+  @override
+  @nonVirtual
+  bool isCompatibleWith(SharedInspectionSurface other) =>
+      other is PortableInspectionSurface &&
+      other.rootType == rootType &&
+      other.catalog.snapshot == catalog.snapshot &&
+      sharesEditorWith(other);
 }
 
 /// A surface over a local value draft. The selected drafts combine into one
 /// owner that reads what they agree on and writes every one of them, and
 /// [buildHost] presents that owner.
-abstract class ValueEditingInspectionSurface
-    implements PortableMultiInspectionSurface {
+abstract class ValueEditingInspectionSurface extends PortableInspectionSurface {
   const ValueEditingInspectionSurface();
 
   ValueEditingRegistration get target;
 
   PortablePresentationHost buildHost(
-    List<PortableMultiInspectionSurface> members,
+    List<SharedInspectionSurface> members,
     EditOwner combinedOwner,
   );
 
   @override
   InspectionContent buildShared(
-    List<PortableMultiInspectionSurface> members,
+    List<SharedInspectionSurface> members,
     InspectionBuildContext context,
   ) {
     final owners =
@@ -60,21 +78,6 @@ abstract class ValueEditingInspectionSurface
   }
 }
 
-/// One inspection a selected item offers to share with other selected items
-/// without a portable editor: when every selected item offers a compatible
-/// surface with the same [id], the inspector shows one inspection for all
-/// of them, such as the roles several members hold.
-abstract interface class SharedInspectionSurface {
-  Object get id;
-
-  bool isCompatibleWith(SharedInspectionSurface other);
-
-  /// Builds the one inspection [members] share. [members] holds the
-  /// compatible surface of every selected item in selection order, this
-  /// surface first.
-  InspectionContent buildShared(List<SharedInspectionSurface> members);
-}
-
 /// A selectable resource that can be represented in the inspector.
 ///
 /// This is the read only inspection boundary. Implementations create a
@@ -85,11 +88,8 @@ abstract class InspectableSelectable<I extends SelectableIdentifier>
     extends Selectable<I> {
   const InspectableSelectable();
 
-  List<PortableMultiInspectionSurface> get portableMultiInspectionSurfaces =>
-      const [];
-
-  /// Inspections this item shares with other selected items without a
-  /// portable editor; used when no portable surface is shared.
+  /// Inspections this item shares with other selected items, each under a
+  /// distinct id.
   List<SharedInspectionSurface> get sharedInspectionSurfaces => const [];
 
   /// Builds the graph and optional resource header for this resource.

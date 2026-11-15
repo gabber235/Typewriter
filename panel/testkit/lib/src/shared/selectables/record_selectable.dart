@@ -262,7 +262,7 @@ class RecordSelectable
   List<SelectionCapability> get capabilities => const [];
 
   @override
-  List<PortableMultiInspectionSurface> get portableMultiInspectionSurfaces => [
+  List<SharedInspectionSurface> get sharedInspectionSurfaces => [
     _RecordFieldsSurface(target),
   ];
 
@@ -287,12 +287,12 @@ final class _RecordFieldsSurface extends ValueEditingInspectionSurface {
   CheckedEditorCatalog get catalog => _recordCatalog;
 
   @override
-  bool isCompatibleWith(PortableMultiInspectionSurface other) =>
+  bool sharesEditorWith(PortableInspectionSurface other) =>
       other is _RecordFieldsSurface;
 
   @override
   PortablePresentationHost buildHost(
-    List<PortableMultiInspectionSurface> members,
+    List<SharedInspectionSurface> members,
     EditOwner combinedOwner,
   ) => _recordFieldsHost(combinedOwner);
 }

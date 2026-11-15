@@ -95,7 +95,7 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
   final Future<void> Function() onUnbind;
 
   @override
-  List<PortableMultiInspectionSurface> get portableMultiInspectionSurfaces => [
+  List<SharedInspectionSurface> get sharedInspectionSurfaces => [
     _ServiceIdentityPortableSurface(editTarget),
   ];
 
@@ -138,12 +138,12 @@ final class _ServiceIdentityPortableSurface
   CheckedEditorCatalog get catalog => _serviceIdentityCatalog;
 
   @override
-  bool isCompatibleWith(PortableMultiInspectionSurface other) =>
+  bool sharesEditorWith(PortableInspectionSurface other) =>
       other is _ServiceIdentityPortableSurface;
 
   @override
   PortablePresentationHost buildHost(
-    List<PortableMultiInspectionSurface> members,
+    List<SharedInspectionSurface> members,
     EditOwner combinedOwner,
   ) => serviceIdentityPortablePresentationHost(identityOwner: combinedOwner);
 }
