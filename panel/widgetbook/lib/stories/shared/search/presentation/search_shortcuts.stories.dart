@@ -5,20 +5,11 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/data/shared/search.dart";
 import "package:widgetbook_workspace/support/story.dart";
 
-/// The keys a search offers, as its key hints show them: the commands of
-/// the highlighted result and Space to select it, disabled while a command
-/// runs, and Control with a digit to open one of the first nine results.
+/// The keys a search offers wherever its focus is, as its key hints show
+/// them: Control with a digit opens one of the first nine results. A
+/// result's commands belong to its row and show while it has focus.
 @widgetbook.UseCase(name: "Default", type: SearchShortcuts)
 Widget searchShortcutsUseCase(BuildContext context) {
-  final highlighted = context.knobs.boolean(
-    label: "Result highlighted",
-    initialValue: true,
-  );
-  final command = context.knobs.object.segmented(
-    label: "Command on Arrival",
-    options: storyCommandStates.keys.toList(),
-    initialOption: "Idle",
-  );
   final results = context.knobs.object.segmented(
     label: "Results",
     options: const ["Few", "Many", "Empty"],
@@ -32,8 +23,6 @@ Widget searchShortcutsUseCase(BuildContext context) {
         height: 480,
         child: StorySearchRoot(
           snapshot: storySearchSnapshots[results]!,
-          commandState: storyCommandStates[command]!,
-          previewed: highlighted ? storyFirstResultId : null,
           child: SearchShortcuts(
             child: Column(
               children: [
