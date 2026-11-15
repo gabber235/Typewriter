@@ -7,6 +7,9 @@ internal enum class Out {
 
     /** Work that hung on it still runs. */
     HUNG_WORK,
+
+    /** Its client is on a restart attempt's own Paper, or on its way back to the shared one. */
+    AWAY,
 }
 
 /** [players] go to [session]'s [submission] until its attempt ends. */

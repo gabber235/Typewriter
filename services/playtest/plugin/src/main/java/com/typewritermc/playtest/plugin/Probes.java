@@ -17,6 +17,7 @@ import com.typewritermc.playtest.wire.Message.ProbeSelectSlot;
 import com.typewritermc.playtest.wire.Message.ProbeSidebar;
 import com.typewritermc.playtest.wire.Message.ProbeSpawn;
 import com.typewritermc.playtest.wire.Message.ProbeTeleport;
+import com.typewritermc.playtest.wire.Message.ProbeSave;
 import com.typewritermc.playtest.wire.Message.ProbeTime;
 import com.typewritermc.playtest.wire.Message.ProbeWork;
 import com.typewritermc.playtest.wire.Message.WorldAction;
@@ -161,6 +162,10 @@ final class Probes implements Listener {
             case ProbeSidebar sidebar -> sidebar(player, sidebar);
             case ProbeTime time -> {
                 player.setPlayerTime(time.time(), false);
+                yield null;
+            }
+            case ProbeSave save -> {
+                player.saveData();
                 yield null;
             }
         };

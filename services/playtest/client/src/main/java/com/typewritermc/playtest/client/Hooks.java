@@ -19,6 +19,10 @@ public final class Hooks {
         Stepper.beforeRunTick(mc);
     }
 
+    public static void leavingWorld(Minecraft mc) {
+        Session.leavingWorld(mc);
+    }
+
     public static void afterTick(Minecraft mc) {
         Stepper.afterTick(mc);
         Session.afterTick(mc);

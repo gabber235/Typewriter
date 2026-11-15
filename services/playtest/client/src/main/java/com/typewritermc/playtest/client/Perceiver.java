@@ -83,6 +83,18 @@ final class Perceiver {
         resetPending = true;
     }
 
+    /**
+     * The client left its Paper. The game drops its chat as it leaves, and the chat lines and block
+     * changes so far carry that Paper's ticks, so they go too; the next frame perceived on the next
+     * Paper sends its record whatever it shows. The watches stay, so a block or entity can be checked
+     * across a restart.
+     */
+    static void leftPaper() {
+        chat.clear();
+        changes.clear();
+        lastSent = null;
+    }
+
     /** From now on every record also carries these blocks and entities. */
     static void watch(Watch watch) {
         watch.blocks().forEach(at -> watchedBlocks.add(new BlockPos(at.x(), at.y(), at.z())));

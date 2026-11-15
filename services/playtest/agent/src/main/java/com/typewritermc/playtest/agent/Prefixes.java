@@ -14,8 +14,11 @@ import java.lang.constant.ConstantDescs;
 import java.lang.constant.MethodTypeDesc;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
+import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -39,12 +42,32 @@ public final class Prefixes {
     private static final ClassDesc SERVER = ClassDesc.of("net.minecraft.server.MinecraftServer");
     private static final MethodTypeDesc BOOLEAN = MethodTypeDesc.of(ConstantDescs.CD_boolean);
     private static final MethodTypeDesc VOID = MethodTypeDesc.of(ConstantDescs.CD_void);
+    private static final Set<String> PREFIXED = Set.of("net.minecraft.server.MinecraftServer", "net.minecraft.server.level.ServerLevel");
 
     private Prefixes() {}
 
-    /** Installs the prefixes; {@link StepAgent} calls it once this class loads from the bootstrap path. */
+    /**
+     * Installs the prefixes; {@link StepAgent} calls it before Paper's main class runs. A class loads
+     * after this call, or loaded before it: an ahead of time cache links the server's classes while the
+     * JVM starts, so their superclasses load before any agent runs. Those are rewritten in place, which
+     * the prefixes allow, since they change method bodies only.
+     */
     public static void install(Instrumentation instrumentation) {
-        instrumentation.addTransformer(new ClassFileTransformer() {
+        instrumentation.addTransformer(transformer(), true);
+        Class<?>[] loaded = Arrays.stream(instrumentation.getAllLoadedClasses())
+                .filter(type -> PREFIXED.contains(type.getName()))
+                .toArray(Class<?>[]::new);
+        if (loaded.length == 0) return;
+        try {
+            instrumentation.retransformClasses(loaded);
+        } catch (UnmodifiableClassException failure) {
+            // The missing prefixes fail the plugin's boot check, which names them.
+            failure.printStackTrace();
+        }
+    }
+
+    private static ClassFileTransformer transformer() {
+        return new ClassFileTransformer() {
             @Override
             public byte[] transform(ClassLoader loader, String name, Class<?> redefined, ProtectionDomain domain, byte[] bytes) {
                 try {
@@ -59,7 +82,7 @@ public final class Prefixes {
                     return null;
                 }
             }
-        });
+        };
     }
 
     private static Map<String, Consumer<CodeBuilder>> server() {

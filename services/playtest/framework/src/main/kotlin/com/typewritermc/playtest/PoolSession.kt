@@ -115,6 +115,7 @@ internal class PoolSession private constructor(
      */
     private class Leasing(
         val requirementCode: RequirementCode,
+        val restartsPaper: Boolean,
     ) {
         val attempt = CompletableDeferred<Attempt>()
     }
@@ -126,13 +127,14 @@ internal class PoolSession private constructor(
 
     fun nextBarrier(): Int = barriers.incrementAndGet()
 
-    /** One attempt of a requirement to run: [bodies] in order on [players] players. */
+    /** One attempt of a requirement to run: [bodies] in order on [players] players, on a Paper of its own with [restartsPaper]. */
     class Planned(
         val testId: String,
         val requirement: String,
         val players: Int,
         val demonstrates: Demonstrates,
         val bodies: List<suspend RequirementScope.() -> Unit>,
+        val restartsPaper: Boolean = false,
     )
 
     /**
@@ -149,7 +151,7 @@ internal class PoolSession private constructor(
      */
     suspend fun sideBySide(planned: List<Planned>): List<Throwable?> {
         val leasings =
-            planned.map { submissions.incrementAndGet() to Leasing(RequirementCode.of(it.bodies.first())) }
+            planned.map { submissions.incrementAndGet() to Leasing(RequirementCode.of(it.bodies.first()), it.restartsPaper) }
         for ((submission, leasing) in leasings) {
             leases[submission] = leasing
             broken?.let(leasing.attempt::completeExceptionally)
@@ -159,7 +161,7 @@ internal class PoolSession private constructor(
                 Queue(
                     planned.zip(
                         leasings,
-                    ) { it, (submission, _) -> Submit(submission, it.testId, it.requirement, it.players, it.demonstrates) },
+                    ) { it, (submission, _) -> Submit(submission, it.testId, it.requirement, it.players, it.demonstrates, it.restartsPaper) },
                 ),
             )
         } catch (unavailable: GameUnavailable) {
@@ -196,7 +198,7 @@ internal class PoolSession private constructor(
         for ((index, body) in planned.bodies.withIndex()) {
             if (index > 0) {
                 attempt.players.forEach { attempts.remove(it.name) }
-                attempt = lease(submission, leasing.requirementCode) { send(Reclaim(submission)) }
+                attempt = lease(submission, leasing) { send(Reclaim(submission)) }
             }
             attempt.evidence = evidence
             failure = settle(submission, attempt, run(attempt, body))?.let(attempt::located)
@@ -225,10 +227,10 @@ internal class PoolSession private constructor(
     /** Waits for the lease of [submission] that [ask] asks the pool for. */
     private suspend fun lease(
         submission: Long,
-        code: RequirementCode,
+        first: Leasing,
         ask: () -> Unit,
     ): Attempt {
-        val leasing = Leasing(code)
+        val leasing = Leasing(first.requirementCode, first.restartsPaper)
         leases[submission] = leasing
         broken?.let { leasing.attempt.completeExceptionally(it) }
         return try {
@@ -273,6 +275,9 @@ internal class PoolSession private constructor(
         failure?.let(untaken::addSuppressed)
         return untaken
     }
+
+    /** Kills and boots again the own Paper of [submission]'s attempt; returns the new Paper's tick after which every player is back. */
+    suspend fun restart(submission: Long): Int = request<Message.Restarted> { request -> Message.Restart(request, submission) }.tick()
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<Kind> {
@@ -374,6 +379,10 @@ internal class PoolSession private constructor(
                 leases[message.submission()]?.attempt?.completeExceptionally(RequirementDeclined(message.reason()))
             }
 
+            is Message.LeaseFailed -> {
+                leases[message.submission()]?.attempt?.completeExceptionally(PaperLost(message.reason()))
+            }
+
             is Reply -> {
                 replies[message.request()]?.complete(message)
             }
@@ -410,6 +419,7 @@ internal class PoolSession private constructor(
                 is BarrierSeen -> Attempt.Event.Barrier(player, message.barrier())
                 is Message.WorkHung -> Attempt.Event.Failed(player, WorkHung(player.name, message.work(), message.beganAfter()))
                 is Message.ClientLost -> Attempt.Event.Failed(player, ClientLost(player.name, message.reason()))
+                is Message.PaperLost -> Attempt.Event.Failed(player, PaperLost(message.reason()))
             },
         )
     }
@@ -427,7 +437,15 @@ internal class PoolSession private constructor(
         lease: Lease,
         leasing: Leasing,
     ): Attempt {
-        val attempt = Attempt(this, lease.players().map { GamePlayer(it.name(), it.uuid()) }, lease.region(), leasing.requirementCode)
+        val attempt =
+            Attempt(
+                this,
+                lease.submission(),
+                lease.players().map { GamePlayer(it.name(), it.uuid()) },
+                lease.region(),
+                leasing.requirementCode,
+                leasing.restartsPaper,
+            )
         attempt.players.forEach { attempts[it.name] = attempt }
         return attempt
     }

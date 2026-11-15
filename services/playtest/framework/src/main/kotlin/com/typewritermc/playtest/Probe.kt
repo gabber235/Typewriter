@@ -10,6 +10,7 @@ import com.typewritermc.playtest.wire.Message.ProbeGameMode
 import com.typewritermc.playtest.wire.Message.ProbeGive
 import com.typewritermc.playtest.wire.Message.ProbeMark
 import com.typewritermc.playtest.wire.Message.ProbePacketEntity
+import com.typewritermc.playtest.wire.Message.ProbeSave
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot
 import com.typewritermc.playtest.wire.Message.ProbeSidebar
 import com.typewritermc.playtest.wire.Message.ProbeSpawn
@@ -80,6 +81,9 @@ class Probe internal constructor(
         item: String,
         count: Int = 1,
     ): Mark = run(listOf(player), ProbeGive(slot, item.id(), count))
+
+    /** Paper writes [player]'s data to disk now, as it does when the player quits or the world saves. */
+    suspend fun save(player: GamePlayer): Mark = run(listOf(player), ProbeSave())
 
     /** [player] holds hotbar [slot], 0 to 8. */
     suspend fun selectSlot(

@@ -16,6 +16,9 @@ internal class PoolSettings(
     /** How many warm clients the pool keeps, each with a player of its own. */
     val clients: Int,
 ) {
+    /** Where the ahead of time caches for the restart Papers' boots stay across runs. */
+    val aotDir: Path get() = poolDir.resolve("aot")
+
     companion object {
         fun fromSystemProperties() =
             PoolSettings(

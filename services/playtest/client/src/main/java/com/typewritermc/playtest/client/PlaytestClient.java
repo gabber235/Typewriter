@@ -53,7 +53,7 @@ public final class PlaytestClient implements ClientModInitializer {
     private static void receive(Message message) {
         Minecraft mc = Minecraft.getInstance();
         switch (message) {
-            case Connect connect -> mc.execute(() -> Session.connect(connect.host(), connect.port()));
+            case Connect connect -> mc.execute(() -> Session.connect(mc, connect.host(), connect.port()));
             case Reset reset -> mc.execute(() -> {
                 Inputs.reset(mc);
                 Looks.reset();

@@ -52,9 +52,11 @@ public sealed interface Message {
 
     /**
      * One attempt of a requirement to run once {@code players} players are free. Every attempt of one
-     * requirement case carries the same {@code testId}, so they land in one case of the run file.
+     * requirement case carries the same {@code testId}, so they land in one case of the run file. With
+     * {@code restartsPaper} the attempt runs on a Paper of its own, which its body may kill and boot
+     * again: a kill drops every client on a Paper.
      */
-    record Submit(long submission, String testId, String requirement, int players, Demonstrates demonstrates) {}
+    record Submit(long submission, String testId, String requirement, int players, Demonstrates demonstrates, boolean restartsPaper) {}
 
     /**
      * Session to pool: run these attempts side by side. The pool claims the players of all of them at
@@ -71,6 +73,30 @@ public sealed interface Message {
 
     /** Pool to session: the pool can never run the submission; {@code reason} says why. */
     record Declined(long submission, String reason) implements Message {}
+
+    /**
+     * Pool to session: the submission's attempt failed before its lease, as its own Paper was lost while
+     * it booted; {@code reason} says why and where the Paper's log is. The pool recorded the attempt.
+     */
+    record LeaseFailed(long submission, String reason) implements Message {}
+
+    /**
+     * Session to pool: kill the Paper of the submission's attempt, which runs on a Paper of its own, as
+     * a crash would, and boot it again on the same world. The pool answers with {@link Restarted} once
+     * every player of the attempt is back.
+     */
+    record Restart(long request, long submission) implements Message {}
+
+    /**
+     * Pool to session: the attempt's Paper booted again after its kill and every player's client is
+     * back and holds what Paper sends it, from after {@code tick} of the new Paper on.
+     */
+    record Restarted(long request, int tick) implements Reply {
+        @Override
+        public Restarted withRequest(long request) {
+            return new Restarted(request, tick);
+        }
+    }
 
     /** One player a lease hands to an attempt. */
     record Player(String name, UUID uuid) {}
@@ -339,14 +365,43 @@ public sealed interface Message {
      */
     record ClientStalled(String player, int lastAcked) implements Message {}
 
+    /**
+     * Pool to the session holding {@code player}: the Paper of its attempt, one of its own, was lost,
+     * for {@code reason}, which names the Paper's log; the attempt fails.
+     */
+    record PaperLost(String player, String reason) implements PlayerEvent {}
+
+    /**
+     * Pool to Paper: Paper booted again under attempt {@code attempt} after a kill, and {@code players}
+     * belong to it again, unwiped and where Paper put them. From now on their counted work holds back
+     * ticks. Paper answers with {@link Resumed}.
+     */
+    record Resume(long attempt, List<UUID> players) implements Message {}
+
+    /**
+     * Paper to pool: the resumed attempt's players' clients hold all Paper sends them, from after
+     * {@code tick} on. {@code failure} is null when it worked, or says why it could not.
+     */
+    record Resumed(long attempt, int tick, String failure) implements Message {}
+
     /** Paper to pool: {@code player}'s work {@code work}, reported hung earlier, ended. */
     record HungEnded(String player, String work) implements Message {}
 
     /** Pool to Paper: from now on a tick runs only when the step policy grants it. */
     record Stepping() implements Message {}
 
-    /** Pool to client: join the Paper at this address. */
+    /**
+     * Pool to client: join the Paper at this address, first leaving the one the client is on, the way
+     * the pause menu leaves.
+     */
     record Connect(String host, int port) implements Message {}
+
+    /**
+     * Client to pool: the client lost the Paper on {@code port} without being told to leave it, for
+     * {@code reason}: its connection dropped or it could not join. It draws nothing until the next
+     * {@link Connect}.
+     */
+    record Disconnected(int port, String reason) implements Message {}
 
     /** Client to pool: the player is in the world and nothing covers the game, so Paper may start stepping. */
     record Joined() implements Message {}
@@ -523,6 +578,9 @@ public sealed interface Message {
 
     /** The player sees the time of day stand still at {@code time} ticks: 0 is sunrise, 6000 noon. */
     record ProbeTime(long time) implements PlayerAction {}
+
+    /** Paper writes the player's data to disk now, as it does when the player quits or the world saves. */
+    record ProbeSave() implements PlayerAction {}
 
     /** One step of an {@link Input}. Keys are named as {@link Key} names them. */
     sealed interface InputStep {}

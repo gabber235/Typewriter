@@ -8,5 +8,11 @@ java {
 }
 
 tasks.jar {
-    manifest { attributes("Premain-Class" to "com.typewritermc.playtest.agent.StepAgent") }
+    manifest {
+        attributes(
+            "Premain-Class" to "com.typewritermc.playtest.agent.StepAgent",
+            // Classes an ahead of time cache loads before the agent runs are prefixed in place.
+            "Can-Retransform-Classes" to "true",
+        )
+    }
 }

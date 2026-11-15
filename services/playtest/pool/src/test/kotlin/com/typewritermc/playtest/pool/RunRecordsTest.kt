@@ -26,12 +26,12 @@ val RunRecordsTest by testSuite {
         records.started("run-1")
         records.record(
             "run-1",
-            Submit(1, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH),
+            Submit(1, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false),
             Result(1, 420, null, null, listOf(), "", listOf()),
         )
         records.record(
             "run-1",
-            Submit(2, "WINDOW-1 a check that never holds fails", "WINDOW-1", 1, Demonstrates.FAILURE),
+            Submit(2, "WINDOW-1 a check that never holds fails", "WINDOW-1", 1, Demonstrates.FAILURE, false),
             Result(2, 900, "gv-1 did not see chat \"Goodbye\"", "WindowRequirements.kt:17", listOf(), "", listOf()),
         )
 
@@ -53,7 +53,7 @@ val RunRecordsTest by testSuite {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         records.record(
             "run-1",
-            Submit(1, "GOLDEN-1 a sidebar matches its golden", "GOLDEN-1", 1, Demonstrates.HAPPY_PATH),
+            Submit(1, "GOLDEN-1 a sidebar matches its golden", "GOLDEN-1", 1, Demonstrates.HAPPY_PATH, false),
             Result(
                 1,
                 120,
@@ -88,15 +88,15 @@ val RunRecordsTest by testSuite {
         val flaky = "FLAKY-1 a requirement that fails its first attempt and passes its second is flaky"
         records.record(
             "run-1",
-            Submit(1, flaky, "FLAKY-1", 1, Demonstrates.FAILURE),
+            Submit(1, flaky, "FLAKY-1", 1, Demonstrates.FAILURE, false),
             Result(1, 300, "missed", null, listOf(), "", listOf()),
         )
         records.record(
             "run-1",
-            Submit(2, "PROBE-1 a chat line reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH),
+            Submit(2, "PROBE-1 a chat line reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false),
             Result(2, 420, null, null, listOf(), "", listOf()),
         )
-        records.record("run-1", Submit(7, flaky, "FLAKY-1", 1, Demonstrates.FAILURE), Result(7, 310, null, null, listOf(), "", listOf()))
+        records.record("run-1", Submit(7, flaky, "FLAKY-1", 1, Demonstrates.FAILURE, false), Result(7, 310, null, null, listOf(), "", listOf()))
 
         records.ended("run-1", file, retries)
 
@@ -124,7 +124,7 @@ val RunRecordsTest by testSuite {
         listOf(Demonstrates.HAPPY_PATH, Demonstrates.FAILURE, Demonstrates.EDGE_CASE).forEachIndexed { index, demonstrates ->
             records.record(
                 "run-1",
-                Submit(index.toLong(), "CASE-$index", "CASE-$index", 1, demonstrates),
+                Submit(index.toLong(), "CASE-$index", "CASE-$index", 1, demonstrates, false),
                 Result(index.toLong(), 1, null, null, listOf(), "", listOf()),
             )
         }
@@ -143,7 +143,7 @@ val RunRecordsTest by testSuite {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         records.record(
             "run-1",
-            Submit(1, "PROBE-1 a chat line reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH),
+            Submit(1, "PROBE-1 a chat line reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false),
             Result(
                 1,
                 120,
@@ -181,12 +181,12 @@ val RunRecordsTest by testSuite {
         val dir = Files.createTempDirectory("run-records")
         records.record(
             "run-1",
-            Submit(1, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH),
+            Submit(1, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false),
             Result(1, 420, null, null, listOf(), "", listOf()),
         )
         records.record(
             "run-2",
-            Submit(1, "WINDOW-1 a check that never holds fails", "WINDOW-1", 1, Demonstrates.FAILURE),
+            Submit(1, "WINDOW-1 a check that never holds fails", "WINDOW-1", 1, Demonstrates.FAILURE, false),
             Result(1, 900, null, null, listOf(), "", listOf()),
         )
 
@@ -201,13 +201,13 @@ val RunRecordsTest by testSuite {
     test("an attempt whose test JVM ended first fails in its run's file, whichever session of the run writes it") {
         val records = RunRecords(clock = { 1_000 })
         val dir = Files.createTempDirectory("run-records")
-        val killed = Submit(3, "PROBE-2 the first input after a far teleport acts there", "PROBE-2", 1, Demonstrates.HAPPY_PATH)
+        val killed = Submit(3, "PROBE-2 the first input after a far teleport acts there", "PROBE-2", 1, Demonstrates.HAPPY_PATH, false)
         val gone = Outcome.createFailed(message = "its test JVM ended before the attempt did; see pool.log", firstBroken = null)
 
         // The sibling session wrote the run file before the killed one left: its leaving writes it again.
         records.record(
             "run-1",
-            Submit(1, "SIBLING-1 a second module's requirement reaches its player", "SIBLING-1", 1, Demonstrates.HAPPY_PATH),
+            Submit(1, "SIBLING-1 a second module's requirement reaches its player", "SIBLING-1", 1, Demonstrates.HAPPY_PATH, false),
             Result(1, 400, null, null, listOf(), "", listOf()),
         )
         records.ended("run-1", dir.resolve("run-1.json"), retries)
@@ -228,12 +228,12 @@ val RunRecordsTest by testSuite {
         val hung = "HUNG-1 work still running 1 s after it began fails the attempt"
         records.record(
             "run-1",
-            Submit(1, hung, "HUNG-1", 1, Demonstrates.FAILURE),
+            Submit(1, hung, "HUNG-1", 1, Demonstrates.FAILURE, false),
             Result(1, 1_500, "gv-1's work \"Ledger lookup\" hung", "WorkRequirements.kt:30", listOf(), "", listOf()),
         )
         records.record(
             "run-1",
-            Submit(2, "PROBE-1 a chat line reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH),
+            Submit(2, "PROBE-1 a chat line reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false),
             Result(2, 420, null, null, listOf(), "", listOf()),
         )
 

@@ -3,7 +3,8 @@ package com.typewritermc.playtest.client;
 import net.minecraft.client.Minecraft;
 
 /**
- * Which frames run while the client steps. Before the first step the client draws as any client does.
+ * Which frames run while the client steps. Before the first step the client draws as any client does;
+ * a client that lost its Paper draws nothing until it joins one again.
  * While stepping, a frame runs only after a tick ran or when a record is forced, and then it perceives
  * without drawing: extract builds what the player would see and {@link NoDraw} keeps the world state a
  * later drawn frame needs, while nothing reaches the GPU or the window.
@@ -21,7 +22,8 @@ final class Frames {
 
     /** Start of {@code Minecraft.renderFrame}, where it acquires the window's next texture. */
     static Mode begin(Minecraft mc) {
-        if (!Stepper.stepping()) mode = Mode.DRAW;
+        if (Session.waiting()) mode = Mode.SKIP;
+        else if (!Stepper.stepping()) mode = Mode.DRAW;
         else mode = Stepper.perceiveFrame() ? Mode.PERCEIVE : Mode.SKIP;
         if (mode != Mode.SKIP) Perceiver.beginFrame(mc);
         return mode;

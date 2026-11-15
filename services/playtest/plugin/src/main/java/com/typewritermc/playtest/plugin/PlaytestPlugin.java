@@ -19,6 +19,8 @@ import com.typewritermc.playtest.wire.Message.Query;
 import com.typewritermc.playtest.wire.Message.Region;
 import com.typewritermc.playtest.wire.Message.RegionsAhead;
 import com.typewritermc.playtest.wire.Message.Release;
+import com.typewritermc.playtest.wire.Message.Resume;
+import com.typewritermc.playtest.wire.Message.Resumed;
 import com.typewritermc.playtest.wire.Message.Role;
 import com.typewritermc.playtest.wire.Message.Settle;
 import com.typewritermc.playtest.wire.Message.Settled;
@@ -105,7 +107,8 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
 
     private void connect(int port) {
         try {
-            pool = Link.open(port, new Hello(Role.PAPER, "paper"), message -> onMainThread(() -> receive(message)), this::poolLost);
+            String name = System.getProperty("playtest.paper.name", "paper");
+            pool = Link.open(port, new Hello(Role.PAPER, name), message -> onMainThread(() -> receive(message)), this::poolLost);
         } catch (IOException unreachable) {
             poolLost(unreachable);
         }
@@ -115,6 +118,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         switch (message) {
             case Stepping stepping -> Step.on = true;
             case Claim claim -> claim(claim);
+            case Resume resume -> resume(resume);
             case Release release -> {
                 policy.release(attempts.release(release.attempt()));
                 ground.release(release.attempt());
@@ -163,6 +167,23 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
             player.teleport(middle);
         }
         policy.deliver(claim.players(), () -> pool.send(new Claimed(claim.attempt(), null)));
+    }
+
+    /**
+     * Gives the attempt its players again after this Paper was killed and booted under it: as a claim
+     * does, but without the wipe or the move, so they keep what Paper loaded for them. Resumed once each
+     * of their clients holds all Paper sends them.
+     */
+    private void resume(Resume resume) {
+        int ranAfter = policy.lastEnded();
+        var players = online(resume.players());
+        if (players.failure() != null) {
+            pool.send(new Resumed(resume.attempt(), ranAfter, players.failure()));
+            return;
+        }
+        attempts.claim(resume.attempt(), resume.players());
+        policy.claim(resume.players());
+        policy.deliver(resume.players(), () -> pool.send(new Resumed(resume.attempt(), ranAfter, null)));
     }
 
     /** Leaves a mark of [kind] on the player: Paper keeps some kinds, this plugin the others. */

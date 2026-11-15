@@ -10,6 +10,7 @@ import java.net.ServerSocket
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
+import java.util.zip.ZipFile
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
@@ -22,6 +23,15 @@ internal class Part(
     val log: Path,
     val player: String? = null,
 )
+
+/** The folder and port of a restart attempt's own Paper, which every boot of it reuses. */
+internal class OwnFolder(
+    val name: String,
+    val dir: Path,
+    val port: Int,
+) {
+    val log: Path get() = dir.resolve("console.log")
+}
 
 /** A virtual X display and the Xvfb process that serves it. */
 internal class Display(
@@ -88,6 +98,41 @@ internal class Game private constructor(
         return Replaced(replacement, kept.resolve("console.log"))
     }
 
+    /**
+     * A fresh folder and free port for [name], a restart attempt's own Paper, set up as the shared
+     * Paper's folder is. A folder an earlier attempt kept for its log goes.
+     */
+    fun ownFolder(name: String): OwnFolder {
+        val folder = OwnFolder(name, settings.poolDir.resolve(name), freePort())
+        preparePaper(settings, folder.dir, folder.port)
+        return folder
+    }
+
+    /** Boots [folder]'s Paper with [flags] added; a boot after the first adds to the same log. */
+    @Synchronized
+    fun bootOwn(
+        folder: OwnFolder,
+        flags: List<String>,
+        again: Boolean,
+    ): Part = startPaper(settings, poolPort, folder.dir, folder.name, flags, append = again).also { running += it }
+
+    /** [part] ended and is no longer a part of the game. */
+    @Synchronized
+    fun forget(part: Part) {
+        running -= part
+    }
+
+    /** Keeps the lost own Paper's [folder] as `<name>-lost-<n>` for its log; returns where its log is now. */
+    @Synchronized
+    fun keepLost(folder: OwnFolder): Path {
+        val kept = settings.poolDir.resolve("${folder.name}-lost-${++lost}")
+        Files.move(folder.dir, kept)
+        return kept.resolve("console.log")
+    }
+
+    /** Removes the folder of an own Paper whose attempt ended. */
+    fun removeOwn(folder: OwnFolder) = remove(folder.dir)
+
     /** Stops every part: asks first, then forces whatever still runs. */
     fun stop() {
         val all = parts
@@ -103,14 +148,16 @@ internal class Game private constructor(
             poolPort: Int,
             players: List<String>,
         ): Game {
-            // The folders of clients an earlier run lost are that run's evidence, not this one's.
+            // The folders of parts an earlier run lost, and of its restart Papers, are that run's evidence, not this one's.
             Files
                 .list(settings.poolDir)
                 .use { dirs ->
-                    dirs.filter { it.fileName.toString().matches(Regex("client-.+-lost-\\d+")) }.toList()
+                    dirs.filter { it.fileName.toString().matches(Regex("client-.+-lost-\\d+|$OWN_PAPER.+")) }.toList()
                 }.forEach { remove(it) }
             val paperPort = freePort()
-            val paper = startPaper(settings, poolPort, paperPort)
+            val paperDir = settings.poolDir.resolve("paper")
+            preparePaper(settings, paperDir, paperPort)
+            val paper = startPaper(settings, poolPort, paperDir, "paper", listOf(), append = false)
             val started = mutableListOf(paper)
             val input = InputPath.here()
             val displays = mutableMapOf<String, Display>()
@@ -159,12 +206,16 @@ internal class Game private constructor(
             return Display(":$number", Part("Display of $player", process, log))
         }
 
-        private fun startPaper(
+        /** The name every restart attempt's own Paper starts with: `paper-` and its first player's name. */
+        const val OWN_PAPER = "paper-"
+
+        /** A fresh Paper folder in [dir] that serves on [port]. */
+        private fun preparePaper(
             settings: PoolSettings,
-            poolPort: Int,
+            dir: Path,
             port: Int,
-        ): Part {
-            val dir = freshDir(settings.poolDir.resolve("paper"))
+        ) {
+            freshDir(dir)
             listOf("versions", "libraries", "cache").forEach { Files.createSymbolicLink(dir.resolve(it), settings.paperDir.resolve(it)) }
             dir.resolve("plugins").createDirectories()
             Files.copy(settings.pluginJar, dir.resolve("plugins/playtest-plugin.jar"))
@@ -173,16 +224,35 @@ internal class Game private constructor(
             // The pool runs Paper only for the framework, inside its own build folder.
             dir.resolve("eula.txt").writeText("eula=true\n")
             dir.resolve("server.properties").writeText(serverProperties(port))
+        }
+
+        /**
+         * Starts the Paper in [dir] as [name], with [flags] before the rest. It starts the patched server
+         * on its class path directly, as Paperclip would after its patch check: Java's ahead of time
+         * cache holds only classes the JVM's own loaders load, never those of Paperclip's loader.
+         */
+        private fun startPaper(
+            settings: PoolSettings,
+            poolPort: Int,
+            dir: Path,
+            name: String,
+            flags: List<String>,
+            append: Boolean,
+        ): Part {
+            val server = PaperServer.of(settings.paperDir)
             val command =
-                listOf(
-                    settings.java.toString(),
-                    "-javaagent:${settings.agentJar}",
-                    "-Dplaytest.pool.port=$poolPort",
-                    "-jar",
-                    settings.paperDir.resolve("paper.jar").toString(),
-                    "--nogui",
-                )
-            return launch("Paper", command, dir, mapOf())
+                buildList {
+                    add(settings.java.toString())
+                    addAll(flags)
+                    add("-javaagent:${settings.agentJar}")
+                    add("-Dplaytest.pool.port=$poolPort")
+                    add("-Dplaytest.paper.name=$name")
+                    add("-cp")
+                    add(server.classPath.joinToString(File.pathSeparator))
+                    add(server.mainClass)
+                    add("--nogui")
+                }
+            return launch(if (name == "paper") "Paper" else "Paper $name", command, dir, mapOf(), append = append)
         }
 
         private fun startClient(
@@ -239,13 +309,14 @@ internal class Game private constructor(
             dir: Path,
             environment: Map<String, String>,
             player: String? = null,
+            append: Boolean = false,
         ): Part {
             val log = dir.resolve("console.log")
             val builder =
                 ProcessBuilder(command)
                     .directory(dir.toFile())
                     .redirectErrorStream(true)
-                    .redirectOutput(log.toFile())
+                    .redirectOutput(if (append) ProcessBuilder.Redirect.appendTo(log.toFile()) else ProcessBuilder.Redirect.to(log.toFile()))
                     .redirectInput(ProcessBuilder.Redirect.from(File("/dev/null")))
             builder.environment().putAll(environment)
             return Part(name, builder.start(), log, player)
@@ -295,5 +366,31 @@ internal class Game private constructor(
             checkNotNull(Game::class.java.getResourceAsStream(name)) { "the pool jar has no $name" }.use { String(it.readAllBytes()) }
 
         private fun freePort(): Int = ServerSocket(0, 1, InetAddress.getLoopbackAddress()).use { it.localPort }
+    }
+}
+
+/** How the patched Paper starts without Paperclip: its class path, in the order Paperclip loads it, and its main class. */
+internal class PaperServer(
+    val classPath: List<Path>,
+    val mainClass: String,
+) {
+    companion object {
+        /** The launch of the patched Paper in [paperDir], from the lists its Paperclip jar carries. */
+        fun of(paperDir: Path): PaperServer =
+            ZipFile(paperDir.resolve("paper.jar").toFile()).use { jar ->
+                fun lines(entry: String) =
+                    jar
+                        .getInputStream(checkNotNull(jar.getEntry(entry)) { "the Paperclip jar in $paperDir has no $entry" })
+                        .bufferedReader()
+                        .readLines()
+                        .filter(String::isNotBlank)
+
+                // Each line is a hash, an id and the jar's path below its folder, apart by tabs.
+                fun jars(
+                    entry: String,
+                    folder: String,
+                ) = lines(entry).map { paperDir.resolve(folder).resolve(it.split('\t')[2]) }
+                PaperServer(jars("META-INF/versions.list", "versions") + jars("META-INF/libraries.list", "libraries"), lines("META-INF/main-class").single().trim())
+            }
     }
 }

@@ -20,6 +20,7 @@ final class Stepper {
 
     private static final long TICK_NANOS = 50_000_000L;
     private static final long PARK_NANOS = TimeUnit.MILLISECONDS.toNanos(2);
+    private static final long WAITING_PARK_NANOS = TimeUnit.MILLISECONDS.toNanos(50);
 
     private static final ArrayDeque<Integer> granted = new ArrayDeque<>();
     private static volatile Thread renderThread;
@@ -84,9 +85,28 @@ final class Stepper {
         if (thread != null) LockSupport.unpark(thread);
     }
 
+    /**
+     * The client left its Paper: its clock runs on its own again, from where the stepped clock stood so
+     * time never runs backward, and it waits for the step pings of the next Paper it joins.
+     */
+    static void leftPaper() {
+        if (stepping) {
+            long offset = virtualNanos - System.nanoTime();
+            Util.setTimeSource(() -> System.nanoTime() + offset);
+        }
+        stepping = false;
+        granted.clear();
+        running = null;
+        lastPinged = -1;
+        lastRan = -1;
+        perceiveDue = false;
+    }
+
     /** Head of {@code Minecraft.runTick}, before it reads the clock. */
     static void beforeRunTick(Minecraft mc) {
         renderThread = Thread.currentThread();
+        // Without a Paper the client only waits for the pool, which wakes it.
+        if (Session.waiting()) LockSupport.parkNanos(WAITING_PARK_NANOS);
         if (!stepping) return;
         mc.packetProcessor().processQueuedPackets();
         if (running != null) return;

@@ -18,6 +18,7 @@ import com.typewritermc.playtest.wire.Message.ClientLost
 import com.typewritermc.playtest.wire.Message.ClientStalled
 import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.Declined
+import com.typewritermc.playtest.wire.Message.Disconnected
 import com.typewritermc.playtest.wire.Message.Demonstrates
 import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
@@ -32,9 +33,11 @@ import com.typewritermc.playtest.wire.Message.Key
 import com.typewritermc.playtest.wire.Message.KeyStep
 import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Lease
+import com.typewritermc.playtest.wire.Message.LeaseFailed
 import com.typewritermc.playtest.wire.Message.Look
 import com.typewritermc.playtest.wire.Message.Looked
 import com.typewritermc.playtest.wire.Message.Marks
+import com.typewritermc.playtest.wire.Message.PaperLost
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Perception
 import com.typewritermc.playtest.wire.Message.Player
@@ -50,6 +53,7 @@ import com.typewritermc.playtest.wire.Message.ProbeGameMode
 import com.typewritermc.playtest.wire.Message.ProbeGive
 import com.typewritermc.playtest.wire.Message.ProbeMark
 import com.typewritermc.playtest.wire.Message.ProbePacketEntity
+import com.typewritermc.playtest.wire.Message.ProbeSave
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot
 import com.typewritermc.playtest.wire.Message.ProbeSidebar
 import com.typewritermc.playtest.wire.Message.ProbeSpawn
@@ -67,6 +71,10 @@ import com.typewritermc.playtest.wire.Message.Release
 import com.typewritermc.playtest.wire.Message.Renderer
 import com.typewritermc.playtest.wire.Message.Reset
 import com.typewritermc.playtest.wire.Message.ResetDone
+import com.typewritermc.playtest.wire.Message.Restart
+import com.typewritermc.playtest.wire.Message.Restarted
+import com.typewritermc.playtest.wire.Message.Resume
+import com.typewritermc.playtest.wire.Message.Resumed
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
 import com.typewritermc.playtest.wire.Message.ScrollStep
@@ -104,20 +112,30 @@ val WireTest by testSuite {
             listOf<Message>(
                 Hello(Role.CLIENT, "gv-1"),
                 Refused("Paper stopped while starting; see pool/paper/logs/latest.log"),
-                Queue(listOf(Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH))),
+                Queue(listOf(Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false))),
                 Queue(
                     listOf(
-                        Submit(8, "LOST-1 a client that crashes fails its own attempt (attempt 1 of 3)", "LOST-1", 1, Demonstrates.FAILURE),
+                        Submit(8, "LOST-1 a client that crashes fails its own attempt (attempt 1 of 3)", "LOST-1", 1, Demonstrates.FAILURE, false),
                         Submit(
                             9,
                             "LOST-1 a client that crashes fails its own attempt (attempt 2 of 3)",
                             "LOST-1",
                             1,
                             Demonstrates.EDGE_CASE,
+                            false,
                         ),
                     ),
                 ),
+                Queue(listOf(Submit(10, "RESTART-1 a saved item survives a killed Paper", "RESTART-1", 1, Demonstrates.HAPPY_PATH, true))),
                 Declined(8, "GROUP-1 claims 3 players, but the pool holds 1"),
+                LeaseFailed(10, "paper-gv-1 exited with code 1 while it booted; see pool/paper-gv-1-lost-1/console.log"),
+                Restart(18, 10),
+                Restarted(18, 41),
+                PaperLost("gv-1", "paper-gv-1 exited with code 137 while it booted; see pool/paper-gv-1-lost-1/console.log"),
+                Resume(11, listOf(player, UUID(1, 2))),
+                Resumed(11, 41, null),
+                Resumed(12, 7, "the player gv-2 is not online"),
+                Disconnected(25_566, "its connection to the Paper at 127.0.0.1:25566 dropped"),
                 Reclaim(8),
                 Lease(7, listOf(Player("gv-1", player), Player("gv-2", UUID(1, 2))), Region(-1_024, 2_048)),
                 Result(7, 1_250, null, null, listOf(), "", listOf()),
@@ -150,6 +168,7 @@ val WireTest by testSuite {
                 Probe(14, listOf(player), ProbeWork("Ledger lookup", 120, "Ledger ready")),
                 Probe(15, listOf(player), ProbeSidebar("Quest", listOf("Find the key", "Gold: 3"))),
                 Probe(16, listOf(player), ProbeTime(6_000)),
+                Probe(17, listOf(player), ProbeSave()),
                 Query(14, player),
                 Marks(14, listOf(Kind.SCOREBOARD, Kind.HOLD), null),
                 Marks(15, listOf(), "the player gv-2 is not online"),

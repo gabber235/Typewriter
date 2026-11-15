@@ -108,6 +108,16 @@ class RequirementScope internal constructor(
     ): Mark = input("walks to $x, $z", WalkToStep(attempt.region.worldX(x), attempt.region.worldZ(z), limit.count))
 
     /**
+     * Kills the attempt's Paper as a crash would, so it saves nothing, boots it again on the same world,
+     * and returns once every player's client is back and holds what Paper sends it. Each player is where
+     * Paper put it on its join, with what Paper loaded for it: what was saved survives, the rest is gone.
+     * The mark is the tick of the new Paper after which they are back; windows count from it, and nothing
+     * perceived before the kill counts for them. Fails with [PaperLost] when the Paper does not come back.
+     * Only a requirement declared with `restartsPaper = true` runs on a Paper it may kill.
+     */
+    suspend fun restartPaper(): Mark = attempt.restart().also { anchor = it }
+
+    /**
      * The frame the player's client holds now is the golden [name], to the pixel. It is compared only
      * on the pinned renderer, where a frame that differs, or a golden another renderer drew, fails; any
      * other machine notes it as not checked. Ask once a window let the scene settle, of a scene where

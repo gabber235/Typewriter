@@ -41,7 +41,9 @@ private var currentSession: Result<PoolSession>? = null
  * test JVM once the pool has [players] free, each wiped and standing in a region of the world that is
  * the attempt's own. A failed attempt goes to the end of the pool's line and runs again on warm
  * clients, up to 4 attempts in total; a pass after a failure is flaky and fails the test like a
- * failure. [demonstrates] says what the case shows, in the run file.
+ * failure. [demonstrates] says what the case shows, in the run file. With [restartsPaper] the attempt
+ * runs on a Paper of its own, which the body may kill and boot again with
+ * [RequirementScope.restartPaper]; the shared Paper and every other attempt never notice.
  */
 @TestRegistering
 fun TestSuiteScope.requirement(
@@ -49,8 +51,9 @@ fun TestSuiteScope.requirement(
     sentence: String,
     players: Int = 1,
     demonstrates: Demonstrates = Demonstrates.HAPPY_PATH,
+    restartsPaper: Boolean = false,
     body: suspend RequirementScope.() -> Unit,
-) = attempts(id, sentence, players, demonstrates, listOf(body))
+) = attempts(id, sentence, players, demonstrates, listOf(body), restartsPaper)
 
 /**
  * Registers one requirement whose attempt runs [bodies] in order; before each body after the first the
@@ -64,10 +67,11 @@ internal fun TestSuiteScope.attempts(
     players: Int,
     demonstrates: Demonstrates,
     bodies: List<suspend RequirementScope.() -> Unit>,
+    restartsPaper: Boolean = false,
 ) {
     require(players >= 1) { "$id claims $players players; a requirement claims at least 1" }
     register(id, sentence, RequirementCode.of(bodies.first())) { session ->
-        session.attempt(PoolSession.Planned("$id $sentence", id, players, demonstrates, bodies))
+        session.attempt(PoolSession.Planned("$id $sentence", id, players, demonstrates, bodies, restartsPaper))
     }
 }
 

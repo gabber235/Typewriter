@@ -16,6 +16,7 @@ import com.typewritermc.playtest.wire.Message.ClientLost;
 import com.typewritermc.playtest.wire.Message.ClientStalled;
 import com.typewritermc.playtest.wire.Message.Connect;
 import com.typewritermc.playtest.wire.Message.Declined;
+import com.typewritermc.playtest.wire.Message.Disconnected;
 import com.typewritermc.playtest.wire.Message.Demonstrates;
 import com.typewritermc.playtest.wire.Message.End;
 import com.typewritermc.playtest.wire.Message.Ended;
@@ -31,11 +32,13 @@ import com.typewritermc.playtest.wire.Message.Key;
 import com.typewritermc.playtest.wire.Message.KeyStep;
 import com.typewritermc.playtest.wire.Message.Kind;
 import com.typewritermc.playtest.wire.Message.Lease;
+import com.typewritermc.playtest.wire.Message.LeaseFailed;
 import com.typewritermc.playtest.wire.Message.Capture;
 import com.typewritermc.playtest.wire.Message.Captured;
 import com.typewritermc.playtest.wire.Message.Look;
 import com.typewritermc.playtest.wire.Message.Looked;
 import com.typewritermc.playtest.wire.Message.Marks;
+import com.typewritermc.playtest.wire.Message.PaperLost;
 import com.typewritermc.playtest.wire.Message.Perceived;
 import com.typewritermc.playtest.wire.Message.Perception;
 import com.typewritermc.playtest.wire.Message.Player;
@@ -52,6 +55,7 @@ import com.typewritermc.playtest.wire.Message.ProbeGameMode;
 import com.typewritermc.playtest.wire.Message.ProbeGive;
 import com.typewritermc.playtest.wire.Message.ProbeMark;
 import com.typewritermc.playtest.wire.Message.ProbePacketEntity;
+import com.typewritermc.playtest.wire.Message.ProbeSave;
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot;
 import com.typewritermc.playtest.wire.Message.ProbeSpawn;
 import com.typewritermc.playtest.wire.Message.ProbeTeleport;
@@ -68,6 +72,10 @@ import com.typewritermc.playtest.wire.Message.RegionsAhead;
 import com.typewritermc.playtest.wire.Message.Release;
 import com.typewritermc.playtest.wire.Message.Reset;
 import com.typewritermc.playtest.wire.Message.ResetDone;
+import com.typewritermc.playtest.wire.Message.Restart;
+import com.typewritermc.playtest.wire.Message.Restarted;
+import com.typewritermc.playtest.wire.Message.Resume;
+import com.typewritermc.playtest.wire.Message.Resumed;
 import com.typewritermc.playtest.wire.Message.Renderer;
 import com.typewritermc.playtest.wire.Message.Result;
 import com.typewritermc.playtest.wire.Message.Role;
@@ -126,6 +134,7 @@ public final class Wire {
                     string(body, submit.requirement());
                     body.writeInt(submit.players());
                     body.writeByte(submit.demonstrates().ordinal());
+                    body.writeBoolean(submit.restartsPaper());
                 }
             }
             case Declined declined -> {
@@ -133,6 +142,35 @@ public final class Wire {
                 string(body, declined.reason());
             }
             case Reclaim reclaim -> body.writeLong(reclaim.submission());
+            case LeaseFailed failed -> {
+                body.writeLong(failed.submission());
+                string(body, failed.reason());
+            }
+            case Restart restart -> {
+                body.writeLong(restart.request());
+                body.writeLong(restart.submission());
+            }
+            case Restarted restarted -> {
+                body.writeLong(restarted.request());
+                body.writeInt(restarted.tick());
+            }
+            case PaperLost lost -> {
+                string(body, lost.player());
+                string(body, lost.reason());
+            }
+            case Resume resume -> {
+                body.writeLong(resume.attempt());
+                uuids(body, resume.players());
+            }
+            case Resumed resumed -> {
+                body.writeLong(resumed.attempt());
+                body.writeInt(resumed.tick());
+                optional(body, resumed.failure());
+            }
+            case Disconnected disconnected -> {
+                body.writeInt(disconnected.port());
+                string(body, disconnected.reason());
+            }
             case Query query -> {
                 body.writeLong(query.request());
                 uuid(body, query.player());
@@ -363,6 +401,13 @@ public final class Wire {
             case Looked m -> 38;
             case Capture m -> 39;
             case Captured m -> 40;
+            case LeaseFailed m -> 41;
+            case Restart m -> 42;
+            case Restarted m -> 43;
+            case PaperLost m -> 44;
+            case Resume m -> 45;
+            case Resumed m -> 46;
+            case Disconnected m -> 47;
         };
     }
 
@@ -374,7 +419,7 @@ public final class Wire {
                 int count = count(in);
                 var together = new ArrayList<Submit>(count);
                 for (int i = 0; i < count; i++) {
-                    together.add(new Submit(in.readLong(), string(in), string(in), in.readInt(), demonstrates(in.readUnsignedByte())));
+                    together.add(new Submit(in.readLong(), string(in), string(in), in.readInt(), demonstrates(in.readUnsignedByte()), in.readBoolean()));
                 }
                 yield new Queue(List.copyOf(together));
             }
@@ -444,6 +489,13 @@ public final class Wire {
             case 38 -> new Looked(in.readLong());
             case 39 -> new Capture(in.readLong(), uuid(in), string(in));
             case 40 -> new Captured(in.readLong(), new Renderer(string(in), string(in), string(in), string(in), string(in)), optional(in));
+            case 41 -> new LeaseFailed(in.readLong(), string(in));
+            case 42 -> new Restart(in.readLong(), in.readLong());
+            case 43 -> new Restarted(in.readLong(), in.readInt());
+            case 44 -> new PaperLost(string(in), string(in));
+            case 45 -> new Resume(in.readLong(), uuids(in));
+            case 46 -> new Resumed(in.readLong(), in.readInt(), optional(in));
+            case 47 -> new Disconnected(in.readInt(), string(in));
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
     }
@@ -566,6 +618,7 @@ public final class Wire {
                 out.writeByte(13);
                 out.writeLong(time.time());
             }
+            case ProbeSave save -> out.writeByte(14);
         }
     }
 
@@ -586,6 +639,7 @@ public final class Wire {
             case 11 -> new ProbeWork(string(in), in.readInt(), string(in));
             case 12 -> new ProbeSidebar(string(in), strings(in));
             case 13 -> new ProbeTime(in.readLong());
+            case 14 -> new ProbeSave();
             default -> throw new WireException("probe action " + kind + " is no action this build knows");
         };
     }

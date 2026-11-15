@@ -24,9 +24,11 @@ import java.nio.file.Path
  */
 internal class Attempt(
     private val session: PoolSession,
+    private val submission: Long,
     val players: List<GamePlayer>,
     val region: Region,
     private val requirementCode: RequirementCode,
+    private val restartsPaper: Boolean,
 ) {
     /** One event of a leased player's stream. */
     sealed interface Event {
@@ -54,7 +56,7 @@ internal class Attempt(
 
     private val incoming = Channel<Event>(Channel.UNLIMITED)
     private val received = mutableListOf<Event>()
-    private val lost = CompletableDeferred<ClientLost>()
+    private val lost = CompletableDeferred<AssertionError>()
     private val thrown = mutableSetOf<AssertionError>()
     private val taken = mutableListOf<AttemptStep>()
 
@@ -116,7 +118,8 @@ internal class Attempt(
     /** Hands an event of one of [players] to the attempt; called by the session's reader. */
     fun deliver(event: Event) {
         incoming.trySend(if (event is Event.Perceived) event.copy(perception = region.local(event.perception)) else event)
-        ((event as? Event.Failed)?.failure as? ClientLost)?.let(lost::complete)
+        // A lost client or Paper never answers what the body waits for.
+        (event as? Event.Failed)?.failure?.takeIf { it is ClientLost || it is PaperLost }?.let(lost::complete)
     }
 
     /** Ends the streams: the connection to the pool broke with [cause]. */
@@ -157,6 +160,24 @@ internal class Attempt(
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<Kind> = step("query ${player.name}") { unlessLost { session.query(player) } }
+
+    /**
+     * Kills the attempt's own Paper and boots it again; the mark is the new Paper's tick after which every
+     * player is back. What the players perceived before is gone from the timeline: its ticks are the
+     * killed Paper's, which the new one counts again from the start.
+     */
+    suspend fun restart(): Mark {
+        if (!restartsPaper) {
+            called()
+            throw RequirementRefused(
+                "restartPaper needs restartsPaper = true on the requirement: a kill drops every client on a Paper, so only an attempt on a Paper of its own may restart it",
+            )
+        }
+        val mark = step("restart Paper") { Mark(unlessLost { session.restart(submission) }) }
+        received.clear()
+        ranUntil = mark.tick
+        return mark
+    }
 
     /** [player]'s client runs [steps], which [says] describes; the mark is the tick after which its first event reached the client. */
     suspend fun input(
@@ -230,7 +251,7 @@ internal class Attempt(
         val renderer: Renderer,
     )
 
-    /** The answer of [call], unless a client of the attempt is lost first: a lost client never answers. */
+    /** The answer of [call], unless a client or the Paper of the attempt is lost first: neither answers then. */
     private suspend fun <T> unlessLost(call: suspend () -> T): T =
         coroutineScope {
             val answer = async { call() }
