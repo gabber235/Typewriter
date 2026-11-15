@@ -607,6 +607,12 @@ decided:
   - id: draw-at-end-of-tick
     what: "Draw at end of tick (Recommended)"
     why: The stepped clock drew at partial tick 0, so every blended value and entity position showed the previous tick; drawing at partial tick 1 makes a frame and a perception record show the same tick
+  - id: only-check-in-xtask
+    what: "A. xtask owns the check (Recommended)"
+    why: Gradle fails a gameTest module that matches no --tests filter; xtask already fails any id that matches no case in the whole run, so every gameTest task turns off failOnNoMatchingTests and selection uses testBalloon's own filter
+  - id: keep-slice-6-built-decisions
+    what: "Keep, approve runner only (Recommended)"
+    why: Rain and thunder stay with Paper's wipe, the wipe also resets the FOV ease and clients set fovEffectScale 0; approve refuses frames not made on the pinned runner, so no Mac golden slips in
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -714,4 +720,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 6 finishes goldens with the wipe resetting blends and frames drawn at the end of the tick; then pin render distance 2 and tighten PROBE-3.
+next: Slice 6 finishes (--only through testBalloon, approve runner only); then pin render distance 2 and tighten PROBE-3.
