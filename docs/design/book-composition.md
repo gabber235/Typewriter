@@ -99,7 +99,7 @@ sealed interface InstanceChoice<V : Record> {
 }
 ```
 
-- `V` is the embedded book's own variables type: the bind reuses the book's `content(variables)` id, so both share one type.
+- `V` is the embedded book's own variables type. A bind computes `derived(embed, "V")`, the embed's own id, so sharing the book's type needs a bind that answers an alias of the book's `V`; the catalog already takes an alias (`DerivedTarget.Plain`), the bind builder has no way to give one yet.
 - `I` and `O` are derived from the book's inlets and outlets.
 - An outside link names the inlet through the existing `opposite` path, so both sides are stored, as for any link authored on both sides (`ResourceValueMapper.kt:215-227`):
 
@@ -237,8 +237,8 @@ Bo clicks the smith: `smith_question` runs, but `fire` skips `ask_line@["fetch_i
 
 Nothing compiled or ran. Checked against code: KSP accepts a universal endpoint (`universal_resource_endpoint.kt:19`, compile only); the hard link checks run before `accepts` (`ResourceValueMapper.kt:191-213`); `isReadableAs(_, Resource)` is false (`KspTypeGraphConverter.kt:281`); the engine keys by the full `CompiledResourceKey`, so copies never collide (`CompiledResourceGraph.kt:25-39`).
 
-- **`bind` and `Book<V>` are not built**; `dynamic()` is built with `scope` and `exports` only (layer 1), and the `Book` record has no variables yet. Layer 31 waits on 1b (`bind`) and 13 ([build-graph.md](build-graph.md)).
-- **The id of `I` and `O`.** A derived type's id is the location of the field the bind reads; `I` and `O` come from many relay resources, so the rule needs to name the field the bind is declared on.
+- **`Book<V>` is not built**; `bind` is built (node 1b), and the `Book` record has no variables yet. Layer 31 waits on 13 ([build-graph.md](build-graph.md)).
+- **The id of `I` and `O`.** A derived type's id is the resource whose type has the parameter and the parameter's name (`TypeDefinitionId.derived(embed, "I")`), so `I` and `O` need no field rule however many relay resources their bind reads; what is unproven is a bind that reads relay resources through `book.contents`, and an alias answer for `V`.
 - **`book.contents<BookOutlet>()` inside `dynamic()`.** Only `ref.resolve()` and field reads are designed as tracked reads; this is a chain of field reads over pages.
 - **`Book<V>` as a reference target** in `Ref<EmbeddedBook.Embed, Book<V>>`.
 - **The back link fields on the embed** belong to whichever relation the outside link uses, so the relay family rule must also cover the embed's `inlets` fields. Whether the panel's link drag writes both sides for a relation it learns from a bind.

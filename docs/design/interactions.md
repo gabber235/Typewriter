@@ -939,7 +939,7 @@ Changing `K` reuses [migrations](migrations.md#group-entries).
 - One for a party where joining another moves you; many for overlapping regions or several guilds. Joining a group you are already in changes nothing.
 - `Ref<ManualGroupEntry<*>>` means `JoinGroup` cannot point at a formula group; the panel only offers manual ones.
 - Party is not a Typewriter concept; creators build parties with a manual group.
-- Each group entry exports its own identity type through `bind` (`islands` gives `Island`). Formulas name the grouping, `protagonist.island`; there is no ambiguous `protagonist.group`.
+- Each group entry exports its own identity type through `bind` (`islands` gives `Island`). A bind computes a type parameter of its resource's type (node 1b), so a group entry type needs a type parameter for its identity; open for node 11. Formulas name the grouping, `protagonist.island`; there is no ambiguous `protagonist.group`.
 - Anything else about a group, such as an island's name, is a provider or a variable keyed by the group, unless it belongs in the key type.
 
 Every legacy group is one of these:
