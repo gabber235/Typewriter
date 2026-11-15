@@ -40,6 +40,14 @@ class Selection extends _$Selection {
     _set([selectable], selecting: false);
   }
 
+  /// Selects only [selectable], as [selectOnly] does, and lands keyboard
+  /// focus on its row once a surface shows it, such as a search result
+  /// chosen on another page.
+  void reveal(SelectableIdentifier selectable) {
+    selectOnly(selectable);
+    ref.read(selectionLandingProvider.notifier)._request(selectable);
+  }
+
   /// Adds [selectable] when it is not selected and removes it when it is,
   /// keeping the rest, and shows the checks of select mode.
   void toggle(SelectableIdentifier selectable) {
@@ -147,6 +155,26 @@ class SelectMode extends _$SelectMode {
   /// select mode, null keeps it, and an empty selection always ends it.
   void _follow(List<SelectableIdentifier> selection, {bool? selecting}) {
     state = selection.isNotEmpty && (selecting ?? state);
+  }
+}
+
+/// The item whose row takes keyboard focus the next time a surface shows
+/// it, or null. [Selection.reveal] requests it; the [Selector] of that item
+/// takes it once its route is current, and then it is cleared. Kept alive,
+/// as the request outlives the search that made it until the page shows.
+@Riverpod(keepAlive: true)
+class SelectionLanding extends _$SelectionLanding {
+  @override
+  SelectableIdentifier? build() {
+    return null;
+  }
+
+  void _request(SelectableIdentifier selectable) => state = selectable;
+
+  /// Clears the request when it is still for [selectable], as its row took
+  /// focus.
+  void take(SelectableIdentifier selectable) {
+    if (state == selectable) state = null;
   }
 }
 

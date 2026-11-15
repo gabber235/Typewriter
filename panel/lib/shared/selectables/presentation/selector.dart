@@ -123,6 +123,24 @@ class Selector extends HookConsumerWidget {
       selectableId,
     ]);
 
+    // A revealed item takes focus after the frame, once its route is
+    // current, so neither the page's open focus nor a closing search keeps
+    // it.
+    final landing = ref.watch(
+      selectionLandingProvider.select((id) => id == selectableId),
+    );
+    final current = ModalRoute.isCurrentOf(context) ?? true;
+    useEffect(() {
+      if (!landing || !current) return null;
+      var active = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!active || !context.mounted) return;
+        ref.read(selectionLandingProvider.notifier).take(selectableId);
+        focusNode.requestFocus();
+      });
+      return () => active = false;
+    }, [landing, current, focusNode]);
+
     final source = SelectionOperationsRoot.of(context);
     final captured = contextTargets.value;
     final operations =

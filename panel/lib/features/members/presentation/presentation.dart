@@ -6,6 +6,7 @@ export "member_table.dart";
 export "membership_hold.dart";
 export "membership_operations.dart";
 export "membership_page.dart";
+export "membership_search_results.dart";
 export "person_summary.dart";
 export "role_checks.dart";
 export "role_multiselect_chips.dart";

@@ -537,3 +537,30 @@ class _StoryPreview extends StatelessWidget {
     );
   }
 }
+
+/// The row states a search result story shows, by knob label.
+const storyRowStates = ["Idle", "Focused", "Selected", "Loading"];
+
+/// The row context of [type] result [title] in the row state [state], one of
+/// [storyRowStates], holding [payload] and the first result's shortcut.
+SearchResultRowContext storyRowContext(
+  SearchResultType type,
+  Object payload, {
+  required String title,
+  required String state,
+}) => SearchResultRowContext(
+  result: SearchResult(
+    id: "story:${type.id}",
+    type: type,
+    payload: payload,
+    title: title,
+  ),
+  focused: state == "Focused",
+  selected: state == "Selected",
+  loading: state == "Loading",
+  onTap: () {},
+  shortcutActivator: AdaptiveSingleActivator(
+    LogicalKeyboardKey.digit1,
+    control: true,
+  ),
+);
