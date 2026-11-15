@@ -619,6 +619,12 @@ decided:
   - id: renderer-has-os
     what: "Add os (Recommended)"
     why: A renderer names the OS so the pin says Linux outright instead of relying on no other OS matching Vulkan, llvmpipe, Mesa and CPU
+  - id: keep-slice-6-built-decisions
+    what: "Keep, missing golden fails (Recommended)"
+    why: The wire's Request, PaperRequest and ClientRequest mirror Reply; on the pinned runner a missing golden fails with the approve command instead of not checked, since the game runs in CI only from slice 9, which approves the first goldens
+  - id: steadiness-beside-slice-7
+    what: "Steadiness first, slice 7 beside (Recommended)"
+    why: GOLDEN-3 flaked once and tick counts vary between runs (BREAK-1 6 to 11), which a stepped design should repeat exactly; the speed builder proves the PROBE-3 ring, fixes the missing golden and finds why runs vary (measure, then a choice), while slice 7 builds
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -727,7 +733,7 @@ slices:
       opened" is inferred from the pool log; the driver token is unseen on a real runner; weather is not
       pinned.
   - id: restart-paper
-    status: queued
+    status: building
     what: fast boot flags, AOT cache training, clients gated during boot
     green: a deposit survives a killed Paper
   - id: coverage-and-clips
@@ -739,4 +745,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 6 done. Confirm its built decisions; then the PROBE-3 ring proof and why tick counts vary, and slice 7 (restart Paper).
+next: Slice 7 (restart Paper) builds on feat/game-verification-slice-7; beside it, feat/game-verification-steadiness proves the ring, fixes the missing golden and finds why runs vary.
