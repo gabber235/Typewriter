@@ -61,6 +61,66 @@ void main() {
     );
   });
 
+  test("a link to a definition offers a bound resource of that definition "
+      "and no resource of another", () {
+    final fixture = LinkChoicesFixture(
+      sourceTarget: skir.ResourceMatchTemplate.wrapDefinition(
+        testTypeId("Board"),
+      ),
+    );
+    final plan = (fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    ) as PortableLinkPlanReady).plans.single;
+    final board = plan.targets.singleWhere(
+      (target) => target.resource == fixture.boundBoard,
+    );
+    expect(board.disabledReason, isNull);
+    expect(
+      plan.targets.map((target) => target.resource),
+      isNot(contains(fixture.unrelatedTarget)),
+    );
+  });
+
+  test("a link to a supertype offers a bound resource whose definition "
+      "extends it", () {
+    final fixture = LinkChoicesFixture(
+      sourceTarget: skir.ResourceMatchTemplate.wrapType(
+        typeTemplateOf("Supertype"),
+      ),
+    );
+    final plan = (fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    ) as PortableLinkPlanReady).plans.single;
+    final board = plan.targets.singleWhere(
+      (target) => target.resource == fixture.boundBoard,
+    );
+    expect(board.disabledReason, isNull);
+  });
+
+  test("a link to one application of a definition does not offer a bound "
+      "resource whose computed argument the panel cannot know", () {
+    final fixture = LinkChoicesFixture(
+      sourceTarget: skir.ResourceMatchTemplate.wrapType(
+        typeTemplateOf(
+          skir.NamedTypeTemplate(
+            definition: testTypeId("Board"),
+            arguments: [typeTemplateOf(skir.ScalarKind.text)],
+          ),
+        ),
+      ),
+    );
+    final plan = (fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    ) as PortableLinkPlanReady).plans.single;
+    expect(
+      plan.targets.map((target) => target.resource),
+      isNot(contains(fixture.boundBoard)),
+    );
+  });
+
   test("a selected abstract form supplies its own reference endpoint", () {
     final fixture = LinkChoicesFixture(abstractWrapper: true);
     final source = skir.ValueLocation(

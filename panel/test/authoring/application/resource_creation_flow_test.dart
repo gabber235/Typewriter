@@ -29,6 +29,25 @@ void main() {
     },
   );
 
+  testWidgets("a page is created with a new Book whose parameter a bind "
+      "computes", (tester) async {
+    final fixture = ResourceCreationFixture(derivedBookParameters: {"Bound"});
+    final page = fixture.request("Page");
+    final panel = await tester.pumpPanel(adaServing(fixture.document()));
+
+    final creation = await panel.create(page);
+    await panel.search.result("Create Book").tap();
+
+    expect(creation.error, isNull);
+    expect(creation.created?.resourceId, page.id);
+    final saved = await panel.savedAfter();
+    final book = saved.linkTarget(page.id, "book")!;
+    expect(
+      saved.resource(book)!.configuration,
+      fixture.request("Book").configuration,
+    );
+  });
+
   testWidgets(
     "an owner back reference the Realm leaves empty still joins the single "
     "owner",

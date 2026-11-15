@@ -55,6 +55,13 @@ skir.NamedTypeTemplate _named(Object type) => switch (type) {
   _ => skir.NamedTypeTemplate(definition: _id(type), arguments: const []),
 };
 
+/// The resources [target] matches: a [skir.ResourceMatchTemplate] stays
+/// itself, and anything else is the type [typeTemplateOf] reads.
+skir.ResourceMatchTemplate _match(Object target) => switch (target) {
+  final skir.ResourceMatchTemplate match => match,
+  _ => skir.ResourceMatchTemplate.wrapType(typeTemplateOf(target)),
+};
+
 /// [payload] held as the test type [type].
 skir.DataValue typedValue(String type, skir.DataValue payload) =>
     skir.DataValue.createNamed(actualType: typeUse(type), payload: payload);
@@ -243,7 +250,8 @@ skir.PublishedType declaredMap(
   ),
 );
 
-/// The ready link type [type] through [endpoint] to a [target].
+/// The ready link type [type] through [endpoint] to a [target], a type as
+/// [typeTemplateOf] reads it or a [skir.ResourceMatchTemplate].
 skir.PublishedType declaredLink(
   Object type, {
   required String endpoint,
@@ -252,13 +260,15 @@ skir.PublishedType declaredLink(
   _id(type),
   representation: skir.RepresentationTemplate.createLink(
     endpoint: skir.EndpointId(value: endpoint),
-    target: skir.ResourceMatchTemplate.wrapType(typeTemplateOf(target)),
+    target: _match(target),
   ),
 );
 
-/// The endpoint [id] of a relation at a [resource], one per resource unless
-/// [cardinality] says otherwise, cleared when its counterpart is deleted
-/// unless [onDelete] says otherwise. The relation it joins places it.
+/// The endpoint [id] of a relation at a [resource], a type as
+/// [typeTemplateOf] reads it or a [skir.ResourceMatchTemplate], one per
+/// resource unless [cardinality] says otherwise, cleared when its
+/// counterpart is deleted unless [onDelete] says otherwise. The relation it
+/// joins places it.
 skir.EndpointDefinition endpointOf(
   String id,
   Object resource, {
@@ -267,9 +277,7 @@ skir.EndpointDefinition endpointOf(
 }) => skir.EndpointDefinition(
   id: skir.EndpointId(value: id),
   slot: skir.EndpointSlot.first,
-  resource: skir.ResourceMatchTemplate.wrapType(
-    skir.TypeTemplate.wrapNamed(_named(resource)),
-  ),
+  resource: _match(resource),
   cardinality: cardinality,
   onDelete: onDelete,
 );
@@ -291,7 +299,8 @@ skir.RelationContract declaredRelation(
 /// Binds [endpoint] to the value a [resource] holds at [path], whose names
 /// are fields and whose [skir.FieldPatternSegment.items] reads each item of a
 /// collection; the value is declared by [owner], the [resource] unless
-/// given, and links to a [target].
+/// given, and links to a [target], a type as [typeTemplateOf] reads it or a
+/// [skir.ResourceMatchTemplate].
 skir.EndpointBindingTemplate endpointBinding(
   String endpoint, {
   required String resource,
@@ -314,7 +323,7 @@ skir.EndpointBindingTemplate endpointBinding(
         },
     ],
   ),
-  target: skir.ResourceMatchTemplate.wrapType(typeTemplateOf(target)),
+  target: _match(target),
   containsCollection: path.contains(skir.FieldPatternSegment.items),
 );
 

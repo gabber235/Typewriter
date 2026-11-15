@@ -479,11 +479,11 @@ final class _ResourceCreationOperation {
     final source = view.resource(plan.source.source)!;
     for (final type in catalog.creatableTypes) {
       final configuration = catalog.beginSelection(type);
-      final complete = catalog.completeUse(configuration) != null;
-      // A pending type stays a candidate while its choices could still fit.
-      if (catalog.fits(configuration, plan.targetMatch) == ResourceFit.no) {
-        continue;
-      }
+      final chosen = catalog.isFullyChosen(configuration);
+      final fit = catalog.fits(configuration, plan.targetMatch);
+      // A pending type stays a candidate while a creator's choices could
+      // still make it fit; a fully chosen one only when it fits.
+      if (fit == ResourceFit.no || chosen && fit != ResourceFit.yes) continue;
       final inverse = catalog
           .endpointBindings(configuration)
           .where((binding) => binding.template.endpoint == plan.opposite.id)
@@ -507,7 +507,7 @@ final class _ResourceCreationOperation {
         description: catalog.selectionDisplay(configuration)?.description ?? "",
         searchText: "create $label",
         display: catalog.selectionDisplay(configuration),
-        disabledReason: !complete
+        disabledReason: !chosen
             ? "This type requires concrete type arguments"
             : compatible
             ? null

@@ -6,12 +6,19 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 /// A draft of a source resource whose wrapper record links to target
 /// resources with a back reference, and an existing and an empty target.
 /// The flags vary the shape of the wrapper and of its inverse link.
+///
+/// With [sourceTarget] the source link leads to resources that match it
+/// instead of to nodes, and the draft also holds a bound board: a resource of
+/// the generic `Board`, which extends `Supertype` and whose one parameter a
+/// bind computes, so its selection stays partial. It also holds a resource of
+/// the unrelated `Unrelated`.
 final class LinkChoicesFixture {
   factory LinkChoicesFixture({
     bool incompatibleInverse = false,
     bool directCollection = false,
     bool abstractWrapper = false,
     bool nestedCollection = false,
+    skir.ResourceMatchTemplate? sourceTarget,
   }) {
     final wrapper = abstractWrapper ? "AbstractWrapper" : "Wrapper";
     final linked = directCollection || nestedCollection;
@@ -38,10 +45,32 @@ final class LinkChoicesFixture {
           ),
         ),
         node("resource:empty", skir.DataValue.unfilled),
+        if (sourceTarget != null) ...[
+          authoredRecord("resource:board", {
+            "label": skir.DataValue.unfilled,
+          }, type: typeUse("Board")),
+          authoredRecord("resource:unrelated", {
+            "label": skir.DataValue.unfilled,
+          }, type: typeUse("Unrelated")),
+        ],
       ],
       catalog: authoredCatalog(
         [
           if (abstractWrapper) declaredRecord("AbstractWrapper", open: true),
+          if (sourceTarget != null) ...[
+            declaredRecord("Supertype", open: true),
+            declaredRecord(
+              "Board",
+              fields: {"label": skir.ScalarKind.text},
+              parents: ["Supertype"],
+              parameters: {"Item": []},
+              derived: {"Item"},
+            ),
+            declaredRecord(
+              "Unrelated",
+              fields: {"label": skir.ScalarKind.text},
+            ),
+          ],
           declaredCollection("Links", "TargetLink"),
           declaredRecord(
             "Node",
@@ -58,7 +87,11 @@ final class LinkChoicesFixture {
             },
             parents: [if (abstractWrapper) "AbstractWrapper"],
           ),
-          declaredLink("SourceLink", endpoint: "test.source", target: "Node"),
+          declaredLink(
+            "SourceLink",
+            endpoint: "test.source",
+            target: sourceTarget ?? "Node",
+          ),
           declaredLink(
             "TargetLink",
             endpoint: "test.target",
@@ -77,7 +110,7 @@ final class LinkChoicesFixture {
             ),
             endpointOf(
               "test.target",
-              "Node",
+              sourceTarget ?? "Node",
               cardinality: linked
                   ? skir.EndpointCardinality.one
                   : skir.EndpointCardinality.many,
@@ -89,7 +122,7 @@ final class LinkChoicesFixture {
             "test.source",
             resource: "Node",
             path: ["source"],
-            target: "Node",
+            target: sourceTarget ?? "Node",
           ),
           if (!abstractWrapper)
             endpointBinding(
@@ -112,6 +145,8 @@ final class LinkChoicesFixture {
       source: valueAt("resource:source", ["source"]),
       existingTarget: skir.ResourceId(value: "resource:existing"),
       emptyTarget: skir.ResourceId(value: "resource:empty"),
+      boundBoard: skir.ResourceId(value: "resource:board"),
+      unrelatedTarget: skir.ResourceId(value: "resource:unrelated"),
       nestedLinkPath: valueAt("resource:source", ["wrapper", "back"]).path,
       wrapperUse: typeUse("Wrapper"),
       wrapperSelection: selectionOfUse(typeUse("Wrapper")),
@@ -124,6 +159,8 @@ final class LinkChoicesFixture {
     required this.source,
     required this.existingTarget,
     required this.emptyTarget,
+    required this.boundBoard,
+    required this.unrelatedTarget,
     required this.nestedLinkPath,
     required this.wrapperUse,
     required this.wrapperSelection,
@@ -134,6 +171,12 @@ final class LinkChoicesFixture {
   final skir.ValueLocation source;
   final skir.ResourceId existingTarget;
   final skir.ResourceId emptyTarget;
+
+  /// The board whose parameter a bind computes, present with a source target.
+  final skir.ResourceId boundBoard;
+
+  /// The resource of an unrelated definition, present with a source target.
+  final skir.ResourceId unrelatedTarget;
   final skir.ValuePath nestedLinkPath;
   final skir.NamedTypeUse wrapperUse;
   final skir.TypeSelection wrapperSelection;
