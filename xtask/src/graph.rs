@@ -1,8 +1,8 @@
 //! The pull request gate as data. Each step is one program invocation (or one native function),
 //! so `--print` can show the plain command and anyone can run it by hand.
 //!
-//! [`GENERATE`] runs first whenever a selected step needs generated sources; the other steps then
-//! run in parallel and heavy steps queue on the machine wide [`HeavyLock`]. Every step runs as a
+//! [`GENERATE`] runs first whenever a selected step needs generated sources and one is stale; the
+//! other steps then run in parallel and heavy steps queue on the machine wide [`HeavyLock`]. Every step runs as a
 //! process in its own group, native steps as `xtask step <name>`, so an interrupt or a budget
 //! overrun stops everything the step started. Every step writes its output to
 //! `.xtask/logs/<step>.log` and its `TestRun` to `.xtask/results/steps/<step>.json`, and has a time
@@ -218,8 +218,8 @@ impl Step {
     }
 }
 
-/// Brings the generated sources up to date. Not heavy itself: it takes the heavy lock only around
-/// build_runner, the one generator that saturates the machine.
+/// Brings the generated sources up to date. Heavy, so waiting for the lock never counts against
+/// its budget; the graph skips it when every generator is current, so a warm run never queues.
 pub const GENERATE: Step = Step {
     name: "generate",
     area: Area::Protocol,
@@ -227,7 +227,7 @@ pub const GENERATE: Step = Step {
         describe: generate::DESCRIBE,
         run: generate::step,
     },
-    heavy: false,
+    heavy: true,
     // A cold CI runner builds every generator from scratch.
     budget: mins(20),
     needs_generate: false,
@@ -615,7 +615,7 @@ pub fn run(ctx: &Context, steps: &[&'static Step]) -> Result<()> {
         .trim()
         .to_owned();
     let run = |step: &Step| run_step(ctx, step, &logs, &commit);
-    if needs_generate(steps) && !run(&GENERATE) {
+    if needs_generate(steps) && !generate::is_up_to_date(ctx)? && !run(&GENERATE) {
         bail!("generate failed, so no step ran");
     }
     let failed = thread::scope(|scope| {
