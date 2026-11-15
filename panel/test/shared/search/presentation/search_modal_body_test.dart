@@ -42,23 +42,44 @@ void main() {
     expect(panel.shows("Missing renderer test-row"), isTrue);
   });
 
-  testWidgets("clicking a result selects it", (tester) async {
+  testWidgets("clicking a result opens it", (tester) async {
+    final source = FakeSearchSource();
+    final activated = <String>[];
+    final panel = await tester.showSearch(
+      source,
+      results: body,
+      activated: activated,
+      size: const Size(800, 700),
+    );
+    await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
+
+    await panel.search.result("Result beta").tap();
+
+    expect(activated, ["beta"]);
+  });
+
+  testWidgets("Down moves focus from the query to the first result, and Up "
+      "back, with the search still open", (tester) async {
     final source = FakeSearchSource();
     final panel = await tester.showSearch(
       source,
       results: body,
       size: const Size(800, 700),
     );
-    await panel.search.show(source, [resultNode("alpha")]);
-    final alpha = panel.search.result("Result alpha");
-    expect(alpha.isSelected, isFalse);
+    await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
+    expect(panel.queryBar.isFocused, isTrue);
 
-    await alpha.tap();
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    expect(panel.search.result("Result alpha").isFocused, isTrue);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    expect(panel.search.result("Result beta").isFocused, isTrue);
 
-    expect(alpha.isSelected, isTrue);
+    await panel.press(LogicalKeyboardKey.arrowUp);
+    await panel.press(LogicalKeyboardKey.arrowUp);
+    expect(panel.queryBar.isFocused, isTrue);
   });
 
-  testWidgets("Space toggles the selection of the focused result", (
+  testWidgets("typing on a focused result types into the query", (
     tester,
   ) async {
     final source = FakeSearchSource();
@@ -68,15 +89,75 @@ void main() {
       size: const Size(800, 700),
     );
     await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
-    final beta = panel.search.result("Result beta");
-    await beta.focus();
+    await panel.queryBar.type("al");
+    await panel.press(LogicalKeyboardKey.arrowDown);
 
-    await panel.press(LogicalKeyboardKey.space);
-    expect(beta.isSelected, isTrue);
-    expect(panel.search.result("Result alpha").isSelected, isFalse);
+    await panel.press(LogicalKeyboardKey.keyP);
 
-    await panel.press(LogicalKeyboardKey.space);
-    expect(beta.isSelected, isFalse);
+    expect(panel.queryBar.isFocused, isTrue);
+    expect(panel.queryBar.text, "alp");
+  });
+
+  testWidgets("Enter in the query opens the first result", (tester) async {
+    final source = FakeSearchSource();
+    final activated = <String>[];
+    final panel = await tester.showSearch(
+      source,
+      results: body,
+      activated: activated,
+      size: const Size(800, 700),
+    );
+    await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await panel.press(LogicalKeyboardKey.escape);
+    expect(panel.queryBar.isFocused, isTrue);
+
+    await panel.press(LogicalKeyboardKey.enter);
+
+    expect(activated, ["alpha"]);
+  });
+
+  testWidgets("a command's key acts on the focused result only", (
+    tester,
+  ) async {
+    final source = FakeSearchSource();
+    final ran = <String>[];
+    final command = SearchCommand.single<String>(
+      id: const SearchCommandId("test.copy"),
+      presentation: const SearchCommandPresentation(
+        label: "Copy",
+        shortcut: SingleActivator(LogicalKeyboardKey.keyC, alt: true),
+      ),
+      matcher: const SearchResultMatcher(testResultType),
+      execute: (context, value, target) async {
+        ran.add(target.result.id);
+        return const SearchCommandResult.completed(
+          surfaceEffect: SearchSurfaceEffect.refresh(),
+        );
+      },
+    );
+    final panel = await tester.showSearch(
+      source,
+      results: body,
+      commands: [command],
+      size: const Size(800, 700),
+    );
+    await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await panel.press(LogicalKeyboardKey.escape);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+    await panel.press(LogicalKeyboardKey.keyC);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+    expect(ran, isEmpty);
+
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+    await panel.press(LogicalKeyboardKey.keyC);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+    expect(ran, ["alpha"]);
   });
 
   for (final number in [1, 3, 9]) {

@@ -7,16 +7,25 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// read from and written to [SearchController], while row rendering is
 /// delegated by result type identifier through [rowRenderers]. Empty states
 /// replace the scroll view only when the projected row count is zero.
+///
+/// With a [selection], the results are a [SelectionSurface] over it: each
+/// row is a [Selector] of its [SearchResultSelectable], so a surface that
+/// chooses several values, such as a list picker, takes every selection
+/// gesture the rest of the panel knows.
 class SearchTreeResults extends HookConsumerWidget {
   const SearchTreeResults({
     required this.rowRenderers,
     this.empty,
     this.loading,
     this.shrinkWrap = false,
+    this.selection,
     super.key,
   });
 
   final Map<String, SearchResultRowBuilder> rowRenderers;
+
+  /// The values the results choose, or null when a result opens on its own.
+  final SurfaceSelection? selection;
   final Widget? empty;
   final Widget? loading;
   final bool shrinkWrap;
@@ -51,7 +60,7 @@ class SearchTreeResults extends HookConsumerWidget {
       };
     }
 
-    return ClipPath(
+    final list = ClipPath(
       clipper: VerticalClipper(additionalWidth: 500),
       child: CustomScrollView(
         shrinkWrap: shrinkWrap,
@@ -72,6 +81,17 @@ class SearchTreeResults extends HookConsumerWidget {
           SliverToBoxAdapter(child: SizedBox(height: context.spacing.space2)),
         ],
       ),
+    );
+    final owned = selection;
+    if (owned == null) return list;
+    return SelectionSurface(
+      selection: owned,
+      every: [
+        for (final node in snapshot.nodes.walk())
+          if (node case SearchResultNode(:final result))
+            SearchResultSelectable(result),
+      ],
+      child: list,
     );
   }
 }
@@ -173,6 +193,24 @@ class SearchTreeRowWidget extends ConsumerWidget {
   }
 }
 
+/// The focus stops of the result rows below [results], in visible order: one
+/// per row, its row's control or selectable.
+List<FocusNode> searchResultStops(FocusNode results) => [
+  for (final node in results.traversalDescendants)
+    if (node.ancestors.any((ancestor) => ancestor is _ResultRowFocusNode)) node,
+];
+
+/// Marks the subtree of one result row, so [searchResultStops] tells its
+/// stop apart from section headers.
+final class _ResultRowFocusNode extends FocusNode {
+  _ResultRowFocusNode()
+    : super(
+        debugLabel: "Search result row",
+        canRequestFocus: false,
+        skipTraversal: true,
+      );
+}
+
 class _SearchTreeResultRow extends HookConsumerWidget {
   const _SearchTreeResultRow({required this.row, required this.rowRenderers});
 
@@ -182,6 +220,10 @@ class _SearchTreeResultRow extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final focused = useState(false);
+    final rowFocus = useMemoized(_ResultRowFocusNode.new);
+    useEffect(() => rowFocus.dispose, [rowFocus]);
+    final selectorFocus = useFocusNode(debugLabel: "Search result");
+    final owned = SelectionSurface.maybeOf(context)?.selection;
     final controller = ref.watch(searchProvider)!;
     final result = row.result;
     final activator = searchResultShortcutActivator(row.shortcutNumber);
@@ -189,32 +231,44 @@ class _SearchTreeResultRow extends HookConsumerWidget {
     final commands = controller.commandsFor(result);
     final commandState = controller.commandState;
     final commandsBusy = commandState is SearchCommandRunning;
-    final commandResults = switch (commandState) {
+    final commandResult = switch (commandState) {
       SearchCommandIdle() => null,
-      SearchCommandRunning(:final resultIds) => resultIds,
-      SearchCommandCompleted(:final resultIds) => resultIds,
-      SearchCommandFailed(:final resultIds) => resultIds,
+      SearchCommandRunning(:final resultId) => resultId,
+      SearchCommandCompleted(:final resultId) => resultId,
+      SearchCommandFailed(:final resultId) => resultId,
     };
-    final commandConcernsThis = commandResults?.contains(result.id) ?? false;
+    final commandConcernsThis = commandResult == result.id;
 
     final rowContext = SearchResultRowContext(
       result: result,
-      selected: controller.isSelected(result.id),
-      focused: focused.value || controller.currentPreview?.id == result.id,
+      selected: false,
+      focused: focused.value,
       loading: commandsBusy && commandConcernsThis,
-      onTap: () {
-        if (controller.selectionMode == .single) {
-          controller.activate(result);
-          return;
-        }
-        controller.toggleSelected(result.id);
-      },
+      onTap: controller.isBusy ? null : () => controller.activate(result),
       shortcutActivator: activator,
     );
 
-    final child =
-        rowRenderers[result.type.rowRendererId]?.call(rowContext) ??
+    Widget render(SearchResultRowContext context) =>
+        rowRenderers[result.type.rowRendererId]?.call(context) ??
         MissingSearchResultRendererRow(result: result);
+
+    // A row of a surface's own selection is its selector: the selector
+    // takes the clicks and keys, and the row only shows its state.
+    final child = owned == null
+        ? render(rowContext)
+        : Selector(
+            selectableId: SearchResultSelectable(result),
+            focusNode: selectorFocus,
+            builder: (selected, focused, hovered) => SelectorCheck(
+              child: render(
+                rowContext.copyWith(
+                  selected: selected,
+                  focused: focused,
+                  onTap: null,
+                ),
+              ),
+            ),
+          );
 
     void execute(SearchCommandId commandId) {
       controller.executeCommand(commandId, resultId: result.id);
@@ -285,6 +339,19 @@ class _SearchTreeResultRow extends HookConsumerWidget {
             ],
             child: ManagedActionSet(
               shortcuts: [
+                // A command's key acts on this result while it has focus.
+                for (final resolved in commands)
+                  ActionShortcut(
+                    id: "search_result_${result.id}_${resolved.command.id.value}",
+                    label: resolved.command.presentation.label,
+                    icon: ElasticSwitcher(child: commandIcon(resolved.command)),
+                    description: "",
+                    activators: [?resolved.command.presentation.shortcut],
+                    priority: resolved.command.presentation.priority,
+                    run: commandsBusy || resolved.state is! SearchCommandEnabled
+                        ? null
+                        : ActionRun.press((_) => execute(resolved.command.id)),
+                  ),
                 ActionShortcut(
                   id: "search_tree_results_activate",
                   label: "",
@@ -296,7 +363,8 @@ class _SearchTreeResultRow extends HookConsumerWidget {
                   priority: 0,
                   show: false,
                   run:
-                      controller.isBusy ||
+                      owned != null ||
+                          controller.isBusy ||
                           controller.activationState(result)
                               is! SearchActivationEnabled
                       ? null
@@ -304,7 +372,9 @@ class _SearchTreeResultRow extends HookConsumerWidget {
                 ),
               ],
               child: Focus(
+                focusNode: rowFocus,
                 skipTraversal: true,
+                canRequestFocus: false,
                 descendantsAreTraversable: true,
                 onFocusChange: (hasFocus) {
                   focused.value = hasFocus;

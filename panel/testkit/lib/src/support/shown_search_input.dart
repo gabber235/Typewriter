@@ -5,75 +5,12 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/doubles/presentation_host.dart";
 import "package:typewriter_testkit/src/doubles/projecting_host.dart";
 import "package:typewriter_testkit/src/drivers/panel_driver.dart";
+import "package:typewriter_testkit/src/shared/editors/list_picker_fixture.dart";
+import "package:typewriter_testkit/src/shared/editors/presentation/collection_editor_fixture.dart";
 import "package:typewriter_testkit/src/shared/editors/presentation_builders.dart";
 import "package:typewriter_testkit/src/shared/editors/catalog_fixture.dart";
 import "package:typewriter_testkit/src/support/portable_operations.dart";
 import "package:typewriter_testkit/src/support/shown_component.dart";
-
-/// A search over the static [choices], keyed by item id, that writes the
-/// chosen one to [target].
-///
-/// Results bind as [resultType] (text unless given) and show their value.
-/// A [listType] collects several choices into that list type; otherwise one
-/// choice replaces the value. The search is labeled [label], shows
-/// [placeholder] and [summary] when given, and grows to [maximumExtent].
-skir.SearchControl staticSearchControl({
-  required skir.BindingRef target,
-  required Map<String, skir.DataValue> choices,
-  skir.TypeTemplate? resultType,
-  skir.TypeDefinitionId? listType,
-  String? label,
-  String? placeholder,
-  skir.PresentationNode? summary,
-  double maximumExtent = 220,
-}) {
-  final row = skir.ExpressionBindingId(value: "row");
-  final rowRead = inputExpression(row);
-  final control = skir.SearchControl.mutable()
-    ..control =
-        (skir.BoundControl.mutable()
-              ..binding = target
-              ..label = label == null ? null : textLiteral(label))
-            .toFrozen()
-    ..selectionMode = listType == null
-        ? skir.SearchSelectionMode.single
-        : skir.SearchSelectionMode.multiple
-    ..queryBinding = declareNamedBinding("query", textTemplate)
-    ..summaryBinding = declareNamedBinding(
-      "summary",
-      listType == null
-          ? textTemplate
-          : skir.TypeTemplate.createNamed(
-              definition: listType,
-              arguments: const [],
-            ),
-    )
-    ..maximumExtent = numberLiteral(maximumExtent)
-    ..placeholder = placeholder == null ? null : textLiteral(placeholder)
-    ..provider = skir.SearchProvider.createStaticValues(
-      values: literalExpression(
-        skir.DataValue.createListValue(
-          items: [
-            for (final choice in choices.entries)
-              skir.ListItem(
-                id: skir.ItemId(value: choice.key),
-                value: choice.value,
-              ),
-          ],
-        ),
-      ),
-      result: skir.SearchResultMapping(
-        binding: declareBinding(row, resultType ?? textTemplate),
-        key: rowRead,
-        selectedValue: rowRead,
-        label: rowRead,
-        presentation: presentationText("result", rowRead),
-      ),
-      selectors: const [],
-    );
-  if (summary != null) control.summary = summary;
-  return control.toFrozen();
-}
 
 /// Shows a search over Alpha and Beta that writes the root of the value
 /// holding [value], Alpha by default, reporting each write to [onWrite] and
@@ -252,6 +189,24 @@ final class SearchInputScenario {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Showing a [ListPickerScenario].
+extension ShownListPicker on ListPickerScenario {
+  /// Shows the picker 360 wide; the search is still closed.
+  Future<PanelDriver> show(WidgetTester tester) {
+    addTearDown(collection.dispose);
+    return tester.showComponent(
+      Scaffold(
+        body: SingleChildScrollView(
+          child: SizedBox(
+            width: 360,
+            child: CollectionEditorScenarioView(scenario: collection),
           ),
         ),
       ),

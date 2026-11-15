@@ -15,105 +15,11 @@ void main() {
       );
 
       expect(
-        controller.execute(command, commandTarget([searchResult("a")])),
+        controller.execute(command, commandTarget(searchResult("a"))),
         SearchCommandSubmitResult.notApplicable,
       );
       expect(controller.state, isA<SearchCommandIdle>());
     });
-
-    test("batch command receives the complete selection", () async {
-      final batches = <List<String>>[];
-      final effects = <SearchSurfaceEffect>[];
-      final command = SearchCommand.batch<String>(
-        id: const SearchCommandId("test.batch"),
-        presentation: const SearchCommandPresentation(label: "Batch"),
-        matcher: const SearchResultMatcher(testResultType),
-        execute: (context, values, target) async {
-          batches.add(values);
-          return const SearchCommandResult.completed();
-        },
-      );
-      final controller = CommandController(
-        effectCallback: effects.add,
-        prompts: const UnsupportedSearchPromptHost(),
-      );
-      addTearDown(controller.dispose);
-
-      expect(
-        controller.execute(
-          command,
-          commandTarget([searchResult("a"), searchResult("b")]),
-        ),
-        SearchCommandSubmitResult.submitted,
-      );
-      await Future<void>.delayed(Duration.zero);
-
-      expect(batches, [
-        ["a", "b"],
-      ]);
-      expect(controller.state, isA<SearchCommandCompleted>());
-      expect(effects, [const SearchSurfaceEffect.close()]);
-    });
-
-    final outcomes = {
-      "every result succeeds": (
-        locked: <String>{},
-        state: isA<SearchCommandCompleted>(),
-      ),
-      "one result fails": (
-        locked: {"b"},
-        state: isA<SearchCommandFailed>().having(
-          (state) => state.message,
-          "message",
-          "b is locked",
-        ),
-      ),
-      "several results fail": (
-        locked: {"b", "c"},
-        state: isA<SearchCommandFailed>().having(
-          (state) => state.message,
-          "message",
-          "Search failed: b is locked, c is locked",
-        ),
-      ),
-    };
-    for (final MapEntry(key: name, value: (:locked, :state))
-        in outcomes.entries) {
-      test(
-        "a repeated command runs once per selected result when $name",
-        () async {
-          final executed = <String>[];
-          final controller = CommandController(
-            effectCallback: (_) {},
-            prompts: const UnsupportedSearchPromptHost(),
-          );
-          addTearDown(controller.dispose);
-
-          controller.execute(
-            SearchCommand.repeated<String>(
-              id: const SearchCommandId("test.repeated"),
-              presentation: const SearchCommandPresentation(label: "Repeated"),
-              matcher: const SearchResultMatcher(testResultType),
-              execute: (context, value, target) async {
-                executed.add(value);
-                return locked.contains(value)
-                    ? SearchCommandResult.failed(message: "$value is locked")
-                    : const SearchCommandResult.completed();
-              },
-            ),
-            commandTarget([
-              searchResult("a"),
-              searchResult("b"),
-              searchResult("c"),
-            ]),
-          );
-          await Future<void>.delayed(Duration.zero);
-
-          expect(executed, ["a", "b", "c"]);
-          expect(controller.state, state);
-        },
-      );
-    }
 
     test("running command blocks another execution", () {
       final completer = Completer<SearchCommandResult>();
@@ -125,7 +31,7 @@ void main() {
         prompts: const UnsupportedSearchPromptHost(),
       );
       addTearDown(controller.dispose);
-      final target = commandTarget([searchResult("a")]);
+      final target = commandTarget(searchResult("a"));
 
       expect(
         controller.execute(command, target),
@@ -152,7 +58,7 @@ void main() {
           execute: (context, value, target) async =>
               const SearchCommandResult.cancelled(),
         ),
-        commandTarget([searchResult("a")]),
+        commandTarget(searchResult("a")),
       );
       await Future<void>.delayed(Duration.zero);
 
@@ -180,7 +86,7 @@ void main() {
                 hostEffects: [NamedHostEffect("organization")],
               ),
         ),
-        commandTarget([searchResult("a")]),
+        commandTarget(searchResult("a")),
       );
       await Future<void>.delayed(Duration.zero);
 
@@ -201,7 +107,7 @@ void main() {
         searchCommand(
           execute: (context, value, target) => Future.error(StateError("boom")),
         ),
-        commandTarget([searchResult("a")]),
+        commandTarget(searchResult("a")),
       );
       await Future<void>.delayed(Duration.zero);
 
