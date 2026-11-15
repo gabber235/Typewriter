@@ -589,6 +589,12 @@ decided:
   - id: free-clients-in-step
     what: "Keep free clients in step (Recommended)"
     why: A free client fell up to 235 ticks behind and stalled every attempt once claimed; every player gets step pings, one rule, lost clients still go after 5 s
+  - id: goldens-on-the-runner-only
+    what: "E, also ci should work again. If not we can try to move to namespace"
+    why: The Mac renders different pixels, so goldens stay exact on the pinned runner only; compare, hashing, diff and approve are built now and the Mac reports a golden as not checked; the first real green comes with CI, on Actions or else Namespace runners
+  - id: a4-threshold-share
+    what: "Share of the frame (Recommended)"
+    why: A pixel count means 4x less area on the Mac window than on the runner; a share of the frame means the same on every window size
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -696,4 +702,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 6 A4 is built; goldens wait on a choice because the Mac cannot render the runner pixels. Choose how goldens are checked and the A4 threshold unit.
+next: Slice 6 finishes goldens (runner only, the Mac reports not checked), the A4 threshold as a share of the frame, and the --only discovery gap.
