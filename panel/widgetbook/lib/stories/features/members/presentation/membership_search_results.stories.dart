@@ -57,7 +57,7 @@ Widget joinCodeSearchResultItemUseCase(BuildContext context) {
       row: storyRowContext(
         joinCodeSearchResultType,
         item,
-        title: joinCodeSearchResultType.label,
+        title: "Join code",
         state: state,
       ),
     ),

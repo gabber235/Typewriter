@@ -12,10 +12,10 @@ const serviceSearchResultType = SearchResultType(
 abstract class ServiceSearchItem with _$ServiceSearchItem {
   const factory ServiceSearchItem({
     required skir.Service service,
+    required bool connected,
 
     /// The host the service runs, whose card stands for the service.
     skir.ServiceHost? host,
-    required bool connected,
   }) = _ServiceSearchItem;
 
   const ServiceSearchItem._();

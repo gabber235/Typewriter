@@ -45,7 +45,7 @@ class Selection extends _$Selection {
   /// chosen on another page.
   void reveal(SelectableIdentifier selectable) {
     selectOnly(selectable);
-    ref.read(selectionLandingProvider.notifier)._request(selectable);
+    ref.read(selectionLandingProvider.notifier)._target = selectable;
   }
 
   /// Adds [selectable] when it is not selected and removes it when it is,
@@ -169,12 +169,13 @@ class SelectionLanding extends _$SelectionLanding {
     return null;
   }
 
-  void _request(SelectableIdentifier selectable) => state = selectable;
+  SelectableIdentifier? get _target => state;
+  set _target(SelectableIdentifier? selectable) => state = selectable;
 
   /// Clears the request when it is still for [selectable], as its row took
   /// focus.
   void take(SelectableIdentifier selectable) {
-    if (state == selectable) state = null;
+    if (_target == selectable) _target = null;
   }
 }
 
