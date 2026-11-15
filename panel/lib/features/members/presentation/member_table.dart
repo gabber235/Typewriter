@@ -31,11 +31,10 @@ class MembersTable extends HookConsumerWidget {
         icon: MaterialSymbols.groups_2_rounded,
       ),
       shortcutsOf: (member) => [memberRowRemoval(member, rows)],
-      leadingBuilder: (context, member, selected) => SelectableAvatar(
+      leadingBuilder: (context, member) => MemberAvatar(
         avatarUrl:
             member.avatarUrl?.nullIfEmpty ??
             "$userIconUrl&seed=${member.userId}",
-        isSelected: selected,
         radius: 16,
       ),
       cellsBuilder: (context, member) => [
@@ -125,14 +124,13 @@ class MembersCardList extends StatelessWidget {
         description: "Invite someone to get started!",
       ),
       shortcutsOf: (member) => [memberRowRemoval(member, rows)],
-      contentBuilder: (context, member, selected) => Row(
+      contentBuilder: (context, member) => Row(
         spacing: context.spacing.space3,
         children: [
-          SelectableAvatar(
+          MemberAvatar(
             avatarUrl:
                 member.avatarUrl?.nullIfEmpty ??
                 "$userIconUrl&seed=${member.userId}",
-            isSelected: selected,
             radius: 20,
           ),
           Expanded(

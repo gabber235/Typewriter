@@ -46,6 +46,36 @@ class SelectableDriver extends ComponentDriver {
   /// Whether the item's check is on.
   bool get isChecked => _checks.contains(CheckedState.isTrue);
 
+  /// How many check marks the item draws where the user can see them.
+  int get visibleCheckMarks => find
+      .descendant(
+        of: _item,
+        matching: find.byWidgetPredicate(
+          (widget) => switch (widget) {
+            Icon(:final icon) => _checkGlyphs.contains(icon),
+            Icones(:final icon) => _checkSymbols.contains(icon),
+            _ => false,
+          },
+        ),
+      )
+      .evaluate()
+      .where(
+        (mark) => !mark.debugGetDiagnosticChain().any(
+          (ancestor) => switch (ancestor.widget) {
+            Opacity(opacity: 0) => true,
+            _ => false,
+          },
+        ),
+      )
+      .length;
+
+  static const _checkGlyphs = [Icons.check, Icons.check_rounded];
+  static const _checkSymbols = [
+    MaterialSymbols.check,
+    MaterialSymbols.check_small,
+    MaterialSymbols.check_small_rounded,
+  ];
+
   Iterable<CheckedState> get _checks => find.semantics
       .byLabel(label)
       .evaluate()

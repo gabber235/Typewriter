@@ -138,7 +138,19 @@ void main() {
 
       expect(panel.item("Grace").isMarkedSelected, isTrue);
       expect(panel.item("Grace").showsCheck, isFalse);
+      expect(panel.item("Grace").visibleCheckMarks, 0);
       expect(find.byType(MemberInspection), findsOneWidget);
+    });
+
+    testWidgets("a toggle click shows exactly one check on the member", (
+      tester,
+    ) async {
+      final panel = await tester.pumpPanel(page, at: membersPage());
+
+      await panel.item("Grace").toggle();
+
+      expect(panel.item("Grace").visibleCheckMarks, 1);
+      expect(panel.item("Linus").visibleCheckMarks, 0);
     });
 
     testWidgets("Bram and Dara both get the Writer role from the inspector, "

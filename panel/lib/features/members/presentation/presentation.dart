@@ -1,3 +1,4 @@
+export "member_avatar.dart";
 export "member_inspection.dart";
 export "member_list.dart";
 export "member_list_route.dart";
@@ -12,5 +13,4 @@ export "role_checks.dart";
 export "role_multiselect_chips.dart";
 export "role_multiselect_dropdown.dart";
 export "route.dart";
-export "selectable_avatar.dart";
 export "selection_table.dart";

@@ -34,9 +34,8 @@ Widget selectionTableUseCase(BuildContext context) {
         description: "Rows appear here once there are some.",
       ),
       shortcutsOf: (_) => const [],
-      leadingBuilder: (context, member, selected) => SelectableAvatar(
+      leadingBuilder: (context, member) => MemberAvatar(
         avatarUrl: "$userIconUrl&seed=${member.userId}",
-        isSelected: selected,
         radius: 16,
       ),
       cellsBuilder: (context, member) => [
@@ -76,7 +75,7 @@ Widget selectionCardListUseCase(BuildContext context) {
         description: "Cards appear here once there are some.",
       ),
       shortcutsOf: (_) => const [],
-      contentBuilder: (context, member, selected) =>
+      contentBuilder: (context, member) =>
           PersonSummary(name: member.name, email: member.email),
     ),
   );

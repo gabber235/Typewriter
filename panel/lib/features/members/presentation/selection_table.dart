@@ -52,8 +52,7 @@ class SelectionTable<T> extends HookConsumerWidget {
   final WidgetBuilder emptyBuilder;
 
   /// The selector cell's content beside the check, such as an avatar.
-  final Widget Function(BuildContext context, T item, bool selected)
-  leadingBuilder;
+  final Widget Function(BuildContext context, T item) leadingBuilder;
 
   /// The row's cells after the selector cell: one per label, then actions.
   final List<SelectionTableCell> Function(BuildContext context, T item)
@@ -136,12 +135,12 @@ class SelectionTable<T> extends HookConsumerWidget {
                         selectableId: selectable,
                         focusNode: entry.focus,
                         link: link,
-                        builder: (selected, focused, hovered) => Semantics(
+                        builder: (_, _, _) => Semantics(
                           label: labelOf(item),
                           child: Padding(
                             padding: cellPadding,
                             child: SelectorCheck(
-                              child: leadingBuilder(context, item, selected),
+                              child: leadingBuilder(context, item),
                             ),
                           ),
                         ),
@@ -193,8 +192,7 @@ class SelectionCardList<T> extends HookConsumerWidget {
   /// What a screen reader names the card by.
   final String Function(T item) labelOf;
   final WidgetBuilder emptyBuilder;
-  final Widget Function(BuildContext context, T item, bool selected)
-  contentBuilder;
+  final Widget Function(BuildContext context, T item) contentBuilder;
   final List<ActionShortcut> Function(T item) shortcutsOf;
 
   @override
@@ -238,7 +236,7 @@ class SelectionCardList<T> extends HookConsumerWidget {
                       placement: SelectorCheckPlacement.corner,
                       child: Padding(
                         padding: EdgeInsets.all(context.spacing.space3),
-                        child: contentBuilder(context, item, selected),
+                        child: contentBuilder(context, item),
                       ),
                     ),
                   ),

@@ -39,14 +39,13 @@ class JoinRequestsList extends HookConsumerWidget {
         description: "When members request to join, they will appear here.",
       ),
       shortcutsOf: (request) => [joinRequestRowDecline(request, rows)],
-      contentBuilder: (context, request, selected) => Row(
+      contentBuilder: (context, request) => Row(
         spacing: context.spacing.space3,
         children: [
-          SelectableAvatar(
+          MemberAvatar(
             avatarUrl:
                 request.userAvatarUrl?.nullIfEmpty ??
                 "$userIconUrl&seed=${request.userId}",
-            isSelected: selected,
             radius: 20,
           ),
           Expanded(

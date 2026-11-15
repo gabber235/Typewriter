@@ -24,11 +24,10 @@ class MemberInspection extends ConsumerWidget {
           Row(
             spacing: context.spacing.space3,
             children: [
-              SelectableAvatar(
+              MemberAvatar(
                 avatarUrl:
                     single.avatarUrl?.nullIfEmpty ??
                     "$userIconUrl&seed=${single.userId}",
-                isSelected: false,
                 radius: 24,
               ),
               Expanded(

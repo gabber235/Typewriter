@@ -38,8 +38,7 @@ class JoinCodesTable extends StatelessWidget {
         description: "Generate a join code above to get started!",
       ),
       shortcutsOf: (code) => joinCodeRowShortcuts(code, rows),
-      leadingBuilder: (context, code, selected) =>
-          JoinCodeMark(selected: selected),
+      leadingBuilder: (context, code) => const JoinCodeMark(),
       cellsBuilder: (context, code) => [
         SelectionTableCell(
           Padding(
@@ -120,10 +119,10 @@ class JoinCodesCardList extends StatelessWidget {
         description: "Generate a join code above to get started!",
       ),
       shortcutsOf: (code) => joinCodeRowShortcuts(code, rows),
-      contentBuilder: (context, code, selected) => Row(
+      contentBuilder: (context, code) => Row(
         spacing: context.spacing.space3,
         children: [
-          JoinCodeMark(selected: selected),
+          const JoinCodeMark(),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,26 +155,21 @@ class JoinCodesCardList extends StatelessWidget {
   }
 }
 
-/// A join code's identity mark: a link tile that turns into a check while
-/// the code is selected.
+/// A join code's identity mark: a link tile. It stays the same while the
+/// code is selected; the row's fill shows the selection, and in select mode
+/// its [SelectorCheck] is the one check.
 class JoinCodeMark extends StatelessWidget {
-  const JoinCodeMark({required this.selected, super.key});
-
-  final bool selected;
+  const JoinCodeMark({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return CircleAvatar(
       radius: 16,
-      backgroundColor: selected
-          ? context.colors.success
-          : theme.colorScheme.primaryContainer,
-      child: Icon(
-        selected ? Icons.check : Icons.link,
-        color: selected
-            ? context.colors.onSuccess
-            : theme.colorScheme.onPrimaryContainer,
+      backgroundColor: theme.colorScheme.primaryContainer,
+      child: Icones(
+        MaterialSymbols.link_rounded,
+        color: theme.colorScheme.onPrimaryContainer,
         size: 18,
       ),
     );

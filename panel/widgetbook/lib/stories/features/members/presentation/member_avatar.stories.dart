@@ -4,11 +4,10 @@ import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/support/story.dart";
 
-/// A member's avatar, which turns into a check while the member is
-/// selected, at the sizes the table, cards and requests use.
-@widgetbook.UseCase(name: "Default", type: SelectableAvatar)
-Widget selectableAvatarUseCase(BuildContext context) {
-  final selected = context.knobs.boolean(label: "Selected");
+/// A member's avatar at the sizes the table, cards and requests use. It
+/// stays the same while the member is selected.
+@widgetbook.UseCase(name: "Default", type: MemberAvatar)
+Widget memberAvatarUseCase(BuildContext context) {
   final radius = context.knobs.double.slider(
     label: "Radius",
     initialValue: 24,
@@ -19,9 +18,8 @@ Widget selectableAvatarUseCase(BuildContext context) {
     const [],
     at: PanelLocation.component(
       Center(
-        child: SelectableAvatar(
+        child: MemberAvatar(
           avatarUrl: "$userIconUrl&seed=grace",
-          isSelected: selected,
           radius: radius,
         ),
       ),
