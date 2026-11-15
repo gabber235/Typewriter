@@ -595,6 +595,12 @@ decided:
   - id: a4-threshold-share
     what: "Share of the frame (Recommended)"
     why: A pixel count means 4x less area on the Mac window than on the runner; a share of the frame means the same on every window size
+  - id: pin-client-graphics
+    what: "Pin custom settings (Recommended)"
+    why: The default FANCY preset overrides renderDistance 2 with 3 at start (Minecraft.java:576), so a move waits for 81 chunks; graphicsPreset custom with render distance 2 cuts that and keeps a preset change from moving the goldens; built after slice 6 merges, before any golden hash exists
+  - id: ring-proof-probe-3
+    what: "Tighten PROBE-3 (Recommended)"
+    why: PROBE-3 passes even without the neighbour ring; checking on the first tick after the move, with and without the ring, shows whether the ring is needed, without a build change
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -702,4 +708,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 6 finishes goldens (runner only, the Mac reports not checked), the A4 threshold as a share of the frame, and the --only discovery gap.
+next: Lease time fixes merged (e5f88a238). Slice 6 finishes goldens; after it merges, pin the client graphics and tighten PROBE-3.
