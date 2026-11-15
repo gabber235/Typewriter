@@ -710,9 +710,22 @@ slices:
       grant to lease step (wipe plus the move into the region) takes a median of about 1.2 s, against
       about 18 ms for the wipe itself in spike K; probes take a median of 64 ms, windows 52 ms, inputs 16 ms.
   - id: pixels
-    status: building
+    status: done
     what: A4 on demand, goldens on devenv Mesa
     green: an entity behind a wall is not seen; a sidebar golden
+    evidence: [commits d1bfaf7cb c79a80861 68b78c1ca, "cargo xtask e2e game on 68b78c1ca: 92 passed first attempt, grant to lease median 472 ms", "slice thread: 6 green full runs in a row after one GOLDEN-3 flake; --only GOLDEN-1 and --only NOPE-1 behave"]
+    taught: >-
+      visible() costs 30 to 80 ms per asking requirement and about 0.25% of the suite. Golden frames
+      carried the previous place through blended fog, sky and FOV values and a one tick late draw; the
+      wipe now resets the blends and clients draw at the end of the tick. Drawn frames used the lightmap
+      from client launch because perceive frames used up its update; fixed. Goldens hash exactly, record
+      their renderer (with os), and compare only on the pinned runner (Linux, amd64, Vulkan, llvmpipe, the
+      Mesa devenv ships); the Mac reports not checked, so golden requirements prove nothing there until
+      slice 9. The custom graphics preset makes render distance 2 real: a claim now waits for 49 chunks.
+      Open: GOLDEN-3 flaked once under full suite load (cause unknown); tick counts vary between runs
+      (BREAK-1 6 to 11); a missing golden on the pinned runner still reports not checked; "no session
+      opened" is inferred from the pool log; the driver token is unseen on a real runner; weather is not
+      pinned.
   - id: restart-paper
     status: queued
     what: fast boot flags, AOT cache training, clients gated during boot
@@ -726,4 +739,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 6 finishes (--only through testBalloon, approve runner only); then pin render distance 2 and tighten PROBE-3.
+next: Slice 6 done. Confirm its built decisions; then the PROBE-3 ring proof and why tick counts vary, and slice 7 (restart Paper).
