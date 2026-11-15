@@ -1006,7 +1006,10 @@ private fun KSType.endpointTemplate(declarations: MutableMap<TypeDefinitionId, K
         }
     val arguments =
         arguments.map { argument ->
-            argument.type?.takeUnless { argument.variance == Variance.STAR }?.resolve()?.endpointTemplate(declarations)
+            argument.type
+                ?.takeUnless { argument.variance == Variance.STAR }
+                ?.resolve()
+                ?.endpointTemplate(declarations)
                 ?: EndpointTemplate.Rejected(NESTED_ENDPOINT_STAR)
         }
     arguments.filterIsInstance<EndpointTemplate.Rejected>().firstOrNull()?.let { return it }

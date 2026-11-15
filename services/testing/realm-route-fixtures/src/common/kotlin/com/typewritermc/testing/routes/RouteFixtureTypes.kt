@@ -29,7 +29,10 @@ import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
+import com.typewritermc.types.Many
+import com.typewritermc.types.One
 import com.typewritermc.types.Ref
+import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.TypewriterTypeImports
@@ -269,6 +272,23 @@ object FixtureLedgerRows : DynamicProvider {
             field("note", ScalarKind.TEXT.use)
         }
     }
+}
+
+/** An entry that pins one board, whatever row type that board computes. */
+@TypewriterType(id = "13952bef6ef8408cb6b5d0edbeb7a25d")
+data class FixtureBoardPin(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+    val board: Ref<FixtureBoardPins.Pin, FixtureBoard<*>>,
+) : StaticEntry
+
+/** Pins and the board each one names: a board of any row type, since no pin can name a computed one. */
+@ReferenceContract("d7c8b4b90bcc4ab6b940309dca85257d")
+interface FixtureBoardPinsContract {
+    interface Pin : Many<FixtureBoardPin>
+
+    interface Board : One<FixtureBoard<*>>
 }
 
 /** A draft type that reads a matched resource as its bare binding. */

@@ -13,6 +13,8 @@ import com.typewritermc.realm.edit.WorkingViewEditContext
 import com.typewritermc.realm.formula.FitOf
 import com.typewritermc.testing.routes.FixtureBoard
 import com.typewritermc.testing.routes.FixtureBoardDefinition
+import com.typewritermc.testing.routes.FixtureBoardPin
+import com.typewritermc.testing.routes.FixtureBoardPinDefinition
 import com.typewritermc.testing.routes.FixtureColumn
 import com.typewritermc.testing.routes.FixtureColumnDefinition
 import com.typewritermc.types.Ref
@@ -53,6 +55,22 @@ suspend fun RealmFixture.commitBoard(
     rows: (TypeUse) -> List<DataValue> = { emptyList() },
 ): Creation =
     commitBound(FixtureBoardDefinition.id, rows = rows) { page -> FixtureBoard<Nothing>(page, GraphPlacement(), name, columns.toList()) }
+
+/** Creates a pin named [name] on the realm's static page whose star link names [board], and commits it. */
+suspend fun RealmFixture.commitPin(
+    name: String,
+    board: ResourceId,
+): Creation {
+    val (id, reply) =
+        commitElement {
+            val page = resources.typesOf(StaticPageDefinition.id).single()
+            encoder.record(
+                TypeSelection(definition = FixtureBoardPinDefinition.id, arguments = emptyList()),
+                FixtureBoardPin(Ref(page.toResourceId()), GraphPlacement(), name, Ref(board.toResourceId())),
+            )
+        }
+    return Creation(id, reply)
+}
 
 /** A board named [name] with [columns] on the realm's static page, before it is saved. */
 fun RealmFixture.board(

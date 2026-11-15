@@ -14,6 +14,7 @@ import com.typewritermc.realm.testing.commitBoard
 import com.typewritermc.realm.testing.commitBoardChoosing
 import com.typewritermc.realm.testing.commitBound
 import com.typewritermc.realm.testing.commitDefinition
+import com.typewritermc.realm.testing.commitPin
 import com.typewritermc.realm.testing.commitScoredRow
 import com.typewritermc.realm.testing.computedVar
 import com.typewritermc.realm.testing.conflictingFacts
@@ -22,10 +23,12 @@ import com.typewritermc.realm.testing.errorsOn
 import com.typewritermc.realm.testing.fitRuns
 import com.typewritermc.realm.testing.formulas
 import com.typewritermc.realm.testing.intUse
+import com.typewritermc.realm.testing.linkAt
 import com.typewritermc.realm.testing.plainType
 import com.typewritermc.realm.testing.plainVar
 import com.typewritermc.realm.testing.publicationBlockersByResource
 import com.typewritermc.realm.testing.publishToEngine
+import com.typewritermc.realm.testing.record
 import com.typewritermc.realm.testing.recordValue
 import com.typewritermc.realm.testing.rename
 import com.typewritermc.realm.testing.renameAfterReadingTypeOf
@@ -223,6 +226,29 @@ val BoundTypesTest by testSuite {
             val board = commitBoard("scores", column("gold")).created()
 
             commitDefinition("late", plainType(TypeDefinitionId.derived(board, "W").use())).reply.shouldBeRejected("derived_type_missing")
+        }
+    }
+
+    test("a star link to any board names a board whose row type its bind computes, and the holder fits") {
+        withSetup(staticPage, catalog = routeFixtureCatalog) {
+            val board = commitBoard("scores", column("gold", number = true)).created()
+
+            val pin = commitPin("pin", board).created()
+
+            record(pin).linkAt(ValuePath.root.field("board"))?.resource shouldBe board
+            errorCodesOn(pin).shouldBeEmpty()
+        }
+    }
+
+    test("a star link to any board refuses a resource of another definition, even one with a computed row type") {
+        withSetup(staticPage, catalog = routeFixtureCatalog) {
+            val ledger =
+                commitBound(
+                    FixtureLedgerDefinition.id,
+                    chosen = listOf(ChosenArgument(parameter = 0, type = textUse)),
+                ) { page -> FixtureLedger<Nothing, Nothing>(page, GraphPlacement(), "ledger") }.created()
+
+            commitPin("pin", ledger).reply.shouldBeRejected("target_resource_type_mismatch")
         }
     }
 
