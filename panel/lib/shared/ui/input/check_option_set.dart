@@ -21,9 +21,10 @@ final class CheckChoice<K> {
 ///
 /// A press on a choice only some items hold gives it to all of them, the
 /// next takes it from all, and the one after gives each item back what it
-/// held before. A choice all or none hold switches between the two. Every
-/// press hands [onChanged] the next set of every item, in the order of
-/// [held], so the owner writes all of them at once or none.
+/// held before, where in its order it held it. A choice all or none hold
+/// switches between the two. Every press hands [onChanged] the next set of
+/// every item, in the order of [held], so the owner writes all of them at
+/// once or none. Sets keep their order: a choice given to an item goes last.
 class CheckOptionSet<K> extends HookWidget {
   const CheckOptionSet({
     required this.choices,
@@ -42,29 +43,36 @@ class CheckOptionSet<K> extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Which items held a choice before the press that gave it to all, and
-    // the sets that press left, so a change from anywhere else forgets it.
-    final before = useRef(<K, (List<bool>, List<Set<K>>)>{});
+    // Where each item held a choice before the press that gave it to all,
+    // and the sets that press left, so a change from anywhere else forgets it.
+    final before = useRef(<K, (List<int?>, List<Set<K>>)>{});
 
     void press(K key) {
-      final holding = [for (final set in held) set.contains(key)];
-      final all = holding.every((holds) => holds);
+      final places = [for (final set in held) _placeOf(set, key)];
+      final all = places.every((place) => place != null);
       final remembered = switch (before.value.remove(key)) {
         (final places, final left) when _sameSets(left, held) => places,
         _ => null,
       };
-      final next = remembered != null && !all
-          ? remembered
-          : [for (final _ in holding) !all];
+      final List<int?> next;
+      if (remembered != null && !all) {
+        next = remembered;
+      } else if (all) {
+        next = [for (final _ in places) null];
+      } else {
+        next = [
+          for (final (index, place) in places.indexed)
+            place ?? held[index].length,
+        ];
+      }
       final written = [
-        for (final (index, set) in held.indexed)
-          {...set.where((held) => held != key), if (next[index]) key},
+        for (final (index, set) in held.indexed) _placed(set, key, next[index]),
       ];
-      final places = remembered ?? (all ? null : holding);
-      if (places != null &&
+      final kept = remembered ?? (all ? null : places);
+      if (kept != null &&
           next != remembered &&
-          places.any((holds) => holds)) {
-        before.value[key] = (places, written);
+          kept.any((place) => place != null)) {
+        before.value[key] = (kept, written);
       }
       onChanged(written);
     }
@@ -91,6 +99,20 @@ class CheckOptionSet<K> extends HookWidget {
           }(),
       ],
     );
+  }
+
+  /// Where [set] holds [key] in its order, or null when it does not.
+  static int? _placeOf<K>(Set<K> set, K key) {
+    final index = set.toList().indexOf(key);
+    return index < 0 ? null : index;
+  }
+
+  /// [set] in its order with [key] at [place], or without it when [place] is
+  /// null.
+  static Set<K> _placed<K>(Set<K> set, K key, int? place) {
+    final rest = [...set.where((held) => held != key)];
+    if (place != null) rest.insert(place.clamp(0, rest.length), key);
+    return rest.toSet();
   }
 
   static bool _sameSets<K>(List<Set<K>> a, List<Set<K>> b) =>
