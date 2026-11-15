@@ -646,6 +646,12 @@ decided:
   - id: remove-visible-set-hold
     what: "Remove until proven (Recommended)"
     why: GOLDEN-3 flaked once in 7 full runs and never in 25 since, with or without the fix; no code without a failing test, and one less Minecraft hook
+  - id: keep-slice-7-built-decisions
+    what: "Keep them (Recommended)"
+    why: The step agent retransforms classes the AOT cache loaded before premain and no longer joins the boot class path; both Papers launch from Paper's class path; one fresh Paper per restart attempt, players resumed without a wipe; the cache is trained on a restart boot and kept only after a clean halt
+  - id: rules-per-paper
+    what: "Yes, one per Paper (Recommended)"
+    why: The restart Paper has a rules class while the shared Paper's rules sit in about 8 branches in Pool; every Paper gets a rules object and Pool forwards each event to its server's rules
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -778,4 +784,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 7 done. Confirm its built decisions and whether the shared Paper gets a rules object like the restart Paper; steadiness finishes.
+next: The slice 7 builder gives the shared Paper a rules object; steadiness finishes; then slice 8 (coverage and clips).
