@@ -57,10 +57,10 @@ class CommandController with ChangeNotifier {
   ) async {
     if (_disposed) return;
 
-    final resultIds = target.selection.map((result) => result.id).toSet();
+    final resultId = target.result.id;
     _state = SearchCommandExecutionState.running(
       command: command.id,
-      resultIds: resultIds,
+      resultId: resultId,
     );
     notifyListeners();
 
@@ -76,7 +76,7 @@ class CommandController with ChangeNotifier {
         case SearchCommandResultFailed(:final message, :final surfaceEffect):
           _state = SearchCommandExecutionState.failed(
             command: command.id,
-            resultIds: resultIds,
+            resultId: resultId,
             message: message,
           );
           notifyListeners();
@@ -87,7 +87,7 @@ class CommandController with ChangeNotifier {
         ):
           _state = SearchCommandExecutionState.completed(
             command: command.id,
-            resultIds: resultIds,
+            resultId: resultId,
           );
           notifyListeners();
           await _effectCallback(surfaceEffect);
@@ -99,7 +99,7 @@ class CommandController with ChangeNotifier {
       if (_disposed) return;
       _state = SearchCommandExecutionState.failed(
         command: command.id,
-        resultIds: resultIds,
+        resultId: resultId,
         message: error.toString(),
       );
       notifyListeners();

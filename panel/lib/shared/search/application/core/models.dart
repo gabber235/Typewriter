@@ -233,32 +233,11 @@ sealed class SearchNode with _$SearchNode {
 
 /// Traversal helpers that preserve depth first, source order.
 extension SearchNodes on List<SearchNode> {
-  List<SearchResult> findResults(Set<String> resultIds) {
-    final wanted = resultIds.toSet();
-    final results = <SearchResult>[];
-    final stack = [];
-
-    for (var i = length - 1; i >= 0; i--) {
-      stack.add(this[i]);
-    }
-
-    while (stack.isNotEmpty && wanted.isNotEmpty) {
-      final node = stack.removeLast();
-
-      switch (node) {
-        case SearchSectionNode():
-          for (var i = node.children.length - 1; i >= 0; i--) {
-            stack.add(node.children[i]);
-          }
-        case SearchResultNode():
-          if (wanted.remove(node.result.id)) {
-            results.add(node.result);
-          }
-      }
-    }
-
-    return results;
-  }
+  /// The result with [id], or null when the tree does not hold it.
+  SearchResult? findResult(String id) => walk()
+      .whereType<SearchResultNode>()
+      .map((node) => node.result)
+      .firstWhereOrNull((result) => result.id == id);
 
   Iterable<SearchNode> walk() sync* {
     final stack = [];
@@ -330,30 +309,6 @@ abstract class SearchSurfaceEffect with _$SearchSurfaceEffect {
   const factory SearchSurfaceEffect.refresh() = SearchSurfaceRefresh;
 
   const factory SearchSurfaceEffect.close() = SearchSurfaceClose;
-}
-
-/// Resolves multiple controller effects into one deterministic instruction.
-///
-/// Query updates take precedence over refresh, refresh takes precedence over
-/// close, and an empty set closes the search surface.
-extension SearchSurfaceEffects on Set<SearchSurfaceEffect> {
-  SearchSurfaceEffect merge() {
-    if (isEmpty) {
-      return SearchSurfaceEffect.close();
-    }
-
-    final updates = whereType<SearchSurfaceUpdateQuery>().toList();
-    if (updates.isNotEmpty) {
-      return updates.first;
-    }
-
-    final refreshes = any((e) => e is SearchSurfaceRefresh);
-    if (refreshes) {
-      return SearchSurfaceEffect.refresh();
-    }
-
-    return SearchSurfaceEffect.close();
-  }
 }
 
 /// An application side effect returned by a command for its surface host.

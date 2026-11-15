@@ -35,8 +35,13 @@ class SearchBody extends HookConsumerWidget {
     this.onQueryDismiss,
     this.textFieldActions,
     this.selectAllOnFocus = false,
+    this.selection,
     super.key,
   });
+
+  /// The values the results choose, for a surface that chooses several; see
+  /// [SearchTreeResults.selection].
+  final SurfaceSelection? selection;
 
   final SearchFrameBuilder frameBuilder;
   final bool shrinkWrap;
@@ -70,12 +75,90 @@ class SearchBody extends HookConsumerWidget {
     }, [inputFieldController]);
     final controller = ref.watch(searchProvider)!;
     final currentPreview = controller.currentPreview;
+    final results = useFocusNode(
+      debugLabel: "Search results",
+      canRequestFocus: false,
+      skipTraversal: true,
+    );
+    // Typing on a result moves to the query with the typed letter after the
+    // text, so focusing it must not select that text.
+    final typedAhead = useState(false);
+    useFocusedChange(inputFieldController.inputFocusNode, ({
+      required hasFocus,
+    }) {
+      if (!hasFocus) typedAhead.value = false;
+      return null;
+    }, [inputFieldController]);
+
     void submit() {
-      final result =
-          controller.currentPreview ??
-          controller.selectedResults.firstOrNull ??
-          controller.snapshot.nodes.firstResult;
+      final result = controller.snapshot.nodes.firstResult;
       if (result != null) unawaited(controller.activate(result));
+    }
+
+    // Whether the results sit below the query, so Down leads from the query
+    // into them and Up out of them again; above it the keys swap.
+    bool resultsBelow() {
+      final query = inputFieldController.inputFocusNode.rect;
+      final list = results.rect;
+      return list.top >= query.top;
+    }
+
+    void enterResults({required bool down}) {
+      final stops = searchResultStops(results);
+      if (stops.isEmpty || down != resultsBelow()) return;
+      (down ? stops.first : stops.last).requestFocus();
+    }
+
+    // Moves focus one result towards [down]; past the end that faces the
+    // query, focus returns to the query.
+    void step({required bool down}) {
+      final stops = searchResultStops(results);
+      final at = stops.indexWhere((stop) => stop.hasFocus);
+      if (at < 0) return;
+      final next = at + (down ? 1 : -1);
+      if (next >= 0 && next < stops.length) {
+        stops[next].requestFocus();
+      } else if ((next < 0) == resultsBelow()) {
+        inputFieldController.requestInputFocus();
+      }
+    }
+
+    // Keys a focused result leaves unhandled: Up and Down move between the
+    // results, from the first key on and whatever frame it lands in, and a
+    // typed character goes to the query.
+    KeyEventResult resultKeys(FocusNode node, KeyEvent event) {
+      final character = event.character;
+      final keyboard = HardwareKeyboard.instance;
+      final plain =
+          !keyboard.isControlPressed &&
+          !keyboard.isMetaPressed &&
+          !keyboard.isAltPressed &&
+          !keyboard.isShiftPressed;
+      final key = event.logicalKey;
+      if (event is! KeyUpEvent &&
+          plain &&
+          (key == LogicalKeyboardKey.arrowDown ||
+              key == LogicalKeyboardKey.arrowUp)) {
+        step(down: key == LogicalKeyboardKey.arrowDown);
+        return KeyEventResult.handled;
+      }
+      if (event is KeyUpEvent ||
+          character == null ||
+          character == " " ||
+          character.runes.any((rune) => rune < 0x20 || rune == 0x7f) ||
+          keyboard.isControlPressed ||
+          keyboard.isMetaPressed ||
+          keyboard.isAltPressed) {
+        return KeyEventResult.ignored;
+      }
+      typedAhead.value = true;
+      controller.updateQuery(controller.query + character);
+      // The query bar takes the new text while it does not have focus, so
+      // focus follows once the text is shown.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) inputFieldController.requestInputFocus();
+      });
+      return KeyEventResult.handled;
     }
 
     final surface = Actions(
@@ -96,10 +179,28 @@ class SearchBody extends HookConsumerWidget {
                 onCancel: onQueryDismiss,
                 textFieldActions: [
                   ...?textFieldActions,
+                  for (final down in [true, false])
+                    ActionShortcut(
+                      id: down
+                          ? "enter_search_results_down"
+                          : "enter_search_results_up",
+                      label: "Go to results",
+                      description: "Move focus from the query to the results",
+                      activators: [
+                        SingleActivator(
+                          down
+                              ? LogicalKeyboardKey.arrowDown
+                              : LogicalKeyboardKey.arrowUp,
+                        ),
+                      ],
+                      priority: 100,
+                      show: false,
+                      run: ActionRun.press((_) => enterResults(down: down)),
+                    ),
                   ActionShortcut(
                     id: "submit_search_result",
-                    label: "Select result",
-                    description: "Apply the highlighted search result",
+                    label: "Open result",
+                    description: "Open the first search result",
                     activators: [
                       const SingleActivator(LogicalKeyboardKey.enter),
                       const SingleActivator(LogicalKeyboardKey.numpadEnter),
@@ -109,7 +210,7 @@ class SearchBody extends HookConsumerWidget {
                     run: ActionRun.press((_) => submit()),
                   ),
                 ],
-                selectAllOnFocus: selectAllOnFocus,
+                selectAllOnFocus: selectAllOnFocus && !typedAhead.value,
                 onQueryChanged: controller.updateQuery,
                 selectors: controller.selectors,
                 completeSelector: controller.completeSelector,
@@ -150,17 +251,22 @@ class SearchBody extends HookConsumerWidget {
               const SearchCommandInfo(),
             ],
           ),
-          searchResults: Actions(
-            actions: {
-              DismissIntent: CallbackAction<DismissIntent>(
-                onInvoke: (_) => inputFieldController.requestSurroundingFocus(),
+          searchResults: Focus(
+            focusNode: results,
+            onKeyEvent: resultKeys,
+            child: Actions(
+              actions: {
+                DismissIntent: CallbackAction<DismissIntent>(
+                  onInvoke: (_) => inputFieldController.requestInputFocus(),
+                ),
+              },
+              child: SearchTreeResults(
+                selection: selection,
+                rowRenderers: rowRenderers,
+                shrinkWrap: shrinkWrap,
+                empty: empty,
+                loading: loading,
               ),
-            },
-            child: SearchTreeResults(
-              rowRenderers: rowRenderers,
-              shrinkWrap: shrinkWrap,
-              empty: empty,
-              loading: loading,
             ),
           ),
           actionBar: const ActionRow(),

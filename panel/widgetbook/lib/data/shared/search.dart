@@ -439,15 +439,15 @@ final Map<String, SearchCommandExecutionState> storyCommandStates = {
   "Idle": const SearchCommandExecutionState.idle(),
   "Running": SearchCommandExecutionState.running(
     command: storyOpenCommandId,
-    resultIds: {storyFirstResultId},
+    resultId: storyFirstResultId,
   ),
   "Completed": SearchCommandExecutionState.completed(
     command: storyOpenCommandId,
-    resultIds: {storyFirstResultId},
+    resultId: storyFirstResultId,
   ),
   "Failed": SearchCommandExecutionState.failed(
     command: storyOpenCommandId,
-    resultIds: {storyFirstResultId},
+    resultId: storyFirstResultId,
     message: "The realm did not answer. Press Open page to try again.",
   ),
 };

@@ -3,7 +3,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
-  testWidgets("a child shows the selection as it changes", (tester) async {
+  testWidgets("a child shows the collapsed sections as they change", (
+    tester,
+  ) async {
     late SearchController controller;
     final panel = await tester.pumpPanel(
       const [],
@@ -17,12 +19,12 @@ void main() {
         ),
       ),
     );
-    expect(panel.shows("Results selected: 0"), isTrue);
+    expect(panel.shows("Results collapsed: 0"), isTrue);
 
-    controller.toggleSelected("alpha");
+    controller.toggleSection("alpha");
     await panel.settle();
 
-    expect(panel.shows("Results selected: 1"), isTrue);
+    expect(panel.shows("Results collapsed: 1"), isTrue);
   });
 
   testWidgets("a child shows the results the source sends", (tester) async {
@@ -66,15 +68,15 @@ void main() {
         ),
       ),
     );
-    expect(panel.shows("First selected: 0"), isTrue);
+    expect(panel.shows("First collapsed: 0"), isTrue);
 
     second.value = true;
     await panel.settle();
-    controller.toggleSelected("alpha");
+    controller.toggleSection("alpha");
     await panel.settle();
 
-    expect(panel.shows("First selected: 0"), isFalse);
-    expect(panel.shows("Second selected: 1"), isTrue);
+    expect(panel.shows("First collapsed: 0"), isFalse);
+    expect(panel.shows("Second collapsed: 1"), isTrue);
   });
 
   testWidgets("a root that creates its controller disposes its source", (
@@ -150,13 +152,13 @@ void main() {
 
       current.value = second;
       await panel.settle();
-      second.toggleSelected("alpha");
+      second.toggleSection("alpha");
       first
-        ..toggleSelected("beta")
-        ..toggleSelected("gamma");
+        ..toggleSection("beta")
+        ..toggleSection("gamma");
       await panel.settle();
 
-      expect(panel.shows("Taps: 1, selected: 1"), isTrue);
+      expect(panel.shows("Taps: 1, collapsed: 1"), isTrue);
     },
   );
 }

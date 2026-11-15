@@ -96,8 +96,7 @@ void main() {
       payload: realm,
     );
     final target = SearchCommandTarget(
-      primary: result,
-      selection: [result],
+      result: result,
       query: SearchQueryContext.empty,
     );
     final command = openRealmCommand(

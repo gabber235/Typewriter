@@ -20,7 +20,7 @@ Widget searchCommandInfoUseCase(BuildContext context) {
   final commandState = state == "Long failure"
       ? SearchCommandExecutionState.failed(
           command: storyOpenCommandId,
-          resultIds: const {storyFirstResultId},
+          resultId: storyFirstResultId,
           message:
               "The realm did not answer within ten seconds while it was "
               "opening the page, and the connection to its host dropped "

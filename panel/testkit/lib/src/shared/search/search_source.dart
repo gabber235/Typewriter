@@ -175,13 +175,9 @@ SearchCommand searchCommand({
       (context, value, target) async => const SearchCommandResult.completed(),
 );
 
-/// A command target on [results], the first one primary, outside any query.
-SearchCommandTarget commandTarget(List<SearchResult> results) =>
-    SearchCommandTarget(
-      primary: results.first,
-      selection: results,
-      query: SearchQueryContext.empty,
-    );
+/// A command target on [result], outside any query.
+SearchCommandTarget commandTarget(SearchResult result) =>
+    SearchCommandTarget(result: result, query: SearchQueryContext.empty);
 
 /// A host effect a command asks for, told apart by [name].
 final class NamedHostEffect implements SearchHostEffect {
