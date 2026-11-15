@@ -21,6 +21,19 @@ class TestSelectableData extends _$TestSelectableData {
   ) => !mapEquals(previous, next);
 }
 
+/// The test items whose resource no longer holds them, as an item someone
+/// else deleted.
+@Riverpod(keepAlive: true)
+class TestSelectablesGone extends _$TestSelectablesGone {
+  @override
+  Set<String> build() => const {};
+
+  /// Makes the item [id] gone from its resource.
+  void remove(String id) {
+    state = {...state, id};
+  }
+}
+
 @riverpod
 skir.DataValue? testData(Ref ref, String id) =>
     ref.watch(testSelectableDataProvider)[id];
@@ -51,6 +64,9 @@ class TestSelectableIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
+    if (ref.watch(testSelectablesGoneProvider).contains(id)) {
+      return AsyncError(SelectableNotFoundException(this), StackTrace.current);
+    }
     final data =
         ref.watch(testDataProvider(id)) ??
         skir.DataValue.createRecord(

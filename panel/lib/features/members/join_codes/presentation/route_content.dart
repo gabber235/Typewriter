@@ -25,13 +25,7 @@ class JoinCodesTab extends HookConsumerWidget {
       ready: codesAsync.hasValue,
       focus: codeFocus,
     );
-    ref.useMembershipRows<JoinCodeIdentifier>(
-      list: MembershipList.joinCodes,
-      rows: rows,
-      live: codesAsync.value
-          ?.map((code) => JoinCodeIdentifier(code.code))
-          .toSet(),
-    );
+    ref.useMembershipRows(list: MembershipList.joinCodes, rows: rows);
     final rolesAsync = ref.watch(organizationRolesProvider);
     final joinCodeOptions = useState(const JoinCodeOptions());
 

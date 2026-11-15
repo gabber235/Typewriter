@@ -19,12 +19,7 @@ final class InspectionSession extends ChangeNotifier {
         workspace: ref.read(localWorkControllerProvider),
       ) {
     ref.listen(inspectedSelectionProvider, (_, next) {
-      if (next.asError?.error case SelectableNotFoundException(:final id)) {
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          if (!_disposed) ref.read(selectionProvider.notifier).unselect(id);
-        });
-        SchedulerBinding.instance.ensureVisualUpdate();
-      } else if (next.isLoading || next.hasError) {
+      if (next.isLoading || next.hasError) {
         notifyListeners();
       } else {
         _refresh();
@@ -33,7 +28,6 @@ final class InspectionSession extends ChangeNotifier {
     _refresh();
   }
   final Ref ref;
-  bool _disposed = false;
   final InspectionBindings owners;
   InspectionBuildContext? _buildContext;
 
@@ -203,7 +197,6 @@ final class InspectionSession extends ChangeNotifier {
 
   @override
   void dispose() {
-    _disposed = true;
     _buildContext?.dispose();
     owners.dispose();
     super.dispose();

@@ -8,7 +8,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Members are selected through the shared selection; the inspector shows
 /// and edits the selected members. The tab publishes its rows, so a remove
 /// held from the inspector or the context menu sends and refuses on them,
-/// and members that leave the live list leave the selection.
+/// and members that leave the live list leave the selection by the
+/// selection's own rule.
 class MembersTab extends HookConsumerWidget {
   const MembersTab({super.key});
 
@@ -24,13 +25,7 @@ class MembersTab extends HookConsumerWidget {
       identity: (member) => member.userId,
       ready: membersAsync.hasValue,
     );
-    ref.useMembershipRows<MemberIdentifier>(
-      list: MembershipList.members,
-      rows: rows,
-      live: membersAsync.value
-          ?.map((member) => MemberIdentifier(member.userId))
-          .toSet(),
-    );
+    ref.useMembershipRows(list: MembershipList.members, rows: rows);
 
     return SliverMainAxisGroup(
       slivers: [

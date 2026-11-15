@@ -253,36 +253,18 @@ class SelectionCardShimmer extends StatelessWidget {
   }
 }
 
-/// Keeps a membership page's selection and held rows in step with its live
-/// rows.
+/// Publishes a membership page's rows.
 extension MembershipRowsUpkeep on WidgetRef {
   /// Publishes [rows] as the rows of [list] while the calling widget is
-  /// mounted, and drops every selected item of type [I] that [live] no
-  /// longer holds, so a member removed elsewhere leaves the selection while
-  /// a refused one stays. Null [live] is a list still loading.
-  void useMembershipRows<I extends SelectableIdentifier>({
+  /// mounted.
+  void useMembershipRows({
     required MembershipList list,
     required HoldRows rows,
-    required Set<I>? live,
   }) {
     final shown = watch(membershipRowsProvider);
     useEffect(() {
       shown.show(list, rows);
       return () => shown.hide(list, rows);
     }, [shown, list, rows]);
-    useEffect(() {
-      if (live == null) return null;
-      final gone = read(selectionProvider)
-          .whereType<I>()
-          .where((id) => !live.contains(id))
-          .toList();
-      if (gone.isNotEmpty) {
-        // The selection changes after this build, as a provider may not
-        // change while the tree builds.
-        final selection = read(selectionProvider.notifier);
-        Future.microtask(() => selection.unselectAll(gone));
-      }
-      return null;
-    }, [live]);
   }
 }

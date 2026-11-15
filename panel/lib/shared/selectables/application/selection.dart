@@ -9,12 +9,25 @@ part "selection.g.dart";
 /// by the inspector and batch operations. Widgets mutate this state through
 /// the methods below; resolved selectable objects are derived by [Selected],
 /// and whether items show their checks by [SelectMode].
+///
+/// This is the one place an item that disappears leaves the selection: an
+/// item leaves once its resource has loaded and no longer holds it, as when
+/// someone else deletes it or a hold removes it. An item whose resource is
+/// loading or failing stays, and so does every item a refused change left
+/// in place, such as the held back items of a refused batch, so the user can
+/// try again. Nothing else prunes the selection.
 @riverpod
 class Selection extends _$Selection {
   @override
   List<SelectableIdentifier> build() {
+    ref.onDispose(_watched.clear);
     return [];
   }
+
+  /// The resolution each selected item is watched through, so the item
+  /// leaves once its resource no longer holds it.
+  final _watched =
+      <SelectableIdentifier, ProviderSubscription<AsyncValue<Selectable>>>{};
 
   @override
   bool updateShouldNotify(
@@ -105,11 +118,6 @@ class Selection extends _$Selection {
     _set(selectables, selecting: false);
   }
 
-  /// Removes [selectable] if it is currently selected.
-  void unselect(SelectableIdentifier selectable) {
-    _set(state.where((s) => s != selectable).toList());
-  }
-
   /// Removes every identifier in [selectables] from the current selection.
   void unselectAll(List<SelectableIdentifier> selectables) {
     _set(state.where((s) => !selectables.contains(s)).toList());
@@ -128,8 +136,45 @@ class Selection extends _$Selection {
       _anchor = null;
       _base = const [];
     }
+    _watch(next);
     ref.read(selectModeProvider.notifier)._follow(next, selecting: selecting);
   }
+
+  /// Watches the resolution of every item in [selection] and stops watching
+  /// the items that left it.
+  void _watch(List<SelectableIdentifier> selection) {
+    for (final id in [..._watched.keys]) {
+      if (!selection.contains(id)) _watched.remove(id)!.close();
+    }
+    for (final id in selection) {
+      _watched[id] ??= ref.listen(selectableResolutionProvider(id), (
+        _,
+        resolution,
+      ) {
+        if (resolution.error is! SelectableNotFoundException) return;
+        // The resolution may change while the tree builds, where no
+        // provider may change; the item leaves right after.
+        scheduleMicrotask(() {
+          if (ref.mounted && _watched.containsKey(id)) _prune(id);
+        });
+      }, fireImmediately: true);
+    }
+  }
+
+  /// Removes [id], whose resource no longer holds it, keeping select mode
+  /// and the anchor of the items that stay.
+  void _prune(SelectableIdentifier id) {
+    _base = _base.where((s) => s != id).toList();
+    if (_anchor == id) _anchor = null;
+    _set(state.where((s) => s != id).toList());
+  }
+}
+
+/// What [id] resolves to now. [Selected] reads every selected item through
+/// it, and [Selection] watches it to let an item that disappeared go.
+@riverpod
+AsyncValue<Selectable> selectableResolution(Ref ref, SelectableIdentifier id) {
+  return id.create(ref);
 }
 
 /// Whether the selection is in select mode, so the selectables of every
@@ -189,9 +234,10 @@ bool isSelected(Ref ref, SelectableIdentifier selectable) {
 /// Resolves the canonical identifier selection into current selectable objects.
 ///
 /// This provider is the boundary between selection state and resource state.
-/// It preserves the order of [selectionProvider], returns loading or error
-/// state when any identifier cannot resolve, and publishes a complete list
-/// only after every identifier has resolved.
+/// It preserves the order of [selectionProvider] and leaves out an item its
+/// resource no longer holds, which [Selection] then lets go. It returns
+/// loading or error state when any other identifier cannot resolve, and
+/// publishes a complete list only after every one of them has resolved.
 @riverpod
 class Selected extends _$Selected {
   @override
@@ -200,7 +246,8 @@ class Selected extends _$Selected {
 
     final values = <Selectable>[];
     for (final id in ids) {
-      final value = id.create(ref);
+      final value = ref.watch(selectableResolutionProvider(id));
+      if (value.error is SelectableNotFoundException) continue;
       if (value.mapUnready<List<Selectable<SelectableIdentifier>>>()
           case final v?) {
         return v;
@@ -219,7 +266,8 @@ class Selected extends _$Selected {
   }
 }
 
-/// Failure returned when a selected identifier no longer resolves to an item.
+/// Failure a selected identifier resolves to once its resource has loaded
+/// and no longer holds the item; the item then leaves the selection.
 class SelectableNotFoundException implements Exception {
   SelectableNotFoundException(this.id);
 

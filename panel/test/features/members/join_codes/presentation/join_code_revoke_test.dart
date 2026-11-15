@@ -128,6 +128,42 @@ void main() {
     });
   });
 
+  testWidgets("a refused revoke keeps every selected code selected, so it "
+      "can be tried again", (tester) async {
+    final first = joinCode("first");
+    final second = joinCode("second");
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      membershipBackend(joinCodes: [first, second]),
+    ], at: membersPage(const JoinCodesRoute()));
+    panel.world.nats.registerHandler(
+      "cloud.to.user.ada.organization.acme.members.join_codes.revoke",
+      (_) => skir.RevokeOrganizationJoinCodesResponse.serializer.toBytes(
+        skir.RevokeOrganizationJoinCodesResponse.createCodeNotFoundError(
+          codeIds: [first.code],
+        ),
+      ),
+    );
+
+    await panel.item(joinCodeUrl(first.code)).toggle();
+    await panel.item(joinCodeUrl(second.code)).toggle();
+    await panel.holdButton("Revoke 2 join codes?");
+    await panel.eventually(
+      () => expect(
+        find.descendant(
+          of: find.byType(HoldRow),
+          matching: find.byType(LabeledMessage),
+        ),
+        findsNWidgets(2),
+      ),
+    );
+    await panel.settle();
+
+    expect(panel.inspector.heading("2 join codes"), findsOneWidget);
+    expect(panel.item(joinCodeUrl(first.code)).isChecked, isTrue);
+    expect(panel.item(joinCodeUrl(second.code)).isChecked, isTrue);
+  });
+
   testWidgets("the inspector copies the selected join code", (tester) async {
     final clipboard = tester.recordClipboard();
     final code = joinCode("spring");

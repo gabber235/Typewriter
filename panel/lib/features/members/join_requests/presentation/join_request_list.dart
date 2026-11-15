@@ -20,14 +20,7 @@ class JoinRequestsList extends HookConsumerWidget {
       items: requests,
       identity: (request) => request.requestId,
     );
-    ref.useMembershipRows<JoinRequestIdentifier>(
-      list: MembershipList.joinRequests,
-      rows: rows,
-      live: {
-        for (final request in requests)
-          JoinRequestIdentifier(request.requestId),
-      },
-    );
+    ref.useMembershipRows(list: MembershipList.joinRequests, rows: rows);
 
     return SelectionCardList<skir.OrganizationJoinRequest>(
       rows: rows,

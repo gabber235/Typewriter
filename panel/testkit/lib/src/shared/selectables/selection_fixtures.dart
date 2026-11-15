@@ -72,7 +72,7 @@ final class DeferredSelectableIdentifier extends TestSelectableIdentifier {
   /// waiting menu does once the selection settles.
   void resolve(PanelDriver panel) {
     _resolved = true;
-    panel.container.invalidate(selectedProvider);
+    panel.container.invalidate(selectableResolutionProvider(this));
   }
 }
 
