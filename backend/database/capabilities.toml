@@ -7,12 +7,15 @@ files = ["kernel/color.surql"]
 [schema.url]
 files = ["kernel/url.surql"]
 
+[schema.refusal]
+files = ["kernel/refusal.surql"]
+
 [schema.user]
 depends_on = ["record_id"]
 files = ["user.surql"]
 
 [schema.service]
-depends_on = ["record_id"]
+depends_on = ["record_id", "refusal"]
 files = [
     "service/functions.surql",
     "service/service.surql",

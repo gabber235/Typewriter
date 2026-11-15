@@ -4075,7 +4075,6 @@ version = "0.2.0"
 dependencies = [
  "otel-wasi",
  "serde",
- "serde_json",
  "tracing",
  "uuid",
  "wasmcloud-utils",

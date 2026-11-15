@@ -6,9 +6,9 @@
 //! batch before the database is read. The transaction then finds revision conflicts before any
 //! item applies; a conflict depends only on its own host, because configuring one host never
 //! changes another host's revision. Without conflicts, items apply in request order, so a later
-//! item sees the Realms an earlier one created or removed. Any refused item throws, which rolls
-//! back every earlier item; the thrown message is a JSON list of the refused items, because a
-//! rolled back transaction returns no statement result. Each accepted configuration increments
+//! item sees the Realms an earlier one created or removed. Any refused item makes the
+//! transaction call `fn::refuse` with every refused item, which rolls back every earlier item
+//! and reaches the handler as a typed refusal through `decode_refusable`. Each accepted configuration increments
 //! its host's `topology_revision.desired`, and every resulting change is published to both
 //! organization topology watchers and the host execution watcher after commit. Runtime
 //! activation is separate and arrives through `host_execution::handle_report`.
@@ -17,7 +17,7 @@ use otel_wasi::ResultWithSlug;
 use serde::{Deserialize, Serialize};
 use wasmcloud_utils::{
     database::{
-        RecordId, TransactionOutcome,
+        RecordId, Refusable,
         topology::{EngineInstanceViewRecord, RealmInstanceViewRecord, ServiceHostRecord},
         transaction_query,
     },
@@ -76,12 +76,16 @@ struct ConflictedHost {
 }
 
 /// One item that kept an applying batch from committing, as the rolled back transaction
-/// threw it. The payloads of these refusals come from the request item.
+/// refused it with `fn::refuse`. The payloads of these refusals come from the request item.
 #[derive(Debug, Deserialize)]
-struct RefusedApplication {
-    index: usize,
-    outcome: String,
-    message: Option<String>,
+#[serde(tag = "outcome")]
+enum RefusedApplication {
+    #[serde(rename = "invalid-configuration-error")]
+    InvalidConfiguration { index: usize, message: String },
+    #[serde(rename = "incompatible-engine-error")]
+    IncompatibleEngine { index: usize },
+    #[serde(rename = "realm-not-found-error")]
+    RealmNotFound { index: usize },
 }
 
 #[tracing::instrument(skip_all)]
@@ -121,11 +125,11 @@ pub async fn handle_configure(
 
     let outcome = configure_in_transaction(inputs, org_id).await?;
     let changes = match outcome {
-        TransactionOutcome::Committed(ConfigureBatchOutcome::Configured { changes }) => changes
+        Refusable::Committed(ConfigureBatchOutcome::Configured { changes }) => changes
             .into_iter()
             .map(ConfiguredHost::into_change)
             .collect::<Vec<_>>(),
-        TransactionOutcome::Committed(ConfigureBatchOutcome::Conflicted { conflicts }) => {
+        Refusable::Committed(ConfigureBatchOutcome::Conflicted { conflicts }) => {
             otel_wasi::main_attribute!("host.outcome" = "conflicted");
             return Ok(ConfigureServiceHostsResponse::RefusedError(
                 conflicts
@@ -137,16 +141,13 @@ pub async fn handle_configure(
                     .collect::<Result<Vec<_>, otel_wasi::Error>>()?,
             ));
         }
-        TransactionOutcome::Rejected(error) => {
+        Refusable::Refused(refusals) => {
             otel_wasi::main_attribute!("host.outcome" = "refused");
-            let refusals: Vec<RefusedApplication> =
-                serde_json::from_str(wasmcloud_utils::database_domain_slug(error.message()))
-                    .error_with_slug("service-host-configure-refusal-parse-failed")?;
             return Ok(ConfigureServiceHostsResponse::RefusedError(
                 refusals
                     .into_iter()
                     .map(|refusal| {
-                        let edit = item(&edits, refusal.index)?;
+                        let edit = item(&edits, refusal.index())?;
                         Ok(refused(edit, refusal.into_refusal(edit)?))
                     })
                     .collect::<Result<Vec<_>, otel_wasi::Error>>()?,
@@ -166,7 +167,7 @@ pub async fn handle_configure(
 async fn configure_in_transaction(
     inputs: Vec<ConfigurationInput>,
     org_id: &str,
-) -> Result<TransactionOutcome<ConfigureBatchOutcome>, otel_wasi::Error> {
+) -> Result<Refusable<ConfigureBatchOutcome, Vec<RefusedApplication>>, otel_wasi::Error> {
     let organization_id = RecordId::new("organization", org_id);
     transaction_query!(
         ConfigureBatchOutcome,
@@ -224,7 +225,7 @@ async fn configure_in_transaction(
                     };
                 });
             IF !array::is_empty($refused) {
-                THROW encoding::json::encode($refused)
+                fn::refuse($refused)
             };
 
             LET $result = {
@@ -242,7 +243,7 @@ async fn configure_in_transaction(
     .execute()
     .await
     .error_with_slug("service-host-configure-query-failed")?
-    .decode()
+    .decode_refusable()
     .error_with_slug("service-host-configure-result-parse-failed")
 }
 
@@ -345,25 +346,31 @@ impl ConflictedHost {
 }
 
 impl RefusedApplication {
+    fn index(&self) -> usize {
+        match self {
+            Self::InvalidConfiguration { index, .. }
+            | Self::IncompatibleEngine { index }
+            | Self::RealmNotFound { index } => *index,
+        }
+    }
+
     fn into_refusal(
         self,
         edit: &HostConfigurationEdit,
     ) -> Result<HostConfigurationRefusal, otel_wasi::Error> {
         let engine = edit.execution.primary_engine.as_ref();
-        match self.outcome.as_str() {
-            "invalid-configuration-error" => Ok(skir_variant!(
-                HostConfigurationRefusal::InvalidConfigurationError {
-                    message: self.message.unwrap_or_default(),
-                }
+        match self {
+            Self::InvalidConfiguration { message, .. } => Ok(skir_variant!(
+                HostConfigurationRefusal::InvalidConfigurationError { message }
             )),
-            "incompatible-engine-error" => Ok(skir_variant!(
+            Self::IncompatibleEngine { .. } => Ok(skir_variant!(
                 HostConfigurationRefusal::IncompatibleEngineError {
                     target: engine
                         .map(|engine| engine.target.clone())
                         .unwrap_or_default(),
                 }
             )),
-            "realm-not-found-error" => match engine.map(|engine| &engine.realm) {
+            Self::RealmNotFound { .. } => match engine.map(|engine| &engine.realm) {
                 Some(EngineRealmSelection::ExistingRealm(selection)) => Ok(skir_variant!(
                     HostConfigurationRefusal::RealmNotFoundError {
                         realm_id: selection.realm_id.clone(),
@@ -374,10 +381,6 @@ impl RefusedApplication {
                     "a missing Realm was reported for an item that selects no existing Realm",
                 )),
             },
-            outcome => Err(otel_wasi::Error::new(
-                "service-host-configure-refusal-unknown",
-                format!("unexpected refusal outcome `{outcome}`"),
-            )),
         }
     }
 }
