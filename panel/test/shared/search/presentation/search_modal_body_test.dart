@@ -43,15 +43,11 @@ void main() {
   });
 
   testWidgets("clicking a result opens it", (tester) async {
-    final source = FakeSearchSource();
     final activated = <String>[];
-    final panel = await tester.showSearch(
-      source,
-      results: body,
-      activated: activated,
-      size: const Size(800, 700),
-    );
-    await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
+    final panel = await tester.showSearchOver([
+      "alpha",
+      "beta",
+    ], activated: activated);
 
     await panel.search.result("Result beta").tap();
 
@@ -60,13 +56,7 @@ void main() {
 
   testWidgets("Down moves focus from the query to the first result, and Up "
       "back, with the search still open", (tester) async {
-    final source = FakeSearchSource();
-    final panel = await tester.showSearch(
-      source,
-      results: body,
-      size: const Size(800, 700),
-    );
-    await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
+    final panel = await tester.showSearchOver(["alpha", "beta"]);
     expect(panel.queryBar.isFocused, isTrue);
 
     await panel.press(LogicalKeyboardKey.arrowDown);
@@ -82,13 +72,7 @@ void main() {
   testWidgets("typing on a focused result types into the query", (
     tester,
   ) async {
-    final source = FakeSearchSource();
-    final panel = await tester.showSearch(
-      source,
-      results: body,
-      size: const Size(800, 700),
-    );
-    await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
+    final panel = await tester.showSearchOver(["alpha", "beta"]);
     await panel.queryBar.type("al");
     await panel.press(LogicalKeyboardKey.arrowDown);
 
@@ -99,15 +83,11 @@ void main() {
   });
 
   testWidgets("Enter in the query opens the first result", (tester) async {
-    final source = FakeSearchSource();
     final activated = <String>[];
-    final panel = await tester.showSearch(
-      source,
-      results: body,
-      activated: activated,
-      size: const Size(800, 700),
-    );
-    await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
+    final panel = await tester.showSearchOver([
+      "alpha",
+      "beta",
+    ], activated: activated);
     await panel.press(LogicalKeyboardKey.arrowDown);
     await panel.press(LogicalKeyboardKey.arrowDown);
     await panel.press(LogicalKeyboardKey.escape);
@@ -121,7 +101,6 @@ void main() {
   testWidgets("a command's key acts on the focused result only", (
     tester,
   ) async {
-    final source = FakeSearchSource();
     final ran = <String>[];
     final command = SearchCommand.single<String>(
       id: const SearchCommandId("test.copy"),
@@ -137,13 +116,10 @@ void main() {
         );
       },
     );
-    final panel = await tester.showSearch(
-      source,
-      results: body,
+    final panel = await tester.showSearchOver(
+      ["alpha", "beta"],
       commands: [command],
-      size: const Size(800, 700),
     );
-    await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
     await panel.press(LogicalKeyboardKey.arrowDown);
     await panel.press(LogicalKeyboardKey.arrowDown);
     await panel.press(LogicalKeyboardKey.escape);

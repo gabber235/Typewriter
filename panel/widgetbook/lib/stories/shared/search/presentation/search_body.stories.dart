@@ -8,8 +8,9 @@ import "package:widgetbook_workspace/support/story.dart";
 /// A whole search inside its root, as the search overlay and inline fields
 /// show it: the focused query field, the outcome of the last command, the
 /// result tree, the key hints and the preview. Typing narrows the pages;
-/// Enter opens the highlighted one. Under reduced motion every change
-/// lands at once.
+/// Enter opens the first one, and Down moves focus into the results, where
+/// Enter opens the focused one. Under reduced motion every change lands at
+/// once.
 @widgetbook.UseCase(name: "Default", type: SearchBody)
 Widget searchBodyUseCase(BuildContext context) {
   final snapshot = context.knobs.searchResults();

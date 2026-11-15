@@ -50,6 +50,32 @@ extension ShowSearch on WidgetTester {
       ),
     ),
   );
+
+  /// Shows a whole search, its query bar over card rows, with the results
+  /// [ids] in that order, offering [commands] and recording activated
+  /// result ids in [activated] when given.
+  Future<PanelDriver> showSearchOver(
+    List<String> ids, {
+    List<String>? activated,
+    List<SearchCommand> commands = const [],
+  }) async {
+    final source = FakeSearchSource();
+    final panel = await showSearch(
+      source,
+      results: SearchBody(
+        searchHint: "Search",
+        rowRenderers: searchRows(
+          density: SearchResultDensity.card,
+          kindLabel: "Test",
+        ),
+      ),
+      activated: activated,
+      commands: commands,
+      size: const Size(800, 700),
+    );
+    await panel.search.show(source, [for (final id in ids) resultNode(id)]);
+    return panel;
+  }
 }
 
 /// Row renderers for [testResultType] results whose rows read
