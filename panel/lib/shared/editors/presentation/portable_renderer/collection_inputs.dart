@@ -676,32 +676,32 @@ extension _PortableChoiceSetRendering on PortablePresentationNodeRenderer {
     )!;
     final selected = scope.selectedValues(reference);
     final differing = scope.itemValues(reference);
+    final values = selected.isEmpty ? [scope.read(reference)] : selected;
     return _controlFrame(
       control.control,
       scope,
-      _PortableChoiceSet(
+      CheckOptionSet<String>(
         key: ValueKey(node.nodeId),
-        choices: _knownChoices(scope, reference)!,
-        values: selected.isEmpty ? [scope.read(reference)] : selected,
+        choices: [
+          for (final name in _knownChoices(scope, reference)!)
+            CheckChoice(key: name, label: name),
+        ],
+        held: [for (final value in values) _choicesIn(value)],
         enabled:
             scope.enabled &&
             !scope.readOnly &&
             (differing.isEmpty || scope.canWriteItems(reference)),
-        choice: (name) => skir.DataValue.createNamed(
-          actualType: item.member(name),
-          payload: skir.DataValue.unit,
-        ),
-        withItems: (value, items) {
-          final set = skir.DataValue.createSetValue(items: items);
-          return value is skir.DataValue_namedWrapper
-              ? value.withAuthoredPayload(set)
-              : setType == null
-              ? set
-              : skir.DataValue.createNamed(actualType: setType, payload: set);
+        onChanged: (held) {
+          final written = [
+            for (final (index, value) in values.indexed)
+              _withChoices(value, held[index], item: item, setType: setType),
+          ];
+          if (written.toSet().length == 1) {
+            scope.write(reference, written.first);
+          } else {
+            scope.writeItems(reference, written);
+          }
         },
-        write: (values) => values.toSet().length == 1
-            ? scope.write(reference, values.first)
-            : scope.writeItems(reference, values),
       ),
       renderPrefix: true,
     );
@@ -747,134 +747,43 @@ extension _PortableChoiceSetRendering on PortablePresentationNodeRenderer {
   }
 }
 
-/// The options of a set of known choices over the values each selected item
-/// holds.
-///
-/// A press on a choice only some items hold gives it to all of them, the
-/// next takes it from all, and the one after gives each item back what it
-/// held before. A choice all or none hold switches between the two.
-class _PortableChoiceSet extends HookWidget {
-  const _PortableChoiceSet({
-    required this.choices,
-    required this.values,
-    required this.enabled,
-    required this.choice,
-    required this.withItems,
-    required this.write,
-    super.key,
-  });
+/// The choices [value], a set of enum cases, holds, in its order.
+Set<String> _choicesIn(skir.DataValue? value) => {
+  for (final item in value?.authoredItems ?? <skir.ListItem>[])
+    ?item.value.enumCaseName,
+};
 
-  final List<String> choices;
-  final List<skir.DataValue?> values;
-  final bool enabled;
-  final skir.DataValue Function(String name) choice;
-  final skir.DataValue Function(
-    skir.DataValue? value,
-    List<skir.ListItem> items,
-  )
-  withItems;
-  final void Function(List<skir.DataValue> values) write;
-
-  /// A new item holding the choice [name] in [value], under the choice's own
-  /// name unless an item already has it.
-  skir.ListItem _item(skir.DataValue? value, String name) => skir.ListItem(
-    id: skir.ItemId(
-      value: value?.authoredItems?.any((item) => item.id.value == name) ?? false
-          ? const Uuid().v4()
-          : name,
-    ),
-    value: choice(name),
-  );
-
-  /// [value] holding the choice [name] at [place], or without it when
-  /// [place] is null.
-  skir.DataValue _placed(
-    skir.DataValue? value,
-    String name,
-    (int, skir.ListItem)? place,
-  ) {
-    final items = [
-      for (final item in value?.authoredItems ?? <skir.ListItem>[])
-        if (item.value.enumCaseName != name) item,
-    ];
-    if (place case (final at, final item)) {
-      items.insert(at.clamp(0, items.length), item);
-    }
-    return withItems(value, items);
-  }
-
-  static bool _holds(skir.DataValue? value, String name) =>
-      _held(value, name) != null;
-
-  /// Where [value] holds the choice [name], and the item that holds it.
-  static (int, skir.ListItem)? _held(skir.DataValue? value, String name) {
-    for (final (index, item) in (value?.authoredItems ?? []).indexed) {
-      if (item.value.enumCaseName == name) return (index, item);
-    }
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Where each item held a choice before the press that gave it to all,
-    // and the values the presses since then left, so a change from anywhere
-    // else forgets it.
-    final before = useRef(
-      <String, (List<(int, skir.ListItem)?>, List<skir.DataValue>)>{},
-    );
-    void press(String name) {
-      final held = [for (final value in values) _held(value, name)];
-      final all = held.every((place) => place != null);
-      final remembered = switch (before.value.remove(name)) {
-        (final places, final left) when listEquals(left, values) => places,
-        _ => null,
-      };
-      final List<(int, skir.ListItem)?> next;
-      if (remembered != null && !all) {
-        next = remembered;
-      } else if (all) {
-        next = [for (final _ in held) null];
-      } else {
-        next = [
-          for (final (index, place) in held.indexed)
-            place ??
-                (
-                  values[index]?.authoredItems?.length ?? 0,
-                  _item(values[index], name),
-                ),
-        ];
-      }
-      final written = [
-        for (final (index, value) in values.indexed)
-          _placed(value, name, next[index]),
-      ];
-      final places = remembered ?? (all ? null : held);
-      if (places != null &&
-          next != remembered &&
-          places.any((place) => place != null)) {
-        before.value[name] = (places, written);
-      }
-      write(written);
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final name in choices)
-          () {
-            final count = values.where((value) => _holds(value, name)).length;
-            return CheckOption(
-              label: name,
-              value: count == values.length
-                  ? true
-                  : count == 0
-                  ? false
-                  : null,
-              detail: "$count of ${values.length}",
-              onPressed: enabled ? () => press(name) : null,
-            );
-          }(),
-      ],
-    );
-  }
+/// [value] holding exactly the choices [names], in their order, as cases of
+/// the enum [item] in a set of [setType]. A choice it already holds keeps its
+/// item; a new one gets an item named after the choice unless an item already
+/// has that name.
+skir.DataValue _withChoices(
+  skir.DataValue? value,
+  Set<String> names, {
+  required skir.NamedTypeUse item,
+  required skir.NamedTypeUse? setType,
+}) {
+  final authored = value?.authoredItems ?? <skir.ListItem>[];
+  final held = {for (final item in authored) ?item.value.enumCaseName: item};
+  final items = [
+    for (final name in names)
+      held[name] ??
+          skir.ListItem(
+            id: skir.ItemId(
+              value: authored.any((item) => item.id.value == name)
+                  ? const Uuid().v4()
+                  : name,
+            ),
+            value: skir.DataValue.createNamed(
+              actualType: item.member(name),
+              payload: skir.DataValue.unit,
+            ),
+          ),
+  ];
+  final set = skir.DataValue.createSetValue(items: items);
+  return value is skir.DataValue_namedWrapper
+      ? value.withAuthoredPayload(set)
+      : setType == null
+      ? set
+      : skir.DataValue.createNamed(actualType: setType, payload: set);
 }
