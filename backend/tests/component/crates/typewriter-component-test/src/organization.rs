@@ -20,7 +20,8 @@ use wasmcloud_utils::skir::base::{
         },
         member::{
             OrganizationMemberRoleAssignment, OrganizationMembersChange,
-            OrganizationMembersChanged, UpdateOrganizationMemberRolesRequest,
+            OrganizationMembersChanged, RemoveOrganizationMembersRequest,
+            RemoveOrganizationMembersResponse, UpdateOrganizationMemberRolesRequest,
             UpdateOrganizationMemberRolesResponse,
         },
         organization::{
