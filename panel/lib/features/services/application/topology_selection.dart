@@ -97,14 +97,9 @@ class ServiceHostIdentifier extends SelectableIdentifier {
                 .toList(),
           ),
         ),
-        onUnbind: canonicalService == null
+        unbinding: canonicalService == null
             ? null
-            : () async {
-                final response = await work.execute(
-                  repository.unbind(canonicalService.serviceId),
-                );
-                response.requireAcceptedUnbinding();
-              },
+            : ServiceUnbinding(repository, work),
         serviceIdentityTarget: service == null || canonicalService == null
             ? null
             : serviceIdentityTarget(

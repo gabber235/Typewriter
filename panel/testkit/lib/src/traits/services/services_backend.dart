@@ -88,25 +88,34 @@ extension ServicesBackendEvents on FakeNats {
   );
 
   /// Confirms every host configuration requested on [subject] with [change]
-  /// and returns the requests, in the order they arrive.
-  List<skir.ConfigureServiceHostRequest> confirmHostConfigurations(
+  /// and returns the configurations, in the order they arrive.
+  List<skir.HostConfigurationEdit> confirmHostConfigurations(
     String subject,
     skir.HostConfigurationChange change,
   ) {
-    final sent = <skir.ConfigureServiceHostRequest>[];
+    final sent = <skir.HostConfigurationEdit>[];
     registerHandler(subject, (data) {
-      sent.add(skir.ConfigureServiceHostRequest.serializer.fromBytes(data));
+      sent.addAll(
+        skir.ConfigureServiceHostsRequest.serializer
+            .fromBytes(data)
+            .configurations,
+      );
       return configuredReply(change);
     });
     return sent;
   }
 
-  /// The names every service rename requested on [subject] sent, in order.
-  List<String> sentServiceNames(String subject) => [
+  /// The renames each service rename batch requested on [subject] sent, in
+  /// order, as the names of each batch.
+  List<List<String>> sentServiceNames(String subject) => [
     for (final request in requestsTo(subject))
-      skir.UpdateOrganizationServiceRequest.serializer
-          .fromBytes(request.payload)
-          .name,
+      [
+        for (final rename
+            in skir.UpdateOrganizationServicesRequest.serializer
+                .fromBytes(request.payload)
+                .renames)
+          rename.name,
+      ],
   ];
 
   /// Announces [change] to the services of [organization].

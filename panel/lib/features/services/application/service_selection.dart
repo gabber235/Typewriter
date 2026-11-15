@@ -48,10 +48,7 @@ class ServiceIdentifier extends SelectableIdentifier {
           repository: repository,
           work: work,
         ),
-        onUnbind: () async {
-          final response = await work.execute(repository.unbind(serviceId));
-          response.requireAcceptedUnbinding();
-        },
+        unbinding: ServiceUnbinding(repository, work),
         id: this,
         service: service,
         canonicalService: canonical,
@@ -79,7 +76,7 @@ class ServiceIdentifier extends SelectableIdentifier {
 class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
   const ServiceSelectable({
     required this.editTarget,
-    required this.onUnbind,
+    required this.unbinding,
     required this.id,
     required this.service,
     required this.canonicalService,
@@ -92,7 +89,7 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
   final skir.Service canonicalService;
   final bool connected;
   final ValueEditingRegistration editTarget;
-  final Future<void> Function() onUnbind;
+  final ServiceUnbinding unbinding;
 
   @override
   List<PortableMultiInspectionSurface> get portableMultiInspectionSurfaces => [
@@ -108,7 +105,7 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
 
   @override
   List<SelectionCapability> get capabilities => [
-    UnbindSelectionCapability(onUnbind: onUnbind),
+    UnbindSelectionCapability(batch: unbinding, target: id.serviceId),
   ];
 
   @override

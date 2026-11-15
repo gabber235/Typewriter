@@ -56,16 +56,19 @@ void main() {
         "with the service's own revision", (tester) async {
       final panel = await tester.pumpPanel(_gabbe);
       await panel.services.card("Paper host", "Gabbe").select();
-      skir.UpdateOrganizationServiceRequest? sent;
+      skir.ServiceRename? sent;
       panel.world.nats.registerHandler(_updateSubject, (data) {
-        sent = skir.UpdateOrganizationServiceRequest.serializer.fromBytes(data);
-        return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-          skir.UpdateOrganizationServiceResponse.wrapSuccess(
+        sent = skir.UpdateOrganizationServicesRequest.serializer
+            .fromBytes(data)
+            .renames
+            .single;
+        return skir.UpdateOrganizationServicesResponse.serializer.toBytes(
+          skir.UpdateOrganizationServicesResponse.wrapSuccess([
             (_service.toMutable()
                   ..revision = 2
                   ..name = "gabb")
                 .toFrozen(),
-          ),
+          ]),
         );
       });
 
@@ -221,24 +224,72 @@ void main() {
         reason: "The shared configuration drafts a change for each host",
       );
     });
+
+    testWidgets("renaming two selected services sends one batch, and a "
+        "refusal saves neither and says why for each", (tester) async {
+      final lobby = service("lobby", name: "lobby", status: null);
+      final arena = service("arena", name: "arena", status: null);
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        servicesBackend(services: [lobby, arena]),
+      ]);
+      panel.world.nats.registerHandler(
+        _updateSubject,
+        (_) => skir.UpdateOrganizationServicesResponse.serializer.toBytes(
+          skir.UpdateOrganizationServicesResponse.wrapRefusedError([
+            skir.RefusedServiceRename(
+              serviceId: arena.serviceId,
+              reason: skir.ServiceRenameRefusal.createServiceNotFoundError(),
+            ),
+          ]),
+        ),
+      );
+      panel.container.read(selectionProvider.notifier).selectAll([
+        ServiceIdentifier(lobby.serviceId),
+        ServiceIdentifier(arena.serviceId),
+      ]);
+      await panel.settle();
+
+      await panel.field("Name").type("hall");
+
+      await panel.eventually(
+        () => expect(panel.shows("The service was deleted"), isTrue),
+      );
+      expect(panel.world.nats.sentServiceNames(_updateSubject), [
+        ["hall", "hall"],
+      ]);
+      expect(
+        panel.shows(
+          "Lobby was not renamed, because another service in this change "
+          "was refused. Nothing was saved.",
+        ),
+        isTrue,
+      );
+      await panel.settle();
+      expect(
+        panel.world.nats.requestsTo(_updateSubject),
+        hasLength(1),
+        reason: "Neither service is sent again on its own",
+      );
+    });
   });
 
   group("unbind", () {
     testWidgets("holding Delete on a selected service unbinds it and it "
         "leaves the selection", (tester) async {
       final panel = await tester.pumpPanel(_gabbe);
-      skir.UnbindServiceRequest? sent;
+      skir.UnbindServicesRequest? sent;
       panel.world.nats.registerHandler(_unbindSubject, (data) {
-        sent = skir.UnbindServiceRequest.serializer.fromBytes(data);
-        return skir.UnbindServiceResponse.serializer.toBytes(
-          skir.UnbindServiceResponse.createSuccess(),
+        sent = skir.UnbindServicesRequest.serializer.fromBytes(data);
+        return skir.UnbindServicesResponse.serializer.toBytes(
+          skir.UnbindServicesResponse.createSuccess(),
         );
       });
       await panel.services.card("Paper host", "Gabbe").select();
 
       await panel.holdKey(LogicalKeyboardKey.delete);
 
-      await panel.eventually(() => expect(sent?.serviceId, "paper"));
+      await panel.eventually(() => expect(sent?.serviceIds, ["paper"]));
       expect(panel.container.read(selectionProvider), isEmpty);
     });
 
@@ -247,15 +298,23 @@ void main() {
       final panel = await tester.pumpPanel(_gabbe);
       panel.world.nats.registerHandler(
         _unbindSubject,
-        (_) => skir.UnbindServiceResponse.serializer.toBytes(
-          skir.UnbindServiceResponse.createServiceNotFoundError(),
+        (_) => skir.UnbindServicesResponse.serializer.toBytes(
+          skir.UnbindServicesResponse.wrapRefusedError([
+            skir.RefusedServiceUnbind(
+              serviceId: "paper",
+              reason: skir.ServiceUnbindRefusal.createServiceNotFoundError(),
+            ),
+          ]),
         ),
       );
       await panel.services.card("Paper host", "Gabbe").select();
 
       await panel.holdKey(LogicalKeyboardKey.delete);
 
-      expect(panel.refusalOn(_unbindOne), "Service not found");
+      expect(
+        panel.refusalOn(_unbindOne),
+        "This service is no longer bound to the organization",
+      );
       expect(panel.container.read(selectionProvider), isNotEmpty);
     });
 
@@ -264,8 +323,8 @@ void main() {
       var sent = false;
       panel.world.nats.registerHandler(_unbindSubject, (_) {
         sent = true;
-        return skir.UnbindServiceResponse.serializer.toBytes(
-          skir.UnbindServiceResponse.createSuccess(),
+        return skir.UnbindServicesResponse.serializer.toBytes(
+          skir.UnbindServicesResponse.createSuccess(),
         );
       });
       await panel.services.card("Paper host", "Gabbe").select();
@@ -599,13 +658,13 @@ void main() {
       ..disconnect()
       ..reconnect();
     reply.complete(
-      skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-        skir.UpdateOrganizationServiceResponse.wrapSuccess(
+      skir.UpdateOrganizationServicesResponse.serializer.toBytes(
+        skir.UpdateOrganizationServicesResponse.wrapSuccess([
           (_service.toMutable()
                 ..revision = 2
                 ..name = "renamed")
               .toFrozen(),
-        ),
+        ]),
       ),
     );
 

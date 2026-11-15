@@ -25,8 +25,10 @@ abstract interface class EditPreparedApply {
 /// Every member must belong to the same local work owner. Preparation claims
 /// lanes, reserves the full resource union, refreshes observations and captures
 /// every member before sending. Requests in the same lane run serially; other
-/// lanes may proceed together and settle independently. This preparation
-/// barrier does not make the server writes one transaction.
+/// lanes may proceed together and settle independently. Every member is
+/// captured in one turn, so members whose persistence prepares through
+/// [PreparedBatches] travel as one request that the server applies all or
+/// nothing; members of other contracts remain separate writes.
 final class EditApplyCoordinator {
   const EditApplyCoordinator();
   Future<void> apply(Iterable<EditApplyRequest> requests) async {

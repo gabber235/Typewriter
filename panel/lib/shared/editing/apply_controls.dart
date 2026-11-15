@@ -13,8 +13,15 @@ final class ApplyControls extends HookWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (state.status != null)
-          Semantics(liveRegion: true, child: Text(state.status!)),
+        if (state.status case final status?)
+          Semantics(
+            liveRegion: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [for (final line in status.split("\n")) Text(line)],
+            ),
+          ),
         for (final diagnostic in state.diagnostics)
           Text(diagnostic.message, style: context.text.sentence),
         Wrap(

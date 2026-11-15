@@ -75,7 +75,7 @@ final class OrganizationServices {
 
   /// Configures [host] at its revision with [execution], neither a Realm
   /// nor an engine by default.
-  Future<skir.ConfigureServiceHostResponse> configure(
+  Future<skir.ConfigureServiceHostsResponse> configure(
     skir.ServiceHost host, [
     skir.HostExecutionConfiguration? execution,
   ]) => execute(

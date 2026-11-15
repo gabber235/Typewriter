@@ -8,8 +8,8 @@ import "package:typewriter_testkit/src/doubles/nats.dart";
 ///
 /// The panel's real projections and service commands run against it. It
 /// keeps what the panel sends in memory: a registration token binds a new
-/// service, a rename renames, an unbind removes, and a host configuration
-/// is confirmed at the next revision; each reply carries the outcome the
+/// service, a batch of renames renames, a batch of unbinds removes, and each
+/// host configuration of a batch is confirmed at its next revision; each reply carries the outcome the
 /// projections apply. It holds no service rules: every command succeeds.
 ///
 /// [topology] or [services] left null never arrives, so the page keeps
@@ -112,27 +112,27 @@ final class FakeServicesService {
       (request) => _bind(request, organization),
     );
     command(
-      skir.UnbindServiceRequest.defaultInstance.operation(
+      skir.UnbindServicesRequest.defaultInstance.operation(
         userId: user,
         organizationId: organization,
       ),
-      skir.UnbindServiceRequest.serializer,
+      skir.UnbindServicesRequest.serializer,
       _unbind,
     );
     command(
-      skir.UpdateOrganizationServiceRequest.defaultInstance.operation(
+      skir.UpdateOrganizationServicesRequest.defaultInstance.operation(
         userId: user,
         organizationId: organization,
       ),
-      skir.UpdateOrganizationServiceRequest.serializer,
+      skir.UpdateOrganizationServicesRequest.serializer,
       _rename,
     );
     command(
-      skir.ConfigureServiceHostRequest.defaultInstance.operation(
+      skir.ConfigureServiceHostsRequest.defaultInstance.operation(
         userId: user,
         organizationId: organization,
       ),
-      skir.ConfigureServiceHostRequest.serializer,
+      skir.ConfigureServiceHostsRequest.serializer,
       _configure,
     );
   }
@@ -170,70 +170,80 @@ final class FakeServicesService {
     );
   }
 
-  skir.UnbindServiceResponse _unbind(skir.UnbindServiceRequest request) {
+  skir.UnbindServicesResponse _unbind(skir.UnbindServicesRequest request) {
     _services?.removeWhere(
-      (service) => service.serviceId.id == request.serviceId,
+      (service) => request.serviceIds.contains(service.serviceId.id),
     );
-    return skir.UnbindServiceResponse.wrapSuccess(
-      skir.UnbindServiceResponse_Success.defaultInstance,
+    return skir.UnbindServicesResponse.wrapSuccess(
+      skir.UnbindServicesResponse_Success.defaultInstance,
     );
   }
 
-  skir.UpdateOrganizationServiceResponse _rename(
-    skir.UpdateOrganizationServiceRequest request,
+  skir.UpdateOrganizationServicesResponse _rename(
+    skir.UpdateOrganizationServicesRequest request,
   ) {
     final services = _services ?? <skir.Service>[];
-    final index = services.indexWhere(
-      (service) => service.serviceId == request.serviceId,
-    );
-    final current = services[index];
-    final renamed = skir.Service(
-      serviceId: current.serviceId,
-      revision: current.revision + 1,
-      name: request.name,
-      role: current.role,
-      createdAt: current.createdAt,
-      organization: current.organization,
-      state: current.state,
-      registration: current.registration,
-    );
-    services[index] = renamed;
-    return skir.UpdateOrganizationServiceResponse.wrapSuccess(renamed);
+    final renamed = <skir.Service>[];
+    for (final rename in request.renames) {
+      final index = services.indexWhere(
+        (service) => service.serviceId == rename.serviceId,
+      );
+      final current = services[index];
+      final service = skir.Service(
+        serviceId: current.serviceId,
+        revision: current.revision + 1,
+        name: rename.name,
+        role: current.role,
+        createdAt: current.createdAt,
+        organization: current.organization,
+        state: current.state,
+        registration: current.registration,
+      );
+      services[index] = service;
+      renamed.add(service);
+    }
+    return skir.UpdateOrganizationServicesResponse.wrapSuccess(renamed);
   }
 
-  skir.ConfigureServiceHostResponse _configure(
-    skir.ConfigureServiceHostRequest request,
+  skir.ConfigureServiceHostsResponse _configure(
+    skir.ConfigureServiceHostsRequest request,
   ) {
-    final hosts = [..._topology.hosts];
-    final index = hosts.indexWhere((host) => host.hostId == request.hostId);
-    final current = hosts[index];
-    final revision = current.revision + 1;
-    final configured = skir.ServiceHost(
-      hostId: current.hostId,
-      serviceId: current.serviceId,
-      revision: revision,
-      entrypoint: current.entrypoint,
-      canHostRealm: current.canHostRealm,
-      supportedEngines: current.supportedEngines,
-      topologyRevision: skir.ReconciledRevision(
-        desired: revision,
-        applied: revision,
-      ),
-      state: current.state,
-    );
-    hosts[index] = configured;
-    _topology = skir.OrganizationTopologySnapshot(
-      hosts: hosts,
-      realms: _topology.realms,
-      engines: _topology.engines,
-    );
-    return skir.ConfigureServiceHostResponse.wrapSuccess(
-      skir.HostConfigurationChange(
-        host: configured,
-        realm: null,
-        engine: null,
-        removedResources: const [],
-      ),
-    );
+    final changes = <skir.HostConfigurationChange>[];
+    for (final configuration in request.configurations) {
+      final hosts = [..._topology.hosts];
+      final index = hosts.indexWhere(
+        (host) => host.hostId == configuration.hostId,
+      );
+      final current = hosts[index];
+      final revision = current.revision + 1;
+      final configured = skir.ServiceHost(
+        hostId: current.hostId,
+        serviceId: current.serviceId,
+        revision: revision,
+        entrypoint: current.entrypoint,
+        canHostRealm: current.canHostRealm,
+        supportedEngines: current.supportedEngines,
+        topologyRevision: skir.ReconciledRevision(
+          desired: revision,
+          applied: revision,
+        ),
+        state: current.state,
+      );
+      hosts[index] = configured;
+      _topology = skir.OrganizationTopologySnapshot(
+        hosts: hosts,
+        realms: _topology.realms,
+        engines: _topology.engines,
+      );
+      changes.add(
+        skir.HostConfigurationChange(
+          host: configured,
+          realm: null,
+          engine: null,
+          removedResources: const [],
+        ),
+      );
+    }
+    return skir.ConfigureServiceHostsResponse.wrapSuccess(changes);
   }
 }

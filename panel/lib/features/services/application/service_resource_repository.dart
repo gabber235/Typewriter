@@ -138,126 +138,179 @@ final class ServiceResourceRepository {
     }
   }
 
-  /// Prepares removal of one service binding from this organization.
-  PreparedCommit<skir.UnbindServiceResponse> unbind(skir.RecordId service) {
+  /// Prepares removal of the bindings of [services] from this organization as
+  /// one all or nothing batch.
+  PreparedCommit<skir.UnbindServicesResponse> unbind(
+    List<skir.RecordId> services,
+  ) {
     session.checkActive();
-    final request = skir.UnbindServiceRequest(serviceId: service.id);
+    final request = skir.UnbindServicesRequest(
+      serviceIds: [for (final service in services) service.id],
+    );
     return session.transport.prepare(
       request.operation(
         userId: session.requireUserId(),
         organizationId: organization,
       ),
-      resources: {(organization, service)},
-      label: "Unbind service: ${service.id}",
-      onResponse: (response) => _integrateUnbinding(response, service),
+      resources: {for (final service in services) (organization, service)},
+      label: services.length == 1
+          ? "Unbind service: ${services.single.id}"
+          : "Unbind ${services.length} services",
+      onResponse: (response) => _integrateUnbinding(response, services),
     );
   }
 
   Future<void> _integrateUnbinding(
-    skir.UnbindServiceResponse response,
-    skir.RecordId service,
+    skir.UnbindServicesResponse response,
+    List<skir.RecordId> services,
   ) async {
     switch (response) {
-      case skir.UnbindServiceResponse_successWrapper():
-        acceptServiceRemoval(service);
-      case skir.UnbindServiceResponse_serviceNotFoundErrorWrapper() ||
-          skir.UnbindServiceResponse_internalErrorWrapper() ||
-          skir.UnbindServiceResponse_unknown():
+      case skir.UnbindServicesResponse_successWrapper():
+        for (final service in services) {
+          acceptServiceRemoval(service);
+        }
+      case skir.UnbindServicesResponse_refusedErrorWrapper() ||
+          skir.UnbindServicesResponse_internalErrorWrapper() ||
+          skir.UnbindServicesResponse_unknown():
     }
   }
 
+  late final _configurationBatches =
+      PreparedBatches<
+        skir.HostConfigurationEdit,
+        skir.ConfigureServiceHostsResponse
+      >(
+        (configurations) => session.transport.prepare(
+          skir.ConfigureServiceHostsRequest(configurations: configurations)
+              .operation(
+                userId: session.requireUserId(),
+                organizationId: organization,
+              ),
+          resources: {
+            for (final configuration in configurations)
+              (organization, configuration.hostId),
+          },
+          replay: SubmissionReplay.identicalRequest,
+          label: "Apply Host configurations",
+          onResponse: _integrateConfiguration,
+        ),
+      );
+
   /// Prepares a host configuration mutation against [revision].
   ///
-  /// The expected revision is an optimistic concurrency check. The backend
-  /// answers a repeat whose configuration is already stored with the stored
-  /// state, so an unanswered send may be sent again byte for byte. The
-  /// prepared commit declares the organization and host for mutation
-  /// tracking. Callers reconcile accepted configuration through the topology
-  /// provider flow.
-  PreparedCommit<skir.ConfigureServiceHostResponse> configure(
+  /// Configurations prepared in the same turn, as when one Apply covers
+  /// several hosts, travel as one all or nothing batch; each caller reads its
+  /// own host from the shared reply. The expected revision is an optimistic
+  /// concurrency check. The backend answers a repeat whose configuration is
+  /// already stored with the stored state, so an unanswered send may be sent
+  /// again byte for byte. The prepared commit declares the organization and
+  /// host for mutation tracking. Callers reconcile accepted configuration
+  /// through the topology provider flow.
+  PreparedCommit<skir.ConfigureServiceHostsResponse> configure(
     skir.RecordId host,
     int revision,
     skir.HostExecutionConfiguration execution,
   ) {
-    session.checkActive();
-    final request = skir.ConfigureServiceHostRequest(
-      hostId: host,
-      expectedRevision: revision,
-      execution: execution,
-    );
-    return session.transport.prepare(
-      request.operation(
-        userId: session.requireUserId(),
-        organizationId: organization,
+    session.requireUserId();
+    return _configurationBatches.join(
+      skir.HostConfigurationEdit(
+        hostId: host,
+        expectedRevision: revision,
+        execution: execution,
       ),
       resources: {(organization, host)},
       replay: SubmissionReplay.identicalRequest,
       label: "Apply Host configuration: ${host.id}",
-      onResponse: _integrateConfiguration,
     );
   }
 
   Future<void> _integrateConfiguration(
-    skir.ConfigureServiceHostResponse response,
+    skir.ConfigureServiceHostsResponse response,
   ) async {
     switch (response) {
-      case skir.ConfigureServiceHostResponse_successWrapper(:final value):
-        acceptConfiguration(value);
-      case skir.ConfigureServiceHostResponse_conflictErrorWrapper(:final value):
-        acceptConfiguration(value.actual);
-      case skir.ConfigureServiceHostResponse_unknown() ||
-          skir.ConfigureServiceHostResponse_internalErrorWrapper() ||
-          skir.ConfigureServiceHostResponse_invalidRecordIdErrorWrapper() ||
-          skir.ConfigureServiceHostResponse_invalidConfigurationErrorWrapper() ||
-          skir.ConfigureServiceHostResponse_incompatibleEngineErrorWrapper() ||
-          skir.ConfigureServiceHostResponse_realmNotFoundErrorWrapper():
+      case skir.ConfigureServiceHostsResponse_successWrapper(:final value):
+        value.forEach(acceptConfiguration);
+      case skir.ConfigureServiceHostsResponse_refusedErrorWrapper(:final value):
+        for (final refused in value) {
+          if (refused.reason
+              case skir.HostConfigurationRefusal_conflictErrorWrapper(
+                :final value,
+              )) {
+            acceptConfiguration(value.actual);
+          }
+        }
+      case skir.ConfigureServiceHostsResponse_unknown() ||
+          skir.ConfigureServiceHostsResponse_internalErrorWrapper():
     }
   }
 
+  late final _renames =
+      PreparedBatches<
+        skir.ServiceRename,
+        skir.UpdateOrganizationServicesResponse
+      >(
+        (renames) => session.transport.prepare(
+          skir.UpdateOrganizationServicesRequest(renames: renames).operation(
+            userId: session.requireUserId(),
+            organizationId: organization,
+          ),
+          resources: {
+            for (final rename in renames) (organization, rename.serviceId),
+          },
+          replay: SubmissionReplay.identicalRequest,
+          label: "Update services",
+          onResponse: _integrateRenames,
+        ),
+      );
+
   /// Prepares a service identity rename against [revision].
   ///
-  /// The service revision protects identity edits from overwriting a newer
-  /// canonical value. The backend answers a repeat whose name is already
-  /// stored with the stored service, so an unanswered send may be sent again
-  /// byte for byte. Runtime topology is not changed by this operation.
-  PreparedCommit<skir.UpdateOrganizationServiceResponse> rename(
+  /// Renames prepared in the same turn, as when one edit covers several
+  /// selected services, travel as one all or nothing batch; each caller reads
+  /// its own service from the shared reply. The service revision protects
+  /// identity edits from overwriting a newer canonical value. The backend
+  /// answers a repeat whose name is already stored with the stored service,
+  /// so an unanswered send may be sent again byte for byte. Runtime topology
+  /// is not changed by this operation.
+  PreparedCommit<skir.UpdateOrganizationServicesResponse> rename(
     skir.RecordId service,
     int revision,
     String name,
   ) {
-    session.checkActive();
-    final request = skir.UpdateOrganizationServiceRequest(
-      serviceId: service,
-      expectedRevision: revision,
-      name: name,
-    );
-    return session.transport.prepare(
-      request.operation(
-        userId: session.requireUserId(),
-        organizationId: organization,
+    session.requireUserId();
+    return _renames.join(
+      skir.ServiceRename(
+        serviceId: service,
+        expectedRevision: revision,
+        name: name,
       ),
       resources: {(organization, service)},
       replay: SubmissionReplay.identicalRequest,
       label: "Update service: ${service.id}",
-      onResponse: _integrateRename,
     );
   }
 
-  Future<void> _integrateRename(
-    skir.UpdateOrganizationServiceResponse response,
+  Future<void> _integrateRenames(
+    skir.UpdateOrganizationServicesResponse response,
   ) async {
     switch (response) {
-      case skir.UpdateOrganizationServiceResponse_successWrapper(:final value):
-        acceptService(value.requireKnown());
-      case skir.UpdateOrganizationServiceResponse_conflictErrorWrapper(
+      case skir.UpdateOrganizationServicesResponse_successWrapper(:final value):
+        for (final service in value) {
+          acceptService(service.requireKnown());
+        }
+      case skir.UpdateOrganizationServicesResponse_refusedErrorWrapper(
         :final value,
       ):
-        acceptService(value.actual.requireKnown());
-      case skir.UpdateOrganizationServiceResponse_unknown() ||
-          skir.UpdateOrganizationServiceResponse_internalErrorWrapper() ||
-          skir.UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper() ||
-          skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper() ||
-          skir.UpdateOrganizationServiceResponse_validationErrorWrapper():
+        for (final refused in value) {
+          if (refused.reason
+              case skir.ServiceRenameRefusal_conflictErrorWrapper(
+                :final value,
+              )) {
+            acceptService(value.actual.requireKnown());
+          }
+        }
+      case skir.UpdateOrganizationServicesResponse_unknown() ||
+          skir.UpdateOrganizationServicesResponse_internalErrorWrapper():
     }
   }
 
@@ -282,14 +335,51 @@ extension BindServiceResult on skir.BindServiceResponse {
   };
 }
 
-extension UnbindServiceResult on skir.UnbindServiceResponse {
-  void requireAcceptedUnbinding() => switch (this) {
-    skir.UnbindServiceResponse_successWrapper() => null,
-    skir.UnbindServiceResponse_serviceNotFoundErrorWrapper() =>
-      throw ApiException.notFound("Service"),
-    skir.UnbindServiceResponse_internalErrorWrapper() =>
-      throw ApiException.internalServerError(),
-    skir.UnbindServiceResponse_unknown() =>
-      throw ApiException.unknownResponseMessage(),
+/// Unbinds services of one organization through its repository, all
+/// selected services in one batch.
+///
+/// Two unbindings over the same repository are equal, so the unbind
+/// operation joins every selected service and host of the organization into
+/// one request. Targets are service record ids.
+final class ServiceUnbinding implements UnbindBatch {
+  const ServiceUnbinding(this.repository, this.work);
+  final ServiceResourceRepository repository;
+  final LocalWorkCommands work;
+
+  @override
+  Future<void> unbind(List<Object> targets) async {
+    final services = targets.cast<skir.RecordId>();
+    final response = await work.execute(repository.unbind(services));
+    switch (response) {
+      case skir.UnbindServicesResponse_successWrapper():
+        return;
+      case skir.UnbindServicesResponse_refusedErrorWrapper(:final value):
+        throw RefusedTargets(HoldRefused(value.first.reason.message), {
+          for (final refused in value)
+            for (final service in services)
+              if (service.id == refused.serviceId) service,
+        });
+      case skir.UnbindServicesResponse_internalErrorWrapper():
+        throw ApiException.internalServerError();
+      case skir.UnbindServicesResponse_unknown():
+        throw ApiException.unknownResponseMessage();
+    }
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is ServiceUnbinding && identical(other.repository, repository);
+
+  @override
+  int get hashCode => identityHashCode(repository);
+}
+
+extension on skir.ServiceUnbindRefusal {
+  String get message => switch (this) {
+    skir.ServiceUnbindRefusal_serviceNotFoundErrorWrapper() =>
+      "This service is no longer bound to the organization",
+    skir.ServiceUnbindRefusal_duplicateErrorWrapper() =>
+      "This service was named twice",
+    skir.ServiceUnbindRefusal_unknown() => "This service could not be unbound",
   };
 }

@@ -47,6 +47,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   final _forms = <Object, EditGroupId>{};
   final _operations = <_EditOperation<S, E>>[];
   final _tasks = <EditGroupId, EditorScheduledTask>{};
+  final _autosaves = <EditGroupId, SelectionAutosave>{};
   final _requested = <EditGroupId>{};
   final _interactions = <Object, EditInteraction<S, E>>{};
   var _identity = 0;
@@ -629,6 +630,11 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   void _schedule(EditGroupId id, {Duration? delay}) {
     _tasks.remove(id)?.cancel();
     if (!_hasAdmissibleOperations(id)) return;
+    final autosave = delay == null ? _autosaves[id] : null;
+    if (autosave != null) {
+      autosave.schedule();
+      return;
+    }
     final task = scheduler.schedule(delay ?? debounce);
     _tasks[id] = task;
     task.completed.then((result) {
@@ -677,6 +683,21 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
 
   EditApplyRequest applyRequest(EditGroupId id) =>
       _WorkspaceApplyRequest<S, E>(this, id);
+
+  /// Autosaves group [id] through [autosave], together with the other groups
+  /// edited in the same selection, until that save starts.
+  ///
+  /// A retry after a failed save keeps its own delay and saves the group
+  /// alone.
+  void autosaveWith(EditGroupId id, SelectionAutosave autosave) {
+    _tasks.remove(id)?.cancel();
+    _autosaves[id] = autosave;
+  }
+
+  /// Returns group [id] to its own autosave when [autosave] still holds it.
+  void leaveAutosave(EditGroupId id, SelectionAutosave autosave) {
+    if (identical(_autosaves[id], autosave)) _autosaves.remove(id);
+  }
 
   Future<void> _submit(_LiveEditGroup<S> group) => const EditApplyCoordinator()
       .apply([_WorkspaceApplyRequest<S, E>(this, group.id, laneOwned: true)]);
@@ -1527,6 +1548,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     }
     _listened.clear();
     _tasks.clear();
+    _autosaves.clear();
     _reviews.clear();
     _reviewRuns.clear();
     super.dispose();

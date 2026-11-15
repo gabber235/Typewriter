@@ -9,9 +9,9 @@
 | `ScopedWorkSession` | Own registered drivers, view leases, reservations, and the submission journal for an authenticated scope |
 | `EditingWorkDriver<S, E>` | Project common work into activity and supply an optional disposable review view |
 | `EditControl` | Expose allowed actions for the group reached through a presentation binding |
-| `EditApplyCoordinator` | Reserve and prepare a selection before starting its independent requests |
+| `EditApplyCoordinator` | Reserve and prepare a selection in one turn before starting its requests |
 
-Realm uses `RealmEditModel` and `RealmEditPersistence`. Service identity and host configuration both use `ValueEditModel`, with their respective persistence adapters. Their server endpoints and transaction boundaries remain separate.
+Realm uses `RealmEditModel` and `RealmEditPersistence`. Service identity and host configuration both use `ValueEditModel`, with their respective persistence adapters. Their server endpoints remain separate. Each prepares through `PreparedBatches`, so the members of one selection that the coordinator captures together travel as one batch request that the server applies all or nothing; a refused batch settles every member, each with its own reason.
 
 | Domain | Edit admission | Save boundary | Publication boundary |
 | :--- | :--- | :--- | :--- |

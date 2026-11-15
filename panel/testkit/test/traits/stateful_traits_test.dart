@@ -59,10 +59,14 @@ void main() {
       ];
       final first = testWorld(traits);
       await first.nats.answer(
-        skir.UpdateOrganizationServiceRequest(
-          serviceId: lobby.serviceId,
-          expectedRevision: lobby.revision,
-          name: "Hall",
+        skir.UpdateOrganizationServicesRequest(
+          renames: [
+            skir.ServiceRename(
+              serviceId: lobby.serviceId,
+              expectedRevision: lobby.revision,
+              name: "Hall",
+            ),
+          ],
         ).operation(userId: ada.id, organizationId: acme.organizationId),
       );
 

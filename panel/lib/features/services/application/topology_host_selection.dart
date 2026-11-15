@@ -9,7 +9,7 @@ class _ServiceHostSelectable
     required this.topology,
     required this.connected,
     required this.configurationTarget,
-    required this.onUnbind,
+    required this.unbinding,
     required this.serviceIdentityTarget,
   });
 
@@ -20,7 +20,7 @@ class _ServiceHostSelectable
   final skir.OrganizationTopologySnapshot topology;
   final bool connected;
   final ValueEditingRegistration configurationTarget;
-  final Future<void> Function()? onUnbind;
+  final ServiceUnbinding? unbinding;
   final ValueEditingRegistration? serviceIdentityTarget;
 
   @override
@@ -46,8 +46,8 @@ class _ServiceHostSelectable
 
   @override
   List<SelectionCapability> get capabilities => [
-    if (onUnbind case final unbind?)
-      UnbindSelectionCapability(onUnbind: unbind),
+    if (unbinding case final unbinding?)
+      UnbindSelectionCapability(batch: unbinding, target: host.serviceId),
   ];
 
   @override
