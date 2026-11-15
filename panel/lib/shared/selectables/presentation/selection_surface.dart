@@ -16,9 +16,9 @@ part "selection_surface.g.dart";
 /// still reaches every item.
 ///
 /// The list that owns the surface's rows gives them to it with
-/// [useSelectionSurfaceRows]; a hold over the selection, started from the
-/// inspector or a context menu, then sends and refuses on those rows
-/// ([SelectionRows.selectionRows]).
+/// [useSelectionSurfaceRows]; a hold over its items, started by key, from
+/// the inspector or from a context menu, then sends and refuses on those
+/// rows ([SelectionSurfaces.rowsHolding]).
 ///
 /// A surface given its own [selection] keeps the same gestures over that
 /// selection instead of the page selection; Escape then clears nothing and
@@ -198,23 +198,16 @@ final class SelectionSurfaces {
     return () => _shown.remove(items);
   }
 
-  /// The rows of the surface showing any of [selection], or null when no
-  /// surface with rows shows it.
-  HoldRows? rowsShowing(List<SelectableIdentifier> selection) {
+  /// The rows holding any of the row identities [ids], or null when no
+  /// surface has such rows.
+  HoldRows? rowsHolding(Iterable<Object> ids) {
     for (final items in _shown) {
-      if (items.rows case final rows? when selection.any(items.contains)) {
+      if (items.rows case final rows? when rows.order.any(ids.contains)) {
         return rows;
       }
     }
     return null;
   }
-}
-
-/// Where a hold over the selection shows.
-extension SelectionRows on WidgetRef {
-  /// The rows of the surface showing the selection, or null when none does.
-  HoldRows? get selectionRows =>
-      read(selectionSurfacesProvider).rowsShowing(read(selectionProvider));
 }
 
 class _SelectionSurfaceScope extends InheritedWidget {

@@ -1,10 +1,9 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Registers shortcuts for operations available to the current selection.
+/// Registers shortcuts for operations available to the items a key acts on:
+/// the focused item or the selection ([operationTargetsProvider]).
 ///
 /// Operations come from the source of the nearest [SelectionOperationsRoot].
-/// [selectedProvider] supplies the resolved batch, including retained data
-/// during provider refresh.
 class SelectionOperationShortcuts extends ConsumerWidget {
   const SelectionOperationShortcuts({
     required this.child,
@@ -20,11 +19,11 @@ class SelectionOperationShortcuts extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(selectedProvider).value;
-    final operations = selected == null || selected.isEmpty
+    final targets = ref.watch(operationTargetsProvider).value;
+    final operations = targets == null || targets.isEmpty
         ? const <ShortcutableOperation>[]
         : SelectionOperationsRoot.of(context)
-              .operationsFor(ref, selected)
+              .operationsFor(ref, targets)
               .whereType<ShortcutableOperation>();
 
     return ManagedActionSet(
