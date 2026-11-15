@@ -4,7 +4,8 @@ import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("pressing a choice only some items hold gives it to all, then "
-      "takes it from all, then gives each back what it held", (tester) async {
+      "takes it from all, then gives each back what it held where it held "
+      "it", (tester) async {
     final written = <List<Set<String>>>[];
     var held = [
       {"writer", "editor"},
@@ -51,35 +52,6 @@ void main() {
         {"reader"},
       ],
     ]);
-  });
-
-  testWidgets("a choice given back returns to where each item held it", (
-    tester,
-  ) async {
-    var held = [
-      {"writer", "editor"},
-      {"reader"},
-    ];
-    final panel = await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        StatefulBuilder(
-          builder: (context, setState) => SizedBox(
-            width: 320,
-            child: CheckOptionSet<String>(
-              choices: const [CheckChoice(key: "writer", label: "Writer")],
-              held: held,
-              onChanged: (next) => setState(() => held = next),
-            ),
-          ),
-        ),
-      ),
-    );
-
-    for (var press = 0; press < 3; press++) {
-      await panel.tapOn(find.text("Writer"));
-    }
-
     expect(
       [for (final set in held) set.toList()],
       [
