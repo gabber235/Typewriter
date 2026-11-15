@@ -97,7 +97,7 @@ final class AuthoringSelectableResource
 
   /// Resources of one complete type in one Realm edit together.
   @override
-  List<PortableMultiInspectionSurface> get portableMultiInspectionSurfaces =>
+  List<SharedInspectionSurface> get sharedInspectionSurfaces =>
       switch (resource.content.configuration) {
         skir.TypeSelection_completeWrapper(:final value) => [
           _AuthoredResourceSurface(this, value),
@@ -136,7 +136,7 @@ final class AuthoringSelectableResource
 
 /// The configured value of an authored resource, which resources of the same
 /// complete type in the same Realm edit together in one form.
-final class _AuthoredResourceSurface implements PortableMultiInspectionSurface {
+final class _AuthoredResourceSurface extends PortableInspectionSurface {
   const _AuthoredResourceSurface(this.selectable, this.type);
 
   final AuthoringSelectableResource selectable;
@@ -152,13 +152,13 @@ final class _AuthoredResourceSurface implements PortableMultiInspectionSurface {
   CheckedEditorCatalog get catalog => selectable.workspace.document.catalog;
 
   @override
-  bool isCompatibleWith(PortableMultiInspectionSurface other) =>
+  bool sharesEditorWith(PortableInspectionSurface other) =>
       other is _AuthoredResourceSurface &&
       other.selectable.workspace == selectable.workspace;
 
   @override
   InspectionContent buildShared(
-    List<PortableMultiInspectionSurface> members,
+    List<SharedInspectionSurface> members,
     InspectionBuildContext context,
   ) => selectable._inspection([
     for (final member in members.skip(1).cast<_AuthoredResourceSurface>())

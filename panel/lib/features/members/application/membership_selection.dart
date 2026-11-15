@@ -108,7 +108,10 @@ final class _MemberRolesSurface implements SharedInspectionSurface {
       other is _MemberRolesSurface;
 
   @override
-  InspectionContent buildShared(List<SharedInspectionSurface> members) {
+  InspectionContent buildShared(
+    List<SharedInspectionSurface> members,
+    InspectionBuildContext context,
+  ) {
     return InspectionContent(
       body: MemberInspection(
         members: [
@@ -300,7 +303,10 @@ final class _JoinRequestGrantSurface implements SharedInspectionSurface {
       other is _JoinRequestGrantSurface;
 
   @override
-  InspectionContent buildShared(List<SharedInspectionSurface> members) {
+  InspectionContent buildShared(
+    List<SharedInspectionSurface> members,
+    InspectionBuildContext context,
+  ) {
     return InspectionContent(
       body: JoinRequestInspection(
         requests: [

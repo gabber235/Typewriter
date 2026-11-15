@@ -9,10 +9,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// Selection is read from [selectedProvider]. Focus is deliberately unrelated:
 /// selectable surfaces own focus, while this session reacts only to selection
-/// resolution and resource availability. Shared portable surfaces are combined
-/// only when every selected resource contributes a mutually compatible surface
-/// with the same root type and catalog snapshot. Otherwise each resource keeps
-/// its own inspection content.
+/// resolution and resource availability. Shared surfaces are combined only
+/// when every selected resource contributes a mutually compatible surface
+/// under the same id. Otherwise each resource keeps its own inspection
+/// content.
 final class InspectionSession extends ChangeNotifier {
   InspectionSession(this.ref)
     : owners = InspectionBindings(
@@ -86,73 +86,34 @@ final class InspectionSession extends ChangeNotifier {
       return context.ownHosts(selection.single.buildInspection(context.owners));
     }
 
-    if (_buildSharedPortable(selection, context) case final content?) {
-      return context.ownHosts(content);
-    }
-    if (_buildShared(selection) case final content?) {
+    if (_buildShared(selection, context) case final content?) {
       return context.ownHosts(content);
     }
 
     return _buildStructural(selection, context);
   }
 
-  InspectionContent? _buildSharedPortable(
+  InspectionContent? _buildShared(
     List<InspectableSelectable> selection,
     InspectionBuildContext context,
   ) {
-    final candidates = selection
-        .map(
-          (item) =>
-              _indexPortableSurfaces(item.portableMultiInspectionSurfaces),
-        )
-        .toList();
-    final plans = [
-      for (final members
-          in _groupsInEvery<Object, PortableMultiInspectionSurface>(
-            candidates,
-            (first, other) =>
-                first.isCompatibleWith(other) && other.isCompatibleWith(first),
-          ))
-        if (members.every(
-              (candidate) => candidate.rootType == members.first.rootType,
-            ) &&
-            _sharePortableCatalog(members))
-          members,
-    ];
-    if (plans.isEmpty) return null;
-
-    return _combined([
-      for (final members in plans)
-        context.ownHosts(members.first.buildShared(members, context)),
-    ]);
-  }
-
-  InspectionContent? _buildShared(List<InspectableSelectable> selection) {
     final candidates = [
       for (final item in selection)
-        {
-          for (final surface in item.sharedInspectionSurfaces)
-            surface.id: surface,
-        },
+        _indexSurfaces(item.sharedInspectionSurfaces),
     ];
     final contents = [
-      for (final members in _groupsInEvery<Object, SharedInspectionSurface>(
-        candidates,
-        (first, other) =>
-            first.isCompatibleWith(other) && other.isCompatibleWith(first),
-      ))
-        members.first.buildShared(members),
+      for (final members in _groupsInEvery(candidates))
+        members.first.buildShared(members, context),
     ];
     return contents.isEmpty ? null : _combined(contents);
   }
 
   /// The surfaces that every item of a selection offers under one id, one
   /// group per id, each in selection order, keeping only groups whose
-  /// surfaces are all [compatible] with the first. None when an item offers
-  /// no surface.
-  List<List<S>> _groupsInEvery<K, S extends Object>(
-    List<Map<K, S>> candidates,
-    bool Function(S first, S other) compatible,
+  /// surfaces are all compatible with the first, both ways. None when an
+  /// item offers no surface.
+  List<List<SharedInspectionSurface>> _groupsInEvery(
+    List<Map<Object, SharedInspectionSurface>> candidates,
   ) {
     if (candidates.isEmpty || candidates.any((surfaces) => surfaces.isEmpty)) {
       return const [];
@@ -162,7 +123,11 @@ final class InspectionSession extends ChangeNotifier {
         if ([for (final surfaces in candidates) ?surfaces[id]]
             case final members
             when members.length == candidates.length &&
-                members.every((member) => compatible(members.first, member)))
+                members.every(
+                  (member) =>
+                      members.first.isCompatibleWith(member) &&
+                      member.isCompatibleWith(members.first),
+                ))
           members,
     ];
   }
@@ -203,24 +168,17 @@ final class InspectionSession extends ChangeNotifier {
   }
 }
 
-Map<Object, PortableMultiInspectionSurface> _indexPortableSurfaces(
-  Iterable<PortableMultiInspectionSurface> surfaces,
+Map<Object, SharedInspectionSurface> _indexSurfaces(
+  Iterable<SharedInspectionSurface> surfaces,
 ) {
-  final indexed = <Object, PortableMultiInspectionSurface>{};
+  final indexed = <Object, SharedInspectionSurface>{};
   for (final surface in surfaces) {
     if (indexed.containsKey(surface.id)) {
-      throw StateError("Portable inspection surface ids must be unique");
+      throw StateError("Shared inspection surface ids must be unique");
     }
     indexed[surface.id] = surface;
   }
   return indexed;
-}
-
-bool _sharePortableCatalog(List<PortableMultiInspectionSurface> surfaces) {
-  final catalog = surfaces.first.catalog;
-  return surfaces.every(
-    (surface) => surface.catalog.snapshot == catalog.snapshot,
-  );
 }
 
 /// Restores a resource selection and its route without retaining an inspector.
