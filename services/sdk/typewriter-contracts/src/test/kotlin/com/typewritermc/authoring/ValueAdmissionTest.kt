@@ -106,7 +106,7 @@ val ValueAdmissionTest by testSuite {
         val first = TypeDefinitionId.content(ResourceId(value = "gone"), "first")
         val second = TypeDefinitionId.content(ResourceId(value = "gone"), "second")
         val held = StandardTypes.map.use(listOf(first.use(), second.use()))
-        val reported = walked(catalog, DataValue.TypeUseWrapper(held), ScalarKind.TYPE.use, at).reported.filter { it.type != null }
-        reported.map { it.at to it.type } shouldBe listOf(at to first, at to second)
+        val reported = walked(catalog, DataValue.TypeUseWrapper(held), ScalarKind.TYPE.use, at).reported
+        reported.map { it.at to (it.cause as? MisfitCause.TypeUnavailable)?.type } shouldBe listOf(at to first, at to second)
     }
 }

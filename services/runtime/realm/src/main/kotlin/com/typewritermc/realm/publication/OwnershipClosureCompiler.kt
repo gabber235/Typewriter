@@ -109,8 +109,8 @@ internal class OwnershipClosureCompiler(
                 }.map { problem ->
                     val occurrence = occurrencesByLocation[problem.location]
                     val missingOwned =
-                        problem.code == "target_resource_missing" &&
-                            occurrence != null &&
+                        occurrence != null &&
+                            occurrence.target.resource !in snapshot.resources &&
                             relationByEndpoint[occurrence.id.endpoint] in ownershipRelations
                     compilationDiagnostic(
                         code = if (missingOwned) "missing_owned_resource" else problem.code,

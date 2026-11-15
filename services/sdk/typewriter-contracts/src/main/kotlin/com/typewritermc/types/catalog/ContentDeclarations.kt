@@ -2,6 +2,7 @@ package com.typewritermc.types.catalog
 
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.Misfit
+import com.typewritermc.authoring.MisfitCause
 import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
@@ -224,6 +225,44 @@ fun CheckedCatalog.unavailableCode(id: TypeDefinitionId): String? =
         ?.firstOrNull { it.code in CONTENT_TYPE_PROBLEMS }
         ?.code
 
+/** Why a content type stands in as the error type; [code] is the code clients see for it. */
+sealed interface Unavailability {
+    val code: String
+
+    /** The type is gone. */
+    data object Missing : Unavailability {
+        override val code: String = "content_type_missing"
+    }
+
+    /** The type is an alias that contains itself. */
+    data object AliasLoop : Unavailability {
+        override val code: String = "content_alias_loop"
+    }
+
+    /** The type is computed by a bind, and computing it failed [at] a resource. */
+    data class Computed(
+        val at: DerivedFailureAt,
+    ) : Unavailability {
+        override val code: String get() = at.failure.code
+    }
+
+    /** The type's declaration breaks the rule [code] names. */
+    data class Invalid(
+        override val code: String,
+    ) : Unavailability
+}
+
+/** Why [id] stands in as the error type, or null when it is ready: the catalog's diagnostic code read as a reason. */
+fun CheckedCatalog.unavailability(id: TypeDefinitionId): Unavailability? {
+    val code = unavailableCode(id) ?: return null
+    derivedFailure(id)?.let { return Unavailability.Computed(it) }
+    return when (code) {
+        Unavailability.Missing.code -> Unavailability.Missing
+        Unavailability.AliasLoop.code -> Unavailability.AliasLoop
+        else -> Unavailability.Invalid(code)
+    }
+}
+
 /**
  * One misfit per type the resource's type names that is gone or invalid, at the root, each carrying its id: the ones
  * the configuration names and the ones [owner] derives for the configured definition's derived parameters.
@@ -235,8 +274,11 @@ fun AuthoringRecord.missingContent(
     (configuration.referencedDefinitions() + derivedDefinitions(owner, catalog))
         .distinct()
         .filter { it.contentOwner() != null }
-        .mapNotNull { id -> catalog.unavailableCode(id)?.let { Misfit(ValueProblem(location = ValueLocation.of(owner), code = it), id) } }
-        .toList()
+        .mapNotNull { id ->
+            catalog.unavailability(id)?.let {
+                Misfit(ValueProblem(location = ValueLocation.of(owner), code = it.code), MisfitCause.TypeUnavailable(id, it))
+            }
+        }.toList()
 
 /** The types [owner] derives for the configured definition's derived parameters. */
 private fun AuthoringRecord.derivedDefinitions(
@@ -265,12 +307,9 @@ fun AuthoringRecord.misfits(
     linkFit: () -> List<ValueProblem> = { emptyList() },
 ): List<Misfit> =
     (missingContent(owner, catalog) + structuralMisfits(owner, catalog) + linkFit().map { Misfit(it) }).map { misfit ->
-        if (misfit.problem.code == UNDECLARED_POSITION) return@map misfit
-        linkTargetAt(misfit.problem.location.path)?.let { misfit.copy(target = it) } ?: misfit
+        if (misfit.cause != MisfitCause.Shape) return@map misfit
+        linkTargetAt(misfit.problem.location.path)?.let { misfit.copy(cause = MisfitCause.Link(it)) } ?: misfit
     }
-
-/** The misfit of a value at a position its type does not declare. */
-private const val UNDECLARED_POSITION = "unknown_field"
 
 /** The resource the link stored at [path] points at, or null when no link is stored there. */
 private fun AuthoringRecord.linkTargetAt(path: ValuePath): ResourceId? {

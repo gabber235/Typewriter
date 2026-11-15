@@ -6,6 +6,7 @@ import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.root
+import com.typewritermc.authoring.unavailableType
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
@@ -116,7 +117,7 @@ private fun List<ValueProblem>.on(resource: ResourceId): List<ValueProblem> = fi
  * stays, so a new use of it is refused like a use of any missing type, and one [owner] already had is not.
  */
 private fun List<Misfit>.withoutOwnBinds(owner: ResourceId): List<Misfit> {
-    val own = filter { misfit -> misfit.type?.let { it.namesDerivedKey() && it.contentOwner() == owner } == true }.toSet()
+    val own = filter { misfit -> misfit.unavailableType?.let { it.namesDerivedKey() && it.contentOwner() == owner } == true }.toSet()
     // A use at the root names the type from the configuration, not a value, so nothing sits under it.
     val values = own.map { it.problem.location }.filter { it.path.segments.isNotEmpty() }
     return filterNot { misfit -> misfit in own || values.any { misfit.problem.location.isWithin(it) } }

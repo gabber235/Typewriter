@@ -1,5 +1,6 @@
 package com.typewritermc.realm.formula
 
+import com.typewritermc.authoring.MisfitCause
 import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.ValueVisitor
 import com.typewritermc.authoring.ValueWalk
@@ -22,7 +23,6 @@ import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -38,7 +38,7 @@ internal object FormulaValueVisitor : ValueVisitor<Any?> {
     override fun problem(
         at: ValueLocation,
         code: String,
-        type: TypeDefinitionId?,
+        cause: MisfitCause,
     ): Nothing = throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
 
     override fun placeholder(at: ValueLocation): Nothing = throw FailedEvaluation(FormulaFailure.Dependency(at.resource))

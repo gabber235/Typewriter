@@ -1,5 +1,6 @@
 package com.typewritermc.types.catalog
 
+import com.typewritermc.authoring.MisfitCause
 import com.typewritermc.authoring.of
 import com.typewritermc.types.TEXT
 import com.typewritermc.types.catalog
@@ -102,8 +103,14 @@ val DerivedTypesTest by testSuite {
         val record = AuthoringRecord.partial(configuration = TypeSelection.of(board.id))
 
         catalog.unavailableCode(DERIVED_V) shouldBe "derived_type_missing"
-        record.missingContent(DERIVING_BOARD, catalog).map { it.problem.code to it.type } shouldContain
-            ("derived_type_missing" to DERIVED_V)
+        record.missingContent(DERIVING_BOARD, catalog).map { it.problem.code to it.cause } shouldContain
+            (
+                "derived_type_missing" to
+                    MisfitCause.TypeUnavailable(
+                        DERIVED_V,
+                        Unavailability.Computed(DerivedFailureAt(DERIVING_BOARD, DerivedFailure.NoBlock)),
+                    )
+            )
     }
 
     val origin = RuleOrigin(owner = id("board"), ordinal = 0)
@@ -116,6 +123,7 @@ val DerivedTypesTest by testSuite {
             val catalog = catalog(boardDefinition()).withContent(derives(DerivedTarget.Missing(failure)))
 
             catalog.unavailableCode(DERIVED_V) shouldBe code
+            catalog.unavailability(DERIVED_V) shouldBe Unavailability.Computed(DerivedFailureAt(DERIVING_BOARD, failure))
         }
     }
 
@@ -135,8 +143,8 @@ val DerivedTypesTest by testSuite {
 
         catalog(boardDefinition()).withContent(derives(DerivedTarget.Declared(defaulted))).definition(DERIVED_V) shouldBe
             DeclarationStatus.READY
-        catalog(boardDefinition()).withContent(derives(DerivedTarget.Declared(duplicated))).unavailableCode(DERIVED_V) shouldBe
-            "duplicate_field"
+        catalog(boardDefinition()).withContent(derives(DerivedTarget.Declared(duplicated))).unavailability(DERIVED_V) shouldBe
+            Unavailability.Invalid("duplicate_field")
     }
 
     test("a derived alias that contains itself is an alias loop") {
@@ -144,6 +152,7 @@ val DerivedTypesTest by testSuite {
         val catalog = catalog(boardDefinition(), list).withContent(derives(DerivedTarget.Plain(list.id.use(listOf(DERIVED_V.use())))))
 
         catalog.unavailableCode(DERIVED_V) shouldBe "content_alias_loop"
+        catalog.unavailability(DERIVED_V) shouldBe Unavailability.AliasLoop
     }
 
     test("a stored choice for a derived parameter is refused") {

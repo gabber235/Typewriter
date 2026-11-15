@@ -7,9 +7,10 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResourceType
+import com.typewritermc.types.catalog.Unavailability
 import com.typewritermc.types.catalog.contentOwner
 import com.typewritermc.types.catalog.referencedDefinitions
-import com.typewritermc.types.catalog.unavailableCode
+import com.typewritermc.types.catalog.unavailability
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -66,21 +67,45 @@ sealed interface CompletenessResult {
 }
 
 /**
- * A way a value does not fit its schema, the type it is about when that type is gone or invalid, and the target of the
- * link stored where it is. Two misfits are the same when their location, code, type and target agree, so a second use
- * of a missing type is a new one.
+ * A way a value does not fit its schema, at the problem's location, and why. Two misfits are the same when their
+ * location, code and cause agree, so a second use of a missing type is a new one.
  */
 data class Misfit(
     val problem: ValueProblem,
-    val type: TypeDefinitionId? = null,
-    val target: SkirResourceId? = null,
+    val cause: MisfitCause = MisfitCause.Shape,
 ) {
     /**
      * Whether a change made this misfit, given the ones the value had [before]. A link that does not fit and now points
      * at another target is new, as a new link would be; one that was removed is not, since that leaves less misfit.
      */
-    fun isNewAgainst(before: Set<Misfit>): Boolean = this !in before && (target != null || before.none { it.copy(target = null) == this })
+    fun isNewAgainst(before: Set<Misfit>): Boolean =
+        this !in before && (cause is MisfitCause.Link || before.none { it.withoutLink() == this })
+
+    private fun withoutLink(): Misfit = if (cause is MisfitCause.Link) copy(cause = MisfitCause.Shape) else this
 }
+
+/** Why a value does not fit; the problem's code says the same for clients. */
+sealed interface MisfitCause {
+    /** The value does not have the shape its schema asks for. */
+    data object Shape : MisfitCause
+
+    /** The value sits at a position its type does not declare, so no slot judges what it holds. */
+    data object Undeclared : MisfitCause
+
+    /** The link stored here, to [target], does not fit the slot its position declares. */
+    data class Link(
+        val target: SkirResourceId,
+    ) : MisfitCause
+
+    /** A type used here, [type], stands in as the error type for the reason [why]. */
+    data class TypeUnavailable(
+        val type: TypeDefinitionId,
+        val why: Unavailability,
+    ) : MisfitCause
+}
+
+/** The type this misfit is a use of when that type is unavailable, or null for any other misfit. */
+val Misfit.unavailableType: TypeDefinitionId? get() = (cause as? MisfitCause.TypeUnavailable)?.type
 
 /** Checks record shape and type compatibility while allowing [DataValue.UNFILLED] at otherwise valid locations. */
 fun AuthoringRecord.validateStructure(
@@ -100,7 +125,7 @@ fun AuthoringRecord.structuralMisfits(
     catalog: CheckedCatalog,
 ): List<Misfit> {
     val inspection = inspectStructure(owner, catalog)
-    return (inspection.problems.map { Misfit(it) } + inspection.typed).map { misfit ->
+    return inspection.misfits.map { misfit ->
         misfit.copy(problem = misfit.problem.copy(location = misfit.problem.location.copy(resource = owner)))
     }
 }
@@ -114,7 +139,7 @@ private fun AuthoringRecord.inspectStructure(
     val walk = ValueWalk(catalog, inspection)
     when (val type = catalog.typeOf(owner, configuration)) {
         is Resolution.Invalid -> {
-            inspection.problems += type.diagnostics.map { it.asValueProblem(root) }
+            type.diagnostics.forEach { inspection.misfits += Misfit(it.asValueProblem(root)) }
         }
 
         is Resolution.Ready -> {
@@ -148,19 +173,25 @@ private fun AuthoringRecord.inspectPartial(
     val known = partial.knownFields.associateBy { it.key }
     val dependent = partial.dependentFields.associateBy { it.owner.name }
     val expectedKeys = known.keys + dependent.keys
-    val problems = mutableListOf<ValueProblem>()
+    val problems = mutableListOf<Misfit>()
     val present = fields.mapView.keys
-    (present - expectedKeys).forEach { key -> problems += ValueProblem(location = root.field(key), code = "unknown_field") }
-    (expectedKeys - present).forEach { key -> problems += ValueProblem(location = root.field(key), code = "missing_field") }
+    (present - expectedKeys).forEach { key ->
+        problems += Misfit(ValueProblem(location = root.field(key), code = UNDECLARED_FIELD), MisfitCause.Undeclared)
+    }
+    (expectedKeys - present).forEach { key -> problems += Misfit(ValueProblem(location = root.field(key), code = "missing_field")) }
     known.forEach { (name, field) ->
         val value = field(name) ?: return@forEach
         walk.walk(value, field.type, root.field(name))
     }
     dependent.forEach { (name, _) ->
         val value = field(name) ?: return@forEach
-        if (value != DataValue.UNFILLED) problems += ValueProblem(location = root.field(name), code = "dependent_field_requires_type")
+        if (value !=
+            DataValue.UNFILLED
+        ) {
+            problems += Misfit(ValueProblem(location = root.field(name), code = "dependent_field_requires_type"))
+        }
     }
-    inspection.problems += problems
+    inspection.misfits += problems
 }
 
 /**
@@ -168,11 +199,11 @@ private fun AuthoringRecord.inspectPartial(
  * the first. Every node sees a non null type: a nullable use around a value walks its inner type.
  */
 interface ValueVisitor<R> {
-    /** A check failed at [at]; [type] is the type it is about when that type is gone or invalid. */
+    /** A check failed at [at] with [code], for the reason [cause]. */
     fun problem(
         at: ValueLocation,
         code: String,
-        type: TypeDefinitionId? = null,
+        cause: MisfitCause = MisfitCause.Shape,
     )
 
     /** What a node that failed a check stands for, so inspection can go on. A visitor that throws in [problem] never reaches it. */
@@ -266,7 +297,7 @@ class ValueWalk<R>(
     ) {
         val resolver = catalog ?: return
         use.referencedDefinitions().distinct().filter { it.contentOwner() != null }.forEach { id ->
-            resolver.unavailableCode(id)?.let { visitor.problem(at, it, id) }
+            resolver.unavailability(id)?.let { visitor.problem(at, it.code, MisfitCause.TypeUnavailable(id, it)) }
         }
     }
 
@@ -427,7 +458,7 @@ class ValueWalk<R>(
         val record = value as? DataValue.RecordWrapper ?: return problem(at, "expected_record")
         val fields = representation.fields.associateBy { it.key }
         val present = record.fields.mapView
-        (present.keys - fields.keys).forEach { name -> visitor.problem(at.field(name), "unknown_field") }
+        (present.keys - fields.keys).forEach { name -> visitor.problem(at.field(name), UNDECLARED_FIELD, MisfitCause.Undeclared) }
         (fields.keys - present.keys).forEach { name -> visitor.problem(at.field(name), "missing_field") }
         val answers =
             fields.entries.mapNotNull { (name, field) ->
@@ -535,9 +566,9 @@ class ValueWalk<R>(
             invalid.diagnostics.forEach { visitor.problem(at, it.code) }
         }
         use.referencedDefinitions().distinct().filter { it.contentOwner() != null }.forEach { id ->
-            resolver.unavailableCode(id)?.let {
+            resolver.unavailability(id)?.let {
                 fits = false
-                visitor.problem(at, it, id)
+                visitor.problem(at, it.code, MisfitCause.TypeUnavailable(id, it))
             }
         }
         return fits
@@ -565,26 +596,21 @@ class ValueWalk<R>(
 }
 
 /**
- * complete(), validateStructure and the misfits: the walk as a visitor that collects. A problem about a type that is
- * gone or invalid is a typed misfit, which only misfits read; every other one is a structural problem.
+ * complete(), validateStructure and the misfits: the walk as a visitor that collects. A use of a type that is gone or
+ * invalid is a misfit only misfits read; every other one is also a structural problem.
  */
 private class ValueInspection : ValueVisitor<Unit> {
-    val problems = mutableListOf<ValueProblem>()
+    val misfits = mutableListOf<Misfit>()
     val unfinished = mutableListOf<ValueLocation>()
-    val typed = mutableListOf<Misfit>()
+
+    val problems: List<ValueProblem> get() = misfits.filterNot { it.cause is MisfitCause.TypeUnavailable }.map { it.problem }
 
     override fun problem(
         at: ValueLocation,
         code: String,
-        type: TypeDefinitionId?,
+        cause: MisfitCause,
     ) {
-        if (type ==
-            null
-        ) {
-            problems += ValueProblem(location = at, code = code)
-        } else {
-            typed += Misfit(ValueProblem(location = at, code = code), type)
-        }
+        misfits += Misfit(ValueProblem(location = at, code = code), cause)
     }
 
     override fun placeholder(at: ValueLocation) = Unit
@@ -676,3 +702,6 @@ private val plainScalarForms: Map<ScalarKind, (DataValue) -> Boolean> =
         ScalarKind.DURATION to { value -> value is DataValue.DurationWrapper },
         ScalarKind.TYPE to { value -> value is DataValue.TypeUseWrapper },
     )
+
+/** The code of a value at a position its type does not declare. */
+private const val UNDECLARED_FIELD = "unknown_field"

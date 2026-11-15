@@ -1,5 +1,6 @@
 package com.typewritermc.realm.formula
 
+import com.typewritermc.authoring.MisfitCause
 import com.typewritermc.authoring.ValueVisitor
 import com.typewritermc.authoring.ValueWalk
 import com.typewritermc.authoring.field
@@ -18,7 +19,6 @@ import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FunctionTypeUse
 import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -124,7 +124,7 @@ private class FormulaSitesVisitor(
     override fun problem(
         at: ValueLocation,
         code: String,
-        type: TypeDefinitionId?,
+        cause: MisfitCause,
     ) = Unit
 
     override fun placeholder(at: ValueLocation) = Unit
