@@ -93,15 +93,14 @@ final class RecordingSelectionOperation extends SelectionOperation {
       available && selection.isNotEmpty;
 
   @override
-  void executeOn(WidgetRef ref) {
-    executions.add(
-      ref.read(selectedProvider).requireValue.map((item) => item.id).toList(),
-    );
-  }
+  ActionRun run(OperationTargets targets) => pressOn(targets, _record);
+
+  void _record(WidgetRef ref, List<Selectable> targets) =>
+      executions.add([for (final item in targets) item.id]);
 
   @override
-  MenuItem menuItem(WidgetRef ref) =>
-      MenuItem(label: name, onPressed: () => executeOn(ref));
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) =>
+      MenuItem(label: name, onPressed: () => _record(ref, targets(ref)));
 
   @override
   Widget inspectorButton(
@@ -173,7 +172,8 @@ final class RecordingShortcutOperation extends ActivatorShortcutOperation {
   bool canExecuteOn(List<Selectable> selection) => selection.isNotEmpty;
 
   @override
-  void executeOn(WidgetRef ref) => executions++;
+  ActionRun run(OperationTargets targets) =>
+      pressOn(targets, (_, _) => executions++);
 
   @override
   Widget inspectorButton(
@@ -182,8 +182,8 @@ final class RecordingShortcutOperation extends ActivatorShortcutOperation {
   }) => const SizedBox.shrink();
 
   @override
-  MenuItem menuItem(WidgetRef ref) =>
-      MenuItem(label: name, onPressed: () => executeOn(ref));
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) =>
+      MenuItem(label: name, onPressed: () => executions++);
 }
 
 /// A shortcut operation whose activators are supplied by the test.
@@ -203,7 +203,7 @@ final class ShortcutTestOperation extends ActivatorShortcutOperation {
   bool canExecuteOn(List<Selectable> selection) => true;
 
   @override
-  FutureOr<void> executeOn(WidgetRef ref) {}
+  ActionRun run(OperationTargets targets) => pressOn(targets, (_, _) {});
 
   @override
   Widget inspectorButton(
@@ -212,7 +212,8 @@ final class ShortcutTestOperation extends ActivatorShortcutOperation {
   }) => throw UnimplementedError();
 
   @override
-  MenuItem menuItem(WidgetRef ref) => throw UnimplementedError();
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) =>
+      throw UnimplementedError();
 }
 
 /// A selectable that never finishes loading, for targets that stay pending.

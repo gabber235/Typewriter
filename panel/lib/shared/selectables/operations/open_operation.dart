@@ -49,10 +49,12 @@ class OpenOperation extends IntentShortcutOperation {
   }
 
   @override
-  FutureOr<void> executeOn(WidgetRef ref) async {
-    final selection = ref.read(selectedProvider).requireValue;
+  ActionRun run(OperationTargets targets) => pressOn(targets, _open);
+
+  /// Opens every item of [targets] in order, while the caller stays.
+  static Future<void> _open(WidgetRef ref, List<Selectable> targets) async {
     for (final (_, op)
-        in selection
+        in targets
             .collectCapabilitiesWithSelectables<OpenSelectionCapability>()) {
       await op.onOpen();
       if (!ref.context.mounted) return;
@@ -60,11 +62,11 @@ class OpenOperation extends IntentShortcutOperation {
   }
 
   @override
-  MenuItem menuItem(WidgetRef ref) {
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) {
     return MenuItem(
       icon: const Icon(Icons.open_in_new),
       label: "Open",
-      onPressed: () => executeOn(ref),
+      onPressed: () => _open(ref, targets(ref)),
     );
   }
 
@@ -73,7 +75,7 @@ class OpenOperation extends IntentShortcutOperation {
     List<Selectable> selection, {
     required OperationEmphasis emphasis,
   }) => CommandButton(
-    command: shortcut,
+    command: commandOn(fixedTargets(selection)),
     face: emphasis.face,
     icon: const Icon(Icons.open_in_new, size: 16),
     label: selection.length > 1 ? "Open (${selection.length})" : "Open",

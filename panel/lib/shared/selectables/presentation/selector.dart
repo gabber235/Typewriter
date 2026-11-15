@@ -160,6 +160,13 @@ class Selector extends HookConsumerWidget {
                   : source.operationsForTargets(ref, captured)) ??
               source.operationsFor(ref, selected.value ?? const []);
 
+    // The menu acts on the targets captured when it opened, resolved when
+    // an entry runs.
+    List<Selectable> menuTargets(WidgetRef ref) => [
+      for (final id in captured ?? const <SelectableIdentifier>[])
+        ?ref.read(selectableResolutionProvider(id)).value,
+    ];
+
     useFocusedChange(focusNode, ({required hasFocus}) {
       isFocused.value = hasFocus;
       if (!hasFocus) pendingContextPosition.value = null;
@@ -323,7 +330,7 @@ class Selector extends HookConsumerWidget {
           child: ContextMenuRegion(
             key: anchorKey,
             onClose: () => contextTargets.value = null,
-            items: selectionOperationMenuItems(operations, ref),
+            items: selectionOperationMenuItems(operations, ref, menuTargets),
             enableGestures: false,
             controller: controller,
             child: Listener(
