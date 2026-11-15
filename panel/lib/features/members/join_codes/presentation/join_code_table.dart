@@ -3,10 +3,11 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// The active join codes as a table: the link with its Copy button, how
-/// often it works, its expiry, and a revoke button on each row.
+/// often it works, and its expiry.
 ///
 /// The table renders the rows [JoinCodesTab] owns. Each row selects through
-/// the shared selection, so the inspector shows the selected codes.
+/// the shared selection, so the inspector shows the selected codes and
+/// revokes them.
 class JoinCodesTable extends StatelessWidget {
   const JoinCodesTable({required this.rows, super.key});
 
@@ -30,69 +31,49 @@ class JoinCodesTable extends StatelessWidget {
         1: FlexColumnWidth(2),
         2: IntrinsicColumnWidth(),
         3: IntrinsicColumnWidth(),
-        4: FixedColumnWidth(80),
       },
       emptyBuilder: (context) => const EmptyState(
         icon: MaterialSymbols.link_off_rounded,
         title: "No active join codes",
         description: "Generate a join code above to get started!",
       ),
-      shortcutsOf: (code) => joinCodeRowShortcuts(code, rows),
       leadingBuilder: (context, code) => const JoinCodeMark(),
       cellsBuilder: (context, code) => [
-        SelectionTableCell(
-          Padding(
-            padding: cellPadding,
-            child: Row(
-              children: [
-                Expanded(
-                  child: BlurReveal(
-                    blurSigma: 3,
-                    child: Text(
-                      joinCodeUrl(code.code),
-                      style: theme.textTheme.bodyMedium!.copyWith(
-                        fontSize: 13,
-                        color: theme.colorScheme.onSurface,
-                      ),
+        Padding(
+          padding: cellPadding,
+          child: Row(
+            children: [
+              Expanded(
+                child: BlurReveal(
+                  blurSigma: 3,
+                  child: Text(
+                    joinCodeUrl(code.code),
+                    style: theme.textTheme.bodyMedium!.copyWith(
+                      fontSize: 13,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                 ),
-                SizedBox(width: context.spacing.space2),
-                CommandButton(
-                  command: joinCodeCopy(code),
-                  face: ButtonFace.icon,
-                  icon: const Icon(Icons.copy, size: 16),
-                  label: "Copy Join Code",
-                  doneLabel: "Copied",
-                  tooltip: "Copy Join Code",
-                ),
-              ],
-            ),
+              ),
+              SizedBox(width: context.spacing.space2),
+              CommandButton(
+                command: joinCodeCopy(code),
+                face: ButtonFace.icon,
+                icon: const Icon(Icons.copy, size: 16),
+                label: "Copy Join Code",
+                doneLabel: "Copied",
+                tooltip: "Copy Join Code",
+              ),
+            ],
           ),
         ),
-        SelectionTableCell(
-          Padding(
-            padding: cellPadding,
-            child: JoinCodeTypeBadges(code: code),
-          ),
+        Padding(
+          padding: cellPadding,
+          child: JoinCodeTypeBadges(code: code),
         ),
-        SelectionTableCell(
-          Padding(
-            padding: cellPadding,
-            child: CountdownBadge(endDate: code.expiresAt),
-          ),
-        ),
-        SelectionTableCell.controls(
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
-            child: CommandButton(
-              face: ButtonFace.icon,
-              color: context.colors.danger,
-              icon: const Icon(Icons.link_off, size: 20),
-              label: "Revoke join code",
-              command: joinCodeRowRevocation(code, rows),
-            ),
-          ),
+        Padding(
+          padding: cellPadding,
+          child: CountdownBadge(endDate: code.expiresAt),
         ),
       ],
     );
@@ -118,7 +99,6 @@ class JoinCodesCardList extends StatelessWidget {
         title: "No active join codes",
         description: "Generate a join code above to get started!",
       ),
-      shortcutsOf: (code) => joinCodeRowShortcuts(code, rows),
       contentBuilder: (context, code) => Row(
         spacing: context.spacing.space3,
         children: [
@@ -174,30 +154,4 @@ class JoinCodeMark extends StatelessWidget {
       ),
     );
   }
-}
-
-/// The commands of [code]'s row: C copies it, and holding Delete revokes
-/// the selection when it holds the code, otherwise the code alone.
-List<ActionShortcut> joinCodeRowShortcuts(
-  skir.JoinCode code,
-  AnimatedRows<skir.JoinCode> rows,
-) => [joinCodeCopy(code), joinCodeRowRevocation(code, rows)];
-
-/// The Revoke command of [code]'s row: its key and its button.
-ActionShortcut joinCodeRowRevocation(
-  skir.JoinCode code,
-  AnimatedRows<skir.JoinCode> rows,
-) {
-  return joinCodeRevocation(
-    id: "revoke_join_code_${code.code}",
-    label: "Revoke join code",
-    targets: (ref) => {
-      for (final id
-          in ref
-              .selectionOrRow(JoinCodeIdentifier(code.code))
-              .whereType<JoinCodeIdentifier>())
-        id.codeId,
-    },
-    rows: rows,
-  );
 }

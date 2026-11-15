@@ -11,6 +11,5 @@ export "membership_search_results.dart";
 export "person_summary.dart";
 export "role_checks.dart";
 export "role_multiselect_chips.dart";
-export "role_multiselect_dropdown.dart";
 export "route.dart";
 export "selection_table.dart";

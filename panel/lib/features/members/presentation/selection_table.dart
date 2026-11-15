@@ -1,29 +1,15 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// One cell of a [SelectionTable] row after its selector cell.
-@immutable
-final class SelectionTableCell {
-  /// A cell a click selects through, as a click on the row does.
-  const SelectionTableCell(this.child) : selects = true;
-
-  /// A cell of controls, such as a roles dropdown or a remove button, that
-  /// take their own clicks.
-  const SelectionTableCell.controls(this.child) : selects = false;
-
-  final Widget child;
-  final bool selects;
-}
-
 /// A table of selectable rows on a surface, filling the rest of the scroll
-/// view: a header row, one column per label in [labels], and an unlabelled
-/// actions column. The members and join code tables share it.
+/// view: a header row and one column per label in [labels]. The members and
+/// join code tables share it.
 ///
 /// Each row is one [Selector] on the row's own focus node, in the page's
 /// [SelectionSurface]: the first cell holds it, with the item's check in
-/// select mode, and the cells a click selects through take its gestures.
-/// The first labelled column is the row's main text, where a hold shows its
-/// line and refusal. [shortcutsOf] gives the row's own commands, such as
-/// holding Delete, answered while focus is anywhere in the row.
+/// select mode, and a click anywhere on the row selects through it. Rows
+/// change nothing themselves: the inspector, the context menu and their
+/// keys run the selection's operations. The first labelled column is the
+/// row's main text, where a hold shows its line and refusal.
 class SelectionTable<T> extends HookConsumerWidget {
   const SelectionTable({
     required this.rows,
@@ -34,7 +20,6 @@ class SelectionTable<T> extends HookConsumerWidget {
     required this.emptyBuilder,
     required this.leadingBuilder,
     required this.cellsBuilder,
-    required this.shortcutsOf,
     this.hasScrollBody = true,
     super.key,
   });
@@ -45,8 +30,7 @@ class SelectionTable<T> extends HookConsumerWidget {
   /// What a screen reader names the row by.
   final String Function(T item) labelOf;
 
-  /// The labelled columns between the selector column and the actions
-  /// column.
+  /// The labelled columns after the selector column.
   final List<String> labels;
   final Map<int, TableColumnWidth> columnWidths;
   final WidgetBuilder emptyBuilder;
@@ -54,10 +38,8 @@ class SelectionTable<T> extends HookConsumerWidget {
   /// The selector cell's content beside the check, such as an avatar.
   final Widget Function(BuildContext context, T item) leadingBuilder;
 
-  /// The row's cells after the selector cell: one per label, then actions.
-  final List<SelectionTableCell> Function(BuildContext context, T item)
-  cellsBuilder;
-  final List<ActionShortcut> Function(T item) shortcutsOf;
+  /// The row's cells after the selector cell, one per label.
+  final List<Widget> Function(BuildContext context, T item) cellsBuilder;
   final bool hasScrollBody;
 
   @override
@@ -97,7 +79,6 @@ class SelectionTable<T> extends HookConsumerWidget {
                       ),
                     ),
                   ),
-                const TableCell(child: SizedBox.shrink()),
               ],
             ),
           ],
@@ -114,8 +95,6 @@ class SelectionTable<T> extends HookConsumerWidget {
             final selectable = selectableOf(item);
             final selected = selection.contains(selectable);
             final link = links.putIfAbsent(entry.id, SelectorLink.new);
-            Widget withShortcuts(Widget child) =>
-                ManagedActionSet(shortcuts: shortcutsOf(item), child: child);
             return TableRow(
               key: ValueKey(entry.id),
               decoration: BoxDecoration(
@@ -127,21 +106,19 @@ class SelectionTable<T> extends HookConsumerWidget {
               children: [
                 TableCell(
                   verticalAlignment: TableCellVerticalAlignment.middle,
-                  child: withShortcuts(
-                    RowStop.attachedByChild(
-                      bounds: RingBounds.tableRow,
-                      borderRadius: context.shapes.mediumBorderRadius,
-                      child: Selector(
-                        selectableId: selectable,
-                        focusNode: entry.focus,
-                        link: link,
-                        builder: (_, _, _) => Semantics(
-                          label: labelOf(item),
-                          child: Padding(
-                            padding: cellPadding,
-                            child: SelectorCheck(
-                              child: leadingBuilder(context, item),
-                            ),
+                  child: RowStop.attachedByChild(
+                    bounds: RingBounds.tableRow,
+                    borderRadius: context.shapes.mediumBorderRadius,
+                    child: Selector(
+                      selectableId: selectable,
+                      focusNode: entry.focus,
+                      link: link,
+                      builder: (_, _, _) => Semantics(
+                        label: labelOf(item),
+                        child: Padding(
+                          padding: cellPadding,
+                          child: SelectorCheck(
+                            child: leadingBuilder(context, item),
                           ),
                         ),
                       ),
@@ -150,13 +127,9 @@ class SelectionTable<T> extends HookConsumerWidget {
                 ),
                 for (final cell in cellsBuilder(context, item))
                   TableCell(
-                    child: withShortcuts(
-                      RowStop(
-                        role: RowRole.part,
-                        child: cell.selects
-                            ? SelectorLinkRegion(link: link, child: cell.child)
-                            : cell.child,
-                      ),
+                    child: RowStop(
+                      role: RowRole.part,
+                      child: SelectorLinkRegion(link: link, child: cell),
                     ),
                   ),
               ],
@@ -173,8 +146,8 @@ class SelectionTable<T> extends HookConsumerWidget {
 /// join codes and join requests pages.
 ///
 /// A tap selects the card and the inspector shows it; the card never opens
-/// in place. In select mode each card shows its check at its corner.
-/// [shortcutsOf] gives the card's own commands, such as holding Delete.
+/// in place and changes nothing itself. In select mode each card shows its
+/// check at its corner.
 class SelectionCardList<T> extends HookConsumerWidget {
   const SelectionCardList({
     required this.rows,
@@ -182,7 +155,6 @@ class SelectionCardList<T> extends HookConsumerWidget {
     required this.labelOf,
     required this.emptyBuilder,
     required this.contentBuilder,
-    required this.shortcutsOf,
     super.key,
   });
 
@@ -193,7 +165,6 @@ class SelectionCardList<T> extends HookConsumerWidget {
   final String Function(T item) labelOf;
   final WidgetBuilder emptyBuilder;
   final Widget Function(BuildContext context, T item) contentBuilder;
-  final List<ActionShortcut> Function(T item) shortcutsOf;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -211,33 +182,30 @@ class SelectionCardList<T> extends HookConsumerWidget {
         final item = entry.item;
         return Padding(
           padding: EdgeInsets.only(bottom: context.spacing.space3),
-          child: ManagedActionSet(
-            shortcuts: shortcutsOf(item),
-            child: RowStop.attachedByChild(
-              borderRadius: context.shapes.mediumBorderRadius,
-              child: Selector(
-                selectableId: selectableOf(item),
-                focusNode: entry.focus,
-                // The card reads as its label alone; the inspector reads the
-                // rest.
-                builder: (selected, focused, hovered) => Semantics(
-                  label: labelOf(item),
-                  excludeSemantics: true,
-                  child: Surface(
-                    color: selected
-                        ? Color.alphaBlend(
-                            theme.colorScheme.primaryContainer.withValues(
-                              alpha: 0.3,
-                            ),
-                            Surface.colorOf(context),
-                          )
-                        : Surface.colorOf(context),
-                    child: SelectorCheck(
-                      placement: SelectorCheckPlacement.corner,
-                      child: Padding(
-                        padding: EdgeInsets.all(context.spacing.space3),
-                        child: contentBuilder(context, item),
-                      ),
+          child: RowStop.attachedByChild(
+            borderRadius: context.shapes.mediumBorderRadius,
+            child: Selector(
+              selectableId: selectableOf(item),
+              focusNode: entry.focus,
+              // The card reads as its label alone; the inspector reads the
+              // rest.
+              builder: (selected, focused, hovered) => Semantics(
+                label: labelOf(item),
+                excludeSemantics: true,
+                child: Surface(
+                  color: selected
+                      ? Color.alphaBlend(
+                          theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.3,
+                          ),
+                          Surface.colorOf(context),
+                        )
+                      : Surface.colorOf(context),
+                  child: SelectorCheck(
+                    placement: SelectorCheckPlacement.corner,
+                    child: Padding(
+                      padding: EdgeInsets.all(context.spacing.space3),
+                      child: contentBuilder(context, item),
                     ),
                   ),
                 ),
@@ -282,15 +250,6 @@ class SelectionCardShimmer extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-/// What a row's own command acts on.
-extension SelectionOrRow on WidgetRef {
-  /// The selection when it holds [row], otherwise [row] alone.
-  List<SelectableIdentifier> selectionOrRow(SelectableIdentifier row) {
-    final selection = read(selectionProvider);
-    return selection.contains(row) ? selection : [row];
   }
 }
 

@@ -15,7 +15,7 @@ final _request = joinRequest(
 
 void main() {
   for (final (name, share, declines) in [
-    ("holding Delete on the focused request declines it", 1.0, 1),
+    ("holding Delete on the selected request declines it", 1.0, 1),
     ("releasing Delete early keeps the request", 0.5, 0),
   ]) {
     testWidgets(name, (tester) async {
@@ -35,6 +35,7 @@ void main() {
       await panel.eventually(() => expect(panel.shows("Grace"), isTrue));
       // The page opens on the first request.
       expect(panel.focused, contains("Grace"));
+      await panel.press(LogicalKeyboardKey.enter);
 
       await panel.holdKey(LogicalKeyboardKey.delete, share: share);
 

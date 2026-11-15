@@ -26,27 +26,22 @@ Widget selectionTableUseCase(BuildContext context) {
         0: IntrinsicColumnWidth(),
         1: FlexColumnWidth(1),
         2: FlexColumnWidth(1),
-        3: FixedColumnWidth(48),
       },
       emptyBuilder: (context) => const EmptyState(
         icon: MaterialSymbols.groups_2_rounded,
         title: "Nothing to select",
         description: "Rows appear here once there are some.",
       ),
-      shortcutsOf: (_) => const [],
       leadingBuilder: (context, member) => MemberAvatar(
         avatarUrl: "$userIconUrl&seed=${member.userId}",
         radius: 16,
       ),
       cellsBuilder: (context, member) => [
         for (final text in [member.name, member.email])
-          SelectionTableCell(
-            Padding(
-              padding: EdgeInsets.all(context.spacing.space3),
-              child: Text(text ?? "", overflow: TextOverflow.ellipsis),
-            ),
+          Padding(
+            padding: EdgeInsets.all(context.spacing.space3),
+            child: Text(text ?? "", overflow: TextOverflow.ellipsis),
           ),
-        const SelectionTableCell.controls(SizedBox.shrink()),
       ],
     ),
   );
@@ -74,7 +69,6 @@ Widget selectionCardListUseCase(BuildContext context) {
         title: "Nothing to select",
         description: "Cards appear here once there are some.",
       ),
-      shortcutsOf: (_) => const [],
       contentBuilder: (context, member) =>
           PersonSummary(name: member.name, email: member.email),
     ),

@@ -26,6 +26,7 @@ void main() {
       (_) => reply.future,
     );
 
+    await panel.item(joinCodeUrl(code.code)).select();
     final gesture = await tester.startGesture(
       tester.getCenter(
         find.bySemanticsLabel(RegExp(RegExp.escape(_revokeOne))).last,
@@ -69,6 +70,7 @@ void main() {
     final link = clipboard.single;
     await panel.eventually(() => expect(panel.reads(link), isTrue));
 
+    await panel.item(link).select();
     await panel.holdButton(_revokeOne);
 
     await panel.eventually(

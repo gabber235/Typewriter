@@ -58,15 +58,16 @@ class JoinCodeInspection extends StatelessWidget {
   }
 }
 
-/// The one Copy join code command for [code]: its row key, its row button
-/// and the inspector button all build it, so each says Copied.
+/// The one Copy join code command for [code]: its row button and the
+/// inspector button both build it, so each says Copied. It has no key, as
+/// rows bind none of their own.
 ActionShortcut joinCodeCopy(skir.JoinCode code) {
   final url = joinCodeUrl(code.code);
   return ActionShortcut(
     id: "copy_join_code_${code.code}",
     label: "Copy join code",
     description: "Copy this join code",
-    activators: const [SingleActivator(LogicalKeyboardKey.keyC)],
+    activators: const [],
     priority: 1,
     run: ActionRun.press((_) => Clipboard.setData(ClipboardData(text: url))),
   );

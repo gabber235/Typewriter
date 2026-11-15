@@ -8,7 +8,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// inspector shows its details, the roles to grant, Accept and Decline. The
 /// list publishes its rows, so a decline held from the inspector or the
 /// context menu sends and refuses on them, and requests that leave the live
-/// list leave the selection.
+/// list leave the selection. Cards change nothing themselves.
 class JoinRequestsList extends HookConsumerWidget {
   const JoinRequestsList({required this.requests, super.key});
 
@@ -38,7 +38,6 @@ class JoinRequestsList extends HookConsumerWidget {
         title: "No join requests",
         description: "When members request to join, they will appear here.",
       ),
-      shortcutsOf: (request) => [joinRequestRowDecline(request, rows)],
       contentBuilder: (context, request) => Row(
         spacing: context.spacing.space3,
         children: [
@@ -59,28 +58,6 @@ class JoinRequestsList extends HookConsumerWidget {
       ),
     );
   }
-}
-
-/// The Decline command of [request]'s card: its key. It declines the
-/// selection when the selection holds the request, otherwise the request
-/// alone.
-ActionShortcut joinRequestRowDecline(
-  skir.OrganizationJoinRequest request,
-  AnimatedRows<skir.OrganizationJoinRequest> rows,
-) {
-  return joinRequestDecline(
-    id: "decline_join_request_${request.requestId}",
-    label: "Decline",
-    targets: (ref) => {
-      for (final id
-          in ref
-              .selectionOrRow(JoinRequestIdentifier(request.requestId))
-              .whereType<JoinRequestIdentifier>())
-        id.requestId,
-    },
-    nameOf: (_, id) => rows[id]?.item.displayName,
-    rows: rows,
-  );
 }
 
 /// What a join request is called on screen.

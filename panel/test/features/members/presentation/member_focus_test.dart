@@ -28,6 +28,7 @@ void main() {
       signedIn(ada, organization: acme),
       membershipService(members: [grace, linus]),
     ], at: membersPage());
+    await panel.press(LogicalKeyboardKey.enter);
     await panel.holdKey(LogicalKeyboardKey.delete);
     await panel.eventually(() => expect(panel.focusedRow, linus));
   });
@@ -80,15 +81,8 @@ void main() {
     expect(panel.focused, contains("Linus"));
     await panel.press(LogicalKeyboardKey.home);
     expect(panel.focused, contains("Ada"));
-    await panel.press(LogicalKeyboardKey.keyL);
-    // The roles field reads no name when focused; its placeholder finds it.
-    expect(panel.focusShows(find.text("Select roles")), isTrue);
     await panel.press(LogicalKeyboardKey.tab);
-    expect(
-      panel.focused,
-      isNot(
-        anyOf(contains("Grace"), contains("Linus"), contains("Select roles")),
-      ),
-    );
+    expect(panel.focused, isNot(anyOf(contains("Grace"), contains("Linus"))));
+    expect(panel.focusShows(find.text("Select roles")), isFalse);
   });
 }

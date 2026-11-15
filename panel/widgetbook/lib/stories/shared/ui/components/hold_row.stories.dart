@@ -5,7 +5,7 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/features/members/membership_story.dart";
 import "package:widgetbook_workspace/support/story.dart";
 
-/// Hold Delete or D on a member row, or Remove on a selection.
+/// Select members, then hold Delete or D, or Remove in the inspector.
 @widgetbook.UseCase(name: "Member rows", type: HoldRow)
 Widget holdRowStory(BuildContext context) {
   return membershipStory(
