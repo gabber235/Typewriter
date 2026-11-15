@@ -5,32 +5,27 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
+  final stories = realmInstance(
+    "stories",
+    host: "stories",
+    hostName: "realm_instance:stories",
+    engine: "typewritermc:paper",
+    state: childRuntimeState(artifact: null),
+  );
+  final maps = realmInstance(
+    "maps",
+    host: "maps",
+    hostName: "realm_instance:maps",
+    engine: "typewritermc:paper",
+    state: childRuntimeState(artifact: null),
+  );
+
   test("a search lists the Realms whose name matches", () async {
-    final topology = ValueNotifier<AsyncValue<List<skir.RealmInstance>>>(
-      AsyncData([
-        realmInstance(
-          "stories",
-          host: "stories",
-          hostName: "realm_instance:stories",
-          engine: "typewritermc:paper",
-          state: childRuntimeState(artifact: null),
-        ),
-        realmInstance(
-          "maps",
-          host: "maps",
-          hostName: "realm_instance:maps",
-          engine: "typewritermc:paper",
-          state: childRuntimeState(artifact: null),
-        ),
-      ]),
+    final snapshot = await firstSnapshot<AsyncValue<List<skir.RealmInstance>>>(
+      realmsSearchSource,
+      AsyncData([stories, maps]),
+      query: "stories",
     );
-    addTearDown(topology.dispose);
-    final source = RealmsSearchSource(topology);
-    addTearDown(source.dispose);
-    source.initialize(
-      SearchQueryContext(normalizedQuery: "stories", selectors: const []),
-    );
-    final snapshot = await source.snapshots.first;
 
     expect(snapshot.status, SearchSourceStatus.ready);
     expect(
@@ -44,16 +39,11 @@ void main() {
   });
 
   test("a topology that fails to load is reported as a Realms error", () async {
-    final topology = ValueNotifier<AsyncValue<List<skir.RealmInstance>>>(
+    final snapshot = await firstSnapshot<AsyncValue<List<skir.RealmInstance>>>(
+      realmsSearchSource,
       AsyncError(StateError("Topology unreachable"), StackTrace.empty),
+      query: "stories",
     );
-    addTearDown(topology.dispose);
-    final source = RealmsSearchSource(topology);
-    addTearDown(source.dispose);
-    source.initialize(
-      SearchQueryContext(normalizedQuery: "stories", selectors: const []),
-    );
-    final snapshot = await source.snapshots.first;
 
     expect(snapshot.status, SearchSourceStatus.error);
     expect(snapshot.errorSummaries.single.sourceLabel, "Realms");
@@ -63,18 +53,39 @@ void main() {
     );
   });
 
+  test("an empty search lists every Realm", () async {
+    final results = resultsOf(
+      await firstSnapshot<AsyncValue<List<skir.RealmInstance>>>(
+        realmsSearchSource,
+        AsyncData([stories, maps]),
+      ),
+    );
+
+    expect(
+      results.map((result) => result.title),
+      unorderedEquals(["realm_instance:stories", "realm_instance:maps"]),
+    );
+  });
+
+  test("a topology that fails after loading keeps its Realms listed beside "
+      "the error", () async {
+    final snapshot = await firstSnapshot<AsyncValue<List<skir.RealmInstance>>>(
+      realmsSearchSource,
+      failedAfter([stories], StateError("Topology unreachable")),
+      query: "stories",
+    );
+
+    expect(snapshot.status, SearchSourceStatus.error);
+    expect(snapshot.errorSummaries.single.sourceLabel, "Realms");
+    expect(resultsOf(snapshot).single.title, "realm_instance:stories");
+  });
+
   test("opening a Realm from search follows its live availability", () {
     final availability = ValueNotifier<AsyncValue<Map<skir.RecordId, bool>>>(
       const AsyncLoading(),
     );
     addTearDown(availability.dispose);
-    final realm = realmInstance(
-      "stories",
-      host: "stories",
-      hostName: "realm_instance:stories",
-      engine: "typewritermc:paper",
-      state: childRuntimeState(artifact: null),
-    );
+    final realm = stories;
     final result = SearchResult(
       id: realm.realmId.id,
       type: realmSearchResultType,

@@ -83,11 +83,11 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
     openOrganizationCommand(),
     createOrganizationCommand(),
   ];
-  sources.add(OrganizationsSearchSource(ref.valued(organizationsProvider)));
+  sources.add(organizationsSearchSource(ref.valued(organizationsProvider)));
 
   if (organizationId != null) {
     final realms = ref.valued(realmsProvider);
-    sources.add(RealmsSearchSource(realms));
+    sources.add(realmsSearchSource(realms));
     commands.add(
       openRealmCommand(
         organizationId: organizationId,

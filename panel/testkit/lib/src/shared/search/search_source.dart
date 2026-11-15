@@ -348,3 +348,35 @@ Widget innerActionRow({
     body: TextButton(onPressed: onInner, child: const Text("Inner action")),
   ),
 );
+
+/// A list that loaded [value] and now loads again after its scope changed,
+/// still holding [value], as a provider holds it while it rebuilds.
+AsyncValue<T> reloadingFrom<T>(T value) =>
+    // ignore: invalid_use_of_internal_member
+    AsyncLoading<T>().copyWithPrevious(AsyncData(value), isRefresh: false);
+
+/// A list that loaded [value] and then failed with [error], still holding
+/// [value], as a provider holds it after a failed reload.
+AsyncValue<T> failedAfter<T>(T value, Object error) =>
+    // ignore: invalid_use_of_internal_member
+    AsyncError<T>(error, StackTrace.empty).copyWithPrevious(AsyncData(value));
+
+/// The first snapshot the source [create] builds over a list holding [list]
+/// answers [query] with; the list and the source are disposed after the
+/// test.
+Future<SearchSourceSnapshot> firstSnapshot<T>(
+  SearchSource Function(ValueListenable<T> list) create,
+  T list, {
+  String query = "",
+}) async {
+  final listenable = ValueNotifier<T>(list);
+  addTearDown(listenable.dispose);
+  final source = create(listenable);
+  addTearDown(source.dispose);
+  source.initialize(
+    query.isEmpty
+        ? SearchQueryContext.empty
+        : SearchQueryContext(normalizedQuery: query, selectors: const []),
+  );
+  return source.snapshots.first;
+}
