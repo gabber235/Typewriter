@@ -24,6 +24,8 @@ internal data class PlaytestSettings(
     val goldens: String,
     /** The local golden images, each named by the hash of its frame. */
     val goldenImages: Path,
+    /** The Mesa release devenv ships, which the pinned renderer draws with. */
+    val mesa: String,
     /** Every `playtest.*` property, for the pool. */
     val forwarded: Map<String, String>,
 ) {
@@ -51,6 +53,7 @@ internal data class PlaytestSettings(
                 root = Path(required("root")),
                 goldens = required("goldens"),
                 goldenImages = Path(required("goldenImages")),
+                mesa = required("mesa"),
                 forwarded = forwarded,
             )
         }

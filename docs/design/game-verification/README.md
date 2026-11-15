@@ -127,6 +127,18 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   I measures.
 - A frame that differs from its approved golden **fails the test** and the pull request shows golden,
   new frame and diff (2026-11-06). Goldens are exact on the pinned runner platform (spike F).
+- The **pinned renderer** is Vulkan through llvmpipe on Linux amd64 with the Mesa devenv ships
+  (2026-11-15). devenv exports that release as `PLAYTEST_MESA`, and the game framework owns the pin
+  and its one match rule. On the pinned renderer a golden another renderer drew (the Mesa before an
+  upgrade) fails and asks for a fresh approve; any other machine reports "not checked" with its
+  renderer. Each captured frame's candidate says whether the pinned renderer drew it, and
+  `cargo xtask goldens approve` refuses any it did not. A nixpkgs Mesa upgrade fails every golden, and
+  the upgrade pull request approves them again.
+- **Selection** is testBalloon's (2026-11-15): `cargo xtask e2e game --only` passes each id as a test
+  pattern, and the framework holds no selection code. A game module the selection leaves empty passes,
+  as Gradle's "no matching tests" check is off for gameTest tasks; xtask's selection check names each
+  id that matched no case of the run. A Gradle run that passed while no test JVM opened a pool
+  session is a run without cases, which fails as "no requirements ran".
 - Requirements are written as **G1 windows plus the recorded timeline** (2026-11-06): every check sits
   in a `within(n.ticks)` window that opens at the last stimulus and passes the moment it holds; order,
   gaps and motion are read from the run's recorded timeline after a window. Drafts in

@@ -608,3 +608,10 @@ pub fn drive_attempts<T: crate::e2e::Target>(
     )?;
     Ok((folded, drove.into_inner()))
 }
+
+/// A frame a game run captured as `<frame>.png` in `run`, beside the `<frame>.golden` candidate
+/// file that names its golden, hash, size and renderer.
+pub fn captured_golden(run: &TempRoot, frame: &str, candidate: &str, png: &str) {
+    run.write(&format!("{frame}.golden"), candidate);
+    run.write(&format!("{frame}.png"), png);
+}

@@ -103,7 +103,7 @@ internal class PoolSession private constructor(
     private val attemptsOf = ConcurrentHashMap<String, Int>()
 
     /** This project's goldens and the local golden images. */
-    val goldens = Goldens(settings.root, settings.goldens, settings.goldenImages)
+    val goldens = Goldens(settings.root, settings.goldens, settings.goldenImages, PinnedRenderer(settings.mesa))
     private val ended = CompletableDeferred<Unit>()
 
     @Volatile
@@ -191,7 +191,8 @@ internal class PoolSession private constructor(
         val started = System.nanoTime()
         var failure: Throwable? = null
         val steps = mutableListOf<AttemptStep>()
-        val evidence = Evidence(settings.testRun.toAbsolutePath().parent, planned.testId, checkNotNull(attemptsOf.merge(planned.testId, 1, Int::plus)))
+        val evidence =
+            Evidence(settings.testRun.toAbsolutePath().parent, planned.testId, checkNotNull(attemptsOf.merge(planned.testId, 1, Int::plus)))
         for ((index, body) in planned.bodies.withIndex()) {
             if (index > 0) {
                 attempt.players.forEach { attempts.remove(it.name) }

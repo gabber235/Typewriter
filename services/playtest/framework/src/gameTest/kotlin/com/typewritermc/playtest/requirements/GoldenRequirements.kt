@@ -6,6 +6,7 @@ import com.typewritermc.playtest.Frame
 import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.GameMode
 import com.typewritermc.playtest.backToBack
+import com.typewritermc.playtest.brightnessAt
 import com.typewritermc.playtest.camera
 import com.typewritermc.playtest.frameOf
 import com.typewritermc.playtest.idle
@@ -91,7 +92,6 @@ val GoldenRequirements by testSuite(compartment = { GameCompartment }) {
         val night = frameOf(player, "night")
 
         // The floor right below the camera, at the bottom of the frame, where the fog hardly reaches.
-        val floorAt = { frame: Frame -> frame.rgbAt(frame.width / 2, frame.height - 20).let { (it shr 16 and 0xFF) + (it shr 8 and 0xFF) + (it and 0xFF) } }
-        floorAt(night) shouldBeLessThan floorAt(day) / 2
+        night.brightnessAt(night.width / 2, night.height - 20) shouldBeLessThan day.brightnessAt(day.width / 2, day.height - 20) / 2
     }
 }

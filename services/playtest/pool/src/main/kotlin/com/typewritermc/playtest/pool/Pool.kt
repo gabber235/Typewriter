@@ -3,10 +3,10 @@ package com.typewritermc.playtest.pool
 import com.typewritermc.playtest.wire.Message
 import com.typewritermc.playtest.wire.Message.AttemptStep
 import com.typewritermc.playtest.wire.Message.BarrierSeen
-import com.typewritermc.playtest.wire.Message.Capture
 import com.typewritermc.playtest.wire.Message.Claim
 import com.typewritermc.playtest.wire.Message.Claimed
 import com.typewritermc.playtest.wire.Message.ClientLost
+import com.typewritermc.playtest.wire.Message.ClientRequest
 import com.typewritermc.playtest.wire.Message.ClientStalled
 import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.Declined
@@ -14,10 +14,9 @@ import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
 import com.typewritermc.playtest.wire.Message.Hello
 import com.typewritermc.playtest.wire.Message.HungEnded
-import com.typewritermc.playtest.wire.Message.Input
 import com.typewritermc.playtest.wire.Message.Joined
 import com.typewritermc.playtest.wire.Message.Lease
-import com.typewritermc.playtest.wire.Message.Look
+import com.typewritermc.playtest.wire.Message.PaperRequest
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Player
 import com.typewritermc.playtest.wire.Message.PlayerLeft
@@ -31,6 +30,7 @@ import com.typewritermc.playtest.wire.Message.Region
 import com.typewritermc.playtest.wire.Message.RegionsAhead
 import com.typewritermc.playtest.wire.Message.Release
 import com.typewritermc.playtest.wire.Message.Reply
+import com.typewritermc.playtest.wire.Message.Request
 import com.typewritermc.playtest.wire.Message.Reset
 import com.typewritermc.playtest.wire.Message.ResetDone
 import com.typewritermc.playtest.wire.Message.Result
@@ -369,8 +369,8 @@ internal class Pool(
     }
 
     /**
-     * What a session sends the game for its attempts' players: probes and steps for Paper, inputs and
-     * watches for their clients. A message naming a player no attempt of the session holds reaches neither.
+     * What a session sends the game for its attempts' players: probes, queries and steps for Paper;
+     * inputs, looks, captures and watches for their clients. A message naming a player no attempt of the session holds reaches neither.
      */
     private fun toGame(
         session: Peer,
@@ -380,22 +380,18 @@ internal class Pool(
         if (named == null) return System.err.println("$session sent ${message.javaClass.simpleName}, which a session never sends")
         if (named.isEmpty() || !named.all { holds(session, it) }) return
         when (message) {
-            is Probe -> {
-                route(paper, session, message.request()) { Probe(it, message.players(), message.action()) }
+            is PaperRequest -> {
+                route(paper, session, message)
             }
 
-            is Query -> {
-                route(paper, session, message.request()) { Query(it, message.player()) }
+            is ClientRequest -> {
+                route(clientOf(message.player())?.peer, session, message)
             }
 
             is StepUntil -> {
                 val routed = StepUntil(message.player(), message.tick(), ++nextBarrier)
                 barriers[routed.barrier()] = Routed(session, message.barrier())
                 paper?.send(routed)
-            }
-
-            is Input -> {
-                route(clientOf(message.player())?.peer, session, message.request()) { Input(it, message.player(), message.steps()) }
             }
 
             is StopStepping -> {
@@ -406,29 +402,20 @@ internal class Pool(
                 clientOf(message.player())?.peer?.send(message)
             }
 
-            is Look -> {
-                route(clientOf(message.player())?.peer, session, message.request()) { Look(it, message.player(), message.entities()) }
-            }
-
-            is Capture -> {
-                route(clientOf(message.player())?.peer, session, message.request()) { Capture(it, message.player(), message.path()) }
-            }
-
             // playersNamedBy turned every other message away above.
             else -> {}
         }
     }
 
-    /** Sends [peer] the message [routed] builds with a pool wide request id, remembering which session asked as [request]. */
+    /** Sends [peer] the session's [request] under a pool wide request id, remembering which session asked under which id. */
     private fun route(
         peer: Peer?,
         session: Peer,
-        request: Long,
-        routed: (Long) -> Message,
+        request: Request,
     ) {
         val id = ++nextRequest
-        requests[id] = Routed(session, request)
-        peer?.send(routed(id))
+        requests[id] = Routed(session, request.request())
+        peer?.send(request.withRequest(id))
     }
 
     /** The players a message for the game acts on, or null for a message a session never sends. */
@@ -436,12 +423,10 @@ internal class Pool(
         when (message) {
             is Probe -> message.players()
             is Query -> listOf(message.player())
+            is ClientRequest -> listOf(message.player())
             is StepUntil -> listOf(message.player())
             is StopStepping -> listOf(message.player())
-            is Input -> listOf(message.player())
             is Watch -> listOf(message.player())
-            is Look -> listOf(message.player())
-            is Capture -> listOf(message.player())
             else -> null
         }
 

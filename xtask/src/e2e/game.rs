@@ -92,8 +92,9 @@ pub(crate) fn gradle_args(args: &E2eArgs, quarantine: &Quarantine, file: &Path) 
         "gameTest".to_owned(),
         format!("-Pplaytest.testRun={}", file.display()),
     ];
-    if !args.only.is_empty() {
-        gradle.push(format!("-Pplaytest.only={}", args.only.join(",")));
+    for selected in &args.only {
+        gradle.push("--tests".to_owned());
+        gradle.push(test_pattern(selected));
     }
     if args.repeat.get() > 1 {
         gradle.push(format!("-Pplaytest.repeat={}", args.repeat));
@@ -105,11 +106,31 @@ pub(crate) fn gradle_args(args: &E2eArgs, quarantine: &Quarantine, file: &Path) 
     gradle
 }
 
-/// The run `ran` wrote. Fails, with the cause and the pool's log, when there is none or the file
-/// belongs to a run that started before this one: a test JVM of an earlier run that outlived it
-/// still ends its session and writes there.
+/// The testBalloon pattern that selects the test `selected` names: a test id (the requirement id
+/// and its sentence) as it is, a requirement id with any sentence. `/` sets the pattern's element
+/// separator, so the test's own name starts with the id.
+fn test_pattern(selected: &str) -> String {
+    if selected.contains(' ') {
+        format!("/*/{selected}")
+    } else {
+        format!("/*/{selected} *")
+    }
+}
+
+/// The run `ran` wrote. A Gradle run that passed while no test JVM opened a session with the pool
+/// ran no requirement: testBalloon enters no game compartment the selection leaves empty, so that
+/// run is one without cases. Fails, with the cause and the pool's log, when there is no run file
+/// otherwise, or the file belongs to a run that started before this one: a test JVM of an earlier
+/// run that outlived it still ends its session and writes there.
 pub(crate) fn own_run(ran: &Ran) -> Result<TestRun> {
     let log = ran.pool_log.display();
+    if !ran.file.exists() && ran.gradle.success() && !pool_logged_during(ran) {
+        return Ok(TestRun {
+            runner: Runner::Game,
+            started_at_millis: ran.started_millis,
+            ..TestRun::default()
+        });
+    }
     if !ran.file.exists() {
         bail!(
             "game: the run wrote no run file at {} (Gradle exited with {}): {}; see {log}",
@@ -133,15 +154,20 @@ pub(crate) fn own_run(ran: &Ran) -> Result<TestRun> {
     Ok(run)
 }
 
-/// Why the pool wrote no run file for `ran`, as the pool logged it during the run.
-fn pool_cause(ran: &Ran) -> String {
-    let logged_since = fs::metadata(&ran.pool_log)
+/// Whether the pool logged during `ran`: a test JVM that opens a session starts the pool, which
+/// logs.
+fn pool_logged_during(ran: &Ran) -> bool {
+    fs::metadata(&ran.pool_log)
         .and_then(|meta| meta.modified())
         .ok()
         .and_then(|modified| modified.duration_since(UNIX_EPOCH).ok())
         .and_then(|since| i64::try_from(since.as_millis()).ok())
-        .is_some_and(|modified| modified >= ran.started_millis);
-    let failed = logged_since
+        .is_some_and(|modified| modified >= ran.started_millis)
+}
+
+/// Why the pool wrote no run file for `ran`, as the pool logged it during the run.
+fn pool_cause(ran: &Ran) -> String {
+    let failed = pool_logged_during(ran)
         .then(|| fs::read_to_string(&ran.pool_log).ok())
         .flatten()
         .and_then(|log| {
@@ -154,7 +180,7 @@ fn pool_cause(ran: &Ran) -> String {
 }
 
 /// The suite's verdict on its `run`: each case under the run's attempt policy and the quarantine,
-/// the selection, and a Gradle failure that no failing case explains, such as a test JVM that
+/// the selection, a run that ran no requirement, and a Gradle failure that no failing case explains, such as a test JVM that
 /// ended before it ran its requirements.
 pub(crate) fn judge(
     run: &TestRun,
@@ -165,6 +191,12 @@ pub(crate) fn judge(
     out: &mut dyn Write,
 ) -> Result<()> {
     results::selection_matches(run, only)?;
+    if run.cases.is_empty() {
+        bail!(
+            "game: no requirements ran ({})",
+            shown.join("test_run.json").display()
+        );
+    }
     verdict(
         "game",
         &shown.join("test_run.json"),
@@ -238,6 +270,49 @@ mod tests {
             error.contains(&root.path("pool.log").display().to_string()),
             "{error}"
         );
+    }
+
+    #[test]
+    fn a_passing_gradle_run_without_a_pool_session_ran_no_requirement_and_fails_by_the_selection() {
+        let root = TempRoot::new();
+        let run = own_run(&Ran {
+            file: root.path("results/game/test_run.json"),
+            started_millis: 0,
+            gradle: exited(0),
+            pool_log: root.path("pool.log"),
+        })
+        .unwrap();
+        for (only, says) in [
+            (vec!["NOPE-1".to_owned()], "no case matches NOPE-1"),
+            (vec![], "no requirements ran"),
+        ] {
+            let error = refusal(judge(
+                &run,
+                exited(0),
+                &only,
+                &Quarantine::default(),
+                Path::new("results/game"),
+                &mut Vec::new(),
+            ));
+            assert!(error.contains(says), "{only:?}: {error}");
+        }
+    }
+
+    #[test]
+    fn a_passing_gradle_run_whose_pool_session_wrote_no_run_file_fails_with_the_pool_s_cause() {
+        let root = TempRoot::new();
+        root.write(
+            "pool.log",
+            "Attempt 1: PROBE-1 on gv-1\nThe game failed: Paper stopped; see paper.log\n",
+        );
+        let error = refusal(own_run(&Ran {
+            file: root.path("results/game/test_run.json"),
+            started_millis: 0,
+            gradle: exited(0),
+            pool_log: root.path("pool.log"),
+        }));
+        assert!(error.contains("wrote no run file"), "{error}");
+        assert!(error.contains("Paper stopped; see paper.log"), "{error}");
     }
 
     #[test]
@@ -371,12 +446,18 @@ mod tests {
     #[test]
     fn gradle_gets_the_run_file_the_selection_the_repeat_and_the_quarantine() {
         let file = Path::new("/repo/.xtask/results/game/test_run.json");
-        let args = parsed(&["game", "--only", "WINDOW-1,HUNG-1", "--repeat", "3"]).unwrap();
+        let args = parsed(&[
+            "game",
+            "--only",
+            "WINDOW-1,HUNG-1 work still running fails",
+            "--repeat",
+            "3",
+        ])
+        .unwrap();
         let gradle = gradle_args(&args, &quarantining("game/LEAK-1"), file);
         for expected in [
             "gameTest",
             "-Pplaytest.testRun=/repo/.xtask/results/game/test_run.json",
-            "-Pplaytest.only=WINDOW-1,HUNG-1",
             "-Pplaytest.repeat=3",
             "-Pplaytest.quarantine=LEAK-1",
         ] {
@@ -385,11 +466,22 @@ mod tests {
                 "{expected} in {gradle:?}"
             );
         }
+        // testBalloon selects a test whose name is the id and its sentence, or the whole test id.
+        let selection: Vec<_> = gradle
+            .windows(2)
+            .filter(|pair| pair[0] == "--tests")
+            .map(|pair| pair[1].as_str())
+            .collect();
+        assert_eq!(
+            selection,
+            ["/*/WINDOW-1 *", "/*/HUNG-1 work still running fails"]
+        );
         let plain = gradle_args(&parsed(&["game"]).unwrap(), &Quarantine::default(), file);
         assert!(
-            !plain.iter().any(|arg| ["only", "repeat", "quarantine"]
-                .iter()
-                .any(|name| arg.starts_with(&format!("-Pplaytest.{name}=")))),
+            !plain.iter().any(|arg| arg == "--tests"
+                || ["repeat", "quarantine"]
+                    .iter()
+                    .any(|name| arg.starts_with(&format!("-Pplaytest.{name}=")))),
             "{plain:?}"
         );
     }

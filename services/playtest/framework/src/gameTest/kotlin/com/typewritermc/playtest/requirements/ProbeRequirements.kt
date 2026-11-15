@@ -41,11 +41,12 @@ val ProbeRequirements by testSuite(compartment = { GameCompartment }) {
         "a block at the edge of what the client draws shows right after a far teleport",
         demonstrates = Demonstrates.EDGE_CASE,
     ) {
-        // The client draws the 7 by 7 chunks around its own (render distance 3) and meshes a chunk only
-        // once its 8 neighbours arrived, so the corner chunk 3 chunks away on both axes shows only once
-        // the chunk 4 away on both axes arrived, the farthest one Paper sends.
+        // The client draws the 5 by 5 chunks around its own (render distance 2, which the custom graphics
+        // preset keeps) and meshes a chunk only once its 8 neighbours arrived, so the corner chunk 2 chunks
+        // away on both axes shows only once the chunk 3 away on both axes arrived, the farthest one a claim
+        // waits for.
         probe.fill(BlockPos(298, 99, 6), BlockPos(302, 99, 10), "stone")
-        val corner = probe.block(BlockPos(344, 101, 56), "stone")
+        val corner = probe.block(BlockPos(330, 101, 40), "stone")
         probe.teleport(player, 300.5, 100.0, 8.5, yaw = -42.5f)
         // The teleport is done once the client holds what it needs; this probe changes nothing and marks then.
         probe.gameMode(player, GameMode.CREATIVE)

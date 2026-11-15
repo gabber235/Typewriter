@@ -97,7 +97,8 @@ final class Looks {
         capture = null;
         Pixels frame = Grab.read(List.of(copy)).getFirst();
         var info = RenderSystem.getDevice().getDeviceInfo();
-        var renderer = new Renderer(info.backendName(), info.name(), info.driverInfo(), System.getProperty("os.arch"));
+        var renderer = new Renderer(
+                info.backendName(), info.name(), info.driverInfo(), System.getProperty("os.name"), System.getProperty("os.arch"));
         PlaytestClient.send(new Captured(asked.request(), renderer, writePng(frame, Path.of(asked.path()))));
     }
 

@@ -80,9 +80,30 @@ class Frame(
 }
 
 /**
+ * The renderer goldens are approved on and exact for, the pinned runner's: Vulkan through Mesa's
+ * llvmpipe (lavapipe) on Linux x86, with the Mesa devenv ships as [mesa]. The device names the CPU's
+ * vector width, which another runner CPU may change, so any llvmpipe device is pinned; a golden still
+ * compares only with the exact renderer that drew it.
+ */
+class PinnedRenderer(
+    private val mesa: String,
+) {
+    private val mesaRelease = Regex("""(?<![\w.])Mesa ${Regex.escape(mesa)}(?![\w.])""")
+
+    /** Whether [renderer] is the pinned one. */
+    fun drew(renderer: Renderer): Boolean =
+        renderer.os() == "Linux" &&
+            renderer.arch() == "amd64" &&
+            renderer.backend() == "Vulkan" &&
+            renderer.device().startsWith("llvmpipe (") &&
+            mesaRelease.containsMatchIn(renderer.driver())
+
+    override fun toString(): String = "Vulkan on llvmpipe, Mesa $mesa, Linux, amd64"
+}
+
+/**
  * An approved frame of the golden its file names: the hash of its pixels, its size, and the renderer
- * that drew it. Only a frame from the same renderer can match it to the pixel, so a run on another
- * renderer does not compare.
+ * that drew it. Only a frame from the same renderer can match it to the pixel.
  */
 data class Golden(
     val sha256: String,
@@ -101,14 +122,14 @@ data class Golden(
                 key("sha256"),
                 key("width").toInt(),
                 key("height").toInt(),
-                Renderer(key("backend"), key("device"), key("driver"), key("arch")),
+                Renderer(key("backend"), key("device"), key("driver"), key("os"), key("arch")),
             )
         }
 
         /**
          * Writes, beside a captured frame, what `cargo xtask goldens approve` needs to make it the golden
          * in [golden], a path from the repository root: the frame's PNG [image] in the same folder, its
-         * hash and size, and its [renderer].
+         * hash and size, its [renderer], and whether that is the [pinned] one, which approve requires.
          */
         fun writeCandidate(
             path: Path,
@@ -116,6 +137,7 @@ data class Golden(
             image: String,
             frame: Frame,
             renderer: Renderer,
+            pinned: PinnedRenderer,
         ) {
             path.parent?.let(Files::createDirectories)
             Files.writeString(
@@ -129,7 +151,9 @@ data class Golden(
                     "backend" to renderer.backend(),
                     "device" to renderer.device(),
                     "driver" to renderer.driver(),
+                    "os" to renderer.os(),
                     "arch" to renderer.arch(),
+                    "pinned" to pinned.drew(renderer),
                 ).joinToString("") { (key, value) -> "$key=$value\n" },
             )
         }
@@ -138,12 +162,14 @@ data class Golden(
 
 /**
  * A project's goldens: each golden `name` is the file `<folder>/<name>.golden` from the repository
- * [root], and the frame an approve took for it lies among the local [images] under its hash.
+ * [root], and the frame an approve took for it lies among the local [images] under its hash. They are
+ * exact for the [pinned] renderer.
  */
 internal class Goldens(
     private val root: Path,
     private val folder: String,
     private val images: Path,
+    val pinned: PinnedRenderer,
 ) {
     /** The file of the golden [name], from the repository root. */
     fun file(name: String): String = "$folder/$name.golden"
@@ -173,19 +199,28 @@ sealed interface GoldenVerdict {
 }
 
 /**
- * Compares [frame], drawn by [renderer], with [golden] when there is one and it was drawn by the same
- * renderer. [image] is the golden's own frame when it is at hand; only then can a difference show
- * where it lies.
+ * Compares [frame], drawn by [renderer], with [golden] when there is one. Only the [pinned] renderer
+ * checks; there a golden another renderer drew, as one from before a Mesa upgrade, fails until it is
+ * approved again. [image] is the golden's own frame when it is at hand; only then can a difference
+ * show where it lies.
  */
 fun judge(
     golden: Golden?,
     image: Frame?,
     frame: Frame,
     renderer: Renderer,
+    pinned: PinnedRenderer,
 ): GoldenVerdict {
+    if (!pinned.drew(renderer)) {
+        return GoldenVerdict.NotChecked("this machine draws with ${renderer.named}, not the pinned renderer ($pinned)")
+    }
     if (golden == null) return GoldenVerdict.NotChecked("no golden is approved yet")
     if (golden.renderer != renderer) {
-        return GoldenVerdict.NotChecked("the golden was drawn by ${golden.renderer.named}; this run draws with ${renderer.named}")
+        return GoldenVerdict.Differs(
+            "the golden was drawn by ${golden.renderer.named}, and the pinned renderer draws with ${renderer.named}: " +
+                "re-approve it from this run",
+            null,
+        )
     }
     if (frame.width != golden.width || frame.height != golden.height) {
         return GoldenVerdict.Differs("the frame is ${frame.width}x${frame.height}, the golden ${golden.width}x${golden.height}", null)
@@ -200,4 +235,4 @@ fun judge(
     return GoldenVerdict.Differs("${image.differingPixels(frame)} of ${frame.width * frame.height} pixels differ", image.diff(frame))
 }
 
-private val Renderer.named: String get() = "${backend()}, ${device()}, ${driver()}, ${arch()}"
+private val Renderer.named: String get() = "${backend()}, ${device()}, ${driver()}, ${os()}, ${arch()}"

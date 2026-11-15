@@ -71,9 +71,6 @@ abstract class GameParts : CommandLineArgumentProvider {
 
     @get:Internal abstract val testRun: Property<String>
 
-    /** The requirements the run runs, by id or test id, comma separated; every one when absent. */
-    @get:Internal abstract val only: Property<String>
-
     /** Attempts of each requirement; absent, a failed attempt runs again up to 4 in total. */
     @get:Internal abstract val repeat: Property<String>
 
@@ -88,6 +85,9 @@ abstract class GameParts : CommandLineArgumentProvider {
 
     /** The local golden images, each named by the hash of its frame. */
     @get:Internal abstract val goldenImages: Property<String>
+
+    /** The Mesa release devenv ships, which the pinned renderer draws with. */
+    @get:Internal abstract val mesa: Property<String>
 
     override fun asArguments() =
         (
@@ -105,8 +105,9 @@ abstract class GameParts : CommandLineArgumentProvider {
                 "root" to root.get(),
                 "goldens" to goldens.get(),
                 "goldenImages" to goldenImages.get(),
+                "mesa" to mesa.get(),
             ) +
-                listOf("only" to only, "repeat" to repeat, "quarantine" to quarantine)
+                listOf("repeat" to repeat, "quarantine" to quarantine)
                     .mapNotNull { (name, value) -> value.orNull?.let { name to it } }
         ).map { (name, value) -> "-Dplaytest.$name=$value" }
 }
@@ -118,9 +119,10 @@ tasks.register<Test>("gameTest") {
     classpath = gameTest.runtimeClasspath
     // The game's state lives outside Gradle's view, so a game run is never up to date.
     outputs.upToDateWhen { false }
-    // A run that selects requirements may select none of this project's; `cargo xtask e2e game` fails a
-    // selected id that matches no case of the run file instead.
-    failOnNoDiscoveredTests.set(providers.gradleProperty("playtest.only").map { false }.orElse(true))
+    // `cargo xtask e2e game --only` selects across every game module, so a module may hold none of
+    // the selected requirements. Whether a selected id matched nothing is the whole run's question,
+    // and xtask's selection check (`results::selection_matches`) answers it from the run file.
+    filter.isFailOnNoMatchingTests = false
     usesService(gameRun)
     jvmArgumentProviders +=
         objects.newInstance<GameParts>().apply {
@@ -136,12 +138,13 @@ tasks.register<Test>("gameTest") {
             poolDir.set(servicesDirectory.resolve("build/playtest/pool").path)
             // `cargo xtask e2e game` names the run file it gates on; other runs keep theirs in the build.
             testRun.set(providers.gradleProperty("playtest.testRun").orElse(servicesDirectory.resolve("build/playtest/test_run.json").path))
-            only.set(providers.gradleProperty("playtest.only"))
             repeat.set(providers.gradleProperty("playtest.repeat"))
             quarantine.set(providers.gradleProperty("playtest.quarantine"))
             root.set(repositoryRoot.path)
             goldens.set(projectDir.resolve("src/gameTest/goldens").relativeTo(repositoryRoot).invariantSeparatorsPath)
             // `cargo xtask goldens approve` keeps each approved frame here; a run diffs against it.
             goldenImages.set(servicesDirectory.resolve("build/playtest/goldens").path)
+            // devenv.nix exports the Mesa it ships, so the pin moves with nixpkgs.
+            mesa.set(providers.environmentVariable("PLAYTEST_MESA"))
         }
 }

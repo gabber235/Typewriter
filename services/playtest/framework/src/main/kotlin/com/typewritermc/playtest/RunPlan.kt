@@ -3,22 +3,15 @@ package com.typewritermc.playtest
 import com.typewritermc.playtest.wire.Message.AttemptPolicy
 
 /**
- * What this test JVM's run asks of its requirements, as the `gameTest` task passes it: which ones run
- * (`playtest.only`, ids or test ids; all when empty), how their attempts are made (`playtest.repeat`
- * runs each exactly that often, else failed attempts run again up to [RETRIES] in total), and which the
- * quarantine holds (`playtest.quarantine`): those run once and never block.
+ * What this test JVM's run asks of its requirements, as the `gameTest` task passes it: how their
+ * attempts are made (`playtest.repeat` runs each exactly that often, else failed attempts run again up
+ * to [RETRIES] in total), and which the quarantine holds (`playtest.quarantine`): those run once and
+ * never block. Which requirements run is testBalloon's selection.
  */
 internal class RunPlan private constructor(
-    private val only: Set<String>,
     val policy: AttemptPolicy,
     private val quarantined: Set<String>,
 ) {
-    /** Whether the run runs the requirement [id], whose test is [testId]. */
-    fun runs(
-        id: String,
-        testId: String,
-    ): Boolean = only.isEmpty() || id in only || testId in only
-
     /** Whether the quarantine holds the requirement [id], whose test is [testId]. */
     fun quarantines(
         id: String,
@@ -52,7 +45,7 @@ internal class RunPlan private constructor(
                 } else {
                     AttemptPolicy(AttemptPolicy.Kind.EXACTLY, repeat)
                 }
-            return RunPlan(ids("only"), policy, ids("quarantine"))
+            return RunPlan(policy, ids("quarantine"))
         }
     }
 }

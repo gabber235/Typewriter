@@ -109,10 +109,10 @@ class RequirementScope internal constructor(
 
     /**
      * The frame the player's client holds now is the golden [name], to the pixel. It is compared only
-     * when the approved golden was drawn by this run's renderer, else the attempt notes it as not
-     * checked; a frame that differs fails with its diff. Ask once a window let the scene settle, of a
-     * scene where nothing moves from tick to tick. `cargo xtask goldens approve` approves the frames
-     * a run wrote.
+     * on the pinned renderer, where a frame that differs, or a golden another renderer drew, fails; any
+     * other machine notes it as not checked. Ask once a window let the scene settle, of a scene where
+     * nothing moves from tick to tick. `cargo xtask goldens approve` approves the frames the pinned
+     * renderer drew in a run.
      */
     suspend fun GamePlayer.looksLike(name: String) = attempt.golden(this, name)
 

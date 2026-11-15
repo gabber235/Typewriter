@@ -17,7 +17,23 @@ public sealed interface Message {
         String player();
     }
 
-    /** The answer to the session's request {@code request}: a probe, a query, an input or a look. */
+    /** A session's request to the game, which a {@link Reply} answers under the same {@code request}. */
+    sealed interface Request extends Message {
+        long request();
+
+        /** The same request under another id, as the pool hands it on under a pool wide one. */
+        Request withRequest(long request);
+    }
+
+    /** A request Paper answers. */
+    sealed interface PaperRequest extends Request {}
+
+    /** A request the client of {@code player} answers. */
+    sealed interface ClientRequest extends Request {
+        UUID player();
+    }
+
+    /** The answer to the session's request {@code request}: a probe, a query, an input, a look or a capture. */
     sealed interface Reply extends Message {
         long request();
 
@@ -115,7 +131,12 @@ public sealed interface Message {
      * {@code players}; an action on the world runs once, in the region of their attempt. Paper answers
      * with {@link ProbeDone} once the client of each of {@code players} holds what it caused.
      */
-    record Probe(long request, List<UUID> players, ProbeAction action) implements Message {}
+    record Probe(long request, List<UUID> players, ProbeAction action) implements PaperRequest {
+        @Override
+        public Probe withRequest(long request) {
+            return new Probe(request, players, action);
+        }
+    }
 
     /**
      * Paper to session: the probe ran after {@code tick} ended, so its effects can show from the next
@@ -142,7 +163,12 @@ public sealed interface Message {
      * Session to Paper: which kinds of state {@code player} still carries a mark of. Paper answers with
      * {@link Marks}. Only the framework's own test kit asks, for kinds no player can see.
      */
-    record Query(long request, UUID player) implements Message {}
+    record Query(long request, UUID player) implements PaperRequest {
+        @Override
+        public Query withRequest(long request) {
+            return new Query(request, player);
+        }
+    }
 
     /** Paper to session: the kinds the player carries a mark of; {@code failure} is null when Paper could look. */
     record Marks(long request, List<Kind> marked, String failure) implements Reply {
@@ -343,7 +369,12 @@ public sealed interface Message {
      * the client sends to its own window. The steps run in order on the client's ticks; the client answers with
      * {@link InputDone} once the last one ran.
      */
-    record Input(long request, UUID player, List<InputStep> steps) implements Message {}
+    record Input(long request, UUID player, List<InputStep> steps) implements ClientRequest {
+        @Override
+        public Input withRequest(long request) {
+            return new Input(request, player, steps);
+        }
+    }
 
     /**
      * Client to session: the input's steps ran. Its first event reached the client after {@code tick}
@@ -370,7 +401,12 @@ public sealed interface Message {
      * the look; a reset ends it too. The client answers with {@link Looked} once a record measured
      * that way, or ended, went out.
      */
-    record Look(long request, UUID player, List<UUID> entities) implements Message {}
+    record Look(long request, UUID player, List<UUID> entities) implements ClientRequest {
+        @Override
+        public Look withRequest(long request) {
+            return new Look(request, player, entities);
+        }
+    }
 
     /** Client to session: the look took effect; every record from now on measures what it names. */
     record Looked(long request) implements Reply {
@@ -384,7 +420,12 @@ public sealed interface Message {
      * Session to the player's client: draw the frame as the client holds it now, for real, and write it
      * as a PNG to {@code path}. The client answers with {@link Captured}.
      */
-    record Capture(long request, UUID player, String path) implements Message {}
+    record Capture(long request, UUID player, String path) implements ClientRequest {
+        @Override
+        public Capture withRequest(long request) {
+            return new Capture(request, player, path);
+        }
+    }
 
     /** Client to session: the frame is written, drawn by {@code renderer}; {@code failure} is null when it was. */
     record Captured(long request, Renderer renderer, String failure) implements Reply {
@@ -395,10 +436,11 @@ public sealed interface Message {
     }
 
     /**
-     * What drew a frame: the graphics backend, the device and the driver it reports, and the CPU
-     * architecture. Two renderers draw the same scene alike to the pixel only when all four match.
+     * What drew a frame: the graphics backend, the device and the driver it reports, the operating
+     * system and the CPU architecture. Two renderers draw the same scene alike to the pixel only when
+     * all five match.
      */
-    record Renderer(String backend, String device, String driver, String arch) {}
+    record Renderer(String backend, String device, String driver, String os, String arch) {}
 
     /** Client to session: what the player perceives changed. */
     record Perceived(String player, Perception perception) implements PlayerEvent {}

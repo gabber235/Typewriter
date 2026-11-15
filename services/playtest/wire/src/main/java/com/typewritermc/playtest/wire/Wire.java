@@ -253,6 +253,7 @@ public final class Wire {
                 string(body, captured.renderer().backend());
                 string(body, captured.renderer().device());
                 string(body, captured.renderer().driver());
+                string(body, captured.renderer().os());
                 string(body, captured.renderer().arch());
                 optional(body, captured.failure());
             }
@@ -442,7 +443,7 @@ public final class Wire {
             case 37 -> new Look(in.readLong(), uuid(in), uuids(in));
             case 38 -> new Looked(in.readLong());
             case 39 -> new Capture(in.readLong(), uuid(in), string(in));
-            case 40 -> new Captured(in.readLong(), new Renderer(string(in), string(in), string(in), string(in)), optional(in));
+            case 40 -> new Captured(in.readLong(), new Renderer(string(in), string(in), string(in), string(in), string(in)), optional(in));
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
     }

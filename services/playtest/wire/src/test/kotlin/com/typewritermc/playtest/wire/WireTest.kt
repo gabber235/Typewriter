@@ -9,6 +9,8 @@ import com.typewritermc.playtest.wire.Message.Block
 import com.typewritermc.playtest.wire.Message.BlockPos
 import com.typewritermc.playtest.wire.Message.ButtonStep
 import com.typewritermc.playtest.wire.Message.Camera
+import com.typewritermc.playtest.wire.Message.Capture
+import com.typewritermc.playtest.wire.Message.Captured
 import com.typewritermc.playtest.wire.Message.ChatLine
 import com.typewritermc.playtest.wire.Message.Claim
 import com.typewritermc.playtest.wire.Message.Claimed
@@ -30,8 +32,6 @@ import com.typewritermc.playtest.wire.Message.Key
 import com.typewritermc.playtest.wire.Message.KeyStep
 import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Lease
-import com.typewritermc.playtest.wire.Message.Capture
-import com.typewritermc.playtest.wire.Message.Captured
 import com.typewritermc.playtest.wire.Message.Look
 import com.typewritermc.playtest.wire.Message.Looked
 import com.typewritermc.playtest.wire.Message.Marks
@@ -198,8 +198,12 @@ val WireTest by testSuite {
                 Look(16, player, listOf()),
                 Looked(15),
                 Capture(17, player, "/tmp/results/GOLDEN-1/attempt-1/sidebar.png"),
-                Captured(17, Renderer("Vulkan", "llvmpipe (LLVM 20.1.2, 256 bits)", "Mesa 26.2.5", "amd64"), null),
-                Captured(18, Renderer("OpenGL", "Apple M1 Max", "4.1 Metal", "aarch64"), "the frame could not be written"),
+                Captured(
+                    17,
+                    Renderer("Vulkan", "llvmpipe (LLVM 20.1.2, 256 bits)", "1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)", "Linux", "amd64"),
+                    null,
+                ),
+                Captured(18, Renderer("OpenGL", "Apple M1 Max", "4.1 Metal", "Mac OS X", "aarch64"), "the frame could not be written"),
                 Perceived(
                     "gv-1",
                     Perception(

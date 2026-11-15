@@ -199,7 +199,10 @@ class EntityFacts internal constructor(
     fun visible(share: Double = VISIBLE_SHARE): Perceivable =
         object : Perceivable {
             override val description =
-                if (share == VISIBLE_SHARE) "entity $entity visible" else "entity $entity visible, owning at least ${percent(share)} of the frame"
+                when (share) {
+                    VISIBLE_SHARE -> "entity $entity visible"
+                    else -> "entity $entity visible, owning at least ${percent(share)} of the frame"
+                }
 
             override val pixelsOf = listOf(entity)
 
@@ -224,8 +227,7 @@ class EntityFacts internal constructor(
     }
 
     /** [share] as a percentage of three significant digits: `0.00732%`, `12.3%`, `0%`. */
-    private fun percent(share: Double): String =
-        BigDecimal(share * 100).round(MathContext(3)).stripTrailingZeros().toPlainString() + "%"
+    private fun percent(share: Double): String = BigDecimal(share * 100).round(MathContext(3)).stripTrailingZeros().toPlainString() + "%"
 
     private fun drawnAs(perception: Perception): Entity? = perception.entities().firstOrNull { it.uuid() == entity.uuid }
 

@@ -54,12 +54,26 @@ val RunRecordsTest by testSuite {
         records.record(
             "run-1",
             Submit(1, "GOLDEN-1 a sidebar matches its golden", "GOLDEN-1", 1, Demonstrates.HAPPY_PATH),
-            Result(1, 120, "the frame differs from golden sidebar", null, listOf(), "GOLDEN-1/attempt-1", listOf("sidebar.png", "sidebar.diff.png")),
+            Result(
+                1,
+                120,
+                "the frame differs from golden sidebar",
+                null,
+                listOf(),
+                "GOLDEN-1/attempt-1",
+                listOf("sidebar.png", "sidebar.diff.png"),
+            ),
         )
 
         records.ended("run-1", file, retries)
 
-        val attempt = TestRun.serializer.fromJsonCode(Files.readString(file)).cases.single().attempts.single()
+        val attempt =
+            TestRun.serializer
+                .fromJsonCode(Files.readString(file))
+                .cases
+                .single()
+                .attempts
+                .single()
         attempt.folder shouldBe "GOLDEN-1/attempt-1"
         attempt.artifacts shouldBe
             listOf(
@@ -72,7 +86,11 @@ val RunRecordsTest by testSuite {
         val records = RunRecords(clock = { 1_000 })
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val flaky = "FLAKY-1 a requirement that fails its first attempt and passes its second is flaky"
-        records.record("run-1", Submit(1, flaky, "FLAKY-1", 1, Demonstrates.FAILURE), Result(1, 300, "missed", null, listOf(), "", listOf()))
+        records.record(
+            "run-1",
+            Submit(1, flaky, "FLAKY-1", 1, Demonstrates.FAILURE),
+            Result(1, 300, "missed", null, listOf(), "", listOf()),
+        )
         records.record(
             "run-1",
             Submit(2, "PROBE-1 a chat line reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH),

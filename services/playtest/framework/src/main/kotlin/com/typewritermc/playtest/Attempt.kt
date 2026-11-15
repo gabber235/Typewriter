@@ -176,8 +176,8 @@ internal class Attempt(
 
     /**
      * [player]'s frame, as the client holds it now, is the golden [name]: the frame and what an approve
-     * needs go into the attempt's evidence, and it is compared when the approved golden was drawn by
-     * the same renderer, else noted as not checked. A frame that differs fails the attempt.
+     * needs go into the attempt's evidence, and on the pinned renderer it is compared with the approved
+     * golden; another renderer notes it as not checked. A frame that differs fails the attempt.
      */
     suspend fun golden(
         player: GamePlayer,
@@ -186,12 +186,18 @@ internal class Attempt(
         val at = System.currentTimeMillis()
         val (png, frame, renderer) = capture(player, name)
         val goldens = session.goldens
-        Golden.writeCandidate(evidence.file("$name.golden"), goldens.file(name), png.fileName.toString(), frame, renderer)
+        Golden.writeCandidate(evidence.file("$name.golden"), goldens.file(name), png.fileName.toString(), frame, renderer, goldens.pinned)
         val golden = goldens.golden(name)
         val says = "golden $name of ${player.name}"
-        when (val verdict = judge(golden, golden?.let(goldens::image), frame, renderer)) {
-            GoldenVerdict.Matches -> took(at, "$says matches")
-            is GoldenVerdict.NotChecked -> took(at, "$says not checked: ${verdict.reason}")
+        when (val verdict = judge(golden, golden?.let(goldens::image), frame, renderer, goldens.pinned)) {
+            GoldenVerdict.Matches -> {
+                took(at, "$says matches")
+            }
+
+            is GoldenVerdict.NotChecked -> {
+                took(at, "$says not checked: ${verdict.reason}")
+            }
+
             is GoldenVerdict.Differs -> {
                 val diff = verdict.diff?.let { marked -> evidence.file("$name.diff.png").also(marked::writePng) }
                 diff?.let { evidence.screenshots += it.fileName.toString() }
