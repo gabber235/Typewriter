@@ -288,6 +288,18 @@ pieces:
           and why Paper sends only about 10 chunks per tick without the cap, are unknown.
         state: working
         evidence: ["branch proto/gv-lease-time 056013429: services/playtest/lease-time/", "4 full suite runs, 82 passed each", "fixes in e5f88a238: cargo xtask e2e game 83 passed, grant to lease median 409 ms, p90 684 ms, max 5284 ms (was 1132, 1422, 16353)"]
+      - id: why-runs-vary
+        what: Find what wall clock work moves tick counts and frames
+        taught: >-
+          Variance shows even when requirements run alone. BREAK: the client's 5 tick break delay carries
+          over from an earlier attempt on that client (proven 10 of 10). CHAT: Paper sends chat from its
+          async chat thread at wall clock times. CMD: an input can start after the client acked the tick, so
+          Paper moves on first. GOLDEN-3: after a teleport the client computes visible sections on a
+          background thread (inferred; did not recur in 25 runs). Regions loaded ahead and Paper's async
+          chunk and light work cause none of it. The neighbour ring is needed: with a first tick check
+          PROBE-3 passed 20 of 20 with it and failed 20 of 20 without.
+        state: working
+        evidence: ["commit e4ded3e7d on feat/game-verification-steadiness"]
 
   - id: requirement-shape
     status: building
@@ -625,6 +637,9 @@ decided:
   - id: steadiness-beside-slice-7
     what: "Steadiness first, slice 7 beside (Recommended)"
     why: GOLDEN-3 flaked once and tick counts vary between runs (BREAK-1 6 to 11), which a stepped design should repeat exactly; the speed builder proves the PROBE-3 ring, fixes the missing golden and finds why runs vary (measure, then a choice), while slice 7 builds
+  - id: steadiness-fixes
+    what: "Build all four (Recommended)"
+    why: Runs varied from four causes; the client wipe resets the break delay, Paper's async chat counts as player work, and the client holds its ack until a pending input is handled and its visible section set is current; two existing rules, no change to how Paper or Minecraft behave
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -745,4 +760,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 7 (restart Paper) builds on feat/game-verification-slice-7; beside it, feat/game-verification-steadiness proves the ring, fixes the missing golden and finds why runs vary.
+next: Slice 7 builds; the steadiness branch builds the four fixes (break delay in the wipe, chat as work, ack held for inputs and visible sections).
