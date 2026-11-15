@@ -18,12 +18,15 @@ const grace = PanelUser(
 /// The organization most tests work in.
 final acme = organization("Acme");
 
-/// An organization named [name], identified by its snake cased name.
-skir.Organization organization(String name) => skir.Organization(
-  organizationId: skir.recordId("organization:${name.snakeCase()}"),
-  name: name,
-  logoUrl: "",
-);
+/// An organization named [name], identified by its snake cased name and
+/// founded by [founder], [ada] unless a test says otherwise.
+skir.Organization organization(String name, {PanelUser founder = ada}) =>
+    skir.Organization(
+      organizationId: skir.recordId("organization:${name.snakeCase()}"),
+      name: name,
+      logoUrl: "",
+      founderId: skir.recordId("user:${founder.id}"),
+    );
 
 /// [user] is signed in and belongs to [organization] and [others]; the panel
 /// opens in [organization].

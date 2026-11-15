@@ -7,4 +7,5 @@ library;
 export "organization_icon.dart";
 export "organization_route.dart";
 export "organization_selector.dart";
+export "organization_settings.dart";
 export "route.dart";

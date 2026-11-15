@@ -1,6 +1,7 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/doubles/nats.dart";
 
 /// The organizations, realms and services a test world's backend knows.
 ///
@@ -9,6 +10,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// services. Every realm runs on its own host whose service keeps reporting,
 /// so the realm counts as online until a test takes the connection away. It
 /// remembers changes made through it and holds no service rules.
+///
+/// Over NATS it answers the user's organization commands: a batch of updates
+/// renames organizations and changes their icons, and a batch of deletions
+/// deletes them for every member. Nothing is refused unless a test says so
+/// with [takenNames] or [deleteRefusal].
 final class FakeOrganizations {
   FakeOrganizations();
 
@@ -16,6 +22,108 @@ final class FakeOrganizations {
   final _realms = <skir.RecordId, List<skir.RealmInstance>>{};
   final _changes = StreamController<void>.broadcast(sync: true);
   final _stopped = <skir.RecordId>{};
+  var _sequence = 1;
+
+  /// Names another organization uses, which an update to that name refuses
+  /// as taken.
+  final takenNames = <String>{};
+
+  /// What every delete is refused with, as when the organization changed
+  /// elsewhere; null deletes.
+  skir.OrganizationDeleteRefusal? deleteRefusal;
+
+  /// Answers the organization commands [user] sends on [nats].
+  void serve(FakeNats nats, {required String user}) {
+    final command = nats.commands(latency: Duration.zero, failure: () => null);
+    command(
+      skir.UpdateOrganizationsRequest.defaultInstance.operation(userId: user),
+      skir.UpdateOrganizationsRequest.serializer,
+      (request) => _update(user, request),
+    );
+    command(
+      skir.DeleteOrganizationsRequest.defaultInstance.operation(userId: user),
+      skir.DeleteOrganizationsRequest.serializer,
+      (request) => _delete(user, request),
+    );
+  }
+
+  skir.UpdateOrganizationsResponse _update(
+    String user,
+    skir.UpdateOrganizationsRequest request,
+  ) {
+    final refused = [
+      for (final update in request.updates)
+        if (update.name case final name? when takenNames.contains(name))
+          skir.RefusedOrganizationUpdate(
+            organizationId: update.organizationId,
+            reason: skir.OrganizationUpdateRefusal.createNameTakenError(),
+          ),
+    ];
+    if (refused.isNotEmpty) {
+      return skir.UpdateOrganizationsResponse.wrapRefusedError(refused);
+    }
+    final updated = <skir.Organization>[];
+    for (final update in request.updates) {
+      for (final organizations in _members.values) {
+        final index = organizations.indexWhere(
+          (organization) =>
+              organization.organizationId == update.organizationId,
+        );
+        if (index < 0) continue;
+        final current = organizations[index];
+        organizations[index] = skir.Organization(
+          organizationId: current.organizationId,
+          name: update.name ?? current.name,
+          logoUrl: update.logoUrl ?? current.logoUrl,
+          founderId: current.founderId,
+        );
+      }
+      updated.addAll(
+        of(user).where(
+          (organization) =>
+              organization.organizationId == update.organizationId,
+        ),
+      );
+    }
+    _changes.add(null);
+    return skir.UpdateOrganizationsResponse.createSuccess(
+      organizations: updated,
+      event: skir.UserOrganizationsChanged(
+        sequence: ++_sequence,
+        changes: updated.map(skir.UserOrganizationsChange.wrapUpdate),
+      ),
+    );
+  }
+
+  skir.DeleteOrganizationsResponse _delete(
+    String user,
+    skir.DeleteOrganizationsRequest request,
+  ) {
+    if (deleteRefusal case final reason?) {
+      return skir.DeleteOrganizationsResponse.wrapRefusedError([
+        for (final organization in request.organizationIds)
+          skir.RefusedOrganizationDelete(
+            organizationId: organization,
+            reason: reason,
+          ),
+      ]);
+    }
+    for (final organizations in _members.values) {
+      organizations.removeWhere(
+        (organization) =>
+            request.organizationIds.contains(organization.organizationId),
+      );
+    }
+    _changes.add(null);
+    return skir.DeleteOrganizationsResponse.createSuccess(
+      event: skir.UserOrganizationsChanged(
+        sequence: ++_sequence,
+        changes: request.organizationIds.map(
+          skir.UserOrganizationsChange.wrapRemove,
+        ),
+      ),
+    );
+  }
 
   /// Makes [user] a member of [organization].
   void join(String user, skir.Organization organization) {
