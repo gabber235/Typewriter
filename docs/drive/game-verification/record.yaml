@@ -640,6 +640,12 @@ decided:
   - id: steadiness-fixes
     what: "Build all four (Recommended)"
     why: Runs varied from four causes; the client wipe resets the break delay, Paper's async chat counts as player work, and the client holds its ack until a pending input is handled and its visible section set is current; two existing rules, no change to how Paper or Minecraft behave
+  - id: keep-chat-chain-hook
+    what: "Keep it (Recommended)"
+    why: Paper's public AsyncChatEvent fires after the packet read, so a tick could slip in; the plugin appends to the player's private chat chain on the pinned Paper and fails loudly at load if it is gone
+  - id: remove-visible-set-hold
+    what: "Remove until proven (Recommended)"
+    why: GOLDEN-3 flaked once in 7 full runs and never in 25 since, with or without the fix; no code without a failing test, and one less Minecraft hook
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -760,4 +766,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 7 builds; the steadiness branch builds the four fixes (break delay in the wipe, chat as work, ack held for inputs and visible sections).
+next: Steadiness finishes (visible set hold removed, tests for the other client resets, SEEN-4 measured); slice 7 builds.
