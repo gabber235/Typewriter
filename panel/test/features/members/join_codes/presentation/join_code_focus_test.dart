@@ -37,6 +37,25 @@ void main() {
     await panel.eventually(() => expect(panel.focusedRow, second));
   });
 
+  testWidgets("revoking the last code from the inspector brings focus back "
+      "to Generate Join Code", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      membershipService(joinCodes: [first]),
+    ], at: membersPage(const JoinCodesRoute()));
+    await panel.press(LogicalKeyboardKey.space);
+    await panel.pressControl(LogicalKeyboardKey.keyL);
+    await panel.tabTo("Revoke this join code? Nobody new can join with it.");
+
+    await panel.holdKey(LogicalKeyboardKey.enter);
+
+    await panel.eventually(
+      () => expect(panel.shows("No active join codes"), isTrue),
+    );
+    await panel.settle();
+    expect(panel.hasFocusOn("Generate Join Code"), isTrue);
+  });
+
   testWidgets("a generated code takes focus when it arrives", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),

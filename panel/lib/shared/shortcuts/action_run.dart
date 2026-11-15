@@ -50,19 +50,24 @@ final class HoldPlan<K extends Object> {
     required FutureOr<void> Function(WidgetRef ref, K target) this._each,
     this.rows,
   }) : _all = null,
-       _rowsOf = null;
+       _rowsOf = null,
+       _heldBack = null;
 
   /// Runs [work] once over every target, for an action that succeeds or
   /// fails for all of its targets together (a Realm operation, a batch
-  /// command). With [rows], every target row is sending while it runs and
-  /// a failure refuses all of them with its message; without rows a
-  /// failure jams the command's buttons.
+  /// command). With [rows], every target row is sending while it runs. A
+  /// [RefusedTargets] failure refuses the targets it names with its message
+  /// and tells every other target it was held back, in the words
+  /// [heldBack] gives it when the hold starts; any other failure refuses
+  /// all of them with its message. Without rows a failure jams the
+  /// command's buttons.
   const HoldPlan.all({
     required this.weight,
     required this.verb,
     required this._targets,
     required this._outcome,
     required Future<void> Function(WidgetRef ref, Set<K> targets) work,
+    this._heldBack,
     this.doneWord,
     this.rows,
     this._rowsOf,
@@ -96,6 +101,7 @@ final class HoldPlan<K extends Object> {
   final String Function(Set<K> targets) _outcome;
   final FutureOr<void> Function(WidgetRef ref, K target)? _each;
   final Future<void> Function(WidgetRef ref, Set<K> targets)? _all;
+  final String Function(WidgetRef ref, K target)? _heldBack;
 
   /// The outcome line for the current targets, read to a screen reader
   /// before a hold starts; null when there is nothing to hold.
@@ -117,6 +123,7 @@ final class HoldPlan<K extends Object> {
     ]);
     final each = _each;
     final all = _all;
+    final heldBack = _heldBack;
     return HoldTry(
       ids: ids,
       weight: weight,
@@ -126,6 +133,11 @@ final class HoldPlan<K extends Object> {
       // The ids came from K, so the typed work is called with its own type.
       each: each == null ? null : (ref, id) => each(ref, id as K),
       all: all == null ? null : (ref) => all(ref, ids.toSet()),
+      heldBack: {
+        if (all != null)
+          for (final id in ids)
+            id: heldBack?.call(ref, id) ?? _heldBackByDefault,
+      },
     );
   }
 }
@@ -161,6 +173,7 @@ final class HoldTry {
     required this.rows,
     required this.each,
     required this.all,
+    this.heldBack = const {},
   });
 
   final List<Object> ids;
@@ -174,6 +187,33 @@ final class HoldTry {
 
   /// The work over every target at once.
   final Future<void> Function(WidgetRef ref)? all;
+
+  /// What each target of [all] says when a [RefusedTargets] failure names
+  /// other targets but not it, read when the hold started.
+  final Map<Object, String> heldBack;
+}
+
+const _heldBackByDefault =
+    "This was held back, because another item in this change was refused. "
+    "Nothing was saved.";
+
+/// A batch refused because of some of its [targets]: the [reason] shows
+/// under each of them, while every other target of the batch says it was
+/// held back and nothing changed.
+final class RefusedTargets implements ShownFailure {
+  const RefusedTargets(this.reason, this.targets);
+
+  /// Why the named targets were refused.
+  final ShownFailure reason;
+
+  @override
+  String get message => reason.message;
+
+  /// The targets the refusal names, as the hold's target ids.
+  final Set<Object> targets;
+
+  @override
+  String toString() => message;
 }
 
 /// A hold refused with no row to show it; the command's buttons jam and

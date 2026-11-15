@@ -234,8 +234,11 @@ final class CommandRuns implements CommandRunner {
     // Sent rows leave with listOut when their items go.
     clock.reset();
     _dropIfIdle(current.command);
-    // Refused rows never left: focus moves to the first one in list order.
-    final first = attempt.ids.firstWhereOrNull(result.failures.containsKey);
+    // Refused rows never left: focus moves to the first one in list order
+    // that was refused for itself, not held back for another.
+    final first = attempt.ids.firstWhereOrNull(
+      (id) => result.failures.containsKey(id) && !result.heldBack.contains(id),
+    );
     if (first != null) attempt.rows?.focusId(first);
   }
 

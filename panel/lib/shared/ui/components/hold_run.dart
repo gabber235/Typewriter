@@ -2,19 +2,24 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "hold_run.freezed.dart";
 
-/// Refusals by target id. Empty means every target succeeded.
+/// Refusals by target id. Empty means every target succeeded. [heldBack]
+/// are the targets refused only because a batch refused others.
 @freezed
 abstract class HoldResult with _$HoldResult {
-  const factory HoldResult({@Default({}) Map<Object, String> failures}) =
-      _HoldResult;
+  const factory HoldResult({
+    @Default({}) Map<Object, String> failures,
+    @Default({}) Set<Object> heldBack,
+  }) = _HoldResult;
 }
 
 /// Runs the work of a completed hold. [ref] answers the ref to run each step
 /// with: the one that began the hold while it is mounted.
 ///
 /// Work over every target runs once; with rows, every target row is sending
-/// while it runs and a failure refuses all of them. Work per target runs in list order and
-/// keeps going past a refusal; with rows, every target row is sending for
+/// while it runs. A [RefusedTargets] failure refuses the targets it names
+/// and holds back the rest with their held back words; any other failure
+/// refuses all of them. Work per target runs in list order and keeps going
+/// past a refusal; with rows, every target row is sending for
 /// the whole run (one call), and the refused ones are refused on their
 /// entries afterwards.
 Future<HoldResult> runHold(HoldTry attempt, WidgetRef Function() ref) async {
@@ -31,9 +36,18 @@ Future<HoldResult> runHold(HoldTry attempt, WidgetRef Function() ref) async {
       return const HoldResult();
     } on Object catch (error, stack) {
       final message = failureMessage(error, stack);
-      final failures = {for (final id in attempt.ids) id: message};
+      final named = error is RefusedTargets
+          ? attempt.ids.where(error.targets.contains).toSet()
+          : const <Object>{};
+      final heldBack = named.isEmpty
+          ? const <Object>{}
+          : attempt.ids.where((id) => !named.contains(id)).toSet();
+      final failures = {
+        for (final id in attempt.ids)
+          id: heldBack.contains(id) ? attempt.heldBack[id]! : message,
+      };
       rows.refuse(failures);
-      return HoldResult(failures: failures);
+      return HoldResult(failures: failures, heldBack: heldBack);
     }
     return const HoldResult();
   }

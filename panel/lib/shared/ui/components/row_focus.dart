@@ -35,7 +35,9 @@ enum RowRole {
 /// Keyboard focus one list owns by row identity. Focus moves inside the
 /// list's diff: a removed focused row hands focus to the next survivor,
 /// else the previous one, else the enclosing scope; a row announced with
-/// [expect] takes focus when it arrives. Other arrivals and removals never
+/// [expect] takes focus when it arrives. Focus in an aside [Pane], such as
+/// the inspector, keeps the last row; when that row leaves, focus comes
+/// back to its survivor, else to where the empty page lands. Other arrivals and removals never
 /// move focus. RowFocus keeps no nodes of its own: order and nodes come from
 /// the entries of the list it serves.
 final class RowFocus {
@@ -186,6 +188,29 @@ final class RowFocus {
         if (ancestor is FocusScopeNode) ancestor,
     };
     final primary = FocusManager.instance.primaryFocus;
+    if (primary != null &&
+        _idOf(primary) != from.id &&
+        Pane.holdsAside(primary)) {
+      // The aside may lose what it showed in this same frame, which would
+      // override a move made now, so focus comes back after the frame: to
+      // the heir, else where the empty page lands once the leaving rows
+      // are quiet.
+      final list = from.focus;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final focused = FocusManager.instance.primaryFocus;
+        final away =
+            focused == null ||
+            focused is FocusScopeNode ||
+            Pane.holdsAside(focused);
+        if (!away) return;
+        if (to != null && to.phase != RowPhase.leaving) {
+          _landingOf(to).requestFocus();
+        } else {
+          Pane.landAsOpened(list);
+        }
+      });
+      return;
+    }
     if (primary != null && _idOf(primary) == from.id) {
       // The leaving row, or a control inside it, holds focus: move now.
       if (to != null) {
@@ -231,6 +256,8 @@ final class RowFocus {
       if (_rows?[held]?.phase != RowPhase.leaving) _last = held;
       return;
     }
+    // Focus in an aside acts on the rows: the last row stays.
+    if (Pane.holdsAside(primary)) return;
     // Focus moved on inside the same route: forget the last row.
     final last = _last;
     if (last == null) return;

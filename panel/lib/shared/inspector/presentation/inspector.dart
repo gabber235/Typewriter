@@ -326,6 +326,7 @@ class DesktopInspector extends HookConsumerWidget {
                       id: "inspector",
                       borderRadius: context.shapes.largeBorderRadius,
                       enabled: hasSelection,
+                      aside: true,
                       margin: null,
                       child: Section(
                         margin: EdgeInsets.zero,

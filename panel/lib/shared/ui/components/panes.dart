@@ -41,6 +41,9 @@ class _PaneRegistration {
 class _PaneScopeNode extends FocusScopeNode {
   _PaneScopeNode({super.debugLabel});
 
+  // Pane.aside of the pane that owns this scope.
+  bool aside = false;
+
   @override
   bool get skipTraversal => super.skipTraversal || traversalDescendants.isEmpty;
 
@@ -292,6 +295,7 @@ class Pane extends StatefulWidget {
     this.margin = const EdgeInsets.all(8),
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
     this.openFocus = PaneOpenFocus.none,
+    this.aside = false,
     super.key,
   });
   final String id;
@@ -302,6 +306,29 @@ class Pane extends StatefulWidget {
   final EdgeInsetsGeometry? margin;
   final BorderRadiusGeometry? borderRadius;
   final PaneOpenFocus openFocus;
+
+  /// Whether the pane's controls act on the rows of the lists beside it, as
+  /// the inspector's do. Focus in it keeps each list's last row, and when
+  /// that row leaves, focus comes back to the list.
+  final bool aside;
+
+  /// Whether [node] is inside an [aside] pane, read from the focus tree,
+  /// so it holds while widgets tear down.
+  static bool holdsAside(FocusNode node) => _scopeOf(node)?.aside ?? false;
+
+  /// Moves focus where the pane around [node] lands when it opens: its
+  /// first item, else its first control, else the pane itself. A list
+  /// whose last row left uses it to land on the empty page.
+  static void landAsOpened(FocusNode node) {
+    final scope = _scopeOf(node);
+    if (scope == null) return;
+    (scope.firstItem ?? scope.traversalDescendants.firstOrNull ?? scope)
+        .requestFocus();
+  }
+
+  static _PaneScopeNode? _scopeOf(FocusNode node) => node is _PaneScopeNode
+      ? node
+      : node.ancestors.whereType<_PaneScopeNode>().firstOrNull;
 
   /// Tells the pane around [context] that an item mounted, so a primary
   /// pane still waiting for its first item can focus it. [RowStop],
@@ -350,7 +377,8 @@ class _PaneState extends State<Pane> {
   @override
   void initState() {
     super.initState();
-    _scope = _PaneScopeNode(debugLabel: "Pane-${widget.id}");
+    _scope = _PaneScopeNode(debugLabel: "Pane-${widget.id}")
+      ..aside = widget.aside;
     _registration = _PaneRegistration(scope: _scope);
     if (widget.openFocus == PaneOpenFocus.firstItem) {
       _openPending = true;
@@ -457,6 +485,7 @@ class _PaneState extends State<Pane> {
   @override
   void didUpdateWidget(Pane oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _scope.aside = widget.aside;
     _updateRegistration();
   }
 

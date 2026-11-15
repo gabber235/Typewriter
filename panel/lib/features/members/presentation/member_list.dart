@@ -93,9 +93,7 @@ class _MembersTableShimmer extends StatelessWidget {
           children: [
             TableRow(
               children: [
-                _MembersTableCell(
-                  child: ShimmerBox.rectangle(width: 24, height: 24),
-                ),
+                SizedBox.shrink(),
                 _MembersTableCell(
                   child: ShimmerBox.rectangle(width: 64, height: 13),
                 ),
@@ -164,59 +162,11 @@ class _MembersListShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverMainAxisGroup(
-      slivers: [
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: 56,
-            child: Row(
-              children: [
-                ShimmerBox.rectangle(width: 24, height: 24),
-                SizedBox(width: context.spacing.space3),
-                ShimmerBox.rectangle(width: 72, height: 14),
-              ],
-            ),
-          ),
-        ),
-        SliverList.builder(
-          itemCount: context.responsive(mobile: 6, tablet: 8),
-          itemBuilder: (context, index) => Padding(
-            padding: EdgeInsets.only(bottom: context.spacing.space3),
-            child: _MemberCardShimmer(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MemberCardShimmer extends StatelessWidget {
-  const _MemberCardShimmer();
-
-  @override
-  Widget build(BuildContext context) {
-    return Surface(
-      color: Surface.colorOf(context),
-      child: Padding(
-        padding: EdgeInsets.all(context.spacing.space3),
-        child: Row(
-          children: [
-            ShimmerBox.circle(width: 40, height: 40),
-            SizedBox(width: context.spacing.space3),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 6,
-                children: [
-                  ShimmerBox.rectangle(width: 140, height: 15),
-                  ShimmerBox.rectangle(width: 210, height: 13),
-                ],
-              ),
-            ),
-            SizedBox(width: context.spacing.space3),
-            ShimmerBox.rectangle(width: 24, height: 24),
-          ],
-        ),
+    return SliverList.builder(
+      itemCount: context.responsive(mobile: 6, tablet: 8),
+      itemBuilder: (context, index) => Padding(
+        padding: EdgeInsets.only(bottom: context.spacing.space3),
+        child: const SelectionCardShimmer(),
       ),
     );
   }

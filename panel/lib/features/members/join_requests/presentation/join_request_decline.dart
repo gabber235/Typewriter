@@ -29,6 +29,7 @@ ActionShortcut joinRequestDecline({
     priority: priority,
     verb: "Decline",
     doneWord: "Declined",
+    noun: "request",
     outcomeOne: (name) =>
         "Decline ${name ?? "this request"}? They must ask again to join.",
     outcomeMany: (count) =>

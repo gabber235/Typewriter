@@ -8,7 +8,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// [outcomeOne] names the one target by [nameOf], read with the targets on
 /// every preview and start, or gets null when it has no name;
-/// [outcomeMany] counts several. The target rows, from [rows] or else
+/// [outcomeMany] counts several. When the backend refuses some targets,
+/// every other one says it was held back, by its name or else as this
+/// [noun]. The target rows, from [rows] or else
 /// [rowsOf] when the hold starts, are sending while [work] runs, and a
 /// refusal stays on each of them.
 ActionShortcut membershipHold({
@@ -18,6 +20,7 @@ ActionShortcut membershipHold({
   required Set<skir.RecordId> Function(WidgetRef ref) targets,
   required String verb,
   required String doneWord,
+  required String noun,
   required String Function(String? name) outcomeOne,
   required String Function(int count) outcomeMany,
   required Future<void> Function(WidgetRef ref, Set<skir.RecordId> targets)
@@ -50,6 +53,10 @@ ActionShortcut membershipHold({
             ? outcomeOne(named)
             : outcomeMany(targets.length),
         work: work,
+        heldBack: (ref, target) =>
+            "${nameOf?.call(ref, target) ?? "This $noun"} was not "
+            "${doneWord.toLowerCase()}, because another $noun in this change "
+            "was refused. Nothing was saved.",
       ),
     ),
   );

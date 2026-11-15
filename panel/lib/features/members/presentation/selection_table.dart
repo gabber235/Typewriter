@@ -252,6 +252,41 @@ class SelectionCardList<T> extends HookConsumerWidget {
   }
 }
 
+/// A [SelectionCardList] card while its list loads: an avatar, a name over
+/// an email, and [trailing] where the card shows more.
+class SelectionCardShimmer extends StatelessWidget {
+  const SelectionCardShimmer({this.trailing, super.key});
+
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Surface(
+      color: Surface.colorOf(context),
+      child: Padding(
+        padding: EdgeInsets.all(context.spacing.space3),
+        child: Row(
+          spacing: context.spacing.space3,
+          children: [
+            const ShimmerBox.circle(width: 40, height: 40),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: context.spacing.space2,
+                children: [
+                  ShimmerBox.rectangle(width: 140, height: 15),
+                  ShimmerBox.rectangle(width: 210, height: 13),
+                ],
+              ),
+            ),
+            ?trailing,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// What a row's own command acts on.
 extension SelectionOrRow on WidgetRef {
   /// The selection when it holds [row], otherwise [row] alone.

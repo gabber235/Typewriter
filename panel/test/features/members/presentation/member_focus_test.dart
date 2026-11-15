@@ -32,6 +32,23 @@ void main() {
     await panel.eventually(() => expect(panel.focusedRow, linus));
   });
 
+  testWidgets("removing Grace from the inspector brings focus back to "
+      "Linus", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      membershipService(members: [grace, linus]),
+    ], at: membersPage());
+    await panel.press(LogicalKeyboardKey.space);
+    await panel.pressControl(LogicalKeyboardKey.keyL);
+    await panel.tabTo("Remove Grace? They lose access straight away.");
+
+    await panel.holdKey(LogicalKeyboardKey.enter);
+
+    await panel.eventually(() => expect(find.text("Grace"), findsNothing));
+    await panel.settle();
+    expect(panel.focusedRow, linus);
+  });
+
   testWidgets("a member someone else removes while Grace is focused leaves "
       "focus on Grace", (tester) async {
     final panel = await tester.pumpPanel([

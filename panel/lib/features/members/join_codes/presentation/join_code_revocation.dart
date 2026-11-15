@@ -27,6 +27,7 @@ ActionShortcut joinCodeRevocation({
     priority: priority,
     verb: "Revoke",
     doneWord: "Revoked",
+    noun: "join code",
     outcomeOne: (_) => "Revoke this join code? Nobody new can join with it.",
     outcomeMany: (count) =>
         "Revoke $count join codes? Nobody new can join with them.",

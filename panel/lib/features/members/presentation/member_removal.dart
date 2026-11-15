@@ -29,6 +29,7 @@ ActionShortcut memberRemoval({
     priority: priority,
     verb: "Remove",
     doneWord: "Removed",
+    noun: "member",
     outcomeOne: (name) =>
         "Remove ${name ?? "this member"}? They lose access straight away.",
     outcomeMany: (count) =>

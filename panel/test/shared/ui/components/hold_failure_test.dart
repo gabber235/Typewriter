@@ -9,8 +9,8 @@ void main() {
   const refusal = "Organization founder cannot be removed";
 
   testWidgets("a remove of three the backend refuses for Grace and Linus "
-      "removes none, puts the refusal under Grace and Linus, jams Grace and "
-      "focuses her", (tester) async {
+      "removes none, puts the refusal under Grace and Linus, tells Ken he was "
+      "held back, jams Grace and focuses her", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       membershipService(
@@ -55,6 +55,11 @@ void main() {
       );
     }
     expect(panel.messageUnder("Linus"), refusal);
+    expect(
+      panel.messageUnder("Ken"),
+      "Ken was not removed, because another member in this change was "
+      "refused. Nothing was saved.",
+    );
     expect(panel.focusedRow, grace);
 
     await panel.keyDown(LogicalKeyboardKey.keyD);

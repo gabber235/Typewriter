@@ -431,20 +431,6 @@ void main() {
         400,
         "Select distinct organization members",
       ),
-      "removing the founder": (
-        skir.RemoveOrganizationMembersResponse.createFounderCannotBeRemovedError(
-          userIds: [_grace],
-        ).requireAccepted,
-        409,
-        "Organization founder cannot be removed",
-      ),
-      "removing someone who is not a member": (
-        skir.RemoveOrganizationMembersResponse.createUserNotMemberError(
-          userIds: [_grace],
-        ).requireAccepted,
-        404,
-        "Organization Member not found",
-      ),
       "approving without roles": (
         skir.ApproveOrganizationJoinRequestsResponse.createRolesRequiredError(
           requestIds: [skir.recordId("request_to_join:grace")],
@@ -465,13 +451,6 @@ void main() {
         400,
         "Select distinct pending requests",
       ),
-      "declining a missing request": (
-        skir.DeclineOrganizationJoinRequestsResponse.createRequestNotFoundError(
-          requestIds: [skir.recordId("request_to_join:missing")],
-        ).requireAccepted,
-        404,
-        "Request not found",
-      ),
       "a code generation with roles that cannot be assigned": (
         skir.GenerateOrganizationJoinCodeResponse.createRolesNotAssignableError(
           roleIds: [role("founder").roleId],
@@ -486,13 +465,6 @@ void main() {
         400,
         "Expiration duration must be positive",
       ),
-      "revoking a missing code": (
-        skir.RevokeOrganizationJoinCodesResponse.createCodeNotFoundError(
-          codeIds: [skir.recordId("join_code:missing")],
-        ).requireAccepted,
-        404,
-        "Join Code not found",
-      ),
     };
     for (final MapEntry(key: reason, value: (accept, code, message))
         in rejections.entries) {
@@ -503,6 +475,56 @@ void main() {
             isA<ApiException>()
                 .having((error) => error.code, "code", code)
                 .having((error) => error.message, "message", message),
+          ),
+        );
+      });
+    }
+    final refusals = {
+      "removing the founder": (
+        skir.RemoveOrganizationMembersResponse.createFounderCannotBeRemovedError(
+          userIds: [_grace],
+        ).requireAccepted,
+        409,
+        "Organization founder cannot be removed",
+      ),
+      "removing someone who is not a member": (
+        skir.RemoveOrganizationMembersResponse.createUserNotMemberError(
+          userIds: [_grace],
+        ).requireAccepted,
+        404,
+        "Organization Member not found",
+      ),
+      "declining a missing request": (
+        skir.DeclineOrganizationJoinRequestsResponse.createRequestNotFoundError(
+          requestIds: [skir.recordId("request_to_join:missing")],
+        ).requireAccepted,
+        404,
+        "Request not found",
+      ),
+      "revoking a missing code": (
+        skir.RevokeOrganizationJoinCodesResponse.createCodeNotFoundError(
+          codeIds: [skir.recordId("join_code:missing")],
+        ).requireAccepted,
+        404,
+        "Join Code not found",
+      ),
+    };
+    for (final MapEntry(key: reason, value: (accept, code, message))
+        in refusals.entries) {
+      test("rejects $reason naming the refused target, with code $code and "
+          "its reason", () {
+        expect(
+          accept,
+          throwsA(
+            isA<RefusedTargets>()
+                .having((error) => error.targets, "targets", hasLength(1))
+                .having(
+                  (error) => error.reason,
+                  "reason",
+                  isA<ApiException>()
+                      .having((error) => error.code, "code", code)
+                      .having((error) => error.message, "message", message),
+                ),
           ),
         );
       });

@@ -42,8 +42,13 @@ extension DeclineOrganizationJoinRequestsOutcome
         :final value,
       ):
         throw ApiException.invalidRecordId(value);
-      case skir.DeclineOrganizationJoinRequestsResponse_requestNotFoundErrorWrapper():
-        throw ApiException.notFound("Request");
+      case skir.DeclineOrganizationJoinRequestsResponse_requestNotFoundErrorWrapper(
+        :final value,
+      ):
+        throw RefusedTargets(
+          ApiException.notFound("Request"),
+          value.requestIds.toSet(),
+        );
       case skir.DeclineOrganizationJoinRequestsResponse_invalidSelectionErrorWrapper():
         throw ApiException.badRequest("Select distinct pending requests");
       case skir.DeclineOrganizationJoinRequestsResponse_successWrapper():
@@ -91,8 +96,13 @@ extension RevokeOrganizationJoinCodesOutcome
         :final value,
       ):
         throw ApiException.invalidRecordId(value);
-      case skir.RevokeOrganizationJoinCodesResponse_codeNotFoundErrorWrapper():
-        throw ApiException.notFound("Join Code");
+      case skir.RevokeOrganizationJoinCodesResponse_codeNotFoundErrorWrapper(
+        :final value,
+      ):
+        throw RefusedTargets(
+          ApiException.notFound("Join Code"),
+          value.codeIds.toSet(),
+        );
       case skir.RevokeOrganizationJoinCodesResponse_invalidSelectionErrorWrapper():
         throw ApiException.badRequest("Select distinct join codes");
       case skir.RevokeOrganizationJoinCodesResponse_successWrapper():
@@ -145,10 +155,20 @@ extension RemoveOrganizationMembersOutcome
         :final value,
       ):
         throw ApiException.invalidRecordId(value);
-      case skir.RemoveOrganizationMembersResponse_userNotMemberErrorWrapper():
-        throw ApiException.notFound("Organization member");
-      case skir.RemoveOrganizationMembersResponse_founderCannotBeRemovedErrorWrapper():
-        throw ApiException.conflict("Organization founder cannot be removed");
+      case skir.RemoveOrganizationMembersResponse_userNotMemberErrorWrapper(
+        :final value,
+      ):
+        throw RefusedTargets(
+          ApiException.notFound("Organization member"),
+          value.userIds.toSet(),
+        );
+      case skir.RemoveOrganizationMembersResponse_founderCannotBeRemovedErrorWrapper(
+        :final value,
+      ):
+        throw RefusedTargets(
+          ApiException.conflict("Organization founder cannot be removed"),
+          value.userIds.toSet(),
+        );
       case skir.RemoveOrganizationMembersResponse_invalidSelectionErrorWrapper():
         throw ApiException.badRequest("Select distinct organization members");
       case skir.RemoveOrganizationMembersResponse_successWrapper():
