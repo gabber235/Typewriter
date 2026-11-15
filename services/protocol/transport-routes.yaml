@@ -268,7 +268,7 @@ routes:
     server: { component: service-registration }
     flow:
       kind: unary
-      method: "service/v1/organization.skir:UpdateOrganizationService"
+      method: "service/v1/organization.skir:UpdateOrganizationServices"
       operation: organization.services.update
       request: user.{user}.organization.{organization}.services.update
 
@@ -278,7 +278,7 @@ routes:
     server: { component: service-registration }
     flow:
       kind: unary
-      method: "service/v1/registration.skir:UnbindService"
+      method: "service/v1/registration.skir:UnbindServices"
       operation: organization.services.unbind
       request: user.{user}.organization.{organization}.services.unbind
 
@@ -288,7 +288,7 @@ routes:
     server: { component: service-registration }
     flow:
       kind: unary
-      method: "service/v1/topology.skir:ConfigureServiceHost"
+      method: "service/v1/topology.skir:ConfigureServiceHosts"
       operation: organization.topology.configure
       request: user.{user}.organization.{organization}.topology.configure
 

@@ -1,6 +1,6 @@
 //! Binds a host to the stack's organization the way an owner does by hand, every step a real
 //! route with the owner's credentials: `BindService` with the token the loader wrote, then the
-//! organization topology until the host advertises, then `ConfigureServiceHost` assigning it a
+//! organization topology until the host advertises, then `ConfigureServiceHosts` assigning it a
 //! hosted Realm, then the topology again until that Realm reports active. Each wait has a deadline
 //! and fails naming its step, so a host that never advertises says so instead of hanging.
 
@@ -14,9 +14,10 @@ use wasmcloud_utils::skir::base::service::v1::registration::{
     BindServiceRequest, BindServiceResponse,
 };
 use wasmcloud_utils::skir::base::service::v1::topology::{
-    ChildRuntimeStatus, ConfigureServiceHostRequest, ConfigureServiceHostResponse, EngineTarget,
-    HostExecutionConfiguration, HostedRealmConfiguration, OrganizationTopologySnapshot,
-    ServiceHost, WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse,
+    ChildRuntimeStatus, ConfigureServiceHostsRequest, ConfigureServiceHostsResponse, EngineTarget,
+    HostConfigurationEdit, HostExecutionConfiguration, HostedRealmConfiguration,
+    OrganizationTopologySnapshot, ServiceHost, WatchOrganizationTopologyRequest,
+    WatchOrganizationTopologyResponse,
 };
 use wasmcloud_utils::transport_routes::{
     OrganizationTopologyWatchRoute, ServiceBindRoute, ServiceTopologyConfigureRoute,
@@ -110,31 +111,36 @@ pub async fn run(args: BindArgs) -> Result<()> {
     let response = owner
         .request::<ServiceTopologyConfigureRoute>(
             format!("{scope}.topology.configure"),
-            &ConfigureServiceHostRequest {
-                host_id: host.host_id.clone(),
-                expected_revision: host.revision,
-                execution: HostExecutionConfiguration {
-                    realm: Some(HostedRealmConfiguration {
-                        primary_engine: EngineTarget {
-                            engine_id: REALM_ENGINE.into(),
-                            version_constraint: ">=0.0.0".into(),
+            &ConfigureServiceHostsRequest {
+                configurations: vec![HostConfigurationEdit {
+                    host_id: host.host_id.clone(),
+                    expected_revision: host.revision,
+                    execution: HostExecutionConfiguration {
+                        realm: Some(HostedRealmConfiguration {
+                            primary_engine: EngineTarget {
+                                engine_id: REALM_ENGINE.into(),
+                                version_constraint: ">=0.0.0".into(),
+                                ..Default::default()
+                            },
                             ..Default::default()
-                        },
+                        }),
                         ..Default::default()
-                    }),
+                    },
                     ..Default::default()
-                },
+                }],
                 ..Default::default()
             },
         )
         .await
-        .context("ConfigureServiceHost")?;
-    let ConfigureServiceHostResponse::Success(change) = response else {
-        bail!("ConfigureServiceHost failed: {response:?}");
+        .context("ConfigureServiceHosts")?;
+    let ConfigureServiceHostsResponse::Success(changes) = response else {
+        bail!("ConfigureServiceHosts failed: {response:?}");
     };
-    let realm = change
-        .realm
-        .context("ConfigureServiceHost assigned no Realm")?
+    let realm = changes
+        .into_iter()
+        .next()
+        .and_then(|change| change.realm)
+        .context("ConfigureServiceHosts assigned no Realm")?
         .realm_id;
 
     deadline(

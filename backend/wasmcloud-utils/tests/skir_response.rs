@@ -6,7 +6,8 @@ use wasmcloud_utils::skir::base::{
     service::v1::{
         identity::IssueServiceIdentityResponse,
         organization::{
-            UpdateOrganizationServiceResponse, UpdateOrganizationServiceResponse_ConflictError,
+            RefusedServiceRename, ServiceRenameRefusal, ServiceRenameRefusal_ConflictError,
+            UpdateOrganizationServicesResponse,
         },
         service::Service,
         status::QueryServiceBindingResponse,
@@ -36,16 +37,19 @@ fn variant_names_decide_outcomes_and_slugs() {
 #[test]
 fn messages_never_include_payload_values() {
     let conflict = |actual_name: &str| {
-        UpdateOrganizationServiceResponse::ConflictError(Box::new(
-            UpdateOrganizationServiceResponse_ConflictError {
-                expected_revision: 3,
-                actual: Service {
-                    name: actual_name.to_owned(),
+        UpdateOrganizationServicesResponse::RefusedError(vec![RefusedServiceRename {
+            reason: ServiceRenameRefusal::ConflictError(Box::new(
+                ServiceRenameRefusal_ConflictError {
+                    expected_revision: 3,
+                    actual: Service {
+                        name: actual_name.to_owned(),
+                        ..Default::default()
+                    },
                     ..Default::default()
                 },
-                ..Default::default()
-            },
-        ))
+            )),
+            ..Default::default()
+        }])
         .variant_message()
     };
 
