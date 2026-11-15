@@ -1,6 +1,7 @@
 package com.typewritermc.realm.formula
 
 import com.typewritermc.authoring.Availability
+import com.typewritermc.authoring.of
 import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.FormulaFunction
 import com.typewritermc.formula.VarValueDefinition
@@ -29,6 +30,7 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -50,6 +52,9 @@ internal class RealmFormulaEnvironment(
     override fun resolve(use: TypeUse): Resolution<CheckedType> = checked.resolve(use)
 
     override fun expand(use: TypeUse): TypeUse = checked.expand(use)
+
+    override fun unappliedType(definition: TypeDefinitionId): Resolution<ResourceType> =
+        checked.authoredTypeOf(TypeSelection.of(definition))
 
     override fun inScope(name: String): List<AuthorResourceId> = reads.read(NameAt(at, name)).map { it.toResourceId() }
 

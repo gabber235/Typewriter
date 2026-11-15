@@ -6,6 +6,7 @@ import com.typewritermc.formula.syntax.parseExpression
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import skirout.editor.v1.type_catalog.FunctionParameterUse
 import skirout.editor.v1.type_catalog.FunctionTypeUse
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -22,6 +23,9 @@ interface FormulaEnvironment {
 
     /** [use] with every alias replaced by the type it names, all through the use. A use with no alias comes back as is. */
     fun expand(use: TypeUse): TypeUse
+
+    /** [definition]'s type before any argument is chosen: the fields that need no argument, and those that wait on one. */
+    fun unappliedType(definition: TypeDefinitionId): Resolution<ResourceType>
 
     /** The resources [name] means at the innermost scope level that has it. Two or more is an ambiguity. */
     fun inScope(name: String): List<ResourceId>

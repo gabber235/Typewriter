@@ -26,6 +26,7 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.member
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
@@ -34,6 +35,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigDecimal
@@ -211,6 +213,9 @@ class EvaluationWorld(
             override fun resolve(use: TypeUse): Resolution<CheckedType> = evaluationCatalog.resolve(use)
 
             override fun expand(use: TypeUse): TypeUse = evaluationCatalog.expand(use)
+
+            override fun unappliedType(definition: TypeDefinitionId): Resolution<ResourceType> =
+                evaluationCatalog.authoredTypeOf(TypeSelection.of(definition))
 
             override fun inScope(name: String): List<ResourceId> = resources.filter { it.name == name }.map(EvaluationResource::id)
 

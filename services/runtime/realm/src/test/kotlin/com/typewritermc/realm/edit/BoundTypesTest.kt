@@ -240,6 +240,20 @@ val BoundTypesTest by testSuite {
         }
     }
 
+    test("a formula reads a field every board has through a star link, and refuses one that needs the row type") {
+        withSetup(staticPage, catalog = routeFixtureCatalog) {
+            val board = commitBoard("scores", column("gold", number = true)).created()
+            commitPin("pin", board).created()
+
+            val name = commitDefinition("name", plainType(textUse)) { computedVar(textUse, "pin.board.name") }.created()
+            val rows = commitDefinition("rows", plainType(intUse)) { computedVar(intUse, "pin.board.rows") }.created()
+
+            errorCodesOn(name).shouldBeEmpty()
+            formulas.value(name) shouldBe "scores"
+            errorCodesOn(rows) shouldBe listOf("formula_open_member")
+        }
+    }
+
     test("a star link to any board refuses a resource of another definition, even one with a computed row type") {
         withSetup(staticPage, catalog = routeFixtureCatalog) {
             val ledger =

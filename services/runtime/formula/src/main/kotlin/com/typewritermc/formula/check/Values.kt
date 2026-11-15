@@ -189,7 +189,7 @@ private fun Checker.callMember(
     val target = synthOnce(callee.target, scope)
     if (target.type == ERROR) return construct(ERROR, arguments, span, scope)
     val field =
-        fieldType(target.type.nonNull(), callee.name.text)
+        fieldType(target.type.nonNull(), callee.name.text, callee.name.span)
             ?: return callNamed(callee.name.text, target, arguments, expected, span, scope, callee.safe, callee.name)
     val read = FieldRead(target, callee.name.text, callee.safe, field, callee.span)
     return invokeValue(read, arguments, expected, callee.safe, span, scope)
