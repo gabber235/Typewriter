@@ -28,6 +28,10 @@ class CommandController with ChangeNotifier {
   final List<SearchHostEffectExecutor<SearchHostEffect>> _hostEffectExecutors;
 
   var _disposed = false;
+
+  // Returns a finished command to idle; cancelled on dispose, so a closed
+  // search leaves no timer behind.
+  Timer? _autoReset;
   var _state = const SearchCommandExecutionState.idle();
 
   SearchCommandExecutionState get state => _state;
@@ -100,7 +104,7 @@ class CommandController with ChangeNotifier {
       );
       notifyListeners();
     }
-    await _clearAutoReset();
+    _clearAutoReset();
   }
 
   Future<void> _executeHostEffects(List<SearchHostEffect> effects) async {
@@ -117,22 +121,26 @@ class CommandController with ChangeNotifier {
     }
   }
 
-  Future<void> _clearAutoReset() async {
+  void _clearAutoReset() {
     if (_disposed) return;
-    await Future<void>.delayed(
+    _autoReset?.cancel();
+    _autoReset = Timer(
       _state is SearchCommandFailed
           ? const Duration(seconds: 10)
           : const Duration(seconds: 3),
+      () {
+        if (_disposed || _state is SearchCommandRunning) return;
+        _state = const SearchCommandExecutionState.idle();
+        notifyListeners();
+      },
     );
-    if (_disposed || _state is SearchCommandRunning) return;
-    _state = const SearchCommandExecutionState.idle();
-    notifyListeners();
   }
 
   @override
   void dispose() {
     assert(!_disposed);
     _disposed = true;
+    _autoReset?.cancel();
     super.dispose();
   }
 }
