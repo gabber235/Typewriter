@@ -613,6 +613,12 @@ decided:
   - id: keep-slice-6-built-decisions
     what: "Keep, approve runner only (Recommended)"
     why: Rain and thunder stay with Paper's wipe, the wipe also resets the FOV ease and clients set fovEffectScale 0; approve refuses frames not made on the pinned runner, so no Mac golden slips in
+  - id: mesa-pin-from-devenv
+    what: "B. devenv exports it (Recommended)"
+    why: The pinned Mesa version comes from the Mesa devenv ships, so it cannot drift from nixpkgs; on the pinned runner a golden made on another renderer fails with re-approve, never quietly not checked, so a Mesa bump makes the weekly upgrade pull request re-approve
+  - id: renderer-has-os
+    what: "Add os (Recommended)"
+    why: A renderer names the OS so the pin says Linux outright instead of relying on no other OS matching Vulkan, llvmpipe, Mesa and CPU
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
