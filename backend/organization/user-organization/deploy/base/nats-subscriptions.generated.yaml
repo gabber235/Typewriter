@@ -8,6 +8,8 @@ metadata:
 data:
   core-subscriptions: >-
     typewriter.from.user.*.organization.create:typewriter.organization-user-organization,
+    typewriter.from.user.*.organization.update:typewriter.organization-user-organization,
+    typewriter.from.user.*.organization.delete:typewriter.organization-user-organization,
     typewriter.from.user.*.organization.watch:typewriter.organization-user-organization,
     typewriter.from.user.*.organization.join_requests.watch:typewriter.organization-user-organization,
     typewriter.from.user.*.organization.join_requests.request:typewriter.organization-user-organization,

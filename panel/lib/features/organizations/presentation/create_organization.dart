@@ -50,7 +50,7 @@ class _CreateOrganization extends HookConsumerWidget {
             SizedBox(height: context.spacing.space6),
             Enter(
               token: MotionToken.loadIn,
-              child: _OrganizationIconPicker(
+              child: OrganizationIconPicker(
                 iconUrl: iconUrl,
                 onRandomize: () => randomSeed.value = _generateSeed(),
               ),
@@ -137,54 +137,5 @@ class _CreateOrganization extends HookConsumerWidget {
       }
       context.reportFailure("Create organization failed", detail: "$error");
     }
-  }
-}
-
-/// Presents the generated logo preview and lets the user choose another seed.
-class _OrganizationIconPicker extends StatelessWidget {
-  const _OrganizationIconPicker({
-    required this.iconUrl,
-    required this.onRandomize,
-  });
-
-  final String iconUrl;
-  final VoidCallback onRandomize;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Material(
-      borderRadius: context.shapes.largeBorderRadius,
-      child: Button(
-        face: ButtonFace.bare,
-        label: "Randomize icon",
-        onPressed: onRandomize,
-        child: Padding(
-          padding: EdgeInsets.all(context.spacing.space3),
-          child: Row(
-            children: [
-              OrganizationLogo(logoUrl: iconUrl, size: 64),
-              SizedBox(width: context.spacing.space4),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SectionTitle(title: "Icon"),
-                    SizedBox(height: context.spacing.space1),
-                    Text(
-                      "For now, generated and can be randomized again by clicking the icon.",
-                      style: context.text.sentence.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

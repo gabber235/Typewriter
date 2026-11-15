@@ -196,6 +196,7 @@ List<skir.Organization> storyOrganizations(Generator generator, int count) => [
         organizationId: skir.recordId("organization:${name.snakeCase()}"),
         name: name,
         logoUrl: index == 0 ? "" : generateOrganizationIconUrl(name),
+        founderId: skir.recordId("user:ada"),
       );
     }(),
 ];

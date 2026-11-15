@@ -23,6 +23,7 @@ pub struct OrganizationRecord {
     pub id: RecordId,
     pub name: String,
     pub logo_url: Option<String>,
+    pub founder: RecordId,
 }
 
 /// Stored user fields embedded in organization projections.
@@ -60,6 +61,7 @@ impl From<OrganizationRecord> for Organization {
             organization_id: value.id.into(),
             name: value.name,
             logo_url: value.logo_url.unwrap_or_default(),
+            founder_id: value.founder.into(),
             _unrecognized: None,
         }
     }

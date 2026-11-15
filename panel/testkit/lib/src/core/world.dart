@@ -149,6 +149,10 @@ final class World {
       // Tests and stories never retry, so a failure shows at once.
       retry: (retryCount, error) => null,
     );
+    final user = session.user;
+    if (_builder.organizationDoubles && user != null) {
+      organizations.serve(nats, user: user.id);
+    }
   }
 
   /// Builds the world [traits] describe.

@@ -1,6 +1,6 @@
 //! User scoped organization operations for the authenticated messaging surface.
 //!
-//! The component owns organization creation and user views for memberships and pending join
+//! The component owns organization creation, renaming and deletion, and user views for memberships and pending join
 //! requests. Organization records and membership edges are canonical database state. Watch
 //! handlers expose snapshots, while successful mutations persist sequenced changes on the user
 //! or organization stream that owns each projection.
@@ -15,7 +15,9 @@ wit_bindgen::generate!({
 });
 
 mod create;
+mod delete;
 mod join_requests;
+mod update;
 mod watch;
 
 use wasmcloud_utils::{
@@ -33,6 +35,8 @@ impl Guest for Component {
             msg,
             Handlers {
                 user_organization_create: create::handle_create,
+                user_organizations_update: update::handle_update,
+                user_organizations_delete: delete::handle_delete,
                 user_organizations_watch: watch::handle_watch,
                 user_join_requests_watch: join_requests::handle_watch,
                 user_join_request_submit: join_requests::handle_request,

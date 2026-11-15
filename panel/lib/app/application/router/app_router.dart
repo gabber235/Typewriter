@@ -324,6 +324,7 @@ class AppRouter extends NavigationRouter {
             AutoRoute(page: JoinCodesRoute.page, path: "join-codes"),
           ],
         ),
+        AutoRoute(page: OrganizationSettingsRoute.page, path: "settings"),
         AutoRoute(
           page: RealmRoute.page,
           path: "realm/:realmId",

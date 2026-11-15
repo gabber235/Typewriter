@@ -198,6 +198,14 @@ class OrganizationSidebarContent extends HookConsumerWidget {
           ],
         ),
       ),
+      SidebarLink(
+        icon: Icones(MaterialSymbols.settings_rounded),
+        text: "Settings",
+        route: OrganizationRoute(
+          organizationId: organizationId.id,
+          children: [const OrganizationSettingsRoute()],
+        ),
+      ),
     ];
   }
 

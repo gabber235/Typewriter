@@ -33,3 +33,32 @@ Widget organizationLogoUseCase(BuildContext context) {
     ),
   );
 }
+
+/// The icon picker that creating an organization and its settings share:
+/// pressing it rolls a new icon, and a slow save shows it busy.
+@widgetbook.UseCase(name: "Default", type: OrganizationIconPicker)
+Widget organizationIconPickerUseCase(BuildContext context) {
+  final slow = context.knobs.boolean(label: "Saves slowly");
+  final unavailable = context.knobs.boolean(label: "Unavailable");
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      HookBuilder(
+        builder: (context) {
+          final icon = useState(randomOrganizationIconUrl("acme"));
+          return OrganizationIconPicker(
+            iconUrl: icon.value,
+            onRandomize: unavailable
+                ? null
+                : () async {
+                    if (slow) {
+                      await Future<void>.delayed(const Duration(seconds: 2));
+                    }
+                    icon.value = randomOrganizationIconUrl("acme");
+                  },
+          );
+        },
+      ),
+    ),
+  );
+}

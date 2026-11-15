@@ -25,8 +25,9 @@ use wasmcloud_utils::skir::base::{
             UpdateOrganizationMemberRolesResponse,
         },
         organization::{
-            CreateOrganizationRequest, CreateOrganizationResponse, UserOrganizationsChange,
-            UserOrganizationsChanged,
+            CreateOrganizationRequest, CreateOrganizationResponse, DeleteOrganizationsRequest,
+            DeleteOrganizationsResponse, OrganizationUpdate, UpdateOrganizationsRequest,
+            UpdateOrganizationsResponse, UserOrganizationsChange, UserOrganizationsChanged,
         },
         role::OrganizationRole,
         user::{SubmitUserJoinRequestRequest, SubmitUserJoinRequestResponse},
@@ -208,6 +209,52 @@ pub async fn remove_members<F>(
             from_member(member, organization, "members.remove"),
             &RemoveOrganizationMembersRequest {
                 user_ids: users,
+                ..Default::default()
+            },
+        )
+        .await
+}
+
+/// `user` applies every update in one change.
+pub async fn update_organizations<F>(
+    context: &TestContext<F>,
+    user: &StackUser,
+    updates: Vec<OrganizationUpdate>,
+) -> Result<UpdateOrganizationsResponse> {
+    context
+        .request(
+            from_user(user, "organization.update"),
+            &UpdateOrganizationsRequest {
+                updates,
+                ..Default::default()
+            },
+        )
+        .await
+}
+
+/// A rename of `organization` to `name` that keeps its icon.
+pub fn rename(organization: &Organization, name: &str) -> OrganizationUpdate {
+    OrganizationUpdate {
+        organization_id: organization.id(),
+        name: Some(name.to_owned()),
+        ..Default::default()
+    }
+}
+
+/// `user` deletes the `organizations`, in one change.
+pub async fn delete_organizations<F>(
+    context: &TestContext<F>,
+    user: &StackUser,
+    organizations: &[&Organization],
+) -> Result<DeleteOrganizationsResponse> {
+    context
+        .request(
+            from_user(user, "organization.delete"),
+            &DeleteOrganizationsRequest {
+                organization_ids: organizations
+                    .iter()
+                    .map(|organization| organization.id())
+                    .collect(),
                 ..Default::default()
             },
         )

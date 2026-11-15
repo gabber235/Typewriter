@@ -44,6 +44,26 @@ routes:
       operation: user.organization.create
       request: user.{user}.organization.create
 
+  - name: user_organizations_update
+    scope: user
+    callers: [{ role: authenticated_user }]
+    server: { component: user-organization }
+    flow:
+      kind: unary
+      method: "organization/v1/organization.skir:UpdateOrganizations"
+      operation: user.organization.update
+      request: user.{user}.organization.update
+
+  - name: user_organizations_delete
+    scope: user
+    callers: [{ role: authenticated_user }]
+    server: { component: user-organization }
+    flow:
+      kind: unary
+      method: "organization/v1/organization.skir:DeleteOrganizations"
+      operation: user.organization.delete
+      request: user.{user}.organization.delete
+
   - name: user_organizations_watch
     scope: user
     callers: [{ role: authenticated_user }]

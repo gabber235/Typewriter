@@ -43,7 +43,7 @@ pub async fn handle_binding(
     otel_wasi::main_attribute!("service.id" = scope.service.to_string());
     let service_id = RecordId::new("service", scope.service.as_str());
     let result = read_query!(
-        "SELECT IF organization THEN { id: organization.id, name: organization.name } ELSE NONE END AS organization FROM $service_id FETCH organization"
+        "SELECT IF organization THEN { id: organization.id, name: organization.name, founder: organization.founder } ELSE NONE END AS organization FROM $service_id FETCH organization"
     )
     .bind("service_id", service_id)
     .execute()
@@ -80,7 +80,7 @@ pub async fn handle_lease(
         r#"
         BEGIN TRANSACTION;
         LET $services = SELECT
-            IF organization THEN { id: organization.id, name: organization.name } ELSE NONE END AS organization,
+            IF organization THEN { id: organization.id, name: organization.name, founder: organization.founder } ELSE NONE END AS organization,
             registration.token AS existing_token,
             registration.expires_at AS existing_expires_at
         FROM $service_id
@@ -101,7 +101,7 @@ pub async fn handle_lease(
             }
         };
         LET $result = array::first(SELECT
-            IF organization THEN { id: organization.id, name: organization.name } ELSE NONE END AS organization,
+            IF organization THEN { id: organization.id, name: organization.name, founder: organization.founder } ELSE NONE END AS organization,
             registration.token AS token,
             registration.expires_at AS expires_at
         FROM $service_id

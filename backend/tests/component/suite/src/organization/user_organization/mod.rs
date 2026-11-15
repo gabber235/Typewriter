@@ -1,7 +1,10 @@
 use json_matcher::assert_jm;
 use typewriter_component_test::{
     JoinCode, Organization,
-    organization::{expect_joined, found, join_code_id, join_transaction, submit_join_request},
+    organization::{
+        delete_organizations, expect_joined, found, join_code_id, join_transaction, rename,
+        submit_join_request, update_organizations,
+    },
     prelude::*,
 };
 use wasmcloud_utils::skir::base::organization::v1::{
@@ -15,6 +18,10 @@ const STANDING: &str = "RETURN { requests: count(SELECT id FROM request_to_join 
 /// The number of join codes left.
 const CODES: &str = "RETURN count(SELECT id FROM organization_join_code)";
 /// What is left of a race of Grace and Hedy for one code.
+/// The names of every organization, sorted.
+const NAMES: &str = "RETURN array::sort(SELECT VALUE name FROM organization)";
+/// What is left of `$organization` and everything it held.
+const REMAINS: &str = "RETURN { organization: count(SELECT id FROM $organization), members: count(SELECT id FROM member_of WHERE out = $organization), roles: count(SELECT id FROM organization_role WHERE organization = $organization), codes: count(SELECT id FROM organization_join_code WHERE organization = $organization), requests: count(SELECT id FROM request_to_join WHERE out = $organization) }";
 const RACE: &str = "RETURN { codes: count(SELECT id FROM organization_join_code), requests: count(SELECT id FROM request_to_join), members: count(SELECT id FROM member_of WHERE in IN [user:user_grace, user:user_hedy]) }";
 
 #[component_fixture(
@@ -619,5 +626,194 @@ async fn cancelling_someone_elses_request_is_refused(
         "{reply:?}"
     );
     assert_jm!(context.database()?.read(STANDING, &[("user", hedy.id())]).await?, { "requests": 1, "members": 0 });
+    Ok(())
+}
+
+#[component_test(UserOrganization)]
+async fn renaming_an_organization_reaches_every_member(
+    context: &mut TestContext<UserOrganization>,
+) -> TestResult {
+    let acme = found(context, ada(), "acme").await?;
+    Seed::new()
+        .member(&acme, grace(), WRITER)
+        .apply(context)
+        .await?;
+    for member in [ada(), grace()] {
+        let renamed = acme.id();
+        context.expect_publish(
+            to_user(member, "organizations.changed"),
+            move |event: &UserOrganizationsChanged| {
+                matches!(event.changes.as_slice(), [UserOrganizationsChange::Update(organization)]
+                    if organization.organization_id == renamed
+                        && organization.name == "acme_studio"
+                        && organization.logo_url == "https://example.com/studio.png")
+            },
+        )?;
+    }
+    let mut update = rename(&acme, "acme_studio");
+    update.logo_url = Some("https://example.com/studio.png".to_owned());
+
+    let reply = update_organizations(context, grace(), vec![update]).await?;
+
+    let UpdateOrganizationsResponse::Success(success) = reply else {
+        anyhow::bail!("unexpected update organizations reply: {reply:?}")
+    };
+    assert!(
+        matches!(success.event.changes.as_slice(), [UserOrganizationsChange::Update(organization)]
+            if organization.name == "acme_studio"),
+        "{success:?}"
+    );
+    assert_jm!(
+        context.database()?.query_json(NAMES).await?,
+        ["acme_studio"]
+    );
+    Ok(())
+}
+
+#[component_test(UserOrganization)]
+async fn an_update_batch_with_a_taken_name_changes_nothing(
+    context: &mut TestContext<UserOrganization>,
+) -> TestResult {
+    let acme = found(context, ada(), "acme").await?;
+    let initech = found(context, ada(), "initech").await?;
+    found(context, grace(), "globex").await?;
+
+    let reply = update_organizations(
+        context,
+        ada(),
+        vec![rename(&acme, "acme_studio"), rename(&initech, "globex")],
+    )
+    .await?;
+
+    assert!(
+        matches!(&reply, UpdateOrganizationsResponse::RefusedError(refused)
+            if matches!(refused.as_slice(), [item]
+                if item.organization_id == initech.id()
+                    && matches!(item.reason, OrganizationUpdateRefusal::NameTakenError(_)))),
+        "{reply:?}"
+    );
+    assert_jm!(
+        context.database()?.query_json(NAMES).await?,
+        ["acme", "globex", "initech"]
+    );
+    Ok(())
+}
+
+#[component_test(UserOrganization)]
+async fn updating_an_organization_one_does_not_belong_to_is_refused(
+    context: &mut TestContext<UserOrganization>,
+) -> TestResult {
+    found(context, ada(), "acme").await?;
+    let globex = found(context, grace(), "globex").await?;
+
+    let reply = update_organizations(context, ada(), vec![rename(&globex, "mine")]).await?;
+
+    assert!(
+        matches!(&reply, UpdateOrganizationsResponse::RefusedError(refused)
+            if matches!(refused.as_slice(), [item]
+                if matches!(item.reason, OrganizationUpdateRefusal::OrganizationNotFoundError(_)))),
+        "{reply:?}"
+    );
+    assert_jm!(
+        context.database()?.query_json(NAMES).await?,
+        ["acme", "globex"]
+    );
+    Ok(())
+}
+
+#[component_test(UserOrganization)]
+async fn deleting_an_organization_removes_it_for_members_and_applicants(
+    context: &mut TestContext<UserOrganization>,
+) -> TestResult {
+    let acme = found(context, ada(), "acme").await?;
+    let hedy = StackUser::new("hedy");
+    Seed::new()
+        .member(&acme, grace(), WRITER)
+        .join_request(&hedy, &acme)
+        .join_code(&acme, JoinCode::new("invite").expiring())
+        .apply(context)
+        .await?;
+    for member in [ada(), grace()] {
+        let deleted = acme.id();
+        context.expect_publish(
+            to_user(member, "organizations.changed"),
+            move |event: &UserOrganizationsChanged| {
+                matches!(event.changes.as_slice(), [UserOrganizationsChange::Remove(id)] if **id == deleted)
+            },
+        )?;
+    }
+    context.expect_publish(
+        to_user(&hedy, "join_requests.changed"),
+        |event: &UserJoinRequestsChanged| {
+            matches!(
+                event.changes.as_slice(),
+                [UserJoinRequestsChange::Remove(_)]
+            )
+        },
+    )?;
+
+    let reply = delete_organizations(context, ada(), &[&acme]).await?;
+
+    let DeleteOrganizationsResponse::Success(success) = reply else {
+        anyhow::bail!("unexpected delete organizations reply: {reply:?}")
+    };
+    let deleted = acme.id();
+    assert!(
+        matches!(success.event.changes.as_slice(), [UserOrganizationsChange::Remove(id)] if **id == deleted),
+        "{success:?}"
+    );
+    assert_jm!(
+        context.database()?.read(REMAINS, &[("organization", acme.id())]).await?,
+        { "organization": 0, "members": 0, "roles": 0, "codes": 0, "requests": 0 }
+    );
+    Ok(())
+}
+
+#[component_test(UserOrganization)]
+async fn a_member_who_is_not_the_founder_cannot_delete_the_organization(
+    context: &mut TestContext<UserOrganization>,
+) -> TestResult {
+    let acme = found(context, ada(), "acme").await?;
+    Seed::new()
+        .member(&acme, grace(), WRITER)
+        .apply(context)
+        .await?;
+
+    let reply = delete_organizations(context, grace(), &[&acme]).await?;
+
+    assert!(
+        matches!(&reply, DeleteOrganizationsResponse::RefusedError(refused)
+            if matches!(refused.as_slice(), [item]
+                if item.organization_id == acme.id()
+                    && matches!(item.reason, OrganizationDeleteRefusal::FounderRequiredError(_)))),
+        "{reply:?}"
+    );
+    assert_jm!(
+        context.database()?.read(REMAINS, &[("organization", acme.id())]).await?,
+        { "organization": 1, "members": 2, "roles": 2, "codes": 0, "requests": 0 }
+    );
+    Ok(())
+}
+
+#[component_test(UserOrganization)]
+async fn a_delete_batch_with_one_refused_item_deletes_nothing(
+    context: &mut TestContext<UserOrganization>,
+) -> TestResult {
+    let acme = found(context, ada(), "acme").await?;
+    let globex = found(context, grace(), "globex").await?;
+
+    let reply = delete_organizations(context, ada(), &[&acme, &globex]).await?;
+
+    assert!(
+        matches!(&reply, DeleteOrganizationsResponse::RefusedError(refused)
+            if matches!(refused.as_slice(), [item]
+                if item.organization_id == globex.id()
+                    && matches!(item.reason, OrganizationDeleteRefusal::OrganizationNotFoundError(_)))),
+        "{reply:?}"
+    );
+    assert_jm!(
+        context.database()?.query_json(NAMES).await?,
+        ["acme", "globex"]
+    );
     Ok(())
 }

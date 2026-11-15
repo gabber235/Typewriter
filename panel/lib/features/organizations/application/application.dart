@@ -6,5 +6,7 @@
 library;
 
 export "organization.dart";
+export "organization_footprint.dart";
+export "organization_identity.dart";
 export "organization_presence.dart";
 export "user_join_requests.dart";
