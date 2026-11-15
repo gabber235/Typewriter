@@ -19,6 +19,8 @@ void main() {
         ...window,
       ], at: membersPage());
 
+      await panel.press(LogicalKeyboardKey.enter);
+
       await panel.keyDown(LogicalKeyboardKey.delete);
       await panel.holdFor(0.5);
       expect(find.byType(HoldLine), findsOneWidget);

@@ -15,6 +15,8 @@ void main() {
     final panel = await tester.pumpPanel(traits, at: membersPage());
     expect(panel.focusedRow, grace);
 
+    await panel.press(LogicalKeyboardKey.enter);
+
     await panel.holdKey(LogicalKeyboardKey.delete);
 
     await panel.eventually(() => expect(panel.shows("Grace"), isFalse));
@@ -26,6 +28,8 @@ void main() {
   ) async {
     final panel = await tester.pumpPanel(traits, at: membersPage());
 
+    await panel.press(LogicalKeyboardKey.enter);
+
     await panel.holdKey(LogicalKeyboardKey.delete, share: 1 / 3);
 
     expect(panel.shows("Grace"), isTrue);
@@ -35,6 +39,8 @@ void main() {
   testWidgets("Delete pressed again while the fill drains continues from the "
       "fill and completes sooner than a fresh hold", (tester) async {
     final panel = await tester.pumpPanel(traits, at: membersPage());
+
+    await panel.press(LogicalKeyboardKey.enter);
 
     await panel.keyDown(LogicalKeyboardKey.delete);
     await panel.holdFor(0.6);
@@ -52,6 +58,8 @@ void main() {
       "that took focus", (tester) async {
     final panel = await tester.pumpPanel(traits, at: membersPage());
 
+    await panel.press(LogicalKeyboardKey.enter);
+
     await panel.keyDown(LogicalKeyboardKey.delete);
     await panel.holdFor(1);
     await panel.eventually(() => expect(panel.focusedRow, linus));
@@ -67,6 +75,8 @@ void main() {
 
   testWidgets("moving focus away mid hold removes nothing", (tester) async {
     final panel = await tester.pumpPanel(traits, at: membersPage());
+
+    await panel.press(LogicalKeyboardKey.enter);
 
     await panel.keyDown(LogicalKeyboardKey.delete);
     await panel.holdFor(0.5);

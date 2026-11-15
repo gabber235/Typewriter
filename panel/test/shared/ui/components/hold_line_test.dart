@@ -19,6 +19,8 @@ void main() {
     );
     final height = tester.getSize(row.first).height;
 
+    await panel.press(LogicalKeyboardKey.enter);
+
     await panel.keyDown(LogicalKeyboardKey.delete);
     await tester.pump();
 

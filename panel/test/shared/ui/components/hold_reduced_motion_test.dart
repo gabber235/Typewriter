@@ -15,6 +15,8 @@ void main() {
       "on Linus", (tester) async {
     final panel = await tester.pumpPanel(traits, at: membersPage());
 
+    await panel.press(LogicalKeyboardKey.enter);
+
     await panel.holdKey(LogicalKeyboardKey.delete);
 
     await panel.eventually(() => expect(panel.shows("Grace"), isFalse));
@@ -25,6 +27,8 @@ void main() {
     tester,
   ) async {
     final panel = await tester.pumpPanel(traits, at: membersPage());
+
+    await panel.press(LogicalKeyboardKey.enter);
 
     await panel.holdKey(LogicalKeyboardKey.delete, share: 1 / 3);
 

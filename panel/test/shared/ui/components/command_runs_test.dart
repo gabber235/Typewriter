@@ -89,6 +89,8 @@ void main() {
       membershipService(members: [member("Grace"), member("Linus")]),
     ], at: membersPage());
 
+    await panel.press(LogicalKeyboardKey.enter);
+
     await panel.holdKey(LogicalKeyboardKey.delete);
     await panel.eventually(() => expect(panel.shows("Grace"), isFalse));
     await panel.settle();

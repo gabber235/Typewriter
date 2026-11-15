@@ -18,6 +18,7 @@ void main() {
       ], at: membersPage());
 
       if (shifted) await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await panel.press(LogicalKeyboardKey.enter);
       await panel.keyDown(key);
       await panel.holdFor(0.5);
       expect(panel.holdLine, isNull);
