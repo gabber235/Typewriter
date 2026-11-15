@@ -181,6 +181,18 @@ pieces:
           drawn frames.
         state: working
         evidence: ["branch proto/gv-nodraw 25ed99f98: prototypes/game-verification/RESULTS.md", CI runs 43330492175 43333247905]
+      - id: a4-on-demand
+        parent: perceive-without-drawing
+        what: "visible() asks a player's client to draw real frames only while its window holds; the asked entity's pixels are those that change when it is left out"
+        taught: >-
+          Slice 6: a measured frame costs 5.8 ms on the Mac window (1708x960) and 4.1 ms at the runner's
+          854x480; an asking requirement adds 30 to 80 ms; 5 of 87 asking add about 0.25% to the suite, far
+          below P11's 6 to 27 points. A smaller window does not help, the draw dominates. The lying scenes
+          (behind a wall, fully transparent, off screen, behind an open inventory) are seen correctly. The
+          threshold counts pixels, so it means 4x less area on the Mac window than on the runner. New
+          chunks fade in, so visibility windows need 10 ticks.
+        state: working
+        evidence: ["commit 9e8ab5e21 on feat/game-verification-slice-6", "cargo xtask e2e game: 87 passed, three runs in a row"]
 
   - id: readiness-and-done
     status: building
@@ -684,4 +696,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 6 builds; beside it, the lease time fixes (caps off, drawn chunks plus ring, regions ahead, free clients in step) build on feat/game-verification-lease-time.
+next: Slice 6 A4 is built; goldens wait on a choice because the Mac cannot render the runner pixels. Choose how goldens are checked and the A4 threshold unit.
