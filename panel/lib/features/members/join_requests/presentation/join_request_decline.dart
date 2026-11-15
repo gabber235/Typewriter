@@ -2,19 +2,17 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// The one Decline command: the card key, and the operation the inspector
-/// and the context menu offer, all build it.
+/// The one Decline command, which the operation the inspector, the context
+/// menu and its key offer builds.
 ///
-/// Every target is declined in one change or none is. Their rows, from
-/// [rows] or else [rowsOf] when the hold starts, are sending while it runs,
-/// and a refusal stays on each of them.
+/// Every target is declined in one change or none is. Their rows on the
+/// surface showing the selection are sending while it runs, and a refusal
+/// stays on each of them.
 ActionShortcut joinRequestDecline({
   required String id,
   required String label,
   required Set<skir.RecordId> Function(WidgetRef ref) targets,
   required String? Function(WidgetRef ref, skir.RecordId request) nameOf,
-  HoldRows? rows,
-  HoldRows? Function(WidgetRef ref)? rowsOf,
   int priority = 1,
 }) {
   // They must ask again to join, so the hold is heavy.
@@ -24,8 +22,6 @@ ActionShortcut joinRequestDecline({
     description: "Decline so they must ask again",
     targets: targets,
     nameOf: nameOf,
-    rows: rows,
-    rowsOf: rowsOf,
     priority: priority,
     verb: "Decline",
     doneWord: "Declined",

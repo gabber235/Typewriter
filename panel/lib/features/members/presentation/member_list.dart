@@ -6,10 +6,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// list of cards on narrow windows, and its loading and failure states.
 ///
 /// Members are selected through the shared selection; the inspector shows
-/// and edits the selected members. The tab publishes its rows, so a remove
-/// held from the inspector or the context menu sends and refuses on them,
-/// and members that leave the live list leave the selection by the
-/// selection's own rule.
+/// and edits the selected members. The tab gives its rows to the page's
+/// selection surface, so a remove held from the inspector or the context
+/// menu sends and refuses on them.
 class MembersTab extends HookConsumerWidget {
   const MembersTab({super.key});
 
@@ -25,7 +24,7 @@ class MembersTab extends HookConsumerWidget {
       identity: (member) => member.userId,
       ready: membersAsync.hasValue,
     );
-    ref.useMembershipRows(list: MembershipList.members, rows: rows);
+    useSelectionSurfaceRows(rows);
 
     return SliverMainAxisGroup(
       slivers: [

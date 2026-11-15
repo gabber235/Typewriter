@@ -252,19 +252,3 @@ class SelectionCardShimmer extends StatelessWidget {
     );
   }
 }
-
-/// Publishes a membership page's rows.
-extension MembershipRowsUpkeep on WidgetRef {
-  /// Publishes [rows] as the rows of [list] while the calling widget is
-  /// mounted.
-  void useMembershipRows({
-    required MembershipList list,
-    required HoldRows rows,
-  }) {
-    final shown = watch(membershipRowsProvider);
-    useEffect(() {
-      shown.show(list, rows);
-      return () => shown.hide(list, rows);
-    }, [shown, list, rows]);
-  }
-}

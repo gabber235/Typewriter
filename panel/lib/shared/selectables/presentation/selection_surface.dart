@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "selection_surface.g.dart";
+
 /// One surface of selectables, such as a resource list or a graph, that
 /// tells the selection its items in visible order.
 ///
@@ -12,6 +14,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// nodes off screen, passes [order] instead when it knows their visible
 /// order, or [every] when it knows only which items it holds, so select all
 /// still reaches every item.
+///
+/// The list that owns the surface's rows gives them to it with
+/// [useSelectionSurfaceRows]; a hold over the selection, started from the
+/// inspector or a context menu, then sends and refuses on those rows
+/// ([SelectionRows.selectionRows]).
 class SelectionSurface extends HookConsumerWidget {
   const SelectionSurface({
     required this.child,
@@ -45,6 +52,8 @@ class SelectionSurface extends HookConsumerWidget {
     final items = useMemoized(SelectionSurfaceItems._)
       .._explicit = order
       .._every = every;
+    final surfaces = ref.watch(selectionSurfacesProvider);
+    useEffect(() => surfaces._add(items), [surfaces, items]);
     return _SelectionSurfaceScope(
       items: items,
       child: ManagedActionSet(
@@ -79,6 +88,11 @@ final class SelectionSurfaceItems {
   final _registered = <BuildContext, SelectableIdentifier>{};
   List<SelectableIdentifier>? _explicit;
   List<SelectableIdentifier>? _every;
+
+  /// The rows the surface's items are in, which a hold sends and refuses
+  /// on, or null for a surface without such rows.
+  HoldRows? get rows => _rows;
+  HoldRows? _rows;
 
   /// Adds the selector at [context] showing [id]; the returned callback
   /// removes it again.
@@ -131,6 +145,55 @@ final class SelectionSurfaceItems {
         if (seen.add(id)) id,
     ];
   }
+}
+
+/// Gives [rows] to the [SelectionSurface] around the calling widget while
+/// it is mounted, so a hold over the selection sends and refuses on them.
+void useSelectionSurfaceRows(HoldRows rows) {
+  final items = SelectionSurface.maybeOf(useContext());
+  useEffect(() {
+    if (items == null) return null;
+    items._rows = rows;
+    return () {
+      if (identical(items._rows, rows)) items._rows = null;
+    };
+  }, [items, rows]);
+}
+
+/// Every [SelectionSurface] on screen, so a hold started outside a surface,
+/// such as from the inspector, finds the rows of the selection it acts on.
+/// Nothing rebuilds on a change: a hold reads the surfaces when it starts.
+@Riverpod(keepAlive: true)
+SelectionSurfaces selectionSurfaces(Ref ref) => SelectionSurfaces._();
+
+/// The surfaces on screen; see [selectionSurfacesProvider].
+final class SelectionSurfaces {
+  SelectionSurfaces._();
+
+  final _shown = <SelectionSurfaceItems>[];
+
+  VoidCallback _add(SelectionSurfaceItems items) {
+    _shown.add(items);
+    return () => _shown.remove(items);
+  }
+
+  /// The rows of the surface showing any of [selection], or null when no
+  /// surface with rows shows it.
+  HoldRows? rowsShowing(List<SelectableIdentifier> selection) {
+    for (final items in _shown) {
+      if (items.rows case final rows? when selection.any(items.contains)) {
+        return rows;
+      }
+    }
+    return null;
+  }
+}
+
+/// Where a hold over the selection shows.
+extension SelectionRows on WidgetRef {
+  /// The rows of the surface showing the selection, or null when none does.
+  HoldRows? get selectionRows =>
+      read(selectionSurfacesProvider).rowsShowing(read(selectionProvider));
 }
 
 class _SelectionSurfaceScope extends InheritedWidget {

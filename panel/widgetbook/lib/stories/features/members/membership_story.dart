@@ -5,6 +5,9 @@ import "package:widgetbook_workspace/data/features/membership.dart";
 import "package:widgetbook_workspace/data/features/organization.dart";
 import "package:widgetbook_workspace/support/story.dart";
 
+/// The membership lists a story varies.
+enum MembershipList { members, joinCodes, joinRequests }
+
 /// [page] of Acme, through the organization's real route.
 PageRouteInfo organizationPage(PageRouteInfo page) =>
     OrganizationRoute(organizationId: acme.organizationId.id, children: [page]);

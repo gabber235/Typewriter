@@ -52,7 +52,6 @@ final class RemoveMembersOperation extends ShortcutableOperation {
         .selectedOf<MemberSelectable>()
         .firstWhereOrNull((member) => member.member.userId == id)
         ?.name,
-    rowsOf: (ref) => ref.read(membershipRowsProvider)[MembershipList.members],
     priority: 10,
   );
 
@@ -113,7 +112,6 @@ final class RevokeJoinCodesOperation extends ShortcutableOperation {
     targets: (ref) => {
       for (final code in ref.selectedOf<JoinCodeSelectable>()) code.code.code,
     },
-    rowsOf: (ref) => ref.read(membershipRowsProvider)[MembershipList.joinCodes],
     priority: 10,
   );
 
@@ -176,8 +174,6 @@ final class DeclineJoinRequestsOperation extends ShortcutableOperation {
         .selectedOf<JoinRequestSelectable>()
         .firstWhereOrNull((request) => request.request.requestId == id)
         ?.name,
-    rowsOf: (ref) =>
-        ref.read(membershipRowsProvider)[MembershipList.joinRequests],
     priority: 10,
   );
 

@@ -5,9 +5,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Coordinates join code generation and the live projection display for
 /// the route. It keeps transient UI intent locally while
 /// [OrganizationJoinCodes] remains the owner of server backed code state.
-/// Codes are selected through the shared selection; the tab publishes its
-/// rows, so a revoke held from the inspector or the context menu sends and
-/// refuses on them, and codes that leave the live list leave the selection.
+/// Codes are selected through the shared selection; the tab gives its rows
+/// to the page's selection surface, so a revoke held from the inspector or
+/// the context menu sends and refuses on them.
 class JoinCodesTab extends HookConsumerWidget {
   const JoinCodesTab({super.key});
 
@@ -25,7 +25,7 @@ class JoinCodesTab extends HookConsumerWidget {
       ready: codesAsync.hasValue,
       focus: codeFocus,
     );
-    ref.useMembershipRows(list: MembershipList.joinCodes, rows: rows);
+    useSelectionSurfaceRows(rows);
     final rolesAsync = ref.watch(organizationRolesProvider);
     final joinCodeOptions = useState(const JoinCodeOptions());
 

@@ -75,6 +75,11 @@ class CommandButton extends HookConsumerWidget {
         null => false,
       },
     );
+    // Whether this command's current hold paints on rows, not on itself.
+    final onRows = useListenableSelector(runs.session, () {
+      final session = runs.session.value;
+      return session?.command == command.id && session?.attempt.rows != null;
+    });
     final keys = command.canInvoke && command.registerShortcut
         ? command.shortcuts
         : const <ShortcutActivator>[];
@@ -225,7 +230,7 @@ class CommandButton extends HookConsumerWidget {
                       : null,
                   // With rows, the rows show the run; the button shows it
                   // only for a hold that paints on itself.
-                  pressed: busy && !hold.plan.showsOnRows,
+                  pressed: busy && !onRows,
                   // The Listener owns a pointer hold and the Button's key
                   // press a key hold; the face never runs work on a press.
                   // The fill is the only press feedback, so it never

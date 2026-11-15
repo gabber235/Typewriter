@@ -6,9 +6,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// A click or Space selects a request through the shared selection; the
 /// inspector shows its details, the roles to grant, Accept and Decline. The
-/// list publishes its rows, so a decline held from the inspector or the
-/// context menu sends and refuses on them, and requests that leave the live
-/// list leave the selection. Cards change nothing themselves.
+/// list gives its rows to the page's selection surface, so a decline held
+/// from the inspector or the context menu sends and refuses on them. Cards
+/// change nothing themselves.
 class JoinRequestsList extends HookConsumerWidget {
   const JoinRequestsList({required this.requests, super.key});
 
@@ -20,7 +20,7 @@ class JoinRequestsList extends HookConsumerWidget {
       items: requests,
       identity: (request) => request.requestId,
     );
-    ref.useMembershipRows(list: MembershipList.joinRequests, rows: rows);
+    useSelectionSurfaceRows(rows);
 
     return SelectionCardList<skir.OrganizationJoinRequest>(
       rows: rows,

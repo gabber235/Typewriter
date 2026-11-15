@@ -14,7 +14,7 @@ void main() {
       weight: HoldWeight.heavy,
       verb: "Remove",
       doneWord: "Removed",
-      rows: source.rows,
+      rows: (_) => source.rows,
       targets: (_) => {"2", "0", "1"},
       outcome: (ids) => "Remove ${ids.length} rows?",
       each: (_, id) => switch (id) {

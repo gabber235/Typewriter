@@ -4,34 +4,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "membership_selection.g.dart";
 
-/// The membership lists whose rows a held operation sends and refuses on.
-enum MembershipList { members, joinCodes, joinRequests }
-
-/// The rows each membership page shows now.
-///
-/// A page publishes its rows while it is mounted, so an operation held from
-/// the inspector or the context menu sends and refuses on the rows the user
-/// sees. Nothing rebuilds on a change: a hold reads the rows when it starts.
-@Riverpod(keepAlive: true)
-MembershipRows membershipRows(Ref ref) => MembershipRows();
-
-/// The rows of the membership pages on screen, by list.
-final class MembershipRows {
-  final _shown = <MembershipList, HoldRows>{};
-
-  /// The rows [list] shows, or null while its page is not shown.
-  HoldRows? operator [](MembershipList list) => _shown[list];
-
-  /// Publishes [rows] as the rows of [list].
-  void show(MembershipList list, HoldRows rows) => _shown[list] = rows;
-
-  /// Forgets the rows of [list] when they are still [rows], so a page
-  /// leaving after its successor arrived keeps the successor's rows.
-  void hide(MembershipList list, HoldRows rows) {
-    if (identical(_shown[list], rows)) _shown.remove(list);
-  }
-}
-
 /// The roles each pending join request is granted once accepted, chosen in
 /// the inspector. A request nobody chose roles for is granted none and
 /// cannot be accepted yet.

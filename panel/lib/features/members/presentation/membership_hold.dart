@@ -10,9 +10,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// every preview and start, or gets null when it has no name;
 /// [outcomeMany] counts several. When the backend refuses some targets,
 /// every other one says it was held back, by its name or else as this
-/// [noun]. The target rows, from [rows] or else
-/// [rowsOf] when the hold starts, are sending while [work] runs, and a
-/// refusal stays on each of them.
+/// [noun]. The target rows, on the surface showing the selection when the
+/// hold starts, are sending while [work] runs, and a refusal stays on each
+/// of them.
 ActionShortcut membershipHold({
   required String id,
   required String label,
@@ -26,8 +26,6 @@ ActionShortcut membershipHold({
   required Future<void> Function(WidgetRef ref, Set<skir.RecordId> targets)
   work,
   String? Function(WidgetRef ref, skir.RecordId target)? nameOf,
-  HoldRows? rows,
-  HoldRows? Function(WidgetRef ref)? rowsOf,
   int priority = 1,
 }) {
   String? named;
@@ -40,8 +38,7 @@ ActionShortcut membershipHold({
     run: ActionRun.hold(
       HoldPlan<skir.RecordId>.all(
         weight: HoldWeight.heavy,
-        rows: rows,
-        rowsOf: rowsOf,
+        rows: (ref) => ref.selectionRows,
         targets: (ref) {
           final picked = targets(ref);
           named = picked.length == 1 ? nameOf?.call(ref, picked.single) : null;
