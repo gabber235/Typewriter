@@ -111,7 +111,8 @@ private fun List<ValueProblem>.on(resource: ResourceId): List<ValueProblem> = fi
 /**
  * These misfits without the ones a type [owner]'s own binds compute causes: each misfit naming such a type, and whatever
  * sits under a value of it. That type is extension output, not a choice the write made, so its failure shows as a
- * finding on [owner] and blocks publish but never refuses the write. A misfit naming another resource's computed type
+ * finding on [owner] and blocks publish but never refuses the write. A bind that answers another resource's computed type
+ * makes [owner]'s type fail with it, and that failure counts as [owner]'s own too, since only the other resource can fix it. A misfit naming another resource's computed type
  * stays, so a new use of it is refused like a use of any missing type, and one [owner] already had is not.
  */
 private fun List<Misfit>.withoutOwnBinds(owner: ResourceId): List<Misfit> {

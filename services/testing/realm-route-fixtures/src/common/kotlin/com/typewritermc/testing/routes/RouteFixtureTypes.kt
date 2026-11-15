@@ -291,6 +291,88 @@ interface FixtureBoardPinsContract {
     interface Board : One<FixtureBoard<*>>
 }
 
+/** An entry whose row type is the row type of the board it names, which its bind answers instead of computing one. */
+@TypewriterType(id = "caa22a24a9b3419c822eba2d3323bebc")
+data class FixtureBoardAlias<V>(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+    val board: Ref<FixtureBoardAliases.Alias, FixtureBoard<*>>,
+    val rows: List<V> = emptyList(),
+) : StaticEntry
+
+/** Aliases and the board each one takes its row type from. */
+@ReferenceContract("d64f21bd3ad1405cb1a543b226b038ee")
+interface FixtureBoardAliasesContract {
+    interface Alias : Many<FixtureBoardAlias<*>>
+
+    interface Board : One<FixtureBoard<*>>
+}
+
+/** An alias's row type: the row type its board computes, chosen or computed, read through the link. */
+@TypewriterDynamicProvider
+object FixtureBoardAliasRows : DynamicProvider {
+    override fun Dynamics.register() {
+        bind(FixtureBoardAliasBind.V) { alias ->
+            val board = alias.board.orNull() ?: return@bind
+            answer(board.typeArgument(0))
+        }
+    }
+}
+
+/** An entry whose row type is the row type of the echo it names, so two echoes naming each other alias in a loop. */
+@TypewriterType(id = "e3a7254f17ee44deaa8b186fca726d36")
+data class FixtureEcho<V>(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+    val echo: Ref<FixtureEchoes.Source, FixtureEcho<*>>,
+    val rows: List<V> = emptyList(),
+) : StaticEntry
+
+/** Echoes and the echo each one answers the row type of. */
+@ReferenceContract("e4b277f125214e12ad19ae9423f52adf")
+interface FixtureEchoesContract {
+    interface Source : Many<FixtureEcho<*>>
+
+    interface Target : One<FixtureEcho<*>>
+}
+
+/** An echo's row type: the row type of the echo it names. */
+@TypewriterDynamicProvider
+object FixtureEchoRows : DynamicProvider {
+    override fun Dynamics.register() {
+        bind(FixtureEchoBind.V) { echo ->
+            val target = echo.echo.orNull() ?: return@bind
+            answer(target.typeArgument(0))
+        }
+    }
+}
+
+/**
+ * An entry whose bind misuses an answer, as an extension's own bug would: it answers a text and then answers again
+ * while [twice], or declares a field otherwise.
+ */
+@TypewriterType(id = "0e3c445518b0497ea425982ee02b20e5")
+data class FixtureMisanswer<V>(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+    val twice: Boolean = false,
+    val rows: List<V> = emptyList(),
+) : StaticEntry
+
+/** A misanswer's bind: an answer followed by a second answer or by a field. */
+@TypewriterDynamicProvider
+object FixtureMisanswerRows : DynamicProvider {
+    override fun Dynamics.register() {
+        bind(FixtureMisanswerBind.V) { entry ->
+            answer(ScalarKind.TEXT.use)
+            if (entry.twice.orNull() == true) answer(ScalarKind.TEXT.use) else field("note", ScalarKind.TEXT.use)
+        }
+    }
+}
+
 /** A draft type that reads a matched resource as its bare binding. */
 private class BareDraft(
     override val match: ResourceMatch,

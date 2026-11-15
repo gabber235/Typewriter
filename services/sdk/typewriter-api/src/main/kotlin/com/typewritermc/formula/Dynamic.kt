@@ -5,6 +5,7 @@ import com.typewritermc.authoring.FieldPath
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.checking.DraftType
 import com.typewritermc.dsl.TypewriterDsl
+import com.typewritermc.types.Ref
 import com.typewritermc.types.catalog.BindKey
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
@@ -61,7 +62,11 @@ class BindParameter<D>
         internal val draft: DraftType<D>,
     )
 
-/** The record type one bind block computes for one resource. It reads authored content through its own receiver. */
+/**
+ * The type one bind block computes for one resource: a record it declares field by field, or a type it answers whole.
+ * It reads authored content through its own receiver. A block either declares fields or answers once; doing both, or
+ * answering twice, fails the bind.
+ */
 @TypewriterDsl
 interface BindBuilder : AuthoredReads {
     /** A field [name] of the computed record holding [type]; [hasDefault] lets a value leave it out. */
@@ -70,6 +75,19 @@ interface BindBuilder : AuthoredReads {
         type: TypeUse,
         hasDefault: Boolean = false,
     )
+
+    /**
+     * The computed parameter means [type], built from what the bind reads, such as [typeArgument] of a linked resource.
+     * The computed type follows [type] wherever it leads, so a change there changes it without running this bind again.
+     */
+    fun answer(type: TypeUse)
+
+    /**
+     * The type argument at [index] of the resource this link names, as its creator chose it or as its own bind computes
+     * it: a computed argument is that resource's computed type, whatever its bind makes of it later. Fails the bind
+     * when the resource is gone, its type does not resolve, or its creator has not chosen that argument yet.
+     */
+    fun Ref<*, *>.typeArgument(index: Int): TypeUse
 }
 
 /** What one hook says about one resource. It reads authored content through its own receiver. */

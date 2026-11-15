@@ -1,11 +1,13 @@
 package com.typewritermc.realm.formula
 
+import com.typewritermc.authoring.of
 import com.typewritermc.realm.authoring.ProjectionAt
 import com.typewritermc.realm.authoring.RealmQuery
 import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.types.catalog.CONTENT_TYPE_PROBLEMS
 import com.typewritermc.types.catalog.DerivedFailure
+import com.typewritermc.types.catalog.contentOwner
 import com.typewritermc.types.catalog.misfits
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -41,7 +43,15 @@ internal data class FitOf(
                 } else {
                     emptyList()
                 }
-            misfit.problem.toFinding(related, misfit.type?.let(catalog::derivedFailure))
+            val failure = misfit.type?.let(catalog::derivedFailure)
+            // A computed type that aliases another resource's names that resource, whose bind is the one to fix.
+            val elsewhere = failure?.owner?.takeIf { it != misfit.type?.contentOwner() }
+            misfit.problem.toFinding(
+                related + listOfNotNull(elsewhere?.let { ValueLocation.of(it) }),
+                failure?.failure,
+                aliased =
+                    elsewhere != null,
+            )
         }
     }
 }
@@ -51,12 +61,17 @@ internal fun ValueLocation.isWithin(other: ValueLocation): Boolean =
     resource == other.resource && path.segments.size >= other.path.segments.size &&
         path.segments.subList(0, other.path.segments.size) == other.path.segments
 
-/** The finding a creator sees at the use; a gone type has no name left to give, and a computed one says why it failed. */
+/**
+ * The finding a creator sees at the use; a gone type has no name left to give, and a computed one says why it failed,
+ * also when it is [aliased] from another resource's computed type.
+ */
 private fun ValueProblem.toFinding(
     related: List<ValueLocation>,
     failure: DerivedFailure?,
+    aliased: Boolean = false,
 ): ContentFinding =
     when {
+        failure != null && aliased -> ContentFinding(code, failure.aliasedMessage(), location, related)
         failure != null -> ContentFinding(code, failure.message(), location, related)
         code == "content_alias_loop" -> ContentFinding(code, "The custom type used here is defined by itself.", location, related)
         code == "content_type_missing" -> ContentFinding(code, "A custom type used here no longer exists.", location, related)
@@ -72,3 +87,13 @@ private fun DerivedFailure.message(): String =
         is DerivedFailure.Loop -> "The type used here is computed from itself."
         is DerivedFailure.Failed -> "The type used here could not be computed: $message"
     }
+
+/** What a creator reads about a computed type that follows another resource's computed type, which leads nowhere. */
+private fun DerivedFailure.aliasedMessage(): String =
+    "The type used here follows another resource's computed type, which " +
+        when (this) {
+            DerivedFailure.NoBlock -> "no bind computes."
+            is DerivedFailure.Conflict -> "more than one bind computes, so none decides it."
+            is DerivedFailure.Loop -> "is computed from itself."
+            is DerivedFailure.Failed -> "could not be computed: $message"
+        }

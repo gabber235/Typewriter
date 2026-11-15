@@ -50,6 +50,15 @@ sealed interface DerivedTarget {
     ) : DerivedTarget
 }
 
+/**
+ * A derived key that leads nowhere because of what [owner]'s bind computes: the key's own owner, or, for a key whose bind
+ * answered another resource's computed type, the owner that alias chain ends at.
+ */
+data class DerivedFailureAt(
+    val owner: ResourceId,
+    val failure: DerivedFailure,
+)
+
 /** Why a derived key leads nowhere; each [code] makes the derived type stand in as the error type. */
 sealed interface DerivedFailure {
     val code: String

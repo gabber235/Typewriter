@@ -912,6 +912,19 @@ class CapturedAuthoringReads internal constructor(
         return DraftBinding(catalog, readContext, location, type)
     }
 
+    /**
+     * The type arguments [resource]'s configuration gives, chosen or computed ([CheckedCatalog.typeArguments]), with no
+     * bind run, so the read depends on that configuration alone and not on what its bind computes. Null when [resource]
+     * is gone or its configuration does not resolve.
+     */
+    internal fun typeArguments(resource: ResourceId): List<TypeUse?>? {
+        observeResource(resource)
+        observe(InputIdentity.Catalog(catalog))
+        observe(InputIdentity.Form(ValueLocation.of(resource)))
+        val record = view.resources[resource] ?: return null
+        return (typeCatalog.typeArguments(resource, record.configuration) as? Resolution.Ready)?.value
+    }
+
     private fun unavailable(location: ValueLocation): Availability.Unavailable =
         Availability.Unavailable(listOf(location)).also { missing += location }
 

@@ -2,6 +2,7 @@ package com.typewritermc.realm.testing
 
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
@@ -9,14 +10,19 @@ import com.typewritermc.engine.pages.StaticPage
 import com.typewritermc.engine.pages.StaticPageDefinition
 import com.typewritermc.library.PageElements
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.authoring.DerivedTypeOf
 import com.typewritermc.realm.edit.WorkingViewEditContext
 import com.typewritermc.realm.formula.FitOf
 import com.typewritermc.testing.routes.FixtureBoard
+import com.typewritermc.testing.routes.FixtureBoardAlias
+import com.typewritermc.testing.routes.FixtureBoardAliasDefinition
 import com.typewritermc.testing.routes.FixtureBoardDefinition
 import com.typewritermc.testing.routes.FixtureBoardPin
 import com.typewritermc.testing.routes.FixtureBoardPinDefinition
 import com.typewritermc.testing.routes.FixtureColumn
 import com.typewritermc.testing.routes.FixtureColumnDefinition
+import com.typewritermc.testing.routes.FixtureEcho
+import com.typewritermc.testing.routes.FixtureEchoDefinition
 import com.typewritermc.types.Ref
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.derived
@@ -38,6 +44,7 @@ import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
+import java.util.UUID
 
 /** A column of a fixture board: a number column when [number] is true, a text column otherwise. */
 fun column(
@@ -70,6 +77,46 @@ suspend fun RealmFixture.commitPin(
             )
         }
     return Creation(id, reply)
+}
+
+/**
+ * Creates an alias named [name] on the realm's static page whose link names [board], so its bind answers that board's row
+ * type, and commits it; [rows] gives its rows from its own row type.
+ */
+suspend fun RealmFixture.commitAlias(
+    name: String,
+    board: ResourceId,
+    rows: (TypeUse) -> List<DataValue> = { emptyList() },
+): Creation =
+    commitBound(FixtureBoardAliasDefinition.id, rows = rows) { page ->
+        FixtureBoardAlias<Nothing>(page, GraphPlacement(), name, Ref(board.toResourceId()))
+    }
+
+/**
+ * Creates two echoes on the realm's static page in one commit, each naming the other, and returns their ids. The first is
+ * created with its link open and points at the second once that exists.
+ */
+internal suspend fun RealmFixture.commitEchoes(): Pair<ResourceId, ResourceId> {
+    val first = ResourceId(value = "entry-${UUID.randomUUID()}")
+    val second = ResourceId(value = "entry-${UUID.randomUUID()}")
+    val page = Ref<PageElements.Element, StaticPage>(resources.typesOf(StaticPageDefinition.id).single().toResourceId())
+
+    fun echo(
+        id: ResourceId,
+        target: ResourceId,
+    ) = encoder.record(
+        TypeSelection(definition = FixtureEchoDefinition.id, arguments = emptyList()),
+        FixtureEcho<Nothing>(page, GraphPlacement(), id.value, Ref(target.toResourceId())),
+    )
+    val towardSecond = echo(first, second)
+    val createFirst = elementWrites(first) { towardSecond.with("echo", DataValue.UNFILLED) }.second
+    val createSecond = elementWrites(second) { echo(second, first) }.second
+    commit {
+        createFirst()
+        createSecond()
+        checkedSet(ValueLocation.of(first, ValuePath.root.field("echo")), checkNotNull(towardSecond.fieldMap["echo"]))
+    }.shouldBeCommitted()
+    return first to second
 }
 
 /** A board named [name] with [columns] on the realm's static page, before it is saved. */
@@ -158,6 +205,9 @@ fun RealmFixture.rowFields(board: ResourceId): List<Pair<String, TypeUse>> =
 
 /** What [board] wrote down for its types: the declarations it holds and the arguments its selection chose. */
 fun RealmFixture.writtenFor(board: ResourceId): List<Any> = record(board).let { it.types + it.configuration.arguments }
+
+/** How often the graph ran the bind of [owner]'s row type `V` so far. */
+internal fun RealmFixture.bindRuns(owner: ResourceId): Long = graphRuns.runsOf(DerivedTypeOf(owner, "V"))
 
 /** How often [resource]'s fit was judged so far. */
 internal fun RealmFixture.fitRuns(resource: ResourceId): Long = graphRuns.runsOf(FitOf(resource))

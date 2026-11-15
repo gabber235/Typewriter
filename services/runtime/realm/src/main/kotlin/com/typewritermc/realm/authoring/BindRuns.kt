@@ -6,10 +6,12 @@ import com.typewritermc.discovery.runExtension
 import com.typewritermc.formula.BindBuilder
 import com.typewritermc.formula.graph.GraphKey
 import com.typewritermc.realm.catalog.code
+import com.typewritermc.types.Ref
 import com.typewritermc.types.catalog.DerivedFailure
 import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.catalog.DerivedTarget
 import com.typewritermc.types.catalog.derived
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.toTemplate
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
@@ -47,7 +49,7 @@ internal fun CapturedAuthoringReads.boundType(
     val record = BoundRecord(this, TypeDefinitionId.derived(owner, key))
     return runExtension({
         bind.run(record, binding)
-        DerivedTarget.Declared(record.definition())
+        record.target()
     }) { failure -> DerivedTarget.Missing(DerivedFailure.Failed(bind.origin, failure.message ?: failure::class.simpleName.orEmpty())) }
 }
 
@@ -142,19 +144,24 @@ internal class ViewBinds(
     ) : CancellationException("A bind needs its own result.")
 }
 
-/** The record one bind computes, kept apart until the bind finishes, so a bind that fails adds nothing. */
+/**
+ * The type one bind computes, kept apart until the bind finishes, so a bind that fails adds nothing: the record its fields
+ * declare, or the type it answers, which the derived id then aliases.
+ */
 private class BoundRecord(
-    reads: AuthoredReads,
+    private val reads: CapturedAuthoringReads,
     private val id: TypeDefinitionId,
 ) : BindBuilder,
     AuthoredReads by reads {
     private val fields = mutableListOf<FieldDeclaration>()
+    private var answered: TypeUse? = null
 
     override fun field(
         name: String,
         type: TypeUse,
         hasDefault: Boolean,
     ) {
+        check(answered == null) { "A bind that answers a type declares no fields, but this one declared field $name after answering." }
         fields +=
             FieldDeclaration.partial(
                 owner = FieldOwner(definition = id, name = name),
@@ -163,9 +170,25 @@ private class BoundRecord(
             )
     }
 
-    fun definition(): TypeDefinition =
-        TypeDefinition.partial(
-            id = id,
-            representation = RepresentationTemplate.createRecord(fields = fields.toList(), form = RecordForm.CONCRETE),
-        )
+    override fun answer(type: TypeUse) {
+        check(answered == null) { "A bind answers one type, but this one answered twice." }
+        check(fields.isEmpty()) { "A bind that answers a type declares no fields, but this one answered after declaring fields." }
+        answered = type
+    }
+
+    override fun Ref<*, *>.typeArgument(index: Int): TypeUse {
+        val arguments = reads.typeArguments(target.toSkir()) ?: error("The linked resource is gone or its type does not resolve.")
+        check(index in arguments.indices) { "The linked resource's type has no argument $index." }
+        return checkNotNull(arguments[index]) { "The linked resource's creator has not chosen its argument $index yet." }
+    }
+
+    /** What the derived id leads to: the answered type, or the declared record. */
+    fun target(): DerivedTarget =
+        answered?.let(DerivedTarget::Plain)
+            ?: DerivedTarget.Declared(
+                TypeDefinition.partial(
+                    id = id,
+                    representation = RepresentationTemplate.createRecord(fields = fields.toList(), form = RecordForm.CONCRETE),
+                ),
+            )
 }

@@ -114,6 +114,17 @@ interface CheckedCatalog {
     fun authoredTypeOf(selection: TypeSelection): Resolution<ResourceType>
 
     /**
+     * The arguments [owner]'s configured [selection] gives its definition's parameters, in order, as [typeOf] fills them
+     * before it resolves: a chosen one as its creator chose it, a computed one as [owner]'s derived id, and null while a
+     * creator has not chosen it yet. It runs no bind, so a reader that takes another resource's argument, as an alias
+     * does, never depends on what that resource's bind computes.
+     */
+    fun typeArguments(
+        owner: ResourceId,
+        selection: TypeSelection,
+    ): Resolution<List<TypeUse?>>
+
+    /**
      * The applications the creator's choices in [selection] are known to read as: a complete type and its ancestors, or
      * the ancestors a partial type already fixes. Empty when the selection does not resolve.
      */
@@ -157,8 +168,11 @@ interface CheckedCatalog {
     /** [use] with every field key replaced by where its chain leads. The code catalog has none, so it answers [use]. */
     fun expand(use: TypeUse): TypeUse
 
-    /** Why the derived id [id], or a member of one, stands in as the error type; null when it leads somewhere or is no derived id. */
-    fun derivedFailure(id: TypeDefinitionId): DerivedFailure?
+    /**
+     * Why the derived id [id], or a member of one, stands in as the error type, and whose bind failed: [id]'s own owner,
+     * or the owner of the computed type an alias chain from [id] ends at. Null when it leads somewhere or is no derived id.
+     */
+    fun derivedFailure(id: TypeDefinitionId): DerivedFailureAt?
 }
 
 /** This template with each parameter replaced by its use in [arguments]; invalid at the first parameter [arguments] leaves unbound. */
@@ -273,7 +287,7 @@ class DefaultCheckedCatalog private constructor(
         }
     }
 
-    override fun derivedFailure(id: TypeDefinitionId): DerivedFailure? =
+    override fun derivedFailure(id: TypeDefinitionId): DerivedFailureAt? =
         (content?.takeIf { id.namesDerivedKey() }?.target(id) as? ContentTarget.Missing)?.failure
 
     override fun declaration(id: TypeDefinitionId): Resolution<TypeDefinition> {
@@ -384,6 +398,38 @@ class DefaultCheckedCatalog private constructor(
 
     override fun authoredTypeOf(selection: TypeSelection): Resolution<ResourceType> = typeWith(selection) { emptyMap() }
 
+    override fun typeArguments(
+        owner: ResourceId,
+        selection: TypeSelection,
+    ): Resolution<List<TypeUse?>> =
+        when (val given = argumentsWith(selection) { definition -> definition.derivedArguments(owner) }) {
+            is Resolution.Invalid -> {
+                given
+            }
+
+            is Resolution.Ready -> {
+                given.value.let { (definition, arguments) ->
+                    Resolution.Ready(definition.parameters.map { arguments[it.key] })
+                }
+            }
+        }
+
+    /**
+     * The definition [selection] configures and the arguments its parameters have: the creator's choices plus what
+     * [derived] answers for the derived ones. A derived parameter is never chosen, so a stored choice for one is refused.
+     */
+    private fun argumentsWith(
+        selection: TypeSelection,
+        derived: (TypeDefinition) -> Map<ParameterKey, TypeUse>,
+    ): Resolution<Pair<TypeDefinition, Map<ParameterKey, TypeUse>>> {
+        val availability = status(selection.definition)
+        if (availability is DeclarationStatus.UnavailableWrapper) return Resolution.Invalid(availability.reasons)
+        val definition = checkNotNull(lookup(selection.definition))
+        val chosen = chosenArguments(selection, definition) ?: return invalid(selection.definition, "argument_arity")
+        if (definition.parameters.any { it.derived && it.key in chosen }) return invalid(selection.definition, "derived_argument_chosen")
+        return Resolution.Ready(definition to chosen + derived(definition))
+    }
+
     /**
      * The type [selection] makes with the arguments [derived] answers for the definition's derived parameters: complete
      * once every parameter has an argument, partial before. A derived parameter is never chosen, so a stored choice for
@@ -393,12 +439,11 @@ class DefaultCheckedCatalog private constructor(
         selection: TypeSelection,
         derived: (TypeDefinition) -> Map<ParameterKey, TypeUse>,
     ): Resolution<ResourceType> {
-        val availability = status(selection.definition)
-        if (availability is DeclarationStatus.UnavailableWrapper) return Resolution.Invalid(availability.reasons)
-        val definition = checkNotNull(lookup(selection.definition))
-        val chosen = chosenArguments(selection, definition) ?: return invalid(selection.definition, "argument_arity")
-        if (definition.parameters.any { it.derived && it.key in chosen }) return invalid(selection.definition, "derived_argument_chosen")
-        val arguments = chosen + derived(definition)
+        val (definition, arguments) =
+            when (val given = argumentsWith(selection, derived)) {
+                is Resolution.Invalid -> return given
+                is Resolution.Ready -> given.value
+            }
         if (arguments.size == definition.parameters.size) {
             return when (
                 val resolved =
@@ -1228,9 +1273,20 @@ private class ContentLayer(
         visiting: Set<TypeDefinitionId>,
     ): ContentTarget =
         when (derived) {
-            is DerivedTarget.Declared -> ContentTarget.Declared(derived.definition, listOf(derived.definition) + derived.cases)
-            is DerivedTarget.Plain -> follow(derived.use, visiting + id)
-            is DerivedTarget.Missing -> ContentTarget.Missing(derived.failure.code, derived.failure)
+            is DerivedTarget.Declared -> {
+                ContentTarget.Declared(derived.definition, listOf(derived.definition) + derived.cases)
+            }
+
+            is DerivedTarget.Plain -> {
+                follow(derived.use, visiting + id)
+            }
+
+            is DerivedTarget.Missing -> {
+                ContentTarget.Missing(
+                    derived.failure.code,
+                    DerivedFailureAt(checkNotNull(id.contentOwner()), derived.failure),
+                )
+            }
         }
 
     /** Where a held or derived [use] leads: on through a bare content id, or a plain alias of anything else. */
@@ -1367,10 +1423,10 @@ private sealed interface ContentTarget {
 
     data object Loop : ContentTarget
 
-    /** Nothing there; [code] says why the id stands in as the error type, and [failure] why a derived id does. */
+    /** Nothing there; [code] says why the id stands in as the error type, and [failure] which bind failed when a computed type does. */
     data class Missing(
         val code: String = "content_type_missing",
-        val failure: DerivedFailure? = null,
+        val failure: DerivedFailureAt? = null,
     ) : ContentTarget
 }
 
