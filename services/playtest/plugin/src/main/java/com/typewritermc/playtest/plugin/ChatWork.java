@@ -89,7 +89,9 @@ final class ChatWork implements Listener {
         }
     }
 
-    // The chain is private to the listener; this Paper is pinned, so the field is always there.
+    // Paper's public AsyncChatEvent fires on the chat thread after the packet read, so a tick could start
+    // between the read and the event; only the listener's private chain is known at the read itself.
+    // This Paper is pinned, so the field is always there.
     private static Field chainField() {
         try {
             Field field = ServerGamePacketListenerImpl.class.getDeclaredField("chatMessageChain");

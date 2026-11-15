@@ -144,10 +144,14 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   one after, since that tick's heartbeat starts it. Paper's async chat counts as its player's work from
   the moment Paper reads the line until its chat thread sent it; chat stays on that thread. The client
   mirrors this: it acks a tick only once its own work for it is done, that is the events an input
-  queued right after the tick were polled (their packets reach Paper before the ack) and the visible
-  sections are current after a move. An input starts only right after a tick; one that arrives while
-  Paper is idle asks for a tick first. The client wipe also resets what the client counts down between
-  inputs (the break delay, the miss and use delays, the jump and sprint double tap windows).
+  queued right after the tick were polled, so their packets reach Paper before the ack. An input starts
+  only right after a tick; one that arrives while Paper is idle asks for a tick first. GOLDEN-3 is
+  watched: the visible sections update on a background thread after a move, which may make a frame
+  lag a tick, but no run showed it, so the client does not wait for them (cause unproven). The client
+  wipe also resets the break delay, which counts down only while the player keeps breaking. The
+  client's other input delays (miss, use, jump and sprint double tap) count down every tick or clear
+  once the button is up, and the pool runs at least 10 ticks between two attempts on a client, so no
+  requirement can show them carry over; the wipe leaves them.
 - Requirements are written as **G1 windows plus the recorded timeline** (2026-11-06): every check sits
   in a `within(n.ticks)` window that opens at the last stimulus and passes the moment it holds; order,
   gaps and motion are read from the run's recorded timeline after a window. Drafts in
