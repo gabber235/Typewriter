@@ -10,11 +10,33 @@ val WorkLedgerTest by testSuite {
     val player = UUID.fromString("00000000-0000-0000-0000-000000000001")
     val partner = UUID.fromString("00000000-0000-0000-0000-000000000002")
 
-    test("work begun between ticks lets the next tick start and holds the one after until it ends") {
+    test("work that already runs, begun between ticks, holds the next tick until it ends") {
         val work = WorkLedger { 0L }
         work.tickEnded(10)
 
-        val lookup = work.begin(player, "gv-1", "Ledger lookup")
+        val chat = work.begin(player, "gv-1", "chat")
+
+        work.holds(listOf(player), 11) shouldBe true
+        chat.end()
+        work.holds(listOf(player), 11) shouldBe false
+    }
+
+    test("work that already runs, begun during a tick, holds the tick after it until it ends") {
+        val work = WorkLedger { 0L }
+        work.tickEnded(10)
+        work.tickStarted(11)
+
+        work.begin(player, "gv-1", "chat")
+
+        work.tickEnded(11)
+        work.holds(listOf(player), 12) shouldBe true
+    }
+
+    test("a scheduled task begun between ticks lets the next tick start, whose heartbeat starts it, and holds the one after") {
+        val work = WorkLedger { 0L }
+        work.tickEnded(10)
+
+        val lookup = work.schedule(player, "gv-1", "Ledger lookup")
 
         work.holds(listOf(player), 11) shouldBe false
         work.tickStarted(11)
@@ -24,12 +46,12 @@ val WorkLedgerTest by testSuite {
         work.holds(listOf(player), 12) shouldBe false
     }
 
-    test("work begun during a tick lets the tick after it start, whose heartbeat starts a Bukkit async task") {
+    test("a scheduled task begun during a tick lets the tick after it start, whose heartbeat starts it") {
         val work = WorkLedger { 0L }
         work.tickEnded(10)
         work.tickStarted(11)
 
-        work.begin(player, "gv-1", "Ledger lookup")
+        work.schedule(player, "gv-1", "Ledger lookup")
 
         work.tickEnded(11)
         work.holds(listOf(player), 12) shouldBe false
@@ -51,12 +73,12 @@ val WorkLedgerTest by testSuite {
         work.quiet(listOf(player, partner)) shouldBe false
     }
 
-    test("a player is quiet only once every piece of its work ended, even work that holds no tick yet") {
+    test("a player is quiet only once every piece of its work ended, even a task that holds no tick yet") {
         val work = WorkLedger { 0L }
         work.tickEnded(10)
 
-        val lookup = work.begin(player, "gv-1", "Ledger lookup")
-        val save = work.begin(player, "gv-1", "Ledger save")
+        val lookup = work.schedule(player, "gv-1", "Ledger lookup")
+        val save = work.schedule(player, "gv-1", "Ledger save")
 
         work.quiet(listOf(player)) shouldBe false
         lookup.end()

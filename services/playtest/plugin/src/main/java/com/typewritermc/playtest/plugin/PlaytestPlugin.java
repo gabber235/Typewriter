@@ -76,6 +76,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private final Probes probes = new Probes(this, this::mark);
     private final Attempts attempts = new Attempts(this);
     private final GroundAhead ground = new GroundAhead(this);
+    private final ChatWork chat = new ChatWork();
     private Link pool;
 
     @Override
@@ -93,6 +94,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(probes, this);
         Bukkit.getPluginManager().registerEvents(attempts, this);
         Bukkit.getPluginManager().registerEvents(owned, this);
+        Bukkit.getPluginManager().registerEvents(chat, this);
         Bukkit.getMessenger().registerIncomingPluginChannel(this, STEP_ACK, (channel, player, bytes) -> {
             UUID id = player.getUniqueId();
             var ack = ByteBuffer.wrap(bytes);

@@ -40,6 +40,7 @@ final class XTest implements InputDevice {
     private final MethodHandle translateCoordinates;
     private final MethodHandle setInputFocus;
     private final MethodHandle sync;
+    private boolean sent;
 
     XTest(Window window) {
         this.window = window;
@@ -89,7 +90,14 @@ final class XTest implements InputDevice {
     }
 
     @Override
-    public void pass() {}
+    public void pass() {
+        sent = false;
+    }
+
+    @Override
+    public boolean unpolled() {
+        return sent;
+    }
 
     @Override
     public void key(Key key, boolean down) {
@@ -195,6 +203,7 @@ final class XTest implements InputDevice {
     }
 
     private void flush() {
+        sent = true;
         call(() -> {
             int ignored = (int) sync.invokeExact(display, 0);
         });

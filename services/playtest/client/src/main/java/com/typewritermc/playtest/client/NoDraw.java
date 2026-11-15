@@ -22,14 +22,15 @@ import net.minecraft.util.Util;
 final class NoDraw {
     private NoDraw() {}
 
-    static void render(Minecraft mc) {
+    /** Returns whether it updated the occlusion graph: false when the frame shows no world. */
+    static boolean render(Minecraft mc) {
         GameRenderer renderer = mc.gameRenderer;
         GameRenderState state = renderer.gameRenderState();
         var window = state.windowRenderState;
         if (window.width != renderer.mainRenderTarget().width || window.height != renderer.mainRenderTarget().height) {
             renderer.resize(window.width, window.height);
         }
-        if (!state.shouldRenderLevel) return;
+        if (!state.shouldRenderLevel) return false;
         // Extract hands a tick's light over once: drawn here, or a later drawn frame lights the world as
         // it was lit when the client last drew.
         ((GameRendererInvoker) renderer).playtest$lightmap().render(state.lightmapRenderState);
@@ -62,5 +63,6 @@ final class NoDraw {
         } finally {
             RenderSystem.isRenderingLevel = false;
         }
+        return true;
     }
 }

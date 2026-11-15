@@ -74,7 +74,9 @@ final class Looks {
      */
     static void perceive(Minecraft mc, GameRenderer renderer) {
         List<UUID> drawn = asked.stream().filter(Perceiver::draws).toList();
-        NoDraw.render(mc);
+        ClientWork.perceived(mc, NoDraw.render(mc));
+        // A frame whose tick still waits on the client's own work is perceived again; it shows nothing yet.
+        if (!ClientWork.done()) return;
         if (capture != null) answerCapture(drawWithout(mc, renderer, null));
         if (drawn.isEmpty()) return;
         var copies = new ArrayList<Grab.Copy>(drawn.size() + 1);

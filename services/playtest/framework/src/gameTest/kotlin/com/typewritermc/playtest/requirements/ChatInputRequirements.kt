@@ -19,7 +19,8 @@ val ChatInputRequirements by testSuite(compartment = { GameCompartment }) {
         player.typeInChat("hello there")
         player.press(Key.ENTER)
 
-        within(10.ticks) { player sees chat("<${player.name}> hello there") }
+        // Paper sends the line from its chat thread before it runs the tick after the one the line was sent in.
+        within(1.ticks) { player sees chat("<${player.name}> hello there") }
     }
 
     requirement("CMD-1", "a command the player types runs with what was typed") {
@@ -31,7 +32,8 @@ val ChatInputRequirements by testSuite(compartment = { GameCompartment }) {
         player.typeInChat("/warp spawn")
         player.press(Key.ENTER)
 
-        within(10.ticks) { player sees chat("Warping to spawn") }
+        // Paper runs the command before the tick after the one it was sent in.
+        within(1.ticks) { player sees chat("Warping to spawn") }
     }
 
     requirement("TAB-1", "warp suggestions narrow as the player types") {

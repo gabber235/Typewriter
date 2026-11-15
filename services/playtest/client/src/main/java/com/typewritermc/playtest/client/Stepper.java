@@ -11,8 +11,9 @@ import net.minecraft.util.Util;
 /**
  * The client's clock in step with Paper. Paper sends a step ping at the end of every stepped tick; from
  * the first one on, the client's clock stands still and moves exactly one tick for each step ping, so
- * the client runs one tick per server tick. After the tick's frame is perceived the client acks the
- * tick, and Paper runs the next one. Render thread only, except {@link #wake()}.
+ * the client runs one tick per server tick. After the tick's frame is perceived, once the client's own
+ * work for it is done ({@link ClientWork}), the client acks the tick, and Paper runs the next one.
+ * Render thread only, except {@link #wake()}.
  */
 final class Stepper {
     /** Step pings carry the server tick plus this; smaller ids are barriers. */
@@ -30,6 +31,7 @@ final class Stepper {
     private static int lastPinged = -1;
     private static int lastRan = -1;
     private static boolean perceiveDue;
+    private static int askedAfter = -1;
 
     private Stepper() {}
 
@@ -119,7 +121,7 @@ final class Stepper {
             running = next;
             virtualNanos += TICK_NANOS;
         } else {
-            // No tick runs in this pass, so this is a point between ticks where input may start.
+            // No tick runs in this pass: an input that waits to start asks Paper for a tick here.
             Inputs.betweenTicks(mc, false);
         }
     }
@@ -146,10 +148,12 @@ final class Stepper {
     }
 
     /**
-     * An input that needs ticks started while no ack is due, so Paper, idle until now, hears at once
-     * that this client needs it to step.
+     * An input waits for a tick while no ack is due, so Paper, idle until now, hears that this client
+     * needs it to step; once for each tick the client ran.
      */
     static void needTicks() {
-        if (stepping && !perceiveDue) ClientPlayNetworking.send(new StepAck(lastRan, true));
+        if (!stepping || perceiveDue || askedAfter == lastRan) return;
+        askedAfter = lastRan;
+        ClientPlayNetworking.send(new StepAck(lastRan, true));
     }
 }

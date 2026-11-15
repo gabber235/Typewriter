@@ -58,6 +58,7 @@ public final class PlaytestClient implements ClientModInitializer {
                 Inputs.reset(mc);
                 Looks.reset();
                 Blends.reset(mc);
+                Cooldowns.reset(mc);
                 Perceiver.reset(mc);
             });
             case Watch watch -> mc.execute(() -> Perceiver.watch(watch));

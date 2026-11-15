@@ -32,6 +32,7 @@ final class SdlQueue implements InputDevice {
     private final List<ByteBuffer> queuedText = new ArrayList<>();
     private float pointerX;
     private float pointerY;
+    private boolean queued;
 
     SdlQueue(Window window) {
         this.window = window;
@@ -48,6 +49,12 @@ final class SdlQueue implements InputDevice {
     @Override
     public void pass() {
         queuedText.clear();
+        queued = false;
+    }
+
+    @Override
+    public boolean unpolled() {
+        return queued;
     }
 
     @Override
@@ -99,7 +106,8 @@ final class SdlQueue implements InputDevice {
         return SDLVideo.SDL_GetWindowID(window.handle());
     }
 
-    private static void push(Consumer<SDL_Event> fill) {
+    private void push(Consumer<SDL_Event> fill) {
+        queued = true;
         try (SDL_Event event = SDL_Event.calloc()) {
             fill.accept(event);
             if (!SDLEvents.SDL_PushEvent(event)) throw new IllegalStateException("SDL refused an input event: " + org.lwjgl.sdl.SDLError.SDL_GetError());

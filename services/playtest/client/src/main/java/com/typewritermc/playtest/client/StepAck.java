@@ -6,8 +6,9 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
 /**
- * Client to Paper: the client ran and perceived server tick {@code tick}; {@code busy} while it runs an
- * input that needs further ticks, so Paper keeps stepping. The body is the int and one byte.
+ * Client to Paper: the client ran and perceived server tick {@code tick}; {@code busy} while an input
+ * waits to start or runs and needs further ticks, so Paper keeps stepping. The body is the int and one
+ * byte.
  */
 record StepAck(int tick, boolean busy) implements CustomPacketPayload {
     static final Type<StepAck> TYPE = new Type<>(Identifier.parse("playtest:step"));

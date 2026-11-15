@@ -413,7 +413,8 @@ public sealed interface Message {
     /**
      * Pool to client: a new attempt starts. The client releases every key and button, closes every
      * screen, drops the chat draft and its watches, takes the mouse, starts what it eases from tick to
-     * tick (sky and fog) afresh, and perceives afresh.
+     * tick (sky and fog) and what it counts down between inputs (the delay after a broken block) afresh,
+     * and perceives afresh.
      */
     record Reset() implements Message {}
 

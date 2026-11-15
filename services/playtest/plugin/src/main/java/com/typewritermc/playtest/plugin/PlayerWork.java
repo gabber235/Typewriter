@@ -6,12 +6,13 @@ import org.bukkit.entity.Player;
 /**
  * Work a plugin does for a player that the game's ticks wait for: a lookup, a save, anything that runs
  * off the main thread and later changes what the player perceives. On a Paper the game pool steps, the
- * tick after the next one waits until the player's counted work ended, so the work takes no ticks from
- * a requirement's windows. Work that still runs 1 s after it began fails the player's attempt with its
- * name; it is never cancelled, and it holds no tick from then on.
+ * next tick waits until the player's counted work ended, so the work takes no ticks from a
+ * requirement's windows; a task handed to Bukkit's async scheduler lets the next tick start, whose
+ * heartbeat starts it, and holds the one after. Work that still runs 1 s after it began fails the
+ * player's attempt with its name; it is never cancelled, and it holds no tick from then on.
  *
- * <p>Count work with {@link #begin} and {@link #end}, or around a future with {@link #around}, or
- * around a task handed to a scheduler with {@link #task}. Any thread may count work. Every piece of
+ * <p>Count work that already runs with {@link #begin} and {@link #end}, or around a future with
+ * {@link #around}, or around a task handed to Bukkit's async scheduler with {@link #task}. Any thread may count work. Every piece of
  * work a plugin starts for a player must be counted, or a check may run before its effect.
  */
 public final class PlayerWork implements AutoCloseable {
@@ -37,10 +38,10 @@ public final class PlayerWork implements AutoCloseable {
 
     /**
      * [player]'s work [name] counts from now until [task] returns or throws; hand the returned task to
-     * any scheduler, such as Bukkit's async scheduler.
+     * Bukkit's async scheduler, which starts it at the next tick's heartbeat.
      */
     public static Runnable task(Player player, String name, Runnable task) {
-        PlayerWork counted = begin(player, name);
+        PlayerWork counted = new PlayerWork(LEDGER.schedule(player.getUniqueId(), player.getName(), name));
         return () -> {
             try {
                 task.run();

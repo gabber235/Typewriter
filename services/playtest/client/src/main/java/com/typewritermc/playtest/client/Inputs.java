@@ -39,10 +39,12 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * The player's hands: each {@link Input} becomes a script of steps that send window events through the
- * {@link InputDevice}. Steps run only between ticks, so the next tick handles what they sent. A step runs
- * first right after the step before it ended, and after that once after every tick until it ends; while a
- * script waits on ticks the client is busy, and Paper keeps stepping for it. Render thread only, except
- * {@link #arrive}.
+ * {@link InputDevice}. Steps run only right after a tick, so the next tick handles what they sent, and that
+ * tick's ack waits until the client polled them: what they make the client send reaches Paper before Paper
+ * can run the next tick. An input that arrives while Paper is idle asks it for a tick to start after. A step
+ * runs first right after the step before it ended, and after that once after every tick until it ends;
+ * while an input waits to start or a script waits on ticks the client is busy, and Paper keeps stepping
+ * for it. Render thread only, except {@link #arrive}.
  */
 final class Inputs {
     /** Ticks a step waits for the game to answer, such as a screen opening, before it fails. */
@@ -68,14 +70,19 @@ final class Inputs {
         return !"xtest".equals(System.getProperty("playtest.input", "sdl"));
     }
 
-    /** An input arrived from the session; it starts at the next point between ticks. Any thread. */
+    /** An input arrived from the session; it starts right after the next tick. Any thread. */
     static void arrive(Input input) {
         arrived.add(input);
     }
 
-    /** Whether a script waits on further ticks. */
+    /** Whether an input waits to start, or a script waits on further ticks. */
     static boolean busy() {
-        return running != null;
+        return running != null || !arrived.isEmpty();
+    }
+
+    /** Whether the client has yet to poll events the last point between ticks sent. */
+    static boolean unpolled() {
+        return device != null && device.unpolled();
     }
 
     /** A new attempt: drop every input, let go of every key and button, close every screen, take the mouse. */
@@ -97,23 +104,24 @@ final class Inputs {
 
     /**
      * A point between ticks: after a tick ended ({@code tickRan}), or in a loop pass that runs no tick.
-     * Retypes when a suggestion request went unanswered, moves the running script on, and starts the next
-     * input once nothing runs.
+     * After a tick it retypes when a suggestion request went unanswered, moves the running script on, and
+     * starts the next input once nothing runs; in a pass without a tick it asks Paper for a tick when an
+     * input waits to start.
      */
     static void betweenTicks(Minecraft mc, boolean tickRan) {
         InputDevice hands = device(mc);
         hands.pass();
-        if (tickRan) retypeIfUnanswered(mc, hands);
-        if (running != null) {
-            if (!tickRan) return;
-            running.advance(mc, hands);
+        if (!tickRan) {
+            if (running == null && !arrived.isEmpty()) Stepper.needTicks();
+            return;
         }
+        retypeIfUnanswered(mc, hands);
+        if (running != null) running.advance(mc, hands);
         while (running == null) {
             Input next = arrived.poll();
             if (next == null) return;
             running = new Script(next, Stepper.lastRan());
             running.advance(mc, hands);
-            if (running != null) Stepper.needTicks();
         }
     }
 

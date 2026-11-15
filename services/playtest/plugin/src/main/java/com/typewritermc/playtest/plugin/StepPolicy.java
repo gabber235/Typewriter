@@ -133,7 +133,7 @@ final class StepPolicy {
         }
     }
 
-    /** The player's client ran and perceived [tick]; [busy] while it runs an input that needs further ticks. */
+    /** The player's client ran and perceived [tick]; [busy] while an input waits to start or needs further ticks. */
     void acked(UUID player, int tick, boolean busy) {
         acks.acked(player, tick);
         if (busy) this.busy.add(player);

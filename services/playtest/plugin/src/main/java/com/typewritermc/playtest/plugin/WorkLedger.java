@@ -11,8 +11,9 @@ import java.util.function.LongSupplier;
  * Paper's next tick. Any thread begins and ends work; the main thread tells the ledger where the ticks
  * are and asks it between ticks.
  *
- * <p>Work lets the next tick to start after its begin run, since Bukkit's async scheduler starts a task
- * only at that tick's heartbeat, and holds every tick after it until it ends. Work that still runs
+ * <p>Work that already runs when it begins holds the next tick to start until it ends. A task handed to
+ * Bukkit's async scheduler starts only at the next tick's heartbeat, so it lets that tick start and
+ * holds every tick after it until it ends. Work that still runs
  * {@link #HUNG_NANOS} after it began is hung: reported once, it holds no tick from then on, and it is
  * never cancelled; once it ends, that is reported once too, so its player can come back to the pool.
  */
@@ -78,10 +79,25 @@ final class WorkLedger {
         running = -1;
     }
 
-    /** [player]'s plugin began work [name]. Any thread. */
+    /** [player]'s plugin began work [name] that already runs; it holds the next tick to start. Any thread. */
     synchronized Entry begin(UUID player, String playerName, String name) {
-        int nextToStart = (running >= 0 ? running : lastEnded) + 1;
-        var entry = new Entry(player, playerName, name, lastEnded, nextToStart + 1, nanos.getAsLong());
+        return count(player, playerName, name, nextToStart());
+    }
+
+    /**
+     * [player]'s plugin handed work [name] to Bukkit's async scheduler; it lets the next tick start, whose
+     * heartbeat starts it, and holds the one after. Any thread.
+     */
+    synchronized Entry schedule(UUID player, String playerName, String name) {
+        return count(player, playerName, name, nextToStart() + 1);
+    }
+
+    private int nextToStart() {
+        return (running >= 0 ? running : lastEnded) + 1;
+    }
+
+    private Entry count(UUID player, String playerName, String name, int holdsFrom) {
+        var entry = new Entry(player, playerName, name, lastEnded, holdsFrom, nanos.getAsLong());
         counted.add(entry);
         return entry;
     }

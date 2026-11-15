@@ -23,6 +23,9 @@ interface InputDevice {
      */
     void pass();
 
+    /** Whether this pass queued events the client has not polled yet. */
+    boolean unpolled();
+
     void key(Key key, boolean down);
 
     /** Types {@code text}, one character after the other. */
