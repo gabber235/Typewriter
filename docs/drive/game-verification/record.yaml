@@ -287,7 +287,7 @@ pieces:
           (StepPolicy allAcked(claimed)). Why the client reports view distance 3 with render distance 2,
           and why Paper sends only about 10 chunks per tick without the cap, are unknown.
         state: working
-        evidence: ["branch proto/gv-lease-time 056013429: services/playtest/lease-time/", "4 full suite runs, 82 passed each"]
+        evidence: ["branch proto/gv-lease-time 056013429: services/playtest/lease-time/", "4 full suite runs, 82 passed each", "fixes in e5f88a238: cargo xtask e2e game 83 passed, grant to lease median 409 ms, p90 684 ms, max 5284 ms (was 1132, 1422, 16353)"]
 
   - id: requirement-shape
     status: building
