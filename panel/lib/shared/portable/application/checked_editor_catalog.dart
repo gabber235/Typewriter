@@ -576,7 +576,9 @@ final class CheckedEditorCatalog {
   /// answers it from the creator's choices. A definition fits its nominal
   /// subtypes whatever their arguments; a type fits a complete selection
   /// readable as it, and a pending one through an application its choices
-  /// already fix, or is undecided while the definition could still become it.
+  /// already fix, or is undecided while the definition could still become it:
+  /// every argument of the type its choices already fix reads as the expected
+  /// one. A fixed argument that does not makes it no.
   ResourceFit fits(skir.TypeSelection selection, skir.ResourceMatch match) {
     switch (match) {
       case skir.ResourceMatch_definitionWrapper(:final value):
@@ -595,7 +597,7 @@ final class CheckedEditorCatalog {
         )) {
           return ResourceFit.yes;
         }
-        return nominalDefinitions(selection).contains(value.definition)
+        return _couldBecome(selection, value)
             ? ResourceFit.undecided
             : ResourceFit.no;
       default:
@@ -604,6 +606,49 @@ final class CheckedEditorCatalog {
             : ResourceFit.no;
     }
   }
+
+  /// Whether choosing the open arguments of [selection] could still make it
+  /// read as [expected]: one way its definition reaches [expected]'s fixes no
+  /// argument that does not read as the expected one.
+  bool _couldBecome(skir.TypeSelection selection, skir.NamedTypeUse expected) {
+    final published = selected(selection);
+    if (published == null) return false;
+    final own = published.definition;
+    final bindings = _bindings(selection, published);
+    final applications = [
+      if (own.id == expected.definition)
+        skir.NamedTypeTemplate(
+          definition: own.id,
+          arguments: [
+            for (final parameter in own.parameters)
+              skir.TypeTemplate.wrapParameter(parameter.key),
+          ],
+        ),
+      for (final ancestor in published.ancestorTemplates)
+        if (ancestor.definition == expected.definition) ancestor,
+    ];
+    final wanted = expected.arguments.toList(growable: false);
+    return applications.any((application) {
+      final arguments = application.arguments.toList(growable: false);
+      if (arguments.length != wanted.length) return false;
+      for (final (index, argument) in arguments.indexed) {
+        final fixed = _apply(argument, bindings);
+        if (fixed != null && !isReadableAs(fixed, wanted[index])) return false;
+      }
+      return true;
+    });
+  }
+
+  /// The match [template] answers while its parameters are unknown: a closed
+  /// type is that type, an open one fits its definition's nominal subtypes
+  /// whatever their arguments, and a type naming no definition, such as a
+  /// bare parameter, fits every resource.
+  skir.ResourceMatch widestMatch(skir.ResourceMatchTemplate template) =>
+      _applyMatch(template, const {}) ??
+      switch (template.definition) {
+        final definition? => skir.ResourceMatch.wrapDefinition(definition),
+        null => skir.ResourceMatch.anyResource,
+      };
 
   bool selectionMatches(skir.TypeSelection actual, skir.TypeUse? expected) =>
       switch (completeUse(actual)) {

@@ -2,6 +2,7 @@ package com.typewritermc.types.catalog
 
 import com.typewritermc.types.named
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.ResolvedField
 import skirout.editor.v1.type_catalog.ResourceMatch
@@ -68,7 +69,8 @@ enum class Fit { YES, NO, UNDECIDED }
  * Whether a resource configured by [selection] fits [match]; every place that names resources asks this. With an [owner],
  * a type reads what that resource's binds compute; without one, only the creator's choices, as a bind's own reads must.
  * A definition reads only the configured definition, so it fits before any argument is known; a type the choices do not
- * fix yet is [Fit.UNDECIDED] while the definition could still become it.
+ * fix yet is [Fit.UNDECIDED] while the definition could still become it: every argument of the type the choices already
+ * fix reads as the expected one, and [Fit.NO] once one does not.
  */
 fun CheckedCatalog.fits(
     selection: TypeSelection,
@@ -99,7 +101,7 @@ fun CheckedCatalog.fits(
                 is ResourceType.Partial -> {
                     when {
                         knownApplications(selection).any { isReadableAs(it.use, expected) } -> Fit.YES
-                        isNominalSubtype(type.definition, match.value.definition) -> Fit.UNDECIDED
+                        couldBecome(selection, match.value) -> Fit.UNDECIDED
                         else -> Fit.NO
                     }
                 }
@@ -109,6 +111,16 @@ fun CheckedCatalog.fits(
         else -> {
             throw IllegalArgumentException("Unknown resource match.")
         }
+    }
+
+/** Whether choosing the open arguments of [selection] could still make it read as [expected]. */
+private fun CheckedCatalog.couldBecome(
+    selection: TypeSelection,
+    expected: NamedTypeUse,
+): Boolean =
+    partialApplications(selection, expected.definition).any { arguments ->
+        arguments.size == expected.arguments.size &&
+            arguments.zip(expected.arguments).all { (fixed, wanted) -> fixed == null || isReadableAs(fixed, wanted) }
     }
 
 private fun Boolean.asFit(): Fit = if (this) Fit.YES else Fit.NO

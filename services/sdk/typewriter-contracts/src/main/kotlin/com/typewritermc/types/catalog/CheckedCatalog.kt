@@ -119,6 +119,16 @@ interface CheckedCatalog {
      */
     fun knownApplications(selection: TypeSelection): Set<NamedTypeUse>
 
+    /**
+     * The applications of [definition] the creator's choices in [selection] fix in part, one per way [selection]'s
+     * definition reaches it: each argument by position, null while no choice fixes it. Empty when the selection does
+     * not resolve or is no nominal subtype of [definition].
+     */
+    fun partialApplications(
+        selection: TypeSelection,
+        definition: TypeDefinitionId,
+    ): List<List<TypeUse?>>
+
     fun isReadableAs(
         actual: TypeUse,
         expected: TypeUse,
@@ -514,9 +524,35 @@ class DefaultCheckedCatalog private constructor(
     private fun knownPartialApplications(
         root: TypeDefinition,
         chosen: Map<ParameterKey, TypeUse>,
-    ): Set<NamedTypeUse> {
-        val bindings = chosen.filterValues { resolve(it) is Resolution.Ready }
-        val applications = linkedSetOf<NamedTypeUse>()
+    ): Set<NamedTypeUse> =
+        partialAncestry(root, chosen)
+            .mapNotNull { (current, known) ->
+                if (current.parameters.any { it.key !in known }) return@mapNotNull null
+                current.id.namedUse(current.parameters.map { known.getValue(it.key) }).takeIf { resolve(it.use) is Resolution.Ready }
+            }.toCollection(linkedSetOf())
+
+    override fun partialApplications(
+        selection: TypeSelection,
+        definition: TypeDefinitionId,
+    ): List<List<TypeUse?>> {
+        if (authoredTypeOf(selection) !is Resolution.Ready) return emptyList()
+        val root = lookup(selection.definition) ?: return emptyList()
+        val chosen = chosenArguments(selection, root) ?: return emptyList()
+        val wanted = content?.expandId(definition) ?: definition
+        return partialAncestry(root, chosen.mapValues { expand(it.value) })
+            .filter { (current, _) -> current.id == wanted }
+            .map { (current, known) -> current.parameters.map { known[it.key] } }
+    }
+
+    /**
+     * [root] and every ready ancestor it reaches, each with the arguments [chosen] fixes for it by parameter key; a
+     * parameter a choice leaves open, or one whose choice does not resolve, is absent. One entry per distinct way.
+     */
+    private fun partialAncestry(
+        root: TypeDefinition,
+        chosen: Map<ParameterKey, TypeUse>,
+    ): List<Pair<TypeDefinition, Map<ParameterKey, TypeUse>>> {
+        val reached = mutableListOf<Pair<TypeDefinition, Map<ParameterKey, TypeUse>>>()
         val visited = mutableSetOf<Pair<TypeDefinitionId, Map<ParameterKey, TypeUse>>>()
 
         fun visit(
@@ -524,10 +560,7 @@ class DefaultCheckedCatalog private constructor(
             known: Map<ParameterKey, TypeUse>,
         ) {
             if (!visited.add(current.id to known)) return
-            if (current.parameters.all { it.key in known }) {
-                val application = current.id.namedUse(current.parameters.map { known.getValue(it.key) })
-                if (resolve(application.use) is Resolution.Ready) applications += application
-            }
+            reached += current to known
             current.parents.forEach { parentTemplate ->
                 val parentDefinition = lookup(parentTemplate.definition) ?: return@forEach
                 if (status(parentDefinition.id) != DeclarationStatus.READY) return@forEach
@@ -542,8 +575,8 @@ class DefaultCheckedCatalog private constructor(
             }
         }
 
-        visit(root, bindings)
-        return applications
+        visit(root, chosen.filterValues { resolve(it) is Resolution.Ready })
+        return reached
     }
 
     /**

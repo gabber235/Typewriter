@@ -9,6 +9,7 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.recordDefinition
 import com.typewritermc.types.resourceDefinition
 import com.typewritermc.types.rewardDefinition
+import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -35,9 +36,17 @@ val ResourceMatchTest by testSuite {
             representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             parents = listOf(resource.id.namedTemplate()),
         )
+    val labelledId = id("labelled")
+    val labelled =
+        TypeDefinition.partial(
+            id = labelledId,
+            parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = labelledId, index = 0), name = "B")),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+            parents = listOf(pair.id.namedTemplate(listOf(ScalarKind.TEXT.template, ParameterKey(owner = labelledId, index = 0).template))),
+        )
     val board = boardDefinition()
     val catalog =
-        catalog(resource, reward, ledger, pair, board)
+        catalog(resource, reward, ledger, pair, labelled, board)
             .withContent(derives(DerivedTarget.Declared(derivedRecord("gold" to TEXT))))
     val boolean = ScalarKind.BOOLEAN.use
 
@@ -74,6 +83,20 @@ val ResourceMatchTest by testSuite {
         catalog.fits(TypeSelection.of(pair.id, mapOf(0 to TEXT)), ResourceMatch.TypeWrapper(resource.id.namedUse()), owner = null) shouldBe
             Fit.YES
         catalog.fits(TypeSelection.of(ledger.id), exact, owner = null) shouldBe Fit.NO
+    }
+
+    test("a type does not fit a pending resource whose chosen argument does not read as the expected one") {
+        val chosenText = TypeSelection.of(pair.id, mapOf(0 to TEXT))
+
+        catalog.fits(chosenText, ResourceMatch.TypeWrapper(pair.id.namedUse(listOf(boolean, boolean))), owner = null) shouldBe Fit.NO
+        catalog.fits(chosenText, ResourceMatch.TypeWrapper(pair.id.namedUse(listOf(TEXT, boolean))), owner = null) shouldBe Fit.UNDECIDED
+    }
+
+    test("a type does not fit a pending subtype whose parent fixes an argument that does not read as the expected one") {
+        val pending = TypeSelection.of(labelled.id)
+
+        catalog.fits(pending, ResourceMatch.TypeWrapper(pair.id.namedUse(listOf(boolean, boolean))), owner = null) shouldBe Fit.NO
+        catalog.fits(pending, ResourceMatch.TypeWrapper(pair.id.namedUse(listOf(TEXT, boolean))), owner = null) shouldBe Fit.UNDECIDED
     }
 
     test("with an owner, a type reads the computed type its binds answer") {

@@ -297,6 +297,110 @@ void main() {
       "FirstSecond",
     );
   });
+  test("a link reads its target only while the target fits what its relation targets, and a pending target stays readable", () {
+    final base = boundPage.catalog(generic: true);
+    final ref = typeDefinition("PageRef");
+    final integer = skir.ScalarKind.createInteger(
+      width: skir.IntegerWidth.signedThirtyTwo,
+    );
+    final integerPage = skir.TypeTemplate.createNamed(
+      definition: boundPage.type,
+      arguments: [skir.TypeTemplate.wrapScalar(integer)],
+    );
+    final catalog = CheckedEditorCatalog(
+      (base.snapshot.toMutable()
+            ..types = [
+              ...base.snapshot.types,
+              declaredDefinition(
+                skir.TypeDefinition(
+                  id: ref,
+                  parameters: const [],
+                  parents: const [],
+                  representation: skir.RepresentationTemplate.createLink(
+                    endpoint: skir.EndpointId(value: "target"),
+                    target: skir.ResourceMatchTemplate.wrapType(integerPage),
+                  ),
+                ),
+              ),
+            ]
+            ..relations = [
+              skir.RelationContract(
+                id: skir.RelationId(value: "reference"),
+                first: skir.EndpointDefinition(
+                  id: skir.EndpointId(value: "target"),
+                  slot: skir.EndpointSlot.first,
+                  resource: skir.ResourceMatchTemplate.anyResource,
+                  cardinality: skir.EndpointCardinality.many,
+                  onDelete: skir.RelationDeletePolicy.clear,
+                ),
+                second: skir.EndpointDefinition(
+                  id: skir.EndpointId(value: "reciprocal"),
+                  slot: skir.EndpointSlot.second,
+                  resource: skir.ResourceMatchTemplate.wrapType(integerPage),
+                  cardinality: skir.EndpointCardinality.many,
+                  onDelete: skir.RelationDeletePolicy.clear,
+                ),
+                families: const [],
+              ),
+            ])
+          .toFrozen(),
+    );
+    final source = skir.ExpressionBindingId(value: "source");
+    final name = fieldExpression(
+      portableCall("resource.value", [
+        skir.ExpressionNode.createInput(
+          binding: source,
+          path: skir.ValuePath(
+            segments: [
+              skir.PathSegment.createItem(id: skir.ItemId(value: "one")),
+            ],
+          ),
+        ),
+      ]),
+      "name",
+    );
+    final evaluator = PortableExpressionEvaluator.located(
+      {source: linkListBinding(ref, boundPage.resource)},
+      budget: boundPage.budget,
+      queries: PortableExpressionQueries(
+        catalog: catalog,
+        authored: boundPage.document(
+          catalog,
+          "Text page",
+          configuration: selectionOfUse(
+            skir.NamedTypeUse(
+              definition: boundPage.type,
+              arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+            ),
+          ),
+        ),
+      ),
+    );
+    final pending = PortableExpressionEvaluator.located(
+      {source: linkListBinding(ref, boundPage.resource)},
+      budget: boundPage.budget,
+      queries: PortableExpressionQueries(
+        catalog: catalog,
+        authored: boundPage.document(
+          catalog,
+          "Pending page",
+          configuration: selectionOfDefinition(boundPage.type),
+        ),
+      ),
+    );
+
+    final misfit = evaluator.evaluate(name);
+    expect(misfit, isA<PortableExpressionUnavailable>());
+    expect((misfit as PortableExpressionUnavailable).locations, [
+      boundPage.root,
+    ]);
+    final undecided = pending.evaluate(name);
+    expect(undecided, isA<PortableExpressionAvailable>(), reason: "$undecided");
+    expect(
+      (undecided as PortableExpressionAvailable).value.authoredString,
+      "Pending page",
+    );
+  });
   test(
     "unlocated reference item aliases retain their lexical target schema",
     () {

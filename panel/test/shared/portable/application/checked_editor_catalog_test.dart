@@ -496,4 +496,34 @@ void main() {
       fixture.first,
     );
   });
+
+  test("a pending resource whose chosen argument does not read as the expected one does not fit", () {
+    final fixture = repeatedParameterCatalog(repeated: true);
+    final pair = fixture.actual.definition;
+    final text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
+    final boolean = skir.TypeUse.wrapScalar(skir.ScalarKind.boolean);
+    final chosenText = skir.TypeSelection(
+      definition: pair,
+      arguments: [skir.ChosenArgument(parameter: 0, type: text)],
+    );
+
+    expect(
+      fixture.catalog.fits(
+        chosenText,
+        skir.ResourceMatch.wrapType(
+          skir.NamedTypeUse(definition: pair, arguments: [boolean, boolean]),
+        ),
+      ),
+      ResourceFit.no,
+    );
+    expect(
+      fixture.catalog.fits(
+        chosenText,
+        skir.ResourceMatch.wrapType(
+          skir.NamedTypeUse(definition: pair, arguments: [text, boolean]),
+        ),
+      ),
+      ResourceFit.undecided,
+    );
+  });
 }
