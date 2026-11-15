@@ -3,7 +3,6 @@ package com.typewritermc.discovery
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.checking.DraftType
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.formula.BindParameter
 import com.typewritermc.formula.DynamicProvider
 import com.typewritermc.formula.Dynamics
@@ -15,6 +14,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -55,7 +55,7 @@ fun boardParameter(name: String) =
     BindParameter(
         BindKey(BIND_BOARD, name),
         object : DraftType<DraftBinding> {
-            override val match = ResourceTypeMatch.Definition(BIND_BOARD)
+            override val match = ResourceMatch.DefinitionWrapper(BIND_BOARD)
 
             override fun bind(binding: DraftBinding) = binding
         },

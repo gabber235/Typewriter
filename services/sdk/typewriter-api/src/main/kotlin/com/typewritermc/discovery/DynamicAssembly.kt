@@ -2,12 +2,12 @@ package com.typewritermc.discovery
 
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.checking.DraftType
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.formula.BindBuilder
 import com.typewritermc.formula.BindParameter
 import com.typewritermc.formula.DynamicBuilder
 import com.typewritermc.formula.Dynamics
 import com.typewritermc.types.catalog.BindKey
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -19,7 +19,7 @@ import skirout.kernel.v1.resource_id.ResourceId
  */
 class DynamicHook internal constructor(
     val origin: RuleOrigin,
-    val match: ResourceTypeMatch,
+    val match: ResourceMatch,
     private val dynamic: DynamicBuilder.(DraftBinding) -> Unit,
 ) {
     /** Runs this hook on the resource [binding] binds; a caller binds through [match] first. */
@@ -144,7 +144,8 @@ private class DynamicCollector(
         definition: TypeDefinitionId,
         dynamic: DynamicBuilder.(ResourceId) -> Unit,
     ) {
-        hooks += DynamicHook(owned.ruleOrigin, ResourceTypeMatch.Definition(definition)) { binding -> dynamic(binding.location.resource) }
+        hooks +=
+            DynamicHook(owned.ruleOrigin, ResourceMatch.DefinitionWrapper(definition)) { binding -> dynamic(binding.location.resource) }
     }
 
     override fun <D> bind(

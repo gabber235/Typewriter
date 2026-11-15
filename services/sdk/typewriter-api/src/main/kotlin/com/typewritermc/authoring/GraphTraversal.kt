@@ -3,7 +3,6 @@ package com.typewritermc.authoring
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.checking.PartialSelection
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.toResourceId
@@ -16,6 +15,7 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 
@@ -138,7 +138,7 @@ fun RelationId.forward(): RelationSelection = RelationSelection.Contracts(setOf(
 fun RelationId.reverse(): RelationSelection = RelationSelection.Contracts(setOf(this), TraversalDirection.REVERSE)
 
 object ResourceDrafts : DraftType<ResourceDraft> {
-    override val match: ResourceTypeMatch = ResourceTypeMatch.AnyResource
+    override val match: ResourceMatch = ResourceMatch.ANY_RESOURCE
 
     override fun bind(binding: DraftBinding): ResourceDraft = BoundResourceDraft(binding)
 }

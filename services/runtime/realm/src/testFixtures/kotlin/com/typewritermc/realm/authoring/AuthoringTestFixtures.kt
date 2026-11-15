@@ -8,7 +8,6 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.discovery.CollectedDynamics
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedConfiguration
@@ -55,6 +54,7 @@ import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -71,7 +71,7 @@ internal data class TestDraft(
 )
 
 internal data class TestDraftType(
-    override val match: ResourceTypeMatch,
+    override val match: ResourceMatch,
 ) : com.typewritermc.checking.DraftType<TestDraft> {
     override fun bind(binding: com.typewritermc.authoring.DraftBinding): TestDraft = TestDraft(binding)
 }
@@ -327,5 +327,18 @@ internal val PENDING_GENERIC_DEFINITION =
     TypeDefinition.partial(
         id = PENDING_GENERIC,
         parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = PENDING_GENERIC, index = 0), name = "T")),
+        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+    )
+
+/** A generic record type with two parameters and no fields: a selection can choose one argument and leave the other open. */
+internal val PENDING_PAIR = TypeDefinitionId.qualified("test", "pending_pair")
+internal val PENDING_PAIR_DEFINITION =
+    TypeDefinition.partial(
+        id = PENDING_PAIR,
+        parameters =
+            listOf(
+                TypeParameter.partial(key = ParameterKey(owner = PENDING_PAIR, index = 0), name = "T"),
+                TypeParameter.partial(key = ParameterKey(owner = PENDING_PAIR, index = 1), name = "U"),
+            ),
         representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
     )

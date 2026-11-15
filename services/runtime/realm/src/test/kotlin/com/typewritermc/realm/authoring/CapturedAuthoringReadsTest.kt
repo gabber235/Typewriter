@@ -10,7 +10,6 @@ import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.field
 import com.typewritermc.expression.operations.HostFailure
@@ -26,6 +25,7 @@ import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.qualified
+import com.typewritermc.types.template
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -42,8 +42,10 @@ import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -157,7 +159,7 @@ val CapturedAuthoringReadsTest by testSuite {
         captured(resources) { lease ->
             val reads = CapturedAuthoringReads(lease.originalView())
 
-            val selected = reads.select(TypedSelection(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))))
+            val selected = reads.select(TypedSelection(TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE))))
 
             selected.knownMatches.map {
                 it.binding.location.resource
@@ -190,7 +192,7 @@ val CapturedAuthoringReadsTest by testSuite {
             val found =
                 CapturedAuthoringReads(
                     lease.originalView(),
-                ).discoverResources(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE)))
+                ).discoverResources(TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE)))
 
             found.map { it.location.resource } shouldBe listOf(resource)
             found.single().type.shouldBeInstanceOf<ResourceType.Partial>()
@@ -209,7 +211,7 @@ val CapturedAuthoringReadsTest by testSuite {
 
             val result =
                 CapturedAuthoringReads(lease.originalView()).select(
-                    TypedSelection(TestDraftType(ResourceTypeMatch.Application(PENDING_GENERIC.namedUse(listOf(TEXT_USE))))),
+                    TypedSelection(TestDraftType(ResourceMatch.TypeWrapper(PENDING_GENERIC.namedUse(listOf(TEXT_USE))))),
                 )
 
             result.knownMatches.map { it.binding.location.resource } shouldBe listOf(complete)
@@ -220,7 +222,7 @@ val CapturedAuthoringReadsTest by testSuite {
         }
     }
 
-    test("an applied type selection matches only resources of that exact applied type") {
+    test("an applied type selection skips a resource whose argument does not read as the requested one") {
         val generic = TypeDefinitionId.qualified("test", "generic_resource")
         val parameter = ParameterKey(owner = generic, index = 0)
         val definition =
@@ -243,7 +245,7 @@ val CapturedAuthoringReadsTest by testSuite {
 
             val selected =
                 CapturedAuthoringReads(lease.originalView()).select(
-                    TypedSelection(TestDraftType(ResourceTypeMatch.Application(textUse))),
+                    TypedSelection(TestDraftType(ResourceMatch.TypeWrapper(textUse))),
                 )
 
             selected.knownMatches.map {
@@ -253,26 +255,72 @@ val CapturedAuthoringReadsTest by testSuite {
         }
     }
 
-    test("binding a pending generic succeeds only when its chosen arguments match the requested type") {
-        val generic = TypeDefinitionId.qualified("test", "generic_binding")
-        val definition =
-            TypeDefinition.partial(
-                id = generic,
-                parameters =
-                    listOf(
-                        TypeParameter.partial(key = ParameterKey(owner = generic, index = 0), name = "T"),
-                        TypeParameter.partial(key = ParameterKey(owner = generic, index = 1), name = "U"),
-                    ),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+    test("an applied type selection matches a resource of a nominal subtype readable as that type") {
+        val textChild = TypeDefinitionId.qualified("test", "text_child")
+        val flagChild = TypeDefinitionId.qualified("test", "flag_child")
+        val definitions =
+            listOf(
+                TypeDefinition(
+                    id = textChild,
+                    parameters = emptyList(),
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+                    parents = listOf(PENDING_GENERIC.namedTemplate(listOf(ScalarKind.TEXT.template))),
+                ),
+                TypeDefinition(
+                    id = flagChild,
+                    parameters = emptyList(),
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+                    parents = listOf(PENDING_GENERIC.namedTemplate(listOf(ScalarKind.BOOLEAN.template))),
+                ),
             )
-        val catalog = DefinitionCatalog(TEST_DEFINITIONS + listOf(definition))
+        val text = ResourceId(value = "text")
+        val flag = ResourceId(value = "flag")
+        val resources =
+            mapOf(
+                text to AuthoringRecord.of(TypeSelection.of(textChild), emptyMap()),
+                flag to AuthoringRecord.of(TypeSelection.of(flagChild), emptyMap()),
+            )
+        captured(resources, DefinitionCatalog(TEST_DEFINITIONS + PENDING_GENERIC_DEFINITION + definitions)) { lease ->
+
+            val selected =
+                CapturedAuthoringReads(lease.originalView()).select(
+                    TypedSelection(TestDraftType(ResourceMatch.TypeWrapper(PENDING_GENERIC.namedUse(listOf(TEXT_USE))))),
+                )
+
+            selected.knownMatches.map { it.binding.location.resource } shouldBe listOf(text)
+            selected.undecided.isEmpty() shouldBe true
+        }
+    }
+
+    test("an applied type selection skips a pending resource whose chosen argument conflicts and waits on one whose argument is open") {
+        val conflicting = ResourceId(value = "conflicting")
+        val open = ResourceId(value = "open")
+        val resources =
+            mapOf(
+                conflicting to AuthoringRecord.of(TypeSelection.of(PENDING_PAIR, mapOf(0 to INT_USE)), emptyMap()),
+                open to AuthoringRecord.of(TypeSelection.of(PENDING_PAIR, mapOf(0 to TEXT_USE)), emptyMap()),
+            )
+        captured(resources, DefinitionCatalog(TEST_DEFINITIONS + PENDING_PAIR_DEFINITION)) { lease ->
+
+            val selected =
+                CapturedAuthoringReads(lease.originalView()).select(
+                    TypedSelection(TestDraftType(ResourceMatch.TypeWrapper(PENDING_PAIR.namedUse(listOf(TEXT_USE, INT_USE))))),
+                )
+
+            selected.knownMatches.isEmpty() shouldBe true
+            selected.undecided.map { it.resource.toSkir() } shouldBe listOf(open)
+        }
+    }
+
+    test("binding a pending generic succeeds only when its chosen arguments match the requested type") {
+        val catalog = DefinitionCatalog(TEST_DEFINITIONS + PENDING_PAIR_DEFINITION)
         val resource = ResourceId(value = "pending")
         val unresolved = ResourceId(value = "unresolved")
-        val textUse = generic.namedUse(listOf(TEXT_USE, INT_USE))
-        val numberUse = generic.namedUse(listOf(INT_USE, INT_USE))
+        val textUse = PENDING_PAIR.namedUse(listOf(TEXT_USE, INT_USE))
+        val numberUse = PENDING_PAIR.namedUse(listOf(INT_USE, INT_USE))
         val record =
             AuthoringRecord.of(
-                TypeSelection.of(generic, mapOf(0 to TEXT_USE)),
+                TypeSelection.of(PENDING_PAIR, mapOf(0 to TEXT_USE)),
                 emptyMap(),
             )
         val resources =
@@ -280,7 +328,7 @@ val CapturedAuthoringReadsTest by testSuite {
                 resource to record,
                 unresolved to
                     record.copy(
-                        configuration = TypeSelection.of(generic),
+                        configuration = TypeSelection.of(PENDING_PAIR),
                     ),
             )
         captured(resources, catalog) { lease ->

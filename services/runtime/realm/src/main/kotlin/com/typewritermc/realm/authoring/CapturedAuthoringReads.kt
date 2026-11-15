@@ -26,7 +26,6 @@ import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.checking.PartialSelection
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.configuration.kind
@@ -40,9 +39,11 @@ import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DerivedOrigin
+import com.typewritermc.types.catalog.Fit
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.contentTypesOf
+import com.typewritermc.types.catalog.fits
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
@@ -69,6 +70,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
@@ -396,14 +398,14 @@ class CapturedAuthoringReads internal constructor(
             observeResource(resource)
             val root = ValueLocation.of(resource)
             observe(InputIdentity.Form(root))
-            when (match(record.configuration, query.type.match)) {
-                TypeMatch.No -> {}
+            when (typeCatalog.fits(record.configuration, query.type.match, owner = null)) {
+                Fit.NO -> {}
 
-                TypeMatch.Undecided -> {
+                Fit.UNDECIDED -> {
                     undecided += UndecidedCandidate(resource.toResourceId(), listOf(root))
                 }
 
-                TypeMatch.Yes -> {
+                Fit.YES -> {
                     val binding = resourceBinding(resource, record)
                     if (binding == null) {
                         undecided += UndecidedCandidate(resource.toResourceId(), listOf(root))
@@ -563,7 +565,7 @@ class CapturedAuthoringReads internal constructor(
             observeResource(resource)
             val root = ValueLocation.of(resource)
             observe(InputIdentity.Form(root))
-            if (match(record.configuration, type.match) != TypeMatch.Yes) return@mapNotNull null
+            if (typeCatalog.fits(record.configuration, type.match, owner = null) != Fit.YES) return@mapNotNull null
             resourceBinding(resource, record)
         }
     }
@@ -612,14 +614,14 @@ class CapturedAuthoringReads internal constructor(
 
     internal fun bindResource(
         location: ValueLocation,
-        requested: ResourceTypeMatch,
+        requested: ResourceMatch,
     ): DraftBinding? {
         require(location.path.segments.isEmpty()) { "A resource check subject must use a root location." }
         observeResource(location.resource)
         observe(InputIdentity.Catalog(catalog))
         observe(InputIdentity.Form(location))
         val record = view.resources[location.resource] ?: return null
-        if (match(record.configuration, requested) != TypeMatch.Yes) return null
+        if (typeCatalog.fits(record.configuration, requested, owner = null) != Fit.YES) return null
         return resourceBinding(location.resource, record)
     }
 
@@ -781,31 +783,6 @@ class CapturedAuthoringReads internal constructor(
 
             else -> {
                 emptyList()
-            }
-        }
-    }
-
-    /** Whether the creator's choices in [selection] make a resource that [requested] selects: which resources, never what they hold. */
-    private fun match(
-        selection: TypeSelection,
-        requested: ResourceTypeMatch,
-    ): TypeMatch {
-        if (requested == ResourceTypeMatch.AnyResource) return TypeMatch.Yes
-        val type = (typeCatalog.authoredTypeOf(selection) as? Resolution.Ready)?.value ?: return TypeMatch.No
-        return when (requested) {
-            ResourceTypeMatch.AnyResource -> {
-                TypeMatch.Yes
-            }
-
-            is ResourceTypeMatch.Definition -> {
-                if (type.represents(requested.id)) TypeMatch.Yes else TypeMatch.No
-            }
-
-            is ResourceTypeMatch.Application -> {
-                when (type) {
-                    is ResourceType.Complete -> if (type.checked.use == requested.use.use) TypeMatch.Yes else TypeMatch.No
-                    is ResourceType.Partial -> if (type.definition == requested.use.definition) TypeMatch.Undecided else TypeMatch.No
-                }
             }
         }
     }
@@ -988,14 +965,6 @@ private sealed interface LocatedValue {
         val failure: FailureId,
         val message: String,
     ) : LocatedValue
-}
-
-private sealed interface TypeMatch {
-    data object No : TypeMatch
-
-    data object Undecided : TypeMatch
-
-    data object Yes : TypeMatch
 }
 
 private enum class CollectionPart {

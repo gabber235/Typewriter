@@ -13,7 +13,6 @@ import com.typewritermc.capability.RealmCommandContext
 import com.typewritermc.capability.RealmCommandOutcome
 import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.checking.DraftType
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.elements.Entry
 import com.typewritermc.engine.pages.StaticEntry
@@ -41,6 +40,7 @@ import com.typewritermc.types.use
 import skirout.editor.v1.capability.NotificationSeverity
 import skirout.editor.v1.capability.PanelInstruction
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ScalarKind
 
 /*
@@ -222,7 +222,7 @@ data class FixtureMirror<V>(
 object FixtureMirrorRows : DynamicProvider {
     override fun Dynamics.register() {
         bind(FixtureMirrorBind.V) {
-            val mirrors = select(TypedSelection(BareDraft(ResourceTypeMatch.Definition(FixtureMirrorDefinition.id)))).knownMatches
+            val mirrors = select(TypedSelection(BareDraft(ResourceMatch.DefinitionWrapper(FixtureMirrorDefinition.id)))).knownMatches
             field("mirrors", integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use, hasDefault = mirrors.isNotEmpty())
         }
     }
@@ -293,7 +293,7 @@ interface FixtureBoardPinsContract {
 
 /** A draft type that reads a matched resource as its bare binding. */
 private class BareDraft(
-    override val match: ResourceTypeMatch,
+    override val match: ResourceMatch,
 ) : DraftType<DraftBinding> {
     override fun bind(binding: DraftBinding): DraftBinding = binding
 }

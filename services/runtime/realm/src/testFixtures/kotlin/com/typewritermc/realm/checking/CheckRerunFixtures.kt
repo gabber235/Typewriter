@@ -12,7 +12,6 @@ import com.typewritermc.authoring.root
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
 import com.typewritermc.realm.authoring.AuthoringSeed
@@ -73,6 +72,7 @@ import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -117,7 +117,7 @@ internal object RerunChecks : RealmCheckProvider {
             }
             check(name) { it == "valid" }.error("Name is invalid.", draft.binding.location)
         }
-        each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
+        each(TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE))) { draft ->
             check(read(boundPath<Int>(location(draft.binding.location.resource, "count"), INT_USE))) { it >= 0 }
                 .error("Count is negative.", draft.binding.location)
         }
@@ -126,7 +126,7 @@ internal object RerunChecks : RealmCheckProvider {
             check(Availability.Available(ghost is Availability.Available)) { it }.error("Ghost is missing.", ValueLocation.of(REALM))
         }
         realm {
-            val selected = select(TypedSelection(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE)))).knownMatches
+            val selected = select(TypedSelection(TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE)))).knownMatches
             check(Availability.Available(selected.size)) { it >= 2 }.error("Fewer than two resources.", ValueLocation.of(REALM))
         }
     }
@@ -173,10 +173,10 @@ internal object DiscoveryGate {
     /** The NAME check's subject type; discovery reads its match, which passes this gate. */
     val draftType =
         object : DraftType<TestDraft> {
-            override val match: ResourceTypeMatch
+            override val match: ResourceMatch
                 get() {
                     pass()
-                    return ResourceTypeMatch.Definition(TEST_TYPE)
+                    return ResourceMatch.DefinitionWrapper(TEST_TYPE)
                 }
 
             override fun bind(binding: DraftBinding) = TestDraft(binding)

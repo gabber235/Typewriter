@@ -96,9 +96,6 @@ internal object TypewriterApi {
     val DraftType = ClassName(CHECKING, "DraftType")
     val RealmCheckProvider = ClassName(CHECKING, "RealmCheckProvider")
     val RealmChecks = ClassName(CHECKING, "RealmChecks")
-    val ResourceTypeMatch = ClassName(CHECKING, "ResourceTypeMatch")
-    val ResourceTypeMatchApplication = ResourceTypeMatch.nestedClass("Application")
-    val ResourceTypeMatchDefinition = ResourceTypeMatch.nestedClass("Definition")
     val TypedSelection = ClassName(CHECKING, "TypedSelection")
     val compileSelection = MemberName(CHECKING, "compileSelection")
 

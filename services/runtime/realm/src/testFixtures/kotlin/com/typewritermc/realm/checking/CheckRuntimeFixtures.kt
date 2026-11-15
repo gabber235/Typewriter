@@ -9,7 +9,6 @@ import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.of
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.check
 import com.typewritermc.configuration.field
 import com.typewritermc.expression.eq
@@ -61,6 +60,7 @@ import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -130,7 +130,7 @@ internal suspend fun membership(
     val provider =
         object : RealmCheckProvider {
             override fun RealmChecks.register() {
-                each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
+                each(TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE))) { draft ->
                     check(read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))) { it == "valid" }
                         .error("Name is invalid.", draft.binding.location)
                 }
@@ -165,7 +165,7 @@ internal class BlockingCheck {
     private val provider =
         object : RealmCheckProvider {
             override fun RealmChecks.register() {
-                each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
+                each(TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE))) { draft ->
                     val name = read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))
                     if ((name as? Availability.Available)?.value == "blocked") {
                         started.countDown()

@@ -11,7 +11,6 @@ import com.typewritermc.authoring.root
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
 import com.typewritermc.configuration.field
@@ -79,6 +78,7 @@ import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -267,7 +267,7 @@ val RealmCheckRuntimeTest by testSuite {
             val provider =
                 object : RealmCheckProvider {
                     override fun RealmChecks.register() {
-                        each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { error("Callback exploded.") }
+                        each(TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE))) { error("Callback exploded.") }
                     }
                 }
             val catalog = DefinitionCatalog(TEST_DEFINITIONS, providers = checksOf(14, provider))
@@ -337,7 +337,7 @@ val RealmCheckRuntimeTest by testSuite {
         val provider =
             object : RealmCheckProvider {
                 override fun RealmChecks.register() {
-                    each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
+                    each(TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE))) { draft ->
                         val name = read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))
                         if (first.compareAndSet(true, false)) {
                             running.countDown()
@@ -369,7 +369,7 @@ val RealmCheckRuntimeTest by testSuite {
         val provider =
             object : RealmCheckProvider {
                 override fun RealmChecks.register() {
-                    each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
+                    each(TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE))) { draft ->
                         val name = read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))
                         check(name) { it == "valid" }.error("Name is invalid.", draft.binding.location)
                     }
@@ -406,13 +406,13 @@ val RealmCheckRuntimeTest by testSuite {
         val release = CountDownLatch(1)
         val blockedInRediscovery =
             object : DraftType<TestDraft> {
-                override val match: ResourceTypeMatch
+                override val match: ResourceMatch
                     get() {
                         if (rediscovering.get()) {
                             entered.countDown()
                             release.await(30, TimeUnit.SECONDS)
                         }
-                        return ResourceTypeMatch.Definition(TEST_TYPE)
+                        return ResourceMatch.DefinitionWrapper(TEST_TYPE)
                     }
 
                 override fun bind(binding: DraftBinding) = TestDraft(binding)
@@ -453,7 +453,7 @@ val RealmCheckRuntimeTest by testSuite {
                         realm {
                             select(
                                 TypedSelection(
-                                    TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE)),
+                                    TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE)),
                                     ExpressionNode.LiteralWrapper(DataValue.BooleanWrapper(true)),
                                 ),
                             )

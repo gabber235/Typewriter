@@ -4,7 +4,6 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.of
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
@@ -25,6 +24,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -58,7 +58,7 @@ val PublicationAcceptanceTest by testSuite {
                     realm {
                         select(
                             TypedSelection(
-                                TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE)),
+                                TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE)),
                                 ExpressionNode.LiteralWrapper(DataValue.BooleanWrapper(true)),
                             ),
                         )

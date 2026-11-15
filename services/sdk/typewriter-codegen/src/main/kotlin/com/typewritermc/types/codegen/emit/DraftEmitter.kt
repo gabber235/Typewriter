@@ -29,6 +29,7 @@ import com.typewritermc.types.codegen.parameterizedOrSelf
 import com.typewritermc.types.template
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ValueLocation
 import com.typewritermc.codegen.TypewriterApi as Api
 
@@ -242,8 +243,8 @@ internal object DraftEmitter : SdkEmitter {
                     .build(),
             ).addProperty(
                 PropertySpec
-                    .builder("match", Api.ResourceTypeMatch, KModifier.OVERRIDE)
-                    .initializer("%T(application)", Api.ResourceTypeMatchApplication)
+                    .builder("match", ResourceMatch::class.asClassName(), KModifier.OVERRIDE)
+                    .initializer("%T(application)", ResourceMatch.TypeWrapper::class.asClassName())
                     .build(),
             ).addFunction(bind(exactDraftClass, CodeBlock.of("%T(binding,♢%L)", names.exactDraft, projectionArguments())))
             .addFunction(
@@ -256,8 +257,8 @@ internal object DraftEmitter : SdkEmitter {
 
     private fun SdkDeclaration.definitionMatch(): PropertySpec =
         PropertySpec
-            .builder("match", Api.ResourceTypeMatch, KModifier.OVERRIDE)
-            .initializer("%T(%T.id)", Api.ResourceTypeMatchDefinition, names.definition)
+            .builder("match", ResourceMatch::class.asClassName(), KModifier.OVERRIDE)
+            .initializer("%T(%T.id)", ResourceMatch.DefinitionWrapper::class.asClassName(), names.definition)
             .build()
 
     private fun bind(

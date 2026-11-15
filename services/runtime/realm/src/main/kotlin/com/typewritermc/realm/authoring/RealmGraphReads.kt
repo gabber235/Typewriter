@@ -23,11 +23,10 @@ import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.checking.PartialSelection
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.expression.operations.HostFailure
-import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResourceType
+import com.typewritermc.types.catalog.Fit
+import com.typewritermc.types.catalog.fits
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.record
 import com.typewritermc.types.toResourceId
@@ -278,37 +277,17 @@ private class CapturedGraph(
     ): BoundMatch<D> {
         val record = view.resources[resource] ?: return BoundMatch.No
         val location = ValueLocation.of(resource)
-        val matches =
-            when (val requested = type.match) {
-                ResourceTypeMatch.AnyResource -> {
-                    true
-                }
-
-                is ResourceTypeMatch.Definition -> {
-                    root.catalog.checked.isNominalSubtype(record.configuration.definition, requested.id)
-                }
-
-                is ResourceTypeMatch.Application -> {
-                    when (val actual = (root.catalog.checked.authoredTypeOf(record.configuration) as? Resolution.Ready)?.value) {
-                        null -> {
-                            false
-                        }
-
-                        is ResourceType.Complete -> {
-                            actual.checked.use == requested.use.use
-                        }
-
-                        is ResourceType.Partial -> {
-                            return if (actual.definition == requested.use.definition) {
-                                BoundMatch.Undecided(UndecidedCandidate(resource.toResourceId(), listOf(location)))
-                            } else {
-                                BoundMatch.No
-                            }
-                        }
-                    }
-                }
+        when (root.catalog.checked.fits(record.configuration, type.match, owner = null)) {
+            Fit.NO -> {
+                return BoundMatch.No
             }
-        if (!matches) return BoundMatch.No
+
+            Fit.UNDECIDED -> {
+                return BoundMatch.Undecided(UndecidedCandidate(resource.toResourceId(), listOf(location)))
+            }
+
+            Fit.YES -> {}
+        }
         return when (val binding = reads.resourceBinding(resource)) {
             is Availability.Available -> BoundMatch.Match(type.bind(binding.value))
             is Availability.Unavailable -> BoundMatch.Undecided(UndecidedCandidate(resource.toResourceId(), binding.locations))
