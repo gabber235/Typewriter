@@ -37,6 +37,54 @@ Widget authoredSearchInputUseCase(BuildContext context) {
   );
 }
 
+@widgetbook.UseCase(name: "List picker", type: PortableSearchInput)
+Widget listPickerUseCase(BuildContext context) {
+  final held = context.knobs.boolean(label: "Holds values", initialValue: true);
+  final readOnly = context.knobs.boolean(label: "Read only");
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(
+        width: 360,
+        child: _ListPickerStory(
+          key: ValueKey((held, readOnly)),
+          held: held,
+          readOnly: readOnly,
+        ),
+      ),
+    ),
+  );
+}
+
+/// A list of quest steps picked from a search: click, Enter or Space toggles
+/// one value, Command or Control+click another, Shift adds the range and
+/// select all adds every result. The checks are the list's values.
+final class _ListPickerStory extends HookWidget {
+  const _ListPickerStory({
+    required this.held,
+    required this.readOnly,
+    super.key,
+  });
+
+  final bool held;
+  final bool readOnly;
+
+  @override
+  Widget build(BuildContext context) {
+    final picker = useMemoized(
+      () => ListPickerScenario(
+        held: held,
+        choices: const ["Arrival", "Discovery", "Return", "Departure"],
+      ),
+    );
+    useEffect(() => picker.collection.dispose, [picker]);
+    return CollectionEditorScenarioView(
+      scenario: picker.collection,
+      readOnly: readOnly,
+    );
+  }
+}
+
 /// A reward field that searches a fixed list of rewards and keeps the one
 /// the user chooses.
 final class _SearchInputStory extends HookWidget {
