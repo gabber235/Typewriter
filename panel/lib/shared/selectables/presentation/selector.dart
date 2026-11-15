@@ -62,6 +62,10 @@ final class _SelectableFocusNode extends FocusNode {
 /// registers itself. Control+click on Apple platforms opens the context menu.
 /// In select mode, on a surface holding a selected item, the item reads as
 /// checked or not, and a [SelectorCheck] in [builder] shows its check.
+///
+/// On a [SelectionSurface] with its own [SurfaceSelection], every gesture
+/// goes to that selection instead, the item reads as selected by it, and it
+/// has no context menu of page operations.
 class Selector extends HookConsumerWidget {
   const Selector({
     required this.selectableId,
@@ -102,7 +106,12 @@ class Selector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isSelected = ref.watch(isSelectedProvider(selectableId));
+    final surface = SelectionSurface.maybeOf(context);
+    final owned = surface?.selection;
+    useListenable(owned);
+    final isSelected =
+        owned?.contains(selectableId) ??
+        ref.watch<bool>(isSelectedProvider(selectableId));
     final isFocused = useState(false);
     final isHovered = useState(false);
     final controller = useMemoized(AnchoredPopupController.new);
@@ -112,12 +121,12 @@ class Selector extends HookConsumerWidget {
     final contextTargets = useState<List<SelectableIdentifier>?>(null);
     final selection = ref.watch(selectionProvider);
     final selected = ref.watch(selectedProvider);
-    final surface = SelectionSurface.maybeOf(context);
     // Select mode shows checks only on a surface holding a selected item,
     // so the rest of the page stays as it was.
-    final selecting =
-        ref.watch(selectModeProvider) &&
-        (surface == null ? isSelected : selection.any(surface.contains));
+    final selecting = owned != null
+        ? owned.showsChecks
+        : ref.watch(selectModeProvider) &&
+              (surface == null ? isSelected : selection.any(surface.contains));
     useEffect(() => surface?.register(context, selectableId), [
       surface,
       selectableId,
@@ -141,13 +150,15 @@ class Selector extends HookConsumerWidget {
       return () => active = false;
     }, [landing, current, focusNode]);
 
-    final source = SelectionOperationsRoot.of(context);
+    // A surface's own selection offers no page operations.
+    final source = owned == null ? SelectionOperationsRoot.of(context) : null;
     final captured = contextTargets.value;
-    final operations =
-        (captured == null
-            ? null
-            : source.operationsForTargets(ref, captured)) ??
-        source.operationsFor(ref, selected.value ?? const []);
+    final operations = source == null
+        ? const <SelectionOperation>[]
+        : (captured == null
+                  ? null
+                  : source.operationsForTargets(ref, captured)) ??
+              source.operationsFor(ref, selected.value ?? const []);
 
     useFocusedChange(focusNode, ({required hasFocus}) {
       isFocused.value = hasFocus;
@@ -157,6 +168,7 @@ class Selector extends HookConsumerWidget {
     }, [focusNode, onFocusChange]);
 
     void activateContext(Offset globalPosition) {
+      if (owned != null) return;
       if (!ref.read(selectionProvider).contains(selectableId)) {
         ref.read(selectionProvider.notifier).selectOnly(selectableId);
       }
@@ -166,10 +178,7 @@ class Selector extends HookConsumerWidget {
     }
 
     // Announces the choice to the surface, then changes the selection.
-    void choose(
-      void Function(Selection selection) change, {
-      required bool throughTap,
-    }) {
+    void choose(void Function() change, {required bool throughTap}) {
       Actions.maybeInvoke(
         context,
         SelectedSelectorIntent(
@@ -179,10 +188,29 @@ class Selector extends HookConsumerWidget {
           throughActivateIntent: !throughTap,
         ),
       );
-      change(ref.read(selectionProvider.notifier));
+      change();
     }
 
     List<SelectableIdentifier> order() => surface?.order ?? [selectableId];
+
+    // The gestures, sent to the surface's own selection or else the page
+    // selection.
+    void selectOnly() => owned != null
+        ? owned.choose(selectableId)
+        : ref.read(selectionProvider.notifier).selectOnly(selectableId);
+    void toggle() => owned != null
+        ? owned.toggle(selectableId)
+        : ref.read(selectionProvider.notifier).toggle(selectableId);
+    void selectRange(
+      SurfaceSelection? target,
+      SelectableIdentifier to,
+      List<SelectableIdentifier> items, {
+      SelectableIdentifier? from,
+    }) => target != null
+        ? target.selectRange(to, order: items, from: from)
+        : ref
+              .read(selectionProvider.notifier)
+              .selectRange(to, order: items, from: from);
 
     // The modifiers held now: Shift selects a range, Command or Control
     // toggles, and Control on Apple platforms asks for the context menu.
@@ -205,13 +233,13 @@ class Selector extends HookConsumerWidget {
       pressed.value = null;
       if (controller.isOpen) return controller.close();
       if (held.menu) return activateContext(details.globalPosition);
-      choose(throughTap: true, (selection) {
+      choose(throughTap: true, () {
         if (held.range) {
-          selection.selectRange(selectableId, order: order());
+          selectRange(owned, selectableId, order());
         } else if (held.toggle) {
-          selection.toggle(selectableId);
+          toggle();
         } else {
-          selection.selectOnly(selectableId);
+          selectOnly();
         }
       });
       focusNode.requestFocus();
@@ -226,10 +254,13 @@ class Selector extends HookConsumerWidget {
       Future.microtask(() {
         if (!context.mounted) return;
         final to = SelectableScope.primaryFocusedId() ?? selectableId;
-        final items = SelectionSurface.ofPrimaryFocus()?.order ?? order();
-        ref
-            .read(selectionProvider.notifier)
-            .selectRange(to, order: items, from: selectableId);
+        final reached = SelectionSurface.ofPrimaryFocus();
+        selectRange(
+          reached?.selection ?? (reached == null ? owned : null),
+          to,
+          reached?.order ?? order(),
+          from: selectableId,
+        );
       });
     }
 
@@ -339,16 +370,11 @@ class Selector extends HookConsumerWidget {
                               },
                             ),
                         ActivateIntent: CallbackAction<ActivateIntent>(
-                          onInvoke: (_) => choose(
-                            throughTap: false,
-                            (selection) => selection.selectOnly(selectableId),
-                          ),
+                          onInvoke: (_) =>
+                              choose(throughTap: false, selectOnly),
                         ),
                         ToggleIntent: CallbackAction<ToggleIntent>(
-                          onInvoke: (_) => choose(
-                            throughTap: false,
-                            (selection) => selection.toggle(selectableId),
-                          ),
+                          onInvoke: (_) => choose(throughTap: false, toggle),
                         ),
                         ExtendSelectionIntent:
                             CallbackAction<ExtendSelectionIntent>(
@@ -360,10 +386,7 @@ class Selector extends HookConsumerWidget {
                         child: _SelectorStateScope(
                           selected: isSelected,
                           selecting: selecting,
-                          toggle: () => choose(
-                            throughTap: true,
-                            (selection) => selection.toggle(selectableId),
-                          ),
+                          toggle: () => choose(throughTap: true, toggle),
                           child: HookBuilder(
                             builder: (context) {
                               return builder(

@@ -19,13 +19,21 @@ part "selection_surface.g.dart";
 /// [useSelectionSurfaceRows]; a hold over the selection, started from the
 /// inspector or a context menu, then sends and refuses on those rows
 /// ([SelectionRows.selectionRows]).
+///
+/// A surface given its own [selection] keeps the same gestures over that
+/// selection instead of the page selection; Escape then clears nothing and
+/// steps out as it would without a selection.
 class SelectionSurface extends HookConsumerWidget {
   const SelectionSurface({
     required this.child,
     this.order,
     this.every,
+    this.selection,
     super.key,
   });
+
+  /// The selection this surface owns, or null for the page selection.
+  final SurfaceSelection? selection;
 
   /// Every item of the surface in visible order, for a surface that does
   /// not build them all; null orders the registered selectors by position.
@@ -51,14 +59,20 @@ class SelectionSurface extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = useMemoized(SelectionSurfaceItems._)
       .._explicit = order
-      .._every = every;
+      .._every = every
+      .._selection = selection;
+    final owned = selection;
     final surfaces = ref.watch(selectionSurfacesProvider);
-    useEffect(() => surfaces._add(items), [surfaces, items]);
+    useEffect(() => owned == null ? surfaces._add(items) : null, [
+      surfaces,
+      items,
+      owned,
+    ]);
     return _SelectionSurfaceScope(
       items: items,
       child: ManagedActionSet(
         shortcuts: [
-          ...ref.watch(selectionClearingShortcutsProvider),
+          if (owned == null) ...ref.watch(selectionClearingShortcutsProvider),
           if (ref.watch(selectionShortcutsEnabledProvider))
             ActionShortcut.intent(
               id: "select_every",
@@ -69,8 +83,11 @@ class SelectionSurface extends HookConsumerWidget {
               intent: SelectEveryIntent,
               priority: -10,
               run: ActionRun.press(
-                (ref) =>
-                    ref.read(selectionProvider.notifier).selectEvery(items.all),
+                (ref) => owned != null
+                    ? owned.selectEvery(items.all)
+                    : ref
+                          .read(selectionProvider.notifier)
+                          .selectEvery(items.all),
               ),
             ),
         ],
@@ -88,6 +105,10 @@ final class SelectionSurfaceItems {
   final _registered = <BuildContext, SelectableIdentifier>{};
   List<SelectableIdentifier>? _explicit;
   List<SelectableIdentifier>? _every;
+  SurfaceSelection? _selection;
+
+  /// The selection the surface owns, or null for the page selection.
+  SurfaceSelection? get selection => _selection;
 
   /// The rows the surface's items are in, which a hold sends and refuses
   /// on, or null for a surface without such rows.
