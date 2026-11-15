@@ -18,8 +18,8 @@ import com.typewritermc.playtest.wire.Message.ClientLost
 import com.typewritermc.playtest.wire.Message.ClientStalled
 import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.Declined
-import com.typewritermc.playtest.wire.Message.Disconnected
 import com.typewritermc.playtest.wire.Message.Demonstrates
+import com.typewritermc.playtest.wire.Message.Disconnected
 import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
 import com.typewritermc.playtest.wire.Message.Entity
@@ -73,9 +73,9 @@ import com.typewritermc.playtest.wire.Message.Reset
 import com.typewritermc.playtest.wire.Message.ResetDone
 import com.typewritermc.playtest.wire.Message.Restart
 import com.typewritermc.playtest.wire.Message.Restarted
+import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Resume
 import com.typewritermc.playtest.wire.Message.Resumed
-import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
 import com.typewritermc.playtest.wire.Message.ScrollStep
 import com.typewritermc.playtest.wire.Message.Settle
@@ -112,10 +112,21 @@ val WireTest by testSuite {
             listOf<Message>(
                 Hello(Role.CLIENT, "gv-1"),
                 Refused("Paper stopped while starting; see pool/paper/logs/latest.log"),
-                Queue(listOf(Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false))),
                 Queue(
                     listOf(
-                        Submit(8, "LOST-1 a client that crashes fails its own attempt (attempt 1 of 3)", "LOST-1", 1, Demonstrates.FAILURE, false),
+                        Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false),
+                    ),
+                ),
+                Queue(
+                    listOf(
+                        Submit(
+                            8,
+                            "LOST-1 a client that crashes fails its own attempt (attempt 1 of 3)",
+                            "LOST-1",
+                            1,
+                            Demonstrates.FAILURE,
+                            false,
+                        ),
                         Submit(
                             9,
                             "LOST-1 a client that crashes fails its own attempt (attempt 2 of 3)",

@@ -159,9 +159,9 @@ internal class PoolSession private constructor(
         try {
             send(
                 Queue(
-                    planned.zip(
-                        leasings,
-                    ) { it, (submission, _) -> Submit(submission, it.testId, it.requirement, it.players, it.demonstrates, it.restartsPaper) },
+                    planned.zip(leasings) { it, (submission, _) ->
+                        Submit(submission, it.testId, it.requirement, it.players, it.demonstrates, it.restartsPaper)
+                    },
                 ),
             )
         } catch (unavailable: GameUnavailable) {

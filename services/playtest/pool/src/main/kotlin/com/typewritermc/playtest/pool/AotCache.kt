@@ -68,7 +68,11 @@ internal class AotCache(
         }
         Files.move(train.output, dir.resolve("${train.key}.aot"), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
         // Training boots of the same key may still run; every file of an older key goes.
-        Files.list(dir).use { files -> files.filter { !it.fileName.toString().startsWith("${train.key}.") }.toList() }.forEach(Files::deleteIfExists)
+        Files
+            .list(dir)
+            .use { files ->
+                files.filter { !it.fileName.toString().startsWith("${train.key}.") }.toList()
+            }.forEach(Files::deleteIfExists)
     }
 
     companion object {
@@ -79,13 +83,16 @@ internal class AotCache(
             flags: List<String>,
         ): String {
             val digest = MessageDigest.getInstance("SHA-256")
+
             fun part(text: String) = digest.update("$text\u0000".toByteArray())
             part(jdk)
             // A file's content, never its time: a rebuilt but equal jar keeps the cache. Java 25 maps a
             // cache over changed jars without a word, so a changed jar must change the key.
             for (file in files) {
                 part(file.fileName.toString())
-                Files.newInputStream(file).use { input -> DigestInputStream(input, digest).use { it.transferTo(OutputStream.nullOutputStream()) } }
+                Files.newInputStream(file).use { input ->
+                    DigestInputStream(input, digest).use { it.transferTo(OutputStream.nullOutputStream()) }
+                }
             }
             flags.forEach(::part)
             return HexFormat.of().formatHex(digest.digest()).take(KEY_LENGTH)

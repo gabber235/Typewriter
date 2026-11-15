@@ -49,7 +49,8 @@ val AotCacheTest by testSuite {
         train.output.writeText("new")
         cache.trained(train, 0)
 
-        dir.listDirectoryEntries().map { it.name } shouldContainExactly listOf((cache.boot("k2", "paper-gv-1") as AotCache.Boot.Use).cache.name)
+        dir.listDirectoryEntries().map { it.name } shouldContainExactly
+            listOf((cache.boot("k2", "paper-gv-1") as AotCache.Boot.Use).cache.name)
     }
 
     test("a training boot that was killed, or that never finished its cache, leaves none behind, so the next boot trains again") {

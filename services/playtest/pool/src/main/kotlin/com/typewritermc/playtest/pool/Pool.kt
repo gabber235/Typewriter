@@ -1,5 +1,6 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.pool.OwnPaper.Do
 import com.typewritermc.playtest.wire.Message
 import com.typewritermc.playtest.wire.Message.AttemptStep
 import com.typewritermc.playtest.wire.Message.BarrierSeen
@@ -38,9 +39,9 @@ import com.typewritermc.playtest.wire.Message.Reset
 import com.typewritermc.playtest.wire.Message.ResetDone
 import com.typewritermc.playtest.wire.Message.Restart
 import com.typewritermc.playtest.wire.Message.Restarted
+import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Resume
 import com.typewritermc.playtest.wire.Message.Resumed
-import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
 import com.typewritermc.playtest.wire.Message.Settle
 import com.typewritermc.playtest.wire.Message.Settled
@@ -51,7 +52,6 @@ import com.typewritermc.playtest.wire.Message.Submit
 import com.typewritermc.playtest.wire.Message.Watch
 import com.typewritermc.playtest.wire.Message.WorkHung
 import com.typewritermc.playtest.wire.Wire
-import com.typewritermc.playtest.pool.OwnPaper.Do
 import java.io.BufferedInputStream
 import java.io.DataInputStream
 import java.io.IOException
@@ -412,7 +412,9 @@ internal class Pool(
 
             is Restart -> {
                 val attempt = attemptOf(session, message.submission())
-                val own = attempt?.server?.own ?: return System.err.println("$session asked to restart the Paper of an attempt that has none of its own")
+                val own =
+                    attempt?.server?.own
+                        ?: return System.err.println("$session asked to restart the Paper of an attempt that has none of its own")
                 act(attempt.server, own.rules.restart(message.request()))
             }
 
@@ -525,7 +527,11 @@ internal class Pool(
     private fun serverOf(
         session: Peer,
         player: UUID,
-    ): Server? = attemptOf.values.firstOrNull { attempt -> attempt.session == session && attempt.players.any { it.uuid() == player } }?.server
+    ): Server? =
+        attemptOf.values
+            .firstOrNull { attempt ->
+                attempt.session == session && attempt.players.any { it.uuid() == player }
+            }?.server
 
     /** The Paper that opened the connection [peer]. */
     private fun serverOf(peer: Peer): Server? = if (shared.peer == peer) shared else owns.values.firstOrNull { it.peer == peer }
@@ -544,9 +550,7 @@ internal class Pool(
             }
 
             is Resumed -> {
-                val own = server.own ?: return
-                val failure = message.failure()
-                act(server, if (failure == null) own.rules.resumed(message.tick()) else own.rules.failed("${server.name} could not resume its attempt: $failure"))
+                resumed(server, message)
             }
 
             is Settled -> {
@@ -561,23 +565,46 @@ internal class Pool(
                 hungEnded(message)
             }
 
-            // A client the pool moved to another Paper leaves this one on purpose.
             is PlayerLeft -> {
-                if (clientNamed(message.player())?.on == server) {
-                    clientLost(message.player(), "its player left Paper (${message.reason().lowercase()})")
-                }
+                lostOn(server, message.player(), "its player left Paper (${message.reason().lowercase()})")
             }
 
             is ClientStalled -> {
-                if (clientNamed(message.player())?.on == server) {
-                    clientLost(message.player(), "it acked no tick for 5 s after tick ${message.lastAcked()}")
-                }
+                lostOn(server, message.player(), "it acked no tick for 5 s after tick ${message.lastAcked()}")
             }
 
             else -> {
                 System.err.println("${server.name} sent ${message.javaClass.simpleName}, which Paper never sends")
             }
         }
+    }
+
+    /** [server], an own Paper, resumed its attempt after a restart, or could not. */
+    private fun resumed(
+        server: Server,
+        message: Resumed,
+    ) {
+        val own = server.own ?: return
+        val failure = message.failure()
+        act(
+            server,
+            if (failure ==
+                null
+            ) {
+                own.rules.resumed(message.tick())
+            } else {
+                own.rules.failed("${server.name} could not resume its attempt: $failure")
+            },
+        )
+    }
+
+    /** [server] lost [player]'s client for [cause]; a client the pool moved to another Paper left this one on purpose. */
+    private fun lostOn(
+        server: Server,
+        player: String,
+        cause: String,
+    ) {
+        if (clientNamed(player)?.on == server) clientLost(player, cause)
     }
 
     /** Paper or a client answered [request]: the session that sent it gets [answer] under its own request id. */
@@ -820,55 +847,93 @@ internal class Pool(
         todo: List<Do>,
     ) {
         val own = server.own ?: return
+        todo.forEach { act(server, own, it) }
+    }
+
+    private fun act(
+        server: Server,
+        own: Own,
+        next: Do,
+    ) {
         val attempt = own.attempt
-        for (next in todo) {
-            when (next) {
-                Do.Boot -> bootOwn(server, own)
+        when (next) {
+            Do.Boot -> {
+                bootOwn(server, own)
+            }
 
-                Do.Connect -> {
-                    for (player in attempt.players) {
-                        val client = clientOf(player.uuid()) ?: continue
-                        client.on = server
-                        client.joined = false
-                        client.ready = false
-                        claims.holdOut(client.player, Out.AWAY)
-                        connect(client)
-                    }
-                }
+            Do.Connect -> {
+                moveTo(server, attempt)
+            }
 
-                Do.Step -> {
-                    server.stepping = true
-                    server.peer?.send(Stepping())
-                }
+            Do.Step -> {
+                server.stepping = true
+                server.peer?.send(Stepping())
+            }
 
-                Do.Claim -> server.peer?.send(Claim(attempt.id, attempt.players.map { it.uuid() }, attempt.region))
+            Do.Claim -> {
+                server.peer?.send(Claim(attempt.id, attempt.players.map { it.uuid() }, attempt.region))
+            }
 
-                Do.Resume -> server.peer?.send(Resume(attempt.id, attempt.players.map { it.uuid() }))
+            Do.Resume -> {
+                server.peer?.send(Resume(attempt.id, attempt.players.map { it.uuid() }))
+            }
 
-                Do.Kill -> {
-                    attempt.restarting = true
-                    attempt.fresh.clear()
-                    own.killedAt = System.nanoTime()
-                    own.part?.process?.destroyForcibly()
-                }
+            Do.Kill -> {
+                kill(own)
+            }
 
-                is Do.Restarted -> {
-                    System.err.println("${server.name} is back ${seconds(own.killedAt)} after its kill")
-                    attempt.restarting = false
-                    attempt.session.send(Restarted(next.request, next.tick))
-                    attempt.fresh.values.forEach(attempt.session::send)
-                    attempt.fresh.clear()
-                }
+            is Do.Restarted -> {
+                restarted(server, own, next)
+            }
 
-                is Do.Lost -> lostOwn(server, own, next.cause)
+            is Do.Lost -> {
+                lostOwn(server, own, next.cause)
+            }
 
-                Do.Return -> {
-                    sendBack(attempt)
-                    // Its plugin halts once the pool is gone; a training boot writes its cache as it exits.
-                    server.peer?.close() ?: own.part?.process?.destroyForcibly()
-                }
+            Do.Return -> {
+                sendBack(attempt)
+                // Its plugin halts once the pool is gone; a training boot writes its cache as it exits.
+                server.peer?.close() ?: own.part?.process?.destroyForcibly()
             }
         }
+    }
+
+    /** [attempt]'s players leave the shared Paper for [server], which serves no claim of theirs meanwhile. */
+    private fun moveTo(
+        server: Server,
+        attempt: Attempt,
+    ) {
+        for (player in attempt.players) {
+            val client = clientOf(player.uuid()) ?: continue
+            client.on = server
+            client.joined = false
+            client.ready = false
+            claims.holdOut(client.player, Out.AWAY)
+            connect(client)
+        }
+    }
+
+    /** Ends [own]'s Paper as a crash would; what its players perceive waits until it is back. */
+    private fun kill(own: Own) {
+        val attempt = own.attempt
+        attempt.restarting = true
+        attempt.fresh.clear()
+        own.killedAt = System.nanoTime()
+        own.part?.process?.destroyForcibly()
+    }
+
+    /** [own]'s Paper is back: the session hears so, then the latest record of each player. */
+    private fun restarted(
+        server: Server,
+        own: Own,
+        back: Do.Restarted,
+    ) {
+        val attempt = own.attempt
+        System.err.println("${server.name} is back ${seconds(own.killedAt)} after its kill")
+        attempt.restarting = false
+        attempt.session.send(Restarted(back.request, back.tick))
+        attempt.fresh.values.forEach(attempt.session::send)
+        attempt.fresh.clear()
     }
 
     /** Starts the next boot of [own]'s Paper, with the restart flags and the cache, and its boot limit. */
@@ -881,7 +946,9 @@ internal class Pool(
         own.bootedAt = System.nanoTime()
         own.part = game.bootOwn(own.folder, RESTART_FLAGS + boot.flags, again = own.rules.boots > 1).also(::watch)
         val number = own.rules.boots
-        System.err.println("${server.name} boots (${if (boot is AotCache.Boot.Use) "from its cache" else "training its cache"}), boot $number")
+        System.err.println(
+            "${server.name} boots (${if (boot is AotCache.Boot.Use) "from its cache" else "training its cache"}), boot $number",
+        )
         thread(name = "playtest-pool-${server.name}-boot-$number", isDaemon = true) {
             Thread.sleep(TimeUnit.SECONDS.toMillis(OwnPaper.BOOT_SECONDS))
             events.put(Event.OwnBootTimedOut(server.name, number))

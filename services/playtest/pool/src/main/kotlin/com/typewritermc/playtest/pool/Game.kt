@@ -316,8 +316,9 @@ internal class Game private constructor(
                 ProcessBuilder(command)
                     .directory(dir.toFile())
                     .redirectErrorStream(true)
-                    .redirectOutput(if (append) ProcessBuilder.Redirect.appendTo(log.toFile()) else ProcessBuilder.Redirect.to(log.toFile()))
-                    .redirectInput(ProcessBuilder.Redirect.from(File("/dev/null")))
+                    .redirectOutput(
+                        if (append) ProcessBuilder.Redirect.appendTo(log.toFile()) else ProcessBuilder.Redirect.to(log.toFile()),
+                    ).redirectInput(ProcessBuilder.Redirect.from(File("/dev/null")))
             builder.environment().putAll(environment)
             return Part(name, builder.start(), log, player)
         }
@@ -390,7 +391,10 @@ internal class PaperServer(
                     entry: String,
                     folder: String,
                 ) = lines(entry).map { paperDir.resolve(folder).resolve(it.split('\t')[2]) }
-                PaperServer(jars("META-INF/versions.list", "versions") + jars("META-INF/libraries.list", "libraries"), lines("META-INF/main-class").single().trim())
+                PaperServer(
+                    jars("META-INF/versions.list", "versions") + jars("META-INF/libraries.list", "libraries"),
+                    lines("META-INF/main-class").single().trim(),
+                )
             }
     }
 }

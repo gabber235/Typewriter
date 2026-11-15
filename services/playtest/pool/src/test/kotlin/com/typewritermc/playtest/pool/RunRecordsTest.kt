@@ -96,7 +96,11 @@ val RunRecordsTest by testSuite {
             Submit(2, "PROBE-1 a chat line reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false),
             Result(2, 420, null, null, listOf(), "", listOf()),
         )
-        records.record("run-1", Submit(7, flaky, "FLAKY-1", 1, Demonstrates.FAILURE, false), Result(7, 310, null, null, listOf(), "", listOf()))
+        records.record(
+            "run-1",
+            Submit(7, flaky, "FLAKY-1", 1, Demonstrates.FAILURE, false),
+            Result(7, 310, null, null, listOf(), "", listOf()),
+        )
 
         records.ended("run-1", file, retries)
 
