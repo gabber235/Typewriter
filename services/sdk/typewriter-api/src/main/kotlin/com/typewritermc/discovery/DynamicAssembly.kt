@@ -50,8 +50,9 @@ data class DynamicRegistrationFailure(
 )
 
 /**
- * What every dynamic provider registered when the extension loaded: its hooks and binds, and the failures that dropped
- * a provider or one of its binds. The realm and every engine hold the same collection for one catalog generation.
+ * What every dynamic provider registered when the extension loaded: its hooks and binds, and the failures load found
+ * among them, each of which dropped a provider or one of its binds unless its code says the bind stays. The realm and
+ * every engine hold the same collection for one catalog generation.
  */
 class CollectedDynamics internal constructor(
     val hooks: List<DynamicHook>,
@@ -69,6 +70,8 @@ class CollectedDynamics internal constructor(
 /**
  * Runs the registration of every provider in [dynamics]. A bind must name a parameter of a type its own artifact
  * declares among [declarations]; load drops any other bind. A bind matches exactly the type its parameter belongs to.
+ * Two binds of one parameter are reported against each provider as duplicate_bind and both stay, so the parameter stays
+ * computed and each resource of the type shows the conflict.
  */
 internal fun collectDynamics(
     dynamics: List<OwnedDynamic>,
@@ -76,7 +79,7 @@ internal fun collectDynamics(
 ): CollectedDynamics {
     val declared = declarations.groupBy { it.definition.id }
     val hooks = mutableListOf<DynamicHook>()
-    val binds = mutableListOf<BindHook>()
+    val binds = mutableListOf<Pair<OwnedDynamic, BindHook>>()
     val failures = mutableListOf<DynamicRegistrationFailure>()
     dynamics.forEach { owned ->
         val collector = DynamicCollector(owned)
@@ -85,13 +88,19 @@ internal fun collectDynamics(
             hooks += collector.hooks
             collector.binds.forEach { bind ->
                 when (val rejection = bind.rejection(owned, declared)) {
-                    null -> binds += bind
+                    null -> binds += owned to bind
                     else -> failures += rejection
                 }
             }
         }) { failure -> failures += DynamicRegistrationFailure(owned, "dynamic_registration_failed", failure) }
     }
-    return CollectedDynamics(hooks, binds, failures)
+    binds.groupBy { (_, bind) -> bind.key }.values.filter { it.size > 1 }.forEach { duplicates ->
+        duplicates.forEach { (owned, bind) ->
+            val message = "${duplicates.size} binds compute ${bind.key.owner}'s parameter ${bind.key.name}, so none decides it."
+            failures += DynamicRegistrationFailure(owned, "duplicate_bind", IllegalStateException(message))
+        }
+    }
+    return CollectedDynamics(hooks, binds.map { (_, bind) -> bind }, failures)
 }
 
 /** [declaration] with every parameter some bind in [bound] computes marked derived. */
