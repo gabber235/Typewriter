@@ -53,6 +53,7 @@ import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -139,14 +140,14 @@ internal val EDGE =
         EndpointDefinition(
             id = EDGE_SOURCE,
             slot = EndpointSlot.FIRST,
-            resource = NODE.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(NODE.template()),
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
             id = EDGE_TARGET,
             slot = EndpointSlot.SECOND,
-            resource = NODE.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(NODE.template()),
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
@@ -158,14 +159,14 @@ internal val BAD =
         EndpointDefinition(
             id = BAD_ENDPOINT,
             slot = EndpointSlot.FIRST,
-            resource = NODE.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(NODE.template()),
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
             id = BAD_TARGET,
             slot = EndpointSlot.SECOND,
-            resource = NODE.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(NODE.template()),
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         ),

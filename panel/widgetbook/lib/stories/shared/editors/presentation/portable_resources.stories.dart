@@ -533,7 +533,11 @@ skir.EndpointDefinition _endpoint(
 ) => skir.EndpointDefinition(
   id: id,
   slot: slot,
-  resource: skir.NamedTypeTemplate(definition: resource, arguments: const []),
+  resource: skir.ResourceMatchTemplate.wrapType(
+    skir.TypeTemplate.wrapNamed(
+      skir.NamedTypeTemplate(definition: resource, arguments: const []),
+    ),
+  ),
   cardinality: cardinality,
   onDelete: skir.RelationDeletePolicy.restrict,
 );

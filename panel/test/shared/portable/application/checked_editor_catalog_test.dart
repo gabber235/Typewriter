@@ -331,15 +331,19 @@ void main() {
     expect(pendingBindings, hasLength(1));
     expect(pendingBindings.single.isAvailable, isFalse);
 
-    final integer = skir.TypeUse.wrapScalar(
-      skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
+    final marker = skir.NamedTypeUse(
+      definition: fixture.marker,
+      arguments: const [],
     );
     final complete = selectionOfUse(
-      skir.NamedTypeUse(definition: fixture.root, arguments: [integer]),
+      skir.NamedTypeUse(
+        definition: fixture.root,
+        arguments: [skir.TypeUse.wrapNamed(marker)],
+      ),
     );
     final applied = fixture.catalog.endpointBindings(complete).single;
     expect(applied.isAvailable, isTrue);
-    expect(applied.target, integer);
+    expect(applied.target, skir.ResourceMatch.wrapType(marker));
     expect(applied.containingResource?.definition, fixture.base);
   });
 

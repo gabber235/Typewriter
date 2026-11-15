@@ -252,7 +252,7 @@ skir.PublishedType declaredLink(
   _id(type),
   representation: skir.RepresentationTemplate.createLink(
     endpoint: skir.EndpointId(value: endpoint),
-    target: typeTemplateOf(target),
+    target: skir.ResourceMatchTemplate.wrapType(typeTemplateOf(target)),
   ),
 );
 
@@ -267,7 +267,9 @@ skir.EndpointDefinition endpointOf(
 }) => skir.EndpointDefinition(
   id: skir.EndpointId(value: id),
   slot: skir.EndpointSlot.first,
-  resource: _named(resource),
+  resource: skir.ResourceMatchTemplate.wrapType(
+    skir.TypeTemplate.wrapNamed(_named(resource)),
+  ),
   cardinality: cardinality,
   onDelete: onDelete,
 );
@@ -312,7 +314,7 @@ skir.EndpointBindingTemplate endpointBinding(
         },
     ],
   ),
-  target: typeTemplateOf(target),
+  target: skir.ResourceMatchTemplate.wrapType(typeTemplateOf(target)),
   containsCollection: path.contains(skir.FieldPatternSegment.items),
 );
 

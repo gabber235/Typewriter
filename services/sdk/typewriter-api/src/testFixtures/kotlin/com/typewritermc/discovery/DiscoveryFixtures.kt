@@ -115,6 +115,7 @@ import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResourceMatch
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -360,7 +361,7 @@ internal fun ownership(
         EndpointDefinition(
             id = EndpointId(value = "$relation:first"),
             slot = EndpointSlot.FIRST,
-            resource = owner.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(owner.template()),
             cardinality = EndpointCardinality.ONE,
             onDelete = RelationDeletePolicy.CASCADE,
         ),
@@ -368,7 +369,7 @@ internal fun ownership(
         EndpointDefinition(
             id = EndpointId(value = "$relation:second"),
             slot = EndpointSlot.SECOND,
-            resource = member.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(member.template()),
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
@@ -439,7 +440,7 @@ internal fun endpoint(
 ) = EndpointDefinition(
     id = EndpointId(value = id),
     slot = slot,
-    resource = resource.namedTemplate(),
+    resource = ResourceMatchTemplate.TypeWrapper(resource.template()),
     cardinality = EndpointCardinality.MANY,
     onDelete = RelationDeletePolicy.CLEAR,
 )

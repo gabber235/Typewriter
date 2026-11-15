@@ -26,9 +26,35 @@ final class AppliedEndpointBinding {
 
   final skir.EndpointBindingTemplate template;
   final skir.NamedTypeUse? containingResource;
-  final skir.TypeUse? target;
+  final skir.ResourceMatch? target;
 
   bool get isAvailable => containingResource != null && target != null;
+}
+
+/// Whether a resource fits a [skir.ResourceMatch]: yes, no, or not until a
+/// creator chooses more arguments.
+enum ResourceFit { yes, no, undecided }
+
+extension ResourceMatchDefinition on skir.ResourceMatch {
+  /// The definition this match names, or null for every resource.
+  skir.TypeDefinitionId? get definition => switch (this) {
+    skir.ResourceMatch_typeWrapper(:final value) => value.definition,
+    skir.ResourceMatch_definitionWrapper(:final value) => value,
+    _ => null,
+  };
+}
+
+extension ResourceMatchTemplateDefinition on skir.ResourceMatchTemplate {
+  /// The definition this template names, or null for every resource and for
+  /// a type that is a bare parameter.
+  skir.TypeDefinitionId? get definition => switch (this) {
+    skir.ResourceMatchTemplate_typeWrapper(
+      value: skir.TypeTemplate_namedWrapper(:final value),
+    ) =>
+      value.definition,
+    skir.ResourceMatchTemplate_definitionWrapper(:final value) => value,
+    _ => null,
+  };
 }
 
 /// Interprets one published editor catalog snapshot for panel consumers.
@@ -181,6 +207,18 @@ final class CheckedEditorCatalog {
     final definition = selected(containing);
     if (definition == null) return null;
     return _apply(template, _bindings(containing, definition));
+  }
+
+  /// The match [template] names under the arguments [containing] binds, or
+  /// null while a type it names needs an argument [containing] leaves open or
+  /// is not a named type.
+  skir.ResourceMatch? applyMatch(
+    skir.ResourceMatchTemplate template,
+    skir.TypeSelection containing,
+  ) {
+    final definition = selected(containing);
+    if (definition == null) return null;
+    return _applyMatch(template, _bindings(containing, definition));
   }
 
   skir.TypeUse? concreteType(skir.TypeTemplate template) =>
@@ -368,7 +406,7 @@ final class CheckedEditorCatalog {
               template.containingResource,
               bindings,
             ),
-            target: _apply(template.target, bindings),
+            target: _applyMatch(template.target, bindings),
           ),
     ];
     // A concrete declaration's binding carries its overridden field type.
@@ -532,6 +570,39 @@ final class CheckedEditorCatalog {
               skir.ChosenArgument(parameter: position, type: existing),
       ],
     );
+  }
+
+  /// Whether a resource configured by [selection] fits [match], as the realm
+  /// answers it from the creator's choices. A definition fits its nominal
+  /// subtypes whatever their arguments; a type fits a complete selection
+  /// readable as it, and a pending one through an application its choices
+  /// already fix, or is undecided while the definition could still become it.
+  ResourceFit fits(skir.TypeSelection selection, skir.ResourceMatch match) {
+    switch (match) {
+      case skir.ResourceMatch_definitionWrapper(:final value):
+        return nominalDefinitions(selection).contains(value)
+            ? ResourceFit.yes
+            : ResourceFit.no;
+      case skir.ResourceMatch_typeWrapper(:final value):
+        final expected = skir.TypeUse.wrapNamed(value);
+        if (completeUse(selection) case final complete?) {
+          return isReadableAs(skir.TypeUse.wrapNamed(complete), expected)
+              ? ResourceFit.yes
+              : ResourceFit.no;
+        }
+        if (knownApplications(selection).any(
+          (known) => isReadableAs(skir.TypeUse.wrapNamed(known), expected),
+        )) {
+          return ResourceFit.yes;
+        }
+        return nominalDefinitions(selection).contains(value.definition)
+            ? ResourceFit.undecided
+            : ResourceFit.no;
+      default:
+        return match == skir.ResourceMatch.anyResource
+            ? ResourceFit.yes
+            : ResourceFit.no;
+    }
   }
 
   bool selectionMatches(skir.TypeSelection actual, skir.TypeUse? expected) =>
@@ -1007,6 +1078,26 @@ final class CheckedEditorCatalog {
     skir.TypeTemplate_functionWrapper(:final value) => value.toUse(
       (part) => _apply(part, bindings),
     ),
+    _ => null,
+  };
+
+  skir.ResourceMatch? _applyMatch(
+    skir.ResourceMatchTemplate template,
+    Map<skir.ParameterKey, skir.TypeUse> bindings,
+  ) => switch (template) {
+    skir.ResourceMatchTemplate_typeWrapper(:final value) => switch (_apply(
+      value,
+      bindings,
+    )) {
+      skir.TypeUse_namedWrapper(:final value) => skir.ResourceMatch.wrapType(
+        value,
+      ),
+      _ => null,
+    },
+    skir.ResourceMatchTemplate_definitionWrapper(:final value) =>
+      skir.ResourceMatch.wrapDefinition(value),
+    _ when template == skir.ResourceMatchTemplate.anyResource =>
+      skir.ResourceMatch.anyResource,
     _ => null,
   };
 

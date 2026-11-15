@@ -26,6 +26,7 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.catalog.of
+import com.typewritermc.types.definition
 import com.typewritermc.types.entries
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -353,6 +354,7 @@ private fun realmStructureDiagnostics(
     relations: List<RelationContract>,
     catalog: CheckedCatalog,
 ): List<DeclarationDiagnostic> {
+    // A member endpoint naming every resource owns every type.
     val members = relations.filter { it.ownsResources }.map { it.second.resource.definition }
     return declarations
         .filter {
@@ -371,7 +373,7 @@ private fun realmStructureDiagnostics(
                     DeclarationDiagnostic.of(id, "generic_realm_section", origins)
                 }
 
-                members.none { member -> catalog.isNominalSubtype(id, member) } -> {
+                members.none { member -> member == null || catalog.isNominalSubtype(id, member) } -> {
                     DeclarationDiagnostic.of(id, "unowned_resource_type", origins)
                 }
 
@@ -385,9 +387,9 @@ private fun realmStructureDiagnostics(
 /** The owner side endpoints of ownership relations: the link fields that hold owned resources. */
 private fun List<RelationContract>.ownershipEndpoints(): Set<EndpointId> = filter { it.ownsResources }.mapTo(linkedSetOf()) { it.first.id }
 
-/** The owner endpoint types of ownership relations: the first endpoint, which holds the owned resources. */
+/** The owner endpoint types of ownership relations: the first endpoint, which holds the owned resources; an owner naming every resource names no type. */
 private fun List<RelationContract>.ownerTypes(): Set<TypeDefinitionId> =
-    filter { it.ownsResources }.mapTo(linkedSetOf()) { it.first.resource.definition }
+    filter { it.ownsResources }.mapNotNullTo(linkedSetOf()) { it.first.resource.definition }
 
 /** Whether [id] is the realm root or a realm section type, which the realm creates and every resource sits inside. */
 private fun CheckedCatalog.isRealmStructure(id: TypeDefinitionId): Boolean =

@@ -467,7 +467,7 @@ authoredLinkCollection({
           linkDefinition,
           representation: skir.RepresentationTemplate.createLink(
             endpoint: sourceEndpoint,
-            target: rootTemplate,
+            target: skir.ResourceMatchTemplate.wrapType(rootTemplate),
           ),
         ),
       ],
@@ -477,9 +477,13 @@ authoredLinkCollection({
           first: skir.EndpointDefinition(
             id: sourceEndpoint,
             slot: skir.EndpointSlot.first,
-            resource: skir.NamedTypeTemplate(
-              definition: rootDefinition,
-              arguments: const [],
+            resource: skir.ResourceMatchTemplate.wrapType(
+              skir.TypeTemplate.wrapNamed(
+                skir.NamedTypeTemplate(
+                  definition: rootDefinition,
+                  arguments: const [],
+                ),
+              ),
             ),
             cardinality: skir.EndpointCardinality.many,
             onDelete: skir.RelationDeletePolicy.clear,
@@ -487,9 +491,13 @@ authoredLinkCollection({
           second: skir.EndpointDefinition(
             id: targetEndpoint,
             slot: skir.EndpointSlot.second,
-            resource: skir.NamedTypeTemplate(
-              definition: rootDefinition,
-              arguments: const [],
+            resource: skir.ResourceMatchTemplate.wrapType(
+              skir.TypeTemplate.wrapNamed(
+                skir.NamedTypeTemplate(
+                  definition: rootDefinition,
+                  arguments: const [],
+                ),
+              ),
             ),
             cardinality: skir.EndpointCardinality.many,
             onDelete: skir.RelationDeletePolicy.clear,
@@ -536,7 +544,7 @@ authoredLinkCollection({
               skir.FieldPatternSegment.items,
             ],
           ),
-          target: rootTemplate,
+          target: skir.ResourceMatchTemplate.wrapType(rootTemplate),
           containsCollection: true,
         ),
       ],

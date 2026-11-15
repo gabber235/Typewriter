@@ -728,9 +728,12 @@ final class _EvaluationResources implements skir.PortableResources {
     final opposite = relation.first.id == link.endpoint
         ? relation.second
         : relation.first;
-    return catalog
-        .nominalDefinitions(configuration)
-        .contains(opposite.resource.definition);
+    // An opposite endpoint naming every resource accepts any target.
+    return switch (opposite.resource.definition) {
+      final definition? =>
+        catalog.nominalDefinitions(configuration).contains(definition),
+      null => true,
+    };
   }
 
   @override

@@ -201,9 +201,8 @@ skir.PublishedType linkType(
     parents: const [],
     representation: skir.RepresentationTemplate.createLink(
       endpoint: skir.EndpointId(value: "target"),
-      target: skir.TypeTemplate.createNamed(
-        definition: target,
-        arguments: const [],
+      target: skir.ResourceMatchTemplate.wrapType(
+        skir.TypeTemplate.createNamed(definition: target, arguments: const []),
       ),
     ),
   ),

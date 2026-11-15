@@ -3,7 +3,7 @@ part of "checked_editor_catalog.dart";
 /// Reference discovery: where authored records hold references and which
 /// unselected forms could hold them.
 extension CheckedReferenceDiscovery on CheckedEditorCatalog {
-  ({skir.EndpointId endpoint, skir.TypeUse target})? referenceTypeAt(
+  ({skir.EndpointId endpoint, skir.ResourceMatch target})? referenceTypeAt(
     skir.AuthoringRecord record,
     skir.ValuePath path,
   ) => _referenceForUse(
@@ -16,7 +16,7 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
     ),
   );
 
-  ({skir.EndpointId endpoint, skir.TypeUse target})? _referenceForUse(
+  ({skir.EndpointId endpoint, skir.ResourceMatch target})? _referenceForUse(
     skir.NamedTypeUse? use,
   ) {
     if (use == null) return null;
@@ -24,10 +24,7 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
     if (declaration?.status != skir.DeclarationStatus.ready) return null;
     final representation = declaration?.definition.representation;
     if (representation is! skir.RepresentationTemplate_linkWrapper) return null;
-    final target = applyTemplate(
-      representation.value.target,
-      selectionOfUse(use),
-    );
+    final target = applyMatch(representation.value.target, selectionOfUse(use));
     return target == null
         ? null
         : (endpoint: representation.value.endpoint, target: target);
@@ -35,7 +32,7 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
 
   /// Exact reference paths in the authored value, including unfinished links.
   Iterable<
-    ({skir.ValuePath path, skir.EndpointId endpoint, skir.TypeUse target})
+    ({skir.ValuePath path, skir.EndpointId endpoint, skir.ResourceMatch target})
   >
   referenceLocations(skir.AuthoringRecord record) sync* {
     for (final node in record._referenceValues) {
@@ -52,7 +49,7 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
 
   /// Existing collection containers whose item contract is a direct reference.
   Iterable<
-    ({skir.ValuePath path, skir.EndpointId endpoint, skir.TypeUse target})
+    ({skir.ValuePath path, skir.EndpointId endpoint, skir.ResourceMatch target})
   >
   referenceCollections(skir.AuthoringRecord record) sync* {
     for (final node in record._referenceValues) {

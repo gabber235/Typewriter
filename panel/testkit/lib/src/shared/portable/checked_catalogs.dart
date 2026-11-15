@@ -269,7 +269,9 @@ inheritedPresentationCatalog() {
         ),
         valueOwner: base,
         relativePath: skir.RelativeFieldPattern(segments: const []),
-        target: skir.TypeTemplate.wrapParameter(baseParameter),
+        target: skir.ResourceMatchTemplate.wrapType(
+          skir.TypeTemplate.wrapParameter(baseParameter),
+        ),
         containsCollection: false,
       ),
     ],

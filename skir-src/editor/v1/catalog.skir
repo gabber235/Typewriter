@@ -29,6 +29,7 @@ import {
   RelationId,
   RelativeFieldPattern,
   ResourceMatch,
+  ResourceMatchTemplate,
   RuleId,
   RuleOrigin,
   TypeDefinition,
@@ -72,7 +73,7 @@ enum EndpointCardinality(84060004) {
 struct EndpointDefinition(84060005) {
   id: EndpointId = 0;
   slot: EndpointSlot = 1;
-  resource: NamedTypeTemplate = 2;
+  resource: ResourceMatchTemplate = 2;
   cardinality: EndpointCardinality = 3;
   on_delete: RelationDeletePolicy = 4;
 }
@@ -326,7 +327,7 @@ struct EndpointBindingTemplate(84060033) {
   containing_resource: NamedTypeTemplate = 1;
   value_owner: TypeDefinitionId = 2;
   relative_path: RelativeFieldPattern = 3;
-  target: TypeTemplate = 4;
+  target: ResourceMatchTemplate = 4;
   contains_collection: bool = 5;
 }
 

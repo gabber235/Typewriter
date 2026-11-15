@@ -7,6 +7,7 @@ import com.typewritermc.types.catalog.reasons
 import com.typewritermc.types.closedCases
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.isInstantiable
+import com.typewritermc.types.mapTemplate
 import com.typewritermc.types.mapTypes
 import com.typewritermc.types.match
 import com.typewritermc.types.member
@@ -41,6 +42,8 @@ import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResolvedField
 import skirout.editor.v1.type_catalog.ResolvedRecordForm
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceMatch
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -156,6 +159,37 @@ fun TypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<TypeUs
 /** Applies the arguments of this template, keeping it a named application. */
 fun NamedTypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<NamedTypeUse> =
     this.arguments.mapResolution { it.apply(arguments) }.map { definition.namedUse(it) }
+
+/**
+ * The match this template names once [arguments] bind its parameters. A type must resolve to a named type; any other
+ * type is invalid as `invalid_resource_match`, owned by the first definition or parameter owner it is written with.
+ */
+fun ResourceMatchTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<ResourceMatch> =
+    when (this) {
+        is ResourceMatchTemplate.TypeWrapper -> {
+            value.apply(arguments).flatMap { use ->
+                use.named?.let { Resolution.Ready(ResourceMatch.TypeWrapper(it)) }
+                    ?: Resolution.Invalid(listOf(diagnostic(value.diagnosticOwner(), "invalid_resource_match")))
+            }
+        }
+
+        is ResourceMatchTemplate.DefinitionWrapper -> {
+            Resolution.Ready(ResourceMatch.DefinitionWrapper(value))
+        }
+
+        ResourceMatchTemplate.ANY_RESOURCE -> {
+            Resolution.Ready(ResourceMatch.ANY_RESOURCE)
+        }
+
+        else -> {
+            unknownVariant(this)
+        }
+    }
+
+/** The definition a diagnostic about this template names: the first it is written with, or a parameter's owner. */
+private fun TypeTemplate.diagnosticOwner(): TypeDefinitionId =
+    walk().firstNotNullOfOrNull { node -> node.named?.definition ?: (node as? TypeTemplate.ParameterWrapper)?.value?.owner }
+        ?: TYPE_USE_DIAGNOSTIC_OWNER
 
 /**
  * Owns an immutable declaration snapshot and memoized application results for one catalog generation.
@@ -1070,6 +1104,9 @@ private class ValidatedDeclarations(
                 markUnavailable(definition.id, "template_argument_arity")
             }
         }
+        if (definition.representation.matchedDefinitions().any { it !in definitions }) {
+            markUnavailable(definition.id, "unknown_dependency")
+        }
     }
 
     private fun propagateUnavailableDependencies() {
@@ -1337,7 +1374,7 @@ private fun TypeDefinition.mapTemplates(transform: (TypeTemplate) -> TypeTemplat
             }
 
             is RepresentationTemplate.LinkWrapper -> {
-                RepresentationTemplate.createLink(endpoint = shape.value.endpoint, target = transform(shape.value.target))
+                RepresentationTemplate.createLink(endpoint = shape.value.endpoint, target = shape.value.target.mapTemplate(transform))
             }
 
             else -> {

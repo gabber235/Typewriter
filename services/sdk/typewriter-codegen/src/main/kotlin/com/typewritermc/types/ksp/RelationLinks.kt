@@ -6,6 +6,7 @@ import com.typewritermc.types.template
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -34,7 +35,11 @@ fun relationLinkDefinition(
                     derived = false,
                 ),
             ),
-        representation = RepresentationTemplate.createLink(endpoint = endpoint, target = target.template),
+        representation =
+            RepresentationTemplate.createLink(
+                endpoint = endpoint,
+                target = ResourceMatchTemplate.TypeWrapper(target.template),
+            ),
         parents = emptyList(),
     )
 }

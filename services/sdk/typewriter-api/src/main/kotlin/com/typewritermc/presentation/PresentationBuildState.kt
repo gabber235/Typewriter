@@ -10,6 +10,7 @@ import com.typewritermc.expression.operations.PortableOperationCatalog
 import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.canonicalText
 import com.typewritermc.types.catalog.apply
+import com.typewritermc.types.definition
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
@@ -34,6 +35,7 @@ import skirout.editor.v1.presentation.StackChild
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
@@ -274,9 +276,10 @@ internal class PresentationBuildState(
             require(
                 link.endpoint in binding.ownershipEndpoints,
             ) { "A create action owner must be the owner side of an ownership relation." }
-            val target =
-                requireNotNull(link.target as? TypeTemplate.NamedWrapper) { "A create action owner must link a named resource type." }
-            require(type.isSubtype(created, target.value.definition)) { "A create action owner does not accept resources of $created." }
+            if (link.target != ResourceMatchTemplate.ANY_RESOURCE) {
+                val target = requireNotNull(link.target.definition) { "A create action owner must link a named resource type." }
+                require(type.isSubtype(created, target)) { "A create action owner does not accept resources of $created." }
+            }
         }
         val subject = type.rebind(created.template(emptyList()))
         val fields =

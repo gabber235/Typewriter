@@ -16,6 +16,7 @@ import skirout.editor.v1.type_catalog.AppliedSchema
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ResolvedField
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeUse
 
 // Members on a type: a record's fields, read through any number of references, then provider functions whose first
@@ -53,12 +54,16 @@ private fun Checker.mentionsMissing(type: TypeUse): Boolean =
         }
     }
 
-/** The record a value of [type] reads its fields from: the type itself, or what its references point at. */
+/**
+ * The record a value of [type] reads its fields from: the type itself, or what its references point at. A reference to
+ * a definition or to every resource names no one record, so it reads from itself as an unreadable target does.
+ */
 internal fun Checker.recordBehind(type: TypeUse): TypeUse {
     var current = type
     repeat(MAX_REFERENCE_HOPS) {
         val link = schema(current)?.representation as? ResolvedRepresentation.LinkWrapper ?: return current
-        current = normalize(link.value.target)
+        val target = link.value.target as? ResourceMatch.TypeWrapper ?: return current
+        current = normalize(target.value.use)
     }
     return current
 }

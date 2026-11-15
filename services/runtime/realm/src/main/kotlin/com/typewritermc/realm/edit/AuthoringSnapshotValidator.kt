@@ -15,6 +15,7 @@ import com.typewritermc.types.catalog.contentOwner
 import com.typewritermc.types.catalog.misfiledDeclarations
 import com.typewritermc.types.catalog.misfits
 import com.typewritermc.types.catalog.namesDerivedKey
+import com.typewritermc.types.definition
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.record
@@ -164,12 +165,13 @@ private fun validateRealmStructure(
         }
 
     val ownership = contracts.filter { it.ownsResources }
+    // A member endpoint naming every resource, with no definition, makes every resource ownable.
     val members = ownership.map { it.second.resource.definition }
 
     fun ResourceId.isOwned() = ownership.any { links.at(this, it.id, EndpointSlot.SECOND).isNotEmpty() }
 
     fun AuthoringRecord.isOwnable() =
-        configuration.definition.let { type -> members.any { it == type || catalog.isNominalSubtype(type, it) } }
+        configuration.definition.let { type -> members.any { it == null || it == type || catalog.isNominalSubtype(type, it) } }
 
     // A member without a back reference loses its owner when only the owner's record changes, so the resources an
     // affected resource owned before the change are checked too.

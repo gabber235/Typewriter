@@ -45,6 +45,7 @@ import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -748,7 +749,7 @@ val TypeSystemFoundationTest by testSuite {
                         FieldPatternSegment.ITEMS,
                         FieldPatternSegment.field("destination"),
                     ),
-                target = id("page").template(),
+                target = ResourceMatchTemplate.TypeWrapper(id("page").template()),
                 containsCollection = true,
             )
 

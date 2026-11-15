@@ -191,7 +191,7 @@ struct EndpointId(84180034) {
 }
 struct LinkRepresentationTemplate(84180035) {
   endpoint: EndpointId = 0;
-  target: TypeTemplate = 1;
+  target: ResourceMatchTemplate = 1;
 }
 enum RepresentationTemplate(84180036) {
   scalar: ScalarRepresentationTemplate = 1;
@@ -414,7 +414,7 @@ struct MappingResolvedRepresentation(84180081) {
 }
 struct LinkResolvedRepresentation(84180082) {
   endpoint: EndpointId = 0;
-  target: TypeUse = 1;
+  target: ResourceMatch = 1;
 }
 enum ResolvedRepresentation(84180083) {
   scalar: ScalarResolvedRepresentation = 1;

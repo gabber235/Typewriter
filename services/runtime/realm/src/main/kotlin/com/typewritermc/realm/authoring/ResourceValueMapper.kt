@@ -16,9 +16,9 @@ import com.typewritermc.authoring.root
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.Fit
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.isSelectionReadableAs
-import com.typewritermc.types.closedUse
+import com.typewritermc.types.catalog.fits
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -28,10 +28,10 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
 import com.typewritermc.types.storedUse
-import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
+import com.typewritermc.types.widest
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.authoring_facts.LinkProjection
@@ -43,9 +43,9 @@ import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
-import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -228,11 +228,11 @@ internal object ResourceValueMapper {
             if (catalog != null) {
                 val sourceEndpoint = if (slot == EndpointSlot.FIRST) contract.first else contract.second
                 val targetEndpoint = if (slot == EndpointSlot.FIRST) contract.second else contract.first
-                if (!resources.getValue(occurrence.source).matches(sourceEndpoint.resource, catalog)) {
+                if (!resources.getValue(occurrence.source).matches(sourceEndpoint.resource.widest(), catalog)) {
                     problems += ValueProblem(location = occurrence.id.location, code = "source_resource_type_mismatch")
                     return@forEach
                 }
-                if (!resources.getValue(occurrence.target.resource).matches(targetEndpoint.resource, catalog)) {
+                if (!resources.getValue(occurrence.target.resource).matches(targetEndpoint.resource.widest(), catalog)) {
                     problems += ValueProblem(location = occurrence.id.location, code = "target_resource_type_mismatch")
                     return@forEach
                 }
@@ -360,7 +360,7 @@ internal object ResourceValueMapper {
         occurrence: LinkOccurrence,
         record: AuthoringRecord,
         catalog: CheckedCatalog,
-    ): TypeUse? =
+    ): ResourceMatch? =
         record
             .linkSlots(occurrence.source, catalog)
             .singleOrNull { it.location == occurrence.id.location.path && it.endpoint == occurrence.id.endpoint }
@@ -369,7 +369,7 @@ internal object ResourceValueMapper {
 
 private data class LinkSchemaSlot(
     val endpoint: EndpointId,
-    val target: TypeUse,
+    val target: ResourceMatch,
     val location: ValuePath?,
     val containsCollection: Boolean,
     val directCollection: ValuePath?,
@@ -617,17 +617,11 @@ private fun collectLinkSlots(
     }
 }
 
+/** Whether the creator's choices fit [match]; which resources a slot accepts asks this, never what binds compute. */
 private fun AuthoringRecord.matches(
-    expected: TypeUse,
+    match: ResourceMatch,
     catalog: CheckedCatalog,
-): Boolean = catalog.isSelectionReadableAs(configuration, expected)
-
-private fun AuthoringRecord.matches(
-    expected: NamedTypeTemplate,
-    catalog: CheckedCatalog,
-): Boolean =
-    expected.template.closedUse?.let { matches(it, catalog) }
-        ?: catalog.isNominalSubtype(configuration.definition, expected.definition)
+): Boolean = catalog.fits(configuration, match, owner = null) == Fit.YES
 
 private fun occurrenceKey(value: LinkOccurrence): String =
     "${value.id.endpoint.value}:${value.source.value}:${ValuePath.serializer.toJsonCode(

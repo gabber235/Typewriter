@@ -94,6 +94,7 @@ import com.typewritermc.types.ksp.KspTypeGraphConverter
 import com.typewritermc.types.ksp.OwnedFieldDeclaration
 import com.typewritermc.types.ksp.RELATION_LINK_TARGET_BOUND
 import com.typewritermc.types.ksp.typeDefinitionIdentity
+import com.typewritermc.types.mapTemplate
 import com.typewritermc.types.memberOwner
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.nullable
@@ -853,7 +854,7 @@ private fun discoverEndpointBindings(
                                 containingResource = root,
                                 valueOwner = valueOwner,
                                 relativePath = RelativeFieldPattern(segments = path),
-                                target = representation.value.target.substitute(substitutions),
+                                target = representation.value.target.mapTemplate { it.substitute(substitutions) },
                                 containsCollection = containsCollection,
                             )
                     }

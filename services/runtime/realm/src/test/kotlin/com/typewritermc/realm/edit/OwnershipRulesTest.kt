@@ -41,6 +41,7 @@ import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -87,14 +88,14 @@ val OwnershipRulesTest by testSuite {
             EndpointDefinition(
                 id = ownerEndpoint,
                 slot = EndpointSlot.FIRST,
-                resource = ownerType.namedTemplate(),
+                resource = ResourceMatchTemplate.TypeWrapper(ownerType.template()),
                 cardinality = EndpointCardinality.ONE,
                 onDelete = RelationDeletePolicy.CASCADE,
             ),
             EndpointDefinition(
                 id = memberEndpoint,
                 slot = EndpointSlot.SECOND,
-                resource = memberType.namedTemplate(),
+                resource = ResourceMatchTemplate.TypeWrapper(memberType.template()),
                 cardinality = EndpointCardinality.MANY,
                 onDelete = RelationDeletePolicy.CLEAR,
             ),
@@ -149,7 +150,11 @@ val OwnershipRulesTest by testSuite {
             ),
             TypeDefinition.partial(
                 id = childLink,
-                representation = RepresentationTemplate.createLink(endpoint = ownerEndpoint, target = memberType.template()),
+                representation =
+                    RepresentationTemplate.createLink(
+                        endpoint = ownerEndpoint,
+                        target = ResourceMatchTemplate.TypeWrapper(memberType.template()),
+                    ),
             ),
             TypeDefinition.partial(
                 id = childrenType,

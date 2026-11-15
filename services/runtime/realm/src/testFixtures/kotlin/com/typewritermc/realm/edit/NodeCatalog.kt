@@ -43,6 +43,7 @@ import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -166,14 +167,14 @@ private fun relation(
     EndpointDefinition(
         id = first,
         slot = EndpointSlot.FIRST,
-        resource = NODE.namedTemplate(),
+        resource = ResourceMatchTemplate.TypeWrapper(NODE.template()),
         cardinality = firstCardinality,
         onDelete = firstDelete,
     ),
     EndpointDefinition(
         id = second,
         slot = EndpointSlot.SECOND,
-        resource = NODE.namedTemplate(),
+        resource = ResourceMatchTemplate.TypeWrapper(NODE.template()),
         cardinality = secondCardinality,
         onDelete = secondDelete,
     ),

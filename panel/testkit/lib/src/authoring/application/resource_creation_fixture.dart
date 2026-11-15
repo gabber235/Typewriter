@@ -249,14 +249,14 @@ final class ResourceCreationFixture {
       firstLink,
       skir.RepresentationTemplate.createLink(
         endpoint: firstEndpoint,
-        target: _named(second),
+        target: skir.ResourceMatchTemplate.wrapType(_named(second)),
       ),
     );
     _publish(
       secondLink,
       skir.RepresentationTemplate.createLink(
         endpoint: secondEndpoint,
-        target: _named(first),
+        target: skir.ResourceMatchTemplate.wrapType(_named(first)),
       ),
     );
     _relations.add(
@@ -266,14 +266,18 @@ final class ResourceCreationFixture {
         first: skir.EndpointDefinition(
           id: firstEndpoint,
           slot: skir.EndpointSlot.first,
-          resource: _template(first),
+          resource: skir.ResourceMatchTemplate.wrapType(
+            skir.TypeTemplate.wrapNamed(_template(first)),
+          ),
           cardinality: skir.EndpointCardinality.one,
           onDelete: skir.RelationDeletePolicy.clear,
         ),
         second: skir.EndpointDefinition(
           id: secondEndpoint,
           slot: skir.EndpointSlot.second,
-          resource: _template(second),
+          resource: skir.ResourceMatchTemplate.wrapType(
+            skir.TypeTemplate.wrapNamed(_template(second)),
+          ),
           cardinality: collection
               ? skir.EndpointCardinality.many
               : skir.EndpointCardinality.one,
@@ -301,7 +305,7 @@ final class ResourceCreationFixture {
         endpoint: endpoint,
         containingResource: _template(owner),
         valueOwner: _id(owner),
-        target: _named(target),
+        target: skir.ResourceMatchTemplate.wrapType(_named(target)),
         containsCollection: collection,
         relativePath: skir.RelativeFieldPattern(
           segments: [
@@ -333,7 +337,7 @@ final class ResourceCreationFixture {
             _id("Owned$name"),
             representation: skir.RepresentationTemplate.createLink(
               endpoint: owner,
-              target: _named(name),
+              target: skir.ResourceMatchTemplate.wrapType(_named(name)),
             ),
             display: defaultTypeDisplay("Owned $name"),
           ),
@@ -356,14 +360,18 @@ final class ResourceCreationFixture {
           first: skir.EndpointDefinition(
             id: owner,
             slot: skir.EndpointSlot.first,
-            resource: _template("Store"),
+            resource: skir.ResourceMatchTemplate.wrapType(
+              skir.TypeTemplate.wrapNamed(_template("Store")),
+            ),
             cardinality: skir.EndpointCardinality.one,
             onDelete: skir.RelationDeletePolicy.cascade,
           ),
           second: skir.EndpointDefinition(
             id: skir.EndpointId(value: "owns$name:second"),
             slot: skir.EndpointSlot.second,
-            resource: _template(name),
+            resource: skir.ResourceMatchTemplate.wrapType(
+              skir.TypeTemplate.wrapNamed(_template(name)),
+            ),
             cardinality: skir.EndpointCardinality.many,
             onDelete: skir.RelationDeletePolicy.clear,
           ),
@@ -374,7 +382,7 @@ final class ResourceCreationFixture {
           endpoint: owner,
           containingResource: _template("Store"),
           valueOwner: _id("Store"),
-          target: _named(name),
+          target: skir.ResourceMatchTemplate.wrapType(_named(name)),
           containsCollection: true,
           relativePath: skir.RelativeFieldPattern(
             segments: [

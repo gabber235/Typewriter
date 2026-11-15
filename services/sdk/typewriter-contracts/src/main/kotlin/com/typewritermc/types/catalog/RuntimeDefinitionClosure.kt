@@ -6,6 +6,7 @@ import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.walk
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
@@ -69,24 +70,29 @@ fun TypeTemplate.referencedDefinitions(): Set<TypeDefinitionId> = walk().flatMap
 /** Every definition a value of this template needs declared: those it is written with and the Formula record of each function type. */
 fun TypeTemplate.storedDefinitions(): Set<TypeDefinitionId> = walk().flatMapTo(linkedSetOf()) { it.ownDefinitions(stored = true) }
 
-/** Every definition this declaration is written with: its parents, bounds, field types and closed cases. */
+/** Every definition this declaration is written with: its parents, bounds, field types, closed cases and link targets. */
 fun TypeDefinition.referencedDefinitions(): Set<TypeDefinitionId> =
-    templates().flatMapTo(linkedSetOf(), TypeTemplate::referencedDefinitions)
+    templates().flatMapTo(linkedSetOf(), TypeTemplate::referencedDefinitions).apply { addAll(representation.matchedDefinitions()) }
 
 /** Every definition values of this declaration need declared: [referencedDefinitions] plus Formula for each function type. */
-fun TypeDefinition.storedDefinitions(): Set<TypeDefinitionId> = templates().flatMapTo(linkedSetOf(), TypeTemplate::storedDefinitions)
+fun TypeDefinition.storedDefinitions(): Set<TypeDefinitionId> =
+    templates().flatMapTo(linkedSetOf(), TypeTemplate::storedDefinitions).apply { addAll(representation.matchedDefinitions()) }
 
 /** Every template this declaration holds: parents, then parameter bounds, then its representation's. */
 private fun TypeDefinition.templates(): List<TypeTemplate> =
     parents.map { TypeTemplate.NamedWrapper(it) } + parameters.flatMap { parameter -> parameter.bounds } + representation.templates()
 
-/** The type templates a representation mentions directly: field types, items, keys, values and link targets. */
+/** The type templates a representation mentions directly: field types, items, keys, values and a link's target type. */
 internal fun RepresentationTemplate.templates(): List<TypeTemplate> =
     when (this) {
         is RepresentationTemplate.RecordWrapper -> value.fields.map { field -> field.type } + closedCases().orEmpty().map { it.template }
         is RepresentationTemplate.SequenceWrapper -> listOf(value.item)
         is RepresentationTemplate.MappingWrapper -> listOf(value.key, value.value)
-        is RepresentationTemplate.LinkWrapper -> listOf(value.target)
+        is RepresentationTemplate.LinkWrapper -> listOfNotNull((value.target as? ResourceMatchTemplate.TypeWrapper)?.value)
         is RepresentationTemplate.ScalarWrapper -> emptyList()
         else -> unknownVariant(this)
     }
+
+/** The definitions a representation names without a template: the definition a link's `definition` target names. */
+internal fun RepresentationTemplate.matchedDefinitions(): List<TypeDefinitionId> =
+    listOfNotNull(((this as? RepresentationTemplate.LinkWrapper)?.value?.target as? ResourceMatchTemplate.DefinitionWrapper)?.value)

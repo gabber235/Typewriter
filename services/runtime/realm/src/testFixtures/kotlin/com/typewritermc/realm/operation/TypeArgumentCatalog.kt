@@ -40,6 +40,7 @@ import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -84,14 +85,17 @@ internal val DUAL_RELATION =
         EndpointDefinition(
             id = SOURCE_ENDPOINT,
             slot = EndpointSlot.FIRST,
-            resource = DUAL.namedTemplate(listOf(DUAL_FIRST_PARAMETER.template, DUAL_SECOND_PARAMETER.template)),
+            resource =
+                ResourceMatchTemplate.TypeWrapper(
+                    DUAL.template(listOf(DUAL_FIRST_PARAMETER.template, DUAL_SECOND_PARAMETER.template)),
+                ),
             cardinality = EndpointCardinality.ONE,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
             id = TARGET_ENDPOINT,
             slot = EndpointSlot.SECOND,
-            resource = REWARD.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(REWARD.template()),
             cardinality = EndpointCardinality.ONE,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
@@ -159,7 +163,11 @@ internal val REPAIR_DEFINITIONS =
         TypeDefinition.partial(
             id = LINK,
             parameters = listOf(TypeParameter.partial(key = LINK_PARAMETER, name = "target")),
-            representation = RepresentationTemplate.createLink(endpoint = SOURCE_ENDPOINT, target = LINK_PARAMETER.template),
+            representation =
+                RepresentationTemplate.createLink(
+                    endpoint = SOURCE_ENDPOINT,
+                    target = ResourceMatchTemplate.TypeWrapper(LINK_PARAMETER.template),
+                ),
         ),
         TypeDefinition.partial(
             id = DUAL,

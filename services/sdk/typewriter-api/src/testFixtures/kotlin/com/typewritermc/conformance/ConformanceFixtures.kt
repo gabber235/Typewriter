@@ -163,6 +163,7 @@ import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -442,7 +443,11 @@ internal fun resourceDefinition() =
 internal fun linkDefinition() =
     TypeDefinition.partial(
         id = LINK_ID,
-        representation = RepresentationTemplate.createLink(endpoint = ENDPOINT, target = RESOURCE_ID.template(emptyList())),
+        representation =
+            RepresentationTemplate.createLink(
+                endpoint = ENDPOINT,
+                target = ResourceMatchTemplate.TypeWrapper(RESOURCE_ID.template(emptyList())),
+            ),
     )
 
 internal fun request(id: TypeDefinitionId) =

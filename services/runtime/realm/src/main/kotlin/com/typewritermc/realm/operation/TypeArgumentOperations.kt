@@ -19,12 +19,12 @@ import com.typewritermc.realm.edit.factKey
 import com.typewritermc.realm.edit.requiredExpectations
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.Fit
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResourceType
-import com.typewritermc.types.catalog.isSelectionReadableAs
+import com.typewritermc.types.catalog.fits
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.closedCases
-import com.typewritermc.types.closedUse
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -32,11 +32,11 @@ import com.typewritermc.types.items
 import com.typewritermc.types.payload
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.rows
-import com.typewritermc.types.template
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import com.typewritermc.types.widest
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
@@ -51,9 +51,9 @@ import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -475,8 +475,8 @@ private fun incompatibleLinks(
                 proposedSource?.let {
                     ResourceValueMapper.expectedTarget(occurrence, it, catalog)
                 }
-            val sourceValid = proposedSource?.matches(sourceEndpoint.resource, catalog) == true
-            val targetValid = proposedTarget?.matches(targetEndpoint.resource, catalog) == true
+            val sourceValid = proposedSource?.matches(sourceEndpoint.resource.widest(), catalog) == true
+            val targetValid = proposedTarget?.matches(targetEndpoint.resource.widest(), catalog) == true
             val bindingValid = expectedTarget != null && proposedTarget?.matches(expectedTarget, catalog) == true
             if (sourceValid && targetValid && bindingValid) {
                 null
@@ -495,19 +495,11 @@ private fun AuthoringRecord.proposedIf(
     requested: TypeSelection,
 ): AuthoringRecord = if (proposed) copy(configuration = requested) else this
 
+/** Whether the creator's choices fit [match]; which resources a slot accepts asks this, never what binds compute. */
 private fun AuthoringRecord.matches(
-    expected: TypeUse,
+    match: ResourceMatch,
     catalog: CheckedCatalog,
-): Boolean = catalog.isSelectionReadableAs(configuration, expected)
-
-private fun AuthoringRecord.matches(
-    expected: NamedTypeTemplate,
-    catalog: CheckedCatalog,
-): Boolean {
-    val concrete = expected.template.closedUse
-    if (concrete != null) return matches(concrete, catalog)
-    return catalog.isNominalSubtype(configuration.definition, expected.definition)
-}
+): Boolean = catalog.fits(configuration, match, owner = null) == Fit.YES
 
 /** The occurrence a repair clears or removes. */
 private val LinkRepairIntent.occurrence: LinkOccurrenceId

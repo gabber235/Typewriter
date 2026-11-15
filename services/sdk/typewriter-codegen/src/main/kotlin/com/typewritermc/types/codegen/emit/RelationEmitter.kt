@@ -24,6 +24,7 @@ import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.ksp.relationLinkDefinition
 import com.typewritermc.types.ksp.relationLinkId
+import com.typewritermc.types.template
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.RelationContract
@@ -31,6 +32,7 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import com.typewritermc.codegen.TypewriterApi as Api
@@ -137,7 +139,7 @@ private fun SdkRelation.endpointDefinition(endpoint: SdkEndpoint): CodeBlock =
         namedArguments(
             "id" to CodeBlock.of("id.%M(%T.%L)", ENDPOINT_ID, CatalogEndpointSlot::class, endpoint.slot.name.uppercase()),
             "slot" to CodeBlock.of("%T.%L", CatalogEndpointSlot::class, endpoint.slot.name.uppercase()),
-            "resource" to context(references) { endpoint.resourceTemplate.kotlinCode() },
+            "resource" to context(references) { ResourceMatchTemplate.TypeWrapper(endpoint.resourceTemplate.template).kotlinCode() },
             "cardinality" to
                 CodeBlock.of("%T.%L", EndpointCardinality::class, if (endpoint.cardinality == EndpointCardinality.MANY) "MANY" else "ONE"),
             "onDelete" to CodeBlock.of("%T.%L", CatalogDeletePolicy::class, endpoint.onDelete.name),

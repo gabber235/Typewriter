@@ -8,14 +8,14 @@ import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.graphLinkRelationIds
 import com.typewritermc.realm.catalog.ownershipRelationIds
+import com.typewritermc.types.catalog.Fit
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.completeTypeOf
+import com.typewritermc.types.catalog.fits
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.payload
 import com.typewritermc.types.toSkir
-import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.authoring_facts.LinkProjection
@@ -136,14 +136,13 @@ internal class RelationReads(
     ): Boolean {
         val sourceRecord = resources[source.source] ?: return false
         val destination = resources[target] ?: return false
-        val actual = catalog.checked.completeTypeOf(target, destination.configuration) ?: return false
         val expected =
             ResourceValueMapper.expectedTarget(source, sourceRecord, catalog.checked) ?: run {
                 val type = sourceRecord.authoredTypeAt(source.source, source.id.location.path, catalog.checked) ?: return false
                 val checked = catalog.checked.resolve(type) as? Resolution.Ready ?: return false
                 (checked.value.schema.representation as? ResolvedRepresentation.LinkWrapper)?.value?.target ?: return false
             }
-        return catalog.checked.isReadableAs(actual.use, expected)
+        return catalog.checked.fits(destination.configuration, expected, owner = target) == Fit.YES
     }
 
     /**

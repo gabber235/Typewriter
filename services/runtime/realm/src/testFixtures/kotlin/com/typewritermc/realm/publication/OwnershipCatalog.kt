@@ -34,6 +34,7 @@ import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -122,14 +123,14 @@ private val OWNERSHIP_CONTRACT =
         EndpointDefinition(
             id = PAGE_ENDPOINT,
             slot = EndpointSlot.FIRST,
-            resource = PAGE.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(PAGE.template()),
             cardinality = EndpointCardinality.ONE,
             onDelete = RelationDeletePolicy.CASCADE,
         ),
         EndpointDefinition(
             id = CHILD_ENDPOINT,
             slot = EndpointSlot.SECOND,
-            resource = CHILD.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(CHILD.template()),
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
@@ -183,7 +184,11 @@ private val DEFINITIONS =
         ),
         TypeDefinition.partial(
             id = CHILD_LINK,
-            representation = RepresentationTemplate.createLink(endpoint = PAGE_ENDPOINT, target = CHILD.template()),
+            representation =
+                RepresentationTemplate.createLink(
+                    endpoint = PAGE_ENDPOINT,
+                    target = ResourceMatchTemplate.TypeWrapper(CHILD.template()),
+                ),
         ),
         TypeDefinition.partial(
             id = CHILDREN,

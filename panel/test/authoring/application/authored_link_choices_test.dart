@@ -38,9 +38,11 @@ void main() {
           ),
           valueOwner: child,
           relativePath: binding.relativePath,
-          target: skir.TypeTemplate.createNamed(
-            definition: testTypeId("Wrapper"),
-            arguments: const [],
+          target: skir.ResourceMatchTemplate.wrapType(
+            skir.TypeTemplate.createNamed(
+              definition: testTypeId("Wrapper"),
+              arguments: const [],
+            ),
           ),
           containsCollection: false,
         ),
@@ -53,10 +55,8 @@ void main() {
     expect(selected, hasLength(1));
     expect(selected.single.template.containingResource.definition, child);
     expect(
-      catalog.selectionMatches(
-        catalog.beginSelection(base),
-        selected.single.target,
-      ),
+      catalog.fits(catalog.beginSelection(base), selected.single.target!) ==
+          ResourceFit.yes,
       isFalse,
     );
   });

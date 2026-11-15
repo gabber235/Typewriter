@@ -448,8 +448,11 @@ final class _ResourceCreationOperation {
       candidates: candidates,
       presentationDocument: presentationDocument,
       presentationIssues: presentationIssues,
-      searchHint:
-          "Select or create ${catalog.typeSelectionName(catalog.beginSelection(plan.opposite.resource.definition))}",
+      searchHint: switch (plan.opposite.resource.definition) {
+        final definition? =>
+          "Select or create ${catalog.typeSelectionName(catalog.beginSelection(definition))}",
+        null => "Select or create a resource",
+      },
     );
     _checkCurrent();
     return switch (choice) {
@@ -474,16 +477,11 @@ final class _ResourceCreationOperation {
     PortableLinkPlan plan,
   ) sync* {
     final source = view.resource(plan.source.source)!;
-    final expected = catalog.namedUse(plan.targetType);
     for (final type in catalog.creatableTypes) {
       final configuration = catalog.beginSelection(type);
       final complete = catalog.completeUse(configuration) != null;
-      if (complete
-          ? !catalog.selectionMatches(configuration, plan.targetType)
-          : expected == null ||
-                !catalog
-                    .nominalDefinitions(configuration)
-                    .contains(expected.definition)) {
+      // A pending type stays a candidate while its choices could still fit.
+      if (catalog.fits(configuration, plan.targetMatch) == ResourceFit.no) {
         continue;
       }
       final inverse = catalog
@@ -493,9 +491,11 @@ final class _ResourceCreationOperation {
       final compatible =
           inverse.isEmpty ||
           inverse.any(
-            (binding) =>
-                binding.isAvailable &&
-                catalog.selectionMatches(source.configuration, binding.target),
+            (binding) => switch (binding.target) {
+              final target? when binding.isAvailable =>
+                catalog.fits(source.configuration, target) == ResourceFit.yes,
+              _ => false,
+            },
           );
       final label = catalog.typeSelectionName(configuration);
       yield ReferencePickerCandidate(
@@ -785,11 +785,7 @@ final class _ResourceCreationOperation {
     final type = record.configuration.definition;
     final ownerships = [
       for (final ownership in catalog.ownershipRelations)
-        if (catalog.isNominalSubtype(
-          type,
-          ownership.member.resource.definition,
-        ))
-          ownership,
+        if (catalog.endpointAdmits(ownership.member, type)) ownership,
     ];
     if (ownerships.isEmpty) return null;
     // A destination named by the creation decides which ownership applies.

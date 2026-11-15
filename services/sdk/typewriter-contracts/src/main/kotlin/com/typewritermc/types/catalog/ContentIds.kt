@@ -6,6 +6,7 @@ import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.types.VAR_TYPE_ID
 import com.typewritermc.types.declared
+import com.typewritermc.types.mapTemplate
 import com.typewritermc.types.mapTypes
 import com.typewritermc.types.member
 import com.typewritermc.types.memberOwner
@@ -21,6 +22,7 @@ import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeId
@@ -248,6 +250,12 @@ private fun TypeTemplate.remappingContent(copies: Map<ResourceId, ResourceId>): 
 
 private fun NamedTypeTemplate.remappingContent(copies: Map<ResourceId, ResourceId>): NamedTypeTemplate =
     NamedTypeTemplate(definition = definition.remappingContent(copies), arguments = arguments.map { it.remappingContent(copies) })
+
+private fun ResourceMatchTemplate.remappingContent(copies: Map<ResourceId, ResourceId>): ResourceMatchTemplate =
+    when (this) {
+        is ResourceMatchTemplate.DefinitionWrapper -> ResourceMatchTemplate.DefinitionWrapper(value.remappingContent(copies))
+        else -> mapTemplate { it.remappingContent(copies) }
+    }
 
 private fun FieldOwner.remappingContent(copies: Map<ResourceId, ResourceId>): FieldOwner =
     copy(definition = definition.remappingContent(copies))

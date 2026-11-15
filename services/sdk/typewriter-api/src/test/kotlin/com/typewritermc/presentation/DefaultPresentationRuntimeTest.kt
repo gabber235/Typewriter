@@ -105,6 +105,7 @@ import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -1178,7 +1179,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         representation =
                             RepresentationTemplate.createLink(
                                 endpoint = EndpointId(value = "test:link"),
-                                target = resourceId.template(),
+                                target = ResourceMatchTemplate.TypeWrapper(resourceId.template()),
                             ),
                     ) +
                     definitions {

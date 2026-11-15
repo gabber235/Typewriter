@@ -105,14 +105,10 @@ extension OwnerRoutes on CheckedEditorCatalog {
       final next = <OwnerRoute>[];
       for (final route in frontier) {
         for (final ownership in ownershipRelations) {
-          if (!isNominalSubtype(
-            route.ownerRoot,
-            ownership.member.resource.definition,
-          )) {
-            continue;
-          }
+          if (!endpointAdmits(ownership.member, route.ownerRoot)) continue;
+          // An owner endpoint naming every resource names no type to walk up to.
           final owner = ownership.owner.resource.definition;
-          if (route.visited.contains(owner)) continue;
+          if (owner == null || route.visited.contains(owner)) continue;
           final extended = route.extend(owner, ownership.member.id);
           yield extended;
           next.add(extended);

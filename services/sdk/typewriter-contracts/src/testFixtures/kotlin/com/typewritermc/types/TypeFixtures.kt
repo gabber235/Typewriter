@@ -18,6 +18,7 @@ import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -32,7 +33,7 @@ fun linkDefinition(definition: TypeDefinitionId) =
         representation =
             RepresentationTemplate.createLink(
                 endpoint = EndpointId(value = definition.toString()),
-                target = ParameterKey(owner = definition, index = 0).template,
+                target = ResourceMatchTemplate.TypeWrapper(ParameterKey(owner = definition, index = 0).template),
             ),
     )
 
