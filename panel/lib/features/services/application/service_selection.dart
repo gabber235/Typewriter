@@ -149,10 +149,8 @@ final _serviceIdentityDefinition = _draftType("ServiceIdentity");
 final _serviceIdentityType = skir.TypeUse.wrapNamed(
   _draftUse(_serviceIdentityDefinition),
 );
-final _serviceIdentityCatalog = skir.EditorCatalog(
-  resourceDisplays: const [],
-  resourceOperations: const [],
-  generation: skir.CatalogGeneration(value: "panel.service.identity"),
+final _serviceIdentityCatalog = trustedLocalTypeCatalog(
+  generation: "panel.service.identity",
   types: [
     _draftPublished(
       _serviceIdentityDefinition,
@@ -165,18 +163,7 @@ final _serviceIdentityCatalog = skir.EditorCatalog(
       ],
     ),
   ],
-  presentations: const [],
-  presentationMaterials: const [],
-  configuration: const [],
-  capabilities: const [],
-  relations: const [],
-  endpointBindings: const [],
-  realmRoot: skir.TypeDefinitionId.defaultInstance,
-  recommendations: const [],
-  roleFallbacks: const [],
-
-  diagnostics: const [],
-).asTrustedLocalCatalog();
+);
 
 /// Creates the scoped editor target used to rename [service].
 ///

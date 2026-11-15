@@ -2,6 +2,31 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// A trusted local catalog of [types] alone, for a panel owned editor that
+/// declares no presentations, relations, capabilities or operations.
+///
+/// [generation] names the catalog so its snapshots are told apart from a
+/// realm's.
+CheckedEditorCatalog trustedLocalTypeCatalog({
+  required String generation,
+  required List<skir.PublishedType> types,
+}) => skir.EditorCatalog(
+  resourceDisplays: const [],
+  resourceOperations: const [],
+  generation: skir.CatalogGeneration(value: generation),
+  types: types,
+  presentations: const [],
+  presentationMaterials: const [],
+  configuration: const [],
+  capabilities: const [],
+  relations: const [],
+  endpointBindings: const [],
+  realmRoot: skir.TypeDefinitionId.defaultInstance,
+  recommendations: const [],
+  roleFallbacks: const [],
+  diagnostics: const [],
+).asTrustedLocalCatalog();
+
 /// Installs a local catalog asset whose types were made effective by its owner.
 ///
 /// This boundary validates identity and reference integrity only. It does not

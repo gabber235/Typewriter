@@ -89,10 +89,8 @@ skir.PublishedType _draftPublished(
 ///
 /// Named variants preserve disabled and enabled choices while the snapshot
 /// translates the resulting value into a complete host configuration command.
-final _hostConfigurationCatalog = skir.EditorCatalog(
-  resourceDisplays: const [],
-  resourceOperations: const [],
-  generation: skir.CatalogGeneration(value: "panel.host.configuration"),
+final _hostConfigurationCatalog = trustedLocalTypeCatalog(
+  generation: "panel.host.configuration",
   types: [
     _draftPublished(
       _hostConfigurationDefinition,
@@ -129,15 +127,4 @@ final _hostConfigurationCatalog = skir.EditorCatalog(
       ],
     ),
   ],
-  presentations: const [],
-  presentationMaterials: const [],
-  configuration: const [],
-  capabilities: const [],
-  relations: const [],
-  endpointBindings: const [],
-  realmRoot: skir.TypeDefinitionId.defaultInstance,
-  recommendations: const [],
-  roleFallbacks: const [],
-
-  diagnostics: const [],
-).asTrustedLocalCatalog();
+);
