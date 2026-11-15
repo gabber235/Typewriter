@@ -179,7 +179,10 @@ class Selector extends HookConsumerWidget {
       if (!ref.read(selectionProvider).contains(selectableId)) {
         ref.read(selectionProvider.notifier).selectOnly(selectableId);
       }
-      contextTargets.value = List.of(ref.read(selectionProvider));
+      // The item is focused, so the menu acts on what a key would.
+      contextTargets.value = List.of(
+        operationTargetIds(ref.read(selectionProvider), focused: selectableId),
+      );
       focusNode.requestFocus();
       pendingContextPosition.value = globalPosition;
     }

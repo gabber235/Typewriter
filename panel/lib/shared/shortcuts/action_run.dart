@@ -85,7 +85,7 @@ final class HoldPlan<K extends Object> {
   final String? doneWord;
 
   /// Finds the rows the targets are in when the hold starts, such as the
-  /// rows of the surface showing the selection an operation acts on. Null,
+  /// rows of the surface showing the items an operation acts on. Null,
   /// or no rows found, paints the hold on its button.
   final HoldRows? Function(WidgetRef ref)? rows;
 

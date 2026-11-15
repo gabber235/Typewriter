@@ -24,7 +24,38 @@ void main() {
     signedIn(ada, organization: acme),
     membershipService(roles: [writer, editor, reader], members: [bram, dara]),
   ];
+  // Ann and Ken are selected while Bea, between them, is not.
+  final trio = [
+    signedIn(ada, organization: acme),
+    membershipService(
+      roles: [editor],
+      members: [member("Ann"), member("Bea"), member("Ken")],
+    ),
+  ];
+
   group("with the keyboard alone", () {
+    testWidgets("holding Delete on a member outside the selection removes "
+        "only that member", (tester) async {
+      final panel = await tester.pumpPanel(trio, at: membersPage());
+      expect(panel.focused, contains("Ann"));
+
+      await panel.press(LogicalKeyboardKey.space);
+      await panel.press(LogicalKeyboardKey.keyJ);
+      await panel.press(LogicalKeyboardKey.keyJ);
+      await panel.press(LogicalKeyboardKey.space);
+      await panel.press(LogicalKeyboardKey.keyK);
+      expect(panel.focused, contains("Bea"));
+      await panel.keyDown(LogicalKeyboardKey.delete);
+      await panel.holdFor(0.5);
+      expect(panel.holdLine, startsWith("Remove Bea?"));
+      await panel.holdFor(1);
+      await panel.keyUp(LogicalKeyboardKey.delete);
+
+      await panel.eventually(() => expect(panel.onPage("Bea"), findsNothing));
+      expect(panel.onPage("Ann"), findsOneWidget);
+      expect(panel.onPage("Ken"), findsOneWidget);
+    });
+
     testWidgets("Bram and Dara both get the Writer role from the inspector, "
         "each keeping their own roles", (tester) async {
       final panel = await tester.pumpPanel(pair, at: membersPage());
@@ -108,6 +139,23 @@ void main() {
       await panel.eventually(
         () => expect(menu.entries, contains(startsWith("Remove Linus?"))),
       );
+    });
+
+    testWidgets("holding Remove in the context menu of a member outside the "
+        "selection removes only that member", (tester) async {
+      final panel = await tester.pumpPanel(trio, at: membersPage());
+
+      await panel.item("Ann").toggle();
+      await panel.item("Ken").toggle();
+      final menu = await panel.item("Bea").contextMenu();
+      await panel.eventually(
+        () => expect(menu.entries, contains(startsWith("Remove Bea?"))),
+      );
+      await panel.holdButton("Remove Bea?");
+
+      await panel.eventually(() => expect(panel.onPage("Bea"), findsNothing));
+      expect(panel.onPage("Ann"), findsOneWidget);
+      expect(panel.onPage("Ken"), findsOneWidget);
     });
 
     testWidgets("a toggle click shows exactly one check on the member", (

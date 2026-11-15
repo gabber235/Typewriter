@@ -80,7 +80,7 @@ void main() {
     expect(find.text("Copy Join Code"), findsNothing);
   });
 
-  group("two selected codes are revoked together", () {
+  group("of three join codes", () {
     final first = joinCode("first");
     final second = joinCode("second");
     final third = joinCode("third");
@@ -89,7 +89,8 @@ void main() {
       membershipService(joinCodes: [first, second, third]),
     ];
 
-    testWidgets("with the keyboard alone, by holding Delete", (tester) async {
+    testWidgets("two selected are revoked together with the keyboard alone, "
+        "by holding Delete", (tester) async {
       final panel = await tester.pumpPanel(
         page,
         at: membersPage(const JoinCodesRoute()),
@@ -108,9 +109,29 @@ void main() {
       expect(find.textContaining(third.code.id), findsWidgets);
     });
 
-    testWidgets("with the mouse alone, by holding Revoke in the inspector", (
-      tester,
-    ) async {
+    testWidgets("holding Delete on a code outside the selection revokes "
+        "only that code", (tester) async {
+      final panel = await tester.pumpPanel(
+        page,
+        at: membersPage(const JoinCodesRoute()),
+      );
+
+      await panel.press(LogicalKeyboardKey.space);
+      await panel.press(LogicalKeyboardKey.keyJ);
+      await panel.press(LogicalKeyboardKey.keyJ);
+      await panel.press(LogicalKeyboardKey.space);
+      await panel.press(LogicalKeyboardKey.keyK);
+      await panel.holdKey(LogicalKeyboardKey.delete);
+
+      await panel.eventually(
+        () => expect(find.textContaining(second.code.id), findsNothing),
+      );
+      expect(find.textContaining(first.code.id), findsWidgets);
+      expect(find.textContaining(third.code.id), findsWidgets);
+    });
+
+    testWidgets("two selected are revoked together with the mouse alone, by "
+        "holding Revoke in the inspector", (tester) async {
       final panel = await tester.pumpPanel(
         page,
         at: membersPage(const JoinCodesRoute()),

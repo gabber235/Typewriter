@@ -115,9 +115,10 @@ ActionRun pressOn(
 OperationTargets fixedTargets(List<Selectable> items) =>
     (_) => items;
 
-/// The items an operation's key acts on.
+/// The items an operation's key acts on: the focused item or the selection,
+/// as [operationTargetIds] decides.
 List<Selectable> keyTargets(WidgetRef ref) =>
-    ref.read(selectedProvider).value ?? const [];
+    ref.read(operationTargetsProvider).value ?? const [];
 
 abstract class ShortcutableOperation extends SelectionOperation {
   const ShortcutableOperation();
