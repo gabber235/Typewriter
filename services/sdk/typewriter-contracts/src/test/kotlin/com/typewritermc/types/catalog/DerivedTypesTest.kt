@@ -102,7 +102,7 @@ val DerivedTypesTest by testSuite {
         val catalog = catalog(board).withContent(derives(DerivedTarget.Missing(DerivedFailure.NoBlock)))
         val record = AuthoringRecord.partial(configuration = TypeSelection.of(board.id))
 
-        catalog.unavailableCode(DERIVED_V) shouldBe "derived_type_missing"
+        catalog.unavailability(DERIVED_V)?.code shouldBe "derived_type_missing"
         record.missingContent(DERIVING_BOARD, catalog).map { it.problem.code to it.cause } shouldContain
             (
                 "derived_type_missing" to
@@ -122,7 +122,6 @@ val DerivedTypesTest by testSuite {
         test("a derived type that fails as ${failure::class.simpleName} reports $code") {
             val catalog = catalog(boardDefinition()).withContent(derives(DerivedTarget.Missing(failure)))
 
-            catalog.unavailableCode(DERIVED_V) shouldBe code
             catalog.unavailability(DERIVED_V) shouldBe Unavailability.Computed(DerivedFailureAt(DERIVING_BOARD, failure))
         }
     }
@@ -151,7 +150,6 @@ val DerivedTypesTest by testSuite {
         val list = listDefinition()
         val catalog = catalog(boardDefinition(), list).withContent(derives(DerivedTarget.Plain(list.id.use(listOf(DERIVED_V.use())))))
 
-        catalog.unavailableCode(DERIVED_V) shouldBe "content_alias_loop"
         catalog.unavailability(DERIVED_V) shouldBe Unavailability.AliasLoop
     }
 

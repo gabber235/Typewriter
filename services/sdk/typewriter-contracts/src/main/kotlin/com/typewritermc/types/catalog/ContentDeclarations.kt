@@ -32,7 +32,7 @@ import skirout.kernel.v1.resource_id.ResourceId
  */
 
 /** The codes that say why a content type stands in as the error type. */
-val CONTENT_TYPE_PROBLEMS: Set<String> =
+private val CONTENT_TYPE_PROBLEMS: Set<String> =
     setOf(
         "content_type_missing",
         "content_alias_loop",
@@ -219,7 +219,7 @@ fun AuthoringRecord.withoutUnreachableTypes(): AuthoringRecord {
 }
 
 /** The code that says why [id] stands in as the error type, or null when it is ready. */
-fun CheckedCatalog.unavailableCode(id: TypeDefinitionId): String? =
+private fun CheckedCatalog.unavailableCode(id: TypeDefinitionId): String? =
     (definition(id) as? DeclarationStatus.UnavailableWrapper)
         ?.value
         ?.firstOrNull { it.code in CONTENT_TYPE_PROBLEMS }

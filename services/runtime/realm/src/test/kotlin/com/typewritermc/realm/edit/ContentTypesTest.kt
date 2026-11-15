@@ -72,7 +72,7 @@ import com.typewritermc.testing.routes.FixtureTimelinePageDefinition
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField
 import com.typewritermc.types.catalog.contentOwner
-import com.typewritermc.types.catalog.unavailableCode
+import com.typewritermc.types.catalog.unavailability
 import com.typewritermc.types.functionUse
 import com.typewritermc.types.integer
 import com.typewritermc.types.member
@@ -661,7 +661,7 @@ val ContentTypesTest by testSuite {
                 listOf("content_alias_loop")
             val looped = catalogOver(mapOf(first to record(first).with("value", plainVar(typeUse, looping))))
             looped.resolve(fieldKey(second)) shouldBeReady true
-            looped.unavailableCode(TypeDefinitionId.contentField(second, "value")) shouldBe "content_alias_loop"
+            looped.unavailability(TypeDefinitionId.contentField(second, "value"))?.code shouldBe "content_alias_loop"
         }
     }
 
@@ -807,7 +807,7 @@ val ContentTypesTest by testSuite {
             val user = commitRecordUser("first", reward, "gold" to DataValue.integer(1))
             commit(delete(reward)).shouldBeCommitted()
             overDraft(mapOf(user to record(user).with("name", DataValue.StringValueWrapper("renamed")))) {
-                it.unavailableCode(TypeDefinitionId.contentField(reward, "value"))
+                it.unavailability(TypeDefinitionId.contentField(reward, "value"))?.code
             } shouldBe
                 "content_type_missing"
         }

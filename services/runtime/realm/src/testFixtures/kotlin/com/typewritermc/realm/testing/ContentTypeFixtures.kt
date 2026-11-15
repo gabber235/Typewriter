@@ -37,7 +37,7 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField
-import com.typewritermc.types.catalog.unavailableCode
+import com.typewritermc.types.catalog.unavailability
 import com.typewritermc.types.endpointId
 import com.typewritermc.types.functionUse
 import com.typewritermc.types.integer
@@ -585,7 +585,7 @@ infix fun Resolution<*>.shouldBeReady(ready: Boolean) {
 fun RealmFixture.statusOf(id: TypeDefinitionId): DeclarationStatus = viewCatalog.definition(id)
 
 /** The code that says why the saved view's catalog answers [use] with the error type, or null when it is ready. */
-fun RealmFixture.unavailableCodeOf(use: TypeUse): String? = viewCatalog.unavailableCode(checkNotNull(use.named).definition)
+fun RealmFixture.unavailableCodeOf(use: TypeUse): String? = viewCatalog.unavailability(checkNotNull(use.named).definition)?.code
 
 /** The resolved schema of [use] in the saved view's catalog; fails when it does not resolve. */
 fun RealmFixture.resolvedSchema(use: TypeUse): CheckedType =
