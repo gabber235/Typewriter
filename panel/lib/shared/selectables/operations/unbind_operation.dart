@@ -38,31 +38,29 @@ class UnbindOperation extends IntentShortcutOperation {
   // Service rows are not AnimatedRows: no rows, so a refusal jams the Unbind
   // button and menu entry, and the refused service stays selected.
   @override
-  ActionRun get run => ActionRun.hold(
+  ActionRun run(OperationTargets targets) => ActionRun.hold(
     HoldPlan<SelectableIdentifier>(
       // The service must be bound again.
       weight: HoldWeight.heavy,
-      // A selection that failed to resolve offers nothing to unbind; the
-      // preview runs while the button builds, so it never throws.
-      targets: (ref) => {
-        for (final selectable
-            in ref.read(selectedProvider).value ?? const <Selectable>[])
-          selectable.id,
-      },
+      targets: (ref) => {for (final selectable in targets(ref)) selectable.id},
       verb: "Unbind",
       doneWord: "Unbound",
       outcome: (targets) => targets.length == 1
           ? "Unbind this service? It disconnects straight away."
           : "Unbind ${targets.length} services? "
                 "They disconnect straight away.",
-      each: _unbindOne,
+      each: (ref, id) => _unbindOne(ref, targets, id),
     ),
   );
 
-  /// Unbinds one captured service and lets it leave the selection.
-  static Future<void> _unbindOne(WidgetRef ref, SelectableIdentifier id) async {
-    final selection = ref.read(selectedProvider).value ?? const [];
-    final capability = selection
+  /// Unbinds the captured service [id] of [targets] and lets it leave the
+  /// selection.
+  static Future<void> _unbindOne(
+    WidgetRef ref,
+    OperationTargets targets,
+    SelectableIdentifier id,
+  ) async {
+    final capability = targets(ref)
         .where((selectable) => selectable.id == id)
         .collectCapabilitiesWithSelectables<UnbindSelectionCapability>()
         .firstOrNull
@@ -74,16 +72,10 @@ class UnbindOperation extends IntentShortcutOperation {
     }
   }
 
-  /// The shortcut, menu and inspector run the hold; nothing calls this
-  /// without one.
   @override
-  FutureOr<void> executeOn(WidgetRef ref) =>
-      throw StateError("Unbind runs only through its hold.");
-
-  @override
-  MenuItem menuItem(WidgetRef ref) {
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) {
     return MenuItem.command(
-      command: shortcut,
+      command: commandOn(targets),
       icon: const Icon(Icons.link_off),
     );
   }
@@ -94,7 +86,7 @@ class UnbindOperation extends IntentShortcutOperation {
     required OperationEmphasis emphasis,
   }) {
     return CommandButton(
-      command: shortcut,
+      command: commandOn(fixedTargets(selection)),
       face: emphasis.face,
       icon: const Icon(Icons.link_off, size: 16),
       label: selection.length > 1 ? "Unbind ${selection.length}" : "Unbind",

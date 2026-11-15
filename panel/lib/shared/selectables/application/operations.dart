@@ -40,13 +40,18 @@ enum OperationEmphasis {
   };
 }
 
-/// Defines an action available for the current resolved selection.
+/// Reads the items an operation acts on, when it runs or when its hold
+/// starts.
+typedef OperationTargets = List<Selectable> Function(WidgetRef ref);
+
+/// Defines an action available for a set of resolved items.
 ///
-/// Instances are registered through a [SelectionOperationSource]. Availability is
-/// evaluated against the resolved selection, while execution reads the latest
-/// provider state at invocation so menus, shortcuts and inspector controls share
-/// one operation implementation. A held operation captures its targets when
-/// the hold starts.
+/// Instances are registered through a [SelectionOperationSource].
+/// Availability is evaluated against the items it would act on, and [run] is
+/// the one entry every path takes: the key, the context menu and the
+/// inspector each pass the targets they act on, read when it runs, so they
+/// share one operation implementation. A held operation captures its targets
+/// when the hold starts.
 abstract class SelectionOperation {
   const SelectionOperation();
 
@@ -71,46 +76,59 @@ abstract class SelectionOperation {
   /// shows only the first filled operation filled.
   OperationEmphasis get emphasis => OperationEmphasis.flat;
 
-  /// Returns whether this operation is valid for [selection].
+  /// Returns whether this operation is valid for [targets].
   ///
-  /// Callers use this as a fast, side effect free availability check. An empty
-  /// selection is not executable.
-  bool canExecuteOn(List<Selectable> selection);
+  /// Callers use this as a fast, side effect free availability check. An
+  /// empty list is not executable.
+  bool canExecuteOn(List<Selectable> targets);
 
-  /// Executes against the latest resolved selection in [ref].
+  /// What pressing does to the items [targets] reads: a press acts once
+  /// ([pressOn]); a hold runs its work after the fill. Null when the
+  /// operation cannot run.
+  ActionRun? run(OperationTargets targets);
+
+  /// Builds the context menu item that runs this operation on [targets].
   ///
-  /// Implementations may mutate model state, emit provider changes, or trigger
-  /// UI effects. The caller may await the returned [Future]. Availability is
-  /// checked before invocation.
-  FutureOr<void> executeOn(WidgetRef ref);
+  /// The item is created only after [canExecuteOn] filtering. Keep
+  /// construction cheap and side effect free.
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets);
 
-  /// What pressing does: a press runs [executeOn]; a hold runs its work
-  /// after the fill, and every path (key, menu, inspector) reaches it
-  /// through the operation's shortcut. Null when the operation cannot run.
-  ActionRun? get run => ActionRun.press(executeOn);
-
-  /// Builds the context menu item that invokes this operation.
+  /// Builds the inspector control for this operation, acting on
+  /// [selection], in the [emphasis] the inspector gives it.
   ///
-  /// The item is created only after [canExecuteOn] filtering. Keep construction
-  /// cheap and side effect free; the callback may perform the actual work.
-  MenuItem menuItem(WidgetRef ref);
-
-  /// Builds the inspector control for this operation and [selection], in
-  /// the [emphasis] the inspector gives it.
-  ///
-  /// The selection supplies presentation details such as the item count. The
-  /// control invokes [executeOn] through its [WidgetRef] when activated.
+  /// The selection supplies presentation details such as the item count.
   Widget inspectorButton(
     List<Selectable> selection, {
     required OperationEmphasis emphasis,
   });
 }
 
+/// A press that acts once on the items [targets] reads, as most operations
+/// do.
+ActionRun pressOn(
+  OperationTargets targets,
+  FutureOr<void> Function(WidgetRef ref, List<Selectable> targets) act,
+) => ActionRun.press((ref) => act(ref, targets(ref)));
+
+/// Targets that are always [items], such as the selection the inspector
+/// shows.
+OperationTargets fixedTargets(List<Selectable> items) =>
+    (_) => items;
+
+/// The items an operation's key acts on.
+List<Selectable> keyTargets(WidgetRef ref) =>
+    ref.read(selectedProvider).value ?? const [];
+
 abstract class ShortcutableOperation extends SelectionOperation {
   const ShortcutableOperation();
 
-  /// Returns the shortcut registration for this operation.
-  ActionShortcut get shortcut;
+  /// The command that runs this operation on [targets]. Every command of
+  /// one operation shares its id, so its key cap, its buttons and its menu
+  /// entry press and run together.
+  ActionShortcut commandOn(OperationTargets targets);
+
+  /// The command its key runs, on [keyTargets].
+  ActionShortcut get shortcut => commandOn(keyTargets);
 }
 
 abstract class ActivatorShortcutOperation extends ShortcutableOperation {
@@ -120,13 +138,13 @@ abstract class ActivatorShortcutOperation extends ShortcutableOperation {
   List<ShortcutActivator> get activators;
 
   @override
-  ActionShortcut get shortcut => ActionShortcut(
+  ActionShortcut commandOn(OperationTargets targets) => ActionShortcut(
     id: "operation_${name.snakeCase()}",
     label: name,
     description: description,
     activators: activators,
     priority: 10,
-    run: run,
+    run: run(targets),
   );
 }
 
@@ -137,13 +155,13 @@ abstract class IntentShortcutOperation extends ShortcutableOperation {
   Type get intent;
 
   @override
-  ActionShortcut get shortcut => ActionShortcut.intent(
+  ActionShortcut commandOn(OperationTargets targets) => ActionShortcut.intent(
     id: "operation_${name.snakeCase()}",
     label: name,
     description: description,
     intent: intent,
     priority: 10,
-    run: run,
+    run: run(targets),
   );
 }
 
@@ -189,15 +207,16 @@ List<SelectionOperation> availableSelectionOperations(
       .toList();
 }
 
-/// Menu items for [operations] in their sections, with a divider between
-/// sections: the same list the inspector shows.
+/// Menu items for [operations] acting on [targets], in their sections, with
+/// a divider between sections: the same list the inspector shows.
 List<MenuItem> selectionOperationMenuItems(
   Iterable<SelectionOperation> operations,
   WidgetRef ref,
+  OperationTargets targets,
 ) => [
   for (final (index, section) in operations.sections.indexed) ...[
     if (index > 0) const MenuItem.divider(),
-    for (final operation in section) operation.menuItem(ref),
+    for (final operation in section) operation.menuItem(ref, targets),
   ],
 ];
 

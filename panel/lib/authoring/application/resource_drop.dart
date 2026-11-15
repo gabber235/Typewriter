@@ -465,7 +465,7 @@ extension DropOfferRuns on DropOffer {
             availability: skir.OperationAvailability.enabled,
           ),
           canMutate: canMutate,
-        ).executeOn(
+        ).prepare(
           ref,
           initialInput: seedDropInput(
             document,

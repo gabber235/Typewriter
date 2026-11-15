@@ -11,15 +11,13 @@ const membershipSelectionOperations = <SelectionOperation>[
   DeclineJoinRequestsOperation(),
 ];
 
-/// The selected items of type [T], in selection order.
-extension on WidgetRef {
-  List<T> selectedOf<T extends Selectable>() =>
-      (read(selectedProvider).value ?? const <Selectable>[])
-          .whereType<T>()
-          .toList();
+/// The targets of type [T], in target order.
+extension on OperationTargets {
+  List<T> of<T extends Selectable>(WidgetRef ref) =>
+      this(ref).whereType<T>().toList();
 }
 
-/// Removes the selected members with a hold, all or none.
+/// Removes the targeted members with a hold, all or none.
 final class RemoveMembersOperation extends ShortcutableOperation {
   const RemoveMembersOperation();
 
@@ -36,36 +34,31 @@ final class RemoveMembersOperation extends ShortcutableOperation {
   OperationEmphasis get emphasis => OperationEmphasis.filled;
 
   @override
-  bool canExecuteOn(List<Selectable> selection) =>
-      selection.isNotEmpty &&
-      selection.every((item) => item is MemberSelectable);
+  bool canExecuteOn(List<Selectable> targets) =>
+      targets.isNotEmpty && targets.every((item) => item is MemberSelectable);
 
   @override
-  ActionShortcut get shortcut => memberRemoval(
+  ActionShortcut commandOn(OperationTargets targets) => memberRemoval(
     id: "operation_remove_members",
     label: "Remove member",
     targets: (ref) => {
-      for (final member in ref.selectedOf<MemberSelectable>())
+      for (final member in targets.of<MemberSelectable>(ref))
         member.member.userId,
     },
-    nameOf: (ref, id) => ref
-        .selectedOf<MemberSelectable>()
+    nameOf: (ref, id) => targets
+        .of<MemberSelectable>(ref)
         .firstWhereOrNull((member) => member.member.userId == id)
         ?.name,
     priority: 10,
   );
 
   @override
-  FutureOr<void> executeOn(WidgetRef ref) =>
-      throw StateError("Remove runs only through its hold.");
+  ActionRun? run(OperationTargets targets) => commandOn(targets).run;
 
   @override
-  ActionRun? get run => shortcut.run;
-
-  @override
-  MenuItem menuItem(WidgetRef ref) {
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) {
     return MenuItem.command(
-      command: shortcut,
+      command: commandOn(targets),
       icon: const Icon(Icons.person_remove_outlined),
     );
   }
@@ -76,7 +69,7 @@ final class RemoveMembersOperation extends ShortcutableOperation {
     required OperationEmphasis emphasis,
   }) {
     return CommandButton(
-      command: shortcut,
+      command: commandOn(fixedTargets(selection)),
       face: emphasis.face,
       icon: const Icon(Icons.person_remove_outlined, size: 16),
       label: selection.length > 1 ? "Remove ${selection.length}" : "Remove",
@@ -84,7 +77,7 @@ final class RemoveMembersOperation extends ShortcutableOperation {
   }
 }
 
-/// Revokes the selected join codes with a hold, all or none.
+/// Revokes the targeted join codes with a hold, all or none.
 final class RevokeJoinCodesOperation extends ShortcutableOperation {
   const RevokeJoinCodesOperation();
 
@@ -101,31 +94,26 @@ final class RevokeJoinCodesOperation extends ShortcutableOperation {
   OperationEmphasis get emphasis => OperationEmphasis.filled;
 
   @override
-  bool canExecuteOn(List<Selectable> selection) =>
-      selection.isNotEmpty &&
-      selection.every((item) => item is JoinCodeSelectable);
+  bool canExecuteOn(List<Selectable> targets) =>
+      targets.isNotEmpty && targets.every((item) => item is JoinCodeSelectable);
 
   @override
-  ActionShortcut get shortcut => joinCodeRevocation(
+  ActionShortcut commandOn(OperationTargets targets) => joinCodeRevocation(
     id: "operation_revoke_join_codes",
     label: "Revoke join code",
     targets: (ref) => {
-      for (final code in ref.selectedOf<JoinCodeSelectable>()) code.code.code,
+      for (final code in targets.of<JoinCodeSelectable>(ref)) code.code.code,
     },
     priority: 10,
   );
 
   @override
-  FutureOr<void> executeOn(WidgetRef ref) =>
-      throw StateError("Revoke runs only through its hold.");
+  ActionRun? run(OperationTargets targets) => commandOn(targets).run;
 
   @override
-  ActionRun? get run => shortcut.run;
-
-  @override
-  MenuItem menuItem(WidgetRef ref) {
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) {
     return MenuItem.command(
-      command: shortcut,
+      command: commandOn(targets),
       icon: const Icon(Icons.link_off),
     );
   }
@@ -136,7 +124,7 @@ final class RevokeJoinCodesOperation extends ShortcutableOperation {
     required OperationEmphasis emphasis,
   }) {
     return CommandButton(
-      command: shortcut,
+      command: commandOn(fixedTargets(selection)),
       face: emphasis.face,
       icon: const Icon(Icons.link_off, size: 16),
       label: selection.length > 1 ? "Revoke ${selection.length}" : "Revoke",
@@ -144,7 +132,7 @@ final class RevokeJoinCodesOperation extends ShortcutableOperation {
   }
 }
 
-/// Declines the selected join requests with a hold, all or none.
+/// Declines the targeted join requests with a hold, all or none.
 final class DeclineJoinRequestsOperation extends ShortcutableOperation {
   const DeclineJoinRequestsOperation();
 
@@ -158,35 +146,34 @@ final class DeclineJoinRequestsOperation extends ShortcutableOperation {
   OperationSection get section => OperationSection.destructive;
 
   @override
-  bool canExecuteOn(List<Selectable> selection) =>
-      selection.isNotEmpty &&
-      selection.every((item) => item is JoinRequestSelectable);
+  bool canExecuteOn(List<Selectable> targets) =>
+      targets.isNotEmpty &&
+      targets.every((item) => item is JoinRequestSelectable);
 
   @override
-  ActionShortcut get shortcut => joinRequestDecline(
+  ActionShortcut commandOn(OperationTargets targets) => joinRequestDecline(
     id: "operation_decline_join_requests",
     label: "Decline",
     targets: (ref) => {
-      for (final request in ref.selectedOf<JoinRequestSelectable>())
+      for (final request in targets.of<JoinRequestSelectable>(ref))
         request.request.requestId,
     },
-    nameOf: (ref, id) => ref
-        .selectedOf<JoinRequestSelectable>()
+    nameOf: (ref, id) => targets
+        .of<JoinRequestSelectable>(ref)
         .firstWhereOrNull((request) => request.request.requestId == id)
         ?.name,
     priority: 10,
   );
 
   @override
-  FutureOr<void> executeOn(WidgetRef ref) =>
-      throw StateError("Decline runs only through its hold.");
+  ActionRun? run(OperationTargets targets) => commandOn(targets).run;
 
   @override
-  ActionRun? get run => shortcut.run;
-
-  @override
-  MenuItem menuItem(WidgetRef ref) {
-    return MenuItem.command(command: shortcut, icon: const Icon(Icons.close));
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) {
+    return MenuItem.command(
+      command: commandOn(targets),
+      icon: const Icon(Icons.close),
+    );
   }
 
   @override
@@ -195,7 +182,7 @@ final class DeclineJoinRequestsOperation extends ShortcutableOperation {
     required OperationEmphasis emphasis,
   }) {
     return CommandButton(
-      command: shortcut,
+      command: commandOn(fixedTargets(selection)),
       face: emphasis.face,
       icon: const Icon(Icons.close, size: 16),
       label: selection.length > 1 ? "Decline ${selection.length}" : "Decline",
@@ -203,8 +190,8 @@ final class DeclineJoinRequestsOperation extends ShortcutableOperation {
   }
 }
 
-/// Accepts the selected join requests, each with the roles chosen for it
-/// in the inspector, all or none. It is offered once every selected request
+/// Accepts the targeted join requests, each with the roles chosen for it
+/// in the inspector, all or none. It is offered once every targeted request
 /// has roles to grant.
 final class AcceptJoinRequestsOperation extends ActivatorShortcutOperation {
   const AcceptJoinRequestsOperation();
@@ -224,15 +211,17 @@ final class AcceptJoinRequestsOperation extends ActivatorShortcutOperation {
   ];
 
   @override
-  bool canExecuteOn(List<Selectable> selection) =>
-      selection.isNotEmpty &&
-      selection.every(
+  bool canExecuteOn(List<Selectable> targets) =>
+      targets.isNotEmpty &&
+      targets.every(
         (item) => item is JoinRequestSelectable && item.grant.isNotEmpty,
       );
 
   @override
-  Future<void> executeOn(WidgetRef ref) async {
-    final requests = ref.selectedOf<JoinRequestSelectable>();
+  ActionRun run(OperationTargets targets) => pressOn(targets, _accept);
+
+  static Future<void> _accept(WidgetRef ref, List<Selectable> targets) async {
+    final requests = targets.whereType<JoinRequestSelectable>().toList();
     if (requests.isEmpty) return;
     final roles = await ref.read(organizationRolesProvider.future);
     final approvals = <skir.RecordId, List<skir.OrganizationRole>>{
@@ -250,8 +239,11 @@ final class AcceptJoinRequestsOperation extends ActivatorShortcutOperation {
   }
 
   @override
-  MenuItem menuItem(WidgetRef ref) {
-    return MenuItem.command(command: shortcut, icon: const Icon(Icons.check));
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) {
+    return MenuItem.command(
+      command: commandOn(targets),
+      icon: const Icon(Icons.check),
+    );
   }
 
   @override
@@ -260,7 +252,7 @@ final class AcceptJoinRequestsOperation extends ActivatorShortcutOperation {
     required OperationEmphasis emphasis,
   }) {
     return CommandButton(
-      command: shortcut,
+      command: commandOn(fixedTargets(selection)),
       face: emphasis.face,
       icon: const Icon(Icons.check, size: 16),
       label: selection.length > 1 ? "Accept ${selection.length}" : "Accept",

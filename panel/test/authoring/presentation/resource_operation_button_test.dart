@@ -67,7 +67,7 @@ void main() {
           at: PanelLocation.component(
             Consumer(
               builder: (context, ref, _) => ContextMenuRegion(
-                items: [operation.menuItem(ref)],
+                items: [operation.menuItem(ref, fixedTargets(const []))],
                 child: operation.inspectorButton(
                   const [],
                   emphasis: operation.emphasis,

@@ -219,8 +219,7 @@ class ResourceSelectionOperation extends ShortcutableOperation {
   /// Prepares the operation for the captured targets. [initialInput] seeds
   /// the input, as a drop does with the resource dropped onto; the input form
   /// opens only when the Realm needs more.
-  @override
-  Future<void> executeOn(WidgetRef ref, {skir.DataValue? initialInput}) async {
+  Future<void> prepare(WidgetRef ref, {skir.DataValue? initialInput}) async {
     if (!enabled || !ref.context.mounted) return;
     final workspace = ref.read(realmEditingProvider(scope));
     final captured = skir.OperationInvocation(
@@ -253,9 +252,9 @@ class ResourceSelectionOperation extends ShortcutableOperation {
   /// A declared confirmation makes the operation a hold; its outcome is the
   /// line the Realm declared in its one or many form, with the count filled
   /// from the captured targets, known before the fill moves. Disabled, the
-  /// command has no run.
+  /// command has no run. The targets are the ones it was resolved for.
   @override
-  ActionRun? get run => _run(null);
+  ActionRun? run(OperationTargets targets) => _run(null);
 
   /// The run, with every step on [owner] when given: a menu entry closes
   /// when the run starts, so it runs on the ref of the region that opened
@@ -276,17 +275,18 @@ class ResourceSelectionOperation extends ShortcutableOperation {
                   "{count}",
                   "${targets.length}",
                 ),
-          work: (ref, _) => executeOn(owner ?? ref),
+          work: (ref, _) => prepare(owner ?? ref),
         ),
       ),
-      null => ActionRun.press((ref) => executeOn(owner ?? ref)),
+      null => ActionRun.press((ref) => prepare(owner ?? ref)),
     };
   }
 
   /// The one command for key, menu and inspector; its key is registered,
-  /// and the action row shows it, only when the Realm declared one.
+  /// and the action row shows it, only when the Realm declared one. The
+  /// targets are the ones it was resolved for.
   @override
-  ActionShortcut get shortcut => _command(null);
+  ActionShortcut commandOn(OperationTargets targets) => _command(null);
 
   ActionShortcut _command(WidgetRef? owner) => ActionShortcut.intent(
     id: "resource_operation_${operation.definition.id.declaration}",
@@ -300,18 +300,19 @@ class ResourceSelectionOperation extends ShortcutableOperation {
   );
 
   @override
-  MenuItem menuItem(WidgetRef ref) => MenuItem.command(
-    command: _command(ref),
-    disabledReason: disabledReason,
-    icon: operation.definition.presentation.icon.isEmpty
-        ? null
-        : Icones(operation.definition.presentation.icon),
-    color:
-        operation.definition.presentation.tone ==
-            skir.HeaderActionTone.destructive
-        ? ref.context.colors.dangerText
-        : null,
-  );
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) =>
+      MenuItem.command(
+        command: _command(ref),
+        disabledReason: disabledReason,
+        icon: operation.definition.presentation.icon.isEmpty
+            ? null
+            : Icones(operation.definition.presentation.icon),
+        color:
+            operation.definition.presentation.tone ==
+                skir.HeaderActionTone.destructive
+            ? ref.context.colors.dangerText
+            : null,
+      );
 
   @override
   Widget inspectorButton(
@@ -346,12 +347,13 @@ final class ResourceOpenOperation extends IntentShortcutOperation {
   @override
   bool canExecuteOn(List<Selectable> selection) => true;
   @override
-  Future<void> executeOn(WidgetRef ref) => openAuthoredResource(ref, resource);
+  ActionRun run(OperationTargets targets) =>
+      ActionRun.press((ref) => openAuthoredResource(ref, resource));
   @override
-  MenuItem menuItem(WidgetRef ref) => MenuItem(
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) => MenuItem(
     label: name,
     icon: const Icon(Icons.open_in_new),
-    onPressed: () => executeOn(ref),
+    onPressed: () => openAuthoredResource(ref, resource),
   );
   @override
   Widget inspectorButton(
@@ -364,7 +366,7 @@ final class ResourceOpenOperation extends IntentShortcutOperation {
         face: emphasis.face,
         icon: const Icon(Icons.open_in_new, size: 16),
         label: name,
-        onPressed: () => executeOn(ref),
+        onPressed: () => openAuthoredResource(ref, resource),
       ),
     ),
   );
@@ -388,7 +390,9 @@ final class ResourceInspectOperation extends SelectionOperation {
   @override
   bool canExecuteOn(List<Selectable> selection) => true;
   @override
-  Future<void> executeOn(WidgetRef ref) => ref
+  ActionRun run(OperationTargets targets) => ActionRun.press(_inspect);
+
+  Future<void> _inspect(WidgetRef ref) => ref
       .read(realmSurfaceNavigationProvider)
       .navigate(
         resource.scope,
@@ -397,10 +401,10 @@ final class ResourceInspectOperation extends SelectionOperation {
         isCurrent: () => ref.context.mounted,
       );
   @override
-  MenuItem menuItem(WidgetRef ref) => MenuItem(
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) => MenuItem(
     label: name,
     icon: const Icon(Icons.info_outline),
-    onPressed: () => executeOn(ref),
+    onPressed: () => _inspect(ref),
   );
   @override
   Widget inspectorButton(
@@ -461,9 +465,10 @@ final class _UnavailableResourceOperation extends SelectionOperation {
   @override
   bool canExecuteOn(List<Selectable> selection) => true;
   @override
-  void executeOn(WidgetRef ref) {}
+  ActionRun? run(OperationTargets targets) => null;
   @override
-  MenuItem menuItem(WidgetRef ref) => MenuItem(label: name);
+  MenuItem menuItem(WidgetRef ref, OperationTargets targets) =>
+      MenuItem(label: name);
   @override
   Widget inspectorButton(
     List<Selectable> selection, {
