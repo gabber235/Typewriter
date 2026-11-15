@@ -7,12 +7,14 @@ import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Perception
 import com.typewritermc.playtest.wire.Message.ProbeAction
 import com.typewritermc.playtest.wire.Message.Region
+import com.typewritermc.playtest.wire.Message.Renderer
 import com.typewritermc.playtest.wire.Message.Watch
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.selects.select
+import java.nio.file.Path
 
 /**
  * One attempt of one requirement while it holds its lease: the players' perception streams in arrival
@@ -168,6 +170,59 @@ internal class Attempt(
         player: GamePlayer,
         entities: List<EntityRef>,
     ) = unlessLost { session.look(player, entities) }
+
+    /** Where the attempt keeps the frames it writes; the session sets it once the attempt holds its lease. */
+    lateinit var evidence: Evidence
+
+    /**
+     * [player]'s frame, as the client holds it now, is the golden [name]: the frame and what an approve
+     * needs go into the attempt's evidence, and it is compared when the approved golden was drawn by
+     * the same renderer, else noted as not checked. A frame that differs fails the attempt.
+     */
+    suspend fun golden(
+        player: GamePlayer,
+        name: String,
+    ) {
+        val at = System.currentTimeMillis()
+        val (png, frame, renderer) = capture(player, name)
+        val goldens = session.goldens
+        Golden.writeCandidate(evidence.file("$name.golden"), goldens.file(name), png.fileName.toString(), frame, renderer)
+        val golden = goldens.golden(name)
+        val says = "golden $name of ${player.name}"
+        when (val verdict = judge(golden, golden?.let(goldens::image), frame, renderer)) {
+            GoldenVerdict.Matches -> took(at, "$says matches")
+            is GoldenVerdict.NotChecked -> took(at, "$says not checked: ${verdict.reason}")
+            is GoldenVerdict.Differs -> {
+                val diff = verdict.diff?.let { marked -> evidence.file("$name.diff.png").also(marked::writePng) }
+                diff?.let { evidence.screenshots += it.fileName.toString() }
+                took(at, "$says differs: ${verdict.reason}")
+                throw GoldenDiffers(
+                    "${player.name}'s frame differs from golden $name: ${verdict.reason}. The frame is $png" +
+                        (diff?.let { ", its diff $it" } ?: "") +
+                        "; `cargo xtask goldens approve` makes it the golden when the change is meant.",
+                )
+            }
+        }
+    }
+
+    /** [player]'s frame, as the client holds it now, kept in the attempt's evidence as `<name>.png`. */
+    suspend fun capture(
+        player: GamePlayer,
+        name: String,
+    ): Captured {
+        called()
+        val png = evidence.file("$name.png")
+        val renderer = unlessLost { session.capture(player, png) }
+        evidence.screenshots += png.fileName.toString()
+        return Captured(png, Frame.readPng(png), renderer)
+    }
+
+    /** A frame a client drew: its PNG in the evidence, its pixels, and the renderer that drew it. */
+    data class Captured(
+        val png: Path,
+        val frame: Frame,
+        val renderer: Renderer,
+    )
 
     /** The answer of [call], unless a client of the attempt is lost first: a lost client never answers. */
     private suspend fun <T> unlessLost(call: suspend () -> T): T =

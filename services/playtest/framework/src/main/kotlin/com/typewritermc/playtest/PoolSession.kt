@@ -3,6 +3,8 @@ package com.typewritermc.playtest
 import com.typewritermc.playtest.wire.Message
 import com.typewritermc.playtest.wire.Message.AttemptStep
 import com.typewritermc.playtest.wire.Message.BarrierSeen
+import com.typewritermc.playtest.wire.Message.Capture
+import com.typewritermc.playtest.wire.Message.Captured
 import com.typewritermc.playtest.wire.Message.Declined
 import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
@@ -23,6 +25,7 @@ import com.typewritermc.playtest.wire.Message.Query
 import com.typewritermc.playtest.wire.Message.Queue
 import com.typewritermc.playtest.wire.Message.Reclaim
 import com.typewritermc.playtest.wire.Message.Refused
+import com.typewritermc.playtest.wire.Message.Renderer
 import com.typewritermc.playtest.wire.Message.Reply
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
@@ -43,6 +46,7 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
 import java.net.Socket
+import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -69,6 +73,16 @@ class InputFailed(
     message: String,
 ) : AssertionError(message)
 
+/** The player's frame is not the golden it names; [message] says how and where the frame and its diff lie. */
+class GoldenDiffers(
+    message: String,
+) : AssertionError(message)
+
+/** The client could not draw or write the frame a golden asked for; [message] says why. */
+class FrameNotCaptured(
+    message: String,
+) : AssertionError(message)
+
 /**
  * One test JVM's connection to the game pool. Requirements submit through it, and it routes what the
  * pool sends back: leases to the waiting submission, probe replies to the waiting call, and each
@@ -86,6 +100,10 @@ internal class PoolSession private constructor(
     private val replies = ConcurrentHashMap<Long, CompletableDeferred<Reply>>()
     private val settles = ConcurrentHashMap<Long, CompletableDeferred<Settled>>()
     private val attempts = ConcurrentHashMap<String, Attempt>()
+    private val attemptsOf = ConcurrentHashMap<String, Int>()
+
+    /** This project's goldens and the local golden images. */
+    val goldens = Goldens(settings.root, settings.goldens, settings.goldenImages)
     private val ended = CompletableDeferred<Unit>()
 
     @Volatile
@@ -173,11 +191,13 @@ internal class PoolSession private constructor(
         val started = System.nanoTime()
         var failure: Throwable? = null
         val steps = mutableListOf<AttemptStep>()
+        val evidence = Evidence(settings.testRun.toAbsolutePath().parent, planned.testId, checkNotNull(attemptsOf.merge(planned.testId, 1, Int::plus)))
         for ((index, body) in planned.bodies.withIndex()) {
             if (index > 0) {
                 attempt.players.forEach { attempts.remove(it.name) }
                 attempt = lease(submission, leasing.requirementCode) { send(Reclaim(submission)) }
             }
+            attempt.evidence = evidence
             failure = settle(submission, attempt, run(attempt, body))?.let(attempt::located)
             steps += attempt.steps
             if (failure != null) break
@@ -194,6 +214,8 @@ internal class PoolSession private constructor(
                         ?: (it as? WindowMissed)?.at
                 },
                 steps,
+                if (evidence.screenshots.isEmpty()) "" else evidence.folder,
+                evidence.screenshots,
             ),
         )
         return failure
@@ -287,6 +309,16 @@ internal class PoolSession private constructor(
         entities: List<EntityRef>,
     ) {
         request<Looked> { request -> Look(request, player.uuid, entities.map { it.uuid }) }
+    }
+
+    /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */
+    suspend fun capture(
+        player: GamePlayer,
+        png: Path,
+    ): Renderer {
+        val captured = request<Captured> { request -> Capture(request, player.uuid, png.toString()) }
+        captured.failure()?.let { throw FrameNotCaptured(it) }
+        return captured.renderer()
     }
 
     /** Ends the session: the pool writes this session's cases into the run file. */

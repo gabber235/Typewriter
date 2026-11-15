@@ -7,6 +7,8 @@ import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Submit
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.harness.v1.test_run.Artifact
+import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.Outcome
 import skirout.harness.v1.test_run.Runner
 import skirout.harness.v1.test_run.Step
@@ -25,12 +27,12 @@ val RunRecordsTest by testSuite {
         records.record(
             "run-1",
             Submit(1, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH),
-            Result(1, 420, null, null, listOf()),
+            Result(1, 420, null, null, listOf(), "", listOf()),
         )
         records.record(
             "run-1",
             Submit(2, "WINDOW-1 a check that never holds fails", "WINDOW-1", 1, Demonstrates.FAILURE),
-            Result(2, 900, "gv-1 did not see chat \"Goodbye\"", "WindowRequirements.kt:17", listOf()),
+            Result(2, 900, "gv-1 did not see chat \"Goodbye\"", "WindowRequirements.kt:17", listOf(), "", listOf()),
         )
 
         records.ended("run-1", file, retries)
@@ -46,17 +48,37 @@ val RunRecordsTest by testSuite {
             listOf(Outcome.createFailed(message = "gv-1 did not see chat \"Goodbye\"", firstBroken = "WindowRequirements.kt:17"))
     }
 
+    test("the frames an attempt wrote land in the run file as screenshots in the attempt's folder") {
+        val records = RunRecords(clock = { 1_000 })
+        val file = Files.createTempDirectory("run-records").resolve("test_run.json")
+        records.record(
+            "run-1",
+            Submit(1, "GOLDEN-1 a sidebar matches its golden", "GOLDEN-1", 1, Demonstrates.HAPPY_PATH),
+            Result(1, 120, "the frame differs from golden sidebar", null, listOf(), "GOLDEN-1/attempt-1", listOf("sidebar.png", "sidebar.diff.png")),
+        )
+
+        records.ended("run-1", file, retries)
+
+        val attempt = TestRun.serializer.fromJsonCode(Files.readString(file)).cases.single().attempts.single()
+        attempt.folder shouldBe "GOLDEN-1/attempt-1"
+        attempt.artifacts shouldBe
+            listOf(
+                Artifact(kind = ArtifactKind.SCREENSHOT, path = "sidebar.png"),
+                Artifact(kind = ArtifactKind.SCREENSHOT, path = "sidebar.diff.png"),
+            )
+    }
+
     test("every attempt of one case lands in that case, in the order the attempts ended") {
         val records = RunRecords(clock = { 1_000 })
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val flaky = "FLAKY-1 a requirement that fails its first attempt and passes its second is flaky"
-        records.record("run-1", Submit(1, flaky, "FLAKY-1", 1, Demonstrates.FAILURE), Result(1, 300, "missed", null, listOf()))
+        records.record("run-1", Submit(1, flaky, "FLAKY-1", 1, Demonstrates.FAILURE), Result(1, 300, "missed", null, listOf(), "", listOf()))
         records.record(
             "run-1",
             Submit(2, "PROBE-1 a chat line reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH),
-            Result(2, 420, null, null, listOf()),
+            Result(2, 420, null, null, listOf(), "", listOf()),
         )
-        records.record("run-1", Submit(7, flaky, "FLAKY-1", 1, Demonstrates.FAILURE), Result(7, 310, null, null, listOf()))
+        records.record("run-1", Submit(7, flaky, "FLAKY-1", 1, Demonstrates.FAILURE), Result(7, 310, null, null, listOf(), "", listOf()))
 
         records.ended("run-1", file, retries)
 
@@ -85,7 +107,7 @@ val RunRecordsTest by testSuite {
             records.record(
                 "run-1",
                 Submit(index.toLong(), "CASE-$index", "CASE-$index", 1, demonstrates),
-                Result(index.toLong(), 1, null, null, listOf()),
+                Result(index.toLong(), 1, null, null, listOf(), "", listOf()),
             )
         }
 
@@ -113,6 +135,8 @@ val RunRecordsTest by testSuite {
                     AttemptStep(1_050, 20, "probe Chat[text=Hello]"),
                     AttemptStep(1_070, 100, "window of 10 ticks held at tick 1, stepped 1"),
                 ),
+                "",
+                listOf(),
             ),
             claimed = listOf(AttemptStep(1_000, 30, "claim gv-1"), AttemptStep(1_030, 20, "wipe gv-1 into region (1024, 0)")),
         )
@@ -140,12 +164,12 @@ val RunRecordsTest by testSuite {
         records.record(
             "run-1",
             Submit(1, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH),
-            Result(1, 420, null, null, listOf()),
+            Result(1, 420, null, null, listOf(), "", listOf()),
         )
         records.record(
             "run-2",
             Submit(1, "WINDOW-1 a check that never holds fails", "WINDOW-1", 1, Demonstrates.FAILURE),
-            Result(1, 900, null, null, listOf()),
+            Result(1, 900, null, null, listOf(), "", listOf()),
         )
 
         records.ended("run-2", dir.resolve("run-2.json"), retries)
@@ -166,7 +190,7 @@ val RunRecordsTest by testSuite {
         records.record(
             "run-1",
             Submit(1, "SIBLING-1 a second module's requirement reaches its player", "SIBLING-1", 1, Demonstrates.HAPPY_PATH),
-            Result(1, 400, null, null, listOf()),
+            Result(1, 400, null, null, listOf(), "", listOf()),
         )
         records.ended("run-1", dir.resolve("run-1.json"), retries)
         records.abandoned("run-1", listOf(killed), "its test JVM ended before the attempt did; see pool.log")
@@ -187,12 +211,12 @@ val RunRecordsTest by testSuite {
         records.record(
             "run-1",
             Submit(1, hung, "HUNG-1", 1, Demonstrates.FAILURE),
-            Result(1, 1_500, "gv-1's work \"Ledger lookup\" hung", "WorkRequirements.kt:30", listOf()),
+            Result(1, 1_500, "gv-1's work \"Ledger lookup\" hung", "WorkRequirements.kt:30", listOf(), "", listOf()),
         )
         records.record(
             "run-1",
             Submit(2, "PROBE-1 a chat line reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH),
-            Result(2, 420, null, null, listOf()),
+            Result(2, 420, null, null, listOf(), "", listOf()),
         )
 
         records.ended(

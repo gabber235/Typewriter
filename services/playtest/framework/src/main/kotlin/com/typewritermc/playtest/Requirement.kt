@@ -5,6 +5,7 @@ import de.infix.testBalloon.framework.core.TestCompartment
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.TestSuiteScope
 import de.infix.testBalloon.framework.core.aroundAll
+import de.infix.testBalloon.framework.core.disable
 import de.infix.testBalloon.framework.core.invocation
 import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
@@ -107,9 +108,10 @@ internal fun TestSuiteScope.sideBySide(
 }
 
 /**
- * Registers the test "[id] [sentence]" when the run selects it: it makes the requirement's attempts as
- * the run's policy asks, each with [attempt], which returns why it failed or null, and ends as their
- * verdict says.
+ * Registers the test "[id] [sentence]": it makes the requirement's attempts as the run's policy asks,
+ * each with [attempt], which returns why it failed or null, and ends as their verdict says. A test the
+ * run does not select is registered disabled, so a suite whose requirements the run leaves out still
+ * holds its tests and never runs them.
  */
 private fun TestSuiteScope.register(
     id: String,
@@ -119,8 +121,7 @@ private fun TestSuiteScope.register(
 ) {
     val plan = RunPlan.current
     val testId = "$id $sentence"
-    if (!plan.runs(id, testId)) return
-    test(testId) {
+    test(testId, testConfig = if (plan.runs(id, testId)) TestConfig else TestConfig.disable()) {
         val session = session(id)
         plan.policy.attempt(plan.quarantines(id, testId)) { attempt(session) }.conclude(code)
     }

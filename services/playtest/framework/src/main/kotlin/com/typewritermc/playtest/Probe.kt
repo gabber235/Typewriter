@@ -11,8 +11,10 @@ import com.typewritermc.playtest.wire.Message.ProbeGive
 import com.typewritermc.playtest.wire.Message.ProbeMark
 import com.typewritermc.playtest.wire.Message.ProbePacketEntity
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot
+import com.typewritermc.playtest.wire.Message.ProbeSidebar
 import com.typewritermc.playtest.wire.Message.ProbeSpawn
 import com.typewritermc.playtest.wire.Message.ProbeTeleport
+import com.typewritermc.playtest.wire.Message.ProbeTime
 import com.typewritermc.playtest.wire.Message.ProbeWork
 import java.util.UUID
 
@@ -47,6 +49,19 @@ class Probe internal constructor(
         player: GamePlayer,
         mode: GameMode,
     ): Mark = run(listOf(player), ProbeGameMode(mode.name.lowercase()))
+
+    /** [player] sees a sidebar titled [title] holding [lines], top to bottom, each line once. */
+    suspend fun sidebar(
+        player: GamePlayer,
+        title: String,
+        lines: List<String>,
+    ): Mark = run(listOf(player), ProbeSidebar(title, lines))
+
+    /** [player] sees the time of day stand still at [time] ticks: 0 is sunrise, 6000 noon, 18000 midnight. */
+    suspend fun time(
+        player: GamePlayer,
+        time: Long,
+    ): Mark = run(listOf(player), ProbeTime(time))
 
     /** [player] stands at [x], [y], [z], looking toward [yaw] (0 is south) and [pitch] (positive is down). */
     suspend fun teleport(

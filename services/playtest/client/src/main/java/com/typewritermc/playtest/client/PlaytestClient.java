@@ -2,6 +2,7 @@ package com.typewritermc.playtest.client;
 
 import com.typewritermc.playtest.wire.Link;
 import com.typewritermc.playtest.wire.Message;
+import com.typewritermc.playtest.wire.Message.Capture;
 import com.typewritermc.playtest.wire.Message.Connect;
 import com.typewritermc.playtest.wire.Message.Hello;
 import com.typewritermc.playtest.wire.Message.Input;
@@ -56,11 +57,16 @@ public final class PlaytestClient implements ClientModInitializer {
             case Reset reset -> mc.execute(() -> {
                 Inputs.reset(mc);
                 Looks.reset();
+                Blends.reset(mc);
                 Perceiver.reset(mc);
             });
             case Watch watch -> mc.execute(() -> Perceiver.watch(watch));
             case Look look -> mc.execute(() -> {
                 Looks.ask(look);
+                Perceiver.force();
+            });
+            case Capture capture -> mc.execute(() -> {
+                Looks.capture(capture);
                 Perceiver.force();
             });
             case Input input -> Inputs.arrive(input);

@@ -35,11 +35,19 @@ public final class Hooks {
 
     public static void render(Minecraft mc, GameRenderer renderer) {
         switch (Frames.mode()) {
-            case DRAW -> renderer.render();
+            case DRAW -> {
+                renderer.render();
+                Looks.drawn(renderer);
+            }
             case PERCEIVE -> Looks.perceive(mc, renderer);
             case SKIP -> {}
         }
         Frames.end();
+    }
+
+    /** Whether frames draw at the end of the last tick: while the client steps. */
+    public static boolean drawsAtEndOfTick() {
+        return Stepper.stepping();
     }
 
     public static void wake() {

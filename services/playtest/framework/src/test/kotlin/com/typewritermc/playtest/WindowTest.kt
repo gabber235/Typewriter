@@ -120,12 +120,12 @@ val WindowTest by testSuite {
     test("the failure of a check about an entity reports what the frame showed of it at the window's last tick") {
         val zombie = EntityRef(UUID(0, 7), "minecraft:zombie")
         val window = Window(anchor = 100, length = 5.ticks, barrier = 7, checks = listOf(Check(steve, entity(zombie).visible())))
-        window.perceived(steve, perception(101, entities = listOf(Entity(UUID(0, 7), false, null, 0))))
+        window.perceived(steve, perception(101, entities = listOf(Entity(UUID(0, 7), false, null, 0.0))))
 
         val missed = window.barrierSeen(steve, 7).shouldBeInstanceOf<Missed>()
 
         missed.report shouldContain "gv-1 did not see entity zombie visible within 5 ticks"
-        missed.report shouldContain "At tick 105 gv-1 perceived entity zombie drawn, owning 0 pixels."
+        missed.report shouldContain "At tick 105 gv-1 perceived entity zombie drawn, owning 0% of the frame."
     }
 
     test("a barrier of another window changes nothing") {

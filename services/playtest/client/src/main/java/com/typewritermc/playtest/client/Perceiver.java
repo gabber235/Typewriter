@@ -52,7 +52,7 @@ final class Perceiver {
     private static final Set<UUID> watchedEntities = new LinkedHashSet<>();
     private static final Map<BlockPos, Change> changes = new HashMap<>();
     private static final Map<UUID, Entity> drawnEntities = new LinkedHashMap<>();
-    private static final Map<UUID, Integer> ownedPixels = new HashMap<>();
+    private static final Map<UUID, Double> ownedShares = new HashMap<>();
     private static int depth;
     private static GuiFrame frame = new GuiFrame(0, 0);
     private static String itemElement;
@@ -112,15 +112,15 @@ final class Perceiver {
         return drawnEntities.containsKey(entity);
     }
 
-    /** The frame drawn without {@code entity} showed {@code pixels} pixels in another colour. */
-    static void owns(UUID entity, int pixels) {
-        ownedPixels.put(entity, pixels);
+    /** The frame drawn without {@code entity} showed {@code share} of its pixels in another colour. */
+    static void owns(UUID entity, double share) {
+        ownedShares.put(entity, share);
     }
 
     static void beginFrame(Minecraft mc) {
         frame = new GuiFrame(mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
         drawnEntities.clear();
-        ownedPixels.clear();
+        ownedShares.clear();
         scoped = false;
     }
 
@@ -192,7 +192,7 @@ final class Perceiver {
         var entities = new ArrayList<Entity>();
         for (UUID uuid : watchedEntities) {
             Entity drawn = drawnEntities.get(uuid);
-            if (drawn != null) entities.add(new Entity(uuid, drawn.hurt(), drawn.name(), ownedPixels.getOrDefault(uuid, Entity.UNMEASURED)));
+            if (drawn != null) entities.add(new Entity(uuid, drawn.hurt(), drawn.name(), ownedShares.getOrDefault(uuid, Entity.UNMEASURED)));
         }
         return entities;
     }

@@ -36,6 +36,14 @@ val PixelsTest by testSuite {
         with.differences(without) shouldBe 0
     }
 
+    test("the share a thing owns is its pixels over every pixel of the frame, whatever the frame's size") {
+        val small = Pixels(2, 2, intArrayOf(zombie, stone, stone, stone))
+        val large = Pixels(4, 4, IntArray(16) { if (it % 4 < 2 && it < 8) zombie else stone })
+
+        small.differingShare(Pixels(2, 2, IntArray(4) { stone })) shouldBe 0.25
+        large.differingShare(Pixels(4, 4, IntArray(16) { stone })) shouldBe 0.25
+    }
+
     test("frames of different sizes are refused") {
         shouldThrow<IllegalArgumentException> { Pixels(2, 1, IntArray(2)).differences(Pixels(1, 2, IntArray(2))) }
     }

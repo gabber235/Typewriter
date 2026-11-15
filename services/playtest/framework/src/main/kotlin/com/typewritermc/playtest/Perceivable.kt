@@ -4,6 +4,8 @@ import com.typewritermc.playtest.wire.Message.Camera
 import com.typewritermc.playtest.wire.Message.Entity
 import com.typewritermc.playtest.wire.Message.Item
 import com.typewritermc.playtest.wire.Message.Perception
+import java.math.BigDecimal
+import java.math.MathContext
 import kotlin.math.hypot
 import com.typewritermc.playtest.wire.Message.BlockPos as WireBlockPos
 
@@ -188,36 +190,42 @@ class EntityFacts internal constructor(
     fun drawn(): Perceivable = drawn("entity $entity drawn") { true }
 
     /**
-     * The frame draws the entity and at least [pixels] of its pixels are its own: drawn once more
-     * without it, that many pixels show another colour. A wall, full transparency or a screen in front
-     * of it leaves it none. Only this fact makes the client draw frames for real.
+     * The frame draws the entity and it owns at least [share] of the frame, from 0 to 1: drawn once
+     * more without it, that share of the frame's pixels shows another colour. A share means the same on
+     * every window size; the default is what 30 pixels are of the runner's 854x480 frame. A wall, full
+     * transparency or a screen in front of it leaves it none. Only this fact makes the client draw
+     * frames for real.
      */
-    fun visible(pixels: Int = VISIBLE_PIXELS): Perceivable =
+    fun visible(share: Double = VISIBLE_SHARE): Perceivable =
         object : Perceivable {
             override val description =
-                if (pixels == VISIBLE_PIXELS) "entity $entity visible" else "entity $entity visible, owning at least $pixels pixels"
+                if (share == VISIBLE_SHARE) "entity $entity visible" else "entity $entity visible, owning at least ${percent(share)} of the frame"
 
             override val pixelsOf = listOf(entity)
 
             override fun shownIn(
                 perception: Perception,
                 stimulus: Stimulus,
-            ) = drawnAs(perception)?.let { it.pixels() >= pixels } == true
+            ) = drawnAs(perception)?.let { it.share() >= share } == true
 
             override fun observed(perception: Perception): String {
                 val drawn = drawnAs(perception)
                 return when {
                     drawn == null -> "entity $entity not drawn"
-                    drawn.pixels() == Entity.UNMEASURED -> "entity $entity drawn, its pixels not counted"
-                    else -> "entity $entity drawn, owning ${drawn.pixels()} pixels"
+                    drawn.share() == Entity.UNMEASURED -> "entity $entity drawn, its share of the frame not counted"
+                    else -> "entity $entity drawn, owning ${percent(drawn.share())} of the frame"
                 }
             }
         }
 
     private companion object {
-        /** Enough pixels to make out a small entity at a distance, few enough that a sliver past a wall counts. */
-        const val VISIBLE_PIXELS = 30
+        /** 30 pixels of the runner's 854x480 frame: a small entity at a distance, or a sliver past a wall. */
+        const val VISIBLE_SHARE = 30.0 / (854 * 480)
     }
+
+    /** [share] as a percentage of three significant digits: `0.00732%`, `12.3%`, `0%`. */
+    private fun percent(share: Double): String =
+        BigDecimal(share * 100).round(MathContext(3)).stripTrailingZeros().toPlainString() + "%"
 
     private fun drawnAs(perception: Perception): Entity? = perception.entities().firstOrNull { it.uuid() == entity.uuid }
 

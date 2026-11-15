@@ -12,6 +12,7 @@ mod e2e;
 mod evidence;
 mod generate;
 mod gitops;
+mod goldens;
 mod graph;
 mod heavy;
 mod hooks;
@@ -65,6 +66,9 @@ enum Cli {
     Cluster(cluster::ClusterCommand),
     /// Regenerates the generated sources (Git ignores them) whose inputs changed.
     Generate,
+    /// Approves the golden frames a game run captured.
+    #[command(subcommand)]
+    Goldens(goldens::GoldensCommand),
     /// Runs an end to end suite against this worktree's stack and writes its `TestRun`.
     E2e(e2e::E2eArgs),
     /// Runs a command with this worktree's stack up, or removes stacks left behind.
@@ -135,6 +139,7 @@ fn main() -> ExitCode {
         Cli::Review(args) => review::run(&context, args),
         Cli::Evidence(command) => evidence::run(&context, command),
         Cli::Docs(command) => docs::run(&context, command),
+        Cli::Goldens(command) => goldens::run(&context, &command),
         Cli::Hook(command) => hooks::run(&context, command),
         // The command's own exit code passes through.
         Cli::Heavy { command } => return heavy::run(&command).map_or_else(failed, ExitCode::from),

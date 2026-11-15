@@ -154,22 +154,31 @@ val FactsTest by testSuite {
     test("an entity the frame draws is drawn however few of its pixels show") {
         val zombie = EntityRef(UUID(0, 7), "minecraft:zombie")
 
-        fun owning(pixels: Int) = perception(104, entities = listOf(Entity(UUID(0, 7), false, null, pixels)))
+        fun owning(share: Double) = perception(104, entities = listOf(Entity(UUID(0, 7), false, null, share)))
 
-        entity(zombie).drawn().shownIn(owning(0), before) shouldBe true
+        entity(zombie).drawn().shownIn(owning(0.0), before) shouldBe true
         entity(zombie).drawn().shownIn(owning(Entity.UNMEASURED), before) shouldBe true
     }
 
-    test("an entity is visible once it owns at least 30 pixels of the frame, or as many as the check asks") {
+    test("an entity is visible once it owns the share of the frame 30 pixels of 854x480 are, on any frame size") {
         val zombie = EntityRef(UUID(0, 7), "minecraft:zombie")
 
-        fun owning(pixels: Int) = perception(104, entities = listOf(Entity(UUID(0, 7), false, null, pixels)))
+        fun owning(share: Double) = perception(104, entities = listOf(Entity(UUID(0, 7), false, null, share)))
 
-        entity(zombie).visible().shownIn(owning(30), before) shouldBe true
-        entity(zombie).visible().shownIn(owning(29), before) shouldBe false
-        entity(zombie).visible().shownIn(owning(0), before) shouldBe false
-        entity(zombie).visible(pixels = 30_000).shownIn(owning(38_803), before) shouldBe true
-        entity(zombie).visible(pixels = 30_000).shownIn(owning(22_169), before) shouldBe false
+        entity(zombie).visible().shownIn(owning(30.0 / (854 * 480)), before) shouldBe true
+        entity(zombie).visible().shownIn(owning(29.0 / (854 * 480)), before) shouldBe false
+        entity(zombie).visible().shownIn(owning(120.0 / (1708 * 960)), before) shouldBe true
+        entity(zombie).visible().shownIn(owning(119.0 / (1708 * 960)), before) shouldBe false
+        entity(zombie).visible().shownIn(owning(0.0), before) shouldBe false
+    }
+
+    test("an entity is visible once it owns the share of the frame the check asks") {
+        val zombie = EntityRef(UUID(0, 7), "minecraft:zombie")
+
+        fun owning(share: Double) = perception(104, entities = listOf(Entity(UUID(0, 7), false, null, share)))
+
+        entity(zombie).visible(share = 0.05).shownIn(owning(0.06), before) shouldBe true
+        entity(zombie).visible(share = 0.05).shownIn(owning(0.04), before) shouldBe false
     }
 
     test("an entity whose pixels were not counted is not visible") {
@@ -180,11 +189,15 @@ val FactsTest by testSuite {
         entity(zombie).visible().shownIn(unmeasured, before) shouldBe false
     }
 
-    test("a report names how many pixels an entity owned, or that the frame did not draw it") {
+    test("a report names the share of the frame an entity owned, or that the frame did not draw it") {
         val zombie = EntityRef(UUID(0, 7), "minecraft:zombie")
 
-        entity(zombie).visible().observed(perception(104, entities = listOf(Entity(UUID(0, 7), false, null, 0)))) shouldBe
-            "entity zombie drawn, owning 0 pixels"
+        fun owning(share: Double) = perception(104, entities = listOf(Entity(UUID(0, 7), false, null, share)))
+
+        entity(zombie).visible().observed(owning(0.0)) shouldBe "entity zombie drawn, owning 0% of the frame"
+        entity(zombie).visible().observed(owning(0.0000732)) shouldBe "entity zombie drawn, owning 0.00732% of the frame"
+        entity(zombie).visible().observed(owning(0.1234567)) shouldBe "entity zombie drawn, owning 12.3% of the frame"
+        entity(zombie).visible(share = 0.05).description shouldBe "entity zombie visible, owning at least 5% of the frame"
         entity(zombie).visible().observed(perception(104)) shouldBe "entity zombie not drawn"
     }
 

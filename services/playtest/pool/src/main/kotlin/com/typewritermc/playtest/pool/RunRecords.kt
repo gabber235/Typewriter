@@ -5,6 +5,8 @@ import com.typewritermc.playtest.wire.Message
 import com.typewritermc.playtest.wire.Message.AttemptStep
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Submit
+import skirout.harness.v1.test_run.Artifact
+import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.Attempt
 import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.test_run.Demonstrates
@@ -54,7 +56,15 @@ internal class RunRecords(
         claimed: List<AttemptStep> = listOf(),
     ) {
         val outcome = result.failure()?.let { Outcome.createFailed(message = it, firstBroken = result.firstBroken()) } ?: Outcome.PASSED
-        add(run, submit, outcome, result.durationMillis(), (claimed + result.steps()).sortedBy { it.atMillis() })
+        add(
+            run,
+            submit,
+            outcome,
+            result.durationMillis(),
+            (claimed + result.steps()).sortedBy { it.atMillis() },
+            result.folder(),
+            result.screenshots(),
+        )
     }
 
     /**
@@ -99,14 +109,16 @@ internal class RunRecords(
         outcome: Outcome,
         durationMillis: Long,
         steps: List<AttemptStep>,
+        folder: String = "",
+        screenshots: List<String> = listOf(),
     ) {
         val attempt =
             Attempt(
                 outcome = outcome,
                 span = null,
                 durationMillis = durationMillis,
-                artifacts = listOf(),
-                folder = "",
+                artifacts = screenshots.map { Artifact(kind = ArtifactKind.SCREENSHOT, path = it) },
+                folder = folder,
                 steps = steps.map { Step(atMillis = it.atMillis(), actor = null, says = it.says(), durationMillis = it.durationMillis()) },
                 taps = listOf(),
             )

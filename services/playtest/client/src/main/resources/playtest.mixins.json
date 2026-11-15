@@ -5,9 +5,12 @@
   "client": [
     "AbstractContainerScreenAccessor",
     "AbstractContainerScreenMixin",
+    "AtmosphericFogEnvironmentAccessor",
+    "CameraAccessor",
     "ChatComponentMixin",
     "ChatScreenAccessor",
     "CommandSuggestionsAccessor",
+    "FogRendererAccessor",
     "GameRendererInvoker",
     "GuiGraphicsExtractorMixin",
     "GuiRenderStateMixin",
@@ -21,6 +24,7 @@
     "PacketProcessorMixin",
     "PingMixin",
     "SuggestionsListMixin",
+    "TimerMixin",
     "ToastManagerMixin",
     "WindowMixin"
   ],

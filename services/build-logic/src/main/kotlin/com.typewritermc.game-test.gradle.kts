@@ -1,3 +1,4 @@
+import com.typewritermc.buildlogic.repositoryRoot
 import com.typewritermc.buildlogic.servicesDirectory
 import java.util.UUID
 
@@ -79,6 +80,15 @@ abstract class GameParts : CommandLineArgumentProvider {
     /** The requirements the quarantine holds: they run once and never block. */
     @get:Internal abstract val quarantine: Property<String>
 
+    /** The repository root, which golden paths start from. */
+    @get:Internal abstract val root: Property<String>
+
+    /** This project's golden files, from the repository root. */
+    @get:Internal abstract val goldens: Property<String>
+
+    /** The local golden images, each named by the hash of its frame. */
+    @get:Internal abstract val goldenImages: Property<String>
+
     override fun asArguments() =
         (
             mapOf(
@@ -92,6 +102,9 @@ abstract class GameParts : CommandLineArgumentProvider {
                 "clients" to clients.get().toString(),
                 "run" to runId.get(),
                 "testRun" to testRun.get(),
+                "root" to root.get(),
+                "goldens" to goldens.get(),
+                "goldenImages" to goldenImages.get(),
             ) +
                 listOf("only" to only, "repeat" to repeat, "quarantine" to quarantine)
                     .mapNotNull { (name, value) -> value.orNull?.let { name to it } }
@@ -126,5 +139,9 @@ tasks.register<Test>("gameTest") {
             only.set(providers.gradleProperty("playtest.only"))
             repeat.set(providers.gradleProperty("playtest.repeat"))
             quarantine.set(providers.gradleProperty("playtest.quarantine"))
+            root.set(repositoryRoot.path)
+            goldens.set(projectDir.resolve("src/gameTest/goldens").relativeTo(repositoryRoot).invariantSeparatorsPath)
+            // `cargo xtask goldens approve` keeps each approved frame here; a run diffs against it.
+            goldenImages.set(servicesDirectory.resolve("build/playtest/goldens").path)
         }
 }

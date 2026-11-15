@@ -30,6 +30,8 @@ import com.typewritermc.playtest.wire.Message.Key
 import com.typewritermc.playtest.wire.Message.KeyStep
 import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Lease
+import com.typewritermc.playtest.wire.Message.Capture
+import com.typewritermc.playtest.wire.Message.Captured
 import com.typewritermc.playtest.wire.Message.Look
 import com.typewritermc.playtest.wire.Message.Looked
 import com.typewritermc.playtest.wire.Message.Marks
@@ -49,8 +51,10 @@ import com.typewritermc.playtest.wire.Message.ProbeGive
 import com.typewritermc.playtest.wire.Message.ProbeMark
 import com.typewritermc.playtest.wire.Message.ProbePacketEntity
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot
+import com.typewritermc.playtest.wire.Message.ProbeSidebar
 import com.typewritermc.playtest.wire.Message.ProbeSpawn
 import com.typewritermc.playtest.wire.Message.ProbeTeleport
+import com.typewritermc.playtest.wire.Message.ProbeTime
 import com.typewritermc.playtest.wire.Message.ProbeWork
 import com.typewritermc.playtest.wire.Message.Query
 import com.typewritermc.playtest.wire.Message.Queue
@@ -60,6 +64,7 @@ import com.typewritermc.playtest.wire.Message.Refused
 import com.typewritermc.playtest.wire.Message.Region
 import com.typewritermc.playtest.wire.Message.RegionsAhead
 import com.typewritermc.playtest.wire.Message.Release
+import com.typewritermc.playtest.wire.Message.Renderer
 import com.typewritermc.playtest.wire.Message.Reset
 import com.typewritermc.playtest.wire.Message.ResetDone
 import com.typewritermc.playtest.wire.Message.Result
@@ -115,7 +120,7 @@ val WireTest by testSuite {
                 Declined(8, "GROUP-1 claims 3 players, but the pool holds 1"),
                 Reclaim(8),
                 Lease(7, listOf(Player("gv-1", player), Player("gv-2", UUID(1, 2))), Region(-1_024, 2_048)),
-                Result(7, 1_250, null, null, listOf()),
+                Result(7, 1_250, null, null, listOf(), "", listOf()),
                 Result(
                     8,
                     90,
@@ -125,6 +130,8 @@ val WireTest by testSuite {
                         AttemptStep(1_700_000_000_000, 12, "probe Chat[text=Hello]"),
                         AttemptStep(1_700_000_000_012, 70, "window of 5 ticks missed at tick 5, stepped 5"),
                     ),
+                    "GOLDEN-1 a sidebar/attempt-1",
+                    listOf("sidebar.png", "sidebar.diff.png"),
                 ),
                 End("run-1", "/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.RERUN_FAILURES, 4)),
                 End("run-2", "/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.EXACTLY, 3)),
@@ -141,6 +148,8 @@ val WireTest by testSuite {
                 Probe(12, listOf(player), ProbeCommand("warp", listOf("spawn", "spire", "shop"), "Warping to")),
                 Probe(13, listOf(player), ProbeMark(Kind.HOLD)),
                 Probe(14, listOf(player), ProbeWork("Ledger lookup", 120, "Ledger ready")),
+                Probe(15, listOf(player), ProbeSidebar("Quest", listOf("Find the key", "Gold: 3"))),
+                Probe(16, listOf(player), ProbeTime(6_000)),
                 Query(14, player),
                 Marks(14, listOf(Kind.SCOREBOARD, Kind.HOLD), null),
                 Marks(15, listOf(), "the player gv-2 is not online"),
@@ -188,6 +197,9 @@ val WireTest by testSuite {
                 Look(15, player, listOf(UUID(3, 4), UUID(5, 6))),
                 Look(16, player, listOf()),
                 Looked(15),
+                Capture(17, player, "/tmp/results/GOLDEN-1/attempt-1/sidebar.png"),
+                Captured(17, Renderer("Vulkan", "llvmpipe (LLVM 20.1.2, 256 bits)", "Mesa 26.2.5", "amd64"), null),
+                Captured(18, Renderer("OpenGL", "Apple M1 Max", "4.1 Metal", "aarch64"), "the frame could not be written"),
                 Perceived(
                     "gv-1",
                     Perception(
@@ -200,7 +212,7 @@ val WireTest by testSuite {
                             Block(BlockPos(0, 101, 2), "minecraft:air", true, 1_204),
                             Block(BlockPos(1, 101, 2), "minecraft:stone", false, -1),
                         ),
-                        listOf(Entity(UUID(3, 4), true, "Ouch", 1_404), Entity(UUID(5, 6), false, null, Entity.UNMEASURED)),
+                        listOf(Entity(UUID(3, 4), true, "Ouch", 0.000_732), Entity(UUID(5, 6), false, null, Entity.UNMEASURED)),
                     ),
                 ),
                 Perceived("gv-1", Perception(0, listOf(), listOf(), null, listOf(), listOf(), listOf())),

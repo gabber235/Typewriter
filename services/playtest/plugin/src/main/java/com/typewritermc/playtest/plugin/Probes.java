@@ -14,8 +14,10 @@ import com.typewritermc.playtest.wire.Message.ProbeGive;
 import com.typewritermc.playtest.wire.Message.ProbeMark;
 import com.typewritermc.playtest.wire.Message.ProbePacketEntity;
 import com.typewritermc.playtest.wire.Message.ProbeSelectSlot;
+import com.typewritermc.playtest.wire.Message.ProbeSidebar;
 import com.typewritermc.playtest.wire.Message.ProbeSpawn;
 import com.typewritermc.playtest.wire.Message.ProbeTeleport;
+import com.typewritermc.playtest.wire.Message.ProbeTime;
 import com.typewritermc.playtest.wire.Message.ProbeWork;
 import com.typewritermc.playtest.wire.Message.WorldAction;
 import io.papermc.paper.adventure.PaperAdventure;
@@ -61,6 +63,10 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scoreboard.Criteria;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.util.Vector;
 import org.jspecify.annotations.Nullable;
 
@@ -152,7 +158,28 @@ final class Probes implements Listener {
                 work(player, work);
                 yield null;
             }
+            case ProbeSidebar sidebar -> sidebar(player, sidebar);
+            case ProbeTime time -> {
+                player.setPlayerTime(time.time(), false);
+                yield null;
+            }
         };
+    }
+
+    /**
+     * Gives the player a scoreboard of its own whose sidebar shows the lines top to bottom: each line
+     * scores one more than the line below it. The wipe hands the player the main scoreboard again.
+     */
+    private static @Nullable String sidebar(Player player, ProbeSidebar sidebar) {
+        if (new HashSet<>(sidebar.lines()).size() != sidebar.lines().size()) return "a sidebar shows each line once: " + sidebar.lines();
+        Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
+        Objective objective = board.registerNewObjective("playtest_sidebar", Criteria.DUMMY, Component.text(sidebar.title()));
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        for (int index = 0; index < sidebar.lines().size(); index++) {
+            objective.getScore(sidebar.lines().get(index)).setScore(sidebar.lines().size() - index);
+        }
+        player.setScoreboard(board);
+        return null;
     }
 
     /**

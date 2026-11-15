@@ -20,6 +20,9 @@ public sealed interface Message {
     /** The answer to the session's request {@code request}: a probe, a query, an input or a look. */
     sealed interface Reply extends Message {
         long request();
+
+        /** The same answer to another request, as the pool hands it on under the asker's own id. */
+        Reply withRequest(long request);
     }
 
     /** The first message on every connection to the pool. */
@@ -82,9 +85,18 @@ public sealed interface Message {
     /**
      * Session to pool: the attempt ended and its players are free again. {@code failure} is null for a
      * pass; {@code firstBroken} names the requirement line that failed, when it is known. {@code steps}
-     * are what the attempt's bodies did, in order.
+     * are what the attempt's bodies did, in order. {@code folder} holds the attempt's evidence, relative
+     * to the run file's folder, or is empty when it left none; {@code screenshots} are the frames it
+     * wrote there, relative to {@code folder}.
      */
-    record Result(long submission, long durationMillis, String failure, String firstBroken, List<AttemptStep> steps)
+    record Result(
+            long submission,
+            long durationMillis,
+            String failure,
+            String firstBroken,
+            List<AttemptStep> steps,
+            String folder,
+            List<String> screenshots)
         implements Message {}
 
     /** How a run makes its requirements' attempts: failed ones again, up to {@code attempts} in total, or each exactly {@code attempts} times. */
@@ -110,7 +122,12 @@ public sealed interface Message {
      * tick, and its players' clients now hold all it caused. {@code failure} is null when it ran, or says
      * why it could not.
      */
-    record ProbeDone(long request, int tick, String failure) implements Reply {}
+    record ProbeDone(long request, int tick, String failure) implements Reply {
+        @Override
+        public ProbeDone withRequest(long request) {
+            return new ProbeDone(request, tick, failure);
+        }
+    }
 
     /**
      * Session to Paper: run ticks, each once the player acked the one before, until {@code tick} has
@@ -128,7 +145,12 @@ public sealed interface Message {
     record Query(long request, UUID player) implements Message {}
 
     /** Paper to session: the kinds the player carries a mark of; {@code failure} is null when Paper could look. */
-    record Marks(long request, List<Kind> marked, String failure) implements Reply {}
+    record Marks(long request, List<Kind> marked, String failure) implements Reply {
+        @Override
+        public Marks withRequest(long request) {
+            return new Marks(request, marked, failure);
+        }
+    }
 
     /**
      * A kind of per player state an attempt can leave behind for the next attempt on the same player.
@@ -308,7 +330,8 @@ public sealed interface Message {
 
     /**
      * Pool to client: a new attempt starts. The client releases every key and button, closes every
-     * screen, drops the chat draft and its watches, takes the mouse, and perceives afresh.
+     * screen, drops the chat draft and its watches, takes the mouse, starts what it eases from tick to
+     * tick (sky and fog) afresh, and perceives afresh.
      */
     record Reset() implements Message {}
 
@@ -327,7 +350,12 @@ public sealed interface Message {
      * ended, so the input shows from the next tick. {@code failure} is null when every step ran, or
      * says which step could not, for example an aim that left something else under the crosshair.
      */
-    record InputDone(long request, int tick, String failure) implements Reply {}
+    record InputDone(long request, int tick, String failure) implements Reply {
+        @Override
+        public InputDone withRequest(long request) {
+            return new InputDone(request, tick, failure);
+        }
+    }
 
     /**
      * Session to the player's client: from now on every record also carries these blocks and entities,
@@ -345,7 +373,32 @@ public sealed interface Message {
     record Look(long request, UUID player, List<UUID> entities) implements Message {}
 
     /** Client to session: the look took effect; every record from now on measures what it names. */
-    record Looked(long request) implements Reply {}
+    record Looked(long request) implements Reply {
+        @Override
+        public Looked withRequest(long request) {
+            return new Looked(request);
+        }
+    }
+
+    /**
+     * Session to the player's client: draw the frame as the client holds it now, for real, and write it
+     * as a PNG to {@code path}. The client answers with {@link Captured}.
+     */
+    record Capture(long request, UUID player, String path) implements Message {}
+
+    /** Client to session: the frame is written, drawn by {@code renderer}; {@code failure} is null when it was. */
+    record Captured(long request, Renderer renderer, String failure) implements Reply {
+        @Override
+        public Captured withRequest(long request) {
+            return new Captured(request, renderer, failure);
+        }
+    }
+
+    /**
+     * What drew a frame: the graphics backend, the device and the driver it reports, and the CPU
+     * architecture. Two renderers draw the same scene alike to the pixel only when all four match.
+     */
+    record Renderer(String backend, String device, String driver, String arch) {}
 
     /** Client to session: what the player perceives changed. */
     record Perceived(String player, Perception perception) implements PlayerEvent {}
@@ -422,6 +475,12 @@ public sealed interface Message {
      * test kit sends it, to prove ticks wait for counted work and hung work is reported.
      */
     record ProbeWork(String name, int millis, String chat) implements PlayerAction {}
+
+    /** The player sees a sidebar titled {@code title} holding {@code lines}, top to bottom. */
+    record ProbeSidebar(String title, List<String> lines) implements PlayerAction {}
+
+    /** The player sees the time of day stand still at {@code time} ticks: 0 is sunrise, 6000 noon. */
+    record ProbeTime(long time) implements PlayerAction {}
 
     /** One step of an {@link Input}. Keys are named as {@link Key} names them. */
     sealed interface InputStep {}
@@ -504,10 +563,11 @@ public sealed interface Message {
 
     /**
      * A watched entity the frame draws after culling: whether it shows the red hurt tint, the name tag
-     * drawn above it, or null, and how many pixels of the frame it owns: those that differ when the
-     * frame is drawn without it. {@code pixels} is {@link #UNMEASURED} unless a look names the entity.
+     * drawn above it, or null, and the share of the frame it owns, from 0 to 1: the pixels that differ
+     * when the frame is drawn without it, over all of the frame's pixels. {@code share} is
+     * {@link #UNMEASURED} unless a look names the entity.
      */
-    record Entity(UUID uuid, boolean hurt, String name, int pixels) {
-        public static final int UNMEASURED = -1;
+    record Entity(UUID uuid, boolean hurt, String name, double share) {
+        public static final double UNMEASURED = -1;
     }
 }

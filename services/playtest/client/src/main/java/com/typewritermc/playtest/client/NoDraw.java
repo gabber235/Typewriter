@@ -14,9 +14,10 @@ import net.minecraft.util.Util;
 
 /**
  * {@code GameRenderer.render} with every GPU step cut, run after extract on a frame that acquired no
- * window texture. It keeps the CPU work whose result a later drawn frame or the next extract reads: the
- * view area follows the camera, the world's submits run and are dropped, dirty sections compile and
- * upload, and the occlusion graph updates the visible sections the next extract culls with.
+ * window texture. It keeps the work whose result a later drawn frame or the next extract reads: the
+ * lightmap takes the tick's light, the view area follows the camera, the world's submits run and are
+ * dropped, dirty sections compile and upload, and the occlusion graph updates the visible sections the
+ * next extract culls with.
  */
 final class NoDraw {
     private NoDraw() {}
@@ -29,6 +30,9 @@ final class NoDraw {
             renderer.resize(window.width, window.height);
         }
         if (!state.shouldRenderLevel) return;
+        // Extract hands a tick's light over once: drawn here, or a later drawn frame lights the world as
+        // it was lit when the client last drew.
+        ((GameRendererInvoker) renderer).playtest$lightmap().render(state.lightmapRenderState);
         var level = (LevelRendererInvoker) mc.levelRenderer;
         CameraRenderState camera = state.levelRenderState.cameraRenderState;
         LevelRenderState levelState = level.playtest$levelRenderState();

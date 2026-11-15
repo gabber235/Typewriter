@@ -107,6 +107,15 @@ class RequirementScope internal constructor(
         limit: Ticks = 80.ticks,
     ): Mark = input("walks to $x, $z", WalkToStep(attempt.region.worldX(x), attempt.region.worldZ(z), limit.count))
 
+    /**
+     * The frame the player's client holds now is the golden [name], to the pixel. It is compared only
+     * when the approved golden was drawn by this run's renderer, else the attempt notes it as not
+     * checked; a frame that differs fails with its diff. Ask once a window let the scene settle, of a
+     * scene where nothing moves from tick to tick. `cargo xtask goldens approve` approves the frames
+     * a run wrote.
+     */
+    suspend fun GamePlayer.looksLike(name: String) = attempt.golden(this, name)
+
     private suspend fun GamePlayer.input(
         says: String,
         vararg steps: InputStep,

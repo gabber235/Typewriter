@@ -21,4 +21,9 @@ record Pixels(int width, int height, int[] rgba) {
         }
         return differing;
     }
+
+    /** The share of this frame's pixels that show another colour on screen in {@code other}, from 0 to 1. */
+    double differingShare(Pixels other) {
+        return (double) differences(other) / rgba.length;
+    }
 }

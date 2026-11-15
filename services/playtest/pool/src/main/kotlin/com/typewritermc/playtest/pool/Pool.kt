@@ -3,6 +3,7 @@ package com.typewritermc.playtest.pool
 import com.typewritermc.playtest.wire.Message
 import com.typewritermc.playtest.wire.Message.AttemptStep
 import com.typewritermc.playtest.wire.Message.BarrierSeen
+import com.typewritermc.playtest.wire.Message.Capture
 import com.typewritermc.playtest.wire.Message.Claim
 import com.typewritermc.playtest.wire.Message.Claimed
 import com.typewritermc.playtest.wire.Message.ClientLost
@@ -14,17 +15,13 @@ import com.typewritermc.playtest.wire.Message.Ended
 import com.typewritermc.playtest.wire.Message.Hello
 import com.typewritermc.playtest.wire.Message.HungEnded
 import com.typewritermc.playtest.wire.Message.Input
-import com.typewritermc.playtest.wire.Message.InputDone
 import com.typewritermc.playtest.wire.Message.Joined
 import com.typewritermc.playtest.wire.Message.Lease
 import com.typewritermc.playtest.wire.Message.Look
-import com.typewritermc.playtest.wire.Message.Looked
-import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Player
 import com.typewritermc.playtest.wire.Message.PlayerLeft
 import com.typewritermc.playtest.wire.Message.Probe
-import com.typewritermc.playtest.wire.Message.ProbeDone
 import com.typewritermc.playtest.wire.Message.Query
 import com.typewritermc.playtest.wire.Message.Queue
 import com.typewritermc.playtest.wire.Message.Ready
@@ -33,6 +30,7 @@ import com.typewritermc.playtest.wire.Message.Refused
 import com.typewritermc.playtest.wire.Message.Region
 import com.typewritermc.playtest.wire.Message.RegionsAhead
 import com.typewritermc.playtest.wire.Message.Release
+import com.typewritermc.playtest.wire.Message.Reply
 import com.typewritermc.playtest.wire.Message.Reset
 import com.typewritermc.playtest.wire.Message.ResetDone
 import com.typewritermc.playtest.wire.Message.Result
@@ -356,7 +354,7 @@ internal class Pool(
         } catch (unservable: IllegalArgumentException) {
             for (submit in together) {
                 val reason = "${submit.requirement()} cannot run here: ${unservable.message}"
-                runs.record(session.hello.name(), submit, Result(submit.submission(), 0, reason, null, listOf()))
+                runs.record(session.hello.name(), submit, Result(submit.submission(), 0, reason, null, listOf(), "", listOf()))
                 session.send(Declined(submit.submission(), reason))
             }
             return
@@ -412,6 +410,10 @@ internal class Pool(
                 route(clientOf(message.player())?.peer, session, message.request()) { Look(it, message.player(), message.entities()) }
             }
 
+            is Capture -> {
+                route(clientOf(message.player())?.peer, session, message.request()) { Capture(it, message.player(), message.path()) }
+            }
+
             // playersNamedBy turned every other message away above.
             else -> {}
         }
@@ -439,6 +441,7 @@ internal class Pool(
             is Input -> listOf(message.player())
             is Watch -> listOf(message.player())
             is Look -> listOf(message.player())
+            is Capture -> listOf(message.player())
             else -> null
         }
 
@@ -449,8 +452,7 @@ internal class Pool(
 
     private fun fromPaper(message: Message) {
         when (message) {
-            is ProbeDone -> answer(message.request()) { ProbeDone(it, message.tick(), message.failure()) }
-            is Marks -> answer(message.request()) { Marks(it, message.marked(), message.failure()) }
+            is Reply -> answer(message.request(), message::withRequest)
             is Claimed -> attempts[message.attempt()]?.let { claimed(it, message.failure()) }
             is Settled -> attempts[message.id()]?.let { it.session.send(Settled(it.submit.submission())) }
             is WorkHung -> workHung(message)
@@ -495,12 +497,8 @@ internal class Pool(
                 barrierSeen(message)
             }
 
-            is InputDone -> {
-                answer(message.request()) { InputDone(it, message.tick(), message.failure()) }
-            }
-
-            is Looked -> {
-                answer(message.request()) { Looked(it) }
+            is Reply -> {
+                answer(message.request(), message::withRequest)
             }
 
             else -> {
