@@ -754,9 +754,21 @@ slices:
       opened" is inferred from the pool log; the driver token is unseen on a real runner; weather is not
       pinned.
   - id: restart-paper
-    status: building
+    status: done
     what: fast boot flags, AOT cache training, clients gated during boot
     green: a deposit survives a killed Paper
+    evidence: [commits f1a5ac210 8effd83c5, "slice thread: three fresh full runs, 95 passed each", "cargo xtask e2e game on 8effd83c5: 95 passed first attempt; restarts about 11 s while the cache trained"]
+    taught: >-
+      requirement(restartsPaper = true) with restartPaper() runs on a fresh Paper of its own; its players
+      move there by Connect and are resumed without a wipe after a kill. Kill to every player back is 5.3
+      to 6.7 s on the Mac from the cache (P7 5.0 s), about 10.3 s on a boot that trains the cache; three
+      restart requirements add about 11 s to the suite. With an AOT cache the JVM loads MinecraftServer
+      before premain, so the step agent's prefixes silently missed and Paper stopped itself; the agent no
+      longer joins the boot class path and retransforms classes already loaded, and both Papers launch
+      from Paper's class path. The cache is trained on a restart boot, kept only on a clean halt, keyed
+      on JDK, files and flags. Open: Pool checks server.own in about 8 handlers while the restart Paper
+      has its own rules class; a training Paper's halt prints a watchdog dump; 4 restarts at once could
+      starve the shared Paper.
   - id: coverage-and-clips
     status: queued
     what: coverage per requirement, demo reruns with clips
@@ -766,4 +778,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Steadiness finishes (visible set hold removed, tests for the other client resets, SEEN-4 measured); slice 7 builds.
+next: Slice 7 done. Confirm its built decisions and whether the shared Paper gets a rules object like the restart Paper; steadiness finishes.
