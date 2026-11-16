@@ -734,6 +734,9 @@ decided:
   - id: logs-per-run
     what: "Own folder, keep 3 (Recommended)"
     why: FROZEN-1's demo once saw its stall after 10.07 s and the next runs overwrote its logs; each run writes pool and Paper logs to a folder of its own and the last 3 are kept
+  - id: slice-9-dispatched-runs
+    what: "Dispatch runs on its branch (Recommended)"
+    why: CI works again (features/v1 CI and Full tier green on 2026-11-16); slice 9 proves the game job, caches and the Linux paths with workflow_dispatch runs on its own branch, no pull request; if Actions fails again it stops and Namespace runners come next
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -876,8 +879,8 @@ slices:
       loses their clips too; FROZEN-1's demo once saw its stall after 10.07 s, against about 5.1 s in 15
       other demos and in every gated run, and that run's logs were overwritten before they were read. Since 7684c4558 and ea956c027 a killed Paper's records are dropped only by its restart rules and each run keeps its logs in results/game/logs/<n>, the newest 3 kept; a pool left alive from an earlier run still writes into that run's folder (slice 9).
   - id: ci-and-pool-lifecycle
-    status: queued
+    status: building
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Run logs merged (ea956c027, 96 passed with 91 demos). Start slice 9 (CI job and caches, detach, stale pool, lease deadline) on the free GitHub runner.
+next: Slice 9 (CI job and caches, Linux proofs, pool lifecycle) builds on feat/game-verification-slice-9 with dispatched CI runs.
