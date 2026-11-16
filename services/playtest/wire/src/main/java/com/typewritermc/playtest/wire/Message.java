@@ -576,9 +576,8 @@ public sealed interface Message {
     record ScrollStep(int amount) implements InputStep {}
 
     /**
-     * Types {@code text} into the chat, opening it with the chat key first when it is closed. While the
-     * chat stays open with that text, the client retypes the last character whenever a suggestion
-     * request got no answer for 6 ticks, as a person does when no list shows.
+     * Types {@code text} into the chat one character after each tick, opening it with the chat key first
+     * when it is closed.
      */
     record TypeInChatStep(String text) implements InputStep {}
 

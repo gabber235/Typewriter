@@ -22,8 +22,8 @@ import com.typewritermc.playtest.wire.Message.ProbeSave;
 import com.typewritermc.playtest.wire.Message.ProbeTime;
 import com.typewritermc.playtest.wire.Message.ProbeWork;
 import com.typewritermc.playtest.wire.Message.WorldAction;
+import com.typewritermc.playtest.wire.Payload.Watch;
 import io.papermc.paper.adventure.PaperAdventure;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -83,7 +83,7 @@ import org.jspecify.annotations.Nullable;
  */
 final class Probes implements Listener {
     private static final int MAX_FILL = 4_096;
-    private static final Identifier WATCH = Identifier.parse("playtest:watch");
+    private static final Identifier WATCH = Identifier.parse(Watch.CHANNEL);
 
     /** How a probe entity answers a player: the name tag it shows once hit or used. */
     private record Reactions(@Nullable String onHit, @Nullable String onClick) {}
@@ -193,18 +193,11 @@ final class Probes implements Listener {
     }
 
     /**
-     * Sends [player]'s client a watch on [blocks] and [entities]. The body is the block count, each
-     * block's x, y and z, the entity count, and each entity's two UUID halves, as the client's {@code
-     * Watch} payload reads it. A raw payload, since Bukkit's plugin messages drop channels the client
-     * never announced.
+     * Sends [player]'s client a watch on [blocks] and [entities] as a raw payload, since Bukkit's plugin
+     * messages drop channels the client never announced.
      */
     private static void watch(Player player, List<BlockPos> blocks, List<UUID> entities) {
-        var body = ByteBuffer.allocate(Integer.BYTES * (2 + 3 * blocks.size()) + 2 * Long.BYTES * entities.size());
-        body.putInt(blocks.size());
-        for (BlockPos at : blocks) body.putInt(at.x()).putInt(at.y()).putInt(at.z());
-        body.putInt(entities.size());
-        for (UUID entity : entities) body.putLong(entity.getMostSignificantBits()).putLong(entity.getLeastSignificantBits());
-        send(player, new ClientboundCustomPayloadPacket(new DiscardedPayload(WATCH, body.array())));
+        send(player, new ClientboundCustomPayloadPacket(new DiscardedPayload(WATCH, new Watch(blocks, entities).body())));
     }
 
     /**

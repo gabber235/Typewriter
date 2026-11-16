@@ -29,10 +29,10 @@ public final class PlaytestClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        PayloadTypeRegistry.serverboundPlay().register(StepAck.TYPE, StepAck.CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(Watch.TYPE, Watch.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(StepAckPayload.TYPE, StepAckPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(WatchPayload.TYPE, WatchPayload.CODEC);
         // Fabric hands a payload over on the thread that handles packets, in order with the game's own.
-        ClientPlayNetworking.registerGlobalReceiver(Watch.TYPE, (watch, context) -> Perceiver.watch(watch));
+        ClientPlayNetworking.registerGlobalReceiver(WatchPayload.TYPE, (payload, context) -> Perceiver.watch(payload.watch()));
         player = System.getProperty("playtest.player");
         Integer port = Integer.getInteger("playtest.pool.port");
         if (player == null || port == null) throw new IllegalStateException("playtest.player and playtest.pool.port are not set: only the game pool runs this client");

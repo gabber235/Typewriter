@@ -8,6 +8,7 @@ import com.typewritermc.playtest.wire.Message.Entity;
 import com.typewritermc.playtest.wire.Message.Perceived;
 import com.typewritermc.playtest.wire.Message.Perception;
 import com.typewritermc.playtest.wire.Message.ResetDone;
+import com.typewritermc.playtest.wire.Payload.Watch;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -96,9 +97,8 @@ final class Perceiver {
 
     /** From now on every record also carries these blocks and entities. */
     static void watch(Watch watch) {
-        watchedBlocks.addAll(watch.blocks());
+        watch.blocks().forEach(at -> watchedBlocks.add(new BlockPos(at.x(), at.y(), at.z())));
         watchedEntities.addAll(watch.entities());
-        forced = true;
     }
 
     /** The next frame perceives and sends its record, changed or not. */

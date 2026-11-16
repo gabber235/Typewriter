@@ -1,6 +1,7 @@
 package com.typewritermc.playtest.client;
 
 import com.typewritermc.playtest.wire.Message.Ready;
+import com.typewritermc.playtest.wire.Payload.StepAck;
 import java.util.ArrayDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
@@ -110,11 +111,11 @@ final class Stepper {
         // Without a Paper the client only waits for the pool, which wakes it.
         if (Session.waiting()) LockSupport.parkNanos(WAITING_PARK_NANOS);
         if (!stepping) return;
-        mc.packetProcessor().processQueuedPackets();
+        processPackets(mc);
         if (running != null) return;
-        if (granted.isEmpty() && !Perceiver.forced()) {
+        if (granted.isEmpty() && !perceiveDue && !Perceiver.forced()) {
             LockSupport.parkNanos(PARK_NANOS);
-            mc.packetProcessor().processQueuedPackets();
+            processPackets(mc);
         }
         Integer next = granted.poll();
         if (next != null) {
@@ -124,6 +125,18 @@ final class Stepper {
             // No tick runs in this pass: an input that waits to start asks Paper for a tick here.
             Inputs.betweenTicks(mc, false);
         }
+    }
+
+    /**
+     * Handles the packets queued for the render thread, here and where {@code Minecraft.runTick} does,
+     * unless the record of the tick that ran is still due: a packet queued after that tick's step ping
+     * belongs to the next tick, and handled before the record went out it would show a tick early. The
+     * record waits only on the client's own polled events, never on a packet, and Paper sends the next
+     * step ping only after its ack.
+     */
+    static void processPackets(Minecraft mc) {
+        if (stepping && perceiveDue) return;
+        mc.packetProcessor().processQueuedPackets();
     }
 
     /** Tail of {@code Minecraft.tick}. */
@@ -144,7 +157,7 @@ final class Stepper {
     static void perceived() {
         if (!perceiveDue) return;
         perceiveDue = false;
-        ClientPlayNetworking.send(new StepAck(lastRan, Inputs.busy()));
+        ClientPlayNetworking.send(new StepAckPayload(new StepAck(lastRan, Inputs.busy())));
     }
 
     /**
@@ -154,6 +167,6 @@ final class Stepper {
     static void needTicks() {
         if (!stepping || perceiveDue || askedAfter == lastRan) return;
         askedAfter = lastRan;
-        ClientPlayNetworking.send(new StepAck(lastRan, true));
+        ClientPlayNetworking.send(new StepAckPayload(new StepAck(lastRan, true)));
     }
 }

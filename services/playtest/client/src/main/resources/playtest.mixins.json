@@ -9,7 +9,6 @@
     "CameraAccessor",
     "ChatComponentMixin",
     "ChatScreenAccessor",
-    "CommandSuggestionsAccessor",
     "FogRendererAccessor",
     "GameRendererInvoker",
     "GuiGraphicsExtractorMixin",

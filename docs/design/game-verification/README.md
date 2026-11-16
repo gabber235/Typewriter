@@ -142,9 +142,14 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
 - **Steady tick counts** (2026-11-15): a requirement takes the same ticks on every run. Work that
   already runs when it begins holds the next tick; a task handed to Bukkit's async scheduler holds the
   one after, since that tick's heartbeat starts it. Paper's async chat counts as its player's work from
-  the moment Paper reads the line until its chat thread sent it; chat stays on that thread. The client
-  mirrors this: it acks a tick only once its own work for it is done, that is the events an input
-  queued right after the tick were polled, so their packets reach Paper before the ack. An input starts
+  the moment Paper reads the line until its chat thread sent it; chat stays on that thread. A command
+  suggestion request counts the same way, from the read until its answer goes out or Paper decides to
+  send none (cancelled or empty suggestions, or a newer request of the player ended); the client types
+  one character per tick, as a person does, so it asks at most once per tick and every request gets
+  its answer. The client mirrors this: it acks a tick only once its own work for it is done, that is
+  the events an input queued right after the tick were polled, so their packets reach Paper before the
+  ack; until that tick's record went out it handles no packet, since one queued after the tick's step
+  ping belongs to the next tick. An input starts
   only right after a tick; one that arrives while Paper is idle asks for a tick first. GOLDEN-3 is
   watched: the visible sections update on a background thread after a move, which may make a frame
   lag a tick, but no run showed it, so the client does not wait for them (cause unproven). The client

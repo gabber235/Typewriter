@@ -15,6 +15,10 @@ import net.minecraft.world.item.ItemStack;
 public final class Hooks {
     private Hooks() {}
 
+    public static void processPackets(Minecraft mc) {
+        Stepper.processPackets(mc);
+    }
+
     public static void beforeRunTick(Minecraft mc) {
         Stepper.beforeRunTick(mc);
     }

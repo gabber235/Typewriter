@@ -28,8 +28,9 @@ import com.typewritermc.playtest.wire.Message.StepUntil;
 import com.typewritermc.playtest.wire.Message.Stepping;
 import com.typewritermc.playtest.wire.Message.StopStepping;
 import com.typewritermc.playtest.wire.Message.WorkHung;
+import com.typewritermc.playtest.wire.Payload.StepAck;
+import com.typewritermc.playtest.wire.WireException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
@@ -57,8 +58,6 @@ import org.bukkit.util.Vector;
  * pool runs on the main thread between ticks.
  */
 public final class PlaytestPlugin extends JavaPlugin implements Listener {
-    private static final String STEP_ACK = "playtest:step";
-
     private final WorkLedger work = PlayerWork.LEDGER;
     private final StepPolicy policy = new StepPolicy(
             Step::pending,
@@ -77,6 +76,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private final Attempts attempts = new Attempts(this);
     private final GroundAhead ground = new GroundAhead(this);
     private final ChatWork chat = new ChatWork();
+    private final SuggestionWork suggestions = new SuggestionWork();
     private Link pool;
 
     @Override
@@ -95,12 +95,16 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(attempts, this);
         Bukkit.getPluginManager().registerEvents(owned, this);
         Bukkit.getPluginManager().registerEvents(chat, this);
-        Bukkit.getMessenger().registerIncomingPluginChannel(this, STEP_ACK, (channel, player, bytes) -> {
+        Bukkit.getPluginManager().registerEvents(suggestions, this);
+        Bukkit.getMessenger().registerIncomingPluginChannel(this, StepAck.CHANNEL, (channel, player, bytes) -> {
             UUID id = player.getUniqueId();
-            var ack = ByteBuffer.wrap(bytes);
-            int tick = ack.getInt();
-            boolean busy = ack.get() != 0;
-            onMainThread(() -> policy.acked(id, tick, busy));
+            StepAck ack;
+            try {
+                ack = StepAck.read(bytes);
+            } catch (WireException broken) {
+                throw new IllegalArgumentException(player.getName() + "'s client sent a step ack Paper cannot read", broken);
+            }
+            onMainThread(() -> policy.acked(id, ack.tick(), ack.busy()));
         });
         Step.policy = policy::run;
         // The first tick runs once the server is done starting, so the pool hears from a Paper players can join.

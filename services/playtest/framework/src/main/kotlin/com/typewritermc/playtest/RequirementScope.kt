@@ -48,9 +48,9 @@ class RequirementScope internal constructor(
     val probe: Probe = Probe(attempt) { anchor = it }
 
     /**
-     * Opens the chat with its key when it is closed and types [text], as one burst of keys between two
-     * ticks. While the chat stays open with that text, a suggestion request that got no answer for 6
-     * ticks makes the client retype the last character, as a person does when no list shows.
+     * Opens the chat with its key when it is closed and types [text] one character per tick, as a person
+     * types: typing takes a tick for each character, and Paper answers each suggestion request before
+     * the next tick.
      */
     suspend fun GamePlayer.typeInChat(text: String): Mark = input("types \"$text\" in chat", TypeInChatStep(text))
 

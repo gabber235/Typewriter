@@ -6,6 +6,7 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.PacketProcessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,6 +19,12 @@ abstract class MinecraftMixin {
     @Inject(method = "runTick", at = @At("HEAD"))
     private void playtest$beforeRunTick(boolean advanceGameTime, CallbackInfo ci) {
         Hooks.beforeRunTick((Minecraft) (Object) this);
+    }
+
+    /** The loop's own packet handling holds off while a record is due, as {@code Stepper.processPackets} says. */
+    @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/PacketProcessor;processQueuedPackets()V"))
+    private void playtest$processPackets(PacketProcessor processor) {
+        Hooks.processPackets((Minecraft) (Object) this);
     }
 
     @Inject(method = "tick", at = @At("TAIL"))

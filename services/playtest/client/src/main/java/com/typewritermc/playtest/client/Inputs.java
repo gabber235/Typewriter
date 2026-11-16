@@ -2,7 +2,6 @@ package com.typewritermc.playtest.client;
 
 import com.typewritermc.playtest.client.mixin.AbstractContainerScreenAccessor;
 import com.typewritermc.playtest.client.mixin.ChatScreenAccessor;
-import com.typewritermc.playtest.client.mixin.CommandSuggestionsAccessor;
 import com.typewritermc.playtest.client.mixin.MouseHandlerAccessor;
 import com.typewritermc.playtest.wire.Message.AimAtBlockStep;
 import com.typewritermc.playtest.wire.Message.AimAtEntityStep;
@@ -57,7 +56,6 @@ final class Inputs {
     private static final double WALK_RELEASE = 0.35;
 
     private static final Queue<Input> arrived = new ConcurrentLinkedQueue<>();
-    private static final Retype retype = new Retype();
     private static final Set<Key> keysDown = EnumSet.noneOf(Key.class);
     private static final Set<Integer> buttonsDown = new HashSet<>();
     private static InputDevice device;
@@ -89,7 +87,6 @@ final class Inputs {
     static void reset(Minecraft mc) {
         arrived.clear();
         running = null;
-        retype.stop();
         InputDevice hands = device(mc);
         keysDown.forEach(key -> hands.key(key, false));
         buttonsDown.forEach(button -> hands.button(button, false));
@@ -104,9 +101,8 @@ final class Inputs {
 
     /**
      * A point between ticks: after a tick ended ({@code tickRan}), or in a loop pass that runs no tick.
-     * After a tick it retypes when a suggestion request went unanswered, moves the running script on, and
-     * starts the next input once nothing runs; in a pass without a tick it asks Paper for a tick when an
-     * input waits to start.
+     * After a tick it moves the running script on and starts the next input once nothing runs; in a pass
+     * without a tick it asks Paper for a tick when an input waits to start.
      */
     static void betweenTicks(Minecraft mc, boolean tickRan) {
         InputDevice hands = device(mc);
@@ -115,7 +111,6 @@ final class Inputs {
             if (running == null && !arrived.isEmpty()) Stepper.needTicks();
             return;
         }
-        retypeIfUnanswered(mc, hands);
         if (running != null) running.advance(mc, hands);
         while (running == null) {
             Input next = arrived.poll();
@@ -131,22 +126,6 @@ final class Inputs {
             device.focus();
         }
         return device;
-    }
-
-    private static void retypeIfUnanswered(Minecraft mc, InputDevice hands) {
-        String shown = null;
-        boolean awaiting = false;
-        if (mc.gui.screen() instanceof ChatScreen chat) {
-            var screen = (ChatScreenAccessor) chat;
-            shown = screen.playtest$input().getValue();
-            var pending = ((CommandSuggestionsAccessor) screen.playtest$commandSuggestions()).playtest$pendingSuggestions();
-            awaiting = pending != null && !pending.isDone();
-        }
-        if (!retype.afterTick(shown, awaiting)) return;
-        int last = shown.codePointBefore(shown.length());
-        hands.key(Key.BACKSPACE, true);
-        hands.key(Key.BACKSPACE, false);
-        hands.type(new String(Character.toChars(last)));
     }
 
     /** One input's steps in order, from the tick that ended before its first event. */
@@ -245,21 +224,28 @@ final class Inputs {
         }
     }
 
-    /** Opens the chat with its key when it is closed, types, and waits until the chat shows what was typed. */
+    /**
+     * Opens the chat with its key when it is closed, then types one character after each tick, as a
+     * person types, and waits until the chat shows what was typed. Each character is its own edit, so
+     * the client asks Paper for suggestions at most once per tick, and Paper answers each request
+     * before the next tick.
+     */
     private static final class TypingInChat extends Timed {
-        private final String text;
+        private final int[] characters;
         private boolean opening;
         private String expected;
+        private int next;
+        private int typedAt;
 
         TypingInChat(String text) {
-            this.text = text;
+            this.characters = text.codePoints().toArray();
         }
 
         @Override
         public Progress run(Minecraft mc, InputDevice hands) {
             int elapsed = elapsed();
             if (!(mc.gui.screen() instanceof ChatScreen chat)) {
-                if (expected != null) return Progress.failed("the chat closed while typing \"" + text + "\"");
+                if (expected != null) return Progress.failed("the chat closed while typing \"" + typed() + "\"");
                 if (!opening) {
                     opening = true;
                     hands.key(Key.T, true);
@@ -269,16 +255,18 @@ final class Inputs {
                 return elapsed > PATIENCE ? Progress.failed("the chat key opened no chat in " + PATIENCE + " ticks") : Progress.WAIT;
             }
             String shown = ((ChatScreenAccessor) chat).playtest$input().getValue();
-            if (expected == null) {
-                expected = shown + text;
-                hands.type(text);
+            if (expected == null) expected = shown + typed();
+            if (next < characters.length) {
+                hands.type(new String(characters, next++, 1));
+                typedAt = elapsed;
                 return Progress.WAIT;
             }
-            if (shown.equals(expected)) {
-                retype.typed(expected);
-                return Progress.DONE;
-            }
-            return elapsed > PATIENCE ? Progress.failed("the chat shows \"" + shown + "\", not \"" + expected + "\"") : Progress.WAIT;
+            if (shown.equals(expected)) return Progress.DONE;
+            return elapsed - typedAt > PATIENCE ? Progress.failed("the chat shows \"" + shown + "\", not \"" + expected + "\"") : Progress.WAIT;
+        }
+
+        private String typed() {
+            return new String(characters, 0, characters.length);
         }
     }
 
