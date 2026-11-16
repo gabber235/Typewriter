@@ -134,6 +134,15 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   checked" with its renderer. Each captured frame's candidate says whether the pinned renderer drew it, and
   `cargo xtask goldens approve` refuses any it did not. A nixpkgs Mesa upgrade fails every golden, and
   the upgrade pull request approves them again.
+- **Golden images live on the evidence branch** (2026-11-17): the repository holds only a golden's
+  hash, size and renderer. `cargo xtask goldens approve` also pushes the frame to the `evidence` branch
+  as `goldens/<hash>.png`, beside the pull request folders pruning empties, and `cargo xtask e2e game`
+  fetches every golden image the machine lacks before the run, so a frame that differs shows its diff
+  on CI while the framework stays offline.
+- **Parts name their processes** (2026-11-17): the pool writes each part's pid and start time into its
+  folder at every boot (`part.running`), and tests find a client or Paper by it. Linux shows Java only
+  the first page of a command line, so arguments cannot name a part; a file a crash left behind names
+  no process.
 - **Selection** is testBalloon's (2026-11-15): `cargo xtask e2e game --only` passes each id as a test
   pattern, and the framework holds no selection code. A game module the selection leaves empty passes,
   as Gradle's "no matching tests" check is off for gameTest tasks; xtask's selection check names each
