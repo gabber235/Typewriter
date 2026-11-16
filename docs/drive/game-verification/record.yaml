@@ -429,7 +429,8 @@ pieces:
           after a tick reached the game before the tick's last pass (TAB-1), a lost client was asked to
           stop its clip (FROZEN-1, LOST-1), and records of a killed Paper counted as the new Paper's
           ticks, both queued in the session before the restart's answer and kept by the pool until the
-          client stepped with the new boot (RESTART-2). Cost: demo time over gated time per requirement
+          client stepped with the new boot (RESTART-2), and a golden capture that arrived while a clip's
+      passes were due was answered from a pass between ticks (GOLDEN-2, once in five runs). Cost: demo time over gated time per requirement
           median 1.68 and summed 1.20 (run D, load 76 to 155), 1.84 and 1.31 in run B (load 240 to 360),
           against P9's 1.5.
         state: working
@@ -866,7 +867,8 @@ slices:
       runs no tick, is left out. ffmpeg now ships in the base devenv profile. Open: touched counts only
       added lines, so a change that only deletes code reruns nothing; the coverage maps of a session that
       leaves without ending stay in the pool (slice 9); a client lost while others of its attempt record
-      loses their clips too.
+      loses their clips too; FROZEN-1's demo once saw its stall after 10.07 s, against about 5.1 s in 15
+      other demos and in every gated run, and that run's logs were overwritten before they were read.
   - id: ci-and-pool-lifecycle
     status: queued
     what: CI job and caches; detach, stale pool, lease deadline
