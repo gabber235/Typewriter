@@ -778,8 +778,7 @@ slices:
       before premain, so the step agent's prefixes silently missed and Paper stopped itself; the agent no
       longer joins the boot class path and retransforms classes already loaded, and both Papers launch
       from Paper's class path. The cache is trained on a restart boot, kept only on a clean halt, keyed
-      on JDK, files and flags. Open: Pool checks server.own in about 8 handlers while the restart Paper
-      has its own rules class; a training Paper's halt prints a watchdog dump; 4 restarts at once could
+      on JDK, files and flags. Every Paper now has a rules object behind PaperRules and Pool forwards events to it (6e5128c00, 0 own branches left). Open: a training Paper's halt prints a watchdog dump; 4 restarts at once could
       starve the shared Paper.
   - id: coverage-and-clips
     status: queued
@@ -790,4 +789,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Steadiness sends the watch with the probe and finds why TAB-1 drifts; the shared Paper gets its rules object; then slice 8.
+next: Paper rules merged (6e5128c00); a restart Paper can outlive an attempt whose client was lost before its lease (fixing); steadiness builds the watch with the probe and finds TAB-1; then slice 8.
