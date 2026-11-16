@@ -92,12 +92,14 @@ internal class PoolLauncher(
         }
     }
 
-    private fun tryConnect(port: Int): Socket? =
+    /** A connection to the pool on [port], or null when it does not answer, as while it is on its way out. */
+    private fun tryConnect(port: Int): Socket? {
         try {
-            Socket(InetAddress.getLoopbackAddress(), port).apply { tcpNoDelay = true }
+            return Socket(InetAddress.getLoopbackAddress(), port).apply { tcpNoDelay = true }
         } catch (_: IOException) {
-            null
+            return null
         }
+    }
 
     private companion object {
         const val POOL_MAIN = "com.typewritermc.playtest.pool.PoolKt"

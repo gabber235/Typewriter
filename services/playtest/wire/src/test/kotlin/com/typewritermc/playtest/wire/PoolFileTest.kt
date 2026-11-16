@@ -22,7 +22,7 @@ val PoolFileTest by testSuite {
         val self = PoolFile.of(41_234, "run-1")
 
         PoolFile(41_234, "run-1", ended.pid(), 0).process().shouldBeEmpty()
-        self.copy(startedMillis = self.startedMillis - 1_000).process().shouldBeEmpty()
+        PoolFile(self.port(), self.run(), self.pid(), self.startedMillis() - 1_000).process().shouldBeEmpty()
     }
 
     test("a folder without a pool file, or with a file that is not one, holds no pool") {
@@ -33,5 +33,3 @@ val PoolFileTest by testSuite {
         PoolFile.read(dir.resolve("other")).shouldBeEmpty()
     }
 }
-
-private fun PoolFile.copy(startedMillis: Long) = PoolFile(port(), run(), pid(), startedMillis)
