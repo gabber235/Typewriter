@@ -22,7 +22,7 @@ import java.nio.file.StandardCopyOption
 
 /**
  * The attempts of every run the pool served, kept per run id. Every attempt of one case, a requirement
- * retried or repeated, lands in that case. A session's end writes its run's file, and the file is
+ * retried or repeated, lands in that case, and its demo in the case's demo. A session's end writes its run's file, and the file is
  * written again whenever a later session of the run ends or leaves without ending, so the last file
  * holds every attempt the run made.
  */
@@ -66,6 +66,7 @@ internal class RunRecords(
             (claimed + result.steps()).sortedBy { it.atMillis() },
             result.folder(),
             result.screenshots(),
+            result.clips(),
             covered,
         )
     }
@@ -114,6 +115,7 @@ internal class RunRecords(
         steps: List<AttemptStep>,
         folder: String = "",
         screenshots: List<String> = listOf(),
+        clips: List<String> = listOf(),
         covered: List<Message.CoveredClass> = listOf(),
     ) {
         val attempt =
@@ -121,22 +123,26 @@ internal class RunRecords(
                 outcome = outcome,
                 span = null,
                 durationMillis = durationMillis,
-                artifacts = screenshots.map { Artifact(kind = ArtifactKind.SCREENSHOT, path = it) },
+                artifacts =
+                    screenshots.map { Artifact(kind = ArtifactKind.SCREENSHOT, path = it) } +
+                        clips.map { Artifact(kind = ArtifactKind.CLIP, path = it) },
                 folder = folder,
                 steps = steps.map { Step(atMillis = it.atMillis(), actor = null, says = it.says(), durationMillis = it.durationMillis()) },
                 taps = listOf(),
                 covered = covered.map { CoveredClass(name = it.name(), source = it.source(), lines = it.lines()) },
             )
         val cases = runOf(run).cases
-        cases[submit.testId()] =
-            cases[submit.testId()]?.let { case -> case.copy(attempts = case.attempts + attempt) }
+        val case =
+            cases[submit.testId()]
                 ?: TestCase(
                     id = submit.testId(),
                     requirement = submit.requirement(),
                     demonstrates = submit.demonstrates().inRun,
-                    attempts = listOf(attempt),
+                    attempts = listOf(),
                     demo = null,
                 )
+        // A demo runs after the case's last attempt and is never one of its attempts.
+        cases[submit.testId()] = if (submit.demo()) case.copy(demo = attempt) else case.copy(attempts = case.attempts + attempt)
     }
 
     private fun write(

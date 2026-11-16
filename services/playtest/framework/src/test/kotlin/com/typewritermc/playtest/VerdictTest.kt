@@ -73,4 +73,15 @@ val VerdictTest by testSuite {
         Verdict.Quarantined(listOf(missed), attempts = 1).conclude(RequirementCode.of {})
         Verdict.Passed.conclude(RequirementCode.of {})
     }
+
+    test("a demo that ends otherwise than the requirement's last attempt fails it, and one that ends the same way does not") {
+        demoDiffers(last = null, demo = null) shouldBe null
+        demoDiffers(last = missed, demo = AssertionError("gv-1 did not see chat \"Hello\" within 5 ticks, in the demo")) shouldBe null
+
+        val failedDemo = demoDiffers(last = null, demo = missed)
+        failedDemo?.message shouldBe "the demo failed where the last attempt passed: ${missed.message}"
+        failedDemo?.cause shouldBeSameInstanceAs missed
+        demoDiffers(last = missed, demo = null)?.message shouldBe
+            "the demo passed where the last attempt failed: ${missed.message}"
+    }
 }

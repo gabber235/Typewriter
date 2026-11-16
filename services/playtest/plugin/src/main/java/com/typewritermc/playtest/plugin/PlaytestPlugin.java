@@ -80,7 +80,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private final ChatWork chat = new ChatWork();
     private final SuggestionWork suggestions = new SuggestionWork();
     private final Coverage coverage = new Coverage(
-            () -> RT.getAgent().getExecutionData(true), read -> this.pool.send(new Covered(read.attempts(), read.exec())));
+            () -> RT.getAgent().getExecutionData(true), read -> this.pool.send(new Covered(read.attempts(), read.nanos(), read.exec())));
     private Link pool;
 
     @Override

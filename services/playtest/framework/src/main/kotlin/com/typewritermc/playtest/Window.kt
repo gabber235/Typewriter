@@ -14,7 +14,9 @@ internal data class Check(
  * A check holds at the first tick inside the window whose perception shows its fact. A client sends a
  * record only when what the player perceives changed, so a record stands for every tick up to the
  * next one: a record from before the window shows the window's first tick until a later record or the
- * barrier arrives. A fact about a change compares with the record that stood at the anchor. Paper sends
+ * barrier arrives. A record of a frame a clip draws between two ticks judges nothing: only the record
+ * at a tick's end does, the one a gated attempt makes too. A fact about a change compares with the
+ * record that stood at the anchor. Paper sends
  * [barrier] to every checked player once the window's last tick ran, and the client echoes it after
  * every record of those ticks, so a barrier with a check still open is the failure.
  *
@@ -63,7 +65,8 @@ internal class Window(
         player: GamePlayer,
         perception: Perception,
     ): Verdict {
-        if (verdict != Verdict.Open || perception.tick() > end) return verdict
+        // A frame a clip draws between two ticks shows the clip; only a tick's end is judged, as without one.
+        if (verdict != Verdict.Open || perception.tick() > end || perception.partial() < 1f) return verdict
         val carried = lastSeen.put(player, perception)
         if (perception.tick() <= anchor) {
             atStimulus[player] = perception

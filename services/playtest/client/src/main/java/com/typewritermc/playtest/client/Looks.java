@@ -16,7 +16,7 @@ import net.minecraft.client.renderer.GameRenderer;
 
 /**
  * The frames a stepped client draws for real, and only these: for every watched entity a perceived
- * frame draws, the share of the frame it owns, and the frame a golden asks for. For a share the client
+ * frame draws, the share of the frame it owns, the frame a golden asks for, and a clip's frames. For a share the client
  * draws once with every entity, then once without each watched entity the frame draws, and an entity
  * owns the pixels that show another colour without it. The perceive step's section compiles and
  * occlusion update run first, so every draw sees the same world. Render thread only.
@@ -52,12 +52,14 @@ final class Looks {
     static void perceive(Minecraft mc, GameRenderer renderer) {
         List<UUID> drawn = Perceiver.drawn();
         NoDraw.render(mc);
-        if (capture != null) answerCapture(drawWithout(mc, renderer, null));
-        if (drawn.isEmpty()) return;
+        boolean clip = Clips.drawsFrame();
+        if (capture == null && !clip && drawn.isEmpty()) return;
         var copies = new ArrayList<Grab.Copy>(drawn.size() + 1);
         copies.add(drawWithout(mc, renderer, null));
         for (UUID entity : drawn) copies.add(drawWithout(mc, renderer, entity));
         List<Pixels> frames = Grab.read(copies);
+        if (capture != null) answerCapture(frames.getFirst());
+        if (clip) Clips.add(frames.getFirst());
         for (int index = 0; index < drawn.size(); index++) {
             Perceiver.owns(drawn.get(index), frames.getFirst().differingShare(frames.get(index + 1)));
         }
@@ -65,14 +67,13 @@ final class Looks {
 
     /** After a frame drawn as any client draws, before the client steps: a capture takes that frame. */
     static void drawn(GameRenderer renderer) {
-        if (capture != null) answerCapture(Grab.copy(renderer.mainRenderTarget()));
+        if (capture != null) answerCapture(Grab.read(List.of(Grab.copy(renderer.mainRenderTarget()))).getFirst());
     }
 
-    /** Writes the frame {@code copy} holds as the capture asked and answers it. */
-    private static void answerCapture(Grab.Copy copy) {
+    /** Writes {@code frame} as the capture asked and answers it. */
+    private static void answerCapture(Pixels frame) {
         Capture asked = capture;
         capture = null;
-        Pixels frame = Grab.read(List.of(copy)).getFirst();
         var info = RenderSystem.getDevice().getDeviceInfo();
         var renderer = new Renderer(
                 info.backendName(), info.name(), info.driverInfo(), System.getProperty("os.name"), System.getProperty("os.arch"));

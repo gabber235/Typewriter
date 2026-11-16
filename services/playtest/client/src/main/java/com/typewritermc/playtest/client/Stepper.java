@@ -14,7 +14,9 @@ import net.minecraft.util.Util;
  * the first one on, the client's clock stands still and moves exactly one tick for each step ping, so
  * the client runs one tick per server tick. The frame right after the tick records it; once the
  * client's own work for the tick is done too ({@link ClientWork}), the client acks it, and Paper runs
- * the next one.
+ * the next one. While a clip records, the frames it draws between ticks follow the tick first, each
+ * with its record ({@link Clips}); the tick's own record, its ack and the packets after its step ping
+ * wait for the last of them, at the tick's end.
  * Render thread only, except {@link #wake()}.
  */
 final class Stepper {
@@ -106,6 +108,7 @@ final class Stepper {
         lastRan = -1;
         perceiveDue = false;
         ackDue = false;
+        Clips.leftPaper();
     }
 
     /** Head of {@code Minecraft.runTick}, before it reads the clock. */
@@ -120,12 +123,14 @@ final class Stepper {
             LockSupport.parkNanos(PARK_NANOS);
             processPackets(mc);
         }
-        Integer next = granted.poll();
+        // A clip's passes after the tick that ran come first; no tick runs until the last of them.
+        Integer next = Clips.recordsEveryPass() ? null : granted.poll();
         if (next != null) {
             running = next;
             virtualNanos += TICK_NANOS;
-        } else {
-            // No tick runs in this pass: an input that waits to start asks Paper for a tick here.
+        } else if (!Clips.recordsEveryPass()) {
+            // No tick runs in this pass: an input that waits to start asks Paper for a tick here. Between
+            // a clip's passes it waits, as it waits for the record and the ack without a clip.
             Inputs.betweenTicks(mc, false);
             ack();
         }
@@ -149,6 +154,7 @@ final class Stepper {
         lastRan = running;
         running = null;
         perceiveDue = true;
+        Clips.ticked();
         Inputs.betweenTicks(mc, true);
     }
 
@@ -157,9 +163,15 @@ final class Stepper {
         return perceiveDue || Perceiver.forced();
     }
 
-    /** After a perceived frame: the tick it recorded is acked once the client's own work for it is done. */
+    /**
+     * After a perceived frame: the tick it recorded is acked once the client's own work for it is done;
+     * while a clip records, after the last of its passes.
+     */
     static void perceived() {
         if (!perceiveDue) return;
+        boolean more = Clips.morePassesDue();
+        Clips.passed();
+        if (more) return;
         perceiveDue = false;
         ackDue = true;
         ack();

@@ -7,6 +7,8 @@ import com.typewritermc.playtest.wire.Message.Connect;
 import com.typewritermc.playtest.wire.Message.Hello;
 import com.typewritermc.playtest.wire.Message.Input;
 import com.typewritermc.playtest.wire.Message.Reset;
+import com.typewritermc.playtest.wire.Message.StartClip;
+import com.typewritermc.playtest.wire.Message.StopClip;
 import com.typewritermc.playtest.wire.Message.Role;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -59,6 +61,7 @@ public final class PlaytestClient implements ClientModInitializer {
             case Reset reset -> mc.execute(() -> {
                 Inputs.reset(mc);
                 Looks.reset();
+                Clips.reset();
                 Blends.reset(mc);
                 Cooldowns.reset(mc);
                 Perceiver.reset(mc);
@@ -67,6 +70,8 @@ public final class PlaytestClient implements ClientModInitializer {
                 Looks.capture(capture);
                 Perceiver.force();
             });
+            case StartClip start -> mc.execute(() -> Clips.start(start));
+            case StopClip stop -> mc.execute(() -> Clips.stop(stop));
             case Input input -> Inputs.arrive(input);
             default -> LOG.error("The game pool sent {}, which the client never receives", message);
         }

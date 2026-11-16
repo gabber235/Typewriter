@@ -15,6 +15,8 @@ import com.typewritermc.playtest.wire.Message.ChatLine
 import com.typewritermc.playtest.wire.Message.Claim
 import com.typewritermc.playtest.wire.Message.Claimed
 import com.typewritermc.playtest.wire.Message.ClientLost
+import com.typewritermc.playtest.wire.Message.ClipStarted
+import com.typewritermc.playtest.wire.Message.ClipWritten
 import com.typewritermc.playtest.wire.Message.ClientStalled
 import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.Covered
@@ -84,6 +86,8 @@ import com.typewritermc.playtest.wire.Message.Settled
 import com.typewritermc.playtest.wire.Message.StepUntil
 import com.typewritermc.playtest.wire.Message.Stepping
 import com.typewritermc.playtest.wire.Message.StopStepping
+import com.typewritermc.playtest.wire.Message.StartClip
+import com.typewritermc.playtest.wire.Message.StopClip
 import com.typewritermc.playtest.wire.Message.Submit
 import com.typewritermc.playtest.wire.Message.Text
 import com.typewritermc.playtest.wire.Message.TypeInChatStep
@@ -114,7 +118,7 @@ val WireTest by testSuite {
                 Refused("Paper stopped while starting; see pool/paper/logs/latest.log"),
                 Queue(
                     listOf(
-                        Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false),
+                        Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false, false),
                     ),
                 ),
                 Queue(
@@ -126,6 +130,7 @@ val WireTest by testSuite {
                             1,
                             Demonstrates.FAILURE,
                             false,
+                            false,
                         ),
                         Submit(
                             9,
@@ -134,10 +139,11 @@ val WireTest by testSuite {
                             1,
                             Demonstrates.EDGE_CASE,
                             false,
+                            true,
                         ),
                     ),
                 ),
-                Queue(listOf(Submit(10, "RESTART-1 a saved item survives a killed Paper", "RESTART-1", 1, Demonstrates.HAPPY_PATH, true))),
+                Queue(listOf(Submit(10, "RESTART-1 a saved item survives a killed Paper", "RESTART-1", 1, Demonstrates.HAPPY_PATH, true, false))),
                 Declined(8, "GROUP-1 claims 3 players, but the pool holds 1"),
                 LeaseFailed(10, "paper-gv-1 exited with code 1 while it booted; see pool/paper-gv-1-lost-1/console.log"),
                 Restart(18, 10),
@@ -149,7 +155,7 @@ val WireTest by testSuite {
                 Disconnected(25_566, "its connection to the Paper at 127.0.0.1:25566 dropped"),
                 Reclaim(8),
                 Lease(7, listOf(Player("gv-1", player), Player("gv-2", UUID(1, 2))), Region(-1_024, 2_048), "paper-a7"),
-                Result(7, 1_250, null, null, listOf(), "", listOf()),
+                Result(7, 1_250, null, null, listOf(), "", listOf(), listOf()),
                 Result(
                     8,
                     90,
@@ -161,6 +167,7 @@ val WireTest by testSuite {
                     ),
                     "GOLDEN-1 a sidebar/attempt-1",
                     listOf("sidebar.png", "sidebar.diff.png"),
+                    listOf("clips/gv-1.mp4"),
                 ),
                 End("run-1", "/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.RERUN_FAILURES, 4)),
                 End("run-2", "/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.EXACTLY, 3)),
@@ -194,8 +201,8 @@ val WireTest by testSuite {
                 Settle(9),
                 Settled(9, listOf()),
                 Settled(10, listOf(CoveredClass("com/typewritermc/playtest/plugin/Probes", "com/typewritermc/playtest/plugin/Probes.java", listOf(12, 13, 40)))),
-                Covered(listOf(9L, 10L), byteArrayOf(1, -64, 0, 7)),
-                Covered(listOf(), byteArrayOf()),
+                Covered(listOf(9L, 10L), 41_250, byteArrayOf(1, -64, 0, 7)),
+                Covered(listOf(), 0, byteArrayOf()),
                 WorkHung("gv-1", "Ledger lookup", 1_204),
                 PlayerLeft("gv-2", "TIMED_OUT"),
                 ClientLost("gv-2", "its process exited with code 137"),
@@ -227,6 +234,12 @@ val WireTest by testSuite {
                 ),
                 InputDone(13, 1_220, null),
                 InputDone(14, 1_221, "gv-1 aimed at the villager, but the crosshair is on the block at 0 101 2"),
+                StartClip(19, player, "/tmp/results/CLIP-1/demo/clips/gv-1.mp4"),
+                ClipStarted(19, null),
+                ClipStarted(20, "ffmpeg is not on the PATH"),
+                StopClip(21, player),
+                ClipWritten(21, 93, null),
+                ClipWritten(22, 0, "ffmpeg exited with code 1"),
                 Capture(17, player, "/tmp/results/GOLDEN-1/attempt-1/sidebar.png"),
                 Captured(
                     17,
@@ -238,6 +251,8 @@ val WireTest by testSuite {
                     "gv-1",
                     Perception(
                         1_205,
+                        2f / 3,
+                        17,
                         listOf(Text("chat", "Hello"), Text("other", "")),
                         listOf(ChatLine(1_205, "Hello")),
                         Camera(0.5, 101.62, 0.5, 180f, 12.25f, 70f, false),
@@ -249,7 +264,7 @@ val WireTest by testSuite {
                         listOf(Entity(UUID(3, 4), true, "Ouch", 0.000_732), Entity(UUID(5, 6), false, null, Entity.UNMEASURED)),
                     ),
                 ),
-                Perceived("gv-1", Perception(0, listOf(), listOf(), null, listOf(), listOf(), listOf())),
+                Perceived("gv-1", Perception(0, 1f, -1, listOf(), listOf(), null, listOf(), listOf(), listOf())),
                 BarrierSeen("gv-1", 5),
             )
 

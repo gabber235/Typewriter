@@ -84,22 +84,29 @@ pub enum Verdict {
 }
 
 /// The one policy every reader applies to a case of `run`. An attempt whose outcome this build
-/// does not know proves nothing, so it counts as a failure.
+/// does not know proves nothing, so it counts as a failure, and so does a demo that ended otherwise
+/// than the case's last attempt.
 pub fn verdict(run: &TestRun, case: &TestCase, quarantine: &Quarantine) -> Result<Verdict> {
     let Some(last) = case.attempts.last() else {
         bail!("{} has no attempts", case.id);
     };
     let failed = failed_attempts(case).count();
     let passed_last = matches!(last.outcome, Outcome::Passed);
+    // A demo whose clip shows another outcome than the last attempt proves nothing.
+    let demo_differs = case
+        .demo
+        .as_ref()
+        .is_some_and(|demo| matches!(demo.outcome, Outcome::Passed) != passed_last);
     Ok(
         match (
             failed,
+            demo_differs,
             quarantine.entry(&run.runner, case),
             &run.attempt_policy,
         ) {
-            (0, _, _) => Verdict::Passed,
-            (_, Some(_), _) => Verdict::Quarantined,
-            (_, None, AttemptPolicy::RerunFailures(_)) if passed_last => Verdict::Flaky,
+            (0, false, _, _) => Verdict::Passed,
+            (_, _, Some(_), _) => Verdict::Quarantined,
+            (_, false, None, AttemptPolicy::RerunFailures(_)) if passed_last => Verdict::Flaky,
             _ => Verdict::Failed,
         },
     )
@@ -659,6 +666,36 @@ mod tests {
         )
         .unwrap_err();
         assert_eq!(error.to_string(), "no case matches CONN-9");
+    }
+
+    #[test]
+    fn a_demo_that_ends_otherwise_than_the_last_attempt_fails_the_case() {
+        // The case's attempts, its demo's outcome and the verdict.
+        let table = [
+            (vec![Outcome::Passed], Outcome::Passed, Verdict::Passed),
+            (vec![Outcome::Passed], failed("demo"), Verdict::Failed),
+            (vec![failed("x")], failed("demo"), Verdict::Failed),
+            (vec![failed("x")], Outcome::Passed, Verdict::Failed),
+            (
+                vec![failed("x"), Outcome::Passed],
+                Outcome::Passed,
+                Verdict::Flaky,
+            ),
+            (
+                vec![failed("x"), Outcome::Passed],
+                failed("demo"),
+                Verdict::Failed,
+            ),
+        ];
+        for (attempts, demo, expected) in table {
+            let mut run = attempted(AttemptPolicy::RerunFailures(4), &attempts);
+            run.cases[0].demo = Some(Attempt {
+                outcome: demo.clone(),
+                ..Attempt::default()
+            });
+            let verdict = verdict(&run, &run.cases[0], &Quarantine::default()).unwrap();
+            assert_eq!(verdict, expected, "{attempts:?} with a demo that {demo:?}");
+        }
     }
 
     #[test]

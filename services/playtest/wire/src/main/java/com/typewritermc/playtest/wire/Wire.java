@@ -15,6 +15,8 @@ import com.typewritermc.playtest.wire.Message.Claimed;
 import com.typewritermc.playtest.wire.Message.ClientLost;
 import com.typewritermc.playtest.wire.Message.ClientStalled;
 import com.typewritermc.playtest.wire.Message.Connect;
+import com.typewritermc.playtest.wire.Message.ClipStarted;
+import com.typewritermc.playtest.wire.Message.ClipWritten;
 import com.typewritermc.playtest.wire.Message.Covered;
 import com.typewritermc.playtest.wire.Message.CoveredClass;
 import com.typewritermc.playtest.wire.Message.Declined;
@@ -86,6 +88,8 @@ import com.typewritermc.playtest.wire.Message.Settled;
 import com.typewritermc.playtest.wire.Message.StepUntil;
 import com.typewritermc.playtest.wire.Message.Stepping;
 import com.typewritermc.playtest.wire.Message.StopStepping;
+import com.typewritermc.playtest.wire.Message.StartClip;
+import com.typewritermc.playtest.wire.Message.StopClip;
 import com.typewritermc.playtest.wire.Message.Submit;
 import com.typewritermc.playtest.wire.Message.Text;
 import com.typewritermc.playtest.wire.Message.TypeInChatStep;
@@ -135,6 +139,7 @@ public final class Wire {
                     body.writeInt(submit.players());
                     body.writeByte(submit.demonstrates().ordinal());
                     body.writeBoolean(submit.restartsPaper());
+                    body.writeBoolean(submit.demo());
                 }
             }
             case Declined declined -> {
@@ -204,6 +209,7 @@ public final class Wire {
                 }
                 string(body, result.folder());
                 strings(body, result.screenshots());
+                strings(body, result.clips());
             }
             case End end -> {
                 string(body, end.run());
@@ -241,9 +247,28 @@ public final class Wire {
                     for (int line : covered.lines()) body.writeInt(line);
                 }
             }
+            case StartClip start -> {
+                body.writeLong(start.request());
+                uuid(body, start.player());
+                string(body, start.path());
+            }
+            case ClipStarted started -> {
+                body.writeLong(started.request());
+                optional(body, started.failure());
+            }
+            case StopClip stop -> {
+                body.writeLong(stop.request());
+                uuid(body, stop.player());
+            }
+            case ClipWritten written -> {
+                body.writeLong(written.request());
+                body.writeInt(written.frames());
+                optional(body, written.failure());
+            }
             case Covered covered -> {
                 body.writeInt(covered.attempts().size());
                 for (long attempt : covered.attempts()) body.writeLong(attempt);
+                body.writeLong(covered.readNanos());
                 body.writeInt(covered.exec().length);
                 body.write(covered.exec());
             }
@@ -409,6 +434,10 @@ public final class Wire {
             case Resumed m -> 46;
             case Disconnected m -> 47;
             case Covered m -> 48;
+            case StartClip m -> 49;
+            case ClipStarted m -> 50;
+            case StopClip m -> 51;
+            case ClipWritten m -> 52;
         };
     }
 
@@ -420,7 +449,7 @@ public final class Wire {
                 int count = count(in);
                 var together = new ArrayList<Submit>(count);
                 for (int i = 0; i < count; i++) {
-                    together.add(new Submit(in.readLong(), string(in), string(in), in.readInt(), demonstrates(in.readUnsignedByte()), in.readBoolean()));
+                    together.add(new Submit(in.readLong(), string(in), string(in), in.readInt(), demonstrates(in.readUnsignedByte()), in.readBoolean(), in.readBoolean()));
                 }
                 yield new Queue(List.copyOf(together));
             }
@@ -431,7 +460,7 @@ public final class Wire {
                 for (int i = 0; i < count; i++) players.add(new Player(string(in), uuid(in)));
                 yield new Lease(submission, List.copyOf(players), region(in), string(in));
             }
-            case 4 -> new Result(in.readLong(), in.readLong(), optional(in), optional(in), steps(in), string(in), strings(in));
+            case 4 -> new Result(in.readLong(), in.readLong(), optional(in), optional(in), steps(in), string(in), strings(in), strings(in));
             case 5 -> new End(string(in), string(in), new AttemptPolicy(policyKind(in.readUnsignedByte()), in.readInt()));
             case 6 -> new Ended();
             case 7 -> new Probe(in.readLong(), uuids(in), action(in));
@@ -485,15 +514,20 @@ public final class Wire {
             case 45 -> new Resume(in.readLong(), uuids(in));
             case 46 -> new Resumed(in.readLong(), in.readInt(), optional(in));
             case 47 -> new Disconnected(in.readInt(), string(in));
+            case 49 -> new StartClip(in.readLong(), uuid(in), string(in));
+            case 50 -> new ClipStarted(in.readLong(), optional(in));
+            case 51 -> new StopClip(in.readLong(), uuid(in));
+            case 52 -> new ClipWritten(in.readLong(), in.readInt(), optional(in));
             case 48 -> {
                 int count = count(in);
                 var attempts = new ArrayList<Long>(count);
                 for (int i = 0; i < count; i++) attempts.add(in.readLong());
+                long readNanos = in.readLong();
                 int length = in.readInt();
                 if (length < 0 || length > in.available()) throw new WireException("coverage of " + length + " bytes does not fit its frame");
                 var exec = new byte[length];
                 in.readFully(exec);
-                yield new Covered(List.copyOf(attempts), exec);
+                yield new Covered(List.copyOf(attempts), readNanos, exec);
             }
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
@@ -738,6 +772,8 @@ public final class Wire {
 
     private static void perception(DataOutputStream out, Perception perception) throws IOException {
         out.writeInt(perception.tick());
+        out.writeFloat(perception.partial());
+        out.writeInt(perception.frame());
         out.writeInt(perception.texts().size());
         for (Text text : perception.texts()) {
             string(out, text.element());
@@ -785,6 +821,8 @@ public final class Wire {
 
     private static Perception perception(DataInputStream in) throws IOException {
         int tick = in.readInt();
+        float partial = in.readFloat();
+        int frame = in.readInt();
         int textCount = count(in);
         var texts = new ArrayList<Text>(textCount);
         for (int i = 0; i < textCount; i++) texts.add(new Text(string(in), string(in)));
@@ -803,7 +841,7 @@ public final class Wire {
         int entityCount = count(in);
         var entities = new ArrayList<Entity>(entityCount);
         for (int i = 0; i < entityCount; i++) entities.add(new Entity(uuid(in), in.readBoolean(), optional(in), in.readDouble()));
-        return new Perception(tick, List.copyOf(texts), List.copyOf(chat), camera, List.copyOf(items), List.copyOf(blocks), List.copyOf(entities));
+        return new Perception(tick, partial, frame, List.copyOf(texts), List.copyOf(chat), camera, List.copyOf(items), List.copyOf(blocks), List.copyOf(entities));
     }
 
     private static void blockPos(DataOutputStream out, BlockPos pos) throws IOException {

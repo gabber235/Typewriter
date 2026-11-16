@@ -32,6 +32,9 @@ in
     # xtask's secretspec crate, and the 1Password CLI its vault provider calls.
     pkgs.secretspec
     pkgs._1password-cli
+    # The game clients encode demo clips with it, and `cargo xtask evidence` records with it on Linux.
+    # The full build: the default one leaves out the x11grab input the recorder captures with.
+    pkgs.ffmpeg-full
   ];
 
   # Xcode and the macOS SDK come from the system: Flutter's native asset builds and
@@ -59,8 +62,6 @@ in
     env.EVIDENCE_FONT = "${pkgs.dejavu_fonts}/share/fonts/truetype/DejaVuSans.ttf";
     packages = [
       pkgs.xvfb
-      # The full build: the default one leaves out the x11grab input the recorder captures with.
-      pkgs.ffmpeg-full
       pkgs.mesa
       pkgs.vulkan-loader
       pkgs.gtk3

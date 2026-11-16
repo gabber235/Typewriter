@@ -10,12 +10,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /**
  * The share of a tick a frame draws past the last tick. A stepped client draws every frame, drawn or
  * only perceived, at the end of its last tick, as vanilla does while the game is frozen: whatever eases
- * between two ticks shows the tick that ran, not the one before it.
+ * between two ticks shows the tick that ran, not the one before it. A clip's frames between two ticks
+ * draw at their own share of the way from the tick before to the last tick.
  */
 @Mixin(DeltaTracker.Timer.class)
 abstract class TimerMixin {
     @Inject(method = "getGameTimeDeltaPartialTick", at = @At("HEAD"), cancellable = true)
     private void playtest$endOfTick(boolean runsNormally, CallbackInfoReturnable<Float> cir) {
-        if (Hooks.drawsAtEndOfTick()) cir.setReturnValue(1.0F);
+        if (Hooks.stepsPartialTick()) cir.setReturnValue(Hooks.partialTick());
     }
 }

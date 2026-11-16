@@ -21,6 +21,30 @@ class RequirementFlaky(
     cause: Throwable,
 ) : AssertionError(message, cause)
 
+/**
+ * The requirement's demo, its run once more with clips, ended otherwise than its last attempt: a clip
+ * that shows another outcome than the verdict proves nothing. Its [cause] is the failure the one that
+ * failed met.
+ */
+class DemoDiffers(
+    message: String,
+    cause: Throwable,
+) : AssertionError(message, cause)
+
+/**
+ * Why a demo that ended with [demo] after a last attempt that ended with [last], each null for a pass,
+ * fails the requirement; null when both passed or both failed.
+ */
+internal fun demoDiffers(
+    last: Throwable?,
+    demo: Throwable?,
+): DemoDiffers? =
+    when {
+        (last == null) == (demo == null) -> null
+        demo != null -> DemoDiffers("the demo failed where the last attempt passed: ${demo.described}", demo)
+        else -> DemoDiffers("the demo passed where the last attempt failed: ${checkNotNull(last).described}", last)
+    }
+
 /** Where a requirement's own code lives, to find its lines in a stack trace. */
 internal class RequirementCode private constructor(
     private val location: URL?,

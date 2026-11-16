@@ -19,6 +19,8 @@ internal fun Region.worldZ(z: Double): Double = this.z + z
 internal fun Region.local(perception: Perception): Perception =
     Perception(
         perception.tick(),
+        perception.partial(),
+        perception.frame(),
         perception.texts(),
         perception.chat(),
         perception.camera()?.let { Camera(it.x() - x, it.y(), it.z() - z, it.yaw(), it.pitch(), it.fov(), it.scoped()) },

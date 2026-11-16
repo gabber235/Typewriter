@@ -220,6 +220,28 @@ internal class Pool(
     // What each submission's attempt covered: its Paper's reads, and the lines they came to at its last settle.
     private val coverage = Coverage<Pair<Peer, Long>>()
     private val covered = mutableMapOf<Pair<Peer, Long>, List<CoveredClass>>()
+    private val coverageCosts = mutableMapOf<Pair<Peer, Long>, CoverageCost>()
+
+    /**
+     * What one submission's coverage cost: the main thread time of each Paper read handed to it (a read
+     * two attempts share counts for each), and the pool's analyses at its settles.
+     */
+    private class CoverageCost {
+        var reads = 0
+        var readNanos = 0L
+        var analyses = 0
+        var analysisNanos = 0L
+        var lastAnalysisAt = 0L
+
+        /** The cost as one step of the attempt's record. */
+        fun step(): AttemptStep =
+            AttemptStep(
+                lastAnalysisAt,
+                analysisNanos / 1_000_000,
+                "coverage: $reads reads held Paper's main thread %.3f ms; $analyses analyses took %.1f ms"
+                    .format(java.util.Locale.ROOT, readNanos / 1e6, analysisNanos / 1e6),
+            )
+    }
     private val sessions = mutableSetOf<Peer>()
     private val queued = mutableMapOf<Pair<Peer, Long>, Queued>()
     private val timings = mutableMapOf<Pair<Peer, Long>, Timing>()
@@ -381,7 +403,8 @@ internal class Pool(
             is Result -> {
                 val attempt = attemptOf(session, message.submission()) ?: return
                 val claimed = timings.remove(session to message.submission())?.steps.orEmpty()
-                runs.record(session.hello.name(), attempt.submit, message, claimed, covered.remove(attempt.key).orEmpty())
+                val cost = coverageCosts.remove(attempt.key)?.step()
+                runs.record(session.hello.name(), attempt.submit, message, claimed + listOfNotNull(cost), covered.remove(attempt.key).orEmpty())
                 coverage.forget(attempt.key)
                 release(attempt, "its session sent its result")
             }
@@ -402,7 +425,7 @@ internal class Pool(
         } catch (unservable: IllegalArgumentException) {
             for (submit in together) {
                 val reason = "${submit.requirement()} cannot run here: ${unservable.message}"
-                runs.record(session.hello.name(), submit, Result(submit.submission(), 0, reason, null, listOf(), "", listOf()))
+                runs.record(session.hello.name(), submit, Result(submit.submission(), 0, reason, null, listOf(), "", listOf(), listOf()))
                 session.send(Declined(submit.submission(), reason))
             }
             return
@@ -511,12 +534,24 @@ internal class Pool(
 
             // Paper read the attempt's last counts just before; the session hears all the attempt covered so far.
             is Covered -> {
-                message.attempts().forEach { id -> attempts[id]?.let { coverage.add(it.key, message.exec()) } }
+                message.attempts().forEach { id ->
+                    attempts[id]?.let {
+                        coverage.add(it.key, message.exec())
+                        val cost = coverageCosts.getOrPut(it.key, ::CoverageCost)
+                        cost.reads++
+                        cost.readNanos += message.readNanos()
+                    }
+                }
             }
 
             is Settled -> {
                 attempts[message.id()]?.let {
+                    val start = System.nanoTime()
                     val lines = coverage.covered(it.key, it.server.folder.classes)
+                    val cost = coverageCosts.getOrPut(it.key, ::CoverageCost)
+                    cost.analyses++
+                    cost.analysisNanos += System.nanoTime() - start
+                    cost.lastAnalysisAt = System.currentTimeMillis()
                     covered[it.key] = lines
                     it.session.send(Settled(it.submit.submission(), lines))
                 }
@@ -940,7 +975,7 @@ internal class Pool(
         if (attempt.started) return attempt.session.send(PaperLost(attempt.players.first().name(), reason))
         val submission = attempt.submit.submission()
         val claimed = timings.remove(attempt.session to submission)?.steps.orEmpty()
-        runs.record(attempt.session.hello.name(), attempt.submit, Result(submission, 0, reason, null, listOf(), "", listOf()), claimed)
+        runs.record(attempt.session.hello.name(), attempt.submit, Result(submission, 0, reason, null, listOf(), "", listOf(), listOf()), claimed)
         attempt.session.send(LeaseFailed(submission, reason))
         release(attempt, "its Paper was lost")
     }

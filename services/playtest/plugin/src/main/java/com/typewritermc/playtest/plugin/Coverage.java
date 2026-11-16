@@ -15,8 +15,8 @@ import java.util.function.Supplier;
  * the others that ran while they overlapped too. Main thread only.
  */
 public final class Coverage {
-    /** What JaCoCo counted since the read before, in its execution data format, for {@code attempts}. */
-    public record Read(List<Long> attempts, byte[] exec) {}
+    /** What JaCoCo counted since the read before, in its execution data format, for {@code attempts}; the read took {@code nanos}. */
+    public record Read(List<Long> attempts, long nanos, byte[] exec) {}
 
     private final Supplier<byte[]> readAndReset;
     private final Consumer<Read> send;
@@ -51,8 +51,10 @@ public final class Coverage {
 
     /** Hands what ran since the read before to every attempt that held players meanwhile; from now on only the running ones do. */
     private void read() {
+        long start = System.nanoTime();
         byte[] exec = readAndReset.get();
-        if (!since.isEmpty()) send.accept(new Read(List.copyOf(since), exec));
+        long nanos = System.nanoTime() - start;
+        if (!since.isEmpty()) send.accept(new Read(List.copyOf(since), nanos, exec));
         since.clear();
         since.addAll(running);
     }

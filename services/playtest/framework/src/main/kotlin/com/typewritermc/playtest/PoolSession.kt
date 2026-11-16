@@ -28,7 +28,11 @@ import com.typewritermc.playtest.wire.Message.Reply
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
 import com.typewritermc.playtest.wire.Message.Settle
+import com.typewritermc.playtest.wire.Message.ClipStarted
+import com.typewritermc.playtest.wire.Message.ClipWritten
 import com.typewritermc.playtest.wire.Message.CoveredClass
+import com.typewritermc.playtest.wire.Message.StartClip
+import com.typewritermc.playtest.wire.Message.StopClip
 import com.typewritermc.playtest.wire.Message.Settled
 import com.typewritermc.playtest.wire.Message.Submit
 import com.typewritermc.playtest.wire.Wire
@@ -74,6 +78,11 @@ class InputFailed(
 
 /** The player's frame is not the golden it names, or none is approved; [message] says how and where the frame and its diff lie. */
 class GoldenDiffers(
+    message: String,
+) : AssertionError(message)
+
+/** A client could not record or write the clip of a demo; [message] says why. */
+class ClipFailed(
     message: String,
 ) : AssertionError(message)
 
@@ -126,7 +135,11 @@ internal class PoolSession private constructor(
 
     fun nextBarrier(): Int = barriers.incrementAndGet()
 
-    /** One attempt of a requirement to run: [bodies] in order on [players] players, on a Paper of its own with [restartsPaper]. */
+    /**
+     * One attempt of a requirement to run: [bodies] in order on [players] players, on a Paper of its own
+     * with [restartsPaper]. A [demo] runs after the requirement's last attempt with its clients recording
+     * clips, and lands in the case's demo.
+     */
     class Planned(
         val testId: String,
         val requirement: String,
@@ -134,6 +147,7 @@ internal class PoolSession private constructor(
         val demonstrates: Demonstrates,
         val bodies: List<suspend RequirementScope.() -> Unit>,
         val restartsPaper: Boolean = false,
+        val demo: Boolean = false,
     )
 
     /** How one attempt ended: why it failed, or null, and the plugin code it covered by its last settle. */
@@ -164,7 +178,7 @@ internal class PoolSession private constructor(
             send(
                 Queue(
                     planned.zip(leasings) { it, (submission, _) ->
-                        Submit(submission, it.testId, it.requirement, it.players, it.demonstrates, it.restartsPaper)
+                        Submit(submission, it.testId, it.requirement, it.players, it.demonstrates, it.restartsPaper, it.demo)
                     },
                 ),
             )
@@ -199,15 +213,22 @@ internal class PoolSession private constructor(
         var covered = listOf<CoveredClass>()
         val steps = mutableListOf<AttemptStep>()
         val evidence =
-            Evidence(settings.testRun.toAbsolutePath().parent, planned.testId, checkNotNull(attemptsOf.merge(planned.testId, 1, Int::plus)))
+            Evidence(
+                settings.testRun.toAbsolutePath().parent,
+                planned.testId,
+                if (planned.demo) "demo" else "attempt-${attemptsOf.merge(planned.testId, 1, Int::plus)}",
+            )
         for ((index, body) in planned.bodies.withIndex()) {
             if (index > 0) {
                 attempt.players.forEach { attempts.remove(it.name) }
                 attempt = lease(submission, leasing) { send(Reclaim(submission)) }
             }
             attempt.evidence = evidence
-            val settled = settle(submission, attempt, run(attempt, body))
-            failure = settled.failure?.let(attempt::located)
+            val clips = mutableMapOf<GamePlayer, String>()
+            val notStarted = if (planned.demo) startClips(attempt, if (planned.bodies.size > 1) "-${index + 1}" else "", clips) else null
+            val settled = settle(submission, attempt, notStarted ?: run(attempt, body))
+            val notWritten = stopClips(attempt, clips)
+            failure = settled.failure?.let(attempt::located) ?: notWritten
             covered = settled.covered
             steps += attempt.steps
             if (failure != null) break
@@ -224,8 +245,9 @@ internal class PoolSession private constructor(
                         ?: (it as? WindowMissed)?.at
                 },
                 steps,
-                if (evidence.screenshots.isEmpty()) "" else evidence.folder,
+                if (evidence.screenshots.isEmpty() && evidence.clips.isEmpty()) "" else evidence.folder,
                 evidence.screenshots,
+                evidence.clips,
             ),
         )
         return AttemptEnd(failure, covered)
@@ -311,6 +333,39 @@ internal class PoolSession private constructor(
         val done = request<InputDone> { request -> Input(request, player.uuid, steps) }
         done.failure()?.let { throw InputFailed(it) }
         return done.tick()
+    }
+
+    /**
+     * Every player's client of [attempt] records a clip from the next tick on, into the attempt's
+     * evidence as `clips/<player><suffix>.mp4`, and each clip that started joins [started]; returns why a
+     * clip did not start, or null.
+     */
+    private suspend fun startClips(
+        attempt: Attempt,
+        suffix: String,
+        started: MutableMap<GamePlayer, String>,
+    ): ClipFailed? {
+        for (player in attempt.players) {
+            val clip = "clips/${player.name}$suffix.mp4"
+            val answer = request<ClipStarted> { request -> StartClip(request, player.uuid, attempt.evidence.file(clip).toString()) }
+            answer.failure()?.let { return ClipFailed("${player.name}'s clip did not start: $it") }
+            started[player] = clip
+        }
+        return null
+    }
+
+    /** Each client of [clips] finishes its clip, which joins the attempt's evidence; returns why one could not, or null. */
+    private suspend fun stopClips(
+        attempt: Attempt,
+        clips: Map<GamePlayer, String>,
+    ): ClipFailed? {
+        var failed: ClipFailed? = null
+        for ((player, clip) in clips) {
+            val written = request<ClipWritten> { request -> StopClip(request, player.uuid) }
+            val failure = written.failure()
+            if (failure == null) attempt.evidence.clips += clip else failed = failed ?: ClipFailed("${player.name}'s clip was not written: $failure")
+        }
+        return failed
     }
 
     /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */

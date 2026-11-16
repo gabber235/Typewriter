@@ -70,8 +70,8 @@ internal fun TestSuiteScope.attempts(
     restartsPaper: Boolean = false,
 ) {
     require(players >= 1) { "$id claims $players players; a requirement claims at least 1" }
-    register(id, sentence, RequirementCode.of(bodies.first())) { session ->
-        session.attempt(PoolSession.Planned("$id $sentence", id, players, demonstrates, bodies, restartsPaper))
+    register(id, sentence, RequirementCode.of(bodies.first())) { session, demo ->
+        session.attempt(PoolSession.Planned("$id $sentence", id, players, demonstrates, bodies, restartsPaper, demo))
     }
 }
 
@@ -91,20 +91,20 @@ internal fun TestSuiteScope.sideBySide(
     afterwardPlayers: Int = 1,
     afterward: (suspend RequirementScope.() -> Unit)? = null,
 ) {
-    register(id, sentence, RequirementCode.of(bodies)) { session ->
+    register(id, sentence, RequirementCode.of(bodies)) { session, demo ->
         val made = bodies()
         val count = made.size + if (afterward == null) 0 else 1
         val ended =
             session.sideBySide(
                 made.mapIndexed { index, body ->
-                    PoolSession.Planned("$id $sentence (attempt ${index + 1} of $count)", id, 1, demonstrates, listOf(body))
+                    PoolSession.Planned("$id $sentence (attempt ${index + 1} of $count)", id, 1, demonstrates, listOf(body), demo = demo)
                 },
             )
         val failures = ended.mapNotNull { it.failure }
         failures.firstOrNull()?.let { first -> PoolSession.AttemptEnd(first.also { failures.drop(1).forEach(it::addSuppressed) }) }
             ?: afterward?.let {
                 session.attempt(
-                    PoolSession.Planned("$id $sentence (attempt $count of $count)", id, afterwardPlayers, demonstrates, listOf(it)),
+                    PoolSession.Planned("$id $sentence (attempt $count of $count)", id, afterwardPlayers, demonstrates, listOf(it), demo = demo),
                 )
             }
             ?: PoolSession.AttemptEnd(null)
@@ -113,20 +113,32 @@ internal fun TestSuiteScope.sideBySide(
 
 /**
  * Registers the test "[id] [sentence]": it makes the requirement's attempts as the run's policy asks,
- * each with [attempt], which returns how it ended, and ends as their verdict says. Which tests
- * a run runs is testBalloon's selection (`cargo xtask e2e game --only`).
+ * each with [attempt], which returns how it ended, and ends as their verdict says. When the plan
+ * asks for a demo (the requirement failed, or the change touched code its last attempt covered), it
+ * runs once more as a demo, its clients recording clips; a demo that ends otherwise than the last
+ * attempt fails the requirement. Which tests a run runs is testBalloon's selection
+ * (`cargo xtask e2e game --only`).
  */
 private fun TestSuiteScope.register(
     id: String,
     sentence: String,
     code: RequirementCode,
-    attempt: suspend (PoolSession) -> PoolSession.AttemptEnd,
+    attempt: suspend (session: PoolSession, demo: Boolean) -> PoolSession.AttemptEnd,
 ) {
     val plan = RunPlan.current
     val testId = "$id $sentence"
     test(testId) {
         val session = session(id)
-        plan.policy.attempt(plan.quarantines(id, testId)) { attempt(session).failure }.conclude(code)
+        var last = PoolSession.AttemptEnd(null)
+        val verdict = plan.policy.attempt(plan.quarantines(id, testId)) { attempt(session, false).also { last = it }.failure }
+        val differs = if (plan.demos(verdict, last.covered)) demoDiffers(last.failure, attempt(session, true).failure) else null
+        if (differs != null && verdict == Verdict.Passed) throw differs
+        try {
+            verdict.conclude(code)
+        } catch (failed: AssertionError) {
+            differs?.let(failed::addSuppressed)
+            throw failed
+        }
     }
 }
 

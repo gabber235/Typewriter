@@ -55,9 +55,14 @@ public final class Hooks {
         Frames.end();
     }
 
-    /** Whether frames draw at the end of the last tick: while the client steps. */
-    public static boolean drawsAtEndOfTick() {
+    /** Whether the client sets how far past the last tick a frame draws: while it steps. */
+    public static boolean stepsPartialTick() {
         return Stepper.stepping();
+    }
+
+    /** How far from the tick before to the last tick the frame draws: the tick's end, unless a clip draws between ticks. */
+    public static float partialTick() {
+        return Clips.partial();
     }
 
     public static void wake() {

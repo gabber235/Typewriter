@@ -30,6 +30,17 @@ val WindowTest by testSuite {
         window.perceived(steve, perception(103, listOf(Text("chat", "Hello")), listOf(ChatLine(103, "Hello")))) shouldBe Passed(103)
     }
 
+    test("a frame a clip draws between two ticks judges nothing: a fact holds from the tick whose end shows it") {
+        val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(Check(steve, chat("Hello"))), nevers = listOf(alexHearsNothing))
+        val hello = listOf(Text("chat", "Hello"))
+
+        window.perceived(steve, perception(103, partial = 2f / 3, frame = 4, texts = hello, chat = listOf(ChatLine(103, "Hello")))) shouldBe Open
+        window.perceived(alex, perception(104, partial = 1f / 3, frame = 5, chat = listOf(ChatLine(104, "Psst")))) shouldBe Open
+        window.perceived(steve, perception(105, texts = hello, chat = listOf(ChatLine(103, "Hello")))) shouldBe Open
+        window.barrierSeen(alex, 1) shouldBe Open
+        window.barrierSeen(steve, 1) shouldBe Passed(105)
+    }
+
     test("a chat line on the last tick of the window passes") {
         val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(Check(steve, chat("Hello"))))
 

@@ -8,7 +8,7 @@ import com.typewritermc.playtest.wire.Message.Item
 import com.typewritermc.playtest.wire.Message.Perception
 import com.typewritermc.playtest.wire.Message.Text
 
-/** A perception record of [tick] that shows only what the arguments name. */
+/** A perception record of [tick], perceived at its end unless [partial] says otherwise, that shows only what the arguments name. */
 fun perception(
     tick: Int,
     texts: List<Text> = listOf(),
@@ -17,7 +17,9 @@ fun perception(
     items: List<Item> = listOf(),
     blocks: List<Block> = listOf(),
     entities: List<Entity> = listOf(),
-): Perception = Perception(tick, texts, chat, camera, items, blocks, entities)
+    partial: Float = 1f,
+    frame: Int = -1,
+): Perception = Perception(tick, partial, frame, texts, chat, camera, items, blocks, entities)
 
 /** A camera at this eye position, looking south and level with a 70 degree view, without the spyglass. */
 fun camera(

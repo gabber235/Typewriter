@@ -135,10 +135,14 @@ final class Perceiver {
         scoped = false;
     }
 
-    /** After a frame's extract and render ran: sends the record of {@code tick} when it changed or is forced. */
+    /**
+     * After a frame's extract and render ran: sends the record of {@code tick} when it changed or is
+     * forced, and the record of every pass while a clip records.
+     */
     static void endFrame(Minecraft mc, int tick) {
-        var perception = new Perception(tick, frame.legibleTexts(), List.copyOf(chat), camera(mc), frame.visibleItems(), blocks(mc), entities());
-        if (forced || lastSent == null || !sameContent(perception, lastSent)) {
+        var perception = new Perception(
+                tick, Clips.partial(), Clips.frame(), frame.legibleTexts(), List.copyOf(chat), camera(mc), frame.visibleItems(), blocks(mc), entities());
+        if (forced || Clips.recordsEveryPass() || lastSent == null || !sameContent(perception, lastSent)) {
             PlaytestClient.send(new Perceived(PlaytestClient.player(), perception));
             lastSent = perception;
         }

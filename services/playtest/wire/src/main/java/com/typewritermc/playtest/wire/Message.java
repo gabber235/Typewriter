@@ -54,9 +54,12 @@ public sealed interface Message {
      * One attempt of a requirement to run once {@code players} players are free. Every attempt of one
      * requirement case carries the same {@code testId}, so they land in one case of the run file. With
      * {@code restartsPaper} the attempt runs on a Paper of its own, which its body may kill and boot
-     * again: a kill drops every client on a Paper.
+     * again: a kill drops every client on a Paper. A {@code demo} attempt runs once more after the
+     * requirement's last attempt, its clients recording clips; it lands in the case's demo, never among
+     * its attempts.
      */
-    record Submit(long submission, String testId, String requirement, int players, Demonstrates demonstrates, boolean restartsPaper) {}
+    record Submit(
+            long submission, String testId, String requirement, int players, Demonstrates demonstrates, boolean restartsPaper, boolean demo) {}
 
     /**
      * Session to pool: run these attempts side by side. The pool claims the players of all of them at
@@ -130,7 +133,7 @@ public sealed interface Message {
      * pass; {@code firstBroken} names the requirement line that failed, when it is known. {@code steps}
      * are what the attempt's bodies did, in order. {@code folder} holds the attempt's evidence, relative
      * to the run file's folder, or is empty when it left none; {@code screenshots} are the frames it
-     * wrote there, relative to {@code folder}.
+     * wrote there and {@code clips} the clips its clients recorded there, relative to {@code folder}.
      */
     record Result(
             long submission,
@@ -139,7 +142,8 @@ public sealed interface Message {
             String firstBroken,
             List<AttemptStep> steps,
             String folder,
-            List<String> screenshots)
+            List<String> screenshots,
+            List<String> clips)
         implements Message {}
 
     /** How a run makes its requirements' attempts: failed ones again, up to {@code attempts} in total, or each exactly {@code attempts} times. */
@@ -355,23 +359,27 @@ public sealed interface Message {
     /**
      * Paper to pool: what JaCoCo counted of the plugin classes since Paper last read it, in JaCoCo's
      * execution data format, for {@code attempts}, every attempt that held players meanwhile. Paper
-     * reads, and so resets, the counts whenever an attempt starts or settles.
+     * reads, and so resets, the counts whenever an attempt starts or settles; the read held its main
+     * thread for {@code readNanos}.
      */
-    record Covered(List<Long> attempts, byte[] exec) implements Message {
+    record Covered(List<Long> attempts, long readNanos, byte[] exec) implements Message {
         // A record compares arrays by identity; two reads are the same when they hold the same bytes.
         @Override
         public boolean equals(Object other) {
-            return other instanceof Covered covered && attempts.equals(covered.attempts) && java.util.Arrays.equals(exec, covered.exec);
+            return other instanceof Covered covered
+                    && attempts.equals(covered.attempts)
+                    && readNanos == covered.readNanos
+                    && java.util.Arrays.equals(exec, covered.exec);
         }
 
         @Override
         public int hashCode() {
-            return 31 * attempts.hashCode() + java.util.Arrays.hashCode(exec);
+            return 31 * (31 * attempts.hashCode() + Long.hashCode(readNanos)) + java.util.Arrays.hashCode(exec);
         }
 
         @Override
         public String toString() {
-            return "Covered[attempts=" + attempts + ", exec=" + exec.length + " bytes]";
+            return "Covered[attempts=" + attempts + ", readNanos=" + readNanos + ", exec=" + exec.length + " bytes]";
         }
     }
 
@@ -487,6 +495,42 @@ public sealed interface Message {
         @Override
         public Capture withRequest(long request) {
             return new Capture(request, player, path);
+        }
+    }
+
+    /**
+     * Session to the player's client: from the next tick on, draw the frames between ticks too, 30 for
+     * every second of game time, and write them as an mp4 to {@code path}. The client answers with
+     * {@link ClipStarted} and keeps recording until {@link StopClip}.
+     */
+    record StartClip(long request, UUID player, String path) implements ClientRequest {
+        @Override
+        public StartClip withRequest(long request) {
+            return new StartClip(request, player, path);
+        }
+    }
+
+    /** Client to session: the clip records from the next tick on; {@code failure} is null when it does. */
+    record ClipStarted(long request, String failure) implements Reply {
+        @Override
+        public ClipStarted withRequest(long request) {
+            return new ClipStarted(request, failure);
+        }
+    }
+
+    /** Session to the player's client: stop recording and finish the clip. The client answers with {@link ClipWritten}. */
+    record StopClip(long request, UUID player) implements ClientRequest {
+        @Override
+        public StopClip withRequest(long request) {
+            return new StopClip(request, player);
+        }
+    }
+
+    /** Client to session: the clip holds {@code frames} frames and is written; {@code failure} is null when it was. */
+    record ClipWritten(long request, int frames, String failure) implements Reply {
+        @Override
+        public ClipWritten withRequest(long request) {
+            return new ClipWritten(request, frames, failure);
         }
     }
 
@@ -644,9 +688,12 @@ public sealed interface Message {
      * {@code texts} is every legible run of text on screen; {@code chat} every chat line that arrived
      * since the attempt's reset, whether it still shows or not; {@code camera} the view the frame was
      * drawn from, or null without a world; {@code items} every item the GUI draws where it can be
-     * seen; {@code blocks} and {@code entities} what the watches name.
+     * seen; {@code blocks} and {@code entities} what the watches name. A frame draws {@code partial}
+     * of the way from the tick before to {@code tick}: 1 at the end of the tick, where every record
+     * of a gated attempt is perceived, less for a frame a clip draws between two ticks, which shows
+     * the clip and judges nothing. {@code frame} is that frame's number in the clip, or -1 outside one.
      */
-    record Perception(int tick, List<Text> texts, List<ChatLine> chat, Camera camera, List<Item> items, List<Block> blocks, List<Entity> entities) {}
+    record Perception(int tick, float partial, int frame, List<Text> texts, List<ChatLine> chat, Camera camera, List<Item> items, List<Block> blocks, List<Entity> entities) {}
 
     /** One legible run of text and the game element that drew it, for example {@code chat}. */
     record Text(String element, String text) {}
