@@ -737,6 +737,12 @@ decided:
   - id: slice-9-dispatched-runs
     what: "Dispatch runs on its branch (Recommended)"
     why: CI works again (features/v1 CI and Full tier green on 2026-11-16); slice 9 proves the game job, caches and the Linux paths with workflow_dispatch runs on its own branch, no pull request; if Actions fails again it stops and Namespace runners come next
+  - id: pid-file-per-part
+    what: "Pid file per part (Recommended)"
+    why: On Linux Java reads only 4 KB of a command line, so LOST-1, FROZEN-1 and RESTART-3 found no process on CI; the pool writes each part's pid and start time into its folder, the same check PoolFile uses, so a left behind file counts only while that exact process runs; asked "what happens when something crashed and that file gets left behind?"
+  - id: golden-images-on-evidence-branch
+    what: "Evidence branch (Recommended)"
+    why: The repo holds only a golden's hash, so a changed frame on CI failed without a diff; approve also pushes the PNG to the evidence branch as goldens/<hash>.png, outside the pruned pr/ folders, and cargo xtask e2e game fetches any image it lacks before the run, so the framework stays offline; committing the PNG would add about 210 KB per golden to the history on every re-approve
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -883,4 +889,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 9 (CI job and caches, Linux proofs, pool lifecycle) builds on feat/game-verification-slice-9 with dispatched CI runs.
+next: Slice 9 builds the pid file per part and golden images on the evidence branch, generates only what the game suite needs, reruns the one pixel proof, and gets green dispatched runs with warm cache times.
