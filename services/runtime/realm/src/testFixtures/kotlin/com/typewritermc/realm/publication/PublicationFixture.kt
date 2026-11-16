@@ -196,7 +196,7 @@ internal class PublicationFixture(
 /** A complete publication page whose text value is [value]. */
 internal fun publicationPageRecord(value: String) =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(PUBLICATION_PAGE_USE),
+        TypeSelection.of(PUBLICATION_PAGE_USE),
         mapOf("value" to DataValue.StringValueWrapper(value)),
     )
 

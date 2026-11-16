@@ -86,7 +86,7 @@ val ExpectedAuthoringValuesTestSuite by testSuite {
         val titleAt = chapterAt.copy(path = ValuePath(segments = chapterAt.path.segments + PathSegment.createField(name = "title")))
         val expected =
             listOf(
-                EditExpectation.createConfiguration(at = chapterAt, expected = TypeSelection.CompleteWrapper(chapterType)),
+                EditExpectation.createConfiguration(at = chapterAt, expected = TypeSelection.of(chapterType)),
                 EditExpectation.createValue(at = titleAt, expected = DataValue.StringValueWrapper("Quest")),
             )
         val changed =

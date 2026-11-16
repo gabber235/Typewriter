@@ -2,7 +2,6 @@ package com.typewritermc.realm.testing
 
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.SubmissionKey
-import com.typewritermc.authoring.definition
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.edit.AuthoringPlanRejected
 import com.typewritermc.realm.edit.WorkingViewEditContext

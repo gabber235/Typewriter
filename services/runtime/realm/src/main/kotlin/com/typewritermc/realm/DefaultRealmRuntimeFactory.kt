@@ -49,7 +49,8 @@ import kotlinx.coroutines.cancel
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.InputToken
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
+import skirout.editor.v1.type_catalog.TypeUse
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
@@ -310,8 +311,9 @@ internal fun CatalogAssembly.reportCallbackFailures() {
                     attribute(
                         "catalog.subject",
                         when (val target = callback.target) {
-                            is ResourceTarget.TypeWrapper -> target.template.template.canonicalText
-                            ResourceTarget.ANY_RESOURCE -> "any_resource"
+                            is ResourceMatch.TypeWrapper -> TypeUse.NamedWrapper(target.value).canonicalText
+                            is ResourceMatch.DefinitionWrapper -> target.value.canonicalText
+                            ResourceMatch.ANY_RESOURCE -> "any_resource"
                             else -> unknownVariant(target)
                         },
                     )

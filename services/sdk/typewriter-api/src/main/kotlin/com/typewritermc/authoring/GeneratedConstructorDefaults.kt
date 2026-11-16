@@ -38,7 +38,7 @@ fun <T : Any> KClass<T>.constructorDefaults(
  * nested arguments separately. Complete stored values continue to use generated direct construction.
  */
 private class GeneratedNativeConstructionPlan<T : Any>(
-    type: KClass<T>,
+    private val type: KClass<T>,
     fields: List<GeneratedConstructorField<T>>,
     allowedOpaqueArguments: Set<Int>,
 ) : NativeConstructionPlan {
@@ -52,6 +52,13 @@ private class GeneratedNativeConstructionPlan<T : Any>(
         }
 
     override val defaultedFields: Set<FieldOwner> = fields.filter { it.hasDefault }.mapTo(linkedSetOf()) { it.owner }
+
+    override fun read(value: Any): Map<FieldOwner, Any?> {
+        require(type.isInstance(value)) { "Expected an instance of ${type.qualifiedName}, got ${value::class.qualifiedName}." }
+        @Suppress("UNCHECKED_CAST")
+        val instance = value as T
+        return fields.associate { it.owner to it.read(instance) }
+    }
 
     init {
         if (fields.map { it.owner }.distinct().size != fields.size ||

@@ -11,6 +11,7 @@ import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.name
+import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
@@ -246,7 +247,7 @@ internal class FrameworkFixture {
         supplied: Map<String, DataValue>,
     ) = ValuePreparationRequest(
         catalog = generation,
-        target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(use)),
+        target = PreparationTarget.RecordWrapper(TypeSelection.of(use)),
         suppliedValue = DataValue.record(supplied),
     )
 }

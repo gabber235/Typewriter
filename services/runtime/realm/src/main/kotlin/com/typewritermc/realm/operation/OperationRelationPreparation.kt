@@ -2,6 +2,7 @@ package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.authoredTypeAt
+import com.typewritermc.authoring.of
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.text
 import com.typewritermc.checking.InputIdentity
@@ -208,7 +209,7 @@ internal class OperationRelationPreparation(
             val evidence = ResourceValueMapper.declaredEvidence(opposite, target, record, catalog.checked)
             evidence.memberships.forEach { containing ->
                 relations.reads.observeInput(InputIdentity.Membership(containing))
-                val collectionType = record.authoredTypeAt(containing.path, catalog.checked) ?: return@forEach
+                val collectionType = record.authoredTypeAt(containing.resource, containing.path, catalog.checked) ?: return@forEach
                 val checked = catalog.checked.resolve(collectionType) as? Resolution.Ready ?: return@forEach
                 val sequence = checked.value.schema.representation as? ResolvedRepresentation.SequenceWrapper ?: return@forEach
                 val itemType = sequence.value.item as? TypeUse.NamedWrapper ?: return@forEach
@@ -218,7 +219,7 @@ internal class OperationRelationPreparation(
                     DefaultInitializationRuntime(catalog.checked, catalog.nativeBindings).prepareNow(
                         ValuePreparationRequest(
                             catalog = catalog.generation,
-                            target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(itemType.value)),
+                            target = PreparationTarget.RecordWrapper(TypeSelection.of(itemType.value)),
                             suppliedValue = null,
                         ),
                     )

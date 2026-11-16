@@ -127,11 +127,12 @@ List<ResourceCreationField> resourceCreationFields(
   if (configuration == null || catalog == null) return const [];
   return [
     for (final field in catalog.owningFields(configuration))
-      if (catalog.resourceCreationTemplate(field.memberType) != null)
+      if (field.memberType case final memberType?
+          when catalog.resourceCreationTemplate(memberType) != null)
         ResourceCreationField(
           owner: skir.ValueLocation(resource: resource, path: field.path),
-          type: field.memberType,
-          label: "New ${catalog.typeDefinitionName(field.memberType)}",
+          type: memberType,
+          label: "New ${catalog.typeDefinitionName(memberType)}",
         ),
   ];
 }

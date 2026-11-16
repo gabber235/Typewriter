@@ -44,7 +44,7 @@ final _displayBudget = skir.EvaluationBudget(
 
 extension ResourceAppearanceCatalog on CheckedEditorCatalog {
   /// The formulas of the most specific display declared for [selection]: the
-  /// display whose target type is the most specific nominal supertype of the
+  /// display whose target definition is the most specific nominal supertype of the
   /// selected type. When no typed display applies, or two unrelated ones apply
   /// equally, the any resource display applies, as Realm decides. Null only
   /// for a catalog that declares no displays at all.
@@ -69,7 +69,7 @@ extension ResourceAppearanceCatalog on CheckedEditorCatalog {
         .toList(growable: false);
     if (mostSpecific.length == 1) return mostSpecific.single;
     return snapshot.resourceDisplays
-        .where((display) => display.target == skir.ResourceTarget.anyResource)
+        .where((display) => display.target == skir.ResourceMatch.anyResource)
         .firstOrNull;
   }
 
@@ -86,11 +86,12 @@ extension ResourceAppearanceCatalog on CheckedEditorCatalog {
     final queries = PortableExpressionQueries(catalog: this);
     final bindings = {
       configuredValueBindingId: PortableExpressionBinding(
-        value: _subjectValue(record),
-        schema: switch (record.configuration) {
-          skir.TypeSelection_completeWrapper(:final value) =>
-            CompletePortablePresentationBinding(skir.TypeUse.wrapNamed(value)),
-          final selection => PartialPortablePresentationBinding(selection),
+        value: _subjectValue(this, record),
+        schema: switch (completeUse(record.configuration)) {
+          final value? => CompletePortablePresentationBinding(
+            skir.TypeUse.wrapNamed(value),
+          ),
+          null => PartialPortablePresentationBinding(record.configuration),
         },
       ),
     };
@@ -148,21 +149,23 @@ skir.ResourceAppearance? resourceAppearanceIn(
   null => null,
 };
 
-skir.DataValue _subjectValue(skir.AuthoringRecord record) {
+skir.DataValue _subjectValue(
+  CheckedEditorCatalog catalog,
+  skir.AuthoringRecord record,
+) {
   final payload = skir.DataValue.createRecord(fields: record.fields);
-  return switch (record.configuration) {
-    skir.TypeSelection_completeWrapper(:final value) =>
-      skir.DataValue.createNamed(actualType: value, payload: payload),
-    _ => payload,
+  return switch (catalog.completeUse(record.configuration)) {
+    final value? => skir.DataValue.createNamed(
+      actualType: value,
+      payload: payload,
+    ),
+    null => payload,
   };
 }
 
 extension on skir.ResourceDisplayFormulas {
   skir.TypeDefinitionId? get targetDefinition => switch (target) {
-    skir.ResourceTarget_typeWrapper(
-      value: skir.TypeTemplate_namedWrapper(:final value),
-    ) =>
-      value.definition,
+    skir.ResourceMatch_definitionWrapper(:final value) => value,
     _ => null,
   };
 }

@@ -2,6 +2,7 @@ package com.typewritermc.realm.testing
 
 import com.typewritermc.authoring.text
 import com.typewritermc.realm.edit.WorkingViewEditContext
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -28,7 +29,7 @@ val List<ValueProblem>.codes: List<String> get() = map { it.code }
 /** Asserts the commit was refused for at least [codes] and returns every problem it named. */
 fun CommitPreparedEditResponse.shouldBeRejected(vararg codes: String): List<ValueProblem> {
     val problems = shouldBeInstanceOf<CommitPreparedEditResponse.RejectedErrorWrapper>().value
-    problems.codes shouldContainAll codes.toList()
+    withClue("refused for ${problems.codes}") { problems.codes shouldContainAll codes.toList() }
     return problems
 }
 

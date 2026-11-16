@@ -4,7 +4,6 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 
@@ -15,11 +14,11 @@ data class Visited(
     val actual: TypeUse? = null,
 )
 
-/** One problem the walk reported, with the type it is about when that type is gone or invalid. */
+/** One problem the walk reported, and why. */
 data class Reported(
     val at: ValueLocation,
     val code: String,
-    val type: TypeDefinitionId?,
+    val cause: MisfitCause,
 )
 
 /** What the walk showed a visitor while it walked [value] at [use] from [at]. */
@@ -30,9 +29,9 @@ class WalkRecord internal constructor() : ValueVisitor<Unit> {
     override fun problem(
         at: ValueLocation,
         code: String,
-        type: TypeDefinitionId?,
+        cause: MisfitCause,
     ) {
-        reported += Reported(at, code, type)
+        reported += Reported(at, code, cause)
     }
 
     override fun placeholder(at: ValueLocation) = Unit

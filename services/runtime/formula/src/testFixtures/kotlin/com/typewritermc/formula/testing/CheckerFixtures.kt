@@ -1,5 +1,6 @@
 package com.typewritermc.formula.testing
 
+import com.typewritermc.authoring.of
 import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.CoreFormulas
 import com.typewritermc.formula.FormulaDefinition
@@ -27,6 +28,7 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.floatScalar
 import com.typewritermc.types.functionUse
 import com.typewritermc.types.integerScalar
@@ -43,6 +45,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FloatWidth
@@ -52,11 +55,13 @@ import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeId
 import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 
@@ -155,6 +160,8 @@ private val townId = typeId("Town")
 private val energyId = typeId("Energy")
 private val tallyId = typeId("Tally")
 private val goneId = typeId("Gone")
+private val guildId = typeId("Guild")
+private val anyGuildId = typeId("AnyGuild")
 
 val npc: TypeUse = npcId.use()
 val player: TypeUse = playerId.use()
@@ -163,6 +170,42 @@ val reward: TypeUse = rewardId.use()
 val door: TypeUse = doorId.use()
 val payment: TypeUse = paymentId.use()
 val smithType: TypeUse = smithId.use()
+
+/** A link to a guild whatever its key type, as `Ref<E, Guild<*>>` lowers. */
+val anyGuildType: TypeUse = anyGuildId.use()
+
+/** `Guild<K>`: a resource with fields that need no argument (`name`, `home`) and one that needs `K` (`keys`). */
+private val guild: TypeDefinition =
+    ParameterKey(owner = guildId, index = 0).let { key ->
+        TypeDefinition.partial(
+            id = guildId,
+            parameters = listOf(TypeParameter.partial(key = key, name = "K")),
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            "name" to string.toTemplate(),
+                            "home" to refType(townId.use()).toTemplate(),
+                            "keys" to StandardTypes.list.template(listOf(TypeTemplate.ParameterWrapper(key))),
+                        ).map { (name, type) ->
+                            FieldDeclaration.partial(owner = FieldOwner(definition = guildId, name = name), type = type)
+                        },
+                    form = RecordForm.CONCRETE,
+                ),
+            parents = listOf(ResourceDefinition.id.namedTemplate()),
+        )
+    }
+
+/** The link type of [anyGuildType]: its target is the guild definition, with no argument. */
+private val anyGuild: TypeDefinition =
+    TypeDefinition.partial(
+        id = anyGuildId,
+        representation =
+            RepresentationTemplate.createLink(
+                endpoint = EndpointId(value = anyGuildId.toString()),
+                target = ResourceMatchTemplate.DefinitionWrapper(guildId),
+            ),
+    )
 
 /** A `Var` holding [value] whose formulas read nothing, as `Var<T>` lowers. */
 fun varType(value: TypeUse): TypeUse = VarDefinition.id.use(listOf(value, functionUse(result = value)))
@@ -216,6 +259,8 @@ private val testCatalog =
                 ),
                 record(energyId, listOf("amount" to int)),
                 record(tallyId, listOf("count" to varType(int), "extras" to listType(varType(int)))),
+                guild,
+                anyGuild,
             ),
     )
 
@@ -256,7 +301,7 @@ private val boundedProviders: List<FormulaFunction> =
         val result = if (name == "loudest") t else int.toTemplate()
         FormulaFunction(
             name = name,
-            typeParameters = listOf(TypeParameter(key = key, name = "T", bounds = listOf(entityId.template()))),
+            typeParameters = listOf(TypeParameter(key = key, name = "T", bounds = listOf(entityId.template()), derived = false)),
             signature = FunctionTypeTemplate(context = context, parameters = parameters, result = result),
             defaulted = emptySet(),
         ) { error("The checker test world does not run providers.") }
@@ -298,6 +343,7 @@ val checkerResources: List<WorldResource> =
         WorldResource("flag", boolean),
         WorldResource("maybe", nullable(int)),
         WorldResource("smith", refType(smithType)),
+        WorldResource("anyGuild", anyGuildType),
         WorldResource("npc", npc),
         WorldResource("twin", int, id = ResourceId("twin-1")),
         WorldResource("twin", int, id = ResourceId("twin-2")),
@@ -321,6 +367,9 @@ class CheckerWorld(
     override fun resolve(use: TypeUse): Resolution<CheckedType> = testCatalog.resolve(use)
 
     override fun expand(use: TypeUse): TypeUse = testCatalog.expand(use)
+
+    override fun unappliedType(definition: TypeDefinitionId): Resolution<ResourceType> =
+        testCatalog.authoredTypeOf(TypeSelection.of(definition))
 
     override fun inScope(name: String): List<ResourceId> = present.filter { it.name == name }.map(WorldResource::id)
 

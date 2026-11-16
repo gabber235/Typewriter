@@ -7,9 +7,8 @@ import "package:typewriter_testkit/testing.dart";
 void main() {
   test("Open from search opens the hit in its realm", () async {
     final resource = skir.ResourceId(value: "book:main");
-    final configuration = skir.TypeSelection.createComplete(
-      definition: _book,
-      arguments: const [],
+    final configuration = selectionOfUse(
+      skir.NamedTypeUse(definition: _book, arguments: const []),
     );
     final content = skir.AuthoringRecord(
       types: const [],

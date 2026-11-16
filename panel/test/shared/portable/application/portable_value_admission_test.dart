@@ -86,7 +86,7 @@ void main() {
 
     expect(checked.admitsPortableValue(expected, payload), isFalse);
     final admitted = checked.admitPortablePayloadAt(
-      skir.TypeSelection.createComplete(definition: page, arguments: const []),
+      selectionOfUse(skir.NamedTypeUse(definition: page, arguments: const [])),
       skir.ValuePath(segments: [skir.PathSegment.createField(name: "chapter")]),
       payload,
     );

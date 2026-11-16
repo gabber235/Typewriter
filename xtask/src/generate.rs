@@ -194,36 +194,84 @@ const fn build_runner(package: &'static str, inputs: &'static [&'static str]) ->
 }
 
 /// Brings every generated source up to date. Program output goes to `log`, or to the terminal.
+/// Takes the heavy lock before the first generator that has to run, so a run with nothing stale
+/// never queues behind another build.
 pub fn generate(ctx: &Context, log: Option<&File>) -> Result<()> {
-    let state = ctx.root.join(".xtask/generate");
-    fs::create_dir_all(&state).with_context(|| format!("cannot create {}", state.display()))?;
+    bring_up_to_date(ctx, log, Lock::BeforeFirstRun)
+}
+
+/// The graph step: [`generate`] with its output in the step's log, run as a heavy step that
+/// already holds the lock.
+pub fn step(ctx: &Context, log: &File) -> Result<()> {
+    bring_up_to_date(ctx, Some(log), Lock::Held)
+}
+
+/// Whether every generator is current, so [`generate`] would run nothing.
+pub fn is_up_to_date(ctx: &Context) -> Result<bool> {
+    is_up_to_date_over(ctx, GENERATORS)
+}
+
+/// Who holds the heavy lock while generators run.
+enum Lock {
+    /// The caller does: the graph's heavy step.
+    Held,
+    /// Taken before the first generator that has to run.
+    BeforeFirstRun,
+}
+
+fn bring_up_to_date(ctx: &Context, log: Option<&File>, lock: Lock) -> Result<()> {
     let mut upstream = Digest::new();
+    let mut held = None;
     for generator in GENERATORS {
-        let stamp = state.join(format!("{}.stamp", generator.name.replace('/', "-")));
         let before = generator.digest(ctx, &upstream)?;
-        if is_current(ctx, &stamp, &before) {
+        if is_current(ctx, &stamp_path(ctx, generator), &before) {
             upstream = before;
             continue;
+        }
+        if matches!(lock, Lock::BeforeFirstRun) && held.is_none() {
+            held = Some(HeavyLock::acquire("generate")?);
         }
         say(log, &format!("generate {}", generator.name))?;
         generator.run(ctx, log)?;
         // Digested again: the protocol generator rewrites stale Skir numbers in its inputs.
         let after = generator.digest(ctx, &upstream)?;
-        let outputs = generator.output_files(ctx)?;
-        let mut record = format!("{}\n", after.hex());
-        for output in &outputs {
-            record.push_str(output);
-            record.push('\n');
-        }
-        fs::write(&stamp, record).with_context(|| format!("cannot write {}", stamp.display()))?;
+        record(ctx, generator, &after)?;
         upstream = after;
     }
     Ok(())
 }
 
-/// The graph step: [`generate`] with its output in the step's log.
-pub fn step(ctx: &Context, log: &File) -> Result<()> {
-    generate(ctx, Some(log))
+/// Whether each of `generators`, digested in order on the one before it, matches its stamp.
+fn is_up_to_date_over(ctx: &Context, generators: &[Generator]) -> Result<bool> {
+    let mut upstream = Digest::new();
+    for generator in generators {
+        let digest = generator.digest(ctx, &upstream)?;
+        if !is_current(ctx, &stamp_path(ctx, generator), &digest) {
+            return Ok(false);
+        }
+        upstream = digest;
+    }
+    Ok(true)
+}
+
+/// Writes `generator`'s stamp: the `digest` it ran on and the outputs it left.
+fn record(ctx: &Context, generator: &Generator, digest: &Digest) -> Result<()> {
+    let stamp = stamp_path(ctx, generator);
+    let state = stamp.parent().unwrap_or(&ctx.root);
+    fs::create_dir_all(state).with_context(|| format!("cannot create {}", state.display()))?;
+    let mut record = format!("{}\n", digest.hex());
+    for output in generator.output_files(ctx)? {
+        record.push_str(&output);
+        record.push('\n');
+    }
+    fs::write(&stamp, record).with_context(|| format!("cannot write {}", stamp.display()))
+}
+
+fn stamp_path(ctx: &Context, generator: &Generator) -> PathBuf {
+    ctx.root.join(format!(
+        ".xtask/generate/{}.stamp",
+        generator.name.replace('/', "-")
+    ))
 }
 
 impl Generator {
@@ -241,12 +289,10 @@ impl Generator {
                 generate.log_output(log)?.run()
             }
             Tool::BuildRunner(package) => {
-                let _lock = HeavyLock::acquire(&format!("generate {package}"))?;
                 let mut build = ctx.tool(package, "dart", &["run", "build_runner", "build"]);
                 build.log_output(log)?.run()
             }
             Tool::SdkFixtures => {
-                let _lock = HeavyLock::acquire("generate sdk-fixtures")?;
                 let mut write = ctx.tool(
                     "services",
                     "./gradlew",
@@ -264,7 +310,6 @@ impl Generator {
                 embed.log_output(log)?.run()
             }
             Tool::CreationFixtures => {
-                let _lock = HeavyLock::acquire("generate creation-fixtures")?;
                 let directory = ctx.root.join(CREATION_FIXTURES);
                 let define = format!("--dart-define=CREATION_FIXTURE_DIR={}", directory.display());
                 let mut write = ctx.tool(
@@ -275,7 +320,6 @@ impl Generator {
                 write.log_output(log)?.run()
             }
             Tool::FrameVectors => {
-                let _lock = HeavyLock::acquire("generate frame-vectors")?;
                 let output = ctx.root.join(FRAME_VECTORS);
                 let output = output.to_string_lossy();
                 let mut write = ctx.tool(
@@ -533,6 +577,39 @@ mod tests {
             &root.path("protocol.stamp"),
             &inputs
         ));
+    }
+
+    #[test]
+    fn generate_is_up_to_date_only_while_every_generator_in_the_chain_is_current() {
+        const CHAIN: &[Generator] = &[
+            Generator {
+                name: "first",
+                inputs: &["first"],
+                outputs: &[],
+                files: &[],
+                tool: Tool::FrameVectors,
+            },
+            Generator {
+                name: "second",
+                inputs: &["second"],
+                outputs: &[],
+                files: &[],
+                tool: Tool::FrameVectors,
+            },
+        ];
+        let root = TempRoot::new();
+        root.write("first/input.txt", "one");
+        root.write("second/input.txt", "two");
+        assert!(!is_up_to_date_over(&root.ctx, CHAIN).unwrap());
+
+        let first = CHAIN[0].digest(&root.ctx, &Digest::new()).unwrap();
+        record(&root.ctx, &CHAIN[0], &first).unwrap();
+        let second = CHAIN[1].digest(&root.ctx, &first).unwrap();
+        record(&root.ctx, &CHAIN[1], &second).unwrap();
+        assert!(is_up_to_date_over(&root.ctx, CHAIN).unwrap());
+
+        root.write("second/input.txt", "edited");
+        assert!(!is_up_to_date_over(&root.ctx, CHAIN).unwrap());
     }
 
     #[test]

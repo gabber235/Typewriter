@@ -208,7 +208,7 @@ val AuthoringRoutesTest by testSuite {
         runTest {
             val removed =
                 AuthoringRecord.of(
-                    configuration = TypeSelection.CompleteWrapper(TypeDefinitionId.qualified("removed", "resource").namedUse()),
+                    configuration = TypeSelection.of(TypeDefinitionId.qualified("removed", "resource").namedUse()),
                     fields = mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                 )
             val book = record(name = "book")
@@ -253,7 +253,7 @@ val AuthoringRoutesTest by testSuite {
             withSetup(tutorial) { book ->
                 authoringRoutes().use { wire ->
                     val saved = resources.getValue(book.resource).configuration
-                    val tag = TypeSelection.CompleteWrapper(TagDefinition.id.namedUse())
+                    val tag = TypeSelection.of(TagDefinition.id.namedUse())
 
                     wire
                         .call(

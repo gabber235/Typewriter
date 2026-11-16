@@ -130,7 +130,7 @@ Future<PanelDriver> showAlphaBetaSearch(
 PortableResourceProjection namedResourceProjection(skir.ResourceId resource) =>
     PortableResourceProjection(
       resource: resource,
-      configuration: skir.TypeSelection.unknown,
+      configuration: skir.TypeSelection.defaultInstance,
       appearance: skir.ResourceAppearance(
         label: "Resource ${resource.value.split(":").last}",
         accent: const Color(0xff607d8b).toSkirColor(),

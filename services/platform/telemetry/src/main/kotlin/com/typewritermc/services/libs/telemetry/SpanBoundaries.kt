@@ -2,7 +2,7 @@
 
 package com.typewritermc.services.libs.telemetry
 
-import com.typewritermc.services.libs.utils.findExceptional
+import com.typewritermc.failures.findExceptional
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind

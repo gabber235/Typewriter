@@ -75,8 +75,9 @@ abstract class AuthoringFacts with _$AuthoringFacts {
           expected: config.at.path.segments.isEmpty
               ? resources[config.at.resource]?.configuration
               : switch (value(config.at)) {
-                  skir.DataValue_namedWrapper(:final value) =>
-                    skir.TypeSelection.wrapComplete(value.actualType),
+                  skir.DataValue_namedWrapper(:final value) => selectionOfUse(
+                    value.actualType,
+                  ),
                   _ => null,
                 },
         ),

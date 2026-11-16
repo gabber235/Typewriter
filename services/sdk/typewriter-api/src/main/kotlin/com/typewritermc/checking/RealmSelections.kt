@@ -10,24 +10,10 @@ import com.typewritermc.expression.MissingPolicy
 import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.ExpressionBindingId
-import skirout.editor.v1.type_catalog.NamedTypeUse
-import skirout.editor.v1.type_catalog.TypeDefinitionId
-
-sealed interface ResourceTypeMatch {
-    data object AnyResource : ResourceTypeMatch
-
-    data class Definition(
-        val id: TypeDefinitionId,
-    ) : ResourceTypeMatch
-
-    /** Matches only this exact applied type. Definition represents nominal subtype and broader generic views. */
-    data class Application(
-        val use: NamedTypeUse,
-    ) : ResourceTypeMatch
-}
+import skirout.editor.v1.type_catalog.ResourceMatch
 
 interface DraftType<D> {
-    val match: ResourceTypeMatch
+    val match: ResourceMatch
 
     fun bind(binding: DraftBinding): D
 }

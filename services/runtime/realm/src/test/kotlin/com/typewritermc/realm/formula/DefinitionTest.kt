@@ -1,6 +1,7 @@
 package com.typewritermc.realm.formula
 
 import com.typewritermc.authoring.Availability
+import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
 import com.typewritermc.engine.pages.Definition
 import com.typewritermc.formula.Formula
@@ -112,7 +113,7 @@ val DefinitionTest by testSuite {
     test("a Definition keeps its type argument across a realm restart") {
         withSetup(definitions, storage = RealmStorage.Surreal, catalog = routeFixtureCatalog) { page ->
             restart()
-            record(page.baseReward).configuration shouldBe TypeSelection.CompleteWrapper(definitionOf(intUse))
+            record(page.baseReward).configuration shouldBe TypeSelection.of(definitionOf(intUse))
             varValue(page.baseReward) shouldBe plain(50)
         }
     }

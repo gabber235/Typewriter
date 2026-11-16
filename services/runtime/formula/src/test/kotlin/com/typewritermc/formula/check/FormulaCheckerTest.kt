@@ -84,6 +84,11 @@ val FormulaCheckerTest by testSuite {
         row("let f(n: Ref<Town>) = n\n1", int, type(int)),
         row("smith.name", string, type(string)),
         row("smith.missing", string, problem("formula_unknown_member")),
+        row("anyGuild.name", string, type(string)), // a star link reads the fields that need no argument
+        row("anyGuild.home.name", string, type(string)),
+        row("anyGuild.keys", null, problem("formula_open_member", at = 9..13)), // keys: List<K>, and the star leaves K open
+        row("anyGuild.keys()", null, problem("formula_open_member", at = 9..13)),
+        row("anyGuild.missing", string, problem("formula_unknown_member")),
         row("Reward(gold = 1)", reward, type(reward)),
         row("Reward()", reward, problem("formula_missing_argument")),
         row("Reward(chest = true)", reward, problem("formula_missing_argument")),

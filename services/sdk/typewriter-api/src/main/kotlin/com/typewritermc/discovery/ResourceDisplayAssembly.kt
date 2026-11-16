@@ -15,6 +15,7 @@ import com.typewritermc.types.IconDefinition
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.catalog.of
+import com.typewritermc.types.definition
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
@@ -25,7 +26,7 @@ import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.diagnostic.DeclarationOrigin
 import skirout.editor.v1.expression.ExpressionNode
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -63,8 +64,13 @@ internal fun collectResourceDisplays(
         displays.mapNotNull { owned ->
             val target = owned.provider.target
             val affected = target.affected
-            if (target is ResourceTarget.TypeWrapper && !checked.isReady(target.template.definition)) return@mapNotNull null
             val origins = listOf(DeclarationOrigin(owner = owned.origin.owner))
+            // A display names resources by definition only; arguments never pick a display.
+            if (target is ResourceMatch.TypeWrapper) {
+                diagnostics += DeclarationDiagnostic.of(affected, "invalid_resource_display", origins)
+                return@mapNotNull null
+            }
+            if (target is ResourceMatch.DefinitionWrapper && !checked.isReady(target.value)) return@mapNotNull null
             val formulas =
                 try {
                     owned.provider.formulas().let { Triple(it.label.toNode(), it.accent.toNode(), it.icon.toNode()) }
@@ -82,8 +88,8 @@ internal fun collectResourceDisplays(
             }
             val subjects =
                 when (target) {
-                    is ResourceTarget.TypeWrapper -> listOf(target.template.definition)
-                    ResourceTarget.ANY_RESOURCE -> resourceTypes
+                    is ResourceMatch.DefinitionWrapper -> listOf(target.value)
+                    ResourceMatch.ANY_RESOURCE -> resourceTypes
                     else -> unknownVariant(target)
                 }.mapNotNull { definitions[it] }
                     .filter { checked.isReady(it.id) }
@@ -156,13 +162,8 @@ private val RESOURCE_READS =
     ).map { it.id }.toSet()
 
 /** The type a diagnostic of a declaration is reported on; any resource declarations report on the unpublished Resource. */
-internal val ResourceTarget.affected: TypeDefinitionId
-    get() =
-        when (this) {
-            is ResourceTarget.TypeWrapper -> template.definition
-            ResourceTarget.ANY_RESOURCE -> ANY_RESOURCE
-            else -> unknownVariant(this)
-        }
+internal val ResourceMatch.affected: TypeDefinitionId
+    get() = definition ?: ANY_RESOURCE
 
 private val ANY_RESOURCE = TypeDefinitionId.qualified("kotlin", "com.typewritermc.types.Resource")
 

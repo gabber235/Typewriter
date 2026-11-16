@@ -5,6 +5,8 @@ import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderLoader
+import com.typewritermc.formula.BindBuilder
+import com.typewritermc.formula.BindParameter
 import com.typewritermc.formula.DynamicBuilder
 import com.typewritermc.formula.Dynamics
 import com.typewritermc.formula.DynamicProvider
@@ -44,6 +46,11 @@ class RecordingDynamics : Dynamics {
     override fun each(
         definition: TypeDefinitionId,
         dynamic: DynamicBuilder.(ResourceId) -> Unit,
+    ) = Unit
+
+    override fun <D> bind(
+        parameter: BindParameter<D>,
+        bind: BindBuilder.(D) -> Unit,
     ) = Unit
 }
 

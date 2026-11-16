@@ -30,6 +30,7 @@ import com.typewritermc.types.floatScalar
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.isEnum
 import com.typewritermc.types.isValid
+import com.typewritermc.types.mapTemplate
 import com.typewritermc.types.match
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.parameterKeys
@@ -461,7 +462,10 @@ private fun TypeTemplate.presentationTemplate(
         linkResolver = { parent ->
             parent.unwrapNullable().representation(definitions)?.let { (representation, arguments) ->
                 (representation as? RepresentationTemplate.LinkWrapper)?.let { link ->
-                    com.typewritermc.presentation.PresentationLinkTemplate(link.value.endpoint, link.value.target.substitute(arguments))
+                    com.typewritermc.presentation.PresentationLinkTemplate(
+                        link.value.endpoint,
+                        link.value.target.mapTemplate { it.substitute(arguments) },
+                    )
                 }
             }
         },

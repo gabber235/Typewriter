@@ -28,7 +28,8 @@ import {
   RelationFamilyId,
   RelationId,
   RelativeFieldPattern,
-  ResourceTarget,
+  ResourceMatch,
+  ResourceMatchTemplate,
   RuleId,
   RuleOrigin,
   TypeDefinition,
@@ -45,7 +46,7 @@ import { Icon } from "kernel/v1/icon.skir";
 /// Name, accent and icon formulas for resources of [target]. Each formula reads only the subject
 /// resource: its fields and its published type through the configured value binding.
 struct ResourceDisplayFormulas(84060001) {
-  target: ResourceTarget = 0;
+  target: ResourceMatch = 0;
   label: ExpressionNode = 1;
   accent: ExpressionNode = 2;
   icon: ExpressionNode = 3;
@@ -72,7 +73,7 @@ enum EndpointCardinality(84060004) {
 struct EndpointDefinition(84060005) {
   id: EndpointId = 0;
   slot: EndpointSlot = 1;
-  resource: NamedTypeTemplate = 2;
+  resource: ResourceMatchTemplate = 2;
   cardinality: EndpointCardinality = 3;
   on_delete: RelationDeletePolicy = 4;
 }
@@ -326,7 +327,7 @@ struct EndpointBindingTemplate(84060033) {
   containing_resource: NamedTypeTemplate = 1;
   value_owner: TypeDefinitionId = 2;
   relative_path: RelativeFieldPattern = 3;
-  target: TypeTemplate = 4;
+  target: ResourceMatchTemplate = 4;
   contains_collection: bool = 5;
 }
 

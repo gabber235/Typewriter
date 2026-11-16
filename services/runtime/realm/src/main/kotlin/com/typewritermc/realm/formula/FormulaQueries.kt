@@ -6,6 +6,8 @@ import com.typewritermc.authoring.append
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.checking.InputIdentity
+import com.typewritermc.discovery.DynamicHook
+import com.typewritermc.discovery.runExtension
 import com.typewritermc.formula.DynamicBuilder
 import com.typewritermc.formula.ExportBuilder
 import com.typewritermc.formula.FormulaFailure
@@ -28,8 +30,6 @@ import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.extensions
 import com.typewritermc.realm.authoring.ownershipRelations
 import com.typewritermc.realm.authoring.tracked
-import com.typewritermc.realm.catalog.DynamicHook
-import com.typewritermc.services.libs.utils.runExtension
 import com.typewritermc.types.field
 import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.type_catalog.DataValue
@@ -314,7 +314,7 @@ internal data class Evaluate(
         val authored = tracked()
         val catalog = authored.viewCatalog.checked
         val record = authored.record(at.resource) ?: throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
-        val (type, value) = record.storedAt(at.path, catalog) ?: throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
+        val (type, value) = record.storedAt(at.resource, at.path, catalog) ?: throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
         if (value == DataValue.UNFILLED) throw FailedEvaluation(FormulaFailure.Unfilled(at))
         val plain = (value as? DataValue.NamedWrapper)?.value?.takeIf { it.actualType.definition == VarValueDefinition.id }
         if (plain == null) {

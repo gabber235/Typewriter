@@ -2,18 +2,20 @@ package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.authoredTypeAt
+import com.typewritermc.authoring.chosenUse
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.typedAt
-import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.CounterpartBinding
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.items
 import com.typewritermc.types.named
@@ -37,7 +39,6 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.PathSegment
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -165,11 +166,11 @@ internal class RelationValueSynchronizer(
                                 problems += ValueProblem(location = counterpart.value.containing, code = "counterpart_requires_record")
                                 return
                             }
-                    val actual = (prepared.configuration as? TypeSelection.CompleteWrapper)?.use
-                    if (actual == null) {
+                    if ((catalog.authoredTypeOf(prepared.configuration) as? Resolution.Ready)?.value is ResourceType.Partial) {
                         problems += ValueProblem(location = counterpart.value.containing, code = "counterpart_type_pending")
                         return
                     }
+                    val actual = prepared.configuration.chosenUse
                     val materialized = DataValue.named(actual, DataValue.RecordWrapper(prepared.payload))
                     val targetRecord = resources[intent.value.target]
                     val embedded =
@@ -332,10 +333,10 @@ internal class RelationValueSynchronizer(
                     catalog,
                 )
             if (item != null && binding is CounterpartBinding.Collection && binding.location == collection) {
-                val named = record.authoredTypeAt(location.path, catalog).namedType()
+                val named = record.authoredTypeAt(location.resource, location.path, catalog).namedType()
                 val values = record.collectionValue(collection, catalog, problems)?.itemsOrNull()
                 if (named == null) {
-                    problems += ValueProblem(location = location, code = "expected_named_link")
+                    problems += unnamedLinkProblems(location, record)
                     return
                 }
                 if (values == null) return
@@ -356,12 +357,26 @@ internal class RelationValueSynchronizer(
                 return
             }
         }
-        val named = current?.namedType() ?: record.authoredTypeAt(location.path, catalog).namedType()
+        val named = current?.namedType() ?: record.authoredTypeAt(location.resource, location.path, catalog).namedType()
         if (named == null) {
-            problems += ValueProblem(location = location, code = "expected_named_link")
+            problems += unnamedLinkProblems(location, record)
             return
         }
         update(resources, location, DataValue.named(named, DataValue.createLink(endpoint = endpoint, target = target)), problems)
+    }
+
+    /**
+     * Why a link at [location] of [record] has no named type: the problems of the record's own type when that does not
+     * resolve, such as an argument its creator may not choose, otherwise expected_named_link for the position itself.
+     */
+    private fun unnamedLinkProblems(
+        location: ValueLocation,
+        record: AuthoringRecord,
+    ): List<ValueProblem> {
+        val own = (catalog.typeOf(location.resource, record.configuration) as? Resolution.Invalid)?.diagnostics.orEmpty()
+        return own
+            .map { ValueProblem(location = ValueLocation.of(location.resource), code = it.code) }
+            .ifEmpty { listOf(ValueProblem(location = location, code = "expected_named_link")) }
     }
 
     private fun appendDirectLink(
@@ -382,9 +397,9 @@ internal class RelationValueSynchronizer(
         val items = current.itemsOrNull() ?: return null
         val item = deterministicItem(batch, ordinal, collection)
         val location = collection.item(item)
-        val named = record.authoredTypeAt(location.path, catalog).namedType()
+        val named = record.authoredTypeAt(location.resource, location.path, catalog).namedType()
         if (named == null) {
-            problems += ValueProblem(location = location, code = "expected_named_link")
+            problems += unnamedLinkProblems(location, record)
             return null
         }
         insert(
@@ -452,7 +467,7 @@ internal class RelationValueSynchronizer(
             remove(resources, EditIntent.createRemove(at = parent, item = last.id), problems)
             return
         }
-        val position = resources[location.resource]?.typedAt(location.path, catalog) as? TypedPosition.Value
+        val position = resources[location.resource]?.typedAt(location.resource, location.path, catalog) as? TypedPosition.Value
         val nullable = position?.declared is TypeUse.NullableWrapper
         update(resources, location, if (nullable) DataValue.NULL else DataValue.UNFILLED, problems)
     }

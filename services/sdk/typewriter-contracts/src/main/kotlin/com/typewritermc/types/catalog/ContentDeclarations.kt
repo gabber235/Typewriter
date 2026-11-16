@@ -2,6 +2,7 @@ package com.typewritermc.types.catalog
 
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.Misfit
+import com.typewritermc.authoring.MisfitCause
 import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
@@ -10,7 +11,6 @@ import com.typewritermc.types.closedCases
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.diagnostic.ValueProblem
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
@@ -32,10 +32,14 @@ import skirout.kernel.v1.resource_id.ResourceId
  */
 
 /** The codes that say why a content type stands in as the error type. */
-val CONTENT_TYPE_PROBLEMS: Set<String> =
+private val CONTENT_TYPE_PROBLEMS: Set<String> =
     setOf(
         "content_type_missing",
         "content_alias_loop",
+        "derived_type_missing",
+        "derived_type_conflict",
+        "derived_type_loop",
+        "derived_type_failed",
         "declaration_owner_mismatch",
         "declaration_revision",
         "declaration_has_parameters",
@@ -117,8 +121,8 @@ fun List<TypeDefinition>.declarationProblems(owner: ResourceId): Map<TypeDefinit
                         if (definition.id.contentOwner() != owner) add("declaration_owner_mismatch")
                         if (definition.id.revision != 1) add("declaration_revision")
                         if (definition.parameters.isNotEmpty()) add("declaration_has_parameters")
-                        // A field key only appears in a use, where it means what that field holds.
-                        if (definition.id.namesFieldKey()) add("declaration_key")
+                        // A field key only appears in a use, where it means what that field holds; a derived key is computed, never written.
+                        if (definition.id.namesIndirectKey()) add("declaration_key")
                         // A parent is only a closed union declared on this resource; the shared rules check that it lists this case.
                         if (definition.parents.any { it.definition !in unions }) add("declaration_parent")
                         if (definition.recordForm() == RecordForm.OPEN) add("declaration_open_form")
@@ -145,30 +149,26 @@ private fun TypeDefinition.closedCases(): List<NamedTypeTemplate>? = representat
 
 /**
  * One problem at the root of [owner] per declaration this record may not store, used or not: an id that names another
- * resource (declaration_owner_mismatch) or a field key, which only a use may name (declaration_key).
+ * resource (declaration_owner_mismatch), or a field key, which only a use may name, or a derived key, which only derive
+ * blocks produce (declaration_key).
  */
 fun AuthoringRecord.misfiledDeclarations(owner: ResourceId): List<ValueProblem> =
     types
         .flatMap { definition ->
             buildList {
                 if (definition.id.contentOwner() != owner) add("declaration_owner_mismatch")
-                if (definition.id.namesFieldKey()) add("declaration_key")
+                if (definition.id.namesIndirectKey()) add("declaration_key")
             }
         }.distinct()
         .map { ValueProblem(location = ValueLocation.of(owner), code = it) }
 
-/** The use the configuration names, with each chosen argument of a pending one; null for a pending one with none chosen. */
-fun TypeSelection.uses(): List<TypeUse> =
-    when (this) {
-        is TypeSelection.CompleteWrapper -> listOf(value.use)
-        is TypeSelection.PendingWrapper -> value.arguments.mapNotNull { (it as? ArgumentSelection.ChosenWrapper)?.value }
-        else -> emptyList()
-    }
+/** Every definition the configuration names: the configured one and each one its chosen arguments name. */
+fun TypeSelection.referencedDefinitions(): Sequence<TypeDefinitionId> =
+    sequenceOf(definition) + arguments.asSequence().flatMap { it.type.referencedDefinitions() }
 
-/** Every TypeUse this record stores in its configuration and values (type_use and actual_type): the roots of reachability. */
+/** Every TypeUse this record stores in its values (type_use and actual_type). */
 fun AuthoringRecord.storedUses(): Sequence<TypeUse> =
     sequence {
-        yieldAll(configuration.uses())
         val pending = ArrayDeque(fields.map { it.value })
         while (pending.isNotEmpty()) {
             val value = pending.removeFirst()
@@ -194,7 +194,11 @@ private fun DataValue.children(): List<DataValue> =
 
 /** Every definition this record names, in what it stores and inside its declarations. */
 fun AuthoringRecord.referencedDefinitions(): Sequence<TypeDefinitionId> =
-    storedUses().flatMap { it.referencedDefinitions() } + types.asSequence().flatMap { it.referencedDefinitions() }
+    storedDefinitions() + types.asSequence().flatMap { it.referencedDefinitions() }
+
+/** Every definition the configuration and the stored values name: the roots of reachability. */
+private fun AuthoringRecord.storedDefinitions(): Sequence<TypeDefinitionId> =
+    configuration.referencedDefinitions() + storedUses().flatMap { it.referencedDefinitions() }
 
 /**
  * This record without the declarations nothing it stores reaches. Reachability starts at the configuration and every
@@ -204,7 +208,7 @@ fun AuthoringRecord.withoutUnreachableTypes(): AuthoringRecord {
     if (types.isEmpty()) return this
     val byId = types.associateBy { it.id }
     val reachable = linkedSetOf<TypeDefinitionId>()
-    val pending = ArrayDeque(storedUses().flatMap { it.referencedDefinitions() }.toList())
+    val pending = ArrayDeque(storedDefinitions().toList())
     while (pending.isNotEmpty()) {
         val id = pending.removeFirst()
         if (!reachable.add(id)) continue
@@ -215,23 +219,79 @@ fun AuthoringRecord.withoutUnreachableTypes(): AuthoringRecord {
 }
 
 /** The code that says why [id] stands in as the error type, or null when it is ready. */
-fun CheckedCatalog.unavailableCode(id: TypeDefinitionId): String? =
+private fun CheckedCatalog.unavailableCode(id: TypeDefinitionId): String? =
     (definition(id) as? DeclarationStatus.UnavailableWrapper)
         ?.value
         ?.firstOrNull { it.code in CONTENT_TYPE_PROBLEMS }
         ?.code
 
-/** One misfit per type the configuration names that is gone or invalid, at the root, each carrying its id. */
+/** Why a content type stands in as the error type; [code] is the code clients see for it. */
+sealed interface Unavailability {
+    val code: String
+
+    /** The type is gone. */
+    data object Missing : Unavailability {
+        override val code: String = "content_type_missing"
+    }
+
+    /** The type is an alias that contains itself. */
+    data object AliasLoop : Unavailability {
+        override val code: String = "content_alias_loop"
+    }
+
+    /** The type is computed by a bind, and computing it failed [at] a resource. */
+    data class Computed(
+        val at: DerivedFailureAt,
+    ) : Unavailability {
+        override val code: String get() = at.failure.code
+    }
+
+    /** The type's declaration breaks the rule [code] names. */
+    data class Invalid(
+        override val code: String,
+    ) : Unavailability
+}
+
+/** Why [id] stands in as the error type, or null when it is ready: the catalog's diagnostic code read as a reason. */
+fun CheckedCatalog.unavailability(id: TypeDefinitionId): Unavailability? {
+    val code = unavailableCode(id) ?: return null
+    derivedFailure(id)?.let { return Unavailability.Computed(it) }
+    return when (code) {
+        Unavailability.Missing.code -> Unavailability.Missing
+        Unavailability.AliasLoop.code -> Unavailability.AliasLoop
+        else -> Unavailability.Invalid(code)
+    }
+}
+
+/**
+ * One misfit per type the resource's type names that is gone or invalid, at the root, each carrying its id: the ones
+ * the configuration names and the ones [owner] derives for the configured definition's derived parameters.
+ */
 fun AuthoringRecord.missingContent(
     owner: ResourceId,
     catalog: CheckedCatalog,
 ): List<Misfit> =
-    configuration
-        .uses()
-        .flatMap { it.referencedDefinitions() }
+    (configuration.referencedDefinitions() + derivedDefinitions(owner, catalog))
         .distinct()
         .filter { it.contentOwner() != null }
-        .mapNotNull { id -> catalog.unavailableCode(id)?.let { Misfit(ValueProblem(location = ValueLocation.of(owner), code = it), id) } }
+        .mapNotNull { id ->
+            catalog.unavailability(id)?.let {
+                Misfit(ValueProblem(location = ValueLocation.of(owner), code = it.code), MisfitCause.TypeUnavailable(id, it))
+            }
+        }.toList()
+
+/** The types [owner] derives for the configured definition's derived parameters. */
+private fun AuthoringRecord.derivedDefinitions(
+    owner: ResourceId,
+    catalog: CheckedCatalog,
+): Sequence<TypeDefinitionId> {
+    val definition = (catalog.declaration(configuration.definition) as? Resolution.Ready)?.value ?: return emptySequence()
+    return definition
+        .derivedArguments(owner)
+        .values
+        .asSequence()
+        .flatMap { it.referencedDefinitions() }
+}
 
 /**
  * Every way this record does not fit its current schema, each problem at its own location, on any record. Under a
@@ -247,12 +307,9 @@ fun AuthoringRecord.misfits(
     linkFit: () -> List<ValueProblem> = { emptyList() },
 ): List<Misfit> =
     (missingContent(owner, catalog) + structuralMisfits(owner, catalog) + linkFit().map { Misfit(it) }).map { misfit ->
-        if (misfit.problem.code == UNDECLARED_POSITION) return@map misfit
-        linkTargetAt(misfit.problem.location.path)?.let { misfit.copy(target = it) } ?: misfit
+        if (misfit.cause != MisfitCause.Shape) return@map misfit
+        linkTargetAt(misfit.problem.location.path)?.let { misfit.copy(cause = MisfitCause.Link(it)) } ?: misfit
     }
-
-/** The misfit of a value at a position its type does not declare. */
-private const val UNDECLARED_POSITION = "unknown_field"
 
 /** The resource the link stored at [path] points at, or null when no link is stored there. */
 private fun AuthoringRecord.linkTargetAt(path: ValuePath): ResourceId? {

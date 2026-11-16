@@ -7,6 +7,7 @@ import com.typewritermc.types.bytes
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.duration
 import com.typewritermc.types.enumCases
 import com.typewritermc.types.field
@@ -19,7 +20,6 @@ import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
 import com.typewritermc.types.member
 import com.typewritermc.types.named
-import com.typewritermc.types.namedUse
 import com.typewritermc.types.parts
 import com.typewritermc.types.payload
 import com.typewritermc.types.record
@@ -39,12 +39,12 @@ import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.catalog.RequiredInput
 import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.diagnostic.InitializationDiagnostic
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedField
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
@@ -111,7 +111,7 @@ class DefaultInitializationRuntime(
         val expected =
             when (val target = request.target) {
                 is PreparationTarget.ValueWrapper -> target.value
-                is PreparationTarget.RecordWrapper -> target.value.completeUse()?.use
+                is PreparationTarget.RecordWrapper -> completeUse(target.value)?.use
                 else -> unknownVariant(target)
             }
         val failed =
@@ -309,7 +309,7 @@ class DefaultInitializationRuntime(
         val type =
             when (target) {
                 is PreparationTarget.ValueWrapper -> target.value
-                is PreparationTarget.RecordWrapper -> target.value.completeUse()?.use
+                is PreparationTarget.RecordWrapper -> completeUse(target.value)?.use
                 else -> unknownVariant(target)
             } ?: return
         walk(type, content.portableValue(), ValuePath.root)
@@ -449,6 +449,10 @@ class DefaultInitializationRuntime(
         return PreparedValue(content = PreparedContent.ValueWrapper(value), findings = findings)
     }
 
+    /** The complete type the creator's choices in [selection] make, or null while one is missing or it does not resolve. */
+    private fun completeUse(selection: TypeSelection): NamedTypeUse? =
+        ((catalog.authoredTypeOf(selection) as? Resolution.Ready)?.value as? ResourceType.Complete)?.checked?.use?.named
+
     private fun prepareRecord(
         request: ValuePreparationRequest,
         selection: TypeSelection,
@@ -457,18 +461,17 @@ class DefaultInitializationRuntime(
         context.unavailable = true
         val suppliedFields =
             suppliedRecord(request) ?: return unavailable(request, "invalid_supplied_value", "Record preparation requires a record value.")
-        if (selection is TypeSelection.PendingWrapper) return preparePending(request, selection)
-        val use =
-            selection.completeUse()
-                ?: return unavailable(request, "incomplete_type_selection", "Initialization requires every type argument to be selected.")
         val checked =
-            when (val resolution = catalog.resolve(use.use)) {
+            when (val resolution = catalog.authoredTypeOf(selection)) {
                 is Resolution.Invalid -> {
                     return unavailable(request, "invalid_type_selection", resolution.diagnostics.joinToString { it.code })
                 }
 
                 is Resolution.Ready -> {
-                    resolution.value
+                    when (val type = resolution.value) {
+                        is ResourceType.Partial -> return preparePartial(request, selection, type.schema)
+                        is ResourceType.Complete -> type.checked
+                    }
                 }
             }
         rejectUnknownFields(
@@ -479,7 +482,7 @@ class DefaultInitializationRuntime(
         context.unavailable = false
         val prepared = prepareRecordFields(checked, suppliedFields, context, ValuePath.root)
         return PreparedValue(
-            content = PreparedContent.RecordWrapper(AuthoringRecord.of(TypeSelection.CompleteWrapper(use), prepared.fields)),
+            content = PreparedContent.RecordWrapper(AuthoringRecord.of(selection, prepared.fields)),
             findings = prepared.findings,
         )
     }
@@ -591,22 +594,13 @@ class DefaultInitializationRuntime(
         return RecordPreparation(fields, findings.distinct())
     }
 
-    private fun preparePending(
+    private fun preparePartial(
         request: ValuePreparationRequest,
-        selection: TypeSelection.PendingWrapper,
+        selection: TypeSelection,
+        partial: PartialSchema,
     ): PreparedValue {
         val supplied =
             suppliedRecord(request) ?: return unavailable(request, "invalid_supplied_value", "Record preparation requires a record value.")
-        val partial =
-            when (val resolution = catalog.resolvePartial(selection)) {
-                is Resolution.Invalid -> {
-                    return unavailable(request, "invalid_type_selection", resolution.diagnostics.joinToString { it.code })
-                }
-
-                is Resolution.Ready -> {
-                    resolution.value
-                }
-            }
         val knownKeys = partial.knownFields.mapTo(linkedSetOf(), ResolvedField::key)
         val dependentKeys = partial.dependentFields.mapTo(linkedSetOf()) { it.owner.name }
         rejectUnknownFields(request, supplied, knownKeys + dependentKeys)?.let { return it }
@@ -900,22 +894,6 @@ fun ScalarKind.authoredDefault(): DataValue =
         ScalarKind.DURATION -> DataValue.duration(kotlin.time.Duration.ZERO)
         ScalarKind.TIMESTAMP, ScalarKind.TYPE -> DataValue.UNFILLED
         else -> unknownVariant(this)
-    }
-
-private fun TypeSelection.completeUse(): NamedTypeUse? =
-    when (this) {
-        is TypeSelection.CompleteWrapper -> {
-            use
-        }
-
-        is TypeSelection.PendingWrapper -> {
-            val chosen = arguments.map { (it as? ArgumentSelection.ChosenWrapper)?.type ?: return null }
-            definition.namedUse(chosen)
-        }
-
-        else -> {
-            unknownVariant(this)
-        }
     }
 
 private fun PreparedContent.portableValue(): DataValue =

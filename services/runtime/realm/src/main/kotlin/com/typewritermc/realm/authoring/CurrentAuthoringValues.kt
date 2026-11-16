@@ -1,6 +1,7 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.links
+import com.typewritermc.authoring.of
 import com.typewritermc.authoring.resourceIds
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.types.actualType
@@ -28,7 +29,7 @@ internal interface CurrentAuthoringValues {
         if (at.path.segments.isEmpty()) {
             resource(at.resource)?.configuration
         } else {
-            (value(at) as? DataValue.NamedWrapper)?.actualType?.let(TypeSelection::CompleteWrapper)
+            (value(at) as? DataValue.NamedWrapper)?.actualType?.let { TypeSelection.of(it) }
         }
 
     /** The types [resource] declares; empty when it declares none or does not exist. */

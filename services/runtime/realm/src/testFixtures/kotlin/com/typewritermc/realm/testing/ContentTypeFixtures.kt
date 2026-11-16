@@ -8,6 +8,7 @@ import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.ReachabilityQuery
 import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.boundPath
+import com.typewritermc.authoring.chosen
 import com.typewritermc.authoring.exactEditablePath
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
@@ -25,7 +26,6 @@ import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.RelationReads
 import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.realm.catalog.code
-import com.typewritermc.realm.catalog.over
 import com.typewritermc.realm.edit.WorkingViewEditContext
 import com.typewritermc.realm.operation.operationObservation
 import com.typewritermc.testing.routes.FixtureStaticEntryDefinition
@@ -34,9 +34,10 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField
-import com.typewritermc.types.catalog.unavailableCode
+import com.typewritermc.types.catalog.unavailability
 import com.typewritermc.types.endpointId
 import com.typewritermc.types.functionUse
 import com.typewritermc.types.integer
@@ -204,7 +205,7 @@ class TypeDefinitionBuilder internal constructor(
                     index,
                     name,
                     ->
-                    TypeParameter(key = ParameterKey(owner = id, index = index), name = name, bounds = emptyList())
+                    TypeParameter(key = ParameterKey(owner = id, index = index), name = name, bounds = emptyList(), derived = false)
                 },
             representation =
                 if (unitWhenEmpty && fields.isEmpty() && form == RecordForm.CONCRETE) {
@@ -541,7 +542,7 @@ private fun RealmFixture.definitionRecord(
             Definition(Ref(AuthorResourceId(page.value)), GraphPlacement(), name, Var.Value(0)),
         )
     return template.copy(
-        configuration = TypeSelection.CompleteWrapper(definitionOf(type)),
+        configuration = TypeSelection.of(definitionOf(type)),
         fields = template.fields.map { if (it.name == "value") it.copy(value = value) else it },
         types = types,
     )
@@ -570,7 +571,10 @@ fun RealmFixture.declaredTypes(resource: ResourceId): List<TypeDefinition> = rec
 
 /** The schema of [resource]'s configuration, resolved by the saved view's catalog. */
 fun RealmFixture.schemaOf(resource: ResourceId): Resolution<CheckedType> =
-    viewCatalog.resolve(TypeUse.NamedWrapper((record(resource).configuration as TypeSelection.CompleteWrapper).value))
+    when (val type = viewCatalog.typeOf(resource, record(resource).configuration)) {
+        is Resolution.Invalid -> type
+        is Resolution.Ready -> Resolution.Ready(type.value.shouldBeInstanceOf<ResourceType.Complete>().checked)
+    }
 
 /** Asserts whether this resolution is ready. */
 infix fun Resolution<*>.shouldBeReady(ready: Boolean) {
@@ -581,24 +585,21 @@ infix fun Resolution<*>.shouldBeReady(ready: Boolean) {
 fun RealmFixture.statusOf(id: TypeDefinitionId): DeclarationStatus = viewCatalog.definition(id)
 
 /** The code that says why the saved view's catalog answers [use] with the error type, or null when it is ready. */
-fun RealmFixture.unavailableCodeOf(use: TypeUse): String? = viewCatalog.unavailableCode(checkNotNull(use.named).definition)
+fun RealmFixture.unavailableCodeOf(use: TypeUse): String? = viewCatalog.unavailability(checkNotNull(use.named).definition)?.code
 
 /** The resolved schema of [use] in the saved view's catalog; fails when it does not resolve. */
 fun RealmFixture.resolvedSchema(use: TypeUse): CheckedType =
     viewCatalog.resolve(use).shouldBeInstanceOf<Resolution.Ready<CheckedType>>().value
 
 /** The type argument of the Definition [resource]. */
-fun RealmFixture.typeArgumentOf(resource: ResourceId): TypeUse =
-    (record(resource).configuration as TypeSelection.CompleteWrapper).value.arguments.single()
+fun RealmFixture.typeArgumentOf(resource: ResourceId): TypeUse = checkNotNull(record(resource).configuration.chosen(0))
 
 /** The saved view's catalog: the code catalog plus every saved declaration. */
 val RealmFixture.viewCatalog: CheckedCatalog get() = views.read { view -> view.catalog.checked }
 
 /** The catalog a view of the saved state with [upserts] replaced would have, without admitting that state. */
 fun RealmFixture.catalogOver(upserts: Map<ResourceId, AuthoringRecord>): CheckedCatalog =
-    views.read { view ->
-        view.catalog.over(view.resources + upserts).checked
-    }
+    views.read { view -> view.staged(view.resources + upserts).catalog.checked }
 
 /** The code catalog alone, without any declaration a resource holds. */
 val RealmFixture.codeCatalog: CheckedCatalog get() = views.read { view -> view.catalog.code.checked }

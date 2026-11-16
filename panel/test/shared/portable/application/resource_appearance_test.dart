@@ -10,9 +10,7 @@ void main() {
   final catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
   final entry = skir.AuthoringRecord(
     types: const [],
-    configuration: skir.TypeSelection.wrapComplete(
-      compiledSdkElementValue.authoredActualType!,
-    ),
+    configuration: selectionOfUse(compiledSdkElementValue.authoredActualType!),
     fields: compiledSdkElementValue.authoredRecord!.fields,
   );
 
@@ -36,14 +34,7 @@ void main() {
     final formulas = catalog.displayFormulasFor(entry.configuration);
     final target = formulas?.target;
 
-    expect(target, isA<skir.ResourceTarget_typeWrapper>());
-    expect(
-      ((target! as skir.ResourceTarget_typeWrapper).value
-              as skir.TypeTemplate_namedWrapper)
-          .value
-          .definition,
-      _elementDefinition,
-    );
+    expect(target, skir.ResourceMatch.wrapDefinition(_elementDefinition));
     expect(catalog.appearanceOf(entry).label, "Welcome to the village");
   });
 
@@ -59,7 +50,7 @@ void main() {
   test("a resource without a typed display uses the default display", () {
     final cue = skir.AuthoringRecord(
       types: const [],
-      configuration: skir.TypeSelection.wrapComplete(
+      configuration: selectionOfUse(
         skir.NamedTypeUse(definition: _cueDefinition, arguments: const []),
       ),
       fields: const [],
@@ -67,7 +58,7 @@ void main() {
 
     expect(
       catalog.displayFormulasFor(cue.configuration)?.target,
-      skir.ResourceTarget.anyResource,
+      skir.ResourceMatch.anyResource,
     );
     expect(catalog.appearanceOf(cue).label, "Cue");
   });

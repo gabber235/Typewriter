@@ -1,5 +1,6 @@
 package com.typewritermc.realm.formula
 
+import com.typewritermc.authoring.MisfitCause
 import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.ValueVisitor
 import com.typewritermc.authoring.ValueWalk
@@ -15,17 +16,17 @@ import com.typewritermc.formula.eval.refTo
 import com.typewritermc.formula.formulaForm
 import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.completeTypeOf
 import com.typewritermc.types.scalarValue
 import com.typewritermc.types.toResourceId
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 import java.math.BigDecimal
 
 /**
@@ -37,7 +38,7 @@ internal object FormulaValueVisitor : ValueVisitor<Any?> {
     override fun problem(
         at: ValueLocation,
         code: String,
-        type: TypeDefinitionId?,
+        cause: MisfitCause,
     ): Nothing = throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
 
     override fun placeholder(at: ValueLocation): Nothing = throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
@@ -137,10 +138,11 @@ internal fun TypeUse.isVar(): Boolean = (this as? TypeUse.NamedWrapper)?.value?.
  * walk decides them, so a field of a union case is found under the case its value names.
  */
 internal fun AuthoringRecord.storedAt(
+    owner: ResourceId,
     path: ValuePath,
     catalog: CheckedCatalog,
 ): Pair<TypeUse, DataValue>? {
-    if (configuration !is TypeSelection.CompleteWrapper) return null
-    val position = typedAt(path, catalog) as? TypedPosition.Value ?: return null
+    catalog.completeTypeOf(owner, configuration) ?: return null
+    val position = typedAt(owner, path, catalog) as? TypedPosition.Value ?: return null
     return position.declared to position.value
 }

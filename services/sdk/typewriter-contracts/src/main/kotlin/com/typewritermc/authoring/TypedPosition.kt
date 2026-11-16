@@ -3,6 +3,7 @@ package com.typewritermc.authoring
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.named
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
@@ -11,9 +12,9 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.MappingResolvedRepresentation
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 import skirout.editor.v1.type_catalog.MapRow as StoredMapRow
 
 /**
@@ -99,43 +100,39 @@ private fun TypedPosition.Value.stepValue(
 }
 
 /**
- * The position at [path] of this record, walking down from the root by [step]. A pending selection starts at one of
- * its known fields. Null when no schema reaches the position.
+ * The position at [path] of this record on [owner], walking down from the root by [step]. A partial type starts at one
+ * of its known fields. Null when no schema reaches the position.
  */
 fun AuthoringRecord.typedAt(
+    owner: ResourceId,
     path: ValuePath,
     catalog: CheckedCatalog,
 ): TypedPosition? {
     var remaining = path.segments
+    val type = catalog.typeOf(owner, configuration) as? Resolution.Ready ?: return null
     var position: TypedPosition =
-        when (val selection = configuration) {
-            is TypeSelection.CompleteWrapper -> {
-                TypedPosition.Value(selection.use.use, DataValue.named(selection.use, DataValue.RecordWrapper(payload)))
+        when (val resolved = type.value) {
+            is ResourceType.Complete -> {
+                val use = checkNotNull(resolved.checked.use.named)
+                TypedPosition.Value(use.use, DataValue.named(use, DataValue.RecordWrapper(payload)))
             }
 
-            is TypeSelection.PendingWrapper -> {
+            is ResourceType.Partial -> {
                 val first = remaining.firstOrNull() as? PathSegment.FieldWrapper ?: return null
-                val partial = catalog.resolvePartial(selection) as? Resolution.Ready ?: return null
-                val type =
-                    partial.value.knownFields
-                        .singleOrNull { it.key == first.name }
-                        ?.type ?: return null
+                val known = resolved.knownFields.singleOrNull { it.key == first.name }?.type ?: return null
                 remaining = remaining.drop(1)
-                TypedPosition.Value(type, field(first.name) ?: DataValue.UNFILLED)
-            }
-
-            else -> {
-                unknownVariant(selection)
+                TypedPosition.Value(known, field(first.name) ?: DataValue.UNFILLED)
             }
         }
     for (segment in remaining) position = position.step(segment, catalog) ?: return null
     return position
 }
 
-/** The type a value at [path] of this record has; null when no schema reaches it or the path stops at a map row. */
+/** The type a value at [path] of this record on [owner] has; null when no schema reaches it or the path stops at a map row. */
 fun AuthoringRecord.authoredTypeAt(
+    owner: ResourceId,
     path: ValuePath,
     catalog: CheckedCatalog,
-): TypeUse? = (typedAt(path, catalog) as? TypedPosition.Value)?.actual
+): TypeUse? = (typedAt(owner, path, catalog) as? TypedPosition.Value)?.actual
 
 private fun TypeUse.nonNullable(): TypeUse = if (this is TypeUse.NullableWrapper) value.value else this

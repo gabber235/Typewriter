@@ -9,6 +9,7 @@ import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -93,7 +94,7 @@ class CatalogDefinitions internal constructor() {
             TypeDefinition.partial(
                 id = id,
                 parameters = parameters,
-                representation = RepresentationTemplate.createLink(endpoint = endpoint, target = target),
+                representation = RepresentationTemplate.createLink(endpoint = endpoint, target = ResourceMatchTemplate.TypeWrapper(target)),
             )
     }
 

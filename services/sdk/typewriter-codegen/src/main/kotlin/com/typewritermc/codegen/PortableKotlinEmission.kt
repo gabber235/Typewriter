@@ -20,6 +20,7 @@ import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -255,6 +256,26 @@ internal fun NamedTypeTemplate.kotlinCode(): CodeBlock =
         arguments.map { it.kotlinCode() }.listCode(),
     )
 
+context(_: DefinitionReferences)
+internal fun ResourceMatchTemplate.kotlinCode(): CodeBlock =
+    when (this) {
+        is ResourceMatchTemplate.TypeWrapper -> {
+            CodeBlock.of("%T(%L)", ResourceMatchTemplate.TypeWrapper::class, value.kotlinCode())
+        }
+
+        is ResourceMatchTemplate.DefinitionWrapper -> {
+            CodeBlock.of("%T(%L)", ResourceMatchTemplate.DefinitionWrapper::class, value.kotlinCode())
+        }
+
+        ResourceMatchTemplate.ANY_RESOURCE -> {
+            CodeBlock.of("%T.ANY_RESOURCE", ResourceMatchTemplate::class)
+        }
+
+        else -> {
+            unknownVariant(this)
+        }
+    }
+
 /** The complete type use of a template without free parameters. */
 context(_: DefinitionReferences)
 internal fun TypeTemplate.completeUseCode(): CodeBlock = useCode { error("A free parameter does not form a complete type use") }
@@ -375,11 +396,12 @@ internal fun TypeTemplate.appliedNamedUseCode(): CodeBlock {
 context(_: DefinitionReferences)
 internal fun TypeParameter.kotlinCode(): CodeBlock =
     CodeBlock.of(
-        "%T(key·=·%L,♢name·=·%S,♢bounds·=·%L)",
+        "%T(key·=·%L,♢name·=·%S,♢bounds·=·%L,♢derived·=·%L)",
         TypeParameter::class,
         key.kotlinCode(),
         name,
         bounds.map { it.kotlinCode() }.listCode(),
+        derived,
     )
 
 context(_: DefinitionReferences)

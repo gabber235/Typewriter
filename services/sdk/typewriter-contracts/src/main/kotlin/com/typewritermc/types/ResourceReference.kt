@@ -3,11 +3,17 @@ package com.typewritermc.types
 import build.skir.JsonFlavor
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.MissingFieldException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.nullable
+import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.decodeStructure
+import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
@@ -67,7 +73,7 @@ annotation class TypewriterGeneratedEndpoint(
  * An author facing link to [target]. Author types are kotlinx serializable through [TypewriterType], so the generated
  * [opposite] path is stored as its readable Skir JSON.
  */
-@Serializable
+@Serializable(with = RefSerializer::class)
 data class Ref<Endpoint : RelationshipEndpoint<*, *>, out T : Resource>(
     val target: ResourceId,
     @Serializable(with = OppositePathSerializer::class)
@@ -77,6 +83,44 @@ data class Ref<Endpoint : RelationshipEndpoint<*, *>, out T : Resource>(
     override fun equals(other: Any?): Boolean = other is Ref<*, *> && other.target == target
 
     override fun hashCode(): Int = target.hashCode()
+}
+
+/**
+ * Stores a link as its target and, when it has one, its opposite path. When a link's target type has a star, as in
+ * `Ref<E, Board<*>>`, no serializer exists for it, so this serializer never asks for one of either type argument.
+ */
+@OptIn(ExperimentalSerializationApi::class)
+object RefSerializer : KSerializer<Ref<*, *>> {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor(checkNotNull(Ref::class.qualifiedName)) {
+            element("target", ResourceId.serializer().descriptor)
+            element("opposite", OppositePathSerializer.descriptor.nullable, isOptional = true)
+        }
+
+    override fun serialize(
+        encoder: Encoder,
+        value: Ref<*, *>,
+    ) = encoder.encodeStructure(descriptor) {
+        encodeSerializableElement(descriptor, 0, ResourceId.serializer(), value.target)
+        if (value.opposite != null || shouldEncodeElementDefault(descriptor, 1)) {
+            encodeNullableSerializableElement(descriptor, 1, OppositePathSerializer, value.opposite)
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): Ref<*, *> =
+        decoder.decodeStructure(descriptor) {
+            var target: ResourceId? = null
+            var opposite: ValuePath? = null
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> target = decodeSerializableElement(descriptor, 0, ResourceId.serializer())
+                    1 -> opposite = decodeNullableSerializableElement(descriptor, 1, OppositePathSerializer)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> throw SerializationException("Unexpected index $index in a stored link.")
+                }
+            }
+            Ref<Nothing, Nothing>(target ?: throw MissingFieldException("target", descriptor.serialName), opposite)
+        }
 }
 
 /** Embeds the readable Skir JSON of a link's opposite path; decoding checks the path like every other entry point. */

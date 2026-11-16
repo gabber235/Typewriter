@@ -108,7 +108,7 @@ Dotted arrows are demo needs. `G` is drawn only into 3, since every Paper node r
 
 | Node | What | Needs | Runs in | Status |
 | --- | --- | --- | --- | --- |
-| 1b | `bind`: a generic parameter derived from content | 1 | realm, codegen | roughly designed |
+| 1b | `bind`: a generic parameter derived from content | 1 | realm, codegen, engine admission | building |
 | 3 | Paper runtime, sessions, `Engine` identity | 0, G | engine, realm | roughly designed |
 | 4 | Event core: sources, verdicts, handlers, chains, delivery | 1, 3, G | engine, realm, codegen | roughly designed |
 | 6 | Stored data: transactions, `Changes`, stored derives | 4, G | realm, engine, codegen | roughly designed |

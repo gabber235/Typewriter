@@ -2,7 +2,7 @@
 
 package fixture
 
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import com.typewritermc.authoring.defaultLabel
 import com.typewritermc.expression.shortcuts.orIfBlank
 import com.typewritermc.types.DeletionPolicy
@@ -71,7 +71,7 @@ fun main(args: Array<String>) {
             val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture")))
             withClue(assembly.editorCatalog.diagnostics) {
                 assembly.displays.displayFor(BoxDefinition.id, assembly.checked)?.target shouldBe
-                    ResourceTarget.TypeWrapper(LabeledDefinition.id.template())
+                    ResourceMatch.DefinitionWrapper(LabeledDefinition.id)
             }
         }
 }

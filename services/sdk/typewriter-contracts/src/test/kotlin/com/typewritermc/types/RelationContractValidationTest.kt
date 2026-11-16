@@ -11,6 +11,7 @@ import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val RelationContractValidationTest by testSuite {
@@ -18,7 +19,7 @@ val RelationContractValidationTest by testSuite {
         EndpointDefinition(
             id = EndpointId(value = "book:tags"),
             slot = EndpointSlot.FIRST,
-            resource = TypeDefinitionId.qualified("test", "Book").namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(TypeDefinitionId.qualified("test", "Book").namedTemplate().template),
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         )

@@ -1,6 +1,6 @@
 package com.typewritermc.realm
 
-import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.engine.pages.definition
 import com.typewritermc.engine.pages.staticPage
@@ -102,7 +102,7 @@ val SetupApplierTest by testSuite {
             }
 
         withSetup(reward, catalog = routeFixtureCatalog) { baseReward ->
-            record(baseReward.id.toSkir()).configuration shouldBe TypeSelection.CompleteWrapper(definitionOf(intUse))
+            record(baseReward.id.toSkir()).configuration shouldBe TypeSelection.of(definitionOf(intUse))
             varValue(baseReward.id.toSkir()) shouldBe plain(50)
         }
     }

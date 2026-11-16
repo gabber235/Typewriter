@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     implementation(project(":internal-utils"))
+    api(project(":failures"))
     api(platform(libs.koin.bom))
     api(platform(libs.opentelemetry.bom))
     api(libs.koin.core)

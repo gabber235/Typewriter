@@ -98,7 +98,7 @@ final class AuthoringCreationSearchSource implements SearchSource {
           label: label,
           display: catalog.selectionDisplay(configuration),
           query: _query,
-          disabledReason: configuration is! skir.TypeSelection_completeWrapper
+          disabledReason: !catalog.isFullyChosen(configuration)
               ? "This type requires concrete type arguments"
               : switch (document.creationContext(
                   configuration,

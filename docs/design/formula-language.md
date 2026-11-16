@@ -173,7 +173,7 @@ Records, unions and enums a type value declares are full `TypeDefinition`s on th
 enum TypeId { declared = 1; qualified = 2; member: MemberTypeId = 3; content: ContentTypeId = 4; }
 struct MemberTypeId { owner: TypeId = 0; name: string = 1; }
 struct ContentTypeId { resource: ResourceId = 0; key: ContentKey = 1; }
-enum ContentKey { generated: string = 1; field: string = 2; }
+enum ContentKey { generated: string = 1; field: string = 2; derived: string = 3; }
 ```
 
 - A declaration's id is `content(resource, generated(key))`: the resource that declares it and a generated key, which survives a reorder, a rename and a retype. A use may instead name `content(resource, field(name))`, which means whatever that field holds: a declaration by its generated key, or a plain type such as an alias. So a stored use of a creator type is live, an alias works in a stored position, and a retype keeps its users. Field keys expand at the catalog boundary through one walk that resolve and `definition` share; the compiler expands them in published content.
@@ -183,6 +183,7 @@ enum ContentKey { generated: string = 1; field: string = 2; }
 - The view's checked catalog is the code catalog plus saved content declarations, read through the query graph. Engine admission checks an artifact against the code catalog plus the declarations it carries.
 - A custom type that is gone is an error type built from what exists: the catalog answers its id with an empty concrete record, and `definition(id)` answers `Unavailable` with `content_type_missing`. Its holders' old fields become unknown fields, which `FitOf` reports.
 - `Ref<Npc>` in a type position is a plain `TypeUse`, `named(ContentReferences.Source, [Npc])`, the shape KSP gives a Kotlin `Ref`. Every creator reference is a link of one framework contract, `ContentReferences` (`Source` and `Target`, both `Many<Resource>`, `Target` with `CLEAR`), which formula references share; there is no per location contract and no `RelationId` variant. The target must be a resource type: `Ref<Int>` and a `Ref` to a content record are refused as declarations. A `Many` link may sit anywhere; a `One` link still may not sit in a collection. The target is never authored on (`LinkTarget.opposite` stays absent) and lists the holder as a usage; a rename writes nothing.
+- A link target may leave a generic resource's arguments open (`Ref<Board<*>>`, a star target, node 1b). A formula reads through it like any link: `pin.board.name` reads a field every board has, and a field whose type holds the open argument (`pin.board.rows` on `Board<V>`) is `formula_open_member`.
 - Deleting the target clears the link by where it sits: a list item is removed, a nullable reference becomes `null`, and any other reference becomes `unfilled`, so the completeness check blocks publish until it is fixed.
 - A link slot follows the value's own stored type: a kept value that no longer fits its position keeps its links until a creator fixes it.
 - Formula text names types and never declares one (`formula_inline_type`); declarations come from the type picker. A `Definition<Type>` named as a type must hold a plain type; one holding a formula is `formula_type_not_plain`.
@@ -271,7 +272,7 @@ Each resource and entry type has a `dynamic()` hook. It says what its content me
 
 | Builder | Says |
 | --- | --- |
-| `bind(T) { }` | Derive a type parameter from content |
+| `bind(XBind.T) { draft -> }` | Derive a type parameter from content |
 | `scope(target) { value(name, type) }` | What one own field's formulas (or my contents) can see |
 | `exports { }` | What others get when they name me |
 | `produces { field(...) }` | Content shaped chain context for downstream entries |
@@ -297,16 +298,30 @@ Content names such as quest stages are enums through `bind`.
 
 ### bind
 
-`bind` derives a generic parameter from content. KSP generates a handle per type parameter. A bound parameter has no picker; an unbound one stays creator picked through `TypeSelection`. A bound argument is never stored: the configuration holds `ArgumentSelection.bound` for it (a new case next to `chosen` and `unfilled`), and the checked catalog resolves it through the query graph from `dynamic(resource)`, which yields `named(content(resource, key))`: the same content id a declaration has, with revision 1, reaching the same catalog overlay through a query and never saved (see [Members and providers](#members-and-providers)). An edit that changes the bound type reruns `dynamic()` and changes the definition behind the same id; nothing is written back, and `FitOf` reports book instances that no longer fit the derived `V`. The engine resolves `bound` the same way at load. The generated book entry type is also a live `bind`, not a publish step.
+`bind` derives a generic parameter of a resource type from that resource's content. KSP generates `XBind` for every concrete generic resource type, with one handle per type parameter (`BookBind.V`); the handle carries the parameter's `BindKey` and the draft its block reads. An extension registers a bind in its `DynamicProvider`, and registration runs when the extension loads, on the realm and on every engine, like presentations:
 
 ```kotlin
-bind(V) {
-    for ((name, variable) in variables) {
-        val type = variable.type.valueOrNull() ?: continue
-        field(name, type, hasDefault = variable.default != null)
+override fun Dynamics.register() {
+    bind(BookBind.V) { book ->
+        val variables = book.variables.orNull() ?: return@bind
+        variables.items().orNull().orEmpty().forEach { item ->
+            val variable = variables.item(item).orNull() ?: return@forEach
+            val name = variable.name.orNull() ?: return@forEach
+            val type = variable.type.orNull() ?: return@forEach
+            field(name, type, hasDefault = variable.default.orNull() != null)
+        }
     }
 }
 ```
+
+- **Registered bind decides:** registering a bind marks the parameter derived (`TypeParameter.derived`) before any catalog is built, so a derived parameter has no picker; a parameter without a bind stays creator picked through `TypeSelection`. Only the artifact that declares the type may bind it. Load rejects `bind_foreign_type`, `bind_unknown_parameter` and `dynamic_registration_failed`; two binds for one parameter are reported at load as `duplicate_bind` naming both, and both stay registered, so the parameter stays derived and each resource answers `derived_type_conflict`.
+- **Choices only:** a derived argument is never stored. The configuration holds only the creator's choices, and the catalog asks for the resource's type through `typeOf(resource, selection)`, which resolves each derived argument to `derived(resource, key)`: a content id with revision 1, reaching the catalog overlay through a query and never saved (see [Members and providers](#members-and-providers)).
+- **Reads:** the block reads its resource through the type the creator's choices give, with derived arguments left open, so a bind never needs the type it computes; the draft reads every field whose type holds a type parameter as unavailable. A bind may read other resources, as `EmbedBook` reads the embedded book.
+- **Recompute:** the realm runs a bind in the query graph (`DerivedTypeOf`), so an edit reruns only the binds whose reads it changed and changes the definition behind the same id; nothing is written back, and `FitOf` reports values that no longer fit the derived `V` as `value_mismatch`. Every catalog the realm builds over a set of resources, for commit, planning and operations, runs the same binds.
+- **Failures:** a bind that throws (`derived_type_failed`), loops through itself (`derived_type_loop`), conflicts, or has no registration left (`derived_type_missing`) is a finding on the resource and on every use of the type, and blocks publish. A resource is never refused because its own bind fails, so the creator can still fix it in the panel; a new use of a failing derived type is refused, as a new use of any missing type is.
+- **Engine:** an engine runs no bind. Publication carries each derived declaration the content reaches, and engine admission answers `derived(resource, key)` from the declarations the content carries, like a creator declaration.
+
+The generated book entry type is also a live `bind`, not a publish step.
 
 `dynamic()` runs over a KSP generated content view of raw data, `XDraft`, never the real entry class. Each field is a value, missing, or invalid, so a broken field only drops its own members.
 
@@ -359,7 +374,7 @@ Members on types come from code per type, like presentations: a KSP generated `X
 class PaperPlayerFormulas : ... { ... }
 ```
 
-Every named type has a `TypeDefinitionId` (type id and revision). Kotlin catalog types use `declared(uuid)` with their code revision; builtins use `qualified(namespace, name)` with revision 1; cases without their own annotation use `member(owner, name)` (see [Unions and errors](#unions-and-errors)); types declared by content use `content(resource, key)` with revision 1: the resource whose `types` list declares the type (from a `Definition<Type>` value, any position inside it, or a type argument) and its generated key, or, in a use only, a field key that means whatever that field holds (see [Type fields](#type-fields)); a `bind` derived type uses the same id. A content type changes through publication and content migrations, never through its revision. The checked catalog takes content definitions from the query graph.
+Every named type has a `TypeDefinitionId` (type id and revision). Kotlin catalog types use `declared(uuid)` with their code revision; builtins use `qualified(namespace, name)` with revision 1; cases without their own annotation use `member(owner, name)` (see [Unions and errors](#unions-and-errors)); types declared by content use `content(resource, key)` with revision 1: the resource whose `types` list declares the type (from a `Definition<Type>` value, any position inside it, or a type argument) and its generated key, or, in a use only, a field key that means whatever that field holds (see [Type fields](#type-fields)); a `bind` derived type uses `derived(resource, key)` the same way. A content type changes through publication and content migrations, never through its revision. The checked catalog takes content definitions from the query graph.
 
 Inline types are content types too: a record or union written in a type position without a name is a full `TypeDefinition` with any representation, identified by its generated key on the declaring resource, so every field keeps a required `declaration_owner`. Two inline types that look alike are different types (nominal); share one through a creator type. Expression formula text names types but cannot declare an inline type (`let x: record { gold: Int } = ...` is `formula_inline_type`), because text has no stable key; a type field or a type argument can, because its declarations sit on the resource's `types` list. Only function types are structural and have no id.
 
@@ -480,7 +495,7 @@ data class Definition<T>(
 ) : StaticEntry
 ```
 
-`T` is the resource's own type argument in its configuration, chosen with the existing type argument editor; there is no `type` field and no `bind`, so a `Definition` works before `bind` exists (node 1b). Changing the type uses the existing `PreviewTypeArgumentChange` and `PrepareTypeArgumentChange` repair preview, which shows what happens to the current value before the change is confirmed. A configuration argument stays a `TypeUse` (`ArgumentSelection.chosen`), so it can be a function type or name a declaration on the resource's own `types` list, like any type value. Typing a type as text (`record { gold: Int }`) is another input of the type picker that parses into a `TypeUse` and its declarations; no formula is stored. Its `dynamic()` does `exports { use(T) }`, so it is visible by name through the book's contents scope and to other books through imports.
+`T` is the resource's own type argument in its configuration, chosen with the existing type argument editor; there is no `type` field and no `bind`, since a creator chooses `T`. Changing the type uses the existing `PreviewTypeArgumentChange` and `PrepareTypeArgumentChange` repair preview, which shows what happens to the current value before the change is confirmed. A configuration argument stays a `TypeUse` (`ChosenArgument.type`), so it can be a function type or name a declaration on the resource's own `types` list, like any type value. Typing a type as text (`record { gold: Int }`) is another input of the type picker that parses into a `TypeUse` and its declarations; no formula is stored. Its `dynamic()` does `exports { use(T) }`, so it is visible by name through the book's contents scope and to other books through imports.
 
 - **Functions**: a definition whose type is a function type. The text is the body with the parameters in scope. There is no separate function entry type.
 
@@ -603,7 +618,7 @@ Shape:
 
 - **Inputs** come from the installed `AuthoringView`: `Resource(id) -> AuthoringRecord?`, `ResourceIds`, each resource's slice of stored links, and the catalog. Per node `LinksAt` queries and `ProjectionAt`, which judges a slice through the tracked reader and gives `FitOf` its link fit, replace a per view graph index; the realm wide projection is a lazy fold of the node judgements.
 - **Commits set inputs** where views are installed: `AuthoringViewStore.install` applies the same `AuthoringViewDelta` (upserted resources, removed resources, catalog lease) to the graph, so a commit needs no separate report of changed inputs. A full reload (`views.invalidate`) sets every input again; early cutoff keeps that cheap.
-- **Derived queries:** each `InputIdentity` kind is a query, plus `checkRun(instance) -> FindingSet`, `dynamic`, `scopeAt` and `check`. `CapturedAuthoringReads` keeps its API; each read is a query call, and it still records `EditExpectation`s for the commit guard.
+- **Derived queries:** each `InputIdentity` kind is a query, plus `checkRun(instance) -> FindingSet`, `dynamic`, `scopeAt`, `check` and `DerivedTypeOf(owner, key)`, what a bind computes. `CapturedAuthoringReads` keeps its API; each read is a query call, and it still records `EditExpectation`s for the commit guard.
 - **Revision:** one per view install.
 - **Finding currency:** the graph is the only rerun mechanism. `EditExpectation` stays the commit guard; a finding set's evidence is `CheckEvidence` (`checking.skir`): a `fact` holds one `EditExpectation`, and a `scope` records what a name meant where a formula looked it up. A reply judges each set against the view it describes: current when the set's catalog generation matches and every entry of its evidence still holds in that view's saved values, outdated otherwise (`FindingFreshness.kt` `judgedAgainst`). Only the realm judges a scope entry, since a name's meaning comes from extension hooks; an editor judges the fact entries and keeps the realm's answer for the scope entries. A reply judges first, then lists the sets with findings, an outcome other than finished, or an outdated status (`forReply`), so an outdated clean set stays listed. A check missing from a reply has no findings known: it is clean, or it has not run yet; publication status says whether checking still runs.
 - **Publication** captures one saved view and runs every check on a fork at exactly that view (`evaluateCapture`), whatever commits since; each error finding blocks. The findings it shows are the runtime's sets judged for release: current only while the runtime holds them current and their evidence matches the captured view. A candidate is kept only while the current view is still the captured one; publishing a stale candidate answers `CandidateChanged`, and the next refresh prepares again.

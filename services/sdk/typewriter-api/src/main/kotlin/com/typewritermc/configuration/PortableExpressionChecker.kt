@@ -50,6 +50,7 @@ import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
@@ -1019,8 +1020,16 @@ class PortableExpressionChecker(
                     }
 
                     is Signature.Link -> {
-                        val link = representationOrNull(canonical(actual)) as? ResolvedRepresentation.LinkWrapper
-                        unify(expected.target, nominalExpressionType(link?.value?.target ?: fail(CheckFailure.InvalidOperandType)))
+                        val link =
+                            representationOrNull(canonical(actual)) as? ResolvedRepresentation.LinkWrapper
+                                ?: fail(CheckFailure.InvalidOperandType)
+                        // A link to a definition or to every resource names no one type, so it leaves the target unbound.
+                        (link.value.target as? ResourceMatch.TypeWrapper)?.let {
+                            unify(
+                                expected.target,
+                                nominalExpressionType(it.value.use),
+                            )
+                        }
                     }
 
                     is Signature.Partial -> {

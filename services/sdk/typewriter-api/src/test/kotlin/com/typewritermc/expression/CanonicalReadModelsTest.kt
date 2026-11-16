@@ -1,6 +1,7 @@
 package com.typewritermc.expression
 
 import build.skir.JsonFlavor
+import com.typewritermc.authoring.of
 import com.typewritermc.testkit.repositoryFixture
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.actualType
@@ -16,7 +17,6 @@ import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.catalog.ResourceAppearance
 import skirout.editor.v1.catalog.TypeDisplay
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldValue
 import skirout.editor.v1.type_catalog.IntegerWidth
@@ -72,10 +72,7 @@ val CanonicalReadModelsTest by testSuite {
             )
         CanonicalReadModels.typeUse.decode(CanonicalReadModels.typeUse.encode(use)) shouldBe use
         val selection =
-            TypeSelection.createPending(
-                definition = readId("example:Book"),
-                arguments = listOf(ArgumentSelection.UNFILLED, ArgumentSelection.ChosenWrapper(text)),
-            )
+            TypeSelection.of(readId("example:Book"), mapOf(1 to text))
         CanonicalReadModels.typeSelection.decode(CanonicalReadModels.typeSelection.encode(selection)) shouldBe selection
         val published =
             PublishedType(
@@ -101,13 +98,14 @@ val CanonicalReadModelsTest by testSuite {
     }
 
     test("field projection reads the Skir field and a null value is unfilled below it") {
-        val selection = TypeSelection.CompleteWrapper(NamedTypeUse(definition = readId("example:Book"), arguments = emptyList()))
-        CanonicalReadModels.encode(selection, TypeSelection.serializer.typeDescriptor, listOf("value", "arguments")) shouldBe
+        val selection = TypeSelection.of(NamedTypeUse(definition = readId("example:Book"), arguments = emptyList()))
+        CanonicalReadModels.encode(selection, TypeSelection.serializer.typeDescriptor, listOf("arguments")) shouldBe
             DataValue.createListValue(items = emptyList())
         CanonicalReadModels.encode(null, PublishedType.serializer.typeDescriptor, listOf("display")) shouldBe DataValue.UNFILLED
         val record = CanonicalReadModels.typeSelection.encode(selection) as DataValue.NamedWrapper
-        record.value.actualType.definition shouldBe readId("editor/v1/type_catalog.skir:TypeSelection.complete")
-        ((record.value.payload as DataValue.RecordWrapper).value.fields.map(FieldValue::name)) shouldBe listOf("value")
+        record.value.actualType.definition shouldBe readId("editor/v1/type_catalog.skir:TypeSelection")
+        ((record.value.payload as DataValue.RecordWrapper).value.fields.map(FieldValue::name)).toSet() shouldBe
+            setOf("definition", "arguments")
     }
 }
 

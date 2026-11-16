@@ -3,11 +3,9 @@ package com.typewritermc.authoring
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.checking.PartialSelection
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.toResourceId
-import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
@@ -17,7 +15,7 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 
@@ -140,7 +138,7 @@ fun RelationId.forward(): RelationSelection = RelationSelection.Contracts(setOf(
 fun RelationId.reverse(): RelationSelection = RelationSelection.Contracts(setOf(this), TraversalDirection.REVERSE)
 
 object ResourceDrafts : DraftType<ResourceDraft> {
-    override val match: ResourceTypeMatch = ResourceTypeMatch.AnyResource
+    override val match: ResourceMatch = ResourceMatch.ANY_RESOURCE
 
     override fun bind(binding: DraftBinding): ResourceDraft = BoundResourceDraft(binding)
 }
@@ -160,11 +158,7 @@ private class BoundResourceDraft(
     override val readContext: ReadContext = binding.readContext
     override val location: ValueLocation = binding.location
     override val actualType: Availability<NamedTypeUse> =
-        when (val actual = binding.actual) {
-            is TypeSelection.CompleteWrapper -> Availability.Available(actual.use)
-            is TypeSelection.PendingWrapper -> Availability.Unavailable(listOf(location))
-            else -> unknownVariant(actual)
-        }
+        binding.actualType?.let { Availability.Available(it) } ?: Availability.Unavailable(listOf(location))
 }
 
 context(reads: AuthoredReads, graph: GraphReads)

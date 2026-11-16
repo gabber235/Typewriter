@@ -38,9 +38,11 @@ void main() {
           ),
           valueOwner: child,
           relativePath: binding.relativePath,
-          target: skir.TypeTemplate.createNamed(
-            definition: testTypeId("Wrapper"),
-            arguments: const [],
+          target: skir.ResourceMatchTemplate.wrapType(
+            skir.TypeTemplate.createNamed(
+              definition: testTypeId("Wrapper"),
+              arguments: const [],
+            ),
           ),
           containsCollection: false,
         ),
@@ -53,11 +55,69 @@ void main() {
     expect(selected, hasLength(1));
     expect(selected.single.template.containingResource.definition, child);
     expect(
-      catalog.selectionMatches(
-        catalog.beginSelection(base),
-        selected.single.target,
-      ),
+      catalog.fits(catalog.beginSelection(base), selected.single.target!) ==
+          ResourceFit.yes,
       isFalse,
+    );
+  });
+
+  test("a link to a definition offers a bound resource of that definition "
+      "and no resource of another", () {
+    final fixture = LinkChoicesFixture(
+      sourceTarget: skir.ResourceMatchTemplate.wrapDefinition(
+        testTypeId("Board"),
+      ),
+    );
+    final plan = (fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    ) as PortableLinkPlanReady).plans.single;
+    final board = plan.targets.singleWhere(
+      (target) => target.resource == fixture.boundBoard,
+    );
+    expect(board.disabledReason, isNull);
+    expect(
+      plan.targets.map((target) => target.resource),
+      isNot(contains(fixture.unrelatedTarget)),
+    );
+  });
+
+  test("a link to a supertype offers a bound resource whose definition "
+      "extends it", () {
+    final fixture = LinkChoicesFixture(
+      sourceTarget: skir.ResourceMatchTemplate.wrapType(
+        typeTemplateOf("Supertype"),
+      ),
+    );
+    final plan = (fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    ) as PortableLinkPlanReady).plans.single;
+    final board = plan.targets.singleWhere(
+      (target) => target.resource == fixture.boundBoard,
+    );
+    expect(board.disabledReason, isNull);
+  });
+
+  test("a link to one application of a definition does not offer a bound "
+      "resource whose computed argument the panel cannot know", () {
+    final fixture = LinkChoicesFixture(
+      sourceTarget: skir.ResourceMatchTemplate.wrapType(
+        typeTemplateOf(
+          skir.NamedTypeTemplate(
+            definition: testTypeId("Board"),
+            arguments: [typeTemplateOf(skir.ScalarKind.text)],
+          ),
+        ),
+      ),
+    );
+    final plan = (fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    ) as PortableLinkPlanReady).plans.single;
+    expect(
+      plan.targets.map((target) => target.resource),
+      isNot(contains(fixture.boundBoard)),
     );
   });
 

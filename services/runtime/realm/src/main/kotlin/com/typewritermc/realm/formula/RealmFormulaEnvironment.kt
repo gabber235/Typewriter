@@ -1,7 +1,7 @@
 package com.typewritermc.realm.formula
 
 import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.DraftExpectation
+import com.typewritermc.authoring.of
 import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.FormulaFunction
 import com.typewritermc.formula.VarValueDefinition
@@ -18,6 +18,7 @@ import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.field
 import com.typewritermc.types.toResourceId
@@ -52,6 +53,9 @@ internal class RealmFormulaEnvironment(
 
     override fun expand(use: TypeUse): TypeUse = checked.expand(use)
 
+    override fun unappliedType(definition: TypeDefinitionId): Resolution<ResourceType> =
+        checked.authoredTypeOf(TypeSelection.of(definition))
+
     override fun inScope(name: String): List<AuthorResourceId> = reads.read(NameAt(at, name)).map { it.toResourceId() }
 
     override fun functions(name: String): List<FormulaFunction> = functions[name].orEmpty()
@@ -74,9 +78,8 @@ internal data class NamedAs(
     context(reads: RealmReads)
     override fun compute(): TypeUse? {
         val binding = (tracked().resourceBinding(target) as? Availability.Available)?.value ?: return null
-        val actual = (binding.actual as? TypeSelection.CompleteWrapper)?.value ?: return null
-        val export = reads.read(DynamicOf(target)).exports ?: return CONTENT_REFERENCE.use(listOf(actual.use))
-        val resource = (binding.expected as? DraftExpectation.Complete)?.type ?: return null
+        val resource = (binding.type as? ResourceType.Complete)?.checked ?: return null
+        val export = reads.read(DynamicOf(target)).exports ?: return CONTENT_REFERENCE.use(listOf(resource.use))
         return resource.fieldType(export.path.segments)?.let(::readType)
     }
 }

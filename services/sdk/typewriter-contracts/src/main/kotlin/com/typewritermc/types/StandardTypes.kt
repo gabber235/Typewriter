@@ -89,5 +89,5 @@ object StandardTypes {
         owner: TypeDefinitionId,
         index: Int,
         name: String,
-    ) = TypeParameter(key = ParameterKey(owner = owner, index = index), name = name, bounds = emptyList())
+    ) = TypeParameter(key = ParameterKey(owner = owner, index = index), name = name, bounds = emptyList(), derived = false)
 }

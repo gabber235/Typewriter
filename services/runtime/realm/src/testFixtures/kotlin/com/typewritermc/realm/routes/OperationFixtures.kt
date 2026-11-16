@@ -27,10 +27,10 @@ import com.typewritermc.setup.SetupHandle
 import com.typewritermc.types.endpointId
 import com.typewritermc.types.fieldMap
 import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
-import com.typewritermc.types.type
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.catalog.EndpointSlot
@@ -38,7 +38,7 @@ import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
@@ -96,7 +96,7 @@ internal fun tagOnly(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, LinkWithInput>(
         origin,
         "fixture.TagOnly",
-        ResourceTarget.type(TagDefinition.id.namedTemplate()),
+        ResourceMatch.TypeWrapper(TagDefinition.id.namedUse()),
         AnyResourceSubjects,
         OperationInput.Typed(LinkWithInputDefinition.use),
         "Tag only",
@@ -112,7 +112,7 @@ internal fun manyCandidates(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, LinkWithInput>(
         origin,
         "fixture.ManyCandidates",
-        ResourceTarget.type(TagDefinition.id.namedTemplate()),
+        ResourceMatch.TypeWrapper(TagDefinition.id.namedUse()),
         AnyResourceSubjects,
         OperationInput.Typed(LinkWithInputDefinition.use),
         "Many candidates",
@@ -133,7 +133,7 @@ internal fun orphanTag(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, Unit>(
         origin,
         "fixture.OrphanTag",
-        ResourceTarget.type(TagDefinition.id.namedTemplate()),
+        ResourceMatch.TypeWrapper(TagDefinition.id.namedUse()),
         AnyResourceSubjects,
         OperationInput.None,
         "Orphan tag",
@@ -153,7 +153,7 @@ internal fun guarded(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, LinkWithInput>(
         origin,
         "fixture.Guarded",
-        ResourceTarget.type(TagDefinition.id.namedTemplate()),
+        ResourceMatch.TypeWrapper(TagDefinition.id.namedUse()),
         AnyResourceSubjects,
         OperationInput.Typed(LinkWithInputDefinition.use),
         "Guarded",
@@ -175,7 +175,7 @@ internal fun brokenAvailability(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, Unit>(
         origin,
         "fixture.BrokenAvailability",
-        ResourceTarget.type(TagDefinition.id.namedTemplate()),
+        ResourceMatch.TypeWrapper(TagDefinition.id.namedUse()),
         AnyResourceSubjects,
         OperationInput.None,
         "Broken availability",

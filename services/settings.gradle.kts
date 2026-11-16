@@ -38,6 +38,7 @@ fun includeProject(name: String, directory: String) {
     project(":$name").projectDir = file(directory)
 }
 
+includeProject("failures", "platform/failures")
 includeProject("internal-utils", "platform/internal-utils")
 includeProject("protocol", "protocol")
 includeProject("protocol-transport", "protocol/transport-adapters/kotlin")

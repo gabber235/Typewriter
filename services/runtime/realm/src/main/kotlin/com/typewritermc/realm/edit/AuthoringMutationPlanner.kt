@@ -1,6 +1,5 @@
 package com.typewritermc.realm.edit
 
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
@@ -14,7 +13,6 @@ import com.typewritermc.realm.authoring.after
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.formula.withRealmReferences
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.contentSourceOf
 import com.typewritermc.types.catalog.misfiledDeclarations
 import com.typewritermc.types.catalog.withoutUnreachableTypes
 import com.typewritermc.types.endpoint
@@ -98,9 +96,9 @@ internal class AuthoringMutationPlanner(
                 addAll(removed)
                 resources.forEach { (id, record) -> if (latestResources[id] != record) add(id) }
             }
-        val final = resources.toMap().let { state -> catalog.withContent(contentSourceOf(state::get)) }
+        val final = catalog.withContent(saved.staged(resources.toMap()).content)
         val links = TouchedLinks(saved, resources, affected, contracts, final)
-        val validator = AuthoringSnapshotValidator(final, catalog, contracts)
+        val validator = AuthoringSnapshotValidator(final, catalog, contracts, saved)
         problems += validator.validate(latestResources, resources, affected, links) { saved.judged(it).fit }
         if (problems.isNotEmpty()) return MutationPlanningResult.Rejected(problems)
 
@@ -149,7 +147,7 @@ internal class AuthoringMutationPlanner(
             if (problems.isNotEmpty()) return@forEachIndexed
             if (index < deletionRunEnd) return@forEachIndexed
             // An overlay caches what it reaches, and any intent can change what a content type means, so each intent reads a fresh one.
-            val catalog = this.catalog.withContent(contentSourceOf(resources::get))
+            val catalog = this.catalog.withContent(saved.staged(resources).content)
             val relations = RelationValueSynchronizer(catalog, contracts)
             when (intent) {
                 is EditIntent.CreateResourceWrapper -> {

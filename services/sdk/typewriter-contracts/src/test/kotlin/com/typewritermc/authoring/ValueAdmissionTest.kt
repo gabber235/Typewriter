@@ -1,8 +1,10 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.catalog.ContentSource
+import com.typewritermc.types.catalog.ContentTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.catalog.DerivedFailure
+import com.typewritermc.types.catalog.DerivedTarget
 import com.typewritermc.types.catalog.content
 import com.typewritermc.types.catalog.contentField
 import com.typewritermc.types.integer
@@ -57,8 +59,8 @@ val ValueAdmissionTest by testSuite {
         )
     val catalog =
         DefaultCheckedCatalog(CatalogGeneration(value = "walk"), StandardTypes.definitions).withContent(
-            object : ContentSource {
-                override fun declarations(owner: ResourceId): List<TypeDefinition> =
+            object : ContentTypes {
+                override fun written(owner: ResourceId): List<TypeDefinition> =
                     if (owner.value ==
                         "prizes"
                     ) {
@@ -71,6 +73,11 @@ val ValueAdmissionTest by testSuite {
                     owner: ResourceId,
                     field: String,
                 ): TypeUse? = if (field == "alias") prize.use() else null
+
+                override fun derived(
+                    owner: ResourceId,
+                    key: String,
+                ): DerivedTarget = DerivedTarget.Missing(DerivedFailure.NoBlock)
             },
         )
     val at = ValueLocation.of(ResourceId(value = "holder"))
@@ -99,7 +106,7 @@ val ValueAdmissionTest by testSuite {
         val first = TypeDefinitionId.content(ResourceId(value = "gone"), "first")
         val second = TypeDefinitionId.content(ResourceId(value = "gone"), "second")
         val held = StandardTypes.map.use(listOf(first.use(), second.use()))
-        val reported = walked(catalog, DataValue.TypeUseWrapper(held), ScalarKind.TYPE.use, at).reported.filter { it.type != null }
-        reported.map { it.at to it.type } shouldBe listOf(at to first, at to second)
+        val reported = walked(catalog, DataValue.TypeUseWrapper(held), ScalarKind.TYPE.use, at).reported
+        reported.map { it.at to (it.cause as? MisfitCause.TypeUnavailable)?.type } shouldBe listOf(at to first, at to second)
     }
 }

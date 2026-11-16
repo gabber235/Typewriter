@@ -10,7 +10,7 @@ import com.typewritermc.types.TypeDisplay
 import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.RelationContract
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import kotlin.reflect.KClass
@@ -57,7 +57,7 @@ interface GeneratedPresentationProvider : PresentationProvider {
 
 /** One authored resource display: the resources it applies to and its formulas, built on demand at assembly. */
 interface GeneratedResourceDisplayProvider {
-    val target: ResourceTarget
+    val target: ResourceMatch
 
     fun formulas(): DisplayFormulas
 }

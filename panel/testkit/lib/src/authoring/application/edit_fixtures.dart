@@ -344,14 +344,18 @@ final class RelationEditFixture {
             first: skir.EndpointDefinition(
               id: endpoint,
               slot: skir.EndpointSlot.first,
-              resource: selection,
+              resource: skir.ResourceMatchTemplate.wrapType(
+                skir.TypeTemplate.wrapNamed(selection),
+              ),
               cardinality: skir.EndpointCardinality.one,
               onDelete: firstDelete,
             ),
             second: skir.EndpointDefinition(
               id: opposite,
               slot: skir.EndpointSlot.second,
-              resource: selection,
+              resource: skir.ResourceMatchTemplate.wrapType(
+                skir.TypeTemplate.wrapNamed(selection),
+              ),
               cardinality: skir.EndpointCardinality.many,
               onDelete: secondDelete,
             ),

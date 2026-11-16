@@ -166,9 +166,11 @@ void main() {
               id: location.resource,
               content: skir.AuthoringRecord(
                 types: const [],
-                configuration: skir.TypeSelection.createComplete(
-                  definition: definition,
-                  arguments: const [],
+                configuration: selectionOfUse(
+                  skir.NamedTypeUse(
+                    definition: definition,
+                    arguments: const [],
+                  ),
                 ),
                 fields: value.authoredRecord!.fields,
               ),

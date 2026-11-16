@@ -36,7 +36,6 @@ import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.diagnostic.InitializationDiagnostic
 import skirout.editor.v1.diagnostic.StructuralResult
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -57,6 +56,7 @@ import skirout.editor.v1.type_catalog.ValuePath
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
+import skirout.kernel.v1.resource_id.ResourceId as SkirResourceId
 
 val InitializationRuntimeConformanceTest by testSuite {
     val initializedUse = INITIALIZED_ID.namedUse(emptyList())
@@ -131,7 +131,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             runtime.prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.CompleteWrapper(initializedUse),
+                    TypeSelection.of(initializedUse),
                     mapOf("required" to DataValue.StringValueWrapper("authored")),
                 ),
             )
@@ -179,7 +179,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                 ),
             ),
         )
-    val pendingSelection = TypeSelection.createPending(definition = pendingId, arguments = listOf(ArgumentSelection.UNFILLED))
+    val pendingSelection = TypeSelection.of(pendingId)
     val pendingPlan = SamplingPlan(pendingDefaulted)
     val pendingRuntime =
         DefaultInitializationRuntime(
@@ -199,7 +199,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                     "dependent" to DataValue.UNFILLED,
                 ),
             )
-        prepared.record.validateStructure(pendingCatalog) shouldBe StructuralResult.VALID
+        prepared.record.validateStructure(SkirResourceId(value = "prepared"), pendingCatalog) shouldBe StructuralResult.VALID
         prepared.findings.map(InitializationDiagnostic::code) shouldBe listOf("incomplete_type_selection")
         pendingPlan.calls shouldBe 0
     }
@@ -268,7 +268,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             ).prepareNow(
                 recordRequest(
                     pendingGeneration,
-                    TypeSelection.CompleteWrapper(TypeDefinitionId.qualified("test", "Undeclared").namedUse()),
+                    TypeSelection.of(TypeDefinitionId.qualified("test", "Undeclared").namedUse()),
                     emptyMap(),
                 ),
             )
@@ -285,7 +285,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                 .prepareNow(
                     recordRequest(
                         generation,
-                        TypeSelection.CompleteWrapper(initializedUse),
+                        TypeSelection.of(initializedUse),
                         mapOf("required" to DataValue.BooleanWrapper(true)),
                     ),
                 )
@@ -317,7 +317,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val prepared =
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList()))
-                .prepareNow(recordRequest(generation, TypeSelection.CompleteWrapper(levels.first().namedUse()), emptyMap()))
+                .prepareNow(recordRequest(generation, TypeSelection.of(levels.first().namedUse()), emptyMap()))
 
         prepared.findings.map { it.code to it.message } shouldBe
             listOf("default_depth_limit" to "The ordinary default exceeds the supported nesting depth.")
@@ -335,7 +335,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                 runtime.prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.CompleteWrapper(initializedUse),
+                        TypeSelection.of(initializedUse),
                         emptyMap(),
                     ),
                 )
@@ -367,7 +367,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.CompleteWrapper(initializedUse),
+                        TypeSelection.of(initializedUse),
                         emptyMap(),
                     ),
                 )
@@ -427,7 +427,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.CompleteWrapper(abstractOwnerId.namedUse()),
+                        TypeSelection.of(abstractOwnerId.namedUse()),
                         emptyMap(),
                     ),
                 )
@@ -483,7 +483,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.CompleteWrapper(parentId.namedUse()),
+                        TypeSelection.of(parentId.namedUse()),
                         emptyMap(),
                     ),
                 )
@@ -556,7 +556,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             DefaultInitializationRuntime(catalog, bindings).prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.CompleteWrapper(themeId.namedUse()),
+                    TypeSelection.of(themeId.namedUse()),
                     mapOf("label" to DataValue.StringValueWrapper("supplied")),
                 ),
             )
@@ -593,7 +593,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.CompleteWrapper(directId.namedUse()),
+                    TypeSelection.of(directId.namedUse()),
                     emptyMap(),
                 ),
             )
@@ -637,7 +637,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.CompleteWrapper(growId.namedUse(listOf(ScalarKind.TEXT.use))),
+                    TypeSelection.of(growId.namedUse(listOf(ScalarKind.TEXT.use))),
                     emptyMap(),
                 ),
             )
@@ -694,7 +694,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.CompleteWrapper(ownerId.namedUse()),
+                    TypeSelection.of(ownerId.namedUse()),
                     emptyMap(),
                 ),
             )
@@ -754,7 +754,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             runtime.prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.CompleteWrapper(boxId.namedUse(listOf(innerBox.use))),
+                    TypeSelection.of(boxId.namedUse(listOf(innerBox.use))),
                     emptyMap(),
                 ),
             )
@@ -767,7 +767,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             runtime.prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.CompleteWrapper(treeUse),
+                    TypeSelection.of(treeUse),
                     emptyMap(),
                 ),
             )

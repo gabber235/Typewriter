@@ -638,7 +638,7 @@ internal fun weightedAssembly(present: (PresentationBuildScope) -> Unit) =
 internal fun weightedDefinition(): TypeDefinition =
     TypeDefinition(
         id = WEIGHTED,
-        parameters = listOf(TypeParameter(key = WEIGHTED_VALUE, name = "T", bounds = emptyList())),
+        parameters = listOf(TypeParameter(key = WEIGHTED_VALUE, name = "T", bounds = emptyList(), derived = false)),
         representation =
             RepresentationTemplate.createRecord(
                 fields =

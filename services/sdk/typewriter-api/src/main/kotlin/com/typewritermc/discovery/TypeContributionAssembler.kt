@@ -26,6 +26,7 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.catalog.of
+import com.typewritermc.types.definition
 import com.typewritermc.types.entries
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -106,6 +107,8 @@ data class CatalogAssembly(
     val operations: com.typewritermc.operations.OperationCatalog = com.typewritermc.operations.OperationCatalog(),
     val callbackFailures: List<CatalogCallbackFailure> = emptyList(),
     val displays: com.typewritermc.authoring.ResourceDisplayCatalog = com.typewritermc.authoring.ResourceDisplayCatalog(),
+    /** What the dynamic providers registered at load: their hooks, their binds, and the registrations load rejected. */
+    val dynamics: CollectedDynamics = CollectedDynamics.NONE,
 ) {
     /** The published relations. */
     val relations: List<RelationContract> get() = editorCatalog.relations
@@ -129,7 +132,7 @@ sealed interface CatalogCallback {
     ) : CatalogCallback
 
     data class Display(
-        val target: skirout.editor.v1.type_catalog.ResourceTarget,
+        val target: skirout.editor.v1.type_catalog.ResourceMatch,
     ) : CatalogCallback
 }
 
@@ -151,7 +154,9 @@ data class CatalogCallbackFailure(
  */
 fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssembly {
     val standardDeclarations = StandardTypes.definitions.map { OwnedTypeDeclaration(STANDARD_TYPE_ORIGIN, it) }
-    val assembledDeclarations = standardDeclarations + declarations
+    // Binds decide which parameters are computed, so they register before any catalog reads a definition.
+    val collectedDynamics = collectDynamics(dynamics, declarations)
+    val assembledDeclarations = standardDeclarations + declarations.map { it.withBinds(collectedDynamics.bound) }
     val definitions = assembledDeclarations.map(OwnedTypeDeclaration::definition)
     val declarationGroups = assembledDeclarations.groupBy { it.definition.id }
     val definitionIndex = declarationGroups.mapNotNull { (id, owned) -> owned.singleOrNull()?.definition?.let { id to it } }.toMap()
@@ -333,6 +338,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             (configurationFailures.map { it.evidence } + materialCollection.callbackFailures + displayCollection.callbackFailures)
                 .immutableListCopy(),
         displays = com.typewritermc.authoring.ResourceDisplayCatalog(displayCollection.displays, published),
+        dynamics = collectedDynamics,
     )
 }
 
@@ -348,6 +354,7 @@ private fun realmStructureDiagnostics(
     relations: List<RelationContract>,
     catalog: CheckedCatalog,
 ): List<DeclarationDiagnostic> {
+    // A member endpoint naming every resource owns every type.
     val members = relations.filter { it.ownsResources }.map { it.second.resource.definition }
     return declarations
         .filter {
@@ -366,7 +373,7 @@ private fun realmStructureDiagnostics(
                     DeclarationDiagnostic.of(id, "generic_realm_section", origins)
                 }
 
-                members.none { member -> catalog.isNominalSubtype(id, member) } -> {
+                members.none { member -> member == null || catalog.isNominalSubtype(id, member) } -> {
                     DeclarationDiagnostic.of(id, "unowned_resource_type", origins)
                 }
 
@@ -380,9 +387,9 @@ private fun realmStructureDiagnostics(
 /** The owner side endpoints of ownership relations: the link fields that hold owned resources. */
 private fun List<RelationContract>.ownershipEndpoints(): Set<EndpointId> = filter { it.ownsResources }.mapTo(linkedSetOf()) { it.first.id }
 
-/** The owner endpoint types of ownership relations: the first endpoint, which holds the owned resources. */
+/** The owner endpoint types of ownership relations: the first endpoint, which holds the owned resources; an owner naming every resource names no type. */
 private fun List<RelationContract>.ownerTypes(): Set<TypeDefinitionId> =
-    filter { it.ownsResources }.mapTo(linkedSetOf()) { it.first.resource.definition }
+    filter { it.ownsResources }.mapNotNullTo(linkedSetOf()) { it.first.resource.definition }
 
 /** Whether [id] is the realm root or a realm section type, which the realm creates and every resource sits inside. */
 private fun CheckedCatalog.isRealmStructure(id: TypeDefinitionId): Boolean =

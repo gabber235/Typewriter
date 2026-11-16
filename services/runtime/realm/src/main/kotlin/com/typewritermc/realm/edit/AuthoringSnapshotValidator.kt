@@ -1,17 +1,22 @@
 package com.typewritermc.realm.edit
 
+import com.typewritermc.authoring.Misfit
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.root
+import com.typewritermc.authoring.unavailableType
+import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.formula.isWithin
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.contentSourceOf
+import com.typewritermc.types.catalog.contentOwner
 import com.typewritermc.types.catalog.misfiledDeclarations
 import com.typewritermc.types.catalog.misfits
+import com.typewritermc.types.catalog.namesDerivedKey
+import com.typewritermc.types.definition
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.record
@@ -34,6 +39,8 @@ internal class AuthoringSnapshotValidator(
     private val catalog: CheckedCatalog,
     private val savedCatalog: CheckedCatalog,
     private val contracts: List<RelationContract>,
+    /** The view the change started from: what binds compute over a set of resources is read against it. */
+    private val saved: AuthoringView,
 ) {
     /**
      * Validates the same affected graph boundary for replay and caller supplied working overlays. [before] holds the
@@ -64,14 +71,20 @@ internal class AuthoringSnapshotValidator(
                             if (previous.types == record.types) {
                                 catalog
                             } else {
-                                catalog.withContent(contentSourceOf((resources + (id to record.copy(types = previous.types)))::get))
+                                val asBefore = resources + (id to record.copy(types = previous.types))
+                                catalog.withContent(saved.staged(asBefore).content)
                             }
                         val alone = projectAlone(id, previous, resources, ownAsBefore)
                         previous.misfits(id, savedCatalog) { savedFit(id) } +
                             previous.misfits(id, ownAsBefore) { alone.fit.on(id) }
                     }.orEmpty()
                     .toSet()
-            problems += record.misfits(id, catalog) { touching.fit.on(id) }.filter { it.isNewAgainst(baseline) }.map { it.problem }
+            problems +=
+                record
+                    .misfits(id, catalog) { touching.fit.on(id) }
+                    .withoutOwnBinds(id)
+                    .filter { it.isNewAgainst(baseline) }
+                    .map { it.problem }
         }
         problems += touching.problems
         validateOwnership(links, contracts, problems)
@@ -95,6 +108,20 @@ internal class AuthoringSnapshotValidator(
 
 /** The problems located on [resource]. */
 private fun List<ValueProblem>.on(resource: ResourceId): List<ValueProblem> = filter { it.location.resource == resource }
+
+/**
+ * These misfits without the ones a type [owner]'s own binds compute causes: each misfit naming such a type, and whatever
+ * sits under a value of it. That type is extension output, not a choice the write made, so its failure shows as a
+ * finding on [owner] and blocks publish but never refuses the write. A bind that answers another resource's computed type
+ * makes [owner]'s type fail with it, and that failure counts as [owner]'s own too, since only the other resource can fix it. A misfit naming another resource's computed type
+ * stays, so a new use of it is refused like a use of any missing type, and one [owner] already had is not.
+ */
+private fun List<Misfit>.withoutOwnBinds(owner: ResourceId): List<Misfit> {
+    val own = filter { misfit -> misfit.unavailableType?.let { it.namesDerivedKey() && it.contentOwner() == owner } == true }.toSet()
+    // A use at the root names the type from the configuration, not a value, so nothing sits under it.
+    val values = own.map { it.problem.location }.filter { it.path.segments.isNotEmpty() }
+    return filterNot { misfit -> misfit in own || values.any { misfit.problem.location.isWithin(it) } }
+}
 
 /** A resource with more than one owner, where one of its ownership links has an affected end. */
 private fun validateOwnership(
@@ -140,12 +167,13 @@ private fun validateRealmStructure(
         }
 
     val ownership = contracts.filter { it.ownsResources }
+    // A member endpoint naming every resource, with no definition, makes every resource ownable.
     val members = ownership.map { it.second.resource.definition }
 
     fun ResourceId.isOwned() = ownership.any { links.at(this, it.id, EndpointSlot.SECOND).isNotEmpty() }
 
     fun AuthoringRecord.isOwnable() =
-        configuration.definition.let { type -> members.any { it == type || catalog.isNominalSubtype(type, it) } }
+        configuration.definition.let { type -> members.any { it == null || it == type || catalog.isNominalSubtype(type, it) } }
 
     // A member without a back reference loses its owner when only the owner's record changes, so the resources an
     // affected resource owned before the change are checked too.

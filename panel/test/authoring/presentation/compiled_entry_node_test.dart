@@ -128,9 +128,7 @@ void main() {
   }
 }
 
-final _entry = skir.TypeSelection.wrapComplete(
-  compiledSdkElementValue.authoredActualType!,
-);
+final _entry = selectionOfUse(compiledSdkElementValue.authoredActualType!);
 final _catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
 
 /// One compiled entry named "Compiled entry", its other fields at their

@@ -16,7 +16,6 @@ import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.ConfigurationProvider
@@ -79,7 +78,6 @@ import com.typewritermc.types.record
 import com.typewritermc.types.template
 import com.typewritermc.types.text
 import com.typewritermc.types.toWire
-import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -116,7 +114,8 @@ import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -362,7 +361,7 @@ internal fun ownership(
         EndpointDefinition(
             id = EndpointId(value = "$relation:first"),
             slot = EndpointSlot.FIRST,
-            resource = owner.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(owner.template()),
             cardinality = EndpointCardinality.ONE,
             onDelete = RelationDeletePolicy.CASCADE,
         ),
@@ -370,7 +369,7 @@ internal fun ownership(
         EndpointDefinition(
             id = EndpointId(value = "$relation:second"),
             slot = EndpointSlot.SECOND,
-            resource = member.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(member.template()),
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
@@ -441,14 +440,14 @@ internal fun endpoint(
 ) = EndpointDefinition(
     id = EndpointId(value = id),
     slot = slot,
-    resource = resource.namedTemplate(),
+    resource = ResourceMatchTemplate.TypeWrapper(resource.template()),
     cardinality = EndpointCardinality.MANY,
     onDelete = RelationDeletePolicy.CLEAR,
 )
 
 internal fun book(title: String) =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(BookDefinition.use),
+        TypeSelection.of(BookDefinition.use),
         mapOf(
             "title" to DataValue.StringValueWrapper(title),
             "icon" to DataValue.UNFILLED,
@@ -459,14 +458,14 @@ internal fun book(title: String) =
     )
 
 internal class FixtureDisplay(
-    override val target: ResourceTarget,
+    override val target: ResourceMatch,
     private val build: () -> DisplayFormulas,
 ) : GeneratedResourceDisplayProvider {
     override fun formulas(): DisplayFormulas = build()
 }
 
 internal fun displayProvider(
-    target: ResourceTarget,
+    target: ResourceMatch,
     build: () -> DisplayFormulas,
 ) = OwnedResourceDisplay(origin("type_display", "test:type_display"), FixtureDisplay(target, build))
 
@@ -481,7 +480,7 @@ internal fun assemble(
     val generated = generatedProviders<GeneratedTypeProvider>(GeneratedProviderKind.Type).distinctBy { it.definition.id }
     val generatedDisplays =
         generatedProviders<GeneratedResourceDisplayProvider>(GeneratedProviderKind.ResourceDisplay)
-            .filter { includeGenerated || it.target == ResourceTarget.ANY_RESOURCE }
+            .filter { includeGenerated || it.target == ResourceMatch.ANY_RESOURCE }
             .map { OwnedResourceDisplay(origin, it) }
     return CatalogContributions(
         declarations =
@@ -497,9 +496,15 @@ internal fun assemble(
 internal fun CatalogAssembly.diagnosticCodes(type: TypeDefinitionId): List<String> =
     editorCatalog.diagnostics.filter { it.affected == type }.map { it.code }
 
-internal fun CatalogAssembly.label(record: AuthoringRecord): String? =
+/** The display label of [record], held by a resource named [owner]. */
+internal fun CatalogAssembly.label(
+    record: AuthoringRecord,
+    owner: skirout.kernel.v1.resource_id.ResourceId =
+        skirout.kernel.v1.resource_id
+            .ResourceId(value = "labelled"),
+): String? =
     with(com.typewritermc.expression.FixtureReads) {
-        displays.label(record, checked)
+        displays.label(owner, record, checked)
     }
 
 internal fun artifact(

@@ -7,7 +7,6 @@ import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
-import com.typewritermc.authoring.use
 import com.typewritermc.authoring.writeField
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.valueAt
@@ -150,7 +149,7 @@ private fun AuthoringRecord.declaredCollection(
     location: ValueLocation,
     catalog: CheckedCatalog,
 ): AuthoredCollection? {
-    val type = authoredTypeAt(location.path, catalog).namedType() ?: return null
+    val type = authoredTypeAt(location.resource, location.path, catalog).namedType() ?: return null
     val checked = (catalog.resolve(type.use) as? Resolution.Ready)?.value ?: return null
     val representation = checked.schema.representation as? ResolvedRepresentation.SequenceWrapper ?: return null
     return AuthoredCollection(type, representation.value)

@@ -1,17 +1,17 @@
-package com.typewritermc.services.libs.utils
+package com.typewritermc.failures
 
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.types.shouldBeSameInstanceAs
-import kotlinx.coroutines.CancellationException
+import java.util.concurrent.CancellationException
 
 @Suppress("DEPRECATION")
 val ExceptionalThrowablesTest by testSuite {
     test("finds every exceptional throwable kind directly") {
         listOf(
             CancellationException("cancelled"),
-            TestVirtualMachineError(),
+            object : VirtualMachineError("fatal") {},
             ThreadDeath(),
             LinkageError("linkage"),
         ).forEach { it.findExceptional() shouldBeSameInstanceAs it }

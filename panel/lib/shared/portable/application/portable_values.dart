@@ -353,6 +353,7 @@ String _typeIdKey(skir.TypeId value) => switch (value) {
     switch (value.key) {
       skir.ContentKey_generatedWrapper(:final value) => "generated:$value",
       skir.ContentKey_fieldWrapper(:final value) => "field:$value",
+      skir.ContentKey_derivedWrapper(:final value) => "derived:$value",
       skir.ContentKey_unknown() => throw StateError("Unknown content key."),
     },
   ]),

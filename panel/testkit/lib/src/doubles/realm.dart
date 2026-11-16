@@ -87,7 +87,7 @@ final class RealmOperation {
           declaration: "com.typewritermc.operations.$name",
         ),
         targets: skir.OperationTargets(
-          subject: skir.ResourceTarget.anyResource,
+          subject: skir.ResourceMatch.anyResource,
           cardinality: skir.OperationCardinality.selection,
         ),
         capability: capability,
@@ -635,9 +635,7 @@ extension RealmPreparation on AuthoringDocument {
               actualType: named,
               payload: skir.DataValue.createRecord(
                 fields: [
-                  for (final field in catalog.fields(
-                    skir.TypeSelection.wrapComplete(named),
-                  ))
+                  for (final field in catalog.fields(selectionOfUse(named)))
                     skir.FieldValue(
                       name: field.template.key,
                       value: defaults.defaultValue(field.type),

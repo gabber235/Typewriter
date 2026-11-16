@@ -72,8 +72,18 @@ repeatedParameterCatalog({required bool repeated}) {
           form: skir.RecordForm.concrete,
         ),
         parameters: [
-          skir.TypeParameter(key: firstParameter, name: "A", bounds: const []),
-          skir.TypeParameter(key: secondParameter, name: "B", bounds: const []),
+          skir.TypeParameter(
+            key: firstParameter,
+            name: "A",
+            bounds: const [],
+            derived: false,
+          ),
+          skir.TypeParameter(
+            key: secondParameter,
+            name: "B",
+            bounds: const [],
+            derived: false,
+          ),
         ],
       ),
     ],
@@ -90,9 +100,11 @@ repeatedParameterCatalog({required bool repeated}) {
   );
   return (
     catalog: CheckedEditorCatalog(snapshot),
-    actual: skir.TypeSelection.createComplete(
-      definition: pair,
-      arguments: repeated ? [stringUse, stringUse] : [stringUse, listUse],
+    actual: selectionOfUse(
+      skir.NamedTypeUse(
+        definition: pair,
+        arguments: repeated ? [stringUse, stringUse] : [stringUse, listUse],
+      ),
     ),
     first: first,
     second: second,
@@ -113,8 +125,14 @@ dependentParameterCatalog() {
         key: first,
         name: "T",
         bounds: [skir.TypeTemplate.wrapParameter(second)],
+        derived: false,
       ),
-      skir.TypeParameter(key: second, name: "U", bounds: const []),
+      skir.TypeParameter(
+        key: second,
+        name: "U",
+        bounds: const [],
+        derived: false,
+      ),
     ],
   );
   return (
@@ -170,7 +188,12 @@ inheritedPresentationCatalog() {
       form: skir.RecordForm.concrete,
     ),
     parameters: [
-      skir.TypeParameter(key: rootParameter, name: "T", bounds: const []),
+      skir.TypeParameter(
+        key: rootParameter,
+        name: "T",
+        bounds: const [],
+        derived: false,
+      ),
     ],
     parents: [
       skir.NamedTypeTemplate(
@@ -246,7 +269,9 @@ inheritedPresentationCatalog() {
         ),
         valueOwner: base,
         relativePath: skir.RelativeFieldPattern(segments: const []),
-        target: skir.TypeTemplate.wrapParameter(baseParameter),
+        target: skir.ResourceMatchTemplate.wrapType(
+          skir.TypeTemplate.wrapParameter(baseParameter),
+        ),
         containsCollection: false,
       ),
     ],
@@ -291,6 +316,7 @@ skir.PublishedType opaqueType(
         key: parameters[index],
         name: "T$index",
         bounds: const [],
+        derived: false,
       ),
   ],
   display: display ?? defaultTypeDisplay(""),

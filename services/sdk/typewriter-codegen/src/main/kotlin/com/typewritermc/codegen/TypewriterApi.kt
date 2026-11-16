@@ -24,6 +24,7 @@ internal object TypewriterApi {
     private const val TYPES = "com.typewritermc.types"
 
     // Formula
+    val BindParameter = ClassName(FORMULA, "BindParameter")
     val Formula = ClassName(FORMULA, "Formula")
     val FormulaCall = ClassName(FORMULA, "FormulaCall")
     val FormulaFunction = ClassName(FORMULA, "FormulaFunction")
@@ -67,6 +68,7 @@ internal object TypewriterApi {
     val listDraftProjection = MemberName(AUTHORING, "listDraftProjection")
     val mapDraftProjection = MemberName(AUTHORING, "mapDraftProjection")
     val nativeReadProjection = MemberName(AUTHORING, "nativeReadProjection")
+    val unboundReadProjection = MemberName(AUTHORING, "unboundReadProjection")
     val nullableReadProjection = MemberName(AUTHORING, "nullableReadProjection")
     val read = MemberName(AUTHORING, "read", isExtension = true)
     val representationReadProjection = MemberName(AUTHORING, "representationReadProjection")
@@ -94,9 +96,6 @@ internal object TypewriterApi {
     val DraftType = ClassName(CHECKING, "DraftType")
     val RealmCheckProvider = ClassName(CHECKING, "RealmCheckProvider")
     val RealmChecks = ClassName(CHECKING, "RealmChecks")
-    val ResourceTypeMatch = ClassName(CHECKING, "ResourceTypeMatch")
-    val ResourceTypeMatchApplication = ResourceTypeMatch.nestedClass("Application")
-    val ResourceTypeMatchDefinition = ResourceTypeMatch.nestedClass("Definition")
     val TypedSelection = ClassName(CHECKING, "TypedSelection")
     val compileSelection = MemberName(CHECKING, "compileSelection")
 

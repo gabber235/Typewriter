@@ -232,14 +232,16 @@ void main() {
             box,
             skir.AuthoringRecord(
               types: [contentRecordDeclaration(reward)],
-              configuration: skir.TypeSelection.createComplete(
-                definition: typeDefinition("Box"),
-                arguments: [
-                  skir.TypeUse.createNamed(
-                    definition: reward,
-                    arguments: const [],
-                  ),
-                ],
+              configuration: selectionOfUse(
+                skir.NamedTypeUse(
+                  definition: typeDefinition("Box"),
+                  arguments: [
+                    skir.TypeUse.createNamed(
+                      definition: reward,
+                      arguments: const [],
+                    ),
+                  ],
+                ),
               ),
               fields: const [],
             ),
@@ -251,6 +253,37 @@ void main() {
     expect(
       issues.currentFor(box).map((issue) => issue.diagnostic.code),
       isNot(contains("unresolved_type")),
+    );
+  });
+
+  test("a resource whose only parameter is derived has no pending type", () {
+    final keyed = skir.ResourceId(value: "keyed");
+    final document = base
+        .withCatalogEntries(
+          types: [
+            declaredRecord(
+              "Keyed",
+              parameters: {"Bound": []},
+              derived: {"Bound"},
+            ),
+          ],
+        )
+        .changedRemotely(
+          (edit) => edit.create(
+            keyed,
+            skir.AuthoringRecord(
+              types: const [],
+              configuration: selectionOfDefinition(typeDefinition("Keyed")),
+              fields: const [],
+            ),
+          ),
+        );
+
+    final issues = ResourceIssues.evaluate(document: document);
+
+    expect(
+      issues.currentFor(keyed).map((issue) => issue.diagnostic.code),
+      isNot(contains("pending_type")),
     );
   });
 }

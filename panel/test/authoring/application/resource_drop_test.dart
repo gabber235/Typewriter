@@ -389,6 +389,6 @@ final _document = realmDocument(
 );
 
 final _targets = skir.OperationTargets(
-  subject: skir.ResourceTarget.anyResource,
+  subject: skir.ResourceMatch.anyResource,
   cardinality: skir.OperationCardinality.selection,
 );

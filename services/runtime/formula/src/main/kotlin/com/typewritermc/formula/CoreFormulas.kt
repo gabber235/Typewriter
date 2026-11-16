@@ -25,7 +25,7 @@ object CoreFormulas {
     val interpolate: FormulaFunction =
         FormulaFunction(
             name = "interpolate",
-            typeParameters = listOf(TypeParameter(key = value, name = "T", bounds = emptyList())),
+            typeParameters = listOf(TypeParameter(key = value, name = "T", bounds = emptyList(), derived = false)),
             signature =
                 FunctionTypeTemplate(
                     context = listOf(FunctionParameterTemplate(name = "this", type = TypeTemplate.ParameterWrapper(value))),

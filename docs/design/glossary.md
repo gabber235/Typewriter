@@ -72,7 +72,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`BezierPoint`**: point of a Bezier camera segment: a position, an outgoing handle, an optional incoming handle, and an `Ease` toward the next point. See [scenes.md](scenes.md#3-camera-kinds).
 
-**`bind`**: `dynamic()` builder that derives a generic type parameter from content, so a bound parameter needs no picker. See [formula-language.md](formula-language.md#bind).
+**`bind`**: `Dynamics` registration that derives a generic type parameter of a resource type from that resource's content, through the generated handle `XBind.T`; a bound parameter needs no picker and is never stored. See [formula-language.md](formula-language.md#bind).
 
 **Book**: a `Resource` (not an entry) that carries variables, instances, and imports. See [formula-language.md](formula-language.md#book).
 
@@ -184,6 +184,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`ContentDelivery`**: `Live` value keyed by `Engine` with the publication the engine applied or its delivery failure, so the panel shows "applied on N of M engines". See [panel-engine-communication.md](panel-engine-communication.md) question 10.
 
+**`ContentTypes`**: where a catalog finds content types: the declarations each resource writes, the type each field holds, and what each bind computes. The realm answers binds by running them; published content answers from the declarations it carries. See [formula-language.md](formula-language.md#bind).
+
 **Context (chain)**: a typed bag of produced records passed along a chain that only grows. See [events-and-handlers.md](events-and-handlers.md#context).
 
 **Context (formula)**: the interface `C` in `Var<T, C>` whose properties are the values a field's formulas see. See [formula-language.md](formula-language.md#formula-contexts).
@@ -226,7 +228,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Derive**: a pure function over tracked inputs whose result type decides what it maintains. See [overview.md](overview.md#derive).
 
-**Derived type**: a type built by `bind`, with a content id like a declaration's (`content(resource, key)`, revision 1), reached through a query and never saved. See [formula-language.md](formula-language.md#bind).
+**Derived type**: a type built by `bind`, with a content id like a declaration's (`derived(resource, key)`, revision 1), reached through a query and never saved. See [formula-language.md](formula-language.md#bind).
 
 **Developer migrator**: the step a developer writes to convert a stored type's data between two revisions. See [migrations.md](migrations.md#developer-migrator).
 
@@ -664,6 +666,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`require(condition, message)`**: change operation guard; when false at commit the whole transaction fails. See [stored-data.md](stored-data.md#change-operations).
 
+**`ResourceType`**: what `typeOf` or `authoredTypeOf` answers for a resource: complete once every type parameter has an argument, partial with the fields already known while one is missing. See [formula-language.md](formula-language.md#bind).
+
 **`RestoreSnapshot<H>`**: core event that runs once when a hold really ended, after grace, to put back what its snapshot saved; also after a rejoin. See [interactions.md](interactions.md#snapshot-and-restore).
 
 **`RichText`**: text type whose `template` provider (MiniMessage) comes from the Minecraft capability. See [formula-language.md](formula-language.md#text-templates).
@@ -780,11 +784,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Type checking**: local and bidirectional; the field pushes the expected type down and expressions infer up. See [formula-language.md](formula-language.md#type-checking).
 
-**`TypeDefinition`**: describes a named type; its id is `declared` (Kotlin), `qualified` (builtins), `member` (a case without its own id, `member(owner, name)`) or `content` (`content(resource, key)`: a type a resource declares by its generated key, or in a use a field key meaning whatever that field holds), with a revision. Structural types have none. See [formula-language.md](formula-language.md#members-and-providers).
+**`TypeDefinition`**: describes a named type; its id is `declared` (Kotlin), `qualified` (builtins), `member` (a case without its own id, `member(owner, name)`) or `content` (`content(resource, key)`: a type a resource declares by its generated key, or in a use a field key meaning whatever that field holds, or a derived key naming what the resource's bind computes for a type parameter), with a revision. Structural types have none. See [formula-language.md](formula-language.md#members-and-providers).
 
 **`TypeScope`**: formula context for type fields; pure values only, types in scope. See [formula-language.md](formula-language.md#formula-contexts).
 
-**`TypeSelection`**: keeps an unbound type parameter creator picked. See [formula-language.md](formula-language.md#bind).
+**`TypeSelection`**: a resource's configured type as stored: its definition and the arguments a creator chose, keyed by parameter. A computed parameter is never stored; `CheckedCatalog.typeOf(owner, selection)` answers what the resource's values mean, `authoredTypeOf` what the creator's choices alone make. See [formula-language.md](formula-language.md#bind).
 
 **`TypingSkipped`**: live value that marks when a protagonist skipped the typing of an option dialogue. See [dialogue.md](dialogue.md#4-what-the-option-dialogue-asks-for).
 

@@ -4,11 +4,9 @@ import com.typewritermc.authoring.GraphEndpoint
 import com.typewritermc.authoring.GraphStep
 import com.typewritermc.authoring.RelationSelection
 import com.typewritermc.authoring.of
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.completeTypeOf
 import com.typewritermc.types.toResourceId
-import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring_facts.LinkProjection
@@ -16,7 +14,6 @@ import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.EndpointId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
@@ -199,11 +196,8 @@ private fun CapturedAuthoringReads.observeDeclared(evidence: DeclaredLinkEvidenc
 private fun CapturedAuthoringReads.isAvailable(resource: ResourceId): Boolean {
     observeInput(InputIdentity.Existence(resource))
     observeInput(InputIdentity.Form(ValueLocation.of(resource)))
-    return when (val selected = view.resources[resource]?.configuration) {
-        null, is TypeSelection.PendingWrapper -> false
-        is TypeSelection.CompleteWrapper -> typeCatalog.resolve(selected.use.use) is Resolution.Ready
-        else -> unknownVariant(selected)
-    }
+    val selected = view.resources[resource]?.configuration ?: return false
+    return typeCatalog.completeTypeOf(resource, selected) != null
 }
 
 /** Every location strictly above this one in its resource, the resource root first. */

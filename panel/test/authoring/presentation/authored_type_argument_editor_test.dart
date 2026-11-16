@@ -70,10 +70,12 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
-    final complete = switch (picked.result) {
-      skir.TypeSelection_completeWrapper(:final value) => value,
-      _ => throw TestFailure("Expected a complete resource selection"),
-    };
+    final complete =
+        switch (picked.result) {
+          final selection? => _pageKinds.completeUse(selection),
+          null => null,
+        } ??
+        (throw TestFailure("Expected a complete resource selection"));
     expect(complete.definition, testTypeId("ManifestPage"));
   });
 
@@ -172,10 +174,7 @@ void main() {
       at: PanelLocation.component(
         Scaffold(
           body: AuthoredTypeArgumentEditor(
-            selection: skir.TypeSelection.createPending(
-              definition: testTypeId("Variable"),
-              arguments: [skir.ArgumentSelection.unfilled],
-            ),
+            selection: selectionOfDefinition(testTypeId("Variable")),
             catalog: _variableOfReward,
             preview: (next) async {
               requested = next;
@@ -212,15 +211,15 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
     await tester.pumpAndSettle();
 
-    final complete = switch (requested) {
-      final skir.TypeSelection_completeWrapper value => value,
-      _ => throw TestFailure("Expected a complete selection"),
-    };
-    expect(complete.value.definition, testTypeId("Variable"));
+    final complete =
+        switch (requested) {
+          final selection? => _variableOfReward.completeUse(selection),
+          null => null,
+        } ??
+        (throw TestFailure("Expected a complete selection"));
+    expect(complete.definition, testTypeId("Variable"));
     expect(
-      (complete.value.arguments.single as skir.TypeUse_namedWrapper)
-          .value
-          .definition,
+      (complete.arguments.single as skir.TypeUse_namedWrapper).value.definition,
       testTypeId("CoinReward"),
     );
     expect(find.text("Values cleared: 1"), findsOne);
@@ -246,46 +245,93 @@ void main() {
       ),
       ..._rewards,
     ]);
-    skir.TypeSelection? requested;
-    await tester.pumpPanel(
-      const [],
-      at: PanelLocation.component(
-        Scaffold(
-          body: AuthoredTypeArgumentEditor(
-            selection: skir.TypeSelection.createPending(
-              definition: testTypeId("Variable"),
-              arguments: [
-                skir.ArgumentSelection.unfilled,
-                skir.ArgumentSelection.unfilled,
-              ],
-            ),
-            catalog: catalog,
-            preview: (next) async {
-              requested = next;
-              return readyTypeArgumentPreview(catalog, next);
-            },
-            commit: (_) async => const EditStageResult.staged(EditGroupId(1)),
-          ),
-        ),
-      ),
+    final editor = await TypeArgumentEditorDriver.show(
+      tester,
+      selection: selectionOfDefinition(testTypeId("Variable")),
+      catalog: catalog,
     );
 
-    await tester.tap(find.text("Choose a type").first);
-    await tester.pumpAndSettle();
-    await TypeChooserDriver(tester).choose("CoinReward");
-    await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
-    await tester.pumpAndSettle();
+    await editor.chooseNext("CoinReward");
+    await editor.review();
 
-    final pending = switch (requested) {
-      final skir.TypeSelection_pendingWrapper value => value,
+    final pending = switch (editor.requested) {
+      final selection? when catalog.completeUse(selection) == null => selection,
       _ => throw TestFailure("Expected a pending selection"),
     };
-    expect(pending.value.definition, testTypeId("Variable"));
-    expect(
-      pending.value.arguments.first,
-      isA<skir.ArgumentSelection_chosenWrapper>(),
-    );
-    expect(pending.value.arguments.last, skir.ArgumentSelection.unfilled);
+    expect(pending.definition, testTypeId("Variable"));
+    expect(pending.chosenAt(0), isNotNull);
+    expect(pending.chosenAt(1), isNull);
     expect(find.textContaining("Unfilled"), findsOneWidget);
   });
+
+  testWidgets("a derived parameter gets no row and never counts as unfilled", (
+    tester,
+  ) async {
+    final editor = await TypeArgumentEditorDriver.show(
+      tester,
+      selection: selectionOfDefinition(testTypeId("Variable")),
+      catalog: authoredCatalog([
+        declaredRecord(
+          "Variable",
+          parameters: {
+            "T": ["Reward"],
+            "Bound": [],
+          },
+          derived: {"Bound"},
+        ),
+        ..._rewards,
+      ]),
+    );
+
+    expect(find.text("T"), findsOne);
+    expect(find.text("Bound"), findsNothing);
+    await editor.chooseNext("CoinReward");
+
+    expect(
+      find.textContaining("independent fields remain editable"),
+      findsNothing,
+    );
+    await editor.review();
+    expect(editor.requested?.arguments.map((argument) => argument.parameter), [
+      0,
+    ]);
+  });
+
+  testWidgets(
+    "a type use offers no generic with a derived parameter, since no owner computes it",
+    (tester) async {
+      final catalog = authoredCatalog([
+        declaredRecord(
+          "Keyed",
+          parameters: {"T": [], "Bound": []},
+          derived: {"Bound"},
+        ),
+        declaredRecord("List", parameters: {"T": []}),
+      ]);
+
+      await tester.pumpPanel(
+        const [],
+        at: PanelLocation.component(
+          Builder(
+            builder: (context) => FilledButton(
+              onPressed: () => showAuthoredTypeUsePicker(
+                context,
+                title: "Choose payload type",
+                catalog: catalog,
+              ),
+              child: const Text("Choose payload"),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text("Choose payload"));
+      await tester.pumpAndSettle();
+      final chooser = TypeChooserDriver(tester);
+
+      await chooser.search("Keyed");
+      expect(chooser.result("Keyed<Unfilled>"), findsNothing);
+      await chooser.search("List");
+      expect(chooser.result("List<Unfilled>"), findsOneWidget);
+    },
+  );
 }

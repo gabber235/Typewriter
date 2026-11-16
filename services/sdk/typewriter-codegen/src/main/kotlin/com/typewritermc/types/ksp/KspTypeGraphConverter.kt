@@ -177,6 +177,7 @@ class KspTypeGraphConverter(
                                 .filterNot { it.declaration.qualifiedName?.asString() == "kotlin.Any" }
                                 .mapNotNull { template(it, null, path + parameter.name.asString()) }
                                 .toList(),
+                        derived = false,
                     )
                 }
             val templates = positions.map { template(it.resolve(), null, path, it.explicitNullable) }
@@ -387,12 +388,48 @@ class KspTypeGraphConverter(
         val targetType =
             type.arguments[1].type?.resolve()
                 ?: return failure(path + "target", "A resource reference target cannot use a star projection.")
-        val target = template(targetType, owner, path + "target", type.arguments[1].type?.explicitNullable == true) ?: return null
         val endpointName = endpointDeclaration.qualifiedName?.asString() ?: endpointDeclaration.simpleName.asString()
         val identity = relationLinkId(endpointName)
+        val targetStars = targetType.starShape()
+        if (targetStars == StarShape.MIXED) {
+            return failure(path + "target", "A resource reference target takes a star for every argument or for none.", property)
+        }
+        val star = endpointDeclaration.starOpposite()
+        if (star != null) return starLinkTemplate(targetType, star, endpointName, endpoint, path)
+        if (targetStars == StarShape.EVERY) {
+            return failure(
+                path + "target",
+                "Relation endpoint $endpointName links to a typed endpoint, so a star target would widen it.",
+                property,
+            )
+        }
+        val target = template(targetType, owner, path + "target", type.arguments[1].type?.explicitNullable == true) ?: return null
         definitions.putIfAbsent(identity, relationLinkDefinition(endpointName, endpoint))
         ownedFields.putIfAbsent(identity, emptyList())
         return identity.template(listOf(target))
+    }
+
+    /** The link of the endpoint [endpointName], whose opposite admits every [star]: its field must name that star. */
+    private fun starLinkTemplate(
+        target: KSType,
+        star: KSClassDeclaration,
+        endpointName: String,
+        endpoint: EndpointId,
+        path: List<String>,
+    ): TypeTemplate? {
+        if (target.starShape() != StarShape.EVERY || target.declaration.qualifiedName?.asString() != star.qualifiedName?.asString()) {
+            return failure(
+                path + "target",
+                "Relation endpoint $endpointName links to a star endpoint, so its links name the star: ${star.starName()}.",
+                property,
+            )
+        }
+        val admitted = identity(star, path + "target") ?: return null
+        buildDefinition(star, admitted, path + "target")
+        val identity = relationLinkId(endpointName)
+        definitions.putIfAbsent(identity, relationLinkDefinition(endpointName, endpoint, starOpposite = admitted))
+        ownedFields.putIfAbsent(identity, emptyList())
+        return identity.template(emptyList())
     }
 
     private fun buildDefinition(
@@ -417,6 +454,7 @@ class KspTypeGraphConverter(
                                     template(bound, declaration, path + parameter.name.asString())
                                 }
                             }.toList(),
+                    derived = false,
                 )
             }
         val parents =

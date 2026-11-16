@@ -90,6 +90,7 @@ final class BoundPage {
                 key: skir.ParameterKey(owner: type, index: 0),
                 name: "T",
                 bounds: const [],
+                derived: false,
               ),
             ]
           : const [],
@@ -150,9 +151,8 @@ final class BoundPage {
           types: const [],
           configuration:
               configuration ??
-              skir.TypeSelection.createComplete(
-                definition: type,
-                arguments: const [],
+              selectionOfUse(
+                skir.NamedTypeUse(definition: type, arguments: const []),
               ),
           fields: [
             skir.FieldValue(
@@ -201,9 +201,8 @@ skir.PublishedType linkType(
     parents: const [],
     representation: skir.RepresentationTemplate.createLink(
       endpoint: skir.EndpointId(value: "target"),
-      target: skir.TypeTemplate.createNamed(
-        definition: target,
-        arguments: const [],
+      target: skir.ResourceMatchTemplate.wrapType(
+        skir.TypeTemplate.createNamed(definition: target, arguments: const []),
       ),
     ),
   ),

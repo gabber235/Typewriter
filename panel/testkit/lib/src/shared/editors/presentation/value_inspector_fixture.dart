@@ -22,7 +22,7 @@ class ValueInspector {
   BoundPresentationHost host() {
     final actual = value.authoredActualType!;
     final selected = catalog.selectPresentation(
-      skir.TypeSelection.wrapComplete(actual),
+      selectionOfUse(actual),
       role,
     ) as SelectedEditorPresentation;
     return BoundPresentationHost(

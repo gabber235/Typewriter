@@ -6,8 +6,11 @@ import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.formula.graph.StaleRevision
 import com.typewritermc.formula.graph.TrackedGraph
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.ViewCatalogLease
+import com.typewritermc.realm.catalog.code
 import com.typewritermc.realm.catalog.over
 import com.typewritermc.services.libs.utils.closeAll
+import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.types.immutableMapCopy
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,6 +56,22 @@ data class AuthoringView internal constructor(
         }
 
     internal fun linkSlice(resource: ResourceId): LinkSlice = linkSlices[resource] ?: LinkSlice.EMPTY
+
+    /** What binds compute over this view. */
+    internal val binds by lazy { ViewBinds(AuthoredReadView.Original(this)) }
+
+    /**
+     * This view with [resources] in place of its own, sharing the links of every record it kept: what an operation or a
+     * plan reads, and what binds compute over, before anything is saved.
+     */
+    internal fun staged(resources: Map<ResourceId, AuthoringRecord>): AuthoredReadView.Staged =
+        AuthoredReadView.Staged(this, resources) {
+            resources
+                .flatMap { (id, record) ->
+                    if (this.resources[id] === record) linkSlice(id).own else ResourceValueMapper.discover(mapOf(id to record))
+                }.associateBy(LinkOccurrence::id)
+                .immutableMapCopy()
+        }
 
     /** [resource]'s slice judged once for this view with a plain reader over it. */
     internal fun judged(resource: ResourceId): ResourceProjection = judgements[resource]
@@ -137,14 +156,24 @@ sealed interface AuthoredReadView {
         internal fun judged(resource: ResourceId) = original.judged(resource)
 
         internal val projection get() = original.projection
+
+        internal val binds get() = original.binds
     }
 
     class Staged internal constructor(
         override val original: AuthoringView,
         override val resources: Map<ResourceId, AuthoringRecord>,
-        override val links: Map<LinkOccurrenceId, LinkOccurrence>,
+        findLinks: () -> Map<LinkOccurrenceId, LinkOccurrence>,
     ) : AuthoredReadView {
+        override val links by lazy(findLinks)
         override val readContext = ReadContext(original.catalog.generation)
+        internal val binds by lazy { ViewBinds(this) }
+
+        /** What [resources] declare and what binds compute over them. */
+        internal val content by lazy { contentTypesOf(resources::get, binds.origin) }
+
+        /** The code catalog plus [content]. */
+        internal val catalog by lazy { ViewCatalogLease(original.catalog.code, content) }
         private val slices by lazy { links.values.slices() }
         private val judgements = JudgedSlices { resource -> CapturedAuthoringReads(this).judge(resource, linkSlice(resource)) }
 
@@ -166,6 +195,7 @@ sealed interface AuthoredReadView {
             get() = cachedLinks ?: discoverLinks(resources).immutableMapCopy().also { cachedLinks = it }
         override val readContext = original.readContext
         private var derived: Derived? = null
+        private var revisionBinds: ViewBinds? = null
 
         /**
          * Counts the staged writes applied so far. A writer may replace the graph with the same map instance it
@@ -180,10 +210,14 @@ sealed interface AuthoredReadView {
 
         internal val projection: ProjectionResult get() = derived().projection
 
+        /** What binds compute over this view at its current revision. */
+        internal val binds: ViewBinds get() = revisionBinds ?: ViewBinds(this).also { revisionBinds = it }
+
         fun replace(next: Map<ResourceId, AuthoringRecord>) {
             resources = next
             cachedLinks = null
             derived = null
+            revisionBinds = null
             revision++
         }
 
@@ -205,6 +239,15 @@ internal fun AuthoredReadView.linkSlice(resource: ResourceId): LinkSlice =
         is AuthoredReadView.Staged -> linkSlice(resource)
         is AuthoredReadView.Working -> linkSlice(resource)
     }
+
+/** What binds compute over this view. */
+internal val AuthoredReadView.binds: ViewBinds
+    get() =
+        when (this) {
+            is AuthoredReadView.Original -> binds
+            is AuthoredReadView.Staged -> binds
+            is AuthoredReadView.Working -> binds
+        }
 
 /** [resource]'s slice judged once per view with a plain reader over it. */
 internal fun AuthoredReadView.judged(resource: ResourceId): ResourceProjection =
@@ -404,7 +447,9 @@ class InMemoryAuthoringViewStore(
         val catalog = before.catalog.retain()
         try {
             val immutable = merged.immutableMapCopy()
-            return AuthoringView(catalog.over(immutable), immutable, links, linkSlices = slices.immutableMapCopy(), scopes = scopes)
+            return viewOver(catalog, immutable) { viewCatalog ->
+                AuthoringView(viewCatalog, immutable, links, linkSlices = slices.immutableMapCopy(), scopes = scopes)
+            }
         } catch (failure: Throwable) {
             catalog.closeAfter(failure)
             throw failure
@@ -418,7 +463,9 @@ class InMemoryAuthoringViewStore(
         try {
             val immutable = immutableResources(resources)
             return RootRetention(
-                AuthoringView(catalog.over(immutable), immutable, discoverLinks(immutable).immutableMapCopy(), scopes = scopes),
+                viewOver(catalog, immutable) { viewCatalog ->
+                    AuthoringView(viewCatalog, immutable, discoverLinks(immutable).immutableMapCopy(), scopes = scopes)
+                },
             )
         } catch (failure: Throwable) {
             catalog.closeAfter(failure)
@@ -469,12 +516,26 @@ private class DefaultAuthoringLease(
         check(!closed.get()) { "The original read view lease is closed." }
         require(upsertedResources.keys.intersect(removedResources).isEmpty())
         val resources = immutableResources(root.resources + upsertedResources - removedResources)
-        return AuthoredReadView.Staged(root, resources, discoverLinks(resources).immutableMapCopy())
+        return root.staged(resources)
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) release()
     }
+}
+
+/**
+ * The view [build] makes from a catalog over [resources] whose binds are that same view's. A view needs its catalog to
+ * exist, and its binds need the view, so the catalog asks for the view only when a bind first runs.
+ */
+private fun viewOver(
+    catalog: AuthoringCatalogLease,
+    resources: Map<ResourceId, AuthoringRecord>,
+    build: (ViewCatalogLease) -> AuthoringView,
+): AuthoringView {
+    lateinit var view: AuthoringView
+    view = build(catalog.over(resources) { owner, key -> view.binds.origin.derived(owner, key) })
+    return view
 }
 
 private fun discoverLinks(resources: Map<ResourceId, AuthoringRecord>): Map<LinkOccurrenceId, LinkOccurrence> =

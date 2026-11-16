@@ -30,8 +30,8 @@ import com.typewritermc.realm.testing.text
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.setup
 import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
 import com.typewritermc.types.toSkir
-import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -50,7 +50,7 @@ import skirout.editor.v1.resource_operations.OperationWorkingOverlay
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.resource_operations.OperationInvocation as WireInvocation
 
@@ -76,7 +76,7 @@ val ResourceOperationRuntimeTest by testSuite {
         collectOperation<ResourceDraft, Unit>(
             origin,
             DECLARATION,
-            ResourceTarget.type(TagDefinition.id.namedTemplate()),
+            ResourceMatch.TypeWrapper(TagDefinition.id.namedUse()),
             AnyResourceSubjects,
             OperationInput.None,
             "Inline operations",

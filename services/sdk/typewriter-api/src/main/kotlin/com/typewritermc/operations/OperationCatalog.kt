@@ -13,6 +13,7 @@ import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.closedUse
@@ -39,7 +40,7 @@ import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
@@ -80,7 +81,7 @@ class CandidateSearch internal constructor(
  */
 class BoundResourceOperation internal constructor(
     val origin: ProviderOrigin,
-    val target: ResourceTarget,
+    val target: ResourceMatch,
     val definition: ResourceOperationDefinition,
     val input: BoundOperationInput,
     private val collected: CollectedOperation,
@@ -162,14 +163,17 @@ fun bindOperations(
             val collected = requireNotNull(declaration.collected)
             require(operations.none { it.definition.id == declaration.id }) { "Duplicate operation ${declaration.id}." }
             when (val target = declaration.target) {
-                is ResourceTarget.TypeWrapper -> {
-                    val closed = target.template.template.closedUse
-                    require(closed != null && catalog.resolve(closed) is Resolution.Ready) {
-                        "Operation target is unavailable: ${target.template}."
+                is ResourceMatch.TypeWrapper -> {
+                    require(catalog.resolve(TypeUse.NamedWrapper(target.value)) is Resolution.Ready) {
+                        "Operation target is unavailable: ${target.value}."
                     }
                 }
 
-                ResourceTarget.ANY_RESOURCE -> {
+                is ResourceMatch.DefinitionWrapper -> {
+                    require(catalog.isReady(target.value)) { "Operation target is unavailable: ${target.value}." }
+                }
+
+                ResourceMatch.ANY_RESOURCE -> {
                     Unit
                 }
 

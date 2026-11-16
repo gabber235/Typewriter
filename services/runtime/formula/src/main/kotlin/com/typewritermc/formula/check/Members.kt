@@ -5,6 +5,7 @@ import com.typewritermc.formula.VarDefinition
 import com.typewritermc.formula.syntax.Name
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.closedCases
 import com.typewritermc.types.function
 import com.typewritermc.types.isInstantiable
@@ -16,6 +17,8 @@ import skirout.editor.v1.type_catalog.AppliedSchema
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ResolvedField
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceMatch
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 
 // Members on a type: a record's fields, read through any number of references, then provider functions whose first
@@ -53,25 +56,54 @@ private fun Checker.mentionsMissing(type: TypeUse): Boolean =
         }
     }
 
-/** The record a value of [type] reads its fields from: the type itself, or what its references point at. */
+/**
+ * The record a value of [type] reads its fields from: the type itself, or what its references point at. A reference to
+ * a definition or to every resource names no one record, so it reads from itself as an unreadable target does.
+ */
 internal fun Checker.recordBehind(type: TypeUse): TypeUse {
     var current = type
     repeat(MAX_REFERENCE_HOPS) {
         val link = schema(current)?.representation as? ResolvedRepresentation.LinkWrapper ?: return current
-        current = normalize(link.value.target)
+        val target = link.value.target as? ResourceMatch.TypeWrapper ?: return current
+        current = normalize(target.value.use)
     }
     return current
 }
 
-/** The type of field [name] on a value of [type], read through references; each `Var` in it reads as its value. */
+/**
+ * The type of field [name] on a value of [type], read through references; each `Var` in it reads as its value. A
+ * reference to a definition reads the fields that need none of its arguments; a field that needs one is reported at
+ * [at], since a formula has no type for an argument the reference leaves open.
+ */
 internal fun Checker.fieldType(
     type: TypeUse,
     name: String,
+    at: TextSpan,
 ): TypeUse? {
     val record = recordBehind(type)
     if (record == ERROR) return ERROR
+    definitionBehind(record)?.let { return openFieldType(it, name, at) }
     val field = schema(record)?.fields?.firstOrNull { it.key == name } ?: return null
     return normalize(readType(field.type))
+}
+
+/** The definition a reference of [type] names whatever its arguments, or null when [type] is no such reference. */
+private fun Checker.definitionBehind(type: TypeUse): TypeDefinitionId? {
+    val link = schema(type)?.representation as? ResolvedRepresentation.LinkWrapper ?: return null
+    return (link.value.target as? ResourceMatch.DefinitionWrapper)?.value
+}
+
+private fun Checker.openFieldType(
+    definition: TypeDefinitionId,
+    name: String,
+    at: TextSpan,
+): TypeUse? {
+    val type = (environment.unappliedType(definition) as? Resolution.Ready)?.value ?: return null
+    type.knownFields.firstOrNull { it.key == name }?.let { return normalize(readType(it.type)) }
+    val waiting = (type as? ResourceType.Partial)?.schema?.dependentFields.orEmpty()
+    if (waiting.none { it.owner.name == name }) return null
+    report(at, "formula_open_member", "`$name` depends on a type argument this reference leaves open")
+    return ERROR
 }
 
 /**
@@ -129,7 +161,7 @@ internal fun Checker.member(
         report(target.span, "formula_nullable_read", "This may be null; use `?.` or `?:`")
         return Invalid(ERROR, span)
     }
-    val field = fieldType(target.type.nonNull(), name.text)
+    val field = fieldType(target.type.nonNull(), name.text, name.span)
     if (field != null) {
         val type = if (safe && target.type.isNullable) field.orNull() else field
         val read = FieldRead(target, name.text, safe, type, span)

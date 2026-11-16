@@ -704,11 +704,13 @@ final class _EvaluationResources implements skir.PortableResources {
   }
 
   @override
-  bool selects(skir.TypeSelection configuration, skir.TypeUse type) =>
-      switch (_catalog) {
-        final catalog? => _selectionMatches(catalog, configuration, type),
-        null => false,
-      };
+  bool selects(skir.TypeSelection configuration, skir.TypeUse type) {
+    final catalog = _catalog;
+    final named = catalog?.namedUse(type);
+    if (catalog == null || named == null) return false;
+    return catalog.fits(configuration, skir.ResourceMatch.wrapType(named)) !=
+        ResourceFit.no;
+  }
 
   @override
   bool linkTargets(skir.LinkValue link, skir.TypeSelection configuration) {
@@ -721,51 +723,25 @@ final class _EvaluationResources implements skir.PortableResources {
               candidate.second.id == link.endpoint,
         )
         .singleOrNull;
-    // Without a published relation there is no family to check the target
-    // against, so only the resource's existence guards the link.
+    // Without a published relation there is no target to check against, so
+    // only the resource's existence guards the link.
     if (relation == null) return true;
-    // The link sits on its own endpoint; it targets the opposite one.
+    // The link sits on its own endpoint; it targets the opposite one. The
+    // link value names no field, so the opposite endpoint's widest match is
+    // the most precise target known here.
     final opposite = relation.first.id == link.endpoint
         ? relation.second
         : relation.first;
-    return catalog
-        .nominalDefinitions(configuration)
-        .contains(opposite.resource.definition);
+    return catalog.fits(
+          configuration,
+          catalog.widestMatch(opposite.resource),
+        ) !=
+        ResourceFit.no;
   }
 
   @override
   skir.PublishedType? declaration(skir.TypeDefinitionId definition) =>
       _catalog?.published(definition);
-}
-
-/// Whether a resource configured as [selection] is a value of [expected]. A
-/// pending selection matches its nominal family when its chosen arguments are
-/// readable as the expected ones.
-bool _selectionMatches(
-  CheckedEditorCatalog catalog,
-  skir.TypeSelection selection,
-  skir.TypeUse expected,
-) {
-  if (selection is skir.TypeSelection_completeWrapper) {
-    return catalog.selectionMatches(selection, expected);
-  }
-  final named = catalog.namedUse(expected);
-  if (named == null ||
-      !catalog.nominalDefinitions(selection).contains(named.definition)) {
-    return false;
-  }
-  if (selection case skir.TypeSelection_pendingWrapper(:final value)
-      when value.definition == named.definition) {
-    if (value.arguments.length != named.arguments.length) return false;
-    for (final (index, argument) in value.arguments.indexed) {
-      if (argument case skir.ArgumentSelection_chosenWrapper(:final value)) {
-        if (!catalog.isReadableAs(value, named.arguments.elementAt(index))) {
-          return false;
-        }
-      }
-    }
-  }
-  return true;
 }
 
 /// The template as a closed type use, or null when it names a parameter.

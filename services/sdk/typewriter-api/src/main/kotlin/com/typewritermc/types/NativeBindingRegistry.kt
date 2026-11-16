@@ -11,6 +11,7 @@ import com.typewritermc.formula.formulaForm
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.isNominalSubtype
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.type_catalog.CollectionKind
@@ -75,6 +76,16 @@ interface EvaluationValues {
 
 interface NativeBindingRegistry {
     fun bind(actual: CheckedType): NativeBinding<*>
+
+    /**
+     * The stored fields of [value], a code record of a resource whose type is still [type], such as one whose computed
+     * argument its own content gives once saved: each known field through its own binding, and each field that waits on
+     * an open argument unfilled, as a partial record holds it. A waiting field's Kotlin value is not read.
+     */
+    fun encodePartial(
+        type: ResourceType.Partial,
+        value: Any,
+    ): Map<String, DataValue>
 
     fun defaultedFields(actual: CheckedType): Set<FieldOwner>
 
@@ -154,6 +165,26 @@ class FactoryNativeBindingRegistry(
                 }
             }
         }
+    }
+
+    override fun encodePartial(
+        type: ResourceType.Partial,
+        value: Any,
+    ): Map<String, DataValue> {
+        val plan =
+            factoriesByDefinition[type.definition]?.singleOrNull()?.constructionPlan
+                ?: throw NativeBindingException(
+                    "no_partial_native_fields",
+                    "${type.definition} has no generated fields to encode a partial value from.",
+                )
+        val read = plan.read(value).mapKeys { (owner, _) -> owner.name }
+        val known =
+            type.schema.knownFields.associate { field ->
+                @Suppress("UNCHECKED_CAST")
+                val binding = bind(resolve(field.type)) as NativeBinding<Any?>
+                field.key to binding.encode(read.getValue(field.key))
+            }
+        return known + type.schema.dependentFields.associate { it.owner.name to DataValue.UNFILLED }
     }
 
     override fun defaultedFields(actual: CheckedType): Set<FieldOwner> {

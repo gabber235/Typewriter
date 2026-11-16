@@ -1,8 +1,6 @@
 package com.typewritermc.realm.search
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.definition
-import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.catalog.ownershipRelationIds
@@ -11,14 +9,13 @@ import com.typewritermc.realm.storage.inPreviewTransaction
 import com.typewritermc.realm.storage.surrealRecordId
 import com.typewritermc.realm.storage.toResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.isSelectionReadableAs
 import com.typewritermc.types.requireValid
-import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.kernel.v1.resource_id.ResourceId
 
 internal data class IndexedAuthoringSearchCandidate(
@@ -136,9 +133,5 @@ private fun AuthoringRecord.matches(
     if (actualDefinition == realmRoot || catalog.isNominalSubtype(actualDefinition, realmRoot)) return false
     if (roots.isNotEmpty() && roots.none { catalog.isNominalSubtype(actualDefinition, it) }) return false
     if (target == null) return true
-    return when (val selected = configuration) {
-        is TypeSelection.CompleteWrapper -> catalog.isReadableAs(selected.use.use, target.use)
-        is TypeSelection.PendingWrapper -> catalog.knownApplications(selected).any { catalog.isReadableAs(it.use, target.use) }
-        else -> unknownVariant(selected)
-    }
+    return catalog.isSelectionReadableAs(configuration, target.use)
 }

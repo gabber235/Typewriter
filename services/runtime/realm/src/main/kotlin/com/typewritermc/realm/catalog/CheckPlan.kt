@@ -8,7 +8,7 @@ import com.typewritermc.discovery.OwnedCheck
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
-import com.typewritermc.services.libs.utils.runExtension
+import com.typewritermc.discovery.runExtension
 import skirout.editor.v1.catalog.ConfigurationRecipe
 import skirout.editor.v1.catalog.OwnedRule
 import skirout.editor.v1.checking.CheckOutcome

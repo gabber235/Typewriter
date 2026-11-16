@@ -49,7 +49,7 @@ internal fun JsonObject.string(key: String): String = getValue(key).jsonPrimitiv
 /** The owner resource: a record of [TEST_TYPE] whose fields are the case value's. */
 internal fun JsonObject.ownerRecord(): AuthoringRecord {
     val payload = (compactValue(getValue("value")) as DataValue.RecordWrapper).value
-    return AuthoringRecord.of(configuration = TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), payload = payload)
+    return AuthoringRecord.of(configuration = TypeSelection.of(TEST_TYPE.namedUse()), payload = payload)
 }
 
 internal fun JsonObject.locations(key: String): List<ValueLocation> =

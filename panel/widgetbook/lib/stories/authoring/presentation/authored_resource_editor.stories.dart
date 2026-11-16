@@ -257,7 +257,7 @@ messageFixture({bool unfilled = false}) {
   final resource = skir.ResourceId(value: "message:widgetbook");
   final record = skir.AuthoringRecord(
     types: const [],
-    configuration: skir.TypeSelection.createComplete(
+    configuration: skir.TypeSelection(
       definition: definition,
       arguments: const [],
     ),

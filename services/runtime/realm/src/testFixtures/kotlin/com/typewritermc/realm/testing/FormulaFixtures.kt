@@ -7,6 +7,8 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.boundPath
+import com.typewritermc.authoring.chosen
+import com.typewritermc.authoring.chosenUse
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.nativeReadProjection
@@ -161,7 +163,7 @@ fun RealmFixture.setVar(
 fun RealmFixture.varValue(resource: ResourceId): Var<*, *>? =
     views.read { view ->
         val record = view.resources.getValue(resource)
-        val type = (record.configuration as TypeSelection.CompleteWrapper).value.arguments.single()
+        val type = checkNotNull(record.configuration.chosen(0))
         val stored = record.valueAt(ValuePath.root.field("value")).takeUnless { it == DataValue.UNFILLED } ?: return@read null
         val checked = view.catalog.checked.ready(definitionValueUse(type))
         view.catalog.nativeBindings
@@ -184,8 +186,7 @@ fun <D, R> RealmFixture.readDraft(
 ): R =
     views.capture().use { lease ->
         val reads = CapturedAuthoringReads(lease.stagedView(mapOf(resource to record)))
-        val selection = (record.configuration as TypeSelection.CompleteWrapper).value
-        val binding = reads.binding(boundPath<Any>(ValueLocation.of(resource), TypeUse.NamedWrapper(selection)))
+        val binding = reads.binding(boundPath<Any>(ValueLocation.of(resource), TypeUse.NamedWrapper(record.configuration.chosenUse)))
         reads.read(type.bind((binding as Availability.Available).value))
     }
 
@@ -193,7 +194,7 @@ fun <D, R> RealmFixture.readDraft(
 fun RealmFixture.previewTypeChange(
     resource: ResourceId,
     to: TypeUse,
-): PreviewTypeArgumentChangeResponse = preview(resource, TypeSelection.CompleteWrapper(definitionOf(to)))
+): PreviewTypeArgumentChangeResponse = preview(resource, TypeSelection.of(definitionOf(to)))
 
 /**
  * Publishes the realm's saved content into an engine: the Realm assesses and compiles it as a publication does, and an

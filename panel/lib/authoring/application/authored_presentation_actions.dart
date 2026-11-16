@@ -335,9 +335,7 @@ extension _AuthoredPresentationActions on AuthoredPresentationHost {
     }
     final request = skir.ValuePreparationRequest(
       catalog: authored.generation,
-      target: skir.PreparationTarget.wrapRecord(
-        skir.TypeSelection.wrapComplete(named),
-      ),
+      target: skir.PreparationTarget.wrapRecord(selectionOfUse(named)),
       suppliedValue: skir.DataValue.createRecord(fields: const []),
     );
     final binding = edit!;

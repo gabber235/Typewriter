@@ -21,9 +21,7 @@ final class PanelValueKernel implements skir.ValueKernel {
   skir.PortableMaybe<skir.DataValue> configuration(skir.DataValue value) =>
       switch (value) {
         skir.DataValue_namedWrapper(:final value) => skir.PortableMaybeValue(
-          typeSelectionReadValue(
-            skir.TypeSelection.wrapComplete(value.actualType),
-          ),
+          typeSelectionReadValue(selectionOfUse(value.actualType)),
         ),
         _ => const skir.PortableMaybeMissing([]),
       };

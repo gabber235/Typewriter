@@ -34,6 +34,7 @@ import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -63,7 +64,7 @@ internal fun ownershipChildPath(index: Int) =
 /** A complete compiler page that owns [targets] through its children list, one item per target in order. */
 internal fun ownershipPageRecord(targets: List<ResourceId>) =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(PAGE_USE),
+        TypeSelection.of(PAGE_USE),
         mapOf(
             "children" to
                 DataValue.named(
@@ -90,14 +91,14 @@ internal fun ownershipPageRecord(targets: List<ResourceId>) =
 /** A complete compiler child whose text value is [value]. */
 internal fun ownershipChildRecord(value: String) =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(CHILD_USE),
+        TypeSelection.of(CHILD_USE),
         mapOf("value" to DataValue.StringValueWrapper(value)),
     )
 
 /** A child that is a compilation unit itself. */
 internal fun ownershipNestedRecord() =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(NESTED_USE),
+        TypeSelection.of(NESTED_USE),
         mapOf("value" to DataValue.StringValueWrapper("nested")),
     )
 
@@ -122,14 +123,14 @@ private val OWNERSHIP_CONTRACT =
         EndpointDefinition(
             id = PAGE_ENDPOINT,
             slot = EndpointSlot.FIRST,
-            resource = PAGE.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(PAGE.template()),
             cardinality = EndpointCardinality.ONE,
             onDelete = RelationDeletePolicy.CASCADE,
         ),
         EndpointDefinition(
             id = CHILD_ENDPOINT,
             slot = EndpointSlot.SECOND,
-            resource = CHILD.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(CHILD.template()),
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
@@ -183,7 +184,11 @@ private val DEFINITIONS =
         ),
         TypeDefinition.partial(
             id = CHILD_LINK,
-            representation = RepresentationTemplate.createLink(endpoint = PAGE_ENDPOINT, target = CHILD.template()),
+            representation =
+                RepresentationTemplate.createLink(
+                    endpoint = PAGE_ENDPOINT,
+                    target = ResourceMatchTemplate.TypeWrapper(CHILD.template()),
+                ),
         ),
         TypeDefinition.partial(
             id = CHILDREN,

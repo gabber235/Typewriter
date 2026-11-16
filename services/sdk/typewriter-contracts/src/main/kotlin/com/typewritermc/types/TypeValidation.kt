@@ -61,6 +61,7 @@ fun TypeId.requireValid(): TypeId =
                 when (val key = value.key) {
                     is ContentKey.GeneratedWrapper -> require(key.value.isNotBlank()) { "Content type key must not be blank." }
                     is ContentKey.FieldWrapper -> require(key.value.isNotBlank()) { "Content type field must not be blank." }
+                    is ContentKey.DerivedWrapper -> require(key.value.isNotBlank()) { "Derived type key must not be blank." }
                     else -> throw IllegalArgumentException("Unknown content key variant.")
                 }
             }
