@@ -8,6 +8,8 @@ import java.nio.file.Path
  */
 internal class PoolSettings(
     val poolDir: Path,
+    /** The run that started the pool, the only one it serves. */
+    val run: String,
     /** The run's logs folder: the pool's own log, and one for every Paper, client and display. */
     val logs: Path,
     val java: Path,
@@ -30,6 +32,7 @@ internal class PoolSettings(
         fun fromSystemProperties() =
             PoolSettings(
                 poolDir = path("playtest.poolDir"),
+                run = checkNotNull(System.getProperty("playtest.run")) { "playtest.run is not set: the game test task sets it" },
                 logs = path("playtest.logs"),
                 java = path("playtest.java"),
                 paperDir = path("playtest.paper"),

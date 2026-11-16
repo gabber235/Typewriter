@@ -495,6 +495,7 @@ internal class PoolSession private constructor(
                 is Message.WorkHung -> Attempt.Event.Failed(player, WorkHung(player.name, message.work(), message.beganAfter()))
                 is Message.ClientLost -> Attempt.Event.Failed(player, ClientLost(player.name, message.reason()))
                 is Message.PaperLost -> Attempt.Event.Failed(player, PaperLost(message.reason()))
+                is Message.LeaseExpired -> Attempt.Event.Failed(player, LeaseExpired(message.reason()))
             },
         )
     }

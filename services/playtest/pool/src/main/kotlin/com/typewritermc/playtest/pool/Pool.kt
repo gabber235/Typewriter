@@ -11,7 +11,6 @@ import com.typewritermc.playtest.wire.Message.ClientRequest
 import com.typewritermc.playtest.wire.Message.ClientStalled
 import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.Covered
-import com.typewritermc.playtest.wire.Message.CoveredClass
 import com.typewritermc.playtest.wire.Message.Declined
 import com.typewritermc.playtest.wire.Message.Disconnected
 import com.typewritermc.playtest.wire.Message.End
@@ -20,6 +19,7 @@ import com.typewritermc.playtest.wire.Message.Hello
 import com.typewritermc.playtest.wire.Message.HungEnded
 import com.typewritermc.playtest.wire.Message.Joined
 import com.typewritermc.playtest.wire.Message.Lease
+import com.typewritermc.playtest.wire.Message.LeaseExpired
 import com.typewritermc.playtest.wire.Message.LeaseFailed
 import com.typewritermc.playtest.wire.Message.PaperLost
 import com.typewritermc.playtest.wire.Message.PaperRequest
@@ -52,6 +52,7 @@ import com.typewritermc.playtest.wire.Message.Stepping
 import com.typewritermc.playtest.wire.Message.StopStepping
 import com.typewritermc.playtest.wire.Message.Submit
 import com.typewritermc.playtest.wire.Message.WorkHung
+import com.typewritermc.playtest.wire.PoolFile
 import com.typewritermc.playtest.wire.Wire
 import java.io.BufferedInputStream
 import java.io.DataInputStream
@@ -63,7 +64,6 @@ import java.net.SocketException
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.util.UUID
 import java.util.concurrent.LinkedBlockingQueue
@@ -73,7 +73,9 @@ import kotlin.system.exitProcess
 
 /**
  * Starts the pool for the pool folder. The lock file makes it the only pool there; another pool that
- * holds it already serves this run, so this one exits at once. Test JVMs find the pool by its port file.
+ * holds it serves this run, or is being stopped by the test JVM that started this one, so this one
+ * exits at once. Test JVMs find the pool by the pool file it writes once it listens and removes as it
+ * exits.
  */
 fun main() {
     val settings = PoolSettings.fromSystemProperties()
@@ -83,16 +85,14 @@ fun main() {
     // Every starter appends its output to the log; the pool that holds the lock empties it, so the log holds this run alone.
     Files.createDirectories(settings.logs)
     FileChannel.open(settings.poolLog, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
-    val portFile = settings.poolDir.resolve("pool.port")
+    val poolFile = settings.poolDir.resolve(PoolFile.NAME)
     ServerSocket(0, BACKLOG, InetAddress.getLoopbackAddress()).use { server ->
         val pool = Pool(settings, server)
-        val partial = settings.poolDir.resolve("pool.port.partial")
-        Files.writeString(partial, server.localPort.toString())
-        Files.move(partial, portFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+        PoolFile.of(server.localPort, settings.run).write(poolFile)
         try {
             pool.run()
         } finally {
-            Files.deleteIfExists(portFile)
+            Files.deleteIfExists(poolFile)
             lock.release()
         }
     }
@@ -104,8 +104,9 @@ private const val BACKLOG = 16
 /**
  * The pool's single loop: every connection and process reports into one queue, and only this loop
  * touches the pool's state. It boots the game, hands each submitted attempt the players it claims once
- * they are free, wiped and in a region of its own, routes each attempt's messages, and stops once the
- * last session left.
+ * they are free, wiped and in a region of its own, routes each attempt's messages, and stops once its
+ * run is over: the last session left, or none came while its owner could open one. A lease that runs
+ * out before its session sends the result ends the attempt, so a stuck session cannot keep players.
  */
 internal class Pool(
     private val settings: PoolSettings,
@@ -207,11 +208,6 @@ internal class Pool(
         val together: Long,
     )
 
-    private class Routed<T>(
-        val session: Peer,
-        val id: T,
-    )
-
     private val events = LinkedBlockingQueue<Event>()
     private val clients =
         (1..settings.clients).map { Client(Player("gv-$it", UUID.nameUUIDFromBytes("OfflinePlayer:gv-$it".toByteArray()))) }
@@ -220,31 +216,8 @@ internal class Pool(
 
     // What each submission's attempt covered: its Paper's reads, and the lines they came to at its last settle.
     private val coverage = Coverage<Pair<Peer, Long>>()
-    private val covered = mutableMapOf<Pair<Peer, Long>, List<CoveredClass>>()
-    private val coverageCosts = mutableMapOf<Pair<Peer, Long>, CoverageCost>()
 
-    /**
-     * What one submission's coverage cost: the main thread time of each Paper read handed to it (a read
-     * two attempts share counts for each), and the pool's analyses at its settles.
-     */
-    private class CoverageCost {
-        var reads = 0
-        var readNanos = 0L
-        var analyses = 0
-        var analysisNanos = 0L
-        var lastAnalysisAt = 0L
-
-        /** The cost as one step of the attempt's record. */
-        fun step(): AttemptStep =
-            AttemptStep(
-                lastAnalysisAt,
-                analysisNanos / 1_000_000,
-                "coverage: $reads reads held Paper's main thread %.3f ms; $analyses analyses took %.1f ms"
-                    .format(java.util.Locale.ROOT, readNanos / 1e6, analysisNanos / 1e6),
-            )
-    }
-
-    private val sessions = mutableSetOf<Peer>()
+    private val lifetime = Lifetime<Peer>(System.currentTimeMillis(), TimeUnit.SECONDS.toMillis(OWNER_SECONDS))
     private val queued = mutableMapOf<Pair<Peer, Long>, Queued>()
     private val timings = mutableMapOf<Pair<Peer, Long>, Timing>()
 
@@ -252,8 +225,8 @@ internal class Pool(
     private val parked = mutableListOf<Attempt>()
     private val hung = mutableMapOf<String, HungWork>()
     private val attempts = Attempts<Attempt>()
-    private val requests = mutableMapOf<Long, Routed<Long>>()
-    private val barriers = mutableMapOf<Int, Routed<Int>>()
+    private val requests = Routes<Peer, Long>()
+    private val barriers = Routes<Peer, Int>()
     private lateinit var game: Game
     private lateinit var shared: Server
 
@@ -273,11 +246,8 @@ internal class Pool(
         )
     }
     private var failure: String? = null
-    private var sawSession = false
     private var nextAttempt = 0L
     private var nextTogether = 0L
-    private var nextRequest = 0L
-    private var nextBarrier = 0
 
     // Every client was ready once: the game booted, and from then on the pool lends players.
     private var booted = false
@@ -298,7 +268,12 @@ internal class Pool(
         }
         bootLimit(shared)
         try {
-            while (!sawSession || sessions.isNotEmpty()) handle(events.take())
+            while (!lifetime.over(System.currentTimeMillis())) {
+                next()?.let(::handle)
+                attempts.overdue(System.currentTimeMillis()).forEach(::expire)
+            }
+            // A session that comes now finds the pool on its way out, and waits for the next one.
+            server.close()
             // Every attempt ended, so each own Paper halts on its own; one that trained writes its cache as
             // it exits, which the pool keeps only once it hears the exit.
             val ownsEndBy = System.nanoTime() + TimeUnit.SECONDS.toNanos(OWN_EXIT_SECONDS)
@@ -306,6 +281,12 @@ internal class Pool(
         } finally {
             game.stop()
         }
+    }
+
+    /** The next event, or null once the lifetime or a lease may have run out first. */
+    private fun next(): Event? {
+        val wakeAt = listOfNotNull(lifetime.wakeAt(), attempts.nextDeadline()).minOrNull() ?: return events.take()
+        return events.poll(maxOf(0, wakeAt - System.currentTimeMillis()), TimeUnit.MILLISECONDS)
     }
 
     private fun handle(event: Event) {
@@ -335,8 +316,7 @@ internal class Pool(
     private fun joined(peer: Peer) {
         when (peer.role) {
             Role.SESSION -> {
-                sessions += peer
-                sawSession = true
+                lifetime.joined(peer)
                 runs.started(peer.hello.name())
                 failure?.let { peer.send(Refused(it)) }
             }
@@ -392,11 +372,10 @@ internal class Pool(
                 reclaim(session, message)
             }
 
-            // A lost own Paper runs no work that could still reach a later attempt.
+            // A lost own Paper runs no work that could still reach a later attempt, nor does an attempt whose lease ran out.
             is Settle -> {
-                attemptOf(session, message.id())?.let { attempt ->
-                    attempt.server.peer?.send(Settle(attempt.id)) ?: session.send(Settled(message.id(), covered[attempt.key].orEmpty()))
-                }
+                val attempt = attemptOf(session, message.id()) ?: return session.send(Settled(message.id(), listOf()))
+                attempt.server.peer?.send(Settle(attempt.id)) ?: session.send(Settled(message.id(), coverage.latest(attempt.key)))
             }
 
             is Restart -> {
@@ -409,13 +388,12 @@ internal class Pool(
             is Result -> {
                 val attempt = attemptOf(session, message.submission()) ?: return
                 val claimed = timings.remove(session to message.submission())?.steps.orEmpty()
-                val cost = coverageCosts.remove(attempt.key)?.step()
                 runs.record(
                     session.hello.name(),
                     attempt.submit,
                     message,
-                    claimed + listOfNotNull(cost),
-                    covered.remove(attempt.key).orEmpty(),
+                    claimed + listOfNotNull(coverage.cost(attempt.key)),
+                    coverage.latest(attempt.key),
                 )
                 coverage.forget(attempt.key)
                 release(attempt, "its session sent its result")
@@ -473,9 +451,7 @@ internal class Pool(
             }
 
             is StepUntil -> {
-                val routed = StepUntil(message.player(), message.tick(), ++nextBarrier)
-                barriers[routed.barrier()] = Routed(session, message.barrier())
-                paper?.send(routed)
+                paper?.send(StepUntil(message.player(), message.tick(), barriers.route(session, message.barrier()).toInt()))
             }
 
             is StopStepping -> {
@@ -493,9 +469,7 @@ internal class Pool(
         session: Peer,
         request: Request,
     ) {
-        val id = ++nextRequest
-        requests[id] = Routed(session, request.request())
-        peer?.send(request.withRequest(id))
+        peer?.send(request.withRequest(requests.route(session, request.request())))
     }
 
     /** The players a message for the game acts on, or null for a message a session never sends. */
@@ -578,22 +552,13 @@ internal class Pool(
     private fun covered(message: Covered) {
         message.attempts().forEach { id ->
             val attempt = attempts[id] ?: return@forEach
-            coverage.add(attempt.key, message.exec())
-            val cost = coverageCosts.getOrPut(attempt.key, ::CoverageCost)
-            cost.reads++
-            cost.readNanos += message.readNanos()
+            coverage.add(attempt.key, message.exec(), message.readNanos())
         }
     }
 
     /** Paper read [attempt]'s last counts just before: its session hears all the attempt covered so far. */
     private fun settled(attempt: Attempt) {
-        val start = System.nanoTime()
         val lines = coverage.covered(attempt.key, attempt.server.folder.classes)
-        val cost = coverageCosts.getOrPut(attempt.key, ::CoverageCost)
-        cost.analyses++
-        cost.analysisNanos += System.nanoTime() - start
-        cost.lastAnalysisAt = System.currentTimeMillis()
-        covered[attempt.key] = lines
         attempt.session.send(Settled(attempt.submit.submission(), lines))
     }
 
@@ -622,7 +587,7 @@ internal class Pool(
         request: Long,
         answer: (Long) -> Message,
     ) {
-        requests.remove(request)?.let { it.session.send(answer(it.id)) }
+        requests.answer(request)?.let { it.session.send(answer(it.id)) }
     }
 
     private fun fromClient(
@@ -715,6 +680,7 @@ internal class Pool(
         if (group.any { it.started || it.reset.size < it.players.size }) return
         for (attempt in group) {
             attempt.started = true
+            attempts.leased(attempt.id, System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(LEASE_SECONDS))
             timings[attempt.session to attempt.submit.submission()]?.took(
                 "wipe ${attempt.players.joinToString { it.name() }} into region (${attempt.region.x()}, ${attempt.region.z()})",
             )
@@ -725,15 +691,16 @@ internal class Pool(
 
     /** Hands a barrier back under the session's own id, unless it belongs to an attempt that already ended. */
     private fun barrierSeen(message: BarrierSeen) {
-        val routed = barriers.remove(message.barrier()) ?: return
+        val routed = barriers.answer(message.barrier().toLong()) ?: return
         val attempt = attempts.of(message.player()) ?: return
         if (routed.session == attempt.session) routed.session.send(BarrierSeen(message.player(), routed.id))
     }
 
     private fun left(peer: Peer) {
         when (peer.role) {
+            // What it asked gets no answers, and what its attempts covered goes with it.
             Role.SESSION -> {
-                sessions -= peer
+                lifetime.left(peer)
                 abandon(peer)
                 claims.leave(peer)
                 queued.keys.removeAll { it.first == peer }
@@ -741,6 +708,9 @@ internal class Pool(
                 parked.filter { it.session == peer }.forEach { claims.release(it.players) }
                 parked.removeAll { it.session == peer }
                 attempts.all.filter { it.session == peer }.forEach { release(it, "its session left") }
+                requests.leave(peer)
+                barriers.leave(peer)
+                coverage.forget { it.first == peer }
                 lend()
             }
 
@@ -1000,6 +970,7 @@ internal class Pool(
             Result(submission, 0, reason, null, listOf(), "", listOf(), listOf()),
             claimed,
         )
+        coverage.forget(attempt.key)
         attempt.session.send(LeaseFailed(submission, reason))
         release(attempt, "its Paper was lost")
     }
@@ -1108,6 +1079,29 @@ internal class Pool(
                     "$player stayed out of the pool for the rest of the run: its work ${held.works.joinToString { "\"$it\"" }} never ended."
             }
 
+    /**
+     * [attempt]'s lease ran out before its session sent the result, as a session stuck in its body or
+     * its test JVM frozen: the attempt fails in its run's file, its players serve the next claims, and
+     * the session hears so, which fails what its body waits for. Its result, should it still come, finds
+     * no attempt.
+     */
+    private fun expire(attempt: Attempt) {
+        val names = attempt.players.joinToString { it.name() }
+        val reason = "its lease ran out after $LEASE_SECONDS s while its session still held $names; see ${settings.poolLog}"
+        System.err.println("Attempt ${attempt.id}: ${attempt.submit.testId()} $reason")
+        val submission = attempt.submit.submission()
+        runs.record(
+            attempt.session.hello.name(),
+            attempt.submit,
+            Result(submission, TimeUnit.SECONDS.toMillis(LEASE_SECONDS), reason, null, listOf(), "", listOf(), listOf()),
+            timings.remove(attempt.key)?.steps.orEmpty() + listOfNotNull(coverage.cost(attempt.key)),
+            coverage.latest(attempt.key),
+        )
+        coverage.forget(attempt.key)
+        attempt.session.send(LeaseExpired(attempt.players.first().name(), reason))
+        release(attempt, reason)
+    }
+
     /** [attempt] ended for [why], and its players serve the next claims. */
     private fun release(
         attempt: Attempt,
@@ -1214,7 +1208,7 @@ internal class Pool(
         if (failure != null) return
         failure = reason
         System.err.println("The game failed: $reason")
-        sessions.forEach { it.send(Refused(reason)) }
+        lifetime.sessions.forEach { it.send(Refused(reason)) }
         game.stop()
     }
 
@@ -1248,6 +1242,15 @@ internal class Pool(
 
     private companion object {
         const val STOP_SECONDS = 10L
+
+        /**
+         * How long a leased attempt may hold its players before its session sends the result: well over
+         * the longest attempt seen, a restart that trains its boot cache (47 s on a loaded Mac).
+         */
+        const val LEASE_SECONDS = 300L
+
+        /** How long the test JVM that starts the pool has to open its session; it opens it as soon as the pool listens. */
+        const val OWNER_SECONDS = 60L
 
         /** How long the pool waits, once every session left, for its own Papers to exit; a training one assembles its cache meanwhile. */
         const val OWN_EXIT_SECONDS = 60L

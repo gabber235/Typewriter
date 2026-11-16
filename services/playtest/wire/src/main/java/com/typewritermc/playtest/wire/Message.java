@@ -415,6 +415,13 @@ public sealed interface Message {
     record PaperLost(String player, String reason) implements PlayerEvent {}
 
     /**
+     * Pool to the session holding {@code player}: the lease of the attempt holding it ran out before the
+     * session sent the attempt's result, for {@code reason}; the pool recorded the attempt as failed and
+     * gave its players to the next claims, so the attempt fails.
+     */
+    record LeaseExpired(String player, String reason) implements PlayerEvent {}
+
+    /**
      * Pool to Paper: Paper booted again under attempt {@code attempt} after a kill, and {@code players}
      * belong to it again, unwiped and where Paper put them. From now on their counted work holds back
      * ticks. Paper answers with {@link Resumed}.

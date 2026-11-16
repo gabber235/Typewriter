@@ -36,6 +36,7 @@ import com.typewritermc.playtest.wire.Message.Key;
 import com.typewritermc.playtest.wire.Message.KeyStep;
 import com.typewritermc.playtest.wire.Message.Kind;
 import com.typewritermc.playtest.wire.Message.Lease;
+import com.typewritermc.playtest.wire.Message.LeaseExpired;
 import com.typewritermc.playtest.wire.Message.LeaseFailed;
 import com.typewritermc.playtest.wire.Message.Capture;
 import com.typewritermc.playtest.wire.Message.Captured;
@@ -162,6 +163,10 @@ public final class Wire {
             case PaperLost lost -> {
                 string(body, lost.player());
                 string(body, lost.reason());
+            }
+            case LeaseExpired expired -> {
+                string(body, expired.player());
+                string(body, expired.reason());
             }
             case Resume resume -> {
                 body.writeLong(resume.attempt());
@@ -438,6 +443,7 @@ public final class Wire {
             case ClipStarted m -> 50;
             case StopClip m -> 51;
             case ClipWritten m -> 52;
+            case LeaseExpired m -> 53;
         };
     }
 
@@ -518,6 +524,7 @@ public final class Wire {
             case 50 -> new ClipStarted(in.readLong(), optional(in));
             case 51 -> new StopClip(in.readLong(), uuid(in));
             case 52 -> new ClipWritten(in.readLong(), in.readInt(), optional(in));
+            case 53 -> new LeaseExpired(string(in), string(in));
             case 48 -> {
                 int count = count(in);
                 var attempts = new ArrayList<Long>(count);
