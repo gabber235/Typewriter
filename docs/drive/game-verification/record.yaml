@@ -658,6 +658,12 @@ decided:
   - id: find-tab-1-cause
     what: "Find the cause (Recommended)"
     why: TAB-1's first window took 1 to 9 ticks under load, close to its window; measure, then a choice
+  - id: watched-means-measured
+    what: "Keep it (Recommended)"
+    why: The watch travels with the probe on Paper's connection and the client measures pixels of every watched entity from the probe until the wipe; no look step, 0.6 to 0.7% of the suite against 0.1% for visible() entities only
+  - id: type-like-a-person
+    what: "A. Type like a person (Recommended)"
+    why: Paper answers suggestions on 4 threads and keeps only the last request it saw, so a burst of keys got a stale answer and a retype after 6 ticks; typing sends one key per tick and a suggestion request counts as player work until Paper answers
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -789,4 +795,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Paper rules merged (6e5128c00); a restart Paper can outlive an attempt whose client was lost before its lease (fixing); steadiness builds the watch with the probe and finds TAB-1; then slice 8.
+next: Steadiness types one key per tick, holds packets while a record is due, shares the watch codec; restart Papers get a name per attempt; then slice 8.
