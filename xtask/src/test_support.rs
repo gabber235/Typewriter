@@ -590,3 +590,12 @@ pub fn drive_attempts<T: crate::e2e::Target>(
     )?;
     Ok((folded, drove.into_inner()))
 }
+
+/// The environment variables `command` explicitly removes from what it inherits.
+pub fn removed_env(command: &std::process::Command) -> Vec<String> {
+    command
+        .get_envs()
+        .filter(|(_, value)| value.is_none())
+        .map(|(key, _)| key.to_string_lossy().into_owned())
+        .collect()
+}

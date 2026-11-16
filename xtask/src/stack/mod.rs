@@ -466,6 +466,7 @@ pub fn command(ctx: &Context, command: StackCommand) -> Result<()> {
                 |stack| {
                     let mut process = Command::new(&command[0]);
                     process.args(&command[1..]);
+                    crate::isolate_flutter_sdk(&mut process);
                     stack.run_command(&mut process)
                 },
             )?;
