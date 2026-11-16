@@ -53,12 +53,14 @@ final class Looks {
         List<UUID> drawn = Perceiver.drawn();
         NoDraw.render(mc);
         boolean clip = Clips.drawsFrame();
-        if (capture == null && !clip && drawn.isEmpty()) return;
+        // A capture takes the tick's end, as the gated run draws it; a clip's passes before it leave it waiting.
+        boolean captures = capture != null && Clips.partial() >= 1f;
+        if (!captures && !clip && drawn.isEmpty()) return;
         var copies = new ArrayList<Grab.Copy>(drawn.size() + 1);
         copies.add(drawWithout(mc, renderer, null));
         for (UUID entity : drawn) copies.add(drawWithout(mc, renderer, entity));
         List<Pixels> frames = Grab.read(copies);
-        if (capture != null) answerCapture(frames.getFirst());
+        if (captures) answerCapture(frames.getFirst());
         if (clip) Clips.add(frames.getFirst());
         for (int index = 0; index < drawn.size(); index++) {
             Perceiver.owns(drawn.get(index), frames.getFirst().differingShare(frames.get(index + 1)));
