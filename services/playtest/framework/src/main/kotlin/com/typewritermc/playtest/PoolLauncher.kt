@@ -37,7 +37,7 @@ internal class PoolLauncher(
         var goingSince: Long? = null
         while (System.nanoTime() < deadline) {
             val pool = PoolFile.read(poolFile).getOrNull()
-            val process = pool?.process()?.getOrNull()
+            val process = pool?.process()?.running()?.getOrNull()
             when {
                 pool == null || process == null -> {
                     goingSince = null

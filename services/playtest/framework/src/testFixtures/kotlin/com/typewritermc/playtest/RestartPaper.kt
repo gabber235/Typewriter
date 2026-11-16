@@ -13,11 +13,11 @@ import java.nio.file.Path
  */
 suspend fun <T> RequirementScope.killPaperWhileItBoots(restart: suspend () -> T): T =
     coroutineScope {
-        val killed = paperProcess(attempt.paper)?.pid()
+        val killed = partProcess(attempt.paper)?.pid()
         val killer =
             launch(Dispatchers.IO) {
                 while (isActive) {
-                    val booting = paperProcess(attempt.paper)?.takeIf { it.pid() != killed }
+                    val booting = partProcess(attempt.paper)?.takeIf { it.pid() != killed }
                     if (booting != null) {
                         booting.destroyForcibly()
                         break
@@ -36,13 +36,3 @@ private const val KILL_POLL_MILLIS = 10L
 
 /** The folder the pool, every Paper and every client of this run log into. */
 val runLogs: Path get() = PlaytestSettings.fromSystemProperties().logs
-
-/** The process of the Paper named [paper]. */
-private fun paperProcess(paper: String): ProcessHandle? =
-    ProcessHandle.allProcesses().toList().firstOrNull { process ->
-        process
-            .info()
-            .arguments()
-            .orElse(arrayOf())
-            .contains("-Dplaytest.paper.name=$paper")
-    }

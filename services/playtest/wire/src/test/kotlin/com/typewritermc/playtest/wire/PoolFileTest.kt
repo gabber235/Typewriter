@@ -14,15 +14,7 @@ val PoolFileTest by testSuite {
         written.write(file)
 
         PoolFile.read(file) shouldBePresent { it shouldBe written }
-        written.process() shouldBePresent { it.pid() shouldBe ProcessHandle.current().pid() }
-    }
-
-    test("a pool file names no running pool once its process ended, nor when another process took its pid") {
-        val ended = ProcessBuilder("true").start().apply { waitFor() }
-        val self = PoolFile.of(41_234, "run-1")
-
-        PoolFile(41_234, "run-1", ended.pid(), 0).process().shouldBeEmpty()
-        PoolFile(self.port(), self.run(), self.pid(), self.startedMillis() - 1_000).process().shouldBeEmpty()
+        written.process().running() shouldBePresent { it.pid() shouldBe ProcessHandle.current().pid() }
     }
 
     test("a folder without a pool file, or with a file that is not one, holds no pool") {

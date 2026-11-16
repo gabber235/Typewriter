@@ -1,5 +1,6 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.wire.PartFile
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -22,7 +23,36 @@ internal class Part(
     val process: Process,
     val log: Path,
     val player: String? = null,
-)
+) {
+    companion object {
+        /**
+         * Starts [command] in [dir] as the part [name], its output into [log] (added to it when [append]),
+         * with [environment] added to the pool's own, and names its process in [dir]'s part file, in place
+         * of an earlier boot's.
+         */
+        fun launch(
+            name: String,
+            command: List<String>,
+            dir: Path,
+            log: Path,
+            environment: Map<String, String>,
+            player: String? = null,
+            append: Boolean = false,
+        ): Part {
+            val builder =
+                ProcessBuilder(command)
+                    .directory(dir.toFile())
+                    .redirectErrorStream(true)
+                    .redirectOutput(
+                        if (append) ProcessBuilder.Redirect.appendTo(log.toFile()) else ProcessBuilder.Redirect.to(log.toFile()),
+                    ).redirectInput(ProcessBuilder.Redirect.from(File("/dev/null")))
+            builder.environment().putAll(environment)
+            val process = builder.start()
+            PartFile.of(process.toHandle()).write(dir.resolve(PartFile.NAME))
+            return Part(name, process, log, player)
+        }
+    }
+}
 
 /**
  * The folder, port and log of a Paper the pool runs; every boot of a restart attempt's own Paper reuses
@@ -255,7 +285,7 @@ internal class Game private constructor(
                     add(server.mainClass)
                     add("--nogui")
                 }
-            return launch(if (name == "paper") "Paper" else "Paper $name", command, dir, folder.log, mapOf(), append = append)
+            return Part.launch(if (name == "paper") "Paper" else "Paper $name", command, dir, folder.log, mapOf(), append = append)
         }
 
         /**
@@ -331,27 +361,7 @@ internal class Game private constructor(
 
                     InputPath.XTEST -> mapOf("DISPLAY" to checkNotNull(display).name)
                 }
-            return launch("Client $player", command, dir, logOf(settings, "client-$player"), environment, player)
-        }
-
-        private fun launch(
-            name: String,
-            command: List<String>,
-            dir: Path,
-            log: Path,
-            environment: Map<String, String>,
-            player: String? = null,
-            append: Boolean = false,
-        ): Part {
-            val builder =
-                ProcessBuilder(command)
-                    .directory(dir.toFile())
-                    .redirectErrorStream(true)
-                    .redirectOutput(
-                        if (append) ProcessBuilder.Redirect.appendTo(log.toFile()) else ProcessBuilder.Redirect.to(log.toFile()),
-                    ).redirectInput(ProcessBuilder.Redirect.from(File("/dev/null")))
-            builder.environment().putAll(environment)
-            return Part(name, builder.start(), log, player)
+            return Part.launch("Client $player", command, dir, logOf(settings, "client-$player"), environment, player)
         }
 
         // An empty world over one bedrock layer: a player waits on the ground while probes step Paper. Paper

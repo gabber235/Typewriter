@@ -5,7 +5,6 @@ import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.string.shouldContain
-import java.nio.file.Path
 
 /**
  * Registers a requirement of the framework's own test kit in which [lose] makes one attempt lose its
@@ -67,18 +66,6 @@ suspend fun <T> RequirementScope.freezeClient(
     }
 }
 
-/** The process of [player]'s client: the one whose game folder is the player's folder in the pool. */
-private fun clientProcess(player: GamePlayer): ProcessHandle {
-    val gameDir = PlaytestSettings.fromSystemProperties().poolDir.resolve("client-${player.name}")
-    val client =
-        ProcessHandle.allProcesses().toList().firstOrNull { process ->
-            val arguments =
-                process
-                    .info()
-                    .arguments()
-                    .orElse(arrayOf())
-                    .toList()
-            arguments.zipWithNext().any { (flag, value) -> flag == "--gameDir" && Path.of(value) == gameDir }
-        }
-    return checkNotNull(client) { "no client process plays ${player.name} in $gameDir" }
-}
+/** The process of [player]'s client, which the pool started in the player's folder of the pool folder. */
+private fun clientProcess(player: GamePlayer): ProcessHandle =
+    checkNotNull(partProcess("client-${player.name}")) { "no client process plays ${player.name}" }
