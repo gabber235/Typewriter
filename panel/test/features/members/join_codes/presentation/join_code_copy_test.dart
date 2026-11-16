@@ -18,56 +18,44 @@ void main() {
   final secondLink = joinCodeUrl(second.code);
   final thirdLink = joinCodeUrl(third.code);
 
-  group("with the keyboard alone", () {
-    testWidgets("C copies the focused code's link and says so", (tester) async {
-      final clipboard = tester.recordClipboard();
-      final panel = await tester.pumpPanel(
-        page,
-        at: membersPage(const JoinCodesRoute()),
-      );
-      expect(panel.focused, contains(firstLink));
-      final reported = panel.recordReported();
+  group("with the keyboard alone, C", () {
+    const space = LogicalKeyboardKey.space;
+    const down = LogicalKeyboardKey.keyJ;
+    const up = LogicalKeyboardKey.keyK;
+    // The first and third codes are selected before the last two cases.
+    for (final (name, keys, copied) in [
+      (
+        "copies the focused code's link and says so",
+        const <LogicalKeyboardKey>[],
+        firstLink,
+      ),
+      (
+        "copies every selected link, one per line",
+        const [space, down, down, space],
+        "$firstLink\n$thirdLink",
+      ),
+      (
+        "on a code outside the selection copies only that code",
+        const [space, down, down, space, up],
+        secondLink,
+      ),
+    ]) {
+      testWidgets(name, (tester) async {
+        final clipboard = tester.recordClipboard();
+        final panel = await tester.pumpPanel(
+          page,
+          at: membersPage(const JoinCodesRoute()),
+        );
+        expect(panel.focused, contains(firstLink));
+        await panel.pressEach(keys);
+        final reported = panel.recordReported();
 
-      await panel.press(LogicalKeyboardKey.keyC);
+        await panel.press(LogicalKeyboardKey.keyC);
 
-      expect(clipboard, [firstLink]);
-      expect(reported, ["Copied to the clipboard"]);
-    });
-
-    testWidgets("C copies every selected link, one per line", (tester) async {
-      final clipboard = tester.recordClipboard();
-      final panel = await tester.pumpPanel(
-        page,
-        at: membersPage(const JoinCodesRoute()),
-      );
-
-      await panel.press(LogicalKeyboardKey.space);
-      await panel.press(LogicalKeyboardKey.keyJ);
-      await panel.press(LogicalKeyboardKey.keyJ);
-      await panel.press(LogicalKeyboardKey.space);
-      await panel.press(LogicalKeyboardKey.keyC);
-
-      expect(clipboard, ["$firstLink\n$thirdLink"]);
-    });
-
-    testWidgets("C on a code outside the selection copies only that code", (
-      tester,
-    ) async {
-      final clipboard = tester.recordClipboard();
-      final panel = await tester.pumpPanel(
-        page,
-        at: membersPage(const JoinCodesRoute()),
-      );
-
-      await panel.press(LogicalKeyboardKey.space);
-      await panel.press(LogicalKeyboardKey.keyJ);
-      await panel.press(LogicalKeyboardKey.keyJ);
-      await panel.press(LogicalKeyboardKey.space);
-      await panel.press(LogicalKeyboardKey.keyK);
-      await panel.press(LogicalKeyboardKey.keyC);
-
-      expect(clipboard, [secondLink]);
-    });
+        expect(clipboard, [copied]);
+        expect(reported, ["Copied to the clipboard"]);
+      });
+    }
   });
 
   group("with the mouse alone", () {

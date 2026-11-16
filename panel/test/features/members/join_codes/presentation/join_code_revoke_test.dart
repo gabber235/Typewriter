@@ -116,11 +116,14 @@ void main() {
         at: membersPage(const JoinCodesRoute()),
       );
 
-      await panel.press(LogicalKeyboardKey.space);
-      await panel.press(LogicalKeyboardKey.keyJ);
-      await panel.press(LogicalKeyboardKey.keyJ);
-      await panel.press(LogicalKeyboardKey.space);
-      await panel.press(LogicalKeyboardKey.keyK);
+      // Selects the first and third codes, then focuses the second.
+      await panel.pressEach(const [
+        LogicalKeyboardKey.space,
+        LogicalKeyboardKey.keyJ,
+        LogicalKeyboardKey.keyJ,
+        LogicalKeyboardKey.space,
+        LogicalKeyboardKey.keyK,
+      ]);
       await panel.holdKey(LogicalKeyboardKey.delete);
 
       await panel.eventually(

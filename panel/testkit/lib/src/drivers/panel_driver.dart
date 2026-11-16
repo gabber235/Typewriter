@@ -203,6 +203,13 @@ final class PanelDriver extends ComponentDriver {
     await settle();
   }
 
+  /// Presses each of [keys] in turn, as a keyboard user walks a list.
+  Future<void> pressEach(List<LogicalKeyboardKey> keys) async {
+    for (final key in keys) {
+      await press(key);
+    }
+  }
+
   /// Presses [key] with the platform's primary modifier: Command on Apple
   /// platforms, Control elsewhere.
   Future<void> pressPrimary(LogicalKeyboardKey key) async {
