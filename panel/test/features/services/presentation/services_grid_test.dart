@@ -162,7 +162,7 @@ void main() {
     for (final label in ["Assigned Realm", "Message"]) {
       expect(panel.shows(label), isFalse, reason: "$label stays hidden");
     }
-    expect(panel.inspector.operations, [unbindOne]);
+    expect(panel.inspector.operations, ["Copy", unbindOne]);
 
     expect(panel.inspector.isChecked("Host a Realm"), isTrue);
     await panel.inspector.toggle("Host a Realm");
@@ -171,9 +171,8 @@ void main() {
     expect(panel.shows("Assigned Realm"), isTrue);
   });
 
-  testWidgets("a selected custom service offers Unbind and no Open", (
-    tester,
-  ) async {
+  testWidgets("a selected custom service offers Copy and Unbind, and no "
+      "Open", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       servicesBackend(services: [_paper, _discord], topology: _topology),
@@ -181,7 +180,20 @@ void main() {
 
     await panel.services.card("Discord service", "Discord Bridge").select();
 
-    expect(panel.inspector.operations, [unbindOne]);
+    expect(panel.inspector.operations, ["Copy", unbindOne]);
+  });
+
+  testWidgets("Copy in the inspector copies the service's id", (tester) async {
+    final clipboard = tester.recordClipboard();
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(services: [_paper, _discord], topology: _topology),
+    ]);
+    await panel.services.card("Discord service", "Discord Bridge").select();
+
+    await panel.inspector.click("Copy");
+
+    expect(clipboard, [_discord.serviceId.id]);
   });
 
   testWidgets("Unbind in the inspector removes the service", (tester) async {

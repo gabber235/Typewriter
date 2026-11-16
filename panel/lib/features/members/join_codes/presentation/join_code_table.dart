@@ -2,8 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// The active join codes as a table: the link with its Copy button, how
-/// often it works, and its expiry.
+/// The active join codes as a table: the link, how often it works, and its
+/// expiry.
 ///
 /// The table renders the rows [JoinCodesTab] owns. Each row selects through
 /// the shared selection, so the inspector shows the selected codes and
@@ -41,30 +41,15 @@ class JoinCodesTable extends StatelessWidget {
       cellsBuilder: (context, code) => [
         Padding(
           padding: cellPadding,
-          child: Row(
-            children: [
-              Expanded(
-                child: BlurReveal(
-                  blurSigma: 3,
-                  child: Text(
-                    joinCodeUrl(code.code),
-                    style: theme.textTheme.bodyMedium!.copyWith(
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ),
+          child: BlurReveal(
+            blurSigma: 3,
+            child: Text(
+              joinCodeUrl(code.code),
+              style: theme.textTheme.bodyMedium!.copyWith(
+                fontSize: 13,
+                color: theme.colorScheme.onSurface,
               ),
-              SizedBox(width: context.spacing.space2),
-              CommandButton(
-                command: joinCodeCopy(code),
-                face: ButtonFace.icon,
-                icon: const Icon(Icons.copy, size: 16),
-                label: "Copy Join Code",
-                doneLabel: "Copied",
-                tooltip: "Copy Join Code",
-              ),
-            ],
+            ),
           ),
         ),
         Padding(

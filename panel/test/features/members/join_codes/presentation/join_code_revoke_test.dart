@@ -184,23 +184,4 @@ void main() {
     expect(panel.item(joinCodeUrl(first.code)).isChecked, isTrue);
     expect(panel.item(joinCodeUrl(second.code)).isChecked, isTrue);
   });
-
-  testWidgets("the inspector copies the selected join code", (tester) async {
-    final clipboard = tester.recordClipboard();
-    final code = joinCode("spring");
-    final panel = await tester.pumpPanel([
-      signedIn(ada, organization: acme),
-      membershipService(joinCodes: [code]),
-    ], at: membersPage(const JoinCodesRoute()));
-
-    await panel.item(joinCodeUrl(code.code)).select();
-    await panel.tapOn(
-      find.descendant(
-        of: find.byType(JoinCodeInspection),
-        matching: find.text("Copy Join Code"),
-      ),
-    );
-
-    expect(clipboard, [joinCodeUrl(code.code)]);
-  });
 }

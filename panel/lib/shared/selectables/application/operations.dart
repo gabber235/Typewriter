@@ -2,6 +2,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 const coreSelectionOperations = <SelectionOperation>[
   OpenOperation(),
+  CopyOperation(),
   UnbindOperation(),
 ];
 

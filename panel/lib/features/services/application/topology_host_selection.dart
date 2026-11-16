@@ -46,6 +46,7 @@ class _ServiceHostSelectable
 
   @override
   List<SelectionCapability> get capabilities => [
+    CopySelectionCapability(host.serviceId.id),
     if (onUnbind case final unbind?)
       UnbindSelectionCapability(onUnbind: unbind),
   ];
