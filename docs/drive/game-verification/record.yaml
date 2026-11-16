@@ -795,4 +795,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Steadiness types one key per tick, holds packets while a record is due, shares the watch codec; restart Papers get a name per attempt; then slice 8.
+next: Restart Paper fixes merged (fe4f66b9e); steadiness finishes typing one key per tick; then slice 8. Timings since 2026-11-16 ran under load 50 to 145 from other worktrees.
