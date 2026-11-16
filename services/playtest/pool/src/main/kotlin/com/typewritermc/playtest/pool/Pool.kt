@@ -242,6 +242,7 @@ internal class Pool(
                     .format(java.util.Locale.ROOT, readNanos / 1e6, analysisNanos / 1e6),
             )
     }
+
     private val sessions = mutableSetOf<Peer>()
     private val queued = mutableMapOf<Pair<Peer, Long>, Queued>()
     private val timings = mutableMapOf<Pair<Peer, Long>, Timing>()
@@ -264,7 +265,11 @@ internal class Pool(
         val java = settings.java.toRealPath()
         val release = java.parent.parent.resolve("release")
         val jdk = "$java\n" + if (Files.isRegularFile(release)) Files.readString(release) else ""
-        AotCache.key(jdk, PaperServer.of(settings.paperDir).classPath + listOf(settings.agentJar, settings.coverageAgentJar, settings.pluginJar), RESTART_FLAGS)
+        AotCache.key(
+            jdk,
+            PaperServer.of(settings.paperDir).classPath + listOf(settings.agentJar, settings.coverageAgentJar, settings.pluginJar),
+            RESTART_FLAGS,
+        )
     }
     private var failure: String? = null
     private var sawSession = false
@@ -404,7 +409,13 @@ internal class Pool(
                 val attempt = attemptOf(session, message.submission()) ?: return
                 val claimed = timings.remove(session to message.submission())?.steps.orEmpty()
                 val cost = coverageCosts.remove(attempt.key)?.step()
-                runs.record(session.hello.name(), attempt.submit, message, claimed + listOfNotNull(cost), covered.remove(attempt.key).orEmpty())
+                runs.record(
+                    session.hello.name(),
+                    attempt.submit,
+                    message,
+                    claimed + listOfNotNull(cost),
+                    covered.remove(attempt.key).orEmpty(),
+                )
                 coverage.forget(attempt.key)
                 release(attempt, "its session sent its result")
             }
@@ -975,7 +986,12 @@ internal class Pool(
         if (attempt.started) return attempt.session.send(PaperLost(attempt.players.first().name(), reason))
         val submission = attempt.submit.submission()
         val claimed = timings.remove(attempt.session to submission)?.steps.orEmpty()
-        runs.record(attempt.session.hello.name(), attempt.submit, Result(submission, 0, reason, null, listOf(), "", listOf(), listOf()), claimed)
+        runs.record(
+            attempt.session.hello.name(),
+            attempt.submit,
+            Result(submission, 0, reason, null, listOf(), "", listOf(), listOf()),
+            claimed,
+        )
         attempt.session.send(LeaseFailed(submission, reason))
         release(attempt, "its Paper was lost")
     }

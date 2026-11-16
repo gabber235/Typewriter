@@ -9,7 +9,9 @@ val TouchedTest by testSuite {
         val touched = Touched.read("com/typewritermc/playtest/plugin/Probes.java 12 40\n")
 
         touched.touches(
-            listOf(CoveredClass("com/typewritermc/playtest/plugin/Probes", "com/typewritermc/playtest/plugin/Probes.java", listOf(10, 40, 41))),
+            listOf(
+                CoveredClass("com/typewritermc/playtest/plugin/Probes", "com/typewritermc/playtest/plugin/Probes.java", listOf(10, 40, 41)),
+            ),
         ) shouldBe true
     }
 

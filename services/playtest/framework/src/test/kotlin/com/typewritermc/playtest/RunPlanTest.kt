@@ -28,7 +28,8 @@ val RunPlanTest by testSuite {
     test("a requirement runs once more in demo mode when it failed or the change touched code it covered, and only then") {
         val changed = mapOf("playtest.touched" to "/repo/build/touched.txt")
         val plan = RunPlan.of(changed) { "com/typewritermc/playtest/plugin/Probes.java 12\n" }
-        val probes = listOf(CoveredClass("com/typewritermc/playtest/plugin/Probes", "com/typewritermc/playtest/plugin/Probes.java", listOf(12)))
+        val probes =
+            listOf(CoveredClass("com/typewritermc/playtest/plugin/Probes", "com/typewritermc/playtest/plugin/Probes.java", listOf(12)))
         val wipe = listOf(CoveredClass("com/typewritermc/playtest/plugin/Wipe", "com/typewritermc/playtest/plugin/Wipe.java", listOf(12)))
         val failed = AssertionError("the toast never showed")
 

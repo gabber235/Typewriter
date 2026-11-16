@@ -5,6 +5,9 @@ import com.typewritermc.playtest.wire.Message.AttemptStep
 import com.typewritermc.playtest.wire.Message.BarrierSeen
 import com.typewritermc.playtest.wire.Message.Capture
 import com.typewritermc.playtest.wire.Message.Captured
+import com.typewritermc.playtest.wire.Message.ClipStarted
+import com.typewritermc.playtest.wire.Message.ClipWritten
+import com.typewritermc.playtest.wire.Message.CoveredClass
 import com.typewritermc.playtest.wire.Message.Declined
 import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
@@ -28,12 +31,9 @@ import com.typewritermc.playtest.wire.Message.Reply
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
 import com.typewritermc.playtest.wire.Message.Settle
-import com.typewritermc.playtest.wire.Message.ClipStarted
-import com.typewritermc.playtest.wire.Message.ClipWritten
-import com.typewritermc.playtest.wire.Message.CoveredClass
+import com.typewritermc.playtest.wire.Message.Settled
 import com.typewritermc.playtest.wire.Message.StartClip
 import com.typewritermc.playtest.wire.Message.StopClip
-import com.typewritermc.playtest.wire.Message.Settled
 import com.typewritermc.playtest.wire.Message.Submit
 import com.typewritermc.playtest.wire.Wire
 import kotlinx.coroutines.CancellationException

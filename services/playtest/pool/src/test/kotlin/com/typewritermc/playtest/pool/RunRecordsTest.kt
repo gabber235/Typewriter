@@ -100,7 +100,11 @@ val RunRecordsTest by testSuite {
 
         records.ended("run-1", file, retries)
 
-        val case = TestRun.serializer.fromJsonCode(Files.readString(file)).cases.single()
+        val case =
+            TestRun.serializer
+                .fromJsonCode(Files.readString(file))
+                .cases
+                .single()
         case.attempts.map { it.durationMillis } shouldBe listOf(420L)
         case.demo?.durationMillis shouldBe 640L
         case.demo?.outcome shouldBe Outcome.PASSED
@@ -232,7 +236,8 @@ val RunRecordsTest by testSuite {
     test("an attempt whose test JVM ended first fails in its run's file, whichever session of the run writes it") {
         val records = RunRecords(clock = { 1_000 })
         val dir = Files.createTempDirectory("run-records")
-        val killed = Submit(3, "PROBE-2 the first input after a far teleport acts there", "PROBE-2", 1, Demonstrates.HAPPY_PATH, false, false)
+        val killed =
+            Submit(3, "PROBE-2 the first input after a far teleport acts there", "PROBE-2", 1, Demonstrates.HAPPY_PATH, false, false)
         val gone = Outcome.createFailed(message = "its test JVM ended before the attempt did; see pool.log", firstBroken = null)
 
         // The sibling session wrote the run file before the killed one left: its leaving writes it again.

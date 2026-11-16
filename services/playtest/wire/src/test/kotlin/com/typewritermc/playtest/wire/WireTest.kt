@@ -15,9 +15,9 @@ import com.typewritermc.playtest.wire.Message.ChatLine
 import com.typewritermc.playtest.wire.Message.Claim
 import com.typewritermc.playtest.wire.Message.Claimed
 import com.typewritermc.playtest.wire.Message.ClientLost
+import com.typewritermc.playtest.wire.Message.ClientStalled
 import com.typewritermc.playtest.wire.Message.ClipStarted
 import com.typewritermc.playtest.wire.Message.ClipWritten
-import com.typewritermc.playtest.wire.Message.ClientStalled
 import com.typewritermc.playtest.wire.Message.Connect
 import com.typewritermc.playtest.wire.Message.Covered
 import com.typewritermc.playtest.wire.Message.CoveredClass
@@ -83,11 +83,11 @@ import com.typewritermc.playtest.wire.Message.Role
 import com.typewritermc.playtest.wire.Message.ScrollStep
 import com.typewritermc.playtest.wire.Message.Settle
 import com.typewritermc.playtest.wire.Message.Settled
+import com.typewritermc.playtest.wire.Message.StartClip
 import com.typewritermc.playtest.wire.Message.StepUntil
 import com.typewritermc.playtest.wire.Message.Stepping
-import com.typewritermc.playtest.wire.Message.StopStepping
-import com.typewritermc.playtest.wire.Message.StartClip
 import com.typewritermc.playtest.wire.Message.StopClip
+import com.typewritermc.playtest.wire.Message.StopStepping
 import com.typewritermc.playtest.wire.Message.Submit
 import com.typewritermc.playtest.wire.Message.Text
 import com.typewritermc.playtest.wire.Message.TypeInChatStep
@@ -118,7 +118,15 @@ val WireTest by testSuite {
                 Refused("Paper stopped while starting; see pool/paper/logs/latest.log"),
                 Queue(
                     listOf(
-                        Submit(7, "PROBE-1 a chat line the probe sends reaches the player", "PROBE-1", 1, Demonstrates.HAPPY_PATH, false, false),
+                        Submit(
+                            7,
+                            "PROBE-1 a chat line the probe sends reaches the player",
+                            "PROBE-1",
+                            1,
+                            Demonstrates.HAPPY_PATH,
+                            false,
+                            false,
+                        ),
                     ),
                 ),
                 Queue(
@@ -143,7 +151,11 @@ val WireTest by testSuite {
                         ),
                     ),
                 ),
-                Queue(listOf(Submit(10, "RESTART-1 a saved item survives a killed Paper", "RESTART-1", 1, Demonstrates.HAPPY_PATH, true, false))),
+                Queue(
+                    listOf(
+                        Submit(10, "RESTART-1 a saved item survives a killed Paper", "RESTART-1", 1, Demonstrates.HAPPY_PATH, true, false),
+                    ),
+                ),
                 Declined(8, "GROUP-1 claims 3 players, but the pool holds 1"),
                 LeaseFailed(10, "paper-gv-1 exited with code 1 while it booted; see pool/paper-gv-1-lost-1/console.log"),
                 Restart(18, 10),
@@ -200,7 +212,16 @@ val WireTest by testSuite {
                 RegionsAhead(listOf(Region(-1_024, -1_024), Region(-1_024, 0))),
                 Settle(9),
                 Settled(9, listOf()),
-                Settled(10, listOf(CoveredClass("com/typewritermc/playtest/plugin/Probes", "com/typewritermc/playtest/plugin/Probes.java", listOf(12, 13, 40)))),
+                Settled(
+                    10,
+                    listOf(
+                        CoveredClass(
+                            "com/typewritermc/playtest/plugin/Probes",
+                            "com/typewritermc/playtest/plugin/Probes.java",
+                            listOf(12, 13, 40),
+                        ),
+                    ),
+                ),
                 Covered(listOf(9L, 10L), 41_250, byteArrayOf(1, -64, 0, 7)),
                 Covered(listOf(), 0, byteArrayOf()),
                 WorkHung("gv-1", "Ledger lookup", 1_204),

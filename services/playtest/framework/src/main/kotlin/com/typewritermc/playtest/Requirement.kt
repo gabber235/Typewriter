@@ -104,7 +104,14 @@ internal fun TestSuiteScope.sideBySide(
         failures.firstOrNull()?.let { first -> PoolSession.AttemptEnd(first.also { failures.drop(1).forEach(it::addSuppressed) }) }
             ?: afterward?.let {
                 session.attempt(
-                    PoolSession.Planned("$id $sentence (attempt $count of $count)", id, afterwardPlayers, demonstrates, listOf(it), demo = demo),
+                    PoolSession.Planned(
+                        "$id $sentence (attempt $count of $count)",
+                        id,
+                        afterwardPlayers,
+                        demonstrates,
+                        listOf(it),
+                        demo = demo,
+                    ),
                 )
             }
             ?: PoolSession.AttemptEnd(null)
