@@ -77,15 +77,15 @@ BoundPresentationHost serviceIdentityPortablePresentationHost({
 
 BoundPresentationBinding _serviceNamePresentationBinding(
   EditOwner identityOwner,
-) => BoundPresentationBinding(
+) => BoundPresentationBinding.owned(
   id: _serviceNameBinding,
   use: _portableTextType,
   owner: identityOwner,
   control: identityOwner is EditingControlOwner
       ? (identityOwner as EditingControlOwner).bindControl()
       : null,
-  read: (_) {
-    final value = identityOwner.value(editorRootPath.field("name")).valueOrNull;
+  read: (owner) {
+    final value = owner.value(editorRootPath.field("name")).valueOrNull;
     return value is skir.DataValue_stringValueWrapper
         ? value
         : skir.DataValue.unfilled;

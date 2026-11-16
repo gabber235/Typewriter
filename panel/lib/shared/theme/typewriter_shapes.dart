@@ -7,11 +7,19 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// semantic rather than part of the radius scale.
 @immutable
 class TypewriterShapes extends ThemeExtension<TypewriterShapes> {
-  const TypewriterShapes({this.small = 4, this.medium = 8, this.large = 12});
+  const TypewriterShapes({
+    this.small = 4,
+    this.medium = 8,
+    this.large = 12,
+    this.ringWidth = 2,
+  });
 
   final double small;
   final double medium;
   final double large;
+
+  /// The width of the one focus ring.
+  final double ringWidth;
   Radius get smallRadius => Radius.circular(small);
   Radius get mediumRadius => Radius.circular(medium);
   Radius get largeRadius => Radius.circular(large);
@@ -28,12 +36,17 @@ class TypewriterShapes extends ThemeExtension<TypewriterShapes> {
   CircleBorder get circle => const CircleBorder();
 
   @override
-  TypewriterShapes copyWith({double? small, double? medium, double? large}) =>
-      TypewriterShapes(
-        small: small ?? this.small,
-        medium: medium ?? this.medium,
-        large: large ?? this.large,
-      );
+  TypewriterShapes copyWith({
+    double? small,
+    double? medium,
+    double? large,
+    double? ringWidth,
+  }) => TypewriterShapes(
+    small: small ?? this.small,
+    medium: medium ?? this.medium,
+    large: large ?? this.large,
+    ringWidth: ringWidth ?? this.ringWidth,
+  );
 
   @override
   TypewriterShapes lerp(covariant TypewriterShapes? other, double t) {
@@ -43,6 +56,7 @@ class TypewriterShapes extends ThemeExtension<TypewriterShapes> {
       small: l(small, other.small),
       medium: l(medium, other.medium),
       large: l(large, other.large),
+      ringWidth: l(ringWidth, other.ringWidth),
     );
   }
 }

@@ -340,10 +340,7 @@ void main() {
                 ],
               ),
             ),
-            location: skir.ValueLocation(
-              resource: location.resource,
-              path: skir.ValuePath(segments: const []),
-            ),
+            location: host.document.bindings[_rootBinding]!.location,
             schema: PortablePresentationBindingSchema.complete(
               skir.TypeUse.createNamed(definition: root, arguments: const []),
             ),
@@ -647,19 +644,7 @@ void main() {
   testWidgets("a date before 1970 remains editable", (tester) async {
     final written = <skir.DataValue>[];
     final panel = await tester.showBoundElement(
-      skir.PresentationElement.wrapDateTimeInput(
-        skir.DateTimeControl(
-          control: presentationControl(_rootReference),
-          includeDate: true,
-          includeTime: false,
-          appearance: null,
-          content: null,
-          entry: null,
-          mappings: null,
-          popup: null,
-          options: null,
-        ),
-      ),
+      dateInputElement(_rootReference),
       skir.DataValue.wrapTimestamp(DateTime.utc(1900, 6, 15)),
       binding: _rootBinding,
       onWrite: written.add,

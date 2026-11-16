@@ -827,32 +827,30 @@ void main() {
     },
   );
 
-  test(
-    "local parser feedback contributes to headers without global duplication",
-    () {
-      final header = Object();
-      final control = Object();
-      final diagnostic = invalidValueDiagnostic([_title]);
-      final placement = PortableDiagnosticPlacement.route(
-        diagnostics: const [],
-        outcomes: const [],
-        presentation: PortableDiagnosticPresentation(
-          nodes: {
-            header: const PortableDiagnosticNode(
-              kind: PortableDiagnosticNodeKind.header,
-            ),
-            control: diagnosticControl(
-              _title,
-              parent: header,
-            ).copyWith(diagnostics: [diagnostic]),
-          },
-        ),
-      );
-      expect(placement.forAnchor(header).descendants, [diagnostic]);
-      expect(placement.forAnchor(control).direct, isEmpty);
-      expect(placement.general, isEmpty);
-    },
-  );
+  test("local parser feedback stays on its control and reaches headers without "
+      "global duplication", () {
+    final header = Object();
+    final control = Object();
+    final diagnostic = invalidValueDiagnostic([_title]);
+    final placement = PortableDiagnosticPlacement.route(
+      diagnostics: const [],
+      outcomes: const [],
+      presentation: PortableDiagnosticPresentation(
+        nodes: {
+          header: const PortableDiagnosticNode(
+            kind: PortableDiagnosticNodeKind.header,
+          ),
+          control: diagnosticControl(
+            _title,
+            parent: header,
+          ).copyWith(diagnostics: [diagnostic]),
+        },
+      ),
+    );
+    expect(placement.forAnchor(header).descendants, [diagnostic]);
+    expect(placement.forAnchor(control).direct, [diagnostic]);
+    expect(placement.general, isEmpty);
+  });
 }
 
 final _binding = skir.ExpressionBindingId(value: "title");

@@ -80,7 +80,9 @@ class DateTimePickerFieldStory extends HookWidget {
           // A mixed selection shows no value until the user edits it; the
           // display knobs shape the field once it holds a value.
           if (showsMixed)
-            DateTimePickerField.mixed(
+            DateTimePickerField(
+              value: null,
+              mixed: true,
               includeDate: showsDate,
               includeTime: includeTime,
               enabled: field.enabled,

@@ -2,7 +2,7 @@
 //!
 //! Codes are organization owned admission records. Watch snapshots expose only active codes and
 //! the organization code sequence. Generation validates every automatic role before creation and
-//! revocation removes only an existing, still active code. Successful mutations advance the code
+//! revocation removes every selected active code or none. Successful mutations advance the code
 //! sequence and publish the resulting change after commit.
 
 use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
@@ -211,74 +211,101 @@ async fn create_join_code(
     .error_with_slug("join-code-generate-result-parse-failed")
 }
 
-/// Revokes an active invitation code and publishes its removal.
+#[derive(Debug, Deserialize)]
+#[serde(tag = "outcome", rename_all = "kebab-case")]
+enum JoinCodeRevocationOutcome {
+    Revoked { sequence: i64 },
+    CodeNotFoundError { code_ids: Vec<RecordId> },
+    InvalidSelectionError,
+}
+
+impl JoinCodeRevocationOutcome {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Revoked { .. } => "revoked",
+            Self::CodeNotFoundError { .. } => "code-not-found-error",
+            Self::InvalidSelectionError => "invalid-selection-error",
+        }
+    }
+}
+
+/// Revokes every selected active invitation code in one transaction and publishes their removal.
 ///
-/// Expired, missing, or already revoked codes return a not found response without advancing the
-/// organization code sequence.
+/// An empty or repeated selection, or any expired, missing, or already revoked code, rejects the
+/// complete selection without advancing the organization code sequence.
 #[tracing::instrument(skip_all)]
 pub async fn handle_revoke(
     scope: wasmcloud_utils::transport::OrganizationActorScope,
-    req: RevokeOrganizationJoinCodeRequest,
-) -> Result<RevokeOrganizationJoinCodeResponse, otel_wasi::Error> {
+    req: RevokeOrganizationJoinCodesRequest,
+) -> Result<RevokeOrganizationJoinCodesResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
     let org_id = scope.organization.as_str();
     wasmcloud_utils::validate_record_ids!(
-        RevokeOrganizationJoinCodeResponse,
-        req.code_id,
+        RevokeOrganizationJoinCodesResponse,
+        req.code_ids,
         "organization_join_code"
     );
-    let code = req.code_id.clone();
     main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string(),
-        "join_code.id" = code.key.to_string()
+        "join_code.result_count" = req.code_ids.len() as i64
     );
-    let code_id = RecordId::from(&code);
     let organization_id = RecordId::new("organization", org_id);
 
-    #[derive(Deserialize)]
-    struct RevokedJoinCode {
-        sequence: i64,
-    }
-
-    let deleted = transaction_query!(
-        Option<RevokedJoinCode>,
+    let result = transaction_query!(
+        JoinCodeRevocationOutcome,
         r#"
         BEGIN TRANSACTION;
         RETURN {
-            LET $deleted = DELETE $code
-                WHERE organization = $org
-                AND (expires_at IS NONE OR expires_at IS NULL OR expires_at > time::now())
-            RETURN BEFORE;
+            IF array::is_empty($codes) OR array::len(array::distinct($codes)) != array::len($codes) {
+                RETURN { outcome: 'invalid-selection-error' }
+            };
 
-            IF array::len($deleted) = 0 { RETURN NONE };
+            LET $active = SELECT VALUE id FROM $codes
+                WHERE organization = $org
+                AND (expires_at IS NONE OR expires_at IS NULL OR expires_at > time::now());
+            LET $missing = array::complement($codes, $active);
+            IF array::len($missing) > 0 {
+                RETURN { outcome: 'code-not-found-error', code_ids: $missing }
+            };
+
+            DELETE $active;
             LET $sequence = UPDATE ONLY $org SET join_codes_sequence += 1
                 RETURN VALUE join_codes_sequence;
-            RETURN { sequence: $sequence };
+            RETURN { outcome: 'revoked', sequence: $sequence };
         };
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("code", code_id)
+    .bind("codes", req.code_ids.as_slice().into_surreal_record_ids())
     .bind("org", organization_id)
     .execute()
     .await
     .error_with_slug("join-code-revoke-query-failed")?
     .decode()
     .error_with_slug("join-code-revoke-result-parse-failed")?;
-    let deleted = wasmcloud_utils::skir_domain_result!(RevokeOrganizationJoinCodeResponse, deleted);
 
-    if deleted.is_none() {
-        main_attribute!("join_code.outcome" = "code_not_found");
-        return Ok(skir_variant!(
-            RevokeOrganizationJoinCodeResponse::CodeNotFoundError { code_id: code }
-        ));
-    }
+    let result = wasmcloud_utils::skir_domain_result!(RevokeOrganizationJoinCodesResponse, result);
+    main_attribute!("join_code.outcome" = result.as_str());
+    let sequence = skir_transaction_outcome!(
+        RevokeOrganizationJoinCodesResponse,
+        result,
+        success JoinCodeRevocationOutcome::Revoked { sequence } => sequence,
+        errors {
+            JoinCodeRevocationOutcome::CodeNotFoundError { code_ids } => {
+                code_ids: code_ids.into_skir_record_ids()
+            },
+            JoinCodeRevocationOutcome::InvalidSelectionError => {},
+        }
+    );
 
-    let deleted = deleted.expect("checked above");
     let event = OrganizationJoinCodesChanged {
-        sequence: deleted.sequence,
-        changes: vec![OrganizationJoinCodesChange::Remove(Box::new(code.clone()))],
+        sequence,
+        changes: req
+            .code_ids
+            .into_iter()
+            .map(|code| OrganizationJoinCodesChange::Remove(Box::new(code)))
+            .collect(),
         ..Default::default()
     };
     wasmcloud_utils::transport_routes::OrganizationJoinCodesWatchRoute::delivery(
@@ -287,8 +314,7 @@ pub async fn handle_revoke(
     .persist(event.clone())
     .await?;
 
-    main_attribute!("join_code.outcome" = "revoked");
-    Ok(skir_variant!(RevokeOrganizationJoinCodeResponse::Success {
-        event
-    }))
+    Ok(skir_variant!(
+        RevokeOrganizationJoinCodesResponse::Success { event }
+    ))
 }

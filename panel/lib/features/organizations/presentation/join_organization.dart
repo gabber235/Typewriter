@@ -33,8 +33,9 @@ class _JoinOrganization extends HookConsumerWidget {
 
     return SliverMainAxisGroup(
       slivers: [
-        SliverStaggerEntrance(
-          sliver: SliverToBoxAdapter(
+        SliverToBoxAdapter(
+          child: Enter(
+            token: MotionToken.loadIn,
             child: Text(
               "Join organization",
               style: theme.textTheme.headlineMedium,
@@ -42,19 +43,21 @@ class _JoinOrganization extends HookConsumerWidget {
           ),
         ),
         spacer(8),
-        SliverStaggerEntrance(
-          sliver: SliverToBoxAdapter(
+        SliverToBoxAdapter(
+          child: Enter(
+            token: MotionToken.loadIn,
             child: Text(
               "Enter an invite URL or code to request to join an organization.",
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: context.text.sentence.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
         ),
         spacer(16),
-        SliverStaggerEntrance(
-          sliver: SliverToBoxAdapter(
+        SliverToBoxAdapter(
+          child: Enter(
+            token: MotionToken.loadIn,
             child: Form(
               key: formKey,
               child: Row(
@@ -73,9 +76,11 @@ class _JoinOrganization extends HookConsumerWidget {
                     ),
                   ),
                   SizedBox(width: context.spacing.space3),
-                  LoadingButton.filled(
+                  Button(
+                    face: ButtonFace.filled,
                     onPressed: hasReachedLimit ? null : submitJoinRequest,
-                    child: const Text("Join"),
+                    label: "Join",
+                    busyLabel: "Joining",
                   ),
                 ],
               ),
@@ -84,13 +89,14 @@ class _JoinOrganization extends HookConsumerWidget {
         ),
         SliverAnimatedContent(
           child: hasReachedLimit
-              ? StaggerEntrance(
+              ? Enter(
+                  token: MotionToken.loadIn,
                   child: Padding(
                     padding: EdgeInsets.only(top: context.spacing.space2),
                     child: Text(
                       "You have reached the maximum of $_maxPendingRequests pending requests. Please wait for approval or cancel an existing request.",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.error,
+                      style: context.text.sentenceSmall.copyWith(
+                        color: context.colors.dangerText,
                       ),
                     ),
                   ),
@@ -98,15 +104,13 @@ class _JoinOrganization extends HookConsumerWidget {
               : null,
         ),
         spacer(hasActiveRequests ? 24 : 0),
-        SliverStaggerEntrance(
-          sliver: SliverAnimatedContent(
-            child: hasActiveRequests
-                ? Align(
-                    alignment: .centerLeft,
-                    child: SectionTitle(title: "Pending requests"),
-                  )
-                : null,
-          ),
+        SliverAnimatedContent(
+          child: hasActiveRequests
+              ? Align(
+                  alignment: .centerLeft,
+                  child: SectionTitle(title: "Pending requests"),
+                )
+              : null,
         ),
         spacer(hasActiveRequests ? 8 : 0),
         AnimatedSliverList<skir.UserJoinRequest>(
@@ -163,12 +167,12 @@ class _JoinOrganization extends HookConsumerWidget {
       if (!context.mounted) {
         return;
       }
-      showSuccessSnackBar(context, "Join request submitted successfully.");
+      context.reportSuccess("Join request sent");
     } on Exception catch (error) {
       if (!context.mounted) {
         return;
       }
-      showErrorSnackBar(context, "Failed to submit join request: $error");
+      context.reportFailure("Join request failed", detail: "$error");
     }
   }
 
@@ -177,24 +181,12 @@ class _JoinOrganization extends HookConsumerWidget {
     required WidgetRef ref,
     required skir.UserJoinRequest request,
   }) async {
-    final confirmed = await showConfirmationDialogue(
-      context: context,
-      title: "Cancel join request?",
-      content:
-          "Are you sure you want to cancel your request to join ${request.organizationName.formatted}?",
-      confirmText: "Cancel Request",
-      confirmIcon: Fa6Solid.xmark,
-      onConfirm: () async {
-        await ref
-            .read(userJoinRequestsProvider.notifier)
-            .cancelRequest(request.requestId);
-      },
-    );
-
-    if (!confirmed || !context.mounted) {
-      return;
-    }
-    showSuccessSnackBar(context, "Join request canceled.");
+    // One press: the person can simply ask again.
+    await ref
+        .read(userJoinRequestsProvider.notifier)
+        .cancelRequest(request.requestId);
+    if (!context.mounted) return;
+    context.reportSuccess("Join request canceled");
   }
 }
 
@@ -210,12 +202,21 @@ class _PendingJoinRequestTile extends StatelessWidget {
   });
 
   final skir.UserJoinRequest request;
-  final VoidCallback onCancel;
+  final Future<void> Function() onCancel;
   final VoidCallback onExpire;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // One command for the key and the button.
+    final cancel = ActionShortcut.intent(
+      id: "cancel_join_request_${request.requestId}",
+      label: "Cancel request",
+      description: "Cancel your request to join",
+      intent: DeleteIntent,
+      priority: 2,
+      run: ActionRun.press((_) => onCancel()),
+    );
 
     return Material(
       color: Colors.transparent,
@@ -223,44 +224,39 @@ class _PendingJoinRequestTile extends StatelessWidget {
         borderRadius: context.shapes.mediumBorderRadius,
       ),
       child: ManagedActionSet(
-        shortcuts: [
-          ActionShortcut.intent(
-            id: "revoke_join_request",
-            label: "Revoke request",
-            description: "Cancel the join request",
-            intent: DeleteIntent,
-            priority: 2,
-            onInvoke: (_) => onCancel(),
-          ),
-        ],
-        child: ManagedFocusHighlight(
+        shortcuts: [cancel],
+        child: RingTarget(
           borderRadius: context.shapes.mediumBorderRadius,
-          child: ListTile(
-            leading: OrganizationLogo(
-              logoUrl: request.organizationLogoUrl,
-              size: 40,
-            ),
-            title: Text(request.organizationName.formatted),
-            subtitle: Text(
-              "Awaiting approval",
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+          child: Focus(
+            child: PanelRow(
+              leading: OrganizationLogo(
+                logoUrl: request.organizationLogoUrl,
+                size: 40,
               ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CountdownBadge(endDate: request.expiresAt, onExpired: onExpire),
-                SizedBox(width: context.spacing.space2),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 20),
-                  onPressed: onCancel,
-                  tooltip: "Cancel request",
-                  style: IconButton.styleFrom(
-                    foregroundColor: theme.colorScheme.error,
-                  ),
+              title: Text(request.organizationName.formatted),
+              subtitle: Text(
+                "Awaiting approval",
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-              ],
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CountdownBadge(
+                    endDate: request.expiresAt,
+                    onExpired: onExpire,
+                  ),
+                  SizedBox(width: context.spacing.space2),
+                  CommandButton(
+                    command: cancel,
+                    face: ButtonFace.icon,
+                    color: context.colors.dangerText,
+                    icon: const Icon(Icons.close, size: 20),
+                    label: "Cancel request",
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -7,9 +7,8 @@ part "presentation_value_environment.freezed.dart";
 /// An immutable observation of the theme, surface and interaction state the
 /// current owner supplies to state driven paint values.
 ///
-/// Colors, numbers and transitions all choose their value through the same
-/// state match, so a rule such as "while selected" means the same thing for
-/// every property. Render objects may retain this observation for paint.
+/// Colors and numbers choose their value through the same state match, so a
+/// rule such as "while selected" means the same thing for every property. Render objects may retain this observation for paint.
 /// Expressions still evaluate against the requested subject scope, with a
 /// fresh budget per value.
 @freezed
@@ -113,64 +112,6 @@ abstract class PresentationValueEnvironment
     }
     return result;
   }
-
-  /// How a change into the current state animates: the first rule matching
-  /// it, or the fallback. Without a policy, changes apply at once.
-  PresentationMotion motion(
-    skir.PresentationTransitionPolicy? policy,
-    PortablePresentationScope scope,
-  ) {
-    if (policy == null) return PresentationMotion.immediate;
-    final transition =
-        policy.rules
-            .where((rule) => matches(rule.match, scope))
-            .firstOrNull
-            ?.transition ??
-        policy.fallback;
-    if (transition.milliseconds < 0) {
-      throw const PresentationValueFailure(
-        "Presentation duration cannot be negative",
-      );
-    }
-    return PresentationMotion(
-      duration: Duration(milliseconds: transition.milliseconds),
-      curve: _curve(transition.curve),
-    );
-  }
-
-  static Curve _curve(skir.PresentationCurve curve) => switch (curve) {
-    skir.PresentationCurve_elasticOutWrapper(:final value) =>
-      value.isFinite && value > 0
-          ? ElasticOutCurve(value)
-          : throw const PresentationValueFailure(
-              "Elastic curve periods must be finite and positive",
-            ),
-    _ => switch (curve.kind) {
-      skir.PresentationCurve_kind.linearConst => Curves.linear,
-      skir.PresentationCurve_kind.easeInOutConst => Curves.easeInOut,
-      skir.PresentationCurve_kind.easeOutConst => Curves.easeOut,
-      skir.PresentationCurve_kind.emphasizedConst =>
-        Curves.fastEaseInToSlowEaseOut,
-      _ => throw const PresentationValueFailure(
-        "Presentation curve is unavailable",
-      ),
-    },
-  };
-}
-
-/// The duration and curve of one animated change.
-@freezed
-abstract class PresentationMotion with _$PresentationMotion {
-  const factory PresentationMotion({
-    required Duration duration,
-    required Curve curve,
-  }) = _PresentationMotion;
-
-  /// Changes apply at once.
-  static const immediate = PresentationMotion(
-    duration: Duration.zero,
-    curve: Curves.linear,
-  );
 }
 
 /// A presentation value, such as a color, number, size, alignment or

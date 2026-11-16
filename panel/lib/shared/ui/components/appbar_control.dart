@@ -1,55 +1,40 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-enum _AppBarControlFamily { text, filled }
-
 /// Presents one app bar action without replacing its focus owner on resize.
 ///
 /// The feature owns the command, popup, and status. The control shortens its
 /// decorative content when the layout assigns a compact width. [preferredWidth]
 /// reserves a wide presentation for controls such as primary search.
 class AppBarControl extends StatelessWidget {
-  const AppBarControl.text({
+  const AppBarControl({
     required this.contentBuilder,
     required this.onPressed,
     required this.tooltip,
     required this.semanticLabel,
+    this.face = ButtonFace.quiet,
     this.focusNode,
-    this.style,
+    this.color,
     this.preferredWidth,
     super.key,
-  }) : _family = _AppBarControlFamily.text;
-
-  const AppBarControl.filled({
-    required this.contentBuilder,
-    required this.onPressed,
-    required this.tooltip,
-    required this.semanticLabel,
-    this.focusNode,
-    this.style,
-    this.preferredWidth,
-    super.key,
-  }) : _family = _AppBarControlFamily.filled;
+  });
 
   final Widget Function(BuildContext context, bool compact) contentBuilder;
   final VoidCallback onPressed;
   final String tooltip;
   final String semanticLabel;
   final FocusNode? focusNode;
-  final ButtonStyle? style;
+
+  /// Overrides the face colour, as a status does.
+  final Color? color;
   final double? preferredWidth;
-  final _AppBarControlFamily _family;
+
+  /// Quiet for most controls; filled for the bar's main action.
+  final ButtonFace face;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final compact = constraints.maxWidth <= constraints.maxHeight;
-      final geometry = ButtonStyle(
-        minimumSize: const WidgetStatePropertyAll(Size(40, 40)),
-        padding: WidgetStatePropertyAll(
-          EdgeInsets.symmetric(horizontal: context.spacing.space2),
-        ),
-      ).merge(style);
-      final content = ExcludeSemantics(child: contentBuilder(context, compact));
       void reveal(bool focused) {
         if (!focused) return;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -59,31 +44,20 @@ class AppBarControl extends StatelessWidget {
         });
       }
 
-      return Tooltip(
-        message: tooltip,
-        // Merged so the focusable button itself carries the name.
-        child: MergeSemantics(
-          child: Semantics(
+      return Focus(
+        canRequestFocus: false,
+        skipTraversal: true,
+        onFocusChange: reveal,
+        child: SizedBox(
+          width: preferredWidth,
+          child: Button(
+            face: face,
+            focusNode: focusNode,
             label: semanticLabel,
-            child: SizedBox(
-              width: preferredWidth,
-              child: switch (_family) {
-                _AppBarControlFamily.text => TextButton(
-                  focusNode: focusNode,
-                  onFocusChange: reveal,
-                  style: geometry,
-                  onPressed: onPressed,
-                  child: content,
-                ),
-                _AppBarControlFamily.filled => FilledButton(
-                  focusNode: focusNode,
-                  onFocusChange: reveal,
-                  style: geometry,
-                  onPressed: onPressed,
-                  child: content,
-                ),
-              },
-            ),
+            tooltip: tooltip,
+            color: color,
+            onPressed: onPressed,
+            child: contentBuilder(context, compact),
           ),
         ),
       );
@@ -98,6 +72,7 @@ class AppBarControlContent extends StatelessWidget {
     required this.compact,
     this.label,
     this.shortcut,
+    this.rippling = false,
     super.key,
   });
 
@@ -106,22 +81,30 @@ class AppBarControlContent extends StatelessWidget {
   final String? label;
   final Widget? shortcut;
 
+  /// The label is a status word of work still running, and ripples.
+  final bool rippling;
+
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      icon,
-      if (!compact && label != null)
-        Flexible(
-          child: Padding(
-            padding: EdgeInsets.only(left: context.spacing.space2),
-            child: Text(label!, overflow: TextOverflow.ellipsis),
+  Widget build(BuildContext context) {
+    // Compact shows the icon alone, also while the bar animates the control
+    // narrower than the icon.
+    if (compact) return icon;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        icon,
+        if (label != null)
+          Flexible(
+            child: Padding(
+              padding: EdgeInsets.only(left: context.spacing.space2),
+              child: MotionLabel(label!, rippling: rippling),
+            ),
           ),
-        ),
-      if (!compact && shortcut != null) ...[
-        SizedBox(width: context.spacing.space2),
-        shortcut!,
+        if (shortcut != null) ...[
+          SizedBox(width: context.spacing.space2),
+          shortcut!,
+        ],
       ],
-    ],
-  );
+    );
+  }
 }

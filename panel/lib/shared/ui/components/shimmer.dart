@@ -66,17 +66,12 @@ class Shimmer extends StatefulWidget {
 /// share one coordinate space. The state also owns the animation controller
 /// and disposes it with the widget.
 class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
-  late AnimationController _shimmerController;
+  // The loop is the skeleton token, so reduced motion and the loop cap are
+  // decided in resolveMotion, never here.
+  late final _shimmerController = MotionController(vsync: this, value: -0.5);
+  bool _sweeping = false;
   int _listenerCount = 0;
-  bool _reducedMotion = false;
   final Map<Object, Rect> _childBounds = {};
-
-  @override
-  void initState() {
-    super.initState();
-
-    _shimmerController = AnimationController.unbounded(vsync: this);
-  }
 
   @override
   void dispose() {
@@ -87,7 +82,6 @@ class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _reducedMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     _syncAnimation();
   }
 
@@ -101,15 +95,19 @@ class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
     _syncAnimation();
   }
 
-  /// Moves the gradient while a placeholder is registered, unless the user
-  /// asked for reduced motion; then the placeholders stay still.
+  /// Sweeps the gradient while a placeholder is registered. Under reduced
+  /// motion the skeleton simulation is done at once, so the placeholders
+  /// stay still.
   void _syncAnimation() {
-    if (_listenerCount > 0 && !_reducedMotion) {
-      if (!_shimmerController.isAnimating) {
-        _shimmerController.repeat(min: -0.5, max: 1.5, period: 1000.ms);
-      }
-    } else {
-      _shimmerController.stop();
+    if (_listenerCount > 0) {
+      if (_sweeping) return;
+      _sweeping = true;
+      _shimmerController
+        ..jumpTo(-0.5)
+        ..to(1.5, resolveMotion(context, MotionToken.skeleton));
+    } else if (_sweeping) {
+      _sweeping = false;
+      _shimmerController.jumpTo(_shimmerController.value);
     }
   }
 

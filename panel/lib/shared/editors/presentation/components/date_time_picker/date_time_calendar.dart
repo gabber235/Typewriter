@@ -234,7 +234,11 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
                     ? "Use arrow keys to move and Enter to select"
                     : "Use arrow keys to inspect dates",
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 120),
+                  duration: motionTimeline(
+                    context,
+                    MotionToken.focusMove,
+                  ).duration,
+                  curve: motionTimeline(context, MotionToken.focusMove).curve,
                   decoration: BoxDecoration(
                     borderRadius: context.shapes.smallBorderRadius,
                     border: Border.all(

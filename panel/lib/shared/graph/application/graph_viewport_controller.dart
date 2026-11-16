@@ -2,27 +2,29 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns the graph viewport transform and its cancellable animations.
 ///
-/// The controller owns both animation and transformation resources. Call
-/// [dispose] when the graph leaves the tree. Scale limits are enforced by
+/// The controller owns its transformation; the hook owns the motion
+/// controller. Call [dispose] when the graph leaves the tree. Scale limits are enforced by
 /// [zoomAt]; direct transform changes remain the responsibility of the viewer.
 class GraphViewportController {
   GraphViewportController({
-    required TickerProvider tickerProvider,
+    required this._progress,
+    required this.motion,
     required Matrix4 initialTransform,
     this.minScale = 0.6,
     this.maxScale = 2.5,
-  }) : transformation = TransformationController(initialTransform),
-       _animation = AnimationController(
-         vsync: tickerProvider,
-         duration: const Duration(milliseconds: 250),
-       );
+  }) : transformation = TransformationController(initialTransform);
+
+  /// The camera follows focus with focusMove; the hook refreshes it each
+  /// build, so a reduced motion change applies to the next move.
+  ResolvedMotion<Landing> motion;
 
   final double minScale;
   final double maxScale;
   final TransformationController transformation;
-  final AnimationController _animation;
+
+  /// Owned by the hook, which disposes it.
+  final MotionController _progress;
   VoidCallback? _valueListener;
-  AnimationStatusListener? _statusListener;
 
   /// Animates the viewport to [target], replacing any active animation.
   void animateTo(Matrix4 target) {
@@ -30,29 +32,21 @@ class GraphViewportController {
     final tween = Matrix4Tween(
       begin: Matrix4.copy(transformation.value),
       end: target,
-    ).animate(CurvedAnimation(parent: _animation, curve: Curves.easeOutCubic));
+    );
 
     void valueListener() {
-      transformation.value = tween.value;
-    }
-
-    void statusListener(AnimationStatus status) {
-      if (status != AnimationStatus.completed &&
-          status != AnimationStatus.dismissed) {
-        return;
-      }
-      transformation.value = target;
-      _removeAnimationListeners();
+      transformation.value = tween.transform(_progress.value);
     }
 
     _valueListener = valueListener;
-    _statusListener = statusListener;
-    _animation
-      ..stop()
-      ..reset()
-      ..addListener(valueListener)
-      ..addStatusListener(statusListener)
-      ..forward();
+    _progress.addListener(valueListener);
+    // An instant move lands at once; a later animateTo leaves this future
+    // uncompleted, so only the latest move snaps onto its target.
+    _progress.restart(0, 1, motion).then((_) {
+      if (_valueListener != valueListener) return;
+      transformation.value = target;
+      _removeAnimationListeners();
+    });
   }
 
   /// Zooms around a viewport point while respecting the configured scale range.
@@ -102,33 +96,29 @@ class GraphViewportController {
 
   void _removeAnimationListeners() {
     final valueListener = _valueListener;
-    final statusListener = _statusListener;
-    if (valueListener != null) _animation.removeListener(valueListener);
-    if (statusListener != null) {
-      _animation.removeStatusListener(statusListener);
-    }
+    if (valueListener != null) _progress.removeListener(valueListener);
     _valueListener = null;
-    _statusListener = null;
   }
 
   void dispose() {
     _removeAnimationListeners();
-    _animation.dispose();
     transformation.dispose();
   }
 }
 
 /// Creates and disposes a viewport controller for the current hook.
 GraphViewportController useGraphViewportController({
-  required TickerProvider tickerProvider,
   required Matrix4 initialTransform,
 }) {
+  final motion = resolveMotion(useContext(), MotionToken.focusMove);
+  final progress = useMotionController(initial: 1);
   final controller = useMemoized(
     () => GraphViewportController(
-      tickerProvider: tickerProvider,
+      progress: progress,
+      motion: motion,
       initialTransform: initialTransform,
     ),
   );
   useEffect(() => controller.dispose, [controller]);
-  return controller;
+  return controller..motion = motion;
 }

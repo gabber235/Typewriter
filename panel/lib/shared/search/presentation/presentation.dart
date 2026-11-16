@@ -11,6 +11,7 @@ export "search_result_card.dart";
 export "search_result_empty_state.dart";
 export "search_result_renderers.dart";
 export "search_result_row.dart";
+export "search_result_selectable.dart";
 export "search_result_visuals.dart";
 export "search_root.dart";
 export "search_shortcuts.dart";

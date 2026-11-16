@@ -24,7 +24,7 @@ class _ServiceHostSelectable
   final ValueEditingRegistration? serviceIdentityTarget;
 
   @override
-  List<PortableMultiInspectionSurface> get portableMultiInspectionSurfaces => [
+  List<SharedInspectionSurface> get sharedInspectionSurfaces => [
     if (serviceIdentityTarget case final target?)
       _ServiceIdentityPortableSurface(target),
     _ServiceHostConfigurationPortableSurface(
@@ -40,6 +40,9 @@ class _ServiceHostSelectable
 
   @override
   String get name => service?.displayName ?? host.hostId.id;
+
+  @override
+  SelectableNoun get noun => const SelectableNoun(one: "host", many: "hosts");
 
   @override
   List<SelectionCapability> get capabilities => [
@@ -71,7 +74,7 @@ class _ServiceHostSelectable
 }
 
 final class _ServiceHostConfigurationPortableSurface
-    implements PortableMultiInspectionSurface {
+    extends ValueEditingInspectionSurface {
   const _ServiceHostConfigurationPortableSurface({
     required this.selectable,
     required this.target,
@@ -92,12 +95,12 @@ final class _ServiceHostConfigurationPortableSurface
   CheckedEditorCatalog get catalog => _hostConfigurationCatalog;
 
   @override
-  bool isCompatibleWith(PortableMultiInspectionSurface other) =>
+  bool sharesEditorWith(PortableInspectionSurface other) =>
       other is _ServiceHostConfigurationPortableSurface;
 
   @override
   PortablePresentationHost buildHost(
-    List<PortableMultiInspectionSurface> members,
+    List<SharedInspectionSurface> members,
     EditOwner combinedOwner,
   ) {
     final hosts = members

@@ -159,6 +159,31 @@ Widget dropChooserStory(BuildContext context) {
   );
 }
 
+/// The [DropHintChip] an accepted drop hover shows in the corner of its
+/// target: one line saying what releasing there does, cut short when the
+/// target is narrow.
+@widgetbook.UseCase(name: "Hint", type: DropHintChip)
+Widget dropHintChipStory(BuildContext context) {
+  final long = context.knobs.boolean(label: "Long hint");
+  final width = context.knobs.width(const {"Node": 280, "Narrow": 120});
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(
+        width: width,
+        child: Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: DropHintChip(
+            hint: long
+                ? "Link a copy of every dragged entry to Village evening"
+                : "Move here",
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 @widgetbook.UseCase(name: "Dragged resources", type: ResourceDragFeedback)
 Widget resourceDragFeedbackStory(BuildContext context) => Story(
   const [],
@@ -208,5 +233,6 @@ skir.ResourceOperationDefinition _definition(
     confirmation: null,
     inspector: skir.OperationInspector.hidden,
     shortcut: null,
+    emphasis: skir.OperationEmphasis.flat,
   ),
 );

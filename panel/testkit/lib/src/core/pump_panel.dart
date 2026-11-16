@@ -1,6 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_testkit/src/core/offline_network.dart";
 import "package:typewriter_testkit/src/core/stage.dart";
+import "package:typewriter_testkit/src/core/test_lifetime.dart";
 import "package:typewriter_testkit/src/core/trait.dart";
 import "package:typewriter_testkit/src/core/world.dart";
 import "package:typewriter_testkit/src/drivers/panel_driver.dart";
@@ -11,7 +12,8 @@ extension PumpPanel on WidgetTester {
   /// built from [traits], opened [at] a location or at the world's home.
   ///
   /// The world renders in the window its traits chose, never reaches the
-  /// network (see [keepOffline]) and is disposed with the test. Returns once
+  /// network (see [keepOffline]) and is disposed with the test, together with
+  /// every resource the test handed to [endWithTest]. Returns once
   /// the panel finished its first navigation.
   Future<PanelDriver> pumpPanel(List<Trait> traits, {PanelLocation? at}) async {
     final world = World.build(traits);
@@ -21,6 +23,7 @@ extension PumpPanel on WidgetTester {
       ..devicePixelRatio = 1;
     addTearDown(view.reset);
     addTearDown(world.dispose);
+    adoptTestResources(world);
     await pumpWidget(PanelStage.world(world, at: at));
     final panel = PanelDriver(this, world);
     await panel.settle();

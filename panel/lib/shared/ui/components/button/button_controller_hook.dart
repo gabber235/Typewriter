@@ -1,0 +1,35 @@
+import "package:typewriter_panel/typewriter_panel.dart";
+
+/// Creates a [ButtonController] owned by the current widget.
+///
+/// The controller is stable across rebuilds and disposed when the hook is
+/// removed. Its action rejects overlapping triggers while an earlier action is
+/// loading; use the controller's state to render progress and errors.
+ButtonController useButtonController() {
+  return use(_ButtonControllerHook());
+}
+
+class _ButtonControllerHook extends Hook<ButtonController> {
+  @override
+  _ButtonControllerHookState createState() => _ButtonControllerHookState();
+}
+
+class _ButtonControllerHookState
+    extends HookState<ButtonController, _ButtonControllerHook> {
+  late final ButtonController _controller;
+
+  @override
+  void initHook() {
+    super.initHook();
+    _controller = ButtonController();
+  }
+
+  @override
+  ButtonController build(BuildContext context) => _controller;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+}

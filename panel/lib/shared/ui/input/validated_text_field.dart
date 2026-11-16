@@ -348,6 +348,9 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   }
 }
 
+/// How long a valid message stays to be read before it leaves.
+const _validReadTimeout = Duration(milliseconds: 2400);
+
 class _StateText extends HookWidget {
   const _StateText({
     required this.name,
@@ -363,51 +366,37 @@ class _StateText extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state is! _Valid) return Container();
+    final valid = state is _Valid;
+    final leave = resolveMotion(context, MotionToken.listOut);
+    final open = useMotionController(initial: 1);
+    // Runs on frames rather than a timer, so a settling test sees it end.
+    final reading = useAnimationController(duration: _validReadTimeout);
+    // The message types in, stays long enough to read, then squashes shut
+    // with listOut unless it should stay while focused.
+    useEffect(() {
+      open.jumpTo(1);
+      reading.reset();
+      if (!valid || keepValidVisible) return null;
+      reading.forward().then((_) => open.to(0, leave));
+      return null;
+    }, [state, keepValidVisible]);
 
-    final child =
-        Padding(
-              padding: EdgeInsets.only(
-                left: context.spacing.space2,
-                top: context.spacing.space1,
-              ),
-              child: Text(
-                value ?? state.cast<_Valid>()?.message ?? "",
-                style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(color: context.colors.success),
-              ),
-            )
-            .animate()
-            .moveY(begin: -4, duration: 300.ms, curve: Curves.easeInOut)
-            .fadeIn(duration: 300.ms, curve: Curves.easeInOut)
-            .then(delay: 300.ms)
-            .shimmer(duration: 1.5.seconds, curve: Curves.easeInOut)
-            .addEffects([
-              if (!keepValidVisible) ...[
-                ThenEffect(delay: 300.ms),
-                MoveEffect(
-                  end: const Offset(0, -4),
-                  duration: 300.ms,
-                  curve: Curves.easeOut,
-                ),
-                FadeEffect(
-                  begin: 1.0,
-                  end: 0.0,
-                  duration: 300.ms,
-                  curve: Curves.easeOut,
-                ),
-                SwapEffect(builder: (_, _) => Container()),
-              ],
-            ]);
+    if (!valid) return const SizedBox.shrink();
 
-    if (!keepValidVisible) {
-      return AnimatedSize(
-        duration: 300.ms,
-        curve: Curves.easeInOut,
-        child: child,
-      );
-    }
-
-    return child;
+    return Leave(
+      progress: open,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: context.spacing.space2,
+          top: context.spacing.space1,
+        ),
+        child: MotionLabel(
+          value ?? state.cast<_Valid>()?.message ?? "",
+          typesIn: true,
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: context.colors.successText),
+        ),
+      ),
+    );
   }
 }

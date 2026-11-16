@@ -6,7 +6,7 @@ enum _AccessDenial { invalidRoute, notAMember, membershipRemoved }
 ///
 /// Multiple guard callbacks can observe the same denial. One scheduled callback
 /// owns the redirect and optional explanation, preventing duplicate navigation
-/// and snackbars.
+/// and toasts.
 final class _IndexRedirectCoordinator {
   bool _scheduled = false;
 
@@ -33,7 +33,7 @@ final class _IndexRedirectCoordinator {
         await WidgetsBinding.instance.endOfFrame;
         final context = router.navigatorKey.currentContext;
         if (context != null && context.mounted) {
-          showErrorSnackBar(context, _message(reason));
+          context.reportFailure(_message(reason));
         }
       } finally {
         _scheduled = false;

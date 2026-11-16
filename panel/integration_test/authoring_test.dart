@@ -37,8 +37,7 @@ void main() {
       await panel.press("Close");
       await panel.open("Library");
       await panel.open(title);
-      await panel.press("Delete");
-      await panel.press("Delete");
+      await panel.hold("Delete this resource and what it owns?");
       await panel.expectHidden(title);
       // The realm publishes the book's page, so the inbox names the page
       // the deletion takes out of the published content.

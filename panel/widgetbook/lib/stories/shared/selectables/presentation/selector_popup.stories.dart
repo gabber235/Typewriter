@@ -15,6 +15,70 @@ Widget selectorPopupUseCase(BuildContext context) =>
 Widget selectorPopupWithSelectionUseCase(BuildContext context) =>
     _selectorStory(context, withSelection: true);
 
+/// The [SelectorSearchField] at the top of a selector: it owns no value, so
+/// the story shows the query it hands to the content below it.
+@widgetbook.UseCase(name: "Query", type: SelectorSearchField)
+Widget selectorSearchFieldUseCase(BuildContext context) {
+  final longHint = context.knobs.boolean(label: "Long hint");
+  final width = context.knobs.width(const {"Popup": 360, "Narrow": 220});
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(
+        width: width,
+        child: HookBuilder(
+          builder: (context) {
+            final query = useState("");
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SelectorSearchField(
+                  searchQuery: query,
+                  hintText: longHint
+                      ? "Search books, chapters and side quests of this Realm"
+                      : "Search books",
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.spacing.space3,
+                  ),
+                  child: Text(
+                    query.value.isEmpty
+                        ? "Every book"
+                        : "Books matching ${query.value}",
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}
+
+/// The [SelectorSectionHeader] above one group of selector choices.
+@widgetbook.UseCase(name: "Section", type: SelectorSectionHeader)
+Widget selectorSectionHeaderUseCase(BuildContext context) {
+  final longName = context.knobs.boolean(label: "Long names");
+  final width = context.knobs.width(const {"Popup": 360, "Narrow": 160});
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(
+        width: width,
+        child: SelectorSectionHeader(
+          title: longName
+              ? "Side quests of the northern harbor villages"
+              : "Side quests",
+        ),
+      ),
+    ),
+  );
+}
+
 Widget _selectorStory(BuildContext context, {required bool withSelection}) {
   final state = context.knobs.object.dropdown(
     label: "Choices",
@@ -164,12 +228,12 @@ class _BookMenu extends HookWidget {
           for (final section in sections.entries) ...[
             SelectorSectionHeader(title: section.key),
             for (final book in section.value)
-              ListTile(
+              PanelRow(
                 dense: true,
                 selected: book.id == selected?.id,
                 leading: Icon(Icons.menu_book, color: book.color),
                 title: Text(book.title),
-                onTap: () => onSelect(book),
+                onPressed: () => onSelect(book),
               ),
           ],
           const SizedBox(height: 8),

@@ -41,6 +41,43 @@ Widget realmInboxButtonUseCase(BuildContext context) {
   );
 }
 
+/// The app bar's activity control: inside a Realm it is the realm inbox,
+/// outside one the organization's own saves.
+@widgetbook.UseCase(
+  name: "Inside and outside a Realm",
+  type: WorkspaceActivityButton,
+)
+Widget workspaceActivityButtonUseCase(BuildContext context) {
+  final place = context.knobs.object.segmented(
+    label: "Place",
+    options: const ["Realm", "Organization"],
+    initialOption: "Realm",
+  );
+  return Story(
+    [
+      signedIn(ada, organization: acme),
+      showcaseRealm(),
+      ...?storyPublications["Ready"],
+      ...context.knobs.window(),
+    ],
+    at: PanelLocation.route(
+      place == "Organization"
+          ? OrganizationRoute(
+              organizationId: acme.organizationId.id,
+              children: const [ServicesRoute()],
+            )
+          : const RealmRouteTree().realm(showcaseScope),
+    ),
+  );
+}
+
+/// The realm page, where Shift+P in Normal mode opens the realm inbox.
+/// While the Realm is offline or checking, the key does nothing.
+@widgetbook.UseCase(name: "Shift P opens the inbox", type: RealmInboxShortcut)
+Widget realmInboxShortcutUseCase(BuildContext context) {
+  return realmStory(context, traits: [...?storyPublications["Ready"]]);
+}
+
 /// The review inline, at the width of the popup or a wide surface.
 @widgetbook.UseCase(name: "Provider owned review", type: RealmInboxContent)
 Widget realmInboxContentUseCase(BuildContext context) {

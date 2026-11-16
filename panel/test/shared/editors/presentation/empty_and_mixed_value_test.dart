@@ -32,7 +32,9 @@ void main() {
       final panel = await field.pump(
         tester,
         (value, mixed, changed, cleared) => mixed
-            ? ColorPickerField.mixed(
+            ? ColorPickerField(
+                color: null,
+                mixed: true,
                 includeAlpha: false,
                 onChanged: changed,
                 onCleared: cleared,
@@ -57,7 +59,7 @@ void main() {
       expect(field.clears, 1);
       expect(field.writes, [const Color(0xFFAABBCC)]);
       expect(panel.shows("This value is Unfilled"), isTrue);
-      expect(panel.shows("Multiple colors"), isFalse);
+      expect(panel.shows(mixedValueLabel), isFalse);
       expect(panel.shows(mixedValueReplacementMessage), isFalse);
     });
 
@@ -73,7 +75,9 @@ void main() {
           final panel = await field.pump(
             tester,
             (value, mixed, changed, cleared) => mixed
-                ? DateTimePickerField.mixed(
+                ? DateTimePickerField(
+                    value: null,
+                    mixed: true,
                     includeDate: parts.date,
                     includeTime: parts.time,
                     onChanged: changed,
@@ -87,7 +91,7 @@ void main() {
                     onCleared: cleared,
                   ),
           );
-          expect(panel.shows("Multiple values"), mixed);
+          expect(panel.shows(mixedValueLabel), mixed);
           expect(panel.shows(mixedValueReplacementMessage), mixed);
           expect(panel.shows("This value is Unfilled"), !mixed);
           await panel.tapOn(find.tooltip("Open picker"));
@@ -120,7 +124,7 @@ void main() {
           expect(field.clears, 1);
           expect(field.writes, [expected]);
           expect(panel.shows("This value is Unfilled"), isTrue);
-          expect(panel.shows("Multiple values"), isFalse);
+          expect(panel.shows(mixedValueLabel), isFalse);
           expect(panel.shows(mixedValueReplacementMessage), isFalse);
         },
       );

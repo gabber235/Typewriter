@@ -106,7 +106,8 @@ void main() {
 
     await panel.activity.entry("Paper Host configuration").copyReport();
 
-    expect(panel.shows("Problem copied to clipboard"), isTrue);
+    // The copy button says it copied, in place of a toast.
+    expect(find.text("Copied"), findsOneWidget);
     expect(
       clipboard,
       allOf([

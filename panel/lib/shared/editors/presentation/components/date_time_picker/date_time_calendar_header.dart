@@ -97,19 +97,14 @@ class _PickerButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) => TextButton.icon(
-    style: TextButton.styleFrom(
-      minimumSize: const Size(0, 36),
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
-      backgroundColor: selected
-          ? Theme.of(context).colorScheme.primaryContainer
-          : null,
-    ),
-    onPressed: onPressed,
-    iconAlignment: IconAlignment.end,
-    icon: const Icones(MaterialSymbols.arrow_drop_down_rounded, size: 16),
-    label: Text(label, overflow: TextOverflow.ellipsis),
-  );
+  Widget build(BuildContext context) {
+    return Button(
+      face: selected ? ButtonFace.outlined : ButtonFace.quiet,
+      onPressed: onPressed,
+      icon: const Icones(MaterialSymbols.arrow_drop_down_rounded, size: 16),
+      label: label,
+    );
+  }
 }
 
 class _StepButton extends StatelessWidget {
@@ -124,11 +119,11 @@ class _StepButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: tooltip,
-    constraints: const BoxConstraints.tightFor(width: 32, height: 36),
-    padding: EdgeInsets.zero,
-    onPressed: onPressed,
+  Widget build(BuildContext context) => Button(
+    face: ButtonFace.icon,
     icon: Icones(icon, size: 18),
+    label: tooltip,
+    tooltip: tooltip,
+    onPressed: onPressed,
   );
 }

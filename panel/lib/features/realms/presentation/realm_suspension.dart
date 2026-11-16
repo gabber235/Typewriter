@@ -33,7 +33,11 @@ class RealmSuspensionBarrier extends StatelessWidget {
         Positioned.fill(
           child: IgnorePointer(
             ignoring: !suspended,
-            child: ElasticSwitcher(
+            // The veil changes without the user acting, so it fades with ink.
+            child: AnimatedSwitcher(
+              duration: motionTimeline(context, MotionToken.ink).duration,
+              switchInCurve: motionTimeline(context, MotionToken.ink).curve,
+              switchOutCurve: motionTimeline(context, MotionToken.ink).curve,
               child: suspended
                   ? _RealmSuspensionVeil(
                       key: ValueKey(interaction.connectionState),
@@ -63,14 +67,14 @@ class RealmSuspensionInline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final duration = MediaQuery.disableAnimationsOf(context)
-        ? Duration.zero
-        : const Duration(milliseconds: 180);
+    // The dim changes without the user acting, so it fades with ink.
+    final ink = motionTimeline(context, MotionToken.ink);
     return ExcludeInteraction(
       excluding: suspended,
       child: AnimatedOpacity(
         opacity: suspended ? 0.42 : 1,
-        duration: duration,
+        duration: ink.duration,
+        curve: ink.curve,
         child: child,
       ),
     );
@@ -180,10 +184,11 @@ class _ConnectionCard extends StatelessWidget {
                                   RealmConnectionState.unavailable) &&
                           onRetry != null) ...[
                         SizedBox(height: context.spacing.space4),
-                        OutlinedButton.icon(
-                          onPressed: onRetry,
+                        Button(
+                          face: ButtonFace.outlined,
                           icon: const Icon(Icons.refresh),
-                          label: const Text("Check again"),
+                          label: "Check again",
+                          onPressed: onRetry,
                         ),
                       ],
                     ],
@@ -193,7 +198,7 @@ class _ConnectionCard extends StatelessWidget {
                   SizedBox(height: context.spacing.space2),
                   Text(
                     content.description,
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    style: context.text.sentence.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),

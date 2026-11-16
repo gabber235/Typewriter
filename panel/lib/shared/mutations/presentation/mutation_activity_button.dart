@@ -21,7 +21,7 @@ class MutationActivityButton extends ConsumerWidget {
 ///
 /// This split lets route shells use Riverpod and tests or short lived sessions
 /// provide their own state stream without changing activity behavior.
-class MutationActivityView extends StatelessWidget {
+class MutationActivityView extends ConsumerWidget {
   const MutationActivityView({
     required this.state,
     required this.controller,
@@ -31,44 +31,47 @@ class MutationActivityView extends StatelessWidget {
   final LocalWorkCommands controller;
 
   Future<void> _showMobileActivity(BuildContext context) =>
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => SafeArea(
-          minimum: EdgeInsets.all(context.spacing.space3),
-          child: Material(
-            color: context.theme.colorScheme.surfaceContainer,
-            borderRadius: context.shapes.largeBorderRadius,
-            clipBehavior: Clip.antiAlias,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: min(MediaQuery.sizeOf(context).height * .75, 580),
-              ),
-              child: _ActivityDetails(
-                state: state,
-                controller: controller,
-                onClose: () => Navigator.pop(context),
-              ),
-            ),
+      context.showPanelSheet<void>(
+        (context) => SheetCard(
+          maxHeight: min(MediaQuery.sizeOf(context).height * .75, 580),
+          child: _ActivityDetails(
+            state: state,
+            controller: controller,
+            onClose: () => Navigator.pop(context),
           ),
         ),
       );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final drafts = state.entries.values.toList();
+    final failures = [
+      for (final notice in ref.watch(noticesProvider))
+        if (notice.tone == NoticeTone.failure && !notice.toasting) notice,
+    ];
+    final unread = failures.where((notice) => notice.unread).length;
     final phase = MutationActivityPhase.resolve(state.submissions, drafts);
-    final label = phase.label(drafts.length);
-    final color = phase.color(context);
-    final icon = phase.isSaving
-        ? SizedBox.square(
-            dimension: 16,
-            child: CircularProgressIndicator(strokeWidth: 2, color: color),
-          )
-        : Icon(phase.icon, size: 18);
+    // Failures name the button while some wait unread, or while nothing
+    // else has a state to show.
+    final failing =
+        failures.isNotEmpty &&
+        (unread > 0 || phase == MutationActivityPhase.idle);
+    final label = failing
+        ? "${failures.length} failed"
+        : phase.label(drafts.length);
+    final icon = Icon(failing ? Icons.error_outline : phase.icon, size: 18);
+    final color = !failing
+        ? phase.textColor(context)
+        : unread > 0
+        ? MutationActivityPhase.needsAttention.textColor(context)
+        : context.colors.contentSecondary;
+    void opened(VoidCallback show) {
+      ref.read(noticesProvider.notifier).readAll();
+      show();
+    }
+
     Widget trigger(BuildContext context, VoidCallback show) => ElasticSwitcher(
-      child: phase == MutationActivityPhase.idle
+      child: phase == MutationActivityPhase.idle && failures.isEmpty
           ? null
           : Padding(
               key: const ValueKey("activity"),
@@ -79,19 +82,20 @@ class MutationActivityView extends StatelessWidget {
               // when its label changes.
               child: Semantics(
                 liveRegion: true,
-                child: AppBarControl.text(
-                  tooltip: label,
-                  semanticLabel: label,
-                  contentBuilder: (context, compact) => AppBarControlContent(
-                    compact: compact,
-                    icon: icon,
-                    label: label,
+                child: ToastLandingTarget(
+                  child: AppBarControl(
+                    face: ButtonFace.outlined,
+                    tooltip: label,
+                    semanticLabel: label,
+                    contentBuilder: (context, compact) => AppBarControlContent(
+                      compact: compact,
+                      icon: icon,
+                      label: label,
+                      rippling: phase.isSaving,
+                    ),
+                    color: color,
+                    onPressed: () => opened(show),
                   ),
-                  style: TextButton.styleFrom(
-                    foregroundColor: color,
-                    backgroundColor: color.withValues(alpha: .12),
-                  ),
-                  onPressed: show,
                 ),
               ),
             ),
@@ -152,14 +156,26 @@ extension _ActivityAppearance on MutationActivityPhase {
 
   Color color(BuildContext context) => switch (this) {
     MutationActivityPhase.needsAttention ||
-    MutationActivityPhase.savingWithAttention =>
-      context.theme.colorScheme.error,
+    MutationActivityPhase.savingWithAttention => context.colors.danger,
     MutationActivityPhase.needsInput ||
     MutationActivityPhase.drafts => context.colors.warning,
     MutationActivityPhase.saved => context.colors.success,
     MutationActivityPhase.saving ||
-    MutationActivityPhase.pending => context.theme.colorScheme.primary,
+    MutationActivityPhase.pending => context.colors.brand,
     MutationActivityPhase.idle => context.colors.contentSecondary,
+  };
+
+  /// The label colour: the phase hue as text, 4.5:1 on every surface and on
+  /// the 12% tint behind it.
+  Color textColor(BuildContext context) => switch (this) {
+    MutationActivityPhase.idle => context.colors.contentSecondary,
+    _ => context.colors.textOf(
+      color(context),
+      over: Color.alphaBlend(
+        color(context).withValues(alpha: .12),
+        context.colors.surface,
+      ),
+    ),
   };
 
   IconData get icon => switch (this) {

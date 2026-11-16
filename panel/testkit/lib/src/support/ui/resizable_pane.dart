@@ -60,7 +60,6 @@ class _ResizablePaneState extends State<ResizablePane> {
             getSize: () => size,
             onSizeChange: (value) => setState(() => size = value),
             sizeResolver: widget.resolver,
-            animationDuration: const Duration(milliseconds: 100),
           ),
           Semantics(
             container: true,

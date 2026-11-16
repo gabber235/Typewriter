@@ -374,6 +374,15 @@ final class Panel {
   Future<void> press(String label) =>
       _step("press \"$label\"", () async => _tap(await _control(label)));
 
+  /// Confirms the hold button heard as [outcome], such as `Delete this
+  /// resource and what it owns?`, the way a screen reader does: its long
+  /// press confirms at once.
+  Future<void> hold(String outcome) => _step(
+    "hold \"$outcome\"",
+    () async =>
+        _longPress(await _control(outcome, action: SemanticsAction.longPress)),
+  );
+
   /// Creates a resource of [kind] in the open surface the way its "New" action
   /// does and names it [name] in the field [field].
   Future<void> create(
@@ -661,7 +670,10 @@ final class Panel {
   /// button, link or tile reading [label], or one whose first line does, or
   /// one that reads [label] and then its state, such as
   /// `Realm inbox. 2 issues`.
-  Future<SemanticsNode> _control(String label) async {
+  Future<SemanticsNode> _control(
+    String label, {
+    SemanticsAction action = SemanticsAction.tap,
+  }) async {
     SemanticsNode? found;
     await until("a control reads \"$label\"", () {
       found = _tappable(
@@ -669,6 +681,7 @@ final class Panel {
             spoken == label ||
             spoken.split("\n").first == label ||
             spoken.startsWith("$label. "),
+        action: action,
       );
       return found != null;
     });
@@ -687,14 +700,17 @@ final class Panel {
     return found!;
   }
 
-  /// The last enabled control whose name [reads] accepts. A user can only
-  /// press what they see, so a control beyond the edge of a scrollable is
-  /// scrolled to first.
-  SemanticsNode? _tappable(bool Function(String spoken) reads) {
+  /// The last enabled control offering [action] whose name [reads] accepts.
+  /// A user can only press what they see, so a control beyond the edge of a
+  /// scrollable is scrolled to first.
+  SemanticsNode? _tappable(
+    bool Function(String spoken) reads, {
+    SemanticsAction action = SemanticsAction.tap,
+  }) {
     final controls = find.semantics
         .byPredicate(
           (node) =>
-              node.isTappable &&
+              node.getSemanticsData().hasAction(action) &&
               node.isEnabled &&
               !node.isInvisible &&
               reads(node.named),
@@ -797,6 +813,23 @@ final class Panel {
     await tester.pump(_frame);
   }
 
+  /// Confirms the hold of [node] the way assistive technology does, through
+  /// its long press action.
+  Future<void> _longPress(SemanticsNode node) async {
+    final at = _centerOf(node) * tester.view.devicePixelRatio;
+    taps.add(
+      results.Tap(
+        atMillis: DateTime.now().millisecondsSinceEpoch,
+        x: at.dx.round(),
+        y: at.dy.round(),
+      ),
+    );
+    tester.semantics.longPress(
+      find.semantics.byPredicate((candidate) => identical(candidate, node)),
+    );
+    await tester.pump(_frame);
+  }
+
   /// The center of [node] in the logical coordinates pointer events use.
   ///
   /// Every transform up to the root applies, the root's included, which
@@ -837,12 +870,29 @@ final class PanelRow {
         await _panel._tap(action!);
       });
 
+  /// Confirms the row's hold action heard as [outcome], such as `Decline
+  /// grace? They must ask again to join.`, the way a screen reader does.
+  Future<void> hold(String outcome) =>
+      _panel._step("hold \"$outcome\" for $name", () async {
+        SemanticsNode? action;
+        await _panel.until("the row \"$name\" offers \"$outcome\"", () {
+          action = _action(outcome, action: SemanticsAction.longPress);
+          return action != null;
+        });
+        await _panel._longPress(action!);
+      });
+
   /// The control reading [label] closest to a node showing [name]: the one
   /// reached through the fewest ancestors, so a row's own action wins over
   /// the same action of a row beside it.
-  SemanticsNode? _action(String label) {
+  SemanticsNode? _action(
+    String label, {
+    SemanticsAction action = SemanticsAction.tap,
+  }) {
     bool isAction(SemanticsNode node) =>
-        node.isTappable && node.isEnabled && node.named == label;
+        node.getSemanticsData().hasAction(action) &&
+        node.isEnabled &&
+        node.named == label;
     bool shows(SemanticsNode node) => [
       ...node.spoken.split("\n"),
       node.getSemanticsData().value,

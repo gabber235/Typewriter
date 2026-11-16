@@ -29,7 +29,6 @@ class GraphDragSource<T extends GraphDragData> {
   bool _closed = false;
   GraphDragPayload<T>? _prepared;
   GraphDragPayload<T>? _active;
-  Offset? _startPosition;
 
   GraphDragPayload<T> get payload => _active ?? _prepared!;
   ValueListenable<GraphDragSession?>? get state => _scope?.controller.dragState;
@@ -44,6 +43,12 @@ class GraphDragSource<T extends GraphDragData> {
     }
   }
 
+  /// Anchors the avatar of [offered] and starts its drag session.
+  ///
+  /// Flutter anchors a drag right before it hit tests the drag for the first
+  /// time and calls `onDragStarted` only after that hit test. Starting here
+  /// lets the graph know the dragged element in that first hit test, so the
+  /// element's own drop region leaves the graph's move target reachable.
   Offset anchor(
     GraphDragPayload<T> offered,
     Draggable<Object> draggable,
@@ -51,20 +56,12 @@ class GraphDragSource<T extends GraphDragData> {
     Offset position,
   ) {
     // Each callback captures offered, the same immutable Draggable.data.
-    if (!_closed && identical(draggable.data, offered)) {
-      _startPosition = position;
-    }
+    if (identical(draggable.data, offered)) _begin(offered, position);
     return childDragAnchorStrategy(draggable, context, position);
   }
 
-  void begin(GraphDragPayload<T> offered) {
-    final position = _startPosition;
-    if (_closed ||
-        !identical(_prepared, offered) ||
-        position == null ||
-        !offered.start()) {
-      return;
-    }
+  void _begin(GraphDragPayload<T> offered, Offset position) {
+    if (_closed || !identical(_prepared, offered) || !offered.start()) return;
     _active = offered;
     offered.pointer = position;
     final scope = _scope;

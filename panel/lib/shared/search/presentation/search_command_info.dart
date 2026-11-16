@@ -17,63 +17,42 @@ class SearchCommandInfo extends HookConsumerWidget {
     final command = commandId == null ? null : controller.command(commandId);
     final presentation = command?.presentation;
 
+    // One keyed Admonition; its icon stays the command's icon and its word
+    // changes in place: Running, then Completed, types.
+    final label = presentation?.label ?? "command";
+    final previous = usePrevious(state);
+    final failures = useRef(0);
+    if (state is SearchCommandFailed && previous is! SearchCommandFailed) {
+      failures.value++;
+    }
+
     final child = switch (state) {
       SearchCommandIdle() => const SizedBox.shrink(key: ValueKey("idle")),
       SearchCommandRunning() => Admonition(
+        key: const ValueKey("info"),
         color: presentation?.color ?? context.colors.info,
-        icon: ElasticSwitcher(
-          child: Builder(
-            builder: (context) {
-              final iconTheme = IconTheme.of(context);
-              final iconSize = iconTheme.size ?? 24.0;
-              return SizedBox(
-                width: iconSize,
-                height: iconSize,
-                child: CircularProgressIndicator(
-                  color: iconTheme.color,
-                  strokeWidth: 3,
-                  padding: EdgeInsets.all(context.spacing.space1),
-                ),
-              );
-            },
-          ),
+        icon: Icones(presentation?.icon ?? MaterialSymbols.play_arrow_rounded),
+        child: MotionLabel("Running $label", rippling: true),
+      ),
+      SearchCommandCompleted() => Admonition(
+        key: const ValueKey("info"),
+        color: context.colors.success,
+        icon: Icones(
+          presentation?.icon ?? MaterialSymbols.check_circle_rounded,
         ),
-        child: Text("Running ${presentation?.label ?? "command"}..."),
-      ).animate(key: const ValueKey("info")),
-      SearchCommandCompleted() =>
-        Admonition(
-              color: context.colors.success,
-              icon: ElasticSwitcher(
-                child: Icones(
-                  presentation?.icon ?? MaterialSymbols.check_circle_rounded,
-                ),
-              ),
-              child: Text("Completed ${presentation?.label ?? "command"}"),
-            )
-            .animate(key: const ValueKey("info"))
-            .shimmer(
-              color: context.colors.success.withValues(alpha: 0.7),
-              duration: 750.ms,
-              curve: Curves.easeInOutCubic,
-            ),
-      SearchCommandFailed(:final message) => Admonition(
-        color: context.colors.danger,
-        icon: ElasticSwitcher(
-          child: Icones(presentation?.icon ?? Ic.round_dangerous),
+        child: MotionLabel("Completed $label"),
+      ),
+      SearchCommandFailed(:final message) => Jam(
+        key: const ValueKey("info"),
+        failures: failures.value,
+        child: Admonition(
+          color: context.colors.danger,
+          icon: Icones(presentation?.icon ?? Ic.round_dangerous),
+          child: SelectableText("Failed $label: $message"),
         ),
-        child: SelectableText(
-          "Failed ${presentation?.label ?? "command"}: $message",
-        ),
-      ).animate(key: const ValueKey("info")).shakeX(),
+      ),
     };
 
-    return AnimatedSwitcher(
-      duration: 750.ms,
-      switchInCurve: Curves.linear,
-      switchOutCurve: Curves.linear,
-      transitionBuilder: (child, animation) =>
-          ElasticTransition(animation: animation, child: child),
-      child: child,
-    );
+    return PanelSwitcher(child: child);
   }
 }

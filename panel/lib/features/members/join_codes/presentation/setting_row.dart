@@ -26,7 +26,7 @@ class SettingRow extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 description,
-                style: theme.textTheme.bodySmall?.copyWith(
+                style: context.text.sentenceSmall.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),

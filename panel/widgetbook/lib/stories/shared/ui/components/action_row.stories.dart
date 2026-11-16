@@ -17,9 +17,11 @@ ActionShortcut _action(
   activators: activators,
   priority: priority,
   icon: Icon(icon),
-  onInvoke: slow
-      ? (ref) => Future<void>.delayed(const Duration(milliseconds: 800))
-      : (ref) {},
+  run: ActionRun.press(
+    slow
+        ? (ref) => Future<void>.delayed(const Duration(milliseconds: 800))
+        : (ref) {},
+  ),
 );
 
 /// The [ActionRow] of a selected resource: its actions with their shortcuts,

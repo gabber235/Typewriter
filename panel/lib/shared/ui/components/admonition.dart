@@ -12,45 +12,30 @@ class Admonition extends StatelessWidget {
     required Color this._color,
     required this.icon,
     required this.child,
-    this.animationDuration = const Duration(milliseconds: 500),
     this.onTap,
     super.key,
   }) : _kind = _AdmonitionKind.custom;
 
-  const Admonition.info({
-    required this.child,
-    this.onTap,
-    this.animationDuration = const Duration(milliseconds: 500),
-    super.key,
-  }) : _color = null,
-       _kind = _AdmonitionKind.info,
-       icon = const Icones(MaterialSymbols.info_rounded);
+  const Admonition.info({required this.child, this.onTap, super.key})
+    : _color = null,
+      _kind = _AdmonitionKind.info,
+      icon = const Icones(MaterialSymbols.info_rounded);
 
-  const Admonition.warning({
-    required this.child,
-    this.onTap,
-    this.animationDuration = const Duration(milliseconds: 500),
-    super.key,
-  }) : _color = null,
-       _kind = _AdmonitionKind.warning,
-       icon = const Icones(Ph.warning_fill);
+  const Admonition.warning({required this.child, this.onTap, super.key})
+    : _color = null,
+      _kind = _AdmonitionKind.warning,
+      icon = const Icones(Ph.warning_fill);
 
-  const Admonition.danger({
-    required this.child,
-    this.onTap,
-    this.animationDuration = const Duration(milliseconds: 500),
-    super.key,
-  }) : _color = null,
-       _kind = _AdmonitionKind.danger,
-       icon = const Icones(Ph.warning_octagon_fill);
+  const Admonition.danger({required this.child, this.onTap, super.key})
+    : _color = null,
+      _kind = _AdmonitionKind.danger,
+      icon = const Icones(Ph.warning_octagon_fill);
 
   final Color? _color;
   final _AdmonitionKind _kind;
   final Widget icon;
   final Widget child;
   final VoidCallback? onTap;
-
-  final Duration animationDuration;
 
   @override
   Widget build(BuildContext context) {
@@ -64,21 +49,27 @@ class Admonition extends StatelessWidget {
         };
     final backgroundColor = color.withValues(alpha: color.a * 0.1);
     return SurfaceContainer(
-      duration: animationDuration,
+      // A colour change fades like any ink change.
+      motion: resolveMotion(context, MotionToken.ink),
       decoration: BoxDecoration(
         color: backgroundColor,
         border: Border.all(color: color, width: 1),
         borderRadius: context.shapes.mediumBorderRadius,
       ),
-      foreground: color,
+      foreground: context.colors.textOf(
+        color,
+        over: Color.alphaBlend(backgroundColor, Surface.colorOf(context)),
+      ),
       child: Builder(
         builder: (context) => Material(
           color: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: context.shapes.mediumBorderRadius,
           ),
-          child: InkWell(
-            onTap: onTap,
+          child: Button(
+            face: ButtonFace.bare,
+            label: "Show details",
+            onPressed: onTap,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: Row(

@@ -37,6 +37,12 @@ final class WorldBuilder {
   /// The theme mode the user chose.
   ThemeMode themeMode = ThemeMode.light;
 
+  /// Whether the user asked the platform for reduced motion.
+  bool reducedMotion = false;
+
+  /// Where the hold's outcome line sits, for the layout trial.
+  HoldLineLayout holdLineLayout = HoldLineLayout.over;
+
   /// Whether the organization projections the panel watches over NATS are
   /// replaced by [FakeOrganizations]; false leaves the real projections
   /// reading [World.nats], where the test registers replies.
@@ -46,6 +52,10 @@ final class WorldBuilder {
   /// them as [FakeRive] empty boxes, as a test runner without the native
   /// Rive library needs.
   bool liveAnimations = false;
+
+  /// The motion token table the panel plays; null plays the standard table,
+  /// with its loops limited to one round unless [liveAnimations] is set.
+  TypewriterMotion? motionTable;
 
   /// Doubles traits install for sources the world does not model itself,
   /// such as the membership of an organization.
@@ -112,6 +122,8 @@ final class World {
     required this.appearance,
     required this.realm,
     required this.window,
+    required this.reducedMotion,
+    required this.holdLineLayout,
     required this._builder,
   }) {
     container = ProviderContainer(
@@ -122,6 +134,15 @@ final class World {
         if (_builder.organizationDoubles) ...organizations.overrides,
         appearance.override,
         if (!_builder.liveAnimations) const FakeRive().override,
+        if (_builder.motionTable case final table?)
+          motionTableProvider.overrideWithValue(table)
+        // A busy word plays one round and a toast drains in time, so
+        // settling ends while the word shows and with the toast landed; a
+        // browser story keeps the panel's endless loops and full drain.
+        else if (!_builder.liveAnimations)
+          motionTableProvider.overrideWithValue(
+            TypewriterMotion.standard().oneRoundLoops.shortDrain,
+          ),
         ...?realm?.overrides,
         ..._builder.overrides,
       ],
@@ -190,6 +211,8 @@ final class World {
       appearance: FakeAppearance(builder.themeMode),
       realm: realm,
       window: builder.window,
+      reducedMotion: builder.reducedMotion,
+      holdLineLayout: builder.holdLineLayout,
       builder: builder,
     );
   }
@@ -211,6 +234,12 @@ final class World {
 
   /// The window the panel renders in.
   final Size window;
+
+  /// Whether the panel renders for a user who asked for reduced motion.
+  final bool reducedMotion;
+
+  /// Where the hold's outcome line sits, for the layout trial.
+  final HoldLineLayout holdLineLayout;
 
   final WorldBuilder _builder;
 

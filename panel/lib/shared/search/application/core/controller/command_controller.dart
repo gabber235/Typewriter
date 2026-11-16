@@ -28,6 +28,10 @@ class CommandController with ChangeNotifier {
   final List<SearchHostEffectExecutor<SearchHostEffect>> _hostEffectExecutors;
 
   var _disposed = false;
+
+  // Returns a finished command to idle; cancelled on dispose, so a closed
+  // search leaves no timer behind.
+  Timer? _autoReset;
   var _state = const SearchCommandExecutionState.idle();
 
   SearchCommandExecutionState get state => _state;
@@ -53,10 +57,10 @@ class CommandController with ChangeNotifier {
   ) async {
     if (_disposed) return;
 
-    final resultIds = target.selection.map((result) => result.id).toSet();
+    final resultId = target.result.id;
     _state = SearchCommandExecutionState.running(
       command: command.id,
-      resultIds: resultIds,
+      resultId: resultId,
     );
     notifyListeners();
 
@@ -72,7 +76,7 @@ class CommandController with ChangeNotifier {
         case SearchCommandResultFailed(:final message, :final surfaceEffect):
           _state = SearchCommandExecutionState.failed(
             command: command.id,
-            resultIds: resultIds,
+            resultId: resultId,
             message: message,
           );
           notifyListeners();
@@ -83,7 +87,7 @@ class CommandController with ChangeNotifier {
         ):
           _state = SearchCommandExecutionState.completed(
             command: command.id,
-            resultIds: resultIds,
+            resultId: resultId,
           );
           notifyListeners();
           await _effectCallback(surfaceEffect);
@@ -95,12 +99,12 @@ class CommandController with ChangeNotifier {
       if (_disposed) return;
       _state = SearchCommandExecutionState.failed(
         command: command.id,
-        resultIds: resultIds,
+        resultId: resultId,
         message: error.toString(),
       );
       notifyListeners();
     }
-    await _clearAutoReset();
+    _clearAutoReset();
   }
 
   Future<void> _executeHostEffects(List<SearchHostEffect> effects) async {
@@ -117,20 +121,26 @@ class CommandController with ChangeNotifier {
     }
   }
 
-  Future<void> _clearAutoReset() async {
+  void _clearAutoReset() {
     if (_disposed) return;
-    await Future<void>.delayed(
-      _state is SearchCommandFailed ? 10.seconds : 3.seconds,
+    _autoReset?.cancel();
+    _autoReset = Timer(
+      _state is SearchCommandFailed
+          ? const Duration(seconds: 10)
+          : const Duration(seconds: 3),
+      () {
+        if (_disposed || _state is SearchCommandRunning) return;
+        _state = const SearchCommandExecutionState.idle();
+        notifyListeners();
+      },
     );
-    if (_disposed || _state is SearchCommandRunning) return;
-    _state = const SearchCommandExecutionState.idle();
-    notifyListeners();
   }
 
   @override
   void dispose() {
     assert(!_disposed);
     _disposed = true;
+    _autoReset?.cancel();
     super.dispose();
   }
 }

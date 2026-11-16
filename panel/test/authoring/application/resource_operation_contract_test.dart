@@ -346,7 +346,7 @@ void main() {
     final workspace = await world.openRealmEditing();
     final scope = world.requireRealm.scope;
     final selected = [AuthoringResourceIdentifier.inScope(scope, _first)];
-    world.container.read(selectionProvider.notifier).selectAll(selected);
+    world.container.read(selectionProvider.notifier).replace(selected);
     final remote = AuthoringEdit.fromDocument(workspace.document)
       ..delete(_first)
       ..delete(_second);
@@ -381,12 +381,10 @@ void main() {
       final world = await signedInWorld(_heldLibrary);
       final scope = world.requireRealm.scope;
       final selection = world.container.read(selectionProvider.notifier)
-        ..selectAll([AuthoringResourceIdentifier.inScope(scope, _first)]);
+        ..replace([AuthoringResourceIdentifier.inScope(scope, _first)]);
       final document = world.requireRealm.document;
       final captured = resourceActionContext(document, [_first]);
-      selection.selectAll([
-        AuthoringResourceIdentifier.inScope(scope, _second),
-      ]);
+      selection.replace([AuthoringResourceIdentifier.inScope(scope, _second)]);
       List<skir.ResourceId>? invoked;
       final dispatcher = ResourceActionDispatcher(
         catalog: document.catalog,

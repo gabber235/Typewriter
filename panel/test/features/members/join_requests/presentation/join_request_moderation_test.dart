@@ -26,8 +26,9 @@ final _editor = skir.OrganizationRole(
 );
 
 void main() {
-  testWidgets("a declined request is hidden while the decline sends, and "
-      "a refusal brings back what the backend holds now", (tester) async {
+  testWidgets("holding Decline keeps the request listed and struck through "
+      "while the decline sends, and a refusal leaves it listed with the "
+      "refusal under it", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       membershipBackend(joinRequests: [_request]),
@@ -38,96 +39,83 @@ void main() {
       (_) => reply.future,
     );
 
-    // The confirmation and the decline keep the panel busy until the reply
-    // below, so these steps wait for what they need instead of settling.
-    await tester.tap(find.text("Decline"));
-    const question = "Decline Grace's request?";
-    await panel.eventually(
-      () => expect(panel.dialog.showing(question), isTrue),
+    await panel.item("Grace").select();
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.bySemanticsLabel(RegExp(r"^Decline Grace\?")).last),
     );
-    final dialog = find.semantics
-        .byPredicate((node) => node.spoken.contains(question))
-        .evaluate()
-        .last
-        .route!;
-    await tester.tapAt(dialog.button("Decline").screenRect.center);
+    await panel.holdFor(1);
+    await gesture.up();
+    await tester.pump();
 
-    await panel.eventually(() => expect(find.text("Grace"), findsNothing));
-
-    final linus = skir.OrganizationJoinRequest(
-      requestId: skir.recordId("request_to_join:linus"),
-      userId: skir.recordId("user:linus"),
-      userName: "Linus",
-      userEmail: "linus@typewriter.test",
-      userAvatarUrl: null,
-      requestedAt: DateTime.utc(2026),
-      expiresAt: DateTime.utc(2100),
+    expect(panel.onPage("Grace"), findsOneWidget);
+    expect(
+      tester.textDecorationOf(panel.onPage("Grace")),
+      TextDecoration.lineThrough,
     );
-    final member = skir.OrganizationMember(
-      userId: skir.recordId("user:ken"),
-      name: "Ken",
-      email: null,
-      avatarUrl: null,
-      roles: const [],
-      joinedAt: DateTime.utc(2026),
-    );
-    final members = panel.container.listen(
-      organizationMembersProvider,
-      (_, _) {},
-    );
-    addTearDown(members.close);
-    await panel.eventually(() => expect(members.read().value, isEmpty));
-    // Meanwhile the backend gained a request and a member.
-    panel.world.nats
-      ..registerHandler(
-        "$_scope.join_requests.watch",
-        (_) => skir.WatchOrganizationJoinRequestsResponse.serializer.toBytes(
-          skir.WatchOrganizationJoinRequestsResponse.wrapSnapshot(
-            skir.OrganizationJoinRequestsSnapshot(
-              sequence: 5,
-              values: [_request, linus],
-            ),
-          ),
-        ),
-      )
-      ..registerHandler(
-        "$_scope.watch",
-        (_) => skir.WatchOrganizationMembersResponse.serializer.toBytes(
-          skir.WatchOrganizationMembersResponse.wrapSnapshot(
-            skir.OrganizationMembersSnapshot(sequence: 5, values: [member]),
-          ),
-        ),
-      );
 
     reply.complete(
-      skir.DeclineOrganizationJoinRequestResponse.serializer.toBytes(
-        skir.DeclineOrganizationJoinRequestResponse.createRequestNotFoundError(
-          requestId: _request.requestId,
+      skir.DeclineOrganizationJoinRequestsResponse.serializer.toBytes(
+        skir.DeclineOrganizationJoinRequestsResponse.createRequestNotFoundError(
+          requestIds: [_request.requestId],
         ),
       ),
     );
-    await panel.eventually(() {
-      expect(find.text("Grace"), findsOneWidget);
-      expect(find.text("Linus"), findsOneWidget);
-      expect(members.read().value, [member]);
-    });
+    await panel.eventually(
+      () => expect(panel.messageUnder("Grace"), isNotNull),
+    );
     await panel.settle();
+    expect(panel.onPage("Grace"), findsOneWidget);
+    expect(
+      tester.textDecorationOf(panel.onPage("Grace")),
+      isNot(TextDecoration.lineThrough),
+    );
+    expect(panel.messageUnder("Grace"), "Request not found");
   });
 
-  testWidgets("a request cannot be approved until a role is chosen", (
-    tester,
-  ) async {
+  testWidgets("the inspector offers Accept once a role to grant is chosen, "
+      "and Accept adds the member", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
-      membership(roles: [_editor], joinRequests: [_request]),
+      membershipService(roles: [_editor], joinRequests: [_request]),
     ], at: membersPage(const JoinRequestsRoute()));
 
-    await panel.tapOn(find.text("Accept"));
+    await panel.item("Grace").select();
+    expect(panel.inspector.heading("Roles to grant"), findsOneWidget);
+    expect(panel.inspector.operations, isNot(contains("Accept")));
 
-    expect(semanticsLabeled("Confirm & Add Member").single.isEnabled, isFalse);
+    await panel.tapOn(
+      find.descendant(
+        of: find.byType(JoinRequestInspection),
+        matching: find.text("Editor"),
+      ),
+    );
+    await panel.inspector.run("Accept");
 
-    await panel.tapOn(find.text("Editor"));
+    await panel.eventually(() => expect(panel.onPage("Grace"), findsNothing));
+  });
 
-    expect(semanticsLabeled("Confirm & Add Member").single.isEnabled, isTrue);
+  testWidgets("two selected requests are accepted together, each with the "
+      "roles chosen for both", (tester) async {
+    final erin = joinRequest("erin", name: "Erin");
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      membershipService(roles: [_editor], joinRequests: [_request, erin]),
+    ], at: membersPage(const JoinRequestsRoute()));
+
+    await panel.item("Grace").toggle();
+    await panel.item("Erin").toggle();
+    expect(panel.inspector.heading("2 join requests"), findsOneWidget);
+    await panel.tapOn(
+      find.descendant(
+        of: find.byType(JoinRequestInspection),
+        matching: find.text("Editor"),
+      ),
+    );
+    await panel.inspector.run("Accept 2");
+
+    await panel.eventually(() {
+      expect(panel.onPage("Grace"), findsNothing);
+      expect(panel.onPage("Erin"), findsNothing);
+    });
   });
 }

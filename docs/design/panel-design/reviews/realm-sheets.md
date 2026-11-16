@@ -152,14 +152,6 @@ sheets one focus path (open on the first thing to act on, Esc back to the opener
   observed: "Locations use the `>` text marker: 'Arrival > Resource'."
   fix: "Show the field name alone in the muted label style, with the resource's colour tile before it."
 
-- id: SHEETS-17
-  rule: "Something succeeds"
-  severity: 2
-  region: "Activity card, Copy problem report"
-  evidence: "mutation_activity_card.dart:54-61"
-  observed: "Copying shows a 'Problem copied to clipboard' snackbar away from the control."
-  fix: "Type 'Copied' at the icon button."
-
 - id: SHEETS-18
   rule: "A surface is new or changed"
   severity: 2
@@ -248,7 +240,7 @@ sheets one focus path (open on the first thing to act on, Esc back to the opener
 | Close activity | Esc | Trigger. pass | `panelOut` | MOTION-11 |
 | Expand activity card | Tab, Enter | Card | Grow, faster shrink | SHEETS-21 |
 | Save, Retry, Dismiss, Discard in activity | Tab | Not probed | `listOut` when a card leaves | No move. SHEETS-20; Discard SHEETS-2 |
-| Copy problem report | Tab | Unchanged | Type 'Copied' at the button | Snackbar. SHEETS-17 |
+| Copy problem report | Tab | Unchanged | Type 'Copied' at the button | Types 'Copied'. pass |
 | Open realm menu | Unreachable by keys. SHEETS-6 | Search field. pass (typing is its purpose) | `panelIn` from the chip | MOTION-11 |
 | Move in realm menu | Arrow Down works | Row | `focusMove` | MOTION-4 |
 | Close realm menu | Esc fails from a row. SHEETS-5 | Row | `panelOut` | n/a |
@@ -280,7 +272,7 @@ sheets one focus path (open on the first thing to act on, Esc back to the opener
 | Other work cannot continue until a question is answered | fail: Review draft is a dialog for reading, MOTION-10 |
 | The window is under 900 px, or a pane would be narrower than 320 px | fail: SHEETS-S1 |
 | Anything needs saying | pass: messages sit in the inbox |
-| Something succeeds | fail: SHEETS-17 |
+| Something succeeds | pass: Copy types 'Copied' at the button |
 | Something fails | cannot_verify (see above) |
 | Several things fail at once | pass: inbox groups issues |
 | Something is empty | fail: SHEETS-13, SHEETS-S3 |

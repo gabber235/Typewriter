@@ -40,3 +40,26 @@ Widget errorScreenUseCase(BuildContext context) {
     }),
   );
 }
+
+/// A [SmallErrorScreen] inline in a narrow panel, with or without its robot
+/// illustration and a retry action. The robot plays in the browser only.
+@widgetbook.UseCase(name: "Inline", type: SmallErrorScreen)
+Widget smallErrorScreenUseCase(BuildContext context) {
+  final withIcon = context.knobs.boolean(label: "Illustration");
+  final action = context.knobs.boolean(label: "Retry action");
+  final width = context.knobs.width(const {"Wide": 480, "Narrow": 260});
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(
+        width: width,
+        child: SmallErrorScreen(
+          title: "Members unavailable",
+          message: _message,
+          withIcon: withIcon,
+          child: action ? Button(label: "Retry", onPressed: () {}) : null,
+        ),
+      ),
+    ),
+  );
+}

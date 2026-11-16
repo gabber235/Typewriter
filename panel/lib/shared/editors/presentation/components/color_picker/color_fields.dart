@@ -120,7 +120,7 @@ class _RgbFields extends StatelessWidget {
       children: [
         _ChannelField(
           label: "R",
-          labelColor: context.colors.danger,
+          labelColor: context.colors.dangerText,
           value: color.redByte,
           maximum: 255,
           enabled: enabled,
@@ -135,7 +135,7 @@ class _RgbFields extends StatelessWidget {
         ),
         _ChannelField(
           label: "G",
-          labelColor: context.colors.success,
+          labelColor: context.colors.successText,
           value: color.greenByte,
           maximum: 255,
           enabled: enabled,
@@ -150,7 +150,7 @@ class _RgbFields extends StatelessWidget {
         ),
         _ChannelField(
           label: "B",
-          labelColor: context.colors.info,
+          labelColor: context.colors.brandText,
           value: color.blueByte,
           maximum: 255,
           enabled: enabled,
@@ -221,7 +221,7 @@ class _HslFields extends StatelessWidget {
         ),
         _ChannelField(
           label: "S%",
-          labelColor: context.colors.success,
+          labelColor: context.colors.successText,
           value: (hsl.saturation * 100).round(),
           maximum: 100,
           enabled: enabled,
@@ -229,7 +229,7 @@ class _HslFields extends StatelessWidget {
         ),
         _ChannelField(
           label: "L%",
-          labelColor: context.colors.warning,
+          labelColor: context.colors.warningText,
           value: (hsl.lightness * 100).round(),
           maximum: 100,
           enabled: enabled,

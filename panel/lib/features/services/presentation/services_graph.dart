@@ -41,7 +41,16 @@ class ServicesGraph extends ConsumerWidget {
       nodes: projection.nodes,
       connections: projection.connections,
     );
-    return Graph(data: data);
+    // The graph builds only the cards near the screen, so it names every
+    // card's place itself: top to bottom, then left to right.
+    final placed = [...data.elements]
+      ..sort((a, b) => a.y != b.y ? a.y.compareTo(b.y) : a.x.compareTo(b.x));
+    return SelectionSurface(
+      order: [
+        for (final element in placed) ?projection.selectables[element.id],
+      ],
+      child: Graph(data: data),
+    );
   }
 
   /// Builds a render projection without mutating either provider owned model.
@@ -124,6 +133,7 @@ class ServicesGraph extends ConsumerWidget {
     return _ServicesGraphProjection(
       nodes: nodes,
       connections: connections.whereType<ServicesPackedConnection>().toList(),
+      selectables: {for (final item in items) item.graphId: item.selectableId},
     );
   }
 
@@ -259,7 +269,8 @@ class _ServiceGraphNode extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final focusNode = useFocusNode();
+    // The card's entry exists: the graph builds its rows before its cards.
+    final focusNode = RowFocusScope.of(context).nodeOf(item.graphId)!;
     return Selector(
       selectableId: item.selectableId,
       focusNode: focusNode,
@@ -273,24 +284,27 @@ class _ServiceGraphNode extends HookWidget {
           color: Surface.colorOf(context),
           child: Opacity(
             opacity: item.available || isSelected ? 1 : 0.58,
-            child: GridSelectableCard(
-              title: item.title,
-              baseColor: item.color,
-              onBaseColor: item.color.on(context),
-              badgeOnColor: item.color.on(context),
-              isSelected: isSelected,
-              isFocused: isFocused,
-              isHovered: isHovered,
-              badgeLabel: item.badge,
-              header: Icon(item.icon, size: 30),
-              footer: TopologyStatusIndicator(
-                label: item.status,
-                tone: item.tone,
-                color: item.color,
-                highlighted: isSelected,
+            child: SelectorCheck(
+              placement: SelectorCheckPlacement.corner,
+              child: GridSelectableCard(
+                title: item.title,
+                baseColor: item.color,
+                onBaseColor: item.color.on(context),
+                badgeOnColor: item.color.on(context),
+                isSelected: isSelected,
+                isFocused: isFocused,
+                isHovered: isHovered,
+                badgeLabel: item.badge,
+                header: Icon(item.icon, size: 30),
+                footer: TopologyStatusIndicator(
+                  label: item.status,
+                  tone: item.tone,
+                  color: item.color,
+                  highlighted: isSelected,
+                ),
+                width: _nodeWidth * servicesGraphCellSize,
+                height: _nodeHeight * servicesGraphCellSize,
               ),
-              width: _nodeWidth * servicesGraphCellSize,
-              height: _nodeHeight * servicesGraphCellSize,
             ),
           ),
         ),
@@ -347,10 +361,14 @@ class _ServicesGraphProjection {
   const _ServicesGraphProjection({
     required this.nodes,
     required this.connections,
+    required this.selectables,
   });
 
   final List<ServicesPackedNode> nodes;
   final List<ServicesPackedConnection> connections;
+
+  /// The item each card selects.
+  final Map<GraphIdentifier, SelectableIdentifier> selectables;
 }
 
 /// Display state for one selectable graph node.

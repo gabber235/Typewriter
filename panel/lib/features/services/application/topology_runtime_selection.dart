@@ -28,6 +28,9 @@ class _RealmInstanceSelectable
   String get name => realm.ownerHost.name.formatted;
 
   @override
+  SelectableNoun get noun => const SelectableNoun(one: "realm", many: "realms");
+
+  @override
   List<SelectionCapability> get capabilities => [
     if (onOpen case final open?)
       OpenSelectionCapability(onOpen: open, allowMultiSelect: false),
@@ -72,6 +75,10 @@ class _EngineInstanceSelectable
 
   @override
   String get name => "${engine.target.engineId} engine";
+
+  @override
+  SelectableNoun get noun =>
+      const SelectableNoun(one: "engine", many: "engines");
 
   @override
   List<SelectionCapability> get capabilities => [];

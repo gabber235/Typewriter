@@ -41,8 +41,6 @@ class DragHandle extends HookConsumerWidget {
     this.showOnHover = true,
     this.color,
     this.cursor,
-    this.animationDuration = const Duration(milliseconds: 200),
-    this.animationCurve = Curves.easeOut,
     this.onDragStart,
     this.onDragEnd,
   });
@@ -98,12 +96,6 @@ class DragHandle extends HookConsumerWidget {
 
   /// The mouse cursor when hovering over the handle. Defaults based on [axis].
   final MouseCursor? cursor;
-
-  /// Animation duration for show/hide of the visible bar.
-  final Duration animationDuration;
-
-  /// Animation curve for show/hide of the visible bar.
-  final Curve animationCurve;
 
   /// Optional callback when a drag starts.
   final VoidCallback? onDragStart;
@@ -184,9 +176,13 @@ class DragHandle extends HookConsumerWidget {
       final width = axis == Axis.horizontal ? handleThickness : extent;
       final height = axis == Axis.horizontal ? extent : handleThickness;
 
+      final timeline = motionTimeline(
+        context,
+        showHandle ? MotionToken.hoverIn : MotionToken.hoverOut,
+      );
       return AnimatedContainer(
-        duration: animationDuration,
-        curve: animationCurve,
+        duration: timeline.duration,
+        curve: timeline.curve,
         width: showHandle ? width : 0,
         height: showHandle ? height : 0,
         decoration: BoxDecoration(

@@ -104,9 +104,7 @@ void main() {
     );
   });
 
-  testWidgets("Archive asks for confirmation before it archives", (
-    tester,
-  ) async {
+  testWidgets("Archive archives in one press, with no dialog", (tester) async {
     final panel = await tester.pumpStory(
       authoredPresentationInteractionUseCase,
       knobs: {"Layout": "Toggle"},
@@ -114,13 +112,8 @@ void main() {
 
     await panel.tapOn(find.byTooltip("More actions"));
     await panel.tapOn(find.bySemanticsLabel("Archive"));
-    expect(panel.shows("Archive quest?"), isTrue);
-    expect(
-      panel.shows("The quest will no longer be available to players."),
-      isTrue,
-    );
-    await panel.tapOn(find.bySemanticsLabel("Archive"));
 
+    expect(find.byType(AlertDialog), findsNothing);
     expect(panel.shows("Archived quest"), isTrue);
   });
 

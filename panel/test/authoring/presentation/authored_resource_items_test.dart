@@ -70,6 +70,28 @@ void main() {
     },
   );
 
+  testWidgets("select all reaches a node the graph has not built", (
+    tester,
+  ) async {
+    final fixture = AuthoredGraphFixture(secondSource: true);
+    final panel = await fixture.showGraph(tester, farApart: true);
+    final names = [
+      for (final entry in fixture.graphEntries) entry.resource.value,
+    ];
+    // The graph opens centred between them; panning brings the first in.
+    await panel.graph.pan(const Offset(2000, 0));
+    final built = names.where(panel.shows).toList();
+    expect(built, hasLength(1), reason: "the rest are off screen");
+
+    await panel.item(built.single).select();
+    await panel.pressPrimary(LogicalKeyboardKey.keyA);
+
+    expect(panel.container.read(selectionProvider).toSet(), {
+      for (final entry in fixture.graphEntries)
+        AuthoringResourceIdentifier.inScope(fixture.scope, entry.resource),
+    });
+  });
+
   testWidgets("clicking a node selects it and moves focus onto it", (
     tester,
   ) async {
@@ -259,7 +281,7 @@ void main() {
       expect(panel.container.read(selectionProvider), [second]);
       await panel.pressShifted(LogicalKeyboardKey.tab);
       expect(panel.focused, "entry:source");
-      await panel.pressShifted(LogicalKeyboardKey.enter);
+      await panel.press(LogicalKeyboardKey.space);
       expect(panel.container.read(selectionProvider).toSet(), {source, second});
 
       await panel.pressShifted(LogicalKeyboardKey.f10);

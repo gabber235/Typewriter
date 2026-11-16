@@ -101,9 +101,11 @@ final class _RetryNatsButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return LoadingButton(
+    return Button(
+      face: ButtonFace.filled,
       onPressed: () => ref.read(natsProvider.notifier).retry(),
-      child: const Text("Retry"),
+      label: "Retry",
+      busyLabel: "Connecting",
     );
   }
 }

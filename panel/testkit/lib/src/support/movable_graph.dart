@@ -58,7 +58,7 @@ extension PumpMovableGraph on WidgetTester {
     );
     panel.container
         .read(selectionProvider.notifier)
-        .selectAll(selection(focusedIds));
+        .replace(selection(focusedIds));
     await panel.settle();
     return (panel: panel, focusNodes: focusNodes, calls: calls);
   }

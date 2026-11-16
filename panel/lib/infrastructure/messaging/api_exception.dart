@@ -8,7 +8,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// while keeping transport details and server internals out of presentation.
 /// Factories below encode the categories understood by the panel, rather than
 /// making each caller reproduce HTTP style status and message decisions.
-class ApiException implements Exception {
+class ApiException implements ShownFailure {
   const ApiException({required this.code, required this.message});
 
   /// Creates a server failure with a deliberately non diagnostic message.
@@ -76,6 +76,7 @@ class ApiException implements Exception {
   /// The HTTP style category used by callers to choose recovery or presentation.
   final int code;
 
+  @override
   final String message;
 
   @override

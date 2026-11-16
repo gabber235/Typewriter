@@ -5,6 +5,10 @@ abstract class PortableDiagnosticSummary with _$PortableDiagnosticSummary {
   const factory PortableDiagnosticSummary({
     @Default([]) List<PortablePresentationDiagnostic> direct,
     @Default([]) List<PortablePresentationDiagnostic> descendants,
+
+    /// Whether the direct diagnostics just cleared, so the anchor says Fixed
+    /// for the `doneShow` timing.
+    @Default(false) bool fixed,
   }) = _PortableDiagnosticSummary;
   const PortableDiagnosticSummary._();
 
@@ -45,6 +49,10 @@ abstract class PortableDiagnosticPlacement with _$PortableDiagnosticPlacement {
     @Default({}) Map<Object, PortableDiagnosticSummary> summaries,
     @Default([]) List<PortablePresentationDiagnostic> general,
     @Default([]) List<PortablePresentationDiagnostic> unplaced,
+
+    /// Whether the general diagnostics just cleared, so the presentation
+    /// says Fixed for the `doneShow` timing.
+    @Default(false) bool generalFixed,
   }) = _PortableDiagnosticPlacement;
   const PortableDiagnosticPlacement._();
 
@@ -56,23 +64,15 @@ abstract class PortableDiagnosticPlacement with _$PortableDiagnosticPlacement {
         PortableDiagnosticFallback.presentation,
   }) {
     final direct = <Object, Set<PortablePresentationDiagnostic>>{};
-    final descendants = <Object, Set<PortablePresentationDiagnostic>>{};
     final general = <PortablePresentationDiagnostic>{};
     final unplaced = <PortablePresentationDiagnostic>{};
-    void place(Object id, PortablePresentationDiagnostic diagnostic) {
-      (direct[id] ??= {}).add(diagnostic);
-      for (final parent in presentation.headerAncestors(id)) {
-        (descendants[parent] ??= {}).add(diagnostic);
-      }
-    }
 
     final nodes = presentation.nodes;
+    // A control's own findings, such as text it cannot parse, stay on it.
     for (final entry in nodes.entries) {
       if (entry.value.kind == PortableDiagnosticNodeKind.control) {
         for (final diagnostic in entry.value.diagnostics) {
-          for (final parent in presentation.headerAncestors(entry.key)) {
-            (descendants[parent] ??= {}).add(diagnostic);
-          }
+          (direct[entry.key] ??= {}).add(diagnostic);
         }
       }
     }
@@ -141,36 +141,68 @@ abstract class PortableDiagnosticPlacement with _$PortableDiagnosticPlacement {
         continue;
       }
       for (final id in destinations) {
-        place(id, diagnostic);
+        (direct[id] ??= {}).add(diagnostic);
       }
-      for (final entry in nodes.entries) {
+    }
+    return PortableDiagnosticPlacement.summarize(
+      direct: direct,
+      general: general.toList(),
+      unplaced: unplaced.toList(),
+      presentation: presentation,
+    );
+  }
+
+  /// Summarizes diagnostics already placed [direct] on anchors: each header
+  /// ancestor of an anchor, and each header whose target covers a
+  /// diagnostic's target, counts it among its descendants. Anchors in
+  /// [fixed] say Fixed, and [generalFixed] makes [general] say it.
+  factory PortableDiagnosticPlacement.summarize({
+    required Map<Object, Iterable<PortablePresentationDiagnostic>> direct,
+    required PortableDiagnosticPresentation presentation,
+    List<PortablePresentationDiagnostic> general = const [],
+    List<PortablePresentationDiagnostic> unplaced = const [],
+    Set<Object> fixed = const {},
+    bool generalFixed = false,
+  }) {
+    final descendants = <Object, Set<PortablePresentationDiagnostic>>{};
+    final placed = <PortablePresentationDiagnostic>{};
+    for (final entry in direct.entries) {
+      placed.addAll(entry.value);
+      for (final parent in presentation.headerAncestors(entry.key)) {
+        (descendants[parent] ??= {}).addAll(entry.value);
+      }
+    }
+    for (final diagnostic in placed) {
+      for (final entry in presentation.nodes.entries) {
         final anchor = entry.value;
-        if (anchor.kind != PortableDiagnosticNodeKind.header ||
-            anchor.target == null ||
-            destinations.contains(entry.key)) {
-          continue;
-        }
-        if (diagnostic.targets.any(
-          (target) => target.isAtOrBelow(anchor.target!),
-        )) {
+        if (anchor.kind == PortableDiagnosticNodeKind.header &&
+            anchor.target != null &&
+            diagnostic.targets.any(
+              (target) => target.isAtOrBelow(anchor.target!),
+            )) {
           (descendants[entry.key] ??= {}).add(diagnostic);
         }
       }
     }
+    final ids = {
+      for (final entry in direct.entries)
+        if (entry.value.isNotEmpty) entry.key,
+      ...descendants.keys,
+      ...fixed,
+    };
     return PortableDiagnosticPlacement(
-      general: general.toList(),
-      unplaced: unplaced.toList(),
+      general: general,
+      unplaced: unplaced,
+      generalFixed: generalFixed,
       summaries: {
-        for (final id in {...direct.keys, ...descendants.keys})
+        for (final id in ids)
           id: PortableDiagnosticSummary(
-            direct: (direct[id] ?? const <PortablePresentationDiagnostic>{})
-                .toList(),
+            direct: [...?direct[id]],
             descendants:
                 (descendants[id] ?? const <PortablePresentationDiagnostic>{})
-                    .difference(
-                      direct[id] ?? const <PortablePresentationDiagnostic>{},
-                    )
+                    .difference({...?direct[id]})
                     .toList(),
+            fixed: fixed.contains(id),
           ),
       },
     );
@@ -178,6 +210,134 @@ abstract class PortableDiagnosticPlacement with _$PortableDiagnosticPlacement {
 
   PortableDiagnosticSummary forAnchor(Object id) =>
       summaries[id] ?? const PortableDiagnosticSummary();
+}
+
+/// What a diagnostic tree shows of the diagnostics routed to it, so every
+/// reader (a field, its messages, the headers above it) sees the same
+/// problems and the same Fixed from one clock.
+///
+/// Diagnostics new or changed on a mounted anchor wait for the
+/// `problemWait` timing before they show, so typing never flashes a problem
+/// at every letter; [observe] reports the wait and [settle] ends it. An
+/// anchor whose diagnostics are gone shows nothing at once and says Fixed
+/// until [expire]. A newly mounted anchor shows its diagnostics at once.
+final class PortableDiagnosticReveal {
+  PortableDiagnosticReveal.start(this.routed, this.mounted)
+    : shown = _shownOf(routed),
+      fixed = const {};
+
+  const PortableDiagnosticReveal._({
+    required this.routed,
+    required this.mounted,
+    required this.shown,
+    required this.fixed,
+  });
+
+  /// Stands for the general diagnostics among the anchors.
+  static const _general = #general;
+
+  /// The latest routing, which [settle] shows.
+  final PortableDiagnosticPlacement routed;
+
+  /// The anchors mounted at the latest routing.
+  final Set<Object> mounted;
+
+  /// The diagnostics shown on each anchor, and on [_general].
+  final Map<Object, List<PortablePresentationDiagnostic>> shown;
+
+  /// The anchors, and [_general], that say Fixed.
+  final Set<Object> fixed;
+
+  static Map<Object, List<PortablePresentationDiagnostic>> _shownOf(
+    PortableDiagnosticPlacement placement,
+  ) => {
+    for (final entry in placement.summaries.entries)
+      if (entry.value.direct.isNotEmpty) entry.key: entry.value.direct,
+    if (placement.general.isNotEmpty) _general: placement.general,
+  };
+
+  /// Takes a new [routed] placement over the [mounted] anchors. Says
+  /// whether shown diagnostics must wait for the `problemWait` timing and
+  /// whether an anchor started to say Fixed.
+  ({PortableDiagnosticReveal reveal, bool waits, bool fixes}) observe(
+    PortableDiagnosticPlacement routed,
+    Set<Object> mounted,
+  ) {
+    final latest = _shownOf(routed);
+    final present = {
+      for (final diagnostics in latest.values) ...diagnostics,
+      ...routed.unplaced,
+    };
+    final shown = {...this.shown};
+    final fixed = {...this.fixed};
+    var waits = false;
+    var fixes = false;
+    for (final key in {...latest.keys, ...this.shown.keys}) {
+      final next = latest[key] ?? const <PortablePresentationDiagnostic>[];
+      final current = this.shown[key] ?? const [];
+      if (setEquals(next.toSet(), current.toSet())) continue;
+      if (key != _general && !this.mounted.contains(key)) {
+        shown[key] = next;
+      } else if (next.isEmpty) {
+        shown.remove(key);
+        // A diagnostic that only moved to another anchor was not fixed.
+        if (current.any((diagnostic) => !present.contains(diagnostic))) {
+          fixed.add(key);
+          fixes = true;
+        }
+      } else {
+        fixed.remove(key);
+        waits = true;
+      }
+    }
+    bool kept(Object key) => key == _general || mounted.contains(key);
+    shown.removeWhere((key, diagnostics) => !kept(key) || diagnostics.isEmpty);
+    fixed.removeWhere((key) => !kept(key));
+    return (
+      reveal: PortableDiagnosticReveal._(
+        routed: routed,
+        mounted: mounted,
+        shown: shown,
+        fixed: fixed,
+      ),
+      waits: waits,
+      fixes: fixes,
+    );
+  }
+
+  /// Shows the latest routing once its diagnostics have rested.
+  PortableDiagnosticReveal settle() {
+    final shown = _shownOf(routed);
+    return PortableDiagnosticReveal._(
+      routed: routed,
+      mounted: mounted,
+      shown: shown,
+      fixed: {...fixed}..removeAll(shown.keys),
+    );
+  }
+
+  /// Ends every Fixed once the `doneShow` timing has passed.
+  PortableDiagnosticReveal expire() => PortableDiagnosticReveal._(
+    routed: routed,
+    mounted: mounted,
+    shown: shown,
+    fixed: const {},
+  );
+
+  /// The placement every reader of the tree over [presentation] shows.
+  PortableDiagnosticPlacement placement(
+    PortableDiagnosticPresentation presentation,
+  ) => PortableDiagnosticPlacement.summarize(
+    direct: {
+      for (final entry in shown.entries)
+        if (entry.key != _general) entry.key: entry.value,
+    },
+    general: shown[_general] ?? const [],
+    unplaced: routed.unplaced,
+    fixed: {...fixed}..remove(_general),
+    generalFixed: fixed.contains(_general),
+    presentation: presentation,
+  );
 }
 
 typedef PortableDiagnosticAnchorBuilder = Widget Function(

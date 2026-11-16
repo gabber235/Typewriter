@@ -214,11 +214,8 @@ final class AuthoredGraphFixture {
               _ => null,
             },
             presentation: skir.OperationPresentation(
-              inspector: skir.OperationInspector.wrapButton(
-                operation == "delete"
-                    ? skir.ButtonVariant.filled
-                    : skir.ButtonVariant.outlined,
-              ),
+              inspector: skir.OperationInspector.shown,
+              emphasis: skir.OperationEmphasis.outline,
               shortcut: operation == "delete"
                   ? skir.OperationShortcut.delete
                   : null,
@@ -565,7 +562,6 @@ final class AuthoredGraphFixture {
       invocationId: request.invocation.invocationId,
       inputRevision: request.inputRevision,
       edit: edit.prepare(),
-      confirmation: null,
       selection: skir.OperationSelectionEffect.unchanged,
     );
   }
@@ -658,6 +654,7 @@ extension AuthoredGraphViews on AuthoredGraphFixture {
     GraphResizeCommit? onResize,
     ValueNotifier<bool>? readOnlySource,
     Map<Type, Action<Intent>>? actions,
+    bool farApart = false,
   }) async {
     final panel = await tester.pumpPanel(this.realm);
     final binding = workspace.attach(
@@ -722,7 +719,9 @@ extension AuthoredGraphViews on AuthoredGraphFixture {
                               for (final (index, entry) in entries.indexed)
                                 GraphElement(
                                   id: GraphIdentifier(entry.resource.value),
-                                  x: index * 6,
+                                  // Far apart, so the graph builds none
+                                  // until it pans to one.
+                                  x: index * (farApart ? 80 : 6),
                                   y: 0,
                                   width: 4,
                                   height: 1,

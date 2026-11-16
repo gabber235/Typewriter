@@ -5,6 +5,47 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
+  testWidgets("a screen reader opens an organization by its name", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, others: [acme]),
+      userBackend(),
+    ]);
+    await panel.open("/");
+    final card = find.semantics.byPredicate(
+      (node) =>
+          node.isTappable &&
+          !node.isMergedIntoParent &&
+          node.spoken.split("\n").first == acme.name,
+    );
+    await panel.eventually(
+      () => expect(panel.shows("Select organization"), isTrue),
+    );
+    expect(card, findsOne);
+
+    tester.semantics.tap(card);
+    await panel.settle();
+
+    expect(panel.path, contains("/organization/acme"));
+  });
+
+  testWidgets("the account menu is heard as the signed in user", (
+    tester,
+  ) async {
+    await tester.pumpPanel([signedIn(ada, organization: acme)]);
+
+    expect(
+      find.semantics.byPredicate(
+        (node) =>
+            node.isTappable &&
+            !node.isMergedIntoParent &&
+            node.spoken == ada.name,
+      ),
+      findsOne,
+    );
+  });
+
   final submit = skir.SubmitUserJoinRequestRequest(
     code: skir.recordId("organization_join_code:any"),
   ).operation(userId: ada.id).subject;

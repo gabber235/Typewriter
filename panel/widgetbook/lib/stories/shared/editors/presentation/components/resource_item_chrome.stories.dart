@@ -21,6 +21,7 @@ Widget resourceItemChromeUseCase(BuildContext context) {
     dropAccepted: context.knobs.boolean(label: "Drop accepted"),
     dropRejected: context.knobs.boolean(label: "Drop rejected"),
   );
+  final longName = context.knobs.boolean(label: "Long name");
   return Story(
     const [],
     at: PanelLocation.component(
@@ -32,7 +33,10 @@ Widget resourceItemChromeUseCase(BuildContext context) {
           child: ResourceItemChrome(
             density: density,
             appearance: skir.ResourceAppearance(
-              label: "The Lost Village",
+              label: longName
+                  ? "The Lost Village beyond the flooded valley and the "
+                        "old stone bridge"
+                  : "The Lost Village",
               accent: const Color(0xff3f51b5).toSkirColor(),
               icon: skir.Icon.wrapIconify("material-symbols:book"),
             ),

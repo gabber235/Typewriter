@@ -1,3 +1,4 @@
+import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/features/members/join_codes/presentation/route.stories.dart";
@@ -50,19 +51,11 @@ void main() {
     );
     expect(panel.shows(name), isTrue);
 
-    final requests = find.text("Decline").evaluate().length;
-    await tester.tap(find.text("Decline").first);
-    await tester.runStory();
-    final dialog = find.semantics
-        .byPredicate((node) => node.spoken.contains("request?"))
-        .evaluate()
-        .last
-        .route!;
-    await tester.tapAt(dialog.button("Decline").screenRect.center);
+    await tester.tap(find.text(name));
+    await panel.settle();
+    await panel.holdKey(LogicalKeyboardKey.delete);
 
-    await tester.eventually(
-      () => expect(find.text("Decline"), findsNWidgets(requests - 1)),
-    );
+    await tester.eventually(() => expect(panel.shows(name), isFalse));
     await tester.runStory();
   });
 }

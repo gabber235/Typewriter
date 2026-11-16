@@ -139,7 +139,8 @@ final class AuthoredResourceSearchResult extends HookWidget {
           kindLabel: kind,
           footer: footer,
         ),
-        errorBuilder: (message) => chrome(Text(message)),
+        errorBuilder: (message) =>
+            chrome(Text(message, style: context.text.sentence)),
       ),
     };
   }

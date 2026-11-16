@@ -21,7 +21,9 @@ void main() {
     final panel = await tester.pumpPanel(library);
     await panel.openSurface(route.bookId);
 
-    await panel.tapOn(find.text("New page"));
+    // The page's button; the shortcut legend names the action too while
+    // focus is on the page.
+    await panel.tapOn(find.text("New page").first);
 
     expect(panel.working.relations.children[route.bookId], hasLength(2));
   });

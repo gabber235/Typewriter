@@ -12,6 +12,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
     required this.document,
     required this.role,
     required this.budget,
+    this.editedWith = const [],
     this.edit,
     this.openResource,
     this.routedResource,
@@ -27,6 +28,10 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
   });
 
   final skir.ResourceId resource;
+
+  /// The other resources of the same kind edited together with [resource];
+  /// empty for one resource.
+  final List<skir.ResourceId> editedWith;
   final AuthoringDocument document;
   final RealmEditingBinding? edit;
   final skir.PresentationRole role;
@@ -66,7 +71,10 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
     final issues =
         projected?.value ?? ResourceIssues.evaluate(document: observation);
     final workScope = ref.watch(localWorkScopeProvider);
-    final record = observation.resource(resource);
+    final record =
+        editedWith.every((other) => observation.resource(other) != null)
+        ? observation.resource(resource)
+        : null;
     final catalog = observation.catalog;
     final selected = record == null
         ? null
@@ -146,6 +154,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
       () => selected is SelectedEditorPresentation
           ? AuthoredPresentationHost(
               resource: resource,
+              editedWith: editedWith,
               source: observation,
               edit: edit,
               material: selected.material,
@@ -160,6 +169,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
           : null,
       [
         resource,
+        editedWith.map((other) => other.value).join("\n"),
         edit,
         switch (selected) {
           SelectedEditorPresentation(:final material) => material,
@@ -280,7 +290,5 @@ extension on LocalWorkScope {
 
 Widget _diagnostic(BuildContext context, String message) => Text(
   message,
-  style: context.theme.textTheme.bodyMedium?.copyWith(
-    color: context.colors.danger,
-  ),
+  style: context.text.sentence.copyWith(color: context.colors.dangerText),
 );

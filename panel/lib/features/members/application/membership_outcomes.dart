@@ -30,21 +30,28 @@ extension ApproveOrganizationJoinRequestsOutcome
   }
 }
 
-extension DeclineOrganizationJoinRequestOutcome
-    on skir.DeclineOrganizationJoinRequestResponse {
+extension DeclineOrganizationJoinRequestsOutcome
+    on skir.DeclineOrganizationJoinRequestsResponse {
   void requireAccepted() {
     switch (this) {
-      case skir.DeclineOrganizationJoinRequestResponse_unknown():
+      case skir.DeclineOrganizationJoinRequestsResponse_unknown():
         throw ApiException.unknownResponseMessage();
-      case skir.DeclineOrganizationJoinRequestResponse_internalErrorWrapper():
+      case skir.DeclineOrganizationJoinRequestsResponse_internalErrorWrapper():
         throw ApiException.internalServerError();
-      case skir.DeclineOrganizationJoinRequestResponse_invalidRecordIdErrorWrapper(
+      case skir.DeclineOrganizationJoinRequestsResponse_invalidRecordIdErrorWrapper(
         :final value,
       ):
         throw ApiException.invalidRecordId(value);
-      case skir.DeclineOrganizationJoinRequestResponse_requestNotFoundErrorWrapper():
-        throw ApiException.notFound("Request");
-      case skir.DeclineOrganizationJoinRequestResponse_successWrapper():
+      case skir.DeclineOrganizationJoinRequestsResponse_requestNotFoundErrorWrapper(
+        :final value,
+      ):
+        throw RefusedTargets(
+          ApiException.notFound("Request"),
+          value.requestIds.toSet(),
+        );
+      case skir.DeclineOrganizationJoinRequestsResponse_invalidSelectionErrorWrapper():
+        throw ApiException.badRequest("Select distinct pending requests");
+      case skir.DeclineOrganizationJoinRequestsResponse_successWrapper():
         return;
     }
   }
@@ -52,7 +59,8 @@ extension DeclineOrganizationJoinRequestOutcome
 
 extension GenerateOrganizationJoinCodeOutcome
     on skir.GenerateOrganizationJoinCodeResponse {
-  SecretFieldRevealed requireAccepted() {
+  /// The generated code; the route needs its record id to announce focus.
+  skir.JoinCode requireAccepted() {
     switch (this) {
       case skir.GenerateOrganizationJoinCodeResponse_unknown():
         throw ApiException.unknownResponseMessage();
@@ -71,29 +79,33 @@ extension GenerateOrganizationJoinCodeOutcome
       case skir.GenerateOrganizationJoinCodeResponse_successWrapper(
         :final value,
       ):
-        return SecretFieldRevealed(
-          value: value.code.code.id,
-          expiresAt: value.code.expiresAt,
-        );
+        return value.code;
     }
   }
 }
 
-extension RevokeOrganizationJoinCodeOutcome
-    on skir.RevokeOrganizationJoinCodeResponse {
+extension RevokeOrganizationJoinCodesOutcome
+    on skir.RevokeOrganizationJoinCodesResponse {
   void requireAccepted() {
     switch (this) {
-      case skir.RevokeOrganizationJoinCodeResponse_unknown():
+      case skir.RevokeOrganizationJoinCodesResponse_unknown():
         throw ApiException.unknownResponseMessage();
-      case skir.RevokeOrganizationJoinCodeResponse_internalErrorWrapper():
+      case skir.RevokeOrganizationJoinCodesResponse_internalErrorWrapper():
         throw ApiException.internalServerError();
-      case skir.RevokeOrganizationJoinCodeResponse_invalidRecordIdErrorWrapper(
+      case skir.RevokeOrganizationJoinCodesResponse_invalidRecordIdErrorWrapper(
         :final value,
       ):
         throw ApiException.invalidRecordId(value);
-      case skir.RevokeOrganizationJoinCodeResponse_codeNotFoundErrorWrapper():
-        throw ApiException.notFound("Join Code");
-      case skir.RevokeOrganizationJoinCodeResponse_successWrapper():
+      case skir.RevokeOrganizationJoinCodesResponse_codeNotFoundErrorWrapper(
+        :final value,
+      ):
+        throw RefusedTargets(
+          ApiException.notFound("Join Code"),
+          value.codeIds.toSet(),
+        );
+      case skir.RevokeOrganizationJoinCodesResponse_invalidSelectionErrorWrapper():
+        throw ApiException.badRequest("Select distinct join codes");
+      case skir.RevokeOrganizationJoinCodesResponse_successWrapper():
         return;
     }
   }
@@ -131,23 +143,35 @@ extension UpdateOrganizationMemberRolesOutcome
   }
 }
 
-extension RemoveOrganizationMemberOutcome
-    on skir.RemoveOrganizationMemberResponse {
+extension RemoveOrganizationMembersOutcome
+    on skir.RemoveOrganizationMembersResponse {
   void requireAccepted() {
     switch (this) {
-      case skir.RemoveOrganizationMemberResponse_unknown():
+      case skir.RemoveOrganizationMembersResponse_unknown():
         throw ApiException.unknownResponseMessage();
-      case skir.RemoveOrganizationMemberResponse_internalErrorWrapper():
+      case skir.RemoveOrganizationMembersResponse_internalErrorWrapper():
         throw ApiException.internalServerError();
-      case skir.RemoveOrganizationMemberResponse_invalidRecordIdErrorWrapper(
+      case skir.RemoveOrganizationMembersResponse_invalidRecordIdErrorWrapper(
         :final value,
       ):
         throw ApiException.invalidRecordId(value);
-      case skir.RemoveOrganizationMemberResponse_userNotMemberErrorWrapper():
-        throw ApiException.notFound("Organization member");
-      case skir.RemoveOrganizationMemberResponse_founderCannotBeRemovedErrorWrapper():
-        throw ApiException.conflict("Organization founder cannot be removed");
-      case skir.RemoveOrganizationMemberResponse_successWrapper():
+      case skir.RemoveOrganizationMembersResponse_userNotMemberErrorWrapper(
+        :final value,
+      ):
+        throw RefusedTargets(
+          ApiException.notFound("Organization member"),
+          value.userIds.toSet(),
+        );
+      case skir.RemoveOrganizationMembersResponse_founderCannotBeRemovedErrorWrapper(
+        :final value,
+      ):
+        throw RefusedTargets(
+          ApiException.conflict("Organization founder cannot be removed"),
+          value.userIds.toSet(),
+        );
+      case skir.RemoveOrganizationMembersResponse_invalidSelectionErrorWrapper():
+        throw ApiException.badRequest("Select distinct organization members");
+      case skir.RemoveOrganizationMembersResponse_successWrapper():
         return;
     }
   }

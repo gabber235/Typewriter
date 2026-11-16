@@ -131,24 +131,15 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
               scope: childScope,
             ),
           );
-    final content = icon == null
-        ? Text(label)
-        : Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              icon,
-              SizedBox(width: context.spacing.space2),
-              Text(label),
-            ],
-          );
     return _nativeActionButton(
       variant: button.appearance?.variant ?? skir.ButtonVariant.filled,
       states: states,
       style: style,
       onPressed: childScope.canExecuteActionFor(button.action)
-          ? () => unawaited(childScope.executeAction(button.action))
+          ? () => childScope.executeAction(button.action)
           : null,
-      child: content,
+      icon: icon,
+      label: label,
     );
   });
 
@@ -173,31 +164,16 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
     final callback = childScope.canExecuteActionFor(button.action)
         ? () => childScope.executeAction(button.action)
         : null;
-    return switch (button.appearance?.variant) {
-      final variant when variant == skir.ButtonVariant.filled =>
-        LoadingIconButton.filled(
-          statesController: states,
-          style: style,
-          tooltip: label,
-          onPressed: callback,
-          icon: child,
-        ),
-      final variant when variant == skir.ButtonVariant.outlined =>
-        LoadingIconButton.outlined(
-          statesController: states,
-          style: style,
-          tooltip: label,
-          onPressed: callback,
-          icon: child,
-        ),
-      _ => LoadingIconButton(
-        statesController: states,
-        style: style,
-        tooltip: label,
-        onPressed: callback,
-        icon: child,
-      ),
-    };
+    return Button(
+      face: ButtonFace.icon,
+      statesController: states,
+      color: _accentOf(style, button.appearance?.variant),
+      dense: _denseOf(style),
+      label: label,
+      tooltip: label,
+      onPressed: callback,
+      icon: child,
+    );
   });
 
   Widget _renderMenu(
@@ -216,55 +192,71 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
     final popup = menu.popup;
     final constraints = _popupConstraints(childScope, popup);
     final shape = _popupShape(context, childScope, popup);
-    return MenuAnchor(
-      style: MenuStyle(
-        minimumSize: constraints == null
-            ? null
-            : WidgetStatePropertyAll(
-                Size(constraints.minWidth, constraints.minHeight),
+    return HookBuilder(
+      builder: (context) {
+        final controller = useMemoized(AnchoredPopupController.new);
+        useEffect(() => controller.dispose, [controller]);
+        useListenable(controller);
+        final opener = useFocusNode(debugLabel: "Menu button");
+        return AnchoredPopup(
+          controller: controller,
+          opensOnHover: false,
+          opener: opener,
+          minWidth: constraints?.minWidth ?? 0,
+          maxWidth: constraints?.maxWidth ?? 420,
+          maxHeight: constraints?.maxHeight ?? 420,
+          color: popup?.fill == null
+              ? null
+              : _color(context, childScope, popup!.fill),
+          shape: shape,
+          popupBuilder: (context, close) => IntrinsicWidth(
+            child: SingleChildScrollView(
+              padding: popup?.padding == null
+                  ? EdgeInsets.all(context.spacing.space1)
+                  : _presentationInsets(popup!.padding),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final item in menu.items)
+                    if (item.separator)
+                      const Separator()
+                    else
+                      item.renderConfigured(childScope, close: close),
+                ],
               ),
-        maximumSize: constraints == null
-            ? null
-            : WidgetStatePropertyAll(
-                Size(constraints.maxWidth, constraints.maxHeight),
-              ),
-        padding: popup?.padding == null
-            ? null
-            : WidgetStatePropertyAll(_presentationInsets(popup!.padding)),
-        backgroundColor: popup?.fill == null
-            ? null
-            : WidgetStatePropertyAll(_color(context, childScope, popup!.fill)),
-        shape: shape == null ? null : WidgetStatePropertyAll(shape),
-      ),
-      menuChildren: [
-        for (final item in menu.items)
-          if (item.separator)
-            const Divider()
-          else
-            item.renderConfigured(childScope),
-      ],
-      builder: (context, controller, child) {
-        void toggle() =>
-            controller.isOpen ? controller.close() : controller.open();
-        final variant = menu.appearance?.variant;
-        if (variant == null) {
-          return IconButton(
-            statesController: states,
-            style: style,
-            tooltip: label,
-            onPressed: childScope.canExecuteAction ? toggle : null,
-            icon: Icones(
-              "material-symbols:more-vert",
-              color: resolved.iconColor,
             ),
-          );
-        }
-        return _nativeActionButton(
-          variant: variant,
-          states: states,
-          style: style,
-          onPressed: childScope.canExecuteAction ? toggle : null,
-          child: Text(label),
+          ),
+          builder: (context, show) {
+            void toggle() => controller.isOpen
+                ? controller.close()
+                : controller.openFocused();
+            final variant = menu.appearance?.variant;
+            if (variant == null) {
+              return Button(
+                face: ButtonFace.icon,
+                statesController: states,
+                color: _accentOf(style, null),
+                dense: _denseOf(style),
+                label: label,
+                tooltip: label,
+                focusNode: opener,
+                onPressed: childScope.canExecuteAction ? toggle : null,
+                icon: Icones(
+                  "material-symbols:more-vert",
+                  color: resolved.iconColor,
+                ),
+              );
+            }
+            return _nativeActionButton(
+              variant: variant,
+              states: states,
+              style: style,
+              onPressed: childScope.canExecuteAction ? toggle : null,
+              label: label,
+              focusNode: opener,
+            );
+          },
         );
       },
     );
@@ -287,28 +279,43 @@ Widget _nativeActionButton({
   required skir.ButtonVariant variant,
   required WidgetStatesController states,
   required ButtonStyle style,
-  required VoidCallback? onPressed,
-  required Widget child,
-}) => switch (variant) {
-  final value when value == skir.ButtonVariant.outlined => OutlinedButton(
-    statesController: states,
-    style: style,
-    onPressed: onPressed,
-    child: child,
-  ),
-  final value when value == skir.ButtonVariant.text => TextButton(
-    statesController: states,
-    style: style,
-    onPressed: onPressed,
-    child: child,
-  ),
-  _ => FilledButton(
-    statesController: states,
-    style: style,
-    onPressed: onPressed,
-    child: child,
-  ),
-};
+  required FutureOr<void> Function()? onPressed,
+  required String label,
+  FocusNode? focusNode,
+  Widget? icon,
+}) => Button(
+  face: switch (variant) {
+    final value when value == skir.ButtonVariant.outlined =>
+      ButtonFace.outlined,
+    final value when value == skir.ButtonVariant.text => ButtonFace.quiet,
+    _ => ButtonFace.filled,
+  },
+  statesController: states,
+  color: _accentOf(style, variant),
+  dense: _denseOf(style),
+  icon: icon,
+  label: label,
+  focusNode: focusNode,
+  onPressed: onPressed,
+);
+
+/// The authored colour of a portable button: its fill when filled, its text
+/// colour otherwise. The other authored styling gives way to the face.
+Color? _accentOf(ButtonStyle style, skir.ButtonVariant? variant) {
+  final filled =
+      variant != skir.ButtonVariant.outlined &&
+      variant != skir.ButtonVariant.text &&
+      variant != null;
+  return filled
+      ? style.backgroundColor?.resolve(const {})
+      : style.foregroundColor?.resolve(const {}) ??
+            style.iconColor?.resolve(const {});
+}
+
+/// Whether a portable button takes the compact face: authored compact
+/// density does, comfortable or none keeps the normal size.
+bool _denseOf(ButtonStyle style) =>
+    style.visualDensity == VisualDensity.compact;
 
 Widget _actionAppearance(
   PortablePresentationScope scope,
@@ -387,7 +394,7 @@ Widget _actionAppearance(
               final tooltip = _actionText(scope, appearance?.tooltip);
               return tooltip == null
                   ? result
-                  : Tooltip(message: tooltip, child: result);
+                  : PanelTooltip(message: tooltip, child: result);
             } on PresentationValueFailure catch (failure) {
               return _diagnostic(failure.message);
             }
@@ -458,60 +465,55 @@ OutlinedBorder? _popupShape(
 }
 
 extension _ConfiguredMenuItemRendering on skir.MenuItem {
-  Widget renderConfigured(PortablePresentationScope scope) => HookBuilder(
-    builder: (context) {
-      final states = useWidgetStatesController();
-      final observation = useWidgetStateObservation(states);
-      return ValueListenableBuilder<Set<WidgetState>>(
-        valueListenable: observation,
-        builder: (context, observed, child) => PresentationInteractionScope(
-          value: PresentationInteraction.fromWidgetStates(observed)
-              .copyWith(readOnly: scope.readOnly),
-          child: Builder(
-            builder: (context) {
-              try {
-                final callback = action;
-                if (callback == null) {
-                  return _diagnostic("A menu action is missing");
-                }
-                final itemLabel = _actionText(scope, label)!;
-                final detail = _actionText(scope, description);
-                final reason = _actionText(scope, disabledReason);
-                final condition = _boolean(scope, enabledIf, fallback: true);
-                if (condition case _ResolvedFailure(:final message)) {
-                  return _diagnostic(message);
-                }
-                final enabled =
-                    scope.canExecuteActionFor(callback) &&
-                    (condition as _ResolvedValue<bool>).value;
-                return MenuItemButton(
-                  statesController: states,
-                  leadingIcon: icon == null
-                      ? null
-                      : PortablePresentationNodeRenderer(
-                          node: icon!,
-                          scope: scope,
-                        ),
-                  onPressed: enabled
-                      ? () => unawaited(scope.executeAction(callback))
-                      : null,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(itemLabel),
-                      if (detail != null) Text(detail),
-                      if (!enabled && reason != null) Text(reason),
-                    ],
-                  ),
-                );
-              } on PresentationValueFailure catch (failure) {
-                return _diagnostic(failure.message);
-              }
+  /// The item as a menu row; choosing it runs its action and then [close]s
+  /// the menu.
+  Widget renderConfigured(
+    PortablePresentationScope scope, {
+    required VoidCallback close,
+  }) => PresentationInteractionScope(
+    value: PresentationInteraction.fromWidgetStates(const {})
+        .copyWith(readOnly: scope.readOnly),
+    child: Builder(
+      builder: (context) {
+        try {
+          final callback = action;
+          if (callback == null) {
+            return _diagnostic("A menu action is missing");
+          }
+          final itemLabel = _actionText(scope, label)!;
+          final detail = _actionText(scope, description);
+          final reason = _actionText(scope, disabledReason);
+          final condition = _boolean(scope, enabledIf, fallback: true);
+          if (condition case _ResolvedFailure(:final message)) {
+            return _diagnostic(message);
+          }
+          final enabled =
+              scope.canExecuteActionFor(callback) &&
+              (condition as _ResolvedValue<bool>).value;
+          return PanelMenuItem(
+            label: itemLabel,
+            enabled: enabled,
+            leading: icon == null
+                ? null
+                : PortablePresentationNodeRenderer(node: icon!, scope: scope),
+            onPressed: () {
+              unawaited(scope.executeAction(callback));
+              close();
             },
-          ),
-        ),
-      );
-    },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(itemLabel),
+                if (detail != null) Text(detail),
+                if (!enabled && reason != null) Text(reason),
+              ],
+            ),
+          );
+        } on PresentationValueFailure catch (failure) {
+          return _diagnostic(failure.message);
+        }
+      },
+    ),
   );
 }

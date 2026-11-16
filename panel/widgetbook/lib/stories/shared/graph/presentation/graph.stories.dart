@@ -107,7 +107,9 @@ class _SimpleNode<D extends GraphDragData> extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = useAnimationController(duration: 200.ms);
+    final lift = useMotionController();
+    final hoverIn = resolveMotion(context, MotionToken.hoverIn);
+    final hoverOut = resolveMotion(context, MotionToken.hoverOut);
     final dragSource = useGraphDragSource(context, data);
     final offered = dragSource.payload;
     return LayoutBuilder(
@@ -147,7 +149,6 @@ class _SimpleNode<D extends GraphDragData> extends HookWidget {
           maxSimultaneousDrags: 1,
           dragAnchorStrategy: (widget, context, position) =>
               dragSource.anchor(offered, widget, context, position),
-          onDragStarted: () => dragSource.begin(offered),
           onDragUpdate: (details) => dragSource.update(offered, details),
           onDragEnd: (_) => dragSource.end(offered),
           feedback: HookBuilder(
@@ -160,18 +161,17 @@ class _SimpleNode<D extends GraphDragData> extends HookWidget {
             },
           ),
           child: GestureDetector(
+            // A tap lifts the node and lets it settle back.
             onTap: () async {
-              await controller.forward();
-              await controller.reverse();
+              await lift.to(1, hoverIn);
+              await lift.to(0, hoverOut);
             },
-            child: child
-                .animate(controller: controller, autoPlay: false)
-                .scaleXY(
-                  duration: 200.ms,
-                  begin: 1,
-                  end: 1.2,
-                  curve: Curves.easeInOut,
-                ),
+            child: AnimatedBuilder(
+              animation: lift,
+              child: child,
+              builder: (context, child) =>
+                  Transform.scale(scale: 1 + 0.2 * lift.value, child: child),
+            ),
           ),
         );
       },

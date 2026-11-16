@@ -58,8 +58,7 @@ void main() {
         prompts: UnsupportedSearchPromptHost(),
       ),
       SearchCommandTarget(
-        primary: searchResult,
-        selection: [searchResult],
+        result: searchResult,
         query: SearchQueryContext.empty,
       ),
     );

@@ -15,7 +15,9 @@ final class RealmOperation {
     this.name, {
     required this.group,
     String? label,
-    this.inspector = RealmOperationInspector.outlined,
+    this.order = 0,
+    this.inspector = RealmOperationInspector.shown,
+    this.emphasis = skir.OperationEmphasis.flat,
     this.shortcut,
     this.confirmation,
     this.effect,
@@ -41,18 +43,19 @@ final class RealmOperation {
         disabledBecause: disabledBecause,
       );
 
-  /// Deletes the selected resources after the user confirms; bound to the
-  /// delete key and shown as a destructive filled button.
+  /// Deletes the selected resources once the user holds as long as a
+  /// permanent action; bound to the delete key and shown as a destructive
+  /// outlined button, as the core Delete declares it.
   const RealmOperation.delete({String? disabledBecause})
     : this(
         "Delete",
         group: skir.OperationGroup.destructive,
-        inspector: RealmOperationInspector.filled,
+        emphasis: skir.OperationEmphasis.outline,
         shortcut: skir.OperationShortcut.delete,
         confirmation: const RealmConfirmation(
-          title: "Delete resources",
-          message: "Delete the selected resources?",
-          confirm: "Delete",
+          one: "Delete this resource and what it owns?",
+          many: "Delete {count} resources and what they own?",
+          weight: skir.OperationWeight.permanent,
         ),
         effect: _delete,
         disabledBecause: disabledBecause,
@@ -62,7 +65,13 @@ final class RealmOperation {
   final String name;
   final String label;
   final skir.OperationGroup group;
+
+  /// The position inside its group.
+  final int order;
   final RealmOperationInspector inspector;
+
+  /// How its inspector button asks to stand out.
+  final skir.OperationEmphasis emphasis;
   final skir.OperationShortcut? shortcut;
   final RealmConfirmation? confirmation;
   final void Function(AuthoringEdit edit, List<skir.ResourceId> targets)?
@@ -102,19 +111,24 @@ final class RealmOperation {
           description: "$name the resource",
           icon: "",
           group: group,
-          order: 0,
+          order: order,
           tone: group == skir.OperationGroup.destructive
               ? skir.HeaderActionTone.destructive
               : skir.HeaderActionTone.neutral,
-          confirmation: null,
+          confirmation: switch (confirmation) {
+            null => null,
+            final confirmation => skir.OperationConfirmation(
+              outcomeOne: confirmation.one,
+              outcomeMany: confirmation.many,
+              weight: confirmation.weight,
+            ),
+          },
           inspector: switch (inspector) {
             RealmOperationInspector.hidden => skir.OperationInspector.hidden,
-            RealmOperationInspector.outlined =>
-              skir.OperationInspector.wrapButton(skir.ButtonVariant.outlined),
-            RealmOperationInspector.filled =>
-              skir.OperationInspector.wrapButton(skir.ButtonVariant.filled),
+            RealmOperationInspector.shown => skir.OperationInspector.shown,
           },
           shortcut: shortcut,
+          emphasis: emphasis,
         ),
       );
 
@@ -122,20 +136,22 @@ final class RealmOperation {
   String toString() => name;
 }
 
-/// How the inspector shows an operation.
-enum RealmOperationInspector { hidden, outlined, filled }
+/// Whether the inspector shows an operation.
+enum RealmOperationInspector { hidden, shown }
 
-/// The confirmation a Realm asks before it applies an operation.
+/// The outcome line a Realm declares for a held operation: [one] for one
+/// target, [many] for several with "{count}" for their number, held as long
+/// as its [weight].
 final class RealmConfirmation {
   const RealmConfirmation({
-    required this.title,
-    required this.message,
-    required this.confirm,
+    required this.one,
+    required this.many,
+    required this.weight,
   });
 
-  final String title;
-  final String message;
-  final String confirm;
+  final String one;
+  final String many;
+  final skir.OperationWeight weight;
 }
 
 /// The authoring side of one Realm: its saved document, the saves it
@@ -245,6 +261,10 @@ final class FakeRealm {
 
   /// Every save the Realm received, in the order it received them.
   List<RealmSave> get saves => List.unmodifiable(_saves);
+
+  /// How many times the panel asked the Realm to prepare an operation.
+  int get prepares => _prepares;
+  var _prepares = 0;
 
   /// Whether the Realm is away, as when its own link is cut while the panel
   /// stays connected: nothing receives a save until it [returns].
@@ -436,32 +456,26 @@ final class FakeRealm {
     resolveDropCandidates: (request) =>
         answerDropCandidates?.call(request) ??
         _answer(() => skir.ResolveDropCandidatesResult.wrapResolved(const [])),
-    prepareAuthoringAction: (request) =>
-        answerPrepareAction?.call(request) ??
-        _answer(() {
-          final operation = _operations.firstWhere(
-            (operation) => operation.capability == request.capability,
-            orElse: () => throw StateError(
-              "The Realm offers no operation for ${request.capability.value}",
-            ),
-          );
-          final edit = AuthoringEdit.fromDocument(document);
-          operation.effect?.call(edit, request.invocation.targets.toList());
-          final confirmation = operation.confirmation;
-          return skir.AuthoringActionResult.createPreview(
-            invocationId: request.invocation.invocationId,
-            inputRevision: request.inputRevision,
-            edit: edit.prepare(),
-            confirmation: confirmation == null
-                ? null
-                : skir.OperationConfirmation(
-                    title: confirmation.title,
-                    message: confirmation.message,
-                    confirmationLabel: confirmation.confirm,
-                  ),
-            selection: skir.OperationSelectionEffect.unchanged,
-          );
-        }),
+    prepareAuthoringAction: (request) {
+      _prepares++;
+      return answerPrepareAction?.call(request) ??
+          _answer(() {
+            final operation = _operations.firstWhere(
+              (operation) => operation.capability == request.capability,
+              orElse: () => throw StateError(
+                "The Realm offers no operation for ${request.capability.value}",
+              ),
+            );
+            final edit = AuthoringEdit.fromDocument(document);
+            operation.effect?.call(edit, request.invocation.targets.toList());
+            return skir.AuthoringActionResult.createPreview(
+              invocationId: request.invocation.invocationId,
+              inputRevision: request.inputRevision,
+              edit: edit.prepare(),
+              selection: skir.OperationSelectionEffect.unchanged,
+            );
+          });
+    },
   );
 
   /// Replaces the Realm's authoring capabilities for [scope].

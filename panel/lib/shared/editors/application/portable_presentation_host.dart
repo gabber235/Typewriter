@@ -52,6 +52,19 @@ abstract interface class PortablePresentationHost implements Listenable {
   void dispose();
 }
 
+/// A host whose bindings can stand for several selected items, writing a
+/// different value to each of them.
+abstract interface class PortableItemsWriteHost {
+  /// Writes the value at the same index of [values] to each selected item
+  /// behind [reference], in the order the binding's item values list them,
+  /// or to none of them.
+  Future<PortablePresentationWriteResult> writeItems(
+    skir.BindingRef reference,
+    List<skir.DataValue> values, {
+    required PortableInvocationContext context,
+  });
+}
+
 abstract interface class PortableCollectionMutationHost {
   Future<PortablePresentationWriteResult> addCollectionItem(
     skir.BindingRef reference, {
@@ -234,6 +247,10 @@ abstract class PortableTimelineCueProjection
 
 /// The members of a resources binding in link order, the edges among them,
 /// and for each member the owned resources it places on a timeline.
+///
+/// [problem] says why the members cannot be read. [unavailable] says, in
+/// plain words, why the layout does not apply here, such as a selection of
+/// several resources; it is not an error.
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
 abstract class PortableResourcesProjection with _$PortableResourcesProjection {
   factory PortableResourcesProjection({
@@ -241,6 +258,7 @@ abstract class PortableResourcesProjection with _$PortableResourcesProjection {
     required List<PortableResourceEdge> edges,
     required Map<skir.ResourceId, List<PortableTimelineCueProjection>> timeline,
     String? problem,
+    String? unavailable,
   }) => PortableResourcesProjection._value(
     members: List.unmodifiable(members),
     edges: List.unmodifiable(edges),
@@ -249,6 +267,7 @@ abstract class PortableResourcesProjection with _$PortableResourcesProjection {
         entry.key: List.unmodifiable(entry.value),
     },
     problem: problem,
+    unavailable: unavailable,
   );
 
   const factory PortableResourcesProjection._value({
@@ -256,6 +275,7 @@ abstract class PortableResourcesProjection with _$PortableResourcesProjection {
     required List<PortableResourceEdge> edges,
     required Map<skir.ResourceId, List<PortableTimelineCueProjection>> timeline,
     required String? problem,
+    required String? unavailable,
   }) = _PortableResourcesProjection;
 }
 
@@ -325,6 +345,7 @@ extension PortablePresentationRootInvocation on PortablePresentationHost {
             value: entry.value.value,
             location: entry.value.location,
             schema: entry.value.schema,
+            itemValues: entry.value.itemValues,
           ),
       },
       catalogGeneration: observation.catalog.snapshot.generation,

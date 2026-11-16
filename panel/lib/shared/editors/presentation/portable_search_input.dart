@@ -121,6 +121,25 @@ final class PortableSearchInput extends HookWidget {
       controller.addListener(rememberQuery);
       return controller.dispose;
     }, [controller]);
+    final multiple = control.selectionMode == skir.SearchSelectionMode.multiple;
+    // A write may rebuild the search, so the range anchor outlives it.
+    final anchor = useRef<SelectableIdentifier?>(null);
+    final picked = useMemoized(
+      () => multiple
+          ? _PickedValues(
+              controller: controller,
+              picker: picker,
+              anchor: anchor,
+            )
+          : null,
+      [controller, picker, multiple],
+    );
+    useEffect(() => picked?.dispose, [picked]);
+    // The bound value may have changed with this build; the results follow.
+    useEffect(() {
+      picked?.refresh();
+      return null;
+    });
     void openSearch() {
       if (!editing.value && scope.enabled && !scope.readOnly) {
         final initial = control.initialQuery;
@@ -181,15 +200,13 @@ final class PortableSearchInput extends HookWidget {
       leading: leading,
       trailing: suffix,
       child: Semantics(
-        button: true,
         enabled: editable,
-        label: "Activate search input",
-        child: InkWell(
+        child: Button(
           key: const ValueKey("authored_search_summary"),
+          face: ButtonFace.bare,
+          label: "Activate search input",
           focusNode: summaryFocus,
-          canRequestFocus: editable,
-          onTap: editable ? openSearch : null,
-          borderRadius: context.shapes.mediumBorderRadius,
+          onPressed: editable ? openSearch : null,
           child: InputDecorator(
             isEmpty: false,
             isFocused: summaryFocus.hasFocus,
@@ -203,9 +220,9 @@ final class PortableSearchInput extends HookWidget {
                             borderRadius: context.shapes.mediumBorderRadius,
                           ))
                       .copyWith(
-                        borderSide: FocusHighlight.focusBorder(
-                          context,
-                          FocusType.focus,
+                        borderSide: BorderSide(
+                          color: context.colors.focusRing,
+                          width: context.shapes.ringWidth,
                         ),
                       ),
               suffixIcon: inputContent?.leading == skir.InputAdornment.none
@@ -227,6 +244,25 @@ final class PortableSearchInput extends HookWidget {
         ),
       ),
     );
+    final grow = motionTimeline(context, MotionToken.loadIn);
+    // A zero length size change would land inside layout.
+    final grows = grow.duration != Duration.zero;
+    final field = editing.value && editable
+        ? TextFieldTapRegion(
+            child: SearchRoot.borrowed(
+              controller: controller,
+              child: _PortableSearchSurface(
+                picked: picked,
+                placeholder: placeholder,
+                picker: picker,
+                scope: scope,
+                control: control,
+                style: style,
+                maximumExtent: (maximum ?? 320).clamp(80, 800),
+              ),
+            ),
+          )
+        : summary;
     final content = _controlFrame(
       control.control,
       control.appearance == null
@@ -260,31 +296,16 @@ final class PortableSearchInput extends HookWidget {
                     const SingleActivator(LogicalKeyboardKey.space),
                   ],
                   priority: 100,
-                  onInvoke: (_) => openSearch(),
+                  run: ActionRun.press((_) => openSearch()),
                 ),
             ],
-            child: AnimatedSize(
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : 300.ms,
-              curve: Curves.easeInOutCubic,
-              alignment: Alignment.topCenter,
-              child: editing.value && editable
-                  ? TextFieldTapRegion(
-                      child: SearchRoot.borrowed(
-                        controller: controller,
-                        child: _PortableSearchSurface(
-                          placeholder: placeholder,
-                          picker: picker,
-                          scope: scope,
-                          control: control,
-                          style: style,
-                          maximumExtent: (maximum ?? 320).clamp(80, 800),
-                        ),
-                      ),
-                    )
-                  : summary,
-            ),
+            child: grows
+                ? MotionSize(
+                    grow: MotionToken.loadIn,
+                    alignment: Alignment.topCenter,
+                    child: field,
+                  )
+                : field,
           ),
         ),
       ),
@@ -345,6 +366,7 @@ final class _EphemeralSearchHistoryStorage implements SearchHistoryStorage {
 
 final class _PortableSearchSurface extends ConsumerWidget {
   const _PortableSearchSurface({
+    required this.picked,
     required this.placeholder,
     required this.picker,
     required this.scope,
@@ -354,6 +376,10 @@ final class _PortableSearchSurface extends ConsumerWidget {
   });
 
   final skir.SearchControl control;
+
+  /// The values a list picker holds, which its results select; null for a
+  /// search that writes one value.
+  final _PickedValues? picked;
   final double maximumExtent;
   final _PortableControlStyle style;
   final String placeholder;
@@ -389,22 +415,6 @@ final class _PortableSearchSurface extends ConsumerWidget {
       },
     );
     final outsideSuffix = _interactiveAdornment(control.content?.suffix);
-    void navigate(int direction) {
-      final results = controller.snapshot.nodes
-          .walk()
-          .whereType<SearchResultNode>()
-          .map((node) => node.result)
-          .toList();
-      if (results.isEmpty) return;
-      final current = results.indexWhere(
-        (r) => r.id == controller.currentPreview?.id,
-      );
-      final next = current < 0
-          ? (direction > 0 ? 0 : results.length - 1)
-          : (current + direction).clamp(0, results.length - 1);
-      controller.preview(results[next]);
-    }
-
     Widget frame({
       required Widget queryBar,
       required Widget searchResults,
@@ -488,40 +498,21 @@ final class _PortableSearchSurface extends ConsumerWidget {
                 padding: EdgeInsets.all(context.spacing.space2),
                 child: Text(
                   feedback,
-                  style: context.theme.textTheme.bodySmall?.copyWith(
-                    color: context.colors.danger,
+                  style: context.text.sentenceSmall.copyWith(
+                    color: context.colors.dangerText,
                   ),
                 ),
               ),
             ),
           Flexible(
             child: SearchBody(
+              selection: picked,
               searchHint: placeholder,
               frameBuilder: frame,
               shrinkWrap: true,
               surfaceStyle: SearchSurfaceStyle(fill: resultFill),
               onQueryDismiss: controller.close,
               selectAllOnFocus: true,
-              textFieldActions: [
-                for (final direction in [-1, 1])
-                  ActionShortcut(
-                    id: direction < 0
-                        ? "previous_search_result"
-                        : "next_search_result",
-                    label: direction < 0 ? "Previous result" : "Next result",
-                    description: "Highlight a result without applying it",
-                    priority: 100,
-                    activators: [
-                      SingleActivator(
-                        direction < 0
-                            ? LogicalKeyboardKey.arrowUp
-                            : LogicalKeyboardKey.arrowDown,
-                      ),
-                    ],
-                    show: false,
-                    onInvoke: (_) => navigate(direction),
-                  ),
-              ],
               queryStyle: style.valueStyle,
               queryAlignment: style.alignment,
               queryDecoration: style.decoration.copyWith(
@@ -574,20 +565,17 @@ final class _PortableSearchSurface extends ConsumerWidget {
                   if (payload is! PortableSearchPayload) {
                     return MissingSearchResultRendererRow(result: row.result);
                   }
-                  final current = scope.read(control.control.binding);
                   final selectedValue = switch (payload) {
                     PortableMappedSearchPayload(:final selectedValue) =>
                       selectedValue,
                     PortableCustomSearchPayload(:final selectedValue) =>
                       selectedValue,
                   };
-                  final selected =
-                      control.selectionMode == skir.SearchSelectionMode.multiple
-                      ? current?.authoredItems?.any(
-                              (item) => item.value == selectedValue,
-                            ) ??
-                            false
-                      : current == selectedValue;
+                  // A list picker's row shows its value held as selected;
+                  // a single choice shows the current value.
+                  final selected = picked != null
+                      ? row.selected
+                      : scope.read(control.control.binding) == selectedValue;
                   final result = switch (payload) {
                     PortableMappedSearchPayload(:final mapping) =>
                       PortableResultContent(
@@ -596,22 +584,12 @@ final class _PortableSearchSurface extends ConsumerWidget {
                         // like every other resource result.
                         appearance: _resourceAppearance(selectedValue, scope),
                         scope: picker.resultScope(row.result, scope),
-                        row: row.copyWith(
-                          selected: selected,
-                          onTap: controller.isBusy
-                              ? null
-                              : () => controller.activate(row.result),
-                        ),
+                        row: row.copyWith(selected: selected),
                         // A search input opens a dropdown, so its rows are compact.
                         density: SearchResultDensity.compact,
                       ),
                     PortableCustomSearchPayload() => SearchResultRow(
-                      row: row.copyWith(
-                        selected: selected,
-                        onTap: controller.isBusy
-                            ? null
-                            : () => controller.activate(row.result),
-                      ),
+                      row: row.copyWith(selected: selected),
                       density: SearchResultDensity.compact,
                       body: Text(
                         row.result.title ?? "Use custom value",
@@ -621,12 +599,9 @@ final class _PortableSearchSurface extends ConsumerWidget {
                       footer: const Text("Use this custom value"),
                     ),
                   };
-                  return _PortableSearchResult(
-                    highlighted: row.focused,
-                    child: Tooltip(
-                      message: row.result.title ?? "",
-                      child: result,
-                    ),
+                  return PanelTooltip(
+                    message: row.result.title ?? "",
+                    child: result,
                   );
                 },
               },
@@ -653,28 +628,96 @@ skir.ResourceAppearance? _resourceAppearance(
   return host.projectResource(resource, context: scope.invocation)?.appearance;
 }
 
-/// Keeps keyboard navigation visible while the query retains focus.
-final class _PortableSearchResult extends HookWidget {
-  const _PortableSearchResult({required this.highlighted, required this.child});
-  final bool highlighted;
-  final Widget child;
+/// The values a list picker holds, as the selection of its results.
+///
+/// A plain click, Enter, a toggle click or Space adds or removes one value
+/// through the search's activation. Shift adds the range from the anchor,
+/// the last value toggled, and select all adds every result, or removes
+/// them all when the list holds each already; either is one write.
+final class _PickedValues extends ChangeNotifier implements SurfaceSelection {
+  _PickedValues({
+    required this.controller,
+    required this.picker,
+    required this.anchor,
+  });
+
+  final SearchController<void> controller;
+  final PortableSearchBinding picker;
+
+  /// The value a Shift click or Shift with an arrow reaches from: the last
+  /// value toggled.
+  final ObjectRef<SelectableIdentifier?> anchor;
+  var _held = const <String>{};
+  var _writing = false;
+
+  /// Tells the results when the bound value now holds other results.
+  void refresh() {
+    final held = {
+      for (final node in controller.snapshot.nodes.walk())
+        if (node case SearchResultNode(:final result) when picker.holds(result))
+          result.id,
+    };
+    if (setEquals(held, _held)) return;
+    _held = held;
+    notifyListeners();
+  }
+
   @override
-  Widget build(BuildContext context) {
-    useEffect(() {
-      if (highlighted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) {
-            unawaited(
-              Scrollable.ensureVisible(
-                context,
-                alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
-              ),
-            );
-          }
-        });
-      }
-      return null;
-    }, [highlighted]);
-    return child;
+  bool contains(SelectableIdentifier item) =>
+      item is SearchResultSelectable && picker.holds(item.result);
+
+  @override
+  bool get showsChecks => true;
+
+  @override
+  void choose(SelectableIdentifier item) => toggle(item);
+
+  @override
+  void toggle(SelectableIdentifier item) {
+    if (item is! SearchResultSelectable || _writing) return;
+    anchor.value = item;
+    unawaited(controller.activate(item.result));
+  }
+
+  @override
+  void selectRange(
+    SelectableIdentifier to, {
+    required List<SelectableIdentifier> order,
+    SelectableIdentifier? from,
+  }) {
+    if (!order.contains(anchor.value)) anchor.value = from ?? to;
+    final start = order.indexOf(anchor.value!);
+    final end = order.indexOf(to);
+    _chooseAll(
+      start < 0 || end < 0
+          ? [to]
+          : order.sublist(min(start, end), max(start, end) + 1),
+      include: true,
+    );
+  }
+
+  @override
+  void selectEvery(List<SelectableIdentifier> order) {
+    final results = [
+      for (final item in order)
+        if (item is SearchResultSelectable) item.result,
+    ];
+    _chooseAll(order, include: !results.every(picker.holds));
+  }
+
+  void _chooseAll(List<SelectableIdentifier> items, {required bool include}) {
+    if (_writing || controller.isBusy) return;
+    _writing = true;
+    unawaited(
+      picker
+          .chooseAll([
+            for (final item in items)
+              if (item is SearchResultSelectable) item.result,
+          ], include: include)
+          .whenComplete(() {
+            _writing = false;
+            refresh();
+          }),
+    );
   }
 }

@@ -47,19 +47,14 @@ class ResizableElement extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final animationController = useAnimationController(
-      duration: 700.ms,
-      reverseDuration: 250.ms,
-    );
-    final animation = useAnimation(
-      CurvedAnimation(
-        parent: animationController,
-        curve: ElasticOutCurve(0.4),
-        reverseCurve: Curves.fastLinearToSlowEaseIn,
-      ),
-    );
     final isHovering = useState(false);
     final startData = useState<(Offset, int, int)?>(null);
+    // The handle shows while hovered and through a resize.
+    final shown = isHovering.value || startData.value != null;
+    final animation = useMotion(
+      shown ? MotionToken.hoverIn : MotionToken.hoverOut,
+      shown ? 1.0 : 0.0,
+    ).value;
 
     /// The size the element takes with the handle at [position], or null
     /// when no resize is in progress.
@@ -73,7 +68,6 @@ class ResizableElement extends HookConsumerWidget {
     void resetInteraction() {
       startData.value = null;
       ref.read(cursorControllerProvider.notifier).reset();
-      if (!isHovering.value) animationController.reverse();
     }
 
     return ResizableElementSurface(
@@ -83,13 +77,9 @@ class ResizableElement extends HookConsumerWidget {
       gestureDetector: MouseRegion(
         onEnter: (_) {
           isHovering.value = true;
-          if (startData.value != null) return;
-          animationController.forward();
         },
         onExit: (_) {
           isHovering.value = false;
-          if (startData.value != null) return;
-          animationController.reverse();
         },
         cursor: startData.value != null
             ? SystemMouseCursors.grabbing
@@ -112,7 +102,6 @@ class ResizableElement extends HookConsumerWidget {
                     ref
                         .read(cursorControllerProvider.notifier)
                         .cursor(SystemMouseCursors.grabbing);
-                    animationController.forward();
                     startData.value = (
                       details.localPosition,
                       element.width,

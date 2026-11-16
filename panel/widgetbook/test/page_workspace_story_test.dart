@@ -78,7 +78,7 @@ void main() {
       knobs: {"Layout": "Timeline"},
     );
 
-    await panel.tapOn(find.byTooltip("Show menu").first);
+    await panel.tapOn(find.tooltip("Member actions").first);
 
     expect(panel.shows("Disconnect"), isTrue);
     expect(panel.shows("Delete resource"), isTrue);

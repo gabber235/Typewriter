@@ -29,15 +29,15 @@ void main() {
       final requests = nats
           .requestsTo("$_scope.update")
           .map((request) => request.payload);
-      final members = [_grace];
       final roles = [role("editor")];
+      final assignments = {_grace: roles};
       final command = membershipCommands(
         nats,
         organization: _organization,
         user: _user,
-      ).updateRoles(members, roles);
+      ).updateRoles(assignments);
 
-      members.add(skir.recordId("user:other"));
+      assignments[skir.recordId("user:other")] = [role("viewer")];
       roles.add(role("viewer"));
       await command.send();
       await command.send();
@@ -45,19 +45,52 @@ void main() {
       expect(
         requests
             .map(skir.UpdateOrganizationMemberRolesRequest.serializer.fromBytes)
-            .map((request) => request.userIds),
+            .map(
+              (request) => [
+                for (final assignment in request.assignments)
+                  [assignment.userId, ...assignment.roleIds],
+              ],
+            ),
         [
-          [_grace],
-          [_grace],
+          [
+            [_grace, role("editor").roleId],
+          ],
+          [
+            [_grace, role("editor").roleId],
+          ],
         ],
       );
+    });
+
+    test("sends each member's own roles in one request", () async {
+      final nats = FakeNatsClient(actorId: _user)
+        ..registerHandler("$_scope.update", (_) => updated);
+      addTearDown(nats.dispose);
+      final requests = nats
+          .requestsTo("$_scope.update")
+          .map((request) => request.payload);
+      final linus = skir.recordId("user:linus");
+
+      await membershipCommands(
+        nats,
+        organization: _organization,
+        user: _user,
+      ).updateRoles({
+        _grace: [role("editor")],
+        linus: [role("editor"), role("writer")],
+      }).send();
+
       expect(
-        requests
-            .map(skir.UpdateOrganizationMemberRolesRequest.serializer.fromBytes)
-            .map((request) => request.roleIds),
         [
-          [role("editor").roleId],
-          [role("editor").roleId],
+          for (final assignment
+              in skir.UpdateOrganizationMemberRolesRequest.serializer
+                  .fromBytes(requests.single)
+                  .assignments)
+            [assignment.userId, ...assignment.roleIds],
+        ],
+        [
+          [_grace, role("editor").roleId],
+          [linus, role("editor").roleId, role("writer").roleId],
         ],
       );
     });
@@ -70,16 +103,19 @@ void main() {
           .requestsTo("$_scope.update")
           .map((request) => request.payload);
 
-      await membershipCommands(nats, organization: _organization, user: _user)
-          .updateRoles(
-            [_grace],
-            [role("editor"), role("founder", assignable: false)],
-          )
-          .send();
+      await membershipCommands(
+        nats,
+        organization: _organization,
+        user: _user,
+      ).updateRoles({
+        _grace: [role("editor"), role("founder", assignable: false)],
+      }).send();
 
       expect(
         skir.UpdateOrganizationMemberRolesRequest.serializer
             .fromBytes(requests.single)
+            .assignments
+            .single
             .roleIds,
         [role("editor").roleId],
       );
@@ -97,7 +133,9 @@ void main() {
       final events = <skir.OrganizationMembersChanged>[];
       final subscription = repository.members.listen(events.add);
       addTearDown(subscription.cancel);
-      final command = repository.updateRoles([_grace], [role("editor")]);
+      final command = repository.updateRoles({
+        _grace: [role("editor")],
+      });
 
       await command.integrate!(await command.send());
 
@@ -155,7 +193,9 @@ void main() {
     );
     addTearDown(requests.cancel);
     addTearDown(members.cancel);
-    final command = repository.approve([requestId], [role("editor")]);
+    final command = repository.approve({
+      requestId: [role("editor")],
+    });
 
     final result = await command.send();
     expect(seen, isEmpty);
@@ -265,7 +305,7 @@ void main() {
         nats,
         organization: _organization,
         user: null,
-      ).remove(_grace),
+      ).remove([_grace]),
       throwsA(
         isA<ApiException>()
             .having((error) => error.code, "code", 401)
@@ -289,7 +329,7 @@ void main() {
 
     repository.session.end();
 
-    expect(() => repository.remove(_grace), throwsStateError);
+    expect(() => repository.remove([_grace]), throwsStateError);
   });
 
   test(
@@ -307,15 +347,15 @@ void main() {
       final events = <skir.OrganizationMembersChanged>[];
       final subscription = repository.members.listen(events.add);
       addTearDown(subscription.cancel);
-      final command = repository.remove(_grace);
+      final command = repository.remove([_grace]);
       final sending = command.send();
       await pumpEventQueue();
 
       repository.session.end();
       repository.dispose();
       response.complete(
-        skir.RemoveOrganizationMemberResponse.serializer.toBytes(
-          skir.RemoveOrganizationMemberResponse.createSuccess(
+        skir.RemoveOrganizationMembersResponse.serializer.toBytes(
+          skir.RemoveOrganizationMembersResponse.createSuccess(
             event: skir.OrganizationMembersChanged(
               sequence: 7,
               changes: [skir.OrganizationMembersChange.wrapRemove(_grace)],
@@ -336,19 +376,19 @@ void main() {
           skir.UpdateOrganizationMemberRolesResponse.createInternalError()
               .requireAccepted,
       "a member removal":
-          skir.RemoveOrganizationMemberResponse.createInternalError()
+          skir.RemoveOrganizationMembersResponse.createInternalError()
               .requireAccepted,
       "an approval":
           skir.ApproveOrganizationJoinRequestsResponse.createInternalError()
               .requireAccepted,
       "a decline":
-          skir.DeclineOrganizationJoinRequestResponse.createInternalError()
+          skir.DeclineOrganizationJoinRequestsResponse.createInternalError()
               .requireAccepted,
       "a code generation":
           skir.GenerateOrganizationJoinCodeResponse.createInternalError()
               .requireAccepted,
       "a code revocation":
-          skir.RevokeOrganizationJoinCodeResponse.createInternalError()
+          skir.RevokeOrganizationJoinCodesResponse.createInternalError()
               .requireAccepted,
     };
     for (final MapEntry(key: command, value: accept)
@@ -391,23 +431,10 @@ void main() {
         400,
         "Select distinct organization members",
       ),
-      "removing the founder": (
-        skir.RemoveOrganizationMemberResponse.createFounderCannotBeRemovedError(
-          userId: _grace,
-        ).requireAccepted,
-        409,
-        "Organization founder cannot be removed",
-      ),
-      "removing someone who is not a member": (
-        skir.RemoveOrganizationMemberResponse.createUserNotMemberError(
-          userId: _grace,
-        ).requireAccepted,
-        404,
-        "Organization Member not found",
-      ),
       "approving without roles": (
-        skir.ApproveOrganizationJoinRequestsResponse.createRolesRequiredError()
-            .requireAccepted,
+        skir.ApproveOrganizationJoinRequestsResponse.createRolesRequiredError(
+          requestIds: [skir.recordId("request_to_join:grace")],
+        ).requireAccepted,
         400,
         "At least one role is required",
       ),
@@ -424,13 +451,6 @@ void main() {
         400,
         "Select distinct pending requests",
       ),
-      "declining a missing request": (
-        skir.DeclineOrganizationJoinRequestResponse.createRequestNotFoundError(
-          requestId: skir.recordId("request_to_join:missing"),
-        ).requireAccepted,
-        404,
-        "Request not found",
-      ),
       "a code generation with roles that cannot be assigned": (
         skir.GenerateOrganizationJoinCodeResponse.createRolesNotAssignableError(
           roleIds: [role("founder").roleId],
@@ -445,13 +465,6 @@ void main() {
         400,
         "Expiration duration must be positive",
       ),
-      "revoking a missing code": (
-        skir.RevokeOrganizationJoinCodeResponse.createCodeNotFoundError(
-          codeId: skir.recordId("join_code:missing"),
-        ).requireAccepted,
-        404,
-        "Join Code not found",
-      ),
     };
     for (final MapEntry(key: reason, value: (accept, code, message))
         in rejections.entries) {
@@ -462,6 +475,56 @@ void main() {
             isA<ApiException>()
                 .having((error) => error.code, "code", code)
                 .having((error) => error.message, "message", message),
+          ),
+        );
+      });
+    }
+    final refusals = {
+      "removing the founder": (
+        skir.RemoveOrganizationMembersResponse.createFounderCannotBeRemovedError(
+          userIds: [_grace],
+        ).requireAccepted,
+        409,
+        "Organization founder cannot be removed",
+      ),
+      "removing someone who is not a member": (
+        skir.RemoveOrganizationMembersResponse.createUserNotMemberError(
+          userIds: [_grace],
+        ).requireAccepted,
+        404,
+        "Organization Member not found",
+      ),
+      "declining a missing request": (
+        skir.DeclineOrganizationJoinRequestsResponse.createRequestNotFoundError(
+          requestIds: [skir.recordId("request_to_join:missing")],
+        ).requireAccepted,
+        404,
+        "Request not found",
+      ),
+      "revoking a missing code": (
+        skir.RevokeOrganizationJoinCodesResponse.createCodeNotFoundError(
+          codeIds: [skir.recordId("join_code:missing")],
+        ).requireAccepted,
+        404,
+        "Join Code not found",
+      ),
+    };
+    for (final MapEntry(key: reason, value: (accept, code, message))
+        in refusals.entries) {
+      test("rejects $reason naming the refused target, with code $code and "
+          "its reason", () {
+        expect(
+          accept,
+          throwsA(
+            isA<RefusedTargets>()
+                .having((error) => error.targets, "targets", hasLength(1))
+                .having(
+                  (error) => error.reason,
+                  "reason",
+                  isA<ApiException>()
+                      .having((error) => error.code, "code", code)
+                      .having((error) => error.message, "message", message),
+                ),
           ),
         );
       });

@@ -91,13 +91,18 @@ struct ApprovedOrganizationJoinRequest(82020010) {
   member: OrganizationMember;
 }
 
+// One request to approve and the roles its new member receives.
+struct OrganizationJoinRequestApproval(82020011) {
+  request_id: RecordId;
+  role_ids: [RecordId];
+}
+
 // Approves all selected requests in one transaction, creates their memberships, and removes the requests.
-// The selected role set is applied to every approved request. Any invalid request or role rejects the complete selection.
+// Each approval carries the role set its new member receives. Any invalid request or role rejects the complete selection.
 // Success includes the organization request and member changes so consumers can reconcile both projections.
 method ApproveOrganizationJoinRequests(
   struct {
-    request_ids: [RecordId];
-    role_ids: [RecordId];
+    approvals: [OrganizationJoinRequestApproval];
   }
 ): enum {
   internal_error: InternalError;
@@ -119,7 +124,9 @@ method ApproveOrganizationJoinRequests(
     role_ids: [RecordId];
   };
   /// At least one role is required.
-  roles_required_error: struct {};
+  roles_required_error: struct {
+    request_ids: [RecordId];
+  };
   /// Users are already members.
   user_already_member_error: struct {
     user_ids: [RecordId];
@@ -130,11 +137,12 @@ method ApproveOrganizationJoinRequests(
   invalid_record_id_error: InvalidRecordIdError;
 } = 920202;
 
-// Declines one request and removes it from both the organization and user pending request views.
-// The response event is the organization event; the user stream also receives its corresponding removal.
-method DeclineOrganizationJoinRequest(
+// Declines every selected request in one transaction and removes them from both the organization and
+// user pending request views. Any invalid target rejects the complete selection.
+// The response event is the organization event; each user stream also receives its corresponding removal.
+method DeclineOrganizationJoinRequests(
   struct {
-    request_id: RecordId;
+    request_ids: [RecordId];
   }
 ): enum {
   internal_error: InternalError;
@@ -143,10 +151,12 @@ method DeclineOrganizationJoinRequest(
     event: OrganizationJoinRequestsChanged;
   };
 
-  /// Join request not found.
+  /// Join requests not found.
   request_not_found_error: struct {
-    request_id: RecordId;
+    request_ids: [RecordId];
   };
+  /// Selection must contain distinct targets.
+  invalid_selection_error: struct {};
 
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;

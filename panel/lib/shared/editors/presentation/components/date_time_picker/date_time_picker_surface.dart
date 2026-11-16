@@ -60,7 +60,10 @@ class DateTimePickerSurface extends StatelessWidget {
               if (replacing)
                 Padding(
                   padding: EdgeInsets.all(context.spacing.space2),
-                  child: const Text("Choose one replacement value."),
+                  child: Text(
+                    "Choose one replacement value.",
+                    style: context.text.sentence,
+                  ),
                 ),
               if (includeDate)
                 DateTimeCalendar(
@@ -98,7 +101,12 @@ class DateTimePickerSurface extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     for (final direction in [-1, 1])
-                      IconButton(
+                      Button(
+                        face: ButtonFace.icon,
+                        icon: Icon(direction < 0 ? Icons.remove : Icons.add),
+                        label: direction < 0
+                            ? "Decrease time"
+                            : "Increase time",
                         tooltip: direction < 0
                             ? "Decrease time"
                             : "Increase time",
@@ -126,7 +134,6 @@ class DateTimePickerSurface extends StatelessWidget {
                                 }
                               }
                             : null,
-                        icon: Icon(direction < 0 ? Icons.remove : Icons.add),
                       ),
                   ],
                 ),

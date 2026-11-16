@@ -14,142 +14,40 @@ const createOrganizationSearchResultType = SearchResultType(
   label: "Create Organization",
 );
 
-/// Maintains a local search index of the supplied membership projection.
-/// Loading retains available results with stale markers, while provider errors
-/// remain visible beside those results. Navigation and creation are returned
-/// by separate commands as host effects; this source performs no mutation.
-final class OrganizationsSearchSource(
-  final ValueListenable<AsyncValue<List<skir.Organization>>> organizations,
-) implements SearchSource {
-  final _snapshotsController = BehaviorSubject<SearchSourceSnapshot>.seeded(
-    SearchSourceSnapshot.loading(),
-  );
+/// Searches the person's organizations by name, beside the command to create
+/// one more. An empty search lists them all. While the list loads again the
+/// known organizations stay listed, marked stale, and a failure shows beside
+/// them. Opening and creating are separate commands; this source performs no
+/// mutation.
+ListSearchSource<Object> organizationsSearchSource(
+  ValueListenable<AsyncValue<List<skir.Organization>>> organizations,
+) => ListSearchSource<Object>(
+  items: organizations,
+  type: organizationSearchResultType,
+  sectionId: "organizations",
+  title: "Organizations",
+  fixed: const [_CreateOrganization()],
+  listsWithoutQuery: true,
+  retainsStale: true,
+  idOf: (item) => switch (item) {
+    final skir.Organization organization =>
+      organization.organizationId.toSurrealQl(),
+    _ => createOrganizationSearchResultType.id,
+  },
+  typeOf: (item) => item is skir.Organization
+      ? organizationSearchResultType
+      : createOrganizationSearchResultType,
+  titleOf: (item) => switch (item) {
+    final skir.Organization organization => organization.name,
+    _ => "Create Organization",
+  },
+  termsOf: (item) => switch (item) {
+    final skir.Organization organization => [organization.name],
+    _ => ["Create Organization"],
+  },
+);
 
-  late final _searchRefresher = SearchRefresher(
-    [organizations],
-    search,
-    onChange: _updateIndex,
-  );
-
-  final _index = Searchlight.create(
-    schema: Schema({"name": TypedField(.string)}),
-  );
-
-  Map<String, skir.Organization> get orgs {
-    return {
-      for (final org in organizations.value.value ?? <skir.Organization>[])
-        org.organizationId.toSurrealQl(): org,
-    };
-  }
-
-  @override
-  Stream<SearchSourceSnapshot> get snapshots => _snapshotsController.stream;
-
-  @override
-  List<QuerySelectorDefinition> get selectors => const [];
-
-  @override
-  void initialize(SearchQueryContext context) {
-    _searchRefresher.initialize(context);
-    _updateIndex();
-
-    _index.insert({
-      "id": createOrganizationSearchResultType.id,
-      "name": createOrganizationSearchResultType.label,
-    });
-
-    search(context);
-  }
-
-  void _updateIndex() {
-    final organizations = orgs;
-    final toRemove = _index.externalIdsMap.values.toSet().difference(
-      organizations.keys.toSet(),
-    );
-    _index.removeMultiple(toRemove.toList());
-    _index.upsertMultiple(
-      organizations.entries
-          .map((e) => {"id": e.key, "name": e.value.name})
-          .toList(),
-    );
-  }
-
-  @override
-  void search(SearchQueryContext context) {
-    _searchRefresher.search(context);
-
-    final loading = this.organizations.value.isLoading;
-
-    final organizations = orgs;
-
-    SearchResult createSearchResult(SearchHit hit) {
-      if (hit.id == createOrganizationSearchResultType.id) {
-        return SearchResult(
-          id: hit.id,
-          type: createOrganizationSearchResultType,
-          title: createOrganizationSearchResultType.label,
-          payload: {},
-        );
-      }
-
-      if (organizations[hit.id] case final org?) {
-        return SearchResult(
-          id: org.organizationId.toSurrealQl(),
-          type: organizationSearchResultType,
-          payload: org,
-          title: org.name,
-          isStale: loading,
-        );
-      }
-
-      throw Exception("Unknown hit id: ${hit.id}");
-    }
-
-    final result = _index.search(term: context.normalizedQuery, limit: 10);
-    final hits = result.hits
-        .map(createSearchResult)
-        .map((r) => SearchNode.result(result: r))
-        .toList();
-
-    final errors = [
-      if (this.organizations.value case AsyncError(:final error))
-        SearchErrorSummary(
-          id: "organizations_search_error",
-          message: error.toString(),
-          severity: SearchErrorSeverity.error,
-          sourceLabel: "Organizations",
-        ),
-    ];
-
-    final nodes = [
-      if (hits.isNotEmpty)
-        SearchNode.section(
-          id: "organizations",
-          title: "Organizations",
-          children: hits,
-        ),
-    ];
-
-    _snapshotsController.add(
-      SearchSourceSnapshot(
-        status: errors.isNotEmpty
-            ? SearchSourceStatus.error
-            : (loading ? SearchSourceStatus.loading : SearchSourceStatus.ready),
-        nodes: nodes,
-        errorSummaries: errors,
-      ),
-    );
-  }
-
-  @override
-  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
-    // TODO: implement preview
-    throw UnimplementedError();
-  }
-
-  @override
-  void dispose() {
-    _searchRefresher.dispose();
-    _index.dispose();
-  }
+/// The command to create an organization, as a result beside them.
+final class _CreateOrganization {
+  const _CreateOrganization();
 }

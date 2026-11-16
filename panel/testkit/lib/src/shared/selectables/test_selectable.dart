@@ -21,6 +21,19 @@ class TestSelectableData extends _$TestSelectableData {
   ) => !mapEquals(previous, next);
 }
 
+/// The test items whose resource no longer holds them, as an item someone
+/// else deleted.
+@Riverpod(keepAlive: true)
+class TestSelectablesGone extends _$TestSelectablesGone {
+  @override
+  Set<String> build() => const {};
+
+  /// Makes the item [id] gone from its resource.
+  void remove(String id) {
+    state = {...state, id};
+  }
+}
+
 @riverpod
 skir.DataValue? testData(Ref ref, String id) =>
     ref.watch(testSelectableDataProvider)[id];
@@ -29,13 +42,15 @@ class TestSelectableIdentifier extends SelectableIdentifier {
   TestSelectableIdentifier({
     required this.id,
     this.color = Colors.redAccent,
-    this.onDelete,
+    this.noun = const SelectableNoun(one: "test item", many: "test items"),
   });
 
   @override
   final String id;
   final Color color;
-  final VoidCallback? onDelete;
+
+  /// The kind the inspector counts this item by.
+  final SelectableNoun noun;
 
   @override
   int get hashCode => id.hashCode;
@@ -49,6 +64,9 @@ class TestSelectableIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
+    if (ref.watch(testSelectablesGoneProvider).contains(id)) {
+      return AsyncError(SelectableNotFoundException(this), StackTrace.current);
+    }
     final data =
         ref.watch(testDataProvider(id)) ??
         skir.DataValue.createRecord(
@@ -97,7 +115,7 @@ class TestSelectableIdentifier extends SelectableIdentifier {
         id: this,
         data: data,
         color: color,
-        onDelete: onDelete,
+        noun: noun,
       ),
     );
   }
@@ -112,17 +130,19 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
     required this.id,
     required this.data,
     required this.color,
-    required this.onDelete,
+    required this.noun,
   });
 
   final ValueEditPersistence resource;
+
+  @override
+  final SelectableNoun noun;
 
   @override
   final TestSelectableIdentifier id;
 
   final skir.DataValue data;
   final Color color;
-  final VoidCallback? onDelete;
 
   late final EditorDocument document = EditorDocument(
     rootType: skir.TypeUse.wrapNamed(_testSelectableUse),
@@ -132,9 +152,7 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
   );
 
   @override
-  List<SelectionCapability> get capabilities => [
-    if (onDelete != null) DeleteSelectionCapability(onDelete: onDelete!),
-  ];
+  List<SelectionCapability> get capabilities => const [];
 
   SelectableIdentifier get targetId => id;
 

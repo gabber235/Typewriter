@@ -22,13 +22,13 @@ final class ChoiceDropdown extends StatelessWidget {
                 inputFieldController: controller,
                 selected: selected.value,
                 dropdownMenuEntries: const [
-                  DropdownMenuEntry(value: "alpha", label: "Alpha"),
-                  DropdownMenuEntry(
+                  MenuChoice(value: "alpha", label: "Alpha"),
+                  MenuChoice(
                     value: "unavailable",
                     label: "Unavailable",
                     enabled: false,
                   ),
-                  DropdownMenuEntry(value: "beta", label: "Beta"),
+                  MenuChoice(value: "beta", label: "Beta"),
                 ],
                 onSelected: (value) {
                   if (value != null) selected.value = value;

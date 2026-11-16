@@ -4,6 +4,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
+const unbindOne = "Unbind this service? It disconnects straight away.";
 const _unbindSubject = "cloud.to.user.ada.organization.acme.services.unbind";
 const _bindSubject = "cloud.to.user.ada.organization.acme.services.bind";
 
@@ -161,7 +162,7 @@ void main() {
     for (final label in ["Assigned Realm", "Message"]) {
       expect(panel.shows(label), isFalse, reason: "$label stays hidden");
     }
-    expect(panel.inspector.operations, ["Unbind"]);
+    expect(panel.inspector.operations, [unbindOne]);
 
     expect(panel.inspector.isChecked("Host a Realm"), isTrue);
     await panel.inspector.toggle("Host a Realm");
@@ -180,7 +181,7 @@ void main() {
 
     await panel.services.card("Discord service", "Discord Bridge").select();
 
-    expect(panel.inspector.operations, ["Unbind"]);
+    expect(panel.inspector.operations, [unbindOne]);
   });
 
   testWidgets("Unbind in the inspector removes the service", (tester) async {
@@ -196,7 +197,7 @@ void main() {
     );
     await panel.services.card("Discord service", "Discord Bridge").select();
 
-    await panel.inspector.runConfirmed("Unbind", question: "Unbind 1 item(s)?");
+    await panel.holdButton(unbindOne);
 
     await panel.eventually(
       () => expect(
@@ -221,10 +222,9 @@ void main() {
     );
     await panel.services.card("Discord service", "Discord Bridge").select();
 
-    await panel.inspector.runConfirmed("Unbind", question: "Unbind 1 item(s)?");
+    await panel.holdButton(unbindOne);
 
-    expect(panel.shows("Unbind errors"), isTrue);
-    expect(panel.shows("404: Service not found"), isTrue);
+    expect(panel.refusalOn(unbindOne), "Service not found");
     expect(panel.shows("Needs attention"), isTrue);
     expect(
       panel.container

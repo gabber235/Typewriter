@@ -50,10 +50,11 @@ class EmptyScreen extends HookConsumerWidget {
           ),
         SizedBox(height: small ? 12 : 24),
         if (buttonText != null)
-          FilledButton.icon(
-            label: Text(buttonText ?? ""),
-            onPressed: onPressed,
+          Button(
+            face: ButtonFace.filled,
             icon: const Icones(Fa6Solid.plus),
+            label: buttonText ?? "",
+            onPressed: onPressed,
           ),
         if (!small) const Spacer(),
       ],

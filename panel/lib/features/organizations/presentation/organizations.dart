@@ -21,8 +21,9 @@ class _OrganizationsSelector extends HookWidget {
 
     return SliverMainAxisGroup(
       slivers: [
-        SliverStaggerEntrance(
-          sliver: SliverToBoxAdapter(
+        SliverToBoxAdapter(
+          child: Enter(
+            token: MotionToken.loadIn,
             child: Text(
               "Select organization",
               style: Theme.of(context).textTheme.headlineMedium,
@@ -30,8 +31,9 @@ class _OrganizationsSelector extends HookWidget {
           ),
         ),
         spacer(context),
-        SliverStaggerEntrance(
-          sliver: SliverToBoxAdapter(
+        SliverToBoxAdapter(
+          child: Enter(
+            token: MotionToken.loadIn,
             child: EditorTextField(
               decoration: const InputDecoration(
                 hintText: "Search Organization",
@@ -78,13 +80,26 @@ class _OrganizationListTile extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: context.shapes.mediumBorderRadius,
         ),
-        child: InkWell(
-          onTap: () => _openOrganization(context),
+        // The row is the stop and Enter opens the organization.
+        child: RowStop(
           borderRadius: context.shapes.mediumBorderRadius,
-          child: ListTile(
-            leading: OrganizationLogo(logoUrl: organization.logoUrl, size: 40),
-            title: Text(organization.name.formatted),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+          label: organization.name.formatted,
+          onActivate: () => _openOrganization(context),
+          child: ExcludeFocus(
+            excluding: RowEntryScope.maybeOf(context) != null,
+            child: Button(
+              face: ButtonFace.bare,
+              label: "",
+              onPressed: () => _openOrganization(context),
+              child: PanelRow(
+                leading: OrganizationLogo(
+                  logoUrl: organization.logoUrl,
+                  size: 40,
+                ),
+                title: Text(organization.name.formatted),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+              ),
+            ),
           ),
         ),
       ),

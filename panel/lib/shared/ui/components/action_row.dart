@@ -178,93 +178,21 @@ class _RenderActionRowLayout extends RenderBox
   }
 }
 
-class _ActionShortcutButton extends HookConsumerWidget {
+class _ActionShortcutButton extends StatelessWidget {
   const _ActionShortcutButton({required this.action, super.key});
 
   final ActionShortcut action;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller = useLoadingButtonController();
-    useListenable(controller);
-    useEffect(() {
-      final invoke = action.onInvoke;
-      controller.bind(
-        onPressed: invoke == null ? null : () => invoke(ref),
-        onError: (error) {
-          if (!context.mounted) return;
-          if (ScaffoldMessenger.maybeOf(context) != null) {
-            showErrorSnackBar(context, error);
-          }
-        },
-      );
-      return null;
-    }, [controller, action]);
-    final loading = controller.isLoading;
-    final hasInvoke = action.canInvoke && !loading;
-    final content = Row(
-      mainAxisSize: MainAxisSize.min,
-      spacing: context.spacing.space2,
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        if (loading)
-          const SizedBox.square(
-            dimension: 12,
-            child: CircularProgressIndicator(
-              semanticsLabel: "Loading",
-              strokeWidth: 2,
-            ),
-          )
-        else if (action.icon != null)
-          action.icon!,
-        Flexible(child: Text(action.label, overflow: TextOverflow.ellipsis)),
-        RotatingShortcuts(
-          shortcuts: action.shortcuts,
-          size: 9,
-          interval: 5.seconds,
-        ),
-      ],
-    );
-
-    final pill = AnimatedOpacity(
-      duration: 150.ms,
-      opacity: loading ? 0.7 : 1.0,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: DefaultTextStyle(
-          style: Theme.of(context).textTheme.labelSmall!.copyWith(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 12,
-          ),
-          child: IconTheme(
-            data: IconThemeData(
-              size: 12,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            child: content,
-          ),
-        ),
-      ),
-    );
-
-    if (!hasInvoke) {
-      return Tooltip(message: action.description, child: pill);
-    }
-
-    return Material(
-      shape: const StadiumBorder(),
-      child: Tooltip(
-        message: action.description,
-        child: Semantics(
-          button: true,
-          child: InkWell(
-            customBorder: const StadiumBorder(),
-            onTap: controller.handlePress,
-            child: pill,
-          ),
-        ),
-      ),
+  Widget build(BuildContext context) {
+    // The pill presses the command through CommandRuns, so it shares busy,
+    // refusal and jam with the command's key.
+    return CommandButton(
+      command: action,
+      face: ButtonFace.quiet,
+      icon: action.icon,
+      label: action.label,
+      rotateShortcuts: true,
     );
   }
 }

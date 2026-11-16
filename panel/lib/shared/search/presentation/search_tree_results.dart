@@ -7,16 +7,25 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// read from and written to [SearchController], while row rendering is
 /// delegated by result type identifier through [rowRenderers]. Empty states
 /// replace the scroll view only when the projected row count is zero.
+///
+/// With a [selection], the results are a [SelectionSurface] over it: each
+/// row is a [Selector] of its [SearchResultSelectable], so a surface that
+/// chooses several values, such as a list picker, takes every selection
+/// gesture the rest of the panel knows.
 class SearchTreeResults extends HookConsumerWidget {
   const SearchTreeResults({
     required this.rowRenderers,
     this.empty,
     this.loading,
     this.shrinkWrap = false,
+    this.selection,
     super.key,
   });
 
   final Map<String, SearchResultRowBuilder> rowRenderers;
+
+  /// The values the results choose, or null when a result opens on its own.
+  final SurfaceSelection? selection;
   final Widget? empty;
   final Widget? loading;
   final bool shrinkWrap;
@@ -51,7 +60,7 @@ class SearchTreeResults extends HookConsumerWidget {
       };
     }
 
-    return ClipPath(
+    final list = ClipPath(
       clipper: VerticalClipper(additionalWidth: 500),
       child: CustomScrollView(
         shrinkWrap: shrinkWrap,
@@ -72,6 +81,17 @@ class SearchTreeResults extends HookConsumerWidget {
           SliverToBoxAdapter(child: SizedBox(height: context.spacing.space2)),
         ],
       ),
+    );
+    final owned = selection;
+    if (owned == null) return list;
+    return SelectionSurface(
+      selection: owned,
+      every: [
+        for (final node in snapshot.nodes.walk())
+          if (node case SearchResultNode(:final result))
+            SearchResultSelectable(result),
+      ],
+      child: list,
     );
   }
 }
@@ -168,26 +188,42 @@ class SearchTreeRowWidget extends ConsumerWidget {
       final SearchTreeResultRow resultRow => _SearchTreeResultRow(
         row: resultRow,
         rowRenderers: rowRenderers,
-        vsync: vsync,
       ),
     };
   }
 }
 
+/// The focus stops of the result rows below [results], in visible order: one
+/// per row, its row's control or selectable.
+List<FocusNode> searchResultStops(FocusNode results) => [
+  for (final node in results.traversalDescendants)
+    if (node.ancestors.any((ancestor) => ancestor is _ResultRowFocusNode)) node,
+];
+
+/// Marks the subtree of one result row, so [searchResultStops] tells its
+/// stop apart from section headers.
+final class _ResultRowFocusNode extends FocusNode {
+  _ResultRowFocusNode()
+    : super(
+        debugLabel: "Search result row",
+        canRequestFocus: false,
+        skipTraversal: true,
+      );
+}
+
 class _SearchTreeResultRow extends HookConsumerWidget {
-  const _SearchTreeResultRow({
-    required this.row,
-    required this.rowRenderers,
-    this.vsync,
-  });
+  const _SearchTreeResultRow({required this.row, required this.rowRenderers});
 
   final SearchTreeResultRow row;
   final Map<String, SearchResultRowBuilder> rowRenderers;
-  final TickerProvider? vsync;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final focused = useState(false);
+    final rowFocus = useMemoized(_ResultRowFocusNode.new);
+    useEffect(() => rowFocus.dispose, [rowFocus]);
+    final selectorFocus = useFocusNode(debugLabel: "Search result");
+    final owned = SelectionSurface.maybeOf(context)?.selection;
     final controller = ref.watch(searchProvider)!;
     final result = row.result;
     final activator = searchResultShortcutActivator(row.shortcutNumber);
@@ -195,32 +231,44 @@ class _SearchTreeResultRow extends HookConsumerWidget {
     final commands = controller.commandsFor(result);
     final commandState = controller.commandState;
     final commandsBusy = commandState is SearchCommandRunning;
-    final commandResults = switch (commandState) {
+    final commandResult = switch (commandState) {
       SearchCommandIdle() => null,
-      SearchCommandRunning(:final resultIds) => resultIds,
-      SearchCommandCompleted(:final resultIds) => resultIds,
-      SearchCommandFailed(:final resultIds) => resultIds,
+      SearchCommandRunning(:final resultId) => resultId,
+      SearchCommandCompleted(:final resultId) => resultId,
+      SearchCommandFailed(:final resultId) => resultId,
     };
-    final commandConcernsThis = commandResults?.contains(result.id) ?? false;
+    final commandConcernsThis = commandResult == result.id;
 
     final rowContext = SearchResultRowContext(
       result: result,
-      selected: controller.isSelected(result.id),
-      focused: focused.value || controller.currentPreview?.id == result.id,
+      selected: false,
+      focused: focused.value,
       loading: commandsBusy && commandConcernsThis,
-      onTap: () {
-        if (controller.selectionMode == .single) {
-          controller.activate(result);
-          return;
-        }
-        controller.toggleSelected(result.id);
-      },
+      onTap: controller.isBusy ? null : () => controller.activate(result),
       shortcutActivator: activator,
     );
 
-    final child =
-        rowRenderers[result.type.rowRendererId]?.call(rowContext) ??
+    Widget render(SearchResultRowContext context) =>
+        rowRenderers[result.type.rowRendererId]?.call(context) ??
         MissingSearchResultRendererRow(result: result);
+
+    // A row of a surface's own selection is its selector: the selector
+    // takes the clicks and keys, and the row only shows its state.
+    final child = owned == null
+        ? render(rowContext)
+        : Selector(
+            selectableId: SearchResultSelectable(result),
+            focusNode: selectorFocus,
+            builder: (selected, focused, hovered) => SelectorCheck(
+              child: render(
+                rowContext.copyWith(
+                  selected: selected,
+                  focused: focused,
+                  onTap: null,
+                ),
+              ),
+            ),
+          );
 
     void execute(SearchCommandId commandId) {
       controller.executeCommand(commandId, resultId: result.id);
@@ -253,104 +301,101 @@ class _SearchTreeResultRow extends HookConsumerWidget {
       return null;
     }
 
-    final resultCommandIndex =
-        commandResults?.indexed
-            .firstWhereOrNull((element) => element.$2 == result.id)
-            ?.$1 ??
-        -1;
+    // A row whose command runs is a busy control, held pressed in; a failed
+    // command jams it once per failure.
+    final busy = commandConcernsThis && commandsBusy;
+    final failed = commandConcernsThis && commandState is SearchCommandFailed;
+    final failures =
+        useValueChanged<bool, int>(
+          failed,
+          (wasFailed, count) =>
+              failed && !wasFailed ? (count ?? 0) + 1 : count ?? 0,
+        ) ??
+        0;
+    final press = resolveMotion(context, MotionToken.press);
+    final sink = useMotion(MotionToken.press, busy ? 1 : 0);
 
-    final delay = resultCommandIndex < 0
-        ? 0.ms
-        : 50.ms * (resultCommandIndex + 1);
-
-    final errorAnimation = useForwardAnimation(
-      play: commandConcernsThis && commandState is SearchCommandFailed,
-      delay: delay,
-      vsync: vsync,
-    );
-
-    final runningAnimation = useForwardAnimation(
-      play: commandConcernsThis && commandsBusy,
-      delay: delay,
-      vsync: vsync,
-    );
-
-    final scale = TweenSequence([
-      TweenSequenceItem(
-        tween: Tween(begin: 1.0, end: 0.95).curved(Curves.ease),
-        weight: 1.0,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 0.95, end: 1.02).curved(Curves.ease),
-        weight: 2.0,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.02, end: 1.0).curved(Curves.ease),
-        weight: 1.0,
-      ),
-    ]).animate(runningAnimation);
-
-    return Padding(
-      padding: EdgeInsets.only(
-        left: context.spacing.space3 + row.depth * context.spacing.space4,
-      ),
-      child: ScaleTransition(
-        scale: scale,
-        child: ContextMenuRegion(
-          items: [
-            for (final resolved in commands)
-              MenuItem(
-                label: resolved.command.presentation.label,
-                icon: ElasticSwitcher(child: commandIcon(resolved.command)),
-                color: resolved.command.presentation.color,
-                onPressed:
-                    commandsBusy || resolved.state is! SearchCommandEnabled
-                    ? null
-                    : () => execute(resolved.command.id),
-                shortcuts: [?resolved.command.presentation.shortcut],
-              ),
-          ],
-          child: ManagedActionSet(
-            shortcuts: [
-              ActionShortcut(
-                id: "search_tree_results_activate",
-                label: "",
-                description: "",
-                activators: [
-                  SingleActivator(LogicalKeyboardKey.enter),
-                  SingleActivator(LogicalKeyboardKey.numpadEnter),
-                ],
-                priority: 0,
-                show: false,
-                onInvoke:
-                    controller.isBusy ||
-                        controller.activationState(result)
-                            is! SearchActivationEnabled
-                    ? null
-                    : (_) => controller.activate(result),
-              ),
+    return Jam(
+      failures: failures,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: context.spacing.space3 + row.depth * context.spacing.space4,
+        ),
+        child: Transform.scale(
+          scale: press.travels ? 1 - (1 - press.landing.scale) * sink.value : 1,
+          child: ContextMenuRegion(
+            items: [
+              for (final resolved in commands)
+                MenuItem(
+                  label: resolved.command.presentation.label,
+                  icon: ElasticSwitcher(child: commandIcon(resolved.command)),
+                  color: resolved.command.presentation.color,
+                  onPressed:
+                      commandsBusy || resolved.state is! SearchCommandEnabled
+                      ? null
+                      : () => execute(resolved.command.id),
+                  shortcuts: [?resolved.command.presentation.shortcut],
+                ),
             ],
-            child: Focus(
-              skipTraversal: true,
-              descendantsAreTraversable: true,
-              onFocusChange: (hasFocus) {
-                focused.value = hasFocus;
-                if (!hasFocus) return;
-                Scrollable.ensureVisible(
-                  context,
-                  alignment: 0.5,
-                  alignmentPolicy: .explicit,
-                  duration: 300.ms,
-                  curve: Curves.easeOutCubic,
-                );
-                controller.preview(result);
-              },
-              child: child,
+            child: ManagedActionSet(
+              shortcuts: [
+                // A command's key acts on this result while it has focus.
+                for (final resolved in commands)
+                  ActionShortcut(
+                    id: "search_result_${result.id}_${resolved.command.id.value}",
+                    label: resolved.command.presentation.label,
+                    icon: ElasticSwitcher(child: commandIcon(resolved.command)),
+                    description: "",
+                    activators: [?resolved.command.presentation.shortcut],
+                    priority: resolved.command.presentation.priority,
+                    run: commandsBusy || resolved.state is! SearchCommandEnabled
+                        ? null
+                        : ActionRun.press((_) => execute(resolved.command.id)),
+                  ),
+                ActionShortcut(
+                  id: "search_tree_results_activate",
+                  label: "",
+                  description: "",
+                  activators: [
+                    SingleActivator(LogicalKeyboardKey.enter),
+                    SingleActivator(LogicalKeyboardKey.numpadEnter),
+                  ],
+                  priority: 0,
+                  show: false,
+                  run:
+                      owned != null ||
+                          controller.isBusy ||
+                          controller.activationState(result)
+                              is! SearchActivationEnabled
+                      ? null
+                      : ActionRun.press((_) => controller.activate(result)),
+                ),
+              ],
+              child: Focus(
+                focusNode: rowFocus,
+                skipTraversal: true,
+                canRequestFocus: false,
+                descendantsAreTraversable: true,
+                onFocusChange: (hasFocus) {
+                  focused.value = hasFocus;
+                  if (!hasFocus) return;
+                  final move = motionTimeline(context, MotionToken.focusMove);
+                  Scrollable.ensureVisible(
+                    context,
+                    alignment: 0.5,
+                    alignmentPolicy: .explicit,
+                    duration: move.duration,
+                    curve: move.curve,
+                  );
+                  controller.preview(result);
+                },
+                child: child,
+              ),
             ),
           ),
         ),
       ),
-    ).animate(controller: errorAnimation, autoPlay: false).shakeX();
+    );
   }
 }
 

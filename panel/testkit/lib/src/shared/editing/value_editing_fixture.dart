@@ -1,7 +1,7 @@
-import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/src/core/test_lifetime.dart";
 
 typedef EditorCommitter = Future<TypedMutationResult> Function(
   EditorCommit commit,
@@ -303,7 +303,7 @@ extension HeldEditing on ValueEditingRegistration {
   /// ends, the way an open editor keeps its resource.
   ValueEditing hold(ScopedWorkSession work) {
     final editing = acquire(work);
-    addTearDown(
+    endWithTest(
       work.lease(WorkDriverId(domain: "value", scope: persistence.key)).release,
     );
     return editing;

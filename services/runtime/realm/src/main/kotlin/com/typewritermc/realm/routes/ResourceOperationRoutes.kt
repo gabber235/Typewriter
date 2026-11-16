@@ -189,7 +189,6 @@ internal class ResourceOperationRoutes(
                         invocationId = request.invocation.invocationId,
                         inputRevision = request.inputRevision,
                         edit = result.edit,
-                        confirmation = result.confirmation,
                         selection =
                             result.selection?.let(OperationSelectionEffect::ReplaceWrapper)
                                 ?: OperationSelectionEffect.UNCHANGED,

@@ -33,9 +33,10 @@ class DateTimeDayCell extends StatelessWidget {
       label: date.semanticCalendarLabel,
       onTap: enabled ? () => onPressed(date) : null,
       child: ExcludeSemantics(
-        child: InkWell(
-          onTap: enabled ? () => onPressed(date) : null,
-          borderRadius: BorderRadius.circular(20),
+        child: Button(
+          face: ButtonFace.bare,
+          label: date.semanticCalendarLabel,
+          onPressed: enabled ? () => onPressed(date) : null,
           child: Container(
             height: 30,
             alignment: Alignment.center,

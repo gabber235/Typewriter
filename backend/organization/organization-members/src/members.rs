@@ -1,16 +1,17 @@
 //! Organization membership reads and mutations.
 //!
-//! Membership state is owned by the organization database projection. Role updates replace the
-//! assignable role selection for every selected member while preserving protected roles. Removal
-//! enforces the founder invariant. Successful mutations increment the organization member
+//! Membership state is owned by the organization database projection. Role updates replace each
+//! selected member's assignable roles with that member's own selection while preserving protected
+//! roles. Removal
+//! of a selection enforces the founder invariant. Successful mutations increment the organization member
 //! sequence and publish the affected organization and user facts after the database transaction
 //! succeeds.
 
 use otel_wasi::ResultWithSlug;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use wasmcloud_utils::database::organization::projections::OrganizationMemberProjection;
 use wasmcloud_utils::{
-    database::{RecordId, TransactionOutcome, transaction_query},
+    database::{RecordId, transaction_query},
     publication::{
         CapturedOnly, CommittedChange, MembershipFact, PublicationEffect, PublicationExecutor,
     },
@@ -23,46 +24,88 @@ use wasmcloud_utils::{
     skir_variant,
 };
 
+/// One removed member and the sequence of their organization list after the removal.
 #[derive(Debug, Deserialize)]
 struct RemovedMemberRecord {
-    members_sequence: i64,
+    user: RecordId,
     organizations_sequence: i64,
 }
 
-impl RemovedMemberRecord {
-    fn into_committed_change(
-        self,
-        organization: RecordId,
-        user: RecordId,
-    ) -> Result<CommittedChange<RemoveOrganizationMemberResponse>, otel_wasi::Error> {
-        let user_id = user.clone().into();
-        let member_event = OrganizationMembersChanged {
-            sequence: self.members_sequence,
-            changes: vec![OrganizationMembersChange::Remove(Box::new(user_id))],
-            ..Default::default()
-        };
-        let organization_id = organization.clone().into();
-        let organization_event = UserOrganizationsChanged {
-            sequence: self.organizations_sequence,
-            changes: vec![UserOrganizationsChange::Remove(Box::new(organization_id))],
-            ..Default::default()
-        };
-        Ok(CommittedChange::new(
-            skir_variant!(RemoveOrganizationMemberResponse::Success {
-                event: member_event.clone(),
-            }),
-            [
-                PublicationEffect::CapturedMembership(MembershipFact::Members {
-                    organization: organization.key.raw_identity()?.to_owned(),
-                    event: member_event,
-                }),
-                PublicationEffect::CapturedMembership(MembershipFact::UserOrganizations {
-                    user: user.key.raw_identity()?.to_owned(),
-                    event: organization_event,
-                }),
-            ],
-        ))
+#[derive(Debug, Deserialize)]
+#[serde(tag = "outcome", rename_all = "kebab-case")]
+enum MemberRemovalOutcome {
+    Removed {
+        removed: Vec<RemovedMemberRecord>,
+        members_sequence: i64,
+    },
+    UserNotMemberError {
+        user_ids: Vec<RecordId>,
+    },
+    FounderCannotBeRemovedError {
+        user_ids: Vec<RecordId>,
+    },
+    InvalidSelectionError,
+}
+
+impl MemberRemovalOutcome {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Removed { .. } => "removed",
+            Self::UserNotMemberError { .. } => "user-not-member-error",
+            Self::FounderCannotBeRemovedError { .. } => "founder-cannot-be-removed-error",
+            Self::InvalidSelectionError => "invalid-selection-error",
+        }
     }
+}
+
+/// The response and publications of a committed removal: one organization member change removing
+/// every member, and one organization list change for each removed user.
+fn removal_change(
+    organization: RecordId,
+    removed: Vec<RemovedMemberRecord>,
+    members_sequence: i64,
+) -> Result<CommittedChange<RemoveOrganizationMembersResponse>, otel_wasi::Error> {
+    let member_event = OrganizationMembersChanged {
+        sequence: members_sequence,
+        changes: removed
+            .iter()
+            .map(|member| OrganizationMembersChange::Remove(Box::new(member.user.clone().into())))
+            .collect(),
+        ..Default::default()
+    };
+    let mut effects = vec![PublicationEffect::CapturedMembership(
+        MembershipFact::Members {
+            organization: organization.key.raw_identity()?.to_owned(),
+            event: member_event.clone(),
+        },
+    )];
+    for member in removed {
+        effects.push(PublicationEffect::CapturedMembership(
+            MembershipFact::UserOrganizations {
+                user: member.user.key.raw_identity()?.to_owned(),
+                event: UserOrganizationsChanged {
+                    sequence: member.organizations_sequence,
+                    changes: vec![UserOrganizationsChange::Remove(Box::new(
+                        organization.clone().into(),
+                    ))],
+                    ..Default::default()
+                },
+            },
+        ));
+    }
+    Ok(CommittedChange::new(
+        skir_variant!(RemoveOrganizationMembersResponse::Success {
+            event: member_event,
+        }),
+        effects,
+    ))
+}
+
+/// One member's requested assignable roles, as the database function reads it.
+#[derive(Debug, Serialize)]
+struct RoleAssignmentRecord {
+    user: RecordId,
+    roles: Vec<RecordId>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -126,7 +169,7 @@ pub async fn handle_watch(
     .await
 }
 
-/// Applies one role selection to all requested members as one database transaction.
+/// Applies each requested member's own role selection as one database transaction.
 ///
 /// The database function rejects an empty or duplicated selection, unknown users or roles,
 /// protected roles, roleless results, and a result that would leave the organization without a
@@ -139,41 +182,45 @@ pub async fn handle_update(
 ) -> Result<UpdateOrganizationMemberRolesResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
     let org_id = scope.organization.as_str();
-    wasmcloud_utils::validate_record_ids!(
-        UpdateOrganizationMemberRolesResponse,
-        request.user_ids,
-        "user"
-    );
-    wasmcloud_utils::validate_record_ids!(
-        UpdateOrganizationMemberRolesResponse,
-        request.role_ids,
-        "organization_role"
-    );
-    let user_ids = request.user_ids.clone();
-    let role_ids = request.role_ids.clone();
+    for assignment in &request.assignments {
+        wasmcloud_utils::validate_record_ids!(
+            UpdateOrganizationMemberRolesResponse,
+            assignment.user_id,
+            "user"
+        );
+        wasmcloud_utils::validate_record_ids!(
+            UpdateOrganizationMemberRolesResponse,
+            assignment.role_ids,
+            "organization_role"
+        );
+    }
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string(),
-        "member.result_count" = user_ids.len() as i64,
-        "role.result_count" = role_ids.len() as i64
+        "member.result_count" = request.assignments.len() as i64
     );
-    let user_record_ids = user_ids.as_slice().into_surreal_record_ids();
     let organization_id = RecordId::new("organization", org_id);
-    let role_record_ids = role_ids.as_slice().into_surreal_record_ids();
+    let assignments: Vec<RoleAssignmentRecord> = request
+        .assignments
+        .iter()
+        .map(|assignment| RoleAssignmentRecord {
+            user: RecordId::from(&assignment.user_id),
+            roles: assignment.role_ids.as_slice().into_surreal_record_ids(),
+        })
+        .collect();
 
     let result = transaction_query!(
         MemberUpdateOutcome,
         r#"
         BEGIN TRANSACTION;
 
-        RETURN fn::organization::members::update_roles($org, $users, $roles);
+        RETURN fn::organization::members::update_roles($org, $assignments);
 
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("users", user_record_ids)
     .bind("org", organization_id)
-    .bind("roles", role_record_ids)
+    .bind("assignments", assignments)
     .execute()
     .await
     .error_with_slug("member-update-query-failed")?
@@ -234,71 +281,78 @@ pub async fn handle_update(
     .await
 }
 
-/// Removes one member when doing so preserves the organization founder invariant.
+/// Removes every selected member in one transaction when doing so preserves the founder invariant.
 ///
-/// The database transaction returns a domain error when the user is not a member or is the
-/// protected founder. A successful removal advances both the
-/// organization member sequence and the user's organization sequence, then publishes both changes.
+/// The transaction rejects the complete selection when it is empty or repeats a user, when a user
+/// is not a member, or when it holds the original founder or every remaining founder role holder.
+/// A successful removal advances the organization member sequence once and each removed user's
+/// organization sequence, then publishes every change.
 #[tracing::instrument(skip_all)]
 pub async fn handle_remove(
     scope: wasmcloud_utils::transport::OrganizationActorScope,
-    request: RemoveOrganizationMemberRequest,
-) -> Result<RemoveOrganizationMemberResponse, otel_wasi::Error> {
+    request: RemoveOrganizationMembersRequest,
+) -> Result<RemoveOrganizationMembersResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
     let org_id = scope.organization.as_str();
     wasmcloud_utils::validate_record_ids!(
-        RemoveOrganizationMemberResponse,
-        request.user_id,
+        RemoveOrganizationMembersResponse,
+        request.user_ids,
         "user"
     );
-    let user_id = request.user_id.clone();
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string(),
-        "user.id" = user_id.key.to_string()
+        "member.result_count" = request.user_ids.len() as i64
     );
-    let user_record_id = RecordId::from(&user_id);
+    let user_ids = request.user_ids.as_slice().into_surreal_record_ids();
     let organization_id = RecordId::new("organization", org_id);
 
     let result = transaction_query!(
-        RemovedMemberRecord,
+        MemberRemovalOutcome,
         r#"
         BEGIN TRANSACTION;
         RETURN {
-            LET $founder = $org.founder;
-            IF $founder = $user {
-                THROW 'founder-cannot-be-removed-error'
+            IF array::is_empty($users) OR array::len(array::distinct($users)) != array::len($users) {
+                RETURN { outcome: 'invalid-selection-error' }
             };
 
-            LET $member = SELECT * FROM member_of WHERE in = $user AND out = $org;
-
-            IF array::len($member) = 0 {
-                THROW 'user-not-member-error'
+            LET $members = SELECT * FROM member_of WHERE in IN $users AND out = $org;
+            LET $missing = array::complement($users, $members.in);
+            IF array::len($missing) > 0 {
+                RETURN { outcome: 'user-not-member-error', user_ids: $missing }
             };
 
-            LET $is_founder = fn::organization::roles::has_named_role($member[0].roles, 'founder');
-            LET $other_founders = SELECT * FROM member_of WHERE out = $org AND id != $member[0].id AND fn::organization::roles::has_named_role(roles, 'founder');
-
-            IF $is_founder AND array::len($other_founders) = 0 {
-                THROW 'founder-cannot-be-removed-error'
+            IF $org.founder IN $users {
+                RETURN { outcome: 'founder-cannot-be-removed-error', user_ids: [$org.founder] }
             };
 
-            DELETE $member[0].id;
+            LET $founders = $members.filter(|$member| fn::organization::roles::has_named_role($member.roles, 'founder'));
+            LET $other_founders = SELECT VALUE id FROM member_of
+                WHERE out = $org
+                    AND in NOT IN $users
+                    AND fn::organization::roles::has_named_role(roles, 'founder');
+            IF array::len($founders) > 0 AND array::is_empty($other_founders) {
+                RETURN { outcome: 'founder-cannot-be-removed-error', user_ids: $founders.in }
+            };
+
+            FOR $member IN $members {
+                DELETE $member.id;
+                UPDATE ONLY $member.in SET organizations_sequence += 1;
+            };
 
             LET $members_sequence = UPDATE ONLY $org SET members_sequence += 1
                 RETURN VALUE members_sequence;
-            LET $organizations_sequence = UPDATE ONLY $user SET organizations_sequence += 1
-                RETURN VALUE organizations_sequence;
 
             RETURN {
-                members_sequence: $members_sequence,
-                organizations_sequence: $organizations_sequence
+                outcome: 'removed',
+                removed: (SELECT id AS user, organizations_sequence FROM $users),
+                members_sequence: $members_sequence
             };
         };
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("user", user_record_id.clone())
+    .bind("users", user_ids)
     .bind("org", organization_id.clone())
     .execute()
     .await
@@ -306,17 +360,24 @@ pub async fn handle_remove(
     .decode()
     .error_with_slug("member-remove-result-parse-failed")?;
 
-    if let TransactionOutcome::Rejected(error) = &result {
-        otel_wasi::main_attribute!("member.outcome" = error.message().to_owned());
-    }
-    let deleted = wasmcloud_utils::skir_domain_result!(RemoveOrganizationMemberResponse, result,
-        "user-not-member-error" => { user_id: user_id.clone() },
-        "founder-cannot-be-removed-error" => { user_id: user_id.clone() }
+    let result = wasmcloud_utils::skir_domain_result!(RemoveOrganizationMembersResponse, result);
+    otel_wasi::main_attribute!("member.outcome" = result.as_str());
+    let (removed, members_sequence) = skir_transaction_outcome!(
+        RemoveOrganizationMembersResponse,
+        result,
+        success MemberRemovalOutcome::Removed { removed, members_sequence } => (removed, members_sequence),
+        errors {
+            MemberRemovalOutcome::UserNotMemberError { user_ids } => {
+                user_ids: user_ids.into_skir_record_ids()
+            },
+            MemberRemovalOutcome::FounderCannotBeRemovedError { user_ids } => {
+                user_ids: user_ids.into_skir_record_ids()
+            },
+            MemberRemovalOutcome::InvalidSelectionError => {},
+        }
     );
 
-    otel_wasi::main_attribute!("member.outcome" = "removed");
-    deleted
-        .into_committed_change(organization_id, user_record_id)?
+    removal_change(organization_id, removed, members_sequence)?
         .publish_with(&PublicationExecutor {
             refresher: CapturedOnly,
         })

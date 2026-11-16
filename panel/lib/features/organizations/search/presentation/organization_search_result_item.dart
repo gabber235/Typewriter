@@ -54,7 +54,7 @@ class OrganizationSearchResultItem extends StatelessWidget {
       selected: selected,
       focused: focused,
       onTap: onTap,
-      content: SearchResultTitle(title: name),
+      content: SearchResultTitle(title: name, working: loading),
       suffix: SearchResultSuffix(
         label: "organization",
         shortcutActivator: shortcutActivator,
@@ -91,13 +91,14 @@ class CreateOrganizationSearchResultItem extends StatelessWidget {
         color: color,
         onColor: color.on(context),
         icon: const Icon(Icons.add_rounded),
-        focused: focused,
-        loading: loading,
       ),
       selected: selected,
       focused: focused,
       onTap: onTap,
-      content: const SearchResultTitle(title: "Create Organization"),
+      content: SearchResultTitle(
+        title: "Create Organization",
+        working: loading,
+      ),
       suffix: SearchResultSuffix(
         label: "command",
         shortcutActivator: shortcutActivator,

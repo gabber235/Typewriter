@@ -50,14 +50,13 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
     final summaries = snapshot.errorSummaries;
 
     final Widget child;
     if (summaries.isEmpty) {
       child = Text(
         "Search failed",
-        style: textTheme.bodyMedium?.copyWith(color: colorScheme.error),
+        style: textTheme.bodyMedium?.copyWith(color: context.colors.dangerText),
         textAlign: TextAlign.center,
       );
     } else {

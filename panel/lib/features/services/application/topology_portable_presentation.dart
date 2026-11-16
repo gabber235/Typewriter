@@ -422,14 +422,14 @@ BoundPresentationBinding _configurationToggle({
   required String field,
   required skir.DataValue enabled,
   required skir.TypeDefinitionId disabled,
-}) => BoundPresentationBinding(
+}) => BoundPresentationBinding.owned(
   id: id,
   use: _portableBooleanType,
   owner: owner,
   control: owner is EditingControlOwner
       ? (owner as EditingControlOwner).bindControl()
       : null,
-  read: (_) {
+  read: (owner) {
     final current = owner.value(editorRootPath.field(field)).valueOrNull;
     return skir.DataValue.wrapBoolean(
       current != null && _actualType(current) == _actualType(enabled),
@@ -466,14 +466,14 @@ BoundPresentationBinding _configurationString({
   required skir.ExpressionBindingId id,
   required EditOwner owner,
   required skir.ValuePath path,
-}) => BoundPresentationBinding(
+}) => BoundPresentationBinding.owned(
   id: id,
   use: _portableTextType,
   owner: owner,
   control: owner is EditingControlOwner
       ? (owner as EditingControlOwner).bindControl()
       : null,
-  read: (_) => skir.DataValue.wrapStringValue(
+  read: (owner) => skir.DataValue.wrapStringValue(
     owner.value(path).valueOrNull?.authoredString ?? "",
   ),
   write: (suffix, value) => _writeBoundString(id, owner, path, suffix, value),

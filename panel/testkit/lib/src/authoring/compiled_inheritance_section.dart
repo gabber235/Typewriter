@@ -38,7 +38,7 @@ final class CompiledInheritanceSection {
     of: finder,
     matching: find.byWidgetPredicate(
       (widget) =>
-          widget is IconButton &&
+          widget is Button &&
           (widget.tooltip == "Expand" || widget.tooltip == "Collapse"),
     ),
   );

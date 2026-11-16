@@ -86,20 +86,44 @@ final class AuthoringSelectableResource
   @override
   String get name => appearance.label;
 
+  @override
+  SelectableNoun get noun =>
+      const SelectableNoun(one: "resource", many: "resources");
+
   Color get color => appearance.accentColor;
 
   @override
   List<SelectionCapability> get capabilities => const [];
 
-  /// The side inspector knows the routed resource, so `active_resource` and
-  /// the routed member state reach it as they reach the main surface.
+  /// Resources of one complete type in one Realm edit together.
+  @override
+  List<SharedInspectionSurface> get sharedInspectionSurfaces =>
+      switch (resource.content.configuration) {
+        skir.TypeSelection_completeWrapper(:final value) => [
+          _AuthoredResourceSurface(this, value),
+        ],
+        _ => const [],
+      };
+
   @override
   InspectionContent buildInspection(InspectionBindingScope owners) =>
+      _inspection(const []);
+
+  /// The inspection of this resource edited together with [editedWith].
+  ///
+  /// The side inspector knows the routed resource, so `active_resource` and
+  /// the routed member state reach it as they reach the main surface.
+  InspectionContent _inspection(List<skir.ResourceId> editedWith) =>
       InspectionContent(
         body: Consumer(
-          key: ValueKey((id.resourceId, skir.PresentationRole.inspector)),
+          key: ValueKey((
+            id.resourceId,
+            editedWith.map((resource) => resource.value).join("\n"),
+            skir.PresentationRole.inspector,
+          )),
           builder: (context, ref, _) => AuthoredResourceInspection(
             resource: id.resourceId,
+            editedWith: editedWith,
             workspace: workspace,
             commands: commands,
             routedResource: ref.watch(routedResourceProvider(id.scope)),
@@ -108,4 +132,36 @@ final class AuthoringSelectableResource
           ),
         ),
       );
+}
+
+/// The configured value of an authored resource, which resources of the same
+/// complete type in the same Realm edit together in one form.
+final class _AuthoredResourceSurface extends PortableInspectionSurface {
+  const _AuthoredResourceSurface(this.selectable, this.type);
+
+  final AuthoringSelectableResource selectable;
+  final skir.NamedTypeUse type;
+
+  @override
+  Object get id => "authored.resource";
+
+  @override
+  skir.TypeUse get rootType => skir.TypeUse.wrapNamed(type);
+
+  @override
+  CheckedEditorCatalog get catalog => selectable.workspace.document.catalog;
+
+  @override
+  bool sharesEditorWith(PortableInspectionSurface other) =>
+      other is _AuthoredResourceSurface &&
+      other.selectable.workspace == selectable.workspace;
+
+  @override
+  InspectionContent buildShared(
+    List<SharedInspectionSurface> members,
+    InspectionBuildContext context,
+  ) => selectable._inspection([
+    for (final member in members.skip(1).cast<_AuthoredResourceSurface>())
+      member.selectable.id.resourceId,
+  ]);
 }

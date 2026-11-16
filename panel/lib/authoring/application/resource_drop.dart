@@ -219,7 +219,11 @@ extension DropOffers on DropCandidateIndex {
                             .firstWhereOrNull(
                               (definition) => definition.id == operation,
                             )
-                        case final definition? when definition.drop != null)
+                            // A drop never runs an operation that holds to
+                            // confirm.
+                            case final definition?
+                        when definition.drop != null &&
+                            definition.presentation.confirmation == null)
                       DropOffer.operation(
                         operation: definition,
                         destination: id,
@@ -246,7 +250,8 @@ extension LocalDropOffers on ResourceDrag {
     AuthoringDocument document,
   ) {
     final droppable = document.catalog.snapshot.resourceOperations.any(
-      (operation) => operation.drop != null,
+      (operation) =>
+          operation.drop != null && operation.presentation.confirmation == null,
     );
     for (final destination in destinations) {
       switch (destination) {

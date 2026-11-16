@@ -38,7 +38,7 @@ final class _UnavailableRole extends StatelessWidget {
   const _UnavailableRole();
 
   @override
-  Widget build(BuildContext context) => const Tooltip(
+  Widget build(BuildContext context) => const PanelTooltip(
     message: "Resource presentation is unavailable",
     child: Icon(Icons.warning_rounded, size: 14),
   );

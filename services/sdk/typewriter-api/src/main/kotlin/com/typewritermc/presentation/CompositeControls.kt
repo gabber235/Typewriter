@@ -19,6 +19,12 @@ interface CollectionAppearanceScope {
     fun itemPadding(value: PresentationInsets)
 
     fun itemSurface(value: ContainerStyle)
+
+    /** Overrides how the panel's rowIn plays when an item is added. */
+    fun itemArrival(value: MoveOverride)
+
+    /** Overrides how the panel's listOut plays when an item is removed. */
+    fun itemLeave(value: MoveOverride)
 }
 
 interface CollectionOperationAppearanceScope {

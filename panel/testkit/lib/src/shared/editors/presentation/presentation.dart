@@ -1,6 +1,7 @@
 library;
 
 export "collection_editor_fixture.dart";
+export "collection_motion.dart";
 export "compiled_sdk_control_fixture.dart";
 export "diagnostics_fixture.dart";
 export "inherited_field_presentation_fixture.dart";

@@ -4,29 +4,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "membership_visibility.g.dart";
 
-/// Hides declined requests and revoked codes only while their commands send.
-///
-/// The canonical collections remain intact. When sending ends, visibility
-/// follows confirmed collection events and expiry instead of an optimistic
-/// deletion that would need to be rolled back.
-@riverpod
-Set<(MembershipRemovalKind, skir.RecordId)> pendingMembershipRemovals(Ref ref) {
-  final work = ref.watch(localWorkProvider);
-  if (!work.submissions.any((submission) => submission.sending)) {
-    return const {};
-  }
-  final organization = ref.watch(organizationIdProvider);
-  if (organization == null) return const {};
-  final repository = ref.watch(
-    membershipResourceRepositoryProvider(organization),
-  );
-  return {
-    for (final submission in work.submissions)
-      if (submission.sending && repository.removalFor(submission.id) != null)
-        repository.removalFor(submission.id)!,
-  };
-}
-
 /// Shared display clock refreshed at the next observed membership expiry.
 ///
 /// Visibility providers own and cancel their timers. This local clock filters
@@ -46,21 +23,14 @@ AsyncValue<List<skir.OrganizationJoinRequest>> visibleOrganizationJoinRequests(
     return value;
   }
   final now = ref.watch(membershipDisplayTimeProvider);
-  final pending = ref.watch(pendingMembershipRemovalsProvider);
   ref.invalidateMembershipVisibilityAt(
     requests.requireValue.map((request) => request.expiresAt),
     now,
   );
+  // Visibility follows confirmed collection events and expiry only.
   return AsyncData(
     List.unmodifiable(
-      requests.requireValue.where(
-        (request) =>
-            request.expiresAt.isAfter(now) &&
-            !pending.contains((
-              MembershipRemovalKind.joinRequest,
-              request.requestId,
-            )),
-      ),
+      requests.requireValue.where((request) => request.expiresAt.isAfter(now)),
     ),
   );
 }
@@ -72,17 +42,15 @@ AsyncValue<List<skir.JoinCode>> visibleOrganizationJoinCodes(Ref ref) {
     return value;
   }
   final now = ref.watch(membershipDisplayTimeProvider);
-  final pending = ref.watch(pendingMembershipRemovalsProvider);
   ref.invalidateMembershipVisibilityAt(
     codes.requireValue.map((code) => code.expiresAt).nonNulls,
     now,
   );
+  // Visibility follows confirmed collection events and expiry only.
   return AsyncData(
     List.unmodifiable(
       codes.requireValue.where(
-        (code) =>
-            (code.expiresAt == null || code.expiresAt!.isAfter(now)) &&
-            !pending.contains((MembershipRemovalKind.joinCode, code.code)),
+        (code) => code.expiresAt == null || code.expiresAt!.isAfter(now),
       ),
     ),
   );

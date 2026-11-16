@@ -248,7 +248,7 @@ class RealmSurfaceNavigation {
       HomeTarget(:final selected) => selected,
       ResourceTarget(:final routed, :final selected) => selected ?? routed,
     };
-    ref.read(selectionProvider.notifier).selectAll([
+    ref.read(selectionProvider.notifier).replace([
       if (selected != null)
         AuthoringResourceIdentifier.inScope(scope, selected),
     ]);
@@ -339,7 +339,7 @@ class RealmSurfaceNavigation {
               isCurrent: isCurrent,
             );
         if (!isCurrent()) return;
-        ref.read(selectionProvider.notifier).selectAll([id]);
+        ref.read(selectionProvider.notifier).replace([id]);
         // The pushed surface focuses itself while it is shown, so the
         // inspector is revealed once the surface settled; revealing it sooner
         // would lose focus to the surface again.
@@ -354,7 +354,7 @@ class RealmSurfaceNavigation {
         );
         return;
       }
-      ref.read(selectionProvider.notifier).selectAll([id]);
+      ref.read(selectionProvider.notifier).replace([id]);
       _inspect(scope, resource, isCurrent);
     } else if (mode == skir.ResourceNavigationMode.reveal) {
       await reveal(
@@ -424,7 +424,10 @@ final class ResourceCreationNavigationIntent {
             resource: resource.resourceId,
             path: editorRootPath,
           ),
-          presentation: skir.PresentationRole.inspector,
+          // Any role: a Page opens as the workspace, where no inspector
+          // target exists.
+          presentation: null,
+          focus: RevealFocus.firstEmptyField,
           isCurrent: () => isCurrent,
         );
   }

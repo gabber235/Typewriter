@@ -20,12 +20,13 @@ extension SearchDrivers on PanelDriver {
 /// Showing a search over a [FakeSearchSource] on its own.
 extension ShowSearch on WidgetTester {
   /// Shows [results], the result tree when absent, in a [size] box under a
-  /// search root over [source] that knows the tag selector `#` and records
-  /// activated result ids in [activated] when given.
+  /// search root over [source] that knows the tag selector `#`, offers
+  /// [commands] and records activated result ids in [activated] when given.
   Future<PanelDriver> showSearch(
     FakeSearchSource source, {
     Widget? results,
     List<String>? activated,
+    List<SearchCommand> commands = const [],
     Size size = const Size(600, 500),
   }) => pumpPanel(
     const [],
@@ -35,7 +36,11 @@ extension ShowSearch on WidgetTester {
         height: size.height,
         child: SearchRoot(
           create: (ref) => SearchController(
-            session: searchSession(source, activated: activated),
+            session: searchSession(
+              source,
+              activated: activated,
+              commands: commands,
+            ),
             baseSelectors: const [
               KeyValueSelectorDefinition(id: "tag", key: "#"),
             ],
@@ -45,6 +50,32 @@ extension ShowSearch on WidgetTester {
       ),
     ),
   );
+
+  /// Shows a whole search, its query bar over card rows, with the results
+  /// [ids] in that order, offering [commands] and recording activated
+  /// result ids in [activated] when given.
+  Future<PanelDriver> showSearchOver(
+    List<String> ids, {
+    List<String>? activated,
+    List<SearchCommand> commands = const [],
+  }) async {
+    final source = FakeSearchSource();
+    final panel = await showSearch(
+      source,
+      results: SearchBody(
+        searchHint: "Search",
+        rowRenderers: searchRows(
+          density: SearchResultDensity.card,
+          kindLabel: "Test",
+        ),
+      ),
+      activated: activated,
+      commands: commands,
+      size: const Size(800, 700),
+    );
+    await panel.search.show(source, [for (final id in ids) resultNode(id)]);
+    return panel;
+  }
 }
 
 /// Row renderers for [testResultType] results whose rows read
@@ -141,9 +172,29 @@ final class SearchResultDriver extends ComponentDriver {
   /// Whether the row holds the keyboard focus.
   bool get isFocused => _node.isFocused;
 
+  /// Whether the row's check is on, as a list picker shows its chosen
+  /// values.
+  bool get isChecked =>
+      _node.getSemanticsData().flagsCollection.isChecked == CheckedState.isTrue;
+
   /// Clicks the row.
-  Future<void> tap() async {
+  Future<void> tap() => _tapWith(null);
+
+  /// Clicks the row with the platform's toggle modifier held: Command on
+  /// Apple platforms, Control elsewhere.
+  Future<void> toggle() => _tapWith(switch (defaultTargetPlatform) {
+    TargetPlatform.macOS || TargetPlatform.iOS => LogicalKeyboardKey.metaLeft,
+    _ => LogicalKeyboardKey.controlLeft,
+  });
+
+  /// Clicks the row with Shift held, which reaches it from the anchor.
+  Future<void> selectRangeTo() => _tapWith(LogicalKeyboardKey.shiftLeft);
+
+  Future<void> _tapWith(LogicalKeyboardKey? modifier) async {
+    if (modifier != null) await tester.sendKeyDownEvent(modifier);
     await tester.tapAt(_node.screenRect.center);
+    if (modifier != null) await tester.sendKeyUpEvent(modifier);
+    // Let go of the key before the tap resolves, as a quick click does.
     await tester.pump(kDoubleTapTimeout);
     await settle();
   }

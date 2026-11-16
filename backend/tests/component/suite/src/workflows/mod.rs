@@ -143,7 +143,7 @@ async fn manual_request_and_approval_are_visible_from_both_components(
     )?;
 
     let approval =
-        approve_join_requests(context, ada(), &acme, vec![request], vec![writer]).await?;
+        approve_join_requests(context, ada(), &acme, vec![(request, vec![writer])]).await?;
     assert!(
         matches!(
             approval,

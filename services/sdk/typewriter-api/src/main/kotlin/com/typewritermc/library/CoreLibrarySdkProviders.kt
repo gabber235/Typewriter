@@ -14,7 +14,6 @@ import com.typewritermc.expression.shortcuts.orIfBlank
 import com.typewritermc.expression.shortcuts.trim
 import com.typewritermc.expression.target
 import com.typewritermc.presentation.ContainerStyle
-import com.typewritermc.presentation.DisplayDelay
 import com.typewritermc.presentation.EditorContext
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationBorder
@@ -30,9 +29,7 @@ import com.typewritermc.presentation.resource
 import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.presentation.searchChip
 import com.typewritermc.presentation.stateColor
-import com.typewritermc.presentation.stateTransition
 import com.typewritermc.presentation.themeColor
-import com.typewritermc.presentation.transition
 import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
@@ -122,7 +119,6 @@ private fun TagPresentationScope.tagGraphSurface(body: Layout.() -> Unit) {
             foreground = foreground,
             border = PresentationBorder.All(width = 2.0, color = outline),
             radius = PresentationRadius.Large,
-            transition = stateTransition(transition(DisplayDelay(100))),
         ),
     ) {
         align(PresentationAlignment.CENTER, body)

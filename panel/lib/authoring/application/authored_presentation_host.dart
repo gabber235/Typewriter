@@ -7,7 +7,15 @@ part "authored_presentation_collections.dart";
 part "authored_presentation_links.dart";
 part "authored_presentation_resources.dart";
 
-/// Connects portable presentation behavior to one authored resource and its shared edit binding.
+/// Connects portable presentation behavior to an authored resource and its shared edit binding.
+///
+/// Several resources of one kind edit as one through [editedWith]: the
+/// presentation shows what they agree on, every part they disagree on is
+/// unfilled, and each change stages its intents for every one of them in one
+/// edit of the binding's group, so it is saved all or nothing. A change that
+/// needs a prepared value prepares each distinct request once and applies the
+/// result to each resource. One resource alone is the case with no
+/// [editedWith].
 ///
 /// Display and collection projections read the current working document. Invocation
 /// contexts retain the observation that produced an action, so expression reads can
@@ -31,6 +39,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required this.role,
     required this.budget,
     required this.capabilities,
+    this.editedWith = const [],
     this.available = true,
     this.readOnly = false,
     this.prepareValue,
@@ -38,7 +47,14 @@ final class AuthoredPresentationHost extends ChangeNotifier
     this.issues,
   });
 
+  /// The resource the presentation's locations address.
   final skir.ResourceId resource;
+
+  /// The other resources of the same kind edited together with [resource].
+  final List<skir.ResourceId> editedWith;
+
+  /// Every resource this host edits, [resource] first.
+  List<skir.ResourceId> get resources => [resource, ...editedWith];
   AuthoringDocument _source;
   AuthoringDocument get authored => edit?.document ?? _source;
   final skir.PresentationMaterial material;
@@ -94,20 +110,17 @@ final class AuthoredPresentationHost extends ChangeNotifier
   @override
   PortablePresentationDocument get document {
     final observation = authored;
-    final record = observation.resource(resource);
-    if (record == null) {
-      throw StateError("The authored resource is absent");
-    }
+    final records = [
+      for (final id in resources)
+        observation.resource(id) ??
+            (throw StateError("The authored resource is absent")),
+    ];
+    final record = records.first;
     final checked = observation.catalog;
     if (checked.snapshot.generation != observation.generation) {
       throw StateError("The authoring catalog is unavailable");
     }
-    final payload = skir.DataValue.createRecord(fields: record.fields);
-    final value = switch (record.configuration) {
-      skir.TypeSelection_completeWrapper(:final value) =>
-        skir.DataValue.createNamed(actualType: value, payload: payload),
-      _ => payload,
-    };
+    final values = [for (final each in records) _recordValue(each)];
     final schema = switch (record.configuration) {
       skir.TypeSelection_completeWrapper(:final value) =>
         CompletePortablePresentationBinding(skir.TypeUse.wrapNamed(value)),
@@ -132,32 +145,39 @@ final class AuthoredPresentationHost extends ChangeNotifier
       resourceDiagnostics: diagnosticsFor,
       root: material.layout,
       bindings: {
-        presentationSubjectIdentifierBindingId: PortablePresentationBinding(
-          schema: CompletePortablePresentationBinding(
-            skir.TypeUse.wrapNamed(skir.resourceIdType),
-          ),
-          value: resource.toExpressionValue(),
+        // Several resources are no one resource: the subject is what they
+        // agree on, and each one's own identity and name stay known.
+        presentationSubjectIdentifierBindingId: _shared(
+          skir.TypeUse.wrapNamed(skir.resourceIdType),
+          [for (final id in resources) id.toExpressionValue()],
+          whole: true,
         ),
-        presentationSubjectAppearanceBindingId: PortablePresentationBinding(
-          schema: CompletePortablePresentationBinding(
-            skir.TypeUse.wrapNamed(canonicalReadModels.resourceAppearanceUse),
-          ),
-          value: checked.appearanceOf(record).toExpressionValue(),
+        presentationSubjectAppearanceBindingId: _shared(
+          skir.TypeUse.wrapNamed(canonicalReadModels.resourceAppearanceUse),
+          [
+            for (final each in records)
+              checked.appearanceOf(each).toExpressionValue(),
+          ],
         ),
         if (schema != null)
           configuredValueBindingId: PortablePresentationBinding(
             schema: schema,
-            value: value,
+            value: values.agreement,
             editable: true,
             location: skir.ValueLocation(
               resource: resource,
               path: skir.ValuePath(segments: const []),
             ),
+            itemValues: editedWith.isEmpty ? const [] : values,
           ),
       },
       budget: budget,
       diagnosticFallback: PortableDiagnosticFallback.resource,
-      diagnostics: diagnosticsFor(resource),
+      diagnostics: [
+        for (final id in resources)
+          for (final diagnostic in diagnosticsFor(id))
+            if (id == resource) diagnostic else _retargeted(diagnostic, id),
+      ],
       role: role,
       material: material,
       activePresentations: {material.provider},
@@ -226,14 +246,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     if (binding == null) {
       return _reject("This presentation is read only", target: target);
     }
-    final currentRecord = authored.resource(target.resource);
-    if (!context.isCurrent(
-      reference,
-      authored.generation,
-      currentRecord == null
-          ? null
-          : _recordValue(currentRecord).editorValueAt(target.path),
-    )) {
+    if (!context.isCurrent(reference, authored.generation, _current(target))) {
       return _reject(
         "The presentation value changed before this write",
         target: target,
@@ -243,11 +256,14 @@ final class AuthoredPresentationHost extends ChangeNotifier
       label: "Edit value",
       from: _observation(context),
       apply: (operation) async {
-        operation.observeExpressionReads(context.expressionReads);
-        if (prepareValue case final prepare?) {
-          await operation.setWithInitialization(target, value, prepare);
-        } else {
-          operation.set(target, value);
+        operation.observeExpressionReads(_eachRead(context.expressionReads));
+        final prepare = _preparedOnce(prepareValue);
+        for (final at in _each(target)) {
+          if (prepare != null) {
+            await operation.setWithInitialization(at, value, prepare);
+          } else {
+            operation.set(at, value);
+          }
         }
         if (_disposed || !enabled || readOnly) {
           throw StateError("The presentation closed during preparation");
@@ -352,6 +368,83 @@ final class AuthoredPresentationHost extends ChangeNotifier
     skir.BindingRef reference, {
     required PortableInvocationContext context,
   }) => _addMapRow(reference, context: context);
+
+  /// A read only binding of [use] standing for [values], one per resource
+  /// this host edits. Its value is what they agree on; a [whole] value, such
+  /// as an identity, is unfilled unless they are all equal.
+  PortablePresentationBinding _shared(
+    skir.TypeUse use,
+    List<skir.DataValue> values, {
+    bool whole = false,
+  }) => PortablePresentationBinding(
+    schema: CompletePortablePresentationBinding(use),
+    value: !whole
+        ? values.agreement
+        : values.toSet().length == 1
+        ? values.first
+        : skir.DataValue.unfilled,
+    itemValues: editedWith.isEmpty ? const [] : values,
+  );
+
+  /// Where a change at [target] applies: the same path in every resource
+  /// this host edits when [target] is in [resource], otherwise [target]
+  /// alone.
+  Iterable<skir.ValueLocation> _each(skir.ValueLocation target) =>
+      target.resource != resource
+      ? [target]
+      : [
+          for (final id in resources)
+            skir.ValueLocation(resource: id, path: target.path),
+        ];
+
+  /// [reads] expanded to every resource this host edits, so a change made
+  /// from what they agree on expects each of them unchanged.
+  List<skir.ValueLocation> _eachRead(Iterable<skir.ValueLocation> reads) => [
+    for (final read in reads) ..._each(read),
+  ];
+
+  /// What the resources this host edits agree on at [target], as the
+  /// presentation shows it; null when one of them is absent.
+  skir.DataValue? _current(skir.ValueLocation target) {
+    final values = <skir.DataValue>[];
+    for (final at in _each(target)) {
+      final record = authored.resource(at.resource);
+      if (record == null) return null;
+      values.add(_recordValue(record));
+    }
+    return values.agreement.editorValueAt(target.path);
+  }
+
+  /// [prepare] answering each distinct request once, so a change across
+  /// several resources prepares each value once and applies it to each.
+  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
+  _preparedOnce(
+    Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)? prepare,
+  ) {
+    if (prepare == null) return null;
+    final prepared =
+        <skir.ValuePreparationRequest, Future<skir.PreparedValue>>{};
+    return (request) => prepared.putIfAbsent(request, () => prepare(request));
+  }
+
+  /// [diagnostic] of [other], one of [editedWith], aimed at the same path in
+  /// [resource], where the shared presentation shows it.
+  PortablePresentationDiagnostic _retargeted(
+    PortablePresentationDiagnostic diagnostic,
+    skir.ResourceId other,
+  ) => diagnostic.copyWith(
+    targets: [
+      for (final target in diagnostic.targets)
+        switch (target) {
+          PortableValueDiagnosticTarget(:final location)
+              when location.resource == other =>
+            PortableDiagnosticTarget.value(
+              skir.ValueLocation(resource: resource, path: location.path),
+            ),
+          _ => target,
+        },
+    ],
+  );
 
   PortablePresentationWriteResult _stage(
     String label,

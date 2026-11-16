@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/data/shared/editors/diagnostics.dart";
 import "package:widgetbook_workspace/support/story.dart";
 
 @widgetbook.UseCase(name: "Collections", type: PortablePresentationRenderer)
@@ -212,20 +213,7 @@ Widget portableFieldValidationUseCase(BuildContext context) => Story(
             _ => "Error",
           },
         ),
-        role: context.knobs.object.dropdown(
-          label: "Presentation role",
-          options: const [
-            skir.PresentationRole.inspector,
-            skir.PresentationRole.workspace,
-            skir.PresentationRole.resourceSearchResult,
-          ],
-          initialOption: skir.PresentationRole.inspector,
-          labelBuilder: (role) => switch (role) {
-            skir.PresentationRole.workspace => "Workspace",
-            skir.PresentationRole.resourceSearchResult => "Search result",
-            _ => "Inspector",
-          },
-        ),
+        role: context.knobs.role(label: "Presentation role"),
         owner: context.knobs.object.dropdown(
           label: "Diagnostic owner",
           options: PortableDiagnosticFallback.values,
@@ -469,6 +457,82 @@ skir.BoundControl _control(skir.ExpressionBindingId binding, String label) =>
       prefix: null,
       semanticLabel: null,
     );
+
+/// One presentation node rendered in a scope its caller owns, as a list
+/// row or named control renders its part. A host that refuses writes shows
+/// the refusal on the field once the typed value rests.
+@widgetbook.UseCase(
+  name: "Node in a caller scope",
+  type: PortablePresentationNodeRenderer,
+)
+Widget portablePresentationNodeRendererUseCase(BuildContext context) => Story(
+  const [],
+  at: PanelLocation.component(
+    _NodeInCallerScope(
+      readOnly: context.knobs.boolean(label: "Read only"),
+      enabled: context.knobs.boolean(label: "Enabled", initialValue: true),
+      rejectWrites: context.knobs.boolean(label: "Rejects writes"),
+      width: context.knobs.width(const {"Inspector": 420, "Narrow": 240}),
+    ),
+  ),
+);
+
+class _NodeInCallerScope extends HookWidget {
+  const _NodeInCallerScope({
+    required this.readOnly,
+    required this.enabled,
+    required this.rejectWrites,
+    required this.width,
+  });
+
+  final bool readOnly;
+  final bool enabled;
+  final bool rejectWrites;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    final host = useMemoized(
+      () => FakePresentationHost(
+        rejectWrites: rejectWrites,
+        types: {
+          skir.BindingRef(bindingId: _title, path: editorRootPath): _textType,
+          skir.BindingRef(bindingId: _objectives, path: editorRootPath):
+              _integerType,
+        },
+      ),
+      [rejectWrites],
+    );
+    useEffect(() => host.dispose, [host]);
+    final operations = useMemoized(PortableOperationResults.new);
+    useEffect(() => operations.dispose, [operations]);
+    return _Scrolling(
+      width: width,
+      child: PortablePresentationNodeRenderer(
+        node: _questForm(expanded: true),
+        scope: PortablePresentationScope(
+          bindings: {
+            _title: PortableExpressionBinding(
+              value: skir.DataValue.wrapStringValue("Find the lantern"),
+            ),
+            _objectives: PortableExpressionBinding(
+              value: skir.DataValue.wrapInteger("3"),
+            ),
+          },
+          budget: skir.EvaluationBudget(
+            maxSteps: 1000,
+            maxCollectionItems: 100,
+          ),
+          operations: operations,
+          host: host,
+          readOnly: readOnly,
+          enabled: enabled,
+          role: skir.PresentationRole.inspector,
+        ),
+      ),
+    );
+  }
+}
 
 /// Scrolls [child] at [width], the way an inspector column holds a form.
 class _Scrolling extends StatelessWidget {

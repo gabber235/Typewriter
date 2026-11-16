@@ -16,7 +16,7 @@ void main() {
           SizedBox.expand(child: InspectorScaffold(child: SizedBox.expand())),
         ),
       );
-      panel.container.read(selectionProvider.notifier).selectAll([long]);
+      panel.container.read(selectionProvider.notifier).replace([long]);
       await panel.settle();
       await panel.inspector.pull(const Offset(0, -500));
 
@@ -25,7 +25,7 @@ void main() {
 
     testWidgets("in the narrowest desktop inspector", (tester) async {
       final panel = await tester.pumpDesktopInspector();
-      await panel.selectAll([long]);
+      await panel.replaceSelection([long]);
       await panel.inspector.focusHeading(long.id.formatted);
       for (var step = 0; step < 10; step++) {
         await panel.pressShifted(LogicalKeyboardKey.period);
@@ -41,15 +41,15 @@ void main() {
   ) async {
     final pending = LoadingSelectableIdentifier("pending");
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([item]);
+    await panel.replaceSelection([item]);
     final selection = panel.container.read(selectionProvider.notifier);
     expect(panel.inspector.heading(item.id.formatted), findsOneWidget);
 
-    selection.selectAll([item, pending]);
+    selection.replace([item, pending]);
     await panel.settle();
     expect(panel.inspector.heading(item.id.formatted), findsNothing);
 
-    selection.selectAll([item]);
+    selection.replace([item]);
     await panel.settle();
     expect(panel.inspector.heading(item.id.formatted), findsOneWidget);
   });
@@ -65,7 +65,7 @@ void main() {
         builder: (context, name, _) => Text(name),
       ),
     );
-    await panel.selectAll([item]);
+    await panel.replaceSelection([item]);
     await panel.inspector.focusHeading(item.id.formatted);
     await panel.press(LogicalKeyboardKey.period);
     final resized = panel.inspector.rect.width;
@@ -80,7 +80,7 @@ void main() {
   testWidgets("period shrinks the inspector and comma restores it; with "
       "shift held, both take a larger step", (tester) async {
     final panel = await tester.pumpDesktopInspector();
-    await panel.selectAll([item]);
+    await panel.replaceSelection([item]);
     await panel.inspector.focusHeading(item.id.formatted);
     final original = panel.inspector.rect.width;
 

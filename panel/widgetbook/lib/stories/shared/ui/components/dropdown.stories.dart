@@ -41,14 +41,14 @@ class _EngineField extends HookWidget {
           enabled: enabled,
           selected: selected.value,
           dropdownMenuEntries: [
-            DropdownMenuEntry(value: "paper", label: label("Paper")),
-            DropdownMenuEntry(
+            MenuChoice(value: "paper", label: label("Paper")),
+            MenuChoice(
               value: "velocity",
               label: label("Velocity (unavailable)"),
               enabled: false,
             ),
-            DropdownMenuEntry(value: "fabric", label: label("Fabric")),
-            DropdownMenuEntry(value: "minestom", label: label("Minestom")),
+            MenuChoice(value: "fabric", label: label("Fabric")),
+            MenuChoice(value: "minestom", label: label("Minestom")),
           ],
           onSelected: (value) {
             if (value != null) selected.value = value;

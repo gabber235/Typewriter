@@ -2,6 +2,16 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// Where a reveal puts keyboard focus inside the revealed location.
+enum RevealFocus {
+  /// The location's first field.
+  first,
+
+  /// The first field below the location whose bound value is empty, else
+  /// the first field: a resource just created.
+  firstEmptyField,
+}
+
 /// Coordinates the latest navigation request with controls that may mount later.
 /// Requests stay pending until a matching ancestor location registers. The most
 /// specific mounted target wins, optionally restricted to a presentation role.
@@ -10,6 +20,7 @@ class PortableLocationRevealController {
   final Map<Object, _LocationTarget> _targets = {};
   skir.ValueLocation? _pending;
   skir.PresentationRole? _pendingPresentation;
+  RevealFocus _pendingFocus = RevealFocus.first;
   bool Function()? _pendingIsCurrent;
   bool _scheduled = false;
   bool _closed = false;
@@ -17,11 +28,13 @@ class PortableLocationRevealController {
   void request(
     skir.ValueLocation location, {
     skir.PresentationRole? presentation,
+    RevealFocus focus = RevealFocus.first,
     bool Function()? isCurrent,
   }) {
     if (_closed) return;
     _pending = location;
     _pendingPresentation = presentation;
+    _pendingFocus = focus;
     _pendingIsCurrent = isCurrent;
     _schedule();
   }
@@ -29,13 +42,31 @@ class PortableLocationRevealController {
   void _register(
     Object id,
     skir.ValueLocation location,
-    VoidCallback reveal,
-    skir.PresentationRole? presentation,
-  ) {
+    void Function(RevealFocus focus) reveal,
+    skir.PresentationRole? presentation, {
+    required FocusNode focus,
+    bool Function()? isEmpty,
+  }) {
     if (_closed) return;
-    _targets[id] = _LocationTarget(location, reveal, presentation);
+    _targets[id] = _LocationTarget(
+      location,
+      reveal,
+      presentation,
+      focus: focus,
+      isEmpty: isEmpty,
+    );
     _schedule();
   }
+
+  /// The registered fields below [location] whose bound value is empty, in
+  /// registration order.
+  Iterable<FocusNode> _emptyFieldsUnder(skir.ValueLocation location) => [
+    for (final target in _targets.values)
+      if (target.location.resource == location.resource &&
+          target.location.path.isAtOrBelow(location.path) &&
+          (target.isEmpty?.call() ?? false))
+        target.focus,
+  ];
 
   void _schedule() {
     if (_scheduled || _closed || _pending == null) return;
@@ -66,11 +97,16 @@ class PortableLocationRevealController {
               ),
             );
       if (candidates.isEmpty) return;
+      final focus = _pendingFocus;
       _pending = null;
       _pendingPresentation = null;
+      _pendingFocus = RevealFocus.first;
       _pendingIsCurrent = null;
-      candidates.first.reveal();
+      candidates.first.reveal(focus);
     });
+    // A post frame callback alone waits for whatever draws the next frame; an
+    // idle panel draws none.
+    WidgetsBinding.instance.ensureVisualUpdate();
   }
 
   void dispose() {
@@ -83,10 +119,22 @@ class PortableLocationRevealController {
 }
 
 final class _LocationTarget {
-  const _LocationTarget(this.location, this.reveal, this.presentation);
+  const _LocationTarget(
+    this.location,
+    this.reveal,
+    this.presentation, {
+    required this.focus,
+    this.isEmpty,
+  });
   final skir.PresentationRole? presentation;
   final skir.ValueLocation location;
-  final VoidCallback reveal;
+  final void Function(RevealFocus focus) reveal;
+
+  /// The target's marker node; its fields are below it.
+  final FocusNode focus;
+
+  /// Whether the field's bound value is empty; null for a block of fields.
+  final bool Function()? isEmpty;
 }
 
 class PortableLocationRevealScope extends InheritedWidget {
@@ -107,12 +155,15 @@ class PortableLocationRevealScope extends InheritedWidget {
 }
 
 /// Registers the actual control subtree for scrolling and keyboard focus.
+/// Its node marks the fields as an item, so a pane's open focus lands on the
+/// first field.
 class PortableLocationTarget extends HookWidget {
   const PortableLocationTarget({
     required this.location,
     required this.child,
     this.onFocusChange,
     this.focusWhenEmpty = false,
+    this.isEmpty,
     super.key,
   });
   final ValueChanged<bool>? onFocusChange;
@@ -121,13 +172,17 @@ class PortableLocationTarget extends HookWidget {
 
   /// Lets an inspection root receive focus when all controls are read only.
   final bool focusWhenEmpty;
+
+  /// Whether the field's bound value is empty, for
+  /// [RevealFocus.firstEmptyField]; null for a block of fields.
+  final bool Function()? isEmpty;
   @override
   Widget build(BuildContext context) {
     final scope = PortableLocationRevealScope.maybeOf(context);
     final controller = scope?.controller;
     final identity = useMemoized(Object.new);
     final focus = useMemoized(
-      () => FocusNode(
+      () => ItemFocusNode(
         debugLabel: "Authored location",
         skipTraversal: true,
         canRequestFocus: focusWhenEmpty,
@@ -135,25 +190,46 @@ class PortableLocationTarget extends HookWidget {
     );
     useEffect(() => focus.dispose, [focus]);
     useEffect(() {
+      Pane.offerOpenFocus(context);
+      return null;
+    }, const []);
+    useEffect(() {
       if (controller == null || location == null) return null;
-      controller._register(identity, location!, () {
-        if (!context.mounted) return;
-        unawaited(
-          Scrollable.ensureVisible(
-            context,
-            alignment: .25,
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 250),
-          ),
-        );
-        final target = focus.traversalDescendants.firstOrNull;
-        if (target != null) {
-          target.requestFocus();
-        } else if (focusWhenEmpty) {
-          focus.requestFocus();
-        }
-      }, scope?.presentation);
+      controller._register(
+        identity,
+        location!,
+        (mode) {
+          if (!context.mounted) return;
+          final move = motionTimeline(context, MotionToken.focusMove);
+          unawaited(
+            Scrollable.ensureVisible(
+              context,
+              alignment: .25,
+              duration: move.duration,
+              curve: move.curve,
+            ),
+          );
+          final first = focus.traversalDescendants.firstOrNull;
+          final target = switch (mode) {
+            RevealFocus.first => first,
+            RevealFocus.firstEmptyField =>
+              controller
+                      ._emptyFieldsUnder(location!)
+                      .firstOrNull
+                      ?.traversalDescendants
+                      .firstOrNull ??
+                  first,
+          };
+          if (target != null) {
+            target.requestFocus();
+          } else if (focusWhenEmpty) {
+            focus.requestFocus();
+          }
+        },
+        scope?.presentation,
+        focus: focus,
+        isEmpty: () => isEmpty?.call() ?? false,
+      );
       return () => controller._targets.remove(identity);
     }, [controller, location, scope?.presentation, focusWhenEmpty]);
     return Focus(

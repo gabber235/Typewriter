@@ -5,12 +5,13 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Owns one search session and its surface state.
 ///
 /// [SourceController] parses input and owns the source lifetime. This owner
-/// projects scope visibility over that source tree, retaining selection and
-/// preview only for result identities still present. Selection here belongs to
-/// this search session and is independent of the panel resource selection.
+/// projects scope visibility over that source tree, retaining the preview
+/// only for a result identity still present. It keeps no selection: a
+/// command acts on the result that has keyboard focus, and a surface that
+/// chooses several values owns them itself.
 ///
 /// Activations can complete a picker or dispatch a command. Commands resolve
-/// their target from the current tree and delegate execution to
+/// their result from the current tree and delegate execution to
 /// [CommandController]. User query changes during execution are retained and
 /// take precedence over a command supplied replacement query. Disposal releases
 /// the source, command controller and dependency listeners.
@@ -81,15 +82,6 @@ class SearchController<T> extends ChangeNotifier
   Future<SearchSelectorCompletionResult> completeSelector(
     SearchSelectorCompletionRequest request,
   ) => _sourceController.completeSelector(request);
-
-  List<SearchResult> _selectedResults = const [];
-  List<SearchResult> get selectedResults => _selectedResults;
-
-  final Set<String> _selectedIds = {};
-  List<String> get selectedIds => List.unmodifiable(_selectedIds);
-  int get selectedCount => _selectedIds.length;
-
-  bool isSelected(String id) => _selectedIds.contains(id);
 
   List<ResolvedSearchCommand> commandsFor(SearchResult result) {
     final target = _targetFor(result);
@@ -163,73 +155,17 @@ class SearchController<T> extends ChangeNotifier
   @override
   SearchCommandSubmitResult executeCommand(
     SearchCommandId id, {
-    String? resultId,
+    required String resultId,
   }) {
     final command = _commands[id];
     if (command == null) return SearchCommandSubmitResult.commandNotFound;
-    final target = _currentTarget(resultId);
-    if (target == null) return SearchCommandSubmitResult.invalidSelection;
-    return _commandController.execute(command, target);
+    final result = snapshot.nodes.findResult(resultId);
+    if (result == null) return SearchCommandSubmitResult.resultNotFound;
+    return _commandController.execute(command, _targetFor(result));
   }
 
-  SearchCommandTarget _targetFor(SearchResult primary) {
-    final selection =
-        _selectedIds.length > 1 && _selectedIds.contains(primary.id)
-        ? _selectedResults
-        : [primary];
-    return SearchCommandTarget(
-      primary: primary,
-      selection: selection,
-      query: queryContext,
-    );
-  }
-
-  SearchCommandTarget? _currentTarget(String? resultId) {
-    final ids = resultId == null
-        ? _selectedIds.toSet()
-        : _selectedIds.contains(resultId)
-        ? _selectedIds.toSet()
-        : {resultId};
-    if (ids.isEmpty) return null;
-    final results = snapshot.nodes.findResults(ids);
-    if (results.length != ids.length) return null;
-    final primary = resultId == null
-        ? results.first
-        : results.firstWhereOrNull((result) => result.id == resultId);
-    if (primary == null) return null;
-    return SearchCommandTarget(
-      primary: primary,
-      selection: results,
-      query: queryContext,
-    );
-  }
-
-  void toggleSelected(String id, {bool? isMultiSelect}) {
-    final selected = isSelected(id);
-    final multiSelect =
-        selectionMode == SearchSelectionMode.multiple &&
-        (isMultiSelect ?? HardwareKeyboard.instance.isShiftPressed);
-    switch ((selected, multiSelect)) {
-      case (true, true):
-        _selectedIds.remove(id);
-      case (true, false):
-        if (_selectedIds.length > 1) {
-          _selectedIds
-            ..clear()
-            ..add(id);
-        } else {
-          _selectedIds.clear();
-        }
-      case (false, true):
-        _selectedIds.add(id);
-      case (false, false):
-        _selectedIds
-          ..clear()
-          ..add(id);
-    }
-    _syncSelectedResults();
-    notifyListeners();
-  }
+  SearchCommandTarget _targetFor(SearchResult result) =>
+      SearchCommandTarget(result: result, query: queryContext);
 
   final Set<String> _collapsedSectionIds = {};
   List<String> get collapsedSectionIds =>
@@ -290,7 +226,6 @@ class SearchController<T> extends ChangeNotifier
       nodes: _projectNodes(sourceSnapshot.nodes),
     );
     _cleanupState();
-    _syncSelectedResults();
   }
 
   List<SearchNode> _projectNodes(List<SearchNode> nodes) {
@@ -312,24 +247,11 @@ class SearchController<T> extends ChangeNotifier
     return List.unmodifiable(projected);
   }
 
-  void _syncSelectedResults() {
-    _selectedResults = List.unmodifiable(
-      snapshot.nodes.findResults(_selectedIds),
-    );
-  }
-
   void _cleanupState() {
     final oldPreviewId = _currentPreview?.id;
-    _currentPreview = null;
-    final remainingSelectedIds = _selectedIds.toSet();
-
-    for (final node in snapshot.nodes.walk()) {
-      if (node case SearchResultNode(:final result)) {
-        remainingSelectedIds.remove(result.id);
-        if (result.id == oldPreviewId) _currentPreview = result;
-      }
-    }
-    _selectedIds.removeAll(remainingSelectedIds);
+    _currentPreview = oldPreviewId == null
+        ? null
+        : snapshot.nodes.findResult(oldPreviewId);
   }
 
   void _onCommandChange() {

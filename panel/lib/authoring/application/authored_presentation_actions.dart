@@ -69,9 +69,12 @@ extension _AuthoredPresentationActions on AuthoredPresentationHost {
                   if (target == null) {
                     throw StateError("The action target is unavailable");
                   }
-                  operation
-                    ..observeExpressionReads(replacement.reads)
-                    ..set(target, replacement.value);
+                  operation.observeExpressionReads(
+                    _eachRead(replacement.reads),
+                  );
+                  for (final at in _each(target)) {
+                    operation.set(at, replacement.value);
+                  }
                 },
                 target: location(value.target, context: context),
                 from: _observation(context),
@@ -280,8 +283,10 @@ extension _AuthoredPresentationActions on AuthoredPresentationHost {
     return _stage(
       "Edit collection",
       (operation) {
-        operation.observeExpressionReads(reads);
-        apply(target, operation);
+        operation.observeExpressionReads(_eachRead(reads));
+        for (final at in _each(target)) {
+          apply(at, operation);
+        }
       },
       target: target,
       from: _observation(context),
@@ -307,13 +312,15 @@ extension _AuthoredPresentationActions on AuthoredPresentationHost {
     return _stage(
       "Edit map",
       (operation) {
-        operation.observeExpressionReads(reads);
-        final latest = operation.expect(target);
-        if (latest is! PortablePathValue<skir.DataValue> ||
-            latest.value.authoredPayload != current) {
-          throw StateError("The map changed before this action");
+        operation.observeExpressionReads(_eachRead(reads));
+        for (final at in _each(target)) {
+          final latest = operation.expect(at);
+          if (latest is! PortablePathValue<skir.DataValue> ||
+              latest.value.authoredPayload != current) {
+            throw StateError("The map changed before this action");
+          }
+          operation.replaceMap(at, update(rows));
         }
-        operation.replaceMap(target, update(rows));
       },
       target: target,
       from: _observation(context),
@@ -345,9 +352,11 @@ extension _AuthoredPresentationActions on AuthoredPresentationHost {
       label: "Choose form",
       from: authored,
       apply: (operation) async {
-        operation.expect(target);
+        final targets = _each(target).toList()..forEach(operation.expect);
         final prepared = await prepare(request);
-        operation.applyPreparedRecord(target, request, prepared);
+        for (final at in targets) {
+          operation.applyPreparedRecord(at, request, prepared);
+        }
         if (_disposed || !enabled || readOnly) {
           throw StateError("The presentation closed during preparation");
         }

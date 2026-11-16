@@ -1,13 +1,20 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Conditional box content that shares a scroll surface with animated rows.
+/// A block in a list that is shown or not, such as a section heading or a
+/// notice. It arrives and leaves the way rows do; a child with a new key or
+/// type is a removal plus an insertion.
 class SliverAnimatedContent extends StatelessWidget {
   const SliverAnimatedContent({required this.child, super.key});
   final Widget? child;
 
   @override
-  Widget build(BuildContext context) =>
-      SliverToBoxAdapter(child: ElasticMessageSwitcher(child: child));
+  Widget build(BuildContext context) {
+    return AnimatedSliverList<Widget>(
+      items: [?child],
+      identity: (child) => child.key ?? child.runtimeType,
+      itemBuilder: (context, child) => child,
+    );
+  }
 }
 
 /// Independently composable spacing between scroll sections.
@@ -20,24 +27,28 @@ class SliverGap extends StatelessWidget {
       SliverToBoxAdapter(child: SizedBox(height: extent));
 }
 
-/// Animates spacing independently of section headings and collection contents.
-class SliverAnimatedGap extends StatelessWidget {
+/// Spacing that opens with rowIn and closes with listOut beside its rows;
+/// a change mid move retargets from the height on screen.
+class SliverAnimatedGap extends HookWidget {
   const SliverAnimatedGap({required this.extent, super.key})
     : assert(extent >= 0 && extent < double.infinity);
   final double extent;
 
   @override
-  Widget build(BuildContext context) => SliverToBoxAdapter(
-    child: AnimatedContainer(
-      height: extent,
-      duration: MediaQuery.disableAnimationsOf(context)
-          ? Duration.zero
-          : const Duration(milliseconds: 300),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final previous = usePrevious(extent) ?? extent;
+    final opening = extent >= previous;
+    // useMotion rebuilds this widget on every tick of the gap.
+    final height = useMotion(
+      opening ? MotionToken.rowIn : MotionToken.listOut,
+      extent,
+    ).value;
+    return SliverToBoxAdapter(child: SizedBox(height: max(0, height)));
+  }
 }
 
-/// Animated collection presentation. The feature owns its items and actions.
+/// Animated collection presentation. The feature owns its items and
+/// actions; rows load, arrive and leave with the row tokens.
 class AnimatedSliverList<T> extends HookWidget {
   const AnimatedSliverList({
     required this.items,
@@ -51,43 +62,10 @@ class AnimatedSliverList<T> extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reduced = MediaQuery.disableAnimationsOf(context);
-    Widget row(
-      BuildContext context,
-      T item,
-      Animation<double> animation, {
-      bool departing = false,
-    }) {
-      final child = ExcludeInteraction(
-        key: ValueKey(identity(item)),
-        excluding: departing,
-        child: itemBuilder(context, item),
-      );
-      return reduced
-          ? child
-          : ElasticTransition(
-              animation: animation,
-              child: StaggerEntrance(child: child),
-            );
-    }
-
-    final collection = useSliverAnimatedList(
-      items: items,
-      identity: identity,
-      insertDuration: reduced
-          ? Duration.zero
-          : const Duration(milliseconds: 300),
-      removeDuration: reduced
-          ? Duration.zero
-          : const Duration(milliseconds: 180),
-      removedItemBuilder: (context, item, animation) =>
-          row(context, item, animation, departing: true),
-    );
+    final rows = useAnimatedRows(items: items, identity: identity);
     return SliverAnimatedRows(
-      key: collection.key,
-      initialItemCount: collection.items.length,
-      itemBuilder: (context, index, animation) =>
-          row(context, collection.items[index], animation),
+      rows: rows,
+      itemBuilder: (context, entry) => itemBuilder(context, entry.item),
     );
   }
 }

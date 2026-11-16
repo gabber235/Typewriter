@@ -18,24 +18,14 @@ class LoadingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget widget =
-        Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: context.spacing.space6),
-                Text(message, style: Theme.of(context).textTheme.titleLarge),
-              ],
-            )
-            .animate()
-            .slideY(
-              duration: 1.seconds,
-              begin: 0.05,
-              end: 0,
-              curve: Curves.easeInOutCubic,
-            )
-            .fadeIn();
+    Widget widget = Enter(
+      token: MotionToken.loadIn,
+      child: MotionLabel(
+        message,
+        rippling: true,
+        style: Theme.of(context).textTheme.titleLarge,
+      ),
+    );
 
     if (!shrink) {
       widget = Center(child: widget);

@@ -96,11 +96,7 @@ void main() {
         // outline.
         await panel.resources.row("Intro").select();
         await panel.resources.selectOnly([deleted]);
-        await panel.press(LogicalKeyboardKey.delete);
-        await panel.dialog.choose(
-          "Delete",
-          message: "Delete the selected resources?",
-        );
+        await panel.holdKey(LogicalKeyboardKey.delete);
 
         await panel.eventually(
           () => expect(panel.path, "$realmPath/resource/${survivor.value}"),
@@ -121,11 +117,7 @@ void main() {
       // outline.
       await panel.resources.row("Intro").select();
       await panel.resources.selectOnly([libraryId]);
-      await panel.press(LogicalKeyboardKey.delete);
-      await panel.dialog.choose(
-        "Delete",
-        message: "Delete the selected resources?",
-      );
+      await panel.holdKey(LogicalKeyboardKey.delete);
 
       await panel.eventually(() => expect(panel.path, realmPath));
     });

@@ -96,7 +96,6 @@ void main() {
         child: Pane(
           id: "main",
           primary: true,
-          highlightOnFocus: false,
           margin: EdgeInsets.zero,
           child: const Text("main"),
         ),
@@ -108,7 +107,6 @@ void main() {
         height: 500,
         child: Pane(
           id: "sidebar",
-          highlightOnFocus: false,
           margin: EdgeInsets.zero,
           child: const Text("sidebar"),
         ),
@@ -120,7 +118,6 @@ void main() {
         height: 58,
         child: Pane(
           id: "appbar",
-          highlightOnFocus: false,
           margin: EdgeInsets.zero,
           child: const Text("appbar"),
         ),
@@ -161,7 +158,6 @@ void main() {
                   height: 80,
                   child: const Pane(
                     id: "target",
-                    highlightOnFocus: false,
                     margin: EdgeInsets.zero,
                     child: Text("target"),
                   ),
@@ -225,7 +221,6 @@ void main() {
           child: Pane(
             id: "source",
             primary: true,
-            highlightOnFocus: false,
             margin: EdgeInsets.zero,
             child: Column(
               children: [
@@ -289,7 +284,6 @@ void main() {
         child: Pane(
           id: "source",
           primary: true,
-          highlightOnFocus: false,
           margin: EdgeInsets.zero,
           child: Align(
             alignment: Alignment.topLeft,
@@ -381,7 +375,6 @@ void main() {
                   id: "pane",
                   primary: true,
                   trapFocus: trap,
-                  highlightOnFocus: false,
                   margin: EdgeInsets.zero,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -459,7 +452,6 @@ void main() {
         child: Pane(
           id: label,
           primary: true,
-          highlightOnFocus: false,
           margin: EdgeInsets.zero,
           child: Center(child: Text(label)),
         ),
@@ -515,7 +507,6 @@ void main() {
           child: Pane(
             id: "one",
             primary: true,
-            highlightOnFocus: false,
             margin: EdgeInsets.zero,
             child: ElevatedButton(onPressed: () {}, child: const Text("one")),
           ),
@@ -538,5 +529,130 @@ void main() {
 
     expect(FocusScope.of(tester.element(find.text("three"))).hasFocus, isTrue);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets("the focused pane lifts and the others sink back", (
+    tester,
+  ) async {
+    final panes = await tester.showPanes([
+      sourcePane,
+      PlacedPane(id: "right", button: "right", left: 300, top: 0),
+    ]);
+    await tester.pump();
+
+    await panes.navigate(AxisDirection.right);
+    await tester.pumpAndSettle();
+
+    double painted(String button) => tester.getRect(find.text(button)).width;
+    double laidOut(String button) => tester.getSize(find.text(button)).width;
+    expect(painted("right"), greaterThan(laidOut("right")));
+    expect(painted("source"), lessThan(laidOut("source")));
+  });
+
+  testWidgets("a lone pane keeps its size when focused", (tester) async {
+    await tester.showPanes([sourcePane]);
+    await tester.pump();
+    FocusScope.of(tester.element(find.text("source"))).requestFocus();
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getRect(find.text("source")).width,
+      tester.getSize(find.text("source")).width,
+    );
+  });
+
+  testWidgets("a primary pane focuses its first item once the list arrives", (
+    tester,
+  ) async {
+    final items = await tester.showOpenFocusPane(fallback: "Generate");
+    expect(
+      Focus.of(tester.element(find.text("Generate"))).hasPrimaryFocus,
+      isTrue,
+    );
+    items.update([
+      const AnimatedItem(id: "a", label: "Alpha"),
+      const AnimatedItem(id: "b", label: "Beta"),
+    ]);
+    await tester.pumpAndSettle();
+    expect(AnimatedItems.focusedLabel(tester), "Alpha");
+  });
+
+  testWidgets(
+    "a key press before the list arrives keeps focus where the user put it",
+    (tester) async {
+      final items = await tester.showOpenFocusPane(fallback: "Generate");
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      final chosen = FocusManager.instance.primaryFocus;
+      items.update([
+        const AnimatedItem(id: "a", label: "Alpha"),
+        const AnimatedItem(id: "b", label: "Beta"),
+      ]);
+      await tester.pumpAndSettle();
+      expect(FocusManager.instance.primaryFocus, same(chosen));
+    },
+  );
+
+  testWidgets("focus a reveal asks for in the frame the list arrives wins", (
+    tester,
+  ) async {
+    final items = await tester.showOpenFocusPane(fallback: "Generate");
+    items.update([const AnimatedItem(id: "a", label: "Alpha")]);
+    // Runs in the same frame as the pane's open focus, before it.
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => Focus.of(tester.element(find.text("Other"))).requestFocus(),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      Focus.of(tester.element(find.text("Other"))).hasPrimaryFocus,
+      isTrue,
+    );
+  });
+
+  testWidgets("focus moved off the pane's first control, even back to where "
+      "it was before, stays there when the list arrives", (tester) async {
+    final page = await tester.showOpeningPage(
+      opener: Button(label: "Inspector", autofocus: true, onPressed: () {}),
+      fallback: "Generate",
+    );
+    final inspector = Focus.of(tester.element(find.text("Inspector")));
+    page.open();
+    await tester.pumpAndSettle();
+    expect(
+      Focus.of(tester.element(find.text("Generate"))).hasPrimaryFocus,
+      isTrue,
+    );
+
+    // A screen reader or a script focuses the inspector field without a key
+    // or pointer press.
+    inspector.requestFocus();
+    await tester.pumpAndSettle();
+    page.items.update([const AnimatedItem(id: "a", label: "Alpha")]);
+    await tester.pumpAndSettle();
+
+    expect(inspector.hasPrimaryFocus, isTrue);
+  });
+
+  testWidgets("a text field holding focus when a page opens keeps it while "
+      "its text is set without key presses", (tester) async {
+    final name = TextEditingController();
+    addTearDown(name.dispose);
+    final page = await tester.showOpeningPage(
+      opener: TextField(controller: name, autofocus: true),
+      fallback: "New element",
+    );
+    final field = tester
+        .widget<EditableText>(find.byType(EditableText))
+        .focusNode;
+    expect(field.hasFocus, isTrue);
+
+    // A screen reader or a script sets the text; no key is pressed.
+    page.open();
+    name.text = "Old Notes";
+    await tester.pumpAndSettle();
+    page.items.update([const AnimatedItem(id: "a", label: "Alpha")]);
+    await tester.pumpAndSettle();
+
+    expect(field.hasFocus, isTrue);
   });
 }

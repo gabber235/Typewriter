@@ -67,7 +67,7 @@ class InputFieldController {
   }
 }
 
-/// Container that unifies focus highlighting, surrounding focus behavior,
+/// Container that unifies the focus ring target, surrounding focus behavior,
 /// and action shortcuts for inputs with separate editing and navigation focus.
 /// Supply the inner input via [child] and its [controller].
 class InputFieldContainer extends HookConsumerWidget {
@@ -87,7 +87,7 @@ class InputFieldContainer extends HookConsumerWidget {
   /// Coordinates the focus nodes; its creator retains disposal responsibility.
   final InputFieldController controller;
 
-  /// The actual input widget to render (e.g. TextField, DropdownMenu).
+  /// The actual input widget to render (e.g. TextField).
   final Widget child;
 
   /// Actions available whenever either surrounding or input has focus.
@@ -120,7 +120,6 @@ class InputFieldContainer extends HookConsumerWidget {
     useListenable(surroundingNode);
     useListenable(inputFocusNode);
 
-    final focusType = useState(FocusType.none);
     final id = useMemoized(() => uuid.v4());
     final modeCoordinator = ref.read(inputFieldModeCoordinatorProvider);
 
@@ -153,8 +152,7 @@ class InputFieldContainer extends HookConsumerWidget {
       };
     }, [controller, id, modeCoordinator, onInputFocus]);
 
-    return FocusHighlight(
-      type: focusType.value,
+    return RingTarget(
       borderRadius: borderRadius ?? context.shapes.largeBorderRadius,
       child: Actions(
         actions: {
@@ -187,9 +185,6 @@ class InputFieldContainer extends HookConsumerWidget {
             debugLabel: "SurroundingInputFieldContainer",
             descendantsAreTraversable: false,
             includeSemantics: false,
-            onFocusChange: (_) {
-              focusType.value = FocusHighlighting.onlyPrimary(surroundingNode);
-            },
             // The surrounding stop reads as focused like the Focus widget
             // reports it, but a screen reader that focuses the field means
             // to edit it, so its focus action reaches the inner input.

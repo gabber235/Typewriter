@@ -142,11 +142,11 @@ val CorePlacesTest by testSuite {
             .match.required shouldBe listOf(PresentationInteractionState.HOVERED)
         transforms
             .single { it.rotateY != null }
-            .transition
-            ?.rules
-            ?.single()
-            ?.match
-            ?.required shouldBe listOf(PresentationInteractionState.SELECTED)
+            .rotateY
+            .shouldBeInstanceOf<PresentationNumber.StatesWrapper>()
+            .value.rules
+            .single()
+            .match.required shouldBe listOf(PresentationInteractionState.SELECTED)
     }
 
     test("the book outline groups pages by chapter and creates a page into the book from each group") {

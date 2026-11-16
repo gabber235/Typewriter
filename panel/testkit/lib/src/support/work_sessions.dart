@@ -3,6 +3,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/core/pump_panel.dart";
+import "package:typewriter_testkit/src/core/test_lifetime.dart";
 import "package:typewriter_testkit/src/drivers/mutations/save_activity_driver.dart";
 import "package:typewriter_testkit/src/drivers/panel_driver.dart";
 import "package:typewriter_testkit/src/shared/editing/value_editing_fixture.dart";
@@ -12,7 +13,7 @@ import "package:typewriter_testkit/src/support/value_editing_fixtures.dart";
 /// A work session that ends with the current test.
 ScopedWorkSession testWorkSession() {
   final work = ScopedWorkSession();
-  addTearDown(work.dispose);
+  endWithTest(work.dispose);
   return work;
 }
 
@@ -59,7 +60,7 @@ ValueEditing editedResource(
     commitPolicy: policy,
     commit: commit,
   ).acquire(work);
-  addTearDown(work.lease(WorkDriverId(domain: "value", scope: key)).release);
+  endWithTest(work.lease(WorkDriverId(domain: "value", scope: key)).release);
   source.update(
     editorRootPath.field("target"),
     skir.DataValue.wrapStringValue(draft),
@@ -70,7 +71,7 @@ ValueEditing editedResource(
 /// Holds the value lease of [key] in [work] until the test ends, the way an
 /// open editor keeps its resource.
 void holdValueLease(ScopedWorkSession work, EditorResourceKey key) =>
-    addTearDown(work.lease(WorkDriverId(domain: "value", scope: key)).release);
+    endWithTest(work.lease(WorkDriverId(domain: "value", scope: key)).release);
 
 /// The resource [key], labeled "Resource", holding [document] and saved
 /// through [commit] under [commitPolicy].
@@ -123,7 +124,7 @@ ValueEditing textDraft(
         MutationSuccess(revision: 2, value: change.rootValue),
   );
   final source = registration.acquire(work);
-  addTearDown(
+  endWithTest(
     work
         .lease(
           WorkDriverId(domain: "value", scope: registration.persistence.key),

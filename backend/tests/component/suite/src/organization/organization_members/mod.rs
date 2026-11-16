@@ -2,8 +2,9 @@ use json_matcher::assert_jm;
 use typewriter_component_test::{
     JoinCode, Organization,
     organization::{
-        InvalidMemberUpdate, UnavailableRole, approve_join_requests, expect_join_request_removed,
-        join_code_request, role_names, update_member_roles,
+        InvalidMemberUpdate, UnavailableRole, approve_join_requests, decline_join_requests,
+        expect_join_request_removed, join_code_id, join_code_request, remove_members,
+        revoke_join_codes, role_names, update_member_roles,
     },
     prelude::*,
 };
@@ -14,6 +15,8 @@ use wasmcloud_utils::skir::base::{
 
 /// The names of the roles `$user` holds in Acme.
 const ROLES: &str = "SELECT VALUE roles.name FROM ONLY member_of WHERE in = $user AND out = organization:acme FETCH roles";
+/// The names of the roles `$user` holds in Acme, sorted.
+const SORTED_ROLES: &str = "RETURN array::sort((SELECT VALUE roles.name FROM ONLY member_of WHERE in = $user AND out = organization:acme FETCH roles))";
 /// The number of pending join requests.
 const PENDING_REQUESTS: &str = "RETURN count(SELECT id FROM request_to_join)";
 
@@ -193,18 +196,10 @@ async fn revoke_join_code_deletes_and_notifies(
         },
     )?;
 
-    let reply: RevokeOrganizationJoinCodeResponse = context
-        .request(
-            from_member(ada(), &acme, "members.join_codes.revoke"),
-            &RevokeOrganizationJoinCodeRequest {
-                code_id: code,
-                ..Default::default()
-            },
-        )
-        .await?;
+    let reply = revoke_join_codes(context, ada(), &acme, vec![code]).await?;
 
     assert!(
-        matches!(reply, RevokeOrganizationJoinCodeResponse::Success(_)),
+        matches!(reply, RevokeOrganizationJoinCodesResponse::Success(_)),
         "{reply:?}"
     );
     assert_jm!(
@@ -225,21 +220,44 @@ async fn revoking_an_unknown_code_is_refused(
     seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let unknown = skir_record_id("organization_join_code", "unknown");
 
-    let reply: RevokeOrganizationJoinCodeResponse = context
-        .request(
-            from_member(ada(), &acme, "members.join_codes.revoke"),
-            &RevokeOrganizationJoinCodeRequest {
-                code_id: unknown.clone(),
-                ..Default::default()
-            },
-        )
-        .await?;
+    let reply = revoke_join_codes(context, ada(), &acme, vec![unknown.clone()]).await?;
 
     assert!(
-        matches!(&reply, RevokeOrganizationJoinCodeResponse::CodeNotFoundError(error) if error.code_id == unknown),
+        matches!(&reply, RevokeOrganizationJoinCodesResponse::CodeNotFoundError(error) if error.code_ids == [unknown]),
         "{reply:?}"
     );
     context.expect_no_publish(to_organization(&acme, "join_codes.changed"))?;
+    Ok(())
+}
+
+#[component_test(OrganizationMembers)]
+async fn revoking_a_selection_with_an_unknown_code_revokes_none(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[]).await?;
+    seed_join_code(context, &acme, JoinCode::new("invite")).await?;
+    let unknown = skir_record_id("organization_join_code", "unknown");
+
+    let reply = revoke_join_codes(
+        context,
+        ada(),
+        &acme,
+        vec![join_code_id("invite"), unknown.clone()],
+    )
+    .await?;
+
+    assert!(
+        matches!(&reply, RevokeOrganizationJoinCodesResponse::CodeNotFoundError(error) if error.code_ids == [unknown]),
+        "{reply:?}"
+    );
+    assert_jm!(
+        context
+            .database()?
+            .query_json("RETURN count(SELECT id FROM organization_join_code)")
+            .await?,
+        1
+    );
     Ok(())
 }
 
@@ -294,12 +312,62 @@ async fn member_update_keeps_protected_founder_role(
         },
     )?;
 
-    let reply = update_member_roles(context, ada(), &acme, vec![ada().id()], vec![writer]).await?;
+    let reply =
+        update_member_roles(context, ada(), &acme, vec![(ada().id(), vec![writer])]).await?;
 
     let UpdateOrganizationMemberRolesResponse::Success(updated) = reply else {
         anyhow::bail!("expected member update success, received {reply:?}")
     };
     assert_eq!(role_names(&updated.members[0].roles), ["founder", "writer"]);
+    Ok(())
+}
+
+/// One update gives each member its own roles, and every member keeps its protected roles.
+#[component_test(OrganizationMembers)]
+async fn a_member_update_gives_each_member_its_own_roles(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    Seed::new()
+        .organization(&acme, ada())
+        .role(&acme, "editor", 10)
+        .member(&acme, grace(), &["editor"])
+        .apply(context)
+        .await?;
+    let database = context.database()?;
+    let writer = database.role(&acme, "writer").await?;
+    let editor = database.role(&acme, "editor").await?;
+    context.expect_publish(
+        to_organization(&acme, "members.changed"),
+        |event: &OrganizationMembersChanged| event.changes.len() == 2,
+    )?;
+
+    let reply = update_member_roles(
+        context,
+        ada(),
+        &acme,
+        vec![
+            (ada().id(), vec![writer.clone()]),
+            (grace().id(), vec![editor, writer]),
+        ],
+    )
+    .await?;
+
+    assert!(
+        matches!(reply, UpdateOrganizationMemberRolesResponse::Success(_)),
+        "{reply:?}"
+    );
+    let database = context.database()?;
+    assert_jm!(
+        database.read(SORTED_ROLES, &[("user", ada().id())]).await?,
+        ["founder", "writer"]
+    );
+    assert_jm!(
+        database
+            .read(SORTED_ROLES, &[("user", grace().id())])
+            .await?,
+        ["editor", "writer"]
+    );
     Ok(())
 }
 
@@ -327,7 +395,11 @@ async fn an_invalid_member_update_is_refused_without_changes(
         InvalidMemberUpdate::ProtectedRole => (vec![grace().id()], vec![founder.clone()]),
         InvalidMemberUpdate::MissingUser => (vec![missing_user.clone()], vec![writer]),
     };
-    let reply = update_member_roles(context, ada(), &acme, users, roles).await?;
+    let assignments = users
+        .into_iter()
+        .map(|user| (user, roles.clone()))
+        .collect();
+    let reply = update_member_roles(context, ada(), &acme, assignments).await?;
 
     match (&invalid, &reply) {
         (
@@ -370,8 +442,11 @@ async fn an_invalid_member_in_a_batch_leaves_every_member_unchanged(
         context,
         ada(),
         &acme,
-        vec![ada().id(), skir_record_id("user", "missing"), grace().id()],
-        vec![writer],
+        vec![
+            (ada().id(), vec![writer.clone()]),
+            (skir_record_id("user", "missing"), vec![writer.clone()]),
+            (grace().id(), vec![writer]),
+        ],
     )
     .await?;
 
@@ -404,20 +479,12 @@ async fn founder_cannot_be_removed(context: &mut TestContext<OrganizationMembers
     let acme = acme();
     seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
 
-    let reply: RemoveOrganizationMemberResponse = context
-        .request(
-            from_member(ada(), &acme, "members.remove"),
-            &RemoveOrganizationMemberRequest {
-                user_id: ada().id(),
-                ..Default::default()
-            },
-        )
-        .await?;
+    let reply = remove_members(context, ada(), &acme, vec![ada().id()]).await?;
 
     assert!(
         matches!(
             reply,
-            RemoveOrganizationMemberResponse::FounderCannotBeRemovedError(_)
+            RemoveOrganizationMembersResponse::FounderCannotBeRemovedError(_)
         ),
         "{reply:?}"
     );
@@ -452,18 +519,10 @@ async fn removing_a_member_ends_the_membership_and_tells_both_views(
         },
     )?;
 
-    let reply: RemoveOrganizationMemberResponse = context
-        .request(
-            from_member(ada(), &acme, "members.remove"),
-            &RemoveOrganizationMemberRequest {
-                user_id: grace().id(),
-                ..Default::default()
-            },
-        )
-        .await?;
+    let reply = remove_members(context, ada(), &acme, vec![grace().id()]).await?;
 
     assert!(
-        matches!(reply, RemoveOrganizationMemberResponse::Success(_)),
+        matches!(reply, RemoveOrganizationMembersResponse::Success(_)),
         "{reply:?}"
     );
     assert_jm!(
@@ -485,19 +544,84 @@ async fn removing_someone_who_is_not_a_member_is_refused(
     let hedy = StackUser::new("hedy");
     Seed::new().user(&hedy).apply(context).await?;
 
-    let reply: RemoveOrganizationMemberResponse = context
-        .request(
-            from_member(ada(), &acme, "members.remove"),
-            &RemoveOrganizationMemberRequest {
-                user_id: hedy.id(),
-                ..Default::default()
-            },
-        )
-        .await?;
+    let reply = remove_members(context, ada(), &acme, vec![hedy.id()]).await?;
 
     assert!(
-        matches!(&reply, RemoveOrganizationMemberResponse::UserNotMemberError(error) if error.user_id == hedy.id()),
+        matches!(&reply, RemoveOrganizationMembersResponse::UserNotMemberError(error) if error.user_ids == [hedy.id()]),
         "{reply:?}"
+    );
+    context.expect_no_publish(to_organization(&acme, "members.changed"))?;
+    Ok(())
+}
+
+#[component_test(OrganizationMembers)]
+async fn removing_two_members_ends_both_memberships_in_one_change(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    let hedy = StackUser::new("hedy");
+    seed_organization(
+        context,
+        &acme,
+        ada(),
+        &[(grace(), &["writer"]), (&hedy, &["writer"])],
+    )
+    .await?;
+    let (grace_id, hedy_id) = (grace().id(), hedy.id());
+    context.expect_publish(
+        to_organization(&acme, "members.changed"),
+        move |event: &OrganizationMembersChanged| {
+            matches!(event.changes.as_slice(), [OrganizationMembersChange::Remove(first), OrganizationMembersChange::Remove(second)]
+                if [&**first, &**second].contains(&&grace_id) && [&**first, &**second].contains(&&hedy_id))
+        },
+    )?;
+    for user in [grace(), &hedy] {
+        let left = acme.id();
+        context.expect_publish(
+            to_user(user, "organizations.changed"),
+            move |event: &UserOrganizationsChanged| {
+                matches!(event.changes.as_slice(), [UserOrganizationsChange::Remove(id)] if **id == left)
+            },
+        )?;
+    }
+
+    let reply = remove_members(context, ada(), &acme, vec![grace().id(), hedy.id()]).await?;
+
+    assert!(
+        matches!(reply, RemoveOrganizationMembersResponse::Success(_)),
+        "{reply:?}"
+    );
+    assert_jm!(
+        context
+            .database()?
+            .query_json("RETURN count(SELECT id FROM member_of WHERE out = organization:acme)")
+            .await?,
+        1
+    );
+    Ok(())
+}
+
+#[component_test(OrganizationMembers)]
+async fn removing_a_selection_with_a_non_member_removes_none(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
+    let hedy = StackUser::new("hedy");
+    Seed::new().user(&hedy).apply(context).await?;
+
+    let reply = remove_members(context, ada(), &acme, vec![grace().id(), hedy.id()]).await?;
+
+    assert!(
+        matches!(&reply, RemoveOrganizationMembersResponse::UserNotMemberError(error) if error.user_ids == [hedy.id()]),
+        "{reply:?}"
+    );
+    assert_jm!(
+        context
+            .database()?
+            .read(ROLES, &[("user", grace().id())])
+            .await?,
+        ["writer"]
     );
     context.expect_no_publish(to_organization(&acme, "members.changed"))?;
     Ok(())
@@ -529,7 +653,7 @@ async fn approval_makes_the_applicant_a_member_and_tells_both_views(
         },
     )?;
 
-    let reply = approve_join_requests(context, ada(), &acme, vec![request], vec![writer]).await?;
+    let reply = approve_join_requests(context, ada(), &acme, vec![(request, vec![writer])]).await?;
 
     assert!(
         matches!(&reply, ApproveOrganizationJoinRequestsResponse::Success(success)
@@ -548,6 +672,111 @@ async fn approval_makes_the_applicant_a_member_and_tells_both_views(
 }
 
 #[component_test(OrganizationMembers)]
+async fn an_approval_gives_each_applicant_its_own_roles(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    let hedy = StackUser::new("hedy");
+    Seed::new()
+        .organization(&acme, ada())
+        .role(&acme, "editor", 10)
+        .join_request(grace(), &acme)
+        .join_request(&hedy, &acme)
+        .apply(context)
+        .await?;
+    let database = context.database()?;
+    let writer = database.role(&acme, "writer").await?;
+    let editor = database.role(&acme, "editor").await?;
+    let grace_request = database.join_request(grace(), &acme).await?;
+    let hedy_request = database.join_request(&hedy, &acme).await?;
+    context.expect_publish(
+        to_organization(&acme, "join_requests.changed"),
+        |event: &OrganizationJoinRequestsChanged| event.changes.len() == 2,
+    )?;
+    context.expect_publish(
+        to_organization(&acme, "members.changed"),
+        |event: &OrganizationMembersChanged| event.changes.len() == 2,
+    )?;
+    for user in [grace(), &hedy] {
+        context.expect_publish(
+            to_user(user, "join_requests.changed"),
+            |event: &UserJoinRequestsChanged| event.changes.len() == 1,
+        )?;
+        context.expect_publish(
+            to_user(user, "organizations.changed"),
+            |event: &UserOrganizationsChanged| event.changes.len() == 1,
+        )?;
+    }
+
+    let reply = approve_join_requests(
+        context,
+        ada(),
+        &acme,
+        vec![
+            (grace_request, vec![writer.clone()]),
+            (hedy_request, vec![editor, writer]),
+        ],
+    )
+    .await?;
+
+    assert!(
+        matches!(&reply, ApproveOrganizationJoinRequestsResponse::Success(success)
+            if success.approvals.len() == 2),
+        "{reply:?}"
+    );
+    let database = context.database()?;
+    assert_jm!(
+        database
+            .read(SORTED_ROLES, &[("user", grace().id())])
+            .await?,
+        ["writer"]
+    );
+    assert_jm!(
+        database.read(SORTED_ROLES, &[("user", hedy.id())]).await?,
+        ["editor", "writer"]
+    );
+    assert_jm!(database.query_json(PENDING_REQUESTS).await?, 0);
+    Ok(())
+}
+
+#[component_test(OrganizationMembers)]
+async fn an_approval_with_a_roleless_request_approves_none(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    let hedy = StackUser::new("hedy");
+    Seed::new()
+        .organization(&acme, ada())
+        .join_request(grace(), &acme)
+        .join_request(&hedy, &acme)
+        .apply(context)
+        .await?;
+    let database = context.database()?;
+    let writer = database.role(&acme, "writer").await?;
+    let grace_request = database.join_request(grace(), &acme).await?;
+    let hedy_request = database.join_request(&hedy, &acme).await?;
+
+    let reply = approve_join_requests(
+        context,
+        ada(),
+        &acme,
+        vec![
+            (grace_request, vec![writer]),
+            (hedy_request.clone(), Vec::new()),
+        ],
+    )
+    .await?;
+
+    assert!(
+        matches!(&reply, ApproveOrganizationJoinRequestsResponse::RolesRequiredError(error)
+            if error.request_ids == [hedy_request]),
+        "{reply:?}"
+    );
+    assert_jm!(context.database()?.query_json(PENDING_REQUESTS).await?, 2);
+    Ok(())
+}
+
+#[component_test(OrganizationMembers)]
 async fn approve_existing_member_rolls_back_request_deletion(
     context: &mut TestContext<OrganizationMembers>,
 ) -> TestResult {
@@ -557,7 +786,7 @@ async fn approve_existing_member_rolls_back_request_deletion(
     let request = seed_join_request(context, grace(), &acme).await?;
     let writer = database.role(&acme, "writer").await?;
 
-    let reply = approve_join_requests(context, ada(), &acme, vec![request], vec![writer]).await?;
+    let reply = approve_join_requests(context, ada(), &acme, vec![(request, vec![writer])]).await?;
 
     assert!(
         matches!(
@@ -585,7 +814,7 @@ async fn approval_uses_current_role_policy_inside_transaction(
         .await?;
 
     let reply =
-        approve_join_requests(context, ada(), &acme, vec![request], vec![writer.clone()]).await?;
+        approve_join_requests(context, ada(), &acme, vec![(request, vec![writer.clone()])]).await?;
 
     let ApproveOrganizationJoinRequestsResponse::RolesNotAssignableError(error) = reply else {
         anyhow::bail!("expected current role policy error, received {reply:?}")
@@ -610,18 +839,10 @@ async fn decline_request_deletes_and_notifies_both_views(
     let request = seed_join_request(context, grace(), &acme).await?;
     expect_join_request_removed(context, &acme, grace(), &request)?;
 
-    let reply: DeclineOrganizationJoinRequestResponse = context
-        .request(
-            from_member(ada(), &acme, "members.join_requests.decline"),
-            &DeclineOrganizationJoinRequestRequest {
-                request_id: request,
-                ..Default::default()
-            },
-        )
-        .await?;
+    let reply = decline_join_requests(context, ada(), &acme, vec![request]).await?;
 
     assert!(
-        matches!(reply, DeclineOrganizationJoinRequestResponse::Success(_)),
+        matches!(reply, DeclineOrganizationJoinRequestsResponse::Success(_)),
         "{reply:?}"
     );
     assert_jm!(context.database()?.query_json(PENDING_REQUESTS).await?, 0);
@@ -636,20 +857,68 @@ async fn declining_an_unknown_request_is_refused(
     seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let unknown = skir_record_id("request_to_join", "unknown");
 
-    let reply: DeclineOrganizationJoinRequestResponse = context
-        .request(
-            from_member(ada(), &acme, "members.join_requests.decline"),
-            &DeclineOrganizationJoinRequestRequest {
-                request_id: unknown.clone(),
-                ..Default::default()
-            },
-        )
-        .await?;
+    let reply = decline_join_requests(context, ada(), &acme, vec![unknown.clone()]).await?;
 
     assert!(
-        matches!(&reply, DeclineOrganizationJoinRequestResponse::RequestNotFoundError(error) if error.request_id == unknown),
+        matches!(&reply, DeclineOrganizationJoinRequestsResponse::RequestNotFoundError(error) if error.request_ids == [unknown]),
         "{reply:?}"
     );
+    context.expect_no_publish(to_organization(&acme, "join_requests.changed"))?;
+    Ok(())
+}
+
+#[component_test(OrganizationMembers)]
+async fn declining_two_requests_removes_both_and_tells_each_applicant(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    let hedy = StackUser::new("hedy");
+    seed_organization(context, &acme, ada(), &[]).await?;
+    let grace_request = seed_join_request(context, grace(), &acme).await?;
+    let hedy_request = seed_join_request(context, &hedy, &acme).await?;
+    context.expect_publish(
+        to_organization(&acme, "join_requests.changed"),
+        |event: &OrganizationJoinRequestsChanged| event.changes.len() == 2,
+    )?;
+    for (user, request) in [(grace(), &grace_request), (&hedy, &hedy_request)] {
+        let removed = request.clone();
+        context.expect_publish(
+            to_user(user, "join_requests.changed"),
+            move |event: &UserJoinRequestsChanged| {
+                matches!(event.changes.as_slice(), [UserJoinRequestsChange::Remove(id)] if **id == removed)
+            },
+        )?;
+    }
+
+    let reply =
+        decline_join_requests(context, ada(), &acme, vec![grace_request, hedy_request]).await?;
+
+    assert!(
+        matches!(&reply, DeclineOrganizationJoinRequestsResponse::Success(success)
+            if success.event.changes.len() == 2),
+        "{reply:?}"
+    );
+    assert_jm!(context.database()?.query_json(PENDING_REQUESTS).await?, 0);
+    Ok(())
+}
+
+#[component_test(OrganizationMembers)]
+async fn declining_a_selection_with_an_unknown_request_declines_none(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[]).await?;
+    let request = seed_join_request(context, grace(), &acme).await?;
+    let unknown = skir_record_id("request_to_join", "unknown");
+
+    let reply =
+        decline_join_requests(context, ada(), &acme, vec![request, unknown.clone()]).await?;
+
+    assert!(
+        matches!(&reply, DeclineOrganizationJoinRequestsResponse::RequestNotFoundError(error) if error.request_ids == [unknown]),
+        "{reply:?}"
+    );
+    assert_jm!(context.database()?.query_json(PENDING_REQUESTS).await?, 1);
     context.expect_no_publish(to_organization(&acme, "join_requests.changed"))?;
     Ok(())
 }

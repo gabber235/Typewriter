@@ -5,7 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// This widget is presentation only. It does not manage selection, focus, or
 /// hover state. Provide those states through the constructor and keep tap,
 /// keyboard focus, and selection ownership in the parent.
-class GridSelectableCard extends StatelessWidget {
+class GridSelectableCard extends HookWidget {
   const GridSelectableCard({
     required this.title,
     required this.baseColor,
@@ -17,8 +17,6 @@ class GridSelectableCard extends StatelessWidget {
     this.height = 160,
     this.borderRadius = 14,
     this.padding = const EdgeInsets.fromLTRB(14, 12, 14, 12),
-    this.animationDuration = const Duration(milliseconds: 250),
-    this.animationCurve = Curves.fastEaseInToSlowEaseOut,
     this.badgeLabel,
     this.badgeColor,
     this.badgeOnColor,
@@ -41,11 +39,12 @@ class GridSelectableCard extends StatelessWidget {
   /// Selection state. When true, the background becomes `baseColor`.
   final bool isSelected;
 
-  /// Focus state. When true, the border is highlighted in `baseColor` and
-  /// selected background gets a slight transparency shift.
+  /// Focus state, for callers that style text. The card draws no focus
+  /// itself: the focus ring layer rings it.
   final bool isFocused;
 
-  /// Drives the hover scale and the [PresentationInteractionScope] observation.
+  /// Raises the card with `hoverIn` and drives the
+  /// [PresentationInteractionScope] observation.
   final bool isHovered;
 
   /// Fixed width for the card container.
@@ -59,12 +58,6 @@ class GridSelectableCard extends StatelessWidget {
 
   /// Inner padding for the card contents.
   final EdgeInsets padding;
-
-  /// Animation duration for selection and focus transitions.
-  final Duration animationDuration;
-
-  /// Animation curve for selection and focus transitions.
-  final Curve animationCurve;
 
   /// Optional badge label rendered at the top left.
   final String? badgeLabel;
@@ -87,9 +80,6 @@ class GridSelectableCard extends StatelessWidget {
 
   Color _backgroundColor() {
     if (isSelected) {
-      if (isFocused) {
-        return baseColor.withValues(alpha: baseColor.a * 0.70);
-      }
       return baseColor;
     }
     return baseColor.withValues(alpha: baseColor.a * 0.15);
@@ -100,22 +90,25 @@ class GridSelectableCard extends StatelessWidget {
     final onBase =
         onBaseColor ?? Theme.of(context).colorScheme.surfaceContainerLowest;
 
-    final backgroundColor = _backgroundColor();
+    final interaction = PresentationInteraction(
+      selected: isSelected,
+      focused: isFocused,
+      hovered: isHovered,
+    );
+    final decoration = BoxDecoration(
+      color: _backgroundColor(),
+      borderRadius: .circular(borderRadius),
+    );
+    // The fill plays the move the token table picks for the state change:
+    // selection fades with ink.
+    final motion = useStateMotion(interaction.widgetStates, target: decoration);
 
     final card = SurfaceContainer(
-      duration: animationDuration,
-      curve: animationCurve,
+      motion: motion,
       foreground: isSelected ? onBase : baseColor,
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: .circular(borderRadius),
-        border: .all(
-          width: 2,
-          color: isFocused ? baseColor : Colors.transparent,
-        ),
-      ),
+      decoration: decoration,
       padding: padding,
       child: Builder(
         builder: (context) => Column(
@@ -152,15 +145,11 @@ class GridSelectableCard extends StatelessWidget {
           ],
         ),
       ),
-    ).animate(target: isHovered ? 1 : 0).hoverScale(isHovered);
+    );
 
     return PresentationInteractionScope(
-      value: PresentationInteraction(
-        selected: isSelected,
-        focused: isFocused,
-        hovered: isHovered,
-      ),
-      child: card,
+      value: interaction,
+      child: Rise(raised: isHovered, child: card),
     );
   }
 }

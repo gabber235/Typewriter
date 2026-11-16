@@ -24,15 +24,20 @@ class _CreateOrganization extends HookConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            StaggerEntrance(
+            Enter(
+              token: MotionToken.loadIn,
               child: Text(
                 "Create organization",
                 style: theme.textTheme.headlineMedium,
               ),
             ),
             SizedBox(height: context.spacing.space6),
-            const StaggerEntrance(child: SectionTitle(title: "Name")),
-            StaggerEntrance(
+            const Enter(
+              token: MotionToken.loadIn,
+              child: SectionTitle(title: "Name"),
+            ),
+            Enter(
+              token: MotionToken.loadIn,
               child: EditorTextField(
                 controller: nameController,
                 inputFormatters: identifierInputFormatters,
@@ -43,17 +48,22 @@ class _CreateOrganization extends HookConsumerWidget {
               ),
             ),
             SizedBox(height: context.spacing.space6),
-            StaggerEntrance(
+            Enter(
+              token: MotionToken.loadIn,
               child: _OrganizationIconPicker(
                 iconUrl: iconUrl,
                 onRandomize: () => randomSeed.value = _generateSeed(),
               ),
             ),
             SizedBox(height: context.spacing.space8),
-            StaggerEntrance(
+            Enter(
+              token: MotionToken.loadIn,
               child: SizedBox(
                 width: double.infinity,
-                child: LoadingButton.filled(
+                child: Button(
+                  face: ButtonFace.filled,
+                  label: "Create",
+                  busyLabel: "Creating",
                   onPressed: () => _createOrganization(
                     context: context,
                     ref: ref,
@@ -61,7 +71,6 @@ class _CreateOrganization extends HookConsumerWidget {
                     nameController: nameController,
                     seed: randomSeed.value,
                   ),
-                  child: const Text("Create"),
                 ),
               ),
             ),
@@ -126,7 +135,7 @@ class _CreateOrganization extends HookConsumerWidget {
       if (!context.mounted) {
         return;
       }
-      showErrorSnackBar(context, "$error");
+      context.reportFailure("Create organization failed", detail: "$error");
     }
   }
 }
@@ -147,9 +156,10 @@ class _OrganizationIconPicker extends StatelessWidget {
 
     return Material(
       borderRadius: context.shapes.largeBorderRadius,
-      child: InkWell(
-        borderRadius: context.shapes.largeBorderRadius,
-        onTap: onRandomize,
+      child: Button(
+        face: ButtonFace.bare,
+        label: "Randomize icon",
+        onPressed: onRandomize,
         child: Padding(
           padding: EdgeInsets.all(context.spacing.space3),
           child: Row(
@@ -164,7 +174,7 @@ class _OrganizationIconPicker extends StatelessWidget {
                     SizedBox(height: context.spacing.space1),
                     Text(
                       "For now, generated and can be randomized again by clicking the icon.",
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      style: context.text.sentence.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),

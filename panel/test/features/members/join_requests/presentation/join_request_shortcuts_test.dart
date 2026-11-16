@@ -4,67 +4,43 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
+const _declineSubject =
+    "cloud.to.user.ada.organization.acme.members.join_requests.decline";
+
+final _request = joinRequest(
+  "grace",
+  name: "Grace",
+  email: "grace@typewriter.test",
+);
+
 void main() {
-  for (final (key, invoked) in [
-    (LogicalKeyboardKey.escape, "clear"),
-    (LogicalKeyboardKey.delete, "decline"),
+  for (final (name, share, declines) in [
+    ("holding Delete on the selected request declines it", 1.0, 1),
+    ("releasing Delete early keeps the request", 0.5, 0),
   ]) {
-    testWidgets("${key.keyLabel} in the bulk join request actions invokes "
-        "$invoked", (tester) async {
-      final calls = <String>[];
-      final panel = await tester.pumpPanel(
-        [signedIn(ada, organization: acme), membership()],
-        at: PanelLocation.component(
-          BulkJoinRequestActions(
-            selectedCount: 1,
-            selectedIds: {skir.recordId("request_to_join:request")},
-            onClearSelection: () => calls.add("clear"),
-            onDecline: () async => calls.add("decline"),
+    testWidgets(name, (tester) async {
+      final panel = await tester.pumpPanel([
+        signedIn(ada, organization: acme),
+        membershipBackend(joinRequests: [_request]),
+      ], at: membersPage(const JoinRequestsRoute()));
+      var sent = 0;
+      panel.world.nats.registerHandler(_declineSubject, (_) {
+        sent++;
+        return skir.DeclineOrganizationJoinRequestsResponse.serializer.toBytes(
+          skir.DeclineOrganizationJoinRequestsResponse.createRequestNotFoundError(
+            requestIds: [_request.requestId],
           ),
-        ),
-      );
-      await panel.press(LogicalKeyboardKey.tab);
+        );
+      });
+      await panel.eventually(() => expect(panel.shows("Grace"), isTrue));
+      // The page opens on the first request.
+      expect(panel.focused, contains("Grace"));
+      await panel.press(LogicalKeyboardKey.enter);
 
-      await panel.press(key);
+      await panel.holdKey(LogicalKeyboardKey.delete, share: share);
 
-      expect(calls, [invoked]);
+      expect(sent, declines);
+      expect(panel.dialog.showing("Decline Grace's request?"), isFalse);
     });
   }
-
-  testWidgets("Delete on a selected join request declines the whole "
-      "selection without asking", (tester) async {
-    var bulkDeclines = 0;
-    final request = skir.OrganizationJoinRequest(
-      requestId: skir.recordId("request_to_join:selected"),
-      userId: skir.recordId("user:selected"),
-      userName: "Selected",
-      userEmail: "selected@example.com",
-      requestedAt: DateTime.utc(2026),
-      expiresAt: DateTime.utc(2100),
-      userAvatarUrl: null,
-    );
-    final panel = await tester.pumpPanel(
-      [
-        signedIn(ada, organization: acme),
-        membership(joinRequests: [request]),
-      ],
-      at: PanelLocation.component(
-        JoinRequestCard(
-          request: request,
-          isSelected: true,
-          onSelectionChanged: (_) {},
-          onSelectAll: () {},
-          onClearSelection: () {},
-          hasSelection: true,
-          onDeclineSelection: () async => bulkDeclines++,
-        ),
-      ),
-    );
-    await panel.press(LogicalKeyboardKey.tab);
-
-    await panel.press(LogicalKeyboardKey.delete);
-
-    expect(bulkDeclines, 1);
-    expect(panel.dialog.showing("Decline Selected's request?"), isFalse);
-  });
 }

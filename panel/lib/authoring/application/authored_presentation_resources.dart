@@ -38,6 +38,14 @@ extension _AuthoredPresentationResources on AuthoredPresentationHost {
         problem: "The resources binding is unavailable",
       );
     }
+    if (_oneAtATime case final reason? when location.resource == resource) {
+      return PortableResourcesProjection(
+        members: [],
+        edges: [],
+        timeline: {},
+        unavailable: reason,
+      );
+    }
     final relations = {
       for (final relation in authored.catalog.snapshot.relations)
         relation.id: relation,
@@ -201,7 +209,20 @@ extension _AuthoredPresentationResources on AuthoredPresentationHost {
     if (context.catalogGeneration != authored.generation) {
       return _reject("The editor catalog changed");
     }
+    if (_oneAtATime case final reason?) return _reject(reason);
     return _stage(label, apply, independent: true);
+  }
+
+  /// Why resources layouts do not apply while several resources edit
+  /// together: their members, placements and timelines belong to each one,
+  /// so a layout works on one of them at a time. Null for one resource.
+  String? get _oneAtATime {
+    if (editedWith.isEmpty) return null;
+    final configuration = authored.resource(resource)?.configuration;
+    final kind = configuration == null
+        ? "resource"
+        : authored.catalog.typeSelectionName(configuration).toLowerCase();
+    return "Works on one $kind at a time";
   }
 
   PortableGraphPlacement? _graphPlacement(skir.AuthoringRecord record) =>

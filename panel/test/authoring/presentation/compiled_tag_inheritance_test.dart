@@ -200,7 +200,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(section.label("Story"), findsOneWidget);
     expect(section.label("Content"), findsOneWidget);
-    expect(tester.widget<IconButton>(second).tooltip, "Collapse");
+    expect(tester.widget<Button>(second).tooltip, "Collapse");
     expect(tester.takeException(), isNull);
   });
 

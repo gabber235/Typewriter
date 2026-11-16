@@ -14,6 +14,7 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
     final selected = current is skir.DataValue_booleanWrapper
         ? current.value
         : null;
+    final mixed = scope.isMixed(input.control.binding);
     final options = input.options;
     final labels = {
       true: _controlString(options?.trueLabel, scope) ?? "On",
@@ -36,15 +37,18 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
               ? ListTileControlAffinity.leading
               : ListTileControlAffinity.trailing;
           final title = Text(
-            labels[selected] ?? "Choose a value",
+            mixed ? mixedValueLabel : labels[selected] ?? "Choose a value",
             style: style.valueStyle,
             textAlign: style.alignment,
           );
           void change(bool? value) {
-            if (value != null) {
+            // The first press on a mixed toggle turns it on for every item,
+            // whatever step a tristate check would take next.
+            final next = mixed ? true : value;
+            if (next != null) {
               scope.writePayload(
                 input.control.binding,
-                skir.DataValue.wrapBoolean(value),
+                skir.DataValue.wrapBoolean(next),
               );
             }
           }
@@ -52,6 +56,8 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
           final interactivePrefix = _interactiveAdornment(
             scope.associationFor(input.control).prefix?.node,
           );
+          // The toggle flips when Space or Enter is let go, as a button acts,
+          // instead of on key down.
           return _controlSurface(
             style,
             _entryComposition(
@@ -59,8 +65,16 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
                   ? scope.associationFor(input.control).prefix!.render(scope)
                   : null,
               child:
-                  selected == null &&
+                  mixed &&
                       options?.presentation != skir.TogglePresentation.checkbox
+                  ? MixedSwitchTile(
+                      title: title,
+                      leading: position == ListTileControlAffinity.leading,
+                      onPressed: enabled ? () => change(true) : null,
+                    )
+                  : selected == null &&
+                        options?.presentation !=
+                            skir.TogglePresentation.checkbox
                   ? AdaptiveChoiceControl<bool>(
                       choices: labels,
                       selected: null,
@@ -116,7 +130,7 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
                       onChanged: enabled ? change : null,
                     ),
             ),
-          );
+          ).pressedByKeys;
         },
       ),
     );
@@ -158,6 +172,14 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
         )
         .firstOrNull
         ?.id;
+    final mixed = scope.isMixed(control.binding);
+    // A mixed choice selects nothing and says so until the user picks one.
+    Widget withMixedMessage(Widget child) => mixed
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [child, const MixedValueMessage()],
+          )
+        : child;
     return _controlFrame(
       control,
       appearance == null ? scope : scope.withAppearance(appearance),
@@ -205,7 +227,7 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
             final reason = _controlString(override?.disabledReason, scope);
             return reason == null || available(id)
                 ? child
-                : Tooltip(message: reason, child: child);
+                : PanelTooltip(message: reason, child: child);
           }
 
           void choose(String? id) {
@@ -226,9 +248,15 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
             null,
           );
           final suffix = _entrySuffix(content, scope);
-          Widget choiceSurface(Widget child) => _controlSurface(
-            style,
-            _entryComposition(child: child, leading: leading, trailing: suffix),
+          Widget choiceSurface(Widget child) => withMixedMessage(
+            _controlSurface(
+              style,
+              _entryComposition(
+                child: child,
+                leading: leading,
+                trailing: suffix,
+              ),
+            ),
           );
           final presentation = options?.presentation;
           final segmented =
@@ -301,12 +329,7 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
             },
           );
           final externalSuffix = _interactiveAdornment(content?.suffix);
-          // DropdownMenu replaces its component themes when overrides are
-          // supplied. Apply authored properties over the panel defaults.
-          final dropdownTheme = DropdownMenuTheme.of(context);
-          final inputTheme =
-              dropdownTheme.inputDecorationTheme ??
-              Theme.of(context).inputDecorationTheme;
+          final inputTheme = Theme.of(context).inputDecorationTheme;
           final dropdown = Dropdown<String>(
             key: ValueKey("${node.nodeId}.input"),
             selected: selected,
@@ -314,7 +337,9 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
             initialization: SelectionInitializationPolicy.explicit,
             enableFilter: options?.filtering ?? true,
             menuHeight: menuHeight ?? popupConstraints?.maxHeight,
-            hintText: _entryPlaceholder(content, scope),
+            hintText: mixed
+                ? mixedValueLabel
+                : _entryPlaceholder(content, scope),
             textStyle: style.valueStyle,
             textAlign: style.alignment,
             leadingIcon: externalLeading ? null : leading,
@@ -334,32 +359,20 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
                 hintStyle: style.decoration.hintStyle,
               ),
             ),
-            menuStyle: (dropdownTheme.menuStyle ?? const MenuStyle()).copyWith(
-              backgroundColor: popup?.fill == null
-                  ? null
-                  : WidgetStatePropertyAll(colors.resolve(popup!.fill!, scope)),
-              shape: shape == null ? null : WidgetStatePropertyAll(shape),
-              padding: popup?.padding == null
-                  ? null
-                  : WidgetStatePropertyAll(_presentationInsets(popup!.padding)),
-              minimumSize: popupConstraints == null
-                  ? null
-                  : WidgetStatePropertyAll(Size(popupConstraints.minWidth, 0)),
-              maximumSize: popupConstraints == null
-                  ? null
-                  : WidgetStatePropertyAll(
-                      Size(
-                        popupConstraints.maxWidth,
-                        popupConstraints.maxHeight,
-                      ),
-                    ),
-            ),
+            popupColor: popup?.fill == null
+                ? null
+                : colors.resolve(popup!.fill!, scope),
+            popupShape: shape,
+            popupPadding: popup?.padding == null
+                ? null
+                : _presentationInsets(popup!.padding),
+            popupConstraints: popupConstraints,
             dropdownMenuEntries: [
               for (final choice in choices)
-                DropdownMenuEntry(
+                MenuChoice(
                   value: choice.id,
                   label: choice.label,
-                  labelWidget: label(choice.id, choice.label),
+                  content: label(choice.id, choice.label),
                   enabled: available(choice.id),
                 ),
             ],
@@ -382,10 +395,12 @@ extension _PortableChoiceInputRendering on PortablePresentationNodeRenderer {
                     }
                   },
           );
-          return _entryComposition(
-            child: dropdown,
-            leading: externalLeading ? leading : null,
-            trailing: externalSuffix ? suffix : null,
+          return withMixedMessage(
+            _entryComposition(
+              child: dropdown,
+              leading: externalLeading ? leading : null,
+              trailing: externalSuffix ? suffix : null,
+            ),
           );
         },
       ),

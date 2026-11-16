@@ -37,17 +37,38 @@ final _mainStory = Tag(
 
 /// A Realm named [name] with a few Books, a chaptered Book and placed tags:
 /// enough to show every place of the realm shell.
-Trait showcaseRealm({String name = "Main"}) => realm(
+///
+/// [longNames] gives [showcaseBook] and [showcasePage] names that run past
+/// every column; [extraBooks] adds that many Books, for long lists.
+Trait showcaseRealm({
+  String name = "Main",
+  bool longNames = false,
+  int extraBooks = 0,
+}) => realm(
   name: name,
   tags: [_quest, _mainStory],
   books: [
-    showcaseBook,
+    if (longNames)
+      showcaseBook.copyWith(
+        title:
+            "The Remarkably Long Chronicle of the Village That Was Lost "
+            "Twice and Found Again",
+      )
+    else
+      showcaseBook,
     Book(
       bookId: skir.ResourceId(value: "book:atlas_of_echoes"),
       title: "Atlas of Echoes",
       icon: "material-symbols:map",
       color: const Color(0xff795548),
     ),
+    for (var index = 0; index < extraBooks; index++)
+      Book(
+        bookId: skir.ResourceId(value: "book:volume_${index + 1}"),
+        title: "Volume ${index + 1}",
+        icon: "material-symbols:book",
+        color: const Color(0xff607d8b),
+      ),
   ],
   pages: [
     Page(
@@ -55,7 +76,14 @@ Trait showcaseRealm({String name = "Main"}) => realm(
       bookId: showcaseBook.bookId,
       name: "Prologue",
     ),
-    showcasePage,
+    if (longNames)
+      showcasePage.copyWith(
+        name:
+            "Arrival at the gates of the old village after the long winter "
+            "journey across the frozen mountains",
+      )
+    else
+      showcasePage,
     Page(
       pageId: skir.ResourceId(value: "page:market"),
       bookId: showcaseBook.bookId,

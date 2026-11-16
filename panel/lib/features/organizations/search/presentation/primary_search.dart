@@ -45,7 +45,8 @@ class PrimarySearchButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.theme.colorScheme;
-    return AppBarControl.filled(
+    return AppBarControl(
+      face: ButtonFace.filled,
       contentBuilder: (context, compact) => AppBarControlContent(
         compact: compact,
         icon: const Icon(Icons.search_rounded, size: 18),
@@ -63,12 +64,7 @@ class PrimarySearchButton extends ConsumerWidget {
       semanticLabel: "Search",
       preferredWidth: 360,
       onPressed: () => openPrimarySearch(context, ref),
-      style: FilledButton.styleFrom(
-        alignment: Alignment.centerLeft,
-        minimumSize: const Size.fromHeight(40),
-        backgroundColor: colors.surfaceContainer,
-        foregroundColor: colors.onSurfaceVariant,
-      ),
+      color: colors.surfaceContainer,
     );
   }
 }
@@ -90,7 +86,7 @@ class PrimarySearchShortcut extends ConsumerWidget {
           intent: OpenSearchIntent,
           priority: -12,
           icon: const Icon(Icons.search_rounded),
-          onInvoke: (ref) => openPrimarySearch(context, ref),
+          run: ActionRun.press((ref) => openPrimarySearch(context, ref)),
         ),
       ],
       child: child,

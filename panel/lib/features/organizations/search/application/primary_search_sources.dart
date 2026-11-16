@@ -13,7 +13,7 @@ PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
   final realmId = ref.read(realmIdProvider);
   final searchables = [
     if (realmId != null) "resources",
-    if (organizationId != null) "realms",
+    if (organizationId != null) ...["realms", "members", "services"],
     "organizations",
   ];
 
@@ -50,6 +50,25 @@ PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
           buildAuthoringResourceSearchResultItem,
       authoringCreationSearchResultType.rowRendererId:
           buildAuthoringCreationSearchResultItem,
+      memberSearchResultType.rowRendererId: (context) => MemberSearchResultItem(
+        member: context.result.payload as skir.OrganizationMember,
+        row: context,
+      ),
+      joinCodeSearchResultType.rowRendererId: (context) =>
+          JoinCodeSearchResultItem(
+            code: context.result.payload as JoinCodeSearchItem,
+            row: context,
+          ),
+      joinRequestSearchResultType.rowRendererId: (context) =>
+          JoinRequestSearchResultItem(
+            request: context.result.payload as skir.OrganizationJoinRequest,
+            row: context,
+          ),
+      serviceSearchResultType.rowRendererId: (context) =>
+          ServiceSearchResultItem(
+            item: context.result.payload as ServiceSearchItem,
+            row: context,
+          ),
     },
     previewRenderers: const {},
     contributionBuilder: _builder,
@@ -64,17 +83,19 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
     openOrganizationCommand(),
     createOrganizationCommand(),
   ];
-  sources.add(OrganizationsSearchSource(ref.valued(organizationsProvider)));
+  sources.add(organizationsSearchSource(ref.valued(organizationsProvider)));
 
   if (organizationId != null) {
     final realms = ref.valued(realmsProvider);
-    sources.add(RealmsSearchSource(realms));
+    sources.add(realmsSearchSource(realms));
     commands.add(
       openRealmCommand(
         organizationId: organizationId,
         availability: ref.valued(realmsAvailabilityProvider),
       ),
     );
+    sources.addAll(organizationItemSources(ref));
+    commands.addAll(openOrganizationItemCommands(organizationId));
 
     if (realmId != null) {
       final scope = AuthoringScope(
@@ -90,7 +111,7 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
           hostContext: HostContext(
             activeResource: ref.read(routedResourceProvider(scope)),
           ),
-        ).debounced(100.ms).cached(),
+        ).debounced(const Duration(milliseconds: 100)).cached(),
       ]);
       commands.addAll([
         ...openAuthoringCommands(organizationId, realmId),
@@ -124,6 +145,10 @@ SearchCommandId? _primaryCommandId(SearchResult result) =>
       realmSearchResultType => openRealmCommandId,
       authoringResourceSearchResultType => openAuthoringResourceCommandId,
       authoringCreationSearchResultType => createAuthoringResourceCommandId,
+      memberSearchResultType ||
+      joinCodeSearchResultType ||
+      joinRequestSearchResultType ||
+      serviceSearchResultType => openOrganizationItemCommandId(result.type),
       _ => null,
     };
 
@@ -146,6 +171,10 @@ List<SearchHostEffectExecutor<SearchHostEffect>> _buildHostEffectExecutors(
   SearchHostEffectExecutor<RevealCreatedAuthoringResourceEffect>(
     (effect) => effect.intent.reveal(effect.resource),
   ),
+  SearchHostEffectExecutor<RevealSelectableEffect>((effect) async {
+    await ref.read(navigationRouterProvider).navigate(effect.page);
+    ref.read(selectionProvider.notifier).reveal(effect.selectable);
+  }),
   SearchHostEffectExecutor<OpenAuthoringResourceEffect>((effect) async {
     final resource = effect.resource;
     await ref

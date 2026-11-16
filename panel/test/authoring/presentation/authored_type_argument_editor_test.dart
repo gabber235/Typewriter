@@ -145,7 +145,7 @@ void main() {
 
     await tester.tap(find.text("Allow no value"));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, "Choose"));
+    await tester.tap(find.widgetWithText(Button, "Choose"));
     await tester.pumpAndSettle();
 
     final nullable = switch (selected) {
@@ -209,7 +209,7 @@ void main() {
     await TypeChooserDriver(tester).choose("CoinReward");
 
     expect(find.text("Review type change"), findsOne);
-    await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
+    await tester.tap(find.widgetWithText(Button, "Review type change"));
     await tester.pumpAndSettle();
 
     final complete = switch (requested) {
@@ -226,7 +226,7 @@ void main() {
     expect(find.text("Values cleared: 1"), findsOne);
     expect(find.textContaining("variable:1 value"), findsOne);
 
-    await tester.tap(find.widgetWithText(FilledButton, "Apply type change"));
+    await tester.tap(find.widgetWithText(Button, "Apply type change"));
     await tester.pumpAndSettle();
 
     expect(committed?.next, requested);
@@ -273,7 +273,7 @@ void main() {
     await tester.tap(find.text("Choose a type").first);
     await tester.pumpAndSettle();
     await TypeChooserDriver(tester).choose("CoinReward");
-    await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
+    await tester.tap(find.widgetWithText(Button, "Review type change"));
     await tester.pumpAndSettle();
 
     final pending = switch (requested) {

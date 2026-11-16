@@ -55,6 +55,11 @@ class AuthoredResourcesInteractions extends StatelessWidget {
         _ => AuthoredResourceItem(
           identifier: identifier,
           resources: resources,
+          checkPlacement: switch (view.layout) {
+            PortableResourcesLayoutKind.list ||
+            PortableResourcesLayoutKind.tree => SelectorCheckPlacement.leading,
+            _ => SelectorCheckPlacement.corner,
+          },
           child: content,
         ),
       };
@@ -163,7 +168,22 @@ class _AuthoredResourcesLayoutState
             if (!canMutate)
               DeleteIntent: CallbackAction<DeleteIntent>(onInvoke: (_) => null),
           },
-          child: SelectionOperationShortcuts(child: widget.child),
+          child: SelectionOperationShortcuts(
+            child: SelectionSurface(
+              // A graph builds only the nodes near the screen; select all
+              // still reaches every member.
+              every: widget.view.layout == PortableResourcesLayoutKind.graph
+                  ? [
+                      for (final member in widget.view.members)
+                        AuthoringResourceIdentifier.inScope(
+                          widget.authoringScope,
+                          member.resource,
+                        ),
+                    ]
+                  : null,
+              child: widget.child,
+            ),
+          ),
         ),
       ),
     );
@@ -269,17 +289,20 @@ class _ResourceItemDragAndDrop extends ConsumerWidget {
 }
 
 /// A member of a workspace layout: selected by tap or activation; double tap
-/// opens it, like the Open operation.
+/// opens it, like the Open operation. In select mode its check shows at
+/// [checkPlacement].
 class AuthoredResourceItem extends HookConsumerWidget {
   const AuthoredResourceItem({
     required this.identifier,
     required this.resources,
     required this.child,
+    this.checkPlacement = SelectorCheckPlacement.leading,
     super.key,
   });
 
   final AuthoringResourceIdentifier identifier;
   final AuthoredResourcesContext resources;
+  final SelectorCheckPlacement checkPlacement;
   final Widget child;
 
   @override
@@ -303,7 +326,7 @@ class AuthoredResourceItem extends HookConsumerWidget {
             dropAccepted: hover.accepted,
             dropRejected: hover.rejected,
           ),
-          child: child,
+          child: SelectorCheck(placement: checkPlacement, child: child),
         ),
       ),
     );
@@ -423,7 +446,10 @@ class AuthoredGraphItem extends HookConsumerWidget {
                   dropAccepted: hover.accepted,
                   dropRejected: hover.rejected,
                 ),
-                child: child,
+                child: SelectorCheck(
+                  placement: SelectorCheckPlacement.corner,
+                  child: child,
+                ),
               );
           return _ResourceItemDragAndDrop(
             identifier: identifier,

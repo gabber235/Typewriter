@@ -7,25 +7,34 @@ import "package:typewriter_testkit/src/core/world.dart";
 /// The backend answers the signed in user's own projections over NATS: the
 /// organizations they belong to and the [joinRequests] they wait on.
 ///
-/// Like [backendOverNats], the panel's real projections run against
-/// [World.nats] instead of the organization doubles. This trait answers their
-/// snapshot requests at sequence 1; requests to create an organization, to
-/// join one or to cancel a join request reach the handlers the test
-/// registers. For tests of the organization entry page and the user's own
-/// membership commands.
-Trait userBackend({List<skir.UserJoinRequest> joinRequests = const []}) =>
-    _UserBackend(joinRequests);
+/// The panel's real projections run against [World.nats] instead of the
+/// organization doubles. This trait answers their snapshot requests at
+/// sequence 1; a false [organizationsArrive] never answers the organization
+/// list, so the entry page keeps loading. Requests to create an
+/// organization, to join one or to cancel a join request reach the handlers
+/// the test registers. For tests of the organization entry page and the
+/// user's own membership commands.
+Trait userBackend({
+  List<skir.UserJoinRequest> joinRequests = const [],
+  bool organizationsArrive = true,
+}) => _UserBackend(joinRequests, organizationsArrive);
 
 final class _UserBackend extends Trait {
-  const _UserBackend(this.joinRequests);
+  const _UserBackend(this.joinRequests, this.organizationsArrive);
 
   final List<skir.UserJoinRequest> joinRequests;
+
+  /// Whether the organization list answers; false keeps it loading.
+  final bool organizationsArrive;
 
   @override
   Slot get slot => const Slot("backend");
 
   @override
-  String get description => "userBackend(${joinRequests.length} join requests)";
+  String get description => organizationsArrive
+      ? "userBackend(${joinRequests.length} join requests)"
+      : "userBackend(organizations withheld, "
+            "${joinRequests.length} join requests)";
 
   @override
   void applyTo(WorldBuilder world) {
@@ -39,12 +48,14 @@ final class _UserBackend extends Trait {
             skir.WatchUserOrganizationsRequest()
                 .operation(userId: user.id)
                 .subject,
-            (_) => skir.WatchUserOrganizationsResponse.serializer.toBytes(
-              skir.WatchUserOrganizationsResponse.createSnapshot(
-                sequence: 1,
-                values: world.organizations,
-              ),
-            ),
+            (_) => organizationsArrive
+                ? skir.WatchUserOrganizationsResponse.serializer.toBytes(
+                    skir.WatchUserOrganizationsResponse.createSnapshot(
+                      sequence: 1,
+                      values: world.organizations,
+                    ),
+                  )
+                : Completer<Uint8List>().future,
           )
           ..registerHandler(
             skir.WatchUserJoinRequestsRequest()

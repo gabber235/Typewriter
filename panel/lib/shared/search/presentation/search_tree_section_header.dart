@@ -21,9 +21,10 @@ class SearchTreeSectionHeader extends StatelessWidget {
     return Material(
       color: colorScheme.surface,
       borderRadius: context.shapes.largeBorderRadius,
-      child: InkWell(
-        borderRadius: context.shapes.largeBorderRadius,
-        onTap: onToggle,
+      child: Button(
+        face: ButtonFace.bare,
+        label: "",
+        onPressed: onToggle,
         child: Padding(
           padding: EdgeInsets.only(
             left: context.spacing.space3 + row.depth * context.spacing.space4,
@@ -36,8 +37,8 @@ class SearchTreeSectionHeader extends StatelessWidget {
             children: [
               AnimatedRotation(
                 turns: row.expanded ? 0.25 : 0,
-                duration: 750.ms,
-                curve: ElasticOutCurve(0.4),
+                duration: motionTimeline(context, MotionToken.loadIn).duration,
+                curve: motionTimeline(context, MotionToken.loadIn).curve,
                 child: const Icon(Icons.keyboard_arrow_right_rounded),
               ),
               Expanded(

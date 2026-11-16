@@ -118,11 +118,13 @@ class _DateTimeCalendarSelectionGridState
                 button: true,
                 selected: selected,
                 label: item.label,
-                child: InkWell(
-                  borderRadius: context.shapes.smallBorderRadius,
-                  onTap: () => widget.onSelected(item.value),
+                child: Button(
+                  face: ButtonFace.bare,
+                  label: "",
+                  onPressed: () => widget.onSelected(item.value),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 120),
+                    duration: motionTimeline(context, MotionToken.ink).duration,
+                    curve: motionTimeline(context, MotionToken.ink).curve,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: selected

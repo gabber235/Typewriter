@@ -1,52 +1,41 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Switches keyed messages with an elastic slide, fade, and size transition.
+/// Switches keyed messages: the new message arrives with `loadIn`, the old
+/// leaves with `listOut`, and the size follows.
 ///
 /// The child identity controls when a message changes. This widget owns only
-/// presentation timing and does not retain message or loading state.
+/// presentation and does not retain message or loading state.
 class ElasticMessageSwitcher extends StatelessWidget {
-  const ElasticMessageSwitcher({
-    required this.child,
-    this.sizeDuration = const Duration(milliseconds: 1000),
-    this.duration = const Duration(milliseconds: 420),
-    this.reverseDuration = const Duration(milliseconds: 180),
-    super.key,
-  });
+  const ElasticMessageSwitcher({required this.child, super.key});
 
   /// Message to display. Use a distinct key to animate between messages.
   final Widget? child;
 
-  final Duration sizeDuration;
-  final Duration duration;
-  final Duration reverseDuration;
-
   @override
   Widget build(BuildContext context) {
-    final reduced = MediaQuery.disableAnimationsOf(context);
-    if (reduced) return child ?? const SizedBox.shrink();
-    return AnimatedSize(
-      duration: sizeDuration,
+    final arrive = motionTimeline(context, MotionToken.loadIn);
+    final leave = motionTimeline(context, MotionToken.listOut);
+    final content = AnimatedSwitcher(
+      duration: arrive.duration,
+      reverseDuration: leave.duration,
+      transitionBuilder: (child, animation) {
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) => ExcludeInteraction(
+            excluding:
+                animation.status == AnimationStatus.reverse ||
+                animation.status == AnimationStatus.dismissed,
+            child: child!,
+          ),
+          child: ElasticMessageTransition(animation: animation, child: child),
+        );
+      },
+      child: child,
+    );
+    return MotionSize(
+      grow: MotionToken.loadIn,
       alignment: Alignment.topCenter,
-      curve: const ElasticOutCurve(0.9),
-      child: AnimatedSwitcher(
-        duration: duration,
-        reverseDuration: reverseDuration,
-        switchInCurve: Curves.linear,
-        switchOutCurve: Curves.linear,
-        transitionBuilder: (child, animation) {
-          return AnimatedBuilder(
-            animation: animation,
-            builder: (context, child) => ExcludeInteraction(
-              excluding:
-                  animation.status == AnimationStatus.reverse ||
-                  animation.status == AnimationStatus.dismissed,
-              child: child!,
-            ),
-            child: ElasticMessageTransition(animation: animation, child: child),
-          );
-        },
-        child: child,
-      ),
+      child: content,
     );
   }
 }

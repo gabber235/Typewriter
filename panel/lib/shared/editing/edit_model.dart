@@ -236,7 +236,7 @@ sealed class EditStageResult with _$EditStageResult {
 extension EditStagePresentation on EditStageResult {
   void report(BuildContext context) {
     if (this case EditStageRejected(:final message)) {
-      showErrorSnackBar(context, message);
+      context.reportFailure("Change refused", detail: message);
     }
   }
 }

@@ -45,11 +45,13 @@ extension _AuthoredPresentationCollections on AuthoredPresentationHost {
         representation.isInstantiable;
     if (!requiresPreparation) {
       return _stage("Add collection item", (operation) {
-        operation.insert(
-          target,
-          items.lastOrNull?.id,
-          skir.ListItem(id: item, value: authored.defaultValue(expected)),
-        );
+        for (final at in _each(target)) {
+          operation.insert(
+            at,
+            items.lastOrNull?.id,
+            skir.ListItem(id: item, value: authored.defaultValue(expected)),
+          );
+        }
       }, target: target);
     }
     final prepare = prepareValue;
@@ -66,18 +68,20 @@ extension _AuthoredPresentationCollections on AuthoredPresentationHost {
       label: "Add collection item",
       from: authored,
       apply: (operation) async {
-        operation.expect(target);
+        final targets = _each(target).toList()..forEach(operation.expect);
         final prepared = await prepare(request);
         if (_disposed || !enabled || readOnly) {
           throw StateError("The presentation closed during preparation");
         }
-        operation.insertPrepared(
-          target,
-          items.lastOrNull?.id,
-          item,
-          request,
-          prepared,
-        );
+        for (final at in targets) {
+          operation.insertPrepared(
+            at,
+            items.lastOrNull?.id,
+            item,
+            request,
+            prepared,
+          );
+        }
       },
     );
     if (result case EditStageRejected(:final message)) {
@@ -391,43 +395,48 @@ extension _AuthoredPresentationCollections on AuthoredPresentationHost {
       label: "Add map row",
       from: observation,
       apply: (operation) async {
-        final current = operation.expect(target);
-        if (current is! PortablePathValue<skir.DataValue> ||
-            current.value.authoredPayload != payload) {
-          throw StateError("The map changed before this edit");
+        final targets = _each(target).toList();
+        for (final at in targets) {
+          final current = operation.expect(at);
+          if (current is! PortablePathValue<skir.DataValue> ||
+              current.value.authoredPayload != payload) {
+            throw StateError("The map changed before this edit");
+          }
         }
         final key = await prepareBranch(keyType);
         final value = await prepareBranch(valueType);
         if (_disposed || !enabled || readOnly) {
           throw StateError("The presentation closed during preparation");
         }
-        operation.replaceMap(target, [
-          ...rows,
-          skir.MapRow(
-            id: item,
-            key: observation.defaultValue(keyType),
-            value: observation.defaultValue(valueType),
-          ),
-        ]);
-        for (final (branch, prepared) in [
-          (skir.PathSegment.mapKey, key),
-          (skir.PathSegment.mapValue, value),
-        ]) {
-          if (prepared == null) continue;
-          operation.applyPreparedRecord(
-            skir.ValueLocation(
-              resource: target.resource,
-              path: skir.ValuePath(
-                segments: [
-                  ...target.path.segments,
-                  skir.PathSegment.createItem(id: item),
-                  branch,
-                ],
-              ),
+        for (final at in targets) {
+          operation.replaceMap(at, [
+            ...rows,
+            skir.MapRow(
+              id: item,
+              key: observation.defaultValue(keyType),
+              value: observation.defaultValue(valueType),
             ),
-            prepared.$1,
-            prepared.$2,
-          );
+          ]);
+          for (final (branch, prepared) in [
+            (skir.PathSegment.mapKey, key),
+            (skir.PathSegment.mapValue, value),
+          ]) {
+            if (prepared == null) continue;
+            operation.applyPreparedRecord(
+              skir.ValueLocation(
+                resource: at.resource,
+                path: skir.ValuePath(
+                  segments: [
+                    ...at.path.segments,
+                    skir.PathSegment.createItem(id: item),
+                    branch,
+                  ],
+                ),
+              ),
+              prepared.$1,
+              prepared.$2,
+            );
+          }
         }
       },
     );

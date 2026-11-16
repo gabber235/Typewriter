@@ -10,7 +10,6 @@ part "authoring_conflict_review.dart";
 part "authoring_link_staging.dart";
 part "authoring_expectations.dart";
 part "resource_counterpart_catalog.dart";
-part "authoring_defaults.dart";
 
 /// An atomic pair of saved facts and the working overlay sent for preparation.
 @freezed

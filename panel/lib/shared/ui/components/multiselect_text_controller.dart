@@ -55,6 +55,16 @@ class _MultiSelectTextEditingController extends TextEditingController {
     return TextSpan(style: style, children: children);
   }
 
+  /// Shows [labels] as the field's text, the caret after them, without
+  /// reporting them: they come from the selection, so reporting them would
+  /// set the selection it was built from, during build.
+  void showLabels(String labels) {
+    super.value = TextEditingValue(
+      text: labels,
+      selection: TextSelection.collapsed(offset: labels.length),
+    );
+  }
+
   @override
   set value(TextEditingValue newValue) {
     if (!newValue.selection.isValid) {

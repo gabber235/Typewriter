@@ -48,6 +48,21 @@ void main() {
     expect(panel.searchInput.query.isFocused, isTrue);
   });
 
+  testWidgets("moving focus from the query into the results keeps the search "
+      "open", (tester) async {
+    final fixture = SearchInputScenario();
+    final panel = await fixture.show(tester);
+    await panel.searchInput.open();
+
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    expect(panel.search.result("Book").isFocused, isTrue);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+
+    expect(panel.search.result("Map").isFocused, isTrue);
+    expect(panel.searchInput.query.exists, isTrue);
+    expect(fixture.writes, isEmpty);
+  });
+
   testWidgets("focused summary survives a host refresh and reopens", (
     tester,
   ) async {
@@ -69,6 +84,8 @@ void main() {
     final panel = await fixture.show(tester);
     await panel.searchInput.open();
     await tester.tapAt(tester.getCenter(find.text("Map")));
+    // The write takes 40 milliseconds; wait it out before the panel settles.
+    await tester.pump(const Duration(milliseconds: 40));
     await panel.settle();
     expect(fixture.value.authoredString, "Map");
     expect(panel.searchInput.query.exists, isFalse);
@@ -124,8 +141,10 @@ void main() {
       await panel.searchInput.open();
       await panel.press(LogicalKeyboardKey.arrowDown);
       expect(fixture.writes, isEmpty);
-      expect(panel.searchInput.highlighted, "Book");
+      expect(panel.search.result("Book").isFocused, isTrue);
 
+      await panel.press(LogicalKeyboardKey.escape);
+      expect(panel.searchInput.query.isFocused, isTrue);
       await panel.press(LogicalKeyboardKey.escape);
       expect(panel.searchInput.query.exists, isFalse);
       expect(fixture.value, skir.DataValue.wrapStringValue("Book"));
@@ -168,59 +187,60 @@ void main() {
     },
   );
 
-  testWidgets(
-    "multiple choices apply individually while the field stays open",
-    (tester) async {
-      final scenario = CollectionEditorScenario(
-        empty: true,
-        transformLayout: (_) => presentationNode(
-          "search",
-          skir.PresentationElement.wrapSearchInput(
-            staticSearchControl(
-              target: skir.BindingRef(
-                bindingId: configuredValueBindingId,
-                path: CollectionEditorScenario.entriesPath,
-              ),
-              listType: _scenarioList,
-              label: "Icon identifier",
-              placeholder: "Search icons",
-              choices: {
-                for (final name in ["Book", "Map", "Star"])
-                  name: skir.DataValue.wrapStringValue(name),
-              },
-            ),
-          ),
-        ),
-      );
-      addTearDown(scenario.dispose);
-      final panel = await tester.showComponent(
-        Scaffold(
-          body: SingleChildScrollView(
-            child: SizedBox(
-              width: 360,
-              child: CollectionEditorScenarioView(scenario: scenario),
-            ),
-          ),
-        ),
-      );
-      List<String?> entries() => [
-        for (final item in scenario.value.authoredItems!)
-          item.value.authoredString,
-      ];
-      await panel.tapOn(panel.searchInput.summaryButton);
-      await tester.tapAt(tester.getCenter(find.text("Map")));
-      await panel.settle();
-      expect(entries(), ["Map"]);
+  group("a list picker's results are a selection of its values", () {
+    testWidgets("by pointer alone, a click toggles one value, a toggle click "
+        "adds another and a Shift click adds the range in one edit", (
+      tester,
+    ) async {
+      final picker = ListPickerScenario();
+      final panel = await picker.show(tester);
+      await panel.searchInput.open();
+
+      await panel.search.result("Map").tap();
+      expect(picker.entries, ["Map"]);
+      expect(panel.search.result("Map").isChecked, isTrue);
+      await panel.search.result("Book").toggle();
+      expect(picker.entries, ["Map", "Book"]);
+
+      final changes = picker.changes;
+      await panel.search.result("Wolf").selectRangeTo();
+      expect(picker.entries, ["Map", "Book", "Star", "Wolf"]);
+      expect(picker.changes, changes + 1);
+
+      await panel.search.result("Map").tap();
+      expect(picker.entries, ["Book", "Star", "Wolf"]);
+      expect(panel.search.result("Map").isChecked, isFalse);
       expect(panel.searchInput.query.exists, isTrue);
-      await tester.tapAt(tester.getCenter(find.text("Star")));
-      await panel.settle();
-      expect(entries(), ["Map", "Star"]);
-      await tester.tapAt(tester.getCenter(find.text("Map").last));
-      await panel.settle();
-      expect(entries(), ["Star"]);
-      expect(tester.takeException(), isNull);
-    },
-  );
+    });
+
+    testWidgets("by keys alone, Enter and Space toggle the focused value, "
+        "Shift with an arrow adds the range and select all adds every value, "
+        "then removes them", (tester) async {
+      final picker = ListPickerScenario();
+      final panel = await picker.show(tester);
+      await panel.press(LogicalKeyboardKey.tab);
+      await panel.press(LogicalKeyboardKey.enter);
+      await panel.press(LogicalKeyboardKey.arrowDown);
+
+      await panel.press(LogicalKeyboardKey.enter);
+      expect(picker.entries, ["Book"]);
+      await panel.press(LogicalKeyboardKey.space);
+      expect(picker.entries, isEmpty);
+      await panel.press(LogicalKeyboardKey.space);
+
+      final changes = picker.changes;
+      await panel.pressShifted(LogicalKeyboardKey.arrowDown);
+      expect(picker.entries, ["Book", "Map"]);
+      expect(picker.changes, changes + 1);
+      expect(panel.search.result("Map").isFocused, isTrue);
+
+      await panel.pressPrimary(LogicalKeyboardKey.keyA);
+      expect(picker.entries, ["Book", "Map", "Star", "Wolf"]);
+      await panel.pressPrimary(LogicalKeyboardKey.keyA);
+      expect(picker.entries, isEmpty);
+      expect(panel.searchInput.query.exists, isTrue);
+    });
+  });
 
   testWidgets("rejected selections remain open with feedback", (tester) async {
     final fixture = SearchInputScenario(reject: true);
@@ -306,14 +326,5 @@ void main() {
     },
   );
 }
-
-/// The text list type [CollectionEditorScenario] stores its entries as.
-final _scenarioList = skir.TypeDefinitionId(
-  typeId: skir.TypeId.createQualified(
-    namespace: "collection.fixture",
-    name: "TextList",
-  ),
-  revision: 1,
-);
 
 final _queryBinding = skir.ExpressionBindingId(value: "query");

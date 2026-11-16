@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/core/pump_panel.dart";
 import "package:typewriter_testkit/src/core/stage.dart";
+import "package:typewriter_testkit/src/core/trait.dart";
 import "package:typewriter_testkit/src/drivers/component_driver.dart";
 import "package:typewriter_testkit/src/drivers/search/search_driver.dart";
 import "package:typewriter_testkit/src/drivers/semantics.dart";
@@ -10,8 +11,10 @@ import "package:typewriter_testkit/src/shared/search/query.dart";
 /// Showing a query bar on its own.
 extension ShowQueryBar on WidgetTester {
   /// Shows a [width] wide query bar holding [query] over [selectors], the
-  /// mock selectors when absent, wired to the given callbacks.
+  /// mock selectors when absent, wired to the given callbacks, in a panel
+  /// shaped by [traits].
   Future<QueryBarDriver> showQueryBar({
+    List<Trait> traits = const [],
     String query = "",
     List<QuerySelectorDefinition>? selectors,
     ValueChanged<String>? onQueryChanged,
@@ -25,7 +28,7 @@ extension ShowQueryBar on WidgetTester {
     double width = 500,
   }) async {
     final panel = await pumpPanel(
-      const [],
+      traits,
       at: PanelLocation.component(
         SizedBox(
           width: width,

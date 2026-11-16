@@ -38,40 +38,9 @@ class DateTimePickerField extends HookConsumerWidget {
     this.popupConstraints,
     this.enabled = true,
     this.readOnly = false,
+    this.mixed = false,
     super.key,
-  }) : mixed = false;
-
-  const DateTimePickerField.mixed({
-    required this.includeDate,
-    required this.includeTime,
-    required this.onChanged,
-    this.onCleared,
-    this.onInteractionStart,
-    this.onInteractionCommit,
-    this.showPicker = true,
-    this.minimum,
-    this.maximum,
-    this.timeIncrementMilliseconds,
-    this.popupPadding,
-    this.popupColor,
-    this.popupShape,
-    this.decoration,
-    this.style,
-    this.textAlign = TextAlign.start,
-    this.selectAllOnFocus = false,
-    this.showDefaultIcon = true,
-    this.statesController,
-    this.onCommittedDone,
-    this.onPickerCommitted,
-    this.display,
-    this.validator,
-    this.overlayConfig,
-    this.popupConstraints,
-    this.enabled = true,
-    this.readOnly = false,
-    super.key,
-  }) : value = null,
-       mixed = true;
+  }) : assert(!mixed || value == null);
 
   final bool showPicker;
   final DateTime? minimum;
@@ -281,7 +250,7 @@ class DateTimePickerField extends HookConsumerWidget {
                   ),
                 ],
                 priority: 1000,
-                onInvoke: (_) => copyValue(),
+                run: ActionRun.press((_) => copyValue()),
               ),
             if (enabled && showPicker)
               ActionShortcut(
@@ -292,13 +261,11 @@ class DateTimePickerField extends HookConsumerWidget {
                     : "Open the date and time picker",
                 activators: [AdaptiveSingleActivator(LogicalKeyboardKey.keyP)],
                 priority: 1001,
-                onInvoke: (_) => toggle(),
+                run: ActionRun.press((_) => toggle()),
               ),
           ],
           decoration: (decoration ?? const InputDecoration()).copyWith(
-            hintText: mixed
-                ? "Multiple values"
-                : decoration?.hintText ?? format,
+            hintText: mixed ? mixedValueLabel : decoration?.hintText ?? format,
             helperText: !mixed && currentValue == null
                 ? "This value is Unfilled"
                 : null,
@@ -307,21 +274,18 @@ class DateTimePickerField extends HookConsumerWidget {
               children: [
                 if (decoration?.suffixIcon != null) decoration!.suffixIcon!,
                 if (!readOnly && showPicker)
-                  IconButton(
-                    focusNode: pickerFocus,
-                    tooltip: open.value ? "Close picker" : "Open picker",
-                    constraints: const BoxConstraints.tightFor(
-                      width: 30,
-                      height: 36,
-                    ),
-                    padding: EdgeInsets.zero,
-                    onPressed: enabled ? toggle : null,
+                  Button(
+                    face: ButtonFace.icon,
                     icon: Icones(
                       includeDate
                           ? MaterialSymbols.calendar_month_rounded
                           : MaterialSymbols.schedule_rounded,
                       size: 18,
                     ),
+                    label: open.value ? "Close picker" : "Open picker",
+                    tooltip: open.value ? "Close picker" : "Open picker",
+                    focusNode: pickerFocus,
+                    onPressed: enabled ? toggle : null,
                   ),
               ],
             ),

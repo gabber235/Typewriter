@@ -1,6 +1,8 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Applies the message transition used by [ElasticMessageSwitcher].
+/// Applies the message transition used by [ElasticMessageSwitcher]: the
+/// message drops in from just above on the `loadIn` curve and leaves on the
+/// `listOut` curve, fading as it goes.
 ///
 /// The supplied animation is owned by the enclosing switcher. This transition
 /// does not alter the child's lifecycle or identity.
@@ -16,19 +18,18 @@ class ElasticMessageTransition extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final elastic = CurvedAnimation(
+    final shaped = CurvedAnimation(
       parent: animation,
-      curve: const ElasticOutCurve(0.82),
-      reverseCurve: Curves.easeInCubic,
+      curve: motionTimeline(context, MotionToken.loadIn).curve,
+      reverseCurve: motionTimeline(context, MotionToken.listOut).curve.flipped,
     );
-
     return FadeTransition(
       opacity: animation,
       child: SlideTransition(
         position: Tween(
           begin: const Offset(0, -0.1),
           end: Offset.zero,
-        ).animate(elastic),
+        ).animate(shaped),
         child: child,
       ),
     );

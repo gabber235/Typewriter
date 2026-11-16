@@ -12,6 +12,7 @@ part "service_portable_presentation.dart";
 part "service_projection.dart";
 part "service_resource_repository.dart";
 part "service_route_projection.dart";
+part "service_search.dart";
 part "service_selection.dart";
 part "services.freezed.dart";
 part "services.g.dart";

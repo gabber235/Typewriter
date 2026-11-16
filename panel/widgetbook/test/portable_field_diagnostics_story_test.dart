@@ -21,6 +21,72 @@ void main() {
     expect(panel.field("Title").isFocused, isTrue);
   });
 
+  testWidgets("a title made too short says why only once typing pauses", (
+    tester,
+  ) async {
+    final panel = await tester.pumpStory(portableFieldValidationUseCase);
+    await panel.field("Title").type("Find the lantern");
+    await tester.runStory();
+
+    // One keystroke, then a pause shorter than the wait before its problem
+    // shows.
+    panel.field("Title").keystroke("Fi");
+    await tester.runStory(duration: const Duration(milliseconds: 300));
+    expect(panel.shows(_shortTitle), isFalse);
+
+    await tester.runStory();
+    expect(panel.shows(_shortTitle), isTrue);
+  });
+
+  testWidgets("the quest stays clear while a new title problem waits, then "
+      "tints with it", (tester) async {
+    final panel = await tester.pumpStory(portableFieldValidationUseCase);
+    await panel.field("Title").type("Find the lantern");
+    await tester.runStory();
+    expect(panel.header("Quest").tinted, isFalse);
+
+    panel.field("Title").keystroke("Fi");
+    await tester.runStory(duration: const Duration(milliseconds: 300));
+    expect(panel.shows(_shortTitle), isFalse);
+    expect(panel.header("Quest").tinted, isFalse);
+
+    await tester.runStory();
+    expect(panel.shows(_shortTitle), isTrue);
+    expect(panel.header("Quest").tinted, isTrue);
+  });
+
+  testWidgets("the quest marks a new title problem together with its "
+      "message", (tester) async {
+    final panel = await tester.pumpStory(portableFieldValidationUseCase);
+    await panel.field("Title").type("Find the lantern");
+    await tester.runStory();
+    expect(panel.header("Quest").marked, isFalse);
+
+    panel.field("Title").keystroke("Fi");
+    await tester.runStory(duration: const Duration(milliseconds: 300));
+    expect(panel.header("Quest").marked, isFalse);
+
+    await tester.runStory();
+    expect(panel.shows(_shortTitle), isTrue);
+    expect(panel.header("Quest").marked, isTrue);
+  });
+
+  testWidgets("a corrected title says Fixed, then its message closes", (
+    tester,
+  ) async {
+    final panel = await tester.pumpStory(portableFieldValidationUseCase);
+
+    await panel.field("Title").focus();
+    panel.field("Title").keystroke("Find the lantern");
+    await tester.runStory(duration: const Duration(milliseconds: 400));
+    expect(panel.shows("Fixed"), isTrue);
+    expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+
+    await tester.runStory(duration: const Duration(seconds: 2));
+    expect(panel.shows("Fixed"), isFalse);
+    expect(panel.shows(_shortTitle), isFalse);
+  });
+
   testWidgets("a collapsed quest still reports its field diagnostic and "
       "expands to the same draft", (tester) async {
     final panel = await tester.pumpStory(portableFieldValidationUseCase);

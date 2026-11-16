@@ -84,11 +84,12 @@ method GenerateOrganizationJoinCode(
   invalid_record_id_error: InvalidRecordIdError;
 } = 920102;
 
-// Removes an active invitation code and emits its remove change after the transaction commits.
-// An expired or already removed code is reported as not found.
-method RevokeOrganizationJoinCode(
+// Removes every selected active invitation code in one transaction and emits their remove changes
+// after the transaction commits. An expired or already removed code is reported as not found, and any
+// invalid target rejects the complete selection.
+method RevokeOrganizationJoinCodes(
   struct {
-    code_id: RecordId;
+    code_ids: [RecordId];
   }
 ): enum {
   internal_error: InternalError;
@@ -97,10 +98,12 @@ method RevokeOrganizationJoinCode(
     event: OrganizationJoinCodesChanged;
   };
 
-  /// Join code not found.
+  /// Join codes not found.
   code_not_found_error: struct {
-    code_id: RecordId;
+    code_ids: [RecordId];
   };
+  /// Selection must contain distinct targets.
+  invalid_selection_error: struct {};
 
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;

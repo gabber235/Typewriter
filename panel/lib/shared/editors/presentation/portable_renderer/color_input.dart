@@ -107,6 +107,7 @@ extension _PortableColorInputRendering on PortablePresentationNodeRenderer {
                       input.content?.leading != skir.InputAdornment.none,
                   key: ValueKey("${node.nodeId}.input"),
                   color: color,
+                  mixed: scope.isMixed(input.control.binding),
                   includeAlpha: input.includeAlpha,
                   editingFormat: editingFormat,
                   pickerFormat: options?.pickerFormat == null

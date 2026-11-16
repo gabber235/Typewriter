@@ -88,7 +88,7 @@ void main() {
         ]),
       ),
     );
-    final action = find.text("Action 2");
+    final action = find.bySemanticsLabel(RegExp("^Action 2"));
 
     await tester.tap(action);
     await tester.pump();

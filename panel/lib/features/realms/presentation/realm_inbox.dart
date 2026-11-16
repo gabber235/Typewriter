@@ -51,7 +51,7 @@ class RealmInboxShortcut extends HookConsumerWidget {
           description: "Review realm issues and saved changes",
           intent: OpenRealmInboxIntent,
           priority: 20,
-          onInvoke: (_) => popup.openFocused(),
+          run: ActionRun.press((_) => popup.openFocused()),
         ),
     ];
     return RegisteredActionShortcuts(
@@ -102,36 +102,22 @@ class RealmInboxButton extends HookConsumerWidget {
         }
         sheetOpen = true;
         unawaited(
-          showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: context.theme.colorScheme.surfaceContainer
-                .withValues(alpha: 0),
-            builder: (context) {
-              sheetContext = context;
-              return SafeArea(
-                minimum: EdgeInsets.all(context.spacing.space3),
-                child: Material(
-                  color: context.theme.colorScheme.surfaceContainer,
-                  borderRadius: context.shapes.largeBorderRadius,
-                  clipBehavior: Clip.antiAlias,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.sizeOf(context).height * .8,
-                    ),
-                    child: RealmInboxContent(
-                      scope: scope,
-                      onClose: () => Navigator.pop(context),
-                    ),
+          context
+              .showPanelSheet<void>((context) {
+                sheetContext = context;
+                return SheetCard(
+                  maxHeight: MediaQuery.sizeOf(context).height * .8,
+                  child: RealmInboxContent(
+                    scope: scope,
+                    onClose: () => Navigator.pop(context),
                   ),
-                ),
-              );
-            },
-          ).whenComplete(() {
-            sheetOpen = false;
-            sheetContext = null;
-            if (context.mounted) popup.close();
-          }),
+                );
+              })
+              .whenComplete(() {
+                sheetOpen = false;
+                sheetContext = null;
+                if (context.mounted) popup.close();
+              }),
         );
       }
 
@@ -140,7 +126,8 @@ class RealmInboxButton extends HookConsumerWidget {
     }, [mobile, popup]);
     Widget trigger(VoidCallback open) => Semantics(
       liveRegion: true,
-      child: AppBarControl.filled(
+      child: AppBarControl(
+        face: ButtonFace.filled,
         contentBuilder: (context, compact) => AnimatedStatusContent(
           compact: compact,
           icon: Icon(
@@ -153,7 +140,7 @@ class RealmInboxButton extends HookConsumerWidget {
         ),
         tooltip: "Realm inbox (Shift + P in Normal mode)",
         semanticLabel: displayed.semanticLabel,
-        style: displayed.buttonStyle(context),
+        color: displayed.buttonColor(context),
         onPressed: open,
       ),
     );
@@ -207,7 +194,7 @@ class RealmInboxContent extends ConsumerWidget {
           openRealmInboxLocationProvider(scope, location).future,
         );
         if (!opened && context.mounted) {
-          showErrorSnackBar(context, "This resource is no longer available");
+          context.reportFailure("This resource is no longer available");
         }
       },
     );

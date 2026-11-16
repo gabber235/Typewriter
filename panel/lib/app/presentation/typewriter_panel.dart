@@ -25,8 +25,8 @@ class TypewriterPanel extends HookConsumerWidget {
       secondaryForeground: context.colors.contentSecondary,
       child: AppOverlay(
         child: Scaffold(
-          body: AppRequiredWidgets(
-            child: Responsive(
+          body: Responsive(
+            child: AppRequiredWidgets(
               child: RequiredNatsConnection(
                 child: child ?? const SizedBox.shrink(),
               ),
@@ -41,6 +41,7 @@ class TypewriterPanel extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(appearanceProvider);
+    final motion = ref.watch(motionTableProvider);
 
     return RepaintBoundary(
       key: screenshotKey,
@@ -51,8 +52,8 @@ class TypewriterPanel extends HookConsumerWidget {
             builder: (context) => MaterialApp.router(
               title: "Typewriter",
               debugShowCheckedModeBanner: false,
-              theme: buildTheme(Brightness.light),
-              darkTheme: buildTheme(Brightness.dark),
+              theme: buildTheme(Brightness.light, motion: motion),
+              darkTheme: buildTheme(Brightness.dark, motion: motion),
               themeMode: themeMode,
               routerConfig: router.config(
                 navigatorObservers: () => [

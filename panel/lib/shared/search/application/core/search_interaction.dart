@@ -33,12 +33,12 @@ sealed class SearchCommandState with _$SearchCommandState {
   const factory SearchCommandState.enabled() = SearchCommandEnabled;
 }
 
+/// The one result a command acts on, the focused result, and the query it
+/// was found by.
 @freezed
 abstract class SearchCommandTarget with _$SearchCommandTarget {
-  @Assert("selection.length > 0", "Selection must not be empty.")
   const factory SearchCommandTarget({
-    required SearchResult primary,
-    required List<SearchResult> selection,
+    required SearchResult result,
     required SearchQueryContext query,
   }) = _SearchCommandTarget;
 }
@@ -57,8 +57,6 @@ abstract class SearchResultMatcher<P extends Object>
   }
 }
 
-enum SearchCommandBatchMode { single, repeated, batch, custom }
-
 typedef SearchCommandEvaluator<P extends Object> = SearchCommandState Function(
   P value,
   SearchCommandTarget target,
@@ -69,28 +67,17 @@ typedef SearchCommandExecutor<P extends Object> =
       P value,
       SearchCommandTarget target,
     );
-typedef SearchBatchCommandEvaluator<P extends Object> =
-    SearchCommandState Function(List<P> values, SearchCommandTarget target);
-typedef SearchBatchCommandExecutor<P extends Object> =
-    Future<SearchCommandResult> Function(
-      SearchCommandExecutionContext context,
-      List<P> values,
-      SearchCommandTarget target,
-    );
 
-/// Describes an operation against a captured result batch and query.
+/// Describes an operation against the focused result and its query.
 ///
 /// Evaluation supplies visibility and an actionable disabled reason before
 /// execution. Dependencies trigger reevaluation when external availability
-/// changes. Single commands require one matching item, repeated commands invoke
-/// each matched item concurrently and merge outcomes, and batch commands receive
-/// the entire matched selection once. Host side effects are returned as data
-/// for the surface host to execute.
+/// changes. Host side effects are returned as data for the surface host to
+/// execute.
 abstract interface class SearchCommand {
   SearchCommandId get id;
   SearchCommandPresentation get presentation;
   Iterable<Listenable> get dependencies;
-  SearchCommandBatchMode get batchMode;
 
   SearchCommandState evaluate(SearchCommandTarget target);
 
@@ -114,66 +101,21 @@ abstract interface class SearchCommand {
     evaluate: evaluate,
     execute: execute,
   );
-
-  static SearchCommand repeated<P extends Object>({
-    required SearchCommandId id,
-    required SearchCommandPresentation presentation,
-    required SearchResultMatcher<P> matcher,
-    required SearchCommandExecutor<P> execute,
-    Iterable<Listenable> dependencies = const [],
-    SearchCommandEvaluator<P>? evaluate,
-  }) => RepeatedSearchCommand<P>(
-    id: id,
-    presentation: presentation,
-    matcher: matcher,
-    dependencies: dependencies,
-    evaluate: evaluate,
-    execute: execute,
-  );
-
-  static SearchCommand batch<P extends Object>({
-    required SearchCommandId id,
-    required SearchCommandPresentation presentation,
-    required SearchResultMatcher<P> matcher,
-    required SearchBatchCommandExecutor<P> execute,
-    Iterable<Listenable> dependencies = const [],
-    SearchBatchCommandEvaluator<P>? evaluate,
-  }) => BatchSearchCommand<P>(
-    id: id,
-    presentation: presentation,
-    matcher: matcher,
-    dependencies: dependencies,
-    evaluate: evaluate,
-    execute: execute,
-  );
-
-  static SearchCommand custom({
-    required SearchCommandId id,
-    required SearchCommandPresentation presentation,
-    required SearchCommandState Function(SearchCommandTarget target) evaluate,
-    required Future<SearchCommandResult> Function(
-      SearchCommandExecutionContext context,
-      SearchCommandTarget target,
-    )
-    execute,
-    Iterable<Listenable> dependencies = const [],
-  }) => CustomSearchCommand(
-    id: id,
-    presentation: presentation,
-    dependencies: dependencies,
-    evaluate: evaluate,
-    execute: execute,
-  );
 }
 
-abstract base class _TypedSearchCommand<P extends Object>
-    implements SearchCommand {
-  _TypedSearchCommand({
+/// A command for results of one type: it matches the result's payload with
+/// [matcher] and is hidden for results it does not match.
+final class SingleSearchCommand<P extends Object> implements SearchCommand {
+  SingleSearchCommand({
     required this.id,
     required this.presentation,
     required this.matcher,
+    required SearchCommandExecutor<P> execute,
     Iterable<Listenable> dependencies = const [],
-  }) : dependencies = List.unmodifiable(dependencies);
+    SearchCommandEvaluator<P>? evaluate,
+  }) : dependencies = List.unmodifiable(dependencies),
+       _evaluate = evaluate,
+       _execute = execute;
 
   @override
   final SearchCommandId id;
@@ -182,42 +124,12 @@ abstract base class _TypedSearchCommand<P extends Object>
   final SearchResultMatcher<P> matcher;
   @override
   final List<Listenable> dependencies;
-
-  List<P>? matchAll(SearchCommandTarget target) {
-    final values = <P>[];
-    for (final result in target.selection) {
-      final value = matcher.match(result);
-      if (value == null) return null;
-      values.add(value);
-    }
-    return values;
-  }
-}
-
-final class SingleSearchCommand<P extends Object>
-    extends _TypedSearchCommand<P> {
-  SingleSearchCommand({
-    required super.id,
-    required super.presentation,
-    required super.matcher,
-    required SearchCommandExecutor<P> execute,
-    super.dependencies,
-    SearchCommandEvaluator<P>? evaluate,
-  }) : _evaluate = evaluate,
-       _execute = execute;
-
   final SearchCommandEvaluator<P>? _evaluate;
   final SearchCommandExecutor<P> _execute;
 
   @override
-  SearchCommandBatchMode get batchMode => SearchCommandBatchMode.single;
-
-  @override
   SearchCommandState evaluate(SearchCommandTarget target) {
-    if (target.selection.length != 1) {
-      return const SearchCommandState.hidden();
-    }
-    final value = matcher.match(target.primary);
+    final value = matcher.match(target.result);
     if (value == null) return const SearchCommandState.hidden();
     return _evaluate?.call(value, target) ?? const SearchCommandState.enabled();
   }
@@ -227,157 +139,14 @@ final class SingleSearchCommand<P extends Object>
     SearchCommandExecutionContext context,
     SearchCommandTarget target,
   ) {
-    final value = matcher.match(target.primary);
-    if (value == null || target.selection.length != 1) {
+    final value = matcher.match(target.result);
+    if (value == null) {
       return Future.value(
         const SearchCommandResult.failed(message: "Invalid search result"),
       );
     }
     return _execute(context, value, target);
   }
-}
-
-final class RepeatedSearchCommand<P extends Object>
-    extends _TypedSearchCommand<P> {
-  RepeatedSearchCommand({
-    required super.id,
-    required super.presentation,
-    required super.matcher,
-    required SearchCommandExecutor<P> execute,
-    super.dependencies,
-    SearchCommandEvaluator<P>? evaluate,
-  }) : _evaluate = evaluate,
-       _execute = execute;
-
-  final SearchCommandEvaluator<P>? _evaluate;
-  final SearchCommandExecutor<P> _execute;
-
-  @override
-  SearchCommandBatchMode get batchMode => SearchCommandBatchMode.repeated;
-
-  @override
-  SearchCommandState evaluate(SearchCommandTarget target) {
-    final values = matchAll(target);
-    if (values == null || values.isEmpty) {
-      return const SearchCommandState.hidden();
-    }
-    return _mergeCommandStates([
-      for (final value in values)
-        _evaluate?.call(value, target) ?? const SearchCommandState.enabled(),
-    ]);
-  }
-
-  @override
-  Future<SearchCommandResult> execute(
-    SearchCommandExecutionContext context,
-    SearchCommandTarget target,
-  ) async {
-    final values = matchAll(target);
-    if (values == null || values.isEmpty) {
-      return const SearchCommandResult.failed(message: "Invalid search result");
-    }
-    return (await Future.wait([
-      for (final value in values) _execute(context, value, target),
-    ])).merge();
-  }
-}
-
-final class BatchSearchCommand<P extends Object>
-    extends _TypedSearchCommand<P> {
-  BatchSearchCommand({
-    required super.id,
-    required super.presentation,
-    required super.matcher,
-    required SearchBatchCommandExecutor<P> execute,
-    super.dependencies,
-    SearchBatchCommandEvaluator<P>? evaluate,
-  }) : _evaluate = evaluate,
-       _execute = execute;
-
-  final SearchBatchCommandEvaluator<P>? _evaluate;
-  final SearchBatchCommandExecutor<P> _execute;
-
-  @override
-  SearchCommandBatchMode get batchMode => SearchCommandBatchMode.batch;
-
-  @override
-  SearchCommandState evaluate(SearchCommandTarget target) {
-    final values = matchAll(target);
-    if (values == null || values.isEmpty) {
-      return const SearchCommandState.hidden();
-    }
-    return _evaluate?.call(values, target) ??
-        const SearchCommandState.enabled();
-  }
-
-  @override
-  Future<SearchCommandResult> execute(
-    SearchCommandExecutionContext context,
-    SearchCommandTarget target,
-  ) {
-    final values = matchAll(target);
-    if (values == null || values.isEmpty) {
-      return Future.value(
-        const SearchCommandResult.failed(message: "Invalid search result"),
-      );
-    }
-    return _execute(context, values, target);
-  }
-}
-
-final class CustomSearchCommand implements SearchCommand {
-  CustomSearchCommand({
-    required this.id,
-    required this.presentation,
-    required SearchCommandState Function(SearchCommandTarget target) evaluate,
-    required Future<SearchCommandResult> Function(
-      SearchCommandExecutionContext context,
-      SearchCommandTarget target,
-    )
-    execute,
-    Iterable<Listenable> dependencies = const [],
-  }) : dependencies = List.unmodifiable(dependencies),
-       _evaluate = evaluate,
-       _execute = execute;
-
-  @override
-  final SearchCommandId id;
-  @override
-  final SearchCommandPresentation presentation;
-  @override
-  final List<Listenable> dependencies;
-  final SearchCommandState Function(SearchCommandTarget target) _evaluate;
-  final Future<SearchCommandResult> Function(
-    SearchCommandExecutionContext context,
-    SearchCommandTarget target,
-  )
-  _execute;
-
-  @override
-  SearchCommandBatchMode get batchMode => SearchCommandBatchMode.custom;
-
-  @override
-  SearchCommandState evaluate(SearchCommandTarget target) => _evaluate(target);
-
-  @override
-  Future<SearchCommandResult> execute(
-    SearchCommandExecutionContext context,
-    SearchCommandTarget target,
-  ) => _execute(context, target);
-}
-
-SearchCommandState _mergeCommandStates(List<SearchCommandState> states) {
-  if (states.any((state) => state is SearchCommandHidden)) {
-    return const SearchCommandState.hidden();
-  }
-  final reasons = states
-      .whereType<SearchCommandDisabled>()
-      .map((state) => state.reason)
-      .toSet();
-  if (reasons.isNotEmpty) {
-    return SearchCommandState.disabled(reasons.join("; "));
-  }
-  return const SearchCommandState.enabled();
 }
 
 @freezed
@@ -486,7 +255,7 @@ abstract interface class SearchCommandDispatcher {
 
   SearchCommandSubmitResult executeCommand(
     SearchCommandId id, {
-    String? resultId,
+    required String resultId,
   });
 }
 
@@ -671,51 +440,10 @@ sealed class SearchCommandResult with _$SearchCommandResult {
   const factory SearchCommandResult.cancelled() = SearchCommandResultCancelled;
 }
 
-extension SearchCommandResults on List<SearchCommandResult> {
-  SearchCommandResult merge() {
-    if (isEmpty) return const SearchCommandResult.completed();
-    final actionable = where(
-      (result) => result is! SearchCommandResultCancelled,
-    ).toList();
-    if (actionable.isEmpty) return const SearchCommandResult.cancelled();
-
-    final effects = actionable
-        .map(
-          (result) => switch (result) {
-            SearchCommandResultCompleted(:final surfaceEffect) => surfaceEffect,
-            SearchCommandResultFailed(:final surfaceEffect) => surfaceEffect,
-            SearchCommandResultCancelled() => throw StateError(
-              "Cancelled results were removed before effect merging",
-            ),
-          },
-        )
-        .toSet();
-    final messages = actionable
-        .whereType<SearchCommandResultFailed>()
-        .map((result) => result.message)
-        .toSet();
-    if (messages.isNotEmpty) {
-      return SearchCommandResult.failed(
-        message: messages.length == 1
-            ? messages.first
-            : "Search failed: ${messages.join(", ")}",
-        surfaceEffect: effects.merge(),
-      );
-    }
-    return SearchCommandResult.completed(
-      surfaceEffect: effects.merge(),
-      hostEffects: actionable
-          .whereType<SearchCommandResultCompleted>()
-          .expand((result) => result.hostEffects)
-          .toList(),
-    );
-  }
-}
-
 enum SearchCommandSubmitResult {
   submitted,
   busy,
-  invalidSelection,
+  resultNotFound,
   commandNotFound,
   notApplicable,
 }
@@ -724,23 +452,20 @@ enum SearchCommandSubmitResult {
 sealed class SearchCommandExecutionState with _$SearchCommandExecutionState {
   const factory SearchCommandExecutionState.idle() = SearchCommandIdle;
 
-  @Assert("resultIds.length > 0", "Result IDs must not be empty.")
   const factory SearchCommandExecutionState.running({
     required SearchCommandId command,
-    required Set<String> resultIds,
+    required String resultId,
   }) = SearchCommandRunning;
 
-  @Assert("resultIds.length > 0", "Result IDs must not be empty.")
   const factory SearchCommandExecutionState.completed({
     required SearchCommandId command,
-    required Set<String> resultIds,
+    required String resultId,
   }) = SearchCommandCompleted;
 
-  @Assert("resultIds.length > 0", "Result IDs must not be empty.")
   @Assert("message != \"\"", "Message must not be empty.")
   const factory SearchCommandExecutionState.failed({
     required SearchCommandId command,
-    required Set<String> resultIds,
+    required String resultId,
     required String message,
   }) = SearchCommandFailed;
 }

@@ -50,6 +50,75 @@ void main() {
     },
   );
 
+  testWidgets(
+    "a request to a mounted field reveals it while the panel is idle",
+    (tester) async {
+      final controller = PortableLocationRevealController();
+      addTearDown(controller.dispose);
+      final panel = await tester.showComponent(
+        PortableLocationRevealScope(
+          controller: controller,
+          child: PortableLocationTarget(
+            location: root,
+            child: TextField(decoration: InputDecoration(labelText: "Title")),
+          ),
+        ),
+      );
+
+      controller.request(root);
+      await tester.pump();
+      await tester.pump();
+
+      expect(panel.focused, "Title");
+    },
+  );
+
+  testWidgets("a created resource's reveal focuses its first empty field", (
+    tester,
+  ) async {
+    final controller = PortableLocationRevealController();
+    addTearDown(controller.dispose);
+    skir.ValueLocation field(String name) => skir.ValueLocation(
+      resource: root.resource,
+      path: skir.ValuePath(
+        segments: [skir.PathSegment.createField(name: name)],
+      ),
+    );
+    final panel = await tester.showComponent(
+      PortableLocationRevealScope(
+        controller: controller,
+        child: PortableLocationTarget(
+          location: root,
+          child: Column(
+            children: [
+              PortableLocationTarget(
+                location: field("name"),
+                isEmpty: () => false,
+                child: TextField(
+                  controller: TextEditingController(text: "Intro"),
+                  decoration: InputDecoration(labelText: "Name"),
+                ),
+              ),
+              PortableLocationTarget(
+                location: field("summary"),
+                isEmpty: () => true,
+                child: TextField(
+                  decoration: InputDecoration(labelText: "Summary"),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    controller.request(root, focus: RevealFocus.firstEmptyField);
+    await tester.pump();
+    await tester.pump();
+
+    expect(panel.focused, startsWith("Summary"));
+  });
+
   testWidgets("a root reveal focuses the requested inspector presentation", (
     tester,
   ) async {

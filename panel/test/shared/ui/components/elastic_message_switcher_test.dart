@@ -22,7 +22,10 @@ void main() {
     expect(panel.shows("First"), isTrue);
     expect(panel.shows("Second"), isTrue);
 
-    await tester.pump(const Duration(milliseconds: 421));
+    await tester.pump(
+      tester.settleTimeOf(MotionToken.listOut) +
+          const Duration(milliseconds: 20),
+    );
     expect(panel.shows("First"), isFalse);
     expect(panel.shows("Second"), isTrue);
   });
@@ -40,7 +43,10 @@ void main() {
     );
     expect(panel.shows("Message"), isTrue);
 
-    await tester.pump(const Duration(milliseconds: 181));
+    await tester.pump(
+      tester.settleTimeOf(MotionToken.listOut) +
+          const Duration(milliseconds: 20),
+    );
     expect(panel.shows("Message"), isFalse);
   });
 }

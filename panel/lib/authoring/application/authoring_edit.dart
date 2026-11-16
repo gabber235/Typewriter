@@ -531,7 +531,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
 
   @override
   skir.DataValue defaultValue(skir.TypeUse? type) =>
-      _AuthoringDefaults(catalog).forType(type);
+      catalog?.defaultValue(type) ?? skir.DataValue.unfilled;
 
   PortablePathResult<skir.AuthoringRecord> _remove(
     skir.ValueLocation location,

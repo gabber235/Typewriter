@@ -25,6 +25,18 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
           if (row.selectable) row.resource: row,
       };
     }
+    final differing = childScope.itemValues(control.control.binding);
+    // Copying one item's links to the others would skip their counterparts,
+    // so differing link lists offer no edit of their own.
+    if (differing.any((value) => value?.authoredItems != null)) {
+      return _renderMixedCollection(
+        control.control,
+        childScope,
+        differing,
+        "link lists",
+        editable: false,
+      );
+    }
     final items = childScope
         .read(control.control.binding)
         ?.authoredItems
@@ -55,12 +67,10 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
       context,
       childScope,
       location,
-      collectionWithFocus(
+      collectionWithHeader(
         sourceScope: childScope,
         mutationScope: childScope,
         reference: control.control.binding,
-        removalKind: _CollectionRemovalKind.none,
-        renderedOrder: [for (final item in items) item.id],
         sourceHeader: node.header == null
             ? null
             : _ScopedCollectionHeader(header: node.header, scope: childScope),
@@ -83,86 +93,89 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
           ),
         ),
         headerBuilder: headerBuilder,
-        buildBody: (context) {
-          late final CollectionSequence sequence;
-          sequence = CollectionSequence(
-            scope: childScope,
-            collection: control.control.binding,
-            items: items,
-            allowReorder: control.allowReorder,
-            entryBuilder: (context, item, index) {
-              final reference = skir.BindingRef(
-                bindingId: control.control.binding.bindingId,
-                path: skir.ValuePath(
-                  segments: [
-                    ...control.control.binding.path.segments,
-                    skir.PathSegment.createItem(id: item.id),
-                  ],
-                ),
-              );
-              final itemLocation = skir.ValueLocation(
-                resource: location.resource,
-                path: skir.ValuePath(
-                  segments: [
-                    ...location.path.segments,
-                    skir.PathSegment.createItem(id: item.id),
-                  ],
-                ),
-              );
-              return directLinkEntry(
-                item: item,
-                reference: reference,
-                location: itemLocation,
+        buildBody: (context) =>
+            _withItemMotion(control.appearance, (arrival, leave) {
+              late final CollectionSequence sequence;
+              sequence = CollectionSequence(
                 scope: childScope,
-                owner: node,
-                control: rowControl,
-                candidates: candidates,
-                candidateDefinition: candidateDefinition,
-                fallbackHeader: () =>
-                    _generatedEntryHeader("Item ${index + 1}"),
-                movementControls: [
-                  if (control.allowReorder)
-                    _SuppliedHeaderControl(
-                      command: _CollectionCommand.reorder(
-                        childScope.diagnosticTarget(reference),
-                      ),
-                      build: (context) => sequence.handle(
-                        context,
-                        index,
-                        childScope,
-                        label: "Reorder linked resource ${index + 1}",
-                        icon: _operationGlyph(
-                          control.content?.reorderIcon,
-                          childScope,
-                          const Icon(Icons.drag_handle),
-                        ),
-                      ),
+                collection: control.control.binding,
+                items: items,
+                allowReorder: control.allowReorder,
+                arrival: arrival,
+                leave: leave,
+                entryBuilder: (context, item, index) {
+                  final reference = skir.BindingRef(
+                    bindingId: control.control.binding.bindingId,
+                    path: skir.ValuePath(
+                      segments: [
+                        ...control.control.binding.path.segments,
+                        skir.PathSegment.createItem(id: item.id),
+                      ],
                     ),
-                ],
+                  );
+                  final itemLocation = skir.ValueLocation(
+                    resource: location.resource,
+                    path: skir.ValuePath(
+                      segments: [
+                        ...location.path.segments,
+                        skir.PathSegment.createItem(id: item.id),
+                      ],
+                    ),
+                  );
+                  return directLinkEntry(
+                    item: item,
+                    reference: reference,
+                    location: itemLocation,
+                    scope: childScope,
+                    owner: node,
+                    control: rowControl,
+                    candidates: candidates,
+                    candidateDefinition: candidateDefinition,
+                    fallbackHeader: () =>
+                        _generatedEntryHeader("Item ${index + 1}"),
+                    movementControls: [
+                      if (control.allowReorder)
+                        _SuppliedHeaderControl(
+                          command: _CollectionCommand.reorder(
+                            childScope.diagnosticTarget(reference),
+                          ),
+                          build: (context) => sequence.handle(
+                            context,
+                            index,
+                            childScope,
+                            label: "Reorder linked resource ${index + 1}",
+                            icon: _operationGlyph(
+                              control.content?.reorderIcon,
+                              childScope,
+                              const Icon(Icons.drag_handle),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               );
-            },
-          );
-          return _controlFrame(
-            control.control,
-            control.inputAppearance == null
-                ? childScope
-                : childScope.withAppearance(control.inputAppearance!),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (items.isEmpty)
-                  _collectionEmpty(
-                    context,
-                    childScope,
-                    control.content,
-                    "No linked resources",
-                  ),
-                sequence,
-              ],
-            ),
-            renderPrefix: true,
-          );
-        },
+              return _controlFrame(
+                control.control,
+                control.inputAppearance == null
+                    ? childScope
+                    : childScope.withAppearance(control.inputAppearance!),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (items.isEmpty)
+                      _collectionEmpty(
+                        context,
+                        childScope,
+                        control.content,
+                        "No linked resources",
+                      ),
+                    sequence,
+                  ],
+                ),
+                renderPrefix: true,
+              );
+            }),
       ),
     );
   }
@@ -183,10 +196,8 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
   }) {
     final address = scope.authoredAliases.resolve(reference);
     if (address == null) return _diagnostic("The linked item is unavailable");
-    return _MountedCollectionRow(
-      key: ValueKey(item.id.value),
-      row: item.id,
-      builder: (context, row) {
+    return Builder(
+      builder: (context) {
         final style = _controlStyle(context, scope, control.inputAppearance);
         final link = scope.read(reference)?.authoredLink;
         final enabled = scope.canExecuteAction;
@@ -240,18 +251,12 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
                   _operationAppearance(
                     control.content,
                     scope,
-                    (states, buttonStyle) => IconButton(
-                      focusNode: row.recoveryFocus,
-                      statesController: states,
+                    (states, buttonStyle) => _linkChooseButton(
+                      scope,
+                      control,
+                      linked: link != null,
+                      states: states,
                       style: buttonStyle,
-                      tooltip: _operationText(
-                        scope,
-                        control.content?.operationTooltip ??
-                            control.content?.chooseLabel,
-                        link == null
-                            ? "Choose linked resource"
-                            : "Change linked resource",
-                      ),
                       onPressed: enabled
                           ? () => runDirectLinkChange(
                               context: context,
@@ -262,11 +267,6 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
                               candidateDefinition: candidateDefinition,
                             )
                           : null,
-                      icon: _operationGlyph(
-                        control.content?.chooseIcon,
-                        scope,
-                        Icon(link == null ? Icons.link : Icons.edit_outlined),
-                      ),
                     ),
                     tooltip: false,
                   ),
@@ -278,7 +278,6 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
         final clear = link == null
             ? null
             : directLinkClearControl(
-                row: row,
                 scope: scope,
                 control: control,
                 reference: reference,
@@ -345,7 +344,6 @@ extension _DirectLinkCollectionOperations on PortablePresentationNodeRenderer {
     required Map<skir.ResourceId, _AuthoredCollectionRow>? candidates,
     required skir.PresentationCollectionDefinition? candidateDefinition,
   }) {
-    _CollectionInteractionScope.invalidateAncestors(context);
     unawaited(
       _chooseLink(
         context: context,
@@ -359,7 +357,6 @@ extension _DirectLinkCollectionOperations on PortablePresentationNodeRenderer {
   }
 
   _SuppliedHeaderControl directLinkClearControl({
-    required _CollectionRowBinding row,
     required PortablePresentationScope scope,
     required skir.LinkControl control,
     required skir.BindingRef reference,
@@ -369,27 +366,19 @@ extension _DirectLinkCollectionOperations on PortablePresentationNodeRenderer {
     build: (context) => _operationAppearance(
       control.content,
       scope,
-      (states, style) => IconButton(
-        statesController: states,
+      (states, style) => _linkClearButton(
+        scope,
+        control,
+        states: states,
         style: style,
-        tooltip: _operationText(
-          scope,
-          control.content?.operationTooltip ?? control.content?.unlinkLabel,
-          "Clear link",
-        ),
         onPressed: scope.canExecuteAction && scope.host is PortableLinkHost
-            ? () => runCollectionClear(
-                row: row,
-                scope: scope,
-                reference: reference,
-                occurrence: occurrence,
+            ? () => unawaited(
+                scope.clearLinkedOccurrence(
+                  reference: reference,
+                  occurrence: occurrence,
+                ),
               )
             : null,
-        icon: _operationGlyph(
-          control.content?.unlinkIcon,
-          scope,
-          const Icon(Icons.link_off),
-        ),
       ),
       tooltip: false,
     ),
@@ -420,10 +409,22 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = _controlStyle(context, scope, control.inputAppearance);
     final value = scope.read(reference);
-    final link = value?.authoredLink;
+    // Selected resources linking differently show that they differ; clearing
+    // clears each one's link.
+    final mixed = scope.isMixed(reference);
+    final link = mixed ? null : value?.authoredLink;
+    final cleared = mixed
+        ? scope
+              .selectedValues(reference)
+              .map((selected) => selected?.authoredLink)
+              .nonNulls
+              .firstOrNull
+        : link;
     final enabled = scope.enabled && !scope.readOnly;
     final selectedRow = link == null ? null : candidates?[link.target.resource];
-    final summary = link == null
+    final summary = mixed
+        ? const Text(mixedValueLabel, overflow: TextOverflow.ellipsis)
+        : link == null
         ? Text(
             _entryPlaceholder(control.inputContent, scope) ??
                 _operationText(
@@ -469,17 +470,12 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
               _operationAppearance(
                 control.content,
                 scope,
-                (states, style) => IconButton(
-                  statesController: states,
+                (states, style) => _linkChooseButton(
+                  scope,
+                  control,
+                  linked: cleared != null,
+                  states: states,
                   style: style,
-                  tooltip: _operationText(
-                    scope,
-                    control.content?.operationTooltip ??
-                        control.content?.chooseLabel,
-                    link == null
-                        ? "Choose linked resource"
-                        : "Change linked resource",
-                  ),
                   onPressed: enabled
                       ? () => _chooseLink(
                           context: context,
@@ -490,27 +486,18 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                           candidateDefinition: candidateDefinition,
                         )
                       : null,
-                  icon: _operationGlyph(
-                    control.content?.chooseIcon,
-                    scope,
-                    Icon(link == null ? Icons.link : Icons.edit_outlined),
-                  ),
                 ),
                 tooltip: false,
               ),
-              if (link != null)
+              if (cleared != null)
                 _operationAppearance(
                   control.content,
                   scope,
-                  (states, style) => IconButton(
-                    statesController: states,
+                  (states, style) => _linkClearButton(
+                    scope,
+                    control,
+                    states: states,
                     style: style,
-                    tooltip: _operationText(
-                      scope,
-                      control.content?.operationTooltip ??
-                          control.content?.unlinkLabel,
-                      "Clear link",
-                    ),
                     onPressed: enabled
                         ? () {
                             unawaited(
@@ -518,21 +505,16 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                                 reference: reference,
                                 occurrence: skir.LinkOccurrence(
                                   id: skir.LinkOccurrenceId(
-                                    endpoint: link.endpoint,
+                                    endpoint: cleared.endpoint,
                                     location: location,
                                   ),
                                   source: location.resource,
-                                  target: link.target,
+                                  target: cleared.target,
                                 ),
                               ),
                             );
                           }
                         : null,
-                    icon: _operationGlyph(
-                      control.content?.unlinkIcon,
-                      scope,
-                      const Icon(Icons.link_off),
-                    ),
                   ),
                   tooltip: false,
                 ),
@@ -546,7 +528,12 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
       control.inputAppearance == null
           ? scope
           : scope.withAppearance(control.inputAppearance!),
-      content,
+      mixed
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [content, const MixedValueMessage()],
+            )
+          : content,
     );
     if (_CollectionInlineEditor.contains(context)) return framedContent;
     return Padding(
@@ -598,4 +585,67 @@ final class _MissingLinkTarget extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The icon button that chooses a linked resource, or changes it once one
+/// is [linked]. In a collection row it is the row's landing: after a remove,
+/// focus lands on it in the next row.
+Widget _linkChooseButton(
+  PortablePresentationScope scope,
+  skir.LinkControl control, {
+  required bool linked,
+  required WidgetStatesController states,
+  required ButtonStyle style,
+  required VoidCallback? onPressed,
+}) {
+  final text = _operationText(
+    scope,
+    control.content?.operationTooltip ?? control.content?.chooseLabel,
+    linked ? "Change linked resource" : "Choose linked resource",
+  );
+  return RowLanding(
+    child: Button(
+      face: ButtonFace.icon,
+      icon: _operationGlyph(
+        control.content?.chooseIcon,
+        scope,
+        Icon(linked ? Icons.edit_outlined : Icons.link),
+      ),
+      label: text,
+      tooltip: text,
+      color: _accentOf(style, null),
+      dense: _denseOf(style),
+      statesController: states,
+      onPressed: onPressed,
+    ),
+  );
+}
+
+/// The icon button that clears a link.
+Widget _linkClearButton(
+  PortablePresentationScope scope,
+  skir.LinkControl control, {
+  required WidgetStatesController states,
+  required ButtonStyle style,
+  required VoidCallback? onPressed,
+}) {
+  final text = _operationText(
+    scope,
+    control.content?.operationTooltip ?? control.content?.unlinkLabel,
+    "Clear link",
+  );
+  return Button(
+    face: ButtonFace.icon,
+    icon: _operationGlyph(
+      control.content?.unlinkIcon,
+      scope,
+      const Icon(Icons.link_off),
+    ),
+    label: text,
+    tooltip: text,
+    color: _accentOf(style, null),
+    dense: _denseOf(style),
+    statesController: states,
+    onPressed: onPressed,
+  );
 }

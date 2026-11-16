@@ -38,6 +38,7 @@ class QueryBar extends HookWidget {
     this.onCancel,
     this.textFieldActions,
     this.selectAllOnFocus = false,
+    this.loadingLabel,
     this.enabled = true,
     this.readOnly = false,
     super.key,
@@ -74,6 +75,10 @@ class QueryBar extends HookWidget {
   final VoidCallback? onCancel;
   final List<ActionShortcut>? textFieldActions;
   final bool selectAllOnFocus;
+
+  /// While set, a thin progress bar runs along the bottom edge of the text
+  /// box, clear of its rounded corners, and a screen reader hears this.
+  final String? loadingLabel;
   final bool enabled;
   final bool readOnly;
 

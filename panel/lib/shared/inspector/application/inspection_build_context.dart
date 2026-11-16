@@ -25,21 +25,10 @@ final class InspectionBuildContext {
     _hosts.removeAll(hosts);
   }
 
-  /// Creates and registers a composite owner for the selected targets.
+  /// Creates and registers a composite owner over the selected [owners].
   ///
   /// The returned owner is valid for this build context only. The individual
-  /// target owners remain owned by the editor owner registry.
-  MultiEditOwner multiEditorFor(
-    Iterable<ValueEditingRegistration> targets, {
-    required skir.TypeUse rootType,
-    required CheckedEditorCatalog catalog,
-  }) => multiEditorForOwners(
-    targets.map(owners.editor),
-    rootType: rootType,
-    catalog: catalog,
-  );
-
-  /// Creates and registers a composite owner from already resolved owners.
+  /// owners remain owned by the editor owner registry.
   MultiEditOwner multiEditorForOwners(
     Iterable<EditOwner> owners, {
     required skir.TypeUse rootType,

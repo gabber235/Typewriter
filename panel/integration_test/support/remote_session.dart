@@ -80,7 +80,7 @@ final class RemoteSession {
         .listen(membershipResourceRepositoryProvider(id), (_, _) {})
         .read();
     final work = scoped.read(localWorkControllerProvider);
-    (await work.execute(commands.remove(removed.userId))).requireAccepted();
+    (await work.execute(commands.remove([removed.userId]))).requireAccepted();
   }
 
   /// Makes [person] a stranger to [organization] again: removes their
@@ -96,18 +96,23 @@ final class RemoteSession {
         .read();
     final work = scoped.read(localWorkControllerProvider);
     final members = await _watch(scoped, organizationMembersProvider.future);
-    for (final member in members.where((member) => member.name == person)) {
-      (await work.execute(commands.remove(member.userId))).requireAccepted();
+    final memberIds = [
+      for (final member in members)
+        if (member.name == person) member.userId,
+    ];
+    if (memberIds.isNotEmpty) {
+      (await work.execute(commands.remove(memberIds))).requireAccepted();
     }
     final requests = await _watch(
       scoped,
       organizationJoinRequestsProvider.future,
     );
-    for (final request in requests.where(
-      (request) => request.userName == person,
-    )) {
-      (await work.execute(commands.decline(request.requestId)))
-          .requireAccepted();
+    final requestIds = [
+      for (final request in requests)
+        if (request.userName == person) request.requestId,
+    ];
+    if (requestIds.isNotEmpty) {
+      (await work.execute(commands.decline(requestIds))).requireAccepted();
     }
   }
 

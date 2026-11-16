@@ -4,12 +4,13 @@ import com.typewritermc.authoring.name
 import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationConfirmation
 import skirout.editor.v1.operation.OperationDrop
+import skirout.editor.v1.operation.OperationEmphasis
 import skirout.editor.v1.operation.OperationGroup
 import skirout.editor.v1.operation.OperationInspector
 import skirout.editor.v1.operation.OperationPresentation
 import skirout.editor.v1.operation.OperationShortcut
+import skirout.editor.v1.operation.OperationWeight
 import skirout.editor.v1.operation.ResourceOperationId
-import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.HeaderActionTone
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.PathSegment
@@ -41,7 +42,11 @@ fun ResourceOperationId.requireValid(): ResourceOperationId =
     apply { require(listOf(artifact, sourcePart, declaration).all(String::isNotBlank)) }
 
 fun OperationConfirmation.requireValid(): OperationConfirmation =
-    apply { require(title.isNotBlank() && message.isNotBlank() && confirmationLabel.isNotBlank()) }
+    apply {
+        require(outcomeOne.isNotBlank() && outcomeMany.isNotBlank()) { "A confirmation states its outcome." }
+        require("{count}" in outcomeMany) { "The many outcome names its count with {count}." }
+        require(weight != OperationWeight.UNKNOWN) { "A confirmation declares its weight." }
+    }
 
 /** The tone of an operation in this group: destructive operations look destructive everywhere. */
 val OperationGroup.tone: HeaderActionTone
@@ -54,13 +59,9 @@ fun OperationPresentation.requireValid(): OperationPresentation =
         require(icon.isEmpty() || icon.isNotBlank()) { "An operation icon cannot be blank." }
         require(group != OperationGroup.UNKNOWN) { "Unknown operation group." }
         require(tone == group.tone) { "The operation tone follows its group." }
-        require(
-            when (val inspector = inspector) {
-                OperationInspector.HIDDEN -> true
-                is OperationInspector.ButtonWrapper -> inspector.value != ButtonVariant.UNKNOWN
-                else -> false
-            },
-        ) { "Unknown operation inspector." }
+        require(inspector == OperationInspector.HIDDEN || inspector == OperationInspector.SHOWN) { "Unknown operation inspector." }
+        require(emphasis != OperationEmphasis.UNKNOWN) { "Unknown operation emphasis." }
+        require(group != OperationGroup.DESTRUCTIVE || confirmation != null) { "A destructive operation holds to confirm." }
         require(shortcut != OperationShortcut.UNKNOWN) { "Unknown operation shortcut." }
         confirmation?.requireValid()
     }

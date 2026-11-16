@@ -4,13 +4,22 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A view lease into shared form work. Detach never saves or discards edits.
 final class RealmEditingBinding extends ChangeNotifier {
-  RealmEditingBinding(this.workspace, this.resource, this.editingGroup) {
+  RealmEditingBinding(
+    this.workspace,
+    this.resource,
+    this.editingGroup, {
+    this.editedWith = const [],
+  }) {
     control = workspace.workspace.group(editingGroup);
     control.addListener(_updated);
   }
   final RealmEditing workspace;
   late final EditGroupControl<AuthoringDocument, RealmPreparedEdit> control;
   final skir.ResourceId resource;
+
+  /// The other resources this form edits together with [resource]; empty
+  /// for a form on one resource.
+  final List<skir.ResourceId> editedWith;
   final EditGroupId editingGroup;
   var _detached = false;
   String? _message;
@@ -28,7 +37,8 @@ final class RealmEditingBinding extends ChangeNotifier {
       .values
       .where(
         (group) =>
-            group.resources.contains(resource) && group.id != editingGroup,
+            group.id != editingGroup &&
+            [resource, ...editedWith].any(group.resources.contains),
       )
       .toList(growable: false);
 

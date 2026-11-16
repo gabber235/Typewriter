@@ -1,5 +1,3 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Composes the selected resources into one inspector presentation graph.
@@ -11,22 +9,17 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// Selection is read from [selectedProvider]. Focus is deliberately unrelated:
 /// selectable surfaces own focus, while this session reacts only to selection
-/// resolution and resource availability. Shared portable surfaces are combined
-/// only when every selected resource contributes a mutually compatible surface
-/// with the same root type and catalog snapshot. Otherwise each resource keeps
-/// its own inspection content.
+/// resolution and resource availability. Shared surfaces are combined only
+/// when every selected resource contributes a mutually compatible surface
+/// under the same id. Otherwise each resource keeps its own inspection
+/// content.
 final class InspectionSession extends ChangeNotifier {
   InspectionSession(this.ref)
     : owners = InspectionBindings(
         workspace: ref.read(localWorkControllerProvider),
       ) {
     ref.listen(inspectedSelectionProvider, (_, next) {
-      if (next.asError?.error case SelectableNotFoundException(:final id)) {
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          if (!_disposed) ref.read(selectionProvider.notifier).unselect(id);
-        });
-        SchedulerBinding.instance.ensureVisualUpdate();
-      } else if (next.isLoading || next.hasError) {
+      if (next.isLoading || next.hasError) {
         notifyListeners();
       } else {
         _refresh();
@@ -35,7 +28,6 @@ final class InspectionSession extends ChangeNotifier {
     _refresh();
   }
   final Ref ref;
-  bool _disposed = false;
   final InspectionBindings owners;
   InspectionBuildContext? _buildContext;
 
@@ -94,83 +86,64 @@ final class InspectionSession extends ChangeNotifier {
       return context.ownHosts(selection.single.buildInspection(context.owners));
     }
 
-    if (_buildSharedPortable(selection, context) case final content?) {
+    if (_buildShared(selection, context) case final content?) {
       return context.ownHosts(content);
     }
 
     return _buildStructural(selection, context);
   }
 
-  InspectionContent? _buildSharedPortable(
+  InspectionContent? _buildShared(
     List<InspectableSelectable> selection,
     InspectionBuildContext context,
   ) {
-    final candidates = selection
-        .map(
-          (item) =>
-              _indexPortableSurfaces(item.portableMultiInspectionSurfaces),
-        )
-        .toList();
-    if (candidates.any((surfaces) => surfaces.isEmpty)) return null;
+    final candidates = [
+      for (final item in selection)
+        _indexSurfaces(item.sharedInspectionSurfaces),
+    ];
+    final contents = [
+      for (final members in _groupsInEvery(candidates))
+        members.first.buildShared(members, context),
+    ];
+    return contents.isEmpty ? null : _combined(contents);
+  }
 
-    final plans = <_PortableMultiInspectionPlan>[];
-    for (final id in candidates.first.keys) {
-      final members = [for (final surfaces in candidates) ?surfaces[id]];
-      if (members.length != selection.length) continue;
-      final first = members.first;
-      if (members.any(
-        (candidate) =>
-            !first.isCompatibleWith(candidate) ||
-            !candidate.isCompatibleWith(first),
-      )) {
-        continue;
-      }
-      final rootType = members.first.rootType;
-      if (members.any((candidate) => candidate.rootType != rootType)) continue;
-      final catalog = _mergePortableCatalogs(members);
-      if (catalog == null) continue;
-      plans.add(
-        _PortableMultiInspectionPlan(
-          members: members,
-          rootType: rootType,
-          catalog: catalog,
-        ),
-      );
+  /// The surfaces that every item of a selection offers under one id, one
+  /// group per id, each in selection order, keeping only groups whose
+  /// surfaces are all compatible with the first, both ways. None when an
+  /// item offers no surface.
+  List<List<SharedInspectionSurface>> _groupsInEvery(
+    List<Map<Object, SharedInspectionSurface>> candidates,
+  ) {
+    if (candidates.isEmpty || candidates.any((surfaces) => surfaces.isEmpty)) {
+      return const [];
     }
-    if (plans.isEmpty) return null;
-
-    final hosts = <PortablePresentationHost>[];
-    for (final plan in plans) {
-      final owners =
-          (Set<ValueEditing>.identity()..addAll(
-                plan.members.map(
-                  (surface) => context.owners.editor(surface.target),
-                ),
-              ))
-              .toList();
-      final combined = context.multiEditorForOwners(
-        owners,
-        rootType: plan.rootType,
-        catalog: plan.catalog,
-      );
-      final host = plan.members.first.buildHost(plan.members, combined);
-      context.ownHosts(InspectionContent(host: host));
-      hosts.add(host);
-    }
-    return InspectionContent(
-      host: hosts.first,
-      additionalHosts: hosts.skip(1).toList(),
-    );
+    return [
+      for (final id in candidates.first.keys)
+        if ([for (final surfaces in candidates) ?surfaces[id]]
+            case final members
+            when members.length == candidates.length &&
+                members.every(
+                  (member) =>
+                      members.first.isCompatibleWith(member) &&
+                      member.isCompatibleWith(members.first),
+                ))
+          members,
+    ];
   }
 
   InspectionContent _buildStructural(
     List<InspectableSelectable> selection,
     InspectionBuildContext context,
   ) {
-    final contents = <InspectionContent>[];
-    for (final item in selection) {
-      contents.add(context.ownHosts(item.buildInspection(context.owners)));
-    }
+    return _combined([
+      for (final item in selection)
+        context.ownHosts(item.buildInspection(context.owners)),
+    ]);
+  }
+
+  /// [contents] shown together: their bodies in order, then their hosts.
+  InspectionContent _combined(List<InspectionContent> contents) {
     final bodies = contents.map((content) => content.body).nonNulls.toList();
     final hosts = [
       for (final content in contents)
@@ -189,47 +162,23 @@ final class InspectionSession extends ChangeNotifier {
 
   @override
   void dispose() {
-    _disposed = true;
     _buildContext?.dispose();
     owners.dispose();
     super.dispose();
   }
 }
 
-Map<Object, PortableMultiInspectionSurface> _indexPortableSurfaces(
-  Iterable<PortableMultiInspectionSurface> surfaces,
+Map<Object, SharedInspectionSurface> _indexSurfaces(
+  Iterable<SharedInspectionSurface> surfaces,
 ) {
-  final indexed = <Object, PortableMultiInspectionSurface>{};
+  final indexed = <Object, SharedInspectionSurface>{};
   for (final surface in surfaces) {
     if (indexed.containsKey(surface.id)) {
-      throw StateError("Portable inspection surface ids must be unique");
+      throw StateError("Shared inspection surface ids must be unique");
     }
     indexed[surface.id] = surface;
   }
   return indexed;
-}
-
-CheckedEditorCatalog? _mergePortableCatalogs(
-  List<PortableMultiInspectionSurface> surfaces,
-) {
-  final catalog = surfaces.first.catalog;
-  return surfaces.every(
-        (surface) => surface.catalog.snapshot == catalog.snapshot,
-      )
-      ? catalog
-      : null;
-}
-
-final class _PortableMultiInspectionPlan {
-  const _PortableMultiInspectionPlan({
-    required this.members,
-    required this.rootType,
-    required this.catalog,
-  });
-
-  final List<PortableMultiInspectionSurface> members;
-  final skir.TypeUse rootType;
-  final CheckedEditorCatalog catalog;
 }
 
 /// Restores a resource selection and its route without retaining an inspector.
@@ -270,7 +219,7 @@ final class InspectorDestination extends WorkDestination {
     if (_selection.closed) return;
     if (router.currentPath != path) await router.navigatePath(path);
     if (identity case final SelectableIdentifier selected) {
-      container.read(selectionProvider.notifier).selectAll([selected]);
+      container.read(selectionProvider.notifier).replace([selected]);
     }
   }
 

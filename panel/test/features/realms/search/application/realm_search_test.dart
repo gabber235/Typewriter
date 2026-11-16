@@ -5,32 +5,29 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/testing.dart";
 
 void main() {
+  final stories = realmInstance(
+    "stories",
+    host: "stories",
+    hostName: "realm_instance:stories",
+    engine: "typewritermc:paper",
+    state: childRuntimeState(artifact: null),
+  );
+  final maps = realmInstance(
+    "maps",
+    host: "maps",
+    hostName: "realm_instance:maps",
+    engine: "typewritermc:paper",
+    state: childRuntimeState(artifact: null),
+  );
+
   test("a search lists the Realms whose name matches", () async {
-    final topology = ValueNotifier<AsyncValue<List<skir.RealmInstance>>>(
-      AsyncData([
-        realmInstance(
-          "stories",
-          host: "stories",
-          hostName: "realm_instance:stories",
-          engine: "typewritermc:paper",
-          state: childRuntimeState(artifact: null),
-        ),
-        realmInstance(
-          "maps",
-          host: "maps",
-          hostName: "realm_instance:maps",
-          engine: "typewritermc:paper",
-          state: childRuntimeState(artifact: null),
-        ),
-      ]),
+    final list = DrivenList<List<skir.RealmInstance>>();
+    await list.emit([stories, maps]);
+    final snapshot = await firstSnapshot(
+      realmsSearchSource,
+      list,
+      query: "stories",
     );
-    addTearDown(topology.dispose);
-    final source = RealmsSearchSource(topology);
-    addTearDown(source.dispose);
-    source.initialize(
-      SearchQueryContext(normalizedQuery: "stories", selectors: const []),
-    );
-    final snapshot = await source.snapshots.first;
 
     expect(snapshot.status, SearchSourceStatus.ready);
     expect(
@@ -44,16 +41,13 @@ void main() {
   });
 
   test("a topology that fails to load is reported as a Realms error", () async {
-    final topology = ValueNotifier<AsyncValue<List<skir.RealmInstance>>>(
-      AsyncError(StateError("Topology unreachable"), StackTrace.empty),
+    final list = DrivenList<List<skir.RealmInstance>>();
+    await list.fail(StateError("Topology unreachable"));
+    final snapshot = await firstSnapshot(
+      realmsSearchSource,
+      list,
+      query: "stories",
     );
-    addTearDown(topology.dispose);
-    final source = RealmsSearchSource(topology);
-    addTearDown(source.dispose);
-    source.initialize(
-      SearchQueryContext(normalizedQuery: "stories", selectors: const []),
-    );
-    final snapshot = await source.snapshots.first;
 
     expect(snapshot.status, SearchSourceStatus.error);
     expect(snapshot.errorSummaries.single.sourceLabel, "Realms");
@@ -63,26 +57,46 @@ void main() {
     );
   });
 
+  test("an empty search lists every Realm", () async {
+    final list = DrivenList<List<skir.RealmInstance>>();
+    await list.emit([stories, maps]);
+    final results = resultsOf(await firstSnapshot(realmsSearchSource, list));
+
+    expect(
+      results.map((result) => result.title),
+      unorderedEquals(["realm_instance:stories", "realm_instance:maps"]),
+    );
+  });
+
+  test("a topology that fails after loading keeps its Realms listed beside "
+      "the error", () async {
+    final list = DrivenList<List<skir.RealmInstance>>();
+    await list.emit([stories]);
+    await list.fail(StateError("Topology unreachable"));
+    final snapshot = await firstSnapshot(
+      realmsSearchSource,
+      list,
+      query: "stories",
+    );
+
+    expect(snapshot.status, SearchSourceStatus.error);
+    expect(snapshot.errorSummaries.single.sourceLabel, "Realms");
+    expect(resultsOf(snapshot).single.title, "realm_instance:stories");
+  });
+
   test("opening a Realm from search follows its live availability", () {
     final availability = ValueNotifier<AsyncValue<Map<skir.RecordId, bool>>>(
       const AsyncLoading(),
     );
     addTearDown(availability.dispose);
-    final realm = realmInstance(
-      "stories",
-      host: "stories",
-      hostName: "realm_instance:stories",
-      engine: "typewritermc:paper",
-      state: childRuntimeState(artifact: null),
-    );
+    final realm = stories;
     final result = SearchResult(
       id: realm.realmId.id,
       type: realmSearchResultType,
       payload: realm,
     );
     final target = SearchCommandTarget(
-      primary: result,
-      selection: [result],
+      result: result,
       query: SearchQueryContext.empty,
     );
     final command = openRealmCommand(

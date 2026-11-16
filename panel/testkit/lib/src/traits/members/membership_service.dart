@@ -13,7 +13,7 @@ import "package:typewriter_testkit/src/doubles/membership_service.dart";
 /// NATS against a [FakeMembershipService], so generating, revoking,
 /// approving, declining, changing roles and removing show their outcome.
 /// Commands take the world's latency and fail with [commandFailure] when one
-/// is given.
+/// is given; removing one of [founders] is refused.
 Trait membershipService({
   List<skir.OrganizationRole>? roles = const [],
   List<skir.OrganizationMember>? members = const [],
@@ -21,6 +21,7 @@ Trait membershipService({
   List<skir.OrganizationJoinRequest>? joinRequests = const [],
   Object? failure,
   Object? commandFailure,
+  Set<skir.RecordId> founders = const {},
 }) => _MembershipService(
   () => FakeMembershipService(
     roles: roles,
@@ -29,6 +30,7 @@ Trait membershipService({
     joinRequests: joinRequests,
     failure: failure,
     commandFailure: commandFailure,
+    founders: founders,
   ),
   (
     members: members?.length ?? 0,

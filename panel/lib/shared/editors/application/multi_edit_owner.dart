@@ -65,6 +65,13 @@ final class MultiEditOwner extends ChangeNotifier
     return const SelectionEditingCoordinator().update(owners, path, value);
   }
 
+  /// Sets the value at the same index of [values] at [path] on each selected
+  /// owner, in the order of [owners], or on none of them.
+  EditorMutationResult updateEach(
+    skir.ValuePath path,
+    List<skir.DataValue> values,
+  ) => const SelectionEditingCoordinator().updateEach(owners, path, values);
+
   @override
   EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) {
     if (readOnly) return const EditorMutationResult.conflict();

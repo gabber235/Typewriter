@@ -42,7 +42,7 @@ class SelectorPopup<T> extends ConsumerWidget {
         );
       },
       loading: (_) => _SelectorLoading(name: name),
-      error: (title, error) => Text(error),
+      error: (title, error) => Text(error, style: context.text.sentence),
     );
   }
 }
@@ -81,11 +81,11 @@ class SelectorPopupWithSelection<T> extends ConsumerWidget {
             );
           },
           loading: (_) => _SelectorLoading(name: name),
-          error: (title, error) => Text(error),
+          error: (title, error) => Text(error, style: context.text.sentence),
         );
       },
       loading: (_) => _SelectorLoading(name: name),
-      error: (title, error) => Text(error),
+      error: (title, error) => Text(error, style: context.text.sentence),
     );
   }
 }
@@ -143,9 +143,10 @@ class _SelectorButton<T> extends StatelessWidget {
     shape: RoundedRectangleBorder(
       borderRadius: context.shapes.mediumBorderRadius,
     ),
-    child: InkWell(
-      onTap: show,
-      borderRadius: context.shapes.mediumBorderRadius,
+    child: Button(
+      face: ButtonFace.bare,
+      label: "",
+      onPressed: show,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         child: buttonBuilder(selected),
@@ -154,17 +155,11 @@ class _SelectorButton<T> extends StatelessWidget {
   );
 
   void _showMobileMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: context.colors.surface.withValues(alpha: 0),
-      builder: (ctx) => UncontrolledProviderScope(
-        container: ProviderScope.containerOf(context),
-        child: _MobileMenu<T>(
-          contentBuilder: contentBuilder,
-          items: items,
-          selected: selected,
-        ),
+    context.showPanelSheet<void>(
+      (_) => _MobileMenu<T>(
+        contentBuilder: contentBuilder,
+        items: items,
+        selected: selected,
       ),
     );
   }

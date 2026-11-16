@@ -1,5 +1,11 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// The family of every Material text role.
+const textFamily = "Lilex";
+
+/// The family of full sentences, used only by [TypewriterText].
+const sentenceFamily = "IBMPlexSans";
+
 TextStyle _style(String family, double size, double height, double weight) =>
     TextStyle(
       fontFamily: family,
@@ -8,25 +14,40 @@ TextStyle _style(String family, double size, double height, double weight) =>
       fontVariations: [FontVariation("wght", weight)],
     );
 
-/// Builds the complete text hierarchy used by the panel.
+/// Builds the Material text hierarchy used by the panel.
 ///
-/// Display, heading, title, and label roles use JetBrains Mono for the
-/// product's technical visual language. Body roles use Lilex for readable
-/// prose. Line heights are explicit so dense editor layouts remain stable.
+/// Every role is Lilex. Labels and buttons use weight 600, the smallest
+/// label 500. Full sentences do not use these roles; they use
+/// `context.text.sentence`. Line heights are explicit so dense editor
+/// layouts remain stable.
 TextTheme buildTypewriterTextTheme() => TextTheme(
-  displayLarge: _style("JetBrainsMono", 40, 48, 700),
-  displayMedium: _style("JetBrainsMono", 36, 44, 700),
-  displaySmall: _style("JetBrainsMono", 32, 40, 700),
-  headlineLarge: _style("JetBrainsMono", 28, 36, 700),
-  headlineMedium: _style("JetBrainsMono", 26, 34, 700),
-  headlineSmall: _style("JetBrainsMono", 22, 30, 650),
-  titleLarge: _style("JetBrainsMono", 20, 28, 650),
-  titleMedium: _style("JetBrainsMono", 16, 24, 650),
-  titleSmall: _style("JetBrainsMono", 14, 20, 600),
-  bodyLarge: _style("Lilex", 16, 24, 400),
-  bodyMedium: _style("Lilex", 14, 20, 400),
-  bodySmall: _style("Lilex", 12, 16, 400),
-  labelLarge: _style("JetBrainsMono", 14, 20, 700),
-  labelMedium: _style("JetBrainsMono", 13, 18, 700),
-  labelSmall: _style("JetBrainsMono", 11, 16, 650),
+  displayLarge: _style(textFamily, 40, 48, 700),
+  displayMedium: _style(textFamily, 36, 44, 700),
+  displaySmall: _style(textFamily, 32, 40, 700),
+  headlineLarge: _style(textFamily, 28, 36, 700),
+  headlineMedium: _style(textFamily, 26, 34, 700),
+  headlineSmall: _style(textFamily, 22, 30, 650),
+  titleLarge: _style(textFamily, 20, 28, 650),
+  titleMedium: _style(textFamily, 16, 24, 650),
+  titleSmall: _style(textFamily, 14, 20, 600),
+  bodyLarge: _style(textFamily, 16, 24, 400),
+  bodyMedium: _style(textFamily, 14, 20, 400),
+  bodySmall: _style(textFamily, 12, 16, 400),
+  labelLarge: _style(textFamily, 14, 20, 600),
+  labelMedium: _style(textFamily, 13, 18, 600),
+  labelSmall: _style(textFamily, 11, 16, 500),
+);
+
+/// A sentence style. Plex is bundled as static files, so weight selects a file.
+TextStyle _sentence(double size, double height) => TextStyle(
+  fontFamily: sentenceFamily,
+  fontSize: size,
+  height: height / size,
+  fontWeight: FontWeight.w400,
+);
+
+/// Builds the sentence role installed as [TypewriterText].
+TypewriterText buildTypewriterText() => TypewriterText(
+  sentence: _sentence(14, 20),
+  sentenceSmall: _sentence(12, 16),
 );

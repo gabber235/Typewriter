@@ -20,45 +20,45 @@ final class _PortableHeaderRow extends StatefulWidget {
 final class _PortableHeaderRowState extends State<_PortableHeaderRow> {
   var _visibleEndCount = 0;
 
+  /// The header's menus sit side by side: opening one closes the others.
+  final _menus = MenuController();
+
   @override
   Widget build(BuildContext context) {
     final overflow = widget.end
         .skip(_visibleEndCount.clamp(0, widget.end.length))
         .toList();
-    return _PortableHeaderLayout(
-      spacing: context.spacing.space2,
-      beforeTitleCount: widget.before.length,
-      afterTitleCount: widget.after.length,
-      endCount: widget.end.length,
-      textDirection: Directionality.of(context),
-      onVisibleEndCountChanged: (value) {
-        if (mounted && _visibleEndCount != value) {
-          setState(() => _visibleEndCount = value);
-        }
-      },
-      children: [
-        ...widget.before,
-        widget.title,
-        ...widget.after,
-        ...widget.end,
-        if (widget.end.isNotEmpty)
-          _PortableHeaderOverflow(
-            items: overflow.isEmpty ? widget.end : overflow,
-          ),
-      ],
+    return RawMenuAnchorGroup(
+      controller: _menus,
+      child: _PortableHeaderLayout(
+        spacing: context.spacing.space2,
+        beforeTitleCount: widget.before.length,
+        afterTitleCount: widget.after.length,
+        endCount: widget.end.length,
+        textDirection: Directionality.of(context),
+        onVisibleEndCountChanged: (value) {
+          if (mounted && _visibleEndCount != value) {
+            setState(() => _visibleEndCount = value);
+          }
+        },
+        children: [
+          ...widget.before,
+          widget.title,
+          ...widget.after,
+          ...widget.end,
+          if (widget.end.isNotEmpty)
+            _PortableHeaderOverflow(
+              items: overflow.isEmpty ? widget.end : overflow,
+            ),
+        ],
+      ),
     );
   }
 }
 
+/// Hands the menu's close to the actions inside it.
 class _CollectionMenuInvocation extends InheritedWidget {
-  const _CollectionMenuInvocation({
-    required this.origin,
-    required this.row,
-    required this.close,
-    required super.child,
-  });
-  final _CollectionActionOrigin? origin;
-  final _CollectionRowBinding? row;
+  const _CollectionMenuInvocation({required this.close, required super.child});
   final VoidCallback close;
 
   static _CollectionMenuInvocation? maybeOf(BuildContext context) =>
@@ -66,7 +66,7 @@ class _CollectionMenuInvocation extends InheritedWidget {
 
   @override
   bool updateShouldNotify(_CollectionMenuInvocation oldWidget) =>
-      origin != oldWidget.origin || row != oldWidget.row;
+      close != oldWidget.close;
 }
 
 final class _PortableHeaderOverflow extends HookWidget {
@@ -75,37 +75,35 @@ final class _PortableHeaderOverflow extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final row = _CollectionRowContext.maybeOf(context);
-    final captured = useState<_CollectionActionOrigin?>(null);
     final triggerFocus = useFocusNode();
-    final controller = useMemoized(MenuController.new);
-    return MenuAnchor(
+    final controller = useMemoized(AnchoredPopupController.new);
+    useEffect(() => controller.dispose, [controller]);
+    useListenable(controller);
+    return AnchoredPopup(
       controller: controller,
-      childFocusNode: triggerFocus,
-      menuChildren: [
-        for (final item in items)
-          _CollectionMenuInvocation(
-            origin: captured.value,
-            row: row,
-            close: controller.close,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: context.spacing.space1),
-              child: item,
-            ),
+      opensOnHover: false,
+      opener: triggerFocus,
+      popupBuilder: (context, close) => IntrinsicWidth(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(context.spacing.space1),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final item in items)
+                _CollectionMenuInvocation(close: close, child: item),
+            ],
           ),
-      ],
-      builder: (context, menu, child) => IconButton(
-        focusNode: triggerFocus,
-        tooltip: "More actions",
-        onPressed: () {
-          if (menu.isOpen) {
-            menu.close();
-            return;
-          }
-          captured.value = row?.focus?.captureOrigin(row.row);
-          menu.open();
-        },
+        ),
+      ),
+      builder: (context, show) => Button(
+        face: ButtonFace.icon,
         icon: const Icon(Icons.more_horiz),
+        label: "More actions",
+        tooltip: "More actions",
+        focusNode: triggerFocus,
+        onPressed: () =>
+            controller.isOpen ? controller.close() : controller.openFocused(),
       ),
     );
   }

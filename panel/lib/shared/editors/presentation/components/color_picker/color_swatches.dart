@@ -191,9 +191,10 @@ class _ColorSwatch extends StatelessWidget {
       button: true,
       label: "Color $hex",
       enabled: enabled,
-      child: InkWell(
-        onTap: enabled ? onPressed : null,
-        borderRadius: context.shapes.mediumBorderRadius,
+      child: Button(
+        face: ButtonFace.bare,
+        label: "",
+        onPressed: enabled ? onPressed : null,
         child: Padding(
           padding: const EdgeInsets.all(3),
           child: Checkerboard(

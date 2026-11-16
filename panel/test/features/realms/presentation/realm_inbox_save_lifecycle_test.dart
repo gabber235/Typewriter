@@ -191,7 +191,9 @@ void main() {
   });
 
   testWidgets("an unanswered Apply shows that Retry is safe, and Retry "
-      "captured request in the activity settles it from the reply", (tester) async {
+      "captured request in the activity settles it from the reply", (
+    tester,
+  ) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),
       realm(books: [original]),

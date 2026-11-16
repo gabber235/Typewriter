@@ -20,8 +20,9 @@ class _SecretFieldView extends StatelessWidget {
         SizedBox(height: context.spacing.space1),
         Text(
           field.description,
-          style: Theme.of(context).textTheme.bodyMedium
-              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          style: context.text.sentence.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         SizedBox(height: context.spacing.space3),
         _SecretFieldContent(
@@ -30,6 +31,7 @@ class _SecretFieldView extends StatelessWidget {
           generateButtonText: field.generateButtonText,
           regenerateButtonText: field.regenerateButtonText,
           copyButtonText: field.copyButtonText,
+          copyOnGenerate: field.copyOnGenerate,
           expiredText: field.expiredText,
           onGenerate: controller.generate,
           onCopy: controller.copy,
@@ -46,6 +48,7 @@ class _SecretFieldContent extends StatelessWidget {
     required this.generateButtonText,
     required this.regenerateButtonText,
     required this.copyButtonText,
+    required this.copyOnGenerate,
     required this.expiredText,
     required this.onGenerate,
     required this.onCopy,
@@ -56,6 +59,9 @@ class _SecretFieldContent extends StatelessWidget {
   final String generateButtonText;
   final String regenerateButtonText;
   final String copyButtonText;
+
+  /// Whether generating also copies, so the generate button says Copied.
+  final bool copyOnGenerate;
   final String expiredText;
   final Future<void> Function() onGenerate;
   final Future<void> Function() onCopy;
@@ -89,9 +95,10 @@ class _SecretFieldContent extends StatelessWidget {
         prefix: prefix,
         hasPrefix: hasPrefix,
       ),
-      SecretFieldLoading() => _TypewriterLoadingDisplay(
+      SecretFieldLoading() => _ConcealedDisplay(
         prefix: prefix,
         hasPrefix: hasPrefix,
+        loading: true,
       ),
       SecretFieldRevealed(:final value) => _RevealedDisplay(
         prefix: prefix,
@@ -167,37 +174,31 @@ class _SecretFieldContent extends StatelessWidget {
           alignment: WrapAlignment.end,
           crossAxisAlignment: WrapCrossAlignment.end,
           children: [
+            // Keyed: Copy arrives in front of Generate and must not take over
+            // its run state.
             if (canCopy)
-              LoadingButton.textIcon(
+              Button(
+                key: const ValueKey("copy"),
                 onPressed: onCopy,
                 icon: const Icones(
                   MaterialSymbols.content_copy_rounded,
                   size: 16,
                 ),
-                label: Text(copyButtonText),
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.spacing.space3,
-                    vertical: context.spacing.space2,
-                  ),
-                  visualDensity: VisualDensity.compact,
-                ),
+                label: copyButtonText,
+                busyLabel: "Copying",
+                doneLabel: "Copied",
               ),
-            LoadingButton.filledIcon(
+            Button(
+              key: const ValueKey("generate"),
+              face: ButtonFace.filled,
               onPressed: onGenerate,
               icon: const Icones(MaterialSymbols.autorenew_rounded, size: 16),
-              label: Text(
-                isIdle || isError ? generateButtonText : regenerateButtonText,
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: isError ? colorScheme.error : null,
-                foregroundColor: isError ? colorScheme.onError : null,
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.space4,
-                  vertical: context.spacing.space2,
-                ),
-                visualDensity: VisualDensity.compact,
-              ),
+              label: isIdle || isError
+                  ? generateButtonText
+                  : regenerateButtonText,
+              busyLabel: "Generating",
+              doneLabel: copyOnGenerate ? "Copied" : null,
+              color: isError ? colorScheme.error : null,
             ),
           ],
         ),

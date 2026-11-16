@@ -138,17 +138,18 @@ class _OrganizationsList extends StatelessWidget {
                   horizontal: context.spacing.space2,
                   vertical: 2,
                 ),
-                child: Material(
+                child: ClipRRect(
                   borderRadius: context.shapes.mediumBorderRadius,
-                  child: ListTile(
+                  child: PanelRow(
                     dense: true,
+                    label: org.name.formatted,
                     leading: OrganizationLogo(logoUrl: org.logoUrl, size: 32),
                     title: Text(
                       org.name.formatted,
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                    onTap: () => onSelect(org),
+                    onPressed: () => onSelect(org),
                   ),
                 ),
               );
@@ -236,15 +237,15 @@ class ActionList extends StatelessWidget {
         ...actions.map(
           (action) => Padding(
             padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
-            child: ListTile(
+            child: PanelRow(
               dense: true,
-              visualDensity: VisualDensity.compact,
+              label: action.title,
               leading: Icon(action.icon, size: 16),
               title: Text(
                 action.title,
                 style: Theme.of(context).textTheme.labelMedium,
               ),
-              onTap: action.onTap,
+              onPressed: action.onTap,
             ),
           ),
         ),

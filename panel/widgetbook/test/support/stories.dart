@@ -173,13 +173,22 @@ Future<void> loadStoryFonts() async {
 const _combinationLimit = 12;
 
 /// The knob values to render besides the initial ones: every combination of
-/// the choice knobs, or each choice alone when there are too many.
+/// the choice knobs, or, when there are too many, each option a knob does
+/// not start at, one knob at a time.
 List<Map<String, String>> storyVariants(Iterable<Knob> knobs) {
   final choices = <String, List<String>>{
     for (final knob in knobs)
       for (final field in knob.fields)
         if (_options(field) case final options? when options.length > 1)
           field.name: options,
+  };
+  // The label each choice starts at; null when the story starts it at
+  // null, so no option is the start.
+  final starts = <String, String?>{
+    for (final knob in knobs)
+      for (final field in knob.fields)
+        if (choices.containsKey(field.name))
+          field.name: field.initialValueStringified,
   };
   var combinations = 1;
   for (final options in choices.values) {
@@ -197,7 +206,8 @@ List<Map<String, String>> storyVariants(Iterable<Knob> knobs) {
   }
   return [
     for (final MapEntry(key: label, value: options) in choices.entries)
-      for (final option in options.skip(1)) {label: option},
+      for (final option in options)
+        if (option != starts[label]) {label: option},
   ];
 }
 

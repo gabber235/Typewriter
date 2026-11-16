@@ -290,6 +290,14 @@ class AppRouter extends NavigationRouter {
     }
   }
 
+  /// Pages swap at once; rows carry the move (see [PageFrame]).
+  @override
+  RouteType get defaultRouteType => RouteType.custom(
+    transitionsBuilder: PageFrame.transition,
+    duration: Duration.zero,
+    reverseDuration: Duration.zero,
+  );
+
   @override
   List<AutoRoute> get routes => [
     AutoRoute(

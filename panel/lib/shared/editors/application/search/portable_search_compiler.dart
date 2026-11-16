@@ -361,6 +361,100 @@ final class PortableSearchBinding {
     }
   }
 
+  /// The value [result] chooses, or null for a result of another kind.
+  skir.DataValue? valueOf(SearchResult result) => switch (result.payload) {
+    PortableMappedSearchPayload(:final selectedValue) => selectedValue,
+    PortableCustomSearchPayload(:final selectedValue) => selectedValue,
+    _ => null,
+  };
+
+  /// Whether the bound list holds the value [result] chooses.
+  bool holds(SearchResult result) {
+    final value = valueOf(result);
+    if (value == null) return false;
+    final key = canonicalAuthoredValue(value);
+    final items = host.read(control.control.binding, context: context);
+    return items?.authoredItems?.any(
+          (item) => canonicalAuthoredValue(item.value) == key,
+        ) ??
+        false;
+  }
+
+  /// Adds the values of [results] the bound list does not hold yet, or with
+  /// [include] false removes the ones it holds, in one write: one edit, so
+  /// one undo step, however many values change.
+  Future<PortableSearchSelectionResult> chooseAll(
+    List<SearchResult> results, {
+    required bool include,
+  }) async {
+    if (_disposed) {
+      return const PortableSearchSelectionResult.rejected(
+        "This search result is unavailable",
+      );
+    }
+    if (context.catalogGeneration !=
+        host.document.catalog.snapshot.generation) {
+      feedback.value = "The editor catalog changed";
+      return const PortableSearchSelectionResult.rejected(
+        "The editor catalog changed",
+      );
+    }
+    final current = host.read(control.control.binding, context: context);
+    final items = current?.authoredItems;
+    if (current == null || items == null) {
+      const message = "The selected binding is not a collection";
+      feedback.value = message;
+      return const PortableSearchSelectionResult.rejected(message);
+    }
+    final held = {for (final item in items) canonicalAuthoredValue(item.value)};
+    var next = current;
+    final added = <SearchResult>[];
+    for (final result in results) {
+      final value = valueOf(result);
+      if (value == null) continue;
+      final key = canonicalAuthoredValue(value);
+      if (include && held.add(key)) {
+        next =
+            next.withItemAppended(
+              skir.ListItem(
+                id: skir.ItemId(value: "panel:${const Uuid().v4()}"),
+                value: value,
+              ),
+            ) ??
+            next;
+        added.add(result);
+      } else if (!include && held.remove(key)) {
+        for (final item in items) {
+          if (canonicalAuthoredValue(item.value) == key) {
+            next = next.withoutItem(item.id) ?? next;
+          }
+        }
+      }
+    }
+    if (identical(next, current)) {
+      return PortableSearchSelectionResult.applied(added: include);
+    }
+    final outcome = await host.write(
+      control.control.binding,
+      next,
+      context: context,
+    );
+    switch (outcome) {
+      case PortablePresentationWriteApplied():
+        if (!_disposed) {
+          feedback.value = null;
+          added.forEach(_committedSelections.add);
+        }
+        return PortableSearchSelectionResult.applied(added: include);
+      case PortablePresentationWriteRejected(:final diagnostics):
+        final message = diagnostics
+            .map((diagnostic) => diagnostic.message)
+            .join("\n");
+        if (!_disposed) feedback.value = message;
+        return PortableSearchSelectionResult.rejected(message);
+    }
+  }
+
   Future<PortablePresentationWriteResult> _write(skir.DataValue selected) =>
       host.write(control.control.binding, selected, context: context);
 

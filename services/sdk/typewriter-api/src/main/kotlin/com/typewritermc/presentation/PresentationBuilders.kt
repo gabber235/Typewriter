@@ -308,12 +308,6 @@ data class StatusAppearance(
     val value: String,
 )
 
-data class HeaderActionConfirmation(
-    val title: Expr<String, Handled>,
-    val message: Expr<String, Handled>,
-    val confirmationLabel: Expr<String, Handled>,
-)
-
 interface HeaderButtonScope {
     fun icon(value: Expr<String, Handled>)
 
@@ -330,8 +324,6 @@ interface HeaderButtonScope {
     fun enabledIf(value: Expr<Boolean, Handled>)
 
     fun tone(value: HeaderActionTone)
-
-    fun confirmation(value: HeaderActionConfirmation)
 
     fun placement(value: HeaderActionPlacement)
 }
@@ -350,8 +342,6 @@ interface HeaderToggleScope {
     fun visibleIf(value: Expr<Boolean, Handled>)
 
     fun enabledIf(value: Expr<Boolean, Handled>)
-
-    fun confirmation(value: HeaderActionConfirmation)
 
     fun placement(value: HeaderActionPlacement)
 }

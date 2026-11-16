@@ -175,13 +175,9 @@ SearchCommand searchCommand({
       (context, value, target) async => const SearchCommandResult.completed(),
 );
 
-/// A command target on [results], the first one primary, outside any query.
-SearchCommandTarget commandTarget(List<SearchResult> results) =>
-    SearchCommandTarget(
-      primary: results.first,
-      selection: results,
-      query: SearchQueryContext.empty,
-    );
+/// A command target on [result], outside any query.
+SearchCommandTarget commandTarget(SearchResult result) =>
+    SearchCommandTarget(result: result, query: SearchQueryContext.empty);
 
 /// A host effect a command asks for, told apart by [name].
 final class NamedHostEffect implements SearchHostEffect {
@@ -206,16 +202,33 @@ SearchQueryContext sourceQueryContext(
   return context;
 }
 
-/// A search source the test drives: it remembers every search, preview and
-/// selector completion, emits only the snapshots the test gives it, and
-/// answers previews and completions with what the test sets.
+/// A search source a test or story drives: it remembers every search,
+/// preview and selector completion, emits the snapshots the test gives it or
+/// its [answer] makes, and answers previews and completions with what the
+/// test sets.
 final class FakeSearchSource
     implements SearchSource, SearchSelectorCompletionSource {
   /// A source offering [selectors] that emits [initialSnapshot], when given,
-  /// as it initializes.
-  FakeSearchSource({this.selectors = const [], this.initialSnapshot});
+  /// as it initializes, and the [answer] to each query, when given.
+  FakeSearchSource({
+    this.selectors = const [],
+    this.initialSnapshot,
+    this.answer,
+    this.answerDelay = Duration.zero,
+  });
 
   final SearchSourceSnapshot? initialSnapshot;
+
+  /// The snapshot each query answers with: emitted as the source
+  /// initializes, unless [initialSnapshot] is given, and for every search.
+  final SearchSourceSnapshot Function(SearchQueryContext context)? answer;
+
+  /// How long a search takes to answer; meanwhile the last snapshot shows
+  /// as loading.
+  final Duration answerDelay;
+
+  SearchSourceSnapshot? _last;
+  Timer? _answerTimer;
 
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
@@ -228,7 +241,9 @@ final class FakeSearchSource
   final searches = <SearchQueryContext>[];
   final previewRequests = <SearchPreviewRequest>[];
   final completionRequests = <SearchSelectorCompletionRequest>[];
-  SearchPreviewRequestResult previewResult =
+
+  /// What every preview answers; null keeps previews loading forever.
+  SearchPreviewRequestResult? previewResult =
       const SearchPreviewRequestResult.data(data: "preview");
   SearchSelectorCompletionResult completionResult =
       const SearchSelectorCompletionResult();
@@ -240,12 +255,27 @@ final class FakeSearchSource
   @override
   void initialize(SearchQueryContext context) {
     initializeCount++;
-    if (initialSnapshot case final snapshot?) emitSnapshot(snapshot);
+    if (initialSnapshot ?? answer?.call(context) case final snapshot?) {
+      emitSnapshot(snapshot);
+    }
   }
 
   @override
   void search(SearchQueryContext context) {
     searches.add(context);
+    final answer = this.answer;
+    if (answer == null) return;
+    _answerTimer?.cancel();
+    if (answerDelay == Duration.zero) {
+      emitSnapshot(answer(context));
+      return;
+    }
+    emitSnapshot(
+      (_last ?? SearchSourceSnapshot.loading()).copyWith(
+        status: SearchSourceStatus.loading,
+      ),
+    );
+    _answerTimer = Timer(answerDelay, () => emitSnapshot(answer(context)));
   }
 
   @override
@@ -253,7 +283,7 @@ final class FakeSearchSource
     SearchPreviewRequest request,
   ) async {
     previewRequests.add(request);
-    return previewResult;
+    return previewResult ?? Completer<SearchPreviewRequestResult>().future;
   }
 
   @override
@@ -268,6 +298,8 @@ final class FakeSearchSource
 
   /// Emits [snapshot] to every listener.
   void emitSnapshot(SearchSourceSnapshot snapshot) {
+    if (_snapshots.isClosed) return;
+    _last = snapshot;
     _snapshots.add(snapshot);
   }
 
@@ -290,6 +322,7 @@ final class FakeSearchSource
   @override
   void dispose() {
     disposeCount++;
+    _answerTimer?.cancel();
     unawaited(_snapshots.close());
   }
 }
@@ -311,3 +344,83 @@ Widget innerActionRow({
     body: TextButton(onPressed: onInner, child: const Text("Inner action")),
   ),
 );
+
+/// A live list a test drives through the transitions a provider makes: it
+/// loads, holds values, loads again when its scope changes, and fails. The
+/// states come from a real provider, so a value the list held stays in its
+/// loading and failed states as it does in the panel.
+final class DrivenList<T> {
+  DrivenList() {
+    addTearDown(_container.dispose);
+    _container.listen(
+      _provider,
+      (_, next) => _states.value = next,
+      fireImmediately: true,
+    );
+  }
+
+  final _container = ProviderContainer();
+  final _scope = NotifierProvider<_ListScope, int>(_ListScope.new);
+  late final _provider = StreamProvider<T>((ref) {
+    ref.watch(_scope);
+    final controller = StreamController<T>();
+    ref.onDispose(controller.close);
+    _controller = controller;
+    return controller.stream;
+  });
+  late StreamController<T> _controller;
+  final _states = ValueNotifier<AsyncValue<T>>(const AsyncLoading());
+
+  /// The list's state, as a search source reads it.
+  ValueListenable<AsyncValue<T>> get states => _states;
+
+  /// The list holds [value].
+  Future<void> emit(T value) async {
+    _controller.add(value);
+    await _settle();
+  }
+
+  /// The list fails with [error], keeping any value it held.
+  Future<void> fail(Object error) async {
+    _controller.addError(error);
+    await _settle();
+  }
+
+  /// The list's scope changes, such as the organization it belongs to, so
+  /// it loads again while still holding its last value.
+  Future<void> changeScope() async {
+    _container.read(_scope.notifier).next();
+    await _settle();
+  }
+
+  Future<void> _settle() async {
+    await _container.pump();
+    await Future<void>.delayed(Duration.zero);
+  }
+}
+
+final class _ListScope extends Notifier<int> {
+  @override
+  int build() {
+    return 0;
+  }
+
+  void next() => state++;
+}
+
+/// The first snapshot the source [create] builds over [list] answers
+/// [query] with; the source is disposed after the test.
+Future<SearchSourceSnapshot> firstSnapshot<T>(
+  SearchSource Function(ValueListenable<AsyncValue<T>> list) create,
+  DrivenList<T> list, {
+  String query = "",
+}) async {
+  final source = create(list.states);
+  addTearDown(source.dispose);
+  source.initialize(
+    query.isEmpty
+        ? SearchQueryContext.empty
+        : SearchQueryContext(normalizedQuery: query, selectors: const []),
+  );
+  return source.snapshots.first;
+}

@@ -19,7 +19,7 @@ class ResourceBreadcrumbs extends ConsumerWidget {
             Icon(
               Icons.chevron_right,
               size: 16,
-              color: context.colors.contentDisabled,
+              color: context.colors.contentSecondary,
             ),
           ResourceCrumbSelector(scope: scope, crumb: crumb),
         ],
@@ -63,7 +63,7 @@ class ResourceCrumbSelector extends ConsumerWidget {
                 size: 16,
                 color:
                     selected?.appearance.accentColor ??
-                    context.colors.contentDisabled,
+                    context.colors.contentSecondary,
               ),
               SizedBox(width: context.spacing.space2),
               Text(
@@ -119,8 +119,9 @@ class _CrumbMenu extends HookWidget {
             itemCount: filtered.length,
             itemBuilder: (context, index) {
               final choice = filtered[index];
-              return ListTile(
+              return PanelRow(
                 dense: true,
+                label: choice.appearance.label,
                 selected: choice.resource == selected?.resource,
                 leading: ResourceIcon(
                   icon: choice.appearance.icon,
@@ -128,7 +129,7 @@ class _CrumbMenu extends HookWidget {
                   size: 20,
                 ),
                 title: Text(choice.appearance.label),
-                onTap: () => onChoose(choice),
+                onPressed: () => onChoose(choice),
               );
             },
           ),

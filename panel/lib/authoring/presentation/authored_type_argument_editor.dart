@@ -88,12 +88,16 @@ final class _AuthoredTypeArgumentEditorState
                 padding: EdgeInsets.only(top: context.spacing.space2),
                 child: Text(
                   "This unfinished selection can be saved. Existing independent fields remain editable.",
+                  style: context.text.sentence,
                 ),
               ),
             if (!widget.enabled && widget.disabledMessage != null)
               Padding(
                 padding: EdgeInsets.only(top: context.spacing.space2),
-                child: Text(widget.disabledMessage!),
+                child: Text(
+                  widget.disabledMessage!,
+                  style: context.text.sentence,
+                ),
               ),
             if (_error case final error?)
               Padding(
@@ -102,8 +106,8 @@ final class _AuthoredTypeArgumentEditorState
                   liveRegion: true,
                   child: Text(
                     error,
-                    style: context.theme.textTheme.bodyMedium?.copyWith(
-                      color: context.colors.danger,
+                    style: context.text.sentence.copyWith(
+                      color: context.colors.dangerText,
                     ),
                   ),
                 ),
@@ -112,11 +116,12 @@ final class _AuthoredTypeArgumentEditorState
               SizedBox(height: context.spacing.space2),
               Align(
                 alignment: AlignmentDirectional.centerEnd,
-                child: FilledButton(
+                child: Button(
+                  face: ButtonFace.filled,
+                  label: _working ? "Checking" : "Review type change",
                   onPressed: _working || !widget.enabled
                       ? null
                       : () => _preview(_selection),
-                  child: Text(_working ? "Checking" : "Review type change"),
                 ),
               ),
             ],
@@ -142,22 +147,24 @@ final class _AuthoredTypeArgumentEditorState
         children: [
           SizedBox(width: 120, child: Text(parameter.name)),
           Expanded(
-            child: OutlinedButton(
-              onPressed: _working || !widget.enabled
-                  ? null
-                  : () => _choose(index, parameter.name),
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(
-                  chosen == null
-                      ? "Choose a type"
-                      : widget.catalog.typeUseName(chosen),
-                ),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Button(
+                face: ButtonFace.outlined,
+                onPressed: _working || !widget.enabled
+                    ? null
+                    : () => _choose(index, parameter.name),
+                label: chosen == null
+                    ? "Choose a type"
+                    : widget.catalog.typeUseName(chosen),
               ),
             ),
           ),
           if (chosen != null)
-            IconButton(
+            Button(
+              face: ButtonFace.icon,
+              icon: const Icon(Icons.close),
+              label: "Clear ${parameter.name}",
               tooltip: "Clear ${parameter.name}",
               onPressed: _working || !widget.enabled
                   ? null
@@ -168,7 +175,6 @@ final class _AuthoredTypeArgumentEditorState
                       );
                       _error = null;
                     }),
-              icon: const Icon(Icons.close),
             ),
         ],
       ),
@@ -203,7 +209,7 @@ final class _AuthoredTypeArgumentEditorState
       if (!mounted) return;
       switch (result) {
         case skir.PreviewTypeArgumentChangeResponse_readyWrapper(:final value):
-          final accepted = await showDialog<bool>(
+          final accepted = await showAdvancedDialog<bool>(
             context: context,
             builder: (context) =>
                 _TypeRepairReview(preview: value, catalog: widget.catalog),
@@ -279,13 +285,14 @@ final class _TypeRepairReview extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
+        Button(
+          label: "Cancel",
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text("Cancel"),
         ),
-        FilledButton(
+        Button(
+          face: ButtonFace.filled,
+          label: "Apply type change",
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text("Apply type change"),
         ),
       ],
     );

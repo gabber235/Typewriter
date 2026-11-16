@@ -1,3 +1,4 @@
+import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/drivers/panel_driver.dart";
 
@@ -16,7 +17,7 @@ class CountingMode extends InteractionMode with ModeShortcut {
       description: "Counts each press",
       activators: [SingleActivator(LogicalKeyboardKey.keyR)],
       priority: 0,
-      onInvoke: (_) => runs++,
+      run: ActionRun.press((_) => runs++),
     ),
   ];
 }
@@ -27,9 +28,21 @@ class DisplayTestMode extends InteractionMode with ModeDisplay {
   String get name => "TestWithDisplay";
 
   @override
-  Widget buildDisplay(BuildContext context) {
-    return const Text("Test Display");
-  }
+  ModeLook look(BuildContext context) => const ModeLook(
+    label: "Test Display",
+    tone: Colors.deepOrange,
+    icon: Icons.open_with_rounded,
+  );
+}
+
+/// A resting mode with a soft chip and no icon, as Normal shows.
+class SoftDisplayTestMode extends InteractionMode with ModeDisplay {
+  @override
+  String get name => "TestSoft";
+
+  @override
+  ModeLook look(BuildContext context) =>
+      const ModeLook(label: "Resting", tone: Colors.indigo, soft: true);
 }
 
 /// A mode that offers no display, so the mode widget shows nothing.
@@ -44,7 +57,8 @@ class EditingTestMode extends InteractionMode with ModeDisplay, ModeShortcut {
   String get name => "Edit";
 
   @override
-  Widget buildDisplay(BuildContext context) => const Text("Editing");
+  ModeLook look(BuildContext context) =>
+      const ModeLook(label: "Editing", tone: Colors.teal, icon: Icons.edit);
 
   @override
   List<ActionShortcut> getShortcuts() => [escapeToNormalAction()];
@@ -76,5 +90,21 @@ extension EnterMode on PanelDriver {
   Future<void> enterMode(InteractionMode mode) async {
     container.read(currentInteractionModeProvider.notifier).setMode(mode);
     await settle();
+  }
+}
+
+/// Reading the app bar mode chip.
+extension ModeChipFill on WidgetTester {
+  /// The fill the mode chip paints this frame.
+  Color get modeChipFill {
+    final box = widget<DecoratedBox>(
+      find
+          .descendant(
+            of: find.byType(ModeChip),
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
+    );
+    return (box.decoration as BoxDecoration).color!;
   }
 }

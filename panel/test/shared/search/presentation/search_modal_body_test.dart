@@ -42,41 +42,98 @@ void main() {
     expect(panel.shows("Missing renderer test-row"), isTrue);
   });
 
-  testWidgets("clicking a result selects it", (tester) async {
-    final source = FakeSearchSource();
-    final panel = await tester.showSearch(
-      source,
-      results: body,
-      size: const Size(800, 700),
-    );
-    await panel.search.show(source, [resultNode("alpha")]);
-    final alpha = panel.search.result("Result alpha");
-    expect(alpha.isSelected, isFalse);
+  testWidgets("clicking a result opens it", (tester) async {
+    final activated = <String>[];
+    final panel = await tester.showSearchOver([
+      "alpha",
+      "beta",
+    ], activated: activated);
 
-    await alpha.tap();
+    await panel.search.result("Result beta").tap();
 
-    expect(alpha.isSelected, isTrue);
+    expect(activated, ["beta"]);
   });
 
-  testWidgets("Space toggles the selection of the focused result", (
+  testWidgets("Down moves focus from the query to the first result, and Up "
+      "back, with the search still open", (tester) async {
+    final panel = await tester.showSearchOver(["alpha", "beta"]);
+    expect(panel.queryBar.isFocused, isTrue);
+
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    expect(panel.search.result("Result alpha").isFocused, isTrue);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    expect(panel.search.result("Result beta").isFocused, isTrue);
+
+    await panel.press(LogicalKeyboardKey.arrowUp);
+    await panel.press(LogicalKeyboardKey.arrowUp);
+    expect(panel.queryBar.isFocused, isTrue);
+  });
+
+  testWidgets("typing on a focused result types into the query", (
     tester,
   ) async {
-    final source = FakeSearchSource();
-    final panel = await tester.showSearch(
-      source,
-      results: body,
-      size: const Size(800, 700),
+    final panel = await tester.showSearchOver(["alpha", "beta"]);
+    await panel.queryBar.type("al");
+    await panel.press(LogicalKeyboardKey.arrowDown);
+
+    await panel.press(LogicalKeyboardKey.keyP);
+
+    expect(panel.queryBar.isFocused, isTrue);
+    expect(panel.queryBar.text, "alp");
+  });
+
+  testWidgets("Enter in the query opens the first result", (tester) async {
+    final activated = <String>[];
+    final panel = await tester.showSearchOver([
+      "alpha",
+      "beta",
+    ], activated: activated);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await panel.press(LogicalKeyboardKey.escape);
+    expect(panel.queryBar.isFocused, isTrue);
+
+    await panel.press(LogicalKeyboardKey.enter);
+
+    expect(activated, ["alpha"]);
+  });
+
+  testWidgets("a command's key acts on the focused result only", (
+    tester,
+  ) async {
+    final ran = <String>[];
+    final command = SearchCommand.single<String>(
+      id: const SearchCommandId("test.copy"),
+      presentation: const SearchCommandPresentation(
+        label: "Copy",
+        shortcut: SingleActivator(LogicalKeyboardKey.keyC, alt: true),
+      ),
+      matcher: const SearchResultMatcher(testResultType),
+      execute: (context, value, target) async {
+        ran.add(target.result.id);
+        return const SearchCommandResult.completed(
+          surfaceEffect: SearchSurfaceEffect.refresh(),
+        );
+      },
     );
-    await panel.search.show(source, [resultNode("alpha"), resultNode("beta")]);
-    final beta = panel.search.result("Result beta");
-    await beta.focus();
+    final panel = await tester.showSearchOver(
+      ["alpha", "beta"],
+      commands: [command],
+    );
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await panel.press(LogicalKeyboardKey.escape);
 
-    await panel.press(LogicalKeyboardKey.space);
-    expect(beta.isSelected, isTrue);
-    expect(panel.search.result("Result alpha").isSelected, isFalse);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+    await panel.press(LogicalKeyboardKey.keyC);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+    expect(ran, isEmpty);
 
-    await panel.press(LogicalKeyboardKey.space);
-    expect(beta.isSelected, isFalse);
+    await panel.press(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+    await panel.press(LogicalKeyboardKey.keyC);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+    expect(ran, ["alpha"]);
   });
 
   for (final number in [1, 3, 9]) {
@@ -114,6 +171,39 @@ void main() {
 
     expect(panel.shows(searchLoadingSemanticLabel), isTrue);
   });
+
+  testWidgets(
+    "the first load progress runs along the query field's bottom edge, clear "
+    "of its rounded corners",
+    (tester) async {
+      final source = FakeSearchSource();
+      await tester.showSearch(
+        source,
+        results: body,
+        size: const Size(800, 700),
+      );
+
+      source.emitSnapshot(SearchSourceSnapshot.loading());
+      await tester.pump();
+
+      final bar = tester.getRect(
+        find.descendant(
+          of: find.byType(QueryBar),
+          matching: find.byType(EditorTextField),
+        ),
+      );
+      final progress = tester.getRect(find.byType(WorkingLine));
+      final corner = tester
+          .element(find.byType(QueryBar))
+          .shapes
+          .largeBorderRadius
+          .topLeft
+          .x;
+      expect(progress.bottom, closeTo(bar.bottom, 0.5));
+      expect(progress.left, greaterThanOrEqualTo(bar.left + corner));
+      expect(progress.right, lessThanOrEqualTo(bar.right - corner));
+    },
+  );
 
   testWidgets("keeps stale results without showing first load progress", (
     tester,

@@ -18,6 +18,7 @@ class ServicesPage extends ConsumerWidget {
     return Pane(
       id: "services",
       primary: true,
+      openFocus: PaneOpenFocus.firstItem,
       borderRadius: context.shapes.largeBorderRadius,
       margin: EdgeInsets.only(
         top: context.spacing.space2,

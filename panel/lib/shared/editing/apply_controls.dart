@@ -15,27 +15,24 @@ final class ApplyControls extends HookWidget {
       children: [
         if (state.status != null)
           Semantics(liveRegion: true, child: Text(state.status!)),
-        for (final diagnostic in state.diagnostics) Text(diagnostic.message),
+        for (final diagnostic in state.diagnostics)
+          Text(diagnostic.message, style: context.text.sentence),
         Wrap(
           spacing: context.spacing.space2,
           children: [
             if (state.canDiscard)
-              TextButton(
+              Button(
+                label: state.hasLaterEdits ? "Discard later edits" : "Discard",
                 onPressed: control.discard,
-                child: Text(
-                  state.hasLaterEdits ? "Discard later edits" : "Discard",
-                ),
               ),
             if (state.canRetry)
-              TextButton(onPressed: control.retry, child: const Text("Retry")),
+              Button(label: "Retry", onPressed: control.retry),
             if (state.hasSubmittedWork)
-              TextButton(
-                onPressed: control.refresh,
-                child: const Text("Refresh"),
-              ),
-            FilledButton(
+              Button(label: "Refresh", onPressed: control.refresh),
+            Button(
+              face: ButtonFace.filled,
+              label: "Apply",
               onPressed: state.canApply ? control.apply : null,
-              child: const Text("Apply"),
             ),
           ],
         ),

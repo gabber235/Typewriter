@@ -34,36 +34,30 @@ bool selectionShortcutsEnabled(Ref ref) =>
     !ref.watch(interactionSuspendedProvider) &&
     ref.watch(currentInteractionModeProvider) is NormalMode;
 
-/// The shortcut that clears the selection while selection shortcuts apply.
+/// The shortcut that clears the selection while selection shortcuts apply
+/// and something is selected.
 ///
 /// [GlobalOperationShortcuts] offers it, and the app offers it in dialogs
-/// through [dialogShortcutsProvider].
+/// through [dialogShortcutsProvider]. With nothing selected it is not
+/// offered, so Escape reaches what is around it, such as a dialog that
+/// closes.
+///
+/// A [SelectionSurface] offers it too, closer to its items than the page
+/// route, whose own disabled dismiss action would otherwise swallow Escape.
 @riverpod
 List<ActionShortcut> selectionClearingShortcuts(Ref ref) => [
-  if (ref.watch(selectionShortcutsEnabledProvider)) _unselectSelection,
+  if (ref.watch(selectionShortcutsEnabledProvider) &&
+      ref.watch(selectionProvider.select((selection) => selection.isNotEmpty)))
+    _unselectSelection,
 ];
 
-/// Clears the selection, or narrows a multi selection to the focused item.
+/// Clears the whole selection, which also ends select mode.
 final _unselectSelection = ActionShortcut.intent(
   id: "normal_unselect_selection",
-  label: "Unselect Selection",
-  description: "Unselect the currently selected item",
+  label: "Clear Selection",
+  description: "Clear the selection",
   intent: DismissIntent,
   priority: -11,
   show: false,
-  onInvoke: (ref) {
-    final focused = SelectableScope.primaryFocusedId();
-    if (focused == null) {
-      ref.read(selectionProvider.notifier).clear();
-      return;
-    }
-
-    final selection = ref.read(selectionProvider);
-    if (selection.isEmpty) return;
-    if (selection.length == 1) {
-      ref.read(selectionProvider.notifier).clear();
-      return;
-    }
-    ref.read(selectionProvider.notifier).select(focused, isMultiSelect: false);
-  },
+  run: ActionRun.press((ref) => ref.read(selectionProvider.notifier).clear()),
 );

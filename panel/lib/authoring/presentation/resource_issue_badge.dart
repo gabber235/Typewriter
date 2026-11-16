@@ -29,7 +29,7 @@ class ResourceIssueBadge extends StatelessWidget {
     final errors = issues.any(
       (issue) => issue.diagnostic.severity == skir.DiagnosticSeverity.error,
     );
-    return Tooltip(
+    return PanelTooltip(
       message: status,
       child: Semantics(
         label: status,

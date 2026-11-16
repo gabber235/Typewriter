@@ -28,7 +28,7 @@ void main() {
       expect(controller.snapshot.nodes, isEmpty);
       visible.value = true;
 
-      expect(controller.snapshot.nodes.findResults({"a"}), hasLength(1));
+      expect(controller.snapshot.nodes.findResult("a"), isNotNull);
       expect(source.searches, isEmpty);
     });
 
@@ -125,25 +125,6 @@ void main() {
       await controller.activate(controller.snapshot.nodes.firstResult!);
 
       expect(completed, "a");
-    });
-
-    test("selection cleanup follows projected snapshots", () {
-      final source = FakeSearchSource();
-      final controller = SearchController(
-        session: searchSession(source),
-        baseSelectors: const [],
-      );
-      addTearDown(controller.dispose);
-      source.emitSnapshot(
-        readySnapshot(nodes: [resultNode("a"), resultNode("b")]),
-      );
-      controller
-        ..toggleSelected("a", isMultiSelect: true)
-        ..toggleSelected("b", isMultiSelect: true);
-
-      source.emitSnapshot(readySnapshot(nodes: [resultNode("b")]));
-
-      expect(controller.selectedIds, ["b"]);
     });
   });
 }

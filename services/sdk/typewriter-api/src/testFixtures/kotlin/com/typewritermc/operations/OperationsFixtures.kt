@@ -35,10 +35,8 @@ import skirout.editor.v1.operation.OperationAvailability
 import skirout.editor.v1.operation.OperationCardinality
 import skirout.editor.v1.operation.OperationDrop
 import skirout.editor.v1.operation.OperationGroup
-import skirout.editor.v1.operation.OperationInspector
 import skirout.editor.v1.operation.OperationShortcut
 import skirout.editor.v1.operation.ResourceOperationDefinition
-import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.HeaderActionTone
 import skirout.editor.v1.resource_operations.PreparationChoice
 import skirout.editor.v1.resource_operations.PreparationChoiceAnswer

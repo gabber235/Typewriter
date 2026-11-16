@@ -340,8 +340,12 @@ skir.TypeDefinitionId libraryType(String kind) => _definition(kind);
 /// A catalog standing in for Realm's library: a realm root owning a Library
 /// and a tags section, Books owning pages, and Tags with parents. Pages have a
 /// workspace and Books a chapter tree navigator, so surfaces resolve as they
-/// do against Realm.
-CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
+/// do against Realm. [bookIcon] adds the icon name as a second field below
+/// a Book's title in its inspector.
+CheckedEditorCatalog libraryCatalog({
+  skir.CatalogGeneration? generation,
+  bool bookIcon = false,
+}) {
   final text = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
   final integer = skir.TypeTemplate.wrapScalar(
     skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedSixtyFour),
@@ -602,7 +606,11 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
             .toFrozen(),
       ),
     );
-    present(kind, skir.PresentationRole.inspector, input);
+    present(
+      kind,
+      skir.PresentationRole.inspector,
+      kind == "book" && bookIcon ? _withIconField(input) : input,
+    );
     present(kind, skir.PresentationRole.referencePreview, label);
     if (kind == "page") present(kind, skir.PresentationRole.workspace, input);
     if (kind == "tag") present(kind, skir.PresentationRole.item, label);
@@ -971,3 +979,43 @@ AuthoringDocument ownerChainDocument(Book book, {required String id}) {
     links: links,
   );
 }
+
+/// [title] above a text input for the Book's icon name.
+skir.PresentationNode _withIconField(skir.PresentationNode title) =>
+    skir.PresentationNode(
+      nodeId: "library.book.fields",
+      properties: skir.PresentationProperties.defaultInstance,
+      header: null,
+      element: skir.PresentationElement.wrapChildren(
+        skir.ChildrenElement.createColumn(
+          children: [
+            skir.AxisChild.wrapFixed(title),
+            skir.AxisChild.wrapFixed(
+              skir.PresentationNode(
+                nodeId: "library.book.icon",
+                properties: skir.PresentationProperties.defaultInstance,
+                header: null,
+                element: textInputElement(
+                  skir.BindingRef(
+                    bindingId: configuredValueBindingId,
+                    path: skir.ValuePath(
+                      segments: [
+                        skir.PathSegment.createField(name: "icon"),
+                        skir.PathSegment.createField(name: "value"),
+                      ],
+                    ),
+                  ),
+                  label: "icon",
+                ),
+              ),
+            ),
+          ],
+          layout: skir.AxisChildrenLayout(
+            clipOverflow: false,
+            spacing: 0,
+            mainAxisAlignment: skir.MainAxisAlignment.start,
+            crossAxisAlignment: skir.CrossAxisAlignment.start,
+          ),
+        ),
+      ),
+    );

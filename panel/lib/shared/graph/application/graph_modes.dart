@@ -13,9 +13,7 @@ class GraphMoveMode extends InteractionMode
   String get name => "Graph Move";
 
   @override
-  Widget buildDisplay(BuildContext context) {
-    return const ModeDisplayChip(label: "Move", color: Colors.deepPurple);
-  }
+  ModeLook look(BuildContext context) => ModeLook.move(context);
 
   @override
   List<ActionShortcut> getShortcuts() {
@@ -30,7 +28,9 @@ class GraphMoveMode extends InteractionMode
             activators: [SingleActivator(key)],
             priority: 20,
             show: false,
-            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
+            run: ActionRun.press(
+              (ref) => invokeCurrentModeDirection(ref, direction),
+            ),
           ),
       ActionShortcut(
         id: "graph_move",
@@ -72,12 +72,7 @@ class GraphResizeMode extends InteractionMode
   String get name => "Graph Resize";
 
   @override
-  Widget buildDisplay(BuildContext context) {
-    return const ModeDisplayChip(
-      label: "Resize",
-      color: Colors.deepOrangeAccent,
-    );
-  }
+  ModeLook look(BuildContext context) => ModeLook.resize(context);
 
   @override
   List<ActionShortcut> getShortcuts() {
@@ -92,7 +87,9 @@ class GraphResizeMode extends InteractionMode
             activators: [SingleActivator(key)],
             priority: 0,
             show: false,
-            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
+            run: ActionRun.press(
+              (ref) => invokeCurrentModeDirection(ref, direction),
+            ),
           ),
       ActionShortcut(
         id: "graph_resize",

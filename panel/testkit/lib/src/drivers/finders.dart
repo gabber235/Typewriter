@@ -5,15 +5,14 @@ import "package:typewriter_panel/typewriter_panel.dart";
 extension PanelFinders on CommonFinders {
   /// The tooltip whose message matches [message].
   ///
-  /// `find.byTooltip` only knows the tooltip of `package:flutter/material`.
-  /// The panel uses `package:material_ui`, whose tooltips `find.byTooltip`
-  /// reaches through semantics alone, so it misses a tooltip that excludes
-  /// itself from semantics. This finder reads the message itself.
+  /// `find.byTooltip` only knows the tooltip of `package:flutter/material`,
+  /// so it misses [PanelTooltip]. This finder reads the message itself, from
+  /// a [PanelTooltip] or from a [Button] that shows one.
   Finder tooltip(Pattern message, {bool skipOffstage = true}) =>
       byWidgetPredicate((widget) {
         final text = switch (widget) {
-          Tooltip(message: final String plain) => plain,
-          Tooltip(:final richMessage?) => richMessage.toPlainText(),
+          PanelTooltip(:final message) => message,
+          Button(:final tooltip?) => tooltip,
           _ => null,
         };
         if (text == null) return false;

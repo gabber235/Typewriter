@@ -19,95 +19,46 @@ TextStyle _secretTextStyle(BuildContext context) {
       .copyWith(fontVariations: [.weight(700)], letterSpacing: 1);
 }
 
+/// A blurred placeholder of random letters, drawn once per mount. While a
+/// secret is generated the same placeholder sits under a shimmer, the
+/// skeleton loop; it says nothing, so it never changes on its own.
 class _ConcealedDisplay extends HookWidget {
-  const _ConcealedDisplay({required this.prefix, required this.hasPrefix});
-
-  final String? prefix;
-  final bool hasPrefix;
-
-  @override
-  Widget build(BuildContext context) {
-    final length = hasPrefix
-        ? 6 + Random().nextInt(7)
-        : 20 + Random().nextInt(51);
-    final randomText = useState(_generateRandomString(length));
-
-    useTimer(5.seconds, (_) {
-      final newLength = hasPrefix
-          ? 6 + Random().nextInt(7)
-          : 20 + Random().nextInt(51);
-      randomText.value = _generateRandomString(newLength);
-    });
-
-    return Text.rich(
-      TextSpan(
-        children: [
-          if (prefix != null)
-            TextSpan(text: prefix, style: _secretTextStyle(context)),
-          WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            // The blurred text only hints at a value; assistive technology
-            // must not read a concealed or expired secret aloud.
-            child: ExcludeSemantics(
-              child: ImageFiltered(
-                imageFilter: ImageFilter.compose(
-                  inner: ImageFilter.dilate(radiusX: 2, radiusY: 2),
-                  outer: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                ),
-                child: Text(
-                  randomText.value,
-                  style: _secretTextStyle(context).copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant
-                        .withValues(alpha: 0.6),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TypewriterLoadingDisplay extends HookWidget {
-  const _TypewriterLoadingDisplay({
+  const _ConcealedDisplay({
     required this.prefix,
     required this.hasPrefix,
+    this.loading = false,
   });
 
   final String? prefix;
   final bool hasPrefix;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
-    final random = useMemoized(Random.new);
-    final minLength = hasPrefix ? 6 : 20;
-    final maxExtra = hasPrefix ? 7 : 51;
-    final targetText = useState(
-      _generateRandomString(minLength + random.nextInt(maxExtra)),
-    );
-
-    final currentIndex = useState(1);
-
-    final typingDelay = 50.ms;
-    final waitTicks = (500 / typingDelay.inMilliseconds).floor();
-
-    useTimer(typingDelay, (_) {
-      if (currentIndex.value < targetText.value.length + waitTicks) {
-        currentIndex.value++;
-      } else {
-        targetText.value = _generateRandomString(
-          minLength + random.nextInt(maxExtra),
-        );
-        currentIndex.value = 1;
-      }
+    final concealed = useMemoized(() {
+      final random = Random();
+      return _generateRandomString(
+        hasPrefix ? 6 + random.nextInt(7) : 20 + random.nextInt(51),
+      );
     });
 
-    final displayText = targetText.value.substring(
-      0,
-      min(currentIndex.value, targetText.value.length),
+    Widget placeholder = ImageFiltered(
+      imageFilter: ImageFilter.compose(
+        inner: ImageFilter.dilate(radiusX: 2, radiusY: 2),
+        outer: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+      ),
+      child: Text(
+        concealed,
+        maxLines: 1,
+        style: _secretTextStyle(context).copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant
+              .withValues(alpha: 0.6),
+        ),
+      ),
     );
+    if (loading) {
+      placeholder = Shimmer(child: ShimmerLoading(child: placeholder));
+    }
 
     return Text.rich(
       TextSpan(
@@ -118,22 +69,7 @@ class _TypewriterLoadingDisplay extends HookWidget {
             alignment: PlaceholderAlignment.middle,
             // The blurred text only hints at a value; assistive technology
             // must not read a concealed or expired secret aloud.
-            child: ExcludeSemantics(
-              child: ImageFiltered(
-                imageFilter: ImageFilter.compose(
-                  inner: ImageFilter.dilate(radiusX: 2, radiusY: 2),
-                  outer: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                ),
-                child: Text(
-                  displayText,
-                  style: _secretTextStyle(context).copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant
-                        .withValues(alpha: 0.6),
-                  ),
-                  maxLines: 1,
-                ),
-              ),
-            ),
+            child: ExcludeSemantics(child: placeholder),
           ),
         ],
       ),
@@ -141,7 +77,9 @@ class _TypewriterLoadingDisplay extends HookWidget {
   }
 }
 
-class _RevealedDisplay extends HookWidget {
+/// The revealed secret. A short value types in letter by letter; a value
+/// longer than 20 letters arrives whole and stays selectable.
+class _RevealedDisplay extends StatelessWidget {
   const _RevealedDisplay({required this.prefix, required this.value});
 
   final String? prefix;
@@ -149,55 +87,19 @@ class _RevealedDisplay extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentIndex = useState(1);
-    final blurAmount = useState(4.0);
-    final isAnimationComplete = useState(false);
-    final animationDelay = 30.ms;
-
-    useTimer(animationDelay, (_) {
-      if (isAnimationComplete.value) return;
-
-      var anyChange = false;
-
-      if (currentIndex.value < value.length) {
-        currentIndex.value++;
-        anyChange = true;
-      }
-
-      if (blurAmount.value > 0) {
-        blurAmount.value = (blurAmount.value - 0.6).clamp(0.0, 4.0);
-        anyChange = true;
-      }
-
-      if (!anyChange) {
-        isAnimationComplete.value = true;
-      }
-    });
-
-    if (isAnimationComplete.value) {
-      final fullText = prefix != null ? "$prefix$value" : value;
-      return SelectableText(fullText, style: _secretTextStyle(context));
+    final style = _secretTextStyle(context);
+    if (value.length > 20) {
+      return SelectableText(
+        prefix != null ? "$prefix$value" : value,
+        style: style,
+      );
     }
-
-    final displayText = value.substring(0, currentIndex.value);
-    final currentBlur = blurAmount.value;
-
-    return Text.rich(
-      TextSpan(
-        children: [
-          if (prefix != null)
-            TextSpan(text: prefix, style: _secretTextStyle(context)),
-          WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: ImageFiltered(
-              imageFilter: currentBlur > 0.1
-                  ? ImageFilter.blur(sigmaX: currentBlur, sigmaY: currentBlur)
-                  : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-              child: Text(displayText, style: _secretTextStyle(context)),
-            ),
-          ),
-        ],
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (prefix != null) Text(prefix!, style: style),
+        Flexible(child: MotionLabel(value, typesIn: true, style: style)),
+      ],
     );
   }
 }

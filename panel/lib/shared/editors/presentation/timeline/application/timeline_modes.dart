@@ -12,9 +12,7 @@ class TimelineMoveMode extends InteractionMode
   String get name => "Timeline Move";
 
   @override
-  Widget buildDisplay(BuildContext context) {
-    return ModeDisplayChip(label: "Move", color: context.colors.accent);
-  }
+  ModeLook look(BuildContext context) => ModeLook.move(context);
 
   @override
   List<ActionShortcut> getShortcuts() {
@@ -32,7 +30,9 @@ class TimelineMoveMode extends InteractionMode
             ],
             priority: 20,
             show: false,
-            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
+            run: ActionRun.press(
+              (ref) => invokeCurrentModeDirection(ref, direction),
+            ),
           ),
       ActionShortcut(
         id: "timeline_move",
@@ -76,9 +76,7 @@ class TimelineResizeMode extends InteractionMode
   String get name => "Timeline Resize";
 
   @override
-  Widget buildDisplay(BuildContext context) {
-    return ModeDisplayChip(label: "Resize", color: context.colors.warning);
-  }
+  ModeLook look(BuildContext context) => ModeLook.resize(context);
 
   @override
   List<ActionShortcut> getShortcuts() {
@@ -97,7 +95,9 @@ class TimelineResizeMode extends InteractionMode
             ],
             priority: 0,
             show: false,
-            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
+            run: ActionRun.press(
+              (ref) => invokeCurrentModeDirection(ref, direction),
+            ),
           ),
       ActionShortcut(
         id: "timeline_resize",

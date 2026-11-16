@@ -8,91 +8,93 @@ class _QueryBarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ManagedActionSet(
-      shortcuts: controller.shortcuts,
-      child: AnimatedSize(
-        duration: 300.ms,
-        curve: Curves.easeInOut,
-        alignment: Alignment.topCenter,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: context.spacing.space1,
-          children: [
-            Actions(
-              actions: {
-                if (bar.onCancel case final cancel?)
-                  CancelIntent: CallbackAction<CancelIntent>(
-                    onInvoke: (_) {
-                      cancel();
-                      return null;
-                    },
-                  ),
-              },
-              child: AnchoredOverlayPortal(
-                visible: controller.popupVisible,
-                config: const AnchoredOverlayConfig(
-                  preferredSide: AnchoredOverlaySide.bottom,
-                  spacing: 4,
-                  sharedAxisConstraintMode:
-                      SharedAxisConstraintMode.matchAnchor,
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: context.spacing.space1,
+      children: [
+        Actions(
+          actions: {
+            if (bar.onCancel case final cancel?)
+              CancelIntent: CallbackAction<CancelIntent>(
+                onInvoke: (_) {
+                  cancel();
+                  return null;
+                },
+              ),
+          },
+          child: AnchoredOverlayPortal(
+            visible: controller.popupVisible,
+            config: const AnchoredOverlayConfig(
+              preferredSide: AnchoredOverlaySide.bottom,
+              spacing: 4,
+              sharedAxisConstraintMode: SharedAxisConstraintMode.matchAnchor,
+            ),
+            child: _LoadingEdge(
+              label: bar.loadingLabel,
+              child: EditorTextField(
+                inputFieldController: controller.inputFieldController,
+                controller: controller.textController,
+                style: bar.style,
+                textAlign: bar.textAlign,
+                autofocus: bar.autofocus,
+                decoration: bar.inputDecoration.copyWith(
+                  errorText:
+                      controller.parseResult.issues.isNotEmpty ||
+                          bar.validationIssues.isNotEmpty
+                      ? [
+                          ...controller.parseResult.issues,
+                          ...bar.validationIssues,
+                        ].first.message
+                      : null,
+                  contentPadding:
+                      bar.inputDecoration.contentPadding ??
+                      EdgeInsets.symmetric(
+                        vertical: context.spacing.space3,
+                        horizontal: context.spacing.space2,
+                      ),
                 ),
-                child: EditorTextField(
-                  inputFieldController: controller.inputFieldController,
-                  controller: controller.textController,
-                  style: bar.style,
-                  textAlign: bar.textAlign,
-                  autofocus: bar.autofocus,
-                  decoration: bar.inputDecoration.copyWith(
-                    errorText:
-                        controller.parseResult.issues.isNotEmpty ||
-                            bar.validationIssues.isNotEmpty
-                        ? [
-                            ...controller.parseResult.issues,
-                            ...bar.validationIssues,
-                          ].first.message
-                        : null,
-                    contentPadding:
-                        bar.inputDecoration.contentPadding ??
-                        EdgeInsets.symmetric(
-                          vertical: context.spacing.space3,
-                          horizontal: context.spacing.space2,
-                        ),
-                  ),
-                  maxLines: null,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
-                  ],
-                  textFieldActions: [
-                    ...?bar.textFieldActions,
-                    ...controller.shortcuts,
-                  ],
-                  selectAllOnFocus: bar.selectAllOnFocus,
-                  enabled: bar.enabled,
-                  readOnly: bar.readOnly,
-                  onInputFocus: bar.onInputFocus,
-                  onDismiss: bar.onDismiss,
-                  onChanged: controller.onQueryChanged,
-                  onDone: bar.onDone,
-                  onEditingComplete: bar.onEditingComplete,
-                  onSubmitted: controller.onSubmitted,
-                ),
-                overlayBuilder: (context, _) => _buildSuggestionPanel(
-                  context: context,
-                  suggestions: controller.suggestions,
-                  warning: controller.completionWarning,
-                  activeSuggestionIndex: controller.activeSuggestionIndex,
-                  onTapSuggestion: controller.applySuggestion,
-                  onHoverIndex: controller.onHoverIndex,
-                ),
+                maxLines: null,
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
+                ],
+                textFieldActions: [
+                  ...?bar.textFieldActions,
+                  ...controller.shortcuts,
+                ],
+                selectAllOnFocus: bar.selectAllOnFocus,
+                enabled: bar.enabled,
+                readOnly: bar.readOnly,
+                onInputFocus: bar.onInputFocus,
+                onDismiss: bar.onDismiss,
+                onChanged: controller.onQueryChanged,
+                onDone: bar.onDone,
+                onEditingComplete: bar.onEditingComplete,
+                onSubmitted: controller.onSubmitted,
               ),
             ),
-            _QueryBarHelperRow(
-              visible: controller.helperVisible,
-              badges: controller.helperBadges,
+            overlayBuilder: (context, _) => _buildSuggestionPanel(
+              context: context,
+              suggestions: controller.suggestions,
+              warning: controller.completionWarning,
+              activeSuggestionIndex: controller.activeSuggestionIndex,
+              onTapSuggestion: controller.applySuggestion,
+              onHoverIndex: controller.onHoverIndex,
             ),
-          ],
+          ),
         ),
+        _QueryBarHelperRow(
+          visible: controller.helperVisible,
+          badges: controller.helperBadges,
+        ),
+      ],
+    );
+    return ManagedActionSet(
+      shortcuts: controller.shortcuts,
+      child: MotionSize(
+        shrink: MotionToken.panelOut,
+        alignment: Alignment.topCenter,
+        child: content,
       ),
     );
   }
@@ -107,13 +109,8 @@ class _QueryBarHelperRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRect(
-      child: AnimatedSwitcher(
-        duration: 420.ms,
-        reverseDuration: 180.ms,
-        switchInCurve: Curves.linear,
-        switchOutCurve: Curves.linear,
-        transitionBuilder: (child, animation) =>
-            ElasticMessageTransition(animation: animation, child: child),
+      child: PanelSwitcher(
+        alignment: Alignment.topLeft,
         child: !visible
             ? null
             : Padding(
@@ -165,6 +162,34 @@ class _QueryBarHelperRow extends StatelessWidget {
                 ),
               ),
       ),
+    );
+  }
+}
+
+/// Lays a [WorkingLine] along the bottom edge of [child] while [label] is
+/// set. The line stays inside the straight part of the edge, so it never meets
+/// the rounded corners or the focus ring around them.
+class _LoadingEdge extends StatelessWidget {
+  const _LoadingEdge({required this.label, required this.child});
+
+  final String? label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = this.label;
+    if (label == null) return child;
+    final corner = context.shapes.largeBorderRadius.bottomLeft.x;
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          left: corner,
+          right: corner,
+          bottom: 0,
+          child: WorkingLine(label: label),
+        ),
+      ],
     );
   }
 }

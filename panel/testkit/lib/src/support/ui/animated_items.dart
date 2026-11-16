@@ -1,6 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/support/shown_component.dart";
+import "package:typewriter_testkit/src/support/ui/reduced_motion.dart";
 
 /// One item an animated collection shows: its identity and visible label.
 final class AnimatedItem {
@@ -14,6 +15,12 @@ final class AnimatedItem {
   final String label;
 }
 
+/// [count] items with ids `0` to `count - 1`, labelled "Row 0" onwards.
+List<AnimatedItem> numberedItems(int count) => [
+  for (var index = 0; index < count; index++)
+    AnimatedItem(id: "$index", label: "Row $index"),
+];
+
 /// The items an [AnimatedItems] collection shows, changed the way a parent
 /// rebuilding it with new data does.
 final class AnimatedItemSource {
@@ -26,22 +33,30 @@ final class AnimatedItemSource {
   /// The items the next build reads.
   final List<AnimatedItem> items;
 
-  /// Whether the collection is mounted; false unmounts it.
+  /// Whether the items arrived; false shows the collection still loading.
+  bool ready = true;
+
+  /// Whether the collection is mounted; false unmounts it while its rows
+  /// stay.
   final visible = ValueNotifier(true);
 
   final _revision = ValueNotifier(0);
 
-  /// The identities of every item the removal builder showed.
-  final removedIds = <String>[];
+  /// The rows the collection renders, as of its last build.
+  late AnimatedRows<AnimatedItem> rows;
 
-  /// The items the collection rendered on its last build.
-  List<AnimatedItem> renderedItems = const [];
+  /// The ref of the collection, for a command that runs over its rows.
+  late WidgetRef ref;
 
-  /// The identities of [renderedItems], in order.
-  List<String> get renderedIds => [for (final item in renderedItems) item.id];
+  /// The ids of the rows a tap reached, in order.
+  final tapped = <String>[];
+
+  /// The identities of the items in the data, in order, as of the last build.
+  List<String> get renderedIds => [for (final item in rows.items) item.id];
 
   /// Replaces the items with [next] and rebuilds.
   void update(List<AnimatedItem> next) {
+    ready = true;
     items
       ..clear()
       ..addAll(next);
@@ -57,167 +72,311 @@ final class AnimatedItemSource {
   }
 }
 
-/// The collection widget an [AnimatedItems] renders through its hook.
+/// The collection widget an [AnimatedItems] renders its rows through.
 enum AnimatedItemsLayout { sliverList, table }
 
-/// A collection of [AnimatedItemSource] items driven by the panel's animated
-/// collection hook for [layout].
-///
-/// Each item fades with its animation; [opacityOf] reads that fade. Removed
-/// items render under the identity `removed-<id>` except in a table, whose
-/// rows keep their identity.
-final class AnimatedItems extends HookWidget {
-  /// Shows [source] as [layout], animating insertions over [insertDuration]
-  /// and removals over [removeDuration].
+/// A 400 by 400 scroll view of [AnimatedItemSource] items on one
+/// [useAnimatedRows], rendered as [layout]. Each row is 48 px high, one
+/// focus stop holding a small field, and records taps in
+/// [AnimatedItemSource.tapped].
+final class AnimatedItems extends HookConsumerWidget {
+  /// Shows [source] as [layout], with [columns] cells per table row.
   const AnimatedItems({
     required this.source,
     this.layout = AnimatedItemsLayout.sliverList,
-    this.insertDuration = const Duration(milliseconds: 300),
-    this.removeDuration = const Duration(milliseconds: 300),
+    this.columns = 1,
     super.key,
   });
 
   /// The items shown.
   final AnimatedItemSource source;
 
-  /// The collection widget and hook used.
+  /// The collection widget used.
   final AnimatedItemsLayout layout;
 
-  /// How long an inserted item takes to appear.
-  final Duration insertDuration;
+  /// How many cells each table row shows; past one they read
+  /// `<label> cell <n>`.
+  final int columns;
 
-  /// How long a removed item stays while it leaves.
-  final Duration removeDuration;
-
-  /// The fade opacity of the item rendered under [id].
-  static double opacityOf(WidgetTester tester, String id) =>
-      tester.widget<FadeTransition>(find.byKey(ValueKey(id))).opacity.value;
+  /// The label of the row that holds keyboard focus, on the row itself or
+  /// in a control inside it, or null.
+  static String? focusedLabel(WidgetTester tester) {
+    for (
+      FocusNode? node = FocusManager.instance.primaryFocus;
+      node != null;
+      node = node.parent
+    ) {
+      if (node case RowFocusNode(:final entry)) {
+        return (entry.item as AnimatedItem?)?.label;
+      }
+    }
+    return null;
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    source.ref = ref;
     useValueListenable(source._revision);
     final visible = useValueListenable(source.visible);
-    final collection = switch (layout) {
-      AnimatedItemsLayout.sliverList => CustomScrollView(
-        slivers: [_sliverList()],
+    final rows = useAnimatedRows<AnimatedItem>(
+      items: List.of(source.items),
+      identity: (item) => item.id,
+      ready: source.ready,
+    );
+    source.rows = rows;
+    if (!visible) return const SizedBox(width: 400, height: 400);
+    return SizedBox(
+      width: 400,
+      height: 400,
+      child: CustomScrollView(
+        slivers: [
+          switch (layout) {
+            AnimatedItemsLayout.sliverList => SliverAnimatedRows(
+              rows: rows,
+              itemBuilder: (context, entry) => RowStop(
+                child: _tappable(entry.item, _withField(entry.item.label)),
+              ),
+            ),
+            AnimatedItemsLayout.table => SliverRowAnchor(
+              sliver: SliverToBoxAdapter(
+                child: AnimatedTable(
+                  rows: rows,
+                  rowBuilder: (context, entry) => TableRow(
+                    children: [
+                      for (var column = 0; column < columns; column++)
+                        RowStop(
+                          role: column == 0 ? RowRole.stop : RowRole.part,
+                          bounds: RingBounds.tableRow,
+                          child: _tappable(
+                            entry.item,
+                            column == 0
+                                ? _withField(
+                                    columns == 1
+                                        ? entry.item.label
+                                        : "${entry.item.label} cell $column",
+                                  )
+                                : Text("${entry.item.label} cell $column"),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          },
+        ],
       ),
-      AnimatedItemsLayout.table => _table(),
-    };
-    if (!visible) return const SizedBox.shrink();
-    return SizedBox(width: 400, height: 400, child: collection);
-  }
-
-  Widget _removed(
-    BuildContext context,
-    AnimatedItem item,
-    Animation<double> animation,
-  ) {
-    source.removedIds.add(item.id);
-    return _item(item, animation, id: "removed-${item.id}");
-  }
-
-  Widget _sliverList() {
-    final result = useSliverAnimatedList<AnimatedItem>(
-      items: source.items,
-      identity: (item) => item.id,
-      insertDuration: insertDuration,
-      removeDuration: removeDuration,
-      removedItemBuilder: _removed,
-    );
-    source.renderedItems = result.items;
-    return SliverAnimatedRows(
-      key: result.key,
-      initialItemCount: result.items.length,
-      itemBuilder: (context, index, animation) =>
-          _item(result.items[index], animation),
     );
   }
 
-  Widget _table() {
-    final result = useAnimatedTable<AnimatedItem>(
-      items: source.items,
-      identity: (item) => item.id,
-      insertDuration: insertDuration,
-      removeDuration: removeDuration,
-      removedItemBuilder: (context, item, animation) {
-        source.removedIds.add(item.id);
-        return _row(item);
-      },
-    );
-    source.renderedItems = result.items;
-    return AnimatedTable(
-      key: result.key,
-      initialItemCount: result.items.length,
-      rowBuilder: (context, index, animation) => _row(result.items[index]),
-      transitionBuilder: fadeIn,
-    );
-  }
-
-  static TableRow _row(AnimatedItem item) => TableRow(
-    key: ValueKey(item.id),
+  // The label and a field Tab passes over, focused by a test the way a
+  // pointer would.
+  Widget _withField(String label) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      TableCell(key: ValueKey("cell-${item.id}"), child: Text(item.label)),
+      Expanded(child: Text(label)),
+      Focus(
+        debugLabel: "$label field",
+        skipTraversal: true,
+        child: const SizedBox(width: 8, height: 8),
+      ),
     ],
   );
 
-  static Widget _item(
-    AnimatedItem item,
-    Animation<double> animation, {
-    String? id,
-  }) => FadeTransition(
-    key: ValueKey(id ?? item.id),
-    opacity: animation,
-    child: SizedBox(height: 48, child: Text(item.label)),
+  Widget _tappable(AnimatedItem item, Widget child) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: () => source.tapped.add(item.id),
+    child: SizedBox(height: 48, child: child),
   );
 }
 
-/// A transition that fades [child] in with [animation].
-Widget fadeIn(
-  BuildContext context,
-  Animation<double> animation,
-  Widget child,
-) => FadeTransition(opacity: animation, child: child);
-
 /// Showing an animated collection in the panel.
 extension ShowAnimatedItems on WidgetTester {
-  /// Shows [items] as [layout] through [ShowComponent.showComponent],
-  /// animating insertions over [insertDuration] and removals over
-  /// [removeDuration], and returns the source that changes them.
+  /// Shows [items] as [layout] through [ShowComponent.showComponent] and
+  /// returns the source that changes them. [inPane] places the collection in
+  /// a [Pane], whose run plays the load; [reducedMotion] renders it for a
+  /// user who asked for reduced motion; [settle] false renders only the
+  /// first frame of a fresh mount.
   Future<AnimatedItemSource> showAnimatedItems(
     List<AnimatedItem> items, {
     AnimatedItemsLayout layout = AnimatedItemsLayout.sliverList,
-    Duration insertDuration = const Duration(milliseconds: 300),
-    Duration removeDuration = const Duration(milliseconds: 300),
+    int columns = 1,
+    bool inPane = false,
+    bool reducedMotion = false,
+    bool settle = true,
   }) async {
     final source = AnimatedItemSource(items);
-    await showComponent(
-      AnimatedItems(
-        source: source,
-        layout: layout,
-        insertDuration: insertDuration,
-        removeDuration: removeDuration,
-      ),
+    Widget shown = AnimatedItems(
+      source: source,
+      layout: layout,
+      columns: columns,
     );
+    if (inPane) {
+      shown = Pane(id: "items", margin: EdgeInsets.zero, child: shown);
+    }
+    if (reducedMotion) shown = ReducedMotion(child: shown);
+    if (settle) {
+      await showComponent(shown);
+    } else {
+      await mountComponent(shown);
+    }
     return source;
   }
 }
 
-/// Showing a bare animated table in the panel.
-extension ShowActiveRowTable on WidgetTester {
-  /// Shows an [AnimatedTable] of one row reading "Active" that reads
-  /// "Empty" once it has no rows, and returns its state.
-  Future<AnimatedTableState> showActiveRowTable() async {
-    final key = GlobalKey<AnimatedTableState>();
-    await showComponent(
-      AnimatedTable(
-        key: key,
-        initialItemCount: 1,
-        emptyBuilder: (context) => const Text("Empty"),
-        rowBuilder: (context, index, animation) =>
-            const TableRow(children: [Text("Active")]),
-        transitionBuilder: fadeIn,
+/// Moving keyboard focus in an [AnimatedItems] collection, and covering it
+/// with a dialog.
+extension FocusAnimatedItems on WidgetTester {
+  AnimatedItemSource get _shownSource =>
+      widget<AnimatedItems>(find.byType(AnimatedItems)).source;
+
+  /// Focuses the row of [id], the way a pointer or a key landing on it
+  /// does.
+  Future<void> focusAnimatedItem(String id) async {
+    _shownSource.rows[id]!.focus.requestFocus();
+    await pump();
+  }
+
+  /// Focuses the field inside the row of [id].
+  Future<void> focusAnimatedItemField(String id) async {
+    final row = _shownSource.rows[id]!.focus;
+    row.descendants.last.requestFocus();
+    await pump();
+    expect(row.hasFocus && !row.hasPrimaryFocus, isTrue);
+  }
+
+  /// Opens a dialog over the collection that takes focus.
+  Future<void> openTestDialog() async {
+    unawaited(
+      showAdvancedDialog<void>(
+        context: element(find.byType(AnimatedItems)),
+        builder: (context) => Center(
+          child: Button(
+            label: "Close test dialog",
+            autofocus: true,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
       ),
     );
-    return key.currentState!;
+    await pumpAndSettle();
+    expect(AnimatedItems.focusedLabel(this), isNull);
+  }
+
+  /// Closes the dialog [openTestDialog] opened, the way its button does.
+  Future<void> closeTestDialog() async {
+    await tap(find.text("Close test dialog"));
+    await pumpAndSettle();
+  }
+}
+
+/// Showing a page whose primary pane opens on its first item.
+extension ShowOpenFocusPane on WidgetTester {
+  /// Shows a primary [Pane] with open focus on its first item, holding a
+  /// button labelled [fallback], an [AnimatedItems] list still loading and a
+  /// button labelled "Other", and returns the source whose
+  /// [AnimatedItemSource.update] delivers the items.
+  Future<AnimatedItemSource> showOpenFocusPane({
+    required String fallback,
+  }) async {
+    final source = AnimatedItemSource([])..ready = false;
+    await showComponent(
+      _openFocusPane(source, fallback: fallback, other: "Other"),
+    );
+    return source;
+  }
+
+  /// Shows [opener] alone; [OpeningPage.open] then shows a primary [Pane]
+  /// below it with open focus on its first item, holding a button labelled
+  /// [fallback] and an [AnimatedItems] list still loading.
+  Future<OpeningPage> showOpeningPage({
+    required Widget opener,
+    required String fallback,
+  }) async {
+    final source = AnimatedItemSource([])..ready = false;
+    final shown = ValueNotifier(false);
+    addTearDown(shown.dispose);
+    await showComponent(
+      ValueListenableBuilder(
+        valueListenable: shown,
+        builder: (context, show, _) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            opener,
+            if (show) _openFocusPane(source, fallback: fallback),
+          ],
+        ),
+      ),
+    );
+    return (items: source, open: () => shown.value = true);
+  }
+}
+
+/// A page from [ShowOpenFocusPane.showOpeningPage]: [open] shows its pane
+/// and [items] delivers its list.
+typedef OpeningPage = ({AnimatedItemSource items, VoidCallback open});
+
+Pane _openFocusPane(
+  AnimatedItemSource source, {
+  required String fallback,
+  String? other,
+}) => Pane(
+  id: "page",
+  primary: true,
+  openFocus: PaneOpenFocus.firstItem,
+  margin: EdgeInsets.zero,
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Button(label: fallback, onPressed: () {}),
+      AnimatedItems(source: source),
+      if (other != null) Button(label: other, onPressed: () {}),
+    ],
+  ),
+);
+
+/// Showing a bare animated table in the panel.
+extension ShowActiveRowTable on WidgetTester {
+  /// Shows an [AnimatedTable] of the rows of [source], each reading its
+  /// label, that reads "Empty" once it has no rows, and returns the source.
+  Future<AnimatedItemSource> showActiveRowTable({
+    List<AnimatedItem> items = const [AnimatedItem(id: "a", label: "Active")],
+  }) async {
+    final source = AnimatedItemSource(List.of(items));
+    await showComponent(_EmptyingTable(source: source));
+    return source;
+  }
+}
+
+final class _EmptyingTable extends HookConsumerWidget {
+  const _EmptyingTable({required this.source});
+
+  final AnimatedItemSource source;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    source.ref = ref;
+    useValueListenable(source._revision);
+    final rows = useAnimatedRows<AnimatedItem>(
+      items: List.of(source.items),
+      identity: (item) => item.id,
+    );
+    source.rows = rows;
+    return SizedBox(
+      width: 400,
+      child: AnimatedTable(
+        rows: rows,
+        emptyBuilder: (context) => const Text("Empty"),
+        rowBuilder: (context, entry) => TableRow(
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => source.tapped.add(entry.id as String),
+              child: Text(entry.item.label),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

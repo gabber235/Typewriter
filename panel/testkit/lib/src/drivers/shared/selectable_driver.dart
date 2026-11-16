@@ -39,8 +39,75 @@ class SelectableDriver extends ComponentDriver {
             Tristate.isTrue,
       );
 
-  /// Toggles the item's selection with a click.
+  /// Whether the item shows the check of select mode, read as checked or
+  /// not.
+  bool get showsCheck => _checks.any((state) => state != CheckedState.none);
+
+  /// Whether the item's check is on.
+  bool get isChecked => _checks.contains(CheckedState.isTrue);
+
+  /// How many check marks the item draws where the user can see them.
+  int get visibleCheckMarks => find
+      .descendant(
+        of: _item,
+        matching: find.byWidgetPredicate(
+          (widget) => switch (widget) {
+            Icon(:final icon) => _checkGlyphs.contains(icon),
+            Icones(:final icon) => _checkSymbols.contains(icon),
+            _ => false,
+          },
+        ),
+      )
+      .evaluate()
+      .where(
+        (mark) => !mark.debugGetDiagnosticChain().any(
+          (ancestor) => switch (ancestor.widget) {
+            Opacity(opacity: 0) => true,
+            _ => false,
+          },
+        ),
+      )
+      .length;
+
+  static const _checkGlyphs = [Icons.check, Icons.check_rounded];
+  static const _checkSymbols = [
+    MaterialSymbols.check,
+    MaterialSymbols.check_small,
+    MaterialSymbols.check_small_rounded,
+  ];
+
+  Iterable<CheckedState> get _checks => find.semantics
+      .byLabel(label)
+      .evaluate()
+      .map((node) => node.getSemanticsData().flagsCollection.isChecked);
+
+  /// Selects only the item with a plain click.
   Future<void> select() => tapOn(_item);
+
+  /// Adds the item to the selection or removes it with the platform's
+  /// toggle click: Command+click on Apple platforms, Control+click
+  /// elsewhere.
+  Future<void> toggle() async {
+    final modifier = switch (defaultTargetPlatform) {
+      TargetPlatform.macOS || TargetPlatform.iOS => LogicalKeyboardKey.metaLeft,
+      _ => LogicalKeyboardKey.controlLeft,
+    };
+    await tester.sendKeyDownEvent(modifier);
+    await tester.tap(_item);
+    await tester.sendKeyUpEvent(modifier);
+    // Let go of the key before the tap resolves, as a quick click does.
+    await tester.pump(kDoubleTapTimeout);
+    await settle();
+  }
+
+  /// Selects the range from the anchor to the item with a Shift+click.
+  Future<void> selectRangeTo() async {
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.tap(_item);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.pump(kDoubleTapTimeout);
+    await settle();
+  }
 
   /// Opens the item with a double click.
   Future<void> open() async {

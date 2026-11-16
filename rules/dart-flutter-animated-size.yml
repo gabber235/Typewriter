@@ -1,0 +1,14 @@
+id: dart-flutter-animated-size
+language: dart
+severity: error
+message: An AnimatedSize with a zero duration, as reduced motion gives, finishes inside its own layout and marks itself for layout again, which throws.
+note: Use MotionSize, which follows the child at once when its token is instant.
+files:
+  - panel/lib/**
+  - panel/testkit/lib/**
+  - panel/widgetbook/lib/**
+ignores:
+  - panel/lib/shared/ui/components/motion/motion_size.dart
+rule:
+  kind: identifier
+  regex: ^AnimatedSize$

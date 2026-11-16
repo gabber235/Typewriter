@@ -51,13 +51,10 @@ class _ActivityCardState extends State<_ActivityCard> {
     setState(() {});
   }
 
-  Future<void> _copyReport(BuildContext context) async {
+  Future<void> _copyReport() async {
     final report = widget.copyText;
     if (report == null) return;
     await Clipboard.setData(ClipboardData(text: report));
-    if (context.mounted) {
-      showSuccessSnackBar(context, "Problem copied to clipboard");
-    }
   }
 
   @override
@@ -65,6 +62,11 @@ class _ActivityCardState extends State<_ActivityCard> {
     final color = widget.phase.color(context);
     final isExpandable = widget.details.isNotEmpty;
     final isExpanded = _expansibleController.isExpanded;
+    // The chevron turns with the card's grow and shrink.
+    final chevron = motionTimeline(
+      context,
+      isExpanded ? MotionToken.surfaceIn : MotionToken.panelOut,
+    );
     return Padding(
       padding: EdgeInsets.only(top: context.spacing.space2),
       child: DecoratedBox(
@@ -79,14 +81,10 @@ class _ActivityCardState extends State<_ActivityCard> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Expansible(
+              GrowingCard(
                 controller: _expansibleController,
-                animationStyle: const AnimationStyle(
-                  duration: Duration(milliseconds: 240),
-                  curve: Curves.easeOut,
-                ),
                 maintainState: true,
-                headerBuilder: (context, animation) => Semantics(
+                header: (context, animation) => Semantics(
                   container: true,
                   button: isExpandable,
                   expanded: isExpandable ? isExpanded : null,
@@ -98,9 +96,10 @@ class _ActivityCardState extends State<_ActivityCard> {
                             ? "Double tap to collapse"
                             : "Double tap to expand"
                       : null,
-                  child: InkWell(
-                    onTap: isExpandable ? _toggleDetails : null,
-                    borderRadius: context.shapes.smallBorderRadius,
+                  child: Button(
+                    face: ButtonFace.bare,
+                    label: "",
+                    onPressed: isExpandable ? _toggleDetails : null,
                     child: Padding(
                       padding: EdgeInsets.all(context.spacing.space1),
                       child: Row(
@@ -136,10 +135,9 @@ class _ActivityCardState extends State<_ActivityCard> {
                                   overflow: isExpanded
                                       ? TextOverflow.visible
                                       : TextOverflow.ellipsis,
-                                  style: context.theme.textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: context.colors.contentSecondary,
-                                      ),
+                                  style: context.text.sentenceSmall.copyWith(
+                                    color: context.colors.contentSecondary,
+                                  ),
                                 ),
                               ],
                             ),
@@ -152,8 +150,8 @@ class _ActivityCardState extends State<_ActivityCard> {
                               ),
                               child: AnimatedRotation(
                                 turns: isExpanded ? .25 : 0,
-                                duration: const Duration(milliseconds: 240),
-                                curve: Curves.easeOut,
+                                duration: chevron.duration,
+                                curve: chevron.curve,
                                 child: Icon(
                                   Icons.chevron_right,
                                   color: context.colors.contentSecondary,
@@ -167,7 +165,7 @@ class _ActivityCardState extends State<_ActivityCard> {
                     ),
                   ),
                 ),
-                bodyBuilder: (context, animation) => Padding(
+                body: (context) => Padding(
                   padding: EdgeInsets.only(
                     left: context.spacing.space2,
                     top: context.spacing.space3,
@@ -186,11 +184,6 @@ class _ActivityCardState extends State<_ActivityCard> {
                     ],
                   ),
                 ),
-                expansibleBuilder: (context, header, body, animation) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [header, body],
-                ),
               ),
               if (widget.actions.isNotEmpty || widget.copyText != null) ...[
                 SizedBox(height: context.spacing.space2),
@@ -205,11 +198,14 @@ class _ActivityCardState extends State<_ActivityCard> {
                         spacing: context.spacing.space2,
                         runSpacing: context.spacing.space2,
                         children: [
-                          IconButton(
-                            tooltip: "Copy problem report",
+                          Button(
+                            face: ButtonFace.icon,
                             icon: const Icon(Icons.copy_outlined, size: 16),
+                            label: "Copy problem report",
+                            tooltip: "Copy problem report",
+                            doneLabel: "Copied",
                             color: context.colors.contentSecondary,
-                            onPressed: () => _copyReport(context),
+                            onPressed: _copyReport,
                           ),
                         ],
                       ),

@@ -46,7 +46,7 @@ void main() {
           const [],
           at: PanelLocation.component(card),
         );
-        panel.container.read(selectionProvider.notifier).selectAll([
+        panel.container.read(selectionProvider.notifier).replace([
           other,
           if (member) target,
         ]);
@@ -185,7 +185,7 @@ void main() {
     );
 
     final menu = await panel.item("Target").contextMenu();
-    panel.container.read(selectionProvider.notifier).selectAll([other]);
+    panel.container.read(selectionProvider.notifier).replace([other]);
     deferred.resolve(panel);
     await panel.settle();
 

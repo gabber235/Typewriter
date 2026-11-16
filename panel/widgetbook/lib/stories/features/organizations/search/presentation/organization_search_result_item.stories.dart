@@ -51,3 +51,34 @@ Widget organizationSearchResultItemUseCase(BuildContext context) {
     ),
   );
 }
+
+/// The [CreateOrganizationSearchResultItem] the primary search lists after
+/// the organizations, in each row state: idle, focused, selected and busy
+/// creating.
+@widgetbook.UseCase(name: "Default", type: CreateOrganizationSearchResultItem)
+Widget createOrganizationSearchResultItemUseCase(BuildContext context) {
+  final row = context.knobs.object.segmented(
+    label: "Row",
+    options: const ["Idle", "Focused", "Selected", "Loading"],
+    initialOption: "Idle",
+  );
+  final width = context.knobs.object.segmented(
+    label: "Width",
+    options: const ["Modal", "Phone"],
+    initialOption: "Modal",
+  );
+  return Story(
+    const [],
+    at: PanelLocation.component(
+      SizedBox(
+        width: width == "Modal" ? 560 : 320,
+        child: CreateOrganizationSearchResultItem(
+          focused: row == "Focused",
+          selected: row == "Selected",
+          loading: row == "Loading",
+          onTap: () {},
+        ),
+      ),
+    ),
+  );
+}

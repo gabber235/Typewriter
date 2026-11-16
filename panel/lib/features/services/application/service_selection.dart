@@ -95,12 +95,16 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
   final Future<void> Function() onUnbind;
 
   @override
-  List<PortableMultiInspectionSurface> get portableMultiInspectionSurfaces => [
+  List<SharedInspectionSurface> get sharedInspectionSurfaces => [
     _ServiceIdentityPortableSurface(editTarget),
   ];
 
   @override
   String get name => service.displayName;
+
+  @override
+  SelectableNoun get noun =>
+      const SelectableNoun(one: "service", many: "services");
 
   @override
   List<SelectionCapability> get capabilities => [
@@ -118,7 +122,7 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
 }
 
 final class _ServiceIdentityPortableSurface
-    implements PortableMultiInspectionSurface {
+    extends ValueEditingInspectionSurface {
   const _ServiceIdentityPortableSurface(this.target);
 
   @override
@@ -134,12 +138,12 @@ final class _ServiceIdentityPortableSurface
   CheckedEditorCatalog get catalog => _serviceIdentityCatalog;
 
   @override
-  bool isCompatibleWith(PortableMultiInspectionSurface other) =>
+  bool sharesEditorWith(PortableInspectionSurface other) =>
       other is _ServiceIdentityPortableSurface;
 
   @override
   PortablePresentationHost buildHost(
-    List<PortableMultiInspectionSurface> members,
+    List<SharedInspectionSurface> members,
     EditOwner combinedOwner,
   ) => serviceIdentityPortablePresentationHost(identityOwner: combinedOwner);
 }

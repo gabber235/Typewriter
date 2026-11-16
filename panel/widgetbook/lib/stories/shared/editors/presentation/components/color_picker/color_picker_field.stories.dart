@@ -81,7 +81,9 @@ class ColorPickerFieldStory extends HookWidget {
           // A mixed selection shows no value until the user edits it; the
           // display knobs shape the field once it holds a value.
           if (showsMixed)
-            ColorPickerField.mixed(
+            ColorPickerField(
+              color: null,
+              mixed: true,
               includeAlpha: includeAlpha,
               offeredSwatches: _offeredSwatches,
               enabled: field.enabled,

@@ -201,6 +201,18 @@ final class FieldDriver extends ComponentDriver {
     await settle();
   }
 
+  /// Replaces the text of the field, which already holds focus, with [text]
+  /// in one keystroke and returns before any frame runs, so a test can look
+  /// inside the waits that follow; [edit] settles through them instead.
+  void keystroke(String text) {
+    tester.testTextInput.updateEditingValue(
+      TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      ),
+    );
+  }
+
   /// Types [text] and commits it the way leaving the field with Tab does.
   Future<void> enter(String text) async {
     await type(text);

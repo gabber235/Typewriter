@@ -45,7 +45,7 @@ final class ResourcesDriver extends ComponentDriver {
   /// Selects exactly [resources], the way another part of the panel does.
   Future<void> selectOnly(List<skir.ResourceId> resources) async {
     final scope = world.requireRealm.scope;
-    world.container.read(selectionProvider.notifier).selectAll([
+    world.container.read(selectionProvider.notifier).replace([
       for (final resource in resources)
         AuthoringResourceIdentifier.inScope(scope, resource),
     ]);
@@ -69,6 +69,10 @@ final class ResourceOperationsDriver {
 
   /// Opens the context menu and returns its entries.
   Future<List<String>> open() async => (await _row.contextMenu()).entries;
+
+  /// Opens the context menu and returns its entries in their sections.
+  Future<List<List<String>>> openSections() async =>
+      (await _row.contextMenu()).sections;
 
   /// Opens the context menu and chooses [label].
   Future<void> choose(String label) async {

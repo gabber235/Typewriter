@@ -25,7 +25,7 @@ List<ActionShortcut> buildGraphShortcuts({
           const SingleActivator(LogicalKeyboardKey.keyM, shift: true),
         ],
         icon: Icones(Ion.md_move),
-        onInvoke: (_) => activateMoveMode(),
+        run: ActionRun.press((_) => activateMoveMode()),
         priority: 10,
       ),
     if (canResize && currentMode is! GraphResizeMode)
@@ -37,7 +37,7 @@ List<ActionShortcut> buildGraphShortcuts({
           const SingleActivator(LogicalKeyboardKey.keyR, shift: true),
         ],
         icon: Icones(Lucide.move_diagonal_2),
-        onInvoke: (_) => activateResizeMode(),
+        run: ActionRun.press((_) => activateResizeMode()),
         priority: 10,
       ),
     ActionShortcut(
@@ -63,7 +63,7 @@ List<ActionShortcut> buildGraphShortcuts({
         ],
       ],
       priority: -2,
-      onInvoke: (_) => zoomIn(),
+      run: ActionRun.press((_) => zoomIn()),
     ),
     ActionShortcut(
       id: "graph_zoom_out",
@@ -87,7 +87,7 @@ List<ActionShortcut> buildGraphShortcuts({
         ],
       ],
       priority: -2,
-      onInvoke: (_) => zoomOut(),
+      run: ActionRun.press((_) => zoomOut()),
     ),
     ActionShortcut(
       id: "graph_zoom_reset",
@@ -103,7 +103,7 @@ List<ActionShortcut> buildGraphShortcuts({
         ],
       ],
       priority: -2,
-      onInvoke: (_) => resetZoom(),
+      run: ActionRun.press((_) => resetZoom()),
     ),
   ];
 }

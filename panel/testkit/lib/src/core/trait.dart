@@ -28,6 +28,9 @@ final class Slot {
   /// The theme mode the user chose.
   static const appearance = Slot("appearance");
 
+  /// Whether the user asked for reduced motion.
+  static const motion = Slot("motion");
+
   final String name;
 
   @override

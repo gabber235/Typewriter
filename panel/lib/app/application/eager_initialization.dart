@@ -68,39 +68,45 @@ sealed class _StartupDependency<T> with _$StartupDependency<T> {
       _BlockedDependency<T>;
 }
 
-class _Loading extends HookWidget {
+class _Loading extends HookConsumerWidget {
   const _Loading();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final motion = ref.watch(motionTableProvider);
     return MaterialApp(
       title: "Typewriter",
       debugShowCheckedModeBanner: false,
-      theme: buildTheme(Brightness.light),
-      darkTheme: buildTheme(Brightness.dark),
+      theme: buildTheme(Brightness.light, motion: motion),
+      darkTheme: buildTheme(Brightness.dark, motion: motion),
       builder: (context, child) => Responsive(child: child!),
       home: Scaffold(body: const LoadingScreen(title: "Authenticating User")),
     );
   }
 }
 
-class _Error extends StatelessWidget {
+class _Error extends ConsumerWidget {
   const _Error(this.error, this.retry);
   final Object error;
   final VoidCallback retry;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final motion = ref.watch(motionTableProvider);
     return MaterialApp(
       title: "Typewriter",
       debugShowCheckedModeBanner: false,
-      theme: buildTheme(Brightness.light),
-      darkTheme: buildTheme(Brightness.dark),
+      theme: buildTheme(Brightness.light, motion: motion),
+      darkTheme: buildTheme(Brightness.dark, motion: motion),
       builder: (context, child) => Responsive(child: child!),
       home: Scaffold(
         body: ErrorScreen(
           message: "$error",
-          child: ElevatedButton(onPressed: retry, child: const Text("Retry")),
+          child: Button(
+            face: ButtonFace.filled,
+            label: "Retry",
+            onPressed: retry,
+          ),
         ),
       ),
     );

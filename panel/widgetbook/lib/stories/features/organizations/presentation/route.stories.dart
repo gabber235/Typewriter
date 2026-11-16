@@ -30,16 +30,14 @@ Widget indexPageUseCase(BuildContext context) {
   };
   return Story([
     signedIn(ada, others: belongsTo),
-    if (organizations == "Loading")
-      backendOverNats
-    else
-      userBackend(
-        joinRequests: storyUserJoinRequests(generator, switch (requests) {
-          "Few" => 2,
-          "Request limit reached" => 5,
-          _ => 0,
-        }),
-      ),
+    userBackend(
+      organizationsArrive: organizations != "Loading",
+      joinRequests: storyUserJoinRequests(generator, switch (requests) {
+        "Few" => 2,
+        "Request limit reached" => 5,
+        _ => 0,
+      }),
+    ),
     ...context.knobs.traits("Window", {
       "Desktop": const [],
       "Compact": const [compact],
