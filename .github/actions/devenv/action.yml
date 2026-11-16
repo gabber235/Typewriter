@@ -15,8 +15,9 @@ inputs:
     description: >-
       Tool caches besides xtask's Cargo build, space separated: `gradle` (dependencies and the
       wrapper), `gradle-outputs` (Gradle's build cache, which it turns on for this job),
-      `flutter` (the pub cache) and `frame-vectors` (the Cargo build of `cargo xtask generate`'s
-      frame vector writer).
+      `flutter` (the pub cache), `frame-vectors` (the Cargo build of `cargo xtask generate`'s
+      frame vector writer) and `game` (what the game suite downloads and trains: Loom's Minecraft
+      files, the Paper download and the restart Papers' boot cache).
     default: ""
   profile:
     description: >-
@@ -27,8 +28,9 @@ inputs:
 runs:
   using: composite
   steps:
-    # Trusted runs (pushes to the long lived branches, pull requests from this repository) push
-    # to the shared Nix cache and save the tool caches. A pull request reads only its own caches
+    # Trusted runs (pushes to the long lived branches, pull requests from this repository, and
+    # dispatched runs, which only a maintainer can start) push to the shared Nix cache and save the
+    # tool caches; a dispatched run saves them for its own branch. A pull request reads only its own caches
     # and its base branch's, so one into a branch that never saves (a stacked pull request) would
     # otherwise start every run cold; the 10 GB the repository gets evicts the oldest copies.
     - id: trust
@@ -45,7 +47,7 @@ runs:
           long_lived=true
         fi
         trusted=$long_lived
-        if [[ $EVENT == pull_request && $HEAD_REPO == "$REPO" ]]; then
+        if [[ $EVENT == pull_request && $HEAD_REPO == "$REPO" || $EVENT == workflow_dispatch ]]; then
           trusted=true
         fi
         echo "save-caches=$trusted" >> "$GITHUB_OUTPUT"
@@ -206,3 +208,41 @@ runs:
         path: ~/.pub-cache
         key: pub-${{ runner.os }}-${{ hashFiles('panel/**/pubspec.lock') }}
         restore-keys: pub-${{ runner.os }}-
+
+    # The game suite's own downloads, keyed by the build files that pin Minecraft and Paper: Loom's
+    # Minecraft jars, mappings and assets (shared and per project) and run-paper's Paper download.
+    # The patched Paper comes from Gradle's build cache (`gradle-outputs`), as its task is
+    # cacheable.
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches == 'true'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches/fabric-loom
+          ~/.gradle/caches/run-task-jars
+          services/.gradle/loom-cache
+        key: game-${{ runner.os }}-${{ hashFiles('services/libs.versions.toml', 'services/playtest/**/*.gradle.kts') }}
+        restore-keys: game-${{ runner.os }}-
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.gradle/caches/fabric-loom
+          ~/.gradle/caches/run-task-jars
+          services/.gradle/loom-cache
+        key: game-${{ runner.os }}-${{ hashFiles('services/libs.versions.toml', 'services/playtest/**/*.gradle.kts') }}
+        restore-keys: game-${{ runner.os }}-
+    # The restart Papers' ahead of time cache. The pool keys it on the JDK, the plugin's and Paper's
+    # files and the flags, and trains a new one, replacing the old, when the restored one does not
+    # match; so each commit saves what its run left, restored by prefix like Gradle's outputs.
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches == 'true'
+      uses: actions/cache@v4
+      with:
+        path: services/build/playtest/pool/aot
+        key: game-aot-${{ runner.os }}-${{ github.sha }}
+        restore-keys: game-aot-${{ runner.os }}-
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: services/build/playtest/pool/aot
+        key: game-aot-${{ runner.os }}-${{ github.sha }}
+        restore-keys: game-aot-${{ runner.os }}-
