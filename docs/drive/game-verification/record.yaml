@@ -380,7 +380,7 @@ pieces:
 
   - id: video
     status: building
-    open: "30 or 60 fps for clips; how a window treats facts the client smooths between ticks (one tick margin at the deadline)"
+    open: Clips show game time only, so a requirement of a few ticks gives a clip under a second; a run has no cap on its clips
     tries:
       - id: b2-window-capture
         what: Capture the window
@@ -412,6 +412,28 @@ pieces:
           machine reruns give identical mp4 bytes except particles (client randomness).
         state: working
         evidence: ["branch proto/gv-video f1bb8683a: prototypes/game-verification/RESULTS.md", CI run 43312553335]
+      - id: clips-in-demo-reruns
+        parent: frames-between-steps
+        what: >-
+          At 30 fps each pair of ticks gets 3 frames at partial ticks 2/3, 1/3 and 1; every tick still
+          ends with a pass at partial 1, the gated run's draw at the end of the tick, and its record,
+          ack, held packets and the input's next events wait for that pass
+        taught: >-
+          Each pass sends its own record with its partial tick and frame; windows read only records at
+          partial 1, so a demo verdict comes from the same tick-end records as the gated one and the one
+          tick margin never applies. Over 91 demos (run D) 52 windows held at the same tick as gated and 3
+          at another, against 55 and 4 between two gated runs; every shift sat on a wall clock step
+          (work hung for 1 s, the rejoin after a restart), so a demo counts as the same only when it
+          passes or fails as the last attempt did, with no margin. The forced record of every pass
+          exposed four real faults the gated run hides by sending records only on change: a key typed
+          after a tick reached the game before the tick's last pass (TAB-1), a lost client was asked to
+          stop its clip (FROZEN-1, LOST-1), and records of a killed Paper counted as the new Paper's
+          ticks, both queued in the session before the restart's answer and kept by the pool until the
+          client stepped with the new boot (RESTART-2). Cost: demo time over gated time per requirement
+          median 1.68 and summed 1.20 (run D, load 76 to 155), 1.84 and 1.31 in run B (load 240 to 360),
+          against P9's 1.5.
+        state: working
+        evidence: [commits 0ec31acfe 4e61bf097, "cargo xtask e2e game on 4e61bf097: 96 passed, 91 demos, 132 clips"]
 
   - id: goldens
     status: building
@@ -455,6 +477,23 @@ pieces:
         taught: Correct attribution at no measurable cost
         state: picked
         evidence: [docs/design/game-verification/spikes/i-coverage.md, CI run 42162248604]
+      - id: read-when-attempts-start-and-settle
+        parent: i3-read-reset-in-plugin
+        what: >-
+          The plugin reads and resets when an attempt starts or resumes and once its work is quiet at its
+          settle; each read goes to every attempt that ran since the read before, the pool analyses it
+          against the class files the agent dumped, and each case in the run file lists its classes and lines
+        taught: >-
+          On the shared Paper a read cannot tell overlapping attempts apart, so it over attributes and
+          never loses a line. Against a pool of one client (82 single player cases), 79 cases carried
+          extra lines, a median of 70 over an exact median of 590, at most 349 (LEAK-1, whose hung work
+          outlives its attempt), and 76 carried extra classes; the lines the shared run lacked (52 cases,
+          at most 10) were code that runs only alone, the idle tick of StepPolicy. Extra lines only add
+          demo reruns. Cost per attempt (run D, load 76 to 155): a median of 5 reads holding Paper's main
+          thread 0.40 ms in all, at most 20.5 ms; the pool's analysis a median of 24.5 ms, at most 210 ms,
+          on its event loop. A restart attempt's coverage before the kill is lost with its Paper.
+        state: working
+        evidence: [commit a88505c91, "cargo xtask e2e game on 4e61bf097 against a gameTest run with -Pplaytest.clients=1"]
 
   - id: results-and-ci
     status: building
@@ -811,12 +850,26 @@ slices:
       on JDK, files and flags. Every Paper now has a rules object behind PaperRules and Pool forwards events to it (6e5128c00, 0 own branches left). Every way an attempt ends tells its Paper's rules (ba28ff607), and each restart Paper and folder is named after its attempt (fe4f66b9e). Open: a training Paper's halt prints a watchdog dump; 4 restarts at once could
       starve the shared Paper.
   - id: coverage-and-clips
-    status: building
+    status: done
     what: coverage per requirement, demo reruns with clips
     green: a touched requirement gets its clip
+    evidence: [commits a88505c91 0ec31acfe 4e61bf097, "cargo xtask e2e game on 4e61bf097: 96 passed, 91 demos, 132 clips"]
+    taught: >-
+      cargo xtask e2e game writes the lines the change added since the merge base with the default
+      branch to touched.txt; a requirement reruns as a demo when it failed (not refused or unavailable),
+      is flaky or quarantined, or covered a touched line, and the demo's clips join the case's demo
+      attempt as clip artifacts. A demo that passes or fails otherwise than the last attempt fails the
+      case in Kotlin and in the xtask gate, whose report says how the demo ended and points at its
+      folder; evidence stage publishes demo clips with the attempts' artifacts. Any change to the framework's plugin makes every requirement
+      touched, so this branch's runs demo nearly the whole suite. A temporary TEMPCLIP-1 that always
+      fails got its clip in its demo (run B, never committed). A clip with no frame, from a body that
+      runs no tick, is left out. ffmpeg now ships in the base devenv profile. Open: touched counts only
+      added lines, so a change that only deletes code reruns nothing; the coverage maps of a session that
+      leaves without ending stay in the pool (slice 9); a client lost while others of its attempt record
+      loses their clips too.
   - id: ci-and-pool-lifecycle
     status: queued
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 8 (coverage and clips, 30 fps) builds on feat/game-verification-slice-8.
+next: Slice 9 (CI and pool lifecycle) builds on feat/game-verification-slice-8 once its review is done.
