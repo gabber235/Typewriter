@@ -22,8 +22,8 @@ use crate::{CommandExt as _, Context, evidence, generate};
 
 /// Runs the selected game requirements and reports the run the game pool wrote.
 pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
-    // The pool writes its run with the generated Skir types.
-    generate::generate(ctx, None)?;
+    // The suite compiles against the generated Skir types, and the pool writes its run with them.
+    generate::protocol(ctx)?;
     let shown = Path::new(evidence::RESULTS).join("game");
     let evidence = ctx.root.join(&shown);
     let commit = ctx
