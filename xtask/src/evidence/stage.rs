@@ -56,7 +56,11 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
     for (path, mut run) in results::read_all(results)? {
         let at = path.strip_prefix(results)?.to_path_buf();
         let folder = path.parent().context("a run file without a folder")?;
-        for attempt in run.cases.iter_mut().flat_map(|case| &mut case.attempts) {
+        for attempt in run
+            .cases
+            .iter_mut()
+            .flat_map(|case| case.attempts.iter_mut().chain(&mut case.demo))
+        {
             let passed = attempt.outcome == Outcome::Passed;
             attempt.artifacts.retain(|artifact| {
                 artifact.kind.published() && !(passed && artifact.kind == ArtifactKind::Screenshot)
@@ -209,6 +213,29 @@ mod tests {
         assert_eq!(
             files_below(&root.path(PUBLIC)),
             ["panel/attempts/1/clips/conn.mp4", "panel/test_run.json"]
+        );
+    }
+
+    #[test]
+    fn a_demo_publishes_its_clip_beside_the_attempts_of_its_case() {
+        let root = TempRoot::new();
+        root.write("results/game/PROBE-1/demo/clips/gv-1.mp4", "clip");
+        let mut demo = crate::test_support::passed_attempt((0, 1));
+        demo.folder = "PROBE-1/demo".to_owned();
+        demo.artifacts = vec![results::Artifact {
+            kind: ArtifactKind::Clip,
+            path: "clips/gv-1.mp4".to_owned(),
+            _unrecognized: None,
+        }];
+        let mut run = run_of("PROBE-1", vec![crate::test_support::passed_attempt((0, 1))]);
+        run.cases[0].demo = Some(demo);
+        results::write(&run, &root.path("results/game/test_run.json")).unwrap();
+
+        staged(&root.path(""), Path::new("results"), &[]).unwrap();
+
+        assert_eq!(
+            files_below(&root.path(PUBLIC)),
+            ["game/PROBE-1/demo/clips/gv-1.mp4", "game/test_run.json"]
         );
     }
 

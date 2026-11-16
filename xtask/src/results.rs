@@ -92,11 +92,7 @@ pub fn verdict(run: &TestRun, case: &TestCase, quarantine: &Quarantine) -> Resul
     };
     let failed = failed_attempts(case).count();
     let passed_last = matches!(last.outcome, Outcome::Passed);
-    // A demo whose clip shows another outcome than the last attempt proves nothing.
-    let demo_differs = case
-        .demo
-        .as_ref()
-        .is_some_and(|demo| matches!(demo.outcome, Outcome::Passed) != passed_last);
+    let demo_differs = differing_demo(case).is_some();
     Ok(
         match (
             failed,
@@ -112,6 +108,15 @@ pub fn verdict(run: &TestRun, case: &TestCase, quarantine: &Quarantine) -> Resul
     )
 }
 
+/// `case`'s demo when it ended otherwise than the last attempt: its clip shows another outcome,
+/// so it proves nothing.
+fn differing_demo(case: &TestCase) -> Option<&Attempt> {
+    let passed_last = matches!(case.attempts.last()?.outcome, Outcome::Passed);
+    case.demo
+        .as_ref()
+        .filter(|demo| matches!(demo.outcome, Outcome::Passed) != passed_last)
+}
+
 /// The failure of `case`'s last failed attempt, when that attempt says how it failed.
 pub fn last_failure(case: &TestCase) -> Option<&Failure> {
     case.attempts
@@ -123,10 +128,10 @@ pub fn last_failure(case: &TestCase) -> Option<&Failure> {
         })
 }
 
-/// Every artifact of every attempt of `case`, in attempt order, with its path relative to the
+/// Every artifact of every attempt of `case`, in attempt order and its demo last, with its path relative to the
 /// run file's folder (the attempt's folder joined with the artifact's path).
 pub fn artifacts(case: &TestCase) -> impl Iterator<Item = (PathBuf, &Artifact)> {
-    case.attempts.iter().flat_map(|attempt| {
+    case.attempts.iter().chain(&case.demo).flat_map(|attempt| {
         attempt.artifacts.iter().map(move |artifact| {
             let path = match attempt_folder(attempt) {
                 Some(folder) => folder.join(&artifact.path),
@@ -335,14 +340,14 @@ pub fn report(
                 .collect::<Vec<_>>()
                 .join(", ")
         );
-        let first = failures.first().map(|first| &case.attempts[first - 1]);
-        let see = match (evidence, first) {
+        let see_of = |attempt: Option<&Attempt>| match (evidence, attempt) {
             (Some(evidence), Some(attempt)) => match attempt_folder(attempt) {
                 Some(folder) => format!("; see {}/", evidence.join(folder).display()),
                 None => format!("; see {}/", evidence.display()),
             },
             _ => String::new(),
         };
+        let see = see_of(failures.first().map(|first| &case.attempts[first - 1]));
         match verdict {
             Verdict::Passed if repeated => writeln!(
                 out,
@@ -353,7 +358,25 @@ pub fn report(
             )?,
             Verdict::Passed => {}
             Verdict::Failed => {
-                writeln!(out, "{}: failed {attempts}{see}", case.id)?;
+                match differing_demo(case) {
+                    Some(demo) => {
+                        let ended = match &demo.outcome {
+                            Outcome::Failed(failure) => format!(
+                                "failed: {}",
+                                failure.message.lines().next().unwrap_or_default()
+                            ),
+                            _ => "passed".to_owned(),
+                        };
+                        let attempts = if failures.is_empty() {
+                            format!("passed {0} of {0} attempts", case.attempts.len())
+                        } else {
+                            format!("failed {attempts}{see}")
+                        };
+                        let see = see_of(Some(demo));
+                        writeln!(out, "{}: {attempts}, but its demo {ended}{see}", case.id)?;
+                    }
+                    None => writeln!(out, "{}: failed {attempts}{see}", case.id)?,
+                }
                 failed.push(case.id.as_str());
             }
             Verdict::Flaky => {
@@ -696,6 +719,24 @@ mod tests {
             let verdict = verdict(&run, &run.cases[0], &Quarantine::default()).unwrap();
             assert_eq!(verdict, expected, "{attempts:?} with a demo that {demo:?}");
         }
+    }
+
+    #[test]
+    fn a_case_its_demo_fails_says_how_the_demo_ended_and_points_at_its_evidence() {
+        let mut run = attempted(AttemptPolicy::RerunFailures(4), &[Outcome::Passed]);
+        run.cases[0].demo = Some(Attempt {
+            outcome: failed("saw the diamond"),
+            folder: "a/demo".to_owned(),
+            ..Attempt::default()
+        });
+
+        let (result, out) = report_text(&run, &Quarantine::default());
+
+        assert_eq!(result.unwrap_err().to_string(), "1 of 1 cases failed: a");
+        assert_eq!(
+            out,
+            "a: passed 1 of 1 attempts, but its demo failed: saw the diamond; see results/panel/a/demo/\n"
+        );
     }
 
     #[test]
