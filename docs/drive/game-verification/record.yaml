@@ -784,7 +784,7 @@ slices:
       before premain, so the step agent's prefixes silently missed and Paper stopped itself; the agent no
       longer joins the boot class path and retransforms classes already loaded, and both Papers launch
       from Paper's class path. The cache is trained on a restart boot, kept only on a clean halt, keyed
-      on JDK, files and flags. Every Paper now has a rules object behind PaperRules and Pool forwards events to it (6e5128c00, 0 own branches left). Open: a training Paper's halt prints a watchdog dump; 4 restarts at once could
+      on JDK, files and flags. Every Paper now has a rules object behind PaperRules and Pool forwards events to it (6e5128c00, 0 own branches left). Every way an attempt ends tells its Paper's rules (ba28ff607), and each restart Paper and folder is named after its attempt (fe4f66b9e). Open: a training Paper's halt prints a watchdog dump; 4 restarts at once could
       starve the shared Paper.
   - id: coverage-and-clips
     status: queued
