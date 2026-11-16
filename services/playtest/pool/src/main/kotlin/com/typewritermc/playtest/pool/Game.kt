@@ -24,8 +24,8 @@ internal class Part(
     val player: String? = null,
 )
 
-/** The folder and port of a restart attempt's own Paper, which every boot of it reuses. */
-internal class OwnFolder(
+/** The folder and port of a Paper the pool runs; every boot of a restart attempt's own Paper reuses them. */
+internal class PaperFolder(
     val name: String,
     val dir: Path,
     val port: Int,
@@ -63,7 +63,8 @@ internal enum class InputPath(
 internal class Game private constructor(
     private val settings: PoolSettings,
     private val poolPort: Int,
-    val paperPort: Int,
+    val paper: PaperFolder,
+    val paperPart: Part,
     private val input: InputPath,
     private val displays: Map<String, Display>,
     started: List<Part>,
@@ -102,8 +103,8 @@ internal class Game private constructor(
      * A fresh folder and free port for [name], a restart attempt's own Paper, set up as the shared
      * Paper's folder is. A folder an earlier attempt kept for its log goes.
      */
-    fun ownFolder(name: String): OwnFolder {
-        val folder = OwnFolder(name, settings.poolDir.resolve(name), freePort())
+    fun ownFolder(name: String): PaperFolder {
+        val folder = PaperFolder(name, settings.poolDir.resolve(name), freePort())
         preparePaper(settings, folder.dir, folder.port)
         return folder
     }
@@ -111,7 +112,7 @@ internal class Game private constructor(
     /** Boots [folder]'s Paper with [flags] added; a boot after the first adds to the same log. */
     @Synchronized
     fun bootOwn(
-        folder: OwnFolder,
+        folder: PaperFolder,
         flags: List<String>,
         again: Boolean,
     ): Part = startPaper(settings, poolPort, folder.dir, folder.name, flags, append = again).also { running += it }
@@ -124,14 +125,14 @@ internal class Game private constructor(
 
     /** Keeps the lost own Paper's [folder] as `<name>-lost-<n>` for its log; returns where its log is now. */
     @Synchronized
-    fun keepLost(folder: OwnFolder): Path {
+    fun keepLost(folder: PaperFolder): Path {
         val kept = settings.poolDir.resolve("${folder.name}-lost-${++lost}")
         Files.move(folder.dir, kept)
         return kept.resolve("console.log")
     }
 
     /** Removes the folder of an own Paper whose attempt ended. */
-    fun removeOwn(folder: OwnFolder) = remove(folder.dir)
+    fun removeOwn(folder: PaperFolder) = remove(folder.dir)
 
     /** Stops every part: asks first, then forces whatever still runs. */
     fun stop() {
@@ -175,7 +176,7 @@ internal class Game private constructor(
                     started += startClient(settings, poolPort, player, input, display)
                 }
             }.onFailure { started.forEach { it.process.destroyForcibly() } }.getOrThrow()
-            return Game(settings, poolPort, paperPort, input, displays, started)
+            return Game(settings, poolPort, PaperFolder("paper", paperDir, paperPort), paper, input, displays, started)
         }
 
         /**

@@ -1,80 +1,53 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.pool.PaperRules.Claiming
+import com.typewritermc.playtest.pool.PaperRules.Do
+import com.typewritermc.playtest.wire.Message.Region
+
 /**
- * The life of the Paper of its own that a restart attempt runs on, as the rules the pool follows: what
- * the pool does at each thing it hears. The attempt's players wait on the shared Paper while it boots
- * and are told to join only once it is up. Each restart kills it as a crash would and boots it again on
- * the same folder and port; the players' clients, dropped by the kill, draw nothing until it is up
- * again. A Paper that exits on its own, or does not come back within the boot limit, is lost: only its
- * attempt fails.
+ * The life of the Paper of its own that a restart attempt runs on. The attempt's players wait on the
+ * shared Paper while it boots and are told to join only once it is up. Each restart kills it as a crash
+ * would and boots it again on the same folder and port; the players' clients, dropped by the kill, draw
+ * nothing until it is up again. A Paper that exits on its own, or does not come back within the boot
+ * limit, is lost: only its attempt fails.
  */
 internal class OwnPaper(
-    val name: String,
+    private val name: String,
     private val players: Set<String>,
-) {
-    /** What the pool does next. */
-    sealed interface Do {
-        /** Starts the Paper process on its folder and port; again after a kill. */
-        data object Boot : Do
-
-        /** Tells each player's client to join this Paper. */
-        data object Connect : Do
-
-        /** Paper runs a tick only when its step policy grants it, from now on. */
-        data object Step : Do
-
-        /** The players belong to the attempt: wiped, in its region, then leased. */
-        data object Claim : Do
-
-        /** Back after a kill, the players belong to the attempt again, unwiped and where Paper put them. */
-        data object Resume : Do
-
-        /** Ends the Paper process at once, as a crash would, so it saves nothing. */
-        data object Kill : Do
-
-        /** Answers the attempt's restart [request]: every player is back after [tick] of the new Paper. */
-        data class Restarted(
-            val request: Long,
-            val tick: Int,
-        ) : Do
-
-        /** The Paper is lost for [cause]: the attempt fails, the process ends, the players go back to the shared Paper. */
-        data class Lost(
-            val cause: String,
-        ) : Do
-
-        /** The attempt ended: the players go back to the shared Paper and this Paper stops. */
-        data object Return : Do
-    }
-
+) : PaperRules {
     private enum class Phase { BOOTING, JOINING, READYING, RUNNING, RESUMING, KILLED, OVER }
 
+    override val bootSeconds = BOOT_SECONDS
+
     private var phase = Phase.BOOTING
+    private var attempt = 0L
     private var claimed = false
     private var restart: Long? = null
+    private var boots = 0
     private val joinedPlayers = mutableSetOf<String>()
     private val readyPlayers = mutableSetOf<String>()
 
-    /** Boots so far, the first included: a boot limit names the boot it is for. */
-    var boots = 0
-        private set
-
-    /** Whether a player's client losing this Paper now is part of the plan: it was killed, or the attempt is over. */
-    val dropsExpected: Boolean
+    // A player's client losing this Paper now is part of the plan: it was killed, or the attempt is over.
+    private val dropsExpected: Boolean
         get() = phase == Phase.KILLED || phase == Phase.OVER || (phase == Phase.BOOTING && restart != null)
 
-    /** The first boot, once the attempt holds its players. */
-    fun start(): List<Do> = boot()
-
-    /** The plugin of the Paper booted last connected to the pool: Paper is done starting. */
-    fun connected(): List<Do> {
-        if (phase != Phase.BOOTING) return listOf()
-        phase = Phase.JOINING
-        return listOf(Do.Connect)
+    /** Alone on its Paper, the attempt stands in the region at the spawn; the first boot follows. */
+    override fun claim(attempt: Long): Claiming {
+        this.attempt = attempt
+        return Claiming(REGION, boot())
     }
 
-    /** [player]'s client is in this Paper's world. */
-    fun joined(player: String): List<Do> {
+    override fun connected(): List<Do> {
+        val ahead = Do.RegionsAhead(listOf(REGION))
+        if (phase != Phase.BOOTING) return listOf(ahead)
+        phase = Phase.JOINING
+        return listOf(ahead, Do.Gather, Do.Connect)
+    }
+
+    // Its end shows in its process's exit.
+    override fun closed(): List<Do> = listOf()
+
+    override fun joined(player: String): List<Do> {
         if (phase != Phase.JOINING || player !in players) return listOf()
         joinedPlayers += player
         if (!joinedPlayers.containsAll(players)) return listOf()
@@ -82,22 +55,30 @@ internal class OwnPaper(
         return listOf(Do.Step)
     }
 
-    /** [player]'s client steps with this Paper. */
-    fun ready(player: String): List<Do> {
+    override fun ready(player: String): List<Do> {
         if (phase != Phase.READYING || player !in players) return listOf()
         readyPlayers += player
         if (!readyPlayers.containsAll(players)) return listOf()
         if (claimed) {
             phase = Phase.RESUMING
-            return listOf(Do.Resume)
+            return listOf(Do.Resume(attempt))
         }
         claimed = true
         phase = Phase.RUNNING
-        return listOf(Do.Claim)
+        return listOf(Do.Claim(attempt))
     }
 
-    /** Paper resumed the attempt after a restart; its players' clients hold all it sends from after [tick] on. */
-    fun resumed(tick: Int): List<Do> {
+    // Each boot gathers the players again.
+    override fun arriving(player: String): List<Do> = listOf()
+
+    /** A drop off a killed Paper, a Paper whose attempt is over, or a Paper whose process died is no loss of the client. */
+    override fun dropped(
+        player: String,
+        reason: String,
+        paperAlive: Boolean,
+    ): List<Do> = if (dropsExpected || !paperAlive) listOf(Do.Forget(player)) else listOf(Do.Lose(player, "it lost its Paper: $reason"))
+
+    override fun resumed(tick: Int): List<Do> {
         val request = restart
         if (phase != Phase.RESUMING || request == null) return listOf()
         phase = Phase.RUNNING
@@ -105,37 +86,30 @@ internal class OwnPaper(
         return listOf(Do.Restarted(request, tick))
     }
 
-    /** The attempt asks, as [request], for its Paper to be killed and booted again. */
-    fun restart(request: Long): List<Do> {
+    override fun restart(request: Long): List<Do> {
         if (phase != Phase.RUNNING) return listOf()
         restart = request
         phase = Phase.KILLED
         return listOf(Do.Kill)
     }
 
-    /** The Paper process ended with [code]. */
-    fun exited(code: Int): List<Do> =
+    /** A killed Paper boots again; one that exits on its own is lost and gone; once over, its exit is the end. */
+    override fun exited(code: Int): List<Do> =
         when (phase) {
-            Phase.OVER -> listOf()
+            Phase.OVER -> listOf(Do.Gone)
             Phase.KILLED -> boot()
-            Phase.RUNNING -> lost("$name exited with code $code while its attempt ran")
-            else -> lost("$name exited with code $code while it booted")
+            Phase.RUNNING -> lost("$name exited with code $code while its attempt ran") + Do.Gone
+            else -> lost("$name exited with code $code while it booted") + Do.Gone
         }
 
-    /** The limit for boot [boot] ran out; boots count from 1. */
-    fun bootTimedOut(boot: Int): List<Do> {
+    override fun bootTimedOut(boot: Int): List<Do> {
         val booting = phase in setOf(Phase.BOOTING, Phase.JOINING, Phase.READYING, Phase.RESUMING)
         return if (boot == boots && booting) lost("$name did not boot within $BOOT_SECONDS s") else listOf()
     }
 
-    /** Paper could not do what the attempt needs, for [cause]: it is lost. */
-    fun failed(cause: String): List<Do> = if (phase == Phase.OVER) listOf() else lost(cause)
+    override fun failed(cause: String): List<Do> = if (phase == Phase.OVER) listOf() else lost(cause)
 
-    /** Whether this Paper serves its attempt no more: the attempt ended or the Paper is lost. */
-    val over: Boolean get() = phase == Phase.OVER
-
-    /** The attempt ended. */
-    fun ended(): List<Do> {
+    override fun ended(attempt: Long): List<Do> {
         if (phase == Phase.OVER) return listOf()
         phase = Phase.OVER
         return listOf(Do.Return)
@@ -146,7 +120,7 @@ internal class OwnPaper(
         boots++
         joinedPlayers.clear()
         readyPlayers.clear()
-        return listOf(Do.Boot)
+        return listOf(Do.Boot(boots))
     }
 
     private fun lost(cause: String): List<Do> {
@@ -157,5 +131,8 @@ internal class OwnPaper(
     companion object {
         /** How long one boot may take, from its start until every player is back. */
         const val BOOT_SECONDS = 120L
+
+        /** The region at the spawn, where an attempt alone on its Paper stands. */
+        val REGION = Region(0, 0)
     }
 }
