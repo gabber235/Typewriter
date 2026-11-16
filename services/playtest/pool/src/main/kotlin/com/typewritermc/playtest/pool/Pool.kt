@@ -136,10 +136,8 @@ internal class Pool(
 
     /**
      * A Paper the pool runs, in its [folder]: the shared one, or a restart attempt's own. Its [rules] say
-     * what the pool does at each thing it hears about it. It keeps its process now, the attempt claimed on
-     * it [latest] (a restart attempt's own Paper serves that one alone, and only its rules answer with
-     * steps of [PaperRules.Do.Life]), the boot it is in, the cache that boot trains, and when its last boot
-     * and kill happened.
+     * what the pool does at each thing it hears about it. It keeps its process now, the boot it is in, the
+     * cache that boot trains, and when its last boot and kill happened.
      */
     private class Server(
         val folder: PaperFolder,
@@ -149,7 +147,6 @@ internal class Pool(
         val port: Int get() = folder.port
         var peer: Peer? = null
         var part: Part? = null
-        var latest: Attempt? = null
         var boots = 0
         var training: AotCache.Boot.Train? = null
         var lost = false
@@ -242,8 +239,7 @@ internal class Pool(
     // Attempts whose next body waits until nothing holds their players out.
     private val parked = mutableListOf<Attempt>()
     private val hung = mutableMapOf<String, HungWork>()
-    private val attempts = mutableMapOf<Long, Attempt>()
-    private val attemptOf = mutableMapOf<String, Attempt>()
+    private val attempts = Attempts<Attempt>()
     private val requests = mutableMapOf<Long, Routed<Long>>()
     private val barriers = mutableMapOf<Int, Routed<Int>>()
     private lateinit var game: Game
@@ -398,7 +394,7 @@ internal class Pool(
                 val attempt = attemptOf(session, message.submission()) ?: return
                 val claimed = timings.remove(session to message.submission())?.steps.orEmpty()
                 runs.record(session.hello.name(), attempt.submit, message, claimed)
-                release(attempt)
+                release(attempt, "its session sent its result")
             }
 
             else -> {
@@ -504,7 +500,7 @@ internal class Pool(
         session: Peer,
         player: UUID,
     ): Server? =
-        attemptOf.values
+        attempts.all
             .firstOrNull { attempt ->
                 attempt.session == session && attempt.players.any { it.uuid() == player }
             }?.server
@@ -598,11 +594,11 @@ internal class Pool(
             }
 
             is ResetDone -> {
-                attemptOf[name]?.let { reset(it, name) }
+                attempts.of(name)?.let { reset(it, name) }
             }
 
             is Perceived -> {
-                attemptOf[name]?.let { perceived(it, name, message) }
+                attempts.of(name)?.let { perceived(it, name, message) }
             }
 
             is BarrierSeen -> {
@@ -684,7 +680,7 @@ internal class Pool(
     /** Hands a barrier back under the session's own id, unless it belongs to an attempt that already ended. */
     private fun barrierSeen(message: BarrierSeen) {
         val routed = barriers.remove(message.barrier()) ?: return
-        val attempt = attemptOf[message.player()] ?: return
+        val attempt = attempts.of(message.player()) ?: return
         if (routed.session == attempt.session) routed.session.send(BarrierSeen(message.player(), routed.id))
     }
 
@@ -698,7 +694,7 @@ internal class Pool(
                 timings.keys.removeAll { it.first == peer }
                 parked.filter { it.session == peer }.forEach { claims.release(it.players) }
                 parked.removeAll { it.session == peer }
-                attempts.values.filter { it.session == peer }.forEach(::release)
+                attempts.all.filter { it.session == peer }.forEach { release(it, "its session left") }
                 lend()
             }
 
@@ -721,7 +717,7 @@ internal class Pool(
     private fun abandon(session: Peer) {
         val unfinished =
             queued.filterKeys { it.first == session }.values.map { it.submit } +
-                (attempts.values + parked).filter { it.session == session }.map { it.submit }
+                (attempts.all + parked).filter { it.session == session }.map { it.submit }
         if (unfinished.isEmpty()) return
         val run = session.hello.name()
         runs.abandoned(
@@ -755,11 +751,9 @@ internal class Pool(
         val server = if (submit.restartsPaper()) ownPaper(players) else shared
         val claiming = server.rules.claim(++nextAttempt)
         val attempt = Attempt(nextAttempt, session, submit, players, claiming.region, server)
-        server.latest = attempt
         val names = players.joinToString { it.name() }
         timings[session to submit.submission()]?.took("claim $names on ${server.name}")
-        attempts[attempt.id] = attempt
-        attempt.players.forEach { attemptOf[it.name()] = attempt }
+        attempts.start(attempt.id, attempt, attempt.players.map { it.name() }, server.rules)
         System.err.println("Attempt ${attempt.id}: ${submit.testId()} on $names on ${server.name} in ${attempt.region}")
         act(server, claiming.todo)
         return attempt
@@ -805,7 +799,7 @@ internal class Pool(
         next: Do.ToPlayers,
     ) {
         when (next) {
-            Do.Gather -> gather(server)
+            is Do.Gather -> gather(server, next.attempt)
 
             Do.Connect -> clients.filter { it.on === server }.forEach(::connect)
 
@@ -814,7 +808,7 @@ internal class Pool(
             is Do.Lose -> clientLost(next.player, next.cause)
 
             // Records sent before the drop show the Paper that is gone; the next ones show the new one.
-            is Do.Forget -> attemptOf[next.player]?.fresh?.remove(next.player)
+            is Do.Forget -> attempts.of(next.player)?.fresh?.remove(next.player)
         }
     }
 
@@ -824,10 +818,10 @@ internal class Pool(
     ) {
         when (next) {
             is Do.Boot -> boot(server, next.number)
-            Do.Kill -> kill(server)
+            is Do.Kill -> kill(server, next.attempt)
             is Do.Restarted -> restarted(server, next)
-            is Do.Lost -> lostPaper(server, next.cause)
-            Do.Return -> returnFrom(server)
+            is Do.Lost -> lostPaper(server, next.attempt, next.cause)
+            is Do.Return -> returnFrom(server, next.attempt)
             Do.Gone -> gone(server)
         }
     }
@@ -874,18 +868,24 @@ internal class Pool(
         act(server, server.rules.arriving(client.player.name()))
     }
 
-    /** The players of [server]'s attempt leave the shared Paper for it; they serve no other claim meanwhile. */
-    private fun gather(server: Server) {
-        for (player in checkNotNull(server.latest).players) {
+    /** The players of [attempt] leave the shared Paper for [server], its own; they serve no other claim meanwhile. */
+    private fun gather(
+        server: Server,
+        attempt: Long,
+    ) {
+        for (player in running(attempt).players) {
             val client = clientOf(player.uuid()) ?: continue
             moveTo(client, server)
             claims.holdOut(client.player, Out.AWAY)
         }
     }
 
-    /** Ends [server]'s process as a crash would; what its players perceive waits until it is back. */
-    private fun kill(server: Server) {
-        val attempt = checkNotNull(server.latest)
+    /** Ends [server]'s process as a crash would; what the players of [id] perceive waits until it is back. */
+    private fun kill(
+        server: Server,
+        id: Long,
+    ) {
+        val attempt = running(id)
         attempt.restarting = true
         attempt.fresh.clear()
         server.killedAt = System.nanoTime()
@@ -897,7 +897,7 @@ internal class Pool(
         server: Server,
         back: Do.Restarted,
     ) {
-        val attempt = checkNotNull(server.latest)
+        val attempt = running(back.attempt)
         System.err.println("${server.name} is back ${seconds(server.killedAt)} after its kill")
         attempt.restarting = false
         attempt.session.send(Restarted(back.request, back.tick))
@@ -937,6 +937,7 @@ internal class Pool(
      */
     private fun lostPaper(
         server: Server,
+        id: Long,
         cause: String,
     ) {
         server.lost = true
@@ -946,16 +947,14 @@ internal class Pool(
         }
         val reason = "$cause; see ${game.keepLost(server.folder)}"
         System.err.println("The Paper ${server.name} is lost: $reason")
-        val attempt = checkNotNull(server.latest)
+        val attempt = running(id)
         sendBack(attempt)
         if (attempt.started) return attempt.session.send(PaperLost(attempt.players.first().name(), reason))
         val submission = attempt.submit.submission()
         val claimed = timings.remove(attempt.session to submission)?.steps.orEmpty()
         runs.record(attempt.session.hello.name(), attempt.submit, Result(submission, 0, reason, null, listOf(), "", listOf()), claimed)
         attempt.session.send(LeaseFailed(submission, reason))
-        end(attempt)
-        claims.release(attempt.players)
-        lend()
+        release(attempt, "its Paper was lost")
     }
 
     /** [attempt]'s players go back to the shared Paper; each sits out until its client steps there again. */
@@ -967,9 +966,12 @@ internal class Pool(
         }
     }
 
-    /** [server]'s attempt ended: its players go back and it stops; its plugin halts once the pool is gone, and a training boot writes its cache as it exits. */
-    private fun returnFrom(server: Server) {
-        sendBack(checkNotNull(server.latest))
+    /** [attempt] ended: its players go back and [server] stops; its plugin halts once the pool is gone, and a training boot writes its cache as it exits. */
+    private fun returnFrom(
+        server: Server,
+        attempt: Long,
+    ) {
+        sendBack(running(attempt))
         server.peer?.close() ?: server.part?.process?.destroyForcibly()
     }
 
@@ -1003,7 +1005,7 @@ internal class Pool(
         reclaim: Reclaim,
     ) {
         val attempt = attemptOf(session, reclaim.submission()) ?: return
-        end(attempt)
+        end(attempt, "its session claims its players again for its next body")
         timings[session to reclaim.submission()]?.since = System.currentTimeMillis()
         parked += attempt
         unpark()
@@ -1021,7 +1023,7 @@ internal class Pool(
      * until the work ends, so none of it reaches a later attempt. Paper never cancels it.
      */
     private fun workHung(message: WorkHung) {
-        val attempt = attemptOf[message.player()]
+        val attempt = attempts.of(message.player())
         attempt?.session?.send(message)
         val player = clientNamed(message.player())?.player ?: return
         val held =
@@ -1062,19 +1064,31 @@ internal class Pool(
                     "$player stayed out of the pool for the rest of the run: its work ${held.works.joinToString { "\"$it\"" }} never ended."
             }
 
-    private fun release(attempt: Attempt) {
-        end(attempt)
+    /** [attempt] ended for [why], and its players serve the next claims. */
+    private fun release(
+        attempt: Attempt,
+        why: String,
+    ) {
+        end(attempt, why)
         claims.release(attempt.players)
-        act(attempt.server, attempt.server.rules.ended(attempt.id))
         lend()
     }
 
-    /** The attempt is over for Paper: its players' work no longer holds back ticks, and their records reach nobody. */
-    private fun end(attempt: Attempt) {
-        attempts.remove(attempt.id)
-        attempt.players.forEach { attemptOf.remove(it.name()) }
+    /**
+     * [attempt] ended for [why], the one way every attempt ends: its Paper releases the players, so their
+     * work no longer holds back ticks, then the Paper's rules say what follows while the attempt can still
+     * be found. After that, the players' records reach nobody.
+     */
+    private fun end(
+        attempt: Attempt,
+        why: String,
+    ) {
         attempt.server.peer?.send(Release(attempt.id))
+        attempts.end(attempt.id, why) { act(attempt.server, it) }
     }
+
+    /** The attempt [id], which the rules of its Paper name only while it runs. */
+    private fun running(id: Long): Attempt = checkNotNull(attempts[id]) { "attempt $id no longer runs" }
 
     /** A game part ended: a Paper's rules say what follows, a client's is lost and replaced, a display's ends the game. A replaced client's old part ends unheard. */
     private fun exited(part: Part) {
@@ -1106,12 +1120,12 @@ internal class Pool(
         client.part = replaced.replacement.also(::watch)
         val reason = "$cause; see ${replaced.lostLog}"
         System.err.println("The client of $name is lost: $reason. A new one starts.")
-        attemptOf[name]?.let { attempt ->
+        attempts.of(name)?.let { attempt ->
             if (attempt.started) {
                 attempt.session.send(ClientLost(name, reason))
             } else {
                 // Back in line on its own; the attempts beside it get their leases without it.
-                end(attempt)
+                end(attempt, "the client of $name was lost before its lease")
                 claims.release(attempt.players)
                 claims.submit(attempt.session, attempt.submit.submission() to attempt.submit.players())
                 queued[attempt.session to attempt.submit.submission()] = Queued(attempt.submit, ++nextTogether)
@@ -1147,7 +1161,7 @@ internal class Pool(
     private fun attemptOf(
         session: Peer,
         submission: Long,
-    ): Attempt? = attempts.values.firstOrNull { it.session == session && it.submit.submission() == submission }
+    ): Attempt? = attempts.all.firstOrNull { it.session == session && it.submit.submission() == submission }
 
     private fun clientOf(player: UUID): Client? = clients.firstOrNull { it.player.uuid() == player }
 

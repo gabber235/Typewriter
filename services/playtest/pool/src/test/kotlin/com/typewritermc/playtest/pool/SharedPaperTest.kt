@@ -105,6 +105,6 @@ val SharedPaperTest by testSuite {
         paper.restart(7) shouldContainExactly
             listOf(Do.Note("an attempt asked to restart paper, which only an attempt with a Paper of its own may restart"))
         paper.resumed(41).shouldBeEmpty()
-        paper.ended(1).shouldBeEmpty()
+        paper.ended(1, "its session sent its result").shouldBeEmpty()
     }
 }

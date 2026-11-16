@@ -41,7 +41,7 @@ internal class OwnPaper(
         val ahead = Do.RegionsAhead(listOf(REGION))
         if (phase != Phase.BOOTING) return listOf(ahead)
         phase = Phase.JOINING
-        return listOf(ahead, Do.Gather, Do.Connect)
+        return listOf(ahead, Do.Gather(attempt), Do.Connect)
     }
 
     // Its end shows in its process's exit.
@@ -83,14 +83,14 @@ internal class OwnPaper(
         if (phase != Phase.RESUMING || request == null) return listOf()
         phase = Phase.RUNNING
         restart = null
-        return listOf(Do.Restarted(request, tick))
+        return listOf(Do.Restarted(attempt, request, tick))
     }
 
     override fun restart(request: Long): List<Do> {
         if (phase != Phase.RUNNING) return listOf()
         restart = request
         phase = Phase.KILLED
-        return listOf(Do.Kill)
+        return listOf(Do.Kill(attempt))
     }
 
     /** A killed Paper boots again; one that exits on its own is lost and gone; once over, its exit is the end. */
@@ -109,10 +109,13 @@ internal class OwnPaper(
 
     override fun failed(cause: String): List<Do> = if (phase == Phase.OVER) listOf() else lost(cause)
 
-    override fun ended(attempt: Long): List<Do> {
+    override fun ended(
+        attempt: Long,
+        why: String,
+    ): List<Do> {
         if (phase == Phase.OVER) return listOf()
         phase = Phase.OVER
-        return listOf(Do.Return)
+        return listOf(Do.Note("stops, as attempt $attempt ended: $why"), Do.Return(attempt))
     }
 
     private fun boot(): List<Do> {
@@ -125,7 +128,7 @@ internal class OwnPaper(
 
     private fun lost(cause: String): List<Do> {
         phase = Phase.OVER
-        return listOf(Do.Lost(cause))
+        return listOf(Do.Lost(attempt, cause))
     }
 
     companion object {

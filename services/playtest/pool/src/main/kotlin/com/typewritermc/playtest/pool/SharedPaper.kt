@@ -69,7 +69,10 @@ internal class SharedPaper(
 
     override fun failed(cause: String): List<Do> = listOf(Do.Fail(cause))
 
-    override fun ended(attempt: Long): List<Do> = listOf()
+    override fun ended(
+        attempt: Long,
+        why: String,
+    ): List<Do> = listOf()
 
     override fun exited(code: Int): List<Do> = listOf(Do.Fail("$name exited with code $code"))
 

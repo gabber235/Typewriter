@@ -47,8 +47,11 @@ internal interface PaperRules {
     /** Paper could not do what an attempt needs, for [cause]. */
     fun failed(cause: String): List<Do>
 
-    /** [attempt] on this Paper ended. */
-    fun ended(attempt: Long): List<Do>
+    /** [attempt] on this Paper ended, for [why]; every way an attempt ends comes here, once. */
+    fun ended(
+        attempt: Long,
+        why: String,
+    ): List<Do>
 
     /** The Paper process ended with [code]. */
     fun exited(code: Int): List<Do>
@@ -70,7 +73,7 @@ internal interface PaperRules {
         /** The players' clients and claims. */
         sealed interface ToPlayers : Do
 
-        /** The Paper's process and the attempt claimed on it last, which only a Paper that serves one attempt alone answers with. */
+        /** The Paper's process, and the attempt it serves alone, which each step names. */
         sealed interface Life : Do
 
         /** The pool's game as a whole. */
@@ -86,8 +89,10 @@ internal interface PaperRules {
             val regions: List<Region>,
         ) : ToPaper
 
-        /** The Paper's attempt takes its players from the shared Paper; they serve no other claim meanwhile. */
-        data object Gather : ToPlayers
+        /** [attempt] takes its players from the shared Paper; they serve no other claim meanwhile. */
+        data class Gather(
+            val attempt: Long,
+        ) : ToPlayers
 
         /** Tells each client on this Paper to join it. */
         data object Connect : ToPlayers
@@ -124,17 +129,21 @@ internal interface PaperRules {
             val player: String,
         ) : ToPlayers
 
-        /** Ends the Paper process at once, as a crash would, so it saves nothing. */
-        data object Kill : Life
+        /** Ends the Paper process of [attempt] at once, as a crash would, so it saves nothing. */
+        data class Kill(
+            val attempt: Long,
+        ) : Life
 
-        /** Answers the attempt's restart [request]: every player is back after [tick] of the new Paper. */
+        /** Answers [attempt]'s restart [request]: every player is back after [tick] of the new Paper. */
         data class Restarted(
+            val attempt: Long,
             val request: Long,
             val tick: Int,
         ) : Life
 
-        /** The Paper is lost for [cause]: its attempt fails, the process ends, the players go back to the shared Paper. */
+        /** The Paper is lost for [cause]: [attempt] fails, the process ends, the players go back to the shared Paper. */
         data class Lost(
+            val attempt: Long,
             val cause: String,
         ) : Life
 
@@ -143,8 +152,10 @@ internal interface PaperRules {
             val cause: String,
         ) : ToGame
 
-        /** The Paper's attempt ended: the players go back to the shared Paper and this Paper stops. */
-        data object Return : Life
+        /** [attempt] ended: its players go back to the shared Paper and this Paper stops. */
+        data class Return(
+            val attempt: Long,
+        ) : Life
 
         /** The Paper's process ended for good: the pool forgets the Paper and removes its folder unless it was lost. */
         data object Gone : Life
