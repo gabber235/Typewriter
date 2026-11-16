@@ -54,7 +54,7 @@ void main() {
 
     await panel.eventually(
       () => expect(panel.world.nats.sentServiceNames(_updateSubject), [
-        "gabber236",
+        ["gabber236"],
       ]),
     );
     expect(panel.shows(_nameRule), isFalse);
@@ -65,7 +65,9 @@ void main() {
     expect(panel.shows(_nameRule), isTrue);
     expect(name.isFocused, isTrue);
     expect(name.value, "ga");
-    expect(panel.world.nats.sentServiceNames(_updateSubject), ["gabber236"]);
+    expect(panel.world.nats.sentServiceNames(_updateSubject), [
+      ["gabber236"],
+    ]);
     expect(tester.takeException(), isNull);
   });
 

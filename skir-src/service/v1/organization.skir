@@ -29,22 +29,15 @@ method WatchOrganizationServices(
   list: [Service];
 } = 930401;
 
-// Performs an organization scoped compare and set update of service metadata.
-// The registration service owns revision and increments it only after accepting the name change. A stale expected
-// revision returns the current service in conflict_error, unless the requested name is already stored: then success
-// returns the stored service unchanged, so a client may resend a request whose reply was lost.
-// service_not_found_error means the service is absent from this organization.
-method UpdateOrganizationService(
-  struct {
-    service_id: RecordId;
-    expected_revision: int64;
-    name: string;
-  }
-): enum {
-  internal_error: InternalError;
+// One requested rename of an organization service, guarded by the revision the caller last read.
+struct ServiceRename(83040003) {
+  service_id: RecordId;
+  expected_revision: int64;
+  name: string;
+}
 
-  success: Service;
-
+// Why one rename in a refused batch was not applied.
+enum ServiceRenameRefusal(83040004) {
   /// Service changed elsewhere.
   conflict_error: struct {
     expected_revision: int64;
@@ -56,6 +49,35 @@ method UpdateOrganizationService(
 
   /// Service update is invalid.
   validation_error: ServiceUpdateValidationError;
+
+  /// The same service appears more than once in the batch.
+  duplicate_error: struct {};
+
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
+}
+
+// One rename that kept its batch from being applied.
+struct RefusedServiceRename(83040005) {
+  service_id: RecordId;
+  reason: ServiceRenameRefusal;
+}
+
+// Renames organization services as one all or nothing batch; a single rename is a batch of one.
+// The registration service owns each revision and increments it only after accepting the batch. A stale expected
+// revision refuses the batch with the current service, unless the requested name is already stored: then that item
+// succeeds with the stored service unchanged, so a client may resend a batch whose reply was lost.
+// refused_error lists every item that kept the batch from applying; nothing changed.
+// success lists the resulting services in request order.
+method UpdateOrganizationServices(
+  struct {
+    renames: [ServiceRename];
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: [Service];
+
+  /// One or more renames were refused; nothing changed.
+  refused_error: [RefusedServiceRename];
 } = 930402;

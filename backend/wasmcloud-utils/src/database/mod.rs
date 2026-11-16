@@ -17,10 +17,12 @@ pub use surrealdb_component_sdk::{
 };
 
 pub mod organization;
+mod refusal;
 pub mod service;
 mod skir_db;
 pub mod topology;
 
+pub use refusal::{Refusable, RefusalDecodeError};
 pub use skir_db::{SkirDb, SkirType};
 
 /// Maximum number of attempts made for a transaction when the database reports a conflict.
@@ -146,6 +148,26 @@ impl<T: DeserializeOwned> TransactionResponse<T> {
     /// cannot make a committed mutation uncommit.
     pub fn decode(self) -> Result<TransactionOutcome<T>, QueryResultError> {
         self.response.transaction(self.outcome_index)
+    }
+
+    /// Decodes the committed value or the typed refusal the transaction threw with
+    /// `fn::refuse`.
+    ///
+    /// SurrealDB flattens a thrown value to a string, so `fn::refuse` throws its refusal as
+    /// JSON and this method reads it back as `R`; see [`Refusable`]. A rejection that did not
+    /// come from `fn::refuse` is an error, because the caller expects only refusals.
+    pub fn decode_refusable<R: DeserializeOwned>(
+        self,
+    ) -> Result<Refusable<T, R>, RefusalDecodeError> {
+        match self.decode().map_err(RefusalDecodeError::Query)? {
+            TransactionOutcome::Committed(value) => Ok(Refusable::Committed(value)),
+            TransactionOutcome::Rejected(error) => match refusal::read_refusal(error.message()) {
+                Some(refusal) => refusal
+                    .map(Refusable::Refused)
+                    .map_err(RefusalDecodeError::Unreadable),
+                None => Err(RefusalDecodeError::NotARefusal(error)),
+            },
+        }
     }
 }
 

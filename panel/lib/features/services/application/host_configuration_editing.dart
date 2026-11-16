@@ -196,16 +196,48 @@ final class HostEditPersistence extends ValueEditPersistence {
         .configure(hostId, commit.expectedRevision, execution)
         .mapResponse(
           (response) => switch (response) {
-            skir.ConfigureServiceHostResponse_successWrapper(:final value) =>
-              observed(value, conflict: false),
-            skir.ConfigureServiceHostResponse_conflictErrorWrapper(
+            skir.ConfigureServiceHostsResponse_successWrapper(:final value) =>
+              switch (value.firstWhereOrNull(
+                (change) => change.host.hostId == hostId,
+              )) {
+                final change? => observed(change, conflict: false),
+                null => unavailableMutation(
+                  "The host configuration could not be applied",
+                ),
+              },
+            skir.ConfigureServiceHostsResponse_refusedErrorWrapper(
               :final value,
             ) =>
-              observed(value.actual, conflict: true),
-            skir.ConfigureServiceHostResponse_invalidConfigurationErrorWrapper(
-              :final value,
-            ) =>
-              invalidMutation(value.message),
+              switch (value
+                  .firstWhereOrNull((refused) => refused.hostId == hostId)
+                  ?.reason) {
+                skir.HostConfigurationRefusal_conflictErrorWrapper(
+                  :final value,
+                ) =>
+                  observed(value.actual, conflict: true),
+                skir.HostConfigurationRefusal_invalidConfigurationErrorWrapper(
+                  :final value,
+                ) =>
+                  invalidMutation(value.message),
+                skir.HostConfigurationRefusal_incompatibleEngineErrorWrapper(
+                  :final value,
+                ) =>
+                  unavailableMutation(
+                    "This host cannot run ${value.target.engineId}",
+                  ),
+                skir.HostConfigurationRefusal_realmNotFoundErrorWrapper() =>
+                  unavailableMutation("The chosen Realm no longer exists"),
+                skir.HostConfigurationRefusal_duplicateErrorWrapper() =>
+                  invalidMutation(
+                    "This host was configured twice in one change",
+                  ),
+                null => unavailableMutation(
+                  heldBackReason(noun: "host", done: "configured"),
+                ),
+                _ => unavailableMutation(
+                  "The host configuration could not be applied",
+                ),
+              },
             _ => unavailableMutation(
               "The host configuration could not be applied",
             ),

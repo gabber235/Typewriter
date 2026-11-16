@@ -1,168 +1,133 @@
 //! Applies organization owned service metadata changes.
 //!
-//! Metadata update is separate from registration binding because it operates on an already bound
-//! service, uses organization authorization, and has compare and set revision semantics. Binding
+//! Metadata update is separate from registration binding because it operates on already bound
+//! services, uses organization authorization, and has compare and set revision semantics. Binding
 //! changes ownership and visibility. Update changes the service projection while preserving that
 //! ownership. Unbinding removes ownership and clears the lease.
 //!
-//! The database transaction owns the revision check, name validation, and write. It returns the
-//! canonical updated record or the canonical current record for a revision conflict. A stale
-//! request whose name is already stored, as when a resend follows a send that landed, returns
-//! the stored record without writing and publishes it again, so a resend delivers a change
-//! whose first publish failed. Validation and not found outcomes perform no write and publish
-//! nothing. The watch update is published only after commit, because a message cannot participate
-//! in the database rollback boundary.
+//! A request is a batch of renames that applies all or nothing. Items that are malformed on
+//! their face (record identifiers from another table, the same service twice) refuse the batch
+//! before the database is read. The database transaction then checks every item against the
+//! stored services first and writes only when no item is refused, so a refused batch changes
+//! nothing and lists each refused item. A stale item whose name is already stored, as when a
+//! resend follows a send that landed, counts as accepted without writing and is published
+//! again, so a resend delivers a change whose first publish failed. The watch updates are
+//! published only after commit, because a message cannot participate in the database rollback
+//! boundary.
 
 use otel_wasi::ResultWithSlug;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use wasmcloud_utils::{
-    database::{RecordId, service::ServiceRecord, transaction_query},
+    database::{RecordId, TransactionOutcome, service::ServiceRecord, transaction_query},
     publication::{CommittedChange, PublicationEffect, PublicationExecutor, TransientFact},
-    skir::base::service::v1::{
-        organization::{
-            OrganizationServicesChanged, ServiceUpdateValidationError,
-            UpdateOrganizationServiceRequest, UpdateOrganizationServiceResponse,
-            UpdateOrganizationServiceResponse_ConflictError,
-            UpdateOrganizationServiceResponse_ServiceNotFoundError,
+    skir::base::{
+        kernel::v1::errors::InvalidRecordIdError,
+        service::v1::{
+            organization::{
+                OrganizationServicesChanged, RefusedServiceRename, ServiceRename,
+                ServiceRenameRefusal, ServiceRenameRefusal_ConflictError,
+                ServiceRenameRefusal_DuplicateError, ServiceRenameRefusal_ServiceNotFoundError,
+                ServiceUpdateValidationError, UpdateOrganizationServicesRequest,
+                UpdateOrganizationServicesResponse,
+            },
+            service::Service,
         },
-        service::Service,
     },
+    skir_utils::RecordIdTableInput,
     skir_variant,
 };
 
+/// One rename as the transaction reads it; `index` is its position in the request.
+#[derive(Debug, Serialize)]
+struct RenameInput {
+    index: usize,
+    service: RecordId,
+    expected_revision: i64,
+    name: String,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(tag = "outcome", rename_all = "kebab-case")]
-enum ServiceUpdateOutcome {
-    Updated { service: ServiceRecord },
-    /// A stale request whose name is already stored; nothing was written.
-    Unchanged { service: ServiceRecord },
-    ConflictError { actual: ServiceRecord },
-    ServiceNotFoundError,
-    NameInvalid,
+enum RenameBatchOutcome {
+    /// Every item was accepted; `services` holds the stored services in request order.
+    Updated { services: Vec<ServiceRecord> },
+    /// Nothing was written.
+    Refused { items: Vec<RefusedRenameRecord> },
 }
 
-impl ServiceUpdateOutcome {
-    fn as_str(&self) -> &'static str {
-        match self {
-            Self::Updated { .. } => "updated",
-            Self::Unchanged { .. } => "unchanged",
-            Self::ConflictError { .. } => "conflict-error",
-            Self::ServiceNotFoundError => "service-not-found-error",
-            Self::NameInvalid => "name-invalid",
-        }
-    }
+#[derive(Debug, Deserialize)]
+#[serde(tag = "outcome", rename_all = "kebab-case")]
+enum RefusedRenameRecord {
+    ConflictError {
+        index: usize,
+        actual: Box<ServiceRecord>,
+    },
+    ServiceNotFoundError {
+        index: usize,
+    },
+    NameInvalid {
+        index: usize,
+    },
 }
 
-/// Updates the name of a service owned by the addressed organization.
+/// Renames services owned by the addressed organization as one all or nothing batch.
 ///
-/// The expected revision makes concurrent edits explicit. Success returns the committed service,
-/// or the stored one, published again, when a stale request's name is already stored; a conflict
-/// returns the current service and the caller's expected revision, allowing the caller to
-/// reconcile against canonical state. Invalid names and services outside the organization
-/// map to their contract responses without a metadata publication.
-/// After a successful commit, the organization service watch receives the updated projection. A
-/// publication failure occurs after durable mutation and is therefore not rolled back.
+/// Each item's expected revision makes concurrent edits explicit. Success returns every
+/// resulting service in request order and publishes each one; a refusal returns every refused
+/// item with its reason, a conflict carrying the current service so the caller can reconcile,
+/// and publishes nothing. A publication failure occurs after durable mutation and is therefore
+/// not rolled back.
 #[tracing::instrument(skip(request))]
 pub async fn handle_update(
     scope: wasmcloud_utils::transport::OrganizationActorScope,
-    request: UpdateOrganizationServiceRequest,
-) -> Result<UpdateOrganizationServiceResponse, otel_wasi::Error> {
+    request: UpdateOrganizationServicesRequest,
+) -> Result<UpdateOrganizationServicesResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
     let org_id = scope.organization.as_str();
-    wasmcloud_utils::validate_record_ids!(
-        UpdateOrganizationServiceResponse,
-        request.service_id,
-        "service"
-    );
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string(),
-        "service.id" = request.service_id.to_string(),
-        "service.expected_revision" = request.expected_revision,
+        "service.batch_size" = request.renames.len() as i64,
     );
 
-    let service_id = RecordId::from(&request.service_id);
-    let organization_id = RecordId::new("organization", org_id);
-    let result = transaction_query!(
-        ServiceUpdateOutcome,
-        r#"
-        BEGIN TRANSACTION;
+    let renames = request.renames;
+    let malformed = malformed_renames(&renames);
+    if !malformed.is_empty() {
+        otel_wasi::main_attribute!("service.outcome" = "malformed");
+        return Ok(UpdateOrganizationServicesResponse::RefusedError(malformed));
+    }
 
-        RETURN {
-            LET $services = SELECT * FROM $service_id WHERE organization = $organization_id;
-
-            IF array::is_empty($services) {
-                RETURN { outcome: 'service-not-found-error' }
-            };
-
-            LET $current = array::first($services);
-            IF $current.revision != $expected_revision {
-                -- A rename to the stored name, as when its first send landed, answers
-                -- with the stored service and changes nothing.
-                IF $current.name = $name {
-                    RETURN { outcome: 'unchanged', service: $current }
-                };
-                RETURN { outcome: 'conflict-error', actual: $current }
-            };
-
-            IF !fn::is_id($name) {
-                RETURN { outcome: 'name-invalid' }
-            };
-
-            LET $updated = UPDATE ONLY $current.id SET
-                name = $name,
-                revision = $current.revision + 1
-                RETURN AFTER;
-
-            LET $result = { outcome: 'updated', service: $updated };
-            RETURN $result;
-        };
-
-        COMMIT TRANSACTION;
-        "#,
-    )
-    .bind("service_id", service_id)
-    .bind("organization_id", organization_id)
-    .bind("expected_revision", request.expected_revision)
-    .bind("name", request.name)
-    .execute()
-    .await
-    .error_with_slug("service-update-query-failed")?
-    .decode()
-    .error_with_slug("service-update-result-parse-failed")?;
-
-    let result = wasmcloud_utils::skir_domain_result!(UpdateOrganizationServiceResponse, result);
-    otel_wasi::main_attribute!("service.outcome" = result.as_str());
-    let service = match result {
-        ServiceUpdateOutcome::Updated { service } | ServiceUpdateOutcome::Unchanged { service } => {
-            Service::try_from(service)?
-        }
-        ServiceUpdateOutcome::ConflictError { actual } => {
-            return Ok(skir_variant!(
-                UpdateOrganizationServiceResponse::ConflictError {
-                    expected_revision: request.expected_revision,
-                    actual: Service::try_from(actual)?,
-                }
+    let result = rename_in_transaction(&renames, org_id).await?;
+    let result = wasmcloud_utils::skir_domain_result!(UpdateOrganizationServicesResponse, result);
+    let services = match result {
+        RenameBatchOutcome::Updated { services } => services
+            .into_iter()
+            .map(Service::try_from)
+            .collect::<Result<Vec<_>, _>>()?,
+        RenameBatchOutcome::Refused { items } => {
+            otel_wasi::main_attribute!("service.outcome" = "refused");
+            return Ok(UpdateOrganizationServicesResponse::RefusedError(
+                items
+                    .into_iter()
+                    .map(|item| refused_rename(&renames, item))
+                    .collect::<Result<Vec<_>, _>>()?,
             ));
-        }
-        ServiceUpdateOutcome::ServiceNotFoundError => {
-            return Ok(skir_variant!(
-                UpdateOrganizationServiceResponse::ServiceNotFoundError
-            ));
-        }
-        ServiceUpdateOutcome::NameInvalid => {
-            return Ok(validation_error(ServiceUpdateValidationError::NameInvalid));
         }
     };
+    otel_wasi::main_attribute!("service.outcome" = "updated");
 
-    CommittedChange::new(
-        UpdateOrganizationServiceResponse::Success(Box::new(service.clone())),
-        [PublicationEffect::CapturedTransient(
-            TransientFact::Services {
+    let effects = services
+        .iter()
+        .map(|service| {
+            PublicationEffect::CapturedTransient(TransientFact::Services {
                 organization: org_id.to_owned(),
-                event: OrganizationServicesChanged::Update(Box::new(service)),
-            },
-        )],
+                event: OrganizationServicesChanged::Update(Box::new(service.clone())),
+            })
+        })
+        .collect::<Vec<_>>();
+    CommittedChange::new(
+        UpdateOrganizationServicesResponse::Success(services),
+        effects,
     )
     .publish_with(&PublicationExecutor {
         refresher: wasmcloud_utils::publication::CapturedOnly,
@@ -170,6 +135,150 @@ pub async fn handle_update(
     .await
 }
 
-fn validation_error(error: ServiceUpdateValidationError) -> UpdateOrganizationServiceResponse {
-    UpdateOrganizationServiceResponse::ValidationError(Box::new(error))
+/// Checks every rename against the stored services and writes them only when none is refused.
+async fn rename_in_transaction(
+    renames: &[ServiceRename],
+    org_id: &str,
+) -> Result<TransactionOutcome<RenameBatchOutcome>, otel_wasi::Error> {
+    let inputs = renames
+        .iter()
+        .enumerate()
+        .map(|(index, rename)| RenameInput {
+            index,
+            service: RecordId::from(&rename.service_id),
+            expected_revision: rename.expected_revision,
+            name: rename.name.clone(),
+        })
+        .collect::<Vec<_>>();
+    let organization_id = RecordId::new("organization", org_id);
+    transaction_query!(
+        RenameBatchOutcome,
+        r#"
+        BEGIN TRANSACTION;
+
+        RETURN {
+            LET $checked = $renames.map(|$rename| {
+                LET $current = array::first(
+                    SELECT * FROM $rename.service WHERE organization = $organization_id
+                );
+                IF $current = NONE {
+                    RETURN { outcome: 'service-not-found-error', index: $rename.index }
+                };
+                IF $current.revision != $rename.expected_revision {
+                    -- A rename to the stored name, as when its first send landed, is
+                    -- accepted with the stored service and changes nothing.
+                    IF $current.name = $rename.name {
+                        RETURN { outcome: 'unchanged', index: $rename.index, service: $current }
+                    };
+                    RETURN { outcome: 'conflict-error', index: $rename.index, actual: $current }
+                };
+                IF !fn::is_id($rename.name) {
+                    RETURN { outcome: 'name-invalid', index: $rename.index }
+                };
+                RETURN {
+                    outcome: 'accepted',
+                    index: $rename.index,
+                    service: $current,
+                    name: $rename.name,
+                };
+            });
+
+            LET $refused = $checked.filter(|$item| $item.outcome NOT IN ['accepted', 'unchanged']);
+            IF !array::is_empty($refused) {
+                RETURN { outcome: 'refused', items: $refused }
+            };
+
+            FOR $item IN $checked {
+                IF $item.outcome = 'accepted' {
+                    UPDATE ONLY $item.service.id SET
+                        name = $item.name,
+                        revision = $item.service.revision + 1;
+                };
+            };
+
+            LET $result = {
+                outcome: 'updated',
+                services: $checked.map(|$item| SELECT * FROM ONLY $item.service.id),
+            };
+            RETURN $result;
+        };
+
+        COMMIT TRANSACTION;
+        "#,
+    )
+    .bind("renames", inputs)
+    .bind("organization_id", organization_id)
+    .execute()
+    .await
+    .error_with_slug("service-update-query-failed")?
+    .decode()
+    .error_with_slug("service-update-result-parse-failed")
+}
+
+/// Items refused before the database is read: record identifiers from another table and
+/// services named more than once.
+fn malformed_renames(renames: &[ServiceRename]) -> Vec<RefusedServiceRename> {
+    let targets = renames
+        .iter()
+        .map(|rename| &rename.service_id)
+        .collect::<Vec<_>>();
+    renames
+        .iter()
+        .enumerate()
+        .filter_map(|(index, rename)| {
+            let given_tables = rename.service_id.invalid_tables("service");
+            let reason = if !given_tables.is_empty() {
+                ServiceRenameRefusal::InvalidRecordIdError(Box::new(InvalidRecordIdError {
+                    expected_table: "service".to_owned(),
+                    given_tables,
+                    _unrecognized: None,
+                }))
+            } else if crate::utils::repeats_earlier(&targets, index) {
+                skir_variant!(ServiceRenameRefusal::DuplicateError)
+            } else {
+                return None;
+            };
+            Some(RefusedServiceRename {
+                service_id: rename.service_id.clone(),
+                reason,
+                _unrecognized: None,
+            })
+        })
+        .collect()
+}
+
+fn refused_rename(
+    renames: &[ServiceRename],
+    item: RefusedRenameRecord,
+) -> Result<RefusedServiceRename, otel_wasi::Error> {
+    let index = match &item {
+        RefusedRenameRecord::ConflictError { index, .. }
+        | RefusedRenameRecord::ServiceNotFoundError { index }
+        | RefusedRenameRecord::NameInvalid { index } => *index,
+    };
+    let rename = renames.get(index).ok_or_else(|| {
+        otel_wasi::Error::new(
+            "service-update-refusal-index-invalid",
+            format!("refusal names item {index} of {}", renames.len()),
+        )
+    })?;
+    let reason = match item {
+        RefusedRenameRecord::ConflictError { actual, .. } => {
+            skir_variant!(ServiceRenameRefusal::ConflictError {
+                expected_revision: rename.expected_revision,
+                actual: Service::try_from(*actual)?,
+            })
+        }
+        RefusedRenameRecord::ServiceNotFoundError { .. } => {
+            skir_variant!(ServiceRenameRefusal::ServiceNotFoundError)
+        }
+        RefusedRenameRecord::NameInvalid { .. } => ServiceRenameRefusal::ValidationError(Box::new(
+            ServiceUpdateValidationError::NameInvalid,
+        )),
+    };
+    Ok(RefusedServiceRename {
+        service_id: rename.service_id.clone(),
+        reason,
+        _unrecognized: None,
+    })
 }

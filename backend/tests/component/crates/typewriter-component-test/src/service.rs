@@ -9,14 +9,17 @@ use component_test::TestContext;
 use wasmcloud_utils::skir::base::{
     kernel::v1::record_id::RecordId,
     service::v1::{
-        organization::{OrganizationServicesChanged, UpdateOrganizationServiceRequest},
-        registration::{UnbindServiceRequest, UnbindServiceResponse},
+        organization::{
+            OrganizationServicesChanged, ServiceRename, UpdateOrganizationServicesRequest,
+        },
+        registration::{UnbindServicesRequest, UnbindServicesResponse},
         service::ServiceStatus,
         status::{EnsureRegistrationLeaseRequest, EnsureRegistrationLeaseResponse},
         topology::{
-            ChildRuntimeState, ChildRuntimeStatus, ConfigureServiceHostRequest,
-            ConfigureServiceHostResponse, EngineRealmSelection, EngineRealmSelection_ExistingRealm,
-            EngineTarget, HostConfigurationChange, HostExecutionConfiguration,
+            ChildRuntimeState, ChildRuntimeStatus, ConfigureServiceHostsRequest,
+            ConfigureServiceHostsResponse, EngineRealmSelection,
+            EngineRealmSelection_ExistingRealm, EngineTarget, HostConfigurationChange,
+            HostConfigurationEdit, HostConfigurationRefusal, HostExecutionConfiguration,
             HostedEngineConfiguration, HostedRealmConfiguration, OrganizationTopologyChanged,
             RegisterServiceHostRequest, RegisterServiceHostResponse, ReportHostExecutionRequest,
             ReportHostExecutionResponse, SupportedEngine, WatchHostExecutionResponse,
@@ -156,17 +159,44 @@ pub async fn register_host<F>(context: &TestContext<F>, key: &str, engines: &[&s
     }
 }
 
-/// Ada configures Acme's host `key`, expecting it at `expected_revision`.
+/// Ada configures Acme's host `key` alone, a batch of one, expecting it at `expected_revision`:
+/// the change it made, or why it was refused.
 pub async fn configure_host<F>(
     context: &TestContext<F>,
     key: &str,
     expected_revision: i64,
     execution: HostExecutionConfiguration,
-) -> Result<ConfigureServiceHostResponse> {
+) -> Result<Result<HostConfigurationChange, HostConfigurationRefusal>> {
+    let reply = configure_hosts(
+        context,
+        vec![host_configuration(key, expected_revision, execution)],
+    )
+    .await?;
+    match reply {
+        ConfigureServiceHostsResponse::Success(changes) => match <[_; 1]>::try_from(changes) {
+            Ok([change]) => Ok(Ok(change)),
+            Err(changes) => anyhow::bail!("one host was configured, answered {changes:?}"),
+        },
+        ConfigureServiceHostsResponse::RefusedError(refused) => match <[_; 1]>::try_from(refused) {
+            Ok([refused]) => Ok(Err(refused.reason)),
+            Err(refused) => anyhow::bail!("one host was configured, refused {refused:?}"),
+        },
+        reply => anyhow::bail!("configuring host `{key}` failed: {reply:?}"),
+    }
+}
+
+/// Ada configures Acme's hosts with `configurations` as one batch.
+pub async fn configure_hosts<F>(
+    context: &TestContext<F>,
+    configurations: Vec<HostConfigurationEdit>,
+) -> Result<ConfigureServiceHostsResponse> {
     context
         .request(
             from_member(ada(), &acme(), "topology.configure"),
-            &configure_request(key, expected_revision, execution),
+            &ConfigureServiceHostsRequest {
+                configurations,
+                ..Default::default()
+            },
         )
         .await
 }
@@ -179,24 +209,31 @@ pub async fn arrange_host_configuration<F>(
     expected_revision: i64,
     execution: HostExecutionConfiguration,
 ) -> Result<HostConfigurationChange> {
-    let reply: ConfigureServiceHostResponse = context
+    let reply: ConfigureServiceHostsResponse = context
         .arrange(
             from_member(ada(), &acme(), "topology.configure"),
-            &configure_request(key, expected_revision, execution),
+            &ConfigureServiceHostsRequest {
+                configurations: vec![host_configuration(key, expected_revision, execution)],
+                ..Default::default()
+            },
         )
         .await?;
     match reply {
-        ConfigureServiceHostResponse::Success(change) => Ok(*change),
+        ConfigureServiceHostsResponse::Success(mut changes) if changes.len() == 1 => {
+            Ok(changes.remove(0))
+        }
         reply => anyhow::bail!("configuring host `{key}` failed: {reply:?}"),
     }
 }
 
-fn configure_request(
+/// One item of a configuration batch: Acme's host `key`, expected at `expected_revision`, set
+/// to `execution`.
+pub fn host_configuration(
     key: &str,
     expected_revision: i64,
     execution: HostExecutionConfiguration,
-) -> ConfigureServiceHostRequest {
-    ConfigureServiceHostRequest {
+) -> HostConfigurationEdit {
+    HostConfigurationEdit {
         host_id: skir_record_id("service_host", key),
         expected_revision,
         execution,
@@ -242,32 +279,35 @@ pub async fn ensure_registration_lease<F>(
         .await
 }
 
-/// Ada unbinds the service `key` from Acme.
-pub async fn unbind_service<F>(
+/// Ada unbinds the services `keys` from Acme as one batch.
+pub async fn unbind_services<F>(
     context: &TestContext<F>,
-    key: &str,
-) -> Result<UnbindServiceResponse> {
+    keys: &[&str],
+) -> Result<UnbindServicesResponse> {
     context
         .request(
             from_member(ada(), &acme(), "services.unbind"),
-            &UnbindServiceRequest {
-                service_id: key.into(),
+            &UnbindServicesRequest {
+                service_ids: keys.iter().map(|key| (*key).to_owned()).collect(),
                 ..Default::default()
             },
         )
         .await
 }
 
-/// A request to rename the service `key`, expected at `expected_revision`, to `name`.
-pub fn rename_service(
-    key: &str,
-    expected_revision: i64,
-    name: &str,
-) -> UpdateOrganizationServiceRequest {
-    UpdateOrganizationServiceRequest {
-        service_id: skir_record_id("service", key),
-        expected_revision,
-        name: name.into(),
+/// A request to rename, as one batch, each service `key` expected at `expected_revision` to
+/// `name`.
+pub fn rename_services(renames: &[(&str, i64, &str)]) -> UpdateOrganizationServicesRequest {
+    UpdateOrganizationServicesRequest {
+        renames: renames
+            .iter()
+            .map(|(key, expected_revision, name)| ServiceRename {
+                service_id: skir_record_id("service", *key),
+                expected_revision: *expected_revision,
+                name: (*name).into(),
+                ..Default::default()
+            })
+            .collect(),
         ..Default::default()
     }
 }

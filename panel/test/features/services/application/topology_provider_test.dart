@@ -522,10 +522,10 @@ void main() {
           ]);
           await world.initialized();
           await world.servicesOf(_organization).watchTopology();
-          final reply = Completer<skir.ConfigureServiceHostResponse>();
+          final reply = Completer<skir.ConfigureServiceHostsResponse>();
           world.nats.registerHandler(
             _configureSubject,
-            (_) async => skir.ConfigureServiceHostResponse.serializer.toBytes(
+            (_) async => skir.ConfigureServiceHostsResponse.serializer.toBytes(
               await reply.future,
             ),
           );
@@ -544,10 +544,15 @@ void main() {
           if (eventFirst) world.nats.announceTopology(_organization, event);
           reply.complete(
             conflict
-                ? skir.ConfigureServiceHostResponse.createConflictError(
-                    actual: change,
-                  )
-                : skir.ConfigureServiceHostResponse.wrapSuccess(change),
+                ? skir.ConfigureServiceHostsResponse.wrapRefusedError([
+                    skir.RefusedHostConfiguration(
+                      hostId: _host.hostId,
+                      reason: skir.HostConfigurationRefusal.createConflictError(
+                        actual: change,
+                      ),
+                    ),
+                  ])
+                : skir.ConfigureServiceHostsResponse.wrapSuccess([change]),
           );
           await command;
           if (!eventFirst) world.nats.announceTopology(_organization, event);
@@ -570,10 +575,10 @@ void main() {
       ]);
       await world.initialized();
       await world.servicesOf(_organization).watchTopology();
-      final reply = Completer<skir.ConfigureServiceHostResponse>();
+      final reply = Completer<skir.ConfigureServiceHostsResponse>();
       world.nats.registerHandler(
         _configureSubject,
-        (_) async => skir.ConfigureServiceHostResponse.serializer.toBytes(
+        (_) async => skir.ConfigureServiceHostsResponse.serializer.toBytes(
           await reply.future,
         ),
       );
@@ -585,9 +590,9 @@ void main() {
       world.container.invalidate(_topology);
       await world.container.read(_topology.future);
       reply.complete(
-        skir.ConfigureServiceHostResponse.wrapSuccess(
+        skir.ConfigureServiceHostsResponse.wrapSuccess([
           hostConfiguration(configuredPaperHost("host1", revision: 2)),
-        ),
+        ]),
       );
       await command;
 

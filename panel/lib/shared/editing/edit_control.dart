@@ -94,7 +94,7 @@ abstract interface class EditingControlOwner {
   EditControl bindControl();
 }
 
-/// Combines group actions while preserving each independent request outcome.
+/// Combines group actions while preserving each request outcome.
 final class EditSelectionControl extends ChangeNotifier
     implements EditControl, EditApplyControl {
   EditSelectionControl(Iterable<EditControl> controls)
@@ -125,7 +125,12 @@ final class EditSelectionControl extends ChangeNotifier
       canRetry: pending.any((state) => state.canRetry),
       hasSubmittedWork: pending.any((state) => state.hasSubmittedWork),
       hasLaterEdits: pending.any((state) => state.hasLaterEdits),
-      status: pending.firstWhereOrNull((state) => state.status != null)?.status,
+      // A refused batch settles every member at once, each with its own
+      // reason, so every distinct status is shown, one per line.
+      status: switch ({for (final state in pending) ?state.status}) {
+        final statuses when statuses.isNotEmpty => statuses.join("\n"),
+        _ => null,
+      },
       diagnostics: [for (final state in pending) ...state.diagnostics],
     );
   }

@@ -106,11 +106,12 @@ Uint8List topologyListReply(skir.OrganizationTopologySnapshot topology) => skir
     .serializer
     .toBytes(skir.WatchOrganizationTopologyResponse.wrapList(topology));
 
-/// The wire reply that confirms a host configuration with [change].
+/// The wire reply that confirms a batch of one host configuration with
+/// [change].
 Uint8List configuredReply(skir.HostConfigurationChange change) => skir
-    .ConfigureServiceHostResponse
+    .ConfigureServiceHostsResponse
     .serializer
-    .toBytes(skir.ConfigureServiceHostResponse.wrapSuccess(change));
+    .toBytes(skir.ConfigureServiceHostsResponse.wrapSuccess([change]));
 
 /// A host reporting [status], active by default, with [message], as of
 /// [updatedAt], 2026 by default.

@@ -185,6 +185,17 @@ final class HoldTry {
   final Map<Object, String> heldBack;
 }
 
+/// What an item of an all or nothing change says when another item was
+/// refused: [name], or else this [noun], was not [done], and nothing was
+/// saved. Holds and edit forms share these words.
+String heldBackReason({
+  required String noun,
+  required String done,
+  String? name,
+}) =>
+    "${name ?? "This $noun"} was not $done, because another $noun in this "
+    "change was refused. Nothing was saved.";
+
 const _heldBackByDefault =
     "This was held back, because another item in this change was refused. "
     "Nothing was saved.";

@@ -3,8 +3,8 @@
 use wasmcloud_utils::{
     database::{RecordId, topology::EngineTargetRecord},
     skir::base::service::v1::topology::{
-        ConfigureServiceHostResponse, ConfigureServiceHostResponse_InvalidConfigurationError,
-        EngineRealmSelection, HostExecutionConfiguration,
+        EngineRealmSelection, HostConfigurationRefusal,
+        HostConfigurationRefusal_InvalidConfigurationError, HostExecutionConfiguration,
     },
     skir_variant,
 };
@@ -36,8 +36,8 @@ enum RealmSelectionInput {
 pub(crate) struct UnknownRealmSelection;
 
 impl UnknownRealmSelection {
-    pub(crate) fn into_configuration_response(self) -> ConfigureServiceHostResponse {
-        skir_variant!(ConfigureServiceHostResponse::InvalidConfigurationError {
+    pub(crate) fn into_refusal(self) -> HostConfigurationRefusal {
+        skir_variant!(HostConfigurationRefusal::InvalidConfigurationError {
             message: "Engine Realm selection is unknown".to_owned(),
         })
     }

@@ -32,18 +32,35 @@ struct ServiceBoundNotification(83050001) {
   organization_name: string?;
 }
 
-// Removes the organization binding for a service owned by the addressed organization.
-// The registration service also clears any registration lease and publishes fresh organization views. The service
-// identity remains intact, so a later binding uses a newly observed lease rather than reviving the old one.
-method UnbindService(
+// Why one unbinding in a refused batch was not applied.
+enum ServiceUnbindRefusal(83050002) {
+  /// Service not found in organization.
+  service_not_found_error: struct {};
+
+  /// The same service appears more than once in the batch.
+  duplicate_error: struct {};
+}
+
+// One unbinding that kept its batch from being applied.
+struct RefusedServiceUnbind(83050003) {
+  service_id: string;
+  reason: ServiceUnbindRefusal;
+}
+
+// Removes the organization binding for services owned by the addressed organization, as one all or nothing batch;
+// a single unbinding is a batch of one.
+// The registration service also clears each registration lease and publishes fresh organization views. The service
+// identities remain intact, so a later binding uses a newly observed lease rather than reviving the old one.
+// refused_error lists every item that kept the batch from applying; nothing changed.
+method UnbindServices(
   struct {
-    service_id: string;
+    service_ids: [string];
   }
 ): enum {
   internal_error: InternalError;
 
   success: struct {};
 
-  /// Service not found in organization.
-  service_not_found_error: struct {};
+  /// One or more unbindings were refused; nothing changed.
+  refused_error: [RefusedServiceUnbind];
 } = 930502;

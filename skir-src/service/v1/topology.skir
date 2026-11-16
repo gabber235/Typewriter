@@ -131,19 +131,15 @@ struct HostConfigurationChange(83090017) {
   removed_resources: [RecordId];
 }
 
-// Applies a complete host execution configuration with optimistic concurrency. A successful result changes desired state;
-// runtime activation is reported later through host execution updates. A stale expected revision returns
-// conflict_error, unless the requested assignment is already stored: then success returns the stored state unchanged,
-// so a client may resend a request whose reply was lost.
-method ConfigureServiceHost(
-  struct {
-    host_id: RecordId;
-    expected_revision: int64;
-    execution: HostExecutionConfiguration;
-  }
-): enum {
-  success: HostConfigurationChange;
+// One requested host execution configuration, guarded by the host revision the caller last read.
+struct HostConfigurationEdit(83090018) {
+  host_id: RecordId;
+  expected_revision: int64;
+  execution: HostExecutionConfiguration;
+}
 
+// Why one host configuration in a refused batch was not applied.
+enum HostConfigurationRefusal(83090019) {
   /// Host changed elsewhere.
   conflict_error: struct {
     actual: HostConfigurationChange;
@@ -163,36 +159,66 @@ method ConfigureServiceHost(
   realm_not_found_error: struct {
     realm_id: RecordId;
   };
+
+  /// The same host appears more than once in the batch.
+  duplicate_error: struct {};
+
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
+}
+
+// One host configuration that kept its batch from being applied.
+struct RefusedHostConfiguration(83090020) {
+  host_id: RecordId;
+  reason: HostConfigurationRefusal;
+}
+
+// Applies complete host execution configurations with optimistic concurrency, as one all or nothing batch; a single
+// host is a batch of one. Items apply in request order, so a later item sees the Realms an earlier one created or
+// removed. A successful result changes desired state; runtime activation is reported later through host execution
+// updates. A stale expected revision refuses the batch, unless the requested assignment is already stored: then that
+// item succeeds with the stored state unchanged, so a client may resend a batch whose reply was lost.
+// refused_error lists every item that kept the batch from applying; nothing changed. Revision conflicts are found
+// before any item applies, so a batch refused for a conflict lists only its conflicts.
+// success lists the resulting changes in request order.
+method ConfigureServiceHosts(
+  struct {
+    configurations: [HostConfigurationEdit];
+  }
+): enum {
+  success: [HostConfigurationChange];
+
+  /// One or more host configurations were refused; nothing changed.
+  refused_error: [RefusedHostConfiguration];
+
   internal_error: InternalError;
 } = 930901;
 
-struct OrganizationTopologySnapshot(83090018) {
+struct OrganizationTopologySnapshot(83090021) {
   hosts: [ServiceHost];
   realms: [RealmInstance];
   engines: [EngineInstance];
 }
 
-struct RealmRuntimeObservation(83090019) {
+struct RealmRuntimeObservation(83090022) {
   realm_id: RecordId;
   state: ChildRuntimeState;
 }
 
-struct EngineRuntimeObservation(83090020) {
+struct EngineRuntimeObservation(83090023) {
   engine_id: RecordId;
   state: ChildRuntimeState;
 }
 
 // The published host read model and current states of all assigned children after a runtime report.
 // A child omitted by the report retains its previously stored state in this projection.
-struct HostExecutionObservation(83090021) {
+struct HostExecutionObservation(83090024) {
   host: ServiceHost;
   realm: RealmRuntimeObservation?;
   engine: EngineRuntimeObservation?;
 }
 
-enum OrganizationTopologyChanged(83090022) {
+enum OrganizationTopologyChanged(83090025) {
   replace: OrganizationTopologySnapshot;
   configuration_changed: HostConfigurationChange;
   observations_reported: HostExecutionObservation;
@@ -237,7 +263,7 @@ method ReportHostExecution(
 } = 930904;
 
 // Identifies the organization and Realm relationships needed to route messages for a service.
-struct ServiceMessagingScope(83090023) {
+struct ServiceMessagingScope(83090026) {
   organization_id: string;
   owned_realm: RecordId?;
   attached_realm: RecordId?;

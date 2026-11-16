@@ -2,19 +2,19 @@ use json_matcher::assert_jm;
 use typewriter_component_test::{
     prelude::*,
     service::{
-        InvalidHostConfiguration, arrange_host_configuration, configure_host, engine, engine_in,
-        expect_configuration_change, expect_desired_execution, expect_no_topology_change,
-        organization_with_hosts, paper, realm_only, realm_with_engine, register_host,
-        report_execution, seed_organization_services,
+        InvalidHostConfiguration, arrange_host_configuration, configure_host, configure_hosts,
+        engine, engine_in, expect_configuration_change, expect_desired_execution,
+        expect_no_topology_change, host_configuration, organization_with_hosts, paper, realm_only,
+        realm_with_engine, register_host, report_execution, seed_organization_services,
     },
 };
 use wasmcloud_utils::skir::base::service::v1::topology::{
-    ChildRuntimeStatus, ConfigureServiceHostResponse, EngineTarget,
-    GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse, HostExecutionConfiguration,
-    HostRuntimeStatus, OrganizationTopologyChanged, RegisterServiceHostRequest,
-    RegisterServiceHostResponse, ReportHostExecutionResponse, SupportedEngine,
-    WatchHostExecutionRequest, WatchHostExecutionResponse, WatchOrganizationTopologyRequest,
-    WatchOrganizationTopologyResponse,
+    ChildRuntimeStatus, ConfigureServiceHostsResponse, EngineTarget,
+    GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse, HostConfigurationRefusal,
+    HostExecutionConfiguration, HostRuntimeStatus, OrganizationTopologyChanged,
+    RegisterServiceHostRequest, RegisterServiceHostResponse, ReportHostExecutionResponse,
+    SupportedEngine, WatchHostExecutionRequest, WatchHostExecutionResponse,
+    WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse,
 };
 
 use super::ServiceRegistration;
@@ -189,7 +189,7 @@ async fn configure_creates_hosted_realm_and_attached_engine(
 
     let reply = configure_host(context, "lobby", 1, realm_with_engine(paper())).await?;
 
-    let ConfigureServiceHostResponse::Success(configured) = reply else {
+    let Ok(configured) = reply else {
         anyhow::bail!("expected the configuration to be accepted, received {reply:?}");
     };
     let realm = configured
@@ -230,7 +230,7 @@ async fn configure_runs_an_advertised_custom_engine_on_a_host(
 
     let reply = configure_host(context, "lobby", 1, realm_with_engine(custom.clone())).await?;
 
-    let ConfigureServiceHostResponse::Success(configured) = reply else {
+    let Ok(configured) = reply else {
         anyhow::bail!("expected the custom engine to be accepted, received {reply:?}");
     };
     assert_eq!(
@@ -275,7 +275,7 @@ async fn configuring_an_engine_in_another_realm_removes_the_hosted_realm(
 
     let reply = configure_host(context, "lobby", 2, engine_in(external.clone(), paper())).await?;
 
-    let ConfigureServiceHostResponse::Success(configured) = reply else {
+    let Ok(configured) = reply else {
         anyhow::bail!("expected the engine to move, received {reply:?}");
     };
     assert!(configured.realm.is_none());
@@ -329,11 +329,11 @@ async fn configure_rejects_invalid_configuration_without_writing(
         (
             InvalidHostConfiguration::MissingRealm
             | InvalidHostConfiguration::MissingRealmWithHostedRealm,
-            ConfigureServiceHostResponse::RealmNotFoundError(error),
+            Err(HostConfigurationRefusal::RealmNotFoundError(error)),
         ) => error.realm_id == missing,
         (
             InvalidHostConfiguration::IncompatibleEngine,
-            ConfigureServiceHostResponse::IncompatibleEngineError(error),
+            Err(HostConfigurationRefusal::IncompatibleEngineError(error)),
         ) => error.target == unsupported,
         _ => false,
     };
@@ -364,7 +364,7 @@ async fn realm_only_host_may_target_an_engine_it_does_not_execute(
 
     let reply = configure_host(context, "lobby", 1, realm_only(paper())).await?;
 
-    let ConfigureServiceHostResponse::Success(configured) = reply else {
+    let Ok(configured) = reply else {
         anyhow::bail!("expected the Realm only configuration to be accepted, received {reply:?}");
     };
     assert_eq!(
@@ -388,7 +388,7 @@ async fn a_different_configuration_with_a_stale_revision_conflicts_and_changes_n
 
     let reply = configure_host(context, "lobby", 1, realm_only(paper())).await?;
 
-    let ConfigureServiceHostResponse::ConflictError(conflict) = reply else {
+    let Err(HostConfigurationRefusal::ConflictError(conflict)) = reply else {
         anyhow::bail!("expected a host conflict, received {reply:?}");
     };
     assert_eq!(conflict.actual.host.revision, 2);
@@ -402,8 +402,7 @@ async fn repeated_configuration_after_it_landed_answers_and_republishes_the_stor
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
     organization_with_hosts(context, &acme(), ada(), &["lobby"], &["paper"]).await?;
-    let first =
-        arrange_host_configuration(context, "lobby", 1, realm_with_engine(paper())).await?;
+    let first = arrange_host_configuration(context, "lobby", 1, realm_with_engine(paper())).await?;
     expect_configuration_change(context, &acme(), |change| {
         change.host.revision == 2 && change.removed_resources.is_empty()
     })?;
@@ -414,7 +413,7 @@ async fn repeated_configuration_after_it_landed_answers_and_republishes_the_stor
 
     let reply = configure_host(context, "lobby", 1, realm_with_engine(paper())).await?;
 
-    let ConfigureServiceHostResponse::Success(stored) = reply else {
+    let Ok(stored) = reply else {
         anyhow::bail!("expected the repeated configuration to succeed, received {reply:?}");
     };
     assert_eq!(stored.host.revision, 2);
@@ -440,7 +439,7 @@ async fn repeated_engine_in_another_realm_after_it_landed_answers_the_stored_sta
 
     let reply = configure_host(context, "lobby", 1, engine_in(realm, paper())).await?;
 
-    let ConfigureServiceHostResponse::Success(stored) = reply else {
+    let Ok(stored) = reply else {
         anyhow::bail!("expected the repeated configuration to succeed, received {reply:?}");
     };
     assert_eq!(stored.host.revision, 2);
@@ -465,7 +464,7 @@ async fn configure_blocks_realm_removal_while_another_host_depends_on_it(
     assert!(
         matches!(
             reply,
-            ConfigureServiceHostResponse::InvalidConfigurationError(_)
+            Err(HostConfigurationRefusal::InvalidConfigurationError(_))
         ),
         "{reply:?}"
     );
@@ -562,5 +561,155 @@ async fn current_report_marks_host_and_realm_active(
             .await?,
         serde_json::json!([desired, "active", "active", 0, "offline"])
     );
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
+async fn a_batch_configures_every_host_and_publishes_each_change(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    organization_with_hosts(context, &acme(), ada(), &["arena", "lobby"], &["paper"]).await?;
+    expect_configuration_change(context, &acme(), |change| {
+        change.host.service_id.key.to_string() == "arena" && change.realm.is_some()
+    })?;
+    expect_configuration_change(context, &acme(), |change| {
+        change.host.service_id.key.to_string() == "lobby" && change.engine.is_some()
+    })?;
+    expect_desired_execution(context, "arena", |_| true)?;
+    expect_desired_execution(context, "lobby", |_| true)?;
+
+    let reply = configure_hosts(
+        context,
+        vec![
+            host_configuration("arena", 1, realm_only(paper())),
+            host_configuration("lobby", 1, realm_with_engine(paper())),
+        ],
+    )
+    .await?;
+
+    let ConfigureServiceHostsResponse::Success(changes) = reply else {
+        anyhow::bail!("expected both hosts to be configured, received {reply:?}");
+    };
+    assert_eq!(
+        changes
+            .iter()
+            .map(|change| (change.host.service_id.key.to_string(), change.host.revision))
+            .collect::<Vec<_>>(),
+        [("arena".to_owned(), 2), ("lobby".to_owned(), 2)]
+    );
+    assert_jm!(
+        context
+            .database()?
+            .query_json("RETURN [service_host:arena.revision, service_host:lobby.revision, count(SELECT id FROM realm_instance), count(SELECT id FROM engine_instance)]")
+            .await?,
+        [2, 2, 2, 1]
+    );
+    Ok(())
+}
+
+/// One host refused by the database undoes the hosts before it in the same batch.
+#[component_test(ServiceRegistration)]
+async fn a_batch_with_one_invalid_host_configures_none(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    organization_with_hosts(context, &acme(), ada(), &["arena", "lobby"], &["paper"]).await?;
+    expect_no_topology_change(context, &acme(), "arena")?;
+    expect_no_topology_change(context, &acme(), "lobby")?;
+    let unsupported = engine("unsupported", "^1");
+
+    let reply = configure_hosts(
+        context,
+        vec![
+            host_configuration("arena", 1, realm_with_engine(paper())),
+            host_configuration("lobby", 1, realm_with_engine(unsupported.clone())),
+        ],
+    )
+    .await?;
+
+    let ConfigureServiceHostsResponse::RefusedError(refused) = reply else {
+        anyhow::bail!("expected the batch to be refused, received {reply:?}");
+    };
+    assert_eq!(refused.len(), 1, "{refused:?}");
+    assert_eq!(refused[0].host_id.key.to_string(), "lobby");
+    assert!(
+        matches!(&refused[0].reason, HostConfigurationRefusal::IncompatibleEngineError(error)
+            if error.target == unsupported),
+        "{refused:?}"
+    );
+    assert_jm!(
+        context
+            .database()?
+            .query_json("RETURN [service_host:arena.revision, service_host:lobby.revision, count(SELECT id FROM realm_instance), count(SELECT id FROM engine_instance)]")
+            .await?,
+        [1, 1, 0, 0]
+    );
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
+async fn a_batch_with_a_stale_host_configures_none_and_returns_its_current_state(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    organization_with_hosts(context, &acme(), ada(), &["arena", "lobby"], &["paper"]).await?;
+    arrange_host_configuration(context, "lobby", 1, realm_with_engine(paper())).await?;
+    expect_no_topology_change(context, &acme(), "arena")?;
+    expect_no_topology_change(context, &acme(), "lobby")?;
+
+    let reply = configure_hosts(
+        context,
+        vec![
+            host_configuration("arena", 1, realm_only(paper())),
+            host_configuration("lobby", 1, realm_only(paper())),
+        ],
+    )
+    .await?;
+
+    let ConfigureServiceHostsResponse::RefusedError(refused) = reply else {
+        anyhow::bail!("expected the batch to be refused, received {reply:?}");
+    };
+    assert_eq!(refused.len(), 1, "{refused:?}");
+    let HostConfigurationRefusal::ConflictError(conflict) = &refused[0].reason else {
+        anyhow::bail!("expected lobby to conflict, received {refused:?}");
+    };
+    assert_eq!(conflict.actual.host.revision, 2);
+    assert!(conflict.actual.engine.is_some());
+    assert_jm!(
+        context
+            .database()?
+            .query_json("RETURN [service_host:arena.revision, count(SELECT id FROM realm_instance WHERE owner_host_id = service_host:arena)]")
+            .await?,
+        [1, 0]
+    );
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
+async fn a_batch_naming_a_host_twice_is_refused_without_writing(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    organization_with_hosts(context, &acme(), ada(), &["lobby"], &["paper"]).await?;
+    expect_no_topology_change(context, &acme(), "lobby")?;
+
+    let reply = configure_hosts(
+        context,
+        vec![
+            host_configuration("lobby", 1, realm_only(paper())),
+            host_configuration("lobby", 1, realm_with_engine(paper())),
+        ],
+    )
+    .await?;
+
+    let ConfigureServiceHostsResponse::RefusedError(refused) = reply else {
+        anyhow::bail!("expected the batch to be refused, received {reply:?}");
+    };
+    assert_eq!(refused.len(), 1, "{refused:?}");
+    assert!(
+        matches!(
+            refused[0].reason,
+            HostConfigurationRefusal::DuplicateError(_)
+        ),
+        "{refused:?}"
+    );
+    assert_jm!(context.database()?.query_json(TOPOLOGY).await?, [1, 0, 0]);
     Ok(())
 }

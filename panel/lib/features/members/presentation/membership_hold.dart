@@ -50,10 +50,11 @@ ActionShortcut membershipHold({
             ? outcomeOne(named)
             : outcomeMany(targets.length),
         work: work,
-        heldBack: (ref, target) =>
-            "${nameOf?.call(ref, target) ?? "This $noun"} was not "
-            "${doneWord.toLowerCase()}, because another $noun in this change "
-            "was refused. Nothing was saved.",
+        heldBack: (ref, target) => heldBackReason(
+          name: nameOf?.call(ref, target),
+          noun: noun,
+          done: doneWord.toLowerCase(),
+        ),
       ),
     ),
   );

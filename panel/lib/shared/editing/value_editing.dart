@@ -9,7 +9,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// through [onDispose]. `ValueEditingRegistration` supplies the borrowed form
 /// for resource views retained by the local work session.
 final class ValueEditing
-    implements EditOwner, EditingControlOwner, EditingStageOwner {
+    implements
+        EditOwner,
+        EditingControlOwner,
+        EditingStageOwner,
+        SelectionAutosaveMember {
   ValueEditing.fromWorkspace(
     this.workspace,
     this.groupId, {
@@ -33,6 +37,11 @@ final class ValueEditing
 
   EditorSnapshot get snapshot => workspace.document.metadata;
   EditorCommitPolicy get commitPolicy => workspace.policyFor(groupId);
+  @override
+  EditingWorkspace<Object?, Object?>? get autosaveWorkspace =>
+      commitPolicy == EditorCommitPolicy.autosaveChanges ? workspace : null;
+  @override
+  EditGroupId get autosaveGroup => groupId;
   bool get hasWork => workspace.state.groups.containsKey(groupId);
   int get localRevision => workspace.revision;
   Set<skir.ValuePath> get editedPaths => {

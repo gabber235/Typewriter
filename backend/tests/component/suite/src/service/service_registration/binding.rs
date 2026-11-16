@@ -5,13 +5,14 @@ use typewriter_component_test::{
     prelude::*,
     service::{
         arrange_host_configuration, paper, realm_with_engine, register_host,
-        seed_organization_services, seed_registration_lease, unbind_service,
+        seed_organization_services, seed_registration_lease, unbind_services,
     },
 };
 use wasmcloud_utils::skir::base::service::v1::{
     organization::OrganizationServicesChanged,
     registration::{
-        BindServiceRequest, BindServiceResponse, ServiceBoundNotification, UnbindServiceResponse,
+        BindServiceRequest, BindServiceResponse, ServiceBoundNotification, ServiceUnbindRefusal,
+        UnbindServicesResponse,
     },
     service::ServiceRole,
     topology::OrganizationTopologyChanged,
@@ -164,10 +165,10 @@ async fn unbind_removes_service_and_topology_from_organization_views(
         },
     )?;
 
-    let reply = unbind_service(context, "lobby").await?;
+    let reply = unbind_services(context, &["lobby"]).await?;
 
     assert!(
-        matches!(reply, UnbindServiceResponse::Success(_)),
+        matches!(reply, UnbindServicesResponse::Success(_)),
         "{reply:?}"
     );
     assert_jm!(context.database()?.query_json(BINDING).await?, { "organization": null, "token": null });
@@ -190,23 +191,70 @@ async fn unbind_removes_service_and_topology_from_organization_views(
 }
 
 #[component_test(ServiceRegistration)]
-async fn unbinding_another_organizations_service_is_not_found(
+async fn a_batch_naming_another_organizations_service_unbinds_nothing(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
-    seed_organization(context, &acme(), ada(), &[]).await?;
+    seed_organization_services(context, &acme(), ada(), &["arena"]).await?;
     seed_organization_services(context, &globex(), grace(), &["lobby"]).await?;
     context.expect_no_publish("typewriter.to.organization.*.services.watch")?;
     context.expect_no_publish("typewriter.to.organization.*.topology.watch")?;
 
-    let reply = unbind_service(context, "lobby").await?;
+    let reply = unbind_services(context, &["arena", "lobby"]).await?;
+
+    let UnbindServicesResponse::RefusedError(refused) = reply else {
+        anyhow::bail!("expected the batch to be refused, received {reply:?}");
+    };
+    assert_eq!(refused.len(), 1, "{refused:?}");
+    assert_eq!(refused[0].service_id, "lobby");
+    assert!(
+        matches!(
+            refused[0].reason,
+            ServiceUnbindRefusal::ServiceNotFoundError(_)
+        ),
+        "{refused:?}"
+    );
+    assert_jm!(
+        context
+            .database()?
+            .query_json("RETURN [service:arena.organization, service:lobby.organization]")
+            .await?,
+        ["organization:acme", "organization:globex"]
+    );
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
+async fn a_batch_unbinds_every_named_service(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    seed_organization_services(context, &acme(), ada(), &["arena", "lobby"]).await?;
+    context.expect_publish(
+        to_organization(&acme(), "services.watch"),
+        |event: &OrganizationServicesChanged| {
+            matches!(event, OrganizationServicesChanged::Replace(services) if services.is_empty())
+        },
+    )?;
+    context.expect_publish(
+        to_organization(&acme(), "topology.watch"),
+        |event: &OrganizationTopologyChanged| {
+            matches!(event, OrganizationTopologyChanged::Replace(_))
+        },
+    )?;
+
+    let reply = unbind_services(context, &["arena", "lobby"]).await?;
 
     assert!(
-        matches!(reply, UnbindServiceResponse::ServiceNotFoundError(_)),
+        matches!(reply, UnbindServicesResponse::Success(_)),
         "{reply:?}"
     );
     assert_jm!(
-        context.database()?.query_json(BINDING).await?,
-        { "organization": "organization:globex", "token": null }
+        context
+            .database()?
+            .query_json(
+                "RETURN [service:arena.organization ?? null, service:lobby.organization ?? null]"
+            )
+            .await?,
+        [null, null]
     );
     Ok(())
 }

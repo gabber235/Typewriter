@@ -18,6 +18,69 @@ final class EditingStageHold {
   }
 }
 
+/// A group that can autosave together with the other groups of a selection.
+abstract interface class SelectionAutosaveMember {
+  /// The workspace that autosaves [autosaveGroup], or null when the group
+  /// waits for an explicit Apply.
+  EditingWorkspace<Object?, Object?>? get autosaveWorkspace;
+  EditGroupId get autosaveGroup;
+}
+
+/// One debounced autosave for the groups of a selection edit.
+///
+/// Every member stages its own edit; this save captures them all in one
+/// turn through [EditApplyCoordinator], so members that prepare through
+/// [PreparedBatches] reach the server as one all or nothing request. A
+/// member leaves when the save starts, so its next edit alone autosaves on
+/// its own debounce.
+final class SelectionAutosave {
+  SelectionAutosave._(this._members);
+  final List<
+    ({EditingWorkspace<Object?, Object?> workspace, EditGroupId group})
+  >
+  _members;
+  EditorScheduledTask? _task;
+
+  /// Joins the autosaved [members] into one save when more than one
+  /// autosaves, and schedules it after the debounce of the first.
+  static void join(Iterable<SelectionAutosaveMember> members) {
+    final joined = [
+      for (final member in members)
+        if (member.autosaveWorkspace case final workspace?)
+          (workspace: workspace, group: member.autosaveGroup),
+    ];
+    if (joined.length < 2) return;
+    final autosave = SelectionAutosave._(joined);
+    for (final member in joined) {
+      member.workspace.autosaveWith(member.group, autosave);
+    }
+    autosave.schedule();
+  }
+
+  void schedule() {
+    _task?.cancel();
+    final first = _members.first.workspace;
+    final task = first.scheduler.schedule(first.debounce);
+    _task = task;
+    task.completed.then((result) {
+      if (result != EditorTaskCompletion.executed || !identical(_task, task)) {
+        return;
+      }
+      _task = null;
+      for (final member in _members) {
+        member.workspace.leaveAutosave(member.group, this);
+      }
+      unawaited(
+        const EditApplyCoordinator().apply([
+          for (final member in _members)
+            if (!member.workspace.closed)
+              member.workspace.applyRequest(member.group),
+        ]),
+      );
+    });
+  }
+}
+
 /// Local admission is a cohort operation. Persistence keeps its real boundaries.
 final class SelectionEditingCoordinator {
   const SelectionEditingCoordinator();
@@ -89,6 +152,8 @@ final class SelectionEditingCoordinator {
         for (final hold in holds) {
           hold.rollback();
         }
+      } else {
+        SelectionAutosave.join(owners.whereType<SelectionAutosaveMember>());
       }
       return result;
     } finally {

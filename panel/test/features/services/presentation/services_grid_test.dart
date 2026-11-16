@@ -191,8 +191,8 @@ void main() {
     ]);
     panel.world.nats.registerHandler(
       _unbindSubject,
-      (_) => skir.UnbindServiceResponse.serializer.toBytes(
-        skir.UnbindServiceResponse.createSuccess(),
+      (_) => skir.UnbindServicesResponse.serializer.toBytes(
+        skir.UnbindServicesResponse.createSuccess(),
       ),
     );
     await panel.services.card("Discord service", "Discord Bridge").select();
@@ -216,15 +216,23 @@ void main() {
     ]);
     panel.world.nats.registerHandler(
       _unbindSubject,
-      (_) => skir.UnbindServiceResponse.serializer.toBytes(
-        skir.UnbindServiceResponse.createServiceNotFoundError(),
+      (_) => skir.UnbindServicesResponse.serializer.toBytes(
+        skir.UnbindServicesResponse.wrapRefusedError([
+          skir.RefusedServiceUnbind(
+            serviceId: "discord",
+            reason: skir.ServiceUnbindRefusal.createServiceNotFoundError(),
+          ),
+        ]),
       ),
     );
     await panel.services.card("Discord service", "Discord Bridge").select();
 
     await panel.holdButton(unbindOne);
 
-    expect(panel.refusalOn(unbindOne), "Service not found");
+    expect(
+      panel.refusalOn(unbindOne),
+      "This service is no longer bound to the organization",
+    );
     expect(panel.shows("Needs attention"), isTrue);
     expect(
       panel.container

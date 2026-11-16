@@ -52,11 +52,14 @@ void main() {
         revision: 2,
         status: null,
       );
-      skir.UpdateOrganizationServiceRequest? sent;
+      skir.ServiceRename? sent;
       world.nats.registerHandler(_updateSubject, (data) {
-        sent = skir.UpdateOrganizationServiceRequest.serializer.fromBytes(data);
-        return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-          skir.UpdateOrganizationServiceResponse.wrapSuccess(confirmed),
+        sent = skir.UpdateOrganizationServicesRequest.serializer
+            .fromBytes(data)
+            .renames
+            .single;
+        return skir.UpdateOrganizationServicesResponse.serializer.toBytes(
+          skir.UpdateOrganizationServicesResponse.wrapSuccess([confirmed]),
         );
       });
 
@@ -75,10 +78,10 @@ void main() {
       final newest = _newest;
       world.nats.registerHandler(_updateSubject, (_) {
         services.repository.acceptService(newest);
-        return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-          skir.UpdateOrganizationServiceResponse.wrapSuccess(
+        return skir.UpdateOrganizationServicesResponse.serializer.toBytes(
+          skir.UpdateOrganizationServicesResponse.wrapSuccess([
             service("service1", name: "delayed", revision: 2, status: null),
-          ),
+          ]),
         );
       });
 
@@ -95,8 +98,13 @@ void main() {
       final services = await world.watchedServicesOf(_organization);
       world.nats.registerHandler(
         _updateSubject,
-        (_) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-          skir.UpdateOrganizationServiceResponse.createServiceNotFoundError(),
+        (_) => skir.UpdateOrganizationServicesResponse.serializer.toBytes(
+          skir.UpdateOrganizationServicesResponse.wrapRefusedError([
+            skir.RefusedServiceRename(
+              serviceId: _service.serviceId,
+              reason: skir.ServiceRenameRefusal.createServiceNotFoundError(),
+            ),
+          ]),
         ),
       );
 
@@ -120,10 +128,15 @@ void main() {
       final services = await world.watchedServicesOf(_organization);
       world.nats.registerHandler(
         _updateSubject,
-        (_) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-          skir.UpdateOrganizationServiceResponse.wrapValidationError(
-            skir.ServiceUpdateValidationError.nameInvalid,
-          ),
+        (_) => skir.UpdateOrganizationServicesResponse.serializer.toBytes(
+          skir.UpdateOrganizationServicesResponse.wrapRefusedError([
+            skir.RefusedServiceRename(
+              serviceId: _service.serviceId,
+              reason: skir.ServiceRenameRefusal.wrapValidationError(
+                skir.ServiceUpdateValidationError.nameInvalid,
+              ),
+            ),
+          ]),
         ),
       );
 
@@ -152,11 +165,16 @@ void main() {
       );
       world.nats.registerHandler(
         _updateSubject,
-        (_) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-          skir.UpdateOrganizationServiceResponse.createConflictError(
-            expectedRevision: 1,
-            actual: actual,
-          ),
+        (_) => skir.UpdateOrganizationServicesResponse.serializer.toBytes(
+          skir.UpdateOrganizationServicesResponse.wrapRefusedError([
+            skir.RefusedServiceRename(
+              serviceId: _service.serviceId,
+              reason: skir.ServiceRenameRefusal.createConflictError(
+                expectedRevision: 1,
+                actual: actual,
+              ),
+            ),
+          ]),
         ),
       );
 
@@ -290,49 +308,58 @@ void main() {
     test("unbinding sends the service id and removes the service", () async {
       final world = testWorld(_acme);
       final services = await world.watchedServicesOf(_organization);
-      skir.UnbindServiceRequest? sent;
+      skir.UnbindServicesRequest? sent;
       world.nats.registerHandler(_unbindSubject, (data) {
-        sent = skir.UnbindServiceRequest.serializer.fromBytes(data);
-        return skir.UnbindServiceResponse.serializer.toBytes(
-          skir.UnbindServiceResponse.createSuccess(),
+        sent = skir.UnbindServicesRequest.serializer.fromBytes(data);
+        return skir.UnbindServicesResponse.serializer.toBytes(
+          skir.UnbindServicesResponse.createSuccess(),
         );
       });
 
-      (await services.execute(services.repository.unbind(_service.serviceId)))
-          .requireAcceptedUnbinding();
+      await ServiceUnbinding(
+        services.repository,
+        world.container.read(localWorkProvider.notifier),
+      ).unbind([_service.serviceId]);
 
-      expect(sent?.serviceId, "service1");
+      expect(sent?.serviceIds, ["service1"]);
       expect(await services.listed(), isEmpty);
     });
 
-    final rejections = {
-      "the service is not found": (
-        skir.UnbindServiceResponse.createServiceNotFoundError(),
-        404,
-      ),
-    };
-    for (final MapEntry(key: reason, value: (response, code))
-        in rejections.entries) {
-      test("an unbind rejected because $reason fails with $code and keeps "
-          "the service", () async {
-        final world = testWorld(_acme);
-        final services = await world.watchedServicesOf(_organization);
-        world.nats.registerHandler(
-          _unbindSubject,
-          (_) => skir.UnbindServiceResponse.serializer.toBytes(response),
-        );
+    test("an unbind refused because the service is no longer bound says so "
+        "and keeps the service", () async {
+      final world = testWorld(_acme);
+      final services = await world.watchedServicesOf(_organization);
+      world.nats.registerHandler(
+        _unbindSubject,
+        (_) => skir.UnbindServicesResponse.serializer.toBytes(
+          skir.UnbindServicesResponse.wrapRefusedError([
+            skir.RefusedServiceUnbind(
+              serviceId: "service1",
+              reason: skir.ServiceUnbindRefusal.createServiceNotFoundError(),
+            ),
+          ]),
+        ),
+      );
 
-        await expectLater(
-          services
-              .execute(services.repository.unbind(_service.serviceId))
-              .then((response) => response.requireAcceptedUnbinding()),
-          throwsA(
-            isA<ApiException>().having((error) => error.code, "code", code),
-          ),
-        );
-        expect(await services.listed(), [_service]);
-      });
-    }
+      await expectLater(
+        ServiceUnbinding(
+          services.repository,
+          world.container.read(localWorkProvider.notifier),
+        ).unbind([_service.serviceId]),
+        throwsA(
+          isA<RefusedTargets>()
+              .having(
+                (refused) => refused.message,
+                "message",
+                "This service is no longer bound to the organization",
+              )
+              .having((refused) => refused.targets, "targets", {
+                _service.serviceId,
+              }),
+        ),
+      );
+      expect(await services.listed(), [_service]);
+    });
 
     test("an unbind answered with an internal error stays uncertain and keeps "
         "the service", () async {
@@ -340,13 +367,13 @@ void main() {
       final services = await world.watchedServicesOf(_organization);
       world.nats.registerHandler(
         _unbindSubject,
-        (_) => skir.UnbindServiceResponse.serializer.toBytes(
-          skir.UnbindServiceResponse.createInternalError(),
+        (_) => skir.UnbindServicesResponse.serializer.toBytes(
+          skir.UnbindServicesResponse.createInternalError(),
         ),
       );
 
       await expectLater(
-        services.execute(services.repository.unbind(_service.serviceId)),
+        services.execute(services.repository.unbind([_service.serviceId])),
         throwsA(_uncertain),
       );
       expect(await services.listed(), [_service]);
@@ -363,7 +390,7 @@ void main() {
       });
 
       await expectLater(
-        services.execute(services.repository.unbind(_service.serviceId)),
+        services.execute(services.repository.unbind([_service.serviceId])),
         throwsA(isA<SubmissionException>()),
       );
 
@@ -379,10 +406,16 @@ void main() {
       final services = await world.watchedServicesOf(_organization);
       world.nats.registerHandler(
         _configureSubject,
-        (_) => skir.ConfigureServiceHostResponse.serializer.toBytes(
-          skir.ConfigureServiceHostResponse.createInvalidConfigurationError(
-            message: "The Realm needs a primary engine",
-          ),
+        (_) => skir.ConfigureServiceHostsResponse.serializer.toBytes(
+          skir.ConfigureServiceHostsResponse.wrapRefusedError([
+            skir.RefusedHostConfiguration(
+              hostId: _host.hostId,
+              reason:
+                  skir.HostConfigurationRefusal.createInvalidConfigurationError(
+                    message: "The Realm needs a primary engine",
+                  ),
+            ),
+          ]),
         ),
       );
 
@@ -411,10 +444,15 @@ void main() {
       );
       world.nats.registerHandler(
         _configureSubject,
-        (_) => skir.ConfigureServiceHostResponse.serializer.toBytes(
-          skir.ConfigureServiceHostResponse.createConflictError(
-            actual: hostConfiguration(actualHost, realm: actualRealm),
-          ),
+        (_) => skir.ConfigureServiceHostsResponse.serializer.toBytes(
+          skir.ConfigureServiceHostsResponse.wrapRefusedError([
+            skir.RefusedHostConfiguration(
+              hostId: _host.hostId,
+              reason: skir.HostConfigurationRefusal.createConflictError(
+                actual: hostConfiguration(actualHost, realm: actualRealm),
+              ),
+            ),
+          ]),
         ),
       );
 
@@ -433,14 +471,14 @@ void main() {
 
     final unavailable = {
       "an incompatible engine": () =>
-          skir.ConfigureServiceHostResponse.createIncompatibleEngineError(
+          skir.HostConfigurationRefusal.createIncompatibleEngineError(
             target: skir.EngineTarget(
               engineId: "fabric",
               versionConstraint: "*",
             ),
           ),
       "an unknown Realm": () =>
-          skir.ConfigureServiceHostResponse.createRealmNotFoundError(
+          skir.HostConfigurationRefusal.createRealmNotFoundError(
             realmId: skir.recordId("realm_instance:gone"),
           ),
     };
@@ -450,8 +488,14 @@ void main() {
         final services = await world.watchedServicesOf(_organization);
         world.nats.registerHandler(
           _configureSubject,
-          (_) =>
-              skir.ConfigureServiceHostResponse.serializer.toBytes(response()),
+          (_) => skir.ConfigureServiceHostsResponse.serializer.toBytes(
+            skir.ConfigureServiceHostsResponse.wrapRefusedError([
+              skir.RefusedHostConfiguration(
+                hostId: _host.hostId,
+                reason: response(),
+              ),
+            ]),
+          ),
         );
 
         expect(await services.applyHost(_host), isA<MutationUnavailable>());
@@ -470,8 +514,8 @@ void main() {
     final saves = {
       "a rename": (
         subject: _updateSubject,
-        reply: skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-          skir.UpdateOrganizationServiceResponse.wrapSuccess(renamed),
+        reply: skir.UpdateOrganizationServicesResponse.serializer.toBytes(
+          skir.UpdateOrganizationServicesResponse.wrapSuccess([renamed]),
         ),
         save: (OrganizationServices services) =>
             services.rename(_service, "requested"),
@@ -480,10 +524,10 @@ void main() {
       ),
       "a host Apply": (
         subject: _configureSubject,
-        reply: skir.ConfigureServiceHostResponse.serializer.toBytes(
-          skir.ConfigureServiceHostResponse.wrapSuccess(
+        reply: skir.ConfigureServiceHostsResponse.serializer.toBytes(
+          skir.ConfigureServiceHostsResponse.wrapSuccess([
             hostConfiguration(applied),
-          ),
+          ]),
         ),
         save: (OrganizationServices services) => services.applyHost(_host),
         saved: (OrganizationServices services) async =>
@@ -539,10 +583,9 @@ void main() {
       "an unbind": (world) => world
           .servicesOf(_organization)
           .execute(
-            world
-                .servicesOf(_organization)
-                .repository
-                .unbind(_service.serviceId),
+            world.servicesOf(_organization).repository.unbind([
+              _service.serviceId,
+            ]),
           ),
     };
     for (final MapEntry(key: mutation, value: run) in mutations.entries) {
