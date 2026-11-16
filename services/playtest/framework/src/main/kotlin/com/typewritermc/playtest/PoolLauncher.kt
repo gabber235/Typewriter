@@ -85,7 +85,9 @@ internal class PoolLauncher(
             try {
                 process.onExit().get(STOP_SECONDS, TimeUnit.SECONDS)
             } catch (_: TimeoutException) {
-                throw GameUnavailable("the game pool ${pool.pid()} ($why) still runs process ${process.pid()} $STOP_SECONDS s after it was killed")
+                throw GameUnavailable(
+                    "the game pool ${pool.pid()} ($why) still runs process ${process.pid()} $STOP_SECONDS s after it was killed",
+                )
             }
         }
     }

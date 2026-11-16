@@ -95,4 +95,3 @@ val CoverageTest by testSuite {
         coverage.latest("ide" to 1L).shouldNotBeEmpty()
     }
 }
-

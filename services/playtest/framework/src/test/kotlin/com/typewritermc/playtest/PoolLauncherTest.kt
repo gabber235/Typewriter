@@ -15,7 +15,10 @@ val PoolLauncherTest by testSuite {
             val game = stale.game
             var replacement: StandInPool? = null
 
-            val socket = PoolLauncher(launcherSettings(dir, "this run")) { standInPool(dir, "this run").also { replacement = it }.process }.connect()
+            val socket =
+                PoolLauncher(
+                    launcherSettings(dir, "this run"),
+                ) { standInPool(dir, "this run").also { replacement = it }.process }.connect()
 
             socket.port shouldBe replacement?.server?.localPort
             stale.process.isAlive shouldBe false
@@ -41,7 +44,10 @@ val PoolLauncherTest by testSuite {
         standInPool(dir, "this run").close()
         var replacement: StandInPool? = null
 
-        val socket = PoolLauncher(launcherSettings(dir, "this run")) { standInPool(dir, "this run").also { replacement = it }.process }.connect()
+        val socket =
+            PoolLauncher(
+                launcherSettings(dir, "this run"),
+            ) { standInPool(dir, "this run").also { replacement = it }.process }.connect()
 
         socket.port shouldBe replacement?.server?.localPort
         replacement?.close()
@@ -52,7 +58,10 @@ val PoolLauncherTest by testSuite {
         val going = standInPool(dir, "this run", going = true, command = listOf("sleep", "1"))
         var replacement: StandInPool? = null
 
-        val socket = PoolLauncher(launcherSettings(dir, "this run")) { standInPool(dir, "this run").also { replacement = it }.process }.connect()
+        val socket =
+            PoolLauncher(
+                launcherSettings(dir, "this run"),
+            ) { standInPool(dir, "this run").also { replacement = it }.process }.connect()
 
         going.process.exitValue() shouldBe 0
         socket.port shouldBe replacement?.server?.localPort

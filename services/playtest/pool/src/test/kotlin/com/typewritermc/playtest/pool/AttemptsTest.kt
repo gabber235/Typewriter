@@ -80,4 +80,3 @@ val AttemptsTest by testSuite {
         attempts.overdue(Long.MAX_VALUE).shouldBeEmpty()
     }
 }
-
