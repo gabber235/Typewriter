@@ -21,7 +21,7 @@ class OrganizationMembers extends _$OrganizationMembers {
   @override
   Stream<List<skir.OrganizationMember>> build() {
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) return Stream.value(const []);
+    if (organizationId == null) throw ApiException.noOrganization();
     return ref.watchSignedIn(
       signedOut: const [],
       (userId) => skir.WatchOrganizationMembersRequest()

@@ -33,7 +33,7 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
   @override
   Stream<List<skir.OrganizationJoinRequest>> build() {
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) return Stream.value(const []);
+    if (organizationId == null) throw ApiException.noOrganization();
     return ref.watchSignedIn(
       signedOut: const [],
       (userId) => skir.WatchOrganizationJoinRequestsRequest()

@@ -25,7 +25,7 @@ class OrganizationRoles extends _$OrganizationRoles {
   @override
   Stream<List<skir.OrganizationRole>> build() {
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) return Stream.value(const []);
+    if (organizationId == null) throw ApiException.noOrganization();
     return ref.watchSignedIn(
       signedOut: const [],
       (userId) => Stream.fromFuture(

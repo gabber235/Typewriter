@@ -296,17 +296,33 @@ void main() {
     expect(world.nats.connected, isFalse);
   });
 
-  test("without an organization in the route, the services are empty and "
-      "nothing is requested", () async {
+  test("without an organization in the route, the services and the "
+      "topology fail as no organization selected and nothing is "
+      "requested", () async {
     final world = testWorld([
       signedIn(ada, organization: acme),
       servicesBackend(services: [service("one", status: null)]),
     ]);
-    world.container.listen(canonicalServicesProvider, (_, _) {});
+    final noOrganization = isA<ApiException>().having(
+      (error) => error.message,
+      "message",
+      "No organization selected",
+    );
+    world.container
+      ..listen(canonicalServicesProvider, (_, _) {})
+      ..listen(organizationTopologyProvider, (_, _) {});
 
+    await expectLater(
+      world.container.read(canonicalServicesProvider.future),
+      throwsA(noOrganization),
+    );
+    await expectLater(
+      world.container.read(organizationTopologyProvider.future),
+      throwsA(noOrganization),
+    );
     expect(
-      await world.container.read(canonicalServicesProvider.future),
-      isEmpty,
+      world.container.read(projectedServicesProvider).error,
+      noOrganization,
     );
     expect(world.nats.connected, isFalse);
   });
