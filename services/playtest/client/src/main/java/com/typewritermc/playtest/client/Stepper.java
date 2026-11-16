@@ -15,8 +15,8 @@ import net.minecraft.util.Util;
  * the client runs one tick per server tick. The frame right after the tick records it; once the
  * client's own work for the tick is done too ({@link ClientWork}), the client acks it, and Paper runs
  * the next one. While a clip records, the frames it draws between ticks follow the tick first, each
- * with its record ({@link Clips}); the tick's own record, its ack and the packets after its step ping
- * wait for the last of them, at the tick's end.
+ * with its record ({@link Clips}); the tick's own record, its ack, the packets after its step ping and
+ * the input's next events wait for the last of them, at the tick's end.
  * Render thread only, except {@link #wake()}.
  */
 final class Stepper {
@@ -128,9 +128,13 @@ final class Stepper {
         if (next != null) {
             running = next;
             virtualNanos += TICK_NANOS;
-        } else if (!Clips.recordsEveryPass()) {
-            // No tick runs in this pass: an input that waits to start asks Paper for a tick here. Between
-            // a clip's passes it waits, as it waits for the record and the ack without a clip.
+        } else if (Clips.recordsEveryPass()) {
+            // The game takes the events an input sends at the head of the next loop pass, so they move
+            // on in the pass of the tick's last record and show only after it, as right after a tick
+            // without a clip.
+            if (!Clips.morePassesDue()) Inputs.betweenTicks(mc, true);
+        } else {
+            // No tick runs in this pass: an input that waits to start asks Paper for a tick here.
             Inputs.betweenTicks(mc, false);
             ack();
         }
@@ -155,7 +159,8 @@ final class Stepper {
         running = null;
         perceiveDue = true;
         Clips.ticked();
-        Inputs.betweenTicks(mc, true);
+        // The tick's last record is taken in this loop pass unless a clip draws more frames after it.
+        if (!Clips.morePassesDue()) Inputs.betweenTicks(mc, true);
     }
 
     /** Whether this frame runs at all: while stepping, only to perceive a tick that ran or a forced record. */

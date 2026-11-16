@@ -41,7 +41,7 @@ final class Clips {
         PlaytestClient.send(new ClipStarted(asked.request(), null));
     }
 
-    /** Finishes the clip and answers {@code asked} with what it holds. */
+    /** Finishes the clip and answers {@code asked} with what it holds: no frame, and no file, when no tick ran while it recorded. */
     static void stop(StopClip asked) {
         int frames = 0;
         String failed = schedule == null ? "no clip was recording" : failure;
@@ -51,8 +51,6 @@ final class Clips {
             } catch (IOException broken) {
                 failed = failed != null ? failed : broken.getMessage() + "; see " + log();
             }
-        } else if (failed == null) {
-            failed = "the clip holds no frame: no tick ran while it recorded";
         }
         writer = null;
         encoder = null;

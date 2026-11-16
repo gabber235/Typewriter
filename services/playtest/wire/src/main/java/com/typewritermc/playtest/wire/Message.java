@@ -526,7 +526,10 @@ public sealed interface Message {
         }
     }
 
-    /** Client to session: the clip holds {@code frames} frames and is written; {@code failure} is null when it was. */
+    /**
+     * Client to session: the clip holds {@code frames} frames and is written, or holds none and was never
+     * written when no tick ran while it recorded; {@code failure} is null unless it could not be written.
+     */
     record ClipWritten(long request, int frames, String failure) implements Reply {
         @Override
         public ClipWritten withRequest(long request) {

@@ -107,6 +107,7 @@ internal class PoolSession private constructor(
     private val leases = ConcurrentHashMap<Long, Leasing>()
     private val replies = ConcurrentHashMap<Long, CompletableDeferred<Reply>>()
     private val settles = ConcurrentHashMap<Long, CompletableDeferred<Settled>>()
+    private val restarts = ConcurrentHashMap<Long, Attempt>()
     private val attempts = ConcurrentHashMap<String, Attempt>()
     private val attemptsOf = ConcurrentHashMap<String, Int>()
 
@@ -224,10 +225,9 @@ internal class PoolSession private constructor(
                 attempt = lease(submission, leasing) { send(Reclaim(submission)) }
             }
             attempt.evidence = evidence
-            val clips = mutableMapOf<GamePlayer, String>()
-            val notStarted = if (planned.demo) startClips(attempt, if (planned.bodies.size > 1) "-${index + 1}" else "", clips) else null
+            val notStarted = if (planned.demo) attempt.startClips(if (planned.bodies.size > 1) "-${index + 1}" else "") else null
             val settled = settle(submission, attempt, notStarted ?: run(attempt, body))
-            val notWritten = stopClips(attempt, clips)
+            val notWritten = attempt.stopClips()
             failure = settled.failure?.let(attempt::located) ?: notWritten
             covered = settled.covered
             steps += attempt.steps
@@ -305,8 +305,26 @@ internal class PoolSession private constructor(
         return AttemptEnd(untaken, settled.covered())
     }
 
-    /** Kills and boots again the own Paper of [submission]'s attempt; returns the new Paper's tick after which every player is back. */
-    suspend fun restart(submission: Long): Int = request<Message.Restarted> { request -> Message.Restart(request, submission) }.tick()
+    /**
+     * Kills and boots again the own Paper of [attempt], which runs [submission]; returns the new Paper's
+     * tick after which every player is back. The attempt hears it is back as the answer is read, before
+     * any record the new Paper sends.
+     */
+    suspend fun restart(
+        attempt: Attempt,
+        submission: Long,
+    ): Int {
+        var asked = 0L
+        try {
+            return request<Message.Restarted> { request ->
+                asked = request
+                restarts[request] = attempt
+                Message.Restart(request, submission)
+            }.tick()
+        } finally {
+            restarts.remove(asked)
+        }
+    }
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<Kind> {
@@ -335,38 +353,14 @@ internal class PoolSession private constructor(
         return done.tick()
     }
 
-    /**
-     * Every player's client of [attempt] records a clip from the next tick on, into the attempt's
-     * evidence as `clips/<player><suffix>.mp4`, and each clip that started joins [started]; returns why a
-     * clip did not start, or null.
-     */
-    private suspend fun startClips(
-        attempt: Attempt,
-        suffix: String,
-        started: MutableMap<GamePlayer, String>,
-    ): ClipFailed? {
-        for (player in attempt.players) {
-            val clip = "clips/${player.name}$suffix.mp4"
-            val answer = request<ClipStarted> { request -> StartClip(request, player.uuid, attempt.evidence.file(clip).toString()) }
-            answer.failure()?.let { return ClipFailed("${player.name}'s clip did not start: $it") }
-            started[player] = clip
-        }
-        return null
-    }
+    /** [player]'s client records a clip from the next tick on and writes it as an mp4 to [mp4]. */
+    suspend fun startClip(
+        player: GamePlayer,
+        mp4: Path,
+    ): ClipStarted = request<ClipStarted> { request -> StartClip(request, player.uuid, mp4.toString()) }
 
-    /** Each client of [clips] finishes its clip, which joins the attempt's evidence; returns why one could not, or null. */
-    private suspend fun stopClips(
-        attempt: Attempt,
-        clips: Map<GamePlayer, String>,
-    ): ClipFailed? {
-        var failed: ClipFailed? = null
-        for ((player, clip) in clips) {
-            val written = request<ClipWritten> { request -> StopClip(request, player.uuid) }
-            val failure = written.failure()
-            if (failure == null) attempt.evidence.clips += clip else failed = failed ?: ClipFailed("${player.name}'s clip was not written: $failure")
-        }
-        return failed
-    }
+    /** [player]'s client finishes its clip. */
+    suspend fun stopClip(player: GamePlayer): ClipWritten = request<ClipWritten> { request -> StopClip(request, player.uuid) }
 
     /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */
     suspend fun capture(
@@ -432,6 +426,11 @@ internal class PoolSession private constructor(
 
             is Message.LeaseFailed -> {
                 leases[message.submission()]?.attempt?.completeExceptionally(PaperLost(message.reason()))
+            }
+
+            is Message.Restarted -> {
+                restarts.remove(message.request())?.restarted()
+                replies[message.request()]?.complete(message)
             }
 
             is Reply -> {

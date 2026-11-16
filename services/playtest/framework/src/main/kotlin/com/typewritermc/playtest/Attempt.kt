@@ -123,6 +123,18 @@ internal class Attempt(
         (event as? Event.Failed)?.failure?.takeIf { it is ClientLost || it is PaperLost }?.let(lost::complete)
     }
 
+    /**
+     * The attempt's Paper is back, as the session reads its answer: every record that arrived until now
+     * shows the killed Paper, which the body never took while it restarted, so it is dropped; any other
+     * event stays. Called by the session's reader, the stream's only writer, so what arrives later stays behind.
+     */
+    fun restarted() {
+        generateSequence { incoming.tryReceive().getOrNull() }
+            .toList()
+            .filter { it !is Event.Perceived }
+            .forEach { incoming.trySend(it) }
+    }
+
     /** Ends the streams: the connection to the pool broke with [cause]. */
     fun fail(cause: Throwable) {
         incoming.close(cause)
@@ -174,7 +186,7 @@ internal class Attempt(
                 "restartPaper needs restartsPaper = true on the requirement: a kill drops every client on a Paper, so only an attempt on a Paper of its own may restart it",
             )
         }
-        val mark = step("restart Paper") { Mark(unlessLost { session.restart(submission) }) }
+        val mark = step("restart Paper") { Mark(unlessLost { session.restart(this, submission) }) }
         received.clear()
         ranUntil = mark.tick
         return mark
@@ -238,6 +250,52 @@ internal class Attempt(
         val renderer = unlessLost { session.capture(player, png) }
         evidence.screenshots += png.fileName.toString()
         return Captured(png, Frame.readPng(png), renderer)
+    }
+
+    private val clips = linkedMapOf<GamePlayer, String>()
+
+    /**
+     * Every player's client records a clip from the next tick on, into the evidence as
+     * `clips/<player><suffix>.mp4`; returns why one did not start, a lost client included, or null.
+     */
+    suspend fun startClips(suffix: String): Throwable? {
+        for (player in players) {
+            val clip = "clips/${player.name}$suffix.mp4"
+            val answer =
+                try {
+                    unlessLost { session.startClip(player, evidence.file(clip)) }
+                } catch (lost: AssertionError) {
+                    return lost
+                }
+            answer.failure()?.let { return ClipFailed("${player.name}'s clip did not start: $it") }
+            clips[player] = clip
+        }
+        return null
+    }
+
+    /**
+     * Each client that records a clip finishes it, and the clip joins the evidence unless no tick ran
+     * while it recorded; returns why one could not be written, or null. Once a client of the attempt is
+     * lost no clip is asked for: the loss is the attempt's own to report or expect, and a lost client
+     * answers nothing.
+     */
+    suspend fun stopClips(): Throwable? {
+        var failed: Throwable? = null
+        for ((player, clip) in clips) {
+            val written =
+                try {
+                    unlessLost { session.stopClip(player) }
+                } catch (_: AssertionError) {
+                    break
+                }
+            val failure = written.failure()
+            when {
+                failure != null -> failed = failed ?: ClipFailed("${player.name}'s clip was not written: $failure")
+                written.frames() > 0 -> evidence.clips += clip
+            }
+        }
+        clips.clear()
+        return failed
     }
 
     /** A frame a client drew: its PNG in the evidence, its pixels, and the renderer that drew it. */

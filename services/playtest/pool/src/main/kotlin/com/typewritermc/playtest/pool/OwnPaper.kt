@@ -55,13 +55,20 @@ internal class OwnPaper(
         return listOf(Do.Step)
     }
 
+    /**
+     * A player steps with this boot. After a restart, what its client recorded until now shows the killed
+     * Paper: a stepped client hears of the kill only once the pool moves it, so it may still record the
+     * last ticks it ran there after the kill, and only its first step here, which it reports before
+     * anything it records here, divides the two.
+     */
     override fun ready(player: String): List<Do> {
         if (phase != Phase.READYING || player !in players) return listOf()
         readyPlayers += player
-        if (!readyPlayers.containsAll(players)) return listOf()
+        val forget = if (claimed) listOf(Do.Forget(player)) else listOf()
+        if (!readyPlayers.containsAll(players)) return forget
         if (claimed) {
             phase = Phase.RESUMING
-            return listOf(Do.Resume(attempt))
+            return forget + Do.Resume(attempt)
         }
         claimed = true
         phase = Phase.RUNNING

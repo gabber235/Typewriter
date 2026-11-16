@@ -38,8 +38,26 @@ val OwnPaperTest by testSuite {
         paper.exited(137) shouldContainExactly listOf(Do.Boot(2))
         paper.connected() shouldContainExactly listOf(Do.RegionsAhead(listOf(OwnPaper.REGION)), Do.Gather(1), Do.Connect)
         paper.joined("gv-1") shouldContainExactly listOf(Do.Step)
-        paper.ready("gv-1") shouldContainExactly listOf(Do.Resume(1))
+        paper.ready("gv-1") shouldContainExactly listOf(Do.Forget("gv-1"), Do.Resume(1))
         paper.resumed(41) shouldContainExactly listOf(Do.Restarted(1, 7, 41))
+    }
+
+    test("what a client recorded until it steps with the Paper booted again shows the killed one and is forgotten") {
+        val paper = OwnPaper("paper-gv-1", setOf("gv-1", "gv-2"))
+        paper.claim(1)
+        paper.connected()
+        paper.joined("gv-1")
+        paper.joined("gv-2")
+        paper.ready("gv-1")
+        paper.ready("gv-2")
+        paper.restart(7)
+        paper.exited(137)
+        paper.connected()
+        paper.joined("gv-1")
+        paper.joined("gv-2")
+
+        paper.ready("gv-1") shouldContainExactly listOf(Do.Forget("gv-1"))
+        paper.ready("gv-2") shouldContainExactly listOf(Do.Forget("gv-2"), Do.Resume(1))
     }
 
     test("a client dropping off a killed Paper or a dead one is part of the restart, but off a Paper that runs it is lost") {
