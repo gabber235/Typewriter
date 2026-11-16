@@ -874,10 +874,10 @@ slices:
       added lines, so a change that only deletes code reruns nothing; the coverage maps of a session that
       leaves without ending stay in the pool (slice 9); a client lost while others of its attempt record
       loses their clips too; FROZEN-1's demo once saw its stall after 10.07 s, against about 5.1 s in 15
-      other demos and in every gated run, and that run's logs were overwritten before they were read.
+      other demos and in every gated run, and that run's logs were overwritten before they were read. Since 7684c4558 and ea956c027 a killed Paper's records are dropped only by its restart rules and each run keeps its logs in results/game/logs/<n>, the newest 3 kept; a pool left alive from an earlier run still writes into that run's folder (slice 9).
   - id: ci-and-pool-lifecycle
     status: queued
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 8 follow up (logs per run, duplicate drop removed); then slice 9 (CI and pool lifecycle).
+next: Run logs merged (ea956c027, 96 passed with 91 demos). Start slice 9 (CI job and caches, detach, stale pool, lease deadline) on the free GitHub runner.
