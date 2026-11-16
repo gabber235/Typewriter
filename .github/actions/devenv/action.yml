@@ -159,7 +159,7 @@ runs:
         path: |
           ~/.gradle/caches/modules-2
           ~/.gradle/wrapper
-        key: gradle-${{ runner.os }}-${{ hashFiles('services/**/*.gradle.kts', 'services/gradle/libs.versions.toml', 'services/gradle/wrapper/gradle-wrapper.properties') }}
+        key: gradle-${{ runner.os }}-${{ hashFiles('services/**/*.gradle.kts', 'services/libs.versions.toml', 'services/gradle/wrapper/gradle-wrapper.properties') }}
         restore-keys: gradle-${{ runner.os }}-
     - if: contains(inputs.caches, 'gradle') && steps.trust.outputs.save-caches != 'true'
       uses: actions/cache/restore@v4
@@ -167,7 +167,7 @@ runs:
         path: |
           ~/.gradle/caches/modules-2
           ~/.gradle/wrapper
-        key: gradle-${{ runner.os }}-${{ hashFiles('services/**/*.gradle.kts', 'services/gradle/libs.versions.toml', 'services/gradle/wrapper/gradle-wrapper.properties') }}
+        key: gradle-${{ runner.os }}-${{ hashFiles('services/**/*.gradle.kts', 'services/libs.versions.toml', 'services/gradle/wrapper/gradle-wrapper.properties') }}
         restore-keys: gradle-${{ runner.os }}-
 
     # Gradle's build cache, on in CI only: the user home's gradle.properties wins over the
