@@ -103,6 +103,13 @@ Apply every rule whose When matches your change. `Sev` is the severity when brok
 | One key matches at several levels | The most specific level wins | 2 |
 | Both a focused row and a selection exist | Act on the selection if it contains the focused row, otherwise on the focused row | 3 |
 | Something can be selected | Use `Selector` inside a `SelectionSurface`. A plain click or Enter selects only it, without checks. Cmd+click on macOS, Ctrl+click elsewhere, or Space adds or removes it; Shift+click or Shift+Arrows select the range from the anchor in the surface's visible order. From the first add until the selection is empty, every item of a surface holding a selected item shows its check (`SelectorCheck`), and other surfaces stay as they were; a plain click ends that. Esc clears the whole selection | 3 |
+| Selecting everything | Cmd+A on macOS or Ctrl+A elsewhere selects every item of the focused surface and shows checks; pressed again with all selected, it clears | 3 |
+| Showing selectable items in a list | Rows only select and open the context menu; every action on them is a shared selection operation reached by key, context menu, or inspector. No per row buttons, inputs, or keys | 3 |
+| Copying a value | C copies the target (focused row or selection, as above), one value per line, through the shared Copy operation | 2 |
+| Several items are selected | The inspector shows a count heading and edits them together. A field whose values differ shows Mixed; a set of known choices shows all, n of m, or none per choice, and a press cycles all, none, as it was; a free list or map shows Mixed and an edit replaces it for all | 3 |
+| A change over several items is refused | Save nothing. The refused items show their reason; every other item says it was not changed because another item in this change was refused, and that nothing was saved. The selection stays so the user can retry | 3 |
+| Search shows results | Arrows move real focus between the query and the results and the menu stays open; typing on a result goes to the query; Esc steps back to the query, a second Esc closes | 2 |
+| A search picks several values | Its results use the selection gestures over the chosen values; a range or select all is one edit and one undo step. Esc never clears the chosen values | 2 |
 | An action cannot work here | Leave it out of key hints and the command list, which list the most specific actions first | 2 |
 | Moving around | Tab between controls and groups, arrows and H, J, K, L inside them, Esc out one level | 2 |
 | Only touch is available | Hide key caps, key hints, and the mode chip | 2 |

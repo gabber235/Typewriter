@@ -48,13 +48,13 @@ The maintainer chose what each behaviour looks like. These rules for when each o
 - Focus targets after each action.
 - Which feedback each situation gets, and where.
 - Waits: the 300 ms and 5 s limits, doorway versus skeleton, and refreshing without motion.
-- Bulk actions, and showing the hold after preparation.
+- Showing the hold after preparation.
 - Moves that repeat fast, and which move wins when several play together.
 - Scroll anchoring.
-- Filled action placement, and per row actions.
+- Filled action placement.
 - Hiding key caps, hints, and the mode chip with touch only.
 - Where jokes are allowed.
-- The key language table, and the selection versus focus rule.
+- The key language table.
 - Values for `jam`, `hoverIn`, `capIn`, `loadIn`, and slow ink.
 
 ## Open
