@@ -676,6 +676,9 @@ decided:
   - id: record-right-after-tick
     what: "Record right after tick (Recommended)"
     why: The record of tick 7 was taken after the next key cleared the suggestion list, so TAB-1 held at 8; the client takes its record right after the tick and only its ack waits for its own pending input
+  - id: only-own-input
+    what: "A. Only own input (Recommended)"
+    why: BREAK-2 turned 132 px sideways that the playtest never sent, likely the real cursor over a background client window; the client marks the events the playtest pushes and, while stepping, drops and logs every other mouse and key event
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -807,4 +810,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Steadiness merged (2b40b8aea). Choose how foreign input is kept out; fix the late ack; then slice 8.
+next: Only own input and the late ack fix build on feat/game-verification-own-input; then slice 8.
