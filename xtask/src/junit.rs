@@ -35,6 +35,7 @@ pub fn run(
         started_at_millis,
         attempt_policy: AttemptPolicy::Exactly(1),
         cases,
+        logs: String::new(),
         _unrecognized: None,
     })
 }

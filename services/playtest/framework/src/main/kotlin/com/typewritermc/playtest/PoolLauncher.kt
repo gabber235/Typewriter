@@ -19,6 +19,7 @@ internal class PoolLauncher(
 
     fun connect(): Socket {
         settings.poolDir.createDirectories()
+        settings.logs.createDirectories()
         tryConnect()?.let { return it }
         val pool = start()
         val deadline = System.nanoTime() + START_NANOS

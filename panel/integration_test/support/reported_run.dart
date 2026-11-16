@@ -133,6 +133,8 @@ final class ReportedRun {
     startedAtMillis: _startedAt,
     attemptPolicy: results.AttemptPolicy.wrapExactly(1),
     cases: _cases,
+    // The panel runner keeps no logs folder of its own.
+    logs: "",
   );
 
   /// The run as JSON, the form the app reports it to the host driver in.

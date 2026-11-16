@@ -24,14 +24,16 @@ internal class Part(
     val player: String? = null,
 )
 
-/** The folder and port of a Paper the pool runs; every boot of a restart attempt's own Paper reuses them. */
+/**
+ * The folder, port and log of a Paper the pool runs; every boot of a restart attempt's own Paper reuses
+ * them, its log adding to the one before.
+ */
 internal class PaperFolder(
     val name: String,
     val dir: Path,
     val port: Int,
+    val log: Path,
 ) {
-    val log: Path get() = dir.resolve("console.log")
-
     /** Where the JaCoCo agent dumps each plugin class as Paper defined it, which its counts refer to. */
     val classes: Path get() = classesIn(dir)
 }
@@ -63,8 +65,8 @@ internal enum class InputPath(
 
 /**
  * The game the pool runs: one stepped Paper and a client per player (on Linux each with a virtual display
- * of its own), each in a fresh folder of the pool folder, on free loopback ports. [Pool] hears from all of
- * them over the wire once they are up.
+ * of its own), each in a fresh folder of the pool folder, on free loopback ports, and each logging into the
+ * run's logs folder as `<part>.log`. [Pool] hears from all of them over the wire once they are up.
  */
 internal class Game private constructor(
     private val settings: PoolSettings,
@@ -88,8 +90,8 @@ internal class Game private constructor(
     )
 
     /**
-     * Ends [player]'s client process, whatever state it is in, keeps its folder as `client-<player>-lost-<n>`
-     * for its log, and starts a new client in a fresh folder, which joins as the same player.
+     * Ends [player]'s client process, whatever state it is in, keeps its log as `client-<player>-lost-<n>.log`,
+     * and starts a new client in a fresh folder, which joins as the same player.
      */
     @Synchronized
     fun replaceClient(player: String): Replaced {
@@ -98,11 +100,11 @@ internal class Game private constructor(
             it.process.waitFor(STOP_SECONDS, TimeUnit.SECONDS)
             running -= it
         }
-        val kept = settings.poolDir.resolve("client-$player-lost-${++lost}")
-        Files.move(settings.poolDir.resolve("client-$player"), kept)
+        val kept = settings.logs.resolve("client-$player-lost-${++lost}.log")
+        Files.move(logOf(settings, "client-$player"), kept)
         val replacement = startClient(settings, poolPort, player, input, displays[player])
         running += replacement
-        return Replaced(replacement, kept.resolve("console.log"))
+        return Replaced(replacement, kept)
     }
 
     /**
@@ -110,7 +112,7 @@ internal class Game private constructor(
      * Paper's folder is. A folder of that name an earlier pool run left goes.
      */
     fun ownFolder(name: String): PaperFolder {
-        val folder = PaperFolder(name, settings.poolDir.resolve(name), freePort())
+        val folder = PaperFolder(name, settings.poolDir.resolve(name), freePort(), logOf(settings, name))
         preparePaper(settings, folder.dir, folder.port)
         return folder
     }
@@ -121,20 +123,12 @@ internal class Game private constructor(
         folder: PaperFolder,
         flags: List<String>,
         again: Boolean,
-    ): Part = startPaper(settings, poolPort, folder.dir, folder.name, flags, append = again).also { running += it }
+    ): Part = startPaper(settings, poolPort, folder, flags, append = again).also { running += it }
 
     /** [part] ended and is no longer a part of the game. */
     @Synchronized
     fun forget(part: Part) {
         running -= part
-    }
-
-    /** Keeps the lost own Paper's [folder] as `<name>-lost-<n>` for its log; returns where its log is now. */
-    @Synchronized
-    fun keepLost(folder: PaperFolder): Path {
-        val kept = settings.poolDir.resolve("${folder.name}-lost-${++lost}")
-        Files.move(folder.dir, kept)
-        return kept.resolve("console.log")
     }
 
     /** Removes the folder of an own Paper whose attempt ended. */
@@ -155,17 +149,18 @@ internal class Game private constructor(
             poolPort: Int,
             players: List<String>,
         ): Game {
-            // The folders of parts an earlier run lost, and of its restart Papers, are that run's evidence, not this one's.
+            // The restart Papers of a pool that ended without removing them, and the logs of an earlier run
+            // in the same logs folder, are not this run's; the pool's own log is, and it emptied it.
             Files
                 .list(settings.poolDir)
                 .use { dirs ->
-                    dirs.filter { it.fileName.toString().matches(Regex("client-.+-lost-\\d+|$OWN_PAPER.+")) }.toList()
+                    dirs.filter { it.fileName.toString().startsWith(OWN_PAPER) }.toList()
                 }.forEach { remove(it) }
-            val paperPort = freePort()
-            val paperDir = settings.poolDir.resolve("paper")
-            preparePaper(settings, paperDir, paperPort)
-            val paper = startPaper(settings, poolPort, paperDir, "paper", listOf(), append = false)
-            val started = mutableListOf(paper)
+            Files.list(settings.logs).use { logs -> logs.filter { it != settings.poolLog }.toList() }.forEach { remove(it) }
+            val paper = PaperFolder("paper", settings.poolDir.resolve("paper"), freePort(), logOf(settings, "paper"))
+            preparePaper(settings, paper.dir, paper.port)
+            val paperPart = startPaper(settings, poolPort, paper, listOf(), append = false)
+            val started = mutableListOf(paperPart)
             val input = InputPath.here()
             val displays = mutableMapOf<String, Display>()
             runCatching {
@@ -182,7 +177,7 @@ internal class Game private constructor(
                     started += startClient(settings, poolPort, player, input, display)
                 }
             }.onFailure { started.forEach { it.process.destroyForcibly() } }.getOrThrow()
-            return Game(settings, poolPort, PaperFolder("paper", paperDir, paperPort), paper, input, displays, started)
+            return Game(settings, poolPort, paper, paperPart, input, displays, started)
         }
 
         /**
@@ -194,7 +189,7 @@ internal class Game private constructor(
             player: String,
         ): Display {
             val dir = freshDir(settings.poolDir.resolve("display-$player"))
-            val log = dir.resolve("console.log")
+            val log = logOf(settings, "display-$player")
             val process =
                 ProcessBuilder("Xvfb", "-displayfd", "1", "-screen", "0", "1280x720x24", "-nolisten", "tcp")
                     .directory(dir.toFile())
@@ -234,18 +229,18 @@ internal class Game private constructor(
         }
 
         /**
-         * Starts the Paper in [dir] as [name], with [flags] before the rest. It starts the patched server
-         * on its class path directly, as Paperclip would after its patch check: Java's ahead of time
-         * cache holds only classes the JVM's own loaders load, never those of Paperclip's loader.
+         * Starts the Paper in [folder], with [flags] before the rest. It starts the patched server on its
+         * class path directly, as Paperclip would after its patch check: Java's ahead of time cache holds
+         * only classes the JVM's own loaders load, never those of Paperclip's loader.
          */
         private fun startPaper(
             settings: PoolSettings,
             poolPort: Int,
-            dir: Path,
-            name: String,
+            folder: PaperFolder,
             flags: List<String>,
             append: Boolean,
         ): Part {
+            val (name, dir) = folder.name to folder.dir
             val server = PaperServer.of(settings.paperDir)
             val command =
                 buildList {
@@ -260,7 +255,7 @@ internal class Game private constructor(
                     add(server.mainClass)
                     add("--nogui")
                 }
-            return launch(if (name == "paper") "Paper" else "Paper $name", command, dir, mapOf(), append = append)
+            return launch(if (name == "paper") "Paper" else "Paper $name", command, dir, folder.log, mapOf(), append = append)
         }
 
         /**
@@ -336,18 +331,18 @@ internal class Game private constructor(
 
                     InputPath.XTEST -> mapOf("DISPLAY" to checkNotNull(display).name)
                 }
-            return launch("Client $player", command, dir, environment, player)
+            return launch("Client $player", command, dir, logOf(settings, "client-$player"), environment, player)
         }
 
         private fun launch(
             name: String,
             command: List<String>,
             dir: Path,
+            log: Path,
             environment: Map<String, String>,
             player: String? = null,
             append: Boolean = false,
         ): Part {
-            val log = dir.resolve("console.log")
             val builder =
                 ProcessBuilder(command)
                     .directory(dir.toFile())
@@ -387,6 +382,12 @@ internal class Game private constructor(
                 .substringAfter(':')
                 .trim()
                 .toInt()
+
+        /** Where the part [name] logs: `<name>.log` in the run's logs folder. */
+        private fun logOf(
+            settings: PoolSettings,
+            name: String,
+        ): Path = settings.logs.resolve("$name.log")
 
         /** Removes [dir] and all in it. */
         @OptIn(ExperimentalPathApi::class)

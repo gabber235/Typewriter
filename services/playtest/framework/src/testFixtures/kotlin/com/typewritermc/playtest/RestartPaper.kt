@@ -5,6 +5,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.nio.file.Path
 
 /**
  * Runs [restart], a restart of the attempt's own Paper, and ends the new Paper process at once as soon
@@ -32,6 +33,9 @@ suspend fun <T> RequirementScope.killPaperWhileItBoots(restart: suspend () -> T)
     }
 
 private const val KILL_POLL_MILLIS = 10L
+
+/** The folder the pool, every Paper and every client of this run log into. */
+val runLogs: Path get() = PlaytestSettings.fromSystemProperties().logs
 
 /** The process of the Paper named [paper]. */
 private fun paperProcess(paper: String): ProcessHandle? =

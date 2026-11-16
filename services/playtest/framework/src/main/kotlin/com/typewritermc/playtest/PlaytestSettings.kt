@@ -8,8 +8,10 @@ import kotlin.io.path.Path
  * system properties. The pool reads the same properties, so the session forwards every one of them.
  */
 internal data class PlaytestSettings(
-    /** The worktree's pool folder: its lock, its port and its log. */
+    /** The worktree's pool folder: its lock and its port. */
     val poolDir: Path,
+    /** The run's logs folder: the pool's own log, and one for every Paper, client and display. */
+    val logs: Path,
     /** The pool process's own classpath. */
     val poolClasspath: String,
     /** The Java that runs the pool, Paper and the client. */
@@ -29,7 +31,7 @@ internal data class PlaytestSettings(
     /** Every `playtest.*` property, for the pool. */
     val forwarded: Map<String, String>,
 ) {
-    val poolLog: Path get() = poolDir.resolve("pool.log")
+    val poolLog: Path get() = logs.resolve("pool.log")
 
     companion object {
         fun fromSystemProperties(): PlaytestSettings {
@@ -46,6 +48,7 @@ internal data class PlaytestSettings(
                 }
             return PlaytestSettings(
                 poolDir = Path(required("poolDir")),
+                logs = Path(required("logs")),
                 poolClasspath = required("poolClasspath"),
                 java = Path(required("java")),
                 run = required("run"),

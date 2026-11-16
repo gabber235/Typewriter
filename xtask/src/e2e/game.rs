@@ -20,9 +20,6 @@ use crate::review::change::Change;
 use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::{CommandExt as _, Context, evidence, generate};
 
-/// The game pool's log, relative to the repository root.
-const POOL_LOG: &str = "services/build/playtest/pool/pool.log";
-
 /// Runs the selected game requirements and reports the run the game pool wrote.
 pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
     // The pool writes its run with the generated Skir types.
@@ -42,6 +39,8 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
     fs::create_dir_all(&evidence)?;
     fs::write(&touched, touched_lines(&Change::load(ctx, None)?))
         .with_context(|| format!("cannot write {}", touched.display()))?;
+    // The pool, Paper and every client log into a folder of this run's own.
+    let logs = next_run_folder(&evidence.join(results::LOGS))?;
     let ran = Ran {
         file: file.clone(),
         started_millis: now_millis(),
@@ -49,17 +48,18 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
             .tool(
                 "services",
                 "./gradlew",
-                &gradle_args(args, &quarantine, &file, &touched)
+                &gradle_args(args, &quarantine, &file, &touched, &logs)
                     .iter()
                     .map(String::as_str)
                     .collect::<Vec<_>>(),
             )
             .status()
             .context("cannot start Gradle for the game suite")?,
-        pool_log: ctx.root.join(POOL_LOG),
+        pool_log: logs.join("pool.log"),
     };
     let run = TestRun {
         commit,
+        logs: logs.strip_prefix(&evidence)?.to_string_lossy().into_owned(),
         ..own_run(&ran)?
     };
     results::write(&run, &file)?;
@@ -80,7 +80,7 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
 }
 
 /// One Gradle run of the game suite: where its run file belongs, when it started, how Gradle
-/// exited and where the pool logs.
+/// exited and where the pool logs (in the run's own logs folder).
 pub(crate) struct Ran {
     pub file: PathBuf,
     pub started_millis: i64,
@@ -88,14 +88,16 @@ pub(crate) struct Ran {
     pub pool_log: PathBuf,
 }
 
-/// What Gradle runs: every `gameTest` task, writing the run file to `file`, with the selection,
-/// the repeat count and the quarantined requirements, which the test JVMs need since they retry
-/// inside the run, and the file of lines the change touched, which picks the demo reruns.
+/// What Gradle runs: every `gameTest` task, writing the run file to `file` and its logs into
+/// `logs`, with the selection, the repeat count and the quarantined requirements, which the test
+/// JVMs need since they retry inside the run, and the file of lines the change touched, which
+/// picks the demo reruns.
 pub(crate) fn gradle_args(
     args: &E2eArgs,
     quarantine: &Quarantine,
     file: &Path,
     touched: &Path,
+    logs: &Path,
 ) -> Vec<String> {
     let mut gradle = vec![
         "--console=plain".to_owned(),
@@ -103,6 +105,7 @@ pub(crate) fn gradle_args(
         "gameTest".to_owned(),
         format!("-Pplaytest.testRun={}", file.display()),
         format!("-Pplaytest.touched={}", touched.display()),
+        format!("-Pplaytest.logs={}", logs.display()),
     ];
     for selected in &args.only {
         gradle.push("--tests".to_owned());
@@ -215,6 +218,27 @@ fn pool_cause(ran: &Ran) -> String {
     failed.unwrap_or_else(|| "no test JVM ended its session with the game pool".to_owned())
 }
 
+/// How many run folders `cargo xtask e2e game` keeps, the new one included.
+const KEPT_RUNS: usize = 3;
+
+/// A new, empty folder below `runs` for this run's logs, numbered one past the newest run folder
+/// there; run folders beyond the last [`KEPT_RUNS`] go.
+pub(crate) fn next_run_folder(runs: &Path) -> Result<PathBuf> {
+    fs::create_dir_all(runs).with_context(|| format!("cannot create {}", runs.display()))?;
+    let mut numbers: Vec<u64> = fs::read_dir(runs)?
+        .filter_map(|entry| entry.ok()?.file_name().to_str()?.parse().ok())
+        .collect();
+    numbers.sort_unstable();
+    let next = runs.join((numbers.last().copied().unwrap_or(0) + 1).to_string());
+    let gone = numbers.len().saturating_sub(KEPT_RUNS - 1);
+    for number in &numbers[..gone] {
+        let old = runs.join(number.to_string());
+        fs::remove_dir_all(&old).with_context(|| format!("cannot remove {}", old.display()))?;
+    }
+    fs::create_dir(&next).with_context(|| format!("cannot create {}", next.display()))?;
+    Ok(next)
+}
+
 /// The suite's verdict on its `run`: each case under the run's attempt policy and the quarantine,
 /// the selection, a run that ran no requirement, and a Gradle failure that no failing case explains, such as a test JVM that
 /// ended before it ran its requirements.
@@ -262,8 +286,26 @@ mod tests {
     use super::*;
     use crate::results::{AttemptPolicy, Outcome};
     use crate::test_support::{
-        TempRoot, changed, e2e_args as parsed, exited, failed, game_run, quarantining, refusal,
+        TempRoot, changed, e2e_args as parsed, exited, failed, files_below, game_run, quarantining,
+        refusal,
     };
+
+    #[test]
+    fn a_game_run_gets_a_folder_of_its_own_and_only_the_last_three_runs_keep_theirs() {
+        let root = TempRoot::new();
+        for run in [1, 9, 10] {
+            root.write(&format!("logs/{run}/pool.log"), "log");
+        }
+
+        let folder = next_run_folder(&root.path("logs")).unwrap();
+
+        assert_eq!(folder, root.path("logs/11"));
+        assert!(folder.is_dir());
+        assert_eq!(
+            files_below(&root.path("logs")),
+            ["10/pool.log", "9/pool.log"]
+        );
+    }
 
     #[test]
     fn a_game_run_that_wrote_no_run_file_fails_with_the_pool_s_cause_and_its_log() {
@@ -480,7 +522,7 @@ mod tests {
     }
 
     #[test]
-    fn gradle_gets_the_run_file_the_selection_the_repeat_and_the_quarantine() {
+    fn gradle_gets_the_run_file_the_logs_folder_the_selection_the_repeat_and_the_quarantine() {
         let file = Path::new("/repo/.xtask/results/game/test_run.json");
         let args = parsed(&[
             "game",
@@ -491,11 +533,13 @@ mod tests {
         ])
         .unwrap();
         let touched = Path::new("/repo/.xtask/results/game/touched.txt");
-        let gradle = gradle_args(&args, &quarantining("game/LEAK-1"), file, touched);
+        let logs = Path::new("/repo/.xtask/results/game/logs/4");
+        let gradle = gradle_args(&args, &quarantining("game/LEAK-1"), file, touched, logs);
         for expected in [
             "gameTest",
             "-Pplaytest.testRun=/repo/.xtask/results/game/test_run.json",
             "-Pplaytest.touched=/repo/.xtask/results/game/touched.txt",
+            "-Pplaytest.logs=/repo/.xtask/results/game/logs/4",
             "-Pplaytest.repeat=3",
             "-Pplaytest.quarantine=LEAK-1",
         ] {
@@ -519,6 +563,7 @@ mod tests {
             &Quarantine::default(),
             file,
             touched,
+            logs,
         );
         assert!(
             !plain.iter().any(|arg| arg == "--tests"

@@ -15,7 +15,6 @@ internal class Server(
     var part: Part? = null
     var boots = 0
     var training: AotCache.Boot.Train? = null
-    var lost = false
     var killedAt = 0L
     var bootedAt = 0L
 }

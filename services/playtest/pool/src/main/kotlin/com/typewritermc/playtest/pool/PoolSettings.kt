@@ -8,6 +8,8 @@ import java.nio.file.Path
  */
 internal class PoolSettings(
     val poolDir: Path,
+    /** The run's logs folder: the pool's own log, and one for every Paper, client and display. */
+    val logs: Path,
     val java: Path,
     val paperDir: Path,
     val agentJar: Path,
@@ -21,10 +23,14 @@ internal class PoolSettings(
     /** Where the ahead of time caches for the restart Papers' boots stay across runs. */
     val aotDir: Path get() = poolDir.resolve("aot")
 
+    /** The pool's own log, which every test JVM that starts a pool appends that pool's output to. */
+    val poolLog: Path get() = logs.resolve("pool.log")
+
     companion object {
         fun fromSystemProperties() =
             PoolSettings(
                 poolDir = path("playtest.poolDir"),
+                logs = path("playtest.logs"),
                 java = path("playtest.java"),
                 paperDir = path("playtest.paper"),
                 agentJar = path("playtest.agent"),

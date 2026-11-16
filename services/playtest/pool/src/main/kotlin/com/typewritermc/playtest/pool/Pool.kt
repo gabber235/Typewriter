@@ -81,7 +81,8 @@ fun main() {
     val lockFile = FileChannel.open(settings.poolDir.resolve("pool.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
     val lock = lockFile.tryLock() ?: exitProcess(0)
     // Every starter appends its output to the log; the pool that holds the lock empties it, so the log holds this run alone.
-    FileChannel.open(settings.poolDir.resolve("pool.log"), StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
+    Files.createDirectories(settings.logs)
+    FileChannel.open(settings.poolLog, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
     val portFile = settings.poolDir.resolve("pool.port")
     ServerSocket(0, BACKLOG, InetAddress.getLoopbackAddress()).use { server ->
         val pool = Pool(settings, server)
@@ -768,7 +769,7 @@ internal class Pool(
         runs.abandoned(
             run,
             unfinished.distinctBy { it.submission() },
-            "its test JVM ended before the attempt did; see ${settings.poolDir.resolve("pool.log")}",
+            "its test JVM ended before the attempt did; see ${settings.poolLog}",
             stillOut(run),
         )
     }
@@ -920,7 +921,10 @@ internal class Pool(
         }
     }
 
-    /** Ends [server]'s process as a crash would; what the players of [id] perceive waits until it is back. */
+    /**
+     * Ends [server]'s process as a crash would; what the players of [id] perceive waits until it is back,
+     * and the Paper's rules forget what each recorded until it steps with the new boot.
+     */
     private fun kill(
         server: Server,
         id: Long,
@@ -970,7 +974,7 @@ internal class Pool(
     }
 
     /**
-     * [server] is lost for [cause]: its process ends, its folder stays for its log, and its players go
+     * [server] is lost for [cause]: its process ends, its log stays in the run's logs, and its players go
      * back to the shared Paper. A leased attempt fails with the cause; one not leased yet is recorded as
      * failed here, as its session never runs it.
      */
@@ -979,12 +983,11 @@ internal class Pool(
         id: Long,
         cause: String,
     ) {
-        server.lost = true
         server.part?.process?.let {
             it.destroyForcibly()
             it.waitFor(STOP_SECONDS, TimeUnit.SECONDS)
         }
-        val reason = "$cause; see ${game.keepLost(server.folder)}"
+        val reason = "$cause; see ${server.folder.log}"
         System.err.println("The Paper ${server.name} is lost: $reason")
         val attempt = running(id)
         sendBack(attempt)
@@ -1019,7 +1022,7 @@ internal class Pool(
         server.peer?.close() ?: server.part?.process?.destroyForcibly()
     }
 
-    /** [server]'s process ended for good: the pool forgets it, and its folder goes unless it was lost. */
+    /** [server]'s process ended for good: the pool forgets it, and its folder goes. */
     private fun gone(server: Server) = papers.gone(server)
 
     /** [server]'s process ended; a boot that trained a cache keeps it only if it ended cleanly. */

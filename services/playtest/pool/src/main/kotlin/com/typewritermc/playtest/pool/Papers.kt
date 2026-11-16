@@ -33,9 +33,9 @@ internal class Papers(
         return Server(folder, OwnPaper(folder.name, players)).also(::add)
     }
 
-    /** [paper]'s process ended for good: it is forgotten, and its folder goes unless it was lost. */
+    /** [paper]'s process ended for good: it is forgotten, and its folder goes; its log stays in the run's logs. */
     fun gone(paper: Server) {
         byName.remove(paper.name, paper)
-        if (!paper.lost) remove(paper.folder)
+        remove(paper.folder)
     }
 }

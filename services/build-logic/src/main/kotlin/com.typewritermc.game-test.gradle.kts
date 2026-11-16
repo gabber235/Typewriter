@@ -74,6 +74,9 @@ abstract class GameParts : CommandLineArgumentProvider {
 
     @get:Internal abstract val testRun: Property<String>
 
+    /** The run's logs folder: the pool's, every Paper's and every client's. */
+    @get:Internal abstract val logs: Property<String>
+
     /** Attempts of each requirement; absent, a failed attempt runs again up to 4 in total. */
     @get:Internal abstract val repeat: Property<String>
 
@@ -109,6 +112,7 @@ abstract class GameParts : CommandLineArgumentProvider {
                 "clients" to clients.get().toString(),
                 "run" to runId.get(),
                 "testRun" to testRun.get(),
+                "logs" to logs.get(),
                 "root" to root.get(),
                 "goldens" to goldens.get(),
                 "goldenImages" to goldenImages.get(),
@@ -146,6 +150,8 @@ tasks.register<Test>("gameTest") {
             poolDir.set(servicesDirectory.resolve("build/playtest/pool").path)
             // `cargo xtask e2e game` names the run file it gates on; other runs keep theirs in the build.
             testRun.set(providers.gradleProperty("playtest.testRun").orElse(servicesDirectory.resolve("build/playtest/test_run.json").path))
+            // It names a logs folder of the run's own too; other runs share one in the build.
+            logs.set(providers.gradleProperty("playtest.logs").orElse(servicesDirectory.resolve("build/playtest/logs").path))
             repeat.set(providers.gradleProperty("playtest.repeat"))
             quarantine.set(providers.gradleProperty("playtest.quarantine"))
             // `cargo xtask e2e game` writes it against the merge base with the default branch.

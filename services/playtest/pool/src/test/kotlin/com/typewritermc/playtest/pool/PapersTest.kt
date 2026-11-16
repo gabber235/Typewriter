@@ -18,7 +18,7 @@ val PapersTest by testSuite {
         val pool = Files.createTempDirectory("papers")
         val papers =
             Papers(
-                folderOf = { PaperFolder(it, pool.resolve(it).createDirectories(), 0) },
+                folderOf = { PaperFolder(it, pool.resolve(it).createDirectories(), 0, pool.resolve("$it.log")) },
                 remove = { it.dir.toFile().deleteRecursively() },
             )
         val old = papers.restart(23, setOf("gv-1"))
@@ -37,33 +37,19 @@ val PapersTest by testSuite {
         old.folder.dir.exists() shouldBe false
     }
 
-    test("a lost Paper's folder stays for its log once the Paper is gone") {
-        val pool = Files.createTempDirectory("papers")
-        val papers =
-            Papers(
-                folderOf = { PaperFolder(it, pool.resolve(it).createDirectories(), 0) },
-                remove = { it.dir.toFile().deleteRecursively() },
-            )
-        val lost = papers.restart(23, setOf("gv-1"))
-        lost.lost = true
-
-        papers.gone(lost)
-
-        papers[lost.name].shouldBeNull()
-        lost.folder.dir.exists() shouldBe true
-    }
-
     test("a Paper's name is its own: a second Paper under the name of one that runs is refused") {
         val pool = Files.createTempDirectory("papers")
         val papers =
             Papers(
-                folderOf = { PaperFolder(it, pool.resolve(it).createDirectories(), 0) },
+                folderOf = { PaperFolder(it, pool.resolve(it).createDirectories(), 0, pool.resolve("$it.log")) },
                 remove = { it.dir.toFile().deleteRecursively() },
             )
-        papers.add(Server(PaperFolder("paper", pool.resolve("paper"), 0), SharedPaper("paper", setOf("gv-1"))))
+        papers.add(Server(PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log")), SharedPaper("paper", setOf("gv-1"))))
 
         shouldThrow<IllegalStateException> {
-            papers.add(Server(PaperFolder("paper", pool.resolve("paper"), 0), SharedPaper("paper", setOf("gv-1"))))
+            papers.add(
+                Server(PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log")), SharedPaper("paper", setOf("gv-1"))),
+            )
         }
     }
 }

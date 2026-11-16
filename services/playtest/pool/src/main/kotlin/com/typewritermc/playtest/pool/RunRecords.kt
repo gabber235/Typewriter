@@ -158,6 +158,8 @@ internal class RunRecords(
                 startedAtMillis = record.startedAtMillis,
                 attemptPolicy = policy.inRun,
                 cases = record.cases.values.map { case -> stillOut[case.id]?.let { note -> case.noting(note) } ?: case },
+                // `cargo xtask e2e game` names the commit and the run's logs folder, as it chose both.
+                logs = "",
             )
         Files.createDirectories(file.toAbsolutePath().parent)
         val partial = file.resolveSibling("${file.fileName}.partial")

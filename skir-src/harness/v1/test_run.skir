@@ -8,6 +8,9 @@ struct TestRun(85010001) {
   // How the cases' attempts were made; the verdict depends on it.
   attempt_policy: AttemptPolicy;
   cases: [TestCase];
+  // Where the run's logs lie (for the game runner the pool's, Paper's and each client's), relative to
+  // the folder of the run file; empty when the run names none.
+  logs: string;
 }
 
 enum AttemptPolicy(85010002) {

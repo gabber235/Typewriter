@@ -271,7 +271,11 @@ pub const ATTEMPTS: &str = "attempts";
 
 /// Folders inside a run's folder that hold its evidence, never another run, so a drive's own
 /// `test_run.json` below `attempts/` is read only through the suite's run.
-pub const RUN_EVIDENCE: [&str; 4] = [ATTEMPTS, "failures", "screenshots", "logs"];
+pub const RUN_EVIDENCE: [&str; 4] = [ATTEMPTS, "failures", "screenshots", LOGS];
+
+/// The folder of a run's logs below the run file's folder; the game runner keeps one `logs/<n>/`
+/// per run.
+pub const LOGS: &str = "logs";
 
 /// Every `TestRun` under `dir`, at any depth, with the path it was read from, skipping run
 /// evidence folders.
@@ -313,7 +317,7 @@ pub fn write(run: &TestRun, path: &Path) -> Result<()> {
 
 /// Lists every case whose verdict is not a plain pass, and every case when the run repeated
 /// each case, then fails when any case failed. `evidence`, the run's folder,
-/// points each failing case at the evidence of its first failed attempt.
+/// points each failing case at the evidence of its first failed attempt and at the run's logs.
 pub fn report(
     run: &TestRun,
     quarantine: &Quarantine,
@@ -347,7 +351,13 @@ pub fn report(
             },
             _ => String::new(),
         };
-        let see = see_of(failures.first().map(|first| &case.attempts[first - 1]));
+        let logs = match evidence {
+            Some(evidence) if !run.logs.is_empty() => {
+                format!("; logs in {}/", evidence.join(&run.logs).display())
+            }
+            _ => String::new(),
+        };
+        let see = see_of(failures.first().map(|first| &case.attempts[first - 1])) + &logs;
         match verdict {
             Verdict::Passed if repeated => writeln!(
                 out,
@@ -372,7 +382,7 @@ pub fn report(
                         } else {
                             format!("failed {attempts}{see}")
                         };
-                        let see = see_of(Some(demo));
+                        let see = see_of(Some(demo)) + &logs;
                         writeln!(out, "{}: {attempts}, but its demo {ended}{see}", case.id)?;
                     }
                     None => writeln!(out, "{}: failed {attempts}{see}", case.id)?,
@@ -719,6 +729,19 @@ mod tests {
             let verdict = verdict(&run, &run.cases[0], &Quarantine::default()).unwrap();
             assert_eq!(verdict, expected, "{attempts:?} with a demo that {demo:?}");
         }
+    }
+
+    #[test]
+    fn a_failed_case_names_the_folder_of_its_run_s_logs() {
+        let mut run = attempted(AttemptPolicy::RerunFailures(1), &[failed("lost")]);
+        run.logs = "logs/7".to_owned();
+
+        let (_, out) = report_text(&run, &Quarantine::default());
+
+        assert_eq!(
+            out,
+            "a: failed 1 of 1 attempts (1); see results/panel/; logs in results/panel/logs/7/\n"
+        );
     }
 
     #[test]
