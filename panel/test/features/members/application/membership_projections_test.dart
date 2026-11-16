@@ -170,4 +170,32 @@ void main() {
 
     await panel.eventually(() => expect(requests.read().error, isStateError));
   });
+
+  test("without an organization in the route, members, roles, join codes "
+      "and join requests fail as no organization selected and nothing is "
+      "requested", () async {
+    final world = testWorld([
+      signedIn(ada, organization: acme),
+      membershipService(members: [member("Ken")]),
+    ]);
+    final noOrganization = isA<ApiException>().having(
+      (error) => error.message,
+      "message",
+      "No organization selected",
+    );
+
+    for (final provider in <ProviderListenable<Future<Object?>>>[
+      organizationMembersProvider.future,
+      organizationRolesProvider.future,
+      organizationJoinCodesProvider.future,
+      organizationJoinRequestsProvider.future,
+    ]) {
+      world.container.listen(provider, (_, _) {});
+      await expectLater(
+        world.container.read(provider),
+        throwsA(noOrganization),
+      );
+    }
+    expect(world.nats.connected, isFalse);
+  });
 }

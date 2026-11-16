@@ -57,10 +57,11 @@ abstract class JoinCodeOptions with _$JoinCodeOptions {
 
 /// Owns the panel's live read model of invitation codes for the selected organization.
 ///
-/// The provider waits for authentication and organization selection, then
-/// watches the service for one snapshot followed by sequenced add and remove
-/// changes. Duplicate changes are ignored. A sequence gap invalidates the
-/// provider so the next subscription can recover from a fresh snapshot.
+/// The provider waits for authentication and fails without a selected
+/// organization; then it watches the service for one snapshot followed by
+/// sequenced add and remove changes. Duplicate changes are ignored. A
+/// sequence gap invalidates the provider so the next subscription can
+/// recover from a fresh snapshot.
 /// [MembershipResourceRepository] owns commands and supplies confirmed facts.
 /// Derived visibility hides expired and pending rows without changing this
 /// authoritative snapshot.
@@ -71,7 +72,7 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
   @override
   Stream<List<skir.JoinCode>> build() {
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) return Stream.value(const []);
+    if (organizationId == null) throw ApiException.noOrganization();
     return ref.watchSignedIn(
       signedOut: const [],
       (userId) =>

@@ -5,14 +5,14 @@ Duration? _noRouteRetry(int retryCount, Object error) => null;
 /// Adapts the organization scoped service projection to the current route.
 ///
 /// The route provider owns no service data. It follows the selected
-/// organization and watches [CanonicalOrganizationServices], returning an empty
-/// projection when no organization is selected.
+/// organization and watches [CanonicalOrganizationServices], and fails with
+/// [ApiException.noOrganization] when no organization is selected.
 /// Ready observations propagate synchronously so a heartbeat does not create
 /// a loading interval. An actual source refresh retains its pending state.
 @Riverpod(retry: _noRouteRetry)
 FutureOr<List<skir.Service>> canonicalServices(Ref ref) {
   final organization = ref.watch(organizationIdProvider);
-  if (organization == null) return const [];
+  if (organization == null) throw ApiException.noOrganization();
   final source = canonicalOrganizationServicesProvider(organization);
   final services = ref.watch(source);
   if (!services.isLoading && !services.hasError) return services.requireValue;
@@ -32,7 +32,9 @@ AsyncValue<List<skir.Service>> projectedServices(Ref ref) {
   }
 
   final organization = ref.watch(organizationIdProvider);
-  if (organization == null) return AsyncData(canonical.requireValue);
+  if (organization == null) {
+    return AsyncError(ApiException.noOrganization(), StackTrace.current);
+  }
 
   final local = ref.watch(
     localWorkProvider.select((state) => state.editorValues),
@@ -55,7 +57,9 @@ AsyncValue<skir.Service?> projectedService(Ref ref, skir.RecordId serviceId) {
   if (canonical.mapUnready<skir.Service?>() case final value?) return value;
 
   final organization = ref.watch(organizationIdProvider);
-  if (organization == null) return canonical;
+  if (organization == null) {
+    return AsyncError(ApiException.noOrganization(), StackTrace.current);
+  }
 
   final key = EditorResourceKey(
     scope: EditorResourceScope(organizationId: organization),
@@ -70,15 +74,16 @@ AsyncValue<skir.Service?> projectedService(Ref ref, skir.RecordId serviceId) {
 /// Exposes topology for the organization selected by the current route.
 ///
 /// The route projection delegates lifecycle and reconciliation to
-/// [OrganizationTopologyController] and returns an empty topology without an
-/// organization. Each canonical update recomputes this route projection.
+/// [OrganizationTopologyController] and fails with [ApiException.noOrganization]
+/// without an organization. Each canonical update recomputes this route
+/// projection.
 /// Projection updates are synchronous; only an unresolved source can introduce
 /// a loading state for consumers such as the realm interaction gate.
 @Riverpod(retry: _noRouteRetry)
 FutureOr<skir.OrganizationTopologySnapshot> organizationTopology(Ref ref) {
   final organization = ref.watch(organizationIdProvider);
   if (organization == null) {
-    return skir.OrganizationTopologySnapshot.defaultInstance;
+    throw ApiException.noOrganization();
   }
   final source = organizationTopologyControllerProvider(organization);
   final topology = ref.watch(source);
