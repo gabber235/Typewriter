@@ -25,12 +25,16 @@ pub fn run(command: &[String]) -> Result<u8> {
 /// child instead of leaving it running; the marker turns a nested xtask (for example inside
 /// `sh -c`) into an error instead of a wait on this lock.
 fn run_holding(command: &[String]) -> Result<u8> {
-    let mut group = Group::spawn(
-        Command::new(&command[0])
-            .args(&command[1..])
-            .env(lock::HELD_BY_PARENT, "1"),
-    )?;
+    let mut group = Group::spawn(&mut self::command(command))?;
     Ok(exit_code(group.wait(None)?))
+}
+
+/// The process that runs `command` under the heavy lock.
+pub fn command(command: &[String]) -> Command {
+    let mut process = Command::new(&command[0]);
+    process.args(&command[1..]).env(lock::HELD_BY_PARENT, "1");
+    crate::isolate_flutter_sdk(&mut process);
+    process
 }
 
 /// The command's own code, or 128 plus the signal that ended it, as a shell reports it.

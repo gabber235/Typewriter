@@ -171,7 +171,30 @@ impl Context {
         // `cargo xtask` is itself a `cargo run`; its package variables must not leak into the
         // Cargo invocations the harness starts.
         command.env_remove("CARGO_MANIFEST_DIR");
+        isolate_flutter_sdk(&mut command);
         command
+    }
+}
+
+/// Git hands hooks in a worktree `GIT_DIR`, `GIT_INDEX_FILE` and friends. The Flutter launcher
+/// compares `git -C $FLUTTER_ROOT rev-parse HEAD` with its tool stamp; with those variables set
+/// that returns this repository's commit, so Flutter deletes the shared SDK's version cache and
+/// rebuilds its tool, failing every other worktree building at that moment. Every `dart` or
+/// `flutter` command therefore starts without them. `git` itself keeps them.
+pub fn isolate_flutter_sdk(command: &mut Command) {
+    let program = Path::new(command.get_program()).file_name();
+    if program != Some("dart".as_ref()) && program != Some("flutter".as_ref()) {
+        return;
+    }
+    for variable in [
+        "GIT_DIR",
+        "GIT_INDEX_FILE",
+        "GIT_WORK_TREE",
+        "GIT_PREFIX",
+        "GIT_COMMON_DIR",
+        "GIT_OBJECT_DIRECTORY",
+    ] {
+        command.env_remove(variable);
     }
 }
 
@@ -270,5 +293,38 @@ impl Scratch {
 impl Drop for Scratch {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::removed_env;
+
+    #[test]
+    fn flutter_sdk_commands_get_no_git_repository_variables() {
+        let ctx = Context::new();
+        for program in ["dart", "flutter"] {
+            let command = ctx.tool(".", program, &["--version"]);
+            for variable in ["GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE"] {
+                assert!(
+                    removed_env(&command).contains(&variable.to_string()),
+                    "{program} keeps {variable}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn git_commands_keep_their_repository_variables() {
+        let command = Context::new().tool(".", "git", &["cat-file", "-p", ":file"]);
+        assert!(!removed_env(&command).contains(&"GIT_DIR".to_string()));
+        assert!(!removed_env(&command).contains(&"GIT_INDEX_FILE".to_string()));
+    }
+
+    #[test]
+    fn heavy_flutter_commands_get_no_git_repository_variables() {
+        let command = crate::heavy::command(&["flutter".into(), "test".into()]);
+        assert!(removed_env(&command).contains(&"GIT_DIR".to_string()));
     }
 }
