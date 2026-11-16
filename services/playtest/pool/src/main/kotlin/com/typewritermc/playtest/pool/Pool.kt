@@ -927,7 +927,6 @@ internal class Pool(
     ) {
         val attempt = running(id)
         attempt.restarting = true
-        attempt.fresh.clear()
         server.killedAt = System.nanoTime()
         server.part?.process?.destroyForcibly()
     }
