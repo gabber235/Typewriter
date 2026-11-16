@@ -33,13 +33,9 @@ final class Frames {
         return mode;
     }
 
-    /**
-     * After the frame's draw or perceive step. A perceived frame whose tick still waits on the client's
-     * own work records and acks nothing; the next loop pass perceives it again.
-     */
+    /** After the frame's draw or perceive step: a perceived frame records its tick, which is acked once the client's own work is done. */
     static void end() {
         if (mode == Mode.SKIP) return;
-        if (mode == Mode.PERCEIVE && !ClientWork.done()) return;
         if (mode == Mode.PERCEIVE || Perceiver.forced()) Perceiver.endFrame(Minecraft.getInstance(), Stepper.lastRan());
         if (mode == Mode.PERCEIVE) Stepper.perceived();
     }

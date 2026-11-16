@@ -146,10 +146,11 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   suggestion request counts the same way, from the read until its answer goes out or Paper decides to
   send none (cancelled or empty suggestions, or a newer request of the player ended); the client types
   one character per tick, as a person does, so it asks at most once per tick and every request gets
-  its answer. The client mirrors this: it acks a tick only once its own work for it is done, that is
-  the events an input queued right after the tick were polled, so their packets reach Paper before the
-  ack; until that tick's record went out it handles no packet, since one queued after the tick's step
-  ping belongs to the next tick. An input starts
+  its answer. The client mirrors this: it records a tick in the frame right after it, so the record
+  shows the tick as it ended, and only the ack waits for its own work for the tick, that is the events
+  an input queued right after the tick were polled, so their packets reach Paper before the ack; until
+  that tick's record went out it handles no packet, since one queued after the tick's step ping belongs
+  to the next tick. An input starts
   only right after a tick; one that arrives while Paper is idle asks for a tick first. GOLDEN-3 is
   watched: the visible sections update on a background thread after a move, which may make a frame
   lag a tick, but no run showed it, so the client does not wait for them (cause unproven). The client

@@ -43,7 +43,9 @@ val ChatInputRequirements by testSuite(compartment = { GameCompartment }) {
         probe.command("warp", suggests = listOf("spawn", "spire", "shop"), answer = "Warping to")
 
         player.typeInChat("/warp s")
-        within(20.ticks) { player sees suggestions("shop", "spawn", "spire") }
+        // The chat opens in the tick after the chat key, one character goes in after each tick from then
+        // on, and the answer to "/warp " (the sixth) shows in the tick after it was typed.
+        within(7.ticks) { player sees suggestions("shop", "spawn", "spire") }
         player.typeInChat("p")
         within(20.ticks) { player sees suggestions("spawn", "spire") }
     }

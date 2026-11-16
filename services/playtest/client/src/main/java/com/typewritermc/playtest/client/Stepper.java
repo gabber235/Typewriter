@@ -12,8 +12,9 @@ import net.minecraft.util.Util;
 /**
  * The client's clock in step with Paper. Paper sends a step ping at the end of every stepped tick; from
  * the first one on, the client's clock stands still and moves exactly one tick for each step ping, so
- * the client runs one tick per server tick. After the tick's frame is perceived, once the client's own
- * work for it is done ({@link ClientWork}), the client acks the tick, and Paper runs the next one.
+ * the client runs one tick per server tick. The frame right after the tick records it; once the
+ * client's own work for the tick is done too ({@link ClientWork}), the client acks it, and Paper runs
+ * the next one.
  * Render thread only, except {@link #wake()}.
  */
 final class Stepper {
@@ -32,6 +33,7 @@ final class Stepper {
     private static int lastPinged = -1;
     private static int lastRan = -1;
     private static boolean perceiveDue;
+    private static boolean ackDue;
     private static int askedAfter = -1;
 
     private Stepper() {}
@@ -103,6 +105,7 @@ final class Stepper {
         lastPinged = -1;
         lastRan = -1;
         perceiveDue = false;
+        ackDue = false;
     }
 
     /** Head of {@code Minecraft.runTick}, before it reads the clock. */
@@ -113,7 +116,7 @@ final class Stepper {
         if (!stepping) return;
         processPackets(mc);
         if (running != null) return;
-        if (granted.isEmpty() && !perceiveDue && !Perceiver.forced()) {
+        if (granted.isEmpty() && !perceiveDue && !ackDue && !Perceiver.forced()) {
             LockSupport.parkNanos(PARK_NANOS);
             processPackets(mc);
         }
@@ -124,6 +127,7 @@ final class Stepper {
         } else {
             // No tick runs in this pass: an input that waits to start asks Paper for a tick here.
             Inputs.betweenTicks(mc, false);
+            ack();
         }
     }
 
@@ -131,8 +135,8 @@ final class Stepper {
      * Handles the packets queued for the render thread, here and where {@code Minecraft.runTick} does,
      * unless the record of the tick that ran is still due: a packet queued after that tick's step ping
      * belongs to the next tick, and handled before the record went out it would show a tick early. The
-     * record waits only on the client's own polled events, never on a packet, and Paper sends the next
-     * step ping only after its ack.
+     * record goes out in the frame right after its tick, and Paper sends the next step ping only after
+     * the ack.
      */
     static void processPackets(Minecraft mc) {
         if (stepping && perceiveDue) return;
@@ -153,10 +157,18 @@ final class Stepper {
         return perceiveDue || Perceiver.forced();
     }
 
-    /** After a perceived frame: the tick it showed is acked, so Paper may run the next. */
+    /** After a perceived frame: the tick it recorded is acked once the client's own work for it is done. */
     static void perceived() {
         if (!perceiveDue) return;
         perceiveDue = false;
+        ackDue = true;
+        ack();
+    }
+
+    /** Acks the recorded tick once the events an input queued after it were polled, so Paper may run the next. */
+    private static void ack() {
+        if (!ackDue || !ClientWork.done()) return;
+        ackDue = false;
         ClientPlayNetworking.send(new StepAckPayload(new StepAck(lastRan, Inputs.busy())));
     }
 
@@ -165,7 +177,7 @@ final class Stepper {
      * needs it to step; once for each tick the client ran.
      */
     static void needTicks() {
-        if (!stepping || perceiveDue || askedAfter == lastRan) return;
+        if (!stepping || perceiveDue || ackDue || askedAfter == lastRan) return;
         askedAfter = lastRan;
         ClientPlayNetworking.send(new StepAckPayload(new StepAck(lastRan, true)));
     }
