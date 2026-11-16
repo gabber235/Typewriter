@@ -108,6 +108,7 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
 
   @override
   List<SelectionCapability> get capabilities => [
+    CopySelectionCapability(service.serviceId.id),
     UnbindSelectionCapability(onUnbind: onUnbind),
   ];
 

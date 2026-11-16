@@ -210,6 +210,7 @@ void main() {
           if (field.spoken.startsWith("Name")) field.spoken,
       ], hasLength(1));
       expect(panel.inspector.operations, [
+        "Copy 2",
         "Unbind 2 services? They disconnect straight away.",
       ]);
 

@@ -2,9 +2,9 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// What the inspector shows for one join code: its link with a Copy
-/// button, the roles it grants straight away, how often it works and when
-/// it expires.
+/// What the inspector shows for one join code: its link, the roles it
+/// grants straight away, how often it works and when it expires. Copy is
+/// one of its operations.
 class JoinCodeInspection extends StatelessWidget {
   const JoinCodeInspection({
     required this.code,
@@ -26,13 +26,6 @@ class JoinCodeInspection extends StatelessWidget {
       spacing: context.spacing.space3,
       children: [
         BlurReveal(blurSigma: 3, child: Text(url, style: text.bodyMedium)),
-        CommandButton(
-          command: joinCodeCopy(code),
-          face: ButtonFace.outlined,
-          icon: const Icon(Icons.copy, size: 16),
-          label: "Copy Join Code",
-          doneLabel: "Copied",
-        ),
         InspectionDetail(
           label: "Roles",
           child: Text(
@@ -56,19 +49,4 @@ class JoinCodeInspection extends StatelessWidget {
       ],
     );
   }
-}
-
-/// The one Copy join code command for [code]: its row button and the
-/// inspector button both build it, so each says Copied. It has no key, as
-/// rows bind none of their own.
-ActionShortcut joinCodeCopy(skir.JoinCode code) {
-  final url = joinCodeUrl(code.code);
-  return ActionShortcut(
-    id: "copy_join_code_${code.code}",
-    label: "Copy join code",
-    description: "Copy this join code",
-    activators: const [],
-    priority: 1,
-    run: ActionRun.press((_) => Clipboard.setData(ClipboardData(text: url))),
-  );
 }

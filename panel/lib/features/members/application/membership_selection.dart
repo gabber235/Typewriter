@@ -195,7 +195,9 @@ final class JoinCodeSelectable
       const SelectableNoun(one: "join code", many: "join codes");
 
   @override
-  List<SelectionCapability> get capabilities => const [];
+  List<SelectionCapability> get capabilities => [
+    CopySelectionCapability(joinCodeUrl(code.code)),
+  ];
 
   @override
   InspectionContent buildInspection(InspectionBindingScope owners) {
