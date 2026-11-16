@@ -113,9 +113,10 @@ public sealed interface Message {
 
     /**
      * Pool to session: these players belong to the submission's attempt until its {@link Result}, each
-     * wiped and standing in the attempt's {@code region}.
+     * wiped and standing in the attempt's {@code region} on the Paper named {@code paper}: the shared
+     * Paper, or the attempt's own, named after the attempt.
      */
-    record Lease(long submission, List<Player> players, Region region) implements Message {}
+    record Lease(long submission, List<Player> players, Region region, String paper) implements Message {}
 
     /**
      * One thing an attempt did: it began at {@code atMillis}, Unix milliseconds, and took

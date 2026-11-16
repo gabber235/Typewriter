@@ -148,7 +148,7 @@ val WireTest by testSuite {
                 Resumed(12, 7, "the player gv-2 is not online"),
                 Disconnected(25_566, "its connection to the Paper at 127.0.0.1:25566 dropped"),
                 Reclaim(8),
-                Lease(7, listOf(Player("gv-1", player), Player("gv-2", UUID(1, 2))), Region(-1_024, 2_048)),
+                Lease(7, listOf(Player("gv-1", player), Player("gv-2", UUID(1, 2))), Region(-1_024, 2_048), "paper-a7"),
                 Result(7, 1_250, null, null, listOf(), "", listOf()),
                 Result(
                     8,

@@ -101,7 +101,7 @@ internal class Game private constructor(
 
     /**
      * A fresh folder and free port for [name], a restart attempt's own Paper, set up as the shared
-     * Paper's folder is. A folder an earlier attempt kept for its log goes.
+     * Paper's folder is. A folder of that name an earlier pool run left goes.
      */
     fun ownFolder(name: String): PaperFolder {
         val folder = PaperFolder(name, settings.poolDir.resolve(name), freePort())
@@ -207,8 +207,8 @@ internal class Game private constructor(
             return Display(":$number", Part("Display of $player", process, log))
         }
 
-        /** The name every restart attempt's own Paper starts with: `paper-` and its first player's name. */
-        const val OWN_PAPER = "paper-"
+        /** The name every restart attempt's own Paper starts with, followed by its attempt: `paper-a23`. */
+        const val OWN_PAPER = "paper-a"
 
         /** A fresh Paper folder in [dir] that serves on [port]. */
         private fun preparePaper(

@@ -189,6 +189,7 @@ public final class Wire {
                     uuid(body, player.uuid());
                 }
                 region(body, lease.region());
+                string(body, lease.paper());
             }
             case Result result -> {
                 body.writeLong(result.submission());
@@ -428,7 +429,7 @@ public final class Wire {
                 int count = count(in);
                 var players = new ArrayList<Player>(count);
                 for (int i = 0; i < count; i++) players.add(new Player(string(in), uuid(in)));
-                yield new Lease(submission, List.copyOf(players), region(in));
+                yield new Lease(submission, List.copyOf(players), region(in), string(in));
             }
             case 4 -> new Result(in.readLong(), in.readLong(), optional(in), optional(in), steps(in), string(in), strings(in));
             case 5 -> new End(string(in), string(in), new AttemptPolicy(policyKind(in.readUnsignedByte()), in.readInt()));

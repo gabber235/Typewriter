@@ -134,26 +134,6 @@ internal class Pool(
         ) : Event
     }
 
-    /**
-     * A Paper the pool runs, in its [folder]: the shared one, or a restart attempt's own. Its [rules] say
-     * what the pool does at each thing it hears about it. It keeps its process now, the boot it is in, the
-     * cache that boot trains, and when its last boot and kill happened.
-     */
-    private class Server(
-        val folder: PaperFolder,
-        val rules: PaperRules,
-    ) {
-        val name: String get() = folder.name
-        val port: Int get() = folder.port
-        var peer: Peer? = null
-        var part: Part? = null
-        var boots = 0
-        var training: AotCache.Boot.Train? = null
-        var lost = false
-        var killedAt = 0L
-        var bootedAt = 0L
-    }
-
     /** One warm client and its player. A lost client's player waits for a new client of the same name. */
     private class Client(
         val player: Player,
@@ -245,8 +225,8 @@ internal class Pool(
     private lateinit var game: Game
     private lateinit var shared: Server
 
-    // Every Paper the pool runs, the shared one included, by name.
-    private val papers = mutableMapOf<String, Server>()
+    // Every Paper the pool runs, the shared one included, each under a name and in a folder of its own.
+    private val papers = Papers(folderOf = { game.ownFolder(it) }, remove = { game.removeOwn(it) })
     private val aot = AotCache(settings.aotDir)
 
     // Every restart Paper of the pool boots the same JDK, class path, plugins and flags.
@@ -274,7 +254,7 @@ internal class Pool(
         shared.part = game.paperPart
         shared.boots = 1
         shared.bootedAt = startedAt
-        papers[shared.name] = shared
+        papers.add(shared)
         clients.forEach { it.on = shared }
         game.parts.forEach { part ->
             watch(part)
@@ -286,7 +266,7 @@ internal class Pool(
             // Every attempt ended, so each own Paper halts on its own; one that trained writes its cache as
             // it exits, which the pool keeps only once it hears the exit.
             val ownsEndBy = System.nanoTime() + TimeUnit.SECONDS.toNanos(OWN_EXIT_SECONDS)
-            while (papers.values.any { it !== shared }) handle(events.poll(ownsEndBy - System.nanoTime(), TimeUnit.NANOSECONDS) ?: break)
+            while (papers.all.any { it !== shared }) handle(events.poll(ownsEndBy - System.nanoTime(), TimeUnit.NANOSECONDS) ?: break)
         } finally {
             game.stop()
         }
@@ -506,7 +486,7 @@ internal class Pool(
             }?.server
 
     /** The Paper that opened the connection [peer]. */
-    private fun serverOf(peer: Peer): Server? = papers.values.firstOrNull { it.peer == peer }
+    private fun serverOf(peer: Peer): Server? = papers.all.firstOrNull { it.peer == peer }
 
     private fun fromPaper(
         server: Server,
@@ -672,7 +652,7 @@ internal class Pool(
             timings[attempt.session to attempt.submit.submission()]?.took(
                 "wipe ${attempt.players.joinToString { it.name() }} into region (${attempt.region.x()}, ${attempt.region.z()})",
             )
-            attempt.session.send(Lease(attempt.submit.submission(), attempt.players, attempt.region))
+            attempt.session.send(Lease(attempt.submit.submission(), attempt.players, attempt.region, attempt.server.name))
             attempt.fresh.values.forEach(attempt.session::send)
         }
     }
@@ -740,7 +720,7 @@ internal class Pool(
 
     /**
      * The Paper of a new attempt of [submit] claims [players]: it wipes them and puts them in a region no
-     * attempt on it used before. A restart attempt gets a Paper of its own, named after its first player:
+     * attempt on it used before. A restart attempt gets a Paper of its own, named after the attempt:
      * it boots while they wait on the shared Paper, and they join it once it is up.
      */
     private fun claim(
@@ -748,21 +728,16 @@ internal class Pool(
         submit: Submit,
         players: List<Player>,
     ): Attempt {
-        val server = if (submit.restartsPaper()) ownPaper(players) else shared
-        val claiming = server.rules.claim(++nextAttempt)
-        val attempt = Attempt(nextAttempt, session, submit, players, claiming.region, server)
+        val id = ++nextAttempt
+        val server = if (submit.restartsPaper()) papers.restart(id, players.map { it.name() }.toSet()) else shared
+        val claiming = server.rules.claim(id)
+        val attempt = Attempt(id, session, submit, players, claiming.region, server)
         val names = players.joinToString { it.name() }
         timings[session to submit.submission()]?.took("claim $names on ${server.name}")
         attempts.start(attempt.id, attempt, attempt.players.map { it.name() }, server.rules)
         System.err.println("Attempt ${attempt.id}: ${submit.testId()} on $names on ${server.name} in ${attempt.region}")
         act(server, claiming.todo)
         return attempt
-    }
-
-    /** A Paper of its own for a restart attempt of [players], in a fresh folder on a free port. */
-    private fun ownPaper(players: List<Player>): Server {
-        val folder = game.ownFolder(Game.OWN_PAPER + players.first().name())
-        return Server(folder, OwnPaper(folder.name, players.map { it.name() }.toSet())).also { papers[it.name] = it }
     }
 
     /** Does what the rules of [server] say comes next. */
@@ -976,10 +951,7 @@ internal class Pool(
     }
 
     /** [server]'s process ended for good: the pool forgets it, and its folder goes unless it was lost. */
-    private fun gone(server: Server) {
-        papers.remove(server.name)
-        if (!server.lost) game.removeOwn(server.folder)
-    }
+    private fun gone(server: Server) = papers.gone(server)
 
     /** [server]'s process ended; a boot that trained a cache keeps it only if it ended cleanly. */
     private fun paperExited(
@@ -1092,7 +1064,7 @@ internal class Pool(
 
     /** A game part ended: a Paper's rules say what follows, a client's is lost and replaced, a display's ends the game. A replaced client's old part ends unheard. */
     private fun exited(part: Part) {
-        papers.values.firstOrNull { it.part === part }?.let { return paperExited(it, part) }
+        papers.all.firstOrNull { it.part === part }?.let { return paperExited(it, part) }
         val reason = "${part.name} exited with code ${part.process.exitValue()}; see ${part.log}"
         if (part.player == null) return fail(reason)
         clientNamed(part.player)?.takeIf { it.part === part }?.let { lost(it, "its process exited with code ${part.process.exitValue()}") }

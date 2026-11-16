@@ -20,13 +20,15 @@ import java.nio.file.Path
  * One attempt of one requirement while it holds its lease: the players' perception streams in arrival
  * order, kept whole as the attempt's timeline, and the session it talks to the pool through. Positions
  * the requirement names count from the middle of the attempt's [region]; the attempt turns them into
- * world positions on the way out and turns what the players perceive back on the way in.
+ * world positions on the way out and turns what the players perceive back on the way in. It runs on
+ * the Paper named [paper].
  */
 internal class Attempt(
     private val session: PoolSession,
     private val submission: Long,
     val players: List<GamePlayer>,
     val region: Region,
+    val paper: String,
     private val requirementCode: RequirementCode,
     private val restartsPaper: Boolean,
 ) {

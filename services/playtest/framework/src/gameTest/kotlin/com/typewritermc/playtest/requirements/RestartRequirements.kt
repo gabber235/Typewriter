@@ -53,7 +53,7 @@ val RestartRequirements by testSuite(compartment = { GameCompartment }) {
         demonstrates = Demonstrates.FAILURE,
         restartsPaper = true,
     ) {
-        val lost = shouldThrow<PaperLost> { killPaperWhileItBoots(player) { restartPaper() } }
+        val lost = shouldThrow<PaperLost> { killPaperWhileItBoots { restartPaper() } }
 
         lost.report shouldContain "exited with code 137 while it booted"
         lost.report shouldContain "console.log"

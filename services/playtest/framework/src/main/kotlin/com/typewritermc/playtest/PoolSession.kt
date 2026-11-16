@@ -443,6 +443,7 @@ internal class PoolSession private constructor(
                 lease.submission(),
                 lease.players().map { GamePlayer(it.name(), it.uuid()) },
                 lease.region(),
+                lease.paper(),
                 leasing.requirementCode,
                 leasing.restartsPaper,
             )
