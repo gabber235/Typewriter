@@ -303,7 +303,11 @@ pieces:
           Paper's connection, typing takes a tick per key, and the record goes out right after its tick.
           Open: BREAK-2 once turned 132 px sideways that the playtest never sent (likely the real cursor
           over a background client window on the Mac, unproven); once the client acked before SDL delivered
-          its own pushed mouse events, so a turn landed a tick late.
+          its own pushed mouse events, so a turn landed a tick late. Both fixed in 349cda7e0: the client
+          marks its own SDL events and drops and logs every other mouse and key event while stepping (the
+          old flake reproduced exactly with an unmarked motion, and a real cursor's 35 events were dropped
+          during a full run); the ack waits until every pushed event reached the game. Linux trusts its own
+          Xvfb display, unproven until slice 9.
         state: working
         evidence: ["commit e4ded3e7d on feat/game-verification-steadiness", "fixes ed15cc7b3 ee84f2844 f802c922a 39742a7d1 18e698ef9 2b40b8aea: steadied requirements same ticks 10 of 10 under load, 96 passed in three full runs"]
 
@@ -810,4 +814,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Only own input and the late ack fix build on feat/game-verification-own-input; then slice 8.
+next: Own input merged (349cda7e0, 96 passed three times). Start slice 8 (coverage and clips); settle 30 or 60 fps.
