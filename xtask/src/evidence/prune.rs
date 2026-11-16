@@ -3,13 +3,13 @@
 //! and starts over when it loses it, so neither drops media published a moment earlier.
 
 use std::fs;
+use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result};
 
 use super::{ATTEMPTS, Store};
 use crate::Context;
-use crate::branch::BranchCheckout;
 
 /// Written into a merged pull request's folder: the Unix seconds it merged, which the weekly
 /// run compares with the retention.
@@ -45,17 +45,27 @@ fn prune_store(ctx: &Context, store: Store, action: &Prune) -> Result<()> {
         println!("no {store:?} branch yet");
         return Ok(());
     }
+    prune_tree(&repository.path(""), store, action)?;
+    match action {
+        Prune::Weekly { .. } => repository.squash(ctx, "evidence snapshot"),
+        Prune::Closed { .. } => repository.commit_and_push(ctx, &format!("prune {action:?}")),
+    }
+}
+
+/// Drops what `action` drops from the pull request folders of `store` in the branch tree at
+/// `tree`. Only those folders: what lives beside them, such as the golden images, stays.
+fn prune_tree(tree: &Path, store: Store, action: &Prune) -> Result<()> {
     match action {
         Prune::Closed {
             pr, merged: false, ..
-        } => remove(&repository, &store.folder(*pr, None))?,
+        } => remove(&tree.join(store.folder(*pr, None)))?,
         Prune::Closed {
             pr,
             merged: true,
             keep,
         } => {
-            let folder = repository.path(&store.folder(*pr, None));
-            let kept = repository.path(&store.folder(*pr, Some(keep)));
+            let folder = tree.join(store.folder(*pr, None));
+            let kept = tree.join(store.folder(*pr, Some(keep)));
             if folder.exists() {
                 for entry in fs::read_dir(&folder)? {
                     let path = entry?.path();
@@ -68,7 +78,7 @@ fn prune_store(ctx: &Context, store: Store, action: &Prune) -> Result<()> {
         }
         Prune::Weekly { retention } => {
             let cutoff = now().saturating_sub(*retention).as_secs();
-            let prs = repository.path(store.root());
+            let prs = tree.join(store.root());
             if prs.exists() {
                 for entry in fs::read_dir(&prs)? {
                     let folder = entry?.path();
@@ -80,21 +90,19 @@ fn prune_store(ctx: &Context, store: Store, action: &Prune) -> Result<()> {
                     }
                 }
             }
-            return repository.squash(ctx, "evidence snapshot");
         }
-    }
-    repository.commit_and_push(ctx, &format!("prune {action:?}"))
-}
-
-fn remove(repository: &BranchCheckout, relative: &str) -> Result<()> {
-    let path = repository.path(relative);
-    if path.exists() {
-        remove_path(&path)?;
     }
     Ok(())
 }
 
-fn remove_path(path: &std::path::Path) -> Result<()> {
+fn remove(path: &Path) -> Result<()> {
+    if path.exists() {
+        remove_path(path)?;
+    }
+    Ok(())
+}
+
+fn remove_path(path: &Path) -> Result<()> {
     if path.is_dir() {
         fs::remove_dir_all(path)
     } else {
@@ -108,4 +116,43 @@ fn now() -> Duration {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("the system clock is after the Unix epoch")
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use std::time::Duration;
+
+    use super::{Prune, prune_tree};
+    use crate::evidence::Store;
+    use crate::test_support::TempRoot;
+
+    #[test]
+    fn pruning_pull_requests_keeps_the_golden_images_beside_them() {
+        let branch = TempRoot::new();
+        branch.write("goldens/5e1d.png", "golden");
+        branch.write("pr/546/abc1234/frame.png", "closed unmerged");
+        branch.write("pr/547/def5678/frame.png", "merged long ago");
+        branch.write("pr/547/merged-at", "0");
+
+        for action in [
+            Prune::Closed {
+                pr: 546,
+                merged: false,
+                keep: String::new(),
+            },
+            Prune::Weekly {
+                retention: Duration::from_secs(60),
+            },
+        ] {
+            prune_tree(&branch.ctx.root, Store::Images, &action).unwrap();
+        }
+
+        assert!(!branch.path("pr/546").exists());
+        assert!(!branch.path("pr/547").exists());
+        assert_eq!(
+            fs::read_to_string(branch.path("goldens/5e1d.png")).unwrap(),
+            "golden"
+        );
+    }
 }

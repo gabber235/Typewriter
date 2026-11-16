@@ -129,6 +129,9 @@ jobs:
           caches: ${{ matrix.caches }}
           profile: e2e
       - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }}
+        env:
+          # The game suite fetches approved golden images from the evidence branch through gh.
+          GH_TOKEN: ${{ github.token }}
       # Artifacts of this public repository are downloadable, so only the staged public folder
       # is uploaded.
       - if: always()

@@ -18,12 +18,13 @@ use crate::lock;
 use crate::results::{self, Quarantine, TestRun};
 use crate::review::change::Change;
 use crate::skirout::base::harness::v1::test_run::Runner;
-use crate::{CommandExt as _, Context, evidence, generate};
+use crate::{CommandExt as _, Context, evidence, generate, goldens};
 
 /// Runs the selected game requirements and reports the run the game pool wrote.
 pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
     // The suite compiles against the generated Skir types, and the pool writes its run with them.
     generate::protocol(ctx)?;
+    goldens::fetch_missing(ctx)?;
     let shown = Path::new(evidence::RESULTS).join("game");
     let evidence = ctx.root.join(&shown);
     let commit = ctx

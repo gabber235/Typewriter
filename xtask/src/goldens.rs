@@ -2,10 +2,12 @@
 //! A requirement that names a golden writes its frame as a PNG into its attempt's folder, beside a
 //! `<name>.golden` file that says which golden file of the repository it belongs to, the frame's
 //! hash and size, the renderer that drew it, and whether that is the pinned renderer, as the run
-//! judged it. Approving writes the hash, size and renderer into that golden file and keeps the PNG
-//! among the local golden images under its hash, where a later run finds the golden's image to draw
-//! a diff against. A golden is exact only for the renderer that drew it, so approve refuses any
-//! frame the pinned renderer did not draw.
+//! judged it. Approving writes the hash, size and renderer into that golden file, keeps the PNG
+//! among the local golden images under its hash, and pushes it to the evidence branch as
+//! `goldens/<hash>.png`; the repository holds only the hash. Before a game run,
+//! [`fetch_missing`] brings every golden's image the machine lacks, so a frame that differs from
+//! its golden shows where while the framework stays offline. A golden is exact only for the
+//! renderer that drew it, so approve refuses any frame the pinned renderer did not draw.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -13,10 +15,15 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context as _, Result, bail};
 
-use crate::{Context, evidence};
+use crate::branch::{BranchCheckout, REPOSITORY};
+use crate::{CommandExt as _, Context, evidence};
 
 /// The local golden images, each named by its hash, relative to the repository root.
 const IMAGES: &str = "services/build/playtest/goldens";
+
+/// The folder of the golden images on the evidence branch, beside the pull requests' folders,
+/// which pruning empties, never inside them.
+const ON_BRANCH: &str = "goldens";
 
 /// The keys a golden file holds, in the order it holds them.
 const GOLDEN_KEYS: [&str; 8] = [
@@ -39,17 +46,130 @@ pub fn run(ctx: &Context, command: &GoldensCommand) -> Result<()> {
             let from = from
                 .clone()
                 .unwrap_or_else(|| ctx.root.join(evidence::RESULTS).join("game"));
-            for approved in approve(&ctx.root, &from, &ctx.root.join(IMAGES))? {
-                println!("goldens: approved {approved}");
+            let approved = approve(&ctx.root, &from, &ctx.root.join(IMAGES))?;
+            for golden in &approved {
+                println!("goldens: approved {}", golden.golden);
             }
+            let images: Vec<PathBuf> = approved.into_iter().map(|it| it.image).collect();
+            publish(ctx, &images)?;
+            println!(
+                "goldens: pushed {} image(s) to the {} branch",
+                images.len(),
+                evidence::BRANCH
+            );
             Ok(())
         }
     }
 }
 
+/// A golden [`approve`] wrote: its golden file, relative to the repository root, and the local image
+/// it was approved from.
+#[derive(Debug)]
+struct Approved {
+    golden: String,
+    image: PathBuf,
+}
+
+/// Puts each of `images` into the evidence branch checked out at `branch`, as `goldens/<hash>.png`.
+fn place(images: &[PathBuf], branch: &Path) -> Result<()> {
+    let folder = branch.join(ON_BRANCH);
+    fs::create_dir_all(&folder).with_context(|| format!("cannot create {}", folder.display()))?;
+    for image in images {
+        let name = image.file_name().context("a golden image without a name")?;
+        fs::copy(image, folder.join(name))
+            .with_context(|| format!("cannot copy {} onto the evidence branch", image.display()))?;
+    }
+    Ok(())
+}
+
+/// Fetches into `images` the image of each golden in `hashes` it does not hold yet, through `fetch`,
+/// which answers None for an image the evidence branch does not hold; returns those hashes.
+fn fetch_into(
+    images: &Path,
+    hashes: &[&str],
+    fetch: impl Fn(&str) -> Result<Option<Vec<u8>>>,
+) -> Result<Vec<String>> {
+    fs::create_dir_all(images).with_context(|| format!("cannot create {}", images.display()))?;
+    let mut absent = Vec::new();
+    for hash in hashes {
+        let image = images.join(format!("{hash}.png"));
+        if image.exists() {
+            continue;
+        }
+        match fetch(hash)? {
+            Some(bytes) => fs::write(&image, bytes)
+                .with_context(|| format!("cannot write {}", image.display()))?,
+            None => absent.push((*hash).to_owned()),
+        }
+    }
+    Ok(absent)
+}
+
+/// Fetches the image of every golden the repository holds that the local golden images lack,
+/// from the evidence branch, so a frame that differs from its golden shows where. A golden whose
+/// image the branch does not hold yet is said, and its frames fail without a diff.
+pub fn fetch_missing(ctx: &Context) -> Result<()> {
+    let files = ctx
+        .tool(".", "git", &["ls-files", "-z", "--", "*.golden"])
+        .output_text()?;
+    let mut hashes = Vec::new();
+    for file in files.split('\0').filter(|it| !it.is_empty()) {
+        let path = ctx.root.join(file);
+        let text =
+            fs::read_to_string(&path).with_context(|| format!("cannot read {}", path.display()))?;
+        let hash = text
+            .lines()
+            .find_map(|line| line.strip_prefix("sha256="))
+            .with_context(|| format!("{file} holds no sha256"))?;
+        hashes.push(hash.to_owned());
+    }
+    let hashes: Vec<&str> = hashes.iter().map(String::as_str).collect();
+    for hash in fetch_into(&ctx.root.join(IMAGES), &hashes, |hash| {
+        fetch_image(ctx, hash)
+    })? {
+        println!(
+            "goldens: the evidence branch holds no image of golden {hash}; a frame that differs from it fails without a diff"
+        );
+    }
+    Ok(())
+}
+
+/// The image of the golden `hash` from the evidence branch, or None when the branch holds none,
+/// through GitHub's contents API, which serves a push at once.
+fn fetch_image(ctx: &Context, hash: &str) -> Result<Option<Vec<u8>>> {
+    let path = format!(
+        "repos/{REPOSITORY}/contents/{ON_BRANCH}/{hash}.png?ref={}",
+        evidence::BRANCH
+    );
+    let output = ctx
+        .tool(
+            ".",
+            "gh",
+            &["api", "-H", "Accept: application/vnd.github.raw", &path],
+        )
+        .output()
+        .context("cannot start gh to fetch a golden image")?;
+    if output.status.success() {
+        return Ok(Some(output.stdout));
+    }
+    let error = String::from_utf8_lossy(&output.stderr);
+    if error.contains("HTTP 404") {
+        return Ok(None);
+    }
+    bail!("gh could not fetch golden image {hash}: {}", error.trim())
+}
+
+/// Pushes the approved `images` onto the evidence branch, where every machine's game run fetches
+/// them; a push that lost a race with another job moves onto its commit.
+fn publish(ctx: &Context, images: &[PathBuf]) -> Result<()> {
+    let branch = BranchCheckout::clone_shallow(ctx, evidence::BRANCH, "Typewriter goldens")?;
+    place(images, &branch.path(""))?;
+    branch.commit_and_push(ctx, &format!("goldens: {} approved", images.len()))
+}
+
 /// Approves every golden captured under `from` into its golden file below `root`, and copies each
-/// frame into `images`; returns the golden files it wrote, relative to `root`.
-fn approve(root: &Path, from: &Path, images: &Path) -> Result<Vec<String>> {
+/// frame into `images`; returns the goldens it wrote.
+fn approve(root: &Path, from: &Path, images: &Path) -> Result<Vec<Approved>> {
     let mut chosen: BTreeMap<String, Captured> = BTreeMap::new();
     for captured in captured_under(from)? {
         if !captured.pinned {
@@ -85,8 +205,9 @@ fn approve(root: &Path, from: &Path, images: &Path) -> Result<Vec<String>> {
         bail!("the run in {} captured no golden", from.display());
     }
     fs::create_dir_all(images).with_context(|| format!("cannot create {}", images.display()))?;
-    for (golden, captured) in &chosen {
-        let file = root.join(golden);
+    let mut approved = Vec::new();
+    for (golden, captured) in chosen {
+        let file = root.join(&golden);
         let parent = file.parent().context("a golden file without a folder")?;
         fs::create_dir_all(parent)
             .with_context(|| format!("cannot create {}", parent.display()))?;
@@ -105,8 +226,9 @@ fn approve(root: &Path, from: &Path, images: &Path) -> Result<Vec<String>> {
                 image.display()
             )
         })?;
+        approved.push(Approved { golden, image });
     }
-    Ok(chosen.into_keys().collect())
+    Ok(approved)
 }
 
 /// One frame a run captured: the golden file it is for, its PNG, its hash, size and renderer, and
@@ -174,7 +296,9 @@ fn read_captured(file: &Path) -> Result<Captured> {
 mod tests {
     use std::fs;
 
-    use super::approve;
+    use std::cell::RefCell;
+
+    use super::{approve, fetch_into, place};
     use crate::test_support::{TempRoot, captured_golden};
 
     const SIDEBAR: &str = "golden=services/playtest/framework/src/gameTest/goldens/sidebar.golden
@@ -203,7 +327,9 @@ pinned=true
         let approved = approve(&root.ctx.root, &run.ctx.root, &root.path("images")).unwrap();
 
         let golden = "services/playtest/framework/src/gameTest/goldens/sidebar.golden";
-        assert_eq!(approved, vec![golden.to_owned()]);
+        let goldens: Vec<_> = approved.iter().map(|it| it.golden.as_str()).collect();
+        assert_eq!(goldens, [golden]);
+        assert_eq!(approved[0].image, root.path("images/5e1d.png"));
         let written = fs::read_to_string(root.path(golden)).unwrap();
         assert!(written.ends_with(
             "sha256=5e1d\nwidth=854\nheight=480\nbackend=Vulkan\n\
@@ -305,5 +431,45 @@ pinned=true
             error.to_string().contains("captured no golden"),
             "{error:#}"
         );
+    }
+
+    #[test]
+    fn an_approved_image_goes_onto_the_evidence_branch_by_its_hash_beside_the_pull_requests() {
+        let (images, branch) = (TempRoot::new(), TempRoot::new());
+        images.write("5e1d.png", "png bytes");
+        branch.write("pr/546/abc1234/frame.png", "a pull request's frame");
+
+        place(&[images.path("5e1d.png")], &branch.ctx.root).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(branch.path("goldens/5e1d.png")).unwrap(),
+            "png bytes"
+        );
+        assert!(branch.path("pr/546/abc1234/frame.png").exists());
+    }
+
+    #[test]
+    fn a_run_fetches_the_image_of_each_golden_it_lacks_and_none_it_holds() {
+        let images = TempRoot::new();
+        images.write("held.png", "held");
+        let asked = RefCell::new(Vec::new());
+
+        let absent = fetch_into(
+            &images.ctx.root,
+            &["held", "pushed", "never-pushed"],
+            |hash| {
+                asked.borrow_mut().push(hash.to_owned());
+                Ok((hash == "pushed").then(|| b"png bytes".to_vec()))
+            },
+        )
+        .unwrap();
+
+        assert_eq!(asked.into_inner(), ["pushed", "never-pushed"]);
+        assert_eq!(
+            fs::read_to_string(images.path("pushed.png")).unwrap(),
+            "png bytes"
+        );
+        assert_eq!(absent, ["never-pushed"]);
+        assert!(!images.path("never-pushed.png").exists());
     }
 }
