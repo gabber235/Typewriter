@@ -543,29 +543,12 @@ internal class Pool(
                 resumed(server, message)
             }
 
-            // Paper read the attempt's last counts just before; the session hears all the attempt covered so far.
             is Covered -> {
-                message.attempts().forEach { id ->
-                    attempts[id]?.let {
-                        coverage.add(it.key, message.exec())
-                        val cost = coverageCosts.getOrPut(it.key, ::CoverageCost)
-                        cost.reads++
-                        cost.readNanos += message.readNanos()
-                    }
-                }
+                covered(message)
             }
 
             is Settled -> {
-                attempts[message.id()]?.let {
-                    val start = System.nanoTime()
-                    val lines = coverage.covered(it.key, it.server.folder.classes)
-                    val cost = coverageCosts.getOrPut(it.key, ::CoverageCost)
-                    cost.analyses++
-                    cost.analysisNanos += System.nanoTime() - start
-                    cost.lastAnalysisAt = System.currentTimeMillis()
-                    covered[it.key] = lines
-                    it.session.send(Settled(it.submit.submission(), lines))
-                }
+                attempts[message.id()]?.let(::settled)
             }
 
             is WorkHung -> {
@@ -588,6 +571,29 @@ internal class Pool(
                 System.err.println("${server.name} sent ${message.javaClass.simpleName}, which Paper never sends")
             }
         }
+    }
+
+    /** Paper read and reset the counts [message] holds: each attempt it names ran since the read before. */
+    private fun covered(message: Covered) {
+        message.attempts().forEach { id ->
+            val attempt = attempts[id] ?: return@forEach
+            coverage.add(attempt.key, message.exec())
+            val cost = coverageCosts.getOrPut(attempt.key, ::CoverageCost)
+            cost.reads++
+            cost.readNanos += message.readNanos()
+        }
+    }
+
+    /** Paper read [attempt]'s last counts just before: its session hears all the attempt covered so far. */
+    private fun settled(attempt: Attempt) {
+        val start = System.nanoTime()
+        val lines = coverage.covered(attempt.key, attempt.server.folder.classes)
+        val cost = coverageCosts.getOrPut(attempt.key, ::CoverageCost)
+        cost.analyses++
+        cost.analysisNanos += System.nanoTime() - start
+        cost.lastAnalysisAt = System.currentTimeMillis()
+        covered[attempt.key] = lines
+        attempt.session.send(Settled(attempt.submit.submission(), lines))
     }
 
     /** [server] resumed its attempt after a restart, or could not. */
