@@ -683,6 +683,11 @@ decided:
   - id: only-own-input
     what: "A. Only own input (Recommended)"
     why: BREAK-2 turned 132 px sideways that the playtest never sent, likely the real cursor over a background client window; the client marks the events the playtest pushes and, while stepping, drops and logs every other mouse and key event
+  - id: start-slice-8
+    what: "Yes, start slice 8 (Recommended)"
+  - id: clips-30-fps
+    what: "30 fps (Recommended)"
+    why: P9 showed 30 and 60 fps both exact; 30 costs 1.5 times the gated time per rerun requirement against 2.6 at 60, and only demo reruns pay
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -806,7 +811,7 @@ slices:
       on JDK, files and flags. Every Paper now has a rules object behind PaperRules and Pool forwards events to it (6e5128c00, 0 own branches left). Every way an attempt ends tells its Paper's rules (ba28ff607), and each restart Paper and folder is named after its attempt (fe4f66b9e). Open: a training Paper's halt prints a watchdog dump; 4 restarts at once could
       starve the shared Paper.
   - id: coverage-and-clips
-    status: queued
+    status: building
     what: coverage per requirement, demo reruns with clips
     green: a touched requirement gets its clip
   - id: ci-and-pool-lifecycle
@@ -814,4 +819,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Own input merged (349cda7e0, 96 passed three times). Start slice 8 (coverage and clips); settle 30 or 60 fps.
+next: Slice 8 (coverage and clips, 30 fps) builds on feat/game-verification-slice-8.
