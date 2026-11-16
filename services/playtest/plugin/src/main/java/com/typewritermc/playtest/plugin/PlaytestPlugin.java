@@ -8,6 +8,7 @@ import com.typewritermc.playtest.wire.Message;
 import com.typewritermc.playtest.wire.Message.Claim;
 import com.typewritermc.playtest.wire.Message.Claimed;
 import com.typewritermc.playtest.wire.Message.ClientStalled;
+import com.typewritermc.playtest.wire.Message.Covered;
 import com.typewritermc.playtest.wire.Message.Hello;
 import com.typewritermc.playtest.wire.Message.HungEnded;
 import com.typewritermc.playtest.wire.Message.Kind;
@@ -51,6 +52,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
+import org.jacoco.agent.rt.RT;
 
 /**
  * The framework's side of a Paper the game pool booted: the attempts sharing it, the step policy that
@@ -77,6 +79,8 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private final GroundAhead ground = new GroundAhead(this);
     private final ChatWork chat = new ChatWork();
     private final SuggestionWork suggestions = new SuggestionWork();
+    private final Coverage coverage = new Coverage(
+            () -> RT.getAgent().getExecutionData(true), read -> this.pool.send(new Covered(read.attempts(), read.exec())));
     private Link pool;
 
     @Override
@@ -85,6 +89,13 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         missing.removeAll(Step.applied);
         if (!missing.isEmpty()) {
             getLogger().severe("The step agent did not prefix " + missing + "; this Paper cannot be stepped. Stopping.");
+            Bukkit.shutdown();
+            return;
+        }
+        try {
+            RT.getAgent();
+        } catch (IllegalStateException | NoClassDefFoundError absent) {
+            getLogger().severe("The JaCoCo agent is not running (" + absent.getMessage() + "), so no attempt's coverage can be read. Stopping.");
             Bukkit.shutdown();
             return;
         }
@@ -126,6 +137,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
             case Claim claim -> claim(claim);
             case Resume resume -> resume(resume);
             case Release release -> {
+                coverage.ended(release.attempt());
                 policy.release(attempts.release(release.attempt()));
                 ground.release(release.attempt());
             }
@@ -138,7 +150,10 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
                 if (failure == null) policy.deliver(probe.players(), () -> pool.send(new ProbeDone(probe.request(), ranAfter, null)));
                 else pool.send(new ProbeDone(probe.request(), ranAfter, failure));
             }
-            case Settle settle -> policy.settle(attempts.players(settle.id()), () -> pool.send(new Settled(settle.id())));
+            case Settle settle -> policy.settle(attempts.players(settle.id()), () -> {
+                coverage.settled(settle.id());
+                pool.send(new Settled(settle.id(), List.of()));
+            });
             case Query query -> pool.send(marks(query));
             case StepUntil step -> policy.stepUntil(step.player(), step.tick(), step.barrier());
             case StopStepping stop -> policy.stop(stop.player());
@@ -158,6 +173,8 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
             pool.send(new Claimed(claim.attempt(), players.failure()));
             return;
         }
+        // What plugins do for the attempt from here on, its players' wipe included, counts for it.
+        coverage.started(claim.attempt());
         attempts.claim(claim.attempt(), claim.players());
         ground.claim(claim.attempt(), claim.region());
         policy.claim(claim.players());
@@ -187,6 +204,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
             pool.send(new Resumed(resume.attempt(), ranAfter, players.failure()));
             return;
         }
+        coverage.started(resume.attempt());
         attempts.claim(resume.attempt(), resume.players());
         policy.claim(resume.players());
         policy.deliver(resume.players(), () -> pool.send(new Resumed(resume.attempt(), ranAfter, null)));

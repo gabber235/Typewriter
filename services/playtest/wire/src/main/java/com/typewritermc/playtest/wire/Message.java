@@ -338,8 +338,42 @@ public sealed interface Message {
      */
     record Settle(long id) implements Message {}
 
-    /** Paper to pool with {@code id} the attempt, pool to session with {@code id} the submission: see {@link Settle}. */
-    record Settled(long id) implements Message {}
+    /**
+     * Paper to pool with {@code id} the attempt, pool to session with {@code id} the submission: see
+     * {@link Settle}. Paper sends no {@code covered}: its last {@link Covered} came just before. The
+     * pool sends every plugin class the attempt ran code of so far, with the lines that ran.
+     */
+    record Settled(long id, List<CoveredClass> covered) implements Message {}
+
+    /**
+     * One plugin class an attempt ran code of: its JVM {@code name} with slashes, its {@code source}
+     * file by package path ({@code com/typewritermc/playtest/plugin/Probes.java}) and the lines of that
+     * file with an instruction that ran, ascending.
+     */
+    record CoveredClass(String name, String source, List<Integer> lines) {}
+
+    /**
+     * Paper to pool: what JaCoCo counted of the plugin classes since Paper last read it, in JaCoCo's
+     * execution data format, for {@code attempts}, every attempt that held players meanwhile. Paper
+     * reads, and so resets, the counts whenever an attempt starts or settles.
+     */
+    record Covered(List<Long> attempts, byte[] exec) implements Message {
+        // A record compares arrays by identity; two reads are the same when they hold the same bytes.
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof Covered covered && attempts.equals(covered.attempts) && java.util.Arrays.equals(exec, covered.exec);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * attempts.hashCode() + java.util.Arrays.hashCode(exec);
+        }
+
+        @Override
+        public String toString() {
+            return "Covered[attempts=" + attempts + ", exec=" + exec.length + " bytes]";
+        }
+    }
 
     /**
      * Paper to the session holding {@code player}: the player's work {@code work}, which began after

@@ -28,6 +28,7 @@ import com.typewritermc.playtest.wire.Message.Reply
 import com.typewritermc.playtest.wire.Message.Result
 import com.typewritermc.playtest.wire.Message.Role
 import com.typewritermc.playtest.wire.Message.Settle
+import com.typewritermc.playtest.wire.Message.CoveredClass
 import com.typewritermc.playtest.wire.Message.Settled
 import com.typewritermc.playtest.wire.Message.Submit
 import com.typewritermc.playtest.wire.Wire
@@ -135,19 +136,24 @@ internal class PoolSession private constructor(
         val restartsPaper: Boolean = false,
     )
 
+    /** How one attempt ended: why it failed, or null, and the plugin code it covered by its last settle. */
+    class AttemptEnd(
+        val failure: Throwable?,
+        val covered: List<CoveredClass> = listOf(),
+    )
+
     /**
      * Runs one attempt of a requirement: waits for its lease and runs its bodies in order, then reports
      * the outcome. Before each body after the first, the pool releases and claims the same players
-     * again, as the next attempt would get them: wiped and in a new region. Returns why it failed, or
-     * null.
+     * again, as the next attempt would get them: wiped and in a new region. Returns how it ended.
      */
-    suspend fun attempt(planned: Planned): Throwable? = sideBySide(listOf(planned)).single()
+    suspend fun attempt(planned: Planned): AttemptEnd = sideBySide(listOf(planned)).single()
 
     /**
      * Runs [planned] side by side, each as an attempt of its own: the pool claims and leases all their
-     * players at the same moment. Every attempt runs to its own end; returns why each failed, or null.
+     * players at the same moment. Every attempt runs to its own end; returns how each ended.
      */
-    suspend fun sideBySide(planned: List<Planned>): List<Throwable?> {
+    suspend fun sideBySide(planned: List<Planned>): List<AttemptEnd> {
         val leasings =
             planned.map { submissions.incrementAndGet() to Leasing(RequirementCode.of(it.bodies.first()), it.restartsPaper) }
         for ((submission, leasing) in leasings) {
@@ -172,24 +178,25 @@ internal class PoolSession private constructor(
         }
     }
 
-    /** Runs [planned]'s bodies once [leasing] holds its lease; returns why the attempt failed, or null. */
+    /** Runs [planned]'s bodies once [leasing] holds its lease; returns how the attempt ended. */
     private suspend fun runAttempt(
         submission: Long,
         leasing: Leasing,
         planned: Planned,
-    ): Throwable? {
+    ): AttemptEnd {
         var attempt =
             try {
                 leasing.attempt.await()
             } catch (
                 @Suppress("TooGenericExceptionCaught") unleased: Throwable,
             ) {
-                return unleased
+                return AttemptEnd(unleased)
             } finally {
                 leases.remove(submission)
             }
         val started = System.nanoTime()
         var failure: Throwable? = null
+        var covered = listOf<CoveredClass>()
         val steps = mutableListOf<AttemptStep>()
         val evidence =
             Evidence(settings.testRun.toAbsolutePath().parent, planned.testId, checkNotNull(attemptsOf.merge(planned.testId, 1, Int::plus)))
@@ -199,7 +206,9 @@ internal class PoolSession private constructor(
                 attempt = lease(submission, leasing) { send(Reclaim(submission)) }
             }
             attempt.evidence = evidence
-            failure = settle(submission, attempt, run(attempt, body))?.let(attempt::located)
+            val settled = settle(submission, attempt, run(attempt, body))
+            failure = settled.failure?.let(attempt::located)
+            covered = settled.covered
             steps += attempt.steps
             if (failure != null) break
         }
@@ -219,7 +228,7 @@ internal class PoolSession private constructor(
                 evidence.screenshots,
             ),
         )
-        return failure
+        return AttemptEnd(failure, covered)
     }
 
     /** Waits for the lease of [submission] that [ask] asks the pool for. */
@@ -257,21 +266,21 @@ internal class PoolSession private constructor(
 
     /**
      * Waits until the work plugins count for the attempt's players is quiet, so none of it reaches the
-     * next attempt on those players; returns why the attempt failed: hung work or a lost client the
-     * body never met first, else [failure].
+     * next attempt on those players; returns how the attempt ended: failed by hung work or a lost
+     * client the body never met first, else by [failure], and what it covered so far.
      */
     private suspend fun settle(
         submission: Long,
         attempt: Attempt,
         failure: Throwable?,
-    ): Throwable? {
+    ): AttemptEnd {
         // A cancelled body still ends its attempt, so the pool hears the result and frees its players.
         val at = System.currentTimeMillis()
-        withContext(NonCancellable) { waitFor(settles, submission) { send(Settle(submission)) } }
+        val settled = withContext(NonCancellable) { waitFor(settles, submission) { send(Settle(submission)) } }
         attempt.took(at, "settle ${attempt.players.joinToString { it.name }}")
-        val untaken = attempt.untakenFailures().firstOrNull() ?: return failure
+        val untaken = attempt.untakenFailures().firstOrNull() ?: return AttemptEnd(failure, settled.covered())
         failure?.let(untaken::addSuppressed)
-        return untaken
+        return AttemptEnd(untaken, settled.covered())
     }
 
     /** Kills and boots again the own Paper of [submission]'s attempt; returns the new Paper's tick after which every player is back. */

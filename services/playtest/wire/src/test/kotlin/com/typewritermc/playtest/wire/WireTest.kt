@@ -17,6 +17,8 @@ import com.typewritermc.playtest.wire.Message.Claimed
 import com.typewritermc.playtest.wire.Message.ClientLost
 import com.typewritermc.playtest.wire.Message.ClientStalled
 import com.typewritermc.playtest.wire.Message.Connect
+import com.typewritermc.playtest.wire.Message.Covered
+import com.typewritermc.playtest.wire.Message.CoveredClass
 import com.typewritermc.playtest.wire.Message.Declined
 import com.typewritermc.playtest.wire.Message.Demonstrates
 import com.typewritermc.playtest.wire.Message.Disconnected
@@ -190,7 +192,10 @@ val WireTest by testSuite {
                 Release(9),
                 RegionsAhead(listOf(Region(-1_024, -1_024), Region(-1_024, 0))),
                 Settle(9),
-                Settled(9),
+                Settled(9, listOf()),
+                Settled(10, listOf(CoveredClass("com/typewritermc/playtest/plugin/Probes", "com/typewritermc/playtest/plugin/Probes.java", listOf(12, 13, 40)))),
+                Covered(listOf(9L, 10L), byteArrayOf(1, -64, 0, 7)),
+                Covered(listOf(), byteArrayOf()),
                 WorkHung("gv-1", "Ledger lookup", 1_204),
                 PlayerLeft("gv-2", "TIMED_OUT"),
                 ClientLost("gv-2", "its process exited with code 137"),

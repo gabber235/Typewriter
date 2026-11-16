@@ -10,6 +10,8 @@ import com.typewritermc.playtest.wire.Message.ClientLost
 import com.typewritermc.playtest.wire.Message.ClientRequest
 import com.typewritermc.playtest.wire.Message.ClientStalled
 import com.typewritermc.playtest.wire.Message.Connect
+import com.typewritermc.playtest.wire.Message.Covered
+import com.typewritermc.playtest.wire.Message.CoveredClass
 import com.typewritermc.playtest.wire.Message.Declined
 import com.typewritermc.playtest.wire.Message.Disconnected
 import com.typewritermc.playtest.wire.Message.End
@@ -165,6 +167,9 @@ internal class Pool(
         // While its Paper restarts, only each player's latest record waits, as before the lease.
         var restarting = false
         var group: List<Attempt> = listOf(this)
+
+        /** The submission this attempt runs, which keeps what it covered across its bodies. */
+        val key: Pair<Peer, Long> get() = session to submit.submission()
     }
 
     /**
@@ -211,6 +216,10 @@ internal class Pool(
         (1..settings.clients).map { Client(Player("gv-$it", UUID.nameUUIDFromBytes("OfflinePlayer:gv-$it".toByteArray()))) }
     private val claims = Claims<Peer, Player>(clients.map { it.player })
     private val runs = RunRecords()
+
+    // What each submission's attempt covered: its Paper's reads, and the lines they came to at its last settle.
+    private val coverage = Coverage<Pair<Peer, Long>>()
+    private val covered = mutableMapOf<Pair<Peer, Long>, List<CoveredClass>>()
     private val sessions = mutableSetOf<Peer>()
     private val queued = mutableMapOf<Pair<Peer, Long>, Queued>()
     private val timings = mutableMapOf<Pair<Peer, Long>, Timing>()
@@ -233,7 +242,7 @@ internal class Pool(
         val java = settings.java.toRealPath()
         val release = java.parent.parent.resolve("release")
         val jdk = "$java\n" + if (Files.isRegularFile(release)) Files.readString(release) else ""
-        AotCache.key(jdk, PaperServer.of(settings.paperDir).classPath + listOf(settings.agentJar, settings.pluginJar), RESTART_FLAGS)
+        AotCache.key(jdk, PaperServer.of(settings.paperDir).classPath + listOf(settings.agentJar, settings.coverageAgentJar, settings.pluginJar), RESTART_FLAGS)
     }
     private var failure: String? = null
     private var sawSession = false
@@ -358,7 +367,7 @@ internal class Pool(
             // A lost own Paper runs no work that could still reach a later attempt.
             is Settle -> {
                 attemptOf(session, message.id())?.let { attempt ->
-                    attempt.server.peer?.send(Settle(attempt.id)) ?: session.send(Settled(message.id()))
+                    attempt.server.peer?.send(Settle(attempt.id)) ?: session.send(Settled(message.id(), covered[attempt.key].orEmpty()))
                 }
             }
 
@@ -372,7 +381,8 @@ internal class Pool(
             is Result -> {
                 val attempt = attemptOf(session, message.submission()) ?: return
                 val claimed = timings.remove(session to message.submission())?.steps.orEmpty()
-                runs.record(session.hello.name(), attempt.submit, message, claimed)
+                runs.record(session.hello.name(), attempt.submit, message, claimed, covered.remove(attempt.key).orEmpty())
+                coverage.forget(attempt.key)
                 release(attempt, "its session sent its result")
             }
 
@@ -499,8 +509,17 @@ internal class Pool(
                 resumed(server, message)
             }
 
+            // Paper read the attempt's last counts just before; the session hears all the attempt covered so far.
+            is Covered -> {
+                message.attempts().forEach { id -> attempts[id]?.let { coverage.add(it.key, message.exec()) } }
+            }
+
             is Settled -> {
-                attempts[message.id()]?.let { it.session.send(Settled(it.submit.submission())) }
+                attempts[message.id()]?.let {
+                    val lines = coverage.covered(it.key, it.server.folder.classes)
+                    covered[it.key] = lines
+                    it.session.send(Settled(it.submit.submission(), lines))
+                }
             }
 
             is WorkHung -> {

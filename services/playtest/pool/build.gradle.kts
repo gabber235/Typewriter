@@ -2,10 +2,14 @@
 // requirements every test JVM submits.
 plugins {
     id("com.typewritermc.basic-conventions")
+    `java-test-fixtures`
 }
 
 dependencies {
     implementation(project(":playtest-wire"))
     implementation(project(":protocol"))
     implementation(libs.kotlin.serialize.json)
+    // Reads the JaCoCo counts each Paper hands over into the lines every attempt ran.
+    implementation(libs.jacoco.core)
+    testFixturesImplementation(libs.jacoco.core)
 }

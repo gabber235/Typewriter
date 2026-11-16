@@ -15,6 +15,8 @@ import com.typewritermc.playtest.wire.Message.Claimed;
 import com.typewritermc.playtest.wire.Message.ClientLost;
 import com.typewritermc.playtest.wire.Message.ClientStalled;
 import com.typewritermc.playtest.wire.Message.Connect;
+import com.typewritermc.playtest.wire.Message.Covered;
+import com.typewritermc.playtest.wire.Message.CoveredClass;
 import com.typewritermc.playtest.wire.Message.Declined;
 import com.typewritermc.playtest.wire.Message.Disconnected;
 import com.typewritermc.playtest.wire.Message.Demonstrates;
@@ -229,7 +231,22 @@ public final class Wire {
                 for (Region region : ahead.regions()) region(body, region);
             }
             case Settle settle -> body.writeLong(settle.id());
-            case Settled settled -> body.writeLong(settled.id());
+            case Settled settled -> {
+                body.writeLong(settled.id());
+                body.writeInt(settled.covered().size());
+                for (CoveredClass covered : settled.covered()) {
+                    string(body, covered.name());
+                    string(body, covered.source());
+                    body.writeInt(covered.lines().size());
+                    for (int line : covered.lines()) body.writeInt(line);
+                }
+            }
+            case Covered covered -> {
+                body.writeInt(covered.attempts().size());
+                for (long attempt : covered.attempts()) body.writeLong(attempt);
+                body.writeInt(covered.exec().length);
+                body.write(covered.exec());
+            }
             case WorkHung hung -> {
                 string(body, hung.player());
                 string(body, hung.work());
@@ -391,6 +408,7 @@ public final class Wire {
             case Resume m -> 45;
             case Resumed m -> 46;
             case Disconnected m -> 47;
+            case Covered m -> 48;
         };
     }
 
@@ -451,7 +469,7 @@ public final class Wire {
                 yield new Marks(request, List.copyOf(marked), optional(in));
             }
             case 29 -> new Settle(in.readLong());
-            case 30 -> new Settled(in.readLong());
+            case 30 -> new Settled(in.readLong(), coveredClasses(in));
             case 31 -> new WorkHung(string(in), string(in), in.readInt());
             case 32 -> new PlayerLeft(string(in), string(in));
             case 33 -> new ClientLost(string(in), string(in));
@@ -467,6 +485,16 @@ public final class Wire {
             case 45 -> new Resume(in.readLong(), uuids(in));
             case 46 -> new Resumed(in.readLong(), in.readInt(), optional(in));
             case 47 -> new Disconnected(in.readInt(), string(in));
+            case 48 -> {
+                int count = count(in);
+                var attempts = new ArrayList<Long>(count);
+                for (int i = 0; i < count; i++) attempts.add(in.readLong());
+                int length = in.readInt();
+                if (length < 0 || length > in.available()) throw new WireException("coverage of " + length + " bytes does not fit its frame");
+                var exec = new byte[length];
+                in.readFully(exec);
+                yield new Covered(List.copyOf(attempts), exec);
+            }
             default -> throw new WireException("a frame of type " + type + " is no message this build knows");
         };
     }
@@ -476,6 +504,20 @@ public final class Wire {
         var steps = new ArrayList<AttemptStep>(count);
         for (int i = 0; i < count; i++) steps.add(new AttemptStep(in.readLong(), in.readLong(), string(in)));
         return List.copyOf(steps);
+    }
+
+    private static List<CoveredClass> coveredClasses(DataInputStream in) throws IOException {
+        int count = count(in);
+        var classes = new ArrayList<CoveredClass>(count);
+        for (int i = 0; i < count; i++) {
+            String name = string(in);
+            String source = string(in);
+            int lineCount = count(in);
+            var lines = new ArrayList<Integer>(lineCount);
+            for (int j = 0; j < lineCount; j++) lines.add(in.readInt());
+            classes.add(new CoveredClass(name, source, List.copyOf(lines)));
+        }
+        return List.copyOf(classes);
     }
 
     private static Demonstrates demonstrates(int ordinal) throws WireException {

@@ -615,3 +615,13 @@ pub fn captured_golden(run: &TempRoot, frame: &str, candidate: &str, png: &str) 
     run.write(&format!("{frame}.golden"), candidate);
     run.write(&format!("{frame}.png"), png);
 }
+
+/// The working tree file `path`, modified with `added` lines added or rewritten.
+pub fn changed(path: &str, added: &[u32]) -> crate::review::change::FileChange {
+    crate::review::change::FileChange {
+        path: PathBuf::from(path),
+        from: None,
+        status: crate::review::change::Status::Modified,
+        added: added.to_vec(),
+    }
+}

@@ -9,6 +9,7 @@ import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.Attempt
 import skirout.harness.v1.test_run.AttemptPolicy
+import skirout.harness.v1.test_run.CoveredClass
 import skirout.harness.v1.test_run.Demonstrates
 import skirout.harness.v1.test_run.Outcome
 import skirout.harness.v1.test_run.Runner
@@ -47,13 +48,14 @@ internal class RunRecords(
 
     /**
      * One attempt of [submit] ended with [result]. Its steps are the pool's own, [claimed] (waiting for
-     * its players, their wipe), then what its bodies did.
+     * its players, their wipe), then what its bodies did; [covered] is the plugin code it ran.
      */
     fun record(
         run: String,
         submit: Submit,
         result: Result,
         claimed: List<AttemptStep> = listOf(),
+        covered: List<Message.CoveredClass> = listOf(),
     ) {
         val outcome = result.failure()?.let { Outcome.createFailed(message = it, firstBroken = result.firstBroken()) } ?: Outcome.PASSED
         add(
@@ -64,6 +66,7 @@ internal class RunRecords(
             (claimed + result.steps()).sortedBy { it.atMillis() },
             result.folder(),
             result.screenshots(),
+            covered,
         )
     }
 
@@ -111,6 +114,7 @@ internal class RunRecords(
         steps: List<AttemptStep>,
         folder: String = "",
         screenshots: List<String> = listOf(),
+        covered: List<Message.CoveredClass> = listOf(),
     ) {
         val attempt =
             Attempt(
@@ -121,6 +125,7 @@ internal class RunRecords(
                 folder = folder,
                 steps = steps.map { Step(atMillis = it.atMillis(), actor = null, says = it.says(), durationMillis = it.durationMillis()) },
                 taps = listOf(),
+                covered = covered.map { CoveredClass(name = it.name(), source = it.source(), lines = it.lines()) },
             )
         val cases = runOf(run).cases
         cases[submit.testId()] =
@@ -130,6 +135,7 @@ internal class RunRecords(
                     requirement = submit.requirement(),
                     demonstrates = submit.demonstrates().inRun,
                     attempts = listOf(attempt),
+                    demo = null,
                 )
     }
 

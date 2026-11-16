@@ -16,6 +16,7 @@ use anyhow::{Context as _, Result, bail};
 use super::{E2eArgs, take_turn, verdict};
 use crate::lock;
 use crate::results::{self, Quarantine, TestRun};
+use crate::review::change::Change;
 use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::{CommandExt as _, Context, evidence, generate};
 
@@ -36,6 +37,11 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
     let quarantine = Quarantine::load(ctx)?;
     let _lock = take_turn(Path::new(lock::HEAVY_LOCK), "e2e game", &evidence)?;
     let file = evidence.join("test_run.json");
+    // A requirement that covered a line the change added reruns in demo mode.
+    let touched = evidence.join("touched.txt");
+    fs::create_dir_all(&evidence)?;
+    fs::write(&touched, touched_lines(&Change::load(ctx, None)?))
+        .with_context(|| format!("cannot write {}", touched.display()))?;
     let ran = Ran {
         file: file.clone(),
         started_millis: now_millis(),
@@ -43,7 +49,7 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
             .tool(
                 "services",
                 "./gradlew",
-                &gradle_args(args, &quarantine, &file)
+                &gradle_args(args, &quarantine, &file, &touched)
                     .iter()
                     .map(String::as_str)
                     .collect::<Vec<_>>(),
@@ -84,13 +90,19 @@ pub(crate) struct Ran {
 
 /// What Gradle runs: every `gameTest` task, writing the run file to `file`, with the selection,
 /// the repeat count and the quarantined requirements, which the test JVMs need since they retry
-/// inside the run.
-pub(crate) fn gradle_args(args: &E2eArgs, quarantine: &Quarantine, file: &Path) -> Vec<String> {
+/// inside the run, and the file of lines the change touched, which picks the demo reruns.
+pub(crate) fn gradle_args(
+    args: &E2eArgs,
+    quarantine: &Quarantine,
+    file: &Path,
+    touched: &Path,
+) -> Vec<String> {
     let mut gradle = vec![
         "--console=plain".to_owned(),
         "--parallel".to_owned(),
         "gameTest".to_owned(),
         format!("-Pplaytest.testRun={}", file.display()),
+        format!("-Pplaytest.touched={}", touched.display()),
     ];
     for selected in &args.only {
         gradle.push("--tests".to_owned());
@@ -104,6 +116,30 @@ pub(crate) fn gradle_args(args: &E2eArgs, quarantine: &Quarantine, file: &Path) 
         gradle.push(format!("-Pplaytest.quarantine={}", held.join(",")));
     }
     gradle
+}
+
+/// The lines `change` added to services' Kotlin and Java sources, as the game requirements read
+/// them (`playtest.touched`): one source per line, named as JaCoCo names it (`package/File.kt`),
+/// then its added lines, separated by spaces.
+pub(crate) fn touched_lines(change: &Change) -> String {
+    change
+        .files
+        .iter()
+        .filter(|file| file.path.starts_with("services") && !file.added.is_empty())
+        .filter(|file| {
+            file.path
+                .extension()
+                .is_some_and(|extension| extension == "kt" || extension == "java")
+        })
+        .filter_map(|file| {
+            let path = file.path.to_string_lossy();
+            let (_, source) = path
+                .split_once("/kotlin/")
+                .or_else(|| path.split_once("/java/"))?;
+            let lines: Vec<String> = file.added.iter().map(u32::to_string).collect();
+            Some(format!("{source} {}\n", lines.join(" ")))
+        })
+        .collect()
 }
 
 /// The testBalloon pattern that selects the test `selected` names: a test id (the requirement id
@@ -226,7 +262,7 @@ mod tests {
     use super::*;
     use crate::results::{AttemptPolicy, Outcome};
     use crate::test_support::{
-        TempRoot, e2e_args as parsed, exited, failed, game_run, quarantining, refusal,
+        TempRoot, changed, e2e_args as parsed, exited, failed, game_run, quarantining, refusal,
     };
 
     #[test]
@@ -454,10 +490,12 @@ mod tests {
             "3",
         ])
         .unwrap();
-        let gradle = gradle_args(&args, &quarantining("game/LEAK-1"), file);
+        let touched = Path::new("/repo/.xtask/results/game/touched.txt");
+        let gradle = gradle_args(&args, &quarantining("game/LEAK-1"), file, touched);
         for expected in [
             "gameTest",
             "-Pplaytest.testRun=/repo/.xtask/results/game/test_run.json",
+            "-Pplaytest.touched=/repo/.xtask/results/game/touched.txt",
             "-Pplaytest.repeat=3",
             "-Pplaytest.quarantine=LEAK-1",
         ] {
@@ -476,13 +514,47 @@ mod tests {
             selection,
             ["/*/WINDOW-1 *", "/*/HUNG-1 work still running fails"]
         );
-        let plain = gradle_args(&parsed(&["game"]).unwrap(), &Quarantine::default(), file);
+        let plain = gradle_args(
+            &parsed(&["game"]).unwrap(),
+            &Quarantine::default(),
+            file,
+            touched,
+        );
         assert!(
             !plain.iter().any(|arg| arg == "--tests"
                 || ["repeat", "quarantine"]
                     .iter()
                     .any(|name| arg.starts_with(&format!("-Pplaytest.{name}=")))),
             "{plain:?}"
+        );
+    }
+
+    #[test]
+    fn touched_lines_name_each_changed_services_source_as_jacoco_does_with_its_added_lines() {
+        let change = Change {
+            base: "0".repeat(40),
+            files: vec![
+                changed(
+                    "services/playtest/plugin/src/main/java/com/typewritermc/playtest/plugin/Probes.java",
+                    &[12, 40],
+                ),
+                changed(
+                    "services/playtest/framework/src/main/kotlin/com/typewritermc/playtest/Window.kt",
+                    &[3],
+                ),
+                changed("services/playtest/plugin/build.gradle.kts", &[5]),
+                changed("panel/lib/main.dart", &[1]),
+                changed(
+                    "services/playtest/plugin/src/main/java/com/typewritermc/playtest/plugin/Gone.java",
+                    &[],
+                ),
+            ],
+        };
+
+        assert_eq!(
+            touched_lines(&change),
+            "com/typewritermc/playtest/plugin/Probes.java 12 40\n\
+             com/typewritermc/playtest/Window.kt 3\n"
         );
     }
 }

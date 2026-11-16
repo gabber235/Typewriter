@@ -46,8 +46,10 @@ final class ReportedRun {
             folder: "",
             steps: const [],
             taps: const [],
+            covered: const [],
           ),
         ],
+        demo: null,
       ),
     );
   }
@@ -80,8 +82,10 @@ final class ReportedRun {
           folder: "",
           steps: steps,
           taps: taps,
+          covered: const [],
         ),
       ],
+      demo: null,
     );
     final listed = _cases.indexWhere((known) => known.id == reported.id);
     if (listed < 0) {
@@ -114,8 +118,10 @@ final class ReportedRun {
           folder: attempt.folder,
           steps: attempt.steps,
           taps: attempt.taps,
+          covered: attempt.covered,
         ),
       ],
+      demo: reported.demo,
     );
   }
 

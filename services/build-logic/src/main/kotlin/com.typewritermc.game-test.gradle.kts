@@ -37,6 +37,7 @@ val paperPart = gamePart("playtestPaper", ":playtest-paper", "patchedPaper")
 val agentPart = gamePart("playtestAgent", ":playtest-agent", "runtimeElements")
 val pluginPart = gamePart("playtestPlugin", ":playtest-plugin", "playtestPlugin")
 val clientLaunchPart = gamePart("playtestClientLaunch", ":playtest-client", "playtestClientLaunch")
+val coverageAgentPart = gamePart("playtestCoverageAgent", ":playtest-plugin", "playtestCoverageAgent")
 
 /**
  * One run per build: every gameTest task of the build, in whichever project, reports into the same run
@@ -58,6 +59,8 @@ abstract class GameParts : CommandLineArgumentProvider {
 
     @get:Classpath abstract val plugin: ConfigurableFileCollection
 
+    @get:Classpath abstract val coverageAgent: ConfigurableFileCollection
+
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) abstract val clientLaunch: ConfigurableFileCollection
 
     @get:Input abstract val java: Property<String>
@@ -76,6 +79,9 @@ abstract class GameParts : CommandLineArgumentProvider {
 
     /** The requirements the quarantine holds: they run once and never block. */
     @get:Internal abstract val quarantine: Property<String>
+
+    /** The file of lines the change added; a requirement that covered one reruns in demo mode. */
+    @get:Internal abstract val touched: Property<String>
 
     /** The repository root, which golden paths start from. */
     @get:Internal abstract val root: Property<String>
@@ -98,6 +104,7 @@ abstract class GameParts : CommandLineArgumentProvider {
                 "paper" to paper.singleFile.path,
                 "agent" to agent.singleFile.path,
                 "plugin" to plugin.singleFile.path,
+                "coverageAgent" to coverageAgent.singleFile.path,
                 "clientLaunch" to clientLaunch.singleFile.path,
                 "clients" to clients.get().toString(),
                 "run" to runId.get(),
@@ -107,7 +114,7 @@ abstract class GameParts : CommandLineArgumentProvider {
                 "goldenImages" to goldenImages.get(),
                 "mesa" to mesa.get(),
             ) +
-                listOf("repeat" to repeat, "quarantine" to quarantine)
+                listOf("repeat" to repeat, "quarantine" to quarantine, "touched" to touched)
                     .mapNotNull { (name, value) -> value.orNull?.let { name to it } }
         ).map { (name, value) -> "-Dplaytest.$name=$value" }
 }
@@ -130,6 +137,7 @@ tasks.register<Test>("gameTest") {
             paper.from(paperPart)
             agent.from(agentPart)
             plugin.from(pluginPart)
+            coverageAgent.from(coverageAgentPart)
             clientLaunch.from(clientLaunchPart)
             java.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) }.map { it.executablePath.asFile.path })
             // `-Pplaytest.clients=1` runs the suite on a pool of one client.
@@ -140,6 +148,8 @@ tasks.register<Test>("gameTest") {
             testRun.set(providers.gradleProperty("playtest.testRun").orElse(servicesDirectory.resolve("build/playtest/test_run.json").path))
             repeat.set(providers.gradleProperty("playtest.repeat"))
             quarantine.set(providers.gradleProperty("playtest.quarantine"))
+            // `cargo xtask e2e game` writes it against the merge base with the default branch.
+            touched.set(providers.gradleProperty("playtest.touched"))
             root.set(repositoryRoot.path)
             goldens.set(projectDir.resolve("src/gameTest/goldens").relativeTo(repositoryRoot).invariantSeparatorsPath)
             // `cargo xtask goldens approve` keeps each approved frame here; a run diffs against it.

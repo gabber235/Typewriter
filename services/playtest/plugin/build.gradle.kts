@@ -3,6 +3,7 @@
 // rules with many cases have Kotlin unit tests, which need nothing from Paper.
 plugins {
     id("com.typewritermc.basic-conventions")
+    `java-test-fixtures`
 }
 
 // The patched server's jars are Java 25.
@@ -21,6 +22,8 @@ val patchedPaper = configurations.resolvable("patchedPaperPath") { extendsFrom(p
 dependencies {
     "patchedPaper"(project(":playtest-paper", "patchedPaper"))
     compileOnly(project(":playtest-agent"))
+    // The JaCoCo agent the pool starts Paper with; the plugin reads its counts through the agent's own API.
+    compileOnly(variantOf(libs.jacoco.agent) { classifier("runtime") })
     compileOnly(
         files(
             patchedPaper.flatMap { it.elements }.map { folders ->
@@ -49,3 +52,8 @@ tasks.jar {
 configurations.consumable("playtestPlugin") {
     outgoing.artifact(tasks.jar)
 }
+
+// The JaCoCo agent the pool starts every Paper with, the one whose counts the plugin reads.
+val coverageAgent = configurations.dependencyScope("coverageAgent")
+dependencies { "coverageAgent"(variantOf(libs.jacoco.agent) { classifier("runtime") }) }
+configurations.consumable("playtestCoverageAgent") { extendsFrom(coverageAgent.get()) }

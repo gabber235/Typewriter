@@ -94,38 +94,39 @@ internal fun TestSuiteScope.sideBySide(
     register(id, sentence, RequirementCode.of(bodies)) { session ->
         val made = bodies()
         val count = made.size + if (afterward == null) 0 else 1
-        val failures =
-            session
-                .sideBySide(
-                    made.mapIndexed { index, body ->
-                        PoolSession.Planned("$id $sentence (attempt ${index + 1} of $count)", id, 1, demonstrates, listOf(body))
-                    },
-                ).filterNotNull()
-        failures.firstOrNull()?.let { first -> first.also { failures.drop(1).forEach(it::addSuppressed) } }
+        val ended =
+            session.sideBySide(
+                made.mapIndexed { index, body ->
+                    PoolSession.Planned("$id $sentence (attempt ${index + 1} of $count)", id, 1, demonstrates, listOf(body))
+                },
+            )
+        val failures = ended.mapNotNull { it.failure }
+        failures.firstOrNull()?.let { first -> PoolSession.AttemptEnd(first.also { failures.drop(1).forEach(it::addSuppressed) }) }
             ?: afterward?.let {
                 session.attempt(
                     PoolSession.Planned("$id $sentence (attempt $count of $count)", id, afterwardPlayers, demonstrates, listOf(it)),
                 )
             }
+            ?: PoolSession.AttemptEnd(null)
     }
 }
 
 /**
  * Registers the test "[id] [sentence]": it makes the requirement's attempts as the run's policy asks,
- * each with [attempt], which returns why it failed or null, and ends as their verdict says. Which tests
+ * each with [attempt], which returns how it ended, and ends as their verdict says. Which tests
  * a run runs is testBalloon's selection (`cargo xtask e2e game --only`).
  */
 private fun TestSuiteScope.register(
     id: String,
     sentence: String,
     code: RequirementCode,
-    attempt: suspend (PoolSession) -> Throwable?,
+    attempt: suspend (PoolSession) -> PoolSession.AttemptEnd,
 ) {
     val plan = RunPlan.current
     val testId = "$id $sentence"
     test(testId) {
         val session = session(id)
-        plan.policy.attempt(plan.quarantines(id, testId)) { attempt(session) }.conclude(code)
+        plan.policy.attempt(plan.quarantines(id, testId)) { attempt(session).failure }.conclude(code)
     }
 }
 

@@ -25,6 +25,10 @@ struct TestCase(85010003) {
   demonstrates: Demonstrates;
   // In order; never empty.
   attempts: [Attempt];
+  // The case run once more after its last attempt, in demo mode: the game runner records what each
+  // player saw as a clip when the case failed or the change touched code it covered. Its outcome
+  // must be the last attempt's; it never counts as an attempt.
+  demo: Attempt?;
 }
 
 // One run of one case.
@@ -44,10 +48,22 @@ struct Attempt(85010004) {
   steps: [Step];
   // Where a scenario's taps landed, for the markers of its recording.
   taps: [Tap];
+  // The plugin classes the attempt ran and their lines, for runners that measure coverage per case.
+  covered: [CoveredClass];
+}
+
+// One class an attempt ran code of, with the lines of its source file that ran.
+struct CoveredClass(85010005) {
+  // The JVM name, with slashes: "com/typewritermc/playtest/plugin/Probes".
+  name: string;
+  // The source file by its package path: "com/typewritermc/playtest/plugin/Probes.java".
+  source: string;
+  // The lines of `source` with an instruction the attempt ran, ascending.
+  lines: [int32];
 }
 
 // One thing a scenario did or checked, in the words a reader would use.
-struct Step(85010005) {
+struct Step(85010006) {
   // Unix milliseconds, the clock of the attempt's span.
   at_millis: int64;
   // The user signed in when the step started.
@@ -58,14 +74,14 @@ struct Step(85010005) {
 }
 
 // One tap, in pixels of the recorded screen.
-struct Tap(85010006) {
+struct Tap(85010007) {
   // Unix milliseconds, the clock of the attempt's span.
   at_millis: int64;
   x: int32;
   y: int32;
 }
 
-enum Runner(85010007) {
+enum Runner(85010008) {
   components;
   schema;
   panel;
@@ -77,29 +93,29 @@ enum Runner(85010007) {
   game;
 }
 
-enum Demonstrates(85010008) {
+enum Demonstrates(85010009) {
   happy_path;
   failure;
   edge_case;
 }
 
-enum Outcome(85010009) {
+enum Outcome(85010010) {
   passed;
   failed: Failure;
 }
 
-struct Failure(85010010) {
+struct Failure(85010011) {
   message: string;
   // The first failing step or frame, when the runner knows it.
   first_broken: string?;
 }
 
-struct Span(85010011) {
+struct Span(85010012) {
   start_millis: int64;
   end_millis: int64;
 }
 
-enum ArtifactKind(85010012) {
+enum ArtifactKind(85010013) {
   clip;
   screenshot;
   log_excerpt;
@@ -107,7 +123,7 @@ enum ArtifactKind(85010012) {
   spans;
 }
 
-struct Artifact(85010013) {
+struct Artifact(85010014) {
   kind: ArtifactKind;
   path: string;
 }

@@ -11,6 +11,8 @@ internal class PoolSettings(
     val java: Path,
     val paperDir: Path,
     val agentJar: Path,
+    /** The JaCoCo agent every Paper runs with, so each attempt's coverage can be read. */
+    val coverageAgentJar: Path,
     val pluginJar: Path,
     val clientLaunch: Path,
     /** How many warm clients the pool keeps, each with a player of its own. */
@@ -26,6 +28,7 @@ internal class PoolSettings(
                 java = path("playtest.java"),
                 paperDir = path("playtest.paper"),
                 agentJar = path("playtest.agent"),
+                coverageAgentJar = path("playtest.coverageAgent"),
                 pluginJar = path("playtest.plugin"),
                 clientLaunch = path("playtest.clientLaunch"),
                 clients = System.getProperty("playtest.clients", "4").toInt(),
