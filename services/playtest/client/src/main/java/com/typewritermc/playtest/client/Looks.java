@@ -4,61 +4,38 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.typewritermc.playtest.wire.Message.Capture;
 import com.typewritermc.playtest.wire.Message.Captured;
-import com.typewritermc.playtest.wire.Message.Look;
-import com.typewritermc.playtest.wire.Message.Looked;
 import com.typewritermc.playtest.wire.Message.Renderer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 
 /**
- * The frames a stepped client draws for real, and only these: for the entities a check asked about,
- * the share of the frame each owns whenever a perceived frame draws it, and the frame a golden asks
- * for. For a share the client draws once with every entity, then once without each asked entity the
- * frame draws, and an entity owns the pixels that show another colour without it. The perceive step's
- * section compiles and occlusion update run first, so every draw sees the same world. Render thread
- * only.
+ * The frames a stepped client draws for real, and only these: for every watched entity a perceived
+ * frame draws, the share of the frame it owns, and the frame a golden asks for. For a share the client
+ * draws once with every entity, then once without each watched entity the frame draws, and an entity
+ * owns the pixels that show another colour without it. The perceive step's section compiles and
+ * occlusion update run first, so every draw sees the same world. Render thread only.
  */
 final class Looks {
-    private static final Set<UUID> asked = new LinkedHashSet<>();
     private static UUID hidden;
-    private static Long answer;
     private static Capture capture;
 
     private Looks() {}
-
-    /** From now on records measure what {@code look} names; the answer goes out after the next record. */
-    static void ask(Look look) {
-        asked.clear();
-        asked.addAll(look.entities());
-        answer = look.request();
-    }
 
     /** The next frame that runs is written as {@code asked} says, then answered. */
     static void capture(Capture asked) {
         capture = asked;
     }
 
-    /** A new attempt: no check asks any more. */
+    /** A new attempt: no capture waits any more. */
     static void reset() {
-        asked.clear();
         hidden = null;
-        answer = null;
         capture = null;
-    }
-
-    /** After a record went out: a look waiting for one is answered. */
-    static void recordSent() {
-        if (answer == null) return;
-        PlaytestClient.send(new Looked(answer));
-        answer = null;
     }
 
     /** Whether the frame extracting now leaves {@code entity} out, to draw the frame without it. */
@@ -68,12 +45,12 @@ final class Looks {
 
     /**
      * The perceive step of a frame whose extract ran: perceives as {@link NoDraw} does, and when the
-     * frame draws an asked entity, draws it for real and counts pixels. The world's submits consume
+     * frame draws a watched entity, draws it for real and counts pixels. The world's submits consume
      * what the extract handed them, so each drawn frame extracts afresh, muted: once with every entity,
-     * then once without each asked entity the frame draws.
+     * then once without each watched entity the frame draws.
      */
     static void perceive(Minecraft mc, GameRenderer renderer) {
-        List<UUID> drawn = asked.stream().filter(Perceiver::draws).toList();
+        List<UUID> drawn = Perceiver.drawn();
         NoDraw.render(mc);
         // A frame whose tick still waits on the client's own work is perceived again; it shows nothing yet.
         if (!ClientWork.done()) return;

@@ -6,13 +6,12 @@ import com.typewritermc.playtest.wire.Message.Capture;
 import com.typewritermc.playtest.wire.Message.Connect;
 import com.typewritermc.playtest.wire.Message.Hello;
 import com.typewritermc.playtest.wire.Message.Input;
-import com.typewritermc.playtest.wire.Message.Look;
 import com.typewritermc.playtest.wire.Message.Reset;
 import com.typewritermc.playtest.wire.Message.Role;
-import com.typewritermc.playtest.wire.Message.Watch;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
@@ -31,6 +30,9 @@ public final class PlaytestClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         PayloadTypeRegistry.serverboundPlay().register(StepAck.TYPE, StepAck.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(Watch.TYPE, Watch.CODEC);
+        // Fabric hands a payload over on the thread that handles packets, in order with the game's own.
+        ClientPlayNetworking.registerGlobalReceiver(Watch.TYPE, (watch, context) -> Perceiver.watch(watch));
         player = System.getProperty("playtest.player");
         Integer port = Integer.getInteger("playtest.pool.port");
         if (player == null || port == null) throw new IllegalStateException("playtest.player and playtest.pool.port are not set: only the game pool runs this client");
@@ -60,11 +62,6 @@ public final class PlaytestClient implements ClientModInitializer {
                 Blends.reset(mc);
                 Cooldowns.reset(mc);
                 Perceiver.reset(mc);
-            });
-            case Watch watch -> mc.execute(() -> Perceiver.watch(watch));
-            case Look look -> mc.execute(() -> {
-                Looks.ask(look);
-                Perceiver.force();
             });
             case Capture capture -> mc.execute(() -> {
                 Looks.capture(capture);

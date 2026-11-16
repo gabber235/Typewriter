@@ -2,6 +2,7 @@ package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.ProbeAction
+import com.typewritermc.playtest.wire.Message.ProbeBlock
 import com.typewritermc.playtest.wire.Message.ProbeCancelBreaking
 import com.typewritermc.playtest.wire.Message.ProbeChat
 import com.typewritermc.playtest.wire.Message.ProbeCommand
@@ -106,8 +107,8 @@ class Probe internal constructor(
         at: BlockPos,
         block: String,
     ): BlockRef {
-        fill(at, at, block)
-        return BlockRef(at, block.id()).also { attempt.watch(blocks = listOf(it), entities = listOf()) }
+        run(attempt.players, ProbeBlock(attempt.region.world(at), block.id()))
+        return BlockRef(at, block.id())
     }
 
     /**
@@ -180,7 +181,6 @@ class Probe internal constructor(
                 ProbeSpawn(entity.uuid, entity.type, worldX, y, worldZ, yaw, invisible, onHit, onClick)
             }
         run(players, action)
-        attempt.watch(blocks = listOf(), entities = listOf(entity))
         return entity
     }
 

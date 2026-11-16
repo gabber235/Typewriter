@@ -35,8 +35,6 @@ import com.typewritermc.playtest.wire.Message.Lease;
 import com.typewritermc.playtest.wire.Message.LeaseFailed;
 import com.typewritermc.playtest.wire.Message.Capture;
 import com.typewritermc.playtest.wire.Message.Captured;
-import com.typewritermc.playtest.wire.Message.Look;
-import com.typewritermc.playtest.wire.Message.Looked;
 import com.typewritermc.playtest.wire.Message.Marks;
 import com.typewritermc.playtest.wire.Message.PaperLost;
 import com.typewritermc.playtest.wire.Message.Perceived;
@@ -46,6 +44,7 @@ import com.typewritermc.playtest.wire.Message.PlayerLeft;
 import com.typewritermc.playtest.wire.Message.PointAtSlotStep;
 import com.typewritermc.playtest.wire.Message.Probe;
 import com.typewritermc.playtest.wire.Message.ProbeAction;
+import com.typewritermc.playtest.wire.Message.ProbeBlock;
 import com.typewritermc.playtest.wire.Message.ProbeCancelBreaking;
 import com.typewritermc.playtest.wire.Message.ProbeChat;
 import com.typewritermc.playtest.wire.Message.ProbeCommand;
@@ -90,7 +89,6 @@ import com.typewritermc.playtest.wire.Message.Text;
 import com.typewritermc.playtest.wire.Message.TypeInChatStep;
 import com.typewritermc.playtest.wire.Message.WaitStep;
 import com.typewritermc.playtest.wire.Message.WalkToStep;
-import com.typewritermc.playtest.wire.Message.Watch;
 import com.typewritermc.playtest.wire.Message.WorkHung;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -269,19 +267,6 @@ public final class Wire {
                 body.writeInt(done.tick());
                 optional(body, done.failure());
             }
-            case Watch watch -> {
-                uuid(body, watch.player());
-                body.writeInt(watch.blocks().size());
-                for (BlockPos block : watch.blocks()) blockPos(body, block);
-                body.writeInt(watch.entities().size());
-                for (UUID entity : watch.entities()) uuid(body, entity);
-            }
-            case Look look -> {
-                body.writeLong(look.request());
-                uuid(body, look.player());
-                uuids(body, look.entities());
-            }
-            case Looked looked -> body.writeLong(looked.request());
             case Capture capture -> {
                 body.writeLong(capture.request());
                 uuid(body, capture.player());
@@ -382,7 +367,6 @@ public final class Wire {
             case Joined m -> 18;
             case Input m -> 19;
             case InputDone m -> 20;
-            case Watch m -> 21;
             case Claim m -> 22;
             case Claimed m -> 23;
             case Release m -> 24;
@@ -398,8 +382,6 @@ public final class Wire {
             case ClientStalled m -> 34;
             case HungEnded m -> 35;
             case RegionsAhead m -> 36;
-            case Look m -> 37;
-            case Looked m -> 38;
             case Capture m -> 39;
             case Captured m -> 40;
             case LeaseFailed m -> 41;
@@ -455,16 +437,6 @@ public final class Wire {
                 yield new Input(request, player, List.copyOf(steps));
             }
             case 20 -> new InputDone(in.readLong(), in.readInt(), optional(in));
-            case 21 -> {
-                UUID player = uuid(in);
-                int blockCount = count(in);
-                var blocks = new ArrayList<BlockPos>(blockCount);
-                for (int i = 0; i < blockCount; i++) blocks.add(blockPos(in));
-                int entityCount = count(in);
-                var entities = new ArrayList<UUID>(entityCount);
-                for (int i = 0; i < entityCount; i++) entities.add(uuid(in));
-                yield new Watch(player, List.copyOf(blocks), List.copyOf(entities));
-            }
             case 22 -> new Claim(in.readLong(), uuids(in), region(in));
             case 23 -> new Claimed(in.readLong(), optional(in));
             case 24 -> new Release(in.readLong());
@@ -486,8 +458,6 @@ public final class Wire {
             case 34 -> new ClientStalled(string(in), in.readInt());
             case 35 -> new HungEnded(string(in), string(in));
             case 36 -> new RegionsAhead(regions(in));
-            case 37 -> new Look(in.readLong(), uuid(in), uuids(in));
-            case 38 -> new Looked(in.readLong());
             case 39 -> new Capture(in.readLong(), uuid(in), string(in));
             case 40 -> new Captured(in.readLong(), new Renderer(string(in), string(in), string(in), string(in), string(in)), optional(in));
             case 41 -> new LeaseFailed(in.readLong(), string(in));
@@ -594,6 +564,11 @@ public final class Wire {
                 optional(out, entity.onHit());
                 optional(out, entity.onClick());
             }
+            case ProbeBlock block -> {
+                out.writeByte(15);
+                blockPos(out, block.at());
+                string(out, block.block());
+            }
             case ProbeCancelBreaking cancel -> {
                 out.writeByte(7);
                 blockPos(out, cancel.at());
@@ -641,6 +616,7 @@ public final class Wire {
             case 12 -> new ProbeSidebar(string(in), strings(in));
             case 13 -> new ProbeTime(in.readLong());
             case 14 -> new ProbeSave();
+            case 15 -> new ProbeBlock(blockPos(in), string(in));
             default -> throw new WireException("probe action " + kind + " is no action this build knows");
         };
     }

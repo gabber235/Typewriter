@@ -34,8 +34,6 @@ import com.typewritermc.playtest.wire.Message.KeyStep
 import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Lease
 import com.typewritermc.playtest.wire.Message.LeaseFailed
-import com.typewritermc.playtest.wire.Message.Look
-import com.typewritermc.playtest.wire.Message.Looked
 import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.PaperLost
 import com.typewritermc.playtest.wire.Message.Perceived
@@ -44,6 +42,7 @@ import com.typewritermc.playtest.wire.Message.Player
 import com.typewritermc.playtest.wire.Message.PlayerLeft
 import com.typewritermc.playtest.wire.Message.PointAtSlotStep
 import com.typewritermc.playtest.wire.Message.Probe
+import com.typewritermc.playtest.wire.Message.ProbeBlock
 import com.typewritermc.playtest.wire.Message.ProbeCancelBreaking
 import com.typewritermc.playtest.wire.Message.ProbeChat
 import com.typewritermc.playtest.wire.Message.ProbeCommand
@@ -88,7 +87,6 @@ import com.typewritermc.playtest.wire.Message.Text
 import com.typewritermc.playtest.wire.Message.TypeInChatStep
 import com.typewritermc.playtest.wire.Message.WaitStep
 import com.typewritermc.playtest.wire.Message.WalkToStep
-import com.typewritermc.playtest.wire.Message.Watch
 import com.typewritermc.playtest.wire.Message.WorkHung
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -174,6 +172,7 @@ val WireTest by testSuite {
                 Probe(9, listOf(player), ProbePacketEntity(UUID(3, 4), "minecraft:villager", 0.5, 100.0, 3.5, 180f, "Ouch", null)),
                 Probe(10, listOf(player), ProbeSpawn(UUID(5, 6), "minecraft:pig", 0.5, 100.0, 3.5, 0f, true, null, "Oink")),
                 Probe(11, listOf(player), ProbeCancelBreaking(BlockPos(0, 101, 2))),
+                Probe(11, listOf(player), ProbeBlock(BlockPos(0, 101, 2), "minecraft:oak_leaves[persistent=true]")),
                 Probe(12, listOf(player), ProbeCommand("warp", listOf("spawn", "spire", "shop"), "Warping to")),
                 Probe(13, listOf(player), ProbeMark(Kind.HOLD)),
                 Probe(14, listOf(player), ProbeWork("Ledger lookup", 120, "Ledger ready")),
@@ -223,10 +222,6 @@ val WireTest by testSuite {
                 ),
                 InputDone(13, 1_220, null),
                 InputDone(14, 1_221, "gv-1 aimed at the villager, but the crosshair is on the block at 0 101 2"),
-                Watch(player, listOf(BlockPos(0, 101, 2)), listOf(UUID(3, 4))),
-                Look(15, player, listOf(UUID(3, 4), UUID(5, 6))),
-                Look(16, player, listOf()),
-                Looked(15),
                 Capture(17, player, "/tmp/results/GOLDEN-1/attempt-1/sidebar.png"),
                 Captured(
                     17,

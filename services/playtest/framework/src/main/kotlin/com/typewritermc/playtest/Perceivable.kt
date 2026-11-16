@@ -26,13 +26,6 @@ interface Perceivable {
         stimulus: Stimulus,
     ): String = description
 
-    /**
-     * The entities whose visible pixels this fact reads. While a window checks it, the player's client
-     * draws each tick's frame for real, with and without each of them, so only a fact that names some
-     * pays for drawn frames.
-     */
-    val pixelsOf: List<EntityRef> get() = listOf()
-
     /** What [perception] shows of the thing this fact is about, for a report, or null when its texts say enough. */
     fun observed(perception: Perception): String? = null
 }
@@ -193,8 +186,7 @@ class EntityFacts internal constructor(
      * The frame draws the entity and it owns at least [share] of the frame, from 0 to 1: drawn once
      * more without it, that share of the frame's pixels shows another colour. A share means the same on
      * every window size; the default is what 30 pixels are of the runner's 854x480 frame. A wall, full
-     * transparency or a screen in front of it leaves it none. Only this fact makes the client draw
-     * frames for real.
+     * transparency or a screen in front of it leaves it none.
      */
     fun visible(share: Double = VISIBLE_SHARE): Perceivable =
         object : Perceivable {
@@ -203,8 +195,6 @@ class EntityFacts internal constructor(
                     VISIBLE_SHARE -> "entity $entity visible"
                     else -> "entity $entity visible, owning at least ${percent(share)} of the frame"
                 }
-
-            override val pixelsOf = listOf(entity)
 
             override fun shownIn(
                 perception: Perception,

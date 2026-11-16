@@ -33,7 +33,7 @@ public sealed interface Message {
         UUID player();
     }
 
-    /** The answer to the session's request {@code request}: a probe, a query, an input, a look or a capture. */
+    /** The answer to the session's request {@code request}: a probe, a query, an input or a capture. */
     sealed interface Reply extends Message {
         long request();
 
@@ -446,34 +446,6 @@ public sealed interface Message {
     }
 
     /**
-     * Session to the player's client: from now on every record also carries these blocks and entities,
-     * which an arrangement put in front of the player. A reset ends every watch.
-     */
-    record Watch(UUID player, List<BlockPos> blocks, List<UUID> entities) implements Message {}
-
-    /**
-     * Session to the player's client: from now on every record also says how many pixels each of
-     * {@code entities} owns, whenever the frame draws it: the client draws that tick's frame for real,
-     * once with and once without the entity, and counts the pixels that differ. An empty list ends
-     * the look; a reset ends it too. The client answers with {@link Looked} once a record measured
-     * that way, or ended, went out.
-     */
-    record Look(long request, UUID player, List<UUID> entities) implements ClientRequest {
-        @Override
-        public Look withRequest(long request) {
-            return new Look(request, player, entities);
-        }
-    }
-
-    /** Client to session: the look took effect; every record from now on measures what it names. */
-    record Looked(long request) implements Reply {
-        @Override
-        public Looked withRequest(long request) {
-            return new Looked(request);
-        }
-    }
-
-    /**
      * Session to the player's client: draw the frame as the client holds it now, for real, and write it
      * as a PNG to {@code path}. The client answers with {@link Captured}.
      */
@@ -558,6 +530,13 @@ public sealed interface Message {
      */
     record ProbeSpawn(UUID uuid, String type, double x, double y, double z, float yaw, boolean invisible, String onHit, String onClick)
         implements WorldAction {}
+
+    /**
+     * The block at {@code at} becomes {@code block}, a block state such as
+     * {@code minecraft:oak_leaves[persistent=true]}, and every player of the probe watches it: Paper
+     * sends the watch on each player's connection ahead of the change.
+     */
+    record ProbeBlock(BlockPos at, String block) implements WorldAction {}
 
     /** Paper cancels every break of the block at {@code at}, as a protection plugin would. */
     record ProbeCancelBreaking(BlockPos at) implements WorldAction {}
@@ -667,7 +646,7 @@ public sealed interface Message {
      * A watched entity the frame draws after culling: whether it shows the red hurt tint, the name tag
      * drawn above it, or null, and the share of the frame it owns, from 0 to 1: the pixels that differ
      * when the frame is drawn without it, over all of the frame's pixels. {@code share} is
-     * {@link #UNMEASURED} unless a look names the entity.
+     * {@link #UNMEASURED} in a frame the client drew as any client does, before it steps.
      */
     record Entity(UUID uuid, boolean hurt, String name, double share) {
         public static final double UNMEASURED = -1;

@@ -5,6 +5,7 @@ import com.typewritermc.playtest.wire.Message.BlockPos;
 import com.typewritermc.playtest.wire.Message.Kind;
 import com.typewritermc.playtest.wire.Message.PlayerAction;
 import com.typewritermc.playtest.wire.Message.ProbeAction;
+import com.typewritermc.playtest.wire.Message.ProbeBlock;
 import com.typewritermc.playtest.wire.Message.ProbeCancelBreaking;
 import com.typewritermc.playtest.wire.Message.ProbeChat;
 import com.typewritermc.playtest.wire.Message.ProbeCommand;
@@ -22,6 +23,7 @@ import com.typewritermc.playtest.wire.Message.ProbeTime;
 import com.typewritermc.playtest.wire.Message.ProbeWork;
 import com.typewritermc.playtest.wire.Message.WorldAction;
 import io.papermc.paper.adventure.PaperAdventure;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +35,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import net.kyori.adventure.text.Component;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.custom.DiscardedPayload;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
@@ -79,6 +83,7 @@ import org.jspecify.annotations.Nullable;
  */
 final class Probes implements Listener {
     private static final int MAX_FILL = 4_096;
+    private static final Identifier WATCH = Identifier.parse("playtest:watch");
 
     /** How a probe entity answers a player: the name tag it shows once hit or used. */
     private record Reactions(@Nullable String onHit, @Nullable String onClick) {}
@@ -107,6 +112,7 @@ final class Probes implements Listener {
      * world. Null when it ran, else why not.
      */
     @Nullable String run(List<Player> players, ProbeAction action) {
+        watch(players, action);
         return switch (action) {
             case WorldAction world -> run(players.getFirst().getWorld(), world);
             case PlayerAction each -> {
@@ -122,6 +128,7 @@ final class Probes implements Listener {
     private @Nullable String run(World world, WorldAction action) {
         return switch (action) {
             case ProbeFill fill -> fill(world, fill);
+            case ProbeBlock block -> fill(world, new ProbeFill(block.at(), block.at(), block.block()));
             case ProbeSpawn spawn -> spawn(world, spawn);
             case ProbeCancelBreaking cancel -> {
                 unbreakable.add(location(world, cancel.at()));
@@ -169,6 +176,35 @@ final class Probes implements Listener {
                 yield null;
             }
         };
+    }
+
+    /**
+     * Each of [players] watches what [action] puts in front of it. Paper sends the watch on the player's
+     * own connection ahead of the packets that show the block or entity, so the client handles the watch
+     * first and records them from the tick those packets arrive in.
+     */
+    private static void watch(List<Player> players, ProbeAction action) {
+        switch (action) {
+            case ProbeBlock block -> players.forEach(player -> watch(player, List.of(block.at()), List.of()));
+            case ProbeSpawn spawn -> players.forEach(player -> watch(player, List.of(), List.of(spawn.uuid())));
+            case ProbePacketEntity entity -> players.forEach(player -> watch(player, List.of(), List.of(entity.uuid())));
+            default -> {}
+        }
+    }
+
+    /**
+     * Sends [player]'s client a watch on [blocks] and [entities]. The body is the block count, each
+     * block's x, y and z, the entity count, and each entity's two UUID halves, as the client's {@code
+     * Watch} payload reads it. A raw payload, since Bukkit's plugin messages drop channels the client
+     * never announced.
+     */
+    private static void watch(Player player, List<BlockPos> blocks, List<UUID> entities) {
+        var body = ByteBuffer.allocate(Integer.BYTES * (2 + 3 * blocks.size()) + 2 * Long.BYTES * entities.size());
+        body.putInt(blocks.size());
+        for (BlockPos at : blocks) body.putInt(at.x()).putInt(at.y()).putInt(at.z());
+        body.putInt(entities.size());
+        for (UUID entity : entities) body.putLong(entity.getMostSignificantBits()).putLong(entity.getLeastSignificantBits());
+        send(player, new ClientboundCustomPayloadPacket(new DiscardedPayload(WATCH, body.array())));
     }
 
     /**

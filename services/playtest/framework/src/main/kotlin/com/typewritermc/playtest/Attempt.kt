@@ -8,7 +8,6 @@ import com.typewritermc.playtest.wire.Message.Perception
 import com.typewritermc.playtest.wire.Message.ProbeAction
 import com.typewritermc.playtest.wire.Message.Region
 import com.typewritermc.playtest.wire.Message.Renderer
-import com.typewritermc.playtest.wire.Message.Watch
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -188,12 +187,6 @@ internal class Attempt(
         says: String,
     ): Mark = step("input ${player.name} $says") { Mark(unlessLost { session.input(player, steps) }) }.also { ran(it.tick) }
 
-    /** [player]'s client counts the pixels of [entities] in every record from now on; an empty list ends it. */
-    suspend fun look(
-        player: GamePlayer,
-        entities: List<EntityRef>,
-    ) = unlessLost { session.look(player, entities) }
-
     /** Where the attempt keeps the frames it writes; the session sets it once the attempt holds its lease. */
     lateinit var evidence: Evidence
 
@@ -267,12 +260,6 @@ internal class Attempt(
                 }
             }
         }
-
-    /** Every leased player's client watches these from now on. */
-    fun watch(
-        blocks: List<BlockRef>,
-        entities: List<EntityRef>,
-    ) = players.forEach { send(Watch(it.uuid, blocks.map { block -> region.world(block.at) }, entities.map { entity -> entity.uuid })) }
 
     /** The first frame of [trace] in the requirement's own code, as `File.kt:line`. */
     fun requirementLine(trace: Array<StackTraceElement>): String? = requirementCode.line(trace)

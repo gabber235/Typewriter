@@ -152,6 +152,13 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   client's other input delays (miss, use, jump and sprint double tap) count down every tick or clear
   once the button is up, and the pool runs at least 10 ticks between two attempts on a client, so no
   requirement can show them carry over; the wipe leaves them.
+- **Watches travel with the probe** (2026-11-16): Paper sends a probe's watch on the player's own
+  connection, ahead of the packets that show the block or entity, so the client records them from the
+  tick those packets arrive in; nothing about watches crosses the pool. Every watched entity a perceived
+  frame draws is measured: the client draws that frame for real, once with and once without it. Two
+  measured full runs put the drawn frames this adds at 0.6 to 0.7 percent of suite time, summed over
+  clients; a measure only while a `visible()` window is open would cost 0.1 percent but needs the window
+  to reach the client again.
 - Requirements are written as **G1 windows plus the recorded timeline** (2026-11-06): every check sits
   in a `within(n.ticks)` window that opens at the last stimulus and passes the moment it holds; order,
   gaps and motion are read from the run's recorded timeline after a window. Drafts in

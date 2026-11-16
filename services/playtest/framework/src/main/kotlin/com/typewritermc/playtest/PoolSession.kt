@@ -14,8 +14,6 @@ import com.typewritermc.playtest.wire.Message.InputDone
 import com.typewritermc.playtest.wire.Message.InputStep
 import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Lease
-import com.typewritermc.playtest.wire.Message.Look
-import com.typewritermc.playtest.wire.Message.Looked
 import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.Perceived
 import com.typewritermc.playtest.wire.Message.Probe
@@ -304,17 +302,6 @@ internal class PoolSession private constructor(
         val done = request<InputDone> { request -> Input(request, player.uuid, steps) }
         done.failure()?.let { throw InputFailed(it) }
         return done.tick()
-    }
-
-    /**
-     * [player]'s client counts the pixels each of [entities] owns in every record from now on, until
-     * the next look; returns once a record measured that way went out, so every later one does too.
-     */
-    suspend fun look(
-        player: GamePlayer,
-        entities: List<EntityRef>,
-    ) {
-        request<Looked> { request -> Look(request, player.uuid, entities.map { it.uuid }) }
     }
 
     /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */

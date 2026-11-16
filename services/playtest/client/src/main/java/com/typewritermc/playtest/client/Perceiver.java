@@ -8,7 +8,6 @@ import com.typewritermc.playtest.wire.Message.Entity;
 import com.typewritermc.playtest.wire.Message.Perceived;
 import com.typewritermc.playtest.wire.Message.Perception;
 import com.typewritermc.playtest.wire.Message.ResetDone;
-import com.typewritermc.playtest.wire.Message.Watch;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -97,7 +96,7 @@ final class Perceiver {
 
     /** From now on every record also carries these blocks and entities. */
     static void watch(Watch watch) {
-        watch.blocks().forEach(at -> watchedBlocks.add(new BlockPos(at.x(), at.y(), at.z())));
+        watchedBlocks.addAll(watch.blocks());
         watchedEntities.addAll(watch.entities());
         forced = true;
     }
@@ -119,9 +118,9 @@ final class Perceiver {
         muted = mute;
     }
 
-    /** Whether the frame draws {@code entity}, a watched one. */
-    static boolean draws(UUID entity) {
-        return drawnEntities.containsKey(entity);
+    /** The watched entities the frame draws. */
+    static List<UUID> drawn() {
+        return List.copyOf(drawnEntities.keySet());
     }
 
     /** The frame drawn without {@code entity} showed {@code share} of its pixels in another colour. */
@@ -144,7 +143,6 @@ final class Perceiver {
             lastSent = perception;
         }
         forced = false;
-        Looks.recordSent();
         if (resetPending) {
             resetPending = false;
             PlaytestClient.send(new ResetDone());

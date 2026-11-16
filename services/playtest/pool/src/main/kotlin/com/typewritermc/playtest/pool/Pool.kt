@@ -49,7 +49,6 @@ import com.typewritermc.playtest.wire.Message.StepUntil
 import com.typewritermc.playtest.wire.Message.Stepping
 import com.typewritermc.playtest.wire.Message.StopStepping
 import com.typewritermc.playtest.wire.Message.Submit
-import com.typewritermc.playtest.wire.Message.Watch
 import com.typewritermc.playtest.wire.Message.WorkHung
 import com.typewritermc.playtest.wire.Wire
 import java.io.BufferedInputStream
@@ -409,7 +408,7 @@ internal class Pool(
 
     /**
      * What a session sends the game for its attempts' players: probes, queries and steps for Paper;
-     * inputs, looks, captures and watches for their clients. A message naming a player no attempt of the session holds reaches neither.
+     * inputs and captures for their clients. A message naming a player no attempt of the session holds reaches neither.
      */
     private fun toGame(
         session: Peer,
@@ -438,10 +437,6 @@ internal class Pool(
                 paper?.send(message)
             }
 
-            is Watch -> {
-                clientOf(message.player())?.peer?.send(message)
-            }
-
             // playersNamedBy turned every other message away above.
             else -> {}
         }
@@ -466,7 +461,6 @@ internal class Pool(
             is ClientRequest -> listOf(message.player())
             is StepUntil -> listOf(message.player())
             is StopStepping -> listOf(message.player())
-            is Watch -> listOf(message.player())
             else -> null
         }
 

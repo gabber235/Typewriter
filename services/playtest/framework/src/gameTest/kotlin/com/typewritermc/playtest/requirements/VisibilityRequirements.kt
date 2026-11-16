@@ -16,7 +16,8 @@ val VisibilityRequirements by testSuite(compartment = { GameCompartment }) {
         probe.teleport(player, 0.5, 100.0, 0.5)
         val villager = probe.spawn("villager", 0.5, 100.0, 4.5, yaw = 180f)
 
-        within(10.ticks) { player sees entity(villager).visible() }
+        // Paper sends the entity in the tick after the spawn, and the client watches it from that tick on.
+        within(1.ticks) { player sees entity(villager).visible() }
     }
 
     requirement("SEEN-2", "an entity behind a wall is drawn but not seen", demonstrates = Demonstrates.EDGE_CASE) {
@@ -48,7 +49,7 @@ val VisibilityRequirements by testSuite(compartment = { GameCompartment }) {
         val behind = probe.spawn("villager", 0.5, 100.0, -3.5)
         val ahead = probe.spawn("villager", 0.5, 100.0, 4.5, yaw = 180f)
 
-        within(10.ticks) {
+        within(1.ticks) {
             player sees entity(ahead).visible()
             player.never sees entity(behind).visible()
         }
