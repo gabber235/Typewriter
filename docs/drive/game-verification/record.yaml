@@ -298,8 +298,14 @@ pieces:
           background thread (inferred; did not recur in 25 runs). Regions loaded ahead and Paper's async
           chunk and light work cause none of it. The neighbour ring is needed: with a first tick check
           PROBE-3 passed 20 of 20 with it and failed 20 of 20 without.
+          Fixed since: the wipe resets the break delay, chat and suggestion requests count as player work,
+          the client acks only once its pending input is handled, the watch travels with the probe on
+          Paper's connection, typing takes a tick per key, and the record goes out right after its tick.
+          Open: BREAK-2 once turned 132 px sideways that the playtest never sent (likely the real cursor
+          over a background client window on the Mac, unproven); once the client acked before SDL delivered
+          its own pushed mouse events, so a turn landed a tick late.
         state: working
-        evidence: ["commit e4ded3e7d on feat/game-verification-steadiness"]
+        evidence: ["commit e4ded3e7d on feat/game-verification-steadiness", "fixes ed15cc7b3 ee84f2844 f802c922a 39742a7d1 18e698ef9 2b40b8aea: steadied requirements same ticks 10 of 10 under load, 96 passed in three full runs"]
 
   - id: requirement-shape
     status: building
@@ -801,4 +807,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Steadiness takes records right after the tick and finds the BREAK-2 flake; then slice 8.
+next: Steadiness merged (2b40b8aea). Choose how foreign input is kept out; fix the late ack; then slice 8.
