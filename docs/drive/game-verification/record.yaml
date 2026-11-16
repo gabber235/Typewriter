@@ -664,6 +664,12 @@ decided:
   - id: type-like-a-person
     what: "A. Type like a person (Recommended)"
     why: Paper answers suggestions on 4 threads and keeps only the last request it saw, so a burst of keys got a stale answer and a retype after 6 ticks; typing sends one key per tick and a suggestion request counts as player work until Paper answers
+  - id: find-break-2-flake
+    what: "Yes, find the cause (Recommended)"
+    why: BREAK-2, the first attempt on a freshly joined client, aimed 19.8 degrees past its target once in 3 full runs; it may come from the new packet hold or an ungrabbed mouse
+  - id: record-right-after-tick
+    what: "Record right after tick (Recommended)"
+    why: The record of tick 7 was taken after the next key cleared the suggestion list, so TAB-1 held at 8; the client takes its record right after the tick and only its ack waits for its own pending input
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -795,4 +801,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Restart Paper fixes merged (fe4f66b9e); steadiness finishes typing one key per tick; then slice 8. Timings since 2026-11-16 ran under load 50 to 145 from other worktrees.
+next: Steadiness takes records right after the tick and finds the BREAK-2 flake; then slice 8.
