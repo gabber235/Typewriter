@@ -225,33 +225,58 @@ internal class PoolSession private constructor(
                 attempt = lease(submission, leasing) { send(Reclaim(submission)) }
             }
             attempt.evidence = evidence
-            val notStarted = if (planned.demo) attempt.startClips(if (planned.bodies.size > 1) "-${index + 1}" else "") else null
-            val settled = settle(submission, attempt, notStarted ?: run(attempt, body))
-            val notWritten = attempt.stopClips()
-            failure = settled.failure?.let(attempt::located) ?: notWritten
-            covered = settled.covered
+            val ended = runBody(submission, attempt, body, if (planned.demo) clipSuffix(planned, index) else null)
+            failure = ended.failure
+            covered = ended.covered
             steps += attempt.steps
             if (failure != null) break
         }
         attempt.players.forEach { attempts.remove(it.name) }
-        val millis = (System.nanoTime() - started) / 1_000_000
-        send(
-            Result(
-                submission,
-                millis,
-                failure?.described,
-                failure?.let {
-                    attempt.requirementLine(it.stackTrace)
-                        ?: (it as? WindowMissed)?.at
-                },
-                steps,
-                if (evidence.screenshots.isEmpty() && evidence.clips.isEmpty()) "" else evidence.folder,
-                evidence.screenshots,
-                evidence.clips,
-            ),
-        )
+        send(result(submission, attempt, failure, (System.nanoTime() - started) / 1_000_000, steps, evidence))
         return AttemptEnd(failure, covered)
     }
+
+    /** What [submission]'s attempt reports to the pool once it ended with [failure] after [millis]. */
+    private fun result(
+        submission: Long,
+        attempt: Attempt,
+        failure: Throwable?,
+        millis: Long,
+        steps: List<AttemptStep>,
+        evidence: Evidence,
+    ): Result =
+        Result(
+            submission,
+            millis,
+            failure?.described,
+            failure?.let { attempt.requirementLine(it.stackTrace) ?: (it as? WindowMissed)?.at },
+            steps,
+            if (evidence.screenshots.isEmpty() && evidence.clips.isEmpty()) "" else evidence.folder,
+            evidence.screenshots,
+            evidence.clips,
+        )
+
+    /**
+     * Runs [body] on [attempt] and settles it; with a [clip] suffix, every player's client records the
+     * body as a clip named with it. Returns how the body ended.
+     */
+    private suspend fun runBody(
+        submission: Long,
+        attempt: Attempt,
+        body: suspend RequirementScope.() -> Unit,
+        clip: String?,
+    ): AttemptEnd {
+        val notStarted = clip?.let { attempt.startClips(it) }
+        val settled = settle(submission, attempt, notStarted ?: run(attempt, body))
+        val notWritten = clip?.let { attempt.stopClips() }
+        return AttemptEnd(settled.failure?.let(attempt::located) ?: notWritten, settled.covered)
+    }
+
+    /** What sets the clips of [planned]'s body [index] apart: nothing for a single body. */
+    private fun clipSuffix(
+        planned: Planned,
+        index: Int,
+    ): String = if (planned.bodies.size > 1) "-${index + 1}" else ""
 
     /** Waits for the lease of [submission] that [ask] asks the pool for. */
     private suspend fun lease(
