@@ -23,6 +23,7 @@
     "MultiPlayerGameModeAccessor",
     "PacketProcessorMixin",
     "PingMixin",
+    "SDLEventHandlerMixin",
     "SuggestionsListMixin",
     "TimerMixin",
     "ToastManagerMixin",

@@ -15,6 +15,7 @@ import java.lang.foreign.SymbolLookup;
 import java.lang.invoke.MethodHandle;
 import org.lwjgl.sdl.SDLProperties;
 import org.lwjgl.sdl.SDLVideo;
+import org.lwjgl.sdl.SDL_Event;
 
 /**
  * Input as XTest events on the client's own X display, through libX11 and libXtst: the X server takes
@@ -89,13 +90,35 @@ final class XTest implements InputDevice {
         flush();
     }
 
+    /**
+     * Every event: the client's display is a virtual one of its own, which no real cursor or keyboard
+     * reaches, so all input on it is the playtest's. The X server rebuilds the events XTest sends, so they
+     * carry no mark, and one sent event may arrive as several.
+     */
     @Override
-    public void pass() {
+    public boolean owns(SDL_Event event) {
+        return true;
+    }
+
+    @Override
+    public void handled(SDL_Event event) {}
+
+    /**
+     * Events sent before the poll reached the game in it: each batch ends with {@code XSync}, so the X
+     * server handled the batch and its events wait for SDL before the next poll.
+     */
+    @Override
+    public void pollEnded() {
         sent = false;
     }
 
     @Override
-    public boolean unpolled() {
+    public void flushed() {
+        sent = false;
+    }
+
+    @Override
+    public boolean pending() {
         return sent;
     }
 

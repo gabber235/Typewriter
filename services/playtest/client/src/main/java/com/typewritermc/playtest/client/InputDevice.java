@@ -2,6 +2,8 @@ package com.typewritermc.playtest.client;
 
 import com.typewritermc.playtest.wire.Message.Key;
 import net.minecraft.client.Minecraft;
+import org.lwjgl.sdl.SDLVideo;
+import org.lwjgl.sdl.SDL_Event;
 
 /**
  * Where the client's input enters: window events for its own window, as a keyboard and mouse would send
@@ -18,13 +20,22 @@ interface InputDevice {
     void focus();
 
     /**
-     * A new pass between ticks begins: the client polled every event queued in earlier passes. The client
-     * polls its window once per loop, before the tick, so two passes always have a poll between them.
+     * Whether a mouse or key event the client polled is one this device sent. The game handles only
+     * those while the client steps.
      */
-    void pass();
+    boolean owns(SDL_Event event);
 
-    /** Whether this pass queued events the client has not polled yet. */
-    boolean unpolled();
+    /** The game took one of this device's events. */
+    void handled(SDL_Event event);
+
+    /** A poll of the window's events ended: every event the queue held went to the game or was dropped. */
+    void pollEnded();
+
+    /** The game dropped every mouse and key event still queued, this device's own among them. */
+    void flushed();
+
+    /** Whether events this device sent have yet to reach the game; the tick's ack waits for them. */
+    boolean pending();
 
     void key(Key key, boolean down);
 
@@ -53,7 +64,7 @@ interface InputDevice {
     static InputDevice open(Minecraft mc) {
         String name = System.getProperty("playtest.input", "sdl");
         return switch (name) {
-            case "sdl" -> new SdlQueue(mc.getWindow());
+            case "sdl" -> new SdlQueue(() -> SDLVideo.SDL_GetWindowID(mc.getWindow().handle()));
             case "xtest" -> new XTest(mc.getWindow());
             default -> throw new IllegalStateException("playtest.input is " + name + ", not sdl or xtest");
         };

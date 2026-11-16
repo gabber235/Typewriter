@@ -165,7 +165,7 @@ final class Stepper {
         ack();
     }
 
-    /** Acks the recorded tick once the events an input queued after it were polled, so Paper may run the next. */
+    /** Acks the recorded tick once the events an input queued after it reached the game, so Paper may run the next. */
     private static void ack() {
         if (!ackDue || !ClientWork.done()) return;
         ackDue = false;

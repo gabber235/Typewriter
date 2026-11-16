@@ -10,6 +10,8 @@ import net.minecraft.client.renderer.state.gui.GuiTextRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import org.lwjgl.sdl.SDLEvents;
+import org.lwjgl.sdl.SDL_Event;
 
 /** The one door from the mixins into the client: every game hook lands here and is handed on. */
 public final class Hooks {
@@ -93,6 +95,18 @@ public final class Hooks {
 
     public static void leave() {
         Perceiver.leave();
+    }
+
+    private static final OwnInput EVENTS = new OwnInput(
+            SDLEvents::SDL_PollEvent, () -> Inputs.device(Minecraft.getInstance()), Stepper::stepping, Stepper::currentTick, PlaytestClient.LOG::info);
+
+    /** The game's event poll: only the playtest's own mouse and key events while the client steps. */
+    public static boolean pollEvent(SDL_Event event) {
+        return EVENTS.poll(event);
+    }
+
+    public static void inputFlushed() {
+        Inputs.flushed();
     }
 
     public static boolean pretendsFocus() {

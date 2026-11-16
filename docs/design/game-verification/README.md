@@ -147,8 +147,10 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   send none (cancelled or empty suggestions, or a newer request of the player ended); the client types
   one character per tick, as a person does, so it asks at most once per tick and every request gets
   its answer. The client mirrors this: it records a tick in the frame right after it, so the record
-  shows the tick as it ended, and only the ack waits for its own work for the tick, that is the events
-  an input queued right after the tick were polled, so their packets reach Paper before the ack; until
+  shows the tick as it ended, and only the ack waits for its own work for the tick, that is until the
+  game took each event an input queued right after the tick, so their packets reach Paper before the
+  ack (the client counts its pushed events as the game takes them; on Linux, where X rebuilds them,
+  each batch ends with `XSync` and counts as taken after the next poll); until
   that tick's record went out it handles no packet, since one queued after the tick's step ping belongs
   to the next tick. An input starts
   only right after a tick; one that arrives while Paper is idle asks for a tick first. GOLDEN-3 is
@@ -158,6 +160,14 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   client's other input delays (miss, use, jump and sprint double tap) count down every tick or clear
   once the button is up, and the pool runs at least 10 ticks between two attempts on a client, so no
   requirement can show them carry over; the wipe leaves them.
+- **Only own input** (2026-11-16): while the client steps, the game takes only the mouse and key
+  events the playtest sent; it drops every other one and logs its kind and the tick, without failing
+  the attempt. On macOS the client's window shows on the developer's screen and the game believes it
+  holds the mouse, so motion SDL reports there turns the player: an unmarked motion of 132 by 17.8
+  pixels after BREAK-2's turn reproduced its one flake exactly (yaw 19.8, pitch 6.1). The SDL queue
+  marks each event it pushes in the event header's reserved field, which SDL copies with the event. On
+  Linux each client has a virtual display of its own that no real cursor or keyboard reaches, so every
+  event there is the playtest's; this stays unproven on a real runner until slice 9.
 - **Watches travel with the probe** (2026-11-16): Paper sends a probe's watch on the player's own
   connection, ahead of the packets that show the block or entity, so the client records them from the
   tick those packets arrive in; nothing about watches crosses the pool. Every watched entity a perceived

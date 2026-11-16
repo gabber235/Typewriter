@@ -39,7 +39,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * The player's hands: each {@link Input} becomes a script of steps that send window events through the
  * {@link InputDevice}. Steps run only right after a tick, so the next tick handles what they sent, and that
- * tick's ack waits until the client polled them: what they make the client send reaches Paper before Paper
+ * tick's ack waits until each of them reached the game: what they make the client send reaches Paper before Paper
  * can run the next tick. An input that arrives while Paper is idle asks it for a tick to start after. A step
  * runs first right after the step before it ended, and after that once after every tick until it ends;
  * while an input waits to start or a script waits on ticks the client is busy, and Paper keeps stepping
@@ -78,9 +78,9 @@ final class Inputs {
         return running != null || !arrived.isEmpty();
     }
 
-    /** Whether the client has yet to poll events the last point between ticks sent. */
-    static boolean unpolled() {
-        return device != null && device.unpolled();
+    /** Whether events the client's input sent have yet to reach the game. */
+    static boolean pending() {
+        return device != null && device.pending();
     }
 
     /** A new attempt: drop every input, let go of every key and button, close every screen, take the mouse. */
@@ -106,7 +106,6 @@ final class Inputs {
      */
     static void betweenTicks(Minecraft mc, boolean tickRan) {
         InputDevice hands = device(mc);
-        hands.pass();
         if (!tickRan) {
             if (running == null && !arrived.isEmpty()) Stepper.needTicks();
             return;
@@ -120,7 +119,13 @@ final class Inputs {
         }
     }
 
-    private static InputDevice device(Minecraft mc) {
+    /** The game dropped every queued mouse and key event, the device's own among them. */
+    static void flushed() {
+        if (device != null) device.flushed();
+    }
+
+    /** The device the client's input enters through, opened on first use. */
+    static InputDevice device(Minecraft mc) {
         if (device == null) {
             device = InputDevice.open(mc);
             device.focus();

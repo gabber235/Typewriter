@@ -1,22 +1,25 @@
 package com.typewritermc.playtest.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.platform.Window;
 import com.typewritermc.playtest.wire.Message.Key;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.IntSupplier;
 import org.lwjgl.sdl.SDLEvents;
 import org.lwjgl.sdl.SDLKeyboard;
-import org.lwjgl.sdl.SDLVideo;
+import org.lwjgl.sdl.SDL_CommonEvent;
 import org.lwjgl.sdl.SDL_Event;
 import org.lwjgl.system.MemoryUtil;
 
 /**
  * Input as SDL events pushed into the client's own event queue, addressed to its window: what SDL makes
  * of a keyboard and mouse, without the operating system. The developer's real keyboard, mouse and focus
- * stay untouched, so the client pretends the focus and the grab.
+ * stay untouched, so the client pretends the focus and the grab. The window still shows on the
+ * developer's screen, where the real cursor can cross it; each pushed event carries a mark in its
+ * header's reserved field, which SDL copies with the event, so the client tells its own input from the
+ * developer's ({@link OwnInput}).
  */
 final class SdlQueue implements InputDevice {
     private static final int KEY_DOWN = 768;
@@ -26,16 +29,19 @@ final class SdlQueue implements InputDevice {
     private static final int MOUSE_BUTTON_DOWN = 1025;
     private static final int MOUSE_BUTTON_UP = 1026;
     private static final int MOUSE_WHEEL = 1027;
+    /** "PTST": the mark of the events this queue pushed. */
+    private static final int MARK = 0x50545354;
 
-    private final Window window;
-    /** Text the queued events point at: SDL copies an event, not its text, so the text lives until polled. */
+    private final IntSupplier windowId;
+    /** Text the queued events point at: SDL copies an event, not its text, so the text lives until handled. */
     private final List<ByteBuffer> queuedText = new ArrayList<>();
     private float pointerX;
     private float pointerY;
-    private boolean queued;
+    /** Pushed events the game has yet to take. */
+    private int pending;
 
-    SdlQueue(Window window) {
-        this.window = window;
+    SdlQueue(IntSupplier windowId) {
+        this.windowId = windowId;
     }
 
     @Override
@@ -47,14 +53,28 @@ final class SdlQueue implements InputDevice {
     public void focus() {}
 
     @Override
-    public void pass() {
-        queuedText.clear();
-        queued = false;
+    public boolean owns(SDL_Event event) {
+        return MemoryUtil.memGetInt(event.address() + SDL_CommonEvent.RESERVED) == MARK;
     }
 
     @Override
-    public boolean unpolled() {
-        return queued;
+    public void handled(SDL_Event event) {
+        if (pending > 0) pending--;
+        if (pending == 0) freeText();
+    }
+
+    @Override
+    public void pollEnded() {}
+
+    @Override
+    public void flushed() {
+        pending = 0;
+        freeText();
+    }
+
+    @Override
+    public boolean pending() {
+        return pending > 0;
     }
 
     @Override
@@ -103,15 +123,21 @@ final class SdlQueue implements InputDevice {
     }
 
     private int windowId() {
-        return SDLVideo.SDL_GetWindowID(window.handle());
+        return windowId.getAsInt();
     }
 
     private void push(Consumer<SDL_Event> fill) {
-        queued = true;
         try (SDL_Event event = SDL_Event.calloc()) {
             fill.accept(event);
+            MemoryUtil.memPutInt(event.address() + SDL_CommonEvent.RESERVED, MARK);
             if (!SDLEvents.SDL_PushEvent(event)) throw new IllegalStateException("SDL refused an input event: " + org.lwjgl.sdl.SDLError.SDL_GetError());
         }
+        pending++;
+    }
+
+    private void freeText() {
+        queuedText.forEach(MemoryUtil::memFree);
+        queuedText.clear();
     }
 
     private static int scancode(Key key) {
