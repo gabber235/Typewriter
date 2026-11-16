@@ -728,6 +728,12 @@ decided:
   - id: clips-30-fps
     what: "30 fps (Recommended)"
     why: P9 showed 30 and 60 fps both exact; 30 costs 1.5 times the gated time per rerun requirement against 2.6 at 60, and only demo reruns pay
+  - id: keep-slice-8-built-decisions
+    what: "Keep, drop the duplicate (Recommended)"
+    why: No margin for demos; demos for failed, flaky, quarantined and touched requirements; touched means added lines; ffmpeg in the base devenv profile; golden frames from the tick's end; a killed Paper's records are dropped only in the restart Paper's rules, and Pool's fresh.clear goes
+  - id: logs-per-run
+    what: "Own folder, keep 3 (Recommended)"
+    why: FROZEN-1's demo once saw its stall after 10.07 s and the next runs overwrote its logs; each run writes pool and Paper logs to a folder of its own and the last 3 are kept
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -874,4 +880,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 8 merged (22c913c66). Confirm its built decisions and how a failing run keeps its logs; then slice 9.
+next: Slice 8 follow up (logs per run, duplicate drop removed); then slice 9 (CI and pool lifecycle).
