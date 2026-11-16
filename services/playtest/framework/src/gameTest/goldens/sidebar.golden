@@ -1,0 +1,9 @@
+# Approved by `cargo xtask goldens approve`; exact only on the renderer named below.
+sha256=724786b0d78dfb0b5c0c174780c415729341238505040a1b6be4b21fa8914e4d
+width=854
+height=480
+backend=Vulkan
+device=llvmpipe (LLVM 21.1.8, 256 bits)
+driver=1.4.354 llvmpipe Mesa 26.2.5 (LLVM 21.1.8)
+os=Linux
+arch=amd64
