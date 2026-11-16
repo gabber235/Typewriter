@@ -430,7 +430,7 @@ pieces:
           stop its clip (FROZEN-1, LOST-1), and records of a killed Paper counted as the new Paper's
           ticks, both queued in the session before the restart's answer and kept by the pool until the
           client stepped with the new boot (RESTART-2), and a golden capture that arrived while a clip's
-      passes were due was answered from a pass between ticks (GOLDEN-2, once in five runs). Cost: demo time over gated time per requirement
+          passes were due was answered from a pass between ticks (GOLDEN-2, once in five runs). Cost: demo time over gated time per requirement
           median 1.68 and summed 1.20 (run D, load 76 to 155), 1.84 and 1.31 in run B (load 240 to 360),
           against P9's 1.5.
         state: working
@@ -854,7 +854,7 @@ slices:
     status: done
     what: coverage per requirement, demo reruns with clips
     green: a touched requirement gets its clip
-    evidence: [commits a88505c91 0ec31acfe 4e61bf097, "cargo xtask e2e game on 4e61bf097: 96 passed, 91 demos, 132 clips"]
+    evidence: [commits a88505c91 0ec31acfe 4e61bf097 9fab36169 f6b364f9c 22c913c66, "cargo xtask e2e game on 4e61bf097: 96 passed, 91 demos, 132 clips", "slice thread: 8 of 10 full runs green; one GOLDEN-2 demo (fixed in f6b364f9c) and one FROZEN-1 demo stall", "cargo xtask e2e game on 22c913c66: 96 passed first attempt, 91 demos (load 136 to 203)"]
     taught: >-
       cargo xtask e2e game writes the lines the change added since the merge base with the default
       branch to touched.txt; a requirement reruns as a demo when it failed (not refused or unavailable),
@@ -874,4 +874,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 9 (CI and pool lifecycle) builds on feat/game-verification-slice-8 once its review is done.
+next: Slice 8 merged (22c913c66). Confirm its built decisions and how a failing run keeps its logs; then slice 9.
