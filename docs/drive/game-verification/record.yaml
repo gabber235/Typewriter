@@ -758,6 +758,12 @@ decided:
   - id: cachix-token
     what: "I add it (Recommended)"
     why: Every CI job rebuilt about 70 Nix paths (3.5 min) because the Cachix push token was missing from the Typewriter vault and continue-on-error hid the failure; the developer adds CACHIX_AUTH_TOKEN to the cache profile, and a failed push becomes a visible warning
+  - id: build-then-suite
+    what: "Two calls, build task (Recommended)"
+    why: Three idle Kotlin compile daemons held about 4 GB through the suite on CI (lowest free memory 1.0 GB); a gameTestBuild task in the game test plugin builds what gameTest runs, cargo xtask e2e game runs it in a Gradle without a daemon first, then the suite, so the compile daemons exit before it (3.8 GB free, 46 s more); chosen over an empty test selection, Kotlin's internal idle shutdown and in-process compiling, which grew Gradle to 3.1 GB
+  - id: drop-dead-in-process-line
+    what: "Remove Kotlin half (Recommended)"
+    why: The devenv action's GRADLE_OPTS asked for in-process Kotlin compiling, but GRADLE_OPTS reaches only Gradle's client JVM, so it never applied; removing that half changes nothing and stops the file claiming it
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
