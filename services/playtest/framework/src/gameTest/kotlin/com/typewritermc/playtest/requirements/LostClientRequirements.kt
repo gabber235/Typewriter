@@ -34,7 +34,8 @@ val LostClientRequirements by testSuite(compartment = { GameCompartment }) {
 
         val lost = freezeClient(player) { shouldThrow<ClientLost> { within(10.ticks) { player sees chat("Goodbye") } } }
 
-        // The pool calls a client lost after 5 s without an ack; 15 s leaves room for a loaded machine.
+        // Paper's acks find the client stalled after 5 s without an ack and the pool replaces it; 15 s leaves
+        // room for a loaded machine.
         frozenAt.elapsedNow() shouldBeLessThan 15.seconds
         lost.report shouldContain "${player.name}'s client was lost: it acked no tick for 5 s"
     }
