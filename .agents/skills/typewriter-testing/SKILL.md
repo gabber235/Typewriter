@@ -24,6 +24,7 @@ refactor that keeps the outcome.
 | Realm     | authoring, commit and publication rules on a real Realm                  | `setup(...)` with `withSetup`         |
 | Widget    | panel behaviour: keyboard, overlays, unsaved work, offline states        | `pumpPanel(traits)` from testkit       |
 | Scenario  | a user journey through panel, backend and Realm; failures through faults | the `Panel` driver in integration_test|
+| Game      | what a player perceives in a real Minecraft client: chat, text, blocks, entities, input, frames | `requirement(...)` in a module's `src/gameTest`, real clients on a stepped Paper; `cargo xtask e2e game` |
 | Harness   | CI runs the right checks, stacks clean up, evidence leaks no secret      | tests beside the xtask module         |
 
 ## What to assert

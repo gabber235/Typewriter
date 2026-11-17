@@ -31,6 +31,23 @@ description: Run Typewriter locally: builds, the agent stack, Paper, the panel, 
   stays local, since CI uploads only what `cargo xtask evidence stage` writes to `.xtask/public`;
   read it before rerunning.
 
+## Game suite
+- `cargo xtask e2e game` runs every `src/gameTest` requirement against real Minecraft clients on a
+  stepped Paper. It builds first, then boots its own pool, Papers and clients; never start them by
+  hand. A pool left from an earlier run is replaced by the next run.
+- `--only GROUP-1,WINDOW-1` runs those requirements; `--repeat <n>` runs exactly n attempts of each,
+  to hunt a flaky one.
+- A smaller pool: `cargo xtask heavy -- ./gradlew gameTest -Pplaytest.clients=1` from `services/`
+  (default 4 clients).
+- Results: `.xtask/results/game/` holds `test_run.json`, one evidence folder per attempt (frames,
+  golden candidates, clips) and `logs/<n>/` with `pool.log`, `paper.log` and `client-gv-<i>.log` for
+  the newest 3 runs. Read them before rerunning.
+- A golden that fails with the approve command: `cargo xtask goldens approve` records the frames in
+  `.xtask/results/game` (or a folder given), and `cargo xtask goldens approve --pr <n>` the frames
+  CI captured on pull request n. Approve refuses frames the pinned renderer (Linux, Vulkan through
+  llvmpipe, devenv's Mesa) did not draw, so a Mac run reports goldens as not checked and approves
+  nothing.
+
 ## Main checkout only
 - Backend deploy: `cargo xtask deploy local`; builds, pushes, restarts on `k3d-seamlezz-local`.
 - Paper starts from the IntelliJ run configurations in `.run/` (`Paper Embedded`,
