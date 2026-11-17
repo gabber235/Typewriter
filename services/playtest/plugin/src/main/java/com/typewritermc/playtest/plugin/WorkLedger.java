@@ -8,7 +8,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.LongSupplier;
 
 /**
  * The work plugins count for each player through {@link PlayerWork}, and when it holds the stepped
@@ -23,8 +22,8 @@ import java.util.function.LongSupplier;
  *
  * <p>Each piece of work has a deadline of its own, {@link #HUNG_NANOS} after it began, on a thread of
  * its own: the main thread may spend that moment in one long tick, and the report must reach the pool
- * while the work still runs, before anything the work does later. A deadline that runs late, after the
- * work ended past its limit, leaves the report to the end of the work.
+ * while the work still runs, before anything the work does later. The deadline alone decides hung, and
+ * the end of hung work is reported only after its hang.
  */
 final class WorkLedger {
     /** How long work may run before it is reported as hung. */
@@ -40,32 +39,28 @@ final class WorkLedger {
         private final String name;
         private final int beganAfter;
         private final int holdsFrom;
-        private final long beganNanos;
+        // Set once the hang report went out; work that ends before then is reported ended by the deadline.
+        private boolean reported;
+        private boolean endedUnreported;
 
-        private Entry(UUID player, String playerName, String name, int beganAfter, int holdsFrom, long beganNanos) {
+        private Entry(UUID player, String playerName, String name, int beganAfter, int holdsFrom) {
             this.player = player;
             this.playerName = playerName;
             this.name = name;
             this.beganAfter = beganAfter;
             this.holdsFrom = holdsFrom;
-            this.beganNanos = beganNanos;
         }
 
-        /** The work is done; ending it again does nothing. */
+        /**
+         * The work is done; ending it again does nothing. Hung work is reported ended only once its hang
+         * report went out, so the pool never hears the end before the hang.
+         */
         void end() {
-            boolean outranUnseen;
             synchronized (WorkLedger.this) {
-                if (hung.remove(this)) {
-                    ended.add(this);
-                    return;
-                }
-                if (!counted.remove(this)) return;
-                outranUnseen = nanos.getAsLong() - beganNanos >= HUNG_NANOS;
-            }
-            if (!outranUnseen) return;
-            reportHung.accept(report());
-            synchronized (WorkLedger.this) {
-                ended.add(this);
+                if (counted.remove(this)) return;
+                if (!hung.remove(this)) return;
+                if (reported) ended.add(this);
+                else endedUnreported = true;
             }
         }
 
@@ -90,7 +85,6 @@ final class WorkLedger {
         return (nanos, task) -> thread.schedule(task, nanos, TimeUnit.NANOSECONDS);
     }
 
-    private final LongSupplier nanos;
     private final Deadlines deadlines;
     private volatile Consumer<Hung> reportHung = hung -> {};
     // Work that is neither ended nor hung, in begin order.
@@ -101,8 +95,7 @@ final class WorkLedger {
     private int lastEnded = -1;
     private int running = -1;
 
-    WorkLedger(LongSupplier nanos, Deadlines deadlines) {
-        this.nanos = nanos;
+    WorkLedger(Deadlines deadlines) {
         this.deadlines = deadlines;
     }
 
@@ -140,7 +133,7 @@ final class WorkLedger {
     }
 
     private Entry count(UUID player, String playerName, String name, int holdsFrom) {
-        var entry = new Entry(player, playerName, name, lastEnded, holdsFrom, nanos.getAsLong());
+        var entry = new Entry(player, playerName, name, lastEnded, holdsFrom);
         counted.add(entry);
         deadlines.after(HUNG_NANOS, () -> deadline(entry));
         return entry;
@@ -169,12 +162,19 @@ final class WorkLedger {
         return reports;
     }
 
-    /** [entry]'s deadline: work still running is hung, reported now, while it runs. Deadline thread. */
+    /**
+     * [entry]'s deadline: work still running is hung and reported now, while it runs; if it ends while the
+     * report goes out, its end is reported after it. Deadline thread.
+     */
     private void deadline(Entry entry) {
         synchronized (this) {
             if (!counted.remove(entry)) return;
             hung.add(entry);
         }
         reportHung.accept(entry.report());
+        synchronized (this) {
+            entry.reported = true;
+            if (entry.endedUnreported) ended.add(entry);
+        }
     }
 }
