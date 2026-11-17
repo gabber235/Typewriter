@@ -179,3 +179,21 @@ private fun AttemptPolicy.verdict(
         else -> Verdict.Failed(failures, outcomes.size)
     }
 }
+
+/**
+ * How a requirement's body ended: its [failure], or, when it returned without one and never [proved]
+ * something (a window with a positive check that held, or a golden frame), a refusal, since a body
+ * without a positive check could never fail.
+ */
+internal fun bodyEnded(
+    failure: Throwable?,
+    proved: Boolean,
+): Throwable? =
+    failure ?: if (proved) {
+        null
+    } else {
+        RequirementRefused(
+            "the requirement's body made no positive check, so it could never fail: wait for what the player " +
+                "should see with `within`, or compare a still scene with `looksLike`",
+        )
+    }

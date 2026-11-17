@@ -238,7 +238,8 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
 - A window counts from the **last player action or probe call**, with an optional named start
   (`within(40.ticks after left)`) for the rare case (2026-11-06).
 - `never` checks are **broad** (`anyChat()`, `anyTitle()`), and the framework **refuses** a requirement
-  whose checks are all `never` or all client state: it needs one positive check (2026-11-06).
+  whose checks are all `never` or all client state: it needs one positive check (2026-11-06). A body
+  that returns without one (no window whose checks held, no `looksLike`) fails as refused (2026-11-18).
 - A requirement that needs rendered frames **declares it** (`player(frames = 60.hz)`), so the runner
   groups such requirements at a fitting server rate before it starts (2026-11-06).
 

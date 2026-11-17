@@ -159,7 +159,7 @@ class RequirementScope internal constructor(
         } finally {
             attempt.took(opened, says(window, verdict, mark, ranBefore, declared))
         }
-        val missed = verdict as? Window.Verdict.Missed ?: return
+        val missed = verdict as? Window.Verdict.Missed ?: return run { attempt.proved = true }
         throw WindowMissed(missed.report, at)
     }
 

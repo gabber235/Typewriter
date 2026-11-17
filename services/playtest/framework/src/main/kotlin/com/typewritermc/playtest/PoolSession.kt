@@ -296,14 +296,14 @@ internal class PoolSession private constructor(
         }
     }
 
-    /** Runs [body] on [attempt]; returns why it failed, or null. */
+    /** Runs [body] on [attempt]; returns why it failed, or null. A body that made no positive check fails. */
     private suspend fun run(
         attempt: Attempt,
         body: suspend RequirementScope.() -> Unit,
     ): Throwable? =
         try {
             RequirementScope(attempt).body()
-            null
+            bodyEnded(failure = null, proved = attempt.proved)
         } catch (cancelled: CancellationException) {
             cancelled
         } catch (

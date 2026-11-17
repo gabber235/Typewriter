@@ -86,6 +86,9 @@ internal class Attempt(
         return failure
     }
 
+    /** Whether the body made a positive check: a window whose checks held, or a golden frame. */
+    var proved = false
+
     /** The latest tick the attempt knows ran: from its stimuli, its players' records and its windows. */
     var ranUntil: Int = 0
         private set
@@ -214,6 +217,7 @@ internal class Attempt(
         name: String,
     ) {
         val at = System.currentTimeMillis()
+        proved = true
         val (png, frame, renderer) = capture(player, name)
         val goldens = session.goldens
         Golden.writeCandidate(evidence.file("$name.golden"), goldens.file(name), png.fileName.toString(), frame, renderer, goldens.pinned)
