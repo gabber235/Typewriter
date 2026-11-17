@@ -752,6 +752,9 @@ decided:
   - id: prune-unused-goldens
     what: "Unused, 30 days old (Recommended)"
     why: Every re-approve leaves the old image on the evidence branch and prune skipped goldens/, so it grew forever and approve's clone slowed; approve writes when it pushed each image, and the weekly prune drops an image no golden file on develop names once it is older than the retention, the same 30 days as pull request media
+  - id: keep-slice-9-built
+    what: "Keep all three (Recommended)"
+    why: Slice 9's built decisions stand; a leased attempt fails with LeaseExpired after 300 s, a pool no test JVM reaches stops after 60 s, a pool that stopped answering is replaced after 90 s; a dispatched run, which only a maintainer can start, is trusted and saves caches for its own branch; game logs stay off CI's public output, as every suite's logs do
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
