@@ -16,6 +16,9 @@ import java.util.function.LongSupplier;
  * holds every tick after it until it ends. Work that still runs
  * {@link #HUNG_NANOS} after it began is hung: reported once, it holds no tick from then on, and it is
  * never cancelled; once it ends, that is reported once too, so its player can come back to the pool.
+ * Hung is a fact about how long the work ran, not about when a check looked: work that outran the
+ * limit and ended before any check, as when the main thread spends that time in one long tick, is reported hung and
+ * ended at the next one.
  */
 final class WorkLedger {
     /** How long work may run before it is reported as hung. */
@@ -45,7 +48,10 @@ final class WorkLedger {
         /** The work is done; ending it again does nothing. */
         void end() {
             synchronized (WorkLedger.this) {
-                if (counted.remove(this)) return;
+                if (counted.remove(this)) {
+                    if (nanos.getAsLong() - beganNanos >= HUNG_NANOS) hungUnseen.add(this);
+                    return;
+                }
                 if (hung.remove(this)) ended.add(this);
             }
         }
@@ -61,6 +67,8 @@ final class WorkLedger {
     // Hung work that still runs, and hung work that ended since the last report.
     private final List<Entry> hung = new ArrayList<>();
     private final List<Entry> ended = new ArrayList<>();
+    // Work that outran its limit but ended before a check saw it running: hung and ended at once.
+    private final List<Entry> hungUnseen = new ArrayList<>();
     private int lastEnded = -1;
     private int running = -1;
 
@@ -129,6 +137,11 @@ final class WorkLedger {
     synchronized List<Hung> hung() {
         long now = nanos.getAsLong();
         var reports = new ArrayList<Hung>();
+        for (Entry entry : hungUnseen) {
+            reports.add(entry.report());
+            ended.add(entry);
+        }
+        hungUnseen.clear();
         counted.removeIf(entry -> {
             if (now - entry.beganNanos < HUNG_NANOS) return false;
             hung.add(entry);

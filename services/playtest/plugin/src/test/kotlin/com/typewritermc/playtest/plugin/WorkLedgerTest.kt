@@ -122,6 +122,24 @@ val WorkLedgerTest by testSuite {
         work.hung().shouldBeEmpty()
     }
 
+    test("work that ran past its limit but ended before any check looked is still reported once as hung, then as ended") {
+        var now = 0L
+        val work = WorkLedger { now }
+        work.tickEnded(10)
+        val lookup = work.begin(player, "gv-1", "Ledger lookup")
+
+        now = WorkLedger.HUNG_NANOS + 500_000_000L
+        lookup.end()
+        now = WorkLedger.HUNG_NANOS + 700_000_000L
+
+        val report = WorkLedger.Hung(player, "gv-1", "Ledger lookup", 10)
+        work.hung() shouldContainExactly listOf(report)
+        work.ended() shouldContainExactly listOf(report)
+        work.hung().shouldBeEmpty()
+        work.ended().shouldBeEmpty()
+        work.quiet(listOf(player)) shouldBe true
+    }
+
     test("hung work that ends later is reported once as ended, so its player can come back") {
         var now = 0L
         val work = WorkLedger { now }
