@@ -770,6 +770,9 @@ decided:
   - id: run-file-survives-crash
     what: "Rewrite + ended mark (Recommended)"
     why: The pool kept the run only in memory and wrote the run file at End, so a pool crash lost every finished result; the session names the run file and attempt policy when it joins, the pool rewrites the file atomically after every recorded attempt, End marks it ended, and xtask fails a run file without the mark as cut short
+  - id: frozen-1-15-seconds
+    what: "Loosen to 15 s"
+    why: FROZEN-1 missed its 10 s limit once (10.098 s) on a 10 core Mac at load 50 to 98 while passing on CI; a frozen client is reported lost within 15 s, the pool still calls it lost after 5 s without an ack; chosen over keeping 10 s (recommended) and measuring from the last ack
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
