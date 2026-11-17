@@ -755,6 +755,9 @@ decided:
   - id: keep-slice-9-built
     what: "Keep all three (Recommended)"
     why: Slice 9's built decisions stand; a leased attempt fails with LeaseExpired after 300 s, a pool no test JVM reaches stops after 60 s, a pool that stopped answering is replaced after 90 s; a dispatched run, which only a maintainer can start, is trusted and saves caches for its own branch; game logs stay off CI's public output, as every suite's logs do
+  - id: cachix-token
+    what: "I add it (Recommended)"
+    why: Every CI job rebuilt about 70 Nix paths (3.5 min) because the Cachix push token was missing from the Typewriter vault and continue-on-error hid the failure; the developer adds CACHIX_AUTH_TOKEN to the cache profile, and a failed push becomes a visible warning
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
