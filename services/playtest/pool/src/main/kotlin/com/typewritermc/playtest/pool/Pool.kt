@@ -58,7 +58,7 @@ fun main() {
         if (!pool.continuing) FileChannel.open(settings.poolLog, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
         // The test JVM that started this pool says it exited while starting, and points at this log.
         HeapShare.overLimit(settings.clients)?.let { reason ->
-            System.err.println("The game failed: $reason")
+            pool.couldNotRun(reason)
             exitProcess(1)
         }
         PoolFile.of(server.localPort, settings.run).write(poolFile)
@@ -260,7 +260,14 @@ internal class Pool(
     fun run() {
         thread(name = "playtest-pool-accept", isDaemon = true) { accept() }
         val startedAt = System.nanoTime()
-        game = Game.start(settings, server.localPort, clients.map { it.player.name }, continuing)
+        game =
+            try {
+                Game.start(settings, server.localPort, clients.map { it.player.name }, continuing)
+            } catch (cannot: Exception) {
+                // The pool exits with the cause in its log, so the test JVM that started it says it exited while starting.
+                couldNotRun("the game could not start: $cannot; see ${settings.poolLog}")
+                throw cannot
+            }
         shared = Server(game.paper, SharedPaper(game.paper.name, clients.map { it.player.name }.toSet()))
         shared.part = game.paperPart
         shared.boots = 1
@@ -1379,11 +1386,16 @@ internal class Pool(
     /** The game cannot run: every session hears why, and the game stops. */
     private fun fail(reason: String) {
         if (failure != null) return
+        couldNotRun(reason)
+        lifetime.sessions.forEach { it.send(Message.createRefused(reason = reason)) }
+        game.stop()
+    }
+
+    /** The game cannot serve the run, for [reason]: the pool's log and the run's file say why, also before the game started. */
+    fun couldNotRun(reason: String) {
         failure = reason
         System.err.println("The game failed: $reason")
         runs.failed(reason)
-        lifetime.sessions.forEach { it.send(Message.createRefused(reason = reason)) }
-        game.stop()
     }
 
     /** Accepts connections until the pool closes its socket on the way out. */
