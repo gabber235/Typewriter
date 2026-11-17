@@ -361,6 +361,19 @@ Open for the plan: the real names and shapes of the worker and the effect queue 
 
 Folia (decided 2026-11-03): the first version targets Paper's server wide tick end. Picking up queued chain starts stays one small piece of the Paper engine, so the design does not block Folia. Folia later replaces only that piece, with a next tick task per active player, because no per region tick end hook was found. Expected cost there, not measured: one post per active player per tick, and chains start up to one tick later.
 
+### Busy per subject
+
+The game verification framework steps Paper's ticks itself and judges a requirement only once its player's work is quiet ([game-verification/README.md](game-verification/README.md#obligations-on-typewriter)). Typewriter owes it a per subject view of its own work (decided 2026-11-07):
+
+- The engine counts, per protagonist, the chains queued and running for it. A chain with a group subject counts for every member.
+- The realm side counts pending transactions the same way ([stored-data.md](stored-data.md#who-waits-for-a-commit)). A future `Due` is not busy; a requirement waiting on one advances the realm clock ([stored-data.md](stored-data.md#due)).
+- Typewriter never cancels a chain for the test. A chain that does not finish is reported by the framework's wall clock limit (1 s), and its player sits out until it ends.
+- On the test Paper the engine reports this through the framework's `PlayerWork` API, as any plugin does. Whether the test side also needs a hook of its own is open until layers 3 and 6 are built.
+
+Spikes I and D showed that work a server wide quiet check cannot see (a raw thread pool) gives wrong verdicts and wrong coverage, and that a per player count fixes both ([d-clients.md](game-verification/spikes/d-clients.md), [i-coverage.md](game-verification/spikes/i-coverage.md)).
+
+**Effects through the owner thread.** Spike N found that an effect sent from the owner thread lands on the same stepped tick every time, while one a worker thread sends races the tick boundary and lands one or two steps later ([n-stepped-ticks.md](game-verification/spikes/n-stepped-ticks.md)), so a requirement's tick counts would vary between runs. The search therefore asks that the Paper engine's effects reach the player through the owner thread, in the tick's effect queue. The framework later made Paper's own async chat steady another way: the work counts as the player's from the moment Paper reads the line, so the next tick waits for the send. Step 4 above still sends chat from the worker, which is steady only if the chain counts from the moment it is queued; which of the two holds is open (see [Open](#open)).
+
 ### Suspending handlers
 
 After handlers may suspend. A suspended handler is cancelled when any value it resolved through a parameter is removed (step ended, stored value removed, member gone, a mirror `Removed` including `because = Tracking`). `Changed` never cancels it. Stale writes are also dropped by the owner generation check: an event for a finished step is dropped ([interactions.md](interactions.md)).
@@ -616,4 +629,5 @@ KSP rejects, for handlers: `suspend`, stored writes, and effects in a mirror wri
 
 - The same occurrence reaching a handler twice through forwarding.
 - What `force` does for `/tw fire`.
+- Chat from the worker (tick pipeline step 4) against game verification's ask that effects go through the owner thread ([Busy per subject](#busy-per-subject)). Counting the chain as the player's work from the moment it is queued would also keep tick counts steady.
 - Event declaration details (how an event names its subject and typed roles in code) are settled when the event core is built.
