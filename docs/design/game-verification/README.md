@@ -153,8 +153,9 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   each part kind's `-XX:MaxRAMPercentage` (shared Paper 16, own Paper 7, client 4.5, pool 2), so the caps
   scale with the machine; the pool starts each part with its share, and the test JVM starts the pool
   with the pool's, which is why it lives in the module both share. The parts that can run at once (the
-  shared Paper, at most 2 own Papers, 4 clients, the pool) hold at most half the machine in heap, which
-  a unit test pins, and the pool claims no restart attempt while 2 own Papers have not fully exited.
+  shared Paper, at most 2 own Papers, the pool's clients, the pool) hold at most half the machine in
+  heap, which a unit test pins for the default 4 clients; the pool refuses to start with more clients
+  (`-Pplaytest.clients`) than fit, and names how many do. The pool claims no restart attempt while 2 own Papers have not fully exited.
   HEAP-1 asks each running JVM for its share. Measured on the 16 GB runner without caps (run
   43996334142): the shared Paper peaked at 4.4 GB RSS with its heap committed to 4 GB (the part that
   ran the runner out of memory), a client at 1.7 GB RSS on a 0.54 GB heap, an own Paper at 1.3 GB RSS,

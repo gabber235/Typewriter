@@ -87,6 +87,11 @@ fun main() {
     // Every starter appends its output to the log; the pool that holds the lock empties it, so the log holds this run alone.
     Files.createDirectories(settings.logs)
     FileChannel.open(settings.poolLog, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
+    // xtask reads why the game failed from the pool's log.
+    HeapShare.overLimit(settings.clients)?.let { reason ->
+        System.err.println("The game failed: $reason")
+        exitProcess(1)
+    }
     val poolFile = settings.poolDir.resolve(PoolFile.NAME)
     ServerSocket(0, BACKLOG, InetAddress.getLoopbackAddress()).use { server ->
         val pool = Pool(settings, server)
