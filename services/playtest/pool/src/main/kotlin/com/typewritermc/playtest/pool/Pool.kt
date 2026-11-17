@@ -412,7 +412,7 @@ internal class Pool(
         together: List<Submit>,
     ) {
         try {
-            claims.submit(session, *together.map { it.submission() to it.players() }.toTypedArray())
+            claims.submit(session, *together.map { Claim(it.submission(), it.players(), it.restartsPaper()) }.toTypedArray())
         } catch (unservable: IllegalArgumentException) {
             for (submit in together) {
                 val reason = "${submit.requirement()} cannot run here: ${unservable.message}"
@@ -994,8 +994,15 @@ internal class Pool(
         server.peer?.close() ?: server.part?.process?.destroyForcibly()
     }
 
-    /** [server]'s process ended for good: the pool forgets it, and its folder goes. */
-    private fun gone(server: Server) = papers.gone(server)
+    /**
+     * [server], an own Paper, ended for good: the pool forgets it, its folder goes, and a restart attempt
+     * that waited for it to go is claimed.
+     */
+    private fun gone(server: Server) {
+        papers.gone(server)
+        claims.ownPaperGone()
+        lend()
+    }
 
     /** [server]'s process ended; a boot that trained a cache keeps it only if it ended cleanly. */
     private fun paperExited(
@@ -1166,7 +1173,7 @@ internal class Pool(
                 // Back in line on its own; the attempts beside it get their leases without it.
                 end(attempt, "the client of $name was lost before its lease")
                 claims.release(attempt.players)
-                claims.submit(attempt.session, attempt.submit.submission() to attempt.submit.players())
+                claims.submit(attempt.session, Claim(attempt.submit.submission(), attempt.submit.players(), attempt.submit.restartsPaper()))
                 queued[attempt.session to attempt.submit.submission()] = Queued(attempt.submit, ++nextTogether)
                 timings[attempt.session to attempt.submit.submission()]?.since = System.currentTimeMillis()
                 val rest = attempt.group - attempt

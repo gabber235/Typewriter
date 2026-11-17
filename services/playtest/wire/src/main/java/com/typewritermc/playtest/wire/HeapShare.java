@@ -22,6 +22,9 @@ public enum HeapShare {
      */
     public static final double CONCURRENT_LIMIT = 50;
 
+    /** At most this many own Papers run at once; the pool claims no further restart attempt until one is gone. */
+    public static final int OWN_PAPERS = 2;
+
     /** The share, in percent of the machine's memory. */
     public final double percent;
 
@@ -35,10 +38,10 @@ public enum HeapShare {
     }
 
     /**
-     * The shares of the parts that can run at once: the shared Paper, the own Papers of two restart
-     * attempts, four clients and the pool.
+     * The shares of the parts that can run at once: the shared Paper, the {@link #OWN_PAPERS} own
+     * Papers of restart attempts, four clients and the pool.
      */
     public static double concurrent() {
-        return PAPER.percent + 2 * OWN_PAPER.percent + 4 * CLIENT.percent + POOL.percent;
+        return PAPER.percent + OWN_PAPERS * OWN_PAPER.percent + 4 * CLIENT.percent + POOL.percent;
     }
 }
