@@ -55,8 +55,10 @@ runs:
         # Incremental artifacts only grow a cache that starts each job from the same state.
         echo "CARGO_INCREMENTAL=0" >> "$GITHUB_ENV"
         # A job never reuses a Gradle daemon, and an idle one held 2.4 GB that the panel's
-        # analyzer (11 GB on Linux) needs on a 16 GB runner.
-        echo "GRADLE_OPTS=-Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process" >> "$GITHUB_ENV"
+        # analyzer (11 GB on Linux) needs on a 16 GB runner. GRADLE_OPTS reaches only Gradle's
+        # client JVM, so it cannot steer the Kotlin compiler in the build JVM; the game suite
+        # keeps Kotlin's daemons out of its run by building in a Gradle of its own first.
+        echo "GRADLE_OPTS=-Dorg.gradle.daemon=false" >> "$GITHUB_ENV"
     # devenv provides every tool, so the runner's own SDKs only take the disk the Nix store and a
     # cold build need: a panel check ran out of it during generation.
     - shell: bash

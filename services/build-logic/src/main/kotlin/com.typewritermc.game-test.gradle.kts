@@ -164,3 +164,11 @@ tasks.register<Test>("gameTest") {
             mesa.set(providers.environmentVariable("PLAYTEST_MESA"))
         }
 }
+
+// `cargo xtask e2e game` builds everything gameTest runs in a Gradle of its own first, so the Kotlin
+// compile daemons end with that Gradle and hold no memory while the suite runs.
+tasks.register("gameTestBuild") {
+    description = "Builds everything gameTest runs, and runs nothing."
+    group = "build"
+    dependsOn(gameTest.output, gameTest.runtimeClasspath, poolPart, paperPart, agentPart, pluginPart, coverageAgentPart, clientLaunchPart)
+}

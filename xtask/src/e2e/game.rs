@@ -1,6 +1,7 @@
 //! `cargo xtask e2e game`: the game requirements against real Minecraft clients on a stepped
 //! Paper, which the game pool boots on this machine. Paper, the clients and the Gradle build that
-//! starts them all run here, so the whole run is one heavy build. Every project's `gameTest` task
+//! starts them all run here, so the whole run is one heavy build. A Gradle of its own builds the
+//! suite first and exits, so no compiler is alive while the suite runs. Every project's `gameTest` task
 //! runs at once, so their test JVMs share the one pool, which retries failed requirements on its
 //! warm clients and writes the run file. That file is the gate: Gradle's exit only adds a failure
 //! the file cannot show.
@@ -45,17 +46,18 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
     let ran = Ran {
         file: file.clone(),
         started_millis: now_millis(),
-        gradle: ctx
-            .tool(
-                "services",
-                "./gradlew",
-                &gradle_args(args, &quarantine, &file, &touched, &logs)
-                    .iter()
-                    .map(String::as_str)
-                    .collect::<Vec<_>>(),
-            )
-            .status()
-            .context("cannot start Gradle for the game suite")?,
+        gradle: build_then_run(
+            |gradle| {
+                ctx.tool(
+                    "services",
+                    "./gradlew",
+                    &gradle.iter().map(String::as_str).collect::<Vec<_>>(),
+                )
+                .status()
+                .context("cannot start Gradle for the game suite")
+            },
+            &gradle_args(args, &quarantine, &file, &touched, &logs),
+        )?,
         pool_log: logs.join("pool.log"),
     };
     let run = TestRun {
@@ -87,6 +89,30 @@ pub(crate) struct Ran {
     pub started_millis: i64,
     pub gradle: ExitStatus,
     pub pool_log: PathBuf,
+}
+
+/// Builds the suite in a Gradle of its own, then runs `suite` with `gradle`. The build's Gradle
+/// exits before the suite starts, and the Kotlin compile daemons it started end with it, so no
+/// compiler holds memory while the clients and Paper run. It never stops other daemons
+/// (`--stop`): another worktree's build may share them.
+pub(crate) fn build_then_run(
+    mut gradle: impl FnMut(&[String]) -> Result<ExitStatus>,
+    suite: &[String],
+) -> Result<ExitStatus> {
+    let build = [
+        "--console=plain",
+        "--parallel",
+        "--no-daemon",
+        "gameTestBuild",
+    ]
+    .map(str::to_owned);
+    let built = gradle(&build)?;
+    if !built.success() {
+        bail!(
+            "game: building the game suite failed with {built}, so no requirement ran; Gradle's output above says why"
+        );
+    }
+    gradle(suite)
 }
 
 /// What Gradle runs: every `gameTest` task, writing the run file to `file` and its logs into
@@ -573,6 +599,49 @@ mod tests {
                     .any(|name| arg.starts_with(&format!("-Pplaytest.{name}=")))),
             "{plain:?}"
         );
+    }
+
+    #[test]
+    fn the_suite_is_built_in_a_gradle_of_its_own_that_ends_before_the_suite_starts() {
+        let suite = vec!["gameTest".to_owned()];
+        let mut calls = Vec::new();
+
+        let status = build_then_run(
+            |gradle: &[String]| {
+                calls.push(gradle.to_vec());
+                Ok(exited(0))
+            },
+            &suite,
+        )
+        .unwrap();
+
+        assert!(status.success());
+        assert_eq!(calls.len(), 2, "{calls:?}");
+        let (build, run) = (&calls[0], &calls[1]);
+        assert!(build.contains(&"gameTestBuild".to_owned()), "{build:?}");
+        assert!(build.contains(&"--no-daemon".to_owned()), "{build:?}");
+        // Another worktree's Gradle may share the daemons, so the build never stops them.
+        assert!(!build.contains(&"--stop".to_owned()), "{build:?}");
+        assert_eq!(run, &suite);
+    }
+
+    #[test]
+    fn a_suite_that_fails_to_build_runs_no_requirement() {
+        let mut calls = 0;
+
+        let error = build_then_run(
+            |_: &[String]| {
+                calls += 1;
+                Ok(exited(1))
+            },
+            &["gameTest".to_owned()],
+        )
+        .unwrap_err()
+        .to_string();
+
+        assert_eq!(calls, 1);
+        assert!(error.contains("building the game suite failed"), "{error}");
+        assert!(error.contains("no requirement ran"), "{error}");
     }
 
     #[test]

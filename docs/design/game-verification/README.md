@@ -155,6 +155,13 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   43996334142): the shared Paper peaked at 4.4 GB RSS with its heap committed to 4 GB (the part that
   ran the runner out of memory), a client at 1.7 GB RSS on a 0.54 GB heap, an own Paper at 1.3 GB RSS,
   the pool at 0.3 GB.
+- **No compiler runs beside the suite** (2026-11-17): `cargo xtask e2e game` first runs `gameTestBuild`
+  (everything gameTest runs, and nothing more) in a Gradle of its own with `--no-daemon`, then the
+  suite. The Kotlin compile daemons end with the build's Gradle; on the 16 GB runner three of them held
+  4.1 to 4.3 GB while the suite ran (run 44013168715). Building apart raised the lowest free memory from
+  1.0 GB to 3.8 GB for about 46 s (run 44019397538). Compiling inside Gradle frees nothing, as the
+  Gradle daemon grows by what the daemons held. It never runs `--stop`, which would stop other
+  worktrees' builds.
 - **Selection** is testBalloon's (2026-11-15): `cargo xtask e2e game --only` passes each id as a test
   pattern, and the framework holds no selection code. A game module the selection leaves empty passes,
   as Gradle's "no matching tests" check is off for gameTest tasks; xtask's selection check names each
