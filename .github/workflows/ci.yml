@@ -128,7 +128,9 @@ jobs:
         with:
           caches: ${{ matrix.caches }}
           profile: e2e
-      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }}
+      # The game suite's demo reruns follow the lines the change added since the same base the
+      # checks compare with.
+      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }} --base "$BASE_SHA"
         env:
           # The game suite fetches approved golden images from the evidence branch through gh.
           GH_TOKEN: ${{ github.token }}

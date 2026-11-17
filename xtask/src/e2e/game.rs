@@ -45,8 +45,11 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
     // A requirement that covered a line the change added reruns in demo mode.
     let touched = evidence.join("touched.txt");
     fs::create_dir_all(&evidence)?;
-    fs::write(&touched, touched_lines(&Change::load(ctx, None)?))
-        .with_context(|| format!("cannot write {}", touched.display()))?;
+    fs::write(
+        &touched,
+        touched_lines(&Change::load(ctx, args.base.as_deref())?),
+    )
+    .with_context(|| format!("cannot write {}", touched.display()))?;
     // The pool, Paper and every client log into a folder of this run's own.
     let logs = next_run_folder(&evidence.join(results::LOGS))?;
     let ran = Ran {
@@ -643,6 +646,18 @@ mod tests {
                     .any(|name| arg.starts_with(&format!("-Pplaytest.{name}=")))),
             "{plain:?}"
         );
+    }
+
+    #[test]
+    fn the_touched_lines_count_from_the_base_the_run_names_or_else_the_nearest_one() {
+        assert_eq!(
+            parsed(&["game", "--base", "4e61bf097"])
+                .unwrap()
+                .base
+                .as_deref(),
+            Some("4e61bf097")
+        );
+        assert_eq!(parsed(&["game"]).unwrap().base, None);
     }
 
     #[test]

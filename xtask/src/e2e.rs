@@ -73,6 +73,11 @@ pub struct E2eArgs {
     /// Attempts per selected scenario, instead of one attempt plus a rerun of failures.
     #[arg(long, default_value_t = NonZeroU32::MIN)]
     repeat: NonZeroU32,
+    /// The commit the change starts from, whose added lines pick the game suite's demo reruns;
+    /// by default the pull request's base or the nearest branch the head descends from. CI names
+    /// it, as its checkout of a pull request is a detached merge commit `gh` cannot place.
+    #[arg(long)]
+    pub(crate) base: Option<String>,
 }
 
 impl E2eArgs {
