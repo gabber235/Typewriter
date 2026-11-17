@@ -207,14 +207,28 @@ impl Target for CiCluster {
     }
 }
 
-/// Takes the heavy lock at `lock`, then clears the previous run's results in `evidence`.
-/// Clearing only once the lock is held means a run that waits for its turn never removes
-/// the results of the run still writing them.
-fn take_turn(lock: &Path, holder: &str, evidence: &Path) -> Result<HeavyLock> {
+/// Takes the heavy lock at `lock`, then clears the previous run's results in `evidence`, all but
+/// the entries named in `kept`, which outlive a run (the game's folders of earlier runs' logs).
+/// Clearing only once the lock is held means a run that waits for its turn never removes the
+/// results of the run still writing them.
+fn take_turn(lock: &Path, holder: &str, evidence: &Path, kept: &[&str]) -> Result<HeavyLock> {
     let held = HeavyLock::acquire_at(lock, holder)?;
     if evidence.exists() {
-        std::fs::remove_dir_all(evidence)
-            .with_context(|| format!("cannot clear {}", evidence.display()))?;
+        for entry in std::fs::read_dir(evidence)? {
+            let path = entry?.path();
+            if kept
+                .iter()
+                .any(|name| path.file_name() == Some(name.as_ref()))
+            {
+                continue;
+            }
+            let cleared = if path.is_dir() {
+                std::fs::remove_dir_all(&path)
+            } else {
+                std::fs::remove_file(&path)
+            };
+            cleared.with_context(|| format!("cannot clear {}", path.display()))?;
+        }
     }
     Ok(held)
 }
@@ -239,6 +253,7 @@ fn scenarios<T: Target>(ctx: &Context, args: &E2eArgs, device: Device) -> Result
             Path::new(lock::HEAVY_LOCK),
             &format!("e2e {name}"),
             &evidence,
+            &[],
         )
     };
     let defines = ctx.root.join(PANEL_DEFINES);
@@ -781,20 +796,21 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let (lock, evidence) = (dir.path().join("heavy.lock"), dir.path().join("panel"));
         std::fs::create_dir(&evidence).unwrap();
+        std::fs::write(evidence.join("test_run.json"), "{}").unwrap();
         let running = HeavyLock::acquire_at(&lock, "first run").unwrap();
         let waiting = std::thread::spawn({
             let (lock, evidence) = (lock.clone(), evidence.clone());
-            move || take_turn(&lock, "second run", &evidence).map(drop)
+            move || take_turn(&lock, "second run", &evidence, &[]).map(drop)
         });
         std::thread::sleep(std::time::Duration::from_millis(300));
         assert!(
-            evidence.exists(),
+            evidence.join("test_run.json").exists(),
             "a waiting run must not clear the running run's results"
         );
         drop(running);
         waiting.join().unwrap().unwrap();
         assert!(
-            !evidence.exists(),
+            !evidence.join("test_run.json").exists(),
             "its turn starts by clearing the previous results"
         );
     }

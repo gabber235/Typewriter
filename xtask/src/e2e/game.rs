@@ -34,7 +34,13 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
         .trim()
         .to_owned();
     let quarantine = Quarantine::load(ctx)?;
-    let _lock = take_turn(Path::new(lock::HEAVY_LOCK), "e2e game", &evidence)?;
+    // The folders of the last runs' logs outlive the clear; `next_run_folder` keeps the newest.
+    let _lock = take_turn(
+        Path::new(lock::HEAVY_LOCK),
+        "e2e game",
+        &evidence,
+        &[results::LOGS],
+    )?;
     let file = evidence.join("test_run.json");
     // A requirement that covered a line the change added reruns in demo mode.
     let touched = evidence.join("touched.txt");
@@ -636,6 +642,30 @@ mod tests {
                     .iter()
                     .any(|name| arg.starts_with(&format!("-Pplaytest.{name}=")))),
             "{plain:?}"
+        );
+    }
+
+    #[test]
+    fn a_game_run_clears_the_last_results_but_keeps_the_log_folders_of_earlier_runs() {
+        let root = TempRoot::new();
+        let (lock, evidence) = (root.path("heavy.lock"), root.path("results/game"));
+
+        for _ in 0..2 {
+            let turn = take_turn(&lock, "e2e game", &evidence, &[results::LOGS]).unwrap();
+            fs::create_dir_all(&evidence).unwrap();
+            fs::write(evidence.join("test_run.json"), "{}").unwrap();
+            next_run_folder(&evidence.join(results::LOGS)).unwrap();
+            drop(turn);
+        }
+        take_turn(&lock, "e2e game", &evidence, &[results::LOGS])
+            .map(drop)
+            .unwrap();
+
+        assert!(evidence.join("logs/1").is_dir() && evidence.join("logs/2").is_dir());
+        assert_eq!(
+            files_below(&evidence),
+            Vec::<String>::new(),
+            "only the log folders survive"
         );
     }
 
