@@ -139,8 +139,8 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   as `goldens/<hash>.png`, beside the pull request folders pruning empties, and `cargo xtask e2e game`
   fetches every golden image the machine lacks before the run, so a frame that differs shows its diff
   on CI while the framework stays offline. Approve writes `goldens/<hash>.approved-at` beside each
-  image, and the weekly prune drops an image no golden file on develop names once it is older than the
-  retention (an image without that file counts as old).
+  image, and the weekly prune drops an image no golden file on a long lived branch (develop,
+  features/v1) names once it is older than the retention (an image without that file counts as old).
 - **Parts name their processes** (2026-11-17): the pool writes each part's pid and start time into its
   folder at every boot (`part.running`), and tests find a client or Paper by it. Linux shows Java only
   the first page of a command line, so arguments cannot name a part; a file a crash left behind names

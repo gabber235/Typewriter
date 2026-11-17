@@ -1,7 +1,7 @@
 //! Keeps both media stores to what someone can still see. A pull request that closes unmerged
 //! loses its media; a merged one keeps only its final commit's folder, for the retention. A golden
-//! image no golden file on develop names goes once it is older than the retention too; the weekly
-//! run checks out develop, so the golden files it reads are develop's. Pushes retry onto whatever another job pushed first, and a squash pushes with a lease
+//! image no golden file on a long lived branch names goes once it is older than the retention too;
+//! the weekly run fetches each long lived branch and reads its golden files. Pushes retry onto whatever another job pushed first, and a squash pushes with a lease
 //! and starts over when it loses it, so neither drops media published a moment earlier.
 
 use std::fs;
@@ -27,7 +27,7 @@ pub enum Prune {
 
 pub fn prune(ctx: &Context, action: Prune) -> Result<()> {
     let used = match action {
-        Prune::Weekly { .. } => goldens::named(ctx)?,
+        Prune::Weekly { .. } => goldens::named_on_long_lived(ctx)?,
         Prune::Closed { .. } => Vec::new(),
     };
     let mut attempt = 1;

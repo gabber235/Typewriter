@@ -32,6 +32,10 @@ const ON_BRANCH: &str = "goldens";
 /// seconds it was approved.
 const APPROVED_AT: &str = "approved-at";
 
+/// The long lived branches, the ones the devenv action trusts a push to: an image a golden file on
+/// any of them names stays on the evidence branch however old it is.
+pub(crate) const LONG_LIVED: [&str; 2] = ["develop", "features/v1"];
+
 /// The keys a golden file holds, in the order it holds them.
 const GOLDEN_KEYS: [&str; 8] = [
     "sha256", "width", "height", "backend", "device", "driver", "os", "arch",
@@ -188,13 +192,62 @@ pub(crate) fn named(ctx: &Context) -> Result<Vec<String>> {
         let path = ctx.root.join(file);
         let text =
             fs::read_to_string(&path).with_context(|| format!("cannot read {}", path.display()))?;
-        let hash = text
-            .lines()
-            .find_map(|line| line.strip_prefix("sha256="))
-            .with_context(|| format!("{file} holds no sha256"))?;
-        hashes.push(hash.to_owned());
+        hashes.push(hash_in(file, &text)?);
     }
     Ok(hashes)
+}
+
+/// Fetches every long lived branch from origin, then returns the hash each golden file on any of
+/// them names, once each.
+pub(crate) fn named_on_long_lived(ctx: &Context) -> Result<Vec<String>> {
+    let refs: Vec<String> = LONG_LIVED
+        .iter()
+        .map(|branch| format!("origin/{branch}"))
+        .collect();
+    for branch in LONG_LIVED {
+        ctx.tool(
+            ".",
+            "git",
+            &[
+                "fetch",
+                "--quiet",
+                "--depth=1",
+                "origin",
+                &format!("+refs/heads/{branch}:refs/remotes/origin/{branch}"),
+            ],
+        )
+        .output_text()
+        .with_context(|| format!("cannot fetch {branch}, whose goldens keep their images"))?;
+    }
+    named_on(ctx, &refs.iter().map(String::as_str).collect::<Vec<_>>())
+}
+
+/// The hash each golden file at any of `refs` names, once each.
+fn named_on(ctx: &Context, refs: &[&str]) -> Result<Vec<String>> {
+    let mut hashes = Vec::new();
+    for at in refs {
+        let files = ctx
+            .tool(".", "git", &["ls-tree", "-r", "-z", "--name-only", at])
+            .output_text()?;
+        for file in files.split('\0').filter(|it| it.ends_with(".golden")) {
+            let text = ctx
+                .tool(".", "git", &["show", &format!("{at}:{file}")])
+                .output_text()?;
+            let hash = hash_in(&format!("{at}:{file}"), &text)?;
+            if !hashes.contains(&hash) {
+                hashes.push(hash);
+            }
+        }
+    }
+    Ok(hashes)
+}
+
+/// The hash the golden file `file` holding `text` names.
+fn hash_in(file: &str, text: &str) -> Result<String> {
+    text.lines()
+        .find_map(|line| line.strip_prefix("sha256="))
+        .map(str::to_owned)
+        .with_context(|| format!("{file} holds no sha256"))
 }
 
 /// The image of the golden `hash` from the evidence branch, or None when the branch holds none,
@@ -364,7 +417,7 @@ mod tests {
 
     use std::cell::RefCell;
 
-    use super::{approve, fetch_into, place};
+    use super::{approve, fetch_into, named_on, place};
     use crate::test_support::{TempRoot, captured_golden};
 
     const SIDEBAR: &str = "golden=services/playtest/framework/src/gameTest/goldens/sidebar.golden
@@ -569,5 +622,30 @@ pinned=true
             )]
         );
         assert!(images.path("pushed.png").exists());
+    }
+
+    #[test]
+    fn an_image_a_golden_file_on_any_long_lived_branch_names_is_in_use() {
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet", "--initial-branch=develop"]);
+        root.save(
+            "framework/goldens/sidebar.golden",
+            "sha256=on-develop\nwidth=4\n",
+        );
+        root.git(&["update-ref", "refs/remotes/origin/develop", "HEAD"]);
+        root.save(
+            "framework/goldens/title.golden",
+            "sha256=on-features\nwidth=4\n",
+        );
+        root.save("framework/goldens/notes.txt", "sha256=not-a-golden\n");
+        root.git(&["update-ref", "refs/remotes/origin/features/v1", "HEAD"]);
+        // The checkout itself names a golden no long lived branch holds yet.
+        root.git(&["checkout", "--quiet", "-b", "feature"]);
+        root.save("framework/goldens/fresh.golden", "sha256=only-here\n");
+
+        let mut used = named_on(&root.ctx, &["origin/develop", "origin/features/v1"]).unwrap();
+        used.sort();
+
+        assert_eq!(used, ["on-develop", "on-features"]);
     }
 }
