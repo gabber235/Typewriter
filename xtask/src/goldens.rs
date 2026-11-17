@@ -133,39 +133,46 @@ pub(crate) fn drop_unused(branch: &Path, used: &[String], cutoff: u64) -> Result
 }
 
 /// Fetches into `images` the image of each golden in `hashes` it does not hold yet, through `fetch`,
-/// which answers None for an image the evidence branch does not hold; returns those hashes.
+/// which answers None for an image the evidence branch does not hold; returns each hash it got no
+/// image of, with why. An image only draws a diff, so no failed fetch stops the others.
 fn fetch_into(
     images: &Path,
     hashes: &[&str],
     fetch: impl Fn(&str) -> Result<Option<Vec<u8>>>,
-) -> Result<Vec<String>> {
+) -> Result<Vec<(String, String)>> {
     fs::create_dir_all(images).with_context(|| format!("cannot create {}", images.display()))?;
-    let mut absent = Vec::new();
+    let mut unfetched = Vec::new();
     for hash in hashes {
         let image = images.join(format!("{hash}.png"));
         if image.exists() {
             continue;
         }
-        match fetch(hash)? {
-            Some(bytes) => fs::write(&image, bytes)
-                .with_context(|| format!("cannot write {}", image.display()))?,
-            None => absent.push((*hash).to_owned()),
-        }
+        let why = match fetch(hash) {
+            Ok(Some(bytes)) => {
+                fs::write(&image, bytes)
+                    .with_context(|| format!("cannot write {}", image.display()))?;
+                continue;
+            }
+            Ok(None) => "the evidence branch holds no image of it".to_owned(),
+            Err(error) => format!("{error:#}"),
+        };
+        unfetched.push(((*hash).to_owned(), why));
     }
-    Ok(absent)
+    Ok(unfetched)
 }
 
 /// Fetches the image of every golden the repository holds that the local golden images lack,
 /// from the evidence branch, so a frame that differs from its golden shows where. A golden whose
-/// image the branch does not hold yet is said, and its frames fail without a diff.
+/// image the branch does not hold, or that gh could not fetch, is said with why, and its frames fail
+/// without a diff; the run goes on.
 pub fn fetch_missing(ctx: &Context) -> Result<()> {
     let hashes = named(ctx)?;
     let hashes: Vec<&str> = hashes.iter().map(String::as_str).collect();
-    for hash in fetch_into(&ctx.root.join(IMAGES), &hashes, |hash| {
+    for (hash, why) in fetch_into(&ctx.root.join(IMAGES), &hashes, |hash| {
         fetch_image(ctx, hash)
     })? {
         println!(
-            "goldens: the evidence branch holds no image of golden {hash}; a frame that differs from it fails without a diff"
+            "goldens: no image of golden {hash} ({why}); a frame that differs from it fails without a diff"
         );
     }
     Ok(())
@@ -517,7 +524,7 @@ pinned=true
         images.write("held.png", "held");
         let asked = RefCell::new(Vec::new());
 
-        let absent = fetch_into(
+        let unfetched = fetch_into(
             &images.ctx.root,
             &["held", "pushed", "never-pushed"],
             |hash| {
@@ -532,7 +539,35 @@ pinned=true
             fs::read_to_string(images.path("pushed.png")).unwrap(),
             "png bytes"
         );
-        assert_eq!(absent, ["never-pushed"]);
+        assert_eq!(
+            unfetched,
+            [(
+                "never-pushed".to_owned(),
+                "the evidence branch holds no image of it".to_owned()
+            )]
+        );
         assert!(!images.path("never-pushed.png").exists());
+    }
+
+    #[test]
+    fn a_golden_image_that_cannot_be_fetched_is_named_with_why_and_the_others_still_arrive() {
+        let images = TempRoot::new();
+
+        let unfetched = fetch_into(&images.ctx.root, &["unreachable", "pushed"], |hash| {
+            if hash == "unreachable" {
+                anyhow::bail!("gh could not fetch golden image unreachable: HTTP 502")
+            }
+            Ok(Some(b"png bytes".to_vec()))
+        })
+        .unwrap();
+
+        assert_eq!(
+            unfetched,
+            [(
+                "unreachable".to_owned(),
+                "gh could not fetch golden image unreachable: HTTP 502".to_owned()
+            )]
+        );
+        assert!(images.path("pushed.png").exists());
     }
 }
