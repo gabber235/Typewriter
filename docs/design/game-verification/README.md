@@ -242,7 +242,10 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   (`within(40.ticks after left)`) for the rare case (2026-11-06).
 - `never` checks are **broad** (`anyChat()`, `anyTitle()`), and the framework **refuses** a requirement
   whose checks are all `never` or all client state: it needs one positive check (2026-11-06). A body
-  that returns without one (no window whose checks held, no `looksLike`) fails as refused (2026-11-18).
+  that returns without one fails as refused (2026-11-18). A positive check is a window whose checks
+  held, a `looksLike`, an outcome the framework observed that the body caught (a missed window, hung
+  work, a lost client or Paper), or the test kit's `holds`/`lacks` state check. A bare read of state
+  never counts: the rule catches a body that reads and forgets to assert.
 - A requirement that needs rendered frames **declares it** (`player(frames = 60.hz)`), so the runner
   groups such requirements at a fitting server rate before it starts (2026-11-06).
 

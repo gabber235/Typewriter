@@ -95,8 +95,17 @@ internal class Attempt(
         return failure
     }
 
-    /** Whether the body made a positive check: a window whose checks held, or a golden frame. */
+    /**
+     * Whether the body made a positive check: a window whose checks held, a golden frame, a state check
+     * of the test kit, or an outcome the framework observed and threw into it ([observed]).
+     */
     var proved = false
+
+    /**
+     * [failure], an outcome the framework observed (a missed window, hung work, a lost client or Paper),
+     * as it reaches the body: a body that expects it and catches it has made a positive check.
+     */
+    fun observed(failure: AssertionError): AssertionError = failure.also { proved = true }
 
     /** The latest tick the attempt knows ran: from its stimuli, its players' records and its windows. */
     var ranUntil: Int = 0
@@ -330,7 +339,7 @@ internal class Attempt(
                 lost.onAwait { failure ->
                     answer.cancel()
                     thrown += failure
-                    throw failure
+                    throw observed(failure)
                 }
             }
         }

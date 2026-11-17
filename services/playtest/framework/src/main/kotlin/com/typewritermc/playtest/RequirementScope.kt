@@ -170,7 +170,7 @@ class RequirementScope internal constructor(
             attempt.took(opened, says(window, verdict, mark, ranBefore, declared))
         }
         val missed = verdict as? Window.Verdict.Missed ?: return run { attempt.proved = true }
-        throw WindowMissed(missed.report, at)
+        throw attempt.observed(WindowMissed(missed.report, at))
     }
 
     /**
@@ -211,7 +211,7 @@ class RequirementScope internal constructor(
             while (verdict == Window.Verdict.Open) {
                 val event = attempt.nextEvent()
                 // Hung work or a lost client fails the attempt at once, whatever the window would decide.
-                if (event is Attempt.Event.Failed) throw event.failure
+                if (event is Attempt.Event.Failed) throw attempt.observed(event.failure)
                 verdict = judge(event)
             }
             return verdict
