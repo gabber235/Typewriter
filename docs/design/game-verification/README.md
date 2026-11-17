@@ -242,6 +242,23 @@ profile (Xvfb, Mesa, lavapipe), about 13 to 14 minutes warm ([h-ci-runner.md](sp
 How to run it locally is in the dev loop skill (`.claude/skills/typewriter-dev-loop`); how to write
 a requirement is in the testing skill (`.claude/skills/typewriter-testing`).
 
+## Obligations on Typewriter
+
+The search decided what Typewriter itself must offer so its behaviour can be verified. Each obligation
+lives in the design doc of the layer that owns it; this list only points there.
+
+| Obligation | Owner |
+|---|---|
+| Engine step timing counts ticks, so a stepped Paper drives scenes, typing and grace | [interactions.md](../interactions.md#steps) (`StepClock`), [dialogue.md](../dialogue.md) |
+| The realm purges every stored value of a subject in one operation | [stored-data.md](../stored-data.md#purging-a-subject) |
+| The realm's clock is given to it, and a test can advance it past a `Due` | [stored-data.md](../stored-data.md#due) |
+| Engine and realm report, per subject, whether chains or transactions are still busy (the done hook) | [events-and-handlers.md](../events-and-handlers.md#busy-per-subject), [stored-data.md](../stored-data.md#who-waits-for-a-commit) |
+| The Paper engine clears its live state and asks for the purge on `PlayerWipeEvent` | [live-data.md](../live-data.md#wiping-a-protagonist) |
+| Effects reach the player through the owner thread | [events-and-handlers.md](../events-and-handlers.md#busy-per-subject) (open against chat from the worker) |
+
+Open: whether the done signal needs a test side hook as well as Paper's `PlayerWork`, decided with
+layers 3 and 6.
+
 ## Decisions from the developer
 
 Dated decisions, oldest first. The sections above describe what they add up to.

@@ -89,6 +89,12 @@ A stored value without keys is global and has no owner. That is the escape hatch
 
 Stored values carry no time limit of their own. Time based behaviour is built from [reactions](#reactions) and [`Due`](#due).
 
+### Purging a subject
+
+The realm offers one operation that removes every stored value keyed by a subject (a protagonist, or any identity), including pending rows and `Due` timers, as one transaction (decided 2026-11-07 for [game verification](game-verification/README.md#obligations-on-typewriter)). It fires `Removed` for each value like any clear. It is general, not a test feature: an operator deleting a player's data uses it too.
+
+The game verification framework wipes the same player before every requirement, so a requirement meets Typewriter as a player who never played. Spike K found that a wipe which lists kinds by hand leaks the kinds it forgot ([k-restarts.md](game-verification/spikes/k-restarts.md)), so the purge walks the subject's keys instead of a list. The engine clears its live state for the player on the same signal ([live-data.md](live-data.md#wiping-a-protagonist)).
+
 ### Lifecycle events
 
 Every stored value, whether written by a derive, by a step, or by code, emits:
@@ -260,6 +266,7 @@ Chosen 2026-11-03 with the [tick pipeline](events-and-handlers.md#tick-pipeline)
 - **`ensure()`.** Kotlin code that needs the committed result writes `AddCoins(protagonist, 5).ensure()` instead of `AddCoins(protagonist, 5).attempt()`, and the chain waits for the realm's answer.
 - **Batching.** An engine keeps one commit in flight; what arrives meanwhile shares the next commit. Each write has a per engine id, so a retry applies once.
 - **The answer.** The committed value replaces the local one. What a player saw can briefly differ when another engine wrote the same key. The stored result stays correct.
+- **Busy per subject.** An engine can tell, per protagonist, whether a transaction of that protagonist or of a group it belongs to is still pending at the realm. Game verification waits on it before it judges a requirement ([events-and-handlers.md](events-and-handlers.md#busy-per-subject)); a future `Due` is not pending.
 
 Accepted costs for writes without a guard: when an engine crashes, a player may have seen the result of a write that never reached the realm. The window is about one realm round trip. While the realm is down, these chains keep running and their writes wait; guarded chains wait too. A limit on waiting writes during a long outage is open for the plan.
 
@@ -460,6 +467,8 @@ data class Highlighting(
 The realm is the clock. One core source per `Due` type reads the earliest `at` across that type's declarations (the plan adds an index on `at`). Firing is one transaction: it removes the row, or sets `at = repeat.next(now)`, and adds a pending row per `Elapsed<D>` handler ([Offline changes](#offline-changes)). The pending row keeps the fired value, because the timer is already gone or moved on. Each handler then runs like any stored only reader: its writes and clearing its row are one transaction. A `Due` is a pending row with a time.
 
 Firing is an ordinary write, so `Removed<D>` or `Changed<D>` also fire. `Elapsed<D>` is what tells firing apart from cancelling.
+
+The realm reads `now` from a clock it is given, and a test can advance that clock (decided 2026-11-06 for [game verification](game-verification/README.md#obligations-on-typewriter)). The game tick clock does not drive it: engine step time counts ticks, the realm's time stays wall time. A requirement that waits on a timer advances the realm clock past `at` instead of waiting, and a future `Due` never counts as busy work for its subject ([Who waits for a commit](#who-waits-for-a-commit)).
 
 Handlers on `Elapsed<D>` are stored only (decided 2026-11-04). The realm reaches engines only through stored commits, no events are queued for offline protagonists, and an event without an origin is best effort ([live-data.md](live-data.md#routing)), so a live effect at a time goes through owed state:
 
