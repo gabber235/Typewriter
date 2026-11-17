@@ -24,7 +24,7 @@ import java.nio.file.Path
  */
 internal class Attempt(
     private val session: PoolSession,
-    private val submission: Long,
+    private val submission: SubmissionId,
     val players: List<GamePlayer>,
     val region: Region,
     val paper: String,

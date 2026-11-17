@@ -105,9 +105,9 @@ internal class PoolSession private constructor(
     private val submissions = AtomicLong()
     private val requests = AtomicLong()
     private val barriers = AtomicInteger()
-    private val leases = ConcurrentHashMap<Long, Leasing>()
+    private val leases = ConcurrentHashMap<SubmissionId, Leasing>()
     private val replies = ConcurrentHashMap<Long, CompletableDeferred<Reply>>()
-    private val settles = ConcurrentHashMap<Long, CompletableDeferred<Settled>>()
+    private val settles = ConcurrentHashMap<SubmissionId, CompletableDeferred<Settled>>()
     private val restarts = ConcurrentHashMap<Long, Attempt>()
     private val attempts = ConcurrentHashMap<String, Attempt>()
     private val attemptsOf = ConcurrentHashMap<String, Int>()
@@ -171,7 +171,7 @@ internal class PoolSession private constructor(
      */
     suspend fun sideBySide(planned: List<Planned>): List<AttemptEnd> {
         val leasings =
-            planned.map { submissions.incrementAndGet() to Leasing(RequirementCode.of(it.bodies.first()), it.restartsPaper) }
+            planned.map { SubmissionId(submissions.incrementAndGet()) to Leasing(RequirementCode.of(it.bodies.first()), it.restartsPaper) }
         for ((submission, leasing) in leasings) {
             leases[submission] = leasing
             broken?.let(leasing.attempt::completeExceptionally)
@@ -180,7 +180,7 @@ internal class PoolSession private constructor(
             send(
                 Queue(
                     planned.zip(leasings) { it, (submission, _) ->
-                        Submit(submission, it.testId, it.requirement, it.players, it.demonstrates, it.restartsPaper, it.demo)
+                        Submit(submission.value, it.testId, it.requirement, it.players, it.demonstrates, it.restartsPaper, it.demo)
                     },
                 ),
             )
@@ -196,7 +196,7 @@ internal class PoolSession private constructor(
 
     /** Runs [planned]'s bodies once [leasing] holds its lease; returns how the attempt ended. */
     private suspend fun runAttempt(
-        submission: Long,
+        submission: SubmissionId,
         leasing: Leasing,
         planned: Planned,
     ): AttemptEnd {
@@ -223,7 +223,7 @@ internal class PoolSession private constructor(
         for ((index, body) in planned.bodies.withIndex()) {
             if (index > 0) {
                 attempt.players.forEach { attempts.remove(it.name) }
-                attempt = lease(submission, leasing) { send(Reclaim(submission)) }
+                attempt = lease(submission, leasing) { send(Reclaim(submission.value)) }
             }
             attempt.evidence = evidence
             val ended = runBody(submission, attempt, body, if (planned.demo) clipSuffix(planned, index) else null)
@@ -239,7 +239,7 @@ internal class PoolSession private constructor(
 
     /** What [submission]'s attempt reports to the pool once it ended with [failure] after [millis]. */
     private fun result(
-        submission: Long,
+        submission: SubmissionId,
         attempt: Attempt,
         failure: Throwable?,
         millis: Long,
@@ -247,7 +247,7 @@ internal class PoolSession private constructor(
         evidence: Evidence,
     ): Result =
         Result(
-            submission,
+            submission.value,
             millis,
             failure?.described,
             failure?.let { attempt.requirementLine(it.stackTrace) ?: (it as? WindowMissed)?.at },
@@ -262,7 +262,7 @@ internal class PoolSession private constructor(
      * body as a clip named with it. Returns how the body ended.
      */
     private suspend fun runBody(
-        submission: Long,
+        submission: SubmissionId,
         attempt: Attempt,
         body: suspend RequirementScope.() -> Unit,
         clip: String?,
@@ -281,7 +281,7 @@ internal class PoolSession private constructor(
 
     /** Waits for the lease of [submission] that [ask] asks the pool for. */
     private suspend fun lease(
-        submission: Long,
+        submission: SubmissionId,
         first: Leasing,
         ask: () -> Unit,
     ): Attempt {
@@ -318,13 +318,13 @@ internal class PoolSession private constructor(
      * client the body never met first, else by [failure], and what it covered so far.
      */
     private suspend fun settle(
-        submission: Long,
+        submission: SubmissionId,
         attempt: Attempt,
         failure: Throwable?,
     ): AttemptEnd {
         // A cancelled body still ends its attempt, so the pool hears the result and frees its players.
         val at = System.currentTimeMillis()
-        val settled = withContext(NonCancellable) { waitFor(settles, submission) { send(Settle(submission)) } }
+        val settled = withContext(NonCancellable) { waitFor(settles, submission) { send(Settle(submission.value)) } }
         attempt.took(at, "settle ${attempt.players.joinToString { it.name }}")
         val untaken = attempt.untakenFailures().firstOrNull() ?: return AttemptEnd(failure, settled.covered())
         failure?.let(untaken::addSuppressed)
@@ -338,14 +338,14 @@ internal class PoolSession private constructor(
      */
     suspend fun restart(
         attempt: Attempt,
-        submission: Long,
+        submission: SubmissionId,
     ): Int {
         var asked = 0L
         try {
             return request<Message.Restarted> { request ->
                 asked = request
                 restarts[request] = attempt
-                Message.Restart(request, submission)
+                Message.Restart(request, submission.value)
             }.tick()
         } finally {
             restarts.remove(asked)
@@ -411,9 +411,9 @@ internal class PoolSession private constructor(
         return waitFor(replies, request) { send(message(request)) } as T
     }
 
-    private suspend fun <T> waitFor(
-        pending: ConcurrentHashMap<Long, CompletableDeferred<T>>,
-        key: Long,
+    private suspend fun <K : Any, T> waitFor(
+        pending: ConcurrentHashMap<K, CompletableDeferred<T>>,
+        key: K,
         ask: () -> Unit,
     ): T {
         val reply = CompletableDeferred<T>()
@@ -443,15 +443,15 @@ internal class PoolSession private constructor(
     private fun dispatch(message: Message) {
         when (message) {
             is Lease -> {
-                leases[message.submission()]?.let { leasing -> leasing.attempt.complete(start(message, leasing)) }
+                leases[SubmissionId(message.submission())]?.let { leasing -> leasing.attempt.complete(start(message, leasing)) }
             }
 
             is Declined -> {
-                leases[message.submission()]?.attempt?.completeExceptionally(RequirementDeclined(message.reason()))
+                leases[SubmissionId(message.submission())]?.attempt?.completeExceptionally(RequirementDeclined(message.reason()))
             }
 
             is Message.LeaseFailed -> {
-                leases[message.submission()]?.attempt?.completeExceptionally(PaperLost(message.reason()))
+                leases[SubmissionId(message.submission())]?.attempt?.completeExceptionally(PaperLost(message.reason()))
             }
 
             is Message.Restarted -> {
@@ -468,7 +468,7 @@ internal class PoolSession private constructor(
             }
 
             is Settled -> {
-                settles[message.id()]?.complete(message)
+                settles[SubmissionId(message.id())]?.complete(message)
             }
 
             is Refused -> {
@@ -517,7 +517,7 @@ internal class PoolSession private constructor(
         val attempt =
             Attempt(
                 this,
-                lease.submission(),
+                SubmissionId(lease.submission()),
                 lease.players().map { GamePlayer(it.name(), it.uuid()) },
                 lease.region(),
                 lease.paper(),
