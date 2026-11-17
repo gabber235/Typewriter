@@ -366,7 +366,6 @@ fn stopped_run(runner: Runner, now: i64, error: &anyhow::Error, seen: Option<Str
             }],
             ..TestCase::default()
         }],
-        ended: true,
         ..TestRun::default()
     }
 }

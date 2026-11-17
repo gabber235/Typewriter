@@ -41,13 +41,22 @@ val coverageAgentPart = gamePart("playtestCoverageAgent", ":playtest-plugin", "p
 
 /**
  * One run per build: every gameTest task of the build, in whichever project, reports into the same run
- * file, as their test JVMs share one pool.
+ * file under the same run id, as their test JVMs share one pool.
  */
-abstract class GameRun : BuildService<BuildServiceParameters.None> {
-    val id: String = UUID.randomUUID().toString()
+abstract class GameRun : BuildService<GameRun.Params> {
+    interface Params : BuildServiceParameters {
+        val id: Property<String>
+    }
+
+    val id: String get() = parameters.id.get()
 }
 
-val gameRun = gradle.sharedServices.registerIfAbsent("playtestGameRun", GameRun::class) {}
+val gameRun =
+    gradle.sharedServices.registerIfAbsent("playtestGameRun", GameRun::class) {
+        // `cargo xtask e2e game` names the run, so it tells its run file from one an earlier run left;
+        // a build outside xtask makes a fresh one.
+        parameters.id.set(providers.gradleProperty("playtest.runId").orElse(UUID.randomUUID().toString()))
+    }
 
 /** The `-Dplaytest.*` properties the session reads and forwards to the pool it starts. */
 abstract class GameParts : CommandLineArgumentProvider {

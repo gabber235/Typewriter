@@ -84,17 +84,18 @@ fun main() {
     Files.createDirectories(settings.poolDir)
     val lockFile = FileChannel.open(settings.poolDir.resolve("pool.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
     val lock = lockFile.tryLock() ?: exitProcess(0)
-    // Every starter appends its output to the log; the pool that holds the lock empties it, so the log holds this run alone.
     Files.createDirectories(settings.logs)
-    FileChannel.open(settings.poolLog, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
-    // xtask reads why the game failed from the pool's log.
-    HeapShare.overLimit(settings.clients)?.let { reason ->
-        System.err.println("The game failed: $reason")
-        exitProcess(1)
-    }
     val poolFile = settings.poolDir.resolve(PoolFile.NAME)
     ServerSocket(0, BACKLOG, InetAddress.getLoopbackAddress()).use { server ->
         val pool = Pool(settings, server)
+        // Every starter appends its output to the log. A pool that starts its run empties it, so the log
+        // holds this run alone; one that continues its run adds to what the earlier pool of it logged.
+        if (!pool.continuing) FileChannel.open(settings.poolLog, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
+        // The test JVM that started this pool says it exited while starting, and points at this log.
+        HeapShare.overLimit(settings.clients)?.let { reason ->
+            System.err.println("The game failed: $reason")
+            exitProcess(1)
+        }
         PoolFile.of(server.localPort, settings.run).write(poolFile)
         try {
             pool.run()
@@ -221,13 +222,17 @@ internal class Pool(
     private val claims = Claims<Peer, Player>(clients.map { it.player })
     private val runs = RunRecords(stillOut = { run -> stillOut(run) })
 
+    /** Whether an earlier pool of this run left its file, which this pool takes up and adds to. */
+    val continuing = runs.continueFrom(settings.run, settings.testRun)
+
     /** Sessions the pool refused as they joined: what they still send is dropped until they leave. */
     private val refused = mutableSetOf<Peer>()
 
     // What each submission's attempt covered: its Paper's reads, and the lines they came to at its last settle.
     private val coverage = Coverage<Pair<Peer, Long>>()
 
-    private val lifetime = Lifetime<Peer>(System.currentTimeMillis(), TimeUnit.SECONDS.toMillis(OWNER_SECONDS))
+    private val lifetime =
+        Lifetime<Peer>(System.currentTimeMillis(), TimeUnit.SECONDS.toMillis(OWNER_SECONDS), TimeUnit.SECONDS.toMillis(GRACE_SECONDS))
     private val queued = mutableMapOf<Pair<Peer, Long>, Queued>()
     private val timings = mutableMapOf<Pair<Peer, Long>, Timing>()
 
@@ -265,7 +270,7 @@ internal class Pool(
     fun run() {
         thread(name = "playtest-pool-accept", isDaemon = true) { accept() }
         val startedAt = System.nanoTime()
-        game = Game.start(settings, server.localPort, clients.map { it.player.name() })
+        game = Game.start(settings, server.localPort, clients.map { it.player.name() }, continuing)
         shared = Server(game.paper, SharedPaper(game.paper.name, clients.map { it.player.name() }.toSet()))
         shared.part = game.paperPart
         shared.boots = 1
@@ -734,7 +739,7 @@ internal class Pool(
         when (peer.role) {
             // What it asked gets no answers, and what its attempts covered goes with it.
             Role.SESSION -> {
-                lifetime.left(peer)
+                lifetime.left(peer, at = System.currentTimeMillis())
                 // A refused session never joined its run, so it leaves nothing in the run's file.
                 if (!refused.remove(peer)) abandon(peer)
                 claims.leave(peer)
@@ -766,6 +771,8 @@ internal class Pool(
      * fails in its run's file, so the run never reads as complete without them.
      */
     private fun abandon(session: Peer) {
+        // The game failed, so the attempts it never ran are no failures of their own: the run's file says why it failed.
+        if (failure != null) return runs.ended(session.hello.name(), session)
         val unfinished =
             queued.filterKeys { it.first == session }.values.map { it.submit } +
                 (attempts.all + parked).filter { it.session == session }.map { it.submit }
@@ -1248,6 +1255,7 @@ internal class Pool(
         if (failure != null) return
         failure = reason
         System.err.println("The game failed: $reason")
+        runs.failed(settings.run, reason)
         lifetime.sessions.forEach { it.send(Refused(reason)) }
         game.stop()
     }
@@ -1291,6 +1299,9 @@ internal class Pool(
 
         /** How long the test JVM that starts the pool has to open its session; it opens it as soon as the pool listens. */
         const val OWNER_SECONDS = 60L
+
+        /** How long the pool waits after its run's last session left for another session of the run, as a module whose tests start later. */
+        const val GRACE_SECONDS = 60L
 
         /** How long the pool waits, once every session left, for its own Papers to exit; a training one assembles its cache meanwhile. */
         const val OWN_EXIT_SECONDS = 60L

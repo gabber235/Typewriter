@@ -174,9 +174,19 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   starter's process tree is what lets Gradle's cancel stop it: Gradle destroys every descendant by pid.
 - **A run file survives a pool crash** (2026-11-17): a session names the run file and attempt policy in a
   `Join` right after its `Hello`, and the pool refuses a session of the run that names others. The pool
-  rewrites the file atomically after every attempt it records and marks it `ended` once every session of
-  the run ended or left; other runners always write `ended`. `cargo xtask e2e game` fails a file without
-  the mark as cut short after its finished cases, whose evidence still stages.
+  rewrites the file atomically when a session joins and after every attempt it records, with
+  `cut_short` true while a session of the run is open; other runners never set it.
+- **A run names itself and says when it could not run** (2026-11-17): `cargo xtask e2e game` makes a
+  run id and passes `-Pplaytest.runId`; the build's `GameRun` service hands it to every test JVM and
+  pool (a build outside xtask makes a fresh one), and the pool writes it as `run_id`. xtask takes the
+  file as its own only when the id matches, so a file an earlier run left never passes for this one.
+  When the game cannot serve the run, the pool writes why as `failure`, and the attempts it never ran
+  are not recorded as failures of their own. `results::run_trouble` judges `failure` and `cut_short`
+  once for every suite, and the pull request's evidence leads with them as not ready.
+- **One pool per run** (2026-11-17): after its run's last session left, the pool waits 60 s for
+  another session of the run, so with `--max-workers=1` a module whose tests start later joins the same
+  pool and game instead of booting another. A pool that starts for a run whose file already holds that
+  run id takes it up and adds to it, and adds to the run's logs instead of emptying them.
 - **Selection** is testBalloon's (2026-11-15): `cargo xtask e2e game --only` passes each id as a test
   pattern, and the framework holds no selection code. A game module the selection leaves empty passes,
   as Gradle's "no matching tests" check is off for gameTest tasks; xtask's selection check names each

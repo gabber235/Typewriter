@@ -108,6 +108,22 @@ pub fn verdict(run: &TestRun, case: &TestCase, quarantine: &Quarantine) -> Resul
     )
 }
 
+/// Why `run` as a whole proves less than its cases say, judged once for every suite and the pull
+/// request's evidence: it could not run at all, or it stopped before it was over, so cases it
+/// never reached are missing from it.
+pub fn run_trouble(run: &TestRun) -> Option<String> {
+    if !run.failure.is_empty() {
+        Some(format!("could not run: {}", run.failure))
+    } else if run.cut_short {
+        Some(format!(
+            "was cut short after {} cases, so the cases after them never ran",
+            run.cases.len()
+        ))
+    } else {
+        None
+    }
+}
+
 /// `case`'s demo when it ended otherwise than the last attempt: its clip shows another outcome,
 /// so it proves nothing.
 fn differing_demo(case: &TestCase) -> Option<&Attempt> {
@@ -316,7 +332,8 @@ pub fn write(run: &TestRun, path: &Path) -> Result<()> {
 }
 
 /// Lists every case whose verdict is not a plain pass, and every case when the run repeated
-/// each case, then fails when any case failed. `evidence`, the run's folder,
+/// each case, then fails when the run could not run or was cut short ([`run_trouble`]), or any
+/// case failed. `evidence`, the run's folder,
 /// points each failing case at the evidence of its first failed attempt and at the run's logs.
 pub fn report(
     run: &TestRun,
@@ -402,6 +419,15 @@ pub fn report(
                 None => writeln!(out, "{}: quarantined, failed {attempts}{see}", case.id)?,
             },
         }
+    }
+    if let Some(trouble) = run_trouble(run) {
+        let logs = match evidence {
+            Some(evidence) if !run.logs.is_empty() => {
+                format!("; logs in {}/", evidence.join(&run.logs).display())
+            }
+            _ => String::new(),
+        };
+        bail!("the run {trouble}{logs}");
     }
     if !failed.is_empty() {
         bail!(
@@ -741,6 +767,34 @@ mod tests {
         assert_eq!(
             out,
             "a: failed 1 of 1 attempts (1); see results/panel/; logs in results/panel/logs/7/\n"
+        );
+    }
+
+    #[test]
+    fn a_run_cut_short_fails_after_naming_its_finished_cases_and_where_its_logs_are() {
+        let mut run = attempted(AttemptPolicy::RerunFailures(1), &[failed("lost")]);
+        run.cut_short = true;
+        run.logs = "logs/7".to_owned();
+
+        let (result, out) = report_text(&run, &Quarantine::default());
+
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "the run was cut short after 1 cases, so the cases after them never ran; logs in results/panel/logs/7/"
+        );
+        assert!(out.starts_with("a: failed 1 of 1 attempts"), "{out}");
+    }
+
+    #[test]
+    fn a_run_that_could_not_run_fails_with_why_even_when_its_cases_passed() {
+        let mut run = attempted(AttemptPolicy::RerunFailures(1), &[Outcome::Passed]);
+        run.failure = "the game was not ready within 300 s".to_owned();
+
+        let (result, _) = report_text(&run, &Quarantine::default());
+
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "the run could not run: the game was not ready within 300 s"
         );
     }
 

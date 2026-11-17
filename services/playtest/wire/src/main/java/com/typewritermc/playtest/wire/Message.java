@@ -159,7 +159,7 @@ public sealed interface Message {
         public enum Kind { RERUN_FAILURES, EXACTLY }
     }
 
-    /** Session to pool: the session is done; once every session of its run is, the pool marks the run file ended. */
+    /** Session to pool: the session is done; once every session of its run is, the run file no longer reads as cut short. */
     record End() implements Message {}
 
     /** Pool to session: the run file is written. */
