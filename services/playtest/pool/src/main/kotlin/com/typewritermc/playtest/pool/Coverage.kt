@@ -13,62 +13,56 @@ import java.nio.file.Path
 import java.util.Locale
 
 /**
- * The plugin code each attempt ran, kept under [K], from the reads of JaCoCo's counts a Paper hands
- * the pool; the Paper decides which attempts a read counts for. The lines a class's counts stand for
- * come from the class as JaCoCo saw it, which its agent dumps into a Paper's class folder: Paper
- * rewrites plugin classes as it loads them, so the plugin jar's own classes would not match. Each
- * attempt's reads, its last analysis and what both cost stay until the attempt is forgotten.
+ * The plugin code one submission's attempts ran, from the reads of JaCoCo's counts a Paper hands the
+ * pool; the Paper decides which attempts a read counts for. The lines a class's counts stand for come
+ * from the class as JaCoCo saw it, which its agent dumps into a Paper's class folder: Paper rewrites
+ * plugin classes as it loads them, so the plugin jar's own classes would not match. The reads, the last
+ * analysis and what both cost stay as long as the submission does.
  */
-internal class Coverage<K> {
-    /** One attempt's reads, the lines they came to at its last analysis, and what reading and analysing cost. */
-    private class Ran {
-        val reads = ExecutionDataStore()
-        var latest = listOf<CoveredClass>()
-        var readCount = 0
-        var readNanos = 0L
-        var analyses = 0
-        var analysisNanos = 0L
-        var lastAnalysisAt = 0L
-    }
+internal class Coverage {
+    private val reads = ExecutionDataStore()
+    private var readCount = 0
+    private var readNanos = 0L
+    private var analyses = 0
+    private var analysisNanos = 0L
+    private var lastAnalysisAt = 0L
 
-    private val ran = mutableMapOf<K, Ran>()
+    /** What the submission covered at its last analysis. */
+    var latest = listOf<CoveredClass>()
+        private set
 
-    /** [exec], one read in JaCoCo's execution data format that held Paper's main thread [readNanos], counts for the attempt [key]. */
+    /** [exec], one read in JaCoCo's execution data format that held Paper's main thread [readNanos], counts for the submission. */
     fun add(
-        key: K,
         exec: ByteArray,
         readNanos: Long = 0,
     ) {
-        val attempt = ran.getOrPut(key, ::Ran)
-        attempt.readCount++
-        attempt.readNanos += readNanos
+        readCount++
+        this.readNanos += readNanos
         ExecutionDataReader(ByteArrayInputStream(exec)).apply {
-            setExecutionDataVisitor(attempt.reads::put)
+            setExecutionDataVisitor(reads::put)
             setSessionInfoVisitor(SessionInfoStore())
             read()
         }
     }
 
     /**
-     * Every class the attempt [key] ran code of, by name, with the lines of its source that ran: a line
-     * ran when any of its instructions did. [classes] is the folder JaCoCo's agent dumped the Paper's
-     * classes into; a class not dumped there is left out. The answer stays the attempt's [latest].
+     * Every class the submission ran code of, by name, with the lines of its source that ran: a line ran
+     * when any of its instructions did. [classes] is the folder JaCoCo's agent dumped the Paper's classes
+     * into; a class not dumped there is left out. The answer stays the submission's [latest]; before any
+     * read there is nothing to analyse.
      */
-    fun covered(
-        key: K,
-        classes: Path,
-    ): List<CoveredClass> {
-        val attempt = ran[key] ?: return listOf()
+    fun covered(classes: Path): List<CoveredClass> {
+        if (readCount == 0) return listOf()
         val start = System.nanoTime()
         val builder = CoverageBuilder()
-        val analyzer = Analyzer(attempt.reads, builder)
-        for (data in attempt.reads.contents) {
+        val analyzer = Analyzer(reads, builder)
+        for (data in reads.contents) {
             if (!data.hasHits()) continue
             val dumped = classes.resolve("%s.%016x.class".format(data.name, data.id))
             if (!Files.isRegularFile(dumped)) continue
             analyzer.analyzeClass(Files.readAllBytes(dumped), data.name)
         }
-        attempt.latest =
+        latest =
             builder.classes
                 .filter { it.sourceFileName != null }
                 .map { covered ->
@@ -83,38 +77,26 @@ internal class Coverage<K> {
                     )
                 }.filter { it.lines.isNotEmpty() }
                 .sortedBy { it.name }
-        attempt.analyses++
-        attempt.analysisNanos += System.nanoTime() - start
-        attempt.lastAnalysisAt = System.currentTimeMillis()
-        return attempt.latest
+        analyses++
+        analysisNanos += System.nanoTime() - start
+        lastAnalysisAt = System.currentTimeMillis()
+        return latest
     }
-
-    /** What the attempt [key] covered at its last analysis. */
-    fun latest(key: K): List<CoveredClass> = ran[key]?.latest.orEmpty()
 
     /**
-     * What the attempt [key]'s coverage cost, as one step of its record: the main thread time of each
-     * Paper read handed to it (a read two attempts share counts for each), and the pool's analyses.
+     * What the submission's coverage cost, as one step of its record, or null before any read: the main
+     * thread time of each Paper read handed to it (a read two attempts share counts for each), and the
+     * pool's analyses.
      */
-    fun cost(key: K): Step? {
-        val attempt = ran[key] ?: return null
+    fun cost(): Step? {
+        if (readCount == 0) return null
         return Step(
-            atMillis = attempt.lastAnalysisAt,
+            atMillis = lastAnalysisAt,
             actor = null,
             says =
-                "coverage: ${attempt.readCount} reads held Paper's main thread %.3f ms; ${attempt.analyses} analyses took %.1f ms"
-                    .format(Locale.ROOT, attempt.readNanos / 1e6, attempt.analysisNanos / 1e6),
-            durationMillis = attempt.analysisNanos / 1_000_000,
+                "coverage: $readCount reads held Paper's main thread %.3f ms; $analyses analyses took %.1f ms"
+                    .format(Locale.ROOT, readNanos / 1e6, analysisNanos / 1e6),
+            durationMillis = analysisNanos / 1_000_000,
         )
-    }
-
-    /** The attempt [key] ended; its reads go. */
-    fun forget(key: K) {
-        ran -= key
-    }
-
-    /** Every attempt whose key matches [where] ended without its result, as a session that left: their reads go. */
-    fun forget(where: (K) -> Boolean) {
-        ran.keys.removeIf(where)
     }
 }
