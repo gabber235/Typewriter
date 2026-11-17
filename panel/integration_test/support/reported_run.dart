@@ -135,6 +135,8 @@ final class ReportedRun {
     cases: _cases,
     // The panel runner keeps no logs folder of its own.
     logs: "",
+    // The host driver writes the run once the app reported it whole.
+    ended: true,
   );
 
   /// The run as JSON, the form the app reports it to the host driver in.

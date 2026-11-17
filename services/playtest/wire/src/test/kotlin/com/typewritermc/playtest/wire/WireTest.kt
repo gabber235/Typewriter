@@ -32,11 +32,13 @@ import com.typewritermc.playtest.wire.Message.HungEnded
 import com.typewritermc.playtest.wire.Message.Input
 import com.typewritermc.playtest.wire.Message.InputDone
 import com.typewritermc.playtest.wire.Message.Item
+import com.typewritermc.playtest.wire.Message.Join
 import com.typewritermc.playtest.wire.Message.Joined
 import com.typewritermc.playtest.wire.Message.Key
 import com.typewritermc.playtest.wire.Message.KeyStep
 import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Lease
+import com.typewritermc.playtest.wire.Message.LeaseExpired
 import com.typewritermc.playtest.wire.Message.LeaseFailed
 import com.typewritermc.playtest.wire.Message.Marks
 import com.typewritermc.playtest.wire.Message.PaperLost
@@ -161,6 +163,7 @@ val WireTest by testSuite {
                 Restart(18, 10),
                 Restarted(18, 41),
                 PaperLost("gv-1", "paper-gv-1 exited with code 137 while it booted; see logs/1/paper-gv-1.log"),
+                LeaseExpired("gv-1", "its lease ran out after 300 s while its session held gv-1"),
                 Resume(11, listOf(player, UUID(1, 2))),
                 Resumed(11, 41, null),
                 Resumed(12, 7, "the player gv-2 is not online"),
@@ -181,8 +184,9 @@ val WireTest by testSuite {
                     listOf("sidebar.png", "sidebar.diff.png"),
                     listOf("clips/gv-1.mp4"),
                 ),
-                End("run-1", "/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.RERUN_FAILURES, 4)),
-                End("run-2", "/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.EXACTLY, 3)),
+                Join("/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.RERUN_FAILURES, 4)),
+                Join("/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.EXACTLY, 3)),
+                End(),
                 Ended(),
                 Probe(3, listOf(player, UUID(1, 2)), ProbeChat("Hello")),
                 Probe(4, listOf(player), ProbeGameMode("survival")),

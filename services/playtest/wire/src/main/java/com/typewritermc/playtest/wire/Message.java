@@ -41,8 +41,16 @@ public sealed interface Message {
         Reply withRequest(long request);
     }
 
-    /** The first message on every connection to the pool. */
+    /** The first message on every connection to the pool. A session names its run. */
     record Hello(Role role, String name) implements Message {}
+
+    /**
+     * Session to pool, right after its {@link Hello}: the run's file and the policy its attempts are
+     * made under. The pool writes the run there after every attempt it records, so a pool that dies
+     * leaves the attempts that ended. Every session of one run names the same file and policy; the pool
+     * refuses a session that names others.
+     */
+    record Join(String testRunFile, AttemptPolicy policy) implements Message {}
 
     /** Pool to session: the game cannot run; every requirement of the session fails with this reason. */
     record Refused(String reason) implements Message {}
@@ -151,8 +159,8 @@ public sealed interface Message {
         public enum Kind { RERUN_FAILURES, EXACTLY }
     }
 
-    /** Session to pool: the session is done; the pool writes its run, made under {@code policy}, into {@code testRunFile}. */
-    record End(String run, String testRunFile, AttemptPolicy policy) implements Message {}
+    /** Session to pool: the session is done; once every session of its run is, the pool marks the run file ended. */
+    record End() implements Message {}
 
     /** Pool to session: the run file is written. */
     record Ended() implements Message {}
@@ -413,6 +421,13 @@ public sealed interface Message {
      * for {@code reason}, which names the Paper's log; the attempt fails.
      */
     record PaperLost(String player, String reason) implements PlayerEvent {}
+
+    /**
+     * Pool to the session holding {@code player}: the lease of the attempt holding it ran out before the
+     * session sent the attempt's result, for {@code reason}; the pool recorded the attempt as failed and
+     * gave its players to the next claims, so the attempt fails.
+     */
+    record LeaseExpired(String player, String reason) implements PlayerEvent {}
 
     /**
      * Pool to Paper: Paper booted again under attempt {@code attempt} after a kill, and {@code players}

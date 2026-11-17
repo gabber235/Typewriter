@@ -47,7 +47,8 @@ internal class Attempt(
 
         /**
          * The attempt fails because of [player], wherever the body waits: its counted work hung
-         * ([WorkHung]) or its client was lost ([ClientLost]).
+         * ([WorkHung]), its client or Paper was lost ([ClientLost], [PaperLost]), or its lease ran out
+         * ([LeaseExpired]).
          */
         data class Failed(
             override val player: GamePlayer,
@@ -119,8 +120,8 @@ internal class Attempt(
     /** Hands an event of one of [players] to the attempt; called by the session's reader. */
     fun deliver(event: Event) {
         incoming.trySend(if (event is Event.Perceived) event.copy(perception = region.local(event.perception)) else event)
-        // A lost client or Paper never answers what the body waits for.
-        (event as? Event.Failed)?.failure?.takeIf { it is ClientLost || it is PaperLost }?.let(lost::complete)
+        // A lost client or Paper, or a lease that ran out, never answers what the body waits for.
+        (event as? Event.Failed)?.failure?.takeIf { it is ClientLost || it is PaperLost || it is LeaseExpired }?.let(lost::complete)
     }
 
     /**

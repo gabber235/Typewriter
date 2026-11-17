@@ -149,6 +149,7 @@ pub fn run(cases: &[(&str, Outcome)]) -> TestRun {
             .iter()
             .map(|(id, outcome)| case(id, std::slice::from_ref(outcome)))
             .collect(),
+        ended: true,
         ..TestRun::default()
     }
 }
@@ -173,6 +174,7 @@ pub fn game_run(policy: AttemptPolicy, cases: &[(&str, &[Outcome])]) -> TestRun 
                 ..case(&format!("{requirement} the requirement"), outcomes)
             })
             .collect(),
+        ended: true,
         ..TestRun::default()
     }
 }
@@ -183,6 +185,7 @@ pub fn attempted(policy: AttemptPolicy, attempts: &[Outcome]) -> TestRun {
         runner: Runner::Components,
         attempt_policy: policy,
         cases: vec![case("a", attempts)],
+        ended: true,
         ..TestRun::default()
     }
 }
@@ -311,6 +314,7 @@ pub fn run_of(id: &str, attempts: Vec<Attempt>) -> TestRun {
             attempts,
             ..TestCase::default()
         }],
+        ended: true,
         ..TestRun::default()
     }
 }

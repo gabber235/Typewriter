@@ -2,7 +2,8 @@
 //! of this public repository are downloadable and both media stores are public, so every upload
 //! and every publish reads only what this writes to [`PUBLIC`]: each `TestRun` with only its
 //! published artifacts ([`ArtifactKind::published`]: clips, and screenshots of failed attempts,
-//! since a clip shows a passing one better), their files with a clip's preview, the coverage files, and the widgetbook story images below [`STORIES`]. Nothing
+//! since a clip shows a passing one better), their files with a clip's preview and a golden frame's
+//! candidate, the coverage files, and the widgetbook story images below [`STORIES`]. Nothing
 //! is written while any public text holds a known secret or any run lists a file missing on disk.
 
 use std::fs;
@@ -114,20 +115,19 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
 }
 
 /// The files of `run`'s artifacts relative to its `folder` (each attempt's folder joined by
-/// `results::artifacts`), each clip followed by its [`preview`] when the recorder wrote one. The
-/// one place that knows a preview travels with its clip; `publish::media` reads it too.
+/// `results::artifacts`), each clip followed by its [`preview`] when the recorder wrote one, and
+/// each game frame by its [`golden_candidate`] when the frame was a golden's. The one place that
+/// knows what travels with an artifact; `publish::media` reads it too.
 pub(super) fn published_files(folder: &Path, run: &TestRun) -> Vec<PathBuf> {
     let mut files = Vec::new();
     for (path, artifact) in run.cases.iter().flat_map(results::artifacts) {
-        if artifact.kind == ArtifactKind::Clip {
-            let preview = preview(&path);
-            files.push(path);
-            if folder.join(&preview).exists() {
-                files.push(preview);
-            }
-        } else {
-            files.push(path);
-        }
+        let companion = match artifact.kind {
+            ArtifactKind::Clip => Some(preview(&path)),
+            ArtifactKind::Screenshot => Some(golden_candidate(&path)),
+            _ => None,
+        };
+        files.push(path);
+        files.extend(companion.filter(|it| folder.join(it).exists()));
     }
     files
 }
@@ -135,6 +135,12 @@ pub(super) fn published_files(folder: &Path, run: &TestRun) -> Vec<PathBuf> {
 /// The still image the recorder writes beside `clip`, which the pull request shows in its place.
 pub(super) fn preview(clip: &Path) -> PathBuf {
     clip.with_extension("webp")
+}
+
+/// What a game requirement writes beside a golden's `frame`: the golden file it is for, its hash,
+/// size and renderer, which `cargo xtask goldens approve` reads to approve the frame a runner drew.
+fn golden_candidate(frame: &Path) -> PathBuf {
+    frame.with_extension("golden")
 }
 
 fn write_file(path: &Path, bytes: &[u8]) -> Result<()> {
@@ -236,6 +242,38 @@ mod tests {
         assert_eq!(
             files_below(&root.path(PUBLIC)),
             ["game/PROBE-1/demo/clips/gv-1.mp4", "game/test_run.json"]
+        );
+    }
+
+    #[test]
+    fn a_failed_golden_frame_publishes_its_diff_and_the_candidate_approve_reads_beside_it() {
+        let root = TempRoot::new();
+        let folder = "results/game/GOLDEN-1-a-sidebar/attempt-1";
+        for file in ["sidebar.png", "sidebar.diff.png", "sidebar.golden"] {
+            root.write(&format!("{folder}/{file}"), "bytes");
+        }
+        let mut attempt = failed_attempt((0, 1), &[]);
+        attempt.folder = "GOLDEN-1-a-sidebar/attempt-1".to_owned();
+        attempt.artifacts = ["sidebar.png", "sidebar.diff.png"]
+            .map(|path| results::Artifact {
+                kind: ArtifactKind::Screenshot,
+                path: path.to_owned(),
+                _unrecognized: None,
+            })
+            .to_vec();
+        let run = run_of("GOLDEN-1 a sidebar", vec![attempt]);
+        results::write(&run, &root.path("results/game/test_run.json")).unwrap();
+
+        staged(&root.path(""), Path::new("results"), &[]).unwrap();
+
+        assert_eq!(
+            files_below(&root.path(PUBLIC)),
+            [
+                "game/GOLDEN-1-a-sidebar/attempt-1/sidebar.diff.png",
+                "game/GOLDEN-1-a-sidebar/attempt-1/sidebar.golden",
+                "game/GOLDEN-1-a-sidebar/attempt-1/sidebar.png",
+                "game/test_run.json",
+            ]
         );
     }
 

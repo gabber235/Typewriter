@@ -15,6 +15,7 @@ import com.typewritermc.playtest.wire.Message.Hello
 import com.typewritermc.playtest.wire.Message.Input
 import com.typewritermc.playtest.wire.Message.InputDone
 import com.typewritermc.playtest.wire.Message.InputStep
+import com.typewritermc.playtest.wire.Message.Join
 import com.typewritermc.playtest.wire.Message.Kind
 import com.typewritermc.playtest.wire.Message.Lease
 import com.typewritermc.playtest.wire.Message.Marks
@@ -397,9 +398,9 @@ internal class PoolSession private constructor(
         return captured.renderer()
     }
 
-    /** Ends the session: the pool writes this session's cases into the run file. */
+    /** Ends the session: once every session of the run ended, the pool marks the run file ended. */
     suspend fun end() {
-        send(End(settings.run, settings.testRun.toString(), RunPlan.current.policy))
+        send(End())
         ended.await()
         socket.close()
     }
@@ -495,6 +496,7 @@ internal class PoolSession private constructor(
                 is Message.WorkHung -> Attempt.Event.Failed(player, WorkHung(player.name, message.work(), message.beganAfter()))
                 is Message.ClientLost -> Attempt.Event.Failed(player, ClientLost(player.name, message.reason()))
                 is Message.PaperLost -> Attempt.Event.Failed(player, PaperLost(message.reason()))
+                is Message.LeaseExpired -> Attempt.Event.Failed(player, LeaseExpired(message.reason()))
             },
         )
     }
@@ -534,6 +536,8 @@ internal class PoolSession private constructor(
             val socket = PoolLauncher(settings).connect()
             val session = PoolSession(socket, settings)
             session.send(Hello(Role.SESSION, settings.run))
+            // The pool writes the run's file after every attempt, so it needs the file before the first.
+            session.send(Join(settings.testRun.toString(), RunPlan.current.policy))
             thread(name = "playtest-session", isDaemon = true) { session.read() }
             return session
         }

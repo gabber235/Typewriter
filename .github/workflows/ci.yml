@@ -99,7 +99,9 @@ jobs:
       - uses: ./.github/actions/devenv
       - run: devenv shell -- cargo xtask hook commit-msg --range "$BASE_SHA..$HEAD_SHA"
 
-  # The display, Mesa, Vulkan, GTK and Chromium come from the devenv e2e profile, not apt.
+  # The display, Mesa, Vulkan, GTK and Chromium come from the devenv e2e profile, not apt. The
+  # game suite runs four Minecraft clients, each on a virtual display of its own, against Paper on
+  # this runner; it also keeps Gradle's outputs (the patched Paper among them) and its downloads.
   e2e:
     name: e2e (${{ matrix.suite }})
     needs: plan
@@ -109,14 +111,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [panel, panel-web]
+        include:
+          - suite: panel
+            caches: gradle flutter frame-vectors
+          - suite: panel-web
+            caches: gradle flutter frame-vectors
+          - suite: game
+            caches: gradle flutter frame-vectors gradle-outputs game
     steps:
       - uses: actions/checkout@v6
+        # The game suite reruns as demos the requirements that covered a line the change added
+        # since the merge base with the default branch.
+        with:
+          fetch-depth: ${{ matrix.suite == 'game' && '0' || '1' }}
       - uses: ./.github/actions/devenv
         with:
-          caches: gradle flutter frame-vectors
+          caches: ${{ matrix.caches }}
           profile: e2e
       - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }}
+        env:
+          # The game suite fetches approved golden images from the evidence branch through gh.
+          GH_TOKEN: ${{ github.token }}
       # Artifacts of this public repository are downloadable, so only the staged public folder
       # is uploaded.
       - if: always()

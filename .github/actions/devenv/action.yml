@@ -15,8 +15,9 @@ inputs:
     description: >-
       Tool caches besides xtask's Cargo build, space separated: `gradle` (dependencies and the
       wrapper), `gradle-outputs` (Gradle's build cache, which it turns on for this job),
-      `flutter` (the pub cache) and `frame-vectors` (the Cargo build of `cargo xtask generate`'s
-      frame vector writer).
+      `flutter` (the pub cache), `frame-vectors` (the Cargo build of `cargo xtask generate`'s
+      frame vector writer) and `game` (what the game suite downloads and trains: Loom's Minecraft
+      files, the Paper download and the restart Papers' boot cache).
     default: ""
   profile:
     description: >-
@@ -27,8 +28,9 @@ inputs:
 runs:
   using: composite
   steps:
-    # Trusted runs (pushes to the long lived branches, pull requests from this repository) push
-    # to the shared Nix cache and save the tool caches. A pull request reads only its own caches
+    # Trusted runs (pushes to the long lived branches, pull requests from this repository, and
+    # dispatched runs, which only a maintainer can start) push to the shared Nix cache and save the
+    # tool caches; a dispatched run saves them for its own branch. A pull request reads only its own caches
     # and its base branch's, so one into a branch that never saves (a stacked pull request) would
     # otherwise start every run cold; the 10 GB the repository gets evicts the oldest copies.
     - id: trust
@@ -45,7 +47,7 @@ runs:
           long_lived=true
         fi
         trusted=$long_lived
-        if [[ $EVENT == pull_request && $HEAD_REPO == "$REPO" ]]; then
+        if [[ $EVENT == pull_request && $HEAD_REPO == "$REPO" || $EVENT == workflow_dispatch ]]; then
           trusted=true
         fi
         echo "save-caches=$trusted" >> "$GITHUB_OUTPUT"
@@ -53,8 +55,10 @@ runs:
         # Incremental artifacts only grow a cache that starts each job from the same state.
         echo "CARGO_INCREMENTAL=0" >> "$GITHUB_ENV"
         # A job never reuses a Gradle daemon, and an idle one held 2.4 GB that the panel's
-        # analyzer (11 GB on Linux) needs on a 16 GB runner.
-        echo "GRADLE_OPTS=-Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process" >> "$GITHUB_ENV"
+        # analyzer (11 GB on Linux) needs on a 16 GB runner. GRADLE_OPTS reaches only Gradle's
+        # client JVM, so it cannot steer the Kotlin compiler in the build JVM; the game suite
+        # keeps Kotlin's daemons out of its run by building in a Gradle of its own first.
+        echo "GRADLE_OPTS=-Dorg.gradle.daemon=false" >> "$GITHUB_ENV"
     # devenv provides every tool, so the runner's own SDKs only take the disk the Nix store and a
     # cold build need: a panel check ran out of it during generation.
     - shell: bash
@@ -92,17 +96,25 @@ runs:
         done
     # The shell's closure holds every path it built: the Rust toolchain, cargo-llvm-cov and the
     # rest. Cachix skips paths it or cache.nixos.org already has. A failed push costs the next run
-    # time, not this run its result.
+    # time, not this run its result, so it passes with a warning that names the cause: the last
+    # line the token lookup or the push printed, which never holds the token.
     - if: steps.trust.outputs.push-nix == 'true'
       continue-on-error: true
       shell: bash
       env:
         OP_SERVICE_ACCOUNT_TOKEN: ${{ inputs.op-service-account-token }}
       run: |
-        token=$(devenv shell -- secretspec get CACHIX_AUTH_TOKEN --profile cache --provider vault \
-          --reason "push the devenv shell to gabber235.cachix.org")
+        log="$RUNNER_TEMP/cachix-push.log"
+        cause() { sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -v '^[[:space:]]*\(•\|✓\|$\)' | tail -n 1; }
+        if ! token=$(devenv shell -- secretspec get CACHIX_AUTH_TOKEN --profile cache --provider vault \
+          --reason "push the devenv shell to gabber235.cachix.org" 2>"$log"); then
+          echo "::warning::The devenv shell was not pushed to gabber235.cachix.org, so the next run builds its paths again: no Cachix token ($(cause))"
+          exit 0
+        fi
         echo "::add-mask::$token"
-        realpath .devenv/gc/* | CACHIX_AUTH_TOKEN=$token cachix push gabber235
+        if ! realpath .devenv/gc/* | CACHIX_AUTH_TOKEN=$token cachix push gabber235 2>&1 | tee "$log"; then
+          echo "::warning::The devenv shell was not pushed to gabber235.cachix.org, so the next run builds its paths again: cachix push failed ($(cause))"
+        fi
 
     # Each tool cache is a pair: `actions/cache` saves at the end of the job where caches are saved,
     # `actions/cache/restore` only reads everywhere else. Keep the pair's values the same.
@@ -206,3 +218,41 @@ runs:
         path: ~/.pub-cache
         key: pub-${{ runner.os }}-${{ hashFiles('panel/**/pubspec.lock') }}
         restore-keys: pub-${{ runner.os }}-
+
+    # The game suite's own downloads, keyed by the build files that pin Minecraft and Paper: Loom's
+    # Minecraft jars, mappings and assets (shared and per project) and run-paper's Paper download.
+    # The patched Paper comes from Gradle's build cache (`gradle-outputs`), as its task is
+    # cacheable.
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches == 'true'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches/fabric-loom
+          ~/.gradle/caches/run-task-jars
+          services/.gradle/loom-cache
+        key: game-${{ runner.os }}-${{ hashFiles('services/libs.versions.toml', 'services/playtest/**/*.gradle.kts') }}
+        restore-keys: game-${{ runner.os }}-
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.gradle/caches/fabric-loom
+          ~/.gradle/caches/run-task-jars
+          services/.gradle/loom-cache
+        key: game-${{ runner.os }}-${{ hashFiles('services/libs.versions.toml', 'services/playtest/**/*.gradle.kts') }}
+        restore-keys: game-${{ runner.os }}-
+    # The restart Papers' ahead of time cache. The pool keys it on the JDK, the plugin's and Paper's
+    # files and the flags, and trains a new one, replacing the old, when the restored one does not
+    # match; so each commit saves what its run left, restored by prefix like Gradle's outputs.
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches == 'true'
+      uses: actions/cache@v4
+      with:
+        path: services/build/playtest/pool/aot
+        key: game-aot-${{ runner.os }}-${{ github.sha }}
+        restore-keys: game-aot-${{ runner.os }}-
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches != 'true'
+      uses: actions/cache/restore@v4
+      with:
+        path: services/build/playtest/pool/aot
+        key: game-aot-${{ runner.os }}-${{ github.sha }}
+        restore-keys: game-aot-${{ runner.os }}-

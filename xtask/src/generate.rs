@@ -195,10 +195,30 @@ const fn build_runner(package: &'static str, inputs: &'static [&'static str]) ->
 
 /// Brings every generated source up to date. Program output goes to `log`, or to the terminal.
 pub fn generate(ctx: &Context, log: Option<&File>) -> Result<()> {
+    run(ctx, log, GENERATORS)
+}
+
+/// Brings only the protocol's generated sources up to date: the Skir types the services compile
+/// against, all the game suite needs.
+pub fn protocol(ctx: &Context) -> Result<()> {
+    run(ctx, None, through("protocol"))
+}
+
+/// The generators up to and including the one named `last`, in order. Each builds on the ones
+/// before it, so only a leading part of the list can run on its own.
+fn through(last: &str) -> &'static [Generator] {
+    let end = GENERATORS
+        .iter()
+        .position(|it| it.name == last)
+        .unwrap_or_else(|| panic!("no generator is named {last}"));
+    &GENERATORS[..=end]
+}
+
+fn run(ctx: &Context, log: Option<&File>, generators: &[Generator]) -> Result<()> {
     let state = ctx.root.join(".xtask/generate");
     fs::create_dir_all(&state).with_context(|| format!("cannot create {}", state.display()))?;
     let mut upstream = Digest::new();
-    for generator in GENERATORS {
+    for generator in generators {
         let stamp = state.join(format!("{}.stamp", generator.name.replace('/', "-")));
         let before = generator.digest(ctx, &upstream)?;
         if is_current(ctx, &stamp, &before) {
@@ -475,6 +495,15 @@ mod tests {
     use super::*;
 
     use crate::test_support::TempRoot;
+
+    #[test]
+    fn the_protocol_alone_runs_without_the_panel_and_fixture_generators_after_it() {
+        let names =
+            |generators: &[Generator]| generators.iter().map(|it| it.name).collect::<Vec<_>>();
+
+        assert_eq!(names(through("protocol")), ["protocol"]);
+        assert_eq!(names(through("frame-vectors")), names(GENERATORS));
+    }
 
     #[test]
     fn unchanged_inputs_with_every_output_present_are_current() {

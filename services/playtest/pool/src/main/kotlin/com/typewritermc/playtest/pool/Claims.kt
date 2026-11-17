@@ -1,5 +1,7 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.wire.HeapShare
+
 /** Why a player sits out of every claim. */
 internal enum class Out {
     /** Its client is lost and the new one is not ready yet. */
@@ -11,6 +13,13 @@ internal enum class Out {
     /** Its client is on a restart attempt's own Paper, or on its way back to the shared one. */
     AWAY,
 }
+
+/** Submission [submission] waits for [players] players, and for a Paper of its own when it [restarts] Paper. */
+internal data class Claim(
+    val submission: Long,
+    val players: Int,
+    val restarts: Boolean = false,
+)
 
 /** [players] go to [session]'s [submission] until its attempt ends. */
 internal data class Grant<S, P>(
@@ -25,16 +34,18 @@ internal data class Grant<S, P>(
  * Sessions (test JVMs) take turns, so one that arrives late is served next instead of behind everything
  * queued before it. The claim whose turn it is holds back every later claim until enough players are
  * free for it, so a group is never starved by smaller claims. A player is free once no attempt holds it
- * and nothing holds it [out][holdOut].
+ * and nothing holds it [out][holdOut]. A claim that restarts Paper also waits until fewer than
+ * [ownPapers] own Papers have not fully exited, as more would outgrow the memory their shares assume.
  */
 internal class Claims<S, P>(
     private val players: List<P>,
+    private val ownPapers: Int = HeapShare.OWN_PAPERS,
 ) {
     /** Submissions that wait together, each for its count of players. */
     private class Waiting(
-        val together: List<Pair<Long, Int>>,
+        val together: List<Claim>,
     ) {
-        val count = together.sumOf { it.second }
+        val count = together.sumOf { it.players }
     }
 
     /** A session's waiting claims in submission order, and when it was last served. */
@@ -47,17 +58,22 @@ internal class Claims<S, P>(
 
     private val turns = mutableMapOf<S, Turn>()
     private val claimed = mutableSetOf<P>()
+    private var ownPapersAlive = 0
     private val out = mutableMapOf<P, MutableSet<Out>>()
     private var clock = 0L
 
-    /** [session]'s submissions in [together], each waiting for its count of players, all granted at the same moment. */
+    /** [session]'s claims in [together], each waiting for its players, all granted at the same moment. */
     fun submit(
         session: S,
-        vararg together: Pair<Long, Int>,
+        vararg together: Claim,
     ) {
         require(together.isNotEmpty()) { "a submission names at least 1 attempt" }
-        for ((_, count) in together) require(count >= 1) { "a requirement claims at least 1 player, not $count" }
-        val count = together.sumOf { it.second }
+        for (claim in together) require(claim.players >= 1) { "a requirement claims at least 1 player, not ${claim.players}" }
+        val restarts = together.count { it.restarts }
+        require(restarts <= ownPapers) {
+            "attempts side by side need $restarts Papers of their own, but the pool runs at most $ownPapers at once"
+        }
+        val count = together.sumOf { it.players }
         require(count <= players.size) { "a requirement claims $count players, but the pool holds ${players.size}" }
         turns.getOrPut(session) { Turn(clock++) }.waiting.addLast(Waiting(together.toList()))
     }
@@ -65,6 +81,12 @@ internal class Claims<S, P>(
     /** The attempt holding [released] ended; they are free for the next claim unless something holds them out. */
     fun release(released: List<P>) {
         claimed -= released.toSet()
+    }
+
+    /** An own Paper a granted claim started ended for good; until then it counts, even while it stops. */
+    fun ownPaperGone() {
+        check(ownPapersAlive > 0) { "no own Paper of a claim is alive" }
+        ownPapersAlive--
     }
 
     /** [player] sits out of every claim for [why] until [letBack] for it; an attempt holding it keeps it. */
@@ -107,14 +129,16 @@ internal class Claims<S, P>(
                     ?: break
             val head = turn.waiting.first()
             val free = players.filter { it !in claimed && it !in out }
-            if (head.count > free.size) break
+            val restarts = head.together.count { it.restarts }
+            if (head.count > free.size || ownPapersAlive + restarts > ownPapers) break
             var next = 0
-            for ((submission, count) in head.together) {
-                val taken = free.subList(next, next + count)
-                next += count
+            for (claim in head.together) {
+                val taken = free.subList(next, next + claim.players)
+                next += claim.players
                 claimed += taken
-                granted += Grant(session, submission, taken.toList())
+                granted += Grant(session, claim.submission, taken.toList())
             }
+            ownPapersAlive += restarts
             turn.waiting.removeFirst()
             turn.served = clock++
         }

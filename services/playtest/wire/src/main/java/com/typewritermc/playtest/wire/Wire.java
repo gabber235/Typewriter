@@ -31,11 +31,13 @@ import com.typewritermc.playtest.wire.Message.Input;
 import com.typewritermc.playtest.wire.Message.InputDone;
 import com.typewritermc.playtest.wire.Message.InputStep;
 import com.typewritermc.playtest.wire.Message.Item;
+import com.typewritermc.playtest.wire.Message.Join;
 import com.typewritermc.playtest.wire.Message.Joined;
 import com.typewritermc.playtest.wire.Message.Key;
 import com.typewritermc.playtest.wire.Message.KeyStep;
 import com.typewritermc.playtest.wire.Message.Kind;
 import com.typewritermc.playtest.wire.Message.Lease;
+import com.typewritermc.playtest.wire.Message.LeaseExpired;
 import com.typewritermc.playtest.wire.Message.LeaseFailed;
 import com.typewritermc.playtest.wire.Message.Capture;
 import com.typewritermc.playtest.wire.Message.Captured;
@@ -163,6 +165,10 @@ public final class Wire {
                 string(body, lost.player());
                 string(body, lost.reason());
             }
+            case LeaseExpired expired -> {
+                string(body, expired.player());
+                string(body, expired.reason());
+            }
             case Resume resume -> {
                 body.writeLong(resume.attempt());
                 uuids(body, resume.players());
@@ -211,11 +217,10 @@ public final class Wire {
                 strings(body, result.screenshots());
                 strings(body, result.clips());
             }
-            case End end -> {
-                string(body, end.run());
-                string(body, end.testRunFile());
-                body.writeByte(end.policy().kind().ordinal());
-                body.writeInt(end.policy().attempts());
+            case Join join -> {
+                string(body, join.testRunFile());
+                body.writeByte(join.policy().kind().ordinal());
+                body.writeInt(join.policy().attempts());
             }
             case Probe probe -> {
                 body.writeLong(probe.request());
@@ -341,6 +346,7 @@ public final class Wire {
                 string(body, seen.player());
                 body.writeInt(seen.barrier());
             }
+            case End end -> {}
             case Ended ended -> {}
             case Joined joined -> {}
             case Stepping stepping -> {}
@@ -395,6 +401,7 @@ public final class Wire {
             case Result m -> 4;
             case End m -> 5;
             case Ended m -> 6;
+            case Join m -> 21;
             case Probe m -> 7;
             case ProbeDone m -> 8;
             case StepUntil m -> 9;
@@ -438,6 +445,7 @@ public final class Wire {
             case ClipStarted m -> 50;
             case StopClip m -> 51;
             case ClipWritten m -> 52;
+            case LeaseExpired m -> 53;
         };
     }
 
@@ -461,8 +469,9 @@ public final class Wire {
                 yield new Lease(submission, List.copyOf(players), region(in), string(in));
             }
             case 4 -> new Result(in.readLong(), in.readLong(), optional(in), optional(in), steps(in), string(in), strings(in), strings(in));
-            case 5 -> new End(string(in), string(in), new AttemptPolicy(policyKind(in.readUnsignedByte()), in.readInt()));
+            case 5 -> new End();
             case 6 -> new Ended();
+            case 21 -> new Join(string(in), new AttemptPolicy(policyKind(in.readUnsignedByte()), in.readInt()));
             case 7 -> new Probe(in.readLong(), uuids(in), action(in));
             case 8 -> new ProbeDone(in.readLong(), in.readInt(), optional(in));
             case 9 -> new StepUntil(uuid(in), in.readInt(), in.readInt());
@@ -518,6 +527,7 @@ public final class Wire {
             case 50 -> new ClipStarted(in.readLong(), optional(in));
             case 51 -> new StopClip(in.readLong(), uuid(in));
             case 52 -> new ClipWritten(in.readLong(), in.readInt(), optional(in));
+            case 53 -> new LeaseExpired(string(in), string(in));
             case 48 -> {
                 int count = count(in);
                 var attempts = new ArrayList<Long>(count);

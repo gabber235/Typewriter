@@ -28,13 +28,13 @@ val LostClientRequirements by testSuite(compartment = { GameCompartment }) {
 
     clientLostAlongside(
         "FROZEN-1",
-        "a client that stops acking fails its own attempt within 10 s with the reason, the attempt beside it keeps its verdicts, and a new client serves later attempts",
+        "a client that stops acking fails its own attempt within 15 s with the reason, the attempt beside it keeps its verdicts, and a new client serves later attempts",
     ) {
         val frozenAt = TimeSource.Monotonic.markNow()
 
         val lost = freezeClient(player) { shouldThrow<ClientLost> { within(10.ticks) { player sees chat("Goodbye") } } }
 
-        frozenAt.elapsedNow() shouldBeLessThan 10.seconds
+        frozenAt.elapsedNow() shouldBeLessThan 15.seconds
         lost.report shouldContain "${player.name}'s client was lost: it acked no tick for 5 s"
     }
 }

@@ -134,6 +134,44 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   checked" with its renderer. Each captured frame's candidate says whether the pinned renderer drew it, and
   `cargo xtask goldens approve` refuses any it did not. A nixpkgs Mesa upgrade fails every golden, and
   the upgrade pull request approves them again.
+- **Golden images live on the evidence branch** (2026-11-17): the repository holds only a golden's
+  hash, size and renderer. `cargo xtask goldens approve` also pushes the frame to the `evidence` branch
+  as `goldens/<hash>.png`, beside the pull request folders pruning empties, and `cargo xtask e2e game`
+  fetches every golden image the machine lacks before the run, so a frame that differs shows its diff
+  on CI while the framework stays offline. Approve writes `goldens/<hash>.approved-at` beside each
+  image, and the weekly prune drops an image no golden file on develop names once it is older than the
+  retention (an image without that file counts as old).
+- **Parts name their processes** (2026-11-17): the pool writes each part's pid and start time into its
+  folder at every boot (`part.running`), and tests find a client or Paper by it. Linux shows Java only
+  the first page of a command line, so arguments cannot name a part; a file a crash left behind names
+  no process.
+- **Every game JVM takes a share of the machine** (2026-11-17): `HeapShare` in the wire module holds
+  each part kind's `-XX:MaxRAMPercentage` (shared Paper 16, own Paper 7, client 4.5, pool 2), so the caps
+  scale with the machine; the pool starts each part with its share, and the test JVM starts the pool
+  with the pool's, which is why it lives in the module both share. The parts that can run at once (the
+  shared Paper, at most 2 own Papers, 4 clients, the pool) hold at most half the machine in heap, which
+  a unit test pins, and the pool claims no restart attempt while 2 own Papers have not fully exited.
+  HEAP-1 asks each running JVM for its share. Measured on the 16 GB runner without caps (run
+  43996334142): the shared Paper peaked at 4.4 GB RSS with its heap committed to 4 GB (the part that
+  ran the runner out of memory), a client at 1.7 GB RSS on a 0.54 GB heap, an own Paper at 1.3 GB RSS,
+  the pool at 0.3 GB.
+- **No compiler runs beside the suite** (2026-11-17): `cargo xtask e2e game` first runs `gameTestBuild`
+  (everything gameTest runs, and nothing more) in a Gradle of its own with `--no-daemon`, then the
+  suite. The Kotlin compile daemons end with the build's Gradle; on the 16 GB runner three of them held
+  4.1 to 4.3 GB while the suite ran (run 44013168715). Building apart raised the lowest free memory from
+  1.0 GB to 3.8 GB at the cost of a second Gradle start, measured at 46 s from start to first test (run
+  44019397538). With `gameTestBuild` in place, the suite kept at least 3785 MB free and no Kotlin daemon
+  was alive during it (run 44041628191). Compiling inside Gradle frees nothing, as the
+  Gradle daemon grows by what the daemons held. It never runs `--stop`, which would stop other
+  worktrees' builds.
+- **The pool stays attached to its starter** (2026-11-17): the test JVM starts the pool without `setsid`.
+  It outlives its starter's normal exit anyway, since the system reparents an orphan, and staying in the
+  starter's process tree is what lets Gradle's cancel stop it: Gradle destroys every descendant by pid.
+- **A run file survives a pool crash** (2026-11-17): a session names the run file and attempt policy in a
+  `Join` right after its `Hello`, and the pool refuses a session of the run that names others. The pool
+  rewrites the file atomically after every attempt it records and marks it `ended` once every session of
+  the run ended or left; other runners always write `ended`. `cargo xtask e2e game` fails a file without
+  the mark as cut short after its finished cases, whose evidence still stages.
 - **Selection** is testBalloon's (2026-11-15): `cargo xtask e2e game --only` passes each id as a test
   pattern, and the framework holds no selection code. A game module the selection leaves empty passes,
   as Gradle's "no matching tests" check is off for gameTest tasks; xtask's selection check names each
