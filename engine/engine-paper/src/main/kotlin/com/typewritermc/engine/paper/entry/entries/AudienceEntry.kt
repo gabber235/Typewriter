@@ -13,6 +13,8 @@ import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.koin.java.KoinJavaComponent.get
 import java.util.*
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 
 /**
@@ -65,6 +67,18 @@ enum class AudienceDisplayState(val displayName: String, val color: String) {
     ;
 }
 
+/**
+ * Held while a player joins or leaves a display, together with everything that follows from it
+ * further down the audience tree.
+ *
+ * Displays are ticked on several threads and answer to events on others. Adding a player to a
+ * filter and then to its children, or removing them again, has to happen as one step, or a removal
+ * that is still walking the children can undo an add that overtook it and leave a child without a
+ * player its parent holds. One lock for all players, because a display may move other players while
+ * it handles one, and a lock per player could then be taken in two different orders.
+ */
+private val membershipLock = ReentrantLock()
+
 abstract class AudienceDisplay : Listener {
     var isActive = false
         private set
@@ -92,13 +106,13 @@ abstract class AudienceDisplay : Listener {
         this.unregister()
     }
 
-    fun addPlayer(player: Player) {
+    fun addPlayer(player: Player): Unit = membershipLock.withLock {
         if (memberIds.isEmpty()) initialize()
         if (!memberIds.add(player.uniqueId)) return
         onPlayerAdd(player)
     }
 
-    fun removePlayer(player: Player) {
+    fun removePlayer(player: Player): Unit = membershipLock.withLock {
         if (!memberIds.remove(player.uniqueId)) return
         onPlayerRemove(player)
         if (memberIds.isEmpty()) dispose()
@@ -142,19 +156,25 @@ abstract class AudienceFilter(
      * @return If the player is in the audience or not
      */
     fun Player.updateFilter(isFiltered: Boolean): Boolean {
-        val allow = !inverted == isFiltered && canConsider(this)
-        if (allow) {
-            if (filteredPlayers.add(uniqueId)) {
-                onPlayerFilterAdded(this)
-                get<AudienceManager>(AudienceManager::class.java).addPlayerToChildren(this, ref)
+        val passes = !inverted == isFiltered
+        val allowed = passes && canConsider(this)
+        if (allowed == (uniqueId in filteredPlayers)) return allowed
+
+        return membershipLock.withLock {
+            val allow = passes && canConsider(this)
+            if (allow) {
+                if (filteredPlayers.add(uniqueId)) {
+                    onPlayerFilterAdded(this)
+                    get<AudienceManager>(AudienceManager::class.java).addPlayerToChildren(this, ref)
+                }
+            } else {
+                if (filteredPlayers.remove(uniqueId)) {
+                    onPlayerFilterRemoved(this)
+                    get<AudienceManager>(AudienceManager::class.java).removePlayerFromChildren(this, ref)
+                }
             }
-        } else {
-            if (filteredPlayers.remove(uniqueId)) {
-                onPlayerFilterRemoved(this)
-                get<AudienceManager>(AudienceManager::class.java).removePlayerFromChildren(this, ref)
-            }
+            allow
         }
-        return allow
     }
 
     /**
