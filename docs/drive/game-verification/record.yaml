@@ -746,6 +746,9 @@ decided:
   - id: heap-share-of-machine
     what: "Share of the machine"
     why: No game JVM had a heap cap, so on the 16 GB runner one grew to 3.85 GB beside four at 1.5 GB and the runner ran out of memory; every game JVM gets a MaxRAMPercentage share by part kind, so the caps scale with the machine; chosen over a fixed cap per part (recommended) and fewer parts at once
+  - id: at-most-two-own-papers
+    what: "At most 2 (Recommended)"
+    why: The heap budget assumed 2 own Papers but CI ran 3 at once (57% of the machine against the 50% limit); the pool runs at most HeapShare.OWN_PAPERS own Papers, counting ones still stopping, a further restart attempt waits in the queue, and the budget test reads the same number
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
