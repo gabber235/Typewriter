@@ -113,7 +113,7 @@ internal class PoolSession private constructor(
     private val attemptsOf = ConcurrentHashMap<String, Int>()
 
     /** This project's goldens and the local golden images. */
-    val goldens = Goldens(settings.root, settings.goldens, settings.goldenImages, PinnedRenderer(settings.mesa))
+    val goldens = Goldens(settings.root, settings.goldens, settings.goldenImages, PinnedRenderer(settings.mesa, settings.pinnedRunner))
     private val ended = CompletableDeferred<Unit>()
 
     @Volatile

@@ -98,6 +98,9 @@ abstract class GameParts : CommandLineArgumentProvider {
     /** The Mesa release devenv ships, which the pinned renderer draws with. */
     @get:Internal abstract val mesa: Property<String>
 
+    /** Whether this machine is the pinned runner, where a frame from another renderer fails its golden. */
+    @get:Internal abstract val pinnedRunner: Property<Boolean>
+
     override fun asArguments() =
         (
             mapOf(
@@ -117,6 +120,7 @@ abstract class GameParts : CommandLineArgumentProvider {
                 "goldens" to goldens.get(),
                 "goldenImages" to goldenImages.get(),
                 "mesa" to mesa.get(),
+                "pinnedRunner" to pinnedRunner.get().toString(),
             ) +
                 listOf("repeat" to repeat, "quarantine" to quarantine, "touched" to touched)
                     .mapNotNull { (name, value) -> value.orNull?.let { name to it } }
@@ -162,6 +166,8 @@ tasks.register<Test>("gameTest") {
             goldenImages.set(servicesDirectory.resolve("build/playtest/goldens").path)
             // devenv.nix exports the Mesa it ships, so the pin moves with nixpkgs.
             mesa.set(providers.environmentVariable("PLAYTEST_MESA"))
+            // CI's game job runs on the pinned runner and says so; other machines only note frames they cannot check.
+            pinnedRunner.set(providers.environmentVariable("PLAYTEST_PINNED_RUNNER").map { it == "1" }.orElse(false))
         }
 }
 

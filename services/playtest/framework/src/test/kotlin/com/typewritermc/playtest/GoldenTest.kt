@@ -98,6 +98,19 @@ val GoldenTest by testSuite {
             "(Vulkan on llvmpipe, Mesa 26.2.5, Linux, amd64)"
     }
 
+    test("on the pinned runner, a frame another renderer drew fails and names the renderer it saw") {
+        val onPinnedRunner = PinnedRenderer(mesa = "26.2.5", required = true)
+        val drift = Renderer("Vulkan", "llvmpipe (LLVM 20.1.2, 256 bits)", "1.4.318 llvmpipe Mesa 26.3.0 (LLVM 20.1.2)", "Linux", "amd64")
+
+        val verdict = judge(approved, sidebar, sidebar, drift, onPinnedRunner).shouldBeInstanceOf<GoldenVerdict.Differs>()
+
+        verdict.reason shouldBe
+            "this is the pinned runner, but it draws with Vulkan, llvmpipe (LLVM 20.1.2, 256 bits), " +
+            "1.4.318 llvmpipe Mesa 26.3.0 (LLVM 20.1.2), Linux, amd64, not the pinned renderer " +
+            "(Vulkan on llvmpipe, Mesa 26.2.5, Linux, amd64)"
+        judge(approved, sidebar, sidebar, runner, onPinnedRunner) shouldBe GoldenVerdict.Matches
+    }
+
     test("on the pinned renderer, a golden never approved fails; off it, it is not checked") {
         judge(null, null, sidebar, runner, pinned) shouldBe GoldenVerdict.Differs("no golden is approved yet", null)
         judge(null, null, sidebar, mac, pinned).shouldBeInstanceOf<GoldenVerdict.NotChecked>()

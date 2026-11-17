@@ -131,7 +131,9 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   (2026-11-15). devenv exports that release as `PLAYTEST_MESA`, and the game framework owns the pin
   and its one match rule. On the pinned renderer a golden never approved, or one another renderer drew
   (the Mesa before an upgrade), fails with the approve command; any other machine reports "not
-  checked" with its renderer. Each captured frame's candidate says whether the pinned renderer drew it, and
+  checked" with its renderer. CI's game job is the pinned runner and says so (`PLAYTEST_PINNED_RUNNER=1`),
+  so there a frame from another renderer fails with the renderer it saw: a runner that drifts from the
+  pin cannot let every golden pass unchecked. Each captured frame's candidate says whether the pinned renderer drew it, and
   `cargo xtask goldens approve` refuses any it did not. A nixpkgs Mesa upgrade fails every golden, and
   the upgrade pull request approves them again.
 - **Golden images live on the evidence branch** (2026-11-17): the repository holds only a golden's

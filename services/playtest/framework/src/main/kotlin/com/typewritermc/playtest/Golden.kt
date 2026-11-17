@@ -83,10 +83,12 @@ class Frame(
  * The renderer goldens are approved on and exact for, the pinned runner's: Vulkan through Mesa's
  * llvmpipe (lavapipe) on Linux x86, with the Mesa devenv ships as [mesa]. The device names the CPU's
  * vector width, which another runner CPU may change, so any llvmpipe device is pinned; a golden still
- * compares only with the exact renderer that drew it.
+ * compares only with the exact renderer that drew it. [required] says this machine is the pinned runner
+ * (CI's game job), where a frame from any other renderer means the runner drifted from the pin.
  */
 class PinnedRenderer(
     private val mesa: String,
+    val required: Boolean = false,
 ) {
     private val mesaRelease = Regex("""(?<![\w.])Mesa ${Regex.escape(mesa)}(?![\w.])""")
 
@@ -201,7 +203,8 @@ sealed interface GoldenVerdict {
 /**
  * Compares [frame], drawn by [renderer], with [golden]. Only the [pinned] renderer checks; there a
  * golden never approved, or one another renderer drew, as before a Mesa upgrade, fails until it is
- * approved. [image] is the golden's own frame when it is at hand; only then can a difference
+ * approved. Another renderer passes unchecked, except on the pinned runner, where it fails: every golden
+ * would pass unchecked once the runner stopped matching the pin. [image] is the golden's own frame when it is at hand; only then can a difference
  * show where it lies.
  */
 fun judge(
@@ -212,6 +215,12 @@ fun judge(
     pinned: PinnedRenderer,
 ): GoldenVerdict {
     if (!pinned.drew(renderer)) {
+        if (pinned.required) {
+            return GoldenVerdict.Differs(
+                "this is the pinned runner, but it draws with ${renderer.named}, not the pinned renderer ($pinned)",
+                null,
+            )
+        }
         return GoldenVerdict.NotChecked("this machine draws with ${renderer.named}, not the pinned renderer ($pinned)")
     }
     if (golden == null) return GoldenVerdict.Differs("no golden is approved yet", null)
