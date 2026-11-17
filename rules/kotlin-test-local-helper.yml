@@ -6,9 +6,10 @@ note: >-
   A test file holds its suite declaration (`val X by testSuite { }`) and its test cases. Move pumps,
   setups, fakes, assertions and data builders to `services/testing/typewriter-test-kit` or the
   module's `src/testFixtures`; keep test data inline, as values or constants. Declarations inside
-  a test case belong to that case and may stay.
+  a test case (`test` or a game `requirement`) belong to that case and may stay.
 files:
   - services/**/src/test/**/*.kt
+  - services/**/src/gameTest/**/*.kt
 ignores:
   # Inputs the codegen tests compile, not tests.
   - services/sdk/typewriter-codegen/src/test/fixtures/**
@@ -32,7 +33,7 @@ rule:
     # override is a member of an anonymous object (the grammar reads `object : T { }` as a call
     # with a trailing lambda, so the override is how the member shows).
     - all:
-        - not: { inside: { kind: call_expression, has: { kind: simple_identifier, regex: '^test$' }, stopBy: end } }
+        - not: { inside: { kind: call_expression, has: { kind: simple_identifier, regex: '^(test|requirement)$' }, stopBy: end } }
         - any:
             - kind: function_declaration
             - kind: class_declaration
@@ -42,7 +43,7 @@ rule:
         - not: { inside: { any: [{ kind: class_declaration }, { kind: object_declaration }], stopBy: end } }
     # Inside the suite but outside a test case: a lambda bound to a name is a named helper too.
     - all:
-        - not: { inside: { kind: call_expression, has: { kind: simple_identifier, regex: '^test$' }, stopBy: end } }
+        - not: { inside: { kind: call_expression, has: { kind: simple_identifier, regex: '^(test|requirement)$' }, stopBy: end } }
         - kind: property_declaration
         - not: { inside: { kind: source_file } }
         - has: { kind: lambda_literal }
