@@ -4,8 +4,6 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import skirout.harness.v1.test_run.AttemptPolicy
 
@@ -83,15 +81,5 @@ val VerdictTest by testSuite {
         failedDemo?.cause shouldBeSameInstanceAs missed
         demoDiffers(last = missed, demo = null)?.message shouldBe
             "the demo passed where the last attempt failed: ${missed.message}"
-    }
-
-    test(
-        "a body that returned without a positive check fails as refused, saying what it lacks, and a body that proved something or failed keeps its end",
-    ) {
-        val unproven = bodyEnded(failure = null, proved = false).shouldBeInstanceOf<RequirementRefused>()
-        unproven.message shouldContain "made no positive check"
-
-        bodyEnded(failure = null, proved = true) shouldBe null
-        bodyEnded(failure = missed, proved = false) shouldBeSameInstanceAs missed
     }
 }

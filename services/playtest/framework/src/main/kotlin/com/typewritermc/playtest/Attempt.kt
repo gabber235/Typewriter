@@ -5,6 +5,7 @@ import build.skir.reflection.EnumWrapperVariant
 import build.skir.reflection.StructDescriptor
 import build.skir.reflection.StructField
 import build.skir.reflection.TypeDescriptor
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -13,6 +14,7 @@ import kotlinx.coroutines.selects.select
 import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.Step
+import skirout.harness.v1.wire.Answer
 import skirout.harness.v1.wire.InputStep
 import skirout.harness.v1.wire.Message
 import skirout.harness.v1.wire.Perception
@@ -25,14 +27,63 @@ import skirout.harness.v1.wire.WorldAction
 import java.nio.file.Path
 
 /**
+ * What an attempt asks of the pool it runs in. [PoolSession] answers over its connection to the pool;
+ * the framework's own tests answer without one.
+ */
+internal interface AttemptPool {
+    /** This project's goldens and the local golden images. */
+    val goldens: Goldens
+
+    fun send(message: Message)
+
+    fun nextBarrier(): Int
+
+    /** Paper runs [action] for [players]; returns, once each of their clients holds its effect, the tick after which it ran. */
+    suspend fun probe(
+        players: List<GamePlayer>,
+        action: ProbeAction,
+    ): Int
+
+    /** The kinds of state [player] carries a mark of, as Paper sees them. */
+    suspend fun query(player: GamePlayer): List<StateKind>
+
+    /** Kills and boots again the own Paper of [attempt], which runs [submission]; returns the new Paper's tick after which every player is back. */
+    suspend fun restart(
+        attempt: Attempt,
+        submission: SubmissionId,
+    ): Int
+
+    /** [player]'s client runs [steps]; returns the tick after which their first event reached the client. */
+    suspend fun input(
+        player: GamePlayer,
+        steps: List<InputStep>,
+    ): Int
+
+    /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */
+    suspend fun capture(
+        player: GamePlayer,
+        png: Path,
+    ): Renderer
+
+    /** [player]'s client records a clip from the next tick on and writes it as an mp4 to [mp4]. */
+    suspend fun startClip(
+        player: GamePlayer,
+        mp4: Path,
+    ): Answer.ClipStarted
+
+    /** [player]'s client finishes its clip. */
+    suspend fun stopClip(player: GamePlayer): Answer.ClipWritten
+}
+
+/**
  * One attempt of one requirement while it holds its lease: the players' perception streams in arrival
- * order, kept whole as the attempt's timeline, and the session it talks to the pool through. Positions
+ * order, kept whole as the attempt's timeline, and the pool it talks to. Positions
  * the requirement names count from the middle of the attempt's [region]; the attempt turns them into
  * world positions on the way out and turns what the players perceive back on the way in. It runs on
  * the Paper named [paper].
  */
 internal class Attempt(
-    private val session: PoolSession,
+    private val session: AttemptPool,
     private val submission: SubmissionId,
     val players: List<GamePlayer>,
     val region: Region,
@@ -96,8 +147,8 @@ internal class Attempt(
     }
 
     /**
-     * Whether the body made a positive check: a window whose checks held, a golden frame, a state check
-     * of the test kit, or an outcome the framework observed and threw into it ([observed]).
+     * Whether the body made a positive check: a window whose checks held, a golden compare that matched,
+     * a state check of the test kit, or an outcome the framework observed and threw into it ([observed]).
      */
     var proved = false
 
@@ -106,6 +157,19 @@ internal class Attempt(
      * as it reaches the body: a body that expects it and catches it has made a positive check.
      */
     fun observed(failure: AssertionError): AssertionError = failure.also { proved = true }
+
+    /** Runs [body] on the attempt; returns why it failed, or null. A body that made no positive check fails. */
+    suspend fun outcome(body: suspend RequirementScope.() -> Unit): Throwable? =
+        try {
+            RequirementScope(this).body()
+            bodyEnded(proved)
+        } catch (cancelled: CancellationException) {
+            cancelled
+        } catch (
+            @Suppress("TooGenericExceptionCaught") failed: Throwable,
+        ) {
+            failed
+        }
 
     /** The latest tick the attempt knows ran: from its stimuli, its players' records and its windows. */
     var ranUntil: Int = 0
@@ -228,14 +292,13 @@ internal class Attempt(
      * [player]'s frame, as the client holds it now, is the golden [name]: the frame and what an approve
      * needs go into the attempt's evidence, and on the pinned renderer it is compared with the approved
      * golden; another renderer notes it as not checked. A frame that differs, or has no golden there,
-     * fails the attempt.
+     * fails the attempt. Only a compare that matched is a positive check.
      */
     suspend fun golden(
         player: GamePlayer,
         name: String,
     ) {
         val at = System.currentTimeMillis()
-        proved = true
         val (png, frame, renderer) = capture(player, name)
         val goldens = session.goldens
         Golden.writeCandidate(evidence.file("$name.golden"), goldens.file(name), png.fileName.toString(), frame, renderer, goldens.pinned)
@@ -244,6 +307,7 @@ internal class Attempt(
         val says = "golden $name of ${player.name}"
         when (val verdict = judge(golden, golden?.let(goldens::image), frame, renderer, goldens.pinned)) {
             GoldenVerdict.Matches -> {
+                proved = true
                 took(at, "$says matches")
             }
 
