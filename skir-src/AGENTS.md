@@ -29,8 +29,9 @@ Each bounded context owns its own version folders, such as `editor/v1` or `servi
 ## Harness
 
 - `harness` holds the run file (`test_run.skir`) that every test runner writes and `cargo xtask`
-  reads, and the playtest wire (`wire.skir`): every message between the game verification
-  framework, the game pool, the Paper plugin and the client mod.
+  reads, the playtest wire (`wire.skir`): every message between the game verification framework,
+  the game pool, the Paper plugin and the client mod, and the golden files (`golden.skir`).
+- When a harness file on disk has a shape, declare it here and write it as readable Skir JSON.
 - The request rules above (`_error` variants, `internal_error`) do not apply to it.
 - When code or a test tells failure causes apart, model the failure as a kind enum plus a detail
   string. When only a person reads it, keep one string. Never branch on or parse failure text.

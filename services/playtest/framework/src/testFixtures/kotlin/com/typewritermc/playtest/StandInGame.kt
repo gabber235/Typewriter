@@ -1,12 +1,14 @@
 package com.typewritermc.playtest
 
+import build.skir.JsonFlavor
+import skirout.harness.v1.golden.Golden
+import skirout.harness.v1.golden.Renderer
 import skirout.harness.v1.wire.Answer
 import skirout.harness.v1.wire.InputStep
 import skirout.harness.v1.wire.Message
 import skirout.harness.v1.wire.Perception
 import skirout.harness.v1.wire.ProbeAction
 import skirout.harness.v1.wire.Region
-import skirout.harness.v1.wire.Renderer
 import skirout.harness.v1.wire.StateKind
 import java.nio.file.Files
 import java.nio.file.Path
@@ -43,11 +45,8 @@ internal class StandInGame : AttemptPool {
     fun approve(name: String) {
         val file = folder.resolve(goldens.file(name))
         Files.createDirectories(file.parent)
-        Files.writeString(
-            file,
-            "sha256=${frame.sha256}\nwidth=${frame.width}\nheight=${frame.height}\n" +
-                "backend=${renderer.backend}\ndevice=${renderer.device}\ndriver=${renderer.driver}\nos=${renderer.os}\narch=${renderer.arch}\n",
-        )
+        val golden = Golden(sha256 = frame.sha256, width = frame.width, height = frame.height, renderer = renderer)
+        Files.writeString(file, Golden.serializer.toJsonCode(golden, JsonFlavor.READABLE))
     }
 
     override fun send(message: Message) {

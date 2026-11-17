@@ -1,9 +1,11 @@
 //! `cargo xtask goldens approve`: records the frames a game run captured as the approved goldens,
 //! from a local run or, with `--pr`, from the game results of a pull request's latest CI run.
 //! A requirement that names a golden writes its frame as a PNG into its attempt's folder, beside a
-//! `<name>.golden` candidate, which the run file lists as the attempt's golden artifact, that says
-//! which golden file of the repository it belongs to, the frame's hash and size, the renderer that
-//! drew it, and whether that is the pinned renderer, as the run judged it. Approving writes the hash, size and renderer into that golden file, keeps the PNG
+//! `<name>.golden` candidate (a `GoldenCandidate`), which the run file lists as the attempt's golden
+//! artifact, that says which golden file of the repository it belongs to, the frame's hash and size,
+//! the renderer that drew it, and whether that is the pinned renderer, as the run judged it.
+//! Approving writes the hash, size and renderer into that golden file (a `Golden`; both are readable
+//! Skir JSON, declared in `skir-src/harness/v1/golden.skir`), keeps the PNG
 //! among the local golden images under its hash, and pushes it to the evidence branch as
 //! `goldens/<hash>.png`, beside `goldens/<hash>.approved-at`, the moment it was approved, which
 //! the weekly prune reads to drop images no golden names any more; the repository holds only the
@@ -21,6 +23,7 @@ use anyhow::{Context as _, Result, bail};
 
 use crate::branch::{BranchCheckout, REPOSITORY};
 use crate::results::{self, ArtifactKind};
+use crate::skirout::base::harness::v1::golden::{Golden, GoldenCandidate};
 use crate::{CommandExt as _, Context, evidence};
 
 /// The local golden images, each named by its hash, relative to the repository root.
@@ -37,11 +40,6 @@ const APPROVED_AT: &str = "approved-at";
 /// The long lived branches, the ones the devenv action trusts a push to: an image a golden file on
 /// any of them names stays on the evidence branch however old it is.
 pub(crate) const LONG_LIVED: [&str; 2] = ["develop", "features/v1"];
-
-/// The keys a golden file holds, in the order it holds them.
-const GOLDEN_KEYS: [&str; 8] = [
-    "sha256", "width", "height", "backend", "device", "driver", "os", "arch",
-];
 
 /// The artifact CI's game job uploads its staged results as.
 const GAME_ARTIFACT: &str = "results-e2e-game";
@@ -270,7 +268,7 @@ pub(crate) fn named(ctx: &Context) -> Result<Vec<String>> {
         let path = ctx.root.join(file);
         let text =
             fs::read_to_string(&path).with_context(|| format!("cannot read {}", path.display()))?;
-        hashes.push(hash_in(file, &text)?);
+        hashes.push(golden_in(file, &text)?.sha256);
     }
     Ok(hashes)
 }
@@ -311,7 +309,7 @@ fn named_on(ctx: &Context, refs: &[&str]) -> Result<Vec<String>> {
             let text = ctx
                 .tool(".", "git", &["show", &format!("{at}:{file}")])
                 .output_text()?;
-            let hash = hash_in(&format!("{at}:{file}"), &text)?;
+            let hash = golden_in(&format!("{at}:{file}"), &text)?.sha256;
             if !hashes.contains(&hash) {
                 hashes.push(hash);
             }
@@ -320,12 +318,11 @@ fn named_on(ctx: &Context, refs: &[&str]) -> Result<Vec<String>> {
     Ok(hashes)
 }
 
-/// The hash the golden file `file` holding `text` names.
-fn hash_in(file: &str, text: &str) -> Result<String> {
-    text.lines()
-        .find_map(|line| line.strip_prefix("sha256="))
-        .map(str::to_owned)
-        .with_context(|| format!("{file} holds no sha256"))
+/// The golden the golden file `file` holding `text` holds.
+fn golden_in(file: &str, text: &str) -> Result<Golden> {
+    Golden::serializer()
+        .from_json(text, skir_client::UnrecognizedValues::Drop)
+        .map_err(|error| anyhow::anyhow!("{file} is not a golden: {error:?}"))
 }
 
 /// The image of the golden `hash` from the evidence branch, or None when the branch holds none,
@@ -369,32 +366,32 @@ fn publish(ctx: &Context, images: &[PathBuf]) -> Result<()> {
 fn approve(root: &Path, from: &Path, images: &Path) -> Result<Vec<Approved>> {
     let mut chosen: BTreeMap<String, Captured> = BTreeMap::new();
     for captured in captured_under(from)? {
-        if !captured.pinned {
-            let renderer =
-                ["backend", "device", "driver", "os", "arch"].map(|key| &captured.keys[key]);
+        let candidate = &captured.candidate;
+        if !candidate.pinned {
+            let renderer = &candidate.golden.renderer;
             bail!(
-                "golden {}: its frame {} was drawn by {}, not the pinned renderer; goldens are \
-                 approved only from frames the pinned runner drew",
-                captured.golden,
+                "golden {}: its frame {} was drawn by {}, {}, {}, {}, {}, not the pinned renderer; \
+                 goldens are approved only from frames the pinned runner drew",
+                candidate.file,
                 captured.png.display(),
-                renderer
-                    .iter()
-                    .map(|it| it.as_str())
-                    .collect::<Vec<_>>()
-                    .join(", ")
+                renderer.backend,
+                renderer.device,
+                renderer.driver,
+                renderer.os,
+                renderer.arch,
             );
         }
-        match chosen.get(&captured.golden) {
-            Some(earlier) if earlier.keys != captured.keys => bail!(
+        match chosen.get(&candidate.file) {
+            Some(earlier) if earlier.candidate.golden != candidate.golden => bail!(
                 "the run captured golden {} as two different frames ({} and {}): a scene that \
                  changes between attempts cannot be a golden",
-                captured.golden,
+                candidate.file,
                 earlier.png.display(),
                 captured.png.display()
             ),
             Some(_) => {}
             None => {
-                chosen.insert(captured.golden.clone(), captured);
+                chosen.insert(candidate.file.clone(), captured);
             }
         }
     }
@@ -403,19 +400,15 @@ fn approve(root: &Path, from: &Path, images: &Path) -> Result<Vec<Approved>> {
     }
     fs::create_dir_all(images).with_context(|| format!("cannot create {}", images.display()))?;
     let mut approved = Vec::new();
-    for (golden, captured) in chosen {
-        let file = root.join(&golden);
+    for (golden_file, captured) in chosen {
+        let file = root.join(&golden_file);
         let parent = file.parent().context("a golden file without a folder")?;
         fs::create_dir_all(parent)
             .with_context(|| format!("cannot create {}", parent.display()))?;
-        let mut text = String::from(
-            "# Approved by `cargo xtask goldens approve`; exact only on the renderer named below.\n",
-        );
-        for key in GOLDEN_KEYS {
-            text.push_str(&format!("{key}={}\n", captured.keys[key]));
-        }
+        let golden = &captured.candidate.golden;
+        let text = Golden::serializer().to_json(golden, skir_client::JsonFlavor::Readable);
         fs::write(&file, text).with_context(|| format!("cannot write {}", file.display()))?;
-        let image = images.join(format!("{}.png", captured.keys["sha256"]));
+        let image = images.join(format!("{}.png", golden.sha256));
         fs::copy(&captured.png, &image).with_context(|| {
             format!(
                 "cannot copy {} to {}",
@@ -423,18 +416,18 @@ fn approve(root: &Path, from: &Path, images: &Path) -> Result<Vec<Approved>> {
                 image.display()
             )
         })?;
-        approved.push(Approved { golden, image });
+        approved.push(Approved {
+            golden: golden_file,
+            image,
+        });
     }
     Ok(approved)
 }
 
-/// One frame a run captured: the golden file it is for, its PNG, its hash, size and renderer, and
-/// whether the run found that renderer to be the pinned one.
+/// One frame a run captured: its candidate and its PNG, beside the candidate.
 struct Captured {
-    golden: String,
+    candidate: GoldenCandidate,
     png: PathBuf,
-    keys: BTreeMap<String, String>,
-    pinned: bool,
 }
 
 /// Every frame the runs under `folder` captured, from the golden candidates their run files list.
@@ -456,34 +449,13 @@ fn captured_under(folder: &Path) -> Result<Vec<Captured>> {
 fn read_captured(file: &Path) -> Result<Captured> {
     let text =
         fs::read_to_string(file).with_context(|| format!("cannot read {}", file.display()))?;
-    let mut keys: BTreeMap<String, String> = text
-        .lines()
-        .filter(|line| !line.is_empty() && !line.starts_with('#'))
-        .filter_map(|line| line.split_once('='))
-        .map(|(key, value)| (key.to_owned(), value.to_owned()))
-        .collect();
-    let golden = keys
-        .remove("golden")
-        .with_context(|| format!("{} names no golden file", file.display()))?;
-    let image = keys
-        .remove("image")
-        .with_context(|| format!("{} names no image", file.display()))?;
-    let pinned = keys.remove("pinned").with_context(|| {
-        format!(
-            "{} does not say whether the pinned renderer drew it",
-            file.display()
-        )
-    })? == "true";
-    if let Some(missing) = GOLDEN_KEYS.iter().find(|key| !keys.contains_key(**key)) {
-        bail!("{} holds no {missing}", file.display());
-    }
-    let png = file.with_file_name(image);
-    Ok(Captured {
-        golden,
-        png,
-        keys,
-        pinned,
-    })
+    let candidate = GoldenCandidate::serializer()
+        .from_json(&text, skir_client::UnrecognizedValues::Drop)
+        .map_err(|error| {
+            anyhow::anyhow!("{} is not a golden candidate: {error:?}", file.display())
+        })?;
+    let png = file.with_file_name(&candidate.image);
+    Ok(Captured { candidate, png })
 }
 
 #[cfg(test)]
@@ -492,21 +464,28 @@ mod tests {
 
     use std::cell::RefCell;
 
-    use super::{approve, fetch_into, named_on, place, pull_request_frames};
+    use super::{Golden, approve, fetch_into, named_on, place, pull_request_frames};
+    use crate::skirout::base::harness::v1::golden::Renderer;
     use crate::test_support::{TempRoot, captured_golden};
 
-    const SIDEBAR: &str = "golden=services/playtest/framework/src/gameTest/goldens/sidebar.golden
-image=sidebar.png
-sha256=5e1d
-width=854
-height=480
-backend=Vulkan
-device=llvmpipe (LLVM 20.1.2, 256 bits)
-driver=1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)
-os=Linux
-arch=amd64
-pinned=true
-";
+    /// A candidate as the framework writes it beside a captured frame.
+    const SIDEBAR: &str = r#"{
+  "file": "services/playtest/framework/src/gameTest/goldens/sidebar.golden",
+  "image": "sidebar.png",
+  "golden": {
+    "sha256": "5e1d",
+    "width": 854,
+    "height": 480,
+    "renderer": {
+      "backend": "Vulkan",
+      "device": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "driver": "1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)",
+      "os": "Linux",
+      "arch": "amd64"
+    }
+  },
+  "pinned": true
+}"#;
 
     #[test]
     fn approve_writes_the_frames_hash_size_and_renderer_into_its_golden_file_and_keeps_the_frame() {
@@ -525,13 +504,27 @@ pinned=true
         assert_eq!(goldens, [golden]);
         assert_eq!(approved[0].image, root.path("images/5e1d.png"));
         let written = fs::read_to_string(root.path(golden)).unwrap();
-        assert!(written.ends_with(
-            "sha256=5e1d\nwidth=854\nheight=480\nbackend=Vulkan\n\
-             device=llvmpipe (LLVM 20.1.2, 256 bits)\n\
-             driver=1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)\nos=Linux\narch=amd64\n"
-        ));
-        assert!(!written.contains("image="), "{written}");
-        assert!(!written.contains("pinned="), "{written}");
+        assert_eq!(
+            Golden::serializer()
+                .from_json(&written, skir_client::UnrecognizedValues::Keep)
+                .unwrap(),
+            Golden {
+                sha256: "5e1d".to_owned(),
+                width: 854,
+                height: 480,
+                renderer: Renderer {
+                    backend: "Vulkan".to_owned(),
+                    device: "llvmpipe (LLVM 20.1.2, 256 bits)".to_owned(),
+                    driver: "1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)".to_owned(),
+                    os: "Linux".to_owned(),
+                    arch: "amd64".to_owned(),
+                    _unrecognized: None,
+                },
+                _unrecognized: None,
+            }
+        );
+        // Readable, so a reviewer sees what a golden pins.
+        assert!(written.contains(r#""sha256": "5e1d""#), "{written}");
         assert_eq!(
             fs::read_to_string(root.path("images/5e1d.png")).unwrap(),
             "png bytes"
@@ -611,18 +604,15 @@ pinned=true
             &run,
             "GOLDEN-1 a sidebar/attempt-1/sidebar",
             &SIDEBAR
-                .replace("backend=Vulkan", "backend=OpenGL")
+                .replace("Vulkan", "OpenGL")
+                .replace("llvmpipe (LLVM 20.1.2, 256 bits)", "Apple M1 Max")
                 .replace(
-                    "device=llvmpipe (LLVM 20.1.2, 256 bits)",
-                    "device=Apple M1 Max",
+                    "1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)",
+                    "4.1 Metal - 89.4",
                 )
-                .replace(
-                    "driver=1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)",
-                    "driver=4.1 Metal - 89.4",
-                )
-                .replace("os=Linux", "os=Mac OS X")
-                .replace("arch=amd64", "arch=aarch64")
-                .replace("pinned=true", "pinned=false"),
+                .replace("Linux", "Mac OS X")
+                .replace("amd64", "aarch64")
+                .replace(r#""pinned": true"#, r#""pinned": false"#),
             "png bytes",
         );
 
@@ -729,18 +719,24 @@ pinned=true
         root.git(&["init", "--quiet", "--initial-branch=develop"]);
         root.save(
             "framework/goldens/sidebar.golden",
-            "sha256=on-develop\nwidth=4\n",
+            r#"{"sha256": "on-develop", "width": 4}"#,
         );
         root.git(&["update-ref", "refs/remotes/origin/develop", "HEAD"]);
         root.save(
             "framework/goldens/title.golden",
-            "sha256=on-features\nwidth=4\n",
+            r#"{"sha256": "on-features", "width": 4}"#,
         );
-        root.save("framework/goldens/notes.txt", "sha256=not-a-golden\n");
+        root.save(
+            "framework/goldens/notes.txt",
+            r#"{"sha256": "not-a-golden"}"#,
+        );
         root.git(&["update-ref", "refs/remotes/origin/features/v1", "HEAD"]);
         // The checkout itself names a golden no long lived branch holds yet.
         root.git(&["checkout", "--quiet", "-b", "feature"]);
-        root.save("framework/goldens/fresh.golden", "sha256=only-here\n");
+        root.save(
+            "framework/goldens/fresh.golden",
+            r#"{"sha256": "only-here"}"#,
+        );
 
         let mut used = named_on(&root.ctx, &["origin/develop", "origin/features/v1"]).unwrap();
         used.sort();

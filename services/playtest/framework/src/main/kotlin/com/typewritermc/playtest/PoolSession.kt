@@ -7,6 +7,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
+import skirout.harness.v1.golden.Renderer
 import skirout.harness.v1.test_run.CoveredClass
 import skirout.harness.v1.test_run.Demonstrates
 import skirout.harness.v1.test_run.Step
@@ -21,7 +22,6 @@ import skirout.harness.v1.wire.PaperAsk
 import skirout.harness.v1.wire.PlayerEvent
 import skirout.harness.v1.wire.Probe
 import skirout.harness.v1.wire.ProbeAction
-import skirout.harness.v1.wire.Renderer
 import skirout.harness.v1.wire.Request
 import skirout.harness.v1.wire.Result
 import skirout.harness.v1.wire.Role

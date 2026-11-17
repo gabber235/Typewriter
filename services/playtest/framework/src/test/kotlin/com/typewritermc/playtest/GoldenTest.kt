@@ -4,7 +4,9 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
-import skirout.harness.v1.wire.Renderer
+import skirout.harness.v1.golden.Golden
+import skirout.harness.v1.golden.GoldenCandidate
+import skirout.harness.v1.golden.Renderer
 import java.nio.file.Files
 
 val GoldenTest by testSuite {
@@ -19,21 +21,7 @@ val GoldenTest by testSuite {
     val mac = Renderer(backend = "OpenGL", device = "Apple M1 Max", driver = "4.1 Metal - 89.4", os = "Mac OS X", arch = "aarch64")
     val pinned = PinnedRenderer(mesa = "26.2.5")
     val sidebar = Frame(3, 2, intArrayOf(0x7F7F7F, 0x7F7F7F, 0xFFAA00, 0x7F7F7F, 0xFFFFFF, 0xFFAA00))
-    val approved by lazy { Golden(sidebar.sha256, 3, 2, runner) }
-    // What an approve keeps of the candidate: the frame's hash and size and the renderer that drew it.
-    val approvedKeys by lazy {
-        """
-        sha256=${sidebar.sha256}
-        width=3
-        height=2
-        backend=Vulkan
-        device=llvmpipe (LLVM 20.1.2, 256 bits)
-        driver=1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)
-        os=Linux
-        arch=amd64
-
-        """.trimIndent()
-    }
+    val approved by lazy { Golden(sha256 = sidebar.sha256, width = 3, height = 2, renderer = runner) }
 
     test("a frame whose every pixel is its golden's matches it") {
         val again = Frame(3, 2, intArrayOf(0x7F7F7F, 0x7F7F7F, 0xFFAA00, 0x7F7F7F, 0xFFFFFF, 0xFFAA00))
@@ -139,28 +127,45 @@ val GoldenTest by testSuite {
     }
 
     test("a captured frame's candidate names its golden file, image, hash, size, renderer and whether that is the pinned one") {
+        val root = Files.createTempDirectory("repository")
+        val goldens = Goldens(root, "services/playtest/framework/src/gameTest/goldens", root.resolve("images"), pinned)
         val candidate = Files.createTempDirectory("attempt").resolve("sidebar.golden")
 
-        Golden.writeCandidate(
-            candidate,
-            "services/playtest/framework/src/gameTest/goldens/sidebar.golden",
-            "sidebar.png",
-            sidebar,
-            runner,
-            pinned,
-        )
+        goldens.writeCandidate(candidate, "sidebar", "sidebar.png", sidebar, runner)
 
-        Files.readString(candidate) shouldBe
-            "golden=services/playtest/framework/src/gameTest/goldens/sidebar.golden\nimage=sidebar.png\n" +
-            approvedKeys +
-            "pinned=true\n"
+        GoldenCandidate.serializer.fromJsonCode(Files.readString(candidate)) shouldBe
+            GoldenCandidate(
+                file = "services/playtest/framework/src/gameTest/goldens/sidebar.golden",
+                image = "sidebar.png",
+                golden = approved,
+                pinned = true,
+            )
     }
 
     test("a golden file holds the hash, size and renderer an approve wrote, and no file holds no golden") {
-        val folder = Files.createTempDirectory("goldens")
-        Files.writeString(folder.resolve("sidebar.golden"), approvedKeys)
+        val root = Files.createTempDirectory("repository")
+        val goldens = Goldens(root, "goldens", root.resolve("images"), pinned)
+        Files.createDirectories(root.resolve("goldens"))
+        // As `cargo xtask goldens approve` writes it.
+        Files.writeString(
+            root.resolve("goldens/sidebar.golden"),
+            """
+            {
+              "sha256": "${sidebar.sha256}",
+              "width": 3,
+              "height": 2,
+              "renderer": {
+                "backend": "Vulkan",
+                "device": "llvmpipe (LLVM 20.1.2, 256 bits)",
+                "driver": "1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)",
+                "os": "Linux",
+                "arch": "amd64"
+              }
+            }
+            """.trimIndent(),
+        )
 
-        Golden.read(folder.resolve("sidebar.golden")) shouldBe approved
-        Golden.read(folder.resolve("hotbar.golden")) shouldBe null
+        goldens.golden("sidebar") shouldBe approved
+        goldens.golden("hotbar") shouldBe null
     }
 }

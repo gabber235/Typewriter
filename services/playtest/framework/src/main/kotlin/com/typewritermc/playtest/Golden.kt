@@ -1,13 +1,15 @@
 package com.typewritermc.playtest
 
-import skirout.harness.v1.wire.Renderer
+import build.skir.JsonFlavor
+import skirout.harness.v1.golden.Golden
+import skirout.harness.v1.golden.GoldenCandidate
+import skirout.harness.v1.golden.Renderer
 import java.awt.image.BufferedImage
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
 import java.util.HexFormat
-import java.util.Properties
 import javax.imageio.ImageIO
 
 /**
@@ -104,68 +106,9 @@ class PinnedRenderer(
 }
 
 /**
- * An approved frame of the golden its file names: the hash of its pixels, its size, and the renderer
- * that drew it. Only a frame from the same renderer can match it to the pixel.
- */
-data class Golden(
-    val sha256: String,
-    val width: Int,
-    val height: Int,
-    val renderer: Renderer,
-) {
-    companion object {
-        /** The golden in the file at [path], or null when none was approved there. */
-        fun read(path: Path): Golden? {
-            if (!Files.exists(path)) return null
-            val keys = Properties().apply { Files.newBufferedReader(path).use(::load) }
-
-            fun key(name: String) = checkNotNull(keys.getProperty(name)) { "golden file $path holds no $name" }
-            return Golden(
-                key("sha256"),
-                key("width").toInt(),
-                key("height").toInt(),
-                Renderer(backend = key("backend"), device = key("device"), driver = key("driver"), os = key("os"), arch = key("arch")),
-            )
-        }
-
-        /**
-         * Writes, beside a captured frame, what `cargo xtask goldens approve` needs to make it the golden
-         * in [golden], a path from the repository root: the frame's PNG [image] in the same folder, its
-         * hash and size, its [renderer], and whether that is the [pinned] one, which approve requires.
-         */
-        fun writeCandidate(
-            path: Path,
-            golden: String,
-            image: String,
-            frame: Frame,
-            renderer: Renderer,
-            pinned: PinnedRenderer,
-        ) {
-            path.parent?.let(Files::createDirectories)
-            Files.writeString(
-                path,
-                listOf(
-                    "golden" to golden,
-                    "image" to image,
-                    "sha256" to frame.sha256,
-                    "width" to frame.width,
-                    "height" to frame.height,
-                    "backend" to renderer.backend,
-                    "device" to renderer.device,
-                    "driver" to renderer.driver,
-                    "os" to renderer.os,
-                    "arch" to renderer.arch,
-                    "pinned" to pinned.drew(renderer),
-                ).joinToString("") { (key, value) -> "$key=$value\n" },
-            )
-        }
-    }
-}
-
-/**
  * A project's goldens: each golden `name` is the file `<folder>/<name>.golden` from the repository
- * [root], and the frame an approve took for it lies among the local [images] under its hash. They are
- * exact for the [pinned] renderer.
+ * [root], a `Golden` as readable Skir JSON, and the frame an approve took for it lies among the local
+ * [images] under its hash. They are exact for the [pinned] renderer.
  */
 internal class Goldens(
     private val root: Path,
@@ -177,7 +120,31 @@ internal class Goldens(
     fun file(name: String): String = "$folder/$name.golden"
 
     /** The golden [name] approved, or null when none is. */
-    fun golden(name: String): Golden? = Golden.read(root.resolve(file(name)))
+    fun golden(name: String): Golden? =
+        root.resolve(file(name)).takeIf(Files::exists)?.let { Golden.serializer.fromJsonCode(Files.readString(it)) }
+
+    /**
+     * Writes to [path], beside a captured frame, what `cargo xtask goldens approve` needs to make it the
+     * golden [name]: the frame's PNG [image] in the same folder, its hash and size, its [renderer], and
+     * whether that is the pinned one, which approve requires.
+     */
+    fun writeCandidate(
+        path: Path,
+        name: String,
+        image: String,
+        frame: Frame,
+        renderer: Renderer,
+    ) {
+        val candidate =
+            GoldenCandidate(
+                file = file(name),
+                image = image,
+                golden = Golden(sha256 = frame.sha256, width = frame.width, height = frame.height, renderer = renderer),
+                pinned = pinned.drew(renderer),
+            )
+        path.parent?.let(Files::createDirectories)
+        Files.writeString(path, GoldenCandidate.serializer.toJsonCode(candidate, JsonFlavor.READABLE))
+    }
 
     /** The frame [golden] was approved from, when it lies among the local images. */
     fun image(golden: Golden): Frame? = images.resolve("${golden.sha256}.png").takeIf(Files::exists)?.let(Frame::readPng)

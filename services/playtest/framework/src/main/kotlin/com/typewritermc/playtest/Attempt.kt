@@ -11,6 +11,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.selects.select
+import skirout.harness.v1.golden.Renderer
 import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.Step
@@ -21,7 +22,6 @@ import skirout.harness.v1.wire.Perception
 import skirout.harness.v1.wire.PlayerAction
 import skirout.harness.v1.wire.ProbeAction
 import skirout.harness.v1.wire.Region
-import skirout.harness.v1.wire.Renderer
 import skirout.harness.v1.wire.StateKind
 import skirout.harness.v1.wire.WorldAction
 import java.nio.file.Path
@@ -301,7 +301,7 @@ internal class Attempt(
         val at = System.currentTimeMillis()
         val (png, frame, renderer) = capture(player, name)
         val goldens = session.goldens
-        Golden.writeCandidate(evidence.file("$name.golden"), goldens.file(name), png.fileName.toString(), frame, renderer, goldens.pinned)
+        goldens.writeCandidate(evidence.file("$name.golden"), name, png.fileName.toString(), frame, renderer)
         evidence.artifacts += Artifact(kind = ArtifactKind.GOLDEN, path = "$name.golden")
         val golden = goldens.golden(name)
         val says = "golden $name of ${player.name}"

@@ -7,8 +7,8 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.harness.v1.golden.Renderer
 import skirout.harness.v1.test_run.AttemptPolicy
-import skirout.harness.v1.wire.Renderer
 import skirout.harness.v1.wire.StateKind
 
 val PositiveCheckTest by testSuite {
