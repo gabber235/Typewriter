@@ -743,6 +743,9 @@ decided:
   - id: golden-images-on-evidence-branch
     what: "Evidence branch (Recommended)"
     why: The repo holds only a golden's hash, so a changed frame on CI failed without a diff; approve also pushes the PNG to the evidence branch as goldens/<hash>.png, outside the pruned pr/ folders, and cargo xtask e2e game fetches any image it lacks before the run, so the framework stays offline; committing the PNG would add about 210 KB per golden to the history on every re-approve
+  - id: heap-share-of-machine
+    what: "Share of the machine"
+    why: No game JVM had a heap cap, so on the 16 GB runner one grew to 3.85 GB beside four at 1.5 GB and the runner ran out of memory; every game JVM gets a MaxRAMPercentage share by part kind, so the caps scale with the machine; chosen over a fixed cap per part (recommended) and fewer parts at once
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
@@ -889,4 +892,4 @@ slices:
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
 
-next: Slice 9 builds the pid file per part and golden images on the evidence branch, generates only what the game suite needs, reruns the one pixel proof, and gets green dispatched runs with warm cache times.
+next: Slice 9 gives every game JVM a share of the machine's memory, then reruns the one pixel proof; then the developer confirms slice 9's built decisions.
