@@ -1,16 +1,12 @@
 # Game verification: prior decisions
 
-Recovered 2026-11-05 from past threads and the harness plan. The already known list (real clients, `services/playtest`, requirements near the code, `Book.appliesTo`, stimuli, full suite, Q1 to Q8, P1 to P5, goals table) is only repeated where the developer's own words add something.
+Recovered 2026-11-05 from the developer's design sessions and the agent harness plan. The already known list (real clients, `services/playtest`, requirements near the code, `Book.appliesTo`, stimuli, full suite, Q1 to Q8, P1 to P5, goals table) is only repeated where the developer's own words add something.
 
-Source tags:
+Source tags name the kind of source. The sessions, plan revisions and reports behind them are not kept in the repository; this file is their record.
 
-- `M#n`: thread 1e764db2 (Design Post-Merge Agent Workflow), item position n
-- `S#0`: thread a9c559dc (Prototype In Game Verification), the developer's opening message
-- `T`: thread mcp:b3e6b5f6 (Review Typewriter Test Strategy)
-- `Plan:n`: `docs/plans/agent-harness.mdx` line n on the features-agent-harness worktree
-- `Draft r3`, `Draft p3`: older plan revisions, in the M session transcript, not in the final plan
-- `R:legacy`, `R:client`, `R:bot`, `R:speed`, `R:industry`: research subagent reports in the M session (`agent-ac06f0f6`, `agent-a71e30e1`, `agent-aa56035b`, `agent-a8a3d037`, `agent-a9e998e9`, `agent-a9a146bc`). Agent output, not decisions.
-- Thread 5a24eb1f (Improve Test Strategy Review Capabilities) holds nothing about in-game.
+- `M#n`, `S#0`, `T`: the developer's own words in a design session. `M` is the agent workflow design (n is the message position), `S` the brief that opened the in-game prototype, `T` the test strategy review.
+- `Plan:n`, `Draft r3`, `Draft p3`: the agent harness plan at line n, and two older revisions of it.
+- `R:legacy`, `R:client`, `R:bot`, `R:speed`, `R:industry`: research reports. Agent output, not decisions. `research/real-client-precedent.md` and `research/speed-capture-determinism.md` recheck the client, bot, speed and industry facts from source.
 
 ## Requirements (developer stated)
 
@@ -53,7 +49,7 @@ Source tags:
 ### Micro server
 
 - "discussing game verification and things like that that we could do stuff in game and run a micro server". (S#0)
-- This is the **only** place the words appear. No earlier thread uses "micro server", and no search hit defines it. The meaning is unknown, and it may be a dictation artifact.
+- This is the **only** place the words appear. No earlier session uses "micro server", and no search hit defines it. The meaning is unknown, and it may be a dictation artifact.
 - Nearest recorded ideas: Q5 "a server per few clients", one Paper server per CI job, a void world with regions. All agent text. Ask before building on it.
 
 ### Speed
@@ -72,7 +68,7 @@ Source tags:
 
 - Look at the legacy code: "we're gonna at some point get back to most of these things and look at how for example cameras are done and that uses a lot of Minecraft bugs and things like that to actually get things to work or not necessarily bugs, but it uses some interesting Minecraft mechanics." (M#140)
 - Asked for a legacy survey of "what types of tests and what would it need. So that the suite we have will be good and more complete". (M#534)
-- Keep legacy user visible behavior as the target unless the vision changes it. (design session preference in memory)
+- Keep legacy user visible behavior as the target unless the vision changes it. (the developer, in design sessions)
 
 The camera mechanic itself (agent read, verified in `CameraCinematicEntry.kt`):
 
@@ -117,7 +113,7 @@ Rejected by the developer:
 - **Planning in-game as a normal implementation**: "I don't think we can actually plan this one out." (M#618 item 9)
 - **Name "audience"** for the book restriction. (M#618 item 8)
 - **A generic stack core** with NATS or OIDC in it. Only Playtest is extractable. (M#618 item 1)
-- **Separate evidence repository**. (M#916, memory note on the workstream)
+- **Separate evidence repository**. (M#916)
 - **Golden comparison for panel stories** (see conflict above). (T)
 - First reaction to the agent's "own fake player harness or check by hand" question (M#33): neither; "try and see if there is more". (M#35)
 
@@ -193,7 +189,7 @@ Observed, not proposed: panel e2e on Linux CI reached `direct rendering: Yes`, l
 
 ## Untested ideas
 
-Floated, never tried. No in-game prototype was run in these threads; every number and precedent below is from reading or estimate.
+Floated, never tried. No in-game prototype was run in these sessions; every number and precedent below is from reading or estimate.
 
 Video and comparison:
 
