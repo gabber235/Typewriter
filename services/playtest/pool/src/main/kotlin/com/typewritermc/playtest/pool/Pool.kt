@@ -418,8 +418,7 @@ internal class Pool(
     ) {
         val reason = runs.joined(session.hello.name(), session, Path.of(join.testRunFile()), join.policy()) ?: return
         refused += session
-        session.send(Refused(reason))
-        session.close()
+        session.sendLast(Refused(reason))
     }
 
     /** [session]'s attempt ended with [result]: the run records it and its players serve the next claims. */
