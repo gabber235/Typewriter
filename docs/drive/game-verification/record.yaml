@@ -1,7 +1,7 @@
 # docs/drive/game-verification/record.yaml: the working state of the in-game verification framework.
-# Spike details: docs/design/game-verification/README.md and spikes/. Prototype code: git 86724c794
-# (spikes J, K, N) and 9c9275f22 (earlier spikes). Old plan drafts (input only, git ignored):
-# docs/plans/game-verification/ (design.md, directions.md, research-*.md, decisions/*.yaml).
+# Spike details: docs/design/game-verification/README.md, spikes/ and research/. Prototype code: git
+# 86724c794 (spikes J, K, N) and 9c9275f22 (earlier spikes); the P1 to P11 prototype branches are
+# deleted once Finish ends, their results live in spikes/p*.md.
 goal: Prove what a player experiences in a real Minecraft client, as tests that run on every pull request, built in full before L3.
 
 pieces:
@@ -35,7 +35,7 @@ pieces:
           ack passed a broken requirement), switch the client clock on the render thread.
         state: picked
         why: Picked by the developer from P1
-        evidence: [docs/plans/game-verification/decisions/step-driver.yaml, "branch proto/gv-topology 1ec7bef6f: prototypes/game-verification/RESULTS.md", CI run 42345155973]
+        evidence: [docs/design/game-verification/spikes/p1-topology.md, CI run 42345155973]
       - id: paper-per-attempt
         parent: d3-paper-per-group
         what: 4 long lived Papers, one per running attempt, wiped and reused; clients move for a group claim
@@ -46,7 +46,7 @@ pieces:
           needs a keepalive tick or the watchdog stops it.
         state: dropped
         why: 41 to 777% slower once groups or restarts appear
-        evidence: ["branch proto/gv-topology 1ec7bef6f: prototypes/game-verification/RESULTS.md", CI runs 42345155973 42339156447]
+        evidence: [docs/design/game-verification/spikes/p1-topology.md, CI runs 42345155973 42339156447]
       - id: fresh-paper-per-attempt
         parent: d3-paper-per-group
         what: A fresh Paper per requirement, booted ahead while others run
@@ -76,7 +76,7 @@ pieces:
           JVM stops. What is left is Minecraft's bootstrap and datapack load (about 5.5 CPU s).
         state: picked
         why: Picked by the developer; 5.0 s on the normal Java 25 and the Mac, against T2's 9.0 s with a special JDK
-        evidence: ["branch proto/gv-boot 0f8ed6c89: prototypes/game-verification/RESULTS.md", CI runs 42430101477 42433205261]
+        evidence: [docs/design/game-verification/spikes/p7-faster-boot.md, CI runs 42430101477 42433205261]
       - id: checkpoint-restore
         parent: k-own-paper-for-restarts
         what: Restore a snapshot of a booted, empty Paper instead of booting (Azul Zulu 25 CRaC, Linux only)
@@ -87,7 +87,7 @@ pieces:
           a 400 MB image per machine, about 170 lines of hooks; no restore on the Mac.
         state: dropped
         why: Slower than the faster boot and needs Azul's CRaC JDK, a 400 MB image and Linux
-        evidence: ["branch proto/gv-restore a7f4aaff0: prototypes/game-verification/RESULTS.md", CI run 42432909519]
+        evidence: [docs/design/game-verification/spikes/p7-checkpoint-restore.md, CI run 42432909519]
 
   - id: stepped-ticks
     status: building
@@ -152,7 +152,7 @@ pieces:
           streamed. Live gaps: fades count as legible from alpha 8, chat lines wrap into several runs,
           grey completion text looks typed, the text cursor blink adds records.
         state: working
-        evidence: ["branch proto/gv-stream 45481dcb1: prototypes/game-verification/RESULTS.md", CI run 42336338774]
+        evidence: [docs/design/game-verification/spikes/p4-live-stream.md, CI run 42336338774]
       - id: frame-every-tick-at-scale
         parent: live-stream
         what: 4 clients on the shared stepped Paper each draw a frame every tick and stream, judged from the stream
@@ -166,7 +166,7 @@ pieces:
           lag up to 4 ticks on an idle client.
         state: dropped
         why: Over the developer's 50% line even with every lever
-        evidence: ["branch proto/gv-frames 6b7441deb: prototypes/game-verification/RESULTS.md", CI runs 43306724605 43320141634]
+        evidence: [docs/design/game-verification/spikes/p8-frames-every-tick.md, CI runs 43306724605 43320141634]
       - id: perceive-without-drawing
         parent: live-stream
         what: Clients run the extract and submit stages each tick and skip the GPU draw; pixels only for A4 checks, goldens and clips
@@ -180,7 +180,7 @@ pieces:
           adds 6 to 27 points (smaller window helps), because each ask holds the shared Paper for two
           drawn frames.
         state: working
-        evidence: ["branch proto/gv-nodraw 25ed99f98: prototypes/game-verification/RESULTS.md", CI runs 43330492175 43333247905]
+        evidence: [docs/design/game-verification/spikes/p11-perceive-without-drawing.md, CI runs 43330492175 43333247905]
       - id: a4-on-demand
         parent: perceive-without-drawing
         what: "visible() asks a player's client to draw real frames only while its window holds; the asked entity's pixels are those that change when it is left out"
@@ -192,7 +192,7 @@ pieces:
           threshold counts pixels, so it means 4x less area on the Mac window than on the runner. New
           chunks fade in, so visibility windows need 10 ticks.
         state: working
-        evidence: ["commit 9e8ab5e21 on feat/game-verification-slice-6", "cargo xtask e2e game: 87 passed, three runs in a row"]
+        evidence: [commit d1bfaf7cb, "cargo xtask e2e game: 87 passed, three runs in a row"]
 
   - id: readiness-and-done
     status: building
@@ -244,7 +244,7 @@ pieces:
           Paper's 4 thread suggestion pool reordering requests; a 1 thread pool or a retype after 6
           ticks fixes it. Mac run not done (devenv shell hung).
         state: working
-        evidence: ["branch proto/gv-input 85d06340e: prototypes/game-verification/RESULTS.md", CI runs 43306835761 43309694858 43311267445]
+        evidence: [docs/design/game-verification/spikes/p10-input-from-client.md, CI runs 43306835761 43309694858 43311267445]
 
   - id: client-pool
     status: building
@@ -287,7 +287,7 @@ pieces:
           (StepPolicy allAcked(claimed)). Why the client reports view distance 3 with render distance 2,
           and why Paper sends only about 10 chunks per tick without the cap, are unknown.
         state: working
-        evidence: ["branch proto/gv-lease-time 056013429: services/playtest/lease-time/", "4 full suite runs, 82 passed each", "fixes in e5f88a238: cargo xtask e2e game 83 passed, grant to lease median 409 ms, p90 684 ms, max 5284 ms (was 1132, 1422, 16353)"]
+        evidence: [docs/design/game-verification/spikes/lease-time.md, "4 full suite runs, 82 passed each", "fixes in e5f88a238: cargo xtask e2e game 83 passed, grant to lease median 409 ms, p90 684 ms, max 5284 ms (was 1132, 1422, 16353)"]
       - id: why-runs-vary
         what: Find what wall clock work moves tick counts and frames
         taught: >-
@@ -309,7 +309,7 @@ pieces:
           during a full run); the ack waits until every pushed event reached the game. Linux trusts its own
           Xvfb display, unproven until slice 9.
         state: working
-        evidence: ["commit e4ded3e7d on feat/game-verification-steadiness", "fixes ed15cc7b3 ee84f2844 f802c922a 39742a7d1 18e698ef9 2b40b8aea: steadied requirements same ticks 10 of 10 under load, 96 passed in three full runs"]
+        evidence: [commit ed15cc7b3, "fixes ed15cc7b3 ee84f2844 f802c922a 39742a7d1 18e698ef9 2b40b8aea: steadied requirements same ticks 10 of 10 under load, 96 passed in three full runs"]
 
   - id: requirement-shape
     status: building
@@ -339,7 +339,7 @@ pieces:
         taught: P2 proved 200 tests, one JVM, one scheduler; works only inside one Gradle build, so not for extensions built elsewhere
         state: dropped
         why: Services build only, and every run boots the clients again
-        evidence: ["branch proto/gv-testballoon: services/prototypes/gv-testballoon/evidence/root"]
+        evidence: [docs/design/game-verification/spikes/p2-testballoon-runner.md]
       - id: classloader-per-compilation
         parent: runner-c-testballoon
         what: One JVM loads each compilation in its own class loader and runs testBalloon per loader; scheduler and pool in the shared parent loader
@@ -359,15 +359,15 @@ pieces:
           for a stuck pool, keep the report safe from a pool crash. About 590 lines against 217.
         state: picked
         why: Picked by the developer; modules and extensions share warm clients, single runs take 2 s
-        evidence: ["branch proto/gv-pool-process 968f7babb: services/prototypes/gv-pool-process/FINDINGS.md"]
+        evidence: [docs/design/game-verification/spikes/p6-pool-process.md]
       - id: runner-a-and-b
         what: Tests in a pool (A), or requirement values run by the framework (B)
         taught: A shows flaky as green; B loses the IDE gutter and test filters
         state: dropped
         why: A shows flaky as green; B loses the IDE gutter and test filters
-        evidence: [docs/plans/game-verification/directions.md]
+        evidence: [docs/design/game-verification/research/runner-directions.md]
       - id: runner-c-testballoon
-        what: Declared in testBalloon with a needs header; a framework scheduler runs, retries and reports
+        what: Declared in testBalloon with players, demonstrates and restartsPaper; a framework scheduler runs, retries and reports
         taught: >-
           P2: works. 200 mirror tests submit at once (1.08 of ideal), flaky shows as failed, --tests
           selects before submission (testBalloon path syntax), finish runs after every test. One JVM
@@ -376,7 +376,7 @@ pieces:
           must gate on TestRun being written. The flaky error must carry the body's frame first.
         state: picked
         why: Decided by the developer
-        evidence: [docs/plans/game-verification/directions.md, "branch proto/gv-testballoon 7a77e7ba3: services/prototypes/gv-testballoon/FINDINGS.md"]
+        evidence: [docs/design/game-verification/research/runner-directions.md, docs/design/game-verification/spikes/p2-testballoon-runner.md]
 
   - id: video
     status: building
@@ -505,7 +505,7 @@ pieces:
         taught: Each rerun would boot the clients again (results.rs:174)
         state: dropped
         why: Retries run inside the test JVM on warm clients
-        evidence: [docs/plans/game-verification/research-xtask.md]
+        evidence: [docs/design/game-verification/research/xtask-integration.md]
       - id: free-runner
         what: The free GitHub runner, 4 vCPU, software rendering
         taught: Holds the gated clients with the same throughput as the Mac
@@ -525,7 +525,7 @@ pieces:
           Kover must skip gameTest (koverVerify depends on every Test task), coverage-merge must add only
           Kover projects. Patching Paper stays in check while the plugin compiles against it.
         state: working
-        evidence: ["branch proto/gv-build abad68436: services/playtest/FINDINGS.md, services/playtest/evidence/"]
+        evidence: [docs/design/game-verification/spikes/p3-one-build.md]
 
 decided:
   - id: real-clients-only
@@ -558,7 +558,7 @@ decided:
   - id: test-jvm
     what: Requirement code runs in a test JVM; the client streams what its player perceived
   - id: testballoon-runner
-    what: Requirements are declared in testBalloon with a needs header; the framework scheduler runs them and writes TestRun
+    what: Requirements are declared in testBalloon with players, demonstrates and restartsPaper; the framework scheduler runs them and writes TestRun
   - id: one-gametest-task
     what: One root gameTest task runs every module's requirements in one JVM; cargo xtask e2e game runs it
   - id: topology-by-speed
@@ -773,12 +773,40 @@ decided:
   - id: frozen-1-15-seconds
     what: "Loosen to 15 s"
     why: FROZEN-1 missed its 10 s limit once (10.098 s) on a 10 core Mac at load 50 to 98 while passing on CI; a frozen client is reported lost within 15 s, the pool still calls it lost after 5 s without an ack; chosen over keeping 10 s (recommended) and measuring from the last ack
+  - id: run-id-and-failure
+    what: "Yes, this shape (Recommended)"
+    why: Finish review found a failed boot recorded as test JVMs ending, xtask telling runs apart by timestamps and the cause by searching pool.log, and only the game runner reading ended; TestRun carries run_id (made by xtask, passed as -Pplaytest.runId), a run level failure the pool writes when the game cannot run, and cut_short in place of ended (false by default, set only by the game pool), judged once in results for every suite and the pull request evidence
+  - id: one-pool-per-run
+    what: "Pool waits, file continues (Recommended)"
+    why: The pool stopped once its last session left, so a later module's test JVM started a second pool that rewrote the run file from empty; the pool waits 60 s after its last session for another session of the same run, and a pool that starts later for the same run_id loads the run file and adds to it
+  - id: wire-in-skir
+    what: "skir everywhere but no spike needed."
+    why: The four game parts spoke a hand written Java wire (52 messages, about 800 codec lines, 4 run file types copied from test_run.skir, one drifted) outside the Skir contract boundary; the wire's messages move into a harness Skir file, every part uses the generated types, the Paper plugin bundles the Kotlin and Skir runtimes, and the hand codec, the copies and the run file translation go
+  - id: full-send-finish
+    what: "Also you can full send this."
+    why: The developer handed the rest of Finish over; the defaults taken without asking are the decided items below, each the recommendation or the smallest change that meets the goal
+  - id: probes-stay-closed-until-l3
+    what: Probes stay a closed set for now; an open probe registry is an open question for L3
+    why: Finish review (think bigger) found L3 and extensions cannot add setup without editing the framework; nothing needs it before L3, and the wire's move into Skir changes how an open body would travel, so L3 designs it
+  - id: positive-check-per-requirement
+    what: A requirement that made no positive check fails; HEAP-1 becomes a unit test of the commands the pool builds
+    why: The never-needs-positive decision is per requirement but was enforced per window, so a requirement without a window passed with no check; HEAP-1 checked harness flags through jcmd with no perceived check, and the lowest layer that sees a part's flag is the command the pool builds for it
+  - id: one-submission-owner
+    what: The pool gets one Submission object with one finish(outcome)
+    why: One submission's state was spread over five maps with five end paths repeating record, forget and release; no behaviour changes
+  - id: docs-in-finish
+    what: Finish also updates the testing and dev loop skills, services/DEVELOPMENT.md, the gameTest helper lint, the design README's description of the built framework, L3's obligations, and copies every prototype result into docs/design/game-verification/spikes before the branches go
+    why: Finish review (typewriter) found nothing outside the design folder knew the game layer, obligations on Typewriter had not reached the layer docs, and the record's evidence pointed at branches Finish deletes
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
 open:
   - id: quiet-hook
     ask: The old draft dropped the test side quiet hook (done signal from Paper's SubjectWork only). Keep that?
+  - id: open-probes
+    ask: "L3: should probes become an open registry (plugins register named probe handlers) so Typewriter and extensions set up their own state without editing the framework?"
+  - id: async-work-one-executor
+    ask: Paper's async player work is tracked three ways (ChatWork reflection, SuggestionWork's copied rules, the command tree queue poll); would one counted executor installed by the step agent cover all three? Needs a small spike.
 
 slices:
   - id: walking-skeleton
