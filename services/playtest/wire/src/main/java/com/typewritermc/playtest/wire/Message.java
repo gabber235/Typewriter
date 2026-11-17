@@ -41,8 +41,16 @@ public sealed interface Message {
         Reply withRequest(long request);
     }
 
-    /** The first message on every connection to the pool. */
+    /** The first message on every connection to the pool. A session names its run. */
     record Hello(Role role, String name) implements Message {}
+
+    /**
+     * Session to pool, right after its {@link Hello}: the run's file and the policy its attempts are
+     * made under. The pool writes the run there after every attempt it records, so a pool that dies
+     * leaves the attempts that ended. Every session of one run names the same file and policy; the pool
+     * refuses a session that names others.
+     */
+    record Join(String testRunFile, AttemptPolicy policy) implements Message {}
 
     /** Pool to session: the game cannot run; every requirement of the session fails with this reason. */
     record Refused(String reason) implements Message {}
@@ -151,8 +159,8 @@ public sealed interface Message {
         public enum Kind { RERUN_FAILURES, EXACTLY }
     }
 
-    /** Session to pool: the session is done; the pool writes its run, made under {@code policy}, into {@code testRunFile}. */
-    record End(String run, String testRunFile, AttemptPolicy policy) implements Message {}
+    /** Session to pool: the session is done; once every session of its run is, the pool marks the run file ended. */
+    record End() implements Message {}
 
     /** Pool to session: the run file is written. */
     record Ended() implements Message {}

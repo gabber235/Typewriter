@@ -11,6 +11,9 @@ struct TestRun(85010001) {
   // Where the run's logs lie (for the game runner the pool's, Paper's and each client's), relative to
   // the folder of the run file; empty when the run names none.
   logs: string;
+  // Whether the runner wrote the whole run. A game run reads false until its last session ended, so a
+  // file a crashed pool left behind holds the cases that finished and says the run was cut short.
+  ended: bool;
 }
 
 enum AttemptPolicy(85010002) {

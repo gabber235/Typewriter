@@ -194,6 +194,7 @@ pub(crate) fn own_run(ran: &Ran) -> Result<TestRun> {
         return Ok(TestRun {
             runner: Runner::Game,
             started_at_millis: ran.started_millis,
+            ended: true,
             ..TestRun::default()
         });
     }
@@ -267,7 +268,7 @@ pub(crate) fn next_run_folder(runs: &Path) -> Result<PathBuf> {
 }
 
 /// The suite's verdict on its `run`: each case under the run's attempt policy and the quarantine,
-/// the selection, a run that ran no requirement, and a Gradle failure that no failing case explains, such as a test JVM that
+/// the selection, a run that ran no requirement, a run the pool never ended, and a Gradle failure that no failing case explains, such as a test JVM that
 /// ended before it ran its requirements.
 pub(crate) fn judge(
     run: &TestRun,
@@ -284,14 +285,24 @@ pub(crate) fn judge(
             shown.join("test_run.json").display()
         );
     }
-    verdict(
+    let judged = verdict(
         "game",
         &shown.join("test_run.json"),
         run,
         quarantine,
         shown,
         out,
-    )?;
+    );
+    // The pool marks the run ended once its last session ended; a pool that died first left the
+    // cases that finished, whose evidence still stages, and none of the rest.
+    if !run.ended {
+        bail!(
+            "game: the run was cut short after {} cases: the game pool stopped before every test JVM ended its session; see {}",
+            run.cases.len(),
+            shown.join(&run.logs).join("pool.log").display()
+        );
+    }
+    judged?;
     if !gradle.success() {
         bail!(
             "game: every reported requirement passed, but Gradle failed with {gradle}; its output above says why"
@@ -529,6 +540,33 @@ mod tests {
             &mut Vec::new(),
         ));
         assert!(error.contains("Gradle failed"), "{error}");
+    }
+
+    #[test]
+    fn a_run_the_pool_never_ended_fails_as_cut_short_after_its_finished_cases() {
+        let finished = TestRun {
+            ended: false,
+            logs: "logs/4".to_owned(),
+            ..game_run(
+                AttemptPolicy::RerunFailures(4),
+                &[
+                    ("PROBE-1", &[Outcome::Passed]),
+                    ("WINDOW-1", &[Outcome::Passed]),
+                ],
+            )
+        };
+
+        let error = refusal(judge(
+            &finished,
+            exited(1),
+            &[],
+            &Quarantine::default(),
+            Path::new("results/game"),
+            &mut Vec::new(),
+        ));
+
+        assert!(error.contains("cut short after 2 cases"), "{error}");
+        assert!(error.contains("results/game/logs/4/pool.log"), "{error}");
     }
 
     #[test]

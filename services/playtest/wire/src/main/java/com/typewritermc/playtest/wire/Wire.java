@@ -31,6 +31,7 @@ import com.typewritermc.playtest.wire.Message.Input;
 import com.typewritermc.playtest.wire.Message.InputDone;
 import com.typewritermc.playtest.wire.Message.InputStep;
 import com.typewritermc.playtest.wire.Message.Item;
+import com.typewritermc.playtest.wire.Message.Join;
 import com.typewritermc.playtest.wire.Message.Joined;
 import com.typewritermc.playtest.wire.Message.Key;
 import com.typewritermc.playtest.wire.Message.KeyStep;
@@ -216,11 +217,10 @@ public final class Wire {
                 strings(body, result.screenshots());
                 strings(body, result.clips());
             }
-            case End end -> {
-                string(body, end.run());
-                string(body, end.testRunFile());
-                body.writeByte(end.policy().kind().ordinal());
-                body.writeInt(end.policy().attempts());
+            case Join join -> {
+                string(body, join.testRunFile());
+                body.writeByte(join.policy().kind().ordinal());
+                body.writeInt(join.policy().attempts());
             }
             case Probe probe -> {
                 body.writeLong(probe.request());
@@ -346,6 +346,7 @@ public final class Wire {
                 string(body, seen.player());
                 body.writeInt(seen.barrier());
             }
+            case End end -> {}
             case Ended ended -> {}
             case Joined joined -> {}
             case Stepping stepping -> {}
@@ -400,6 +401,7 @@ public final class Wire {
             case Result m -> 4;
             case End m -> 5;
             case Ended m -> 6;
+            case Join m -> 21;
             case Probe m -> 7;
             case ProbeDone m -> 8;
             case StepUntil m -> 9;
@@ -467,8 +469,9 @@ public final class Wire {
                 yield new Lease(submission, List.copyOf(players), region(in), string(in));
             }
             case 4 -> new Result(in.readLong(), in.readLong(), optional(in), optional(in), steps(in), string(in), strings(in), strings(in));
-            case 5 -> new End(string(in), string(in), new AttemptPolicy(policyKind(in.readUnsignedByte()), in.readInt()));
+            case 5 -> new End();
             case 6 -> new Ended();
+            case 21 -> new Join(string(in), new AttemptPolicy(policyKind(in.readUnsignedByte()), in.readInt()));
             case 7 -> new Probe(in.readLong(), uuids(in), action(in));
             case 8 -> new ProbeDone(in.readLong(), in.readInt(), optional(in));
             case 9 -> new StepUntil(uuid(in), in.readInt(), in.readInt());

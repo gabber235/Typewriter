@@ -643,6 +643,7 @@ fn run_step(ctx: &Context, step: &Step, logs: &Path, commit: &str) -> bool {
             ..TestCase::default()
         }],
         logs: String::new(),
+        ended: true,
         _unrecognized: None,
     };
     let path = ctx.root.join(format!(".xtask/results/steps/{name}.json"));

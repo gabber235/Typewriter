@@ -18,6 +18,7 @@ import com.typewritermc.playtest.wire.Message.End
 import com.typewritermc.playtest.wire.Message.Ended
 import com.typewritermc.playtest.wire.Message.Hello
 import com.typewritermc.playtest.wire.Message.HungEnded
+import com.typewritermc.playtest.wire.Message.Join
 import com.typewritermc.playtest.wire.Message.Joined
 import com.typewritermc.playtest.wire.Message.Lease
 import com.typewritermc.playtest.wire.Message.LeaseExpired
@@ -213,7 +214,10 @@ internal class Pool(
     private val clients =
         (1..settings.clients).map { Client(Player("gv-$it", UUID.nameUUIDFromBytes("OfflinePlayer:gv-$it".toByteArray()))) }
     private val claims = Claims<Peer, Player>(clients.map { it.player })
-    private val runs = RunRecords()
+    private val runs = RunRecords(stillOut = { run -> stillOut(run) })
+
+    /** Sessions the pool refused as they joined: what they still send is dropped until they leave. */
+    private val refused = mutableSetOf<Peer>()
 
     // What each submission's attempt covered: its Paper's reads, and the lines they came to at its last settle.
     private val coverage = Coverage<Pair<Peer, Long>>()
@@ -318,7 +322,6 @@ internal class Pool(
         when (peer.role) {
             Role.SESSION -> {
                 lifetime.joined(peer)
-                runs.started(peer.hello.name())
                 failure?.let { peer.send(Refused(it)) }
             }
 
@@ -349,8 +352,11 @@ internal class Pool(
         message: Message,
     ) {
         when (peer.role) {
-            Role.SESSION -> fromSession(peer, message)
+            // What a refused session still sends is dropped until it leaves.
+            Role.SESSION -> if (peer !in refused) fromSession(peer, message)
+
             Role.PAPER -> serverOf(peer)?.let { fromPaper(it, message) }
+
             Role.CLIENT -> clients.firstOrNull { it.peer == peer }?.let { fromClient(it, message) }
         }
     }
@@ -360,12 +366,16 @@ internal class Pool(
         message: Message,
     ) {
         when (message) {
+            is Join -> {
+                join(session, message)
+            }
+
             is Queue -> {
                 queue(session, message.together())
             }
 
             is End -> {
-                runs.ended(message.run(), Path.of(message.testRunFile()), message.policy(), stillOut(message.run()))
+                runs.ended(session.hello.name(), session)
                 session.send(Ended())
             }
 
@@ -387,23 +397,42 @@ internal class Pool(
             }
 
             is Result -> {
-                val attempt = attemptOf(session, message.submission()) ?: return
-                val claimed = timings.remove(session to message.submission())?.steps.orEmpty()
-                runs.record(
-                    session.hello.name(),
-                    attempt.submit,
-                    message,
-                    claimed + listOfNotNull(coverage.cost(attempt.key)),
-                    coverage.latest(attempt.key),
-                )
-                coverage.forget(attempt.key)
-                release(attempt, "its session sent its result")
+                result(session, message)
             }
 
             else -> {
                 toGame(session, message)
             }
         }
+    }
+
+    /** [session] joins its run, which refuses it when the run's other sessions named another file or policy. */
+    private fun join(
+        session: Peer,
+        join: Join,
+    ) {
+        val reason = runs.joined(session.hello.name(), session, Path.of(join.testRunFile()), join.policy()) ?: return
+        refused += session
+        session.send(Refused(reason))
+        session.close()
+    }
+
+    /** [session]'s attempt ended with [result]: the run records it and its players serve the next claims. */
+    private fun result(
+        session: Peer,
+        result: Result,
+    ) {
+        val attempt = attemptOf(session, result.submission()) ?: return
+        val claimed = timings.remove(session to result.submission())?.steps.orEmpty()
+        runs.record(
+            session.hello.name(),
+            attempt.submit,
+            result,
+            claimed + listOfNotNull(coverage.cost(attempt.key)),
+            coverage.latest(attempt.key),
+        )
+        coverage.forget(attempt.key)
+        release(attempt, "its session sent its result")
     }
 
     /** Queues the claim of the attempts in [together], side by side, or declines each at once when the pool could never serve them. */
@@ -702,7 +731,8 @@ internal class Pool(
             // What it asked gets no answers, and what its attempts covered goes with it.
             Role.SESSION -> {
                 lifetime.left(peer)
-                abandon(peer)
+                // A refused session never joined its run, so it leaves nothing in the run's file.
+                if (!refused.remove(peer)) abandon(peer)
                 claims.leave(peer)
                 queued.keys.removeAll { it.first == peer }
                 timings.keys.removeAll { it.first == peer }
@@ -728,20 +758,18 @@ internal class Pool(
     }
 
     /**
-     * [session] left before every attempt it submitted ended, as a killed test JVM does: each such attempt
+     * [session] left. Each attempt it submitted that had not ended, as a killed test JVM leaves them,
      * fails in its run's file, so the run never reads as complete without them.
      */
     private fun abandon(session: Peer) {
         val unfinished =
             queued.filterKeys { it.first == session }.values.map { it.submit } +
                 (attempts.all + parked).filter { it.session == session }.map { it.submit }
-        if (unfinished.isEmpty()) return
-        val run = session.hello.name()
         runs.abandoned(
-            run,
+            session.hello.name(),
+            session,
             unfinished.distinctBy { it.submission() },
             "its test JVM ended before the attempt did; see ${settings.poolLog}",
-            stillOut(run),
         )
     }
 

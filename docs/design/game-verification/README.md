@@ -162,6 +162,14 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   1.0 GB to 3.8 GB for about 46 s (run 44019397538). Compiling inside Gradle frees nothing, as the
   Gradle daemon grows by what the daemons held. It never runs `--stop`, which would stop other
   worktrees' builds.
+- **The pool stays attached to its starter** (2026-11-17): the test JVM starts the pool without `setsid`.
+  It outlives its starter's normal exit anyway, since the system reparents an orphan, and staying in the
+  starter's process tree is what lets Gradle's cancel stop it: Gradle destroys every descendant by pid.
+- **A run file survives a pool crash** (2026-11-17): a session names the run file and attempt policy in a
+  `Join` right after its `Hello`, and the pool refuses a session of the run that names others. The pool
+  rewrites the file atomically after every attempt it records and marks it `ended` once every session of
+  the run ended or left; other runners always write `ended`. `cargo xtask e2e game` fails a file without
+  the mark as cut short after its finished cases, whose evidence still stages.
 - **Selection** is testBalloon's (2026-11-15): `cargo xtask e2e game --only` passes each id as a test
   pattern, and the framework holds no selection code. A game module the selection leaves empty passes,
   as Gradle's "no matching tests" check is off for gameTest tasks; xtask's selection check names each

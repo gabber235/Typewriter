@@ -22,28 +22,50 @@ import java.nio.file.StandardCopyOption
 
 /**
  * The attempts of every run the pool served, kept per run id. Every attempt of one case, a requirement
- * retried or repeated, lands in that case, and its demo in the case's demo. A session's end writes its run's file, and the file is
- * written again whenever a later session of the run ends or leaves without ending, so the last file
- * holds every attempt the run made.
+ * retried or repeated, lands in that case, and its demo in the case's demo. Each session names its
+ * run's file as it joins, and the file is written again after every attempt the run records, so a
+ * pool that dies leaves the attempts that ended. It reads as ended once every session of the run
+ * ended or left; [stillOut] names the players each run's hung work keeps out of the pool.
  */
 internal class RunRecords(
     private val clock: () -> Long = System::currentTimeMillis,
+    private val stillOut: (run: String) -> Map<String, String> = { mapOf() },
 ) {
     private class Run(
         val startedAtMillis: Long,
     ) {
         val cases = linkedMapOf<String, TestCase>()
 
-        /** Where the run's file goes and how its attempts were made, once a session of the run ended. */
+        /** Where the run's file goes and how its attempts are made, as its first session named them. */
         var file: Path? = null
         var policy: Message.AttemptPolicy? = null
+
+        /** The sessions of the run that joined and have neither ended nor left. */
+        val open = mutableSetOf<Any>()
     }
 
     private val runs = mutableMapOf<String, Run>()
 
-    /** A session of [run] joined; the run starts with its first session. */
-    fun started(run: String) {
-        runOf(run)
+    /**
+     * [session] joined [run], naming its [file] and [policy]; the run starts with its first session.
+     * Returns why the session is refused when the run's first session named another file or policy.
+     */
+    fun joined(
+        run: String,
+        session: Any,
+        file: Path,
+        policy: Message.AttemptPolicy,
+    ): String? {
+        val record = runOf(run)
+        val named = record.file
+        if (named != null && (named != file || record.policy != policy)) {
+            return "this session names the run file $file under ${policy.said}, but run $run writes $named under " +
+                "${record.policy?.said}: every session of a run names the same file and policy"
+        }
+        record.file = file
+        record.policy = policy
+        record.open += session
+        return null
     }
 
     /**
@@ -69,40 +91,28 @@ internal class RunRecords(
             result.clips(),
             covered,
         )
+        write(run)
     }
 
-    /**
-     * A session of [run] left before [unfinished] ended: each gets a failed attempt saying [reason], and
-     * the run's file is written again once a session of the run named it.
-     */
+    /** [session] left before [unfinished] ended: each gets a failed attempt saying [reason]. */
     fun abandoned(
         run: String,
+        session: Any,
         unfinished: List<Submit>,
         reason: String,
-        stillOut: Map<String, String> = mapOf(),
     ) {
         unfinished.forEach { add(run, it, Outcome.createFailed(message = reason, firstBroken = null), 0, listOf()) }
-        val record = runOf(run)
-        val file = record.file ?: return
-        val policy = record.policy ?: return
-        write(record, file, policy, stillOut)
+        runOf(run).open -= session
+        write(run)
     }
 
-    /**
-     * A session of [run] ended: writes the run, made under [policy], as a `TestRun` into [file],
-     * replacing what an earlier session of the run wrote. Each note in [stillOut] joins the failure of
-     * the case its test id names: a player that case's hung work keeps out of the pool.
-     */
+    /** [session] of [run] ended. */
     fun ended(
         run: String,
-        file: Path,
-        policy: Message.AttemptPolicy,
-        stillOut: Map<String, String> = mapOf(),
+        session: Any,
     ) {
-        val record = runOf(run)
-        record.file = file
-        record.policy = policy
-        write(record, file, policy, stillOut)
+        runOf(run).open -= session
+        write(run)
     }
 
     private fun runOf(run: String): Run = runs.getOrPut(run) { Run(clock()) }
@@ -145,21 +155,22 @@ internal class RunRecords(
         cases[submit.testId()] = if (submit.demo()) case.copy(demo = attempt) else case.copy(attempts = case.attempts + attempt)
     }
 
-    private fun write(
-        record: Run,
-        file: Path,
-        policy: Message.AttemptPolicy,
-        stillOut: Map<String, String>,
-    ) {
+    /** Writes [run] as a `TestRun` into the file its sessions named, once one did. */
+    private fun write(run: String) {
+        val record = runOf(run)
+        val file = record.file ?: return
+        val policy = record.policy ?: return
+        val notes = stillOut(run)
         val testRun =
             TestRun(
                 runner = Runner.GAME,
                 commit = "",
                 startedAtMillis = record.startedAtMillis,
                 attemptPolicy = policy.inRun,
-                cases = record.cases.values.map { case -> stillOut[case.id]?.let { note -> case.noting(note) } ?: case },
+                cases = record.cases.values.map { case -> notes[case.id]?.let { note -> case.noting(note) } ?: case },
                 // `cargo xtask e2e game` names the commit and the run's logs folder, as it chose both.
                 logs = "",
+                ended = record.open.isEmpty(),
             )
         Files.createDirectories(file.toAbsolutePath().parent)
         val partial = file.resolveSibling("${file.fileName}.partial")
@@ -183,6 +194,13 @@ internal class RunRecords(
                 Message.Demonstrates.HAPPY_PATH -> Demonstrates.HAPPY_PATH
                 Message.Demonstrates.FAILURE -> Demonstrates.FAILURE
                 Message.Demonstrates.EDGE_CASE -> Demonstrates.EDGE_CASE
+            }
+
+    private val Message.AttemptPolicy.said: String
+        get() =
+            when (kind()) {
+                Message.AttemptPolicy.Kind.RERUN_FAILURES -> "reruns up to ${attempts()} attempts"
+                Message.AttemptPolicy.Kind.EXACTLY -> "exactly ${attempts()} attempts"
             }
 
     private val Message.AttemptPolicy.inRun: AttemptPolicy

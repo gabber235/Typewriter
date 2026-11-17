@@ -36,6 +36,7 @@ pub fn run(
         attempt_policy: AttemptPolicy::Exactly(1),
         cases,
         logs: String::new(),
+        ended: true,
         _unrecognized: None,
     })
 }

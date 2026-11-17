@@ -540,6 +540,7 @@ impl Suite<'_> {
             commit: self.commit.clone(),
             started_at_millis,
             cases,
+            ended: true,
             ..TestRun::default()
         })
     }

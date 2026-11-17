@@ -32,6 +32,7 @@ import com.typewritermc.playtest.wire.Message.HungEnded
 import com.typewritermc.playtest.wire.Message.Input
 import com.typewritermc.playtest.wire.Message.InputDone
 import com.typewritermc.playtest.wire.Message.Item
+import com.typewritermc.playtest.wire.Message.Join
 import com.typewritermc.playtest.wire.Message.Joined
 import com.typewritermc.playtest.wire.Message.Key
 import com.typewritermc.playtest.wire.Message.KeyStep
@@ -183,8 +184,9 @@ val WireTest by testSuite {
                     listOf("sidebar.png", "sidebar.diff.png"),
                     listOf("clips/gv-1.mp4"),
                 ),
-                End("run-1", "/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.RERUN_FAILURES, 4)),
-                End("run-2", "/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.EXACTLY, 3)),
+                Join("/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.RERUN_FAILURES, 4)),
+                Join("/tmp/results/test_run.json", AttemptPolicy(AttemptPolicy.Kind.EXACTLY, 3)),
+                End(),
                 Ended(),
                 Probe(3, listOf(player, UUID(1, 2)), ProbeChat("Hello")),
                 Probe(4, listOf(player), ProbeGameMode("survival")),
