@@ -235,7 +235,8 @@ internal class Attempt(
                 throw GoldenDiffers(
                     "${player.name}'s frame fails golden $name: ${verdict.reason}. The frame is $png" +
                         (diff?.let { ", its diff $it" } ?: "") +
-                        "; `cargo xtask goldens approve` makes it the golden when the change is meant.",
+                        "; when the change is meant, `cargo xtask goldens approve --pr <n>` makes the pull request's CI " +
+                        "frame the golden (`cargo xtask goldens approve` takes this machine's last run on the pinned renderer).",
                 )
             }
         }

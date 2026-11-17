@@ -1,4 +1,5 @@
-//! `cargo xtask goldens approve`: records the frames a game run captured as the approved goldens.
+//! `cargo xtask goldens approve`: records the frames a game run captured as the approved goldens,
+//! from a local run or, with `--pr`, from the game results of a pull request's latest CI run.
 //! A requirement that names a golden writes its frame as a PNG into its attempt's folder, beside a
 //! `<name>.golden` file that says which golden file of the repository it belongs to, the frame's
 //! hash and size, the renderer that drew it, and whether that is the pinned renderer, as the run
@@ -41,6 +42,12 @@ const GOLDEN_KEYS: [&str; 8] = [
     "sha256", "width", "height", "backend", "device", "driver", "os", "arch",
 ];
 
+/// The artifact CI's game job uploads its staged results as.
+const GAME_ARTIFACT: &str = "results-e2e-game";
+
+/// Where `approve --pr` downloads a pull request's game frames, relative to the repository root.
+const PULL_REQUEST_FRAMES: &str = ".xtask/state/goldens";
+
 #[derive(clap::Subcommand)]
 pub enum GoldensCommand {
     /// Records each golden a game run captured: its golden file takes the frame's hash, size and
@@ -48,15 +55,25 @@ pub enum GoldensCommand {
     Approve {
         /// The run's folder; the last `cargo xtask e2e game` run's by default.
         from: Option<PathBuf>,
+        /// Approves the frames the latest CI run of this pull request's head captured, which ran
+        /// on the pinned runner, instead of a local run.
+        #[arg(long, conflicts_with = "from")]
+        pr: Option<u64>,
     },
 }
 
 pub fn run(ctx: &Context, command: &GoldensCommand) -> Result<()> {
     match command {
-        GoldensCommand::Approve { from } => {
-            let from = from
-                .clone()
-                .unwrap_or_else(|| ctx.root.join(evidence::RESULTS).join("game"));
+        GoldensCommand::Approve { from, pr } => {
+            let from = match (from, pr) {
+                (Some(from), _) => from.clone(),
+                (None, Some(pr)) => pull_request_frames(
+                    *pr,
+                    &ctx.root.join(PULL_REQUEST_FRAMES).join(format!("pr-{pr}")),
+                    |args| ctx.tool(".", "gh", args).output_text(),
+                )?,
+                (None, None) => ctx.root.join(evidence::RESULTS).join("game"),
+            };
             let approved = approve(&ctx.root, &from, &ctx.root.join(IMAGES))?;
             for golden in &approved {
                 println!("goldens: approved {}", golden.golden);
@@ -71,6 +88,66 @@ pub fn run(ctx: &Context, command: &GoldensCommand) -> Result<()> {
             Ok(())
         }
     }
+}
+
+/// Downloads into `into` the game results the latest CI run of pull request `pr`'s head staged,
+/// through `gh`, and returns the folder of the game run in it, which approve reads as it reads a
+/// local run.
+fn pull_request_frames(
+    pr: u64,
+    into: &Path,
+    gh: impl Fn(&[&str]) -> Result<String>,
+) -> Result<PathBuf> {
+    let pr_number = pr.to_string();
+    let head = gh(&[
+        "pr",
+        "view",
+        &pr_number,
+        "--repo",
+        REPOSITORY,
+        "--json",
+        "headRefOid",
+        "--jq",
+        ".headRefOid",
+    ])?;
+    let head = head.trim();
+    let run = gh(&[
+        "run",
+        "list",
+        "--repo",
+        REPOSITORY,
+        "--workflow",
+        "ci.yml",
+        "--commit",
+        head,
+        "--limit",
+        "1",
+        "--json",
+        "databaseId",
+        "--jq",
+        ".[0].databaseId",
+    ])?;
+    let run = run.trim();
+    if run.is_empty() {
+        bail!("pull request {pr} has no CI run of its head {head} yet");
+    }
+    if into.exists() {
+        fs::remove_dir_all(into).with_context(|| format!("cannot clear {}", into.display()))?;
+    }
+    let dir = into.to_string_lossy();
+    gh(&[
+        "run",
+        "download",
+        run,
+        "--repo",
+        REPOSITORY,
+        "--name",
+        GAME_ARTIFACT,
+        "--dir",
+        &dir,
+    ])
+    .with_context(|| format!("cannot download the game results of CI run {run}"))?;
+    Ok(into.join("game"))
 }
 
 /// A golden [`approve`] wrote: its golden file, relative to the repository root, and the local image
@@ -417,7 +494,7 @@ mod tests {
 
     use std::cell::RefCell;
 
-    use super::{approve, fetch_into, named_on, place};
+    use super::{approve, fetch_into, named_on, place, pull_request_frames};
     use crate::test_support::{TempRoot, captured_golden};
 
     const SIDEBAR: &str = "golden=services/playtest/framework/src/gameTest/goldens/sidebar.golden
@@ -647,5 +724,53 @@ pinned=true
         used.sort();
 
         assert_eq!(used, ["on-develop", "on-features"]);
+    }
+
+    #[test]
+    fn approve_of_a_pull_request_downloads_the_game_frames_of_its_latest_ci_run() {
+        let root = TempRoot::new();
+        let asked = RefCell::new(Vec::new());
+
+        let frames = pull_request_frames(546, &root.path("pr-546"), |args: &[&str]| {
+            asked.borrow_mut().push(args.join(" "));
+            Ok(match args[0] {
+                "pr" => "4e61bf0971\n".to_owned(),
+                "run" if args[1] == "list" => "44063821447\n".to_owned(),
+                _ => String::new(),
+            })
+        })
+        .unwrap();
+
+        let asked = asked.into_inner();
+        assert!(asked[0].starts_with("pr view 546 "), "{asked:?}");
+        assert!(asked[1].contains("--workflow ci.yml"), "{asked:?}");
+        assert!(asked[1].contains("--commit 4e61bf0971"), "{asked:?}");
+        assert!(
+            asked[2].starts_with("run download 44063821447 ")
+                && asked[2].contains("--name results-e2e-game"),
+            "{asked:?}"
+        );
+        assert_eq!(frames, root.path("pr-546/game"));
+    }
+
+    #[test]
+    fn approve_of_a_pull_request_without_a_ci_run_says_so() {
+        let root = TempRoot::new();
+
+        let error = pull_request_frames(546, &root.path("pr-546"), |args: &[&str]| {
+            Ok(if args[0] == "pr" {
+                "4e61bf0971\n"
+            } else {
+                "\n"
+            }
+            .to_owned())
+        })
+        .unwrap_err()
+        .to_string();
+
+        assert_eq!(
+            error,
+            "pull request 546 has no CI run of its head 4e61bf0971 yet"
+        );
     }
 }

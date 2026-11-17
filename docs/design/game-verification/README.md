@@ -134,8 +134,10 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   checked" with its renderer. CI's game job is the pinned runner and says so (`PLAYTEST_PINNED_RUNNER=1`),
   so there a frame from another renderer fails with the renderer it saw: a runner that drifts from the
   pin cannot let every golden pass unchecked. Each captured frame's candidate says whether the pinned renderer drew it, and
-  `cargo xtask goldens approve` refuses any it did not. A nixpkgs Mesa upgrade fails every golden, and
-  the upgrade pull request approves them again.
+  `cargo xtask goldens approve` refuses any it did not. `cargo xtask goldens approve --pr <n>` downloads
+  the game results of the pull request's latest CI run and approves from them; without `--pr` it reads
+  the last local run. A nixpkgs Mesa upgrade fails every golden, and the upgrade pull request approves
+  them again.
 - **Golden images live on the evidence branch** (2026-11-17): the repository holds only a golden's
   hash, size and renderer. `cargo xtask goldens approve` also pushes the frame to the `evidence` branch
   as `goldens/<hash>.png`, beside the pull request folders pruning empties, and `cargo xtask e2e game`
