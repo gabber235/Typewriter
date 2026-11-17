@@ -10,6 +10,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.selects.select
+import skirout.harness.v1.test_run.Artifact
+import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.wire.InputStep
 import skirout.harness.v1.wire.Message
@@ -228,6 +230,7 @@ internal class Attempt(
         val (png, frame, renderer) = capture(player, name)
         val goldens = session.goldens
         Golden.writeCandidate(evidence.file("$name.golden"), goldens.file(name), png.fileName.toString(), frame, renderer, goldens.pinned)
+        evidence.artifacts += Artifact(kind = ArtifactKind.GOLDEN, path = "$name.golden")
         val golden = goldens.golden(name)
         val says = "golden $name of ${player.name}"
         when (val verdict = judge(golden, golden?.let(goldens::image), frame, renderer, goldens.pinned)) {
@@ -241,7 +244,7 @@ internal class Attempt(
 
             is GoldenVerdict.Differs -> {
                 val diff = verdict.diff?.let { marked -> evidence.file("$name.diff.png").also(marked::writePng) }
-                diff?.let { evidence.screenshots += it.fileName.toString() }
+                diff?.let { evidence.artifacts += Artifact(kind = ArtifactKind.SCREENSHOT, path = it.fileName.toString()) }
                 took(at, "$says fails: ${verdict.reason}")
                 throw GoldenDiffers(
                     "${player.name}'s frame fails golden $name: ${verdict.reason}. The frame is $png" +
@@ -261,7 +264,7 @@ internal class Attempt(
         called()
         val png = evidence.file("$name.png")
         val renderer = unlessLost { session.capture(player, png) }
-        evidence.screenshots += png.fileName.toString()
+        evidence.artifacts += Artifact(kind = ArtifactKind.SCREENSHOT, path = png.fileName.toString())
         return Captured(png, Frame.readPng(png), renderer)
     }
 
@@ -304,7 +307,7 @@ internal class Attempt(
             val failure = written.failure
             when {
                 failure != null -> failed = failed ?: ClipFailed("${player.name}'s clip was not written: $failure")
-                written.frames > 0 -> evidence.clips += clip
+                written.frames > 0 -> evidence.artifacts += Artifact(kind = ArtifactKind.CLIP, path = clip)
             }
         }
         clips.clear()

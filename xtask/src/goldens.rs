@@ -1,9 +1,9 @@
 //! `cargo xtask goldens approve`: records the frames a game run captured as the approved goldens,
 //! from a local run or, with `--pr`, from the game results of a pull request's latest CI run.
 //! A requirement that names a golden writes its frame as a PNG into its attempt's folder, beside a
-//! `<name>.golden` file that says which golden file of the repository it belongs to, the frame's
-//! hash and size, the renderer that drew it, and whether that is the pinned renderer, as the run
-//! judged it. Approving writes the hash, size and renderer into that golden file, keeps the PNG
+//! `<name>.golden` candidate, which the run file lists as the attempt's golden artifact, that says
+//! which golden file of the repository it belongs to, the frame's hash and size, the renderer that
+//! drew it, and whether that is the pinned renderer, as the run judged it. Approving writes the hash, size and renderer into that golden file, keeps the PNG
 //! among the local golden images under its hash, and pushes it to the evidence branch as
 //! `goldens/<hash>.png`, beside `goldens/<hash>.approved-at`, the moment it was approved, which
 //! the weekly prune reads to drop images no golden names any more; the repository holds only the
@@ -20,6 +20,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use anyhow::{Context as _, Result, bail};
 
 use crate::branch::{BranchCheckout, REPOSITORY};
+use crate::results::{self, ArtifactKind};
 use crate::{CommandExt as _, Context, evidence};
 
 /// The local golden images, each named by its hash, relative to the repository root.
@@ -436,20 +437,17 @@ struct Captured {
     pinned: bool,
 }
 
-/// Every frame captured under `folder`, from the `<name>.golden` files beside the frames.
+/// Every frame the runs under `folder` captured, from the golden candidates their run files list.
 fn captured_under(folder: &Path) -> Result<Vec<Captured>> {
     let mut found = Vec::new();
-    let entries =
-        fs::read_dir(folder).with_context(|| format!("cannot read {}", folder.display()))?;
-    let mut paths = entries
-        .map(|entry| entry.map(|it| it.path()))
-        .collect::<Result<Vec<_>, _>>()?;
-    paths.sort();
-    for path in paths {
-        if path.is_dir() {
-            found.extend(captured_under(&path)?);
-        } else if path.extension().is_some_and(|it| it == "golden") {
-            found.push(read_captured(&path)?);
+    for (path, run) in results::read_all(folder)? {
+        let at = path.parent().context("a run file without a folder")?;
+        for case in &run.cases {
+            for (file, artifact) in results::artifacts(case) {
+                if artifact.kind == ArtifactKind::Golden {
+                    found.push(read_captured(&at.join(file))?);
+                }
+            }
         }
     }
     Ok(found)
@@ -555,6 +553,30 @@ pinned=true
         let approved = approve(&root.ctx.root, &run.ctx.root, &root.path("images")).unwrap();
 
         assert_eq!(approved.len(), 1);
+    }
+
+    #[test]
+    fn approve_takes_only_the_goldens_the_run_file_names() {
+        let (root, run) = (TempRoot::new(), TempRoot::new());
+        captured_golden(
+            &run,
+            "GOLDEN-1 a sidebar/attempt-1/sidebar",
+            SIDEBAR,
+            "png bytes",
+        );
+        run.write(
+            "GOLDEN-1 a sidebar/attempt-1/hotbar.golden",
+            &SIDEBAR.replace("sidebar", "hotbar"),
+        );
+        run.write("GOLDEN-1 a sidebar/attempt-1/hotbar.png", "png bytes");
+
+        let approved = approve(&root.ctx.root, &run.ctx.root, &root.path("images")).unwrap();
+
+        let goldens: Vec<_> = approved.iter().map(|it| it.golden.as_str()).collect();
+        assert_eq!(
+            goldens,
+            ["services/playtest/framework/src/gameTest/goldens/sidebar.golden"]
+        );
     }
 
     #[test]

@@ -1254,8 +1254,7 @@ internal class Pool(
         firstBroken = null,
         steps = listOf(),
         folder = "",
-        screenshots = listOf(),
-        clips = listOf(),
+        artifacts = listOf(),
     )
 
     /** [attempt] ended for [why], and its players serve the next claims. */

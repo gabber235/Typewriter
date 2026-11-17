@@ -246,9 +246,8 @@ internal class PoolSession private constructor(
             failure = failure?.described,
             firstBroken = failure?.let { attempt.requirementLine(it.stackTrace) ?: (it as? WindowMissed)?.at },
             steps = steps,
-            folder = if (evidence.screenshots.isEmpty() && evidence.clips.isEmpty()) "" else evidence.folder,
-            screenshots = evidence.screenshots,
-            clips = evidence.clips,
+            folder = if (evidence.artifacts.isEmpty()) "" else evidence.folder,
+            artifacts = evidence.artifacts,
         )
 
     /**

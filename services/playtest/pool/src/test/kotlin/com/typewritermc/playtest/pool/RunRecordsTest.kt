@@ -51,7 +51,7 @@ val RunRecordsTest by testSuite {
             listOf(Outcome.createFailed(message = "gv-1 did not see chat \"Goodbye\"", firstBroken = "WindowRequirements.kt:17"))
     }
 
-    test("the frames an attempt wrote land in the run file as screenshots in the attempt's folder") {
+    test("the frames and golden candidates an attempt wrote land in the run file as its artifacts in its folder") {
         val records = RunRecords(clock = { 1_000 })
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         records.joined("run-1", "session", file, retries)
@@ -63,7 +63,12 @@ val RunRecordsTest by testSuite {
                 durationMillis = 120,
                 failure = "the frame differs from golden sidebar",
                 folder = "GOLDEN-1/attempt-1",
-                screenshots = listOf("sidebar.png", "sidebar.diff.png"),
+                artifacts =
+                    listOf(
+                        Artifact(kind = ArtifactKind.SCREENSHOT, path = "sidebar.png"),
+                        Artifact(kind = ArtifactKind.GOLDEN, path = "sidebar.golden"),
+                        Artifact(kind = ArtifactKind.SCREENSHOT, path = "sidebar.diff.png"),
+                    ),
             ),
         )
 
@@ -80,6 +85,7 @@ val RunRecordsTest by testSuite {
         attempt.artifacts shouldBe
             listOf(
                 Artifact(kind = ArtifactKind.SCREENSHOT, path = "sidebar.png"),
+                Artifact(kind = ArtifactKind.GOLDEN, path = "sidebar.golden"),
                 Artifact(kind = ArtifactKind.SCREENSHOT, path = "sidebar.diff.png"),
             )
     }
@@ -101,7 +107,7 @@ val RunRecordsTest by testSuite {
                 submission = 2,
                 durationMillis = 640,
                 folder = "PROBE-1-a-chat-line-reaches-the-player/demo",
-                clips = listOf("clips/gv-1.mp4"),
+                artifacts = listOf(Artifact(kind = ArtifactKind.CLIP, path = "clips/gv-1.mp4")),
             ),
         )
 

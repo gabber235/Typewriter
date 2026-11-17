@@ -134,7 +134,9 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   checked" with its renderer. CI's game job is the pinned runner and says so (`PLAYTEST_PINNED_RUNNER=1`),
   so there a frame from another renderer fails with the renderer it saw: a runner that drifts from the
   pin cannot let every golden pass unchecked. Each captured frame's candidate says whether the pinned renderer drew it, and
-  `cargo xtask goldens approve` refuses any it did not. `cargo xtask goldens approve --pr <n>` downloads
+  `cargo xtask goldens approve` refuses any it did not. The run file lists each candidate as a
+  `golden` artifact of its attempt (2026-11-18); staging, publishing and approve read that kind
+  and never look for a `.golden` file beside a frame. `cargo xtask goldens approve --pr <n>` downloads
   the game results of the pull request's latest CI run and approves from them; without `--pr` it reads
   the last local run. A nixpkgs Mesa upgrade fails every golden, and the upgrade pull request approves
   them again.

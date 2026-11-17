@@ -51,7 +51,8 @@ struct Attempt(85010004) {
   // Where the attempt sits in the run's recording, when there is one.
   span: Span?;
   duration_millis: int64;
-  // Clips, screenshots, log excerpts and spans that show the outcome, relative to `folder`.
+  // Clips, screenshots, golden candidates, log excerpts and spans that show the outcome, relative
+  // to `folder`.
   artifacts: [Artifact];
   // Where this attempt's evidence lies, relative to the folder of the run file; empty for
   // that folder itself.
@@ -134,6 +135,9 @@ enum ArtifactKind(85010013) {
   log_excerpt;
   // OTLP JSON spans of the traces an attempt started.
   spans;
+  // What `cargo xtask goldens approve` reads to make a captured frame a golden: the golden file it
+  // is for, the frame's image beside it, its hash and size, and the renderer that drew it.
+  golden;
 }
 
 struct Artifact(85010014) {

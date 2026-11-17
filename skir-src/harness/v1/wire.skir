@@ -5,6 +5,7 @@
 // canonical text form, except where a field says it holds the player's name.
 
 import {
+  Artifact,
   AttemptPolicy,
   CoveredClass,
   Demonstrates,
@@ -242,8 +243,8 @@ struct Region(85020007) {
 // How an attempt ended. `failure` is null for a pass; `first_broken` names the requirement line that
 // failed, when it is known. `steps` are what the attempt's bodies did, in order, each starting with what
 // kind of thing it was: claim, wipe, probe, input, window or settle. `folder` holds the attempt's evidence,
-// relative to the run file's folder, or is empty when it left none; `screenshots` are the frames it wrote
-// there and `clips` the clips its clients recorded there, relative to `folder`.
+// relative to the run file's folder, or is empty when it left none; `artifacts` are the frames, golden
+// candidates and clips it wrote there, relative to `folder`.
 struct Result(85020008) {
   submission: int64;
   duration_millis: int64;
@@ -251,8 +252,7 @@ struct Result(85020008) {
   first_broken: string?;
   steps: [Step];
   folder: string;
-  screenshots: [string];
-  clips: [string];
+  artifacts: [Artifact];
 }
 
 // A session's request to the game, which a `Reply` answers under the same id. The pool hands it on under

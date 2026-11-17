@@ -608,7 +608,10 @@ fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
                 )
             }
             ArtifactKind::Screenshot => format!("![]({})", url(&path)),
-            ArtifactKind::LogExcerpt | ArtifactKind::Spans | ArtifactKind::Unknown(_) => {
+            ArtifactKind::Golden
+            | ArtifactKind::LogExcerpt
+            | ArtifactKind::Spans
+            | ArtifactKind::Unknown(_) => {
                 continue;
             }
         });

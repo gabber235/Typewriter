@@ -2,7 +2,6 @@ package com.typewritermc.playtest.pool
 
 import build.skir.JsonFlavor
 import skirout.harness.v1.test_run.Artifact
-import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.Attempt
 import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.test_run.CoveredClass
@@ -93,8 +92,7 @@ internal class RunRecords(
             result.durationMillis,
             (claimed + result.steps).sortedBy { it.atMillis },
             result.folder,
-            result.screenshots,
-            result.clips,
+            result.artifacts,
             covered,
         )
         write(run)
@@ -160,8 +158,7 @@ internal class RunRecords(
         durationMillis: Long,
         steps: List<Step>,
         folder: String = "",
-        screenshots: List<String> = listOf(),
-        clips: List<String> = listOf(),
+        artifacts: List<Artifact> = listOf(),
         covered: List<CoveredClass> = listOf(),
     ) {
         val attempt =
@@ -169,9 +166,7 @@ internal class RunRecords(
                 outcome = outcome,
                 span = null,
                 durationMillis = durationMillis,
-                artifacts =
-                    screenshots.map { Artifact(kind = ArtifactKind.SCREENSHOT, path = it) } +
-                        clips.map { Artifact(kind = ArtifactKind.CLIP, path = it) },
+                artifacts = artifacts,
                 folder = folder,
                 steps = steps,
                 taps = listOf(),
