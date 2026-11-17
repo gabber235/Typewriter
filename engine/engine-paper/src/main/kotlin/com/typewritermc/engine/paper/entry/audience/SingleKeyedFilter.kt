@@ -62,7 +62,7 @@ abstract class SingleKeyedFilter<E : AudienceFilterEntry, K, D : PlayerSingleKey
             addPlayerToDisplay(player, newKey)
         }
 
-        displays.values.forEach { it.tick() }
+        displays.values.filter { it.ref == ref }.forEach { it.tick() }
     }
 
     override fun onPlayerRemove(player: Player) {
@@ -80,7 +80,7 @@ abstract class PlayerSingleKeyedDisplay<E : AudienceFilterEntry, K>(
     protected val player: Player,
     private val key: K,
     private val displayKClass: KClass<out SingleKeyedFilter<E, K, *>>,
-    private var current: Ref<E>,
+    @Volatile private var current: Ref<E>,
 ) : KoinComponent {
     private val audienceManager: AudienceManager by inject()
     val ref: Ref<E> get() = current
