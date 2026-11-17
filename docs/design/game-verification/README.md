@@ -156,7 +156,8 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   shared Paper, at most 2 own Papers, the pool's clients, the pool) hold at most half the machine in
   heap, which a unit test pins for the default 4 clients; the pool refuses to start with more clients
   (`-Pplaytest.clients`) than fit, and names how many do. The pool claims no restart attempt while 2 own Papers have not fully exited.
-  HEAP-1 asks each running JVM for its share. Measured on the 16 GB runner without caps (run
+  A unit test of the command lists the pool builds (`Launches`) and the pool's own (`PoolLauncher`) checks
+  that each part carries its share. Measured on the 16 GB runner without caps (run
   43996334142): the shared Paper peaked at 4.4 GB RSS with its heap committed to 4 GB (the part that
   ran the runner out of memory), a client at 1.7 GB RSS on a 0.54 GB heap, an own Paper at 1.3 GB RSS,
   the pool at 0.3 GB.

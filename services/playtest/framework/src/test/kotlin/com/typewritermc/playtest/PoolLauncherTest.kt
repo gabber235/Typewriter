@@ -1,8 +1,10 @@
 package com.typewritermc.playtest
 
+import com.typewritermc.playtest.wire.HeapShare
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import java.net.SocketTimeoutException
 import java.nio.file.Files
@@ -82,5 +84,9 @@ val PoolLauncherTest by testSuite {
             socket.port shouldBe replacement?.server?.localPort
             replacement?.close()
         }
+    }
+
+    test("the pool's JVM caps its heap at the pool's share of the machine") {
+        PoolLauncher.command(launcherSettings(Files.createTempDirectory("pool"), "this run")) shouldContain HeapShare.POOL.flag()
     }
 }

@@ -158,7 +158,12 @@ internal class Game private constructor(
         folder: PaperFolder,
         flags: List<String>,
         again: Boolean,
-    ): Part = startPaper(settings, poolPort, folder, HeapShare.OWN_PAPER, flags, append = again || continuing).also { running += it }
+    ): Part =
+        startPaper(
+            folder,
+            Launches.ownPaper(settings, poolPort, folder, PaperServer.of(settings.paperDir), coverageOptions(settings, folder.dir), flags),
+            append = again || continuing,
+        ).also { running += it }
 
     /** [part] ended and is no longer a part of the game. */
     @Synchronized
@@ -198,7 +203,18 @@ internal class Game private constructor(
             }
             val paper = PaperFolder("paper", settings.poolDir.resolve("paper"), freePort(), logOf(settings, "paper"))
             preparePaper(settings, paper.dir, paper.port)
-            val paperPart = startPaper(settings, poolPort, paper, HeapShare.PAPER, listOf(), append = continuing)
+            val paperPart =
+                startPaper(
+                    paper,
+                    Launches.sharedPaper(
+                        settings,
+                        poolPort,
+                        paper,
+                        PaperServer.of(settings.paperDir),
+                        coverageOptions(settings, paper.dir),
+                    ),
+                    append = continuing,
+                )
             val started = mutableListOf(paperPart)
             val input = InputPath.here()
             val displays = mutableMapOf<String, Display>()
@@ -268,37 +284,26 @@ internal class Game private constructor(
             dir.resolve("server.properties").writeText(serverProperties(port))
         }
 
-        /**
-         * Starts the Paper in [folder], its heap capped at [share], with [flags] before the rest. It starts the patched server on its
-         * class path directly, as Paperclip would after its patch check: Java's ahead of time cache holds
-         * only classes the JVM's own loaders load, never those of Paperclip's loader.
-         */
+        /** Starts the Paper in [folder] with [command], its output into its log (added to it when [append]). */
         private fun startPaper(
-            settings: PoolSettings,
-            poolPort: Int,
             folder: PaperFolder,
-            share: HeapShare,
-            flags: List<String>,
+            command: List<String>,
             append: Boolean,
-        ): Part {
-            val (name, dir) = folder.name to folder.dir
-            val server = PaperServer.of(settings.paperDir)
-            val command =
-                buildList {
-                    add(settings.java.toString())
-                    add(share.flag())
-                    addAll(flags)
-                    add("-javaagent:${settings.agentJar}")
-                    add("-javaagent:${settings.coverageAgentJar}=${coverageOptions(settings, dir)}")
-                    add("-Dplaytest.pool.port=$poolPort")
-                    add("-Dplaytest.paper.name=$name")
-                    add("-cp")
-                    add(server.classPath.joinToString(File.pathSeparator))
-                    add(server.mainClass)
-                    add("--nogui")
-                }
-            return Part.launch(if (name == "paper") "Paper" else "Paper $name", command, dir, folder.log, mapOf(), append = append)
-        }
+        ): Part =
+            Part.launch(
+                if (folder.name ==
+                    "paper"
+                ) {
+                    "Paper"
+                } else {
+                    "Paper ${folder.name}"
+                },
+                command,
+                folder.dir,
+                folder.log,
+                mapOf(),
+                append = append,
+            )
 
         /**
          * The JaCoCo agent counts only the classes of the plugins Paper loads, never Paper's or
@@ -338,36 +343,7 @@ internal class Game private constructor(
         ): Part {
             val dir = freshDir(settings.poolDir.resolve("client-$player"))
             dir.resolve("options.txt").writeText(resource("options.txt"))
-            val launch = Json.parseToJsonElement(Files.readString(settings.clientLaunch)).jsonObject
-
-            fun strings(key: String) = launch.getValue(key).jsonArray.map { it.jsonPrimitive.content }
-            val command =
-                buildList {
-                    add(settings.java.toString())
-                    // Loom's argument files hold what the classpath below already carries.
-                    addAll(strings("jvmArgs").filterNot { it.startsWith("@") })
-                    add(HeapShare.CLIENT.flag())
-                    add("-Dplaytest.pool.port=$poolPort")
-                    add("-Dplaytest.player=$player")
-                    add("-Dplaytest.input=${input.property}")
-                    add("-cp")
-                    add(strings("classpath").joinToString(File.pathSeparator))
-                    add(launch.getValue("main").jsonPrimitive.content)
-                    addAll(strings("args"))
-                    addAll(
-                        listOf(
-                            "--username",
-                            player,
-                            "--offlineDeveloperMode",
-                            "--gameDir",
-                            dir.toString(),
-                            "--width",
-                            "854",
-                            "--height",
-                            "480",
-                        ),
-                    )
-                }
+            val command = Launches.client(settings, poolPort, player, input, dir)
             val environment =
                 when (input) {
                     // A background app on macOS: the window never takes focus from the developer.

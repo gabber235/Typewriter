@@ -102,7 +102,7 @@ internal class PoolLauncher(
         }
     }
 
-    private companion object {
+    internal companion object {
         const val POOL_MAIN = "com.typewritermc.playtest.pool.PoolKt"
         const val POLL_MILLIS = 50L
         const val STOP_SECONDS = 10L
@@ -113,13 +113,16 @@ internal class PoolLauncher(
         /** How long a pool that left its run may take to stop its game and exit: its own Papers' exits and the parts' stops. */
         val GOING = 90.seconds
 
-        /** Starts a pool with every `playtest.*` property of this test JVM; it appends its output to the run's pool log. */
+        /** The pool's command line: its heap capped at the pool's share, with every `playtest.*` property of this test JVM. */
+        fun command(settings: PlaytestSettings): List<String> =
+            listOf(settings.java.toString(), HeapShare.POOL.flag()) +
+                settings.forwarded.map { (key, value) -> "-D$key=$value" } +
+                listOf("-cp", settings.poolClasspath, POOL_MAIN)
+
+        /** Starts a pool with [command]; it appends its output to the run's pool log. */
         fun start(settings: PlaytestSettings): Process =
-            ProcessBuilder(
-                listOf(settings.java.toString(), HeapShare.POOL.flag()) +
-                    settings.forwarded.map { (key, value) -> "-D$key=$value" } +
-                    listOf("-cp", settings.poolClasspath, POOL_MAIN),
-            ).redirectErrorStream(true)
+            ProcessBuilder(command(settings))
+                .redirectErrorStream(true)
                 .redirectOutput(ProcessBuilder.Redirect.appendTo(settings.poolLog.toFile()))
                 .redirectInput(ProcessBuilder.Redirect.from(File("/dev/null")))
                 .start()
