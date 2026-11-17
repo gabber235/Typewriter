@@ -590,11 +590,21 @@ internal class Pool(
             }
 
             is Message.PlayerLeftWrapper -> {
-                lostOn(server, message.value.player, ClientLossKind.LEFT_PAPER, "its player left Paper (${message.value.reason.lowercase()})")
+                lostOn(
+                    server,
+                    message.value.player,
+                    ClientLossKind.LEFT_PAPER,
+                    "its player left Paper (${message.value.reason.lowercase()})",
+                )
             }
 
             is Message.ClientStalledWrapper -> {
-                lostOn(server, message.value.player, ClientLossKind.STALLED, "it acked no tick for 5 s after tick ${message.value.lastAcked}")
+                lostOn(
+                    server,
+                    message.value.player,
+                    ClientLossKind.STALLED,
+                    "it acked no tick for 5 s after tick ${message.value.lastAcked}",
+                )
             }
 
             else -> {
@@ -634,7 +644,10 @@ internal class Pool(
     ) {
         val failure = message.failure
         val rules = server.rules
-        if (failure != null) return act(server, rules.failed(PaperLossKind.RESUME_FAILED, "${server.name} could not resume its attempt: $failure"))
+        if (failure != null) {
+            val cause = "${server.name} could not resume its attempt: $failure"
+            return act(server, rules.failed(PaperLossKind.RESUME_FAILED, cause))
+        }
         act(server, rules.resumed(message.tick))
     }
 
@@ -733,7 +746,10 @@ internal class Pool(
     ) {
         val server = attempt.server
         val names = attempt.players.joinToString { it.name }
-        if (failure != null) return act(server, server.rules.failed(PaperLossKind.CLAIM_FAILED, "${server.name} could not claim $names: $failure"))
+        if (failure != null) {
+            val cause = "${server.name} could not claim $names: $failure"
+            return act(server, server.rules.failed(PaperLossKind.CLAIM_FAILED, cause))
+        }
         attempt.players.forEach { clientOf(it.uuid)?.peer?.send(Message.RESET) }
     }
 

@@ -352,7 +352,7 @@ val RunRecordsTest by testSuite {
         read().end shouldBe RunEnd.COMPLETED
     }
 
-    test("a run the game could not serve says why in its file, while its sessions are still open too, and keeps the attempts that ended before") {
+    test("a run the game could not serve says why in its file, even while sessions are open, and keeps the attempts that ended") {
         val records = RunRecords(clock = { 1_000 })
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val read = { TestRun.serializer.fromJsonCode(Files.readString(file)) }
