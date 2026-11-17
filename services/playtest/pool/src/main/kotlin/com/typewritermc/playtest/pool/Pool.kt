@@ -225,8 +225,14 @@ internal class Pool(
         fun forget(why: String) {
             submissions.remove(key)
             when (val state = state) {
-                is State.Running -> release(state.attempt, why)
-                is State.Parked -> claims.release(state.players)
+                is State.Running -> {
+                    release(state.attempt, why)
+                }
+
+                is State.Parked -> {
+                    claims.release(state.players)
+                }
+
                 is State.Queued -> {}
             }
         }
@@ -321,16 +327,25 @@ internal class Pool(
     // Every client was ready once: the game booted, and from then on the pool lends players.
     private var booted = false
 
+    /**
+     * The game could not start for [cause]: the run file says so, and the pool exits with the cause in its
+     * log, so the test JVM that started it says it exited while starting. Returns [cause] to rethrow.
+     */
+    private fun couldNotStart(cause: Exception): Exception {
+        couldNotRun("the game could not start: $cause; see ${settings.poolLog}")
+        return cause
+    }
+
     fun run() {
         thread(name = "playtest-pool-accept", isDaemon = true) { accept() }
         val startedAt = System.nanoTime()
         game =
             try {
                 Game.start(settings, server.localPort, clients.map { it.player.name }, continuing)
-            } catch (cannot: Exception) {
-                // The pool exits with the cause in its log, so the test JVM that started it says it exited while starting.
-                couldNotRun("the game could not start: $cannot; see ${settings.poolLog}")
-                throw cannot
+            } catch (cannot: IOException) {
+                throw couldNotStart(cannot)
+            } catch (cannot: IllegalStateException) {
+                throw couldNotStart(cannot)
             }
         shared = Server(game.paper, SharedPaper(game.paper.name, clients.map { it.player.name }.toSet()))
         shared.part = game.paperPart
