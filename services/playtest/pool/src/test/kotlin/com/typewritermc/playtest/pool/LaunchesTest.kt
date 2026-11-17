@@ -3,6 +3,7 @@ package com.typewritermc.playtest.pool
 import com.typewritermc.playtest.wire.HeapShare
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
+import skirout.harness.v1.test_run.AttemptPolicy
 import java.nio.file.Files
 
 val LaunchesTest by testSuite {
@@ -13,6 +14,7 @@ val LaunchesTest by testSuite {
                 poolDir = dir.resolve("pool"),
                 run = "run-1",
                 testRun = dir.resolve("test_run.json"),
+                policy = AttemptPolicy.RerunFailuresWrapper(4),
                 logs = dir.resolve("logs"),
                 java = dir.resolve("java"),
                 paperDir = dir.resolve("paper"),

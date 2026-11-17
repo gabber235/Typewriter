@@ -552,9 +552,8 @@ internal class PoolSession private constructor(
         fun open(settings: PlaytestSettings = PlaytestSettings.fromSystemProperties()): PoolSession {
             val socket = PoolLauncher(settings).connect()
             val session = PoolSession(socket, settings)
-            session.send(Message.HelloWrapper(Hello(role = Role.SESSION, name = settings.run)))
-            // The pool writes the run's file after every attempt, so it needs the file before the first.
-            session.send(Message.createJoin(testRunFile = settings.testRun.toString(), policy = RunPlan.current.policy))
+            session.send(Message.HelloWrapper(Hello(role = Role.SESSION, name = "pid ${ProcessHandle.current().pid()}")))
+            session.send(Message.createJoin(run = settings.run))
             thread(name = "playtest-session", isDaemon = true) { session.read() }
             return session
         }

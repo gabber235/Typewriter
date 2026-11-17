@@ -7,7 +7,6 @@
 import { Renderer } from "harness/v1/golden.skir";
 import {
   Artifact,
-  AttemptPolicy,
   CoveredClass,
   Demonstrates,
   Step,
@@ -16,13 +15,11 @@ import {
 enum Message(85030001) {
   // The first message on every connection to the pool.
   hello: Hello;
-  // Session to pool, right after its `hello`: the run's file and the policy its attempts are made under.
-  // The pool writes the run there after every attempt it records, so a pool that dies leaves the attempts
-  // that ended. Every session of one run names the same file and policy; the pool refuses a session that
-  // names others.
+  // Session to pool, right after its `hello`: the run the session belongs to. A pool serves one run and
+  // takes the run's file and attempt policy from the properties it started with; it refuses a session
+  // of another run.
   join: struct {
-    test_run_file: string;
-    policy: AttemptPolicy;
+    run: string;
   };
   // Pool to session: the game cannot run; every requirement of the session fails with this reason.
   refused: struct {
@@ -189,8 +186,8 @@ enum Message(85030001) {
   reset_done;
 }
 
-// The first message on every connection to the pool: who opened it. A session names its run, Paper and
-// a client name themselves.
+// The first message on every connection to the pool: who opened it, and a name for the pool's log. A
+// session names its test JVM, Paper and a client name themselves.
 struct Hello(85030002) {
   role: Role;
   name: string;

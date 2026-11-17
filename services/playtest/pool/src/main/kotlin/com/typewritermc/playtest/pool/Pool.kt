@@ -31,7 +31,6 @@ import java.net.Socket
 import java.net.SocketException
 import java.nio.channels.FileChannel
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.util.UUID
 import java.util.concurrent.LinkedBlockingQueue
@@ -183,12 +182,8 @@ internal class Pool(
         val running: Attempt? get() = (state as? State.Running)?.attempt
     }
 
-    /**
-     * Work that hung on a player and still runs, keeping the player out of every claim, and the case of
-     * [run] whose attempt it hung in.
-     */
+    /** Work that hung on a player and still runs, keeping the player out of every claim, and the case whose attempt it hung in. */
     private class HungWork(
-        val run: String,
         val testId: String,
     ) {
         val works = mutableListOf<String>()
@@ -217,10 +212,10 @@ internal class Pool(
             Client(Player(name = "gv-$it", uuid = UUID.nameUUIDFromBytes("OfflinePlayer:gv-$it".toByteArray()).toString()))
         }
     private val claims = Claims<Peer, Player>(clients.map { it.player })
-    private val runs = RunRecords(stillOut = { run -> stillOut(run) })
+    private val runs = RunRecords(settings.run, settings.testRun, settings.policy, stillOut = { stillOut() })
 
     /** Whether an earlier pool of this run left its file, which this pool takes up and adds to. */
-    val continuing = runs.continueFrom(settings.run, settings.testRun)
+    val continuing = runs.continueFrom()
 
     /** Sessions the pool refused as they joined: what they still send is dropped until they leave. */
     private val refused = mutableSetOf<Peer>()
@@ -392,7 +387,7 @@ internal class Pool(
             }
 
             Message.END -> {
-                runs.ended(session.hello.name, session)
+                runs.ended(session)
                 session.send(Message.ENDED)
             }
 
@@ -426,14 +421,18 @@ internal class Pool(
         }
     }
 
-    /** [session] joins its run, which refuses it when the run's other sessions named another file or policy. */
+    /**
+     * [session] joins the pool's run. A session of another run is refused: its test JVM found this pool
+     * through the pool file of its own run, so it reaches this pool only when its own pool exited between
+     * that read and its connection and this pool took up the port.
+     */
     private fun join(
         session: Peer,
         join: Message.Join,
     ) {
-        val reason = runs.joined(session.hello.name, session, Path.of(join.testRunFile), join.policy) ?: return
+        if (join.run == settings.run) return runs.joined(session)
         refused += session
-        session.sendLast(Message.createRefused(reason = reason))
+        session.sendLast(Message.createRefused(reason = "this pool serves the run ${settings.run}, not the run ${join.run}"))
     }
 
     /** [session]'s attempt ended with [result]: the run records it and its players serve the next claims. */
@@ -840,9 +839,8 @@ internal class Pool(
         unfinished: List<Submission>,
     ) {
         // The game failed, so the attempts it never ran are no failures of their own: the run's file says why it failed.
-        if (failure != null) return runs.ended(session.hello.name, session)
+        if (failure != null) return runs.ended(session)
         runs.abandoned(
-            session.hello.name,
             session,
             unfinished.map { it.submit },
             "its test JVM ended before the attempt did; see ${settings.poolLog}",
@@ -1176,17 +1174,7 @@ internal class Pool(
         val attempt = attempts.of(event.player)
         attempt?.session?.send(Message.PlayerEventWrapper(event))
         val player = clientNamed(event.player)?.player ?: return
-        val held =
-            hung.getOrPut(event.player) {
-                HungWork(
-                    attempt
-                        ?.session
-                        ?.hello
-                        ?.name
-                        .orEmpty(),
-                    attempt?.submit?.testId.orEmpty(),
-                )
-            }
+        val held = hung.getOrPut(event.player) { HungWork(attempt?.submit?.testId.orEmpty()) }
         held.works += work
         claims.holdOut(player, Out.HUNG_WORK)
     }
@@ -1202,11 +1190,9 @@ internal class Pool(
         lend()
     }
 
-    /** For each case of [run] whose hung work never ended, the player it keeps out of the pool. */
-    private fun stillOut(run: String): Map<String, String> =
-        hung
-            .filterValues { it.run == run }
-            .entries
+    /** For each case whose hung work never ended, the player it keeps out of the pool. */
+    private fun stillOut(): Map<String, String> =
+        hung.entries
             .associate { (player, held) ->
                 held.testId to
                     "$player stayed out of the pool for the rest of the run: its work ${held.works.joinToString { "\"$it\"" }} never ended."
@@ -1236,7 +1222,6 @@ internal class Pool(
         why: String,
     ) {
         runs.record(
-            submission.session.hello.name,
             submission.submit,
             result,
             submission.timing.steps + listOfNotNull(coverage.cost(submission)),
@@ -1396,7 +1381,7 @@ internal class Pool(
         if (failure != null) return
         failure = reason
         System.err.println("The game failed: $reason")
-        runs.failed(settings.run, reason)
+        runs.failed(reason)
         lifetime.sessions.forEach { it.send(Message.createRefused(reason = reason)) }
         game.stop()
     }
