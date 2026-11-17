@@ -1,16 +1,16 @@
-# Game verification: prototype search
+# Game verification
 
-Living record of the prototype search for in-game verification. Read this file first after a
-context reset. It holds the goal, the search map, and one line per result; details live in
-`spikes/` and `research/`. Prototype code lived in `prototypes/game-verification/` and was removed when the search ended
-(kept in history at `86724c794`); what survives is this record.
+Design record of Typewriter's in-game verification framework: requirements that prove what a player
+experiences in a real Minecraft client, run on every pull request. The framework is built
+(`services/playtest`); this file describes its model and the decisions behind it. How it was chosen
+is in [The prototype search](#the-prototype-search) at the end, with one line per spike in
+[Results](#results); details live in `spikes/` and `research/`. Read this file first after a context
+reset.
 
 ## Goal
 
-Choose how Typewriter proves what a player experiences in a real Minecraft client, by trying
-several approaches per question and measuring them. Not an implementation plan yet.
-
-Judged on, in the developer's order:
+Prove what a player perceives in a real client, never packet sequences, judged on, in the developer's
+order:
 
 | Criterion | Meaning |
 |---|---|
@@ -19,72 +19,233 @@ Judged on, in the developer's order:
 | Recordable | Video of what the player saw, and comparison against approved references |
 | Performant | Hundreds of requirements in minutes. "if one tests takes already 3 seconds we are in big trouble" |
 
-## Facts that frame the search
+The framework holds no Typewriter code and may later move out of the repository. What it needs from
+Typewriter is listed in [Obligations on Typewriter](#obligations-on-typewriter).
 
-- **Target is Paper 26.3 on Java 25** (`services/runtime/engine/runtimes/paper/build.gradle.kts:57`).
-  The plan text and some research assumed 1.21.4. The loader still compiles against the 1.21.4 API
-  (`services/libs.versions.toml:13`). Research citations to 1.21.4 client code must be rechecked
-  against 26.3 sources before relying on them.
-- 26.3 clients use SDL and can render through OpenGL or Vulkan. 26.4 snapshots reportedly default
-  to Vulkan. Keep capture behind the engine's render target, not raw GL.
-- The panel records video (Linux only, Xvfb and x11grab) but **compares nothing**. There is no
-  golden mechanism to copy.
-- Real v1 behaviour testable today is tiny: one action (message), one event (chat contains text),
-  one trigger relation. Everything richer needs probe plugins that imitate the legacy mechanics.
-- Precedent: only one rendered pattern exists publicly (Fabric client game tests, Xvfb, llvmpipe).
-  Nobody publishes it against external Paper with goldens or with several rendered clients.
+## The parts
 
-Sources: `research/prior-decisions.md`, `research/real-client-precedent.md`,
-`research/speed-capture-determinism.md`.
+Five kinds of process take part. A requirement's code runs only in the test JVM; Paper and the
+clients hold none.
 
-## Settled before this search
-
-Real clients only, no packet level tier (rejected twice). Stimuli are player input or API, not chat
-commands. Full suite on every pull request. The framework holds no Typewriter code and may later
-move out. Goal numbers in the old plan (1 s, 45 s, 350 in 3 min) are agent estimates, not
-requirements; the hard statement is the 3 second quote and "if this takes 5 hours, then it's not
-worth it".
-
-## The search map
-
-Each axis is tried separately, so a result on one does not depend on the others. A spike is small
-and is deleted after it answers its question.
-
-| Id | Question | Candidates to try | How we decide |
+| Part | Process | Java | Role |
 |---|---|---|---|
-| **S0** | Does a real 26.3 client play on external Paper at all? | Fabric client mod plus connect by address | It joins and reports facts; start time and memory |
-| **A** | How do we observe what the player perceives? | A1 client state; A2 what was actually drawn (text runs, entities submitted, sounds); A3 pixels in a region; A4 ID pass for real visibility | A "lying" battery: scenes built so that a weak observer is fooled |
-| **B** | How do we make video? | B1 in-client frame readback to ffmpeg; B2 window capture; B3 packet capture and offline render on demand | Frame cost, quality, per-test clip sync, works on Mac and CI |
-| **C** | How do we make it fast? | C1 render only when needed; C2 run the client clock faster than 20 TPS; C3 long lived client with fast reset (world swap, region, reconnect); C4 micro server: smallest and fastest Paper boot | Seconds per requirement, what breaks |
-| **D** | How many clients? | D1 one client in sequence; D2 N clients on one Paper; D3 one Paper per few clients | Requirements per minute, memory, interference |
-| **E** | How do we know a world is ready, and when a step is done? | E1 echo barrier through a plugin channel; E2 chunks rendered; E3 polling observed facts | Flake rate over repeats |
-| **F** | Can goldens be stable? | F1 same scene N times, measure noise; F2 frozen tick; F3 region versus full frame; F4 Mac versus Linux | Pixel noise floor versus smallest real change we must catch |
-| **G** | How does a requirement read? | G1 windows; G2 await style; G3 timeline checked after the run. Also where logic runs: Paper, client, or a test JVM | Same scenarios side by side; developer preference |
-| **J** | Can a test drive real player input reliably and fast? | Input through the OS or window system, through the client's input callbacks, through the game's own actions; packets only as a baseline | Same server event as a person's input, flake rate, cost gated and rendered |
-| **K** | How do requirements that kill or restart Paper run with a warm client? | Restart the same Paper; a pre booted standby Paper; restart only the plugin | Seconds per restart requirement, verdicts after, leftovers |
-| **N** | Can the test runner step ticks itself? | Paper's tick manager frozen and stepped from the runner; client time driven per step; Paper's wall clock timers (`currentTick`, block break) tied to the stepped tick | Verdicts exact without slowing down, throughput, what still runs on wall clock |
-| **I** | Can coverage be attributed per requirement on a long lived Paper, cheaply? | I1 coverage agent with dump and reset between requirements; I2 one run per requirement group | Overhead per requirement, correct attribution on known scenes |
-| **H** | Does it hold on CI? | Real free runner, 4 vCPU, no GPU; llvmpipe OpenGL versus lavapipe Vulkan | FPS, throughput, flakes, the renderer string |
+| Test JVM | Gradle's `gameTest` task, one per module with a `src/gameTest` source set | 21 (services' toolchain) | Declares requirements in testBalloon, submits them to the pool, judges windows, decides retries |
+| Pool | one process per checkout, started by the first test JVM | 25 | Owns the warm clients and the Papers, queues and grants claims, records the run file |
+| Shared Paper | stock Paper 26.3 with the step agent and the framework plugin | 25 | Runs every requirement that does not restart Paper, each in a region of its own |
+| Own Paper | the same, booted per restart requirement (at most 2 at once) | 25 | Runs a requirement that kills and boots Paper |
+| Client | Minecraft 26.3 with the framework's Fabric mod, 4 by default | 25 | Steps one tick per step ping, perceives without drawing, sends real window input |
 
-Yardstick scenes, used across axes because they are the hard parts of the legacy behaviour:
-title with fade, chat line, action bar, packet only entity seen by one player only, per player fake
-block, camera ride on a packet only display entity with client interpolation, fake empty inventory,
-and sound. The full behaviour list is in `research/prior-decisions.md`.
+- The **step agent** is a Java agent on the stock Paper jar. Once stepping starts, Paper's main loop
+  runs a tick only on a permit, and Paper's block break clock counts ticks
+  ([n-stepped-ticks.md](spikes/n-stepped-ticks.md)).
+- The **framework plugin** runs the probes (chat, block, spawn, give, teleport and the like), the
+  wipe, the step policy, per player work counting (`PlayerWork`) and coverage reads.
+- The **client mod** holds the clock still between step pings, builds a perception record after each
+  tick, sends input as window events (XTest on its own Xvfb display on Linux, its own SDL queue
+  elsewhere) and drops every input event it did not send itself.
+- The **wire** module holds the messages every part shares, the pool and part files and the heap
+  shares.
+- Test JVMs share the pool, so every module and extension shares the warm clients, and a warm single
+  requirement takes about 2 s ([p6-pool-process.md](spikes/p6-pool-process.md)). The pool takes turns
+  between test JVMs.
 
-## Rules for running spikes
+## How a requirement runs
 
-- Throwaway Paper instances are started only inside `prototypes/game-verification/`, on free ports,
-  and are stopped after each run. This thread's prototyping is the one exception to the rule against
-  starting Paper by hand, confirmed by the developer (2026-11-07): a prototype branch may use local
-  throwaway Paper servers and CI, since results must hold on both. No k3d, no deploy.
-- Gradle goes through `cargo xtask heavy`, so it queues behind other builds.
-- Timing runs happen one at a time. Note machine load with every number.
-- Every number names its machine and renderer. Evidence and inference stay labelled.
+```kotlin
+requirement("GROUP-1", "a line sent to the members of a group reaches each member and nobody else", players = 3) {
+    val (member, partner, outsider) = players
+    probe.chat(to = listOf(member, partner), "Bank: 1")
+    within(10.ticks) {
+        member sees chat("Bank: 1")
+        partner sees chat("Bank: 1")
+        outsider.never sees anyChat()
+    }
+}
+```
+
+A requirement declares how many players it needs, what it demonstrates (happy path, failure, edge
+case) and whether it restarts Paper. Then:
+
+1. **Submit.** The test JVM sends the requirement to the pool, which queues it. A claim larger than
+   the pool is declined at once.
+2. **Grant.** When enough players are free, the pool grants them (side by side attempts together) and
+   picks a fresh region 1024 blocks from any other.
+3. **Wipe.** Paper wipes each player's Minecraft and Paper state, fires `PlayerWipeEvent` so every
+   plugin resets its own, and moves the player into the region. Each client resets its own state
+   (blends, delays, chat). A claim waits until the client holds the chunks it draws.
+4. **Lease.** The attempt gets its players. Nothing it does runs ticks yet.
+5. **Stimulus.** A probe changes the world through Paper's API, or an input drives a client like a
+   person (type, press, click, look, walk). A probe returns once its effect reached the client. Each
+   stimulus marks the tick a window counts from.
+6. **Window.** `within(n.ticks)` asks Paper to step until the window's last tick. It passes the moment
+   every check holds in a perception record, and fails when the window's barrier comes back with a
+   check still open. Ticks run only while a window waits, so a pass costs no more ticks than the truth
+   needs.
+7. **Settle.** After the body, Paper steps until the players' counted work is quiet, then the attempt
+   ends, coverage is read and the players go back to the pool.
+
+Requirements are G1 windows plus the recorded timeline
+([g-requirement-shape.md](spikes/g-requirement-shape.md)): order, gaps and motion are read from the
+attempt's timeline after a window. A window needs one positive check; `never` checks are broad
+(`anyChat()`) and keep the window open for all its ticks.
+
+## Ticks
+
+The runner decides when a tick happens. Paper's next tick waits until every connected client acked
+the last one and no claimed player's counted work is running; an idle Paper ticks once a second so
+its watchdog and keepalives stay calm. A requirement therefore takes the same ticks on every run and
+never waits for wall clock timers ([n-stepped-ticks.md](spikes/n-stepped-ticks.md),
+[lease-time.md](spikes/lease-time.md)).
+
+- **Counted work.** A plugin counts work it starts for a player through `PlayerWork`. The step waits
+  while it runs; work past 1 s fails its attempt as hung, is never cancelled, and keeps its player out
+  of the pool until it ends. Paper's async chat and command suggestions count as their player's work.
+- **Input.** An input starts right after a tick; the client's ack waits until the game took every
+  event it queued, so its packets reach Paper first. Typing sends one key per tick, as a person does.
+- **Lost clients.** A client that does not ack for 5 s is lost: its attempt fails and the pool boots a
+  replacement under the same name.
+
+All requirements share one stepped Paper ([p1-topology.md](spikes/p1-topology.md)): a Paper per
+attempt was 41 to 777 percent slower once groups or restarts appear. The cost is that one attempt's
+async work holds every attempt's tick.
+
+## Isolation
+
+Every requirement meets a player who never played. Warm clients are kept; the player is wiped
+([k-restarts.md](spikes/k-restarts.md)).
+
+- The framework wipes the vanilla and Paper kinds it owns (inventory, effects, attributes, statistics,
+  recipes, advancements and more, each with a leak requirement that fails when its wipe is off).
+- Each plugin resets what it keeps for the player on `PlayerWipeEvent`. The framework never reaches
+  into a plugin.
+- Attempts run in regions 1024 blocks apart, never reused, and players see only their own attempt's
+  players and chat.
+
+## Perception
+
+A client perceives without drawing ([p11-perceive-without-drawing.md](spikes/p11-perceive-without-drawing.md)):
+after every tick it runs the extract and submit stages of a frame and skips the GPU work, and builds a
+**perception record** from what they handed over: legible text runs with the HUD element that drew
+them, chat lines with their arrival tick, the camera, items in hotbar and screens, watched blocks and
+watched entities. A record goes out whole, only when it changed ([p4-live-stream.md](spikes/p4-live-stream.md)),
+and stands for every tick until the next.
+
+- **Seen means drawn legibly and owns visible pixels** ([a-observers.md](spikes/a-observers.md)).
+  `drawn()` is the cheap culling answer; `visible()` makes the client draw real frames while its
+  window holds, once with and once without the entity, and the entity owns the pixels that change.
+- **Watches.** A probe that places a block or entity tells the client to watch it on the player's own
+  connection, ahead of the packets that show it.
+- Client state only arranges scenes and names causes; it never decides a verdict.
+
+## Retries and verdicts
+
+A failed attempt runs again at the end of the queue, up to 4 attempts. The verdict is one of:
+
+| Verdict | When | Blocks |
+|---|---|---|
+| Passed | first attempt passed | no |
+| Flaky | an attempt failed and a later one passed | yes, like a failure |
+| Failed | every attempt failed, or a demo ended otherwise than the last attempt | yes |
+| Quarantined | listed in `harness/quarantine.toml`; runs once | no |
+
+- A requirement refused as written (a window without a positive check, `restartPaper()` without the
+  flag, a claim the pool can never grant) and a game that cannot run never retry.
+- Kotlin decides retries and fails the mirrored testBalloon test; xtask judges every runner's run file
+  with the same rule for the gate ([p2-testballoon-runner.md](spikes/p2-testballoon-runner.md)).
+- `--repeat N` runs exactly N attempts of each selected requirement.
+
+## Goldens
+
+`player.looksLike("sidebar")` draws a real frame and compares it exactly against an approved golden
+([f-goldens.md](spikes/f-goldens.md), [p5-devenv-mesa.md](spikes/p5-devenv-mesa.md)).
+
+- The repository holds only the golden file (`src/gameTest/goldens/<name>.golden`): hash, size and
+  the renderer that drew it. The image lives on the `evidence` branch as `goldens/<hash>.png`, and
+  `cargo xtask e2e game` fetches every image the machine lacks before the run, so a differing frame
+  shows golden, new frame and diff.
+- Goldens are exact on one **pinned renderer**: Vulkan through llvmpipe on Linux amd64 with the Mesa
+  devenv ships (`PLAYTEST_MESA`). There a differing frame, a golden never approved, or one another
+  renderer drew fails with the approve command. Any other machine reports "not checked".
+- `cargo xtask goldens approve` takes the frames a run captured, refuses any the pinned renderer did
+  not draw, writes the golden files and pushes the images. A Mesa or Minecraft upgrade fails every
+  golden, and its pull request approves them again. The weekly prune drops images no golden on
+  `develop` names once they are 30 days old.
+
+## Coverage and demo clips
+
+- **Coverage per requirement.** A JaCoCo agent limited to the plugin's classes is read and reset when
+  an attempt starts and when it settles; each read goes to every attempt that ran since the read
+  before ([i-coverage.md](spikes/i-coverage.md)). On the shared Paper overlapping attempts get each
+  other's lines, so it over attributes and never loses a line.
+- **Touched requirements.** xtask writes the lines the change added since the merge base with the
+  default branch; a requirement that covered one is touched.
+- **Demo reruns.** A failed, flaky, quarantined or touched requirement runs once more as a demo with
+  clips: the stepped client draws 30 frames per second of game time between steps and pipes them to
+  ffmpeg ([p9-frames-between-steps.md](spikes/p9-frames-between-steps.md)). Windows read only the
+  records at the end of each tick, so a demo is judged as the gated run was, and it must pass or fail
+  as the last attempt did.
+- Evidence (frames, golden candidates, clips) is staged per attempt; CI publishes it to the `evidence`
+  branch for the pull request.
+
+## Restarts
+
+`requirement(restartsPaper = true)` runs on a fresh Paper of its own, since a kill drops every client
+on it. `restartPaper()` kills it (nothing saved) and boots it again on the same folder; its players
+come back without a wipe, and windows count from the new Paper's ticks. The boot uses Java 25's AOT
+cache trained on a restart boot in the same job, C1 only and SerialGC, with the clients quiet while
+Paper boots: about 5 s from kill to state ([p7-faster-boot.md](spikes/p7-faster-boot.md)). At most 2
+own Papers run at once.
+
+## The pool's life and the run file
+
+- The first test JVM starts the pool; a lock keeps one per checkout, and `pool.running` names its port,
+  run and process. A pool of another run is stopped and replaced; one that has not answered for 90 s
+  is replaced.
+- The pool stays in its starter's process tree, so Gradle's cancel stops it, and it outlives a normal
+  exit of its starter. A pool no test JVM reached stops after 60 s.
+- A leased attempt fails with `LeaseExpired` after 300 s.
+- Each part writes its pid and start time into its folder (`part.running`), and tests find a client
+  or Paper by it; Linux shows Java only the first page of a command line.
+- **The run file** (`test_run.json`) survives a pool crash: a session names it when it joins, the pool
+  rewrites it atomically after every attempt and marks it `ended` once every session left. xtask
+  fails a run file without the mark as cut short; the finished cases' evidence still stages.
+- Each run keeps its pool, Paper and client logs in a folder of its own; the newest 3 are kept.
+
+## Memory
+
+Every game JVM takes a share of the machine (`HeapShare`, `-XX:MaxRAMPercentage`), so the caps scale
+with the machine:
+
+| Part | Share | On a 16 GB runner |
+|---|---|---|
+| Shared Paper | 16 % | 2.6 GB |
+| Own Paper | 7 % | 1.1 GB |
+| Client | 4.5 % | 740 MB |
+| Pool | 2 % | 330 MB |
+
+The parts that can run at once (the shared Paper, 2 own Papers, 4 clients, the pool) hold at most half
+the machine in heap, which a unit test pins. Memory outside the heap (about 1 GB per client, mostly
+the software renderer) is not capped yet; that stays open.
+
+## CI
+
+The game suite is the `game` entry of CI's `e2e` matrix on the free runner, in devenv's `e2e`
+profile (Xvfb, Mesa, lavapipe), about 13 to 14 minutes warm ([h-ci-runner.md](spikes/h-ci-runner.md)).
+
+- `cargo xtask e2e game` first runs `gameTestBuild` in a Gradle of its own without a daemon, so no
+  compile daemon sits beside the suite, then the suite.
+- Caches: Gradle's build cache (which holds the patched Paper), Loom's caches, and the AOT cache of
+  the restart Paper.
+- The job checks out full history for the touched lines, and stages and uploads evidence even when
+  the suite failed.
+
+How to run it locally is in the dev loop skill (`.claude/skills/typewriter-dev-loop`); how to write
+a requirement is in the testing skill (`.claude/skills/typewriter-testing`).
 
 ## Decisions from the developer
 
-- Spike H may push this branch with a temporary workflow that runs only on this branch, to measure
-  on GitHub's free runner. Remove the workflow before the search ends.
+Dated decisions, oldest first. The sections above describe what they add up to.
+
 - v1 cinematics and sequences advance on the **tick clock**, not wall clock (2026-11-06). A faster
   server rate in tests speeds them up; under server lag they slow down instead of keeping pace.
   Legacy used wall clock (`PlayerSession.kt:61`); this is a deliberate change.
@@ -108,7 +269,7 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   Paper of their own (kill and boot).
 - **The test runner decides when a tick happens** (2026-11-07): Paper's own ticking is stopped and
   the runner steps ticks forward, so tests know exactly when things happen and need not slow down
-  for wall clock timers such as Paper's block break timer. Proven or disproven by spike N.
+  for wall clock timers such as Paper's block break timer. Spike N proved it.
 - **Retries** (2026-11-07): a failed requirement is retried later, not immediately, up to 3 times,
   and a requirement that passes on a retry is reported as flaky. For inherently lossy inputs (tab
   suggestions) the framework may repeat the input within the window; the verdict still fails if the
@@ -219,33 +380,103 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   `spikes/g-requirement-shape.md`.
 - Requirement code runs in a **test JVM** (2026-11-06). The client streams what its player perceived,
   loop by loop, with the window barrier inside that stream; Paper and the client hold no requirement
-  code. The stream's size is not measured yet.
+  code. P4 measured the stream: about 3 records of 61 bytes per requirement.
 - A window counts from the **last player action or probe call**, with an optional named start
   (`within(40.ticks after left)`) for the rare case (2026-11-06).
 - `never` checks are **broad** (`anyChat()`, `anyTitle()`), and the framework **refuses** a requirement
   whose checks are all `never` or all client state: it needs one positive check (2026-11-06).
 - A requirement that needs rendered frames **declares it** (`player(frames = 60.hz)`), so the runner
-  groups such requirements at a fitting server rate before it starts (2026-11-06).
+  groups such requirements at a fitting server rate before it starts (2026-11-06). Superseded: stepped
+  ticks replaced server rates, and clients perceive without drawing (P11), so only `visible()`, goldens
+  and clips draw, each for its own span, and no requirement declares frames.
 
-## Open questions for the developer
+## The prototype search
 
-- "Micro server" is read as the smallest, fastest booting Paper. They may correct this.
+How the framework was chosen. Each axis was tried separately, by trying several approaches per
+question and measuring them; a spike was small and was deleted after it answered its question.
 
-## Status
+### Facts that framed the search
 
-The search is finished (2026-11-07). After checking the record against the newer design docs, gap
+- **Target is Paper 26.3 on Java 25** (`services/runtime/engine/runtimes/paper/build.gradle.kts:57`).
+  The plan text and some research assumed 1.21.4. The loader still compiles against the 1.21.4 API
+  (`services/libs.versions.toml:13`). Research citations to 1.21.4 client code must be rechecked
+  against 26.3 sources before relying on them.
+- 26.3 clients use SDL and can render through OpenGL or Vulkan. 26.4 snapshots reportedly default
+  to Vulkan. Keep capture behind the engine's render target, not raw GL.
+- The panel records video (Linux only, Xvfb and x11grab) but **compares nothing**. There is no
+  golden mechanism to copy.
+- Real v1 behaviour testable today is tiny: one action (message), one event (chat contains text),
+  one trigger relation. Everything richer needs probe plugins that imitate the legacy mechanics.
+- Precedent: only one rendered pattern exists publicly (Fabric client game tests, Xvfb, llvmpipe).
+  Nobody publishes it against external Paper with goldens or with several rendered clients.
+
+Sources: `research/prior-decisions.md`, `research/real-client-precedent.md`,
+`research/speed-capture-determinism.md`.
+
+### Settled before this search
+
+Real clients only, no packet level tier (rejected twice). Stimuli are player input or API, not chat
+commands. Full suite on every pull request. The framework holds no Typewriter code and may later
+move out. Goal numbers in the old plan (1 s, 45 s, 350 in 3 min) are agent estimates, not
+requirements; the hard statement is the 3 second quote and "if this takes 5 hours, then it's not
+worth it".
+
+### The search map
+
+| Id | Question | Candidates to try | How we decide |
+|---|---|---|---|
+| **S0** | Does a real 26.3 client play on external Paper at all? | Fabric client mod plus connect by address | It joins and reports facts; start time and memory |
+| **A** | How do we observe what the player perceives? | A1 client state; A2 what was actually drawn (text runs, entities submitted, sounds); A3 pixels in a region; A4 ID pass for real visibility | A "lying" battery: scenes built so that a weak observer is fooled |
+| **B** | How do we make video? | B1 in-client frame readback to ffmpeg; B2 window capture; B3 packet capture and offline render on demand | Frame cost, quality, per-test clip sync, works on Mac and CI |
+| **C** | How do we make it fast? | C1 render only when needed; C2 run the client clock faster than 20 TPS; C3 long lived client with fast reset (world swap, region, reconnect); C4 micro server: smallest and fastest Paper boot | Seconds per requirement, what breaks |
+| **D** | How many clients? | D1 one client in sequence; D2 N clients on one Paper; D3 one Paper per few clients | Requirements per minute, memory, interference |
+| **E** | How do we know a world is ready, and when a step is done? | E1 echo barrier through a plugin channel; E2 chunks rendered; E3 polling observed facts | Flake rate over repeats |
+| **F** | Can goldens be stable? | F1 same scene N times, measure noise; F2 frozen tick; F3 region versus full frame; F4 Mac versus Linux | Pixel noise floor versus smallest real change we must catch |
+| **G** | How does a requirement read? | G1 windows; G2 await style; G3 timeline checked after the run. Also where logic runs: Paper, client, or a test JVM | Same scenarios side by side; developer preference |
+| **J** | Can a test drive real player input reliably and fast? | Input through the OS or window system, through the client's input callbacks, through the game's own actions; packets only as a baseline | Same server event as a person's input, flake rate, cost gated and rendered |
+| **K** | How do requirements that kill or restart Paper run with a warm client? | Restart the same Paper; a pre booted standby Paper; restart only the plugin | Seconds per restart requirement, verdicts after, leftovers |
+| **N** | Can the test runner step ticks itself? | Paper's tick manager frozen and stepped from the runner; client time driven per step; Paper's wall clock timers (`currentTick`, block break) tied to the stepped tick | Verdicts exact without slowing down, throughput, what still runs on wall clock |
+| **I** | Can coverage be attributed per requirement on a long lived Paper, cheaply? | I1 coverage agent with dump and reset between requirements; I2 one run per requirement group | Overhead per requirement, correct attribution on known scenes |
+| **H** | Does it hold on CI? | Real free runner, 4 vCPU, no GPU; llvmpipe OpenGL versus lavapipe Vulkan | FPS, throughput, flakes, the renderer string |
+
+Yardstick scenes, used across axes because they are the hard parts of the legacy behaviour:
+title with fade, chat line, action bar, packet only entity seen by one player only, per player fake
+block, camera ride on a packet only display entity with client interpolation, fake empty inventory,
+and sound. The full behaviour list is in `research/prior-decisions.md`.
+
+### Rules for running spikes
+
+- Throwaway Paper instances are started only inside `prototypes/game-verification/`, on free ports,
+  and are stopped after each run. This thread's prototyping is the one exception to the rule against
+  starting Paper by hand, confirmed by the developer (2026-11-07): a prototype branch may use local
+  throwaway Paper servers and CI, since results must hold on both. No k3d, no deploy.
+- Gradle goes through `cargo xtask heavy`, so it queues behind other builds.
+- Timing runs happen one at a time. Note machine load with every number.
+- Every number names its machine and renderer. Evidence and inference stay labelled.
+- The developer let spike H push its branch with a temporary workflow that ran only on that branch, to
+  measure on GitHub's free runner; the workflow was removed before the search ended.
+
+### Open questions from the search
+
+- "Micro server" was read as the smallest, fastest booting Paper; and the search went on with that reading.
+
+### Status
+
+The search finished on 2026-11-07. After checking the record against the newer design docs, gap
 spikes J (real player input), K (restarts and isolation) and N (runner stepped ticks) ran and are
 recorded below with the developer's later decisions above. The prototype code and the temporary
 workflow are removed again; they remain in git history at commit `86724c794`
 (`prototypes/game-verification/` and `.github/workflows/game-verification-prototype.yml`), which the
 Rerun and Reuse sections of J, K and N refer to; spikes before J refer to `9c9275f22`. Spikes L (a
 1.21.4 client next to 26.3) and M (dialogue redraws on the chat screen) are deferred past the first
-working version of the framework and run once their layers exist. Next
-is the framework plan, built in full before L3.
+working version of the framework and run once their layers exist. The framework was then
+planned and built in nine slices (`docs/drive/game-verification/record.yaml`), with prototypes P1
+to P11 and the lease time measurement answering the questions the plan raised; each has a spike
+document and a row below.
 
 ## Results
 
-One line per finished spike, newest last. Details in `spikes/`.
+One line per finished spike or prototype, newest last. Details in `spikes/`.
 
 | Spike | Result | Consequence |
 |---|---|---|
