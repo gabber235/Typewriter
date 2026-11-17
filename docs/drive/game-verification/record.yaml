@@ -313,7 +313,7 @@ pieces:
 
   - id: requirement-shape
     status: building
-    open: "Pool process design: detach it on purpose, replace a stale idle pool, a lease deadline, a report that survives a pool crash; IDE single runs unchecked"
+    open: "IDE single runs unchecked"
     tries:
       - id: fabric-client-gametest
         what: Fabric's client game test API as the runner
@@ -764,6 +764,12 @@ decided:
   - id: drop-dead-in-process-line
     what: "Remove Kotlin half (Recommended)"
     why: The devenv action's GRADLE_OPTS asked for in-process Kotlin compiling, but GRADLE_OPTS reaches only Gradle's client JVM, so it never applied; removing that half changes nothing and stops the file claiming it
+  - id: no-detach
+    what: "Close it, no detach (Recommended)"
+    why: The pool outlives its starter's normal exit, SIGTERM and SIGKILL by moving under pid 1 (checked on the Mac), and Gradle's cancel kills every descendant by pid, so setsid would change no case; a cancel stopping the whole game is wanted
+  - id: run-file-survives-crash
+    what: "Rewrite + ended mark (Recommended)"
+    why: The pool kept the run only in memory and wrote the run file at End, so a pool crash lost every finished result; the session names the run file and attempt policy when it joins, the pool rewrites the file atomically after every recorded attempt, End marks it ended, and xtask fails a run file without the mark as cut short
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
