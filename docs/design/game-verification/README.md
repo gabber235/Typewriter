@@ -43,8 +43,9 @@ clients hold none.
 - The **client mod** holds the clock still between step pings, builds a perception record after each
   tick, sends input as window events (XTest on its own Xvfb display on Linux, its own SDL queue
   elsewhere) and drops every input event it did not send itself.
-- The **wire** module holds the messages every part shares, the pool and part files and the heap
-  shares.
+- The **wire** is Skir: every message the parts exchange is declared in
+  `skir-src/harness/v1/wire.skir`. The wire module only frames those messages on a socket and holds
+  the pool and part files and the heap shares.
 - Test JVMs share the pool, so every module and extension shares the warm clients, and a warm single
   requirement takes about 2 s ([p6-pool-process.md](spikes/p6-pool-process.md)). The pool takes turns
   between test JVMs.
@@ -168,8 +169,8 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
   renderer drew fails with the approve command. Any other machine reports "not checked".
 - `cargo xtask goldens approve` takes the frames a run captured, refuses any the pinned renderer did
   not draw, writes the golden files and pushes the images. A Mesa or Minecraft upgrade fails every
-  golden, and its pull request approves them again. The weekly prune drops images no golden on
-  `develop` names once they are 30 days old.
+  golden, and its pull request approves them again. The weekly prune drops images no golden on a
+  long lived branch (`develop` or `features/v1`) names once they are 30 days old.
 
 ## Coverage and demo clips
 
@@ -206,9 +207,12 @@ own Papers run at once.
 - A leased attempt fails with `LeaseExpired` after 300 s.
 - Each part writes its pid and start time into its folder (`part.running`), and tests find a client
   or Paper by it; Linux shows Java only the first page of a command line.
-- **The run file** (`test_run.json`) survives a pool crash: a session names it when it joins, the pool
-  rewrites it atomically after every attempt and marks it `ended` once every session left. xtask
-  fails a run file without the mark as cut short; the finished cases' evidence still stages.
+- **The run file** (`test_run.json`) survives a pool crash: a session names it when it joins, and the
+  pool rewrites it atomically after every attempt, keeping it until the run ends. It carries the run's
+  id, which xtask chose and handed to every test JVM, so xtask rejects a file another run wrote. A run
+  the game could not serve says why in `failure`; a run that stopped while a session was still open is
+  marked `cut_short`. xtask fails either as the whole run's trouble, and the finished cases' evidence
+  still stages.
 - Each run keeps its pool, Paper and client logs in a folder of its own; the newest 3 are kept.
 
 ## Memory
@@ -422,8 +426,9 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   whose checks are all `never` or all client state: it needs one positive check (2026-11-06). A body
   that returns without one fails as refused (2026-11-18). A positive check is a window whose checks
   held, a `looksLike`, an outcome the framework observed that the body caught (a missed window, hung
-  work, a lost client or Paper), or the test kit's `holds`/`lacks` state check. A bare read of state
-  never counts: the rule catches a body that reads and forgets to assert.
+  work, a lost client or Paper, caught with `shouldThrow`), or the test kit's `holds`/`lacks` state
+  check. The rule covers whole bodies: a body with no positive check at all fails. A bare read made
+  after one check already held is not caught.
 - A requirement that needs rendered frames **declares it** (`player(frames = 60.hz)`), so the runner
   groups such requirements at a fitting server rate before it starts (2026-11-06). Superseded: stepped
   ticks replaced server rates, and clients perceive without drawing (P11), so only `visible()`, goldens
