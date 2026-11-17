@@ -1,6 +1,6 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.Perception
+import skirout.harness.v1.wire.Perception
 
 /** One check of a window: [player] perceives [fact] at some tick of it, or, as a never check, at none. */
 internal data class Check(
@@ -66,14 +66,14 @@ internal class Window(
         perception: Perception,
     ): Verdict {
         // A frame a clip draws between two ticks shows the clip; only a tick's end is judged, as without one.
-        if (verdict != Verdict.Open || perception.tick() > end || perception.partial() < 1f) return verdict
+        if (verdict != Verdict.Open || perception.tick > end || perception.partial < 1f) return verdict
         val carried = lastSeen.put(player, perception)
-        if (perception.tick() <= anchor) {
+        if (perception.tick <= anchor) {
             atStimulus[player] = perception
             return verdict
         }
-        if (carried != null && carried.tick() <= anchor && perception.tick() > anchor + 1) judge(player, carried, at = anchor + 1)
-        if (verdict == Verdict.Open) judge(player, perception, at = perception.tick())
+        if (carried != null && carried.tick <= anchor && perception.tick > anchor + 1) judge(player, carried, at = anchor + 1)
+        if (verdict == Verdict.Open) judge(player, perception, at = perception.tick)
         return verdict
     }
 
@@ -83,7 +83,7 @@ internal class Window(
         id: Int,
     ): Verdict {
         if (verdict != Verdict.Open || id != barrier) return verdict
-        lastSeen[player]?.takeIf { it.tick() <= anchor }?.let { judge(player, it, at = anchor + 1) }
+        lastSeen[player]?.takeIf { it.tick <= anchor }?.let { judge(player, it, at = anchor + 1) }
         if (verdict != Verdict.Open) return verdict
         waitingFor -= player
         if (waitingFor.isEmpty()) verdict = if (open.isEmpty()) Verdict.Passed(heldUntil) else Verdict.Missed(end, report())
@@ -126,8 +126,8 @@ internal class Window(
             }
             open.map { it.player }.distinct().forEach { player ->
                 val last = lastSeen[player]
-                val texts = last?.texts().orEmpty()
-                val shown = if (texts.isEmpty()) "nothing" else texts.joinToString { "${it.element()} \"${it.text()}\"" }
+                val texts = last?.texts.orEmpty()
+                val shown = if (texts.isEmpty()) "nothing" else texts.joinToString { "${it.element} \"${it.text}\"" }
                 append("At tick $end ${player.name} perceived $shown.\n")
                 open.filter { it.player == player }.mapNotNull { check -> last?.let(check.fact::observed) }.distinct().forEach {
                     append("At tick $end ${player.name} perceived $it.\n")

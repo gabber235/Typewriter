@@ -3,22 +3,9 @@ package com.typewritermc.playtest.client;
 import com.typewritermc.playtest.client.mixin.AbstractContainerScreenAccessor;
 import com.typewritermc.playtest.client.mixin.ChatScreenAccessor;
 import com.typewritermc.playtest.client.mixin.MouseHandlerAccessor;
-import com.typewritermc.playtest.wire.Message.AimAtBlockStep;
-import com.typewritermc.playtest.wire.Message.AimAtEntityStep;
-import com.typewritermc.playtest.wire.Message.ButtonStep;
-import com.typewritermc.playtest.wire.Message.Input;
-import com.typewritermc.playtest.wire.Message.InputDone;
-import com.typewritermc.playtest.wire.Message.InputStep;
-import com.typewritermc.playtest.wire.Message.Key;
-import com.typewritermc.playtest.wire.Message.KeyStep;
-import com.typewritermc.playtest.wire.Message.PointAtSlotStep;
-import com.typewritermc.playtest.wire.Message.ScrollStep;
-import com.typewritermc.playtest.wire.Message.TypeInChatStep;
-import com.typewritermc.playtest.wire.Message.WaitStep;
-import com.typewritermc.playtest.wire.Message.WalkToStep;
+import build.skir.internal.MustNameArguments;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
@@ -35,9 +22,15 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import skirout.harness.v1.wire.Answer;
+import skirout.harness.v1.wire.ClientTask;
+import skirout.harness.v1.wire.InputStep;
+import skirout.harness.v1.wire.KeyboardKey;
+import skirout.harness.v1.wire.Message;
+import skirout.harness.v1.wire.Reply;
 
 /**
- * The player's hands: each {@link Input} becomes a script of steps that send window events through the
+ * The player's hands: each input the session asks for becomes a script of steps that send window events through the
  * {@link InputDevice}. Steps run only right after a tick, so the next tick handles what they sent, and that
  * tick's ack waits until each of them reached the game: what they make the client send reaches Paper before Paper
  * can run the next tick. An input that arrives while Paper is idle asks it for a tick to start after. A step
@@ -55,8 +48,8 @@ final class Inputs {
     /** Distance to the point at which walking lets go of the forward key; the player slides the rest. */
     private static final double WALK_RELEASE = 0.35;
 
-    private static final Queue<Input> arrived = new ConcurrentLinkedQueue<>();
-    private static final Set<Key> keysDown = EnumSet.noneOf(Key.class);
+    private static final Queue<Arrived> arrived = new ConcurrentLinkedQueue<>();
+    private static final Set<KeyboardKey> keysDown = new HashSet<>();
     private static final Set<Integer> buttonsDown = new HashSet<>();
     private static InputDevice device;
     private static Script running;
@@ -68,10 +61,13 @@ final class Inputs {
         return !"xtest".equals(System.getProperty("playtest.input", "sdl"));
     }
 
-    /** An input arrived from the session; it starts right after the next tick. Any thread. */
-    static void arrive(Input input) {
-        arrived.add(input);
+    /** The session's request {@code request} asks for {@code input}; it starts right after the next tick. Any thread. */
+    static void arrive(long request, ClientTask.Input input) {
+        arrived.add(new Arrived(request, input));
     }
+
+    /** An input the session asked for under {@code request}, waiting to start. */
+    private record Arrived(long request, ClientTask.Input input) {}
 
     /** Whether an input waits to start, or a script waits on further ticks. */
     static boolean busy() {
@@ -112,7 +108,7 @@ final class Inputs {
         }
         if (running != null) running.advance(mc, hands);
         while (running == null) {
-            Input next = arrived.poll();
+            Arrived next = arrived.poll();
             if (next == null) return;
             running = new Script(next, Stepper.lastRan());
             running.advance(mc, hands);
@@ -139,10 +135,10 @@ final class Inputs {
         private final int mark;
         private final Deque<Step> steps = new ArrayDeque<>();
 
-        Script(Input input, int mark) {
-            this.request = input.request();
+        Script(Arrived arrived, int mark) {
+            this.request = arrived.request();
             this.mark = mark;
-            input.steps().forEach(step -> steps.add(step(step)));
+            arrived.input().getSteps().forEach(step -> steps.add(step(step)));
         }
 
         /** Runs steps until one waits on a tick, the last one ended, or one failed. */
@@ -161,7 +157,8 @@ final class Inputs {
 
         private void finish(String failure) {
             running = null;
-            PlaytestClient.send(new InputDone(request, mark, failure));
+            var answer = Answer.Companion.createInputDone(MustNameArguments.INSTANCE, mark, failure);
+            PlaytestClient.send(new Message.ReplyWrapper(new Reply(MustNameArguments.INSTANCE, request, answer, null)));
         }
     }
 
@@ -181,28 +178,41 @@ final class Inputs {
 
     private static Step step(InputStep step) {
         return switch (step) {
-            case KeyStep key -> (mc, hands) -> {
-                hands.key(key.key(), key.down());
-                if (key.down()) keysDown.add(key.key());
-                else keysDown.remove(key.key());
+            case InputStep.KeyWrapper wrapper -> {
+                var key = wrapper.getValue();
+                yield (mc, hands) -> {
+                    hands.key(key.getKey(), key.getDown());
+                    if (key.getDown()) keysDown.add(key.getKey());
+                    else keysDown.remove(key.getKey());
+                    return Progress.DONE;
+                };
+            }
+            case InputStep.ButtonWrapper wrapper -> {
+                var button = wrapper.getValue();
+                yield (mc, hands) -> {
+                    hands.button(button.getButton(), button.getDown());
+                    if (button.getDown()) buttonsDown.add(button.getButton());
+                    else buttonsDown.remove(button.getButton());
+                    return Progress.DONE;
+                };
+            }
+            case InputStep.ScrollWrapper scroll -> (mc, hands) -> {
+                hands.scroll(scroll.getValue().getAmount());
                 return Progress.DONE;
             };
-            case ButtonStep button -> (mc, hands) -> {
-                hands.button(button.button(), button.down());
-                if (button.down()) buttonsDown.add(button.button());
-                else buttonsDown.remove(button.button());
-                return Progress.DONE;
-            };
-            case ScrollStep scroll -> (mc, hands) -> {
-                hands.scroll(scroll.amount());
-                return Progress.DONE;
-            };
-            case WaitStep wait -> new Waiting(wait.ticks());
-            case TypeInChatStep type -> new TypingInChat(type.text());
-            case AimAtEntityStep aim -> new Aiming(aim.entity(), null);
-            case AimAtBlockStep aim -> new Aiming(null, new BlockPos(aim.block().x(), aim.block().y(), aim.block().z()));
-            case PointAtSlotStep point -> new PointingAtSlot(point.slot());
-            case WalkToStep walk -> new Walking(walk.x(), walk.z(), walk.maxTicks());
+            case InputStep.WaitWrapper wait -> new Waiting(wait.getValue().getTicks());
+            case InputStep.TypeInChatWrapper type -> new TypingInChat(type.getValue().getText());
+            case InputStep.AimAtEntityWrapper aim -> new Aiming(UUID.fromString(aim.getValue().getEntity()), null);
+            case InputStep.AimAtBlockWrapper wrapper -> {
+                var at = wrapper.getValue().getBlock();
+                yield new Aiming(null, new BlockPos(at.getX(), at.getY(), at.getZ()));
+            }
+            case InputStep.PointAtSlotWrapper point -> new PointingAtSlot(point.getValue().getSlot());
+            case InputStep.WalkToWrapper wrapper -> {
+                var walk = wrapper.getValue();
+                yield new Walking(walk.getX(), walk.getZ(), walk.getMaxTicks());
+            }
+            default -> (mc, hands) -> Progress.failed("the step " + step + " is none this client knows");
         };
     }
 
@@ -253,8 +263,8 @@ final class Inputs {
                 if (expected != null) return Progress.failed("the chat closed while typing \"" + typed() + "\"");
                 if (!opening) {
                     opening = true;
-                    hands.key(Key.T, true);
-                    hands.key(Key.T, false);
+                    hands.key(KeyboardKey.T.INSTANCE, true);
+                    hands.key(KeyboardKey.T.INSTANCE, false);
                     return Progress.WAIT;
                 }
                 return elapsed > PATIENCE ? Progress.failed("the chat key opened no chat in " + PATIENCE + " ticks") : Progress.WAIT;
@@ -390,18 +400,18 @@ final class Inputs {
                     return elapsed > PATIENCE ? Progress.failed("the view did not turn toward the point: " + view(mc)) : Progress.WAIT;
                 }
                 walking = true;
-                hands.key(Key.W, true);
-                keysDown.add(Key.W);
+                hands.key(KeyboardKey.W.INSTANCE, true);
+                keysDown.add(KeyboardKey.W.INSTANCE);
                 return Progress.WAIT;
             }
             if (remaining <= WALK_RELEASE) {
-                hands.key(Key.W, false);
-                keysDown.remove(Key.W);
+                hands.key(KeyboardKey.W.INSTANCE, false);
+                keysDown.remove(KeyboardKey.W.INSTANCE);
                 return Progress.DONE;
             }
             if (elapsed > maxTicks) {
-                hands.key(Key.W, false);
-                keysDown.remove(Key.W);
+                hands.key(KeyboardKey.W.INSTANCE, false);
+                keysDown.remove(KeyboardKey.W.INSTANCE);
                 return Progress.failed("after " + maxTicks + " ticks the player stands " + String.format("%.2f", remaining) + " blocks from the point");
             }
             return Progress.WAIT;

@@ -1,6 +1,6 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.Renderer
+import skirout.harness.v1.wire.Renderer
 import java.awt.image.BufferedImage
 import java.nio.ByteBuffer
 import java.nio.file.Files
@@ -83,20 +83,22 @@ class Frame(
  * The renderer goldens are approved on and exact for, the pinned runner's: Vulkan through Mesa's
  * llvmpipe (lavapipe) on Linux x86, with the Mesa devenv ships as [mesa]. The device names the CPU's
  * vector width, which another runner CPU may change, so any llvmpipe device is pinned; a golden still
- * compares only with the exact renderer that drew it.
+ * compares only with the exact renderer that drew it. [required] says this machine is the pinned runner
+ * (CI's game job), where a frame from any other renderer means the runner drifted from the pin.
  */
 class PinnedRenderer(
     private val mesa: String,
+    val required: Boolean = false,
 ) {
     private val mesaRelease = Regex("""(?<![\w.])Mesa ${Regex.escape(mesa)}(?![\w.])""")
 
     /** Whether [renderer] is the pinned one. */
     fun drew(renderer: Renderer): Boolean =
-        renderer.os() == "Linux" &&
-            renderer.arch() == "amd64" &&
-            renderer.backend() == "Vulkan" &&
-            renderer.device().startsWith("llvmpipe (") &&
-            mesaRelease.containsMatchIn(renderer.driver())
+        renderer.os == "Linux" &&
+            renderer.arch == "amd64" &&
+            renderer.backend == "Vulkan" &&
+            renderer.device.startsWith("llvmpipe (") &&
+            mesaRelease.containsMatchIn(renderer.driver)
 
     override fun toString(): String = "Vulkan on llvmpipe, Mesa $mesa, Linux, amd64"
 }
@@ -122,7 +124,7 @@ data class Golden(
                 key("sha256"),
                 key("width").toInt(),
                 key("height").toInt(),
-                Renderer(key("backend"), key("device"), key("driver"), key("os"), key("arch")),
+                Renderer(backend = key("backend"), device = key("device"), driver = key("driver"), os = key("os"), arch = key("arch")),
             )
         }
 
@@ -148,11 +150,11 @@ data class Golden(
                     "sha256" to frame.sha256,
                     "width" to frame.width,
                     "height" to frame.height,
-                    "backend" to renderer.backend(),
-                    "device" to renderer.device(),
-                    "driver" to renderer.driver(),
-                    "os" to renderer.os(),
-                    "arch" to renderer.arch(),
+                    "backend" to renderer.backend,
+                    "device" to renderer.device,
+                    "driver" to renderer.driver,
+                    "os" to renderer.os,
+                    "arch" to renderer.arch,
                     "pinned" to pinned.drew(renderer),
                 ).joinToString("") { (key, value) -> "$key=$value\n" },
             )
@@ -201,7 +203,8 @@ sealed interface GoldenVerdict {
 /**
  * Compares [frame], drawn by [renderer], with [golden]. Only the [pinned] renderer checks; there a
  * golden never approved, or one another renderer drew, as before a Mesa upgrade, fails until it is
- * approved. [image] is the golden's own frame when it is at hand; only then can a difference
+ * approved. Another renderer passes unchecked, except on the pinned runner, where it fails: every golden
+ * would pass unchecked once the runner stopped matching the pin. [image] is the golden's own frame when it is at hand; only then can a difference
  * show where it lies.
  */
 fun judge(
@@ -212,6 +215,12 @@ fun judge(
     pinned: PinnedRenderer,
 ): GoldenVerdict {
     if (!pinned.drew(renderer)) {
+        if (pinned.required) {
+            return GoldenVerdict.Differs(
+                "this is the pinned runner, but it draws with ${renderer.named}, not the pinned renderer ($pinned)",
+                null,
+            )
+        }
         return GoldenVerdict.NotChecked("this machine draws with ${renderer.named}, not the pinned renderer ($pinned)")
     }
     if (golden == null) return GoldenVerdict.Differs("no golden is approved yet", null)
@@ -235,4 +244,4 @@ fun judge(
     return GoldenVerdict.Differs("${image.differingPixels(frame)} of ${frame.width * frame.height} pixels differ", image.diff(frame))
 }
 
-private val Renderer.named: String get() = "${backend()}, ${device()}, ${driver()}, ${os()}, ${arch()}"
+private val Renderer.named: String get() = "$backend, $device, $driver, $os, $arch"

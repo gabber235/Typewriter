@@ -3,33 +3,10 @@ package com.typewritermc.playtest.plugin;
 import com.destroystokyo.paper.event.server.ServerTickEndEvent;
 import com.destroystokyo.paper.event.server.ServerTickStartEvent;
 import com.typewritermc.playtest.agent.Step;
+import build.skir.internal.MustNameArguments;
 import com.typewritermc.playtest.wire.Link;
-import com.typewritermc.playtest.wire.Message;
-import com.typewritermc.playtest.wire.Message.Claim;
-import com.typewritermc.playtest.wire.Message.Claimed;
-import com.typewritermc.playtest.wire.Message.ClientStalled;
-import com.typewritermc.playtest.wire.Message.Covered;
-import com.typewritermc.playtest.wire.Message.Hello;
-import com.typewritermc.playtest.wire.Message.HungEnded;
-import com.typewritermc.playtest.wire.Message.Kind;
-import com.typewritermc.playtest.wire.Message.Marks;
-import com.typewritermc.playtest.wire.Message.PlayerLeft;
-import com.typewritermc.playtest.wire.Message.Probe;
-import com.typewritermc.playtest.wire.Message.ProbeDone;
-import com.typewritermc.playtest.wire.Message.Query;
-import com.typewritermc.playtest.wire.Message.Region;
-import com.typewritermc.playtest.wire.Message.RegionsAhead;
-import com.typewritermc.playtest.wire.Message.Release;
-import com.typewritermc.playtest.wire.Message.Resume;
-import com.typewritermc.playtest.wire.Message.Resumed;
-import com.typewritermc.playtest.wire.Message.Role;
-import com.typewritermc.playtest.wire.Message.Settle;
-import com.typewritermc.playtest.wire.Message.Settled;
-import com.typewritermc.playtest.wire.Message.StepUntil;
-import com.typewritermc.playtest.wire.Message.Stepping;
-import com.typewritermc.playtest.wire.Message.StopStepping;
-import com.typewritermc.playtest.wire.Message.WorkHung;
-import com.typewritermc.playtest.wire.Payload.StepAck;
+import com.typewritermc.playtest.wire.Payload;
+import com.typewritermc.playtest.wire.SkirEnums;
 import com.typewritermc.playtest.wire.WireException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,6 +14,20 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ThreadPoolExecutor;
+import okio.ByteString;
+import skirout.harness.v1.wire.Answer;
+import skirout.harness.v1.wire.Ask;
+import skirout.harness.v1.wire.Hello;
+import skirout.harness.v1.wire.Message;
+import skirout.harness.v1.wire.PaperAsk;
+import skirout.harness.v1.wire.PlayerEvent;
+import skirout.harness.v1.wire.Probe;
+import skirout.harness.v1.wire.Region;
+import skirout.harness.v1.wire.Reply;
+import skirout.harness.v1.wire.Request;
+import skirout.harness.v1.wire.Role;
+import skirout.harness.v1.wire.StateKind;
+import skirout.harness.v1.wire.StepAck;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.protocol.common.ClientboundPingPacket;
 import net.minecraft.server.MinecraftServer;
@@ -68,7 +59,6 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
             PlaytestPlugin::nothingLeftToSend,
             task -> MinecraftServer.getServer().scheduleOnMain(task),
             work,
-            this::reportHung,
             this::reportEnded,
             new Acks(System::nanoTime),
             this::reportStalled);
@@ -80,7 +70,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private final ChatWork chat = new ChatWork();
     private final SuggestionWork suggestions = new SuggestionWork();
     private final Coverage coverage = new Coverage(
-            () -> RT.getAgent().getExecutionData(true), read -> this.pool.send(new Covered(read.attempts(), read.nanos(), read.exec())));
+            () -> RT.getAgent().getExecutionData(true), read -> this.pool.send(Message.Companion.createCovered(MustNameArguments.INSTANCE, read.attempts(), read.nanos(), ByteString.of(read.exec()))));
     private Link pool;
 
     @Override
@@ -107,15 +97,15 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(owned, this);
         Bukkit.getPluginManager().registerEvents(chat, this);
         Bukkit.getPluginManager().registerEvents(suggestions, this);
-        Bukkit.getMessenger().registerIncomingPluginChannel(this, StepAck.CHANNEL, (channel, player, bytes) -> {
+        Bukkit.getMessenger().registerIncomingPluginChannel(this, Payload.STEP_CHANNEL, (channel, player, bytes) -> {
             UUID id = player.getUniqueId();
             StepAck ack;
             try {
-                ack = StepAck.read(bytes);
+                ack = Payload.stepAck(bytes);
             } catch (WireException broken) {
                 throw new IllegalArgumentException(player.getName() + "'s client sent a step ack Paper cannot read", broken);
             }
-            onMainThread(() -> policy.acked(id, ack.tick(), ack.busy()));
+            onMainThread(() -> policy.acked(id, ack.getTick(), ack.getBusy()));
         });
         Step.policy = policy::run;
         // The first tick runs once the server is done starting, so the pool hears from a Paper players can join.
@@ -125,7 +115,9 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     private void connect(int port) {
         try {
             String name = System.getProperty("playtest.paper.name", "paper");
-            pool = Link.open(port, new Hello(Role.PAPER, name), message -> onMainThread(() -> receive(message)), this::poolLost);
+            pool = Link.open(port, new Hello(MustNameArguments.INSTANCE, Role.PAPER.INSTANCE, name, null), message -> onMainThread(() -> receive(message)), this::poolLost);
+            // Hung work is reported from its deadline's thread, so the report never waits for a long tick.
+            work.reportHungTo(this::reportHung);
         } catch (IOException unreachable) {
             poolLost(unreachable);
         }
@@ -133,32 +125,57 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
 
     private void receive(Message message) {
         switch (message) {
-            case Stepping stepping -> Step.on = true;
-            case Claim claim -> claim(claim);
-            case Resume resume -> resume(resume);
-            case Release release -> {
-                coverage.ended(release.attempt());
-                policy.release(attempts.release(release.attempt()));
-                ground.release(release.attempt());
+            case Message.STEPPING stepping -> Step.on = true;
+            case Message.ClaimWrapper claim -> claim(claim.getValue());
+            case Message.ResumeWrapper resume -> resume(resume.getValue());
+            case Message.ReleaseWrapper release -> {
+                long attempt = release.getValue().getAttempt();
+                coverage.ended(attempt);
+                policy.release(attempts.release(attempt));
+                ground.release(attempt);
             }
-            case RegionsAhead ahead -> ground.load(ahead.regions());
-            case Probe probe -> {
-                int ranAfter = policy.lastEnded();
-                var players = online(probe.players());
-                String failure = players.failure() != null ? players.failure() : probes.run(players.online(), probe.action());
-                // A probe is done once its players' clients have what it caused, so the next stimulus finds it there.
-                if (failure == null) policy.deliver(probe.players(), () -> pool.send(new ProbeDone(probe.request(), ranAfter, null)));
-                else pool.send(new ProbeDone(probe.request(), ranAfter, failure));
+            case Message.RegionsAheadWrapper ahead -> ground.load(ahead.getValue().getRegions());
+            case Message.RequestWrapper request -> request(request.getValue());
+            case Message.SettleWrapper settle -> {
+                long id = settle.getValue().getId();
+                policy.settle(attempts.players(id), () -> {
+                    coverage.settled(id);
+                    pool.send(Message.Companion.createSettled(MustNameArguments.INSTANCE, id, List.of()));
+                });
             }
-            case Settle settle -> policy.settle(attempts.players(settle.id()), () -> {
-                coverage.settled(settle.id());
-                pool.send(new Settled(settle.id(), List.of()));
-            });
-            case Query query -> pool.send(marks(query));
-            case StepUntil step -> policy.stepUntil(step.player(), step.tick(), step.barrier());
-            case StopStepping stop -> policy.stop(stop.player());
+            case Message.StepUntilWrapper step ->
+                    policy.stepUntil(UUID.fromString(step.getValue().getPlayer()), step.getValue().getTick(), step.getValue().getBarrier());
+            case Message.StopSteppingWrapper stop -> policy.stop(UUID.fromString(stop.getValue().getPlayer()));
             default -> getLogger().severe("The game pool sent " + message + ", which Paper never receives");
         }
+    }
+
+    /** Answers a session's request to Paper: a probe or a query. */
+    private void request(Request request) {
+        long id = request.getId();
+        PaperAsk ask = request.getAsk() instanceof Ask.PaperWrapper paper ? paper.getValue() : null;
+        switch (ask) {
+            case PaperAsk.ProbeWrapper probe -> probe(id, probe.getValue());
+            case PaperAsk.QueryWrapper query -> pool.send(reply(id, marks(query.getValue().getPlayer())));
+            case null, default -> getLogger().severe("The game pool sent " + request + ", which Paper never answers");
+        }
+    }
+
+    /** Runs the probe between ticks; it is done once its players' clients have what it caused, so the next stimulus finds it there. */
+    private void probe(long request, Probe probe) {
+        int ranAfter = policy.lastEnded();
+        List<UUID> ids = uuids(probe.getPlayers());
+        var players = online(ids);
+        String failure = players.failure() != null ? players.failure() : probes.run(players.online(), probe.getAction());
+        if (failure == null) {
+            policy.deliver(ids, () -> pool.send(reply(request, Answer.Companion.createProbeDone(MustNameArguments.INSTANCE, ranAfter, null))));
+        } else {
+            pool.send(reply(request, Answer.Companion.createProbeDone(MustNameArguments.INSTANCE, ranAfter, failure)));
+        }
+    }
+
+    private static Message reply(long request, Answer answer) {
+        return new Message.ReplyWrapper(new Reply(MustNameArguments.INSTANCE, request, answer, null));
     }
 
     /**
@@ -167,29 +184,31 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
      * {@link PlayerWipeEvent}), and stand at the middle of the attempt's region. The claim is done once
      * each of their clients holds all of it.
      */
-    private void claim(Claim claim) {
-        var players = online(claim.players());
+    private void claim(Message.Claim claim) {
+        long attempt = claim.getAttempt();
+        List<UUID> ids = uuids(claim.getPlayers());
+        var players = online(ids);
         if (players.failure() != null) {
-            pool.send(new Claimed(claim.attempt(), players.failure()));
+            pool.send(Message.Companion.createClaimed(MustNameArguments.INSTANCE, attempt, players.failure()));
             return;
         }
         // What plugins do for the attempt from here on, its players' wipe included, counts for it.
-        coverage.started(claim.attempt());
-        attempts.claim(claim.attempt(), claim.players());
-        ground.claim(claim.attempt(), claim.region());
-        policy.claim(claim.players());
+        coverage.started(attempt);
+        attempts.claim(attempt, ids);
+        ground.claim(attempt, claim.getRegion());
+        policy.claim(ids);
         probes.forget(players.online());
         for (Player player : players.online()) {
             wipe.wipe(player);
             Bukkit.getPluginManager().callEvent(new PlayerWipeEvent(player));
         }
-        Location middle = middle(players.online().getFirst().getWorld(), claim.region());
+        Location middle = middle(players.online().getFirst().getWorld(), claim.getRegion());
         for (Player player : players.online()) {
             player.setVelocity(new Vector());
             player.setFallDistance(0);
             player.teleport(middle);
         }
-        policy.deliver(claim.players(), () -> pool.send(new Claimed(claim.attempt(), null)));
+        policy.deliver(ids, () -> pool.send(Message.Companion.createClaimed(MustNameArguments.INSTANCE, attempt, null)));
     }
 
     /**
@@ -197,40 +216,47 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
      * does, but without the wipe or the move, so they keep what Paper loaded for them. Resumed once each
      * of their clients holds all Paper sends them.
      */
-    private void resume(Resume resume) {
+    private void resume(Message.Resume resume) {
         int ranAfter = policy.lastEnded();
-        var players = online(resume.players());
+        long attempt = resume.getAttempt();
+        List<UUID> ids = uuids(resume.getPlayers());
+        var players = online(ids);
         if (players.failure() != null) {
-            pool.send(new Resumed(resume.attempt(), ranAfter, players.failure()));
+            pool.send(Message.Companion.createResumed(MustNameArguments.INSTANCE, attempt, ranAfter, players.failure()));
             return;
         }
-        coverage.started(resume.attempt());
-        attempts.claim(resume.attempt(), resume.players());
-        policy.claim(resume.players());
-        policy.deliver(resume.players(), () -> pool.send(new Resumed(resume.attempt(), ranAfter, null)));
+        coverage.started(attempt);
+        attempts.claim(attempt, ids);
+        policy.claim(ids);
+        policy.deliver(ids, () -> pool.send(Message.Companion.createResumed(MustNameArguments.INSTANCE, attempt, ranAfter, null)));
     }
 
     /** Leaves a mark of [kind] on the player: Paper keeps some kinds, this plugin the others. */
-    private void mark(Player player, Kind kind) {
+    private void mark(Player player, StateKind kind) {
         if (Wipe.KINDS.contains(kind)) wipe.mark(player, kind);
         else owned.mark(player, kind);
     }
 
     /** Answers which kinds the queried player carries a mark of. */
-    private Marks marks(Query query) {
-        Player player = Bukkit.getPlayer(query.player());
-        if (player == null) return new Marks(query.request(), List.of(), "the player " + query.player() + " is not online");
-        var marked = new ArrayList<Kind>();
-        for (Kind kind : Kind.values()) {
+    private Answer marks(String queried) {
+        Player player = Bukkit.getPlayer(UUID.fromString(queried));
+        if (player == null) return Answer.Companion.createMarks(MustNameArguments.INSTANCE, List.of(), "the player " + queried + " is not online");
+        var marked = new ArrayList<StateKind>();
+        for (StateKind kind : SkirEnums.constantsOf(StateKind.Companion.getTypeDescriptor())) {
             if (Wipe.KINDS.contains(kind) ? wipe.marked(player, kind) : owned.marked(player, kind)) marked.add(kind);
         }
-        return new Marks(query.request(), List.copyOf(marked), null);
+        return Answer.Companion.createMarks(MustNameArguments.INSTANCE, marked, null);
     }
 
 
     /** Where a claim puts the attempt's players: on the ground at the middle of the region. */
     private static Location middle(World world, Region region) {
-        return new Location(world, region.x() + 0.5, world.getHighestBlockYAt(region.x(), region.z()) + 1, region.z() + 0.5);
+        return new Location(world, region.getX() + 0.5, world.getHighestBlockYAt(region.getX(), region.getZ()) + 1, region.getZ() + 0.5);
+    }
+
+    /** The players the wire names by their UUID's text. */
+    private static List<UUID> uuids(List<String> ids) {
+        return ids.stream().map(UUID::fromString).toList();
     }
 
     private record Online(List<Player> online, String failure) {}
@@ -253,7 +279,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         policy.lose(player.getUniqueId());
-        if (pool != null) pool.send(new PlayerLeft(player.getName(), event.getReason().name()));
+        if (pool != null) pool.send(Message.Companion.createPlayerLeft(MustNameArguments.INSTANCE, player.getName(), event.getReason().name()));
     }
 
     @EventHandler
@@ -273,13 +299,14 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
     /** The player's attempt fails with the hung work; Paper never cancels it. */
     private void reportHung(WorkLedger.Hung hung) {
         getLogger().warning(hung.playerName() + "'s work \"" + hung.name() + "\" began after tick " + hung.beganAfter() + " and still runs after 1 s; it holds no more ticks.");
-        pool.send(new WorkHung(hung.playerName(), hung.name(), hung.beganAfter()));
+        var happened = PlayerEvent.Happened.Companion.createWorkHung(MustNameArguments.INSTANCE, hung.name(), hung.beganAfter());
+        pool.send(new Message.PlayerEventWrapper(new PlayerEvent(MustNameArguments.INSTANCE, hung.playerName(), happened, null)));
     }
 
     /** Work reported hung ended; the pool lets its player back. */
     private void reportEnded(WorkLedger.Hung hung) {
         getLogger().info(hung.playerName() + "'s hung work \"" + hung.name() + "\" ended.");
-        pool.send(new HungEnded(hung.playerName(), hung.name()));
+        pool.send(Message.Companion.createHungEnded(MustNameArguments.INSTANCE, hung.playerName(), hung.name()));
     }
 
     /** The client acked nothing for 5 s while behind; it holds back no tick and the pool replaces it. */
@@ -287,7 +314,7 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         Player player = Bukkit.getPlayer(stalled.player());
         if (player == null) return;
         getLogger().warning(player.getName() + "'s client acked no tick for 5 s after tick " + stalled.lastAcked() + "; it holds no more ticks.");
-        pool.send(new ClientStalled(player.getName(), stalled.lastAcked()));
+        pool.send(Message.Companion.createClientStalled(MustNameArguments.INSTANCE, player.getName(), stalled.lastAcked()));
     }
 
     private void sendBarrier(UUID id, int barrier) {

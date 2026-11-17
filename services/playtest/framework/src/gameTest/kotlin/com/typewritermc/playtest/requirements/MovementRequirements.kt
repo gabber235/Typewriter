@@ -3,11 +3,11 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.GameMode
-import com.typewritermc.playtest.Key
 import com.typewritermc.playtest.camera
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.testSuite
+import skirout.harness.v1.wire.KeyboardKey
 
 val MovementRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("MOVE-1", "holding the sneak key lowers the view") {
@@ -15,7 +15,7 @@ val MovementRequirements by testSuite(compartment = { GameCompartment }) {
         probe.teleport(player, 0.5, 100.0, 0.5)
         probe.gameMode(player, GameMode.SURVIVAL)
 
-        player.hold(Key.LEFT_SHIFT, 6.ticks)
+        player.hold(KeyboardKey.LEFT_SHIFT, 6.ticks)
 
         within(10.ticks) { player sees camera.sank() }
     }
@@ -25,7 +25,7 @@ val MovementRequirements by testSuite(compartment = { GameCompartment }) {
         probe.teleport(player, 0.5, 100.0, 0.5)
         probe.gameMode(player, GameMode.SURVIVAL)
 
-        player.hold(Key.SPACE, 3.ticks)
+        player.hold(KeyboardKey.SPACE, 3.ticks)
 
         within(10.ticks) { player sees camera.rose() }
     }
@@ -35,7 +35,7 @@ val MovementRequirements by testSuite(compartment = { GameCompartment }) {
         probe.teleport(player, 0.5, 100.0, 0.5)
         probe.gameMode(player, GameMode.SPECTATOR)
 
-        player.hold(Key.SPACE, 3.ticks)
+        player.hold(KeyboardKey.SPACE, 3.ticks)
 
         within(10.ticks) { player sees camera.rose() }
     }

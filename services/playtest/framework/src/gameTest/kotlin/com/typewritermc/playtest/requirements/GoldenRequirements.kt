@@ -13,11 +13,11 @@ import com.typewritermc.playtest.idle
 import com.typewritermc.playtest.mark
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.ticks
-import com.typewritermc.playtest.wire.Message.Kind
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import skirout.harness.v1.wire.StateKind
 
 val GoldenRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("GOLDEN-1", "a quest sidebar looks exactly like its approved golden") {
@@ -51,7 +51,7 @@ val GoldenRequirements by testSuite(compartment = { GameCompartment }) {
             probe.gameMode(player, GameMode.SURVIVAL)
             probe.give(player, slot = 0, item = "spyglass")
             probe.selectSlot(player, 0)
-            mark(player, Kind.PLAYER_TIME)
+            mark(player, StateKind.PLAYER_TIME)
             player.hold(Button.RIGHT, 40.ticks)
             frameOf(player, "in-rain").sha256 shouldNotBe beforeRain.sha256
         },

@@ -1,15 +1,22 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.Renderer
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.harness.v1.wire.Renderer
 import java.nio.file.Files
 
 val GoldenTest by testSuite {
-    val runner = Renderer("Vulkan", "llvmpipe (LLVM 20.1.2, 256 bits)", "1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)", "Linux", "amd64")
-    val mac = Renderer("OpenGL", "Apple M1 Max", "4.1 Metal - 89.4", "Mac OS X", "aarch64")
+    val runner =
+        Renderer(
+            backend = "Vulkan",
+            device = "llvmpipe (LLVM 20.1.2, 256 bits)",
+            driver = "1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)",
+            os = "Linux",
+            arch = "amd64",
+        )
+    val mac = Renderer(backend = "OpenGL", device = "Apple M1 Max", driver = "4.1 Metal - 89.4", os = "Mac OS X", arch = "aarch64")
     val pinned = PinnedRenderer(mesa = "26.2.5")
     val sidebar = Frame(3, 2, intArrayOf(0x7F7F7F, 0x7F7F7F, 0xFFAA00, 0x7F7F7F, 0xFFFFFF, 0xFFAA00))
     val approved by lazy { Golden(sidebar.sha256, 3, 2, runner) }
@@ -96,6 +103,26 @@ val GoldenTest by testSuite {
         verdict.reason shouldBe
             "this machine draws with OpenGL, Apple M1 Max, 4.1 Metal - 89.4, Mac OS X, aarch64, not the pinned renderer " +
             "(Vulkan on llvmpipe, Mesa 26.2.5, Linux, amd64)"
+    }
+
+    test("on the pinned runner, a frame another renderer drew fails and names the renderer it saw") {
+        val onPinnedRunner = PinnedRenderer(mesa = "26.2.5", required = true)
+        val drift =
+            Renderer(
+                backend = "Vulkan",
+                device = "llvmpipe (LLVM 20.1.2, 256 bits)",
+                driver = "1.4.318 llvmpipe Mesa 26.3.0 (LLVM 20.1.2)",
+                os = "Linux",
+                arch = "amd64",
+            )
+
+        val verdict = judge(approved, sidebar, sidebar, drift, onPinnedRunner).shouldBeInstanceOf<GoldenVerdict.Differs>()
+
+        verdict.reason shouldBe
+            "this is the pinned runner, but it draws with Vulkan, llvmpipe (LLVM 20.1.2, 256 bits), " +
+            "1.4.318 llvmpipe Mesa 26.3.0 (LLVM 20.1.2), Linux, amd64, not the pinned renderer " +
+            "(Vulkan on llvmpipe, Mesa 26.2.5, Linux, amd64)"
+        judge(approved, sidebar, sidebar, runner, onPinnedRunner) shouldBe GoldenVerdict.Matches
     }
 
     test("on the pinned renderer, a golden never approved fails; off it, it is not checked") {

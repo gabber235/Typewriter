@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import skirout.harness.v1.test_run.Demonstrates
 
 /**
  * [player]'s work [name] runs off Paper's main thread for [millis] of wall clock, counted as any plugin

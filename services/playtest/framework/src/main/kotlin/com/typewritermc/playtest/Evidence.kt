@@ -1,5 +1,6 @@
 package com.typewritermc.playtest
 
+import skirout.harness.v1.test_run.Artifact
 import java.nio.file.Path
 
 /**
@@ -17,11 +18,8 @@ internal class Evidence(
 
     private val dir = runFolder.resolve(folder)
 
-    /** The frames written so far, relative to [folder]. */
-    val screenshots = mutableListOf<String>()
-
-    /** The clips written so far, relative to [folder]. */
-    val clips = mutableListOf<String>()
+    /** The frames, golden candidates and clips written so far, relative to [folder]. */
+    val artifacts = mutableListOf<Artifact>()
 
     /** The file [name] in the attempt's folder. */
     fun file(name: String): Path = dir.resolve(name)

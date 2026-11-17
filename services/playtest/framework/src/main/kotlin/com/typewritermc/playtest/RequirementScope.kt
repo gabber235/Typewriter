@@ -1,21 +1,12 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message
-import com.typewritermc.playtest.wire.Message.AimAtBlockStep
-import com.typewritermc.playtest.wire.Message.AimAtEntityStep
-import com.typewritermc.playtest.wire.Message.ButtonStep
-import com.typewritermc.playtest.wire.Message.InputStep
-import com.typewritermc.playtest.wire.Message.KeyStep
-import com.typewritermc.playtest.wire.Message.PointAtSlotStep
-import com.typewritermc.playtest.wire.Message.ScrollStep
-import com.typewritermc.playtest.wire.Message.StepUntil
-import com.typewritermc.playtest.wire.Message.StopStepping
-import com.typewritermc.playtest.wire.Message.TypeInChatStep
-import com.typewritermc.playtest.wire.Message.WaitStep
-import com.typewritermc.playtest.wire.Message.WalkToStep
+import com.typewritermc.playtest.wire.variantName
+import skirout.harness.v1.wire.InputStep
+import skirout.harness.v1.wire.KeyboardKey
+import skirout.harness.v1.wire.Message
 
-/** A key a requirement presses, named as the default key bindings name it. */
-typealias Key = Message.Key
+/** A key as a step names it: `E`, `LEFT_SHIFT`. */
+private val KeyboardKey.said: String get() = variantName(KeyboardKey.typeDescriptor, this).uppercase()
 
 /** A mouse button. */
 enum class Button(
@@ -52,20 +43,21 @@ class RequirementScope internal constructor(
      * types: typing takes a tick for each character, and Paper answers each suggestion request before
      * the next tick.
      */
-    suspend fun GamePlayer.typeInChat(text: String): Mark = input("types \"$text\" in chat", TypeInChatStep(text))
+    suspend fun GamePlayer.typeInChat(text: String): Mark = input("types \"$text\" in chat", InputStep.createTypeInChat(text = text))
 
     /** Presses and releases [key]. */
-    suspend fun GamePlayer.press(key: Key): Mark = input("presses $key", KeyStep(key, true), KeyStep(key, false))
+    suspend fun GamePlayer.press(key: KeyboardKey): Mark =
+        input("presses ${key.said}", keyStep(key, down = true), keyStep(key, down = false))
 
     /** Holds [key] down for [ticks] client ticks. */
     suspend fun GamePlayer.hold(
-        key: Key,
+        key: KeyboardKey,
         ticks: Ticks,
-    ): Mark = input("holds $key for ${ticks.count} ticks", KeyStep(key, true), WaitStep(ticks.count), KeyStep(key, false))
+    ): Mark = input("holds ${key.said} for ${ticks.count} ticks", keyStep(key, down = true), waitStep(ticks), keyStep(key, down = false))
 
     /** Presses and releases [button]. */
     suspend fun GamePlayer.click(button: Button): Mark =
-        input("clicks $button", ButtonStep(button.number, true), ButtonStep(button.number, false))
+        input("clicks $button", buttonStep(button, down = true), buttonStep(button, down = false))
 
     /** Holds [button] down for [ticks] client ticks. */
     suspend fun GamePlayer.hold(
@@ -74,27 +66,29 @@ class RequirementScope internal constructor(
     ): Mark =
         input(
             "holds $button for ${ticks.count} ticks",
-            ButtonStep(button.number, true),
-            WaitStep(ticks.count),
-            ButtonStep(button.number, false),
+            buttonStep(button, down = true),
+            waitStep(ticks),
+            buttonStep(button, down = false),
         )
 
     /** Turns the mouse wheel by [notches]; negative scrolls down, toward the next hotbar slot. */
-    suspend fun GamePlayer.scroll(notches: Int): Mark = input("scrolls $notches notches", ScrollStep(notches))
+    suspend fun GamePlayer.scroll(notches: Int): Mark = input("scrolls $notches notches", InputStep.createScroll(amount = notches))
 
     /** Turns the view with the mouse until the crosshair rests on [entity]; fails when it lands elsewhere. */
-    suspend fun GamePlayer.aimAt(entity: EntityRef): Mark = input("aims at entity ${entity.uuid}", AimAtEntityStep(entity.uuid))
+    suspend fun GamePlayer.aimAt(entity: EntityRef): Mark =
+        input("aims at entity ${entity.uuid}", InputStep.createAimAtEntity(entity = entity.uuid.toString()))
 
     /** Turns the view with the mouse until the crosshair rests on [block]; fails when it lands elsewhere. */
-    suspend fun GamePlayer.aimAt(block: BlockRef): Mark = input("aims at block ${block.at}", AimAtBlockStep(attempt.region.world(block.at)))
+    suspend fun GamePlayer.aimAt(block: BlockRef): Mark =
+        input("aims at block ${block.at}", InputStep.createAimAtBlock(block = attempt.region.world(block.at)))
 
     /** Moves the pointer over the open screen's slot for the player's inventory [slot] and clicks it. */
     suspend fun GamePlayer.clickInventorySlot(slot: Int): Mark =
         input(
             "clicks inventory slot $slot",
-            PointAtSlotStep(slot),
-            ButtonStep(Button.LEFT.number, true),
-            ButtonStep(Button.LEFT.number, false),
+            InputStep.createPointAtSlot(slot = slot),
+            buttonStep(Button.LEFT, down = true),
+            buttonStep(Button.LEFT, down = false),
         )
 
     /**
@@ -105,7 +99,11 @@ class RequirementScope internal constructor(
         x: Double,
         z: Double,
         limit: Ticks = 80.ticks,
-    ): Mark = input("walks to $x, $z", WalkToStep(attempt.region.worldX(x), attempt.region.worldZ(z), limit.count))
+    ): Mark =
+        input(
+            "walks to $x, $z",
+            InputStep.createWalkTo(x = attempt.region.worldX(x), z = attempt.region.worldZ(z), maxTicks = limit.count),
+        )
 
     /**
      * Kills the attempt's Paper as a crash would, so it saves nothing, boots it again on the same world,
@@ -121,8 +119,8 @@ class RequirementScope internal constructor(
      * The frame the player's client holds now is the golden [name], to the pixel. It is compared only
      * on the pinned renderer, where a frame that differs, a golden never approved, or one another
      * renderer drew fails; any other machine notes it as not checked. Ask once a window let the scene
-     * settle, of a scene where nothing moves from tick to tick. `cargo xtask goldens approve` approves the frames the pinned
-     * renderer drew in a run.
+     * settle, of a scene where nothing moves from tick to tick. `cargo xtask goldens approve --pr <n>` approves the frames a
+     * pull request's CI run drew on the pinned renderer; without `--pr`, the last local run's.
      */
     suspend fun GamePlayer.looksLike(name: String) = attempt.golden(this, name)
 
@@ -130,6 +128,18 @@ class RequirementScope internal constructor(
         says: String,
         vararg steps: InputStep,
     ): Mark = attempt.input(this, steps.toList(), says).also { anchor = it }
+
+    private fun keyStep(
+        key: KeyboardKey,
+        down: Boolean,
+    ): InputStep = InputStep.createKey(key = key, down = down)
+
+    private fun buttonStep(
+        button: Button,
+        down: Boolean,
+    ): InputStep = InputStep.createButton(button = button.number, down = down)
+
+    private fun waitStep(ticks: Ticks): InputStep = InputStep.createWait(ticks = ticks.count)
 
     /**
      * Passes once every check of [checks] held in a tick of the window, the [window] ticks after the
@@ -159,8 +169,8 @@ class RequirementScope internal constructor(
         } finally {
             attempt.took(opened, says(window, verdict, mark, ranBefore, declared))
         }
-        val missed = verdict as? Window.Verdict.Missed ?: return
-        throw WindowMissed(missed.report, at)
+        val missed = verdict as? Window.Verdict.Missed ?: return run { attempt.proved = true }
+        throw attempt.observed(WindowMissed(missed.report, at))
     }
 
     /**
@@ -195,18 +205,18 @@ class RequirementScope internal constructor(
 
     /** Paper runs the window's ticks for [checked] until the window decides, then stops running them. */
     private suspend fun Window.stepUntilDecided(checked: List<GamePlayer>): Window.Verdict {
-        checked.forEach { attempt.send(StepUntil(it.uuid, end, barrier)) }
+        checked.forEach { attempt.send(Message.createStepUntil(player = it.uuid.toString(), tick = end, barrier = barrier)) }
         try {
             var verdict: Window.Verdict = Window.Verdict.Open
             while (verdict == Window.Verdict.Open) {
                 val event = attempt.nextEvent()
                 // Hung work or a lost client fails the attempt at once, whatever the window would decide.
-                if (event is Attempt.Event.Failed) throw event.failure
+                if (event is Attempt.Event.Failed) throw attempt.observed(event.failure)
                 verdict = judge(event)
             }
             return verdict
         } finally {
-            checked.forEach { attempt.send(StopStepping(it.uuid)) }
+            checked.forEach { attempt.send(Message.createStopStepping(player = it.uuid.toString())) }
         }
     }
 

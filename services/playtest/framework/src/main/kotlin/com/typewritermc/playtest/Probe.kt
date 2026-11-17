@@ -1,23 +1,9 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.Kind
-import com.typewritermc.playtest.wire.Message.ProbeAction
-import com.typewritermc.playtest.wire.Message.ProbeBlock
-import com.typewritermc.playtest.wire.Message.ProbeCancelBreaking
-import com.typewritermc.playtest.wire.Message.ProbeChat
-import com.typewritermc.playtest.wire.Message.ProbeCommand
-import com.typewritermc.playtest.wire.Message.ProbeFill
-import com.typewritermc.playtest.wire.Message.ProbeGameMode
-import com.typewritermc.playtest.wire.Message.ProbeGive
-import com.typewritermc.playtest.wire.Message.ProbeMark
-import com.typewritermc.playtest.wire.Message.ProbePacketEntity
-import com.typewritermc.playtest.wire.Message.ProbeSave
-import com.typewritermc.playtest.wire.Message.ProbeSelectSlot
-import com.typewritermc.playtest.wire.Message.ProbeSidebar
-import com.typewritermc.playtest.wire.Message.ProbeSpawn
-import com.typewritermc.playtest.wire.Message.ProbeTeleport
-import com.typewritermc.playtest.wire.Message.ProbeTime
-import com.typewritermc.playtest.wire.Message.ProbeWork
+import skirout.harness.v1.wire.PlayerAction
+import skirout.harness.v1.wire.ProbeAction
+import skirout.harness.v1.wire.StateKind
+import skirout.harness.v1.wire.WorldAction
 import java.util.UUID
 
 /** A player's game mode. */
@@ -44,26 +30,26 @@ class Probe internal constructor(
     suspend fun chat(
         to: List<GamePlayer>,
         text: String,
-    ): Mark = run(to, ProbeChat(text))
+    ): Mark = run(to, PlayerAction.createChat(text = text))
 
     /** [player] plays in [mode] from now on. */
     suspend fun gameMode(
         player: GamePlayer,
         mode: GameMode,
-    ): Mark = run(listOf(player), ProbeGameMode(mode.name.lowercase()))
+    ): Mark = run(listOf(player), PlayerAction.createGameMode(mode = mode.name.lowercase()))
 
     /** [player] sees a sidebar titled [title] holding [lines], top to bottom, each line once. */
     suspend fun sidebar(
         player: GamePlayer,
         title: String,
         lines: List<String>,
-    ): Mark = run(listOf(player), ProbeSidebar(title, lines))
+    ): Mark = run(listOf(player), PlayerAction.createSidebar(title = title, lines = lines))
 
     /** [player] sees the time of day stand still at [time] ticks: 0 is sunrise, 6000 noon, 18000 midnight. */
     suspend fun time(
         player: GamePlayer,
         time: Long,
-    ): Mark = run(listOf(player), ProbeTime(time))
+    ): Mark = run(listOf(player), PlayerAction.createTime(time = time))
 
     /** [player] stands at [x], [y], [z], looking toward [yaw] (0 is south) and [pitch] (positive is down). */
     suspend fun teleport(
@@ -73,7 +59,11 @@ class Probe internal constructor(
         z: Double,
         yaw: Float = 0f,
         pitch: Float = 0f,
-    ): Mark = run(listOf(player), ProbeTeleport(attempt.region.worldX(x), y, attempt.region.worldZ(z), yaw, pitch))
+    ): Mark =
+        run(
+            listOf(player),
+            PlayerAction.createTeleport(x = attempt.region.worldX(x), y = y, z = attempt.region.worldZ(z), yaw = yaw, pitch = pitch),
+        )
 
     /** [player]'s inventory [slot] holds [count] of [item]: 0 to 8 is the hotbar, 9 to 35 the rest, 40 the off hand. */
     suspend fun give(
@@ -81,23 +71,24 @@ class Probe internal constructor(
         slot: Int,
         item: String,
         count: Int = 1,
-    ): Mark = run(listOf(player), ProbeGive(slot, item.id(), count))
+    ): Mark = run(listOf(player), PlayerAction.createGive(slot = slot, item = item.id(), count = count))
 
     /** Paper writes [player]'s data to disk now, as it does when the player quits or the world saves. */
-    suspend fun save(player: GamePlayer): Mark = run(listOf(player), ProbeSave())
+    suspend fun save(player: GamePlayer): Mark = run(listOf(player), PlayerAction.SAVE)
 
     /** [player] holds hotbar [slot], 0 to 8. */
     suspend fun selectSlot(
         player: GamePlayer,
         slot: Int,
-    ): Mark = run(listOf(player), ProbeSelectSlot(slot))
+    ): Mark = run(listOf(player), PlayerAction.createSelectSlot(slot = slot))
 
     /** Every block from [from] to [to], both included, becomes [block], a block state such as `stone`. */
     suspend fun fill(
         from: BlockPos,
         to: BlockPos,
         block: String,
-    ): Mark = run(attempt.players, ProbeFill(attempt.region.world(from), attempt.region.world(to), block.id()))
+    ): Mark =
+        run(attempt.players, WorldAction.createFill(from = attempt.region.world(from), to = attempt.region.world(to), block = block.id()))
 
     /**
      * The block at [at] becomes [block], a block state such as `oak_leaves[persistent=true]`, and every
@@ -107,7 +98,7 @@ class Probe internal constructor(
         at: BlockPos,
         block: String,
     ): BlockRef {
-        run(attempt.players, ProbeBlock(attempt.region.world(at), block.id()))
+        run(attempt.players, WorldAction.createBlock(at = attempt.region.world(at), block = block.id()))
         return BlockRef(at, block.id())
     }
 
@@ -143,7 +134,8 @@ class Probe internal constructor(
     ): EntityRef = spawn(listOf(player), type, x, y, z, yaw, packetOnly = true, invisible = false, onHit, onClick)
 
     /** Paper cancels every break of [block], as a protection plugin would. */
-    suspend fun cancelBreaking(block: BlockRef): Mark = run(attempt.players, ProbeCancelBreaking(attempt.region.world(block.at)))
+    suspend fun cancelBreaking(block: BlockRef): Mark =
+        run(attempt.players, WorldAction.createCancelBreaking(at = attempt.region.world(block.at)))
 
     /**
      * The command `/name` exists for every player of the attempt and nobody else: its argument suggests
@@ -154,7 +146,7 @@ class Probe internal constructor(
         name: String,
         suggests: List<String>,
         answer: String,
-    ): Mark = run(attempt.players, ProbeCommand(name, suggests, answer))
+    ): Mark = run(attempt.players, PlayerAction.createCommand(name = name, suggestions = suggests, answer = answer))
 
     /**
      * A new entity of [type] for [players], which watch it: one Paper holds, or with [packetOnly] one only
@@ -174,21 +166,45 @@ class Probe internal constructor(
     ): EntityRef {
         val entity = EntityRef(UUID.randomUUID(), type.id())
         val (worldX, worldZ) = attempt.region.worldX(x) to attempt.region.worldZ(z)
-        val action =
-            if (packetOnly) {
-                ProbePacketEntity(entity.uuid, entity.type, worldX, y, worldZ, yaw, onHit, onClick)
-            } else {
-                ProbeSpawn(entity.uuid, entity.type, worldX, y, worldZ, yaw, invisible, onHit, onClick)
-            }
-        run(players, action)
+        val uuid = entity.uuid.toString()
+        if (packetOnly) {
+            run(
+                players,
+                PlayerAction.createPacketEntity(
+                    uuid = uuid,
+                    entityType = entity.type,
+                    x = worldX,
+                    y = y,
+                    z = worldZ,
+                    yaw = yaw,
+                    onHit = onHit,
+                    onClick = onClick,
+                ),
+            )
+        } else {
+            run(
+                players,
+                WorldAction.createSpawn(
+                    uuid = uuid,
+                    entityType = entity.type,
+                    x = worldX,
+                    y = y,
+                    z = worldZ,
+                    yaw = yaw,
+                    invisible = invisible,
+                    onHit = onHit,
+                    onClick = onClick,
+                ),
+            )
+        }
         return entity
     }
 
     /** [player] carries a mark of [kind], as an earlier attempt could leave it; for the framework's own test kit. */
     internal suspend fun mark(
         player: GamePlayer,
-        kind: Kind,
-    ): Mark = run(listOf(player), ProbeMark(kind))
+        kind: StateKind,
+    ): Mark = run(listOf(player), PlayerAction.createMark(kind = kind))
 
     /**
      * [player]'s work [name] runs off Paper's main thread for [millis] of wall clock, counted as a
@@ -199,7 +215,17 @@ class Probe internal constructor(
         name: String,
         millis: Int,
         chat: String,
-    ): Mark = run(listOf(player), ProbeWork(name, millis, chat))
+    ): Mark = run(listOf(player), PlayerAction.createWork(name = name, millis = millis, chat = chat))
+
+    private suspend fun run(
+        players: List<GamePlayer>,
+        action: PlayerAction,
+    ): Mark = run(players, ProbeAction.OnPlayerWrapper(action))
+
+    private suspend fun run(
+        players: List<GamePlayer>,
+        action: WorldAction,
+    ): Mark = run(players, ProbeAction.OnWorldWrapper(action))
 
     private suspend fun run(
         players: List<GamePlayer>,

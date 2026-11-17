@@ -1,21 +1,17 @@
 package com.typewritermc.playtest.pool
 
 import build.skir.JsonFlavor
-import com.typewritermc.playtest.wire.Message
-import com.typewritermc.playtest.wire.Message.AttemptStep
-import com.typewritermc.playtest.wire.Message.Result
-import com.typewritermc.playtest.wire.Message.Submit
 import skirout.harness.v1.test_run.Artifact
-import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.Attempt
 import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.test_run.CoveredClass
-import skirout.harness.v1.test_run.Demonstrates
 import skirout.harness.v1.test_run.Outcome
 import skirout.harness.v1.test_run.Runner
 import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.test_run.TestCase
 import skirout.harness.v1.test_run.TestRun
+import skirout.harness.v1.wire.Result
+import skirout.harness.v1.wire.Submit
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -24,8 +20,10 @@ import java.nio.file.StandardCopyOption
  * The attempts of every run the pool served, kept per run id. Every attempt of one case, a requirement
  * retried or repeated, lands in that case, and its demo in the case's demo. Each session names its
  * run's file as it joins, and the file is written again after every attempt the run records, so a
- * pool that dies leaves the attempts that ended. It reads as ended once every session of the run
- * ended or left; [stillOut] names the players each run's hung work keeps out of the pool.
+ * pool that dies leaves the attempts that ended. It reads as cut short while a session of the run is
+ * open, and names why the game could not serve the run once it failed; [stillOut] names the players
+ * each run's hung work keeps out of the pool. A later pool of the same run takes up the file an
+ * earlier one left ([continueFrom]).
  */
 internal class RunRecords(
     private val clock: () -> Long = System::currentTimeMillis,
@@ -38,7 +36,10 @@ internal class RunRecords(
 
         /** Where the run's file goes and how its attempts are made, as its first session named them. */
         var file: Path? = null
-        var policy: Message.AttemptPolicy? = null
+        var policy: AttemptPolicy? = null
+
+        /** Why the game could not serve the run; empty while it could. */
+        var failure = ""
 
         /** The sessions of the run that joined and have neither ended nor left. */
         val open = mutableSetOf<Any>()
@@ -47,24 +48,28 @@ internal class RunRecords(
     private val runs = mutableMapOf<String, Run>()
 
     /**
-     * [session] joined [run], naming its [file] and [policy]; the run starts with its first session.
+     * [session] joined [run], naming its [file] and [policy]; the run starts with its first session, and
+     * its file reads as cut short from then until its last session ended.
      * Returns why the session is refused when the run's first session named another file or policy.
      */
     fun joined(
         run: String,
         session: Any,
         file: Path,
-        policy: Message.AttemptPolicy,
+        policy: AttemptPolicy,
     ): String? {
         val record = runOf(run)
         val named = record.file
-        if (named != null && (named != file || record.policy != policy)) {
+        val ranUnder = record.policy
+        if ((named != null && named != file) || (ranUnder != null && ranUnder != policy)) {
             return "this session names the run file $file under ${policy.said}, but run $run writes $named under " +
-                "${record.policy?.said}: every session of a run names the same file and policy"
+                "${ranUnder?.said}: every session of a run names the same file and policy"
         }
         record.file = file
         record.policy = policy
         record.open += session
+        // The run goes on again, as when a later module's session joins after the others ended.
+        write(run)
         return null
     }
 
@@ -76,19 +81,18 @@ internal class RunRecords(
         run: String,
         submit: Submit,
         result: Result,
-        claimed: List<AttemptStep> = listOf(),
-        covered: List<Message.CoveredClass> = listOf(),
+        claimed: List<Step> = listOf(),
+        covered: List<CoveredClass> = listOf(),
     ) {
-        val outcome = result.failure()?.let { Outcome.createFailed(message = it, firstBroken = result.firstBroken()) } ?: Outcome.PASSED
+        val outcome = result.failure?.let { Outcome.createFailed(message = it, firstBroken = result.firstBroken) } ?: Outcome.PASSED
         add(
             run,
             submit,
             outcome,
-            result.durationMillis(),
-            (claimed + result.steps()).sortedBy { it.atMillis() },
-            result.folder(),
-            result.screenshots(),
-            result.clips(),
+            result.durationMillis,
+            (claimed + result.steps).sortedBy { it.atMillis },
+            result.folder,
+            result.artifacts,
             covered,
         )
         write(run)
@@ -115,6 +119,36 @@ internal class RunRecords(
         write(run)
     }
 
+    /** The game cannot serve [run], for [reason]: its file says so, beside the attempts that ended. */
+    fun failed(
+        run: String,
+        reason: String,
+    ) {
+        runOf(run).failure = reason
+        write(run)
+    }
+
+    /**
+     * Takes up [run] where an earlier pool of it left [file], as when that pool stopped before a later
+     * module's tests started, so this pool adds to the run instead of starting it over. Returns whether
+     * [file] held [run]; a file of another run is written over once this run records something.
+     */
+    fun continueFrom(
+        run: String,
+        file: Path,
+    ): Boolean {
+        if (!Files.exists(file)) return false
+        val earlier = TestRun.serializer.fromJsonCode(Files.readString(file))
+        if (earlier.runId != run) return false
+        val record = Run(earlier.startedAtMillis)
+        earlier.cases.forEach { record.cases[it.id] = it }
+        record.file = file
+        record.policy = earlier.attemptPolicy
+        record.failure = earlier.failure
+        runs[run] = record
+        return true
+    }
+
     private fun runOf(run: String): Run = runs.getOrPut(run) { Run(clock()) }
 
     private fun add(
@@ -122,37 +156,34 @@ internal class RunRecords(
         submit: Submit,
         outcome: Outcome,
         durationMillis: Long,
-        steps: List<AttemptStep>,
+        steps: List<Step>,
         folder: String = "",
-        screenshots: List<String> = listOf(),
-        clips: List<String> = listOf(),
-        covered: List<Message.CoveredClass> = listOf(),
+        artifacts: List<Artifact> = listOf(),
+        covered: List<CoveredClass> = listOf(),
     ) {
         val attempt =
             Attempt(
                 outcome = outcome,
                 span = null,
                 durationMillis = durationMillis,
-                artifacts =
-                    screenshots.map { Artifact(kind = ArtifactKind.SCREENSHOT, path = it) } +
-                        clips.map { Artifact(kind = ArtifactKind.CLIP, path = it) },
+                artifacts = artifacts,
                 folder = folder,
-                steps = steps.map { Step(atMillis = it.atMillis(), actor = null, says = it.says(), durationMillis = it.durationMillis()) },
+                steps = steps,
                 taps = listOf(),
-                covered = covered.map { CoveredClass(name = it.name(), source = it.source(), lines = it.lines()) },
+                covered = covered,
             )
         val cases = runOf(run).cases
         val case =
-            cases[submit.testId()]
+            cases[submit.testId]
                 ?: TestCase(
-                    id = submit.testId(),
-                    requirement = submit.requirement(),
-                    demonstrates = submit.demonstrates().inRun,
+                    id = submit.testId,
+                    requirement = submit.requirement,
+                    demonstrates = submit.demonstrates,
                     attempts = listOf(),
                     demo = null,
                 )
         // A demo runs after the case's last attempt and is never one of its attempts.
-        cases[submit.testId()] = if (submit.demo()) case.copy(demo = attempt) else case.copy(attempts = case.attempts + attempt)
+        cases[submit.testId] = if (submit.demo) case.copy(demo = attempt) else case.copy(attempts = case.attempts + attempt)
     }
 
     /** Writes [run] as a `TestRun` into the file its sessions named, once one did. */
@@ -163,14 +194,16 @@ internal class RunRecords(
         val notes = stillOut(run)
         val testRun =
             TestRun(
+                runId = run,
                 runner = Runner.GAME,
                 commit = "",
                 startedAtMillis = record.startedAtMillis,
-                attemptPolicy = policy.inRun,
+                attemptPolicy = policy,
                 cases = record.cases.values.map { case -> notes[case.id]?.let { note -> case.noting(note) } ?: case },
                 // `cargo xtask e2e game` names the commit and the run's logs folder, as it chose both.
                 logs = "",
-                ended = record.open.isEmpty(),
+                failure = record.failure,
+                cutShort = record.open.isNotEmpty(),
             )
         Files.createDirectories(file.toAbsolutePath().parent)
         val partial = file.resolveSibling("${file.fileName}.partial")
@@ -188,25 +221,11 @@ internal class RunRecords(
                 },
         )
 
-    private val Message.Demonstrates.inRun: Demonstrates
+    private val AttemptPolicy.said: String
         get() =
             when (this) {
-                Message.Demonstrates.HAPPY_PATH -> Demonstrates.HAPPY_PATH
-                Message.Demonstrates.FAILURE -> Demonstrates.FAILURE
-                Message.Demonstrates.EDGE_CASE -> Demonstrates.EDGE_CASE
-            }
-
-    private val Message.AttemptPolicy.said: String
-        get() =
-            when (kind()) {
-                Message.AttemptPolicy.Kind.RERUN_FAILURES -> "reruns up to ${attempts()} attempts"
-                Message.AttemptPolicy.Kind.EXACTLY -> "exactly ${attempts()} attempts"
-            }
-
-    private val Message.AttemptPolicy.inRun: AttemptPolicy
-        get() =
-            when (kind()) {
-                Message.AttemptPolicy.Kind.RERUN_FAILURES -> AttemptPolicy.RerunFailuresWrapper(attempts())
-                Message.AttemptPolicy.Kind.EXACTLY -> AttemptPolicy.ExactlyWrapper(attempts())
+                is AttemptPolicy.RerunFailuresWrapper -> "reruns up to $value attempts"
+                is AttemptPolicy.ExactlyWrapper -> "exactly $value attempts"
+                else -> "an attempt policy this pool does not know ($this)"
             }
 }

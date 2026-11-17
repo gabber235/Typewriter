@@ -4,13 +4,13 @@ import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.GameMode
-import com.typewritermc.playtest.Key
 import com.typewritermc.playtest.camera
 import com.typewritermc.playtest.held
 import com.typewritermc.playtest.offhand
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.testSuite
+import skirout.harness.v1.wire.KeyboardKey
 
 val HotbarRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("HOTBAR-1", "scrolling the wheel down selects the next hotbar slot") {
@@ -34,7 +34,7 @@ val HotbarRequirements by testSuite(compartment = { GameCompartment }) {
         probe.give(player, slot = 2, item = "compass")
         probe.selectSlot(player, 0)
 
-        player.press(Key.DIGIT_3)
+        player.press(KeyboardKey.DIGIT3)
 
         within(5.ticks) { player sees held("compass") }
     }
@@ -47,7 +47,7 @@ val HotbarRequirements by testSuite(compartment = { GameCompartment }) {
         probe.give(player, slot = 40, item = "air")
         probe.selectSlot(player, 0)
 
-        player.press(Key.F)
+        player.press(KeyboardKey.F)
 
         within(5.ticks) { player sees offhand("spyglass") }
     }

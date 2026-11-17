@@ -60,5 +60,6 @@ internal fun launcherSettings(
         goldens = "goldens",
         goldenImages = poolDir.resolve("images"),
         mesa = "",
+        pinnedRunner = false,
         forwarded = mapOf(),
     )

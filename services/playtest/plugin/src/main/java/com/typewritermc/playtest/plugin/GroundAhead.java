@@ -1,6 +1,5 @@
 package com.typewritermc.playtest.plugin;
 
-import com.typewritermc.playtest.wire.Message.Region;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -9,6 +8,7 @@ import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
+import skirout.harness.v1.wire.Region;
 
 /**
  * The ground of the regions the next claims get, which Paper loads during earlier attempts so a claim
@@ -56,8 +56,8 @@ final class GroundAhead {
 
     private static void forEachChunk(World world, Region region, ChunkAction action) {
         int radius = world.getSendViewDistance() + 1;
-        int middleX = region.x() >> 4;
-        int middleZ = region.z() >> 4;
+        int middleX = region.getX() >> 4;
+        int middleZ = region.getZ() >> 4;
         for (int x = middleX - radius; x <= middleX + radius; x++) {
             for (int z = middleZ - radius; z <= middleZ + radius; z++) action.at(x, z);
         }

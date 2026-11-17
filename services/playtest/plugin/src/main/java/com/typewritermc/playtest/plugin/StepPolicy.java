@@ -29,8 +29,8 @@ import java.util.function.Predicate;
  * step ping went out after them: a client handles packets in order, so it then holds all of them.
  *
  * <p>No tick runs, not even the idle one, while the {@link WorkLedger} says a claimed player's counted
- * work holds it, so work takes no ticks from any attempt's windows; work that hangs is reported and
- * holds no tick from then on. An attempt is settled once its players' work is quiet, stepping on
+ * work holds it, so work takes no ticks from any attempt's windows; work that hangs is reported at its
+ * deadline by the ledger and holds no tick from then on. An attempt is settled once its players' work is quiet, stepping on
  * meanwhile so work handed to Bukkit's async scheduler can start.
  *
  * <p>A client that {@link Acks} finds stalled holds back no tick from then on, and counts as lost.
@@ -72,7 +72,6 @@ final class StepPolicy {
     private final Predicate<UUID> nothingLeftToSend;
     private final Consumer<Runnable> queueOnMain;
     private final WorkLedger work;
-    private final Consumer<WorkLedger.Hung> reportHung;
     private final Consumer<WorkLedger.Hung> reportEnded;
     private final Acks acks;
     private final Consumer<Acks.Stalled> reportStalled;
@@ -86,7 +85,6 @@ final class StepPolicy {
      *     flight off the main thread
      * @param queueOnMain queues a task behind every task the main thread holds, even from the main thread
      * @param work the work plugins count for each player
-     * @param reportHung tells the player's attempt that its work hung
      * @param reportEnded tells the pool that work reported hung ended
      * @param acks the tick each client acked last
      * @param reportStalled tells the pool that a client stalled
@@ -98,7 +96,6 @@ final class StepPolicy {
             Predicate<UUID> nothingLeftToSend,
             Consumer<Runnable> queueOnMain,
             WorkLedger work,
-            Consumer<WorkLedger.Hung> reportHung,
             Consumer<WorkLedger.Hung> reportEnded,
             Acks acks,
             Consumer<Acks.Stalled> reportStalled) {
@@ -108,7 +105,6 @@ final class StepPolicy {
         this.nothingLeftToSend = nothingLeftToSend;
         this.queueOnMain = queueOnMain;
         this.work = work;
-        this.reportHung = reportHung;
         this.reportEnded = reportEnded;
         this.acks = acks;
         this.reportStalled = reportStalled;
@@ -179,12 +175,11 @@ final class StepPolicy {
     }
 
     /**
-     * One idle pass between ticks: reports hung work, ended hung work and stalled clients, finishes
+     * One idle pass between ticks: reports ended hung work and stalled clients, finishes
      * deliveries and settled attempts, grants the next tick or sends barriers.
      */
     void run() {
         if (tickPending.getAsBoolean()) return;
-        work.hung().forEach(reportHung);
         work.ended().forEach(reportEnded);
         for (Acks.Stalled stalled : acks.stalled()) {
             lose(stalled.player());

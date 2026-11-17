@@ -9,6 +9,8 @@ import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.function.Consumer;
+import skirout.harness.v1.wire.Hello;
+import skirout.harness.v1.wire.Message;
 
 /**
  * A game part's connection to the pool: Paper and the client each hold one. One daemon thread reads
@@ -25,11 +27,11 @@ public final class Link {
      * Connects to the pool on the loopback {@code port} and sends {@code hello}. The reader thread hands
      * each message to {@code receive} and calls {@code lost} once when the connection ends.
      */
-    public static Link open(int port, Message.Hello hello, Consumer<Message> receive, Consumer<IOException> lost) throws IOException {
+    public static Link open(int port, Hello hello, Consumer<Message> receive, Consumer<IOException> lost) throws IOException {
         var socket = new Socket(InetAddress.getLoopbackAddress(), port);
         socket.setTcpNoDelay(true);
         var link = new Link(socket);
-        link.send(hello);
+        link.send(new Message.HelloWrapper(hello));
         var reader = new Thread(() -> {
             try {
                 var input = new DataInputStream(new BufferedInputStream(socket.getInputStream()));

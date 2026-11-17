@@ -1,9 +1,9 @@
 package com.typewritermc.playtest.client;
 
-import com.typewritermc.playtest.wire.Message.Key;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.sdl.SDLVideo;
 import org.lwjgl.sdl.SDL_Event;
+import skirout.harness.v1.wire.KeyboardKey;
 
 /**
  * Where the client's input enters: window events for its own window, as a keyboard and mouse would send
@@ -37,7 +37,7 @@ interface InputDevice {
     /** Whether events this device sent have yet to reach the game; the tick's ack waits for them. */
     boolean pending();
 
-    void key(Key key, boolean down);
+    void key(KeyboardKey key, boolean down);
 
     /** Types {@code text}, one character after the other. */
     void type(String text);

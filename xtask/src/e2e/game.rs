@@ -14,7 +14,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result, bail};
 
-use super::{E2eArgs, take_turn, verdict};
+use super::{E2eArgs, take_turn};
 use crate::lock;
 use crate::results::{self, Quarantine, TestRun};
 use crate::review::change::Change;
@@ -34,17 +34,30 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
         .trim()
         .to_owned();
     let quarantine = Quarantine::load(ctx)?;
-    let _lock = take_turn(Path::new(lock::HEAVY_LOCK), "e2e game", &evidence)?;
+    // The folders of the last runs' logs outlive the clear; `next_run_folder` keeps the newest.
+    let _lock = take_turn(
+        Path::new(lock::HEAVY_LOCK),
+        "e2e game",
+        &evidence,
+        &[results::LOGS],
+    )?;
     let file = evidence.join("test_run.json");
     // A requirement that covered a line the change added reruns in demo mode.
     let touched = evidence.join("touched.txt");
     fs::create_dir_all(&evidence)?;
-    fs::write(&touched, touched_lines(&Change::load(ctx, None)?))
-        .with_context(|| format!("cannot write {}", touched.display()))?;
+    fs::write(
+        &touched,
+        touched_lines(&Change::load(ctx, args.base.as_deref())?),
+    )
+    .with_context(|| format!("cannot write {}", touched.display()))?;
     // The pool, Paper and every client log into a folder of this run's own.
     let logs = next_run_folder(&evidence.join(results::LOGS))?;
+    // Every test JVM and pool of the run writes this id into the run file, so a file an earlier run
+    // left never passes for this one.
+    let run_id = format!("{}-{}", now_millis(), std::process::id());
     let ran = Ran {
         file: file.clone(),
+        run_id: run_id.clone(),
         started_millis: now_millis(),
         gradle: build_then_run(
             |gradle| {
@@ -56,7 +69,7 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
                 .status()
                 .context("cannot start Gradle for the game suite")
             },
-            &gradle_args(args, &quarantine, &file, &touched, &logs),
+            &gradle_args(args, &quarantine, &run_id, &file, &touched, &logs),
         )?,
         pool_log: logs.join("pool.log"),
     };
@@ -86,6 +99,7 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
 /// exited and where the pool logs (in the run's own logs folder).
 pub(crate) struct Ran {
     pub file: PathBuf,
+    pub run_id: String,
     pub started_millis: i64,
     pub gradle: ExitStatus,
     pub pool_log: PathBuf,
@@ -122,6 +136,7 @@ pub(crate) fn build_then_run(
 pub(crate) fn gradle_args(
     args: &E2eArgs,
     quarantine: &Quarantine,
+    run_id: &str,
     file: &Path,
     touched: &Path,
     logs: &Path,
@@ -130,6 +145,7 @@ pub(crate) fn gradle_args(
         "--console=plain".to_owned(),
         "--parallel".to_owned(),
         "gameTest".to_owned(),
+        format!("-Pplaytest.runId={run_id}"),
         format!("-Pplaytest.testRun={}", file.display()),
         format!("-Pplaytest.touched={}", touched.display()),
         format!("-Pplaytest.logs={}", logs.display()),
@@ -183,67 +199,38 @@ fn test_pattern(selected: &str) -> String {
     }
 }
 
-/// The run `ran` wrote. A Gradle run that passed while no test JVM opened a session with the pool
-/// ran no requirement: testBalloon enters no game compartment the selection leaves empty, so that
-/// run is one without cases. Fails, with the cause and the pool's log, when there is no run file
-/// otherwise, or the file belongs to a run that started before this one: a test JVM of an earlier
-/// run that outlived it still ends its session and writes there.
+/// The run `ran` wrote. A Gradle run that passed without a run file ran no requirement:
+/// testBalloon enters no game compartment the selection leaves empty, so that run is one without
+/// cases. Fails, pointing at the pool's log, when a failed Gradle run left no run file, or the file
+/// holds another run: a test JVM of an earlier run that outlived it still writes there.
 pub(crate) fn own_run(ran: &Ran) -> Result<TestRun> {
     let log = ran.pool_log.display();
-    if !ran.file.exists() && ran.gradle.success() && !pool_logged_during(ran) {
-        return Ok(TestRun {
-            runner: Runner::Game,
-            started_at_millis: ran.started_millis,
-            ended: true,
-            ..TestRun::default()
-        });
-    }
     if !ran.file.exists() {
+        if ran.gradle.success() {
+            return Ok(TestRun {
+                run_id: ran.run_id.clone(),
+                runner: Runner::Game,
+                started_at_millis: ran.started_millis,
+                ..TestRun::default()
+            });
+        }
         bail!(
-            "game: the run wrote no run file at {} (Gradle exited with {}): {}; see {log}",
+            "game: the run wrote no run file at {} (Gradle exited with {}); see {log}",
             ran.file.display(),
             ran.gradle,
-            pool_cause(ran)
         );
     }
     let run = results::read(&ran.file)?;
-    if run.started_at_millis < ran.started_millis {
+    if run.run_id != ran.run_id {
         bail!(
-            "game: {} holds another run, which started at {} ms, before this one at {} ms; this run \
-             wrote none (Gradle exited with {}): {}; see {log}",
+            "game: {} holds the run {}, not this run {}, which wrote none (Gradle exited with {}); see {log}",
             ran.file.display(),
-            run.started_at_millis,
-            ran.started_millis,
+            run.run_id,
+            ran.run_id,
             ran.gradle,
-            pool_cause(ran)
         );
     }
     Ok(run)
-}
-
-/// Whether the pool logged during `ran`: a test JVM that opens a session starts the pool, which
-/// logs.
-fn pool_logged_during(ran: &Ran) -> bool {
-    fs::metadata(&ran.pool_log)
-        .and_then(|meta| meta.modified())
-        .ok()
-        .and_then(|modified| modified.duration_since(UNIX_EPOCH).ok())
-        .and_then(|since| i64::try_from(since.as_millis()).ok())
-        .is_some_and(|modified| modified >= ran.started_millis)
-}
-
-/// Why the pool wrote no run file for `ran`, as the pool logged it during the run.
-fn pool_cause(ran: &Ran) -> String {
-    let failed = pool_logged_during(ran)
-        .then(|| fs::read_to_string(&ran.pool_log).ok())
-        .flatten()
-        .and_then(|log| {
-            log.lines().rev().find_map(|line| {
-                line.split_once("The game failed: ")
-                    .map(|(_, why)| why.to_owned())
-            })
-        });
-    failed.unwrap_or_else(|| "no test JVM ended its session with the game pool".to_owned())
 }
 
 /// How many run folders `cargo xtask e2e game` keeps, the new one included.
@@ -267,9 +254,10 @@ pub(crate) fn next_run_folder(runs: &Path) -> Result<PathBuf> {
     Ok(next)
 }
 
-/// The suite's verdict on its `run`: each case under the run's attempt policy and the quarantine,
-/// the selection, a run that ran no requirement, a run the pool never ended, and a Gradle failure that no failing case explains, such as a test JVM that
-/// ended before it ran its requirements.
+/// The suite's verdict on its `run`: whether it ran and ran to the end, each case under the run's
+/// attempt policy and the quarantine, the selection, a run that ran no requirement, and a Gradle
+/// failure that no failing case explains, such as a test JVM that ended before it ran its
+/// requirements.
 pub(crate) fn judge(
     run: &TestRun,
     gradle: ExitStatus,
@@ -278,6 +266,8 @@ pub(crate) fn judge(
     shown: &Path,
     out: &mut dyn Write,
 ) -> Result<()> {
+    // A run cut short still lists the cases that finished, whose evidence stages.
+    results::report(run, quarantine, Some(shown), out)?;
     results::selection_matches(run, only)?;
     if run.cases.is_empty() {
         bail!(
@@ -285,24 +275,6 @@ pub(crate) fn judge(
             shown.join("test_run.json").display()
         );
     }
-    let judged = verdict(
-        "game",
-        &shown.join("test_run.json"),
-        run,
-        quarantine,
-        shown,
-        out,
-    );
-    // The pool marks the run ended once its last session ended; a pool that died first left the
-    // cases that finished, whose evidence still stages, and none of the rest.
-    if !run.ended {
-        bail!(
-            "game: the run was cut short after {} cases: the game pool stopped before every test JVM ended its session; see {}",
-            run.cases.len(),
-            shown.join(&run.logs).join("pool.log").display()
-        );
-    }
-    judged?;
     if !gradle.success() {
         bail!(
             "game: every reported requirement passed, but Gradle failed with {gradle}; its output above says why"
@@ -346,42 +318,16 @@ mod tests {
     }
 
     #[test]
-    fn a_game_run_that_wrote_no_run_file_fails_with_the_pool_s_cause_and_its_log() {
+    fn a_game_run_that_wrote_no_run_file_fails_and_points_at_the_pool_s_log() {
         let root = TempRoot::new();
-        root.write(
-            "pool.log",
-            "Attempt 1: PROBE-1 on gv-1\nThe game failed: the game was not ready within 300 s; see paper.log\n",
-        );
         let error = refusal(own_run(&Ran {
             file: root.path("results/game/test_run.json"),
+            run_id: "run-2".to_owned(),
             started_millis: 0,
             gradle: exited(1),
             pool_log: root.path("pool.log"),
         }));
         assert!(error.contains("wrote no run file"), "{error}");
-        assert!(
-            error.contains("the game was not ready within 300 s; see paper.log"),
-            "{error}"
-        );
-        assert!(
-            error.contains(&root.path("pool.log").display().to_string()),
-            "{error}"
-        );
-    }
-
-    #[test]
-    fn a_game_run_that_wrote_no_run_file_and_started_no_pool_says_no_session_reached_it() {
-        let root = TempRoot::new();
-        let error = refusal(own_run(&Ran {
-            file: root.path("results/game/test_run.json"),
-            started_millis: 0,
-            gradle: exited(1),
-            pool_log: root.path("pool.log"),
-        }));
-        assert!(
-            error.contains("no test JVM ended its session with the game pool"),
-            "{error}"
-        );
         assert!(
             error.contains(&root.path("pool.log").display().to_string()),
             "{error}"
@@ -393,11 +339,13 @@ mod tests {
         let root = TempRoot::new();
         let run = own_run(&Ran {
             file: root.path("results/game/test_run.json"),
+            run_id: "run-2".to_owned(),
             started_millis: 0,
             gradle: exited(0),
             pool_log: root.path("pool.log"),
         })
         .unwrap();
+        assert_eq!(run.run_id, "run-2");
         for (only, says) in [
             (vec!["NOPE-1".to_owned()], "no case matches NOPE-1"),
             (vec![], "no requirements ran"),
@@ -415,41 +363,26 @@ mod tests {
     }
 
     #[test]
-    fn a_passing_gradle_run_whose_pool_session_wrote_no_run_file_fails_with_the_pool_s_cause() {
-        let root = TempRoot::new();
-        root.write(
-            "pool.log",
-            "Attempt 1: PROBE-1 on gv-1\nThe game failed: Paper stopped; see paper.log\n",
-        );
-        let error = refusal(own_run(&Ran {
-            file: root.path("results/game/test_run.json"),
-            started_millis: 0,
-            gradle: exited(0),
-            pool_log: root.path("pool.log"),
-        }));
-        assert!(error.contains("wrote no run file"), "{error}");
-        assert!(error.contains("Paper stopped; see paper.log"), "{error}");
-    }
-
-    #[test]
-    fn a_run_file_a_run_that_started_earlier_wrote_fails_the_game_run() {
+    fn a_run_file_another_run_wrote_fails_the_game_run_even_when_it_started_later() {
         let root = TempRoot::new();
         let file = root.path("results/game/test_run.json");
-        let earlier = TestRun {
-            started_at_millis: 1_000,
+        let other = TestRun {
+            run_id: "run-1".to_owned(),
+            started_at_millis: 9_000,
             ..game_run(
                 AttemptPolicy::RerunFailures(4),
                 &[("PROBE-1", &[Outcome::Passed])],
             )
         };
-        results::write(&earlier, &file).unwrap();
+        results::write(&other, &file).unwrap();
         let error = refusal(own_run(&Ran {
             file: file.clone(),
+            run_id: "run-2".to_owned(),
             started_millis: 2_000,
             gradle: exited(0),
             pool_log: root.path("pool.log"),
         }));
-        assert!(error.contains("another run"), "{error}");
+        assert!(error.contains("run run-1, not this run run-2"), "{error}");
         assert!(error.contains(&file.display().to_string()), "{error}");
         assert!(
             error.contains(&root.path("pool.log").display().to_string()),
@@ -458,11 +391,12 @@ mod tests {
     }
 
     #[test]
-    fn the_run_file_this_run_wrote_is_its_run() {
+    fn the_run_file_of_this_run_s_id_is_its_run_even_when_a_pool_began_it_before_xtask_counted() {
         let root = TempRoot::new();
         let file = root.path("results/game/test_run.json");
         let written = TestRun {
-            started_at_millis: 2_500,
+            run_id: "run-2".to_owned(),
+            started_at_millis: 1_000,
             ..game_run(
                 AttemptPolicy::RerunFailures(4),
                 &[("PROBE-1", &[Outcome::Passed])],
@@ -471,12 +405,35 @@ mod tests {
         results::write(&written, &file).unwrap();
         let read = own_run(&Ran {
             file,
+            run_id: "run-2".to_owned(),
             started_millis: 2_000,
             gradle: exited(0),
             pool_log: root.path("pool.log"),
         })
         .unwrap();
         assert_eq!(read, written);
+    }
+
+    #[test]
+    fn a_run_the_game_could_not_run_fails_with_why_rather_than_as_a_run_of_nothing() {
+        let unable = TestRun {
+            failure: "the game was not ready within 300 s; see paper.log".to_owned(),
+            ..game_run(AttemptPolicy::RerunFailures(4), &[])
+        };
+
+        let error = refusal(judge(
+            &unable,
+            exited(1),
+            &["PROBE-1".to_owned()],
+            &Quarantine::default(),
+            Path::new("results/game"),
+            &mut Vec::new(),
+        ));
+
+        assert_eq!(
+            error,
+            "the run could not run: the game was not ready within 300 s; see paper.log"
+        );
     }
 
     #[test]
@@ -545,7 +502,7 @@ mod tests {
     #[test]
     fn a_run_the_pool_never_ended_fails_as_cut_short_after_its_finished_cases() {
         let finished = TestRun {
-            ended: false,
+            cut_short: true,
             logs: "logs/4".to_owned(),
             ..game_run(
                 AttemptPolicy::RerunFailures(4),
@@ -566,7 +523,7 @@ mod tests {
         ));
 
         assert!(error.contains("cut short after 2 cases"), "{error}");
-        assert!(error.contains("results/game/logs/4/pool.log"), "{error}");
+        assert!(error.contains("logs in results/game/logs/4/"), "{error}");
     }
 
     #[test]
@@ -587,7 +544,8 @@ mod tests {
     }
 
     #[test]
-    fn gradle_gets_the_run_file_the_logs_folder_the_selection_the_repeat_and_the_quarantine() {
+    fn gradle_gets_the_run_id_the_run_file_the_logs_folder_the_selection_the_repeat_and_the_quarantine()
+     {
         let file = Path::new("/repo/.xtask/results/game/test_run.json");
         let args = parsed(&[
             "game",
@@ -599,9 +557,17 @@ mod tests {
         .unwrap();
         let touched = Path::new("/repo/.xtask/results/game/touched.txt");
         let logs = Path::new("/repo/.xtask/results/game/logs/4");
-        let gradle = gradle_args(&args, &quarantining("game/LEAK-1"), file, touched, logs);
+        let gradle = gradle_args(
+            &args,
+            &quarantining("game/LEAK-1"),
+            "run-7",
+            file,
+            touched,
+            logs,
+        );
         for expected in [
             "gameTest",
+            "-Pplaytest.runId=run-7",
             "-Pplaytest.testRun=/repo/.xtask/results/game/test_run.json",
             "-Pplaytest.touched=/repo/.xtask/results/game/touched.txt",
             "-Pplaytest.logs=/repo/.xtask/results/game/logs/4",
@@ -626,6 +592,7 @@ mod tests {
         let plain = gradle_args(
             &parsed(&["game"]).unwrap(),
             &Quarantine::default(),
+            "run-7",
             file,
             touched,
             logs,
@@ -636,6 +603,42 @@ mod tests {
                     .iter()
                     .any(|name| arg.starts_with(&format!("-Pplaytest.{name}=")))),
             "{plain:?}"
+        );
+    }
+
+    #[test]
+    fn the_touched_lines_count_from_the_base_the_run_names_or_else_the_nearest_one() {
+        assert_eq!(
+            parsed(&["game", "--base", "4e61bf097"])
+                .unwrap()
+                .base
+                .as_deref(),
+            Some("4e61bf097")
+        );
+        assert_eq!(parsed(&["game"]).unwrap().base, None);
+    }
+
+    #[test]
+    fn a_game_run_clears_the_last_results_but_keeps_the_log_folders_of_earlier_runs() {
+        let root = TempRoot::new();
+        let (lock, evidence) = (root.path("heavy.lock"), root.path("results/game"));
+
+        for _ in 0..2 {
+            let turn = take_turn(&lock, "e2e game", &evidence, &[results::LOGS]).unwrap();
+            fs::create_dir_all(&evidence).unwrap();
+            fs::write(evidence.join("test_run.json"), "{}").unwrap();
+            next_run_folder(&evidence.join(results::LOGS)).unwrap();
+            drop(turn);
+        }
+        take_turn(&lock, "e2e game", &evidence, &[results::LOGS])
+            .map(drop)
+            .unwrap();
+
+        assert!(evidence.join("logs/1").is_dir() && evidence.join("logs/2").is_dir());
+        assert_eq!(
+            files_below(&evidence),
+            Vec::<String>::new(),
+            "only the log folders survive"
         );
     }
 

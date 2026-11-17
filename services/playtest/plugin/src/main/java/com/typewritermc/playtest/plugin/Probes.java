@@ -1,28 +1,8 @@
 package com.typewritermc.playtest.plugin;
 
 import com.destroystokyo.paper.event.player.PlayerUseUnknownEntityEvent;
-import com.typewritermc.playtest.wire.Message.BlockPos;
-import com.typewritermc.playtest.wire.Message.Kind;
-import com.typewritermc.playtest.wire.Message.PlayerAction;
-import com.typewritermc.playtest.wire.Message.ProbeAction;
-import com.typewritermc.playtest.wire.Message.ProbeBlock;
-import com.typewritermc.playtest.wire.Message.ProbeCancelBreaking;
-import com.typewritermc.playtest.wire.Message.ProbeChat;
-import com.typewritermc.playtest.wire.Message.ProbeCommand;
-import com.typewritermc.playtest.wire.Message.ProbeFill;
-import com.typewritermc.playtest.wire.Message.ProbeGameMode;
-import com.typewritermc.playtest.wire.Message.ProbeGive;
-import com.typewritermc.playtest.wire.Message.ProbeMark;
-import com.typewritermc.playtest.wire.Message.ProbePacketEntity;
-import com.typewritermc.playtest.wire.Message.ProbeSelectSlot;
-import com.typewritermc.playtest.wire.Message.ProbeSidebar;
-import com.typewritermc.playtest.wire.Message.ProbeSpawn;
-import com.typewritermc.playtest.wire.Message.ProbeTeleport;
-import com.typewritermc.playtest.wire.Message.ProbeSave;
-import com.typewritermc.playtest.wire.Message.ProbeTime;
-import com.typewritermc.playtest.wire.Message.ProbeWork;
-import com.typewritermc.playtest.wire.Message.WorldAction;
-import com.typewritermc.playtest.wire.Payload.Watch;
+import build.skir.internal.MustNameArguments;
+import com.typewritermc.playtest.wire.Payload;
 import io.papermc.paper.adventure.PaperAdventure;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,6 +54,12 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.util.Vector;
 import org.jspecify.annotations.Nullable;
+import skirout.harness.v1.wire.BlockPos;
+import skirout.harness.v1.wire.PlayerAction;
+import skirout.harness.v1.wire.ProbeAction;
+import skirout.harness.v1.wire.StateKind;
+import skirout.harness.v1.wire.Watch;
+import skirout.harness.v1.wire.WorldAction;
 
 /**
  * The arrangements a requirement asks Paper for. Main thread only. Each runs at once and returns null,
@@ -83,7 +69,7 @@ import org.jspecify.annotations.Nullable;
  */
 final class Probes implements Listener {
     private static final int MAX_FILL = 4_096;
-    private static final Identifier WATCH = Identifier.parse(Watch.CHANNEL);
+    private static final Identifier WATCH = Identifier.parse(Payload.WATCH_CHANNEL);
 
     /** How a probe entity answers a player: the name tag it shows once hit or used. */
     private record Reactions(@Nullable String onHit, @Nullable String onClick) {}
@@ -99,10 +85,10 @@ final class Probes implements Listener {
     private final Set<Location> unbreakable = new HashSet<>();
     private final Map<String, SuggestingCommand> commands = new HashMap<>();
     private final Plugin plugin;
-    private final BiConsumer<Player, Kind> mark;
+    private final BiConsumer<Player, StateKind> mark;
 
     /** [mark] leaves a mark of a kind of state on a player, for the framework's own test kit. */
-    Probes(Plugin plugin, BiConsumer<Player, Kind> mark) {
+    Probes(Plugin plugin, BiConsumer<Player, StateKind> mark) {
         this.plugin = plugin;
         this.mark = mark;
     }
@@ -114,67 +100,72 @@ final class Probes implements Listener {
     @Nullable String run(List<Player> players, ProbeAction action) {
         watch(players, action);
         return switch (action) {
-            case WorldAction world -> run(players.getFirst().getWorld(), world);
-            case PlayerAction each -> {
+            case ProbeAction.OnWorldWrapper world -> run(players.getFirst().getWorld(), world.getValue());
+            case ProbeAction.OnPlayerWrapper each -> {
                 for (Player player : players) {
-                    String failure = run(player, each);
+                    String failure = run(player, each.getValue());
                     if (failure != null) yield failure;
                 }
                 yield null;
             }
+            default -> "a probe action this Paper does not know: " + action;
         };
     }
 
     private @Nullable String run(World world, WorldAction action) {
         return switch (action) {
-            case ProbeFill fill -> fill(world, fill);
-            case ProbeBlock block -> fill(world, new ProbeFill(block.at(), block.at(), block.block()));
-            case ProbeSpawn spawn -> spawn(world, spawn);
-            case ProbeCancelBreaking cancel -> {
-                unbreakable.add(location(world, cancel.at()));
+            case WorldAction.FillWrapper fill -> fill(world, fill.getValue().getFrom(), fill.getValue().getTo(), fill.getValue().getBlock());
+            case WorldAction.BlockWrapper block -> fill(world, block.getValue().getAt(), block.getValue().getAt(), block.getValue().getBlock());
+            case WorldAction.SpawnWrapper spawn -> spawn(world, spawn.getValue());
+            case WorldAction.CancelBreakingWrapper cancel -> {
+                unbreakable.add(location(world, cancel.getValue().getAt()));
                 yield null;
             }
+            default -> "a world action this Paper does not know: " + action;
         };
     }
 
     private @Nullable String run(Player player, PlayerAction action) {
         return switch (action) {
-            case ProbeChat chat -> {
-                player.sendMessage(Component.text(chat.text()));
+            case PlayerAction.ChatWrapper chat -> {
+                player.sendMessage(Component.text(chat.getValue().getText()));
                 yield null;
             }
-            case ProbeGameMode mode -> gameMode(player, mode.mode());
-            case ProbeTeleport teleport -> {
+            case PlayerAction.GameModeWrapper mode -> gameMode(player, mode.getValue().getMode());
+            case PlayerAction.TeleportWrapper wrapper -> {
+                var teleport = wrapper.getValue();
                 player.setVelocity(new Vector());
                 player.setFallDistance(0);
-                player.teleport(new Location(player.getWorld(), teleport.x(), teleport.y(), teleport.z(), teleport.yaw(), teleport.pitch()));
+                player.teleport(new Location(player.getWorld(), teleport.getX(), teleport.getY(), teleport.getZ(), teleport.getYaw(), teleport.getPitch()));
                 yield null;
             }
-            case ProbeGive give -> give(player, give);
-            case ProbeSelectSlot select -> {
-                if (select.slot() < 0 || select.slot() > 8) yield "hotbar slot " + select.slot() + " is not 0 to 8";
-                player.getInventory().setHeldItemSlot(select.slot());
+            case PlayerAction.GiveWrapper give -> give(player, give.getValue());
+            case PlayerAction.SelectSlotWrapper select -> {
+                int slot = select.getValue().getSlot();
+                if (slot < 0 || slot > 8) yield "hotbar slot " + slot + " is not 0 to 8";
+                player.getInventory().setHeldItemSlot(slot);
                 yield null;
             }
-            case ProbePacketEntity entity -> packetEntity(player, entity);
-            case ProbeCommand command -> command(player, command);
-            case ProbeMark marked -> {
-                mark.accept(player, marked.kind());
+            case PlayerAction.PacketEntityWrapper entity -> packetEntity(player, entity.getValue());
+            case PlayerAction.CommandWrapper command -> command(player, command.getValue());
+            case PlayerAction.MarkWrapper marked -> {
+                mark.accept(player, marked.getValue().getKind());
                 yield null;
             }
-            case ProbeWork work -> {
-                work(player, work);
+            case PlayerAction.WorkWrapper work -> {
+                work(player, work.getValue());
                 yield null;
             }
-            case ProbeSidebar sidebar -> sidebar(player, sidebar);
-            case ProbeTime time -> {
-                player.setPlayerTime(time.time(), false);
+            case PlayerAction.SidebarWrapper sidebar -> sidebar(player, sidebar.getValue());
+            case PlayerAction.TimeWrapper time -> {
+                player.setPlayerTime(time.getValue().getTime(), false);
                 yield null;
             }
-            case ProbeSave save -> {
+            case PlayerAction.SAVE save -> {
                 player.saveData();
                 yield null;
             }
+            default -> "a player action this Paper does not know: " + action;
         };
     }
 
@@ -184,33 +175,45 @@ final class Probes implements Listener {
      * first and records them from the tick those packets arrive in.
      */
     private static void watch(List<Player> players, ProbeAction action) {
-        switch (action) {
-            case ProbeBlock block -> players.forEach(player -> watch(player, List.of(block.at()), List.of()));
-            case ProbeSpawn spawn -> players.forEach(player -> watch(player, List.of(), List.of(spawn.uuid())));
-            case ProbePacketEntity entity -> players.forEach(player -> watch(player, List.of(), List.of(entity.uuid())));
-            default -> {}
+        Watch watch = watchOf(action);
+        if (watch != null) players.forEach(player -> watch(player, watch));
+    }
+
+    /** What [action] puts in front of its players: a block or an entity, or nothing to watch. */
+    private static @Nullable Watch watchOf(ProbeAction action) {
+        if (action instanceof ProbeAction.OnWorldWrapper world) {
+            if (world.getValue() instanceof WorldAction.BlockWrapper block) return watch(List.of(block.getValue().getAt()), List.of());
+            if (world.getValue() instanceof WorldAction.SpawnWrapper spawn) return watch(List.of(), List.of(spawn.getValue().getUuid()));
         }
+        if (action instanceof ProbeAction.OnPlayerWrapper each && each.getValue() instanceof PlayerAction.PacketEntityWrapper entity) {
+            return watch(List.of(), List.of(entity.getValue().getUuid()));
+        }
+        return null;
+    }
+
+    private static Watch watch(List<BlockPos> blocks, List<String> entities) {
+        return new Watch(MustNameArguments.INSTANCE, blocks, entities, null);
     }
 
     /**
-     * Sends [player]'s client a watch on [blocks] and [entities] as a raw payload, since Bukkit's plugin
+     * Sends [player]'s client [watch] as a raw payload, since Bukkit's plugin
      * messages drop channels the client never announced.
      */
-    private static void watch(Player player, List<BlockPos> blocks, List<UUID> entities) {
-        send(player, new ClientboundCustomPayloadPacket(new DiscardedPayload(WATCH, new Watch(blocks, entities).body())));
+    private static void watch(Player player, Watch watch) {
+        send(player, new ClientboundCustomPayloadPacket(new DiscardedPayload(WATCH, Payload.body(watch))));
     }
 
     /**
      * Gives the player a scoreboard of its own whose sidebar shows the lines top to bottom: each line
      * scores one more than the line below it. The wipe hands the player the main scoreboard again.
      */
-    private static @Nullable String sidebar(Player player, ProbeSidebar sidebar) {
-        if (new HashSet<>(sidebar.lines()).size() != sidebar.lines().size()) return "a sidebar shows each line once: " + sidebar.lines();
+    private static @Nullable String sidebar(Player player, PlayerAction.Sidebar sidebar) {
+        if (new HashSet<>(sidebar.getLines()).size() != sidebar.getLines().size()) return "a sidebar shows each line once: " + sidebar.getLines();
         Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
-        Objective objective = board.registerNewObjective("playtest_sidebar", Criteria.DUMMY, Component.text(sidebar.title()));
+        Objective objective = board.registerNewObjective("playtest_sidebar", Criteria.DUMMY, Component.text(sidebar.getTitle()));
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-        for (int index = 0; index < sidebar.lines().size(); index++) {
-            objective.getScore(sidebar.lines().get(index)).setScore(sidebar.lines().size() - index);
+        for (int index = 0; index < sidebar.getLines().size(); index++) {
+            objective.getScore(sidebar.getLines().get(index)).setScore(sidebar.getLines().size() - index);
         }
         player.setScoreboard(board);
         return null;
@@ -234,15 +237,15 @@ final class Probes implements Listener {
      * Runs the work on Bukkit's async scheduler as a plugin would, counted from the moment it is handed
      * over. An interrupt would cancel it before its chat line; nothing here interrupts it.
      */
-    private void work(Player player, ProbeWork work) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, PlayerWork.task(player, work.name(), () -> {
+    private void work(Player player, PlayerAction.Work work) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, PlayerWork.task(player, work.getName(), () -> {
             try {
-                Thread.sleep(work.millis());
+                Thread.sleep(work.getMillis());
             } catch (InterruptedException cancelled) {
                 Thread.currentThread().interrupt();
                 return;
             }
-            player.sendMessage(Component.text(work.chat()));
+            player.sendMessage(Component.text(work.getChat()));
         }));
     }
 
@@ -255,28 +258,26 @@ final class Probes implements Listener {
         }
     }
 
-    private static @Nullable String give(Player player, ProbeGive give) {
-        Material material = Material.matchMaterial(give.item());
-        if (material == null || !material.isItem()) return "no item " + give.item();
-        if (give.slot() < 0 || give.slot() > 40) return "inventory slot " + give.slot() + " is not 0 to 40";
-        player.getInventory().setItem(give.slot(), material.isAir() ? null : new ItemStack(material, give.count()));
+    private static @Nullable String give(Player player, PlayerAction.Give give) {
+        Material material = Material.matchMaterial(give.getItem());
+        if (material == null || !material.isItem()) return "no item " + give.getItem();
+        if (give.getSlot() < 0 || give.getSlot() > 40) return "inventory slot " + give.getSlot() + " is not 0 to 40";
+        player.getInventory().setItem(give.getSlot(), material.isAir() ? null : new ItemStack(material, give.getCount()));
         return null;
     }
 
-    private static @Nullable String fill(World world, ProbeFill fill) {
+    private static @Nullable String fill(World world, BlockPos from, BlockPos to, String block) {
         BlockData data;
         try {
-            data = Bukkit.createBlockData(fill.block());
+            data = Bukkit.createBlockData(block);
         } catch (IllegalArgumentException unknown) {
-            return "no block state " + fill.block();
+            return "no block state " + block;
         }
-        BlockPos from = fill.from();
-        BlockPos to = fill.to();
-        long count = (long) (Math.abs(to.x() - from.x()) + 1) * (Math.abs(to.y() - from.y()) + 1) * (Math.abs(to.z() - from.z()) + 1);
+        long count = (long) (Math.abs(to.getX() - from.getX()) + 1) * (Math.abs(to.getY() - from.getY()) + 1) * (Math.abs(to.getZ() - from.getZ()) + 1);
         if (count > MAX_FILL) return "a fill of " + count + " blocks is over the limit of " + MAX_FILL;
-        for (int x = Math.min(from.x(), to.x()); x <= Math.max(from.x(), to.x()); x++) {
-            for (int y = Math.min(from.y(), to.y()); y <= Math.max(from.y(), to.y()); y++) {
-                for (int z = Math.min(from.z(), to.z()); z <= Math.max(from.z(), to.z()); z++) {
+        for (int x = Math.min(from.getX(), to.getX()); x <= Math.max(from.getX(), to.getX()); x++) {
+            for (int y = Math.min(from.getY(), to.getY()); y <= Math.max(from.getY(), to.getY()); y++) {
+                for (int z = Math.min(from.getZ(), to.getZ()); z <= Math.max(from.getZ(), to.getZ()); z++) {
                     world.getBlockAt(x, y, z).setBlockData(data, false);
                 }
             }
@@ -284,46 +285,46 @@ final class Probes implements Listener {
         return null;
     }
 
-    private @Nullable String spawn(World world, ProbeSpawn spawn) {
-        EntityType type = Registry.ENTITY_TYPE.get(NamespacedKey.fromString(spawn.type()));
-        if (type == null || !type.isSpawnable() || type.getEntityClass() == null) return "no entity type " + spawn.type();
-        var at = new Location(world, spawn.x(), spawn.y(), spawn.z(), spawn.yaw(), 0);
+    private @Nullable String spawn(World world, WorldAction.Spawn spawn) {
+        EntityType type = Registry.ENTITY_TYPE.get(NamespacedKey.fromString(spawn.getEntityType()));
+        if (type == null || !type.isSpawnable() || type.getEntityClass() == null) return "no entity type " + spawn.getEntityType();
+        var at = new Location(world, spawn.getX(), spawn.getY(), spawn.getZ(), spawn.getYaw(), 0);
         world.spawn(at, type.getEntityClass(), entity -> {
-            ((CraftEntity) entity).getHandle().setUUID(spawn.uuid());
+            ((CraftEntity) entity).getHandle().setUUID(UUID.fromString(spawn.getUuid()));
             entity.setSilent(true);
             entity.setPersistent(true);
-            entity.setInvisible(spawn.invisible());
+            entity.setInvisible(spawn.getInvisible());
             if (entity instanceof LivingEntity living) {
                 living.setAI(false);
                 living.setRemoveWhenFarAway(false);
             }
         });
-        spawned.put(spawn.uuid(), new Reactions(spawn.onHit(), spawn.onClick()));
+        spawned.put(UUID.fromString(spawn.getUuid()), new Reactions(spawn.getOnHit(), spawn.getOnClick()));
         return null;
     }
 
-    private @Nullable String packetEntity(Player viewer, ProbePacketEntity spawn) {
-        var key = Identifier.tryParse(spawn.type());
+    private @Nullable String packetEntity(Player viewer, PlayerAction.PacketEntity spawn) {
+        var key = Identifier.tryParse(spawn.getEntityType());
         var type = key == null ? null : BuiltInRegistries.ENTITY_TYPE.getOptional(key).orElse(null);
-        if (type == null) return "no entity type " + spawn.type();
+        if (type == null) return "no entity type " + spawn.getEntityType();
         var detached = type.create(((CraftWorld) viewer.getWorld()).getHandle(), EntitySpawnReason.COMMAND);
-        if (detached == null) return "entity type " + spawn.type() + " cannot be created";
+        if (detached == null) return "entity type " + spawn.getEntityType() + " cannot be created";
         int id = detached.getId();
-        send(viewer, new ClientboundAddEntityPacket(id, spawn.uuid(), spawn.x(), spawn.y(), spawn.z(), 0, spawn.yaw(), type, 0, Vec3.ZERO, spawn.yaw()));
-        packetEntities.put(id, new PacketEntity(viewer.getUniqueId(), detached, new Reactions(spawn.onHit(), spawn.onClick())));
+        send(viewer, new ClientboundAddEntityPacket(id, UUID.fromString(spawn.getUuid()), spawn.getX(), spawn.getY(), spawn.getZ(), 0, spawn.getYaw(), type, 0, Vec3.ZERO, spawn.getYaw()));
+        packetEntities.put(id, new PacketEntity(viewer.getUniqueId(), detached, new Reactions(spawn.getOnHit(), spawn.getOnClick())));
         return null;
     }
 
     /** [player] may run `/name`, which suggests and answers as [probe] says, for it alone. */
-    private @Nullable String command(Player player, ProbeCommand probe) {
-        SuggestingCommand command = commands.get(probe.name());
+    private @Nullable String command(Player player, PlayerAction.Command probe) {
+        SuggestingCommand command = commands.get(probe.getName());
         if (command == null) {
-            command = new SuggestingCommand(probe.name());
-            commands.put(probe.name(), command);
+            command = new SuggestingCommand(probe.getName());
+            commands.put(probe.getName(), command);
             Bukkit.getCommandMap().register("playtest", command);
             ((CraftServer) Bukkit.getServer()).syncCommands();
         }
-        command.answers.put(player.getUniqueId(), new SuggestingCommand.Answer(List.copyOf(probe.suggestions()), probe.answer()));
+        command.answers.put(player.getUniqueId(), new SuggestingCommand.Answer(List.copyOf(probe.getSuggestions()), probe.getAnswer()));
         player.updateCommands();
         return null;
     }
@@ -369,7 +370,7 @@ final class Probes implements Listener {
     }
 
     private static Location location(World world, BlockPos at) {
-        return new Location(world, at.x(), at.y(), at.z());
+        return new Location(world, at.getX(), at.getY(), at.getZ());
     }
 
     /**

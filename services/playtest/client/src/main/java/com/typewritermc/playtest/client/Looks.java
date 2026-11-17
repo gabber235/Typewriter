@@ -2,9 +2,7 @@ package com.typewritermc.playtest.client;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.typewritermc.playtest.wire.Message.Capture;
-import com.typewritermc.playtest.wire.Message.Captured;
-import com.typewritermc.playtest.wire.Message.Renderer;
+import build.skir.internal.MustNameArguments;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,6 +11,11 @@ import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import skirout.harness.v1.wire.Answer;
+import skirout.harness.v1.wire.ClientTask;
+import skirout.harness.v1.wire.Message;
+import skirout.harness.v1.wire.Renderer;
+import skirout.harness.v1.wire.Reply;
 
 /**
  * The frames a stepped client draws for real, and only these: for every watched entity a perceived
@@ -23,12 +26,14 @@ import net.minecraft.client.renderer.GameRenderer;
  */
 final class Looks {
     private static UUID hidden;
-    private static Capture capture;
+    private static ClientTask.Capture capture;
+    private static long captureRequest;
 
     private Looks() {}
 
-    /** The next frame that runs is written as {@code asked} says, then answered. */
-    static void capture(Capture asked) {
+    /** The next frame that runs is written as {@code asked} says, then answered as request {@code request}. */
+    static void capture(long request, ClientTask.Capture asked) {
+        captureRequest = request;
         capture = asked;
     }
 
@@ -74,12 +79,19 @@ final class Looks {
 
     /** Writes {@code frame} as the capture asked and answers it. */
     private static void answerCapture(Pixels frame) {
-        Capture asked = capture;
+        ClientTask.Capture asked = capture;
         capture = null;
         var info = RenderSystem.getDevice().getDeviceInfo();
         var renderer = new Renderer(
-                info.backendName(), info.name(), info.driverInfo(), System.getProperty("os.name"), System.getProperty("os.arch"));
-        PlaytestClient.send(new Captured(asked.request(), renderer, writePng(frame, Path.of(asked.path()))));
+                MustNameArguments.INSTANCE,
+                info.backendName(),
+                info.name(),
+                info.driverInfo(),
+                System.getProperty("os.name"),
+                System.getProperty("os.arch"),
+                null);
+        var answer = Answer.Companion.createCaptured(MustNameArguments.INSTANCE, renderer, writePng(frame, Path.of(asked.getPath())));
+        PlaytestClient.send(new Message.ReplyWrapper(new Reply(MustNameArguments.INSTANCE, captureRequest, answer, null)));
     }
 
     /**

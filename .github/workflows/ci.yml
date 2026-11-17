@@ -117,7 +117,7 @@ jobs:
           - suite: panel-web
             caches: gradle flutter frame-vectors
           - suite: game
-            caches: gradle flutter frame-vectors gradle-outputs game
+            caches: gradle gradle-outputs game
     steps:
       - uses: actions/checkout@v6
         # The game suite reruns as demos the requirements that covered a line the change added
@@ -128,10 +128,15 @@ jobs:
         with:
           caches: ${{ matrix.caches }}
           profile: e2e
-      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }}
+      # The game suite's demo reruns follow the lines the change added since the same base the
+      # checks compare with.
+      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }} --base "$BASE_SHA"
         env:
           # The game suite fetches approved golden images from the evidence branch through gh.
           GH_TOKEN: ${{ github.token }}
+          # This runner is the pinned one: a golden frame from any other renderer fails instead of
+          # passing unchecked, so a runner that drifts from the pin cannot let every golden through.
+          PLAYTEST_PINNED_RUNNER: ${{ matrix.suite == 'game' && '1' || '' }}
       # Artifacts of this public repository are downloadable, so only the staged public folder
       # is uploaded.
       - if: always()

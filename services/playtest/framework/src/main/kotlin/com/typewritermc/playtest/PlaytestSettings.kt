@@ -28,6 +28,8 @@ internal data class PlaytestSettings(
     val goldenImages: Path,
     /** The Mesa release devenv ships, which the pinned renderer draws with. */
     val mesa: String,
+    /** Whether this machine is the pinned runner, where every frame must come from the pinned renderer. */
+    val pinnedRunner: Boolean,
     /** Every `playtest.*` property, for the pool. */
     val forwarded: Map<String, String>,
 ) {
@@ -57,6 +59,7 @@ internal data class PlaytestSettings(
                 goldens = required("goldens"),
                 goldenImages = Path(required("goldenImages")),
                 mesa = required("mesa"),
+                pinnedRunner = required("pinnedRunner").toBoolean(),
                 forwarded = forwarded,
             )
         }

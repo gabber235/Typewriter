@@ -39,9 +39,21 @@ public enum HeapShare {
 
     /**
      * The shares of the parts that can run at once: the shared Paper, the {@link #OWN_PAPERS} own
-     * Papers of restart attempts, four clients and the pool.
+     * Papers of restart attempts, the pool's {@code clients} warm clients and the pool.
      */
-    public static double concurrent() {
-        return PAPER.percent + OWN_PAPERS * OWN_PAPER.percent + 4 * CLIENT.percent + POOL.percent;
+    public static double concurrent(int clients) {
+        return PAPER.percent + OWN_PAPERS * OWN_PAPER.percent + clients * CLIENT.percent + POOL.percent;
+    }
+
+    /**
+     * Why a pool of {@code clients} warm clients cannot run, as their heaps with the Papers' and the
+     * pool's would take more than {@link #CONCURRENT_LIMIT} of the machine; null when they fit.
+     */
+    public static String overLimit(int clients) {
+        double share = concurrent(clients);
+        if (share <= CONCURRENT_LIMIT) return null;
+        int fit = (int) Math.floor((CONCURRENT_LIMIT - concurrent(0)) / CLIENT.percent);
+        return clients + " clients would take " + share + "% of the machine's memory in heaps with the Papers and the pool, over the "
+                + CONCURRENT_LIMIT + "% limit; run at most " + fit + " clients (-Pplaytest.clients)";
     }
 }

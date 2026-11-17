@@ -1,14 +1,14 @@
 package com.typewritermc.playtest.requirements
 
 import com.typewritermc.playtest.BlockPos
-import com.typewritermc.playtest.Demonstrates
 import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.GameMode
-import com.typewritermc.playtest.Key
 import com.typewritermc.playtest.entity
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.testSuite
+import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.wire.KeyboardKey
 
 val VisibilityRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("SEEN-1", "an entity in the open owns visible pixels") {
@@ -59,7 +59,7 @@ val VisibilityRequirements by testSuite(compartment = { GameCompartment }) {
         probe.fill(BlockPos(-3, 99, -3), BlockPos(3, 99, 12), "stone")
         probe.teleport(player, 0.5, 100.0, 0.5)
         probe.gameMode(player, GameMode.SURVIVAL)
-        player.press(Key.E)
+        player.press(KeyboardKey.E)
         // Ten blocks away the pig and its shadow stand wholly behind the inventory's panel.
         val pig = probe.spawn("pig", 0.5, 100.0, 10.5, yaw = 180f)
 

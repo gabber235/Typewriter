@@ -1,8 +1,8 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.CoveredClass
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.harness.v1.test_run.CoveredClass
 
 val TouchedTest by testSuite {
     test("a requirement that covered a line the change added is touched") {
@@ -10,7 +10,11 @@ val TouchedTest by testSuite {
 
         touched.touches(
             listOf(
-                CoveredClass("com/typewritermc/playtest/plugin/Probes", "com/typewritermc/playtest/plugin/Probes.java", listOf(10, 40, 41)),
+                CoveredClass(
+                    name = "com/typewritermc/playtest/plugin/Probes",
+                    source = "com/typewritermc/playtest/plugin/Probes.java",
+                    lines = listOf(10, 40, 41),
+                ),
             ),
         ) shouldBe true
     }
@@ -20,15 +24,29 @@ val TouchedTest by testSuite {
 
         touched.touches(
             listOf(
-                CoveredClass("com/typewritermc/playtest/plugin/Probes", "com/typewritermc/playtest/plugin/Probes.java", listOf(10, 11, 41)),
-                CoveredClass("com/typewritermc/playtest/wire/Probes", "com/typewritermc/playtest/wire/Probes.java", listOf(12, 40)),
+                CoveredClass(
+                    name = "com/typewritermc/playtest/plugin/Probes",
+                    source = "com/typewritermc/playtest/plugin/Probes.java",
+                    lines = listOf(10, 11, 41),
+                ),
+                CoveredClass(
+                    name = "com/typewritermc/playtest/wire/Probes",
+                    source = "com/typewritermc/playtest/wire/Probes.java",
+                    lines = listOf(12, 40),
+                ),
             ),
         ) shouldBe false
     }
 
     test("a run without a change touches no requirement") {
         Touched.read("").touches(
-            listOf(CoveredClass("com/typewritermc/playtest/plugin/Probes", "com/typewritermc/playtest/plugin/Probes.java", listOf(12))),
+            listOf(
+                CoveredClass(
+                    name = "com/typewritermc/playtest/plugin/Probes",
+                    source = "com/typewritermc/playtest/plugin/Probes.java",
+                    lines = listOf(12),
+                ),
+            ),
         ) shouldBe false
     }
 }

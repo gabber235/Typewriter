@@ -1,6 +1,6 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.CoveredClass
+import skirout.harness.v1.test_run.CoveredClass
 
 /**
  * The lines the change under test added, by source file as JaCoCo names it (`package/path/File.kt`).
@@ -12,7 +12,7 @@ internal class Touched private constructor(
 ) {
     /** Whether [covered], the plugin code a requirement ran, holds a line the change added. */
     fun touches(covered: List<CoveredClass>): Boolean =
-        covered.any { covering -> lines[covering.source()]?.let { added -> covering.lines().any(added::contains) } == true }
+        covered.any { covering -> lines[covering.source]?.let { added -> covering.lines.any(added::contains) } == true }
 
     companion object {
         /** No change: a run outside `cargo xtask e2e game` touches nothing. */

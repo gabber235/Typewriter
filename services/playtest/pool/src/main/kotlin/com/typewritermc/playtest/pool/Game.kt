@@ -97,7 +97,8 @@ internal enum class InputPath(
 /**
  * The game the pool runs: one stepped Paper and a client per player (on Linux each with a virtual display
  * of its own), each in a fresh folder of the pool folder, on free loopback ports, and each logging into the
- * run's logs folder as `<part>.log`. [Pool] hears from all of them over the wire once they are up.
+ * run's logs folder as `<part>.log`, after what an earlier pool of the run logged there when this one
+ * [continuing] its run. [Pool] hears from all of them over the wire once they are up.
  */
 internal class Game private constructor(
     private val settings: PoolSettings,
@@ -106,6 +107,7 @@ internal class Game private constructor(
     val paperPart: Part,
     private val input: InputPath,
     private val displays: Map<String, Display>,
+    private val continuing: Boolean,
     started: List<Part>,
 ) {
     private val running = started.toMutableList()
@@ -131,7 +133,9 @@ internal class Game private constructor(
             it.process.waitFor(STOP_SECONDS, TimeUnit.SECONDS)
             running -= it
         }
-        val kept = settings.logs.resolve("client-$player-lost-${++lost}.log")
+        // An earlier pool of the run may have kept lost logs of its own in the same folder.
+        val kept =
+            generateSequence { settings.logs.resolve("client-$player-lost-${++lost}.log") }.first { !Files.exists(it) }
         Files.move(logOf(settings, "client-$player"), kept)
         val replacement = startClient(settings, poolPort, player, input, displays[player])
         running += replacement
@@ -148,13 +152,18 @@ internal class Game private constructor(
         return folder
     }
 
-    /** Boots [folder]'s Paper with [flags] added; a boot after the first adds to the same log. */
+    /** Boots [folder]'s Paper with [flags] added; a boot after the first, or of a run this pool continues, adds to the same log. */
     @Synchronized
     fun bootOwn(
         folder: PaperFolder,
         flags: List<String>,
         again: Boolean,
-    ): Part = startPaper(settings, poolPort, folder, HeapShare.OWN_PAPER, flags, append = again).also { running += it }
+    ): Part =
+        startPaper(
+            folder,
+            Launches.ownPaper(settings, poolPort, folder, PaperServer.of(settings.paperDir), coverageOptions(settings, folder.dir), flags),
+            append = again || continuing,
+        ).also { running += it }
 
     /** [part] ended and is no longer a part of the game. */
     @Synchronized
@@ -179,18 +188,33 @@ internal class Game private constructor(
             settings: PoolSettings,
             poolPort: Int,
             players: List<String>,
+            continuing: Boolean,
         ): Game {
-            // The restart Papers of a pool that ended without removing them, and the logs of an earlier run
-            // in the same logs folder, are not this run's; the pool's own log is, and it emptied it.
+            // The restart Papers of a pool that ended without removing them are not this run's, and neither
+            // are the logs of an earlier run in the same logs folder, unless this pool continues that run;
+            // the pool's own log is this run's, and the pool emptied it when it starts the run.
             Files
                 .list(settings.poolDir)
                 .use { dirs ->
                     dirs.filter { it.fileName.toString().startsWith(OWN_PAPER) }.toList()
                 }.forEach { remove(it) }
-            Files.list(settings.logs).use { logs -> logs.filter { it != settings.poolLog }.toList() }.forEach { remove(it) }
+            if (!continuing) {
+                Files.list(settings.logs).use { logs -> logs.filter { it != settings.poolLog }.toList() }.forEach { remove(it) }
+            }
             val paper = PaperFolder("paper", settings.poolDir.resolve("paper"), freePort(), logOf(settings, "paper"))
             preparePaper(settings, paper.dir, paper.port)
-            val paperPart = startPaper(settings, poolPort, paper, HeapShare.PAPER, listOf(), append = false)
+            val paperPart =
+                startPaper(
+                    paper,
+                    Launches.sharedPaper(
+                        settings,
+                        poolPort,
+                        paper,
+                        PaperServer.of(settings.paperDir),
+                        coverageOptions(settings, paper.dir),
+                    ),
+                    append = continuing,
+                )
             val started = mutableListOf(paperPart)
             val input = InputPath.here()
             val displays = mutableMapOf<String, Display>()
@@ -198,17 +222,17 @@ internal class Game private constructor(
                 for (player in players) {
                     val display =
                         if (input == InputPath.XTEST) {
-                            startDisplay(settings, player).also {
+                            startDisplay(settings, player, continuing).also {
                                 started += it.part
                                 displays[player] = it
                             }
                         } else {
                             null
                         }
-                    started += startClient(settings, poolPort, player, input, display)
+                    started += startClient(settings, poolPort, player, input, display, append = continuing)
                 }
             }.onFailure { started.forEach { it.process.destroyForcibly() } }.getOrThrow()
-            return Game(settings, poolPort, paper, paperPart, input, displays, started)
+            return Game(settings, poolPort, paper, paperPart, input, displays, continuing, started)
         }
 
         /**
@@ -218,13 +242,14 @@ internal class Game private constructor(
         private fun startDisplay(
             settings: PoolSettings,
             player: String,
+            append: Boolean,
         ): Display {
             val dir = freshDir(settings.poolDir.resolve("display-$player"))
             val log = logOf(settings, "display-$player")
             val process =
                 ProcessBuilder("Xvfb", "-displayfd", "1", "-screen", "0", "1280x720x24", "-nolisten", "tcp")
                     .directory(dir.toFile())
-                    .redirectError(log.toFile())
+                    .redirectError(if (append) ProcessBuilder.Redirect.appendTo(log.toFile()) else ProcessBuilder.Redirect.to(log.toFile()))
                     .redirectInput(ProcessBuilder.Redirect.from(File("/dev/null")))
                     .start()
             val number =
@@ -259,37 +284,26 @@ internal class Game private constructor(
             dir.resolve("server.properties").writeText(serverProperties(port))
         }
 
-        /**
-         * Starts the Paper in [folder], its heap capped at [share], with [flags] before the rest. It starts the patched server on its
-         * class path directly, as Paperclip would after its patch check: Java's ahead of time cache holds
-         * only classes the JVM's own loaders load, never those of Paperclip's loader.
-         */
+        /** Starts the Paper in [folder] with [command], its output into its log (added to it when [append]). */
         private fun startPaper(
-            settings: PoolSettings,
-            poolPort: Int,
             folder: PaperFolder,
-            share: HeapShare,
-            flags: List<String>,
+            command: List<String>,
             append: Boolean,
-        ): Part {
-            val (name, dir) = folder.name to folder.dir
-            val server = PaperServer.of(settings.paperDir)
-            val command =
-                buildList {
-                    add(settings.java.toString())
-                    add(share.flag())
-                    addAll(flags)
-                    add("-javaagent:${settings.agentJar}")
-                    add("-javaagent:${settings.coverageAgentJar}=${coverageOptions(settings, dir)}")
-                    add("-Dplaytest.pool.port=$poolPort")
-                    add("-Dplaytest.paper.name=$name")
-                    add("-cp")
-                    add(server.classPath.joinToString(File.pathSeparator))
-                    add(server.mainClass)
-                    add("--nogui")
-                }
-            return Part.launch(if (name == "paper") "Paper" else "Paper $name", command, dir, folder.log, mapOf(), append = append)
-        }
+        ): Part =
+            Part.launch(
+                if (folder.name ==
+                    "paper"
+                ) {
+                    "Paper"
+                } else {
+                    "Paper ${folder.name}"
+                },
+                command,
+                folder.dir,
+                folder.log,
+                mapOf(),
+                append = append,
+            )
 
         /**
          * The JaCoCo agent counts only the classes of the plugins Paper loads, never Paper's or
@@ -325,39 +339,11 @@ internal class Game private constructor(
             player: String,
             input: InputPath,
             display: Display?,
+            append: Boolean = false,
         ): Part {
             val dir = freshDir(settings.poolDir.resolve("client-$player"))
             dir.resolve("options.txt").writeText(resource("options.txt"))
-            val launch = Json.parseToJsonElement(Files.readString(settings.clientLaunch)).jsonObject
-
-            fun strings(key: String) = launch.getValue(key).jsonArray.map { it.jsonPrimitive.content }
-            val command =
-                buildList {
-                    add(settings.java.toString())
-                    // Loom's argument files hold what the classpath below already carries.
-                    addAll(strings("jvmArgs").filterNot { it.startsWith("@") })
-                    add(HeapShare.CLIENT.flag())
-                    add("-Dplaytest.pool.port=$poolPort")
-                    add("-Dplaytest.player=$player")
-                    add("-Dplaytest.input=${input.property}")
-                    add("-cp")
-                    add(strings("classpath").joinToString(File.pathSeparator))
-                    add(launch.getValue("main").jsonPrimitive.content)
-                    addAll(strings("args"))
-                    addAll(
-                        listOf(
-                            "--username",
-                            player,
-                            "--offlineDeveloperMode",
-                            "--gameDir",
-                            dir.toString(),
-                            "--width",
-                            "854",
-                            "--height",
-                            "480",
-                        ),
-                    )
-                }
+            val command = Launches.client(settings, poolPort, player, input, dir)
             val environment =
                 when (input) {
                     // A background app on macOS: the window never takes focus from the developer.
@@ -365,7 +351,7 @@ internal class Game private constructor(
 
                     InputPath.XTEST -> mapOf("DISPLAY" to checkNotNull(display).name)
                 }
-            return Part.launch("Client $player", command, dir, logOf(settings, "client-$player"), environment, player)
+            return Part.launch("Client $player", command, dir, logOf(settings, "client-$player"), environment, player, append)
         }
 
         // An empty world over one bedrock layer: a player waits on the ground while probes step Paper. Paper

@@ -1,14 +1,7 @@
 package com.typewritermc.playtest.client;
 
+import build.skir.internal.MustNameArguments;
 import com.typewritermc.playtest.client.mixin.GuiTextRenderStateAccessor;
-import com.typewritermc.playtest.wire.Message.Block;
-import com.typewritermc.playtest.wire.Message.Camera;
-import com.typewritermc.playtest.wire.Message.ChatLine;
-import com.typewritermc.playtest.wire.Message.Entity;
-import com.typewritermc.playtest.wire.Message.Perceived;
-import com.typewritermc.playtest.wire.Message.Perception;
-import com.typewritermc.playtest.wire.Message.ResetDone;
-import com.typewritermc.playtest.wire.Payload.Watch;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -34,6 +27,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
+import skirout.harness.v1.wire.Block;
+import skirout.harness.v1.wire.Camera;
+import skirout.harness.v1.wire.ChatLine;
+import skirout.harness.v1.wire.Entity;
+import skirout.harness.v1.wire.Message;
+import skirout.harness.v1.wire.Perception;
+import skirout.harness.v1.wire.PlayerEvent;
+import skirout.harness.v1.wire.Watch;
 
 /**
  * What the player perceives, built from what each frame's extract hands the GUI and the world renderer,
@@ -97,8 +98,8 @@ final class Perceiver {
 
     /** From now on every record also carries these blocks and entities. */
     static void watch(Watch watch) {
-        watch.blocks().forEach(at -> watchedBlocks.add(new BlockPos(at.x(), at.y(), at.z())));
-        watchedEntities.addAll(watch.entities());
+        watch.getBlocks().forEach(at -> watchedBlocks.add(new BlockPos(at.getX(), at.getY(), at.getZ())));
+        watch.getEntities().forEach(entity -> watchedEntities.add(UUID.fromString(entity)));
     }
 
     /** The next frame perceives and sends its record, changed or not. */
@@ -141,25 +142,36 @@ final class Perceiver {
      */
     static void endFrame(Minecraft mc, int tick) {
         var perception = new Perception(
-                tick, Clips.partial(), Clips.frame(), frame.legibleTexts(), List.copyOf(chat), camera(mc), frame.visibleItems(), blocks(mc), entities());
+                MustNameArguments.INSTANCE,
+                tick,
+                Clips.partial(),
+                Clips.frame(),
+                frame.legibleTexts(),
+                List.copyOf(chat),
+                camera(mc),
+                frame.visibleItems(),
+                blocks(mc),
+                entities(),
+                null);
         if (forced || Clips.recordsEveryPass() || lastSent == null || !sameContent(perception, lastSent)) {
-            PlaytestClient.send(new Perceived(PlaytestClient.player(), perception));
+            var perceived = new PlayerEvent.Happened.PerceivedWrapper(perception);
+            PlaytestClient.send(new Message.PlayerEventWrapper(new PlayerEvent(MustNameArguments.INSTANCE, PlaytestClient.player(), perceived, null)));
             lastSent = perception;
         }
         forced = false;
         if (resetPending) {
             resetPending = false;
-            PlaytestClient.send(new ResetDone());
+            PlaytestClient.send(Message.RESET_DONE.INSTANCE);
         }
     }
 
     private static boolean sameContent(Perception a, Perception b) {
-        return a.texts().equals(b.texts())
-                && a.chat().equals(b.chat())
-                && Objects.equals(a.camera(), b.camera())
-                && a.items().equals(b.items())
-                && a.blocks().equals(b.blocks())
-                && a.entities().equals(b.entities());
+        return a.getTexts().equals(b.getTexts())
+                && a.getChat().equals(b.getChat())
+                && Objects.equals(a.getCamera(), b.getCamera())
+                && a.getItems().equals(b.getItems())
+                && a.getBlocks().equals(b.getBlocks())
+                && a.getEntities().equals(b.getEntities());
     }
 
     /** The view the frame was drawn from, rounded so that a still view gives the same record every frame. */
@@ -168,7 +180,16 @@ final class Perceiver {
         CameraRenderState view = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState;
         if (!view.initialized) return null;
         float fov = (float) Math.toDegrees(2 * Math.atan(1 / view.projectionMatrix.m11()));
-        return new Camera(round(view.pos.x, 100), round(view.pos.y, 100), round(view.pos.z, 100), (float) round(view.yRot, 10), (float) round(view.xRot, 10), (float) round(fov, 10), scoped);
+        return new Camera(
+                MustNameArguments.INSTANCE,
+                round(view.pos.x, 100),
+                round(view.pos.y, 100),
+                round(view.pos.z, 100),
+                (float) round(view.yRot, 10),
+                (float) round(view.xRot, 10),
+                (float) round(fov, 10),
+                scoped,
+                null);
     }
 
     private static double round(double value, int steps) {
@@ -181,7 +202,8 @@ final class Perceiver {
         for (BlockPos at : watchedBlocks) {
             String id = BuiltInRegistries.BLOCK.getKey(mc.level.getBlockState(at).getBlock()).toString();
             Change change = changes.get(at);
-            blocks.add(new Block(new com.typewritermc.playtest.wire.Message.BlockPos(at.getX(), at.getY(), at.getZ()), id, seen(mc, at, change), change == null ? -1 : change.tick()));
+            var pos = new skirout.harness.v1.wire.BlockPos(MustNameArguments.INSTANCE, at.getX(), at.getY(), at.getZ(), null);
+            blocks.add(new Block(MustNameArguments.INSTANCE, pos, id, seen(mc, at, change), change == null ? -1 : change.tick(), null));
         }
         return blocks;
     }
@@ -206,13 +228,14 @@ final class Perceiver {
         var entities = new ArrayList<Entity>();
         for (UUID uuid : watchedEntities) {
             Entity drawn = drawnEntities.get(uuid);
-            if (drawn != null) entities.add(new Entity(uuid, drawn.hurt(), drawn.name(), ownedShares.getOrDefault(uuid, Entity.UNMEASURED)));
+            // A frame the client drew as any client does, before it steps, measures no share.
+            if (drawn != null) entities.add(new Entity(MustNameArguments.INSTANCE, drawn.getUuid(), drawn.getHurt(), drawn.getName(), ownedShares.get(uuid), null));
         }
         return entities;
     }
 
     static void onChat(String text) {
-        chat.add(new ChatLine(Stepper.arrivalTick(), text));
+        chat.add(new ChatLine(MustNameArguments.INSTANCE, Stepper.arrivalTick(), text, null));
     }
 
     /** A block changed in the client's world, from the server or the client's own prediction. */
@@ -229,7 +252,7 @@ final class Perceiver {
         if (!watchedEntities.contains(entity.getUUID())) return;
         boolean hurt = state instanceof LivingEntityRenderState living && living.hasRedOverlay;
         String name = state.nameTag == null ? null : state.nameTag.getString();
-        drawnEntities.put(entity.getUUID(), new Entity(entity.getUUID(), hurt, name, Entity.UNMEASURED));
+        drawnEntities.put(entity.getUUID(), new Entity(MustNameArguments.INSTANCE, entity.getUUID().toString(), hurt, name, null, null));
     }
 
     static void onText(GuiTextRenderState state) {

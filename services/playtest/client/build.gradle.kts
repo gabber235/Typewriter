@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.fabric.api)
     implementation(project(":playtest-wire"))
     testImplementation(libs.bundles.basic.test)
+    testImplementation(testFixtures(project(":playtest-wire")))
 }
 
 loom {

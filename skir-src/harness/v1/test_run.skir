@@ -2,6 +2,10 @@
 // runner, the graph's own steps, the panel driver), so the change report, conformance and
 // evidence read a single type instead of each runner's own output format.
 struct TestRun(85010001) {
+  // The run the file belongs to. `cargo xtask e2e game` names it and every test JVM and game pool of
+  // the run writes it, so a file an earlier run left never passes for this one; empty for runners
+  // that write their file once.
+  run_id: string;
   runner: Runner;
   commit: string;
   started_at_millis: int64;
@@ -11,9 +15,12 @@ struct TestRun(85010001) {
   // Where the run's logs lie (for the game runner the pool's, Paper's and each client's), relative to
   // the folder of the run file; empty when the run names none.
   logs: string;
-  // Whether the runner wrote the whole run. A game run reads false until its last session ended, so a
-  // file a crashed pool left behind holds the cases that finished and says the run was cut short.
-  ended: bool;
+  // Why the whole run could not run, as when the game never booted; empty when it ran.
+  failure: string;
+  // Whether the run stopped before it was over. Only the game pool sets it: true on every rewrite
+  // until the run is over, so a file a crashed pool left holds the cases that finished and says the
+  // rest never ran.
+  cut_short: bool;
 }
 
 enum AttemptPolicy(85010002) {
@@ -44,7 +51,8 @@ struct Attempt(85010004) {
   // Where the attempt sits in the run's recording, when there is one.
   span: Span?;
   duration_millis: int64;
-  // Clips, screenshots, log excerpts and spans that show the outcome, relative to `folder`.
+  // Clips, screenshots, golden candidates, log excerpts and spans that show the outcome, relative
+  // to `folder`.
   artifacts: [Artifact];
   // Where this attempt's evidence lies, relative to the folder of the run file; empty for
   // that folder itself.
@@ -127,6 +135,9 @@ enum ArtifactKind(85010013) {
   log_excerpt;
   // OTLP JSON spans of the traces an attempt started.
   spans;
+  // What `cargo xtask goldens approve` reads to make a captured frame a golden: the golden file it
+  // is for, the frame's image beside it, its hash and size, and the renderer that drew it.
+  golden;
 }
 
 struct Artifact(85010014) {

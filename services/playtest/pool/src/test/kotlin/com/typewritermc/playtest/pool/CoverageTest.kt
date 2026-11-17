@@ -20,10 +20,10 @@ val CoverageTest by testSuite {
 
         val covered = coverage.covered(1, paper.classes).single()
 
-        covered.name() shouldBe "com/typewritermc/playtest/pool/Counted\$Subject"
-        covered.source() shouldBe "com/typewritermc/playtest/pool/Counted.kt"
-        covered.lines() shouldContain Counted.lineOf(1)
-        covered.lines() shouldNotContain Counted.lineOf(2)
+        covered.name shouldBe "com/typewritermc/playtest/pool/Counted\$Subject"
+        covered.source shouldBe "com/typewritermc/playtest/pool/Counted.kt"
+        covered.lines shouldContain Counted.lineOf(1)
+        covered.lines shouldNotContain Counted.lineOf(2)
     }
 
     test("an attempt's reads add up to everything that ran in it") {
@@ -34,7 +34,7 @@ val CoverageTest by testSuite {
         paper.run(2)
         coverage.add(1, paper.readAndReset())
 
-        coverage.covered(1, paper.classes).single().lines() shouldContainAll listOf(Counted.lineOf(1), Counted.lineOf(2))
+        coverage.covered(1, paper.classes).single().lines shouldContainAll listOf(Counted.lineOf(1), Counted.lineOf(2))
     }
 
     test("a read counts only for the attempts it was handed to") {
@@ -45,8 +45,8 @@ val CoverageTest by testSuite {
         paper.run(2)
         coverage.add(2, paper.readAndReset())
 
-        coverage.covered(1, paper.classes).single().lines() shouldNotContain Counted.lineOf(2)
-        coverage.covered(2, paper.classes).single().lines() shouldNotContain Counted.lineOf(1)
+        coverage.covered(1, paper.classes).single().lines shouldNotContain Counted.lineOf(2)
+        coverage.covered(2, paper.classes).single().lines shouldNotContain Counted.lineOf(1)
         coverage.covered(3, paper.classes).shouldBeEmpty()
     }
 
@@ -72,7 +72,7 @@ val CoverageTest by testSuite {
         coverage.add(1, paper.readAndReset(), readNanos = 100_000)
 
         coverage.latest(1) shouldBe analysed
-        coverage.cost(1)?.says() shouldStartWith "coverage: 2 reads held Paper's main thread 0.500 ms; 1 analyses took"
+        coverage.cost(1)?.says shouldStartWith "coverage: 2 reads held Paper's main thread 0.500 ms; 1 analyses took"
         coverage.forget(1)
         coverage.latest(1).shouldBeEmpty()
         coverage.cost(1).shouldBeNull()

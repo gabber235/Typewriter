@@ -2,8 +2,8 @@ package com.typewritermc.playtest.client
 
 import com.typewritermc.playtest.client.GuiFrame.Kind.FILL
 import com.typewritermc.playtest.client.GuiFrame.Kind.IMAGE
-import com.typewritermc.playtest.wire.Message.Item
-import com.typewritermc.playtest.wire.Message.Text
+import com.typewritermc.playtest.wire.item
+import com.typewritermc.playtest.wire.text
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 
@@ -14,14 +14,14 @@ val GuiFrameTest by testSuite {
         val frame = GuiFrame(427, 240)
         frame.text("chat", "Hello", 2, 200, 40, 209, opaqueWhite)
 
-        frame.legibleTexts() shouldBe listOf(Text("chat", "Hello"))
+        frame.legibleTexts() shouldBe listOf(text("chat", "Hello"))
     }
 
     test("text drawn outside every named element is named other") {
         val frame = GuiFrame(427, 240)
         frame.text(null, "Survival", 2, 2, 50, 11, opaqueWhite)
 
-        frame.legibleTexts() shouldBe listOf(Text("other", "Survival"))
+        frame.legibleTexts() shouldBe listOf(text("other", "Survival"))
     }
 
     test("text needs an alpha of at least 8 to be legible") {
@@ -29,7 +29,7 @@ val GuiFrameTest by testSuite {
         frame.text("chat", "faded", 2, 200, 40, 209, 0x07FFFFFF)
         frame.text("chat", "faint", 2, 210, 40, 219, 0x08FFFFFF)
 
-        frame.legibleTexts() shouldBe listOf(Text("chat", "faint"))
+        frame.legibleTexts() shouldBe listOf(text("chat", "faint"))
     }
 
     test("text needs more than half of its area on screen to be legible") {
@@ -38,7 +38,7 @@ val GuiFrameTest by testSuite {
         frame.text("chat", "mostly on", 40, 30, 140, 40, opaqueWhite)
         frame.text("chat", "above", 10, -9, 50, 1, opaqueWhite)
 
-        frame.legibleTexts() shouldBe listOf(Text("chat", "mostly on"))
+        frame.legibleTexts() shouldBe listOf(text("chat", "mostly on"))
     }
 
     test("text drawn before a blur is behind it and not legible") {
@@ -47,7 +47,7 @@ val GuiFrameTest by testSuite {
         frame.blur()
         frame.text(null, "Options", 180, 20, 240, 29, opaqueWhite)
 
-        frame.legibleTexts() shouldBe listOf(Text("other", "Options"))
+        frame.legibleTexts() shouldBe listOf(text("other", "Options"))
     }
 
     test("an opaque fill painted later over at least 90 percent of the text hides it") {
@@ -59,7 +59,7 @@ val GuiFrameTest by testSuite {
         frame.element(FILL, 0, 20, 89, 30, 0xFF000000.toInt())
         frame.element(FILL, 0, 40, 100, 50, 0xEF000000.toInt())
 
-        frame.legibleTexts() shouldBe listOf(Text("chat", "mostly covered"), Text("chat", "under glass"))
+        frame.legibleTexts() shouldBe listOf(text("chat", "mostly covered"), text("chat", "under glass"))
     }
 
     test("an image painted later over the text hides it, while one painted earlier is its background") {
@@ -69,7 +69,7 @@ val GuiFrameTest by testSuite {
         frame.text("chat", "under a panel", 0, 20, 100, 30, opaqueWhite)
         frame.element(IMAGE, 0, 20, 100, 30, opaqueWhite)
 
-        frame.legibleTexts() shouldBe listOf(Text("chat", "on a panel"))
+        frame.legibleTexts() shouldBe listOf(text("chat", "on a panel"))
     }
 
     test("blank text is not a legible run") {
@@ -83,7 +83,7 @@ val GuiFrameTest by testSuite {
         val frame = GuiFrame(427, 240)
         frame.item("offhand", -1, "minecraft:spyglass", 1, 110, 221, 126, 237)
 
-        frame.visibleItems() shouldBe listOf(Item("offhand", -1, false, "minecraft:spyglass", 1))
+        frame.visibleItems() shouldBe listOf(item("offhand", -1, false, "minecraft:spyglass", 1))
     }
 
     test("the hotbar item inside the selection frame is the selected one") {
@@ -93,7 +93,7 @@ val GuiFrameTest by testSuite {
         frame.item("hotbar", 1, "minecraft:stick", 1, 165, 221, 181, 237)
 
         frame.visibleItems() shouldBe
-            listOf(Item("hotbar", 0, true, "minecraft:spyglass", 1), Item("hotbar", 1, false, "minecraft:stick", 1))
+            listOf(item("hotbar", 0, true, "minecraft:spyglass", 1), item("hotbar", 1, false, "minecraft:stick", 1))
     }
 
     test("only a hotbar item can be selected, and none without a selection frame") {
@@ -103,7 +103,7 @@ val GuiFrameTest by testSuite {
         frame.item("screen", 9, "minecraft:stick", 16, 145, 21, 161, 37)
 
         frame.visibleItems() shouldBe
-            listOf(Item("hotbar", 0, false, "minecraft:spyglass", 1), Item("screen", 9, false, "minecraft:stick", 16))
+            listOf(item("hotbar", 0, false, "minecraft:spyglass", 1), item("screen", 9, false, "minecraft:stick", 16))
     }
 
     test("an item behind a blur, mostly off screen, or covered by a later image is not seen") {
@@ -115,7 +115,7 @@ val GuiFrameTest by testSuite {
         frame.element(IMAGE, 100, 21, 116, 37, opaqueWhite)
         frame.item("carried", -1, "minecraft:stick", 16, 200, 100, 216, 116)
 
-        frame.visibleItems() shouldBe listOf(Item("carried", -1, false, "minecraft:stick", 16))
+        frame.visibleItems() shouldBe listOf(item("carried", -1, false, "minecraft:stick", 16))
     }
 
     test("an item does not hide text, and text does not hide an item") {
@@ -124,7 +124,7 @@ val GuiFrameTest by testSuite {
         frame.item("hotbar", 0, "minecraft:spyglass", 1, 145, 221, 161, 237)
         frame.text(null, "64", 150, 230, 161, 237, opaqueWhite)
 
-        frame.legibleTexts() shouldBe listOf(Text("chat", "Hello"), Text("other", "64"))
-        frame.visibleItems() shouldBe listOf(Item("hotbar", 0, false, "minecraft:spyglass", 1))
+        frame.legibleTexts() shouldBe listOf(text("chat", "Hello"), text("other", "64"))
+        frame.visibleItems() shouldBe listOf(item("hotbar", 0, false, "minecraft:spyglass", 1))
     }
 }

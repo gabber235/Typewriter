@@ -127,6 +127,8 @@ final class ReportedRun {
 
   /// The cases so far as one run.
   results.TestRun get testRun => results.TestRun(
+    // Only a game run spans test JVMs, so only it names its run.
+    runId: "",
     runner: runner,
     // `cargo xtask e2e` knows the commit; the runner does not.
     commit: "",
@@ -135,8 +137,9 @@ final class ReportedRun {
     cases: _cases,
     // The panel runner keeps no logs folder of its own.
     logs: "",
-    // The host driver writes the run once the app reported it whole.
-    ended: true,
+    // The app reports the run once it ran whole; a drive that never reports it fails on its own.
+    failure: "",
+    cutShort: false,
   );
 
   /// The run as JSON, the form the app reports it to the host driver in.

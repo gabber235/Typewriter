@@ -149,7 +149,6 @@ pub fn run(cases: &[(&str, Outcome)]) -> TestRun {
             .iter()
             .map(|(id, outcome)| case(id, std::slice::from_ref(outcome)))
             .collect(),
-        ended: true,
         ..TestRun::default()
     }
 }
@@ -174,7 +173,6 @@ pub fn game_run(policy: AttemptPolicy, cases: &[(&str, &[Outcome])]) -> TestRun 
                 ..case(&format!("{requirement} the requirement"), outcomes)
             })
             .collect(),
-        ended: true,
         ..TestRun::default()
     }
 }
@@ -185,7 +183,6 @@ pub fn attempted(policy: AttemptPolicy, attempts: &[Outcome]) -> TestRun {
         runner: Runner::Components,
         attempt_policy: policy,
         cases: vec![case("a", attempts)],
-        ended: true,
         ..TestRun::default()
     }
 }
@@ -314,7 +311,6 @@ pub fn run_of(id: &str, attempts: Vec<Attempt>) -> TestRun {
             attempts,
             ..TestCase::default()
         }],
-        ended: true,
         ..TestRun::default()
     }
 }
@@ -614,10 +610,22 @@ pub fn drive_attempts<T: crate::e2e::Target>(
 }
 
 /// A frame a game run captured as `<frame>.png` in `run`, beside the `<frame>.golden` candidate
-/// file that names its golden, hash, size and renderer.
+/// file that names its golden, hash, size and renderer, recorded as a golden artifact of a new
+/// attempt in the folder of `<frame>` in the run file `test_run.json` of `run`.
 pub fn captured_golden(run: &TempRoot, frame: &str, candidate: &str, png: &str) {
     run.write(&format!("{frame}.golden"), candidate);
     run.write(&format!("{frame}.png"), png);
+    let file = run.path("test_run.json");
+    let mut test_run = if file.exists() {
+        crate::results::read(&file).unwrap()
+    } else {
+        run_of("GOLDEN-1 a sidebar", vec![])
+    };
+    let (folder, name) = frame.rsplit_once('/').unwrap();
+    let mut attempt = failed_attempt((0, 1), &[(ArtifactKind::Golden, &format!("{name}.golden"))]);
+    attempt.folder = folder.to_owned();
+    test_run.cases[0].attempts.push(attempt);
+    crate::results::write(&test_run, &file).unwrap();
 }
 
 /// The working tree file `path`, modified with `added` lines added or rewritten.

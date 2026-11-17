@@ -1,8 +1,9 @@
-//! `cargo xtask goldens approve`: records the frames a game run captured as the approved goldens.
+//! `cargo xtask goldens approve`: records the frames a game run captured as the approved goldens,
+//! from a local run or, with `--pr`, from the game results of a pull request's latest CI run.
 //! A requirement that names a golden writes its frame as a PNG into its attempt's folder, beside a
-//! `<name>.golden` file that says which golden file of the repository it belongs to, the frame's
-//! hash and size, the renderer that drew it, and whether that is the pinned renderer, as the run
-//! judged it. Approving writes the hash, size and renderer into that golden file, keeps the PNG
+//! `<name>.golden` candidate, which the run file lists as the attempt's golden artifact, that says
+//! which golden file of the repository it belongs to, the frame's hash and size, the renderer that
+//! drew it, and whether that is the pinned renderer, as the run judged it. Approving writes the hash, size and renderer into that golden file, keeps the PNG
 //! among the local golden images under its hash, and pushes it to the evidence branch as
 //! `goldens/<hash>.png`, beside `goldens/<hash>.approved-at`, the moment it was approved, which
 //! the weekly prune reads to drop images no golden names any more; the repository holds only the
@@ -19,6 +20,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use anyhow::{Context as _, Result, bail};
 
 use crate::branch::{BranchCheckout, REPOSITORY};
+use crate::results::{self, ArtifactKind};
 use crate::{CommandExt as _, Context, evidence};
 
 /// The local golden images, each named by its hash, relative to the repository root.
@@ -32,10 +34,20 @@ const ON_BRANCH: &str = "goldens";
 /// seconds it was approved.
 const APPROVED_AT: &str = "approved-at";
 
+/// The long lived branches, the ones the devenv action trusts a push to: an image a golden file on
+/// any of them names stays on the evidence branch however old it is.
+pub(crate) const LONG_LIVED: [&str; 2] = ["develop", "features/v1"];
+
 /// The keys a golden file holds, in the order it holds them.
 const GOLDEN_KEYS: [&str; 8] = [
     "sha256", "width", "height", "backend", "device", "driver", "os", "arch",
 ];
+
+/// The artifact CI's game job uploads its staged results as.
+const GAME_ARTIFACT: &str = "results-e2e-game";
+
+/// Where `approve --pr` downloads a pull request's game frames, relative to the repository root.
+const PULL_REQUEST_FRAMES: &str = ".xtask/state/goldens";
 
 #[derive(clap::Subcommand)]
 pub enum GoldensCommand {
@@ -44,15 +56,25 @@ pub enum GoldensCommand {
     Approve {
         /// The run's folder; the last `cargo xtask e2e game` run's by default.
         from: Option<PathBuf>,
+        /// Approves the frames the latest CI run of this pull request's head captured, which ran
+        /// on the pinned runner, instead of a local run.
+        #[arg(long, conflicts_with = "from")]
+        pr: Option<u64>,
     },
 }
 
 pub fn run(ctx: &Context, command: &GoldensCommand) -> Result<()> {
     match command {
-        GoldensCommand::Approve { from } => {
-            let from = from
-                .clone()
-                .unwrap_or_else(|| ctx.root.join(evidence::RESULTS).join("game"));
+        GoldensCommand::Approve { from, pr } => {
+            let from = match (from, pr) {
+                (Some(from), _) => from.clone(),
+                (None, Some(pr)) => pull_request_frames(
+                    *pr,
+                    &ctx.root.join(PULL_REQUEST_FRAMES).join(format!("pr-{pr}")),
+                    |args| ctx.tool(".", "gh", args).output_text(),
+                )?,
+                (None, None) => ctx.root.join(evidence::RESULTS).join("game"),
+            };
             let approved = approve(&ctx.root, &from, &ctx.root.join(IMAGES))?;
             for golden in &approved {
                 println!("goldens: approved {}", golden.golden);
@@ -67,6 +89,66 @@ pub fn run(ctx: &Context, command: &GoldensCommand) -> Result<()> {
             Ok(())
         }
     }
+}
+
+/// Downloads into `into` the game results the latest CI run of pull request `pr`'s head staged,
+/// through `gh`, and returns the folder of the game run in it, which approve reads as it reads a
+/// local run.
+fn pull_request_frames(
+    pr: u64,
+    into: &Path,
+    gh: impl Fn(&[&str]) -> Result<String>,
+) -> Result<PathBuf> {
+    let pr_number = pr.to_string();
+    let head = gh(&[
+        "pr",
+        "view",
+        &pr_number,
+        "--repo",
+        REPOSITORY,
+        "--json",
+        "headRefOid",
+        "--jq",
+        ".headRefOid",
+    ])?;
+    let head = head.trim();
+    let run = gh(&[
+        "run",
+        "list",
+        "--repo",
+        REPOSITORY,
+        "--workflow",
+        "ci.yml",
+        "--commit",
+        head,
+        "--limit",
+        "1",
+        "--json",
+        "databaseId",
+        "--jq",
+        ".[0].databaseId",
+    ])?;
+    let run = run.trim();
+    if run.is_empty() {
+        bail!("pull request {pr} has no CI run of its head {head} yet");
+    }
+    if into.exists() {
+        fs::remove_dir_all(into).with_context(|| format!("cannot clear {}", into.display()))?;
+    }
+    let dir = into.to_string_lossy();
+    gh(&[
+        "run",
+        "download",
+        run,
+        "--repo",
+        REPOSITORY,
+        "--name",
+        GAME_ARTIFACT,
+        "--dir",
+        &dir,
+    ])
+    .with_context(|| format!("cannot download the game results of CI run {run}"))?;
+    Ok(into.join("game"))
 }
 
 /// A golden [`approve`] wrote: its golden file, relative to the repository root, and the local image
@@ -133,39 +215,46 @@ pub(crate) fn drop_unused(branch: &Path, used: &[String], cutoff: u64) -> Result
 }
 
 /// Fetches into `images` the image of each golden in `hashes` it does not hold yet, through `fetch`,
-/// which answers None for an image the evidence branch does not hold; returns those hashes.
+/// which answers None for an image the evidence branch does not hold; returns each hash it got no
+/// image of, with why. An image only draws a diff, so no failed fetch stops the others.
 fn fetch_into(
     images: &Path,
     hashes: &[&str],
     fetch: impl Fn(&str) -> Result<Option<Vec<u8>>>,
-) -> Result<Vec<String>> {
+) -> Result<Vec<(String, String)>> {
     fs::create_dir_all(images).with_context(|| format!("cannot create {}", images.display()))?;
-    let mut absent = Vec::new();
+    let mut unfetched = Vec::new();
     for hash in hashes {
         let image = images.join(format!("{hash}.png"));
         if image.exists() {
             continue;
         }
-        match fetch(hash)? {
-            Some(bytes) => fs::write(&image, bytes)
-                .with_context(|| format!("cannot write {}", image.display()))?,
-            None => absent.push((*hash).to_owned()),
-        }
+        let why = match fetch(hash) {
+            Ok(Some(bytes)) => {
+                fs::write(&image, bytes)
+                    .with_context(|| format!("cannot write {}", image.display()))?;
+                continue;
+            }
+            Ok(None) => "the evidence branch holds no image of it".to_owned(),
+            Err(error) => format!("{error:#}"),
+        };
+        unfetched.push(((*hash).to_owned(), why));
     }
-    Ok(absent)
+    Ok(unfetched)
 }
 
 /// Fetches the image of every golden the repository holds that the local golden images lack,
 /// from the evidence branch, so a frame that differs from its golden shows where. A golden whose
-/// image the branch does not hold yet is said, and its frames fail without a diff.
+/// image the branch does not hold, or that gh could not fetch, is said with why, and its frames fail
+/// without a diff; the run goes on.
 pub fn fetch_missing(ctx: &Context) -> Result<()> {
     let hashes = named(ctx)?;
     let hashes: Vec<&str> = hashes.iter().map(String::as_str).collect();
-    for hash in fetch_into(&ctx.root.join(IMAGES), &hashes, |hash| {
+    for (hash, why) in fetch_into(&ctx.root.join(IMAGES), &hashes, |hash| {
         fetch_image(ctx, hash)
     })? {
         println!(
-            "goldens: the evidence branch holds no image of golden {hash}; a frame that differs from it fails without a diff"
+            "goldens: no image of golden {hash} ({why}); a frame that differs from it fails without a diff"
         );
     }
     Ok(())
@@ -181,13 +270,62 @@ pub(crate) fn named(ctx: &Context) -> Result<Vec<String>> {
         let path = ctx.root.join(file);
         let text =
             fs::read_to_string(&path).with_context(|| format!("cannot read {}", path.display()))?;
-        let hash = text
-            .lines()
-            .find_map(|line| line.strip_prefix("sha256="))
-            .with_context(|| format!("{file} holds no sha256"))?;
-        hashes.push(hash.to_owned());
+        hashes.push(hash_in(file, &text)?);
     }
     Ok(hashes)
+}
+
+/// Fetches every long lived branch from origin, then returns the hash each golden file on any of
+/// them names, once each.
+pub(crate) fn named_on_long_lived(ctx: &Context) -> Result<Vec<String>> {
+    let refs: Vec<String> = LONG_LIVED
+        .iter()
+        .map(|branch| format!("origin/{branch}"))
+        .collect();
+    for branch in LONG_LIVED {
+        ctx.tool(
+            ".",
+            "git",
+            &[
+                "fetch",
+                "--quiet",
+                "--depth=1",
+                "origin",
+                &format!("+refs/heads/{branch}:refs/remotes/origin/{branch}"),
+            ],
+        )
+        .output_text()
+        .with_context(|| format!("cannot fetch {branch}, whose goldens keep their images"))?;
+    }
+    named_on(ctx, &refs.iter().map(String::as_str).collect::<Vec<_>>())
+}
+
+/// The hash each golden file at any of `refs` names, once each.
+fn named_on(ctx: &Context, refs: &[&str]) -> Result<Vec<String>> {
+    let mut hashes = Vec::new();
+    for at in refs {
+        let files = ctx
+            .tool(".", "git", &["ls-tree", "-r", "-z", "--name-only", at])
+            .output_text()?;
+        for file in files.split('\0').filter(|it| it.ends_with(".golden")) {
+            let text = ctx
+                .tool(".", "git", &["show", &format!("{at}:{file}")])
+                .output_text()?;
+            let hash = hash_in(&format!("{at}:{file}"), &text)?;
+            if !hashes.contains(&hash) {
+                hashes.push(hash);
+            }
+        }
+    }
+    Ok(hashes)
+}
+
+/// The hash the golden file `file` holding `text` names.
+fn hash_in(file: &str, text: &str) -> Result<String> {
+    text.lines()
+        .find_map(|line| line.strip_prefix("sha256="))
+        .map(str::to_owned)
+        .with_context(|| format!("{file} holds no sha256"))
 }
 
 /// The image of the golden `hash` from the evidence branch, or None when the branch holds none,
@@ -299,20 +437,17 @@ struct Captured {
     pinned: bool,
 }
 
-/// Every frame captured under `folder`, from the `<name>.golden` files beside the frames.
+/// Every frame the runs under `folder` captured, from the golden candidates their run files list.
 fn captured_under(folder: &Path) -> Result<Vec<Captured>> {
     let mut found = Vec::new();
-    let entries =
-        fs::read_dir(folder).with_context(|| format!("cannot read {}", folder.display()))?;
-    let mut paths = entries
-        .map(|entry| entry.map(|it| it.path()))
-        .collect::<Result<Vec<_>, _>>()?;
-    paths.sort();
-    for path in paths {
-        if path.is_dir() {
-            found.extend(captured_under(&path)?);
-        } else if path.extension().is_some_and(|it| it == "golden") {
-            found.push(read_captured(&path)?);
+    for (path, run) in results::read_all(folder)? {
+        let at = path.parent().context("a run file without a folder")?;
+        for case in &run.cases {
+            for (file, artifact) in results::artifacts(case) {
+                if artifact.kind == ArtifactKind::Golden {
+                    found.push(read_captured(&at.join(file))?);
+                }
+            }
         }
     }
     Ok(found)
@@ -357,7 +492,7 @@ mod tests {
 
     use std::cell::RefCell;
 
-    use super::{approve, fetch_into, place};
+    use super::{approve, fetch_into, named_on, place, pull_request_frames};
     use crate::test_support::{TempRoot, captured_golden};
 
     const SIDEBAR: &str = "golden=services/playtest/framework/src/gameTest/goldens/sidebar.golden
@@ -418,6 +553,30 @@ pinned=true
         let approved = approve(&root.ctx.root, &run.ctx.root, &root.path("images")).unwrap();
 
         assert_eq!(approved.len(), 1);
+    }
+
+    #[test]
+    fn approve_takes_only_the_goldens_the_run_file_names() {
+        let (root, run) = (TempRoot::new(), TempRoot::new());
+        captured_golden(
+            &run,
+            "GOLDEN-1 a sidebar/attempt-1/sidebar",
+            SIDEBAR,
+            "png bytes",
+        );
+        run.write(
+            "GOLDEN-1 a sidebar/attempt-1/hotbar.golden",
+            &SIDEBAR.replace("sidebar", "hotbar"),
+        );
+        run.write("GOLDEN-1 a sidebar/attempt-1/hotbar.png", "png bytes");
+
+        let approved = approve(&root.ctx.root, &run.ctx.root, &root.path("images")).unwrap();
+
+        let goldens: Vec<_> = approved.iter().map(|it| it.golden.as_str()).collect();
+        assert_eq!(
+            goldens,
+            ["services/playtest/framework/src/gameTest/goldens/sidebar.golden"]
+        );
     }
 
     #[test]
@@ -517,7 +676,7 @@ pinned=true
         images.write("held.png", "held");
         let asked = RefCell::new(Vec::new());
 
-        let absent = fetch_into(
+        let unfetched = fetch_into(
             &images.ctx.root,
             &["held", "pushed", "never-pushed"],
             |hash| {
@@ -532,7 +691,108 @@ pinned=true
             fs::read_to_string(images.path("pushed.png")).unwrap(),
             "png bytes"
         );
-        assert_eq!(absent, ["never-pushed"]);
+        assert_eq!(
+            unfetched,
+            [(
+                "never-pushed".to_owned(),
+                "the evidence branch holds no image of it".to_owned()
+            )]
+        );
         assert!(!images.path("never-pushed.png").exists());
+    }
+
+    #[test]
+    fn a_golden_image_that_cannot_be_fetched_is_named_with_why_and_the_others_still_arrive() {
+        let images = TempRoot::new();
+
+        let unfetched = fetch_into(&images.ctx.root, &["unreachable", "pushed"], |hash| {
+            if hash == "unreachable" {
+                anyhow::bail!("gh could not fetch golden image unreachable: HTTP 502")
+            }
+            Ok(Some(b"png bytes".to_vec()))
+        })
+        .unwrap();
+
+        assert_eq!(
+            unfetched,
+            [(
+                "unreachable".to_owned(),
+                "gh could not fetch golden image unreachable: HTTP 502".to_owned()
+            )]
+        );
+        assert!(images.path("pushed.png").exists());
+    }
+
+    #[test]
+    fn an_image_a_golden_file_on_any_long_lived_branch_names_is_in_use() {
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet", "--initial-branch=develop"]);
+        root.save(
+            "framework/goldens/sidebar.golden",
+            "sha256=on-develop\nwidth=4\n",
+        );
+        root.git(&["update-ref", "refs/remotes/origin/develop", "HEAD"]);
+        root.save(
+            "framework/goldens/title.golden",
+            "sha256=on-features\nwidth=4\n",
+        );
+        root.save("framework/goldens/notes.txt", "sha256=not-a-golden\n");
+        root.git(&["update-ref", "refs/remotes/origin/features/v1", "HEAD"]);
+        // The checkout itself names a golden no long lived branch holds yet.
+        root.git(&["checkout", "--quiet", "-b", "feature"]);
+        root.save("framework/goldens/fresh.golden", "sha256=only-here\n");
+
+        let mut used = named_on(&root.ctx, &["origin/develop", "origin/features/v1"]).unwrap();
+        used.sort();
+
+        assert_eq!(used, ["on-develop", "on-features"]);
+    }
+
+    #[test]
+    fn approve_of_a_pull_request_downloads_the_game_frames_of_its_latest_ci_run() {
+        let root = TempRoot::new();
+        let asked = RefCell::new(Vec::new());
+
+        let frames = pull_request_frames(546, &root.path("pr-546"), |args: &[&str]| {
+            asked.borrow_mut().push(args.join(" "));
+            Ok(match args[0] {
+                "pr" => "4e61bf0971\n".to_owned(),
+                "run" if args[1] == "list" => "44063821447\n".to_owned(),
+                _ => String::new(),
+            })
+        })
+        .unwrap();
+
+        let asked = asked.into_inner();
+        assert!(asked[0].starts_with("pr view 546 "), "{asked:?}");
+        assert!(asked[1].contains("--workflow ci.yml"), "{asked:?}");
+        assert!(asked[1].contains("--commit 4e61bf0971"), "{asked:?}");
+        assert!(
+            asked[2].starts_with("run download 44063821447 ")
+                && asked[2].contains("--name results-e2e-game"),
+            "{asked:?}"
+        );
+        assert_eq!(frames, root.path("pr-546/game"));
+    }
+
+    #[test]
+    fn approve_of_a_pull_request_without_a_ci_run_says_so() {
+        let root = TempRoot::new();
+
+        let error = pull_request_frames(546, &root.path("pr-546"), |args: &[&str]| {
+            Ok(if args[0] == "pr" {
+                "4e61bf0971\n"
+            } else {
+                "\n"
+            }
+            .to_owned())
+        })
+        .unwrap_err()
+        .to_string();
+
+        assert_eq!(
+            error,
+            "pull request 546 has no CI run of its head 4e61bf0971 yet"
+        );
     }
 }

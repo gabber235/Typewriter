@@ -283,6 +283,18 @@ fn troubled<'a>(section: &'a Section) -> Vec<(&'a TestRun, &'a TestCase, CaseVer
         .collect()
 }
 
+/// Each run that could not run or was cut short, with why, so cases it never reached do not pass
+/// for proven.
+fn stopped_runs(section: &Section) -> Vec<(&'static str, String)> {
+    section
+        .runs
+        .iter()
+        .filter_map(|(_, run)| {
+            results::run_trouble(run).map(|trouble| (runner_name(&run.runner), trouble))
+        })
+        .collect()
+}
+
 fn gating_findings(section: &Section) -> usize {
     section
         .report
@@ -299,7 +311,8 @@ fn headline(section: &Section) -> String {
     let total = passed + trouble;
     let state = if total == 0 {
         "**No tests reported**"
-    } else if trouble > 0 || gating > 0 || section.jobs_failed {
+    } else if trouble > 0 || gating > 0 || section.jobs_failed || !stopped_runs(section).is_empty()
+    {
         "**Not ready**"
     } else if section.covered {
         "**Ready for a maintainer**"
@@ -323,10 +336,14 @@ fn render_attention(out: &mut String, section: &Section) {
         .iter()
         .filter(|finding| finding.severity == "gate")
         .collect();
-    if troubled.is_empty() && gating.is_empty() && !section.jobs_failed {
+    let stopped = stopped_runs(section);
+    if troubled.is_empty() && gating.is_empty() && !section.jobs_failed && stopped.is_empty() {
         return;
     }
     let _ = writeln!(out, "### Needs attention");
+    for (runner, trouble) in stopped {
+        let _ = writeln!(out, "- **The {runner} run {}.**\n", cell(&trouble));
+    }
     if section.jobs_failed {
         let _ = writeln!(
             out,
@@ -591,7 +608,10 @@ fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
                 )
             }
             ArtifactKind::Screenshot => format!("![]({})", url(&path)),
-            ArtifactKind::LogExcerpt | ArtifactKind::Spans | ArtifactKind::Unknown(_) => {
+            ArtifactKind::Golden
+            | ArtifactKind::LogExcerpt
+            | ArtifactKind::Spans
+            | ArtifactKind::Unknown(_) => {
                 continue;
             }
         });
@@ -783,6 +803,7 @@ fn set_pull_body(ctx: &Context, pr: u64, body: &str) -> Result<()> {
 mod tests {
     use super::*;
     use crate::results::Outcome;
+    use crate::skirout::base::harness::v1::test_run::Runner;
     use crate::test_support::{
         TempRoot, empty_change_report, failed, raw_failed_run, requirement_run,
     };
@@ -951,6 +972,41 @@ mod tests {
 
         assert!(section.starts_with("**Not ready**"), "{section}");
         assert!(section.contains("A check or suite job failed"), "{section}");
+    }
+
+    #[test]
+    fn a_run_cut_short_or_unable_to_run_is_not_ready_and_says_why_above_every_fold() {
+        let mut cut = requirement_run("a user joins", "JOIN-1", Outcome::Passed);
+        cut.cut_short = true;
+        cut.runner = Runner::Panel;
+        let mut unable = requirement_run("a quest starts", "QUEST-1", Outcome::Passed);
+        unable.runner = Runner::Game;
+        unable.failure = "the game was not ready within 300 s".to_owned();
+        let runs = [
+            (PathBuf::from("panel"), cut),
+            (PathBuf::from("game"), unable),
+        ];
+        let section = render_section(&Section {
+            sha: "1111111",
+            provenance: "Evidence from a run that stopped early.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: None,
+            covered: false,
+            jobs_failed: false,
+        });
+
+        assert!(section.starts_with("**Not ready**"), "{section}");
+        let first_fold = section.find("<details>").unwrap();
+        let cut = section
+            .find("The panel run was cut short after 1 cases")
+            .expect(&section);
+        let unable = section
+            .find("The game run could not run: the game was not ready within 300 s")
+            .expect(&section);
+        assert!(cut < first_fold && unable < first_fold, "{section}");
     }
 
     #[test]

@@ -16,7 +16,7 @@ import org.bukkit.entity.Player;
  * work a plugin starts for a player must be counted, or a check may run before its effect.
  */
 public final class PlayerWork implements AutoCloseable {
-    static final WorkLedger LEDGER = new WorkLedger(System::nanoTime);
+    static final WorkLedger LEDGER = new WorkLedger(System::nanoTime, WorkLedger.deadlineThread());
 
     private final WorkLedger.Entry entry;
 

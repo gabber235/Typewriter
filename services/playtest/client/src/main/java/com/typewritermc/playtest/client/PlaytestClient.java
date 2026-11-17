@@ -1,15 +1,7 @@
 package com.typewritermc.playtest.client;
 
+import build.skir.internal.MustNameArguments;
 import com.typewritermc.playtest.wire.Link;
-import com.typewritermc.playtest.wire.Message;
-import com.typewritermc.playtest.wire.Message.Capture;
-import com.typewritermc.playtest.wire.Message.Connect;
-import com.typewritermc.playtest.wire.Message.Hello;
-import com.typewritermc.playtest.wire.Message.Input;
-import com.typewritermc.playtest.wire.Message.Reset;
-import com.typewritermc.playtest.wire.Message.StartClip;
-import com.typewritermc.playtest.wire.Message.StopClip;
-import com.typewritermc.playtest.wire.Message.Role;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import net.fabricmc.api.ClientModInitializer;
@@ -18,6 +10,12 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import skirout.harness.v1.wire.Ask;
+import skirout.harness.v1.wire.ClientTask;
+import skirout.harness.v1.wire.Hello;
+import skirout.harness.v1.wire.Message;
+import skirout.harness.v1.wire.Request;
+import skirout.harness.v1.wire.Role;
 
 /**
  * Entry point of the verification client. The game pool launches it with {@code playtest.pool.port}
@@ -39,7 +37,7 @@ public final class PlaytestClient implements ClientModInitializer {
         Integer port = Integer.getInteger("playtest.pool.port");
         if (player == null || port == null) throw new IllegalStateException("playtest.player and playtest.pool.port are not set: only the game pool runs this client");
         try {
-            pool = Link.open(port, new Hello(Role.CLIENT, player), PlaytestClient::receive, PlaytestClient::poolLost);
+            pool = Link.open(port, new Hello(MustNameArguments.INSTANCE, Role.CLIENT.INSTANCE, player, null), PlaytestClient::receive, PlaytestClient::poolLost);
         } catch (IOException unreachable) {
             throw new UncheckedIOException("the game pool on port " + port + " is unreachable", unreachable);
         }
@@ -57,8 +55,11 @@ public final class PlaytestClient implements ClientModInitializer {
     private static void receive(Message message) {
         Minecraft mc = Minecraft.getInstance();
         switch (message) {
-            case Connect connect -> mc.execute(() -> Session.connect(mc, connect.host(), connect.port()));
-            case Reset reset -> mc.execute(() -> {
+            case Message.ConnectWrapper connect -> {
+                var to = connect.getValue();
+                mc.execute(() -> Session.connect(mc, to.getHost(), to.getPort()));
+            }
+            case Message.RESET reset -> mc.execute(() -> {
                 Inputs.reset(mc);
                 Looks.reset();
                 Clips.reset();
@@ -66,16 +67,25 @@ public final class PlaytestClient implements ClientModInitializer {
                 Cooldowns.reset(mc);
                 Perceiver.reset(mc);
             });
-            case Capture capture -> mc.execute(() -> {
-                Looks.capture(capture);
-                Perceiver.force();
-            });
-            case StartClip start -> mc.execute(() -> Clips.start(start));
-            case StopClip stop -> mc.execute(() -> Clips.stop(stop));
-            case Input input -> Inputs.arrive(input);
+            case Message.RequestWrapper request when request.getValue().getAsk() instanceof Ask.ClientWrapper client ->
+                    receive(mc, request.getValue().getId(), client.getValue().getTask());
             default -> LOG.error("The game pool sent {}, which the client never receives", message);
         }
         Stepper.wake();
+    }
+
+    /** The session's request {@code request} for this client's player: {@code task}. */
+    private static void receive(Minecraft mc, long request, ClientTask task) {
+        switch (task) {
+            case ClientTask.CaptureWrapper capture -> mc.execute(() -> {
+                Looks.capture(request, capture.getValue());
+                Perceiver.force();
+            });
+            case ClientTask.StartClipWrapper start -> mc.execute(() -> Clips.start(request, start.getValue()));
+            case ClientTask.STOP_CLIP stop -> mc.execute(() -> Clips.stop(request));
+            case ClientTask.InputWrapper input -> Inputs.arrive(request, input.getValue());
+            default -> LOG.error("The game pool sent request {} for {}, which the client never serves", request, task);
+        }
     }
 
     /** Without the pool this client serves nobody and holds nothing worth saving. */

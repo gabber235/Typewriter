@@ -1,13 +1,14 @@
 package com.typewritermc.playtest.client;
 
-import com.typewritermc.playtest.wire.Message.Ready;
-import com.typewritermc.playtest.wire.Payload.StepAck;
+import build.skir.internal.MustNameArguments;
 import java.util.ArrayDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Util;
+import skirout.harness.v1.wire.Message;
+import skirout.harness.v1.wire.StepAck;
 
 /**
  * The client's clock in step with Paper. Paper sends a step ping at the end of every stepped tick; from
@@ -80,7 +81,7 @@ final class Stepper {
             Util.setTimeSource(() -> virtualNanos);
             stepping = true;
             // Packets handled after this one arrive after a step ping, so they belong to a tick.
-            PlaytestClient.send(new Ready());
+            PlaytestClient.send(Message.READY.INSTANCE);
         }
         lastPinged = tick;
         granted.add(tick);
@@ -186,7 +187,7 @@ final class Stepper {
     private static void ack() {
         if (!ackDue || !ClientWork.done()) return;
         ackDue = false;
-        ClientPlayNetworking.send(new StepAckPayload(new StepAck(lastRan, Inputs.busy())));
+        ClientPlayNetworking.send(new StepAckPayload(new StepAck(MustNameArguments.INSTANCE, lastRan, Inputs.busy(), null)));
     }
 
     /**
@@ -196,6 +197,6 @@ final class Stepper {
     static void needTicks() {
         if (!stepping || perceiveDue || ackDue || askedAfter == lastRan) return;
         askedAfter = lastRan;
-        ClientPlayNetworking.send(new StepAckPayload(new StepAck(lastRan, true)));
+        ClientPlayNetworking.send(new StepAckPayload(new StepAck(MustNameArguments.INSTANCE, lastRan, true, null)));
     }
 }
