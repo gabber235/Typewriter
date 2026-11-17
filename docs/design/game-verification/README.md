@@ -159,7 +159,9 @@ and sound. The full behaviour list is in `research/prior-decisions.md`.
   (everything gameTest runs, and nothing more) in a Gradle of its own with `--no-daemon`, then the
   suite. The Kotlin compile daemons end with the build's Gradle; on the 16 GB runner three of them held
   4.1 to 4.3 GB while the suite ran (run 44013168715). Building apart raised the lowest free memory from
-  1.0 GB to 3.8 GB for about 46 s (run 44019397538). Compiling inside Gradle frees nothing, as the
+  1.0 GB to 3.8 GB at the cost of a second Gradle start, measured at 46 s from start to first test (run
+  44019397538). With `gameTestBuild` in place, the suite kept at least 3785 MB free and no Kotlin daemon
+  was alive during it (run 44041628191). Compiling inside Gradle frees nothing, as the
   Gradle daemon grows by what the daemons held. It never runs `--stop`, which would stop other
   worktrees' builds.
 - **The pool stays attached to its starter** (2026-11-17): the test JVM starts the pool without `setsid`.
