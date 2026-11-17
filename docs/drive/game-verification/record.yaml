@@ -749,6 +749,9 @@ decided:
   - id: at-most-two-own-papers
     what: "At most 2 (Recommended)"
     why: The heap budget assumed 2 own Papers but CI ran 3 at once (57% of the machine against the 50% limit); the pool runs at most HeapShare.OWN_PAPERS own Papers, counting ones still stopping, a further restart attempt waits in the queue, and the budget test reads the same number
+  - id: prune-unused-goldens
+    what: "Unused, 30 days old (Recommended)"
+    why: Every re-approve leaves the old image on the evidence branch and prune skipped goldens/, so it grew forever and approve's clone slowed; approve writes when it pushed each image, and the weekly prune drops an image no golden file on develop names once it is older than the retention, the same 30 days as pull request media
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
 
