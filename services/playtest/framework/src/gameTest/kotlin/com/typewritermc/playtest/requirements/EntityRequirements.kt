@@ -3,11 +3,11 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.GameCompartment
-import com.typewritermc.playtest.GameMode
 import com.typewritermc.playtest.entity
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.testSuite
+import skirout.harness.v1.wire.GameMode
 
 val EntityRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("ENTITY-1", "attacking an entity the crosshair rests on hurts it") {

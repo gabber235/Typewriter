@@ -3,13 +3,13 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.GameCompartment
-import com.typewritermc.playtest.GameMode
 import com.typewritermc.playtest.camera
 import com.typewritermc.playtest.held
 import com.typewritermc.playtest.offhand
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.testSuite
+import skirout.harness.v1.wire.GameMode
 import skirout.harness.v1.wire.KeyboardKey
 
 val HotbarRequirements by testSuite(compartment = { GameCompartment }) {

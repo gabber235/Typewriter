@@ -553,10 +553,8 @@ enum PlayerAction(85020024) {
   chat: struct {
     text: string;
   };
-  // The player's game mode becomes `mode`: survival, creative, adventure or spectator.
-  game_mode: struct {
-    mode: string;
-  };
+  // The player's game mode becomes this one.
+  game_mode: GameMode;
   // The player stands at this position, looking this way.
   teleport: struct {
     x: float64;
@@ -622,8 +620,16 @@ enum PlayerAction(85020024) {
   save;
 }
 
+// A player's game mode, as Minecraft names it.
+enum GameMode(85020025) {
+  survival;
+  creative;
+  adventure;
+  spectator;
+}
+
 // A probe action on the world.
-enum WorldAction(85020025) {
+enum WorldAction(85020026) {
   // Every block from `from` to `to`, both included, becomes `block`, a block state such as
   // `minecraft:oak_leaves[persistent=true]`.
   fill: struct {
@@ -659,7 +665,7 @@ enum WorldAction(85020025) {
 }
 
 // One step of an input.
-enum InputStep(85020026) {
+enum InputStep(85020027) {
   // Presses (`down`) or releases a key.
   key: struct {
     key: KeyboardKey;
@@ -707,7 +713,7 @@ enum InputStep(85020026) {
 }
 
 // The keys a requirement may press, as the default key bindings name them.
-enum KeyboardKey(85020027) {
+enum KeyboardKey(85020028) {
   w;
   a;
   s;
@@ -734,7 +740,7 @@ enum KeyboardKey(85020027) {
 }
 
 // A block position in the world.
-struct BlockPos(85020028) {
+struct BlockPos(85020029) {
   x: int32;
   y: int32;
   z: int32;
@@ -747,7 +753,7 @@ struct BlockPos(85020028) {
 // name. A frame draws `partial` of the way from the tick before to `tick`: 1 at the end of the tick, where
 // every record of a gated attempt is perceived, less for a frame a clip draws between two ticks, which
 // shows the clip and judges nothing. `frame` is that frame's number in the clip, or -1 outside one.
-struct Perception(85020029) {
+struct Perception(85020030) {
   tick: int32;
   partial: float32;
   frame: int32;
@@ -760,20 +766,20 @@ struct Perception(85020029) {
 }
 
 // One legible run of text and the game element that drew it, for example `chat`.
-struct Text(85020030) {
+struct Text(85020031) {
   element: string;
   text: string;
 }
 
 // A chat line and the tick in which it arrived.
-struct ChatLine(85020031) {
+struct ChatLine(85020032) {
   tick: int32;
   text: string;
 }
 
 // The view a frame was drawn from: the eye's position, yaw and pitch in degrees, the vertical field of
 // view in degrees, and whether the spyglass overlay covers it.
-struct Camera(85020032) {
+struct Camera(85020033) {
   x: float64;
   y: float64;
   z: float64;
@@ -786,7 +792,7 @@ struct Camera(85020032) {
 // An item the GUI draws: `element` is `hotbar` (slot 0 to 8, `selected` for the one the selection frame
 // marks), `offhand`, `carried` (on the pointer) or `screen` (a slot of the open screen, numbered by the
 // screen), or `other` with slot -1; `item` is its id.
-struct Item(85020033) {
+struct Item(85020034) {
   element: string;
   slot: int32;
   selected: bool;
@@ -797,7 +803,7 @@ struct Item(85020033) {
 // A watched block: its block id, whether the player perceives it as it is (its section is compiled since
 // the block last changed, visible and inside the view), and the tick it last changed since the attempt's
 // reset, or -1.
-struct Block(85020034) {
+struct Block(85020035) {
   at: BlockPos;
   block: string;
   seen: bool;
@@ -808,7 +814,7 @@ struct Block(85020034) {
 // above it, or null, and the share of the frame it owns, from 0 to 1: the pixels that differ when the
 // frame is drawn without it, over all of the frame's pixels. `share` is null in a frame the client drew
 // as any client does, before it steps.
-struct Entity(85020035) {
+struct Entity(85020036) {
   uuid: string;
   hurt: bool;
   name: string?;
@@ -819,14 +825,14 @@ struct Entity(85020035) {
 // with them: from now on every record also carries these blocks and entities, which a probe puts in front
 // of the player. Paper sends it ahead of the packets that show them, so the client handles it first. A
 // reset ends every watch.
-struct Watch(85020036) {
+struct Watch(85020037) {
   blocks: [BlockPos];
   entities: [string];
 }
 
 // Client to Paper, on the game connection itself: the client ran and perceived server tick `tick`; `busy`
 // while an input waits to start or runs and needs further ticks, so Paper keeps stepping.
-struct StepAck(85020037) {
+struct StepAck(85020038) {
   tick: int32;
   busy: bool;
 }

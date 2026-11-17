@@ -7,7 +7,6 @@ import io.papermc.paper.adventure.PaperAdventure;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -131,7 +130,7 @@ final class Probes implements Listener {
                 player.sendMessage(Component.text(chat.getValue().getText()));
                 yield null;
             }
-            case PlayerAction.GameModeWrapper mode -> gameMode(player, mode.getValue().getMode());
+            case PlayerAction.GameModeWrapper mode -> gameMode(player, mode.getValue());
             case PlayerAction.TeleportWrapper wrapper -> {
                 var teleport = wrapper.getValue();
                 player.setVelocity(new Vector());
@@ -249,13 +248,17 @@ final class Probes implements Listener {
         }));
     }
 
-    private static @Nullable String gameMode(Player player, String mode) {
-        try {
-            player.setGameMode(GameMode.valueOf(mode.toUpperCase(Locale.ROOT)));
-            return null;
-        } catch (IllegalArgumentException unknown) {
-            return "game mode " + mode + " is not survival, creative, adventure or spectator";
-        }
+    private static @Nullable String gameMode(Player player, skirout.harness.v1.wire.GameMode mode) {
+        GameMode bukkit = switch (mode.getKind()) {
+            case SURVIVAL_CONST -> GameMode.SURVIVAL;
+            case CREATIVE_CONST -> GameMode.CREATIVE;
+            case ADVENTURE_CONST -> GameMode.ADVENTURE;
+            case SPECTATOR_CONST -> GameMode.SPECTATOR;
+            case UNKNOWN -> null;
+        };
+        if (bukkit == null) return "game mode " + mode + " is none this plugin knows";
+        player.setGameMode(bukkit);
+        return null;
     }
 
     private static @Nullable String give(Player player, PlayerAction.Give give) {

@@ -1,12 +1,12 @@
 package com.typewritermc.playtest.sibling
 
 import com.typewritermc.playtest.GameCompartment
-import com.typewritermc.playtest.GameMode
 import com.typewritermc.playtest.camera
 import com.typewritermc.playtest.chat
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.testSuite
+import skirout.harness.v1.wire.GameMode
 import skirout.harness.v1.wire.KeyboardKey
 
 val SiblingRequirements by testSuite(compartment = { GameCompartment }) {

@@ -3,13 +3,13 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.GameCompartment
-import com.typewritermc.playtest.GameMode
 import com.typewritermc.playtest.block
 import com.typewritermc.playtest.chat
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.testSuite
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.wire.GameMode
 
 val ProbeRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("PROBE-1", "a chat line the probe sends reaches the player") {
