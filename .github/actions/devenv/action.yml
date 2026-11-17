@@ -94,17 +94,25 @@ runs:
         done
     # The shell's closure holds every path it built: the Rust toolchain, cargo-llvm-cov and the
     # rest. Cachix skips paths it or cache.nixos.org already has. A failed push costs the next run
-    # time, not this run its result.
+    # time, not this run its result, so it passes with a warning that names the cause: the last
+    # line the token lookup or the push printed, which never holds the token.
     - if: steps.trust.outputs.push-nix == 'true'
       continue-on-error: true
       shell: bash
       env:
         OP_SERVICE_ACCOUNT_TOKEN: ${{ inputs.op-service-account-token }}
       run: |
-        token=$(devenv shell -- secretspec get CACHIX_AUTH_TOKEN --profile cache --provider vault \
-          --reason "push the devenv shell to gabber235.cachix.org")
+        log="$RUNNER_TEMP/cachix-push.log"
+        cause() { sed 's/\x1b\[[0-9;]*m//g' "$log" | grep -v '^[[:space:]]*\(•\|✓\|$\)' | tail -n 1; }
+        if ! token=$(devenv shell -- secretspec get CACHIX_AUTH_TOKEN --profile cache --provider vault \
+          --reason "push the devenv shell to gabber235.cachix.org" 2>"$log"); then
+          echo "::warning::The devenv shell was not pushed to gabber235.cachix.org, so the next run builds its paths again: no Cachix token ($(cause))"
+          exit 0
+        fi
         echo "::add-mask::$token"
-        realpath .devenv/gc/* | CACHIX_AUTH_TOKEN=$token cachix push gabber235
+        if ! realpath .devenv/gc/* | CACHIX_AUTH_TOKEN=$token cachix push gabber235 2>&1 | tee "$log"; then
+          echo "::warning::The devenv shell was not pushed to gabber235.cachix.org, so the next run builds its paths again: cachix push failed ($(cause))"
+        fi
 
     # Each tool cache is a pair: `actions/cache` saves at the end of the job where caches are saved,
     # `actions/cache/restore` only reads everywhere else. Keep the pair's values the same.
