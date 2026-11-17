@@ -117,7 +117,7 @@ jobs:
           - suite: panel-web
             caches: gradle flutter frame-vectors
           - suite: game
-            caches: gradle flutter frame-vectors gradle-outputs game
+            caches: gradle gradle-outputs game
     steps:
       - uses: actions/checkout@v6
         # The game suite reruns as demos the requirements that covered a line the change added
