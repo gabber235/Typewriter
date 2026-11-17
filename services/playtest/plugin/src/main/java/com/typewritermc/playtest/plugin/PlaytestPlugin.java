@@ -59,7 +59,6 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
             PlaytestPlugin::nothingLeftToSend,
             task -> MinecraftServer.getServer().scheduleOnMain(task),
             work,
-            this::reportHung,
             this::reportEnded,
             new Acks(System::nanoTime),
             this::reportStalled);
@@ -117,6 +116,8 @@ public final class PlaytestPlugin extends JavaPlugin implements Listener {
         try {
             String name = System.getProperty("playtest.paper.name", "paper");
             pool = Link.open(port, new Hello(MustNameArguments.INSTANCE, Role.PAPER.INSTANCE, name, null), message -> onMainThread(() -> receive(message)), this::poolLost);
+            // Hung work is reported from its deadline's thread, so the report never waits for a long tick.
+            work.reportHungTo(this::reportHung);
         } catch (IOException unreachable) {
             poolLost(unreachable);
         }

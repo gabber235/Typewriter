@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 
 /**
@@ -16,9 +20,11 @@ import java.util.function.LongSupplier;
  * holds every tick after it until it ends. Work that still runs
  * {@link #HUNG_NANOS} after it began is hung: reported once, it holds no tick from then on, and it is
  * never cancelled; once it ends, that is reported once too, so its player can come back to the pool.
- * Hung is a fact about how long the work ran, not about when a check looked: work that outran the
- * limit and ended before any check, as when the main thread spends that time in one long tick, is reported hung and
- * ended at the next one.
+ *
+ * <p>Each piece of work has a deadline of its own, {@link #HUNG_NANOS} after it began, on a thread of
+ * its own: the main thread may spend that moment in one long tick, and the report must reach the pool
+ * while the work still runs, before anything the work does later. A deadline that runs late, after the
+ * work ended past its limit, leaves the report to the end of the work.
  */
 final class WorkLedger {
     /** How long work may run before it is reported as hung. */
@@ -47,12 +53,19 @@ final class WorkLedger {
 
         /** The work is done; ending it again does nothing. */
         void end() {
+            boolean outranUnseen;
             synchronized (WorkLedger.this) {
-                if (counted.remove(this)) {
-                    if (nanos.getAsLong() - beganNanos >= HUNG_NANOS) hungUnseen.add(this);
+                if (hung.remove(this)) {
+                    ended.add(this);
                     return;
                 }
-                if (hung.remove(this)) ended.add(this);
+                if (!counted.remove(this)) return;
+                outranUnseen = nanos.getAsLong() - beganNanos >= HUNG_NANOS;
+            }
+            if (!outranUnseen) return;
+            reportHung.accept(report());
+            synchronized (WorkLedger.this) {
+                ended.add(this);
             }
         }
 
@@ -61,19 +74,41 @@ final class WorkLedger {
         }
     }
 
+    /** Runs [task] [nanos] from now, off the main thread. */
+    @FunctionalInterface
+    interface Deadlines {
+        void after(long nanos, Runnable task);
+    }
+
+    /** One daemon thread that runs every deadline. */
+    static Deadlines deadlineThread() {
+        ScheduledExecutorService thread = Executors.newSingleThreadScheduledExecutor(task -> {
+            var named = new Thread(task, "playtest-work-deadlines");
+            named.setDaemon(true);
+            return named;
+        });
+        return (nanos, task) -> thread.schedule(task, nanos, TimeUnit.NANOSECONDS);
+    }
+
     private final LongSupplier nanos;
+    private final Deadlines deadlines;
+    private volatile Consumer<Hung> reportHung = hung -> {};
     // Work that is neither ended nor hung, in begin order.
     private final List<Entry> counted = new ArrayList<>();
     // Hung work that still runs, and hung work that ended since the last report.
     private final List<Entry> hung = new ArrayList<>();
     private final List<Entry> ended = new ArrayList<>();
-    // Work that outran its limit but ended before a check saw it running: hung and ended at once.
-    private final List<Entry> hungUnseen = new ArrayList<>();
     private int lastEnded = -1;
     private int running = -1;
 
-    WorkLedger(LongSupplier nanos) {
+    WorkLedger(LongSupplier nanos, Deadlines deadlines) {
         this.nanos = nanos;
+        this.deadlines = deadlines;
+    }
+
+    /** Hung work goes to [report], from the deadline's thread or the thread that ended the work. */
+    void reportHungTo(Consumer<Hung> report) {
+        reportHung = report;
     }
 
     /** Paper started [tick]. Main thread. */
@@ -107,6 +142,7 @@ final class WorkLedger {
     private Entry count(UUID player, String playerName, String name, int holdsFrom) {
         var entry = new Entry(player, playerName, name, lastEnded, holdsFrom, nanos.getAsLong());
         counted.add(entry);
+        deadlines.after(HUNG_NANOS, () -> deadline(entry));
         return entry;
     }
 
@@ -133,21 +169,12 @@ final class WorkLedger {
         return reports;
     }
 
-    /** The work that became hung since the last call, each reported once. */
-    synchronized List<Hung> hung() {
-        long now = nanos.getAsLong();
-        var reports = new ArrayList<Hung>();
-        for (Entry entry : hungUnseen) {
-            reports.add(entry.report());
-            ended.add(entry);
-        }
-        hungUnseen.clear();
-        counted.removeIf(entry -> {
-            if (now - entry.beganNanos < HUNG_NANOS) return false;
+    /** [entry]'s deadline: work still running is hung, reported now, while it runs. Deadline thread. */
+    private void deadline(Entry entry) {
+        synchronized (this) {
+            if (!counted.remove(entry)) return;
             hung.add(entry);
-            reports.add(entry.report());
-            return true;
-        });
-        return reports;
+        }
+        reportHung.accept(entry.report());
     }
 }
