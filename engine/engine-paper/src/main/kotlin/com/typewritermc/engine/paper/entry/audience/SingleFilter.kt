@@ -25,7 +25,7 @@ abstract class SingleFilter<E : AudienceFilterEntry, D : PlayerSingleDisplay<E>>
 
     override fun filter(player: Player): Boolean = displays[player.uniqueId]?.ref == ref
     override fun tick() {
-        displays.values.forEach { it.tick() }
+        displays.values.filter { it.ref == ref }.forEach { it.tick() }
     }
 
     override fun onPlayerAdd(player: Player) {
@@ -54,7 +54,7 @@ abstract class SingleFilter<E : AudienceFilterEntry, D : PlayerSingleDisplay<E>>
 abstract class PlayerSingleDisplay<E : AudienceFilterEntry>(
     protected val player: Player,
     private val displayKClass: KClass<out SingleFilter<E, *>>,
-    private var current: Ref<E>,
+    @Volatile private var current: Ref<E>,
 ) : KoinComponent {
     private val audienceManager: AudienceManager by inject()
     val ref: Ref<E> get() = current
