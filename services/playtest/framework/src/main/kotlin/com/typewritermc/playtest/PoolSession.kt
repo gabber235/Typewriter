@@ -449,7 +449,7 @@ internal class PoolSession private constructor(
 
             is Message.LeaseFailedWrapper -> {
                 val failed = message.value
-                leases[SubmissionId(failed.submission)]?.attempt?.completeExceptionally(PaperLost(failed.reason))
+                leases[SubmissionId(failed.submission)]?.attempt?.completeExceptionally(PaperLost(failed.loss))
             }
 
             is Message.ReplyWrapper -> {
@@ -500,11 +500,11 @@ internal class PoolSession private constructor(
                 }
 
                 is PlayerEvent.Happened.ClientLostWrapper -> {
-                    Attempt.Event.Failed(player, ClientLost(player.name, happened.value.reason))
+                    Attempt.Event.Failed(player, ClientLost(player.name, happened.value))
                 }
 
                 is PlayerEvent.Happened.PaperLostWrapper -> {
-                    Attempt.Event.Failed(player, PaperLost(happened.value.reason))
+                    Attempt.Event.Failed(player, PaperLost(happened.value))
                 }
 
                 is PlayerEvent.Happened.LeaseExpiredWrapper -> {

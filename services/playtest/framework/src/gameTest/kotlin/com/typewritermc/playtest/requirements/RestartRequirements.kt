@@ -13,7 +13,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import skirout.harness.v1.test_run.Demonstrates
-import kotlin.io.path.Path
+import skirout.harness.v1.wire.PaperLossKind
 import kotlin.io.path.readText
 
 val RestartRequirements by testSuite(compartment = { GameCompartment }) {
@@ -59,9 +59,8 @@ val RestartRequirements by testSuite(compartment = { GameCompartment }) {
     ) {
         val lost = shouldThrow<PaperLost> { killPaperWhileItBoots { restartPaper() } }
 
-        lost.report shouldContain "exited with code 137 while it booted"
-        val log = Path(lost.report.substringAfterLast("see "))
-        log.parent shouldBe runLogs
-        log.readText() shouldContain "Starting minecraft server"
+        lost.kind shouldBe PaperLossKind.EXITED_WHILE_BOOTING
+        lost.log.parent shouldBe runLogs
+        lost.log.readText() shouldContain "Starting minecraft server"
     }
 }

@@ -5,6 +5,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import skirout.harness.v1.wire.PaperLossKind
 
 val OwnPaperTest by testSuite {
     test("the attempt stands at the spawn, its players join only once their Paper is up, and it steps once all of them joined") {
@@ -83,7 +84,7 @@ val OwnPaperTest by testSuite {
         paper.restart(7)
         paper.exited(137)
 
-        paper.exited(137) shouldContainExactly listOf(Do.Lost(1, "paper-gv-1 exited with code 137 while it booted"), Do.Gone)
+        paper.exited(137) shouldContainExactly listOf(Do.Lost(1, PaperLossKind.EXITED_WHILE_BOOTING, "paper-gv-1 exited with code 137 while it booted"), Do.Gone)
         paper.ended(1, "its session sent its result").shouldBeEmpty()
     }
 
@@ -96,8 +97,8 @@ val OwnPaperTest by testSuite {
         val booting = OwnPaper("paper-gv-2", setOf("gv-2"))
         booting.claim(2)
 
-        running.exited(1) shouldContainExactly listOf(Do.Lost(1, "paper-gv-1 exited with code 1 while its attempt ran"), Do.Gone)
-        booting.exited(1) shouldContainExactly listOf(Do.Lost(2, "paper-gv-2 exited with code 1 while it booted"), Do.Gone)
+        running.exited(1) shouldContainExactly listOf(Do.Lost(1, PaperLossKind.EXITED_WHILE_RUNNING, "paper-gv-1 exited with code 1 while its attempt ran"), Do.Gone)
+        booting.exited(1) shouldContainExactly listOf(Do.Lost(2, PaperLossKind.EXITED_WHILE_BOOTING, "paper-gv-2 exited with code 1 while it booted"), Do.Gone)
     }
 
     test("a Paper that cannot resume its attempt after a restart is lost") {
@@ -112,8 +113,8 @@ val OwnPaperTest by testSuite {
         paper.joined("gv-1")
         paper.ready("gv-1")
 
-        paper.failed("paper-gv-1 could not resume its attempt: the player gv-1 is not online") shouldContainExactly
-            listOf(Do.Lost(1, "paper-gv-1 could not resume its attempt: the player gv-1 is not online"))
+        paper.failed(PaperLossKind.RESUME_FAILED, "paper-gv-1 could not resume its attempt: the player gv-1 is not online") shouldContainExactly
+            listOf(Do.Lost(1, PaperLossKind.RESUME_FAILED, "paper-gv-1 could not resume its attempt: the player gv-1 is not online"))
         paper.resumed(41).shouldBeEmpty()
     }
 
@@ -127,7 +128,7 @@ val OwnPaperTest by testSuite {
         paper.exited(137)
 
         paper.bootTimedOut(1).shouldBeEmpty()
-        paper.bootTimedOut(2) shouldContainExactly listOf(Do.Lost(1, "paper-gv-1 did not boot within ${OwnPaper.BOOT_SECONDS} s"))
+        paper.bootTimedOut(2) shouldContainExactly listOf(Do.Lost(1, PaperLossKind.BOOT_TIMED_OUT, "paper-gv-1 did not boot within ${OwnPaper.BOOT_SECONDS} s"))
     }
 
     test("once its attempt ended, the Paper says why, the players go back, a drop is no loss and the Paper's exit is its end") {

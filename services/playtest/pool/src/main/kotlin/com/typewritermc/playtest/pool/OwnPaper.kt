@@ -2,6 +2,7 @@ package com.typewritermc.playtest.pool
 
 import com.typewritermc.playtest.pool.PaperRules.Claiming
 import com.typewritermc.playtest.pool.PaperRules.Do
+import skirout.harness.v1.wire.PaperLossKind
 import skirout.harness.v1.wire.Region
 
 /**
@@ -105,16 +106,19 @@ internal class OwnPaper(
         when (phase) {
             Phase.OVER -> listOf(Do.Gone)
             Phase.KILLED -> boot()
-            Phase.RUNNING -> lost("$name exited with code $code while its attempt ran") + Do.Gone
-            else -> lost("$name exited with code $code while it booted") + Do.Gone
+            Phase.RUNNING -> lost(PaperLossKind.EXITED_WHILE_RUNNING, "$name exited with code $code while its attempt ran") + Do.Gone
+            else -> lost(PaperLossKind.EXITED_WHILE_BOOTING, "$name exited with code $code while it booted") + Do.Gone
         }
 
     override fun bootTimedOut(boot: Int): List<Do> {
         val booting = phase in setOf(Phase.BOOTING, Phase.JOINING, Phase.READYING, Phase.RESUMING)
-        return if (boot == boots && booting) lost("$name did not boot within $BOOT_SECONDS s") else listOf()
+        return if (boot == boots && booting) lost(PaperLossKind.BOOT_TIMED_OUT, "$name did not boot within $BOOT_SECONDS s") else listOf()
     }
 
-    override fun failed(cause: String): List<Do> = if (phase == Phase.OVER) listOf() else lost(cause)
+    override fun failed(
+        kind: PaperLossKind,
+        cause: String,
+    ): List<Do> = if (phase == Phase.OVER) listOf() else lost(kind, cause)
 
     override fun ended(
         attempt: Long,
@@ -133,9 +137,12 @@ internal class OwnPaper(
         return listOf(Do.Boot(boots))
     }
 
-    private fun lost(cause: String): List<Do> {
+    private fun lost(
+        kind: PaperLossKind,
+        cause: String,
+    ): List<Do> {
         phase = Phase.OVER
-        return listOf(Do.Lost(attempt, cause))
+        return listOf(Do.Lost(attempt, kind, cause))
     }
 
     companion object {

@@ -33,7 +33,7 @@ Each bounded context owns its own version folders, such as `editor/v1` or `servi
   framework, the game pool, the Paper plugin and the client mod.
 - The request rules above (`_error` variants, `internal_error`) do not apply to it.
 - When code or a test tells failure causes apart, model the failure as a kind enum plus a detail
-  string. When only a person reads it, keep one string. Never match, search or parse failure text.
+  string. When only a person reads it, keep one string. Never branch on or parse failure text.
 
 ## Contract boundary
 
