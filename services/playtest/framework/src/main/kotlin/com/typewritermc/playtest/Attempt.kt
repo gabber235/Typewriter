@@ -1,18 +1,25 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message
-import com.typewritermc.playtest.wire.Message.AttemptStep
-import com.typewritermc.playtest.wire.Message.InputStep
-import com.typewritermc.playtest.wire.Message.Kind
-import com.typewritermc.playtest.wire.Message.Perception
-import com.typewritermc.playtest.wire.Message.ProbeAction
-import com.typewritermc.playtest.wire.Message.Region
-import com.typewritermc.playtest.wire.Message.Renderer
+import build.skir.reflection.EnumDescriptor
+import build.skir.reflection.EnumWrapperVariant
+import build.skir.reflection.StructDescriptor
+import build.skir.reflection.StructField
+import build.skir.reflection.TypeDescriptor
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.selects.select
+import skirout.harness.v1.test_run.Step
+import skirout.harness.v1.wire.InputStep
+import skirout.harness.v1.wire.Message
+import skirout.harness.v1.wire.Perception
+import skirout.harness.v1.wire.PlayerAction
+import skirout.harness.v1.wire.ProbeAction
+import skirout.harness.v1.wire.Region
+import skirout.harness.v1.wire.Renderer
+import skirout.harness.v1.wire.StateKind
+import skirout.harness.v1.wire.WorldAction
 import java.nio.file.Path
 
 /**
@@ -60,13 +67,13 @@ internal class Attempt(
     private val received = mutableListOf<Event>()
     private val lost = CompletableDeferred<AssertionError>()
     private val thrown = mutableSetOf<AssertionError>()
-    private val taken = mutableListOf<AttemptStep>()
+    private val taken = mutableListOf<Step>()
 
     /** Every event the body has taken so far, in arrival order. */
     val timeline: List<Event> get() = received
 
     /** What the body did so far, in order, each with its wall clock start and duration. */
-    val steps: List<AttemptStep> get() = taken
+    val steps: List<Step> get() = taken
 
     /** The requirement's own frame that last called into the attempt, while it was still on the stack. */
     private var calledFrom: StackTraceElement? = null
@@ -103,7 +110,7 @@ internal class Attempt(
         atMillis: Long,
         says: String,
     ) {
-        taken += AttemptStep(atMillis, System.currentTimeMillis() - atMillis, says)
+        taken += Step(atMillis = atMillis, actor = null, says = says, durationMillis = System.currentTimeMillis() - atMillis)
     }
 
     /** Runs [action], which the requirement called, as one step that [says] describes. */
@@ -148,7 +155,7 @@ internal class Attempt(
     suspend fun nextEvent(): Event =
         incoming.receive().also {
             received += it
-            if (it is Event.Perceived) ran(it.perception.tick())
+            if (it is Event.Perceived) ran(it.perception.tick)
         }
 
     /**
@@ -176,7 +183,7 @@ internal class Attempt(
             .also { ran(it.tick) }
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
-    suspend fun query(player: GamePlayer): List<Kind> = step("query ${player.name}") { unlessLost { session.query(player) } }
+    suspend fun query(player: GamePlayer): List<StateKind> = step("query ${player.name}") { unlessLost { session.query(player) } }
 
     /**
      * Kills the attempt's own Paper and boots it again; the mark is the new Paper's tick after which every
@@ -273,7 +280,7 @@ internal class Attempt(
                 } catch (lost: AssertionError) {
                     return lost
                 }
-            answer.failure()?.let { return ClipFailed("${player.name}'s clip did not start: $it") }
+            answer.failure?.let { return ClipFailed("${player.name}'s clip did not start: $it") }
             clips[player] = clip
         }
         return null
@@ -294,10 +301,10 @@ internal class Attempt(
                 } catch (_: AssertionError) {
                     break
                 }
-            val failure = written.failure()
+            val failure = written.failure
             when {
                 failure != null -> failed = failed ?: ClipFailed("${player.name}'s clip was not written: $failure")
-                written.frames() > 0 -> evidence.clips += clip
+                written.frames > 0 -> evidence.clips += clip
             }
         }
         clips.clear()
@@ -330,4 +337,47 @@ internal class Attempt(
 }
 
 /** A probe action as a step names it: `Chat[text=Hello]`. */
-private val Message.ProbeAction.says: String get() = toString().removePrefix("Probe")
+private val ProbeAction.says: String
+    get() =
+        when (this) {
+            is ProbeAction.OnPlayerWrapper -> said(PlayerAction.typeDescriptor, value)
+            is ProbeAction.OnWorldWrapper -> said(WorldAction.typeDescriptor, value)
+            else -> "$kind"
+        }
+
+/** [value], a variant of the enum [descriptor] describes, as a step names it: the variant, then its fields. */
+private fun <E> said(
+    descriptor: EnumDescriptor.Reflective<E>,
+    value: E,
+): String {
+    val variant = descriptor.getVariant(value)
+    if (variant !is EnumWrapperVariant.Reflective<E, *>) {
+        return variant.name.split('_').joinToString("") { it.replaceFirstChar(Char::uppercase) } +
+            "[]"
+    }
+    return said(variant.type, variant.get(value))
+}
+
+/** [value] of [type] as a step names it: a struct as `Name[field=value, ...]`, anything else as itself. */
+@Suppress("UNCHECKED_CAST")
+private fun said(
+    type: TypeDescriptor.Reflective<*>,
+    value: Any?,
+): String {
+    val struct = type as? StructDescriptor.Reflective<Any?, *> ?: return value.toString()
+    return struct.fields.joinToString(", ", "${struct.name}[", "]") { field ->
+        val name =
+            field.name
+                .split('_')
+                .mapIndexed { index, part ->
+                    if (index ==
+                        0
+                    ) {
+                        part
+                    } else {
+                        part.replaceFirstChar(Char::uppercase)
+                    }
+                }.joinToString("")
+        "$name=${said(field.type, (field as StructField.Reflective<Any?, *, *>).get(value))}"
+    }
+}

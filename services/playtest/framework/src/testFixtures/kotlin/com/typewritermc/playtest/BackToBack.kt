@@ -1,9 +1,10 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.Kind
 import de.infix.testBalloon.framework.core.TestSuiteScope
 import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
+import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.wire.StateKind
 
 /**
  * Registers a requirement of the framework's own test kit that runs [first] and then [then] on the same
@@ -23,8 +24,8 @@ fun TestSuiteScope.backToBack(
 /** [player] carries a mark of [kind], as an earlier attempt could leave it. */
 suspend fun RequirementScope.mark(
     player: GamePlayer,
-    kind: Kind,
+    kind: StateKind,
 ): Mark = probe.mark(player, kind)
 
 /** The kinds of state [player] carries a mark of, as Paper sees them: the proof for kinds no player can see. */
-suspend fun RequirementScope.marks(player: GamePlayer): List<Kind> = attempt.query(player)
+suspend fun RequirementScope.marks(player: GamePlayer): List<StateKind> = attempt.query(player)

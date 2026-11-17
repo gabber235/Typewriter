@@ -3,12 +3,12 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.GameMode
-import com.typewritermc.playtest.Key
 import com.typewritermc.playtest.chat
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.suggestions
 import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.testSuite
+import skirout.harness.v1.wire.KeyboardKey
 
 val ChatInputRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("CHAT-1", "a line the player types and sends shows in the chat") {
@@ -17,7 +17,7 @@ val ChatInputRequirements by testSuite(compartment = { GameCompartment }) {
         probe.gameMode(player, GameMode.CREATIVE)
 
         player.typeInChat("hello there")
-        player.press(Key.ENTER)
+        player.press(KeyboardKey.ENTER)
 
         // Paper sends the line from its chat thread before it runs the tick after the one the line was sent in.
         within(1.ticks) { player sees chat("<${player.name}> hello there") }
@@ -30,7 +30,7 @@ val ChatInputRequirements by testSuite(compartment = { GameCompartment }) {
         probe.command("warp", suggests = listOf("spawn", "spire", "shop"), answer = "Warping to")
 
         player.typeInChat("/warp spawn")
-        player.press(Key.ENTER)
+        player.press(KeyboardKey.ENTER)
 
         // Paper runs the command before the tick after the one it was sent in.
         within(1.ticks) { player sees chat("Warping to spawn") }

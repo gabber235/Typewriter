@@ -1,5 +1,6 @@
 package com.typewritermc.playtest.wire
 
+import skirout.harness.v1.wire.Message
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
@@ -28,17 +29,15 @@ fun ByteArray.readFrames(): List<Message> {
     }
 }
 
-/** A frame by hand: the length, the type byte and the body, for frames [Wire.write] never writes. */
+/** A frame by hand: the length and the bytes, for frames [Wire.write] never writes. */
 fun handFrame(
-    type: Int,
-    body: ByteArray,
-    length: Int = body.size + 1,
+    bytes: ByteArray,
+    length: Int = bytes.size,
 ): ByteArray {
-    val bytes = ByteArrayOutputStream()
-    DataOutputStream(bytes).apply {
+    val frame = ByteArrayOutputStream()
+    DataOutputStream(frame).apply {
         writeInt(length)
-        writeByte(type)
-        write(body)
+        write(bytes)
     }
-    return bytes.toByteArray()
+    return frame.toByteArray()
 }

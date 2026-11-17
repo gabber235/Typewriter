@@ -12,16 +12,19 @@ import com.typewritermc.playtest.held
 import com.typewritermc.playtest.mark
 import com.typewritermc.playtest.marks
 import com.typewritermc.playtest.ticks
-import com.typewritermc.playtest.wire.Message.Kind
+import com.typewritermc.playtest.wire.entries
+import com.typewritermc.playtest.wire.variantName
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
+import skirout.harness.v1.wire.StateKind
 
 val WipeRequirements by testSuite(compartment = { GameCompartment }) {
-    Kind.entries.forEach { kind ->
+    StateKind.entries.forEach { kind ->
+        val name = variantName(StateKind.typeDescriptor, kind)
         backToBack(
-            "WIPE-${kind.name}",
-            "an attempt finds no ${kind.name.lowercase().replace('_', ' ')} the attempt before it left on its player",
+            "WIPE-${name.uppercase()}",
+            "an attempt finds no ${name.replace('_', ' ')} the attempt before it left on its player",
             first = {
                 mark(player, kind)
                 marks(player) shouldContain kind

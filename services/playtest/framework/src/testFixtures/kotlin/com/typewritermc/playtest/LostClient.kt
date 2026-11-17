@@ -5,6 +5,7 @@ import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.string.shouldContain
+import skirout.harness.v1.test_run.Demonstrates
 
 /**
  * Registers a requirement of the framework's own test kit in which [lose] makes one attempt lose its

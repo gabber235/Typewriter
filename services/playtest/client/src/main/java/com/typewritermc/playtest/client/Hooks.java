@@ -1,6 +1,6 @@
 package com.typewritermc.playtest.client;
 
-import com.typewritermc.playtest.wire.Message.BarrierSeen;
+import build.skir.internal.MustNameArguments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
@@ -12,6 +12,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.sdl.SDLEvents;
 import org.lwjgl.sdl.SDL_Event;
+import skirout.harness.v1.wire.Message;
+import skirout.harness.v1.wire.PlayerEvent;
 
 /** The one door from the mixins into the client: every game hook lands here and is handed on. */
 public final class Hooks {
@@ -71,7 +73,8 @@ public final class Hooks {
 
     public static void ping(int id) {
         if (id >= Stepper.STEP_BASE) Stepper.onStepPing(id - Stepper.STEP_BASE);
-        else PlaytestClient.send(new BarrierSeen(PlaytestClient.player(), id));
+        else PlaytestClient.send(new Message.PlayerEventWrapper(new PlayerEvent(
+                MustNameArguments.INSTANCE, PlaytestClient.player(), PlayerEvent.Happened.Companion.createBarrierSeen(MustNameArguments.INSTANCE, id), null)));
     }
 
     public static void chat(String text) {

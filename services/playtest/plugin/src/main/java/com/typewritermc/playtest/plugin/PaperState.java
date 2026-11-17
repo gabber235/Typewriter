@@ -3,11 +3,12 @@ package com.typewritermc.playtest.plugin;
 import ca.spottedleaf.moonrise.patches.chunk_system.player.ChunkSystemServerPlayer;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
-import com.typewritermc.playtest.wire.Message.Kind;
+import com.typewritermc.playtest.wire.SkirEnums;
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.bossbar.BossBar;
@@ -57,9 +58,10 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import skirout.harness.v1.wire.StateKind;
 
 /**
- * Each kind of vanilla and Paper state a player keeps, named as its {@link Kind}: how Paper wipes it to
+ * Each kind of vanilla and Paper state a player keeps, named as its {@link StateKind}: how Paper wipes it to
  * what a player who never played has, and the mark and its check that the framework's own test kit uses
  * to prove the wipe. Paper wipes the kinds in this order, as some depend on others: the game mode decides
  * whether the player may fly, effects and attributes decide its maximum health. Main thread only.
@@ -889,10 +891,17 @@ enum PaperState {
     private static final int STARVATION_RATE = 80;
     private static final int IMMUNE_TICKS = 20;
 
-    private static final Map<Kind, PaperState> BY_KIND = new EnumMap<>(Kind.class);
+    private static final Map<StateKind, PaperState> BY_KIND = new HashMap<>();
 
     static {
-        for (PaperState state : values()) BY_KIND.put(Kind.valueOf(state.name()), state);
+        var descriptor = StateKind.Companion.getTypeDescriptor();
+        Map<String, StateKind> named = new HashMap<>();
+        for (StateKind kind : SkirEnums.constantsOf(descriptor)) named.put(SkirEnums.variantName(descriptor, kind).toUpperCase(Locale.ROOT), kind);
+        for (PaperState state : values()) {
+            StateKind kind = named.get(state.name());
+            if (kind == null) throw new IllegalStateException(state + " names no kind of state the wire declares");
+            BY_KIND.put(kind, state);
+        }
     }
 
     /** Sets this kind of the player's state to what a player who never played has. */
@@ -905,7 +914,7 @@ enum PaperState {
     abstract boolean marked(Player player);
 
     /** The state of [kind], or null for a kind a plugin keeps. */
-    static PaperState of(Kind kind) {
+    static PaperState of(StateKind kind) {
         return BY_KIND.get(kind);
     }
 

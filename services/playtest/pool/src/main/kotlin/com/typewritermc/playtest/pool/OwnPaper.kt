@@ -2,7 +2,7 @@ package com.typewritermc.playtest.pool
 
 import com.typewritermc.playtest.pool.PaperRules.Claiming
 import com.typewritermc.playtest.pool.PaperRules.Do
-import com.typewritermc.playtest.wire.Message.Region
+import skirout.harness.v1.wire.Region
 
 /**
  * The life of the Paper of its own that a restart attempt runs on. The attempt's players wait on the
@@ -143,6 +143,6 @@ internal class OwnPaper(
         const val BOOT_SECONDS = 120L
 
         /** The region at the spawn, where an attempt alone on its Paper stands. */
-        val REGION = Region(0, 0)
+        val REGION = Region(x = 0, z = 0)
     }
 }

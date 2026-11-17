@@ -1,41 +1,5 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message
-import com.typewritermc.playtest.wire.Message.AttemptStep
-import com.typewritermc.playtest.wire.Message.BarrierSeen
-import com.typewritermc.playtest.wire.Message.Capture
-import com.typewritermc.playtest.wire.Message.Captured
-import com.typewritermc.playtest.wire.Message.ClipStarted
-import com.typewritermc.playtest.wire.Message.ClipWritten
-import com.typewritermc.playtest.wire.Message.CoveredClass
-import com.typewritermc.playtest.wire.Message.Declined
-import com.typewritermc.playtest.wire.Message.End
-import com.typewritermc.playtest.wire.Message.Ended
-import com.typewritermc.playtest.wire.Message.Hello
-import com.typewritermc.playtest.wire.Message.Input
-import com.typewritermc.playtest.wire.Message.InputDone
-import com.typewritermc.playtest.wire.Message.InputStep
-import com.typewritermc.playtest.wire.Message.Join
-import com.typewritermc.playtest.wire.Message.Kind
-import com.typewritermc.playtest.wire.Message.Lease
-import com.typewritermc.playtest.wire.Message.Marks
-import com.typewritermc.playtest.wire.Message.Perceived
-import com.typewritermc.playtest.wire.Message.Probe
-import com.typewritermc.playtest.wire.Message.ProbeAction
-import com.typewritermc.playtest.wire.Message.ProbeDone
-import com.typewritermc.playtest.wire.Message.Query
-import com.typewritermc.playtest.wire.Message.Queue
-import com.typewritermc.playtest.wire.Message.Reclaim
-import com.typewritermc.playtest.wire.Message.Refused
-import com.typewritermc.playtest.wire.Message.Renderer
-import com.typewritermc.playtest.wire.Message.Reply
-import com.typewritermc.playtest.wire.Message.Result
-import com.typewritermc.playtest.wire.Message.Role
-import com.typewritermc.playtest.wire.Message.Settle
-import com.typewritermc.playtest.wire.Message.Settled
-import com.typewritermc.playtest.wire.Message.StartClip
-import com.typewritermc.playtest.wire.Message.StopClip
-import com.typewritermc.playtest.wire.Message.Submit
 import com.typewritermc.playtest.wire.Wire
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -44,6 +8,26 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
+import skirout.harness.v1.test_run.CoveredClass
+import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.test_run.Step
+import skirout.harness.v1.wire.Answer
+import skirout.harness.v1.wire.Ask
+import skirout.harness.v1.wire.ClientTask
+import skirout.harness.v1.wire.Hello
+import skirout.harness.v1.wire.InputStep
+import skirout.harness.v1.wire.Lease
+import skirout.harness.v1.wire.Message
+import skirout.harness.v1.wire.PaperAsk
+import skirout.harness.v1.wire.PlayerEvent
+import skirout.harness.v1.wire.Probe
+import skirout.harness.v1.wire.ProbeAction
+import skirout.harness.v1.wire.Renderer
+import skirout.harness.v1.wire.Request
+import skirout.harness.v1.wire.Result
+import skirout.harness.v1.wire.Role
+import skirout.harness.v1.wire.StateKind
+import skirout.harness.v1.wire.Submit
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.DataInputStream
@@ -51,6 +35,7 @@ import java.io.DataOutputStream
 import java.io.IOException
 import java.net.Socket
 import java.nio.file.Path
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -106,8 +91,8 @@ internal class PoolSession private constructor(
     private val requests = AtomicLong()
     private val barriers = AtomicInteger()
     private val leases = ConcurrentHashMap<SubmissionId, Leasing>()
-    private val replies = ConcurrentHashMap<Long, CompletableDeferred<Reply>>()
-    private val settles = ConcurrentHashMap<SubmissionId, CompletableDeferred<Settled>>()
+    private val replies = ConcurrentHashMap<Long, CompletableDeferred<Answer>>()
+    private val settles = ConcurrentHashMap<SubmissionId, CompletableDeferred<Message.Settled>>()
     private val restarts = ConcurrentHashMap<Long, Attempt>()
     private val attempts = ConcurrentHashMap<String, Attempt>()
     private val attemptsOf = ConcurrentHashMap<String, Int>()
@@ -178,10 +163,19 @@ internal class PoolSession private constructor(
         }
         try {
             send(
-                Queue(
-                    planned.zip(leasings) { it, (submission, _) ->
-                        Submit(submission.value, it.testId, it.requirement, it.players, it.demonstrates, it.restartsPaper, it.demo)
-                    },
+                Message.createQueue(
+                    together =
+                        planned.zip(leasings) { it, (submission, _) ->
+                            Submit(
+                                submission = submission.value,
+                                testId = it.testId,
+                                requirement = it.requirement,
+                                players = it.players,
+                                demonstrates = it.demonstrates,
+                                restartsPaper = it.restartsPaper,
+                                demo = it.demo,
+                            )
+                        },
                 ),
             )
         } catch (unavailable: GameUnavailable) {
@@ -213,7 +207,7 @@ internal class PoolSession private constructor(
         val started = System.nanoTime()
         var failure: Throwable? = null
         var covered = listOf<CoveredClass>()
-        val steps = mutableListOf<AttemptStep>()
+        val steps = mutableListOf<Step>()
         val evidence =
             Evidence(
                 settings.testRun.toAbsolutePath().parent,
@@ -223,7 +217,7 @@ internal class PoolSession private constructor(
         for ((index, body) in planned.bodies.withIndex()) {
             if (index > 0) {
                 attempt.players.forEach { attempts.remove(it.name) }
-                attempt = lease(submission, leasing) { send(Reclaim(submission.value)) }
+                attempt = lease(submission, leasing) { send(Message.createReclaim(submission = submission.value)) }
             }
             attempt.evidence = evidence
             val ended = runBody(submission, attempt, body, if (planned.demo) clipSuffix(planned, index) else null)
@@ -233,7 +227,7 @@ internal class PoolSession private constructor(
             if (failure != null) break
         }
         attempt.players.forEach { attempts.remove(it.name) }
-        send(result(submission, attempt, failure, (System.nanoTime() - started) / 1_000_000, steps, evidence))
+        send(Message.ResultWrapper(result(submission, attempt, failure, (System.nanoTime() - started) / 1_000_000, steps, evidence)))
         return AttemptEnd(failure, covered)
     }
 
@@ -243,18 +237,18 @@ internal class PoolSession private constructor(
         attempt: Attempt,
         failure: Throwable?,
         millis: Long,
-        steps: List<AttemptStep>,
+        steps: List<Step>,
         evidence: Evidence,
     ): Result =
         Result(
-            submission.value,
-            millis,
-            failure?.described,
-            failure?.let { attempt.requirementLine(it.stackTrace) ?: (it as? WindowMissed)?.at },
-            steps,
-            if (evidence.screenshots.isEmpty() && evidence.clips.isEmpty()) "" else evidence.folder,
-            evidence.screenshots,
-            evidence.clips,
+            submission = submission.value,
+            durationMillis = millis,
+            failure = failure?.described,
+            firstBroken = failure?.let { attempt.requirementLine(it.stackTrace) ?: (it as? WindowMissed)?.at },
+            steps = steps,
+            folder = if (evidence.screenshots.isEmpty() && evidence.clips.isEmpty()) "" else evidence.folder,
+            screenshots = evidence.screenshots,
+            clips = evidence.clips,
         )
 
     /**
@@ -324,11 +318,11 @@ internal class PoolSession private constructor(
     ): AttemptEnd {
         // A cancelled body still ends its attempt, so the pool hears the result and frees its players.
         val at = System.currentTimeMillis()
-        val settled = withContext(NonCancellable) { waitFor(settles, submission) { send(Settle(submission.value)) } }
+        val settled = withContext(NonCancellable) { waitFor(settles, submission) { send(Message.createSettle(id = submission.value)) } }
         attempt.took(at, "settle ${attempt.players.joinToString { it.name }}")
-        val untaken = attempt.untakenFailures().firstOrNull() ?: return AttemptEnd(failure, settled.covered())
+        val untaken = attempt.untakenFailures().firstOrNull() ?: return AttemptEnd(failure, settled.covered)
         failure?.let(untaken::addSuppressed)
-        return AttemptEnd(untaken, settled.covered())
+        return AttemptEnd(untaken, settled.covered)
     }
 
     /**
@@ -342,21 +336,23 @@ internal class PoolSession private constructor(
     ): Int {
         var asked = 0L
         try {
-            return request<Message.Restarted> { request ->
-                asked = request
-                restarts[request] = attempt
-                Message.Restart(request, submission.value)
-            }.tick()
+            val restarted =
+                answer<Answer.RestartedWrapper>(requests.incrementAndGet()) { request ->
+                    asked = request
+                    restarts[request] = attempt
+                    Message.createRestart(request = request, submission = submission.value)
+                }
+            return restarted.value.tick
         } finally {
             restarts.remove(asked)
         }
     }
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
-    suspend fun query(player: GamePlayer): List<Kind> {
-        val answer = request<Marks> { request -> Query(request, player.uuid) }
-        answer.failure()?.let { throw ProbeFailed(it) }
-        return answer.marked()
+    suspend fun query(player: GamePlayer): List<StateKind> {
+        val marks = request<Answer.MarksWrapper>(Ask.PaperWrapper(PaperAsk.createQuery(player = player.uuid.toString()))).value
+        marks.failure?.let { throw ProbeFailed(it) }
+        return marks.marked
     }
 
     /** Paper runs [action] for [players]; returns, once each of their clients holds its effect, the tick after which it ran. */
@@ -364,9 +360,10 @@ internal class PoolSession private constructor(
         players: List<GamePlayer>,
         action: ProbeAction,
     ): Int {
-        val done = request<ProbeDone> { request -> Probe(request, players.map { it.uuid }, action) }
-        done.failure()?.let { throw ProbeFailed(it) }
-        return done.tick()
+        val probe = Probe(players = players.map { it.uuid.toString() }, action = action)
+        val done = request<Answer.ProbeDoneWrapper>(Ask.PaperWrapper(PaperAsk.ProbeWrapper(probe))).value
+        done.failure?.let { throw ProbeFailed(it) }
+        return done.tick
     }
 
     /** [player]'s client runs [steps]; returns the tick after which their first event reached the client. */
@@ -374,42 +371,56 @@ internal class PoolSession private constructor(
         player: GamePlayer,
         steps: List<InputStep>,
     ): Int {
-        val done = request<InputDone> { request -> Input(request, player.uuid, steps) }
-        done.failure()?.let { throw InputFailed(it) }
-        return done.tick()
+        val done = request<Answer.InputDoneWrapper>(player, ClientTask.createInput(steps = steps)).value
+        done.failure?.let { throw InputFailed(it) }
+        return done.tick
     }
 
     /** [player]'s client records a clip from the next tick on and writes it as an mp4 to [mp4]. */
     suspend fun startClip(
         player: GamePlayer,
         mp4: Path,
-    ): ClipStarted = request<ClipStarted> { request -> StartClip(request, player.uuid, mp4.toString()) }
+    ): Answer.ClipStarted = request<Answer.ClipStartedWrapper>(player, ClientTask.createStartClip(path = mp4.toString())).value
 
     /** [player]'s client finishes its clip. */
-    suspend fun stopClip(player: GamePlayer): ClipWritten = request<ClipWritten> { request -> StopClip(request, player.uuid) }
+    suspend fun stopClip(player: GamePlayer): Answer.ClipWritten = request<Answer.ClipWrittenWrapper>(player, ClientTask.STOP_CLIP).value
 
     /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */
     suspend fun capture(
         player: GamePlayer,
         png: Path,
     ): Renderer {
-        val captured = request<Captured> { request -> Capture(request, player.uuid, png.toString()) }
-        captured.failure()?.let { throw FrameNotCaptured(it) }
-        return captured.renderer()
+        val captured = request<Answer.CapturedWrapper>(player, ClientTask.createCapture(path = png.toString())).value
+        captured.failure?.let { throw FrameNotCaptured(it) }
+        return captured.renderer
     }
 
     /** Ends the session: once every session of the run ended, the pool marks the run file ended. */
     suspend fun end() {
-        send(End())
+        send(Message.END)
         ended.await()
         socket.close()
     }
 
-    /** Sends the request [message] builds from a fresh request id and returns its [Reply]. */
-    private suspend inline fun <reified T : Reply> request(crossinline message: (Long) -> Message): T {
-        val request = requests.incrementAndGet()
-        return waitFor(replies, request) { send(message(request)) } as T
-    }
+    /** Asks [player]'s client to run [task] under a fresh request id and returns its answer. */
+    private suspend inline fun <reified T : Answer> request(
+        player: GamePlayer,
+        task: ClientTask,
+    ): T = request(Ask.createClient(player = player.uuid.toString(), task = task))
+
+    /** Asks the game [ask] under a fresh request id and returns its answer. */
+    private suspend inline fun <reified T : Answer> request(ask: Ask): T =
+        answer(requests.incrementAndGet()) { request -> Message.RequestWrapper(Request(id = request, ask = ask)) }
+
+    /** Sends the message [message] builds from [request] and returns the answer to it, which must be a [T]. */
+    private suspend inline fun <reified T : Answer> answer(
+        request: Long,
+        crossinline message: (Long) -> Message,
+    ): T =
+        when (val answer = waitFor(replies, request) { send(message(request)) }) {
+            is T -> answer
+            else -> throw GameUnavailable("the game answered request $request with ${answer.kind}, which does not answer it")
+        }
 
     private suspend fun <K : Any, T> waitFor(
         pending: ConcurrentHashMap<K, CompletableDeferred<T>>,
@@ -442,61 +453,83 @@ internal class PoolSession private constructor(
 
     private fun dispatch(message: Message) {
         when (message) {
-            is Lease -> {
-                leases[SubmissionId(message.submission())]?.let { leasing -> leasing.attempt.complete(start(message, leasing)) }
+            is Message.LeaseWrapper -> {
+                val lease = message.value
+                leases[SubmissionId(lease.submission)]?.let { leasing -> leasing.attempt.complete(start(lease, leasing)) }
             }
 
-            is Declined -> {
-                leases[SubmissionId(message.submission())]?.attempt?.completeExceptionally(RequirementDeclined(message.reason()))
+            is Message.DeclinedWrapper -> {
+                val declined = message.value
+                leases[SubmissionId(declined.submission)]?.attempt?.completeExceptionally(RequirementDeclined(declined.reason))
             }
 
-            is Message.LeaseFailed -> {
-                leases[SubmissionId(message.submission())]?.attempt?.completeExceptionally(PaperLost(message.reason()))
+            is Message.LeaseFailedWrapper -> {
+                val failed = message.value
+                leases[SubmissionId(failed.submission)]?.attempt?.completeExceptionally(PaperLost(failed.reason))
             }
 
-            is Message.Restarted -> {
-                restarts.remove(message.request())?.restarted()
-                replies[message.request()]?.complete(message)
+            is Message.ReplyWrapper -> {
+                val reply = message.value
+                if (reply.answer is Answer.RestartedWrapper) restarts.remove(reply.request)?.restarted()
+                replies[reply.request]?.complete(reply.answer)
             }
 
-            is Reply -> {
-                replies[message.request()]?.complete(message)
+            is Message.PlayerEventWrapper -> {
+                deliver(message.value)
             }
 
-            is Message.PlayerEvent -> {
-                deliver(message)
+            is Message.SettledWrapper -> {
+                settles[SubmissionId(message.value.id)]?.complete(message.value)
             }
 
-            is Settled -> {
-                settles[SubmissionId(message.id())]?.complete(message)
+            is Message.RefusedWrapper -> {
+                fail(GameUnavailable(message.value.reason))
             }
 
-            is Refused -> {
-                fail(GameUnavailable(message.reason()))
-            }
-
-            is Ended -> {
+            Message.ENDED -> {
                 ended.complete(Unit)
             }
 
             else -> {
-                fail(GameUnavailable("the game pool sent ${message.javaClass.simpleName}, which a session never receives"))
+                fail(GameUnavailable("the game pool sent ${message.kind}, which a session never receives"))
             }
         }
     }
 
-    /** Hands [message] to the attempt that holds its player; nobody holds a released player. */
-    private fun deliver(message: Message.PlayerEvent) {
-        val attempt = attempts[message.player()] ?: return
-        val player = attempt.player(message.player())
+    /** Hands [event] to the attempt that holds its player; nobody holds a released player. */
+    private fun deliver(event: PlayerEvent) {
+        val attempt = attempts[event.player] ?: return
+        val player = attempt.player(event.player)
+        val happened = event.happened
         attempt.deliver(
-            when (message) {
-                is Perceived -> Attempt.Event.Perceived(player, message.perception())
-                is BarrierSeen -> Attempt.Event.Barrier(player, message.barrier())
-                is Message.WorkHung -> Attempt.Event.Failed(player, WorkHung(player.name, message.work(), message.beganAfter()))
-                is Message.ClientLost -> Attempt.Event.Failed(player, ClientLost(player.name, message.reason()))
-                is Message.PaperLost -> Attempt.Event.Failed(player, PaperLost(message.reason()))
-                is Message.LeaseExpired -> Attempt.Event.Failed(player, LeaseExpired(message.reason()))
+            when (happened) {
+                is PlayerEvent.Happened.PerceivedWrapper -> {
+                    Attempt.Event.Perceived(player, happened.value)
+                }
+
+                is PlayerEvent.Happened.BarrierSeenWrapper -> {
+                    Attempt.Event.Barrier(player, happened.value.barrier)
+                }
+
+                is PlayerEvent.Happened.WorkHungWrapper -> {
+                    Attempt.Event.Failed(player, WorkHung(player.name, happened.value.work, happened.value.beganAfter))
+                }
+
+                is PlayerEvent.Happened.ClientLostWrapper -> {
+                    Attempt.Event.Failed(player, ClientLost(player.name, happened.value.reason))
+                }
+
+                is PlayerEvent.Happened.PaperLostWrapper -> {
+                    Attempt.Event.Failed(player, PaperLost(happened.value.reason))
+                }
+
+                is PlayerEvent.Happened.LeaseExpiredWrapper -> {
+                    Attempt.Event.Failed(player, LeaseExpired(happened.value.reason))
+                }
+
+                else -> {
+                    return fail(GameUnavailable("the game pool sent ${happened.kind} for ${event.player}, which this build does not know"))
+                }
             },
         )
     }
@@ -517,10 +550,10 @@ internal class PoolSession private constructor(
         val attempt =
             Attempt(
                 this,
-                SubmissionId(lease.submission()),
-                lease.players().map { GamePlayer(it.name(), it.uuid()) },
-                lease.region(),
-                lease.paper(),
+                SubmissionId(lease.submission),
+                lease.players.map { GamePlayer(it.name, UUID.fromString(it.uuid)) },
+                lease.region,
+                lease.paper,
                 leasing.requirementCode,
                 leasing.restartsPaper,
             )
@@ -535,9 +568,9 @@ internal class PoolSession private constructor(
         fun open(settings: PlaytestSettings = PlaytestSettings.fromSystemProperties()): PoolSession {
             val socket = PoolLauncher(settings).connect()
             val session = PoolSession(socket, settings)
-            session.send(Hello(Role.SESSION, settings.run))
+            session.send(Message.HelloWrapper(Hello(role = Role.SESSION, name = settings.run)))
             // The pool writes the run's file after every attempt, so it needs the file before the first.
-            session.send(Join(settings.testRun.toString(), RunPlan.current.policy))
+            session.send(Message.createJoin(testRunFile = settings.testRun.toString(), policy = RunPlan.current.policy))
             thread(name = "playtest-session", isDaemon = true) { session.read() }
             return session
         }

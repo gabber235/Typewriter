@@ -1,9 +1,6 @@
 package com.typewritermc.playtest.client;
 
-import com.typewritermc.playtest.wire.Message.ClipStarted;
-import com.typewritermc.playtest.wire.Message.ClipWritten;
-import com.typewritermc.playtest.wire.Message.StartClip;
-import com.typewritermc.playtest.wire.Message.StopClip;
+import build.skir.internal.MustNameArguments;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -11,6 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.List;
+import skirout.harness.v1.wire.Answer;
+import skirout.harness.v1.wire.ClientTask;
+import skirout.harness.v1.wire.Message;
+import skirout.harness.v1.wire.Reply;
 
 /**
  * The clip a demo records. While it records, every tick is followed by the passes its {@link ClipSchedule}
@@ -31,18 +32,21 @@ final class Clips {
 
     private Clips() {}
 
-    /** Records from the next tick on, as {@code asked} says, and answers it. */
-    static void start(StartClip asked) {
+    /** Records from the next tick on, as {@code asked} says, and answers it as request {@code request}. */
+    static void start(long request, ClientTask.StartClip asked) {
         stopEncoder();
         schedule = new ClipSchedule();
-        path = Path.of(asked.path());
+        path = Path.of(asked.getPath());
         failure = null;
         due.clear();
-        PlaytestClient.send(new ClipStarted(asked.request(), null));
+        answer(request, Answer.Companion.createClipStarted(MustNameArguments.INSTANCE, null));
     }
 
-    /** Finishes the clip and answers {@code asked} with what it holds: no frame, and no file, when no tick ran while it recorded. */
-    static void stop(StopClip asked) {
+    /**
+     * Finishes the clip and answers request {@code request} with what it holds: no frame, and no file,
+     * when no tick ran while it recorded.
+     */
+    static void stop(long request) {
         int frames = 0;
         String failed = schedule == null ? "no clip was recording" : failure;
         if (writer != null) {
@@ -56,7 +60,7 @@ final class Clips {
         encoder = null;
         schedule = null;
         due.clear();
-        PlaytestClient.send(new ClipWritten(asked.request(), frames, failed));
+        answer(request, Answer.Companion.createClipWritten(MustNameArguments.INSTANCE, frames, failed));
     }
 
     /** A new attempt or a lost Paper: a clip still recording is dropped. */
@@ -157,6 +161,10 @@ final class Clips {
         if (encoder != null) encoder.destroyForcibly();
         encoder = null;
         writer = null;
+    }
+
+    private static void answer(long request, Answer answer) {
+        PlaytestClient.send(new Message.ReplyWrapper(new Reply(MustNameArguments.INSTANCE, request, answer, null)));
     }
 
     /** ffmpeg's log beside the clip. */

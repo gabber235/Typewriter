@@ -1,8 +1,5 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.AttemptPolicy
-import com.typewritermc.playtest.wire.Message.AttemptPolicy.Kind.EXACTLY
-import com.typewritermc.playtest.wire.Message.AttemptPolicy.Kind.RERUN_FAILURES
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
@@ -10,10 +7,11 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import skirout.harness.v1.test_run.AttemptPolicy
 
 val VerdictTest by testSuite {
-    val retries = AttemptPolicy(RERUN_FAILURES, 4)
-    val thrice = AttemptPolicy(EXACTLY, 3)
+    val retries = AttemptPolicy.RerunFailuresWrapper(4)
+    val thrice = AttemptPolicy.ExactlyWrapper(3)
     val missed = AssertionError("gv-1 did not see chat \"Hello\" within 5 ticks")
     val lost = ClientLost("gv-1", "its process exited with code 137; see client-gv-1/lost-1.log")
     val declined = RequirementDeclined("GROUP-1 cannot run here: a requirement claims 3 players, but the pool holds 1")

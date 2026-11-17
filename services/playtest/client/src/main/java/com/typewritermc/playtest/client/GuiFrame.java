@@ -1,9 +1,10 @@
 package com.typewritermc.playtest.client;
 
-import com.typewritermc.playtest.wire.Message.Item;
-import com.typewritermc.playtest.wire.Message.Text;
+import build.skir.internal.MustNameArguments;
 import java.util.ArrayList;
 import java.util.List;
+import skirout.harness.v1.wire.Item;
+import skirout.harness.v1.wire.Text;
 
 /**
  * Everything the GUI added in one frame, in paint order, which of its text a player can read and which
@@ -72,7 +73,7 @@ final class GuiFrame {
             Painted text = painted.get(index);
             if (text.kind() != null || text.text().isBlank()) continue;
             if (alpha(text.color()) < MIN_TEXT_ALPHA || !inView(text, index)) continue;
-            legible.add(new Text(text.element() == null ? "other" : text.element(), text.text()));
+            legible.add(new Text(MustNameArguments.INSTANCE, text.element() == null ? "other" : text.element(), text.text(), null));
         }
         return legible;
     }
@@ -86,7 +87,7 @@ final class GuiFrame {
         for (int index = 0; index < painted.size(); index++) {
             Painted item = painted.get(index);
             if (item.kind() != Kind.ITEM || !inView(item, index)) continue;
-            visible.add(new Item(item.element(), item.slot(), selected(item), item.text(), item.count()));
+            visible.add(new Item(MustNameArguments.INSTANCE, item.element(), item.slot(), selected(item), item.text(), item.count(), null));
         }
         return visible;
     }

@@ -1,12 +1,12 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.wire.Message.AttemptStep
-import com.typewritermc.playtest.wire.Message.CoveredClass
 import org.jacoco.core.analysis.Analyzer
 import org.jacoco.core.analysis.CoverageBuilder
 import org.jacoco.core.data.ExecutionDataReader
 import org.jacoco.core.data.ExecutionDataStore
 import org.jacoco.core.data.SessionInfoStore
+import skirout.harness.v1.test_run.CoveredClass
+import skirout.harness.v1.test_run.Step
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
 import java.nio.file.Path
@@ -76,9 +76,13 @@ internal class Coverage<K> {
                         (covered.firstLine..covered.lastLine).filter { line ->
                             covered.firstLine > 0 && covered.getLine(line).instructionCounter.coveredCount > 0
                         }
-                    CoveredClass(covered.name, "${covered.packageName}/${covered.sourceFileName}".removePrefix("/"), lines)
-                }.filter { it.lines().isNotEmpty() }
-                .sortedBy { it.name() }
+                    CoveredClass(
+                        name = covered.name,
+                        source = "${covered.packageName}/${covered.sourceFileName}".removePrefix("/"),
+                        lines = lines,
+                    )
+                }.filter { it.lines.isNotEmpty() }
+                .sortedBy { it.name }
         attempt.analyses++
         attempt.analysisNanos += System.nanoTime() - start
         attempt.lastAnalysisAt = System.currentTimeMillis()
@@ -92,13 +96,15 @@ internal class Coverage<K> {
      * What the attempt [key]'s coverage cost, as one step of its record: the main thread time of each
      * Paper read handed to it (a read two attempts share counts for each), and the pool's analyses.
      */
-    fun cost(key: K): AttemptStep? {
+    fun cost(key: K): Step? {
         val attempt = ran[key] ?: return null
-        return AttemptStep(
-            attempt.lastAnalysisAt,
-            attempt.analysisNanos / 1_000_000,
-            "coverage: ${attempt.readCount} reads held Paper's main thread %.3f ms; ${attempt.analyses} analyses took %.1f ms"
-                .format(Locale.ROOT, attempt.readNanos / 1e6, attempt.analysisNanos / 1e6),
+        return Step(
+            atMillis = attempt.lastAnalysisAt,
+            actor = null,
+            says =
+                "coverage: ${attempt.readCount} reads held Paper's main thread %.3f ms; ${attempt.analyses} analyses took %.1f ms"
+                    .format(Locale.ROOT, attempt.readNanos / 1e6, attempt.analysisNanos / 1e6),
+            durationMillis = attempt.analysisNanos / 1_000_000,
         )
     }
 

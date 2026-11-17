@@ -1,6 +1,5 @@
 package com.typewritermc.playtest.requirements
 
-import com.typewritermc.playtest.Demonstrates
 import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.WindowMissed
 import com.typewritermc.playtest.WorkHung
@@ -16,6 +15,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import skirout.harness.v1.test_run.Demonstrates
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds

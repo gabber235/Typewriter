@@ -12,4 +12,5 @@ dependencies {
     // Reads the JaCoCo counts each Paper hands over into the lines every attempt ran.
     implementation(libs.jacoco.core)
     testFixturesImplementation(libs.jacoco.core)
+    testFixturesImplementation(project(":protocol"))
 }

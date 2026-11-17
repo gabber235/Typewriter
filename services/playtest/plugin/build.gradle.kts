@@ -11,11 +11,6 @@ kotlin {
     jvmToolchain(25)
 }
 
-// Only the wire's own classes travel in the plugin jar; it needs nothing else at runtime, not even
-// the Kotlin runtime its tests bring.
-val bundledScope = configurations.dependencyScope("bundled")
-val bundled = configurations.resolvable("bundledPath") { extendsFrom(bundledScope.get()) }
-
 val patchedPaperScope = configurations.dependencyScope("patchedPaper")
 val patchedPaper = configurations.resolvable("patchedPaperPath") { extendsFrom(patchedPaperScope.get()) }
 
@@ -39,14 +34,23 @@ dependencies {
             },
         ),
     )
-    implementation(project(":playtest-wire")) { isTransitive = false }
-    "bundled"(project(":playtest-wire")) { isTransitive = false }
+    implementation(project(":playtest-wire"))
 }
 
-// Paper loads the plugin as one jar, so the wire travels inside it.
+// Paper loads the plugin as one jar and provides none of what the wire runs on, so the jar carries the
+// plugin's whole runtime classpath: the wire, the Kotlin standard library, and the Skir runtime its
+// generated messages are read and written with (skir-client with okio, kotlinx serialization and
+// coroutines). Of the generated protocol only the harness contracts travel, since the wire declares its
+// messages there and the plugin uses no other context. Every bundled jar brings its own manifest and
+// module descriptor, which a plain jar on Paper's plugin class loader neither needs nor may repeat.
 tasks.jar {
-    dependsOn(bundled)
-    from(bundled.map { classpath -> classpath.map(::zipTree) })
+    val runtime = configurations.runtimeClasspath
+    dependsOn(runtime)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(runtime.map { classpath -> classpath.map(::zipTree) }) {
+        exclude("META-INF/MANIFEST.MF", "module-info.class", "META-INF/versions/*/module-info.class")
+        exclude { it.path.startsWith("skirout/") && !it.path.startsWith("skirout/harness/") }
+    }
 }
 
 configurations.consumable("playtestPlugin") {

@@ -1,6 +1,6 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.AttemptPolicy
+import skirout.harness.v1.test_run.AttemptPolicy
 import java.net.URL
 
 /**
@@ -147,13 +147,22 @@ internal suspend fun AttemptPolicy.attempt(
     attempt: suspend (number: Int) -> Throwable?,
 ): Verdict {
     val outcomes = mutableListOf<Throwable?>()
-    for (number in 1..attempts()) {
+    for (number in 1..attempts) {
         val failure = attempt(number)
         outcomes += failure
         if (!again(failure, quarantined)) break
     }
     return verdict(outcomes, quarantined)
 }
+
+/** The most attempts this policy makes of a requirement; a policy this build does not know makes one. */
+private val AttemptPolicy.attempts: Int
+    get() =
+        when (this) {
+            is AttemptPolicy.RerunFailuresWrapper -> value
+            is AttemptPolicy.ExactlyWrapper -> value
+            else -> 1
+        }
 
 /** Whether another attempt follows one that ended with [failure], null for a pass. */
 private fun AttemptPolicy.again(
@@ -162,7 +171,7 @@ private fun AttemptPolicy.again(
 ): Boolean =
     when {
         failure is RequirementRefused || failure is GameUnavailable -> false
-        kind() == AttemptPolicy.Kind.EXACTLY -> true
+        this is AttemptPolicy.ExactlyWrapper -> true
         else -> failure != null && !quarantined
     }
 
@@ -175,7 +184,7 @@ private fun AttemptPolicy.verdict(
     return when {
         failures.isEmpty() -> Verdict.Passed
         quarantined -> Verdict.Quarantined(failures, outcomes.size)
-        kind() == AttemptPolicy.Kind.RERUN_FAILURES && outcomes.last() == null -> Verdict.Flaky(failures, outcomes.size)
+        this is AttemptPolicy.RerunFailuresWrapper && outcomes.last() == null -> Verdict.Flaky(failures, outcomes.size)
         else -> Verdict.Failed(failures, outcomes.size)
     }
 }

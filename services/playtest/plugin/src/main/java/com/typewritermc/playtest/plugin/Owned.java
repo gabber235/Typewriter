@@ -1,6 +1,5 @@
 package com.typewritermc.playtest.plugin;
 
-import com.typewritermc.playtest.wire.Message.Kind;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.UncheckedIOException;
@@ -10,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +23,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import skirout.harness.v1.wire.StateKind;
 
 /**
  * State this plugin keeps per player in each of the ways plugins keep it: a stored value and a stored
@@ -35,8 +34,14 @@ import org.bukkit.scheduler.BukkitTask;
  */
 final class Owned implements Listener {
     /** The kinds this plugin keeps, which it resets when Paper wipes a player. */
-    static final Set<Kind> KINDS =
-            EnumSet.of(Kind.STORED_VALUE, Kind.STORED_PERMISSION, Kind.ATTACHED_PERMISSION, Kind.METADATA, Kind.SESSION, Kind.MAIL, Kind.HOLD);
+    static final Set<StateKind> KINDS = Set.of(
+            StateKind.STORED_VALUE.INSTANCE,
+            StateKind.STORED_PERMISSION.INSTANCE,
+            StateKind.ATTACHED_PERMISSION.INSTANCE,
+            StateKind.METADATA.INSTANCE,
+            StateKind.SESSION.INSTANCE,
+            StateKind.MAIL.INSTANCE,
+            StateKind.HOLD.INSTANCE);
 
     private static final String MARK = "playtest-mark";
     private static final String PERMISSION = "playtest.mark";
@@ -58,16 +63,16 @@ final class Owned implements Listener {
 
     /** Leaves a mark of [kind] on the player, as an earlier attempt could. */
     @SuppressWarnings("deprecation") // Paper deprecates metadata, which plugins still set and this kind stands for.
-    void mark(Player player, Kind kind) {
+    void mark(Player player, StateKind kind) {
         UUID id = player.getUniqueId();
-        switch (kind) {
-            case STORED_VALUE -> store(id, "value", MARK);
-            case STORED_PERMISSION -> store(id, "permission", PERMISSION);
-            case ATTACHED_PERMISSION -> attachments.computeIfAbsent(id, unused -> player.addAttachment(plugin)).setPermission(PERMISSION, true);
-            case METADATA -> player.setMetadata(MARK, new FixedMetadataValue(plugin, MARK));
-            case SESSION -> sessions.computeIfAbsent(id, unused -> new ArrayList<>()).add(MARK);
-            case MAIL -> append(mail.resolve(id + ".txt"), MARK);
-            case HOLD -> {
+        switch (kind.getKind()) {
+            case STORED_VALUE_CONST -> store(id, "value", MARK);
+            case STORED_PERMISSION_CONST -> store(id, "permission", PERMISSION);
+            case ATTACHED_PERMISSION_CONST -> attachments.computeIfAbsent(id, unused -> player.addAttachment(plugin)).setPermission(PERMISSION, true);
+            case METADATA_CONST -> player.setMetadata(MARK, new FixedMetadataValue(plugin, MARK));
+            case SESSION_CONST -> sessions.computeIfAbsent(id, unused -> new ArrayList<>()).add(MARK);
+            case MAIL_CONST -> append(mail.resolve(id + ".txt"), MARK);
+            case HOLD_CONST -> {
                 BukkitTask old = holds.put(id, Bukkit.getScheduler().runTaskLater(plugin, () -> holds.remove(id), HOLD_GRACE_TICKS));
                 if (old != null) old.cancel();
             }
@@ -76,16 +81,16 @@ final class Owned implements Listener {
     }
 
     /** Whether the player carries any mark of [kind] this plugin keeps. */
-    boolean marked(Player player, Kind kind) {
+    boolean marked(Player player, StateKind kind) {
         UUID id = player.getUniqueId();
-        return switch (kind) {
-            case STORED_VALUE -> load(id).containsKey("value");
-            case STORED_PERMISSION -> load(id).containsKey("permission");
-            case ATTACHED_PERMISSION -> player.hasPermission(PERMISSION);
-            case METADATA -> player.hasMetadata(MARK);
-            case SESSION -> sessions.containsKey(id);
-            case MAIL -> Files.exists(mail.resolve(id + ".txt"));
-            case HOLD -> holds.containsKey(id);
+        return switch (kind.getKind()) {
+            case STORED_VALUE_CONST -> load(id).containsKey("value");
+            case STORED_PERMISSION_CONST -> load(id).containsKey("permission");
+            case ATTACHED_PERMISSION_CONST -> player.hasPermission(PERMISSION);
+            case METADATA_CONST -> player.hasMetadata(MARK);
+            case SESSION_CONST -> sessions.containsKey(id);
+            case MAIL_CONST -> Files.exists(mail.resolve(id + ".txt"));
+            case HOLD_CONST -> holds.containsKey(id);
             default -> throw new IllegalArgumentException(kind + " is a kind Paper keeps, not a plugin");
         };
     }

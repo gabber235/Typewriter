@@ -1,9 +1,10 @@
 package com.typewritermc.playtest.plugin;
 
-import com.typewritermc.playtest.wire.Message.Kind;
-import java.util.EnumSet;
+import com.typewritermc.playtest.wire.SkirEnums;
+import java.util.HashSet;
 import java.util.Set;
 import org.bukkit.entity.Player;
+import skirout.harness.v1.wire.StateKind;
 
 /**
  * The vanilla and Paper state of a player, which Paper wipes before every attempt so each attempt finds
@@ -14,7 +15,7 @@ import org.bukkit.entity.Player;
  */
 final class Wipe {
     /** The kinds Paper keeps, which this wipe clears. */
-    static final Set<Kind> KINDS = kinds();
+    static final Set<StateKind> KINDS = kinds();
 
     /** Clears every kind Paper keeps, then the inventory, as closing a container can return items to it. */
     void wipe(Player player) {
@@ -24,26 +25,26 @@ final class Wipe {
     }
 
     /** Leaves a mark of [kind] on the player, as an earlier attempt could. */
-    void mark(Player player, Kind kind) {
+    void mark(Player player, StateKind kind) {
         state(kind).mark(player);
     }
 
     /** Whether the player carries a mark of [kind], whoever left it. */
-    boolean marked(Player player, Kind kind) {
+    boolean marked(Player player, StateKind kind) {
         return state(kind).marked(player);
     }
 
-    private static PaperState state(Kind kind) {
+    private static PaperState state(StateKind kind) {
         PaperState state = PaperState.of(kind);
         if (state == null) throw new IllegalArgumentException(kind + " is a kind a plugin keeps, not Paper");
         return state;
     }
 
-    private static Set<Kind> kinds() {
-        Set<Kind> kinds = EnumSet.noneOf(Kind.class);
-        for (Kind kind : Kind.values()) {
+    private static Set<StateKind> kinds() {
+        Set<StateKind> kinds = new HashSet<>();
+        for (StateKind kind : SkirEnums.constantsOf(StateKind.Companion.getTypeDescriptor())) {
             if (PaperState.of(kind) != null) kinds.add(kind);
         }
-        return kinds;
+        return Set.copyOf(kinds);
     }
 }

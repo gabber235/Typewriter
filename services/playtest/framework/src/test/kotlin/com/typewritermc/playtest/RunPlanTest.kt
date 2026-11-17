@@ -1,18 +1,16 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.AttemptPolicy
-import com.typewritermc.playtest.wire.Message.AttemptPolicy.Kind.EXACTLY
-import com.typewritermc.playtest.wire.Message.AttemptPolicy.Kind.RERUN_FAILURES
-import com.typewritermc.playtest.wire.Message.CoveredClass
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.harness.v1.test_run.AttemptPolicy
+import skirout.harness.v1.test_run.CoveredClass
 
 val RunPlanTest by testSuite {
     test("a run reruns failed attempts up to 4 in total, unless it repeats every requirement an exact number of times") {
-        RunPlan.of(mapOf()).policy shouldBe AttemptPolicy(RERUN_FAILURES, 4)
-        RunPlan.of(mapOf("playtest.repeat" to "1")).policy shouldBe AttemptPolicy(RERUN_FAILURES, 4)
-        RunPlan.of(mapOf("playtest.repeat" to "5")).policy shouldBe AttemptPolicy(EXACTLY, 5)
+        RunPlan.of(mapOf()).policy shouldBe AttemptPolicy.RerunFailuresWrapper(4)
+        RunPlan.of(mapOf("playtest.repeat" to "1")).policy shouldBe AttemptPolicy.RerunFailuresWrapper(4)
+        RunPlan.of(mapOf("playtest.repeat" to "5")).policy shouldBe AttemptPolicy.ExactlyWrapper(5)
         shouldThrow<IllegalArgumentException> { RunPlan.of(mapOf("playtest.repeat" to "0")) }
     }
 
@@ -29,8 +27,21 @@ val RunPlanTest by testSuite {
         val changed = mapOf("playtest.touched" to "/repo/build/touched.txt")
         val plan = RunPlan.of(changed) { "com/typewritermc/playtest/plugin/Probes.java 12\n" }
         val probes =
-            listOf(CoveredClass("com/typewritermc/playtest/plugin/Probes", "com/typewritermc/playtest/plugin/Probes.java", listOf(12)))
-        val wipe = listOf(CoveredClass("com/typewritermc/playtest/plugin/Wipe", "com/typewritermc/playtest/plugin/Wipe.java", listOf(12)))
+            listOf(
+                CoveredClass(
+                    name = "com/typewritermc/playtest/plugin/Probes",
+                    source = "com/typewritermc/playtest/plugin/Probes.java",
+                    lines = listOf(12),
+                ),
+            )
+        val wipe =
+            listOf(
+                CoveredClass(
+                    name = "com/typewritermc/playtest/plugin/Wipe",
+                    source = "com/typewritermc/playtest/plugin/Wipe.java",
+                    lines = listOf(12),
+                ),
+            )
         val failed = AssertionError("the toast never showed")
 
         plan.demos(Verdict.Passed, probes) shouldBe true

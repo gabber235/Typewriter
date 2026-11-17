@@ -1,6 +1,6 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.wire.Message.Region
+import skirout.harness.v1.wire.Region
 
 /**
  * The life of one Paper the pool runs, as the rules the pool follows: what it does next at each thing

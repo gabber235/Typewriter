@@ -6,7 +6,6 @@ import static java.lang.foreign.ValueLayout.JAVA_INT;
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
 import com.mojang.blaze3d.platform.Window;
-import com.typewritermc.playtest.wire.Message.Key;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
@@ -16,6 +15,7 @@ import java.lang.invoke.MethodHandle;
 import org.lwjgl.sdl.SDLProperties;
 import org.lwjgl.sdl.SDLVideo;
 import org.lwjgl.sdl.SDL_Event;
+import skirout.harness.v1.wire.KeyboardKey;
 
 /**
  * Input as XTest events on the client's own X display, through libX11 and libXtst: the X server takes
@@ -123,7 +123,7 @@ final class XTest implements InputDevice {
     }
 
     @Override
-    public void key(Key key, boolean down) {
+    public void key(KeyboardKey key, boolean down) {
         press(keysym(key), down);
         flush();
     }
@@ -232,31 +232,32 @@ final class XTest implements InputDevice {
         });
     }
 
-    private static long keysym(Key key) {
-        return switch (key) {
-            case W -> 'w';
-            case A -> 'a';
-            case S -> 's';
-            case D -> 'd';
-            case E -> 'e';
-            case F -> 'f';
-            case Q -> 'q';
-            case T -> 't';
-            case SPACE -> ' ';
-            case LEFT_SHIFT -> SHIFT_L;
-            case ENTER -> 0xff0d;
-            case BACKSPACE -> 0xff08;
-            case ESCAPE -> 0xff1b;
-            case SLASH -> '/';
-            case DIGIT_1 -> '1';
-            case DIGIT_2 -> '2';
-            case DIGIT_3 -> '3';
-            case DIGIT_4 -> '4';
-            case DIGIT_5 -> '5';
-            case DIGIT_6 -> '6';
-            case DIGIT_7 -> '7';
-            case DIGIT_8 -> '8';
-            case DIGIT_9 -> '9';
+    private static long keysym(KeyboardKey key) {
+        return switch (key.getKind()) {
+            case W_CONST -> 'w';
+            case A_CONST -> 'a';
+            case S_CONST -> 's';
+            case D_CONST -> 'd';
+            case E_CONST -> 'e';
+            case F_CONST -> 'f';
+            case Q_CONST -> 'q';
+            case T_CONST -> 't';
+            case SPACE_CONST -> ' ';
+            case LEFT_SHIFT_CONST -> SHIFT_L;
+            case ENTER_CONST -> 0xff0d;
+            case BACKSPACE_CONST -> 0xff08;
+            case ESCAPE_CONST -> 0xff1b;
+            case SLASH_CONST -> '/';
+            case DIGIT1_CONST -> '1';
+            case DIGIT2_CONST -> '2';
+            case DIGIT3_CONST -> '3';
+            case DIGIT4_CONST -> '4';
+            case DIGIT5_CONST -> '5';
+            case DIGIT6_CONST -> '6';
+            case DIGIT7_CONST -> '7';
+            case DIGIT8_CONST -> '8';
+            case DIGIT9_CONST -> '9';
+            case UNKNOWN -> throw new IllegalArgumentException("the key " + key + " is none this client knows");
         };
     }
 

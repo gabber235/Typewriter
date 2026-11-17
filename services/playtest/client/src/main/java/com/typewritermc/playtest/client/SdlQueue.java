@@ -1,7 +1,6 @@
 package com.typewritermc.playtest.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.typewritermc.playtest.wire.Message.Key;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +11,7 @@ import org.lwjgl.sdl.SDLKeyboard;
 import org.lwjgl.sdl.SDL_CommonEvent;
 import org.lwjgl.sdl.SDL_Event;
 import org.lwjgl.system.MemoryUtil;
+import skirout.harness.v1.wire.KeyboardKey;
 
 /**
  * Input as SDL events pushed into the client's own event queue, addressed to its window: what SDL makes
@@ -78,7 +78,7 @@ final class SdlQueue implements InputDevice {
     }
 
     @Override
-    public void key(Key key, boolean down) {
+    public void key(KeyboardKey key, boolean down) {
         int scancode = scancode(key);
         int keycode = SDLKeyboard.SDL_GetKeyFromScancode(scancode, (short) 0, false);
         push(event -> event.key().type(down ? KEY_DOWN : KEY_UP).windowID(windowId()).scancode(scancode).key(keycode).down(down).repeat(false));
@@ -140,31 +140,32 @@ final class SdlQueue implements InputDevice {
         queuedText.clear();
     }
 
-    private static int scancode(Key key) {
-        return switch (key) {
-            case W -> InputConstants.KEY_W;
-            case A -> InputConstants.KEY_A;
-            case S -> InputConstants.KEY_S;
-            case D -> InputConstants.KEY_D;
-            case E -> InputConstants.KEY_E;
-            case F -> InputConstants.KEY_F;
-            case Q -> InputConstants.KEY_Q;
-            case T -> InputConstants.KEY_T;
-            case SPACE -> InputConstants.KEY_SPACE;
-            case LEFT_SHIFT -> InputConstants.KEY_LSHIFT;
-            case ENTER -> InputConstants.KEY_RETURN;
-            case BACKSPACE -> InputConstants.KEY_BACKSPACE;
-            case ESCAPE -> InputConstants.KEY_ESCAPE;
-            case SLASH -> InputConstants.KEY_SLASH;
-            case DIGIT_1 -> InputConstants.KEY_1;
-            case DIGIT_2 -> InputConstants.KEY_2;
-            case DIGIT_3 -> InputConstants.KEY_3;
-            case DIGIT_4 -> InputConstants.KEY_4;
-            case DIGIT_5 -> InputConstants.KEY_5;
-            case DIGIT_6 -> InputConstants.KEY_6;
-            case DIGIT_7 -> InputConstants.KEY_7;
-            case DIGIT_8 -> InputConstants.KEY_8;
-            case DIGIT_9 -> InputConstants.KEY_9;
+    private static int scancode(KeyboardKey key) {
+        return switch (key.getKind()) {
+            case W_CONST -> InputConstants.KEY_W;
+            case A_CONST -> InputConstants.KEY_A;
+            case S_CONST -> InputConstants.KEY_S;
+            case D_CONST -> InputConstants.KEY_D;
+            case E_CONST -> InputConstants.KEY_E;
+            case F_CONST -> InputConstants.KEY_F;
+            case Q_CONST -> InputConstants.KEY_Q;
+            case T_CONST -> InputConstants.KEY_T;
+            case SPACE_CONST -> InputConstants.KEY_SPACE;
+            case LEFT_SHIFT_CONST -> InputConstants.KEY_LSHIFT;
+            case ENTER_CONST -> InputConstants.KEY_RETURN;
+            case BACKSPACE_CONST -> InputConstants.KEY_BACKSPACE;
+            case ESCAPE_CONST -> InputConstants.KEY_ESCAPE;
+            case SLASH_CONST -> InputConstants.KEY_SLASH;
+            case DIGIT1_CONST -> InputConstants.KEY_1;
+            case DIGIT2_CONST -> InputConstants.KEY_2;
+            case DIGIT3_CONST -> InputConstants.KEY_3;
+            case DIGIT4_CONST -> InputConstants.KEY_4;
+            case DIGIT5_CONST -> InputConstants.KEY_5;
+            case DIGIT6_CONST -> InputConstants.KEY_6;
+            case DIGIT7_CONST -> InputConstants.KEY_7;
+            case DIGIT8_CONST -> InputConstants.KEY_8;
+            case DIGIT9_CONST -> InputConstants.KEY_9;
+            case UNKNOWN -> throw new IllegalArgumentException("the key " + key + " is none this client knows");
         };
     }
 }

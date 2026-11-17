@@ -1,7 +1,6 @@
 package com.typewritermc.playtest.client;
 
-import com.typewritermc.playtest.wire.Message.Disconnected;
-import com.typewritermc.playtest.wire.Message.Joined;
+import build.skir.internal.MustNameArguments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
@@ -11,6 +10,7 @@ import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
+import skirout.harness.v1.wire.Message;
 
 /**
  * Joining the Paper the pool names, leaving it again, and telling the pool once the player is in the
@@ -87,7 +87,7 @@ final class Session {
                 }
                 joined = true;
                 everJoined = true;
-                PlaytestClient.send(new Joined());
+                PlaytestClient.send(Message.JOINED.INSTANCE);
             }
             return;
         }
@@ -101,6 +101,6 @@ final class Session {
     private static void lost(int lostPort, String reason) {
         host = null;
         everJoined = true;
-        PlaytestClient.send(new Disconnected(lostPort, reason));
+        PlaytestClient.send(Message.Companion.createDisconnected(MustNameArguments.INSTANCE, lostPort, reason));
     }
 }

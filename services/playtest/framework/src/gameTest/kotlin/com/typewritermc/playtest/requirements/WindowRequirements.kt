@@ -1,6 +1,5 @@
 package com.typewritermc.playtest.requirements
 
-import com.typewritermc.playtest.Demonstrates
 import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.WindowMissed
 import com.typewritermc.playtest.chat
@@ -10,6 +9,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import skirout.harness.v1.test_run.Demonstrates
 
 val WindowRequirements by testSuite(compartment = { GameCompartment }) {
     requirement(

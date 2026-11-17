@@ -1,7 +1,7 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.AttemptPolicy
-import com.typewritermc.playtest.wire.Message.CoveredClass
+import skirout.harness.v1.test_run.AttemptPolicy
+import skirout.harness.v1.test_run.CoveredClass
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -62,14 +62,7 @@ internal class RunPlan private constructor(
                     .toSet()
             val repeat = properties["playtest.repeat"]?.toInt() ?: 1
             require(repeat >= 1) { "playtest.repeat is $repeat; a run makes at least 1 attempt of each requirement" }
-            val policy =
-                if (repeat ==
-                    1
-                ) {
-                    AttemptPolicy(AttemptPolicy.Kind.RERUN_FAILURES, RETRIES)
-                } else {
-                    AttemptPolicy(AttemptPolicy.Kind.EXACTLY, repeat)
-                }
+            val policy = if (repeat == 1) AttemptPolicy.RerunFailuresWrapper(RETRIES) else AttemptPolicy.ExactlyWrapper(repeat)
             val touched = properties["playtest.touched"]?.let { Touched.read(read(Path.of(it))) } ?: Touched.NONE
             return RunPlan(policy, ids("quarantine"), touched)
         }

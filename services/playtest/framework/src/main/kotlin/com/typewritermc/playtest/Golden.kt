@@ -1,6 +1,6 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message.Renderer
+import skirout.harness.v1.wire.Renderer
 import java.awt.image.BufferedImage
 import java.nio.ByteBuffer
 import java.nio.file.Files
@@ -94,11 +94,11 @@ class PinnedRenderer(
 
     /** Whether [renderer] is the pinned one. */
     fun drew(renderer: Renderer): Boolean =
-        renderer.os() == "Linux" &&
-            renderer.arch() == "amd64" &&
-            renderer.backend() == "Vulkan" &&
-            renderer.device().startsWith("llvmpipe (") &&
-            mesaRelease.containsMatchIn(renderer.driver())
+        renderer.os == "Linux" &&
+            renderer.arch == "amd64" &&
+            renderer.backend == "Vulkan" &&
+            renderer.device.startsWith("llvmpipe (") &&
+            mesaRelease.containsMatchIn(renderer.driver)
 
     override fun toString(): String = "Vulkan on llvmpipe, Mesa $mesa, Linux, amd64"
 }
@@ -124,7 +124,7 @@ data class Golden(
                 key("sha256"),
                 key("width").toInt(),
                 key("height").toInt(),
-                Renderer(key("backend"), key("device"), key("driver"), key("os"), key("arch")),
+                Renderer(backend = key("backend"), device = key("device"), driver = key("driver"), os = key("os"), arch = key("arch")),
             )
         }
 
@@ -150,11 +150,11 @@ data class Golden(
                     "sha256" to frame.sha256,
                     "width" to frame.width,
                     "height" to frame.height,
-                    "backend" to renderer.backend(),
-                    "device" to renderer.device(),
-                    "driver" to renderer.driver(),
-                    "os" to renderer.os(),
-                    "arch" to renderer.arch(),
+                    "backend" to renderer.backend,
+                    "device" to renderer.device,
+                    "driver" to renderer.driver,
+                    "os" to renderer.os,
+                    "arch" to renderer.arch,
                     "pinned" to pinned.drew(renderer),
                 ).joinToString("") { (key, value) -> "$key=$value\n" },
             )
@@ -244,4 +244,4 @@ fun judge(
     return GoldenVerdict.Differs("${image.differingPixels(frame)} of ${frame.width * frame.height} pixels differ", image.diff(frame))
 }
 
-private val Renderer.named: String get() = "${backend()}, ${device()}, ${driver()}, ${os()}, ${arch()}"
+private val Renderer.named: String get() = "$backend, $device, $driver, $os, $arch"

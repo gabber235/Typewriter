@@ -1,6 +1,5 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.Message
 import de.infix.testBalloon.framework.core.TestCompartment
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.TestSuiteScope
@@ -8,9 +7,7 @@ import de.infix.testBalloon.framework.core.aroundAll
 import de.infix.testBalloon.framework.core.invocation
 import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
-
-/** What a requirement's case demonstrates: the path it exists for, a failure it reports, or an edge it holds at. */
-typealias Demonstrates = Message.Demonstrates
+import skirout.harness.v1.test_run.Demonstrates
 
 /**
  * The compartment every game requirement registers in. Its tests start at once and each waits in the
