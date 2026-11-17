@@ -1,6 +1,7 @@
 package com.typewritermc.playtest.pool
 
 import com.typewritermc.playtest.pool.PaperRules.Do
+import com.typewritermc.playtest.wire.HeapShare
 import com.typewritermc.playtest.wire.Message
 import com.typewritermc.playtest.wire.Message.AttemptStep
 import com.typewritermc.playtest.wire.Message.BarrierSeen
@@ -234,7 +235,7 @@ internal class Pool(
     private val papers = Papers(folderOf = { game.ownFolder(it) }, remove = { game.removeOwn(it) })
     private val aot = AotCache(settings.aotDir)
 
-    // Every restart Paper of the pool boots the same JDK, class path, plugins and flags.
+    // Every restart Paper of the pool boots the same JDK, class path, plugins and flags, its heap share included.
     private val aotKey by lazy {
         val java = settings.java.toRealPath()
         val release = java.parent.parent.resolve("release")
@@ -242,7 +243,7 @@ internal class Pool(
         AotCache.key(
             jdk,
             PaperServer.of(settings.paperDir).classPath + listOf(settings.agentJar, settings.coverageAgentJar, settings.pluginJar),
-            RESTART_FLAGS,
+            listOf(HeapShare.OWN_PAPER.flag()) + RESTART_FLAGS,
         )
     }
     private var failure: String? = null

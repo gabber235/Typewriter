@@ -1,5 +1,6 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.wire.HeapShare
 import com.typewritermc.playtest.wire.PartFile
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -153,7 +154,7 @@ internal class Game private constructor(
         folder: PaperFolder,
         flags: List<String>,
         again: Boolean,
-    ): Part = startPaper(settings, poolPort, folder, flags, append = again).also { running += it }
+    ): Part = startPaper(settings, poolPort, folder, HeapShare.OWN_PAPER, flags, append = again).also { running += it }
 
     /** [part] ended and is no longer a part of the game. */
     @Synchronized
@@ -189,7 +190,7 @@ internal class Game private constructor(
             Files.list(settings.logs).use { logs -> logs.filter { it != settings.poolLog }.toList() }.forEach { remove(it) }
             val paper = PaperFolder("paper", settings.poolDir.resolve("paper"), freePort(), logOf(settings, "paper"))
             preparePaper(settings, paper.dir, paper.port)
-            val paperPart = startPaper(settings, poolPort, paper, listOf(), append = false)
+            val paperPart = startPaper(settings, poolPort, paper, HeapShare.PAPER, listOf(), append = false)
             val started = mutableListOf(paperPart)
             val input = InputPath.here()
             val displays = mutableMapOf<String, Display>()
@@ -259,7 +260,7 @@ internal class Game private constructor(
         }
 
         /**
-         * Starts the Paper in [folder], with [flags] before the rest. It starts the patched server on its
+         * Starts the Paper in [folder], its heap capped at [share], with [flags] before the rest. It starts the patched server on its
          * class path directly, as Paperclip would after its patch check: Java's ahead of time cache holds
          * only classes the JVM's own loaders load, never those of Paperclip's loader.
          */
@@ -267,6 +268,7 @@ internal class Game private constructor(
             settings: PoolSettings,
             poolPort: Int,
             folder: PaperFolder,
+            share: HeapShare,
             flags: List<String>,
             append: Boolean,
         ): Part {
@@ -275,6 +277,7 @@ internal class Game private constructor(
             val command =
                 buildList {
                     add(settings.java.toString())
+                    add(share.flag())
                     addAll(flags)
                     add("-javaagent:${settings.agentJar}")
                     add("-javaagent:${settings.coverageAgentJar}=${coverageOptions(settings, dir)}")
@@ -333,6 +336,7 @@ internal class Game private constructor(
                     add(settings.java.toString())
                     // Loom's argument files hold what the classpath below already carries.
                     addAll(strings("jvmArgs").filterNot { it.startsWith("@") })
+                    add(HeapShare.CLIENT.flag())
                     add("-Dplaytest.pool.port=$poolPort")
                     add("-Dplaytest.player=$player")
                     add("-Dplaytest.input=${input.property}")

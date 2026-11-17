@@ -1,5 +1,6 @@
 package com.typewritermc.playtest
 
+import com.typewritermc.playtest.wire.HeapShare
 import com.typewritermc.playtest.wire.PoolFile
 import java.io.File
 import java.io.IOException
@@ -115,7 +116,7 @@ internal class PoolLauncher(
         /** Starts a pool with every `playtest.*` property of this test JVM; it appends its output to the run's pool log. */
         fun start(settings: PlaytestSettings): Process =
             ProcessBuilder(
-                listOf(settings.java.toString()) +
+                listOf(settings.java.toString(), HeapShare.POOL.flag()) +
                     settings.forwarded.map { (key, value) -> "-D$key=$value" } +
                     listOf("-cp", settings.poolClasspath, POOL_MAIN),
             ).redirectErrorStream(true)
