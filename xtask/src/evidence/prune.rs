@@ -1,5 +1,7 @@
 //! Keeps both media stores to what someone can still see. A pull request that closes unmerged
-//! loses its media; a merged one keeps only its final commit's folder, for the retention. Pushes retry onto whatever another job pushed first, and a squash pushes with a lease
+//! loses its media; a merged one keeps only its final commit's folder, for the retention. A golden
+//! image no golden file on develop names goes once it is older than the retention too; the weekly
+//! run checks out develop, so the golden files it reads are develop's. Pushes retry onto whatever another job pushed first, and a squash pushes with a lease
 //! and starts over when it loses it, so neither drops media published a moment earlier.
 
 use std::fs;
@@ -9,7 +11,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use anyhow::{Context as _, Result};
 
 use super::{ATTEMPTS, Store};
-use crate::Context;
+use crate::{Context, goldens};
 
 /// Written into a merged pull request's folder: the Unix seconds it merged, which the weekly
 /// run compares with the retention.
@@ -24,11 +26,15 @@ pub enum Prune {
 }
 
 pub fn prune(ctx: &Context, action: Prune) -> Result<()> {
+    let used = match action {
+        Prune::Weekly { .. } => goldens::named(ctx)?,
+        Prune::Closed { .. } => Vec::new(),
+    };
     let mut attempt = 1;
     loop {
         match Store::ALL
             .into_iter()
-            .try_for_each(|store| prune_store(ctx, store, &action))
+            .try_for_each(|store| prune_store(ctx, store, &action, &used))
         {
             Err(error) if matches!(action, Prune::Weekly { .. }) && attempt < ATTEMPTS => {
                 eprintln!("squash lost its lease, starting over: {error:#}");
@@ -39,13 +45,13 @@ pub fn prune(ctx: &Context, action: Prune) -> Result<()> {
     }
 }
 
-fn prune_store(ctx: &Context, store: Store, action: &Prune) -> Result<()> {
+fn prune_store(ctx: &Context, store: Store, action: &Prune, used: &[String]) -> Result<()> {
     let repository = store.checkout(ctx)?;
     if repository.tip.is_empty() {
         println!("no {store:?} branch yet");
         return Ok(());
     }
-    prune_tree(&repository.path(""), store, action)?;
+    prune_tree(&repository.path(""), store, action, used)?;
     match action {
         Prune::Weekly { .. } => repository.squash(ctx, "evidence snapshot"),
         Prune::Closed { .. } => repository.commit_and_push(ctx, &format!("prune {action:?}")),
@@ -53,8 +59,9 @@ fn prune_store(ctx: &Context, store: Store, action: &Prune) -> Result<()> {
 }
 
 /// Drops what `action` drops from the pull request folders of `store` in the branch tree at
-/// `tree`. Only those folders: what lives beside them, such as the golden images, stays.
-fn prune_tree(tree: &Path, store: Store, action: &Prune) -> Result<()> {
+/// `tree`; a weekly prune of the images also drops the golden images whose hash is not among
+/// `used` once they are older than the retention.
+fn prune_tree(tree: &Path, store: Store, action: &Prune, used: &[String]) -> Result<()> {
     match action {
         Prune::Closed {
             pr, merged: false, ..
@@ -90,6 +97,9 @@ fn prune_tree(tree: &Path, store: Store, action: &Prune) -> Result<()> {
                     }
                 }
             }
+            if store == Store::Images {
+                goldens::drop_unused(tree, used, cutoff)?;
+            }
         }
     }
     Ok(())
@@ -120,7 +130,6 @@ fn now() -> Duration {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
     use std::time::Duration;
 
     use super::{Prune, prune_tree};
@@ -128,31 +137,68 @@ mod tests {
     use crate::test_support::TempRoot;
 
     #[test]
-    fn pruning_pull_requests_keeps_the_golden_images_beside_them() {
+    fn a_golden_image_a_golden_file_on_develop_names_is_kept_however_old() {
         let branch = TempRoot::new();
         branch.write("goldens/5e1d.png", "golden");
-        branch.write("pr/546/abc1234/frame.png", "closed unmerged");
-        branch.write("pr/547/def5678/frame.png", "merged long ago");
-        branch.write("pr/547/merged-at", "0");
+        branch.write("goldens/5e1d.approved-at", "0");
 
-        for action in [
-            Prune::Closed {
-                pr: 546,
-                merged: false,
-                keep: String::new(),
-            },
-            Prune::Weekly {
+        prune_tree(
+            &branch.ctx.root,
+            Store::Images,
+            &Prune::Weekly {
                 retention: Duration::from_secs(60),
             },
-        ] {
-            prune_tree(&branch.ctx.root, Store::Images, &action).unwrap();
-        }
+            &["5e1d".to_owned()],
+        )
+        .unwrap();
 
-        assert!(!branch.path("pr/546").exists());
-        assert!(!branch.path("pr/547").exists());
-        assert_eq!(
-            fs::read_to_string(branch.path("goldens/5e1d.png")).unwrap(),
-            "golden"
+        assert!(branch.path("goldens/5e1d.png").exists());
+        assert!(branch.path("goldens/5e1d.approved-at").exists());
+    }
+
+    #[test]
+    fn an_unused_golden_image_approved_within_the_retention_is_kept() {
+        let branch = TempRoot::new();
+        branch.write("goldens/5e1d.png", "golden");
+        branch.write(
+            "goldens/5e1d.approved-at",
+            &super::now().as_secs().to_string(),
         );
+
+        prune_tree(
+            &branch.ctx.root,
+            Store::Images,
+            &Prune::Weekly {
+                retention: Duration::from_secs(60),
+            },
+            &[],
+        )
+        .unwrap();
+
+        assert!(branch.path("goldens/5e1d.png").exists());
+        assert!(branch.path("goldens/5e1d.approved-at").exists());
+    }
+
+    #[test]
+    fn an_unused_golden_image_older_than_the_retention_goes_and_one_without_an_approval_time_counts_as_old()
+     {
+        let branch = TempRoot::new();
+        branch.write("goldens/5e1d.png", "old");
+        branch.write("goldens/5e1d.approved-at", "0");
+        branch.write("goldens/9a2f.png", "never timed");
+
+        prune_tree(
+            &branch.ctx.root,
+            Store::Images,
+            &Prune::Weekly {
+                retention: Duration::from_secs(60),
+            },
+            &[],
+        )
+        .unwrap();
+
+        assert!(!branch.path("goldens/5e1d.png").exists());
+        assert!(!branch.path("goldens/5e1d.approved-at").exists());
+        assert!(!branch.path("goldens/9a2f.png").exists());
     }
 }

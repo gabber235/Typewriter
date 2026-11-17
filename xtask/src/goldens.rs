@@ -4,7 +4,9 @@
 //! hash and size, the renderer that drew it, and whether that is the pinned renderer, as the run
 //! judged it. Approving writes the hash, size and renderer into that golden file, keeps the PNG
 //! among the local golden images under its hash, and pushes it to the evidence branch as
-//! `goldens/<hash>.png`; the repository holds only the hash. Before a game run,
+//! `goldens/<hash>.png`, beside `goldens/<hash>.approved-at`, the moment it was approved, which
+//! the weekly prune reads to drop images no golden names any more; the repository holds only the
+//! hash. Before a game run,
 //! [`fetch_missing`] brings every golden's image the machine lacks, so a frame that differs from
 //! its golden shows where while the framework stays offline. A golden is exact only for the
 //! renderer that drew it, so approve refuses any frame the pinned renderer did not draw.
@@ -12,6 +14,7 @@
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result, bail};
 
@@ -24,6 +27,10 @@ const IMAGES: &str = "services/build/playtest/goldens";
 /// The folder of the golden images on the evidence branch, beside the pull requests' folders,
 /// which pruning empties, never inside them.
 const ON_BRANCH: &str = "goldens";
+
+/// The suffix of the file beside each golden image on the evidence branch that holds the Unix
+/// seconds it was approved.
+const APPROVED_AT: &str = "approved-at";
 
 /// The keys a golden file holds, in the order it holds them.
 const GOLDEN_KEYS: [&str; 8] = [
@@ -70,14 +77,57 @@ struct Approved {
     image: PathBuf,
 }
 
-/// Puts each of `images` into the evidence branch checked out at `branch`, as `goldens/<hash>.png`.
-fn place(images: &[PathBuf], branch: &Path) -> Result<()> {
+/// Puts each of `images` into the evidence branch checked out at `branch`, as `goldens/<hash>.png`,
+/// beside `goldens/<hash>.approved-at` holding `approved_at`, in Unix seconds.
+fn place(images: &[PathBuf], branch: &Path, approved_at: u64) -> Result<()> {
     let folder = branch.join(ON_BRANCH);
     fs::create_dir_all(&folder).with_context(|| format!("cannot create {}", folder.display()))?;
     for image in images {
         let name = image.file_name().context("a golden image without a name")?;
+        let hash = image.file_stem().context("a golden image without a name")?;
         fs::copy(image, folder.join(name))
             .with_context(|| format!("cannot copy {} onto the evidence branch", image.display()))?;
+        let stamp = folder.join(format!("{}.{APPROVED_AT}", hash.to_string_lossy()));
+        fs::write(&stamp, approved_at.to_string())
+            .with_context(|| format!("cannot write {}", stamp.display()))?;
+    }
+    Ok(())
+}
+
+/// Drops from the evidence branch checked out at `branch` each golden image whose hash is not
+/// among `used` and that was approved before `cutoff`, in Unix seconds, with its approval time. An
+/// image without one counts as approved long ago.
+pub(crate) fn drop_unused(branch: &Path, used: &[String], cutoff: u64) -> Result<()> {
+    let folder = branch.join(ON_BRANCH);
+    if !folder.exists() {
+        return Ok(());
+    }
+    for entry in fs::read_dir(&folder)? {
+        let image = entry?.path();
+        if image.extension().is_none_or(|it| it != "png") {
+            continue;
+        }
+        let hash = image
+            .file_stem()
+            .context("a golden image without a name")?
+            .to_string_lossy()
+            .into_owned();
+        if used.contains(&hash) {
+            continue;
+        }
+        let stamp = folder.join(format!("{hash}.{APPROVED_AT}"));
+        let approved_at = fs::read_to_string(&stamp)
+            .ok()
+            .and_then(|text| text.trim().parse::<u64>().ok())
+            .unwrap_or(0);
+        if approved_at < cutoff {
+            for path in [&image, &stamp] {
+                if path.exists() {
+                    fs::remove_file(path)
+                        .with_context(|| format!("cannot remove {}", path.display()))?;
+                }
+            }
+        }
     }
     Ok(())
 }
@@ -109,6 +159,20 @@ fn fetch_into(
 /// from the evidence branch, so a frame that differs from its golden shows where. A golden whose
 /// image the branch does not hold yet is said, and its frames fail without a diff.
 pub fn fetch_missing(ctx: &Context) -> Result<()> {
+    let hashes = named(ctx)?;
+    let hashes: Vec<&str> = hashes.iter().map(String::as_str).collect();
+    for hash in fetch_into(&ctx.root.join(IMAGES), &hashes, |hash| {
+        fetch_image(ctx, hash)
+    })? {
+        println!(
+            "goldens: the evidence branch holds no image of golden {hash}; a frame that differs from it fails without a diff"
+        );
+    }
+    Ok(())
+}
+
+/// The hash each golden file of the checkout names.
+pub(crate) fn named(ctx: &Context) -> Result<Vec<String>> {
     let files = ctx
         .tool(".", "git", &["ls-files", "-z", "--", "*.golden"])
         .output_text()?;
@@ -123,15 +187,7 @@ pub fn fetch_missing(ctx: &Context) -> Result<()> {
             .with_context(|| format!("{file} holds no sha256"))?;
         hashes.push(hash.to_owned());
     }
-    let hashes: Vec<&str> = hashes.iter().map(String::as_str).collect();
-    for hash in fetch_into(&ctx.root.join(IMAGES), &hashes, |hash| {
-        fetch_image(ctx, hash)
-    })? {
-        println!(
-            "goldens: the evidence branch holds no image of golden {hash}; a frame that differs from it fails without a diff"
-        );
-    }
-    Ok(())
+    Ok(hashes)
 }
 
 /// The image of the golden `hash` from the evidence branch, or None when the branch holds none,
@@ -163,7 +219,10 @@ fn fetch_image(ctx: &Context, hash: &str) -> Result<Option<Vec<u8>>> {
 /// them; a push that lost a race with another job moves onto its commit.
 fn publish(ctx: &Context, images: &[PathBuf]) -> Result<()> {
     let branch = BranchCheckout::clone_shallow(ctx, evidence::BRANCH, "Typewriter goldens")?;
-    place(images, &branch.path(""))?;
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("the system clock is after the Unix epoch");
+    place(images, &branch.path(""), now.as_secs())?;
     branch.commit_and_push(ctx, &format!("goldens: {} approved", images.len()))
 }
 
@@ -434,16 +493,20 @@ pinned=true
     }
 
     #[test]
-    fn an_approved_image_goes_onto_the_evidence_branch_by_its_hash_beside_the_pull_requests() {
+    fn an_approved_image_goes_onto_the_evidence_branch_by_its_hash_with_when_it_was_approved() {
         let (images, branch) = (TempRoot::new(), TempRoot::new());
         images.write("5e1d.png", "png bytes");
         branch.write("pr/546/abc1234/frame.png", "a pull request's frame");
 
-        place(&[images.path("5e1d.png")], &branch.ctx.root).unwrap();
+        place(&[images.path("5e1d.png")], &branch.ctx.root, 1_700_000_000).unwrap();
 
         assert_eq!(
             fs::read_to_string(branch.path("goldens/5e1d.png")).unwrap(),
             "png bytes"
+        );
+        assert_eq!(
+            fs::read_to_string(branch.path("goldens/5e1d.approved-at")).unwrap(),
+            "1700000000"
         );
         assert!(branch.path("pr/546/abc1234/frame.png").exists());
     }
