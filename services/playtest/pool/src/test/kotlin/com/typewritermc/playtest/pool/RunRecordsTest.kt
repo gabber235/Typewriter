@@ -9,6 +9,7 @@ import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.test_run.Demonstrates
 import skirout.harness.v1.test_run.Outcome
+import skirout.harness.v1.test_run.RunEnd
 import skirout.harness.v1.test_run.Runner
 import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.test_run.TestRun
@@ -336,10 +337,10 @@ val RunRecordsTest by testSuite {
         )
         read().runId shouldBe "run-1"
         read().cases.map { it.requirement } shouldBe listOf("PROBE-1")
-        read().cutShort shouldBe true
+        read().end shouldBe RunEnd.CUT_SHORT
 
         records.ended("run-1", "first module")
-        read().cutShort shouldBe true
+        read().end shouldBe RunEnd.CUT_SHORT
 
         records.record(
             "run-1",
@@ -348,13 +349,13 @@ val RunRecordsTest by testSuite {
         )
         records.ended("run-1", "second module")
         read().cases.map { it.requirement } shouldBe listOf("PROBE-1", "SIBLING-1")
-        read().cutShort shouldBe false
-        read().failure shouldBe ""
+        read().end shouldBe RunEnd.COMPLETED
     }
 
-    test("a run the game could not serve says why in its file and keeps the attempts that ended before") {
+    test("a run the game could not serve says why in its file, while its sessions are still open too, and keeps the attempts that ended before") {
         val records = RunRecords(clock = { 1_000 })
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
+        val read = { TestRun.serializer.fromJsonCode(Files.readString(file)) }
         records.joined("run-1", "session", file, retries)
         records.record(
             "run-1",
@@ -363,12 +364,12 @@ val RunRecordsTest by testSuite {
         )
 
         records.failed("run-1", "Paper stopped; see paper.log")
+        val whileOpen = read().end
         records.ended("run-1", "session")
 
-        val run = TestRun.serializer.fromJsonCode(Files.readString(file))
-        run.failure shouldBe "Paper stopped; see paper.log"
-        run.cases.map { it.requirement } shouldBe listOf("PROBE-1")
-        run.cutShort shouldBe false
+        whileOpen shouldBe RunEnd.CouldNotRunWrapper("Paper stopped; see paper.log")
+        read().end shouldBe RunEnd.CouldNotRunWrapper("Paper stopped; see paper.log")
+        read().cases.map { it.requirement } shouldBe listOf("PROBE-1")
     }
 
     test("a later pool of the run takes up the file an earlier pool of it left, and adds its attempts") {
@@ -382,13 +383,13 @@ val RunRecordsTest by testSuite {
             Result.partial(submission = 1, durationMillis = 420),
         )
         earlier.ended("run-1", "first module")
-        read().cutShort shouldBe false
+        read().end shouldBe RunEnd.COMPLETED
 
         val later = RunRecords(clock = { 9_000 })
         later.continueFrom("run-1", file) shouldBe true
         later.joined("run-1", "second module", file, retries) shouldBe null
         // The run goes on, so a pool that dies now leaves a run that was cut short.
-        read().cutShort shouldBe true
+        read().end shouldBe RunEnd.CUT_SHORT
         later.record(
             "run-1",
             submitted(1, "SIBLING-1 a second module's requirement reaches its player"),
@@ -398,7 +399,7 @@ val RunRecordsTest by testSuite {
 
         read().cases.map { it.requirement } shouldBe listOf("PROBE-1", "SIBLING-1")
         read().startedAtMillis shouldBe 1_000
-        read().cutShort shouldBe false
+        read().end shouldBe RunEnd.COMPLETED
     }
 
     test("a pool takes up no file another run left, and writes its own run over it") {
@@ -435,6 +436,6 @@ val RunRecordsTest by testSuite {
         repeated.shouldNotBeNull() shouldContain "exactly 3"
         // A refused session never joined the run, so the first session's end ends it.
         records.ended("run-1", "first")
-        TestRun.serializer.fromJsonCode(Files.readString(file)).cutShort shouldBe false
+        TestRun.serializer.fromJsonCode(Files.readString(file)).end shouldBe RunEnd.COMPLETED
     }
 }

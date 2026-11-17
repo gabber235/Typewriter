@@ -6,6 +6,7 @@ import skirout.harness.v1.test_run.Attempt
 import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.test_run.CoveredClass
 import skirout.harness.v1.test_run.Outcome
+import skirout.harness.v1.test_run.RunEnd
 import skirout.harness.v1.test_run.Runner
 import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.test_run.TestCase
@@ -38,8 +39,8 @@ internal class RunRecords(
         var file: Path? = null
         var policy: AttemptPolicy? = null
 
-        /** Why the game could not serve the run; empty while it could. */
-        var failure = ""
+        /** Why the game could not serve the run; null while it could. */
+        var failure: String? = null
 
         /** The sessions of the run that joined and have neither ended nor left. */
         val open = mutableSetOf<Any>()
@@ -144,7 +145,7 @@ internal class RunRecords(
         earlier.cases.forEach { record.cases[it.id] = it }
         record.file = file
         record.policy = earlier.attemptPolicy
-        record.failure = earlier.failure
+        record.failure = (earlier.end as? RunEnd.CouldNotRunWrapper)?.value
         runs[run] = record
         return true
     }
@@ -202,14 +203,17 @@ internal class RunRecords(
                 cases = record.cases.values.map { case -> notes[case.id]?.let { note -> case.noting(note) } ?: case },
                 // `cargo xtask e2e game` names the commit and the run's logs folder, as it chose both.
                 logs = "",
-                failure = record.failure,
-                cutShort = record.open.isNotEmpty(),
+                end = record.end,
             )
         Files.createDirectories(file.toAbsolutePath().parent)
         val partial = file.resolveSibling("${file.fileName}.partial")
         Files.writeString(partial, TestRun.serializer.toJsonCode(testRun, JsonFlavor.READABLE))
         Files.move(partial, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
     }
+
+    /** How the run ends as its file says now: a game that failed outweighs the sessions still open. */
+    private val Run.end: RunEnd
+        get() = failure?.let { RunEnd.CouldNotRunWrapper(it) } ?: if (open.isNotEmpty()) RunEnd.CUT_SHORT else RunEnd.COMPLETED
 
     /** This case with [note] joined to each failure. */
     private fun TestCase.noting(note: String): TestCase =

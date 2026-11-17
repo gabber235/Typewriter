@@ -138,8 +138,7 @@ final class ReportedRun {
     // The panel runner keeps no logs folder of its own.
     logs: "",
     // The app reports the run once it ran whole; a drive that never reports it fails on its own.
-    failure: "",
-    cutShort: false,
+    end: results.RunEnd.completed,
   );
 
   /// The run as JSON, the form the app reports it to the host driver in.

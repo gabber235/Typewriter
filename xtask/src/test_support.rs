@@ -19,7 +19,8 @@ use crate::e2e::E2eArgs;
 use crate::graph::{Area, Run, Step};
 use crate::hooks::commit_msg::Scopes;
 use crate::results::{
-    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, TestCase, TestRun,
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase,
+    TestRun,
 };
 use crate::skirout::base::harness::v1::test_run::{Runner, Span, Step as ScenarioStep};
 use crate::stack::StackRecord;
@@ -149,6 +150,7 @@ pub fn run(cases: &[(&str, Outcome)]) -> TestRun {
             .iter()
             .map(|(id, outcome)| case(id, std::slice::from_ref(outcome)))
             .collect(),
+        end: RunEnd::Completed,
         ..TestRun::default()
     }
 }
@@ -173,6 +175,7 @@ pub fn game_run(policy: AttemptPolicy, cases: &[(&str, &[Outcome])]) -> TestRun 
                 ..case(&format!("{requirement} the requirement"), outcomes)
             })
             .collect(),
+        end: RunEnd::Completed,
         ..TestRun::default()
     }
 }
@@ -183,6 +186,7 @@ pub fn attempted(policy: AttemptPolicy, attempts: &[Outcome]) -> TestRun {
         runner: Runner::Components,
         attempt_policy: policy,
         cases: vec![case("a", attempts)],
+        end: RunEnd::Completed,
         ..TestRun::default()
     }
 }
@@ -311,6 +315,7 @@ pub fn run_of(id: &str, attempts: Vec<Attempt>) -> TestRun {
             attempts,
             ..TestCase::default()
         }],
+        end: RunEnd::Completed,
         ..TestRun::default()
     }
 }

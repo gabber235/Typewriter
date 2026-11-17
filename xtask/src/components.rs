@@ -19,7 +19,7 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
 use crate::results::{
-    self, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, TestCase, TestRun,
+    self, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase, TestRun,
 };
 use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::{CommandExt, Context, deploy};
@@ -540,6 +540,7 @@ impl Suite<'_> {
             commit: self.commit.clone(),
             started_at_millis,
             cases,
+            end: RunEnd::Completed,
             ..TestRun::default()
         })
     }
