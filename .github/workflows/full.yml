@@ -69,6 +69,9 @@ jobs:
           name: full-tier-evidence
           path: .xtask/public/
           if-no-files-found: ignore
+      # Last, and whatever happened before: a failed or timed out job still keeps its Gradle caches.
+      - if: always()
+        uses: ./.github/actions/devenv-save
       - if: failure() && github.event_name == 'schedule'
         run: gh issue create --title "Full tier failed $(date -I)" --body "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
         env:
