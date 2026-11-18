@@ -7,6 +7,8 @@ plugins {
 
 dependencies {
     api(project(":playtest-wire"))
+    implementation(project(":playtest-launch"))
+    testFixturesImplementation(project(":playtest-launch"))
     api(libs.test.balloon)
     implementation(libs.kotlin.coroutines.core)
     testImplementation(testFixtures(project(":playtest-wire")))

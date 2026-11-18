@@ -1,6 +1,6 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.wire.HeapShare
+import com.typewritermc.playtest.launch.HeapShare
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import skirout.harness.v1.test_run.AttemptPolicy

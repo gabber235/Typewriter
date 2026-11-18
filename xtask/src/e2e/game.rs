@@ -16,7 +16,7 @@ use anyhow::{Context as _, Result, bail};
 
 use super::{E2eArgs, take_turn};
 use crate::lock;
-use crate::results::{self, Quarantine, RunEnd, TestRun};
+use crate::results::{self, Quarantine, TestRun};
 use crate::review::change::Change;
 use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::{CommandExt as _, Context, evidence, generate, goldens};
@@ -52,13 +52,12 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
     .with_context(|| format!("cannot write {}", touched.display()))?;
     // The pool, Paper and every client log into a folder of this run's own.
     let logs = next_run_folder(&evidence.join(results::LOGS))?;
-    // Every test JVM and pool of the run writes this id into the run file, so a file an earlier run
-    // left never passes for this one.
+    // The run's pool writes this id into the run file, and its test JVMs connect only to a pool of
+    // it, so a file or pool an earlier run left never passes for this one.
     let run_id = format!("{}-{}", now_millis(), std::process::id());
     let ran = Ran {
         file: file.clone(),
         run_id: run_id.clone(),
-        started_millis: now_millis(),
         gradle: build_then_run(
             |gradle| {
                 ctx.tool(
@@ -95,12 +94,11 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
     Ok(())
 }
 
-/// One Gradle run of the game suite: where its run file belongs, when it started, how Gradle
-/// exited and where the pool logs (in the run's own logs folder).
+/// One Gradle run of the game suite: where its run file belongs, how Gradle exited and where the
+/// pool logs (in the run's own logs folder).
 pub(crate) struct Ran {
     pub file: PathBuf,
     pub run_id: String,
-    pub started_millis: i64,
     pub gradle: ExitStatus,
     pub pool_log: PathBuf,
 }
@@ -199,22 +197,12 @@ fn test_pattern(selected: &str) -> String {
     }
 }
 
-/// The run `ran` wrote. A Gradle run that passed without a run file ran no requirement:
-/// testBalloon enters no game compartment the selection leaves empty, so that run is one without
-/// cases. Fails, pointing at the pool's log, when a failed Gradle run left no run file, or the file
-/// holds another run: a test JVM of an earlier run that outlived it still writes there.
+/// The run `ran` wrote. The build starts the run's pool before its first game test, and the pool
+/// writes the run file as it takes up the run, so a run with no file never reached its pool. Fails,
+/// pointing at the pool's log, when there is no run file, or the file holds another run.
 pub(crate) fn own_run(ran: &Ran) -> Result<TestRun> {
     let log = ran.pool_log.display();
     if !ran.file.exists() {
-        if ran.gradle.success() {
-            return Ok(TestRun {
-                run_id: ran.run_id.clone(),
-                runner: Runner::Game,
-                started_at_millis: ran.started_millis,
-                end: RunEnd::Completed,
-                ..TestRun::default()
-            });
-        }
         bail!(
             "game: the run wrote no run file at {} (Gradle exited with {}); see {log}",
             ran.file.display(),
@@ -295,7 +283,7 @@ fn now_millis() -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::results::{AttemptPolicy, Outcome};
+    use crate::results::{AttemptPolicy, Outcome, RunEnd};
     use crate::test_support::{
         TempRoot, changed, e2e_args as parsed, exited, failed, files_below, game_run, quarantining,
         refusal,
@@ -319,13 +307,12 @@ mod tests {
     }
 
     #[test]
-    fn a_game_run_that_wrote_no_run_file_fails_and_points_at_the_pool_s_log() {
+    fn a_run_with_no_run_file_fails_and_points_at_the_pool_s_log_even_when_gradle_passed() {
         let root = TempRoot::new();
         let error = refusal(own_run(&Ran {
             file: root.path("results/game/test_run.json"),
             run_id: "run-2".to_owned(),
-            started_millis: 0,
-            gradle: exited(1),
+            gradle: exited(0),
             pool_log: root.path("pool.log"),
         }));
         assert!(error.contains("wrote no run file"), "{error}");
@@ -336,17 +323,13 @@ mod tests {
     }
 
     #[test]
-    fn a_passing_gradle_run_without_a_pool_session_ran_no_requirement_and_fails_by_the_selection() {
-        let root = TempRoot::new();
-        let run = own_run(&Ran {
-            file: root.path("results/game/test_run.json"),
+    fn a_run_whose_selection_matched_no_requirement_fails_by_the_selection() {
+        let run = TestRun {
             run_id: "run-2".to_owned(),
-            started_millis: 0,
-            gradle: exited(0),
-            pool_log: root.path("pool.log"),
-        })
-        .unwrap();
-        assert_eq!(run.run_id, "run-2");
+            runner: Runner::Game,
+            end: RunEnd::Completed,
+            ..TestRun::default()
+        };
         for (only, says) in [
             (vec!["NOPE-1".to_owned()], "no case matches NOPE-1"),
             (vec![], "no requirements ran"),
@@ -379,7 +362,6 @@ mod tests {
         let error = refusal(own_run(&Ran {
             file: file.clone(),
             run_id: "run-2".to_owned(),
-            started_millis: 2_000,
             gradle: exited(0),
             pool_log: root.path("pool.log"),
         }));
@@ -407,7 +389,6 @@ mod tests {
         let read = own_run(&Ran {
             file,
             run_id: "run-2".to_owned(),
-            started_millis: 2_000,
             gradle: exited(0),
             pool_log: root.path("pool.log"),
         })

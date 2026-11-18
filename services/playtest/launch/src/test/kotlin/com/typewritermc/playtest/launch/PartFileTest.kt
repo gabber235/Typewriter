@@ -1,4 +1,4 @@
-package com.typewritermc.playtest.wire
+package com.typewritermc.playtest.launch
 
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.optional.shouldBeEmpty

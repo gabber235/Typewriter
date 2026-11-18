@@ -1,6 +1,6 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.wire.HeapShare
+import com.typewritermc.playtest.launch.HeapShare
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject

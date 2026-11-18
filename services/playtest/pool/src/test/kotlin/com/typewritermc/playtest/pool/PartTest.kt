@@ -1,6 +1,6 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.wire.PartFile
+import com.typewritermc.playtest.launch.PartFile
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.optional.shouldBePresent
 import io.kotest.matchers.shouldBe

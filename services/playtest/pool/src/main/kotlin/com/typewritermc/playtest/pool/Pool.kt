@@ -1,8 +1,9 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.launch.HeapShare
+import com.typewritermc.playtest.launch.PoolFile
+import com.typewritermc.playtest.launch.PoolProcess
 import com.typewritermc.playtest.pool.PaperRules.Do
-import com.typewritermc.playtest.wire.HeapShare
-import com.typewritermc.playtest.wire.PoolFile
 import com.typewritermc.playtest.wire.Wire
 import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.wire.Answer
@@ -39,10 +40,10 @@ import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 /**
- * Starts the pool for the pool folder. The lock file makes it the only pool there; another pool that
- * holds it serves this run, or is being stopped by the test JVM that started this one, so this one
- * exits at once. Test JVMs find the pool by the pool file it writes once it listens and removes as it
- * exits.
+ * Starts the pool for the pool folder. The build's game run starts it once and ends its run by closing
+ * its standard input, which also ends when the build dies. The lock file makes it the only pool there;
+ * another pool holds it only while another build runs in the same folder, so this one exits at once.
+ * Test JVMs find the pool by the pool file it writes once it listens and removes as it exits.
  */
 fun main() {
     val settings = PoolSettings.fromSystemProperties()
@@ -52,11 +53,12 @@ fun main() {
     Files.createDirectories(settings.logs)
     val poolFile = settings.poolDir.resolve(PoolFile.NAME)
     ServerSocket(0, BACKLOG, InetAddress.getLoopbackAddress()).use { server ->
+        // The build appends the pool's output to its log, which the pool that holds the lock empties, so
+        // the log holds this run alone.
+        FileChannel.open(settings.poolLog, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
         val pool = Pool(settings, server)
-        // Every starter appends its output to the log. A pool that starts its run empties it, so the log
-        // holds this run alone; one that continues its run adds to what the earlier pool of it logged.
-        if (!pool.continuing) FileChannel.open(settings.poolLog, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
-        // The test JVM that started this pool says it exited while starting, and points at this log.
+        onEndOf(System.`in`) { pool.stop() }
+        // The build's test JVMs find no pool of their run, and point at this log.
         HeapShare.overLimit(settings.clients)?.let { reason ->
             pool.couldNotRun(reason)
             exitProcess(1)
@@ -77,8 +79,8 @@ private const val BACKLOG = 16
 /**
  * The pool's single loop: every connection and process reports into one queue, and only this loop
  * touches the pool's state. It boots the game, hands each submitted attempt the players it claims once
- * they are free, wiped and in a region of its own, routes each attempt's messages, and stops once its
- * run is over: the last session left, or none came while its owner could open one. A lease that runs
+ * they are free, wiped and in a region of its own, routes each attempt's messages, and stops once the
+ * build ends its run. A lease that runs
  * out before its session sends the result ends the attempt, so a stuck session cannot keep players.
  */
 internal class Pool(
@@ -102,6 +104,9 @@ internal class Pool(
         data class Exited(
             val part: Part,
         ) : Event
+
+        /** The build ended the run. */
+        data object Stop : Event
 
         /** Boot [boot] of the Paper [name] may have outlived its limit. */
         data class BootTimedOut(
@@ -285,20 +290,22 @@ internal class Pool(
             Client(Player(name = "gv-$it", uuid = UUID.nameUUIDFromBytes("OfflinePlayer:gv-$it".toByteArray()).toString()))
         }
     private val claims = Claims<Peer, Player>(clients.map { it.player })
-    private val runs = RunRecords(settings.run, settings.testRun, settings.policy, stillOut = { stillOut() })
-
-    /** Whether an earlier pool of this run left its file, which this pool takes up and adds to. */
-    val continuing = runs.continueFrom()
 
     /** Sessions the pool refused as they joined: what they still send is dropped until they leave. */
     private val refused = mutableSetOf<Peer>()
 
-    private val lifetime =
-        Lifetime<Peer>(System.currentTimeMillis(), TimeUnit.SECONDS.toMillis(OWNER_SECONDS), TimeUnit.SECONDS.toMillis(GRACE_SECONDS))
+    /** The sessions connected now; the run ends complete only once every one of them left. */
+    private val sessions = mutableSetOf<Peer>()
+
+    /** Whether the build ended the run. */
+    private var stopped = false
 
     // Every submission that has not finished, in the order its session submitted it.
     private val submissions = linkedMapOf<Pair<Peer, SubmissionId>, Submission>()
     private val hung = mutableMapOf<String, HungWork>()
+
+    // The run's file is written as the pool takes up the run, naming the players hung work keeps out.
+    private val runs = RunRecords(settings.run, settings.testRun, settings.policy, stillOut = { stillOut() })
     private val attempts = Attempts<Attempt>()
     private val requests = Routes<Peer, Long>()
     private val barriers = Routes<Peer, Int>()
@@ -329,7 +336,7 @@ internal class Pool(
 
     /**
      * The game could not start for [cause]: the run file says so, and the pool exits with the cause in its
-     * log, so the test JVM that started it says it exited while starting. Returns [cause] to rethrow.
+     * log, so the build's test JVMs find no pool of their run and point at that log. Returns [cause] to rethrow.
      */
     private fun couldNotStart(cause: Exception): Exception {
         couldNotRun("the game could not start: $cause; see ${settings.poolLog}")
@@ -341,7 +348,7 @@ internal class Pool(
         val startedAt = System.nanoTime()
         game =
             try {
-                Game.start(settings, server.localPort, clients.map { it.player.name }, continuing)
+                Game.start(settings, server.localPort, clients.map { it.player.name })
             } catch (cannot: IOException) {
                 throw couldNotStart(cannot)
             } catch (cannot: IllegalStateException) {
@@ -359,27 +366,30 @@ internal class Pool(
         }
         bootLimit(shared)
         try {
-            while (!lifetime.over(System.currentTimeMillis())) {
+            while (!stopped) {
                 next()?.let(::handle)
                 val now = System.currentTimeMillis()
                 attempts.all.filter { attempt -> attempt.deadline?.let { it <= now } == true }.forEach(::expire)
             }
-            // A session that comes now finds the pool on its way out, and waits for the next one.
+            // The build's tests all ended, unless the build died: a session still connected leaves the run cut short.
+            if (sessions.isEmpty()) runs.finished()
             server.close()
             // Every attempt ended, so each own Paper halts on its own; one that trained writes its cache as
             // it exits, which the pool keeps only once it hears the exit.
-            val ownsEndBy = System.nanoTime() + TimeUnit.SECONDS.toNanos(OWN_EXIT_SECONDS)
+            val ownsEndBy = System.nanoTime() + TimeUnit.SECONDS.toNanos(PoolProcess.OWN_EXIT_SECONDS)
             while (papers.all.any { it !== shared }) handle(events.poll(ownsEndBy - System.nanoTime(), TimeUnit.NANOSECONDS) ?: break)
         } finally {
             game.stop()
         }
     }
 
-    /** The next event, or null once the lifetime or a lease may have run out first. */
+    /** The build ends the run: the pool stops once the events before this one are handled. */
+    fun stop() = events.put(Event.Stop)
+
+    /** The next event, or null once a lease may have run out first. */
     private fun next(): Event? {
-        val leaseEnds = attempts.all.mapNotNull { it.deadline }.minOrNull()
-        val wakeAt = listOfNotNull(lifetime.wakeAt(), leaseEnds).minOrNull() ?: return events.take()
-        return events.poll(maxOf(0, wakeAt - System.currentTimeMillis()), TimeUnit.MILLISECONDS)
+        val leaseEnds = attempts.all.mapNotNull { it.deadline }.minOrNull() ?: return events.take()
+        return events.poll(maxOf(0, leaseEnds - System.currentTimeMillis()), TimeUnit.MILLISECONDS)
     }
 
     private fun handle(event: Event) {
@@ -403,13 +413,17 @@ internal class Pool(
             is Event.BootTimedOut -> {
                 papers[event.name]?.let { act(it, it.rules.bootTimedOut(event.boot)) }
             }
+
+            Event.Stop -> {
+                stopped = true
+            }
         }
     }
 
     private fun joined(peer: Peer) {
         when (peer.role) {
             Role.SESSION -> {
-                lifetime.joined(peer)
+                sessions += peer
                 failure?.let { peer.send(Message.createRefused(reason = it)) }
             }
 
@@ -475,7 +489,6 @@ internal class Pool(
             }
 
             Message.END -> {
-                runs.ended(session)
                 session.send(Message.ENDED)
             }
 
@@ -518,7 +531,7 @@ internal class Pool(
         session: Peer,
         join: Message.Join,
     ) {
-        if (join.run == settings.run) return runs.joined(session)
+        if (join.run == settings.run) return
         refused += session
         session.sendLast(Message.createRefused(reason = "this pool serves the run ${settings.run}, not the run ${join.run}"))
     }
@@ -892,10 +905,10 @@ internal class Pool(
         when (peer.role) {
             // What it asked gets no answers, and what its attempts covered goes with it.
             Role.SESSION -> {
-                lifetime.left(peer, at = System.currentTimeMillis())
+                sessions -= peer
                 val unfinished = submissions.values.filter { it.session == peer }
                 // A refused session never joined its run, so it leaves nothing in the run's file.
-                if (!refused.remove(peer)) abandon(peer, unfinished)
+                if (!refused.remove(peer)) abandon(unfinished)
                 claims.leave(peer)
                 unfinished.forEach { it.forget("its session left") }
                 requests.leave(peer)
@@ -922,14 +935,10 @@ internal class Pool(
      * [session] left. Each attempt it submitted that had not ended, as a killed test JVM leaves them,
      * fails in its run's file, so the run never reads as complete without them.
      */
-    private fun abandon(
-        session: Peer,
-        unfinished: List<Submission>,
-    ) {
+    private fun abandon(unfinished: List<Submission>) {
         // The game failed, so the attempts it never ran are no failures of their own: the run's file says why it failed.
-        if (failure != null) return runs.ended(session)
+        if (failure != null) return
         runs.abandoned(
-            session,
             unfinished.map { it.submit },
             "its test JVM ended before the attempt did; see ${settings.poolLog}",
         )
@@ -1427,7 +1436,7 @@ internal class Pool(
     private fun fail(reason: String) {
         if (failure != null) return
         couldNotRun(reason)
-        lifetime.sessions.forEach { it.send(Message.createRefused(reason = reason)) }
+        sessions.forEach { it.send(Message.createRefused(reason = reason)) }
         game.stop()
     }
 
@@ -1475,15 +1484,6 @@ internal class Pool(
          * the longest attempt seen, a restart that trains its boot cache (47 s on a loaded Mac).
          */
         const val LEASE_SECONDS = 300L
-
-        /** How long the test JVM that starts the pool has to open its session; it opens it as soon as the pool listens. */
-        const val OWNER_SECONDS = 60L
-
-        /** How long the pool waits after its run's last session left for another session of the run, as a module whose tests start later. */
-        const val GRACE_SECONDS = 60L
-
-        /** How long the pool waits, once every session left, for its own Papers to exit; a training one assembles its cache meanwhile. */
-        const val OWN_EXIT_SECONDS = 60L
 
         /**
          * How a restart attempt's own Paper boots (spike P7's bestq): C1 only and the serial collector,

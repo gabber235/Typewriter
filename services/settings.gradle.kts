@@ -73,6 +73,7 @@ includeProject("realm-route-fixtures", "testing/realm-route-fixtures")
 
 includeProject("playtest", "playtest/framework")
 includeProject("playtest-wire", "playtest/wire")
+includeProject("playtest-launch", "playtest/launch")
 includeProject("playtest-agent", "playtest/agent")
 includeProject("playtest-paper", "playtest/paper")
 includeProject("playtest-plugin", "playtest/plugin")

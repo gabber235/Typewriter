@@ -1,5 +1,8 @@
 import com.typewritermc.buildlogic.repositoryRoot
 import com.typewritermc.buildlogic.servicesDirectory
+import com.typewritermc.playtest.launch.PoolFile
+import com.typewritermc.playtest.launch.PoolProcess
+import java.nio.file.Path
 import java.util.UUID
 
 // Game requirements: tests in the `gameTest` source set run against real Minecraft clients on a
@@ -41,14 +44,42 @@ val coverageAgentPart = gamePart("playtestCoverageAgent", ":playtest-plugin", "p
 
 /**
  * One run per build: every gameTest task of the build, in whichever project, reports into the same run
- * file under the same run id, as their test JVMs share one pool.
+ * file under the same run id, as their test JVMs share one pool. The run owns that pool: the first
+ * gameTest task to run starts it, and the build's end closes it, so Gradle exits, and `cargo xtask`
+ * gives up the heavy lock, only once the pool and its game are gone. A pool that crashed is not started
+ * again: the sessions after it fail at once, and its run file reads cut short.
  */
-abstract class GameRun : BuildService<GameRun.Params> {
+abstract class GameRun :
+    BuildService<GameRun.Params>,
+    AutoCloseable {
     interface Params : BuildServiceParameters {
         val id: Property<String>
     }
 
     val id: String get() = parameters.id.get()
+
+    private var started = false
+    private var pool: PoolProcess? = null
+
+    /** Starts the run's pool from [parts], unless an earlier gameTest task of the build started it. */
+    @Synchronized
+    fun ensurePool(parts: GameParts) {
+        if (started) return
+        started = true
+        pool =
+            PoolProcess.start(
+                PoolProcess.command(parts.java.get(), parts.properties(), parts.pool.asPath),
+                Path.of(parts.logs.get(), "pool.log"),
+                Path.of(parts.poolDir.get(), PoolFile.NAME),
+                id,
+            )
+    }
+
+    /** Ends the pool's run, as the build ends: the pool stops its game and exits, or is killed. */
+    @Synchronized
+    override fun close() {
+        pool?.close()
+    }
 }
 
 val gameRun =
@@ -58,7 +89,7 @@ val gameRun =
         parameters.id.set(providers.gradleProperty("playtest.runId").orElse(UUID.randomUUID().toString()))
     }
 
-/** The `-Dplaytest.*` properties the session reads and forwards to the pool it starts. */
+/** The `-Dplaytest.*` properties of the run, which the session reads and the build's pool starts with. */
 abstract class GameParts : CommandLineArgumentProvider {
     @get:Classpath abstract val pool: ConfigurableFileCollection
 
@@ -110,11 +141,13 @@ abstract class GameParts : CommandLineArgumentProvider {
     /** Whether this machine is the pinned runner, where a frame from another renderer fails its golden. */
     @get:Internal abstract val pinnedRunner: Property<Boolean>
 
-    override fun asArguments() =
+    override fun asArguments() = properties().map { (name, value) -> "-D$name=$value" }
+
+    /** Every property by its full name. */
+    fun properties(): Map<String, String> =
         (
             mapOf(
                 "poolDir" to poolDir.get(),
-                "poolClasspath" to pool.asPath,
                 "java" to java.get(),
                 "paper" to paper.singleFile.path,
                 "agent" to agent.singleFile.path,
@@ -133,7 +166,7 @@ abstract class GameParts : CommandLineArgumentProvider {
             ) +
                 listOf("repeat" to repeat, "quarantine" to quarantine, "touched" to touched)
                     .mapNotNull { (name, value) -> value.orNull?.let { name to it } }
-        ).map { (name, value) -> "-Dplaytest.$name=$value" }
+        ).mapKeys { (name, _) -> "playtest.$name" }
 }
 
 tasks.register<Test>("gameTest") {
@@ -148,7 +181,7 @@ tasks.register<Test>("gameTest") {
     // and xtask's selection check (`results::selection_matches`) answers it from the run file.
     filter.isFailOnNoMatchingTests = false
     usesService(gameRun)
-    jvmArgumentProviders +=
+    val parts =
         objects.newInstance<GameParts>().apply {
             pool.from(poolPart)
             paper.from(paperPart)
@@ -178,6 +211,9 @@ tasks.register<Test>("gameTest") {
             // CI's game job runs on the pinned runner and says so; other machines only note frames they cannot check.
             pinnedRunner.set(providers.environmentVariable("PLAYTEST_PINNED_RUNNER").map { it == "1" }.orElse(false))
         }
+    jvmArgumentProviders += parts
+    // The build's pool runs before the first test JVM starts, which only connects to it.
+    doFirst { gameRun.get().ensurePool(parts) }
 }
 
 // `cargo xtask e2e game` builds everything gameTest runs in a Gradle of its own first, so the Kotlin
