@@ -4,16 +4,20 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import skirout.harness.v1.test_run.AttemptPolicy
+import skirout.harness.v1.wire.ClientLoss
+import skirout.harness.v1.wire.ClientLossKind
 
 val VerdictTest by testSuite {
     val retries = AttemptPolicy.RerunFailuresWrapper(4)
     val thrice = AttemptPolicy.ExactlyWrapper(3)
     val missed = AssertionError("gv-1 did not see chat \"Hello\" within 5 ticks")
-    val lost = ClientLost("gv-1", "its process exited with code 137; see client-gv-1/lost-1.log")
+    val lost =
+        ClientLost(
+            "gv-1",
+            ClientLoss(kind = ClientLossKind.EXITED, detail = "its process exited with code 137", log = "client-gv-1/lost-1.log"),
+        )
     val declined = RequirementDeclined("GROUP-1 cannot run here: a requirement claims 3 players, but the pool holds 1")
     val refused = RequirementRefused("a window needs a positive check: without one it could never fail")
     val broken = GameUnavailable("the game pool broke the connection before the run ended; see pool.log")
@@ -83,15 +87,5 @@ val VerdictTest by testSuite {
         failedDemo?.cause shouldBeSameInstanceAs missed
         demoDiffers(last = missed, demo = null)?.message shouldBe
             "the demo passed where the last attempt failed: ${missed.message}"
-    }
-
-    test(
-        "a body that returned without a positive check fails as refused, saying what it lacks, and a body that proved something or failed keeps its end",
-    ) {
-        val unproven = bodyEnded(failure = null, proved = false).shouldBeInstanceOf<RequirementRefused>()
-        unproven.message shouldContain "made no positive check"
-
-        bodyEnded(failure = null, proved = true) shouldBe null
-        bodyEnded(failure = missed, proved = false) shouldBeSameInstanceAs missed
     }
 }

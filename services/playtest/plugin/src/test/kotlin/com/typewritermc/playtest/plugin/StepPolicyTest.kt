@@ -11,7 +11,7 @@ val StepPolicyTest by testSuite {
     test("a free player's client behind the last tick holds back the next tick until it acks it") {
         var granted = 0
         val policy =
-            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, WorkLedger({ 0L }) { _, _ -> }, {}, Acks { 0L }, {})
+            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, WorkLedger { _, _ -> }, {}, Acks { 0L }, {})
         policy.claim(listOf(claimed))
         policy.acked(claimed, 9, false)
         policy.acked(free, 9, false)
@@ -30,7 +30,7 @@ val StepPolicyTest by testSuite {
     test("a client that never acked a tick, still joining, holds back no tick") {
         var granted = 0
         val policy =
-            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, WorkLedger({ 0L }) { _, _ -> }, {}, Acks { 0L }, {})
+            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, WorkLedger { _, _ -> }, {}, Acks { 0L }, {})
         policy.claim(listOf(claimed))
         policy.tickEnded(10)
         policy.acked(claimed, 10, false)
@@ -52,7 +52,7 @@ val StepPolicyTest by testSuite {
                 { _, _ -> },
                 { true },
                 { it.run() },
-                WorkLedger({ 0L }) { _, _ -> },
+                WorkLedger { _, _ -> },
                 {},
                 Acks { now },
                 { stalled += it.player() },

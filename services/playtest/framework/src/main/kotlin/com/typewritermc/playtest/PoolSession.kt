@@ -1,13 +1,13 @@
 package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.Wire
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
+import skirout.harness.v1.golden.Renderer
 import skirout.harness.v1.test_run.CoveredClass
 import skirout.harness.v1.test_run.Demonstrates
 import skirout.harness.v1.test_run.Step
@@ -22,7 +22,6 @@ import skirout.harness.v1.wire.PaperAsk
 import skirout.harness.v1.wire.PlayerEvent
 import skirout.harness.v1.wire.Probe
 import skirout.harness.v1.wire.ProbeAction
-import skirout.harness.v1.wire.Renderer
 import skirout.harness.v1.wire.Request
 import skirout.harness.v1.wire.Result
 import skirout.harness.v1.wire.Role
@@ -85,7 +84,7 @@ class FrameNotCaptured(
 internal class PoolSession private constructor(
     private val socket: Socket,
     private val settings: PlaytestSettings,
-) {
+) : AttemptPool {
     private val output = DataOutputStream(BufferedOutputStream(socket.getOutputStream()))
     private val submissions = AtomicLong()
     private val requests = AtomicLong()
@@ -98,7 +97,8 @@ internal class PoolSession private constructor(
     private val attemptsOf = ConcurrentHashMap<String, Int>()
 
     /** This project's goldens and the local golden images. */
-    val goldens = Goldens(settings.root, settings.goldens, settings.goldenImages, PinnedRenderer(settings.mesa, settings.pinnedRunner))
+    override val goldens =
+        Goldens(settings.root, settings.goldens, settings.goldenImages, PinnedRenderer(settings.mesa, settings.pinnedRunner))
     private val ended = CompletableDeferred<Unit>()
 
     @Volatile
@@ -115,12 +115,12 @@ internal class PoolSession private constructor(
         val attempt = CompletableDeferred<Attempt>()
     }
 
-    fun send(message: Message) {
+    override fun send(message: Message) {
         broken?.let { throw it }
         synchronized(output) { Wire.write(output, message) }
     }
 
-    fun nextBarrier(): Int = barriers.incrementAndGet()
+    override fun nextBarrier(): Int = barriers.incrementAndGet()
 
     /**
      * One attempt of a requirement to run: [bodies] in order on [players] players, on a Paper of its own
@@ -261,7 +261,7 @@ internal class PoolSession private constructor(
         clip: String?,
     ): AttemptEnd {
         val notStarted = clip?.let { attempt.startClips(it) }
-        val settled = settle(submission, attempt, notStarted ?: run(attempt, body))
+        val settled = settle(submission, attempt, notStarted ?: attempt.outcome(body))
         val notWritten = clip?.let { attempt.stopClips() }
         return AttemptEnd(settled.failure?.let(attempt::located) ?: notWritten, settled.covered)
     }
@@ -289,22 +289,6 @@ internal class PoolSession private constructor(
         }
     }
 
-    /** Runs [body] on [attempt]; returns why it failed, or null. A body that made no positive check fails. */
-    private suspend fun run(
-        attempt: Attempt,
-        body: suspend RequirementScope.() -> Unit,
-    ): Throwable? =
-        try {
-            RequirementScope(attempt).body()
-            bodyEnded(failure = null, proved = attempt.proved)
-        } catch (cancelled: CancellationException) {
-            cancelled
-        } catch (
-            @Suppress("TooGenericExceptionCaught") failed: Throwable,
-        ) {
-            failed
-        }
-
     /**
      * Waits until the work plugins count for the attempt's players is quiet, so none of it reaches the
      * next attempt on those players; returns how the attempt ended: failed by hung work or a lost
@@ -329,7 +313,7 @@ internal class PoolSession private constructor(
      * tick after which every player is back. The attempt hears it is back as the answer is read, before
      * any record the new Paper sends.
      */
-    suspend fun restart(
+    override suspend fun restart(
         attempt: Attempt,
         submission: SubmissionId,
     ): Int {
@@ -348,14 +332,14 @@ internal class PoolSession private constructor(
     }
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
-    suspend fun query(player: GamePlayer): List<StateKind> {
+    override suspend fun query(player: GamePlayer): List<StateKind> {
         val marks = request<Answer.MarksWrapper>(Ask.PaperWrapper(PaperAsk.createQuery(player = player.uuid.toString()))).value
         marks.failure?.let { throw ProbeFailed(it) }
         return marks.marked
     }
 
     /** Paper runs [action] for [players]; returns, once each of their clients holds its effect, the tick after which it ran. */
-    suspend fun probe(
+    override suspend fun probe(
         players: List<GamePlayer>,
         action: ProbeAction,
     ): Int {
@@ -366,7 +350,7 @@ internal class PoolSession private constructor(
     }
 
     /** [player]'s client runs [steps]; returns the tick after which their first event reached the client. */
-    suspend fun input(
+    override suspend fun input(
         player: GamePlayer,
         steps: List<InputStep>,
     ): Int {
@@ -376,16 +360,17 @@ internal class PoolSession private constructor(
     }
 
     /** [player]'s client records a clip from the next tick on and writes it as an mp4 to [mp4]. */
-    suspend fun startClip(
+    override suspend fun startClip(
         player: GamePlayer,
         mp4: Path,
     ): Answer.ClipStarted = request<Answer.ClipStartedWrapper>(player, ClientTask.createStartClip(path = mp4.toString())).value
 
     /** [player]'s client finishes its clip. */
-    suspend fun stopClip(player: GamePlayer): Answer.ClipWritten = request<Answer.ClipWrittenWrapper>(player, ClientTask.STOP_CLIP).value
+    override suspend fun stopClip(player: GamePlayer): Answer.ClipWritten =
+        request<Answer.ClipWrittenWrapper>(player, ClientTask.STOP_CLIP).value
 
     /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */
-    suspend fun capture(
+    override suspend fun capture(
         player: GamePlayer,
         png: Path,
     ): Renderer {
@@ -464,7 +449,7 @@ internal class PoolSession private constructor(
 
             is Message.LeaseFailedWrapper -> {
                 val failed = message.value
-                leases[SubmissionId(failed.submission)]?.attempt?.completeExceptionally(PaperLost(failed.reason))
+                leases[SubmissionId(failed.submission)]?.attempt?.completeExceptionally(PaperLost(failed.loss))
             }
 
             is Message.ReplyWrapper -> {
@@ -515,11 +500,11 @@ internal class PoolSession private constructor(
                 }
 
                 is PlayerEvent.Happened.ClientLostWrapper -> {
-                    Attempt.Event.Failed(player, ClientLost(player.name, happened.value.reason))
+                    Attempt.Event.Failed(player, ClientLost(player.name, happened.value))
                 }
 
                 is PlayerEvent.Happened.PaperLostWrapper -> {
-                    Attempt.Event.Failed(player, PaperLost(happened.value.reason))
+                    Attempt.Event.Failed(player, PaperLost(happened.value))
                 }
 
                 is PlayerEvent.Happened.LeaseExpiredWrapper -> {
@@ -567,9 +552,8 @@ internal class PoolSession private constructor(
         fun open(settings: PlaytestSettings = PlaytestSettings.fromSystemProperties()): PoolSession {
             val socket = PoolLauncher(settings).connect()
             val session = PoolSession(socket, settings)
-            session.send(Message.HelloWrapper(Hello(role = Role.SESSION, name = settings.run)))
-            // The pool writes the run's file after every attempt, so it needs the file before the first.
-            session.send(Message.createJoin(testRunFile = settings.testRun.toString(), policy = RunPlan.current.policy))
+            session.send(Message.HelloWrapper(Hello(role = Role.SESSION, name = "pid ${ProcessHandle.current().pid()}")))
+            session.send(Message.createJoin(run = settings.run))
             thread(name = "playtest-session", isDaemon = true) { session.read() }
             return session
         }

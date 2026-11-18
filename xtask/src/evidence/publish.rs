@@ -802,7 +802,7 @@ fn set_pull_body(ctx: &Context, pr: u64, body: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::results::Outcome;
+    use crate::results::{Outcome, RunEnd};
     use crate::skirout::base::harness::v1::test_run::Runner;
     use crate::test_support::{
         TempRoot, empty_change_report, failed, raw_failed_run, requirement_run,
@@ -977,11 +977,11 @@ mod tests {
     #[test]
     fn a_run_cut_short_or_unable_to_run_is_not_ready_and_says_why_above_every_fold() {
         let mut cut = requirement_run("a user joins", "JOIN-1", Outcome::Passed);
-        cut.cut_short = true;
+        cut.end = RunEnd::CutShort;
         cut.runner = Runner::Panel;
         let mut unable = requirement_run("a quest starts", "QUEST-1", Outcome::Passed);
         unable.runner = Runner::Game;
-        unable.failure = "the game was not ready within 300 s".to_owned();
+        unable.end = RunEnd::CouldNotRun("the game was not ready within 300 s".to_owned());
         let runs = [
             (PathBuf::from("panel"), cut),
             (PathBuf::from("game"), unable),

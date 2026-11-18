@@ -190,15 +190,11 @@ private fun AttemptPolicy.verdict(
 }
 
 /**
- * How a requirement's body ended: its [failure], or, when it returned without one and never [proved]
- * something (a window with a positive check that held, or a golden frame), a refusal, since a body
- * without a positive check could never fail.
+ * Why a body that returned without a failure still fails: a refusal when it never [proved] something,
+ * since a body without a positive check could never fail; null when it did.
  */
-internal fun bodyEnded(
-    failure: Throwable?,
-    proved: Boolean,
-): Throwable? =
-    failure ?: if (proved) {
+internal fun bodyEnded(proved: Boolean): RequirementRefused? =
+    if (proved) {
         null
     } else {
         RequirementRefused(

@@ -3,7 +3,6 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.GameCompartment
-import com.typewritermc.playtest.GameMode
 import com.typewritermc.playtest.backToBack
 import com.typewritermc.playtest.block
 import com.typewritermc.playtest.camera
@@ -16,6 +15,7 @@ import com.typewritermc.playtest.ticks
 import com.typewritermc.playtest.wire.entries
 import com.typewritermc.playtest.wire.variantName
 import de.infix.testBalloon.framework.core.testSuite
+import skirout.harness.v1.wire.GameMode
 import skirout.harness.v1.wire.StateKind
 
 val WipeRequirements by testSuite(compartment = { GameCompartment }) {

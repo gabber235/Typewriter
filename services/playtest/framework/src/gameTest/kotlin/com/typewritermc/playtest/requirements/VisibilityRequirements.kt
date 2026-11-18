@@ -2,12 +2,12 @@ package com.typewritermc.playtest.requirements
 
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.GameCompartment
-import com.typewritermc.playtest.GameMode
 import com.typewritermc.playtest.entity
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.testSuite
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.wire.GameMode
 import skirout.harness.v1.wire.KeyboardKey
 
 val VisibilityRequirements by testSuite(compartment = { GameCompartment }) {

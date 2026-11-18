@@ -17,7 +17,7 @@ use serde::Deserialize;
 use crate::Context;
 use crate::skirout::base::harness::v1::test_run::Runner;
 pub use crate::skirout::base::harness::v1::test_run::{
-    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, TestCase, TestRun,
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, RunEnd, TestCase, TestRun,
 };
 
 /// The quarantine file, relative to the repository root.
@@ -110,17 +110,16 @@ pub fn verdict(run: &TestRun, case: &TestCase, quarantine: &Quarantine) -> Resul
 
 /// Why `run` as a whole proves less than its cases say, judged once for every suite and the pull
 /// request's evidence: it could not run at all, or it stopped before it was over, so cases it
-/// never reached are missing from it.
+/// never reached are missing from it. An end this xtask does not know proves nothing either.
 pub fn run_trouble(run: &TestRun) -> Option<String> {
-    if !run.failure.is_empty() {
-        Some(format!("could not run: {}", run.failure))
-    } else if run.cut_short {
-        Some(format!(
+    match &run.end {
+        RunEnd::Completed => None,
+        RunEnd::CouldNotRun(why) => Some(format!("could not run: {why}")),
+        RunEnd::CutShort => Some(format!(
             "was cut short after {} cases, so the cases after them never ran",
             run.cases.len()
-        ))
-    } else {
-        None
+        )),
+        RunEnd::Unknown(_) => Some("ended in a way this xtask does not know".to_owned()),
     }
 }
 
@@ -774,7 +773,7 @@ mod tests {
     #[test]
     fn a_run_cut_short_fails_after_naming_its_finished_cases_and_where_its_logs_are() {
         let mut run = attempted(AttemptPolicy::RerunFailures(1), &[failed("lost")]);
-        run.cut_short = true;
+        run.end = RunEnd::CutShort;
         run.logs = "logs/7".to_owned();
 
         let (result, out) = report_text(&run, &Quarantine::default());
@@ -789,13 +788,26 @@ mod tests {
     #[test]
     fn a_run_that_could_not_run_fails_with_why_even_when_its_cases_passed() {
         let mut run = attempted(AttemptPolicy::RerunFailures(1), &[Outcome::Passed]);
-        run.failure = "the game was not ready within 300 s".to_owned();
+        run.end = RunEnd::CouldNotRun("the game was not ready within 300 s".to_owned());
 
         let (result, _) = report_text(&run, &Quarantine::default());
 
         assert_eq!(
             result.unwrap_err().to_string(),
             "the run could not run: the game was not ready within 300 s"
+        );
+    }
+
+    #[test]
+    fn a_run_whose_end_this_xtask_does_not_know_fails_even_when_its_cases_passed() {
+        let mut run = attempted(AttemptPolicy::RerunFailures(1), &[Outcome::Passed]);
+        run.end = RunEnd::default();
+
+        let (result, _) = report_text(&run, &Quarantine::default());
+
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "the run ended in a way this xtask does not know"
         );
     }
 

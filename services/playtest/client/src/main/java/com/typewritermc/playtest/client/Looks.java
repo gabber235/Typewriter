@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import skirout.harness.v1.golden.Renderer;
 import skirout.harness.v1.wire.Answer;
 import skirout.harness.v1.wire.ClientTask;
 import skirout.harness.v1.wire.Message;
-import skirout.harness.v1.wire.Renderer;
 import skirout.harness.v1.wire.Reply;
 
 /**

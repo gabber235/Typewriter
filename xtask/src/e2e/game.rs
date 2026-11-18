@@ -16,7 +16,7 @@ use anyhow::{Context as _, Result, bail};
 
 use super::{E2eArgs, take_turn};
 use crate::lock;
-use crate::results::{self, Quarantine, TestRun};
+use crate::results::{self, Quarantine, RunEnd, TestRun};
 use crate::review::change::Change;
 use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::{CommandExt as _, Context, evidence, generate, goldens};
@@ -211,6 +211,7 @@ pub(crate) fn own_run(ran: &Ran) -> Result<TestRun> {
                 run_id: ran.run_id.clone(),
                 runner: Runner::Game,
                 started_at_millis: ran.started_millis,
+                end: RunEnd::Completed,
                 ..TestRun::default()
             });
         }
@@ -417,7 +418,9 @@ mod tests {
     #[test]
     fn a_run_the_game_could_not_run_fails_with_why_rather_than_as_a_run_of_nothing() {
         let unable = TestRun {
-            failure: "the game was not ready within 300 s; see paper.log".to_owned(),
+            end: RunEnd::CouldNotRun(
+                "the game was not ready within 300 s; see paper.log".to_owned(),
+            ),
             ..game_run(AttemptPolicy::RerunFailures(4), &[])
         };
 
@@ -502,7 +505,7 @@ mod tests {
     #[test]
     fn a_run_the_pool_never_ended_fails_as_cut_short_after_its_finished_cases() {
         let finished = TestRun {
-            cut_short: true,
+            end: RunEnd::CutShort,
             logs: "logs/4".to_owned(),
             ..game_run(
                 AttemptPolicy::RerunFailures(4),

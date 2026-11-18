@@ -1,13 +1,11 @@
 package com.typewritermc.playtest
 
+import skirout.harness.v1.wire.GameMode
 import skirout.harness.v1.wire.PlayerAction
 import skirout.harness.v1.wire.ProbeAction
 import skirout.harness.v1.wire.StateKind
 import skirout.harness.v1.wire.WorldAction
 import java.util.UUID
-
-/** A player's game mode. */
-enum class GameMode { SURVIVAL, CREATIVE, ADVENTURE, SPECTATOR }
 
 /**
  * The framework's Paper probe: arrangements and stimuli that run inside Paper, between ticks. Each call
@@ -36,7 +34,7 @@ class Probe internal constructor(
     suspend fun gameMode(
         player: GamePlayer,
         mode: GameMode,
-    ): Mark = run(listOf(player), PlayerAction.createGameMode(mode = mode.name.lowercase()))
+    ): Mark = run(listOf(player), PlayerAction.GameModeWrapper(mode))
 
     /** [player] sees a sidebar titled [title] holding [lines], top to bottom, each line once. */
     suspend fun sidebar(

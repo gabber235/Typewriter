@@ -16,7 +16,7 @@ use anyhow::{Context as _, Result, bail};
 
 use crate::e2e::failures::rfc3339;
 use crate::process::{Group, Supervisor, Unsupervised};
-use crate::results::{self, Outcome, TestRun};
+use crate::results::{self, Outcome, RunEnd, TestRun};
 use crate::skirout::base::harness::v1::test_run::{
     Artifact, ArtifactKind, Attempt, AttemptPolicy, Demonstrates, Failure, Runner, Span, TestCase,
 };
@@ -366,6 +366,7 @@ fn stopped_run(runner: Runner, now: i64, error: &anyhow::Error, seen: Option<Str
             }],
             ..TestCase::default()
         }],
+        end: RunEnd::Completed,
         ..TestRun::default()
     }
 }

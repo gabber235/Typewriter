@@ -1,5 +1,7 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.wire.ofRepeat
+import skirout.harness.v1.test_run.AttemptPolicy
 import java.nio.file.Path
 
 /**
@@ -10,8 +12,10 @@ internal class PoolSettings(
     val poolDir: Path,
     /** The run that started the pool, the only one it serves. */
     val run: String,
-    /** The run's file, which a pool that continues the run takes up. */
+    /** The run's file, which the pool writes after every attempt and a pool that continues the run takes up. */
     val testRun: Path,
+    /** How the run makes the attempts of each requirement, as its file states. */
+    val policy: AttemptPolicy,
     /** The run's logs folder: the pool's own log, and one for every Paper, client and display. */
     val logs: Path,
     val java: Path,
@@ -36,6 +40,7 @@ internal class PoolSettings(
                 poolDir = path("playtest.poolDir"),
                 run = checkNotNull(System.getProperty("playtest.run")) { "playtest.run is not set: the game test task sets it" },
                 testRun = path("playtest.testRun"),
+                policy = AttemptPolicy.ofRepeat(System.getProperty("playtest.repeat")),
                 logs = path("playtest.logs"),
                 java = path("playtest.java"),
                 paperDir = path("playtest.paper"),

@@ -4,24 +4,22 @@
 // prefixed frame (`com.typewritermc.playtest.wire.Wire`). Players are named by their UUID in its
 // canonical text form, except where a field says it holds the player's name.
 
+import { Renderer } from "harness/v1/golden.skir";
 import {
   Artifact,
-  AttemptPolicy,
   CoveredClass,
   Demonstrates,
   Step,
 } from "harness/v1/test_run.skir";
 
-enum Message(85020001) {
+enum Message(85030001) {
   // The first message on every connection to the pool.
   hello: Hello;
-  // Session to pool, right after its `hello`: the run's file and the policy its attempts are made under.
-  // The pool writes the run there after every attempt it records, so a pool that dies leaves the attempts
-  // that ended. Every session of one run names the same file and policy; the pool refuses a session that
-  // names others.
+  // Session to pool, right after its `hello`: the run the session belongs to. A pool serves one run and
+  // takes the run's file and attempt policy from the properties it started with; it refuses a session
+  // of another run.
   join: struct {
-    test_run_file: string;
-    policy: AttemptPolicy;
+    run: string;
   };
   // Pool to session: the game cannot run; every requirement of the session fails with this reason.
   refused: struct {
@@ -44,10 +42,10 @@ enum Message(85020001) {
     reason: string;
   };
   // Pool to session: the submission's attempt failed before its lease, as its own Paper was lost while it
-  // booted; `reason` says why and where the Paper's log is. The pool recorded the attempt.
+  // booted. The pool recorded the attempt.
   lease_failed: struct {
     submission: int64;
-    reason: string;
+    loss: PaperLoss;
   };
   // Pool to session: these players belong to the submission's attempt until its `result`.
   lease: Lease;
@@ -188,15 +186,15 @@ enum Message(85020001) {
   reset_done;
 }
 
-// The first message on every connection to the pool: who opened it. A session names its run, Paper and
-// a client name themselves.
-struct Hello(85020002) {
+// The first message on every connection to the pool: who opened it, and a name for the pool's log. A
+// session names its test JVM, Paper and a client name themselves.
+struct Hello(85030002) {
   role: Role;
   name: string;
 }
 
 // Who opened a connection to the pool.
-enum Role(85020003) {
+enum Role(85030003) {
   session;
   paper;
   client;
@@ -207,7 +205,7 @@ enum Role(85020003) {
 // attempt runs on a Paper of its own, which its body may kill and boot again: a kill drops every client
 // on a Paper. A `demo` attempt runs once more after the requirement's last attempt, its clients recording
 // clips; it lands in the case's demo, never among its attempts.
-struct Submit(85020004) {
+struct Submit(85030004) {
   submission: int64;
   test_id: string;
   requirement: string;
@@ -219,7 +217,7 @@ struct Submit(85020004) {
 
 // The players of the submission's attempt, each wiped and standing in the attempt's `region` on the Paper
 // named `paper`: the shared Paper, or the attempt's own, named after the attempt.
-struct Lease(85020005) {
+struct Lease(85030005) {
   submission: int64;
   players: [Player];
   region: Region;
@@ -227,7 +225,7 @@ struct Lease(85020005) {
 }
 
 // One player a lease hands to an attempt.
-struct Player(85020006) {
+struct Player(85030006) {
   name: string;
   uuid: string;
 }
@@ -235,7 +233,7 @@ struct Player(85020006) {
 // An attempt's own part of the world: the blocks within half the region spacing of `x`, `z` across the
 // ground, at every height. No other attempt of the pool ever uses it, and regions lie a spacing apart,
 // so nothing one attempt places, spawns or plays reaches another.
-struct Region(85020007) {
+struct Region(85030007) {
   x: int32;
   z: int32;
 }
@@ -245,7 +243,7 @@ struct Region(85020007) {
 // kind of thing it was: claim, wipe, probe, input, window or settle. `folder` holds the attempt's evidence,
 // relative to the run file's folder, or is empty when it left none; `artifacts` are the frames, golden
 // candidates and clips it wrote there, relative to `folder`.
-struct Result(85020008) {
+struct Result(85030008) {
   submission: int64;
   duration_millis: int64;
   failure: string?;
@@ -257,13 +255,13 @@ struct Result(85020008) {
 
 // A session's request to the game, which a `Reply` answers under the same id. The pool hands it on under
 // a pool wide id and hands the reply back under the session's own.
-struct Request(85020009) {
+struct Request(85030009) {
   id: int64;
   ask: Ask;
 }
 
 // What a request asks, by who answers it.
-enum Ask(85020010) {
+enum Ask(85030010) {
   paper: PaperAsk;
   // The client of `player` answers.
   client: struct {
@@ -273,7 +271,7 @@ enum Ask(85020010) {
 }
 
 // A request Paper answers.
-enum PaperAsk(85020011) {
+enum PaperAsk(85030011) {
   probe: Probe;
   // Which kinds of state `player` still carries a mark of. Paper answers with `marks`. Only the
   // framework's own test kit asks, for kinds no player can see.
@@ -285,13 +283,13 @@ enum PaperAsk(85020011) {
 // Run `action` between ticks. An action on a player runs for each of `players`; an action on the world
 // runs once, in the region of their attempt. Paper answers with `probe_done` once the client of each of
 // `players` holds what it caused.
-struct Probe(85020012) {
+struct Probe(85030012) {
   players: [string];
   action: ProbeAction;
 }
 
 // A request a player's client answers.
-enum ClientTask(85020013) {
+enum ClientTask(85030013) {
   // What a person does with the keyboard and mouse, as window input the client sends to its own window.
   // The steps run in order on the client's ticks; the client answers with `input_done` once the last one
   // ran.
@@ -314,12 +312,12 @@ enum ClientTask(85020013) {
 }
 
 // The answer to the session's request `request`.
-struct Reply(85020014) {
+struct Reply(85030014) {
   request: int64;
   answer: Answer;
 }
 
-enum Answer(85020015) {
+enum Answer(85030015) {
   // The attempt's Paper booted again after its kill and every player's client is back and holds what Paper
   // sends it, from after `tick` of the new Paper on.
   restarted: struct {
@@ -360,18 +358,8 @@ enum Answer(85020015) {
   };
 }
 
-// What drew a frame: the graphics backend, the device and the driver it reports, the operating system and
-// the CPU architecture. Two renderers draw the same scene alike to the pixel only when all five match.
-struct Renderer(85020016) {
-  backend: string;
-  device: string;
-  driver: string;
-  os: string;
-  arch: string;
-}
-
 // What happened to the player of name `player`.
-struct PlayerEvent(85020017) {
+struct PlayerEvent(85030016) {
   player: string;
   happened: enum {
     // Paper to session: the player's work `work`, which began after tick `began_after`, still ran 1 s
@@ -380,16 +368,11 @@ struct PlayerEvent(85020017) {
       work: string;
       began_after: int32;
     };
-    // Pool to session: the player's client is lost, for `reason`; the attempt fails and the pool starts a
-    // new client for the player.
-    client_lost: struct {
-      reason: string;
-    };
-    // Pool to session: the Paper of its attempt, one of its own, was lost, for `reason`, which names the
-    // Paper's log; the attempt fails.
-    paper_lost: struct {
-      reason: string;
-    };
+    // Pool to session: the player's client is lost; the attempt fails and the pool starts a new client for
+    // the player.
+    client_lost: ClientLoss;
+    // Pool to session: the Paper of its attempt, one of its own, was lost; the attempt fails.
+    paper_lost: PaperLoss;
     // Pool to session: the lease of the attempt holding the player ran out before the session sent the
     // attempt's result, for `reason`; the pool recorded the attempt as failed and gave its players to the
     // next claims, so the attempt fails.
@@ -406,10 +389,52 @@ struct PlayerEvent(85020017) {
   };
 }
 
+// Why a player's client was lost: `detail` says what happened, for a person to read, and `log` is the
+// lost client's log.
+struct ClientLoss(85030017) {
+  kind: ClientLossKind;
+  detail: string;
+  log: string;
+}
+
+enum ClientLossKind(85030018) {
+  // Its process exited, as when it crashed.
+  exited;
+  // It acked no tick for 5 s of wall clock while behind, as when it froze.
+  stalled;
+  // Paper saw its player leave.
+  left_paper;
+  // It lost its Paper without being told to leave: its connection dropped or it could not join.
+  dropped;
+  // Its connection to the pool closed.
+  left_pool;
+}
+
+// Why an attempt's own Paper was lost: `detail` says what happened, for a person to read, and `log` is
+// the Paper's log in the run's logs.
+struct PaperLoss(85030019) {
+  kind: PaperLossKind;
+  detail: string;
+  log: string;
+}
+
+enum PaperLossKind(85030020) {
+  // Its process exited while it booted, the first time or again after a kill.
+  exited_while_booting;
+  // Its process exited while its attempt ran.
+  exited_while_running;
+  // A boot did not end within the boot limit.
+  boot_timed_out;
+  // It could not claim its attempt's players.
+  claim_failed;
+  // It could not resume its attempt after a kill.
+  resume_failed;
+}
+
 // A kind of per player state an attempt can leave behind for the next attempt on the same player. Paper's
 // wipe clears the vanilla and Paper kinds; each plugin resets the kinds it owns when Paper wipes a player,
 // here the framework's own Paper plugin.
-enum StateKind(85020018) {
+enum StateKind(85030021) {
   // Teams on the main scoreboard the player belongs to, and its scores.
   scoreboard;
   // Items in the player's ender chest.
@@ -503,7 +528,7 @@ enum StateKind(85020018) {
 
 // What a probe does on Paper. Names of items, blocks and entity types are Minecraft ids such as
 // `minecraft:stick`.
-enum ProbeAction(85020019) {
+enum ProbeAction(85030022) {
   // It runs for each player of its probe.
   on_player: PlayerAction;
   // It runs once, in the world of its probe's players.
@@ -511,15 +536,13 @@ enum ProbeAction(85020019) {
 }
 
 // A probe action on a player.
-enum PlayerAction(85020020) {
+enum PlayerAction(85030023) {
   // Paper sends `text` to the player as a chat line.
   chat: struct {
     text: string;
   };
-  // The player's game mode becomes `mode`: survival, creative, adventure or spectator.
-  game_mode: struct {
-    mode: string;
-  };
+  // The player's game mode becomes this one.
+  game_mode: GameMode;
   // The player stands at this position, looking this way.
   teleport: struct {
     x: float64;
@@ -585,8 +608,16 @@ enum PlayerAction(85020020) {
   save;
 }
 
+// A player's game mode, as Minecraft names it.
+enum GameMode(85030024) {
+  survival;
+  creative;
+  adventure;
+  spectator;
+}
+
 // A probe action on the world.
-enum WorldAction(85020021) {
+enum WorldAction(85030025) {
   // Every block from `from` to `to`, both included, becomes `block`, a block state such as
   // `minecraft:oak_leaves[persistent=true]`.
   fill: struct {
@@ -622,7 +653,7 @@ enum WorldAction(85020021) {
 }
 
 // One step of an input.
-enum InputStep(85020022) {
+enum InputStep(85030026) {
   // Presses (`down`) or releases a key.
   key: struct {
     key: KeyboardKey;
@@ -670,7 +701,7 @@ enum InputStep(85020022) {
 }
 
 // The keys a requirement may press, as the default key bindings name them.
-enum KeyboardKey(85020023) {
+enum KeyboardKey(85030027) {
   w;
   a;
   s;
@@ -697,7 +728,7 @@ enum KeyboardKey(85020023) {
 }
 
 // A block position in the world.
-struct BlockPos(85020024) {
+struct BlockPos(85030028) {
   x: int32;
   y: int32;
   z: int32;
@@ -710,7 +741,7 @@ struct BlockPos(85020024) {
 // name. A frame draws `partial` of the way from the tick before to `tick`: 1 at the end of the tick, where
 // every record of a gated attempt is perceived, less for a frame a clip draws between two ticks, which
 // shows the clip and judges nothing. `frame` is that frame's number in the clip, or -1 outside one.
-struct Perception(85020025) {
+struct Perception(85030029) {
   tick: int32;
   partial: float32;
   frame: int32;
@@ -723,20 +754,20 @@ struct Perception(85020025) {
 }
 
 // One legible run of text and the game element that drew it, for example `chat`.
-struct Text(85020026) {
+struct Text(85030030) {
   element: string;
   text: string;
 }
 
 // A chat line and the tick in which it arrived.
-struct ChatLine(85020027) {
+struct ChatLine(85030031) {
   tick: int32;
   text: string;
 }
 
 // The view a frame was drawn from: the eye's position, yaw and pitch in degrees, the vertical field of
 // view in degrees, and whether the spyglass overlay covers it.
-struct Camera(85020028) {
+struct Camera(85030032) {
   x: float64;
   y: float64;
   z: float64;
@@ -749,7 +780,7 @@ struct Camera(85020028) {
 // An item the GUI draws: `element` is `hotbar` (slot 0 to 8, `selected` for the one the selection frame
 // marks), `offhand`, `carried` (on the pointer) or `screen` (a slot of the open screen, numbered by the
 // screen), or `other` with slot -1; `item` is its id.
-struct Item(85020029) {
+struct Item(85030033) {
   element: string;
   slot: int32;
   selected: bool;
@@ -760,7 +791,7 @@ struct Item(85020029) {
 // A watched block: its block id, whether the player perceives it as it is (its section is compiled since
 // the block last changed, visible and inside the view), and the tick it last changed since the attempt's
 // reset, or -1.
-struct Block(85020030) {
+struct Block(85030034) {
   at: BlockPos;
   block: string;
   seen: bool;
@@ -771,7 +802,7 @@ struct Block(85020030) {
 // above it, or null, and the share of the frame it owns, from 0 to 1: the pixels that differ when the
 // frame is drawn without it, over all of the frame's pixels. `share` is null in a frame the client drew
 // as any client does, before it steps.
-struct Entity(85020031) {
+struct Entity(85030035) {
   uuid: string;
   hurt: bool;
   name: string?;
@@ -782,14 +813,14 @@ struct Entity(85020031) {
 // with them: from now on every record also carries these blocks and entities, which a probe puts in front
 // of the player. Paper sends it ahead of the packets that show them, so the client handles it first. A
 // reset ends every watch.
-struct Watch(85020032) {
+struct Watch(85030036) {
   blocks: [BlockPos];
   entities: [string];
 }
 
 // Client to Paper, on the game connection itself: the client ran and perceived server tick `tick`; `busy`
 // while an input waits to start or runs and needs further ticks, so Paper keeps stepping.
-struct StepAck(85020033) {
+struct StepAck(85030037) {
   tick: int32;
   busy: bool;
 }

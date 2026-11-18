@@ -2,6 +2,7 @@ package com.typewritermc.playtest.pool
 
 import com.typewritermc.playtest.pool.PaperRules.Claiming
 import com.typewritermc.playtest.pool.PaperRules.Do
+import skirout.harness.v1.wire.PaperLossKind
 
 /**
  * The life of the shared Paper [name], which the client of every one of [players] joins and every
@@ -67,7 +68,11 @@ internal class SharedPaper(
     override fun restart(request: Long): List<Do> =
         listOf(Do.Note("an attempt asked to restart $name, which only an attempt with a Paper of its own may restart"))
 
-    override fun failed(cause: String): List<Do> = listOf(Do.Fail(cause))
+    // The shared Paper serves the whole game, so whatever it could not do ends the game.
+    override fun failed(
+        kind: PaperLossKind,
+        cause: String,
+    ): List<Do> = listOf(Do.Fail(cause))
 
     override fun ended(
         attempt: Long,

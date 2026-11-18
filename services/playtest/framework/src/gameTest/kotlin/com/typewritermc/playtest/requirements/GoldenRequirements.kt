@@ -4,7 +4,6 @@ import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.Frame
 import com.typewritermc.playtest.GameCompartment
-import com.typewritermc.playtest.GameMode
 import com.typewritermc.playtest.backToBack
 import com.typewritermc.playtest.brightnessAt
 import com.typewritermc.playtest.camera
@@ -17,6 +16,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import skirout.harness.v1.wire.GameMode
 import skirout.harness.v1.wire.StateKind
 
 val GoldenRequirements by testSuite(compartment = { GameCompartment }) {

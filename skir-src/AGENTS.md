@@ -11,7 +11,7 @@ Only use these top-level folders:
 - `organization`
 - `service`
 - `editor`
-- `harness` (results the test runners write and `cargo xtask` reads, not product concepts)
+- `harness` (the test harness's own values, not product concepts; see Harness)
 
 Each bounded context owns its own version folders, such as `editor/v1` or `service/v1`. These folders do not imply a stability promise before release.
 
@@ -25,6 +25,16 @@ Each bounded context owns its own version folders, such as `editor/v1` or `servi
 - Model failures as typed outcomes, not string errors. Name every failure variant with an `_error` suffix (validation_error, not_found_error, permission_denied_error, conflict_error); any other variant is a success. Every request response is an enum with `internal_error: InternalError`. The repository Skir generator (`services/protocol/skir-gen`) derives outcome classification from these names.
 - Describe complete results. Never model transport framing such as chunks, transfer identities or size limits; the transport splits large requests and responses.
 - Do not model database internals. Contracts should survive database rewrites and must not be shaped around record layouts, indexes, storage-specific IDs, or query details.
+
+## Harness
+
+- `harness` holds the run file (`test_run.skir`) that every test runner writes and `cargo xtask`
+  reads, the playtest wire (`wire.skir`): every message between the game verification framework,
+  the game pool, the Paper plugin and the client mod, and the golden files (`golden.skir`).
+- When a harness file on disk has a shape, declare it here and write it as readable Skir JSON.
+- The request rules above (`_error` variants, `internal_error`) do not apply to it.
+- When code or a test tells failure causes apart, model the failure as a kind enum plus a detail
+  string. When only a person reads it, keep one string. Never branch on or parse failure text.
 
 ## Contract boundary
 

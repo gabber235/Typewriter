@@ -7,6 +7,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import skirout.harness.v1.wire.PaperLossKind
 
 val SharedPaperTest by testSuite {
     test("once up, the shared Paper hears the regions ahead and every client is told to join it") {
@@ -87,7 +88,7 @@ val SharedPaperTest by testSuite {
         paper.bootTimedOut(1) shouldContainExactly listOf(Do.Fail("the game was not ready within ${SharedPaper.BOOT_SECONDS} s"))
         paper.exited(1) shouldContainExactly listOf(Do.Fail("paper exited with code 1"))
         paper.closed() shouldContainExactly listOf(Do.Fail("paper closed its pool connection"))
-        paper.failed("paper could not claim gv-1: no such player") shouldContainExactly
+        paper.failed(PaperLossKind.CLAIM_FAILED, "paper could not claim gv-1: no such player") shouldContainExactly
             listOf(Do.Fail("paper could not claim gv-1: no such player"))
     }
 

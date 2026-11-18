@@ -1,7 +1,7 @@
 // What one run of one test runner proved. Every runner writes this one shape (the component
 // runner, the graph's own steps, the panel driver), so the change report, conformance and
 // evidence read a single type instead of each runner's own output format.
-struct TestRun(85010001) {
+struct TestRun(85020001) {
   // The run the file belongs to. `cargo xtask e2e game` names it and every test JVM and game pool of
   // the run writes it, so a file an earlier run left never passes for this one; empty for runners
   // that write their file once.
@@ -15,22 +15,30 @@ struct TestRun(85010001) {
   // Where the run's logs lie (for the game runner the pool's, Paper's and each client's), relative to
   // the folder of the run file; empty when the run names none.
   logs: string;
-  // Why the whole run could not run, as when the game never booted; empty when it ran.
-  failure: string;
-  // Whether the run stopped before it was over. Only the game pool sets it: true on every rewrite
-  // until the run is over, so a file a crashed pool left holds the cases that finished and says the
-  // rest never ran.
-  cut_short: bool;
+  // How the run ended.
+  end: RunEnd;
 }
 
-enum AttemptPolicy(85010002) {
+// How a run ended. A run that could not run, or was cut short, proves less than its cases say: the
+// cases it never reached are missing from it.
+enum RunEnd(85020002) {
+  // It ran to the end.
+  completed;
+  // It stopped before it was over. Only the game pool says so: on every rewrite until the run is over,
+  // so a file a crashed pool left holds the cases that finished and says the rest never ran.
+  cut_short;
+  // It could not run at all, as when the game never booted: why, for a person to read.
+  could_not_run: string;
+}
+
+enum AttemptPolicy(85020003) {
   // Failed cases run again until they pass, up to this many attempts in total.
   rerun_failures: int32;
   // Every case ran exactly this many times.
   exactly: int32;
 }
 
-struct TestCase(85010003) {
+struct TestCase(85020004) {
   // The test path or step name, unique within its run.
   id: string;
   // The requirement the test declares it demonstrates, for example "QUEST-1.E1".
@@ -45,7 +53,7 @@ struct TestCase(85010003) {
 }
 
 // One run of one case.
-struct Attempt(85010004) {
+struct Attempt(85020005) {
   // What this attempt observed. Quarantine and flakiness are the attempt policy's verdict.
   outcome: Outcome;
   // Where the attempt sits in the run's recording, when there is one.
@@ -67,7 +75,7 @@ struct Attempt(85010004) {
 }
 
 // One class an attempt ran code of, with the lines of its source file that ran.
-struct CoveredClass(85010005) {
+struct CoveredClass(85020006) {
   // The JVM name, with slashes: "com/typewritermc/playtest/plugin/Probes".
   name: string;
   // The source file by its package path: "com/typewritermc/playtest/plugin/Probes.java".
@@ -77,7 +85,7 @@ struct CoveredClass(85010005) {
 }
 
 // One thing a scenario did or checked, in the words a reader would use.
-struct Step(85010006) {
+struct Step(85020007) {
   // Unix milliseconds, the clock of the attempt's span.
   at_millis: int64;
   // The user signed in when the step started.
@@ -88,14 +96,14 @@ struct Step(85010006) {
 }
 
 // One tap, in pixels of the recorded screen.
-struct Tap(85010007) {
+struct Tap(85020008) {
   // Unix milliseconds, the clock of the attempt's span.
   at_millis: int64;
   x: int32;
   y: int32;
 }
 
-enum Runner(85010008) {
+enum Runner(85020009) {
   components;
   schema;
   panel;
@@ -107,29 +115,29 @@ enum Runner(85010008) {
   game;
 }
 
-enum Demonstrates(85010009) {
+enum Demonstrates(85020010) {
   happy_path;
   failure;
   edge_case;
 }
 
-enum Outcome(85010010) {
+enum Outcome(85020011) {
   passed;
   failed: Failure;
 }
 
-struct Failure(85010011) {
+struct Failure(85020012) {
   message: string;
   // The first failing step or frame, when the runner knows it.
   first_broken: string?;
 }
 
-struct Span(85010012) {
+struct Span(85020013) {
   start_millis: int64;
   end_millis: int64;
 }
 
-enum ArtifactKind(85010013) {
+enum ArtifactKind(85020014) {
   clip;
   screenshot;
   log_excerpt;
@@ -140,7 +148,7 @@ enum ArtifactKind(85010013) {
   golden;
 }
 
-struct Artifact(85010014) {
+struct Artifact(85020015) {
   kind: ArtifactKind;
   path: string;
 }
