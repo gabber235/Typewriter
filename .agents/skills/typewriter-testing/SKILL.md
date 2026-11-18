@@ -88,9 +88,12 @@ expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
   `demonstrates = Demonstrates.FAILURE` or `EDGE_CASE`, and `restartsPaper = true` (then
   `restartPaper()` kills and boots that Paper).
 - Every body makes a positive check, or it fails as refused: a `within(n.ticks) { player sees ... }`
-  that holds, a `player.looksLike("name")` golden, the test kit's `holds`/`lacks` state check, or
-  `shouldThrow<WindowMissed>` (also `WorkHung`, `ClientLost`, `PaperLost`) for a framework outcome the
-  requirement expects. A read after one check held is not caught, so assert every read.
+  that holds, a `player.looksLike("name")` whose compare matched, the framework test kit's
+  `holds`/`lacks` state check, or `shouldThrow<WindowMissed>` (also `WorkHung`, `ClientLost`,
+  `PaperLost`) for a framework outcome the requirement expects. A read after one check held is not
+  caught, so assert every read.
+- When a body's only check is `looksLike`, add a window too: off the pinned renderer the golden is not
+  checked and proves nothing, so the body fails as refused there.
 - Set up the scene with `probe.*` and drive the player with its input (`typeInChat`, `press`,
   `click`, `aimAt`, `walkTo`); the window counts from the last of them.
 - When something must not happen, add a broad `player.never sees anyChat()` beside a positive check
