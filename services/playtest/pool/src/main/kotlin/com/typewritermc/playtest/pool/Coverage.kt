@@ -20,6 +20,26 @@ import java.util.Locale
  * analysis and what both cost stay as long as the submission does.
  */
 internal class Coverage {
+    companion object {
+        /**
+         * The options of the JaCoCo agent in a Paper: it counts the classes of [packages] (the build's own
+         * code, wherever a plugin holds it, never a library a plugin bundles, which a second plugin can hold
+         * in another version), writes no file, as the framework plugin reads the counts in process, and
+         * dumps each counted class into [classes] as Paper defined it.
+         */
+        fun agentOptions(
+            packages: List<String>,
+            classes: Path,
+        ): String =
+            listOf(
+                "output=none",
+                "dumponexit=false",
+                "jmx=false",
+                "includes=${packages.joinToString(":") { "$it.*" }}",
+                "classdumpdir=$classes",
+            ).joinToString(",")
+    }
+
     private val reads = ExecutionDataStore()
     private var readCount = 0
     private var readNanos = 0L
@@ -54,27 +74,30 @@ internal class Coverage {
     fun covered(classes: Path): List<CoveredClass> {
         if (readCount == 0) return listOf()
         val start = System.nanoTime()
-        val builder = CoverageBuilder()
-        val analyzer = Analyzer(reads, builder)
+        // Two plugins can each hold a class of one name with different code, as when both bundle a library;
+        // JaCoCo analyses only one class of a name at a time, so each further one goes to a builder of its own.
+        val builders = mutableListOf<CoverageBuilder>()
         for (data in reads.contents) {
             if (!data.hasHits()) continue
             val dumped = classes.resolve("%s.%016x.class".format(data.name, data.id))
             if (!Files.isRegularFile(dumped)) continue
-            analyzer.analyzeClass(Files.readAllBytes(dumped), data.name)
+            val builder =
+                builders.firstOrNull { built -> built.classes.none { it.name == data.name } }
+                    ?: CoverageBuilder().also(builders::add)
+            Analyzer(reads, builder).analyzeClass(Files.readAllBytes(dumped), data.name)
         }
         latest =
-            builder.classes
-                .filter { it.sourceFileName != null }
-                .map { covered ->
+            builders
+                .flatMap { it.classes }
+                .filter { it.sourceFileName != null && it.firstLine > 0 }
+                .groupBy { it.name to "${it.packageName}/${it.sourceFileName}".removePrefix("/") }
+                .map { (key, covered) ->
                     val lines =
-                        (covered.firstLine..covered.lastLine).filter { line ->
-                            covered.firstLine > 0 && covered.getLine(line).instructionCounter.coveredCount > 0
-                        }
-                    CoveredClass(
-                        name = covered.name,
-                        source = "${covered.packageName}/${covered.sourceFileName}".removePrefix("/"),
-                        lines = lines,
-                    )
+                        covered
+                            .flatMap { one -> (one.firstLine..one.lastLine).filter { one.getLine(it).instructionCounter.coveredCount > 0 } }
+                            .distinct()
+                            .sorted()
+                    CoveredClass(name = key.first, source = key.second, lines = lines)
                 }.filter { it.lines.isNotEmpty() }
                 .sortedBy { it.name }
         analyses++

@@ -188,6 +188,9 @@ abstract class GameParts : CommandLineArgumentProvider {
 
     @get:Input abstract val java: Property<String>
 
+    /** The packages of the build's own code, the only classes coverage counts. */
+    @get:Input abstract val coveredPackages: ListProperty<String>
+
     /** How many warm clients the pool keeps. */
     @get:Input abstract val clients: Property<Int>
 
@@ -239,6 +242,7 @@ abstract class GameParts : CommandLineArgumentProvider {
                 "clientLaunch" to clientLaunch.singleFile.path,
                 "paperAdditions" to paperAdditions.files.joinToString(File.pathSeparator) { it.path },
                 "clients" to clients.get().toString(),
+                "coveredPackages" to coveredPackages.get().joinToString(","),
                 "run" to runId.get(),
                 "testRun" to testRun.get(),
                 "logs" to logs.get(),
@@ -274,6 +278,8 @@ tasks.register<Test>("gameTest") {
             coverageAgent.from(coverageAgentPart)
             clientLaunch.from(clientLaunchPart)
             paperAdditions.from(allPaperAdditions)
+            // Libraries the plugins bundle stay out: two plugins can bundle one in different versions.
+            coveredPackages.set(listOf("com.typewritermc"))
             java.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) }.map { it.executablePath.asFile.path })
             // `-Pplaytest.clients=1` runs the suite on a pool of one client.
             clients.set(providers.gradleProperty("playtest.clients").map(String::toInt).orElse(4))

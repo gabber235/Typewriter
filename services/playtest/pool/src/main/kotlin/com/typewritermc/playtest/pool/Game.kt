@@ -305,33 +305,11 @@ internal class Game private constructor(
                 append = append,
             )
 
-        /**
-         * The JaCoCo agent counts only the classes of the plugins Paper loads, never Paper's or
-         * Minecraft's, so its counts cost nothing measurable; it writes no file, as the plugin reads the
-         * counts in process, and dumps each plugin class into the Paper folder [dir] as Paper defined it.
-         */
+        /** Never Paper's or Minecraft's classes, so the agent's counts cost nothing measurable. */
         private fun coverageOptions(
             settings: PoolSettings,
             dir: Path,
-        ): String {
-            val packages =
-                ZipFile(settings.pluginJar.toFile()).use { jar ->
-                    jar
-                        .entries()
-                        .asSequence()
-                        .map { it.name }
-                        .filter { it.endsWith(".class") && '/' in it }
-                        .map { it.substringBeforeLast('/').replace('/', '.') }
-                        .toSortedSet()
-                }
-            return listOf(
-                "output=none",
-                "dumponexit=false",
-                "jmx=false",
-                "includes=${packages.joinToString(":") { "$it.*" }}",
-                "classdumpdir=${classesIn(dir)}",
-            ).joinToString(",")
-        }
+        ): String = Coverage.agentOptions(settings.coveredPackages, classesIn(dir))
 
         private fun startClient(
             settings: PoolSettings,

@@ -241,20 +241,30 @@ class RequirementScope internal constructor(
             if (!readsStates) return verdict
             val last = tick == end
             val id = if (last) barrier else attempt.nextBarrier()
-            checked.forEach { stepUntil(it, tick, id) }
-            val waiting = checked.toMutableSet()
-            while (waiting.isNotEmpty()) {
-                val event = nextEvent()
-                if (event is Attempt.Event.Barrier && event.id == id) {
-                    waiting -= event.player
-                    continue
-                }
-                verdict = judge(event)
-                if (verdict != Window.Verdict.Open) return verdict
-            }
+            verdict = runTick(checked, tick, id)
+            if (verdict != Window.Verdict.Open) return verdict
             verdict = statesSeen(tick, held = openStates.filter { it.holds() }, broken = neverStates.filter { it.holds() })
             if (verdict != Window.Verdict.Open) return verdict
             if (last) checked.forEach { verdict = barrierSeen(it, barrier) }
+        }
+        return verdict
+    }
+
+    /**
+     * Paper runs [tick] for [checked] and sends each of them barrier [id]; the window judges every record
+     * that arrives before the last of those barriers. Returns what the records decided.
+     */
+    private suspend fun Window.runTick(
+        checked: List<GamePlayer>,
+        tick: Int,
+        id: Int,
+    ): Window.Verdict {
+        checked.forEach { stepUntil(it, tick, id) }
+        val waiting = checked.toMutableSet()
+        var verdict: Window.Verdict = Window.Verdict.Open
+        while (waiting.isNotEmpty() && verdict == Window.Verdict.Open) {
+            val event = nextEvent()
+            if (event is Attempt.Event.Barrier && event.id == id) waiting -= event.player else verdict = judge(event)
         }
         return verdict
     }

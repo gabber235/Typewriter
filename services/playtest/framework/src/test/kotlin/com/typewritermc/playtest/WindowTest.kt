@@ -328,7 +328,13 @@ val WindowTest by testSuite {
 
     test("the barrier with a state check still open fails, naming the state") {
         val window =
-            Window(anchor = 100, length = 5.ticks, barrier = 7, checks = listOf(), states = listOf(StateCheck("Steve's session listed") { false }))
+            Window(
+                anchor = 100,
+                length = 5.ticks,
+                barrier = 7,
+                checks = listOf(),
+                states = listOf(StateCheck("Steve's session listed") { false }),
+            )
 
         window.statesSeen(at = 105, held = listOf()) shouldBe Open
         val missed = window.barrierSeen(steve, 7).shouldBeInstanceOf<Missed>()

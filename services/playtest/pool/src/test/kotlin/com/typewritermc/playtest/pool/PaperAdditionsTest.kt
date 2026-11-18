@@ -5,31 +5,20 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import java.nio.file.Files
-import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.readText
-import kotlin.io.path.writeText
 
 val PaperAdditionsTest by testSuite {
-    /** A module's additions in a fresh folder: [files] by their path in Paper's folder, and [env]. */
-    fun addition(
-        files: Map<String, String> = mapOf(),
-        env: Map<String, String> = mapOf(),
-    ): Path {
-        val dir = Files.createTempDirectory("addition")
-        files.forEach { (path, text) ->
-            val file = dir.resolve(PaperAdditions.FILES).resolve(path)
-            file.parent.createDirectories()
-            file.writeText(text)
-        }
-        if (env.isNotEmpty()) dir.resolve(PaperAdditions.ENV).writeText(env.entries.joinToString("\n") { "${it.key}=${it.value}" })
-        return dir
-    }
-
     test("every module's files land in Paper's folder at their own paths, beside the framework's") {
         val paper = Files.createTempDirectory("paper").also { it.resolve("plugins").createDirectories() }
         Files.writeString(paper.resolve("plugins/playtest-plugin.jar"), "framework")
-        val typewriter = addition(mapOf("plugins/typewriter.jar" to "loader", "plugins/Typewriter/artifacts/inbox/manual/engine.jar" to "engine"))
+        val typewriter =
+            addition(
+                mapOf(
+                    "plugins/typewriter.jar" to "loader",
+                    "plugins/Typewriter/artifacts/inbox/manual/engine.jar" to "engine",
+                ),
+            )
         val sibling = addition(mapOf("plugins/Sibling/config.yml" to "a: 1"))
 
         PaperAdditions(listOf(typewriter, sibling)).copyInto(paper)

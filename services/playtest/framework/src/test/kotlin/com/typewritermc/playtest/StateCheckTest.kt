@@ -56,14 +56,16 @@ val StateCheckTest by testSuite {
     }
 
     test("a state check that held is a positive check, and a bare read of the same state is refused") {
-        val held = StandInGame().attempt.outcome {
-            probe.chat(player, "Hello")
-            within(5.ticks) { state("listed") { true } }
-        }
-        val read = StandInGame().attempt.outcome {
-            probe.chat(player, "Hello")
-            check(true)
-        }
+        val held =
+            StandInGame().attempt.outcome {
+                probe.chat(player, "Hello")
+                within(5.ticks) { state("listed") { true } }
+            }
+        val read =
+            StandInGame().attempt.outcome {
+                probe.chat(player, "Hello")
+                check(true)
+            }
 
         held shouldBe null
         read.shouldBeInstanceOf<RequirementRefused>()
@@ -102,4 +104,3 @@ val StateCheckTest by testSuite {
         game.ranTo shouldBe 104
     }
 }
-
