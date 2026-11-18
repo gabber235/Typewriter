@@ -3,7 +3,9 @@ import com.typewritermc.buildlogic.servicesDirectory
 import com.typewritermc.playtest.launch.PoolFile
 import com.typewritermc.playtest.launch.PoolProcess
 import java.nio.file.Path
+import java.util.Properties
 import java.util.UUID
+import javax.inject.Inject
 
 // Game requirements: tests in the `gameTest` source set run against real Minecraft clients on a
 // stepped Paper, which the game pool boots. They are slow and need a desktop, so `check` leaves them
@@ -41,6 +43,84 @@ val agentPart = gamePart("playtestAgent", ":playtest-agent", "runtimeElements")
 val pluginPart = gamePart("playtestPlugin", ":playtest-plugin", "playtestPlugin")
 val clientLaunchPart = gamePart("playtestClientLaunch", ":playtest-client", "playtestClientLaunch")
 val coverageAgentPart = gamePart("playtestCoverageAgent", ":playtest-plugin", "playtestCoverageAgent")
+
+/**
+ * What this module adds to every Paper the pool boots: [pluginJars] go into `plugins/`, [files] into
+ * Paper's folder at the paths it names, and [environment] is set for Paper's process. Every module's
+ * gameTest shares the build's pool and its Papers, so the pool takes the union of every module's
+ * additions; two modules that disagree on a file or a variable fail before Paper starts.
+ *
+ * ```
+ * gamePaper {
+ *     pluginJars.from(project(":loader-distribution"))
+ *     files { into("plugins/Typewriter/artifacts/inbox/manual") { from(stagedArtifacts) } }
+ *     environment.put("TYPEWRITER_CONFIG_FILE", configFile)
+ * }
+ * ```
+ */
+abstract class GamePaper
+    @Inject
+    constructor(
+        private val project: Project,
+    ) {
+        abstract val pluginJars: ConfigurableFileCollection
+
+        abstract val environment: MapProperty<String, String>
+
+        /** The files that go into Paper's folder, by their path in it. */
+        val files: CopySpec = project.copySpec()
+
+        fun files(action: Action<CopySpec>) = action.execute(files)
+    }
+
+val gamePaper = extensions.create<GamePaper>("gamePaper", project)
+
+val paperAdditionsDir = layout.buildDirectory.dir("playtest/paper-additions")
+
+/** This module's files for Paper's folder, as the pool reads them: `files/` of its additions. */
+val paperAdditionFiles =
+    tasks.register<Sync>("playtestPaperFiles") {
+        description = "Collects the files this module adds to every Paper of the game pool."
+        into(paperAdditionsDir.map { it.dir("files") })
+        into("plugins") { from(gamePaper.pluginJars) }
+        with(gamePaper.files)
+    }
+
+/** This module's environment for Paper, as the pool reads it: `env.properties` of its additions. */
+abstract class WritePaperEnvironment : DefaultTask() {
+    @get:Input abstract val environment: MapProperty<String, String>
+
+    @get:OutputFile abstract val file: RegularFileProperty
+
+    @TaskAction
+    fun write() {
+        val properties = Properties().apply { putAll(environment.get()) }
+        file.get().asFile.outputStream().use { properties.store(it, null) }
+    }
+}
+
+val paperAdditionEnvironment =
+    tasks.register<WritePaperEnvironment>("playtestPaperEnvironment") {
+        description = "Writes the environment this module sets for every Paper of the game pool."
+        environment.set(gamePaper.environment)
+        file.set(paperAdditionsDir.map { it.file("env.properties") })
+    }
+
+configurations.consumable("playtestPaperAdditions") {
+    outgoing.artifact(paperAdditionsDir) { builtBy(paperAdditionFiles, paperAdditionEnvironment) }
+}
+
+// Every module's additions reach the pool, whichever gameTest task starts it.
+val allPaperAdditionsScope = configurations.dependencyScope("playtestAllPaperAdditionsScope")
+rootProject.subprojects.forEach { gameModule ->
+    gameModule.pluginManager.withPlugin("com.typewritermc.game-test") {
+        dependencies.add(
+            allPaperAdditionsScope.name,
+            dependencies.project(mapOf("path" to gameModule.path, "configuration" to "playtestPaperAdditions")),
+        )
+    }
+}
+val allPaperAdditions = configurations.resolvable("playtestAllPaperAdditions") { extendsFrom(allPaperAdditionsScope.get()) }
 
 /**
  * One run per build: every gameTest task of the build, in whichever project, reports into the same run
@@ -103,6 +183,9 @@ abstract class GameParts : CommandLineArgumentProvider {
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) abstract val clientLaunch: ConfigurableFileCollection
 
+    /** Every game module's additions to Paper, one folder each. */
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val paperAdditions: ConfigurableFileCollection
+
     @get:Input abstract val java: Property<String>
 
     /** How many warm clients the pool keeps. */
@@ -154,6 +237,7 @@ abstract class GameParts : CommandLineArgumentProvider {
                 "plugin" to plugin.singleFile.path,
                 "coverageAgent" to coverageAgent.singleFile.path,
                 "clientLaunch" to clientLaunch.singleFile.path,
+                "paperAdditions" to paperAdditions.files.joinToString(File.pathSeparator) { it.path },
                 "clients" to clients.get().toString(),
                 "run" to runId.get(),
                 "testRun" to testRun.get(),
@@ -189,6 +273,7 @@ tasks.register<Test>("gameTest") {
             plugin.from(pluginPart)
             coverageAgent.from(coverageAgentPart)
             clientLaunch.from(clientLaunchPart)
+            paperAdditions.from(allPaperAdditions)
             java.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) }.map { it.executablePath.asFile.path })
             // `-Pplaytest.clients=1` runs the suite on a pool of one client.
             clients.set(providers.gradleProperty("playtest.clients").map(String::toInt).orElse(4))
@@ -221,5 +306,5 @@ tasks.register<Test>("gameTest") {
 tasks.register("gameTestBuild") {
     description = "Builds everything gameTest runs, and runs nothing."
     group = "build"
-    dependsOn(gameTest.output, gameTest.runtimeClasspath, poolPart, paperPart, agentPart, pluginPart, coverageAgentPart, clientLaunchPart)
+    dependsOn(gameTest.output, gameTest.runtimeClasspath, poolPart, paperPart, agentPart, pluginPart, coverageAgentPart, clientLaunchPart, allPaperAdditions)
 }

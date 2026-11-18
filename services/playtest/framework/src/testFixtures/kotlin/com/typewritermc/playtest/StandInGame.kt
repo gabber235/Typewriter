@@ -24,6 +24,10 @@ import java.util.UUID
 internal class StandInGame : AttemptPool {
     private val folder: Path = Files.createTempDirectory("stand-in-game")
     private var tick = 100
+    private var barriers = 0
+
+    /** The last tick the stand in game ran. */
+    val ranTo: Int get() = tick
 
     val player = GamePlayer("gv-1", UUID(0, 1))
 
@@ -55,7 +59,7 @@ internal class StandInGame : AttemptPool {
         attempt.deliver(Attempt.Event.Barrier(player, step.barrier))
     }
 
-    override fun nextBarrier(): Int = 1
+    override fun nextBarrier(): Int = ++barriers
 
     override suspend fun probe(
         players: List<GamePlayer>,

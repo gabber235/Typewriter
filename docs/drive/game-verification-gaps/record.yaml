@@ -14,7 +14,8 @@ pieces:
         taught: One pool and one shared Paper serve every module; the first gameTest task's parts define the pool (build-logic com.typewritermc.game-test.gradle.kts:66-76,154,216), so additions must be one union for the build
         state: picked
         why: The framework stays free of Typewriter code; a module names what it needs
-        evidence: [services/playtest/pool/src/main/kotlin/com/typewritermc/playtest/pool/Game.kt:263-296]
+        taught: Declared as gamePaper { pluginJars; files { CopySpec }; environment }, like runPaper; each module's playtestPaperAdditions folder (files/, env.properties) is collected from every game-test project, the pool copies them after its own files and merges env, failing on disagreement
+        evidence: [services/playtest/pool/src/test/kotlin/com/typewritermc/playtest/pool/PaperAdditionsTest.kt, services/playtest/pool/src/main/kotlin/com/typewritermc/playtest/pool/Game.kt:263-296]
   - id: g2-quit-rejoin
     status: building
     open: none
@@ -30,9 +31,15 @@ pieces:
     tries:
       - id: state-check-in-window
         what: A named test JVM predicate inside a window, evaluated after each stepped tick, counts as the positive check
+        taught: A window that reads state steps one tick at a time, each tick closed by a barrier of its own after its records; the last tick's barrier is the window's own, so no extra round trip. never.state covers "key never gone"
         state: picked
         why: Any state from anywhere (NATS, realm); Flexible ranks first
-        evidence: []
+        evidence: [services/playtest/framework/src/test/kotlin/com/typewritermc/playtest/StateCheckTest.kt, WindowTest.kt, framework/src/gameTest/.../StateRequirements.kt (STATE-1, STATE-2)]
+      - id: wall-clock-eventually
+        what: eventually(limit) polled on real time, as node 3 asked for session TTL expiry (GAME-S3)
+        taught: TTLs run on NATS wall clock; GAME-S3 alone would wait 20 to 60 s per run
+        state: dropped
+        why: The developer kept the framework tick based; GAME-S3 stays in node 3's two engine harness with injected short TTLs
   - id: g4-services
     status: figuring-out
     open: How the loader gets the Paper engine artifact from the local backend; whether one bind survives restart attempts
@@ -51,6 +58,9 @@ decided:
   - id: g3-state-check
     what: "A. State check (Recommended)"
     why: Test JVM predicate polled each tick inside a window; counts as proof
+  - id: g3-ticks-only
+    what: "A. Ticks only (Recommended)"
+    why: Add never.state for S2; S3 stays in node 3's harness
 
 open: []
 

@@ -27,6 +27,8 @@ internal class PoolSettings(
     val clientLaunch: Path,
     /** How many warm clients the pool keeps, each with a player of its own. */
     val clients: Int,
+    /** What the build's game modules add to every Paper. */
+    val paperAdditions: PaperAdditions = PaperAdditions(listOf()),
 ) {
     /** Where the ahead of time caches for the restart Papers' boots stay across runs. */
     val aotDir: Path get() = poolDir.resolve("aot")
@@ -49,6 +51,14 @@ internal class PoolSettings(
                 pluginJar = path("playtest.plugin"),
                 clientLaunch = path("playtest.clientLaunch"),
                 clients = System.getProperty("playtest.clients", "4").toInt(),
+                paperAdditions =
+                    PaperAdditions(
+                        System
+                            .getProperty("playtest.paperAdditions", "")
+                            .split(java.io.File.pathSeparator)
+                            .filter(String::isNotEmpty)
+                            .map(Path::of),
+                    ),
             )
 
         private fun path(name: String): Path =
