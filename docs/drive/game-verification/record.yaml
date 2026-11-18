@@ -6,7 +6,7 @@ goal: Prove what a player experiences in a real Minecraft client, as tests that 
 
 pieces:
   - id: paper-topology
-    status: building
+    status: done
     open: none; a restart Paper runs bestq (AOT cache trained in the same job, C1 only, SerialGC, clients gated while it boots)
     tries:
       - id: d1-one-client
@@ -90,7 +90,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/p7-checkpoint-restore.md, CI run 42432909519]
 
   - id: stepped-ticks
-    status: building
+    status: done
     open: Stepping is proven for one subject. How it behaves with several attempts depends on paper-topology
     tries:
       - id: c2-faster-rate
@@ -119,7 +119,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/n-stepped-ticks.md, CI runs 42304863563 42310014228]
 
   - id: perception
-    status: building
+    status: done
     open: "How A4 asks stay cheap (smaller window for A4 frames, or fewer asks); live gaps: fades, wrapped chat lines, grey completion text, cursor blink"
     tries:
       - id: a1-client-state
@@ -195,7 +195,7 @@ pieces:
         evidence: [commit d1bfaf7cb, "cargo xtask e2e game: 87 passed, three runs in a row"]
 
   - id: readiness-and-done
-    status: building
+    status: done
     open: Which side counts Typewriter's work for the done signal (Paper only, or Paper plus a test side hook); decided with layers 3 and 6
     tries:
       - id: e-bare-barrier-and-chunk-signals
@@ -217,7 +217,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/d-clients.md, docs/design/game-verification/spikes/i-coverage.md]
 
   - id: input
-    status: building
+    status: done
     open: "Lost suggestion replies: a 1 thread suggestion pool on the test Paper, or a retype inside the window like a player would. Mac run of the SDL path under stepped ticks"
     tries:
       - id: j-packets-and-game-actions
@@ -247,7 +247,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/p10-input-from-client.md, CI runs 43306835761 43309694858 43311267445]
 
   - id: client-pool
-    status: building
+    status: done
     open: The client shows a "Chat messages can't be verified" toast after joining; a toast check could see it (slice 1)
     tries:
       - id: fresh-client-per-requirement
@@ -312,7 +312,7 @@ pieces:
         evidence: [commit ed15cc7b3, "fixes ed15cc7b3 ee84f2844 f802c922a 39742a7d1 18e698ef9 2b40b8aea: steadied requirements same ticks 10 of 10 under load, 96 passed in three full runs"]
 
   - id: requirement-shape
-    status: building
+    status: done
     open: "IDE single runs unchecked"
     tries:
       - id: fabric-client-gametest
@@ -379,7 +379,7 @@ pieces:
         evidence: [docs/design/game-verification/research/runner-directions.md, docs/design/game-verification/spikes/p2-testballoon-runner.md]
 
   - id: video
-    status: building
+    status: done
     open: Clips show game time only, so a requirement of a few ticks gives a clip under a second; a run has no cap on its clips
     tries:
       - id: b2-window-capture
@@ -437,7 +437,7 @@ pieces:
         evidence: [commits 0ec31acfe 4e61bf097, "cargo xtask e2e game on 4e61bf097: 96 passed, 91 demos, 132 clips"]
 
   - id: goldens
-    status: building
+    status: done
     open: CI setup cost of the devenv e2e shell (300 to 480 s per job on an uncached branch)
     tries:
       - id: tolerant-compare
@@ -464,7 +464,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/f-goldens.md]
 
   - id: coverage
-    status: building
+    status: done
     open: Attribution with several attempts on one Paper is approximate; exact with a Paper per attempt (paper-topology)
     tries:
       - id: plain-or-tcp-dump
@@ -497,7 +497,7 @@ pieces:
         evidence: [commit a88505c91, "cargo xtask e2e game on 4e61bf097 against a gameTest run with -Pplaytest.clients=1"]
 
   - id: results-and-ci
-    status: building
+    status: done
     open: none beyond the pieces above; the TestRun additions follow from them
     tries:
       - id: xtask-reruns
@@ -513,7 +513,7 @@ pieces:
         evidence: [docs/design/game-verification/spikes/h-ci-runner.md]
 
   - id: build
-    status: building
+    status: done
     open: Which of P3's build file fixes to adopt, and how CI caches Loom (about 700 MB) and the patched Paper (about 216 MB)
     tries:
       - id: one-services-build
@@ -551,7 +551,7 @@ decided:
     what: Video clips go to failing requirements plus requirements the pull request touches, from coverage
   - id: goldens
     what: A frame that differs from its golden fails; goldens are exact on the pinned runner; the repo holds a hash, the PNG lives on the evidence branch; approve takes the PR's CI frames
-    why: Mesa or Minecraft upgrades rebuild the goldens in the weekly upgrade pull request
+    why: Mesa or Minecraft upgrades rebuild the goldens in the weekly upgrade pull request; since review round 2 (2026-11-18) the golden file is readable Skir JSON of a Golden (skir-src/harness/v1/golden.skir), the frame's hash and size and the Renderer that drew it, instead of a properties file
   - id: windows
     what: Requirements are G1 windows plus the recorded timeline; a window counts from the last action or probe call
   - id: never-needs-positive
@@ -767,22 +767,22 @@ decided:
     why: The devenv action's GRADLE_OPTS asked for in-process Kotlin compiling, but GRADLE_OPTS reaches only Gradle's client JVM, so it never applied; removing that half changes nothing and stops the file claiming it
   - id: no-detach
     what: "Close it, no detach (Recommended)"
-    why: The pool outlives its starter's normal exit, SIGTERM and SIGKILL by moving under pid 1 (checked on the Mac), and Gradle's cancel kills every descendant by pid, so setsid would change no case; a cancel stopping the whole game is wanted
+    why: The pool outlives its starter's normal exit, SIGTERM and SIGKILL by moving under pid 1 (checked on the Mac), and Gradle's cancel kills every descendant by pid, so setsid would change no case; a cancel stopping the whole game is wanted; superseded by build-service-owns-pool (2026-11-18), as the build service GameRun starts and stops the pool, so a test JVM is no longer its starter
   - id: run-file-survives-crash
     what: "Rewrite + ended mark (Recommended)"
-    why: The pool kept the run only in memory and wrote the run file at End, so a pool crash lost every finished result; the session names the run file and attempt policy when it joins, the pool rewrites the file atomically after every recorded attempt, the file is marked ended once every session of the run ended or left (a run of two modules has two sessions), and xtask fails a run file without the mark as cut short
+    why: The pool kept the run only in memory and wrote the run file at End, so a pool crash lost every finished result; the session names the run file and attempt policy when it joins, the pool rewrites the file atomically after every recorded attempt, the file is marked ended once every session of the run ended or left (a run of two modules has two sessions), and xtask fails a run file without the mark as cut short; superseded in review round 2 (2026-11-18), as the pool writes the file as it takes up the run, and the ended mark became the run's end, one variant of cut_short until the build ends the run, completed, or could_not_run
   - id: frozen-1-15-seconds
     what: "Loosen to 15 s"
     why: FROZEN-1 missed its 10 s limit once (10.098 s) on a 10 core Mac at load 50 to 98 while passing on CI; a frozen client is reported lost within 15 s, the pool still calls it lost after 5 s without an ack; chosen over keeping 10 s (recommended) and measuring from the last ack
   - id: run-id-and-failure
     what: "Yes, this shape (Recommended)"
-    why: Finish review found a failed boot recorded as test JVMs ending, xtask telling runs apart by timestamps and the cause by searching pool.log, and only the game runner reading ended; TestRun carries run_id (made by xtask, passed as -Pplaytest.runId), a run level failure the pool writes when the game cannot run, and cut_short in place of ended (false by default, set only by the game pool), judged once in results for every suite and the pull request evidence
+    why: Finish review found a failed boot recorded as test JVMs ending, xtask telling runs apart by timestamps and the cause by searching pool.log, and only the game runner reading ended; TestRun carries run_id (made by xtask, passed as -Pplaytest.runId), a run level failure the pool writes when the game cannot run, and cut_short in place of ended (false by default, set only by the game pool), judged once in results for every suite and the pull request evidence; changed in review round 2 (2026-11-18), as the run level failure is now the run end's could_not_run variant, and cut_short is no longer set while a session is open but is the end until the build ends the run (beside completed); run_id stays
   - id: one-pool-per-run
     what: "Pool waits, file continues (Recommended)"
     why: The pool stopped once its last session left, so a later module's test JVM started a second pool that rewrote the run file from empty; the pool waits 60 s after its last session for another session of the same run, and a pool that starts later for the same run_id loads the run file and adds to it; superseded by build-service-owns-pool (2026-11-18), which deletes the 60 s wait and the run file pick-up because the Gradle build now starts and stops the pool
   - id: build-service-owns-pool
     what: "Build service (Recommended)"
-    why: Asked "Who should stop the game pool when a test run ends?". Review round 2 traced the pool outliving the heavy lock by 60 to 120 s. The Gradle build service GameRun starts the pool on the first gameTest task of a build and stops it in close() at build end; the pool stops when its stdin closes, which also covers a killed Gradle. This deletes the 60 s grace, the owner timer and the run file pick-up of one-pool-per-run; a pool crash fails the rest of the build and the run file reads cut short
+    why: Asked "Who should stop the game pool when a test run ends?". Review round 2 traced the pool outliving the heavy lock by 60 to 120 s. The Gradle build service GameRun starts the pool on the first gameTest task of a build and stops it in close() at build end; the pool stops when its stdin closes, which also covers a killed Gradle. This deletes the 60 s grace, the owner timer and the run file pick-up of one-pool-per-run; a pool crash fails the rest of the build and the run file reads cut short; as built, GameRun launches the pool through PoolProcess in the launch module, which holds the pool's command and process; a test JVM only connects and never starts, replaces or stops a pool
   - id: wire-in-skir
     what: "skir everywhere but no spike needed."
     why: The four game parts spoke a hand written Java wire (52 messages, about 800 codec lines, 4 run file types copied from test_run.skir, one drifted) outside the Skir contract boundary; the wire's messages move into a harness Skir file, every part uses the generated types, the Paper plugin bundles the Kotlin and Skir runtimes, and the hand codec, the copies and the run file translation go
@@ -794,7 +794,7 @@ decided:
     why: Finish review (think bigger) found L3 and extensions cannot add setup without editing the framework; nothing needs it before L3, and the wire's move into Skir changes how an open body would travel, so L3 designs it
   - id: positive-check-per-requirement
     what: A requirement that made no positive check fails; HEAP-1 becomes a unit test of the commands the pool builds
-    why: The never-needs-positive decision is per requirement but was enforced per window, so a requirement without a window passed with no check; HEAP-1 checked harness flags through jcmd with no perceived check, and the lowest layer that sees a part's flag is the command the pool builds for it
+    why: The never-needs-positive decision is per requirement but was enforced per window, so a requirement without a window passed with no check; HEAP-1 checked harness flags through jcmd with no perceived check, and the lowest layer that sees a part's flag is the command the pool builds for it; since review round 2 (2026-11-18) a looksLike counts as a positive check only when its compare matched, since one not checked proves nothing
   - id: one-submission-owner
     what: The pool gets one Submission object with one finish(outcome)
     why: One submission's state was spread over five maps with five end paths repeating record, forget and release; no behaviour changes
@@ -974,4 +974,4 @@ slices:
       heap (about 1 GB per client, mostly the software renderer); the commits, quality and gate jobs judge
       the whole long lived branch on dispatched runs.
 
-next: Finish (code health review, typewriter review, design README, delete prototype and slice branches and worktrees), after slice 9 merges into feat/game-verification-prototypes.
+next: "Merge PR #570 into features/v1, then delete the remaining game verification branches and worktrees"
