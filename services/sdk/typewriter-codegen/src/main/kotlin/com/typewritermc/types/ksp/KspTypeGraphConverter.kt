@@ -2,10 +2,15 @@ package com.typewritermc.types.ksp
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeParameter
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.asClassName
 import com.typewritermc.codegen.KnownTypes
@@ -20,12 +25,15 @@ import com.typewritermc.codegen.serialName
 import com.typewritermc.codegen.valueClassScalarKind
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Ref
-import com.typewritermc.types.Resource
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.TypewriterString
 import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.functionTemplate
+import com.typewritermc.types.functionUse
+import com.typewritermc.types.member
 import com.typewritermc.types.named
+import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.nullable
 import com.typewritermc.types.parse
 import com.typewritermc.types.qualified
@@ -34,10 +42,11 @@ import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.EndpointId
-import skirout.editor.v1.type_catalog.EnumVariant
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -46,6 +55,7 @@ import skirout.editor.v1.type_catalog.TypeId
 import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import com.typewritermc.codegen.TypewriterApi as Api
 
 fun interface KspLinkPolicy {
     fun endpoint(endpoint: KSClassDeclaration): EndpointId?
@@ -63,9 +73,19 @@ data class OwnedFieldDeclaration(
 data class KspTypeDiagnostic(
     val path: List<String>,
     val message: String,
+    /** The declaration the author must change, when it is not the converted root. */
+    val symbol: KSNode? = null,
 ) {
     override fun toString(): String = "${path.joinToString(".")}: $message"
 }
+
+/** The templates of one function signature's positions, with the type parameters the function owns. */
+data class KspSignatureConversion(
+    val typeParameters: List<TypeParameter>,
+    val positions: List<TypeTemplate>,
+    val definitions: List<TypeDefinition>,
+    val declarations: Map<TypeDefinitionId, KSClassDeclaration>,
+)
 
 sealed interface KspTypeConversionResult {
     data class Success(
@@ -98,6 +118,12 @@ class KspTypeGraphConverter(
     private val diagnostics = mutableListOf<KspTypeDiagnostic>()
     private val visiting = mutableSetOf<TypeDefinitionId>()
 
+    /** The property whose type is being converted, where a diagnostic about that type belongs. */
+    private var property: KSPropertyDeclaration? = null
+
+    /** The function whose signature is being converted and the synthetic id that owns its type parameters. */
+    private var signatureOwner: Pair<KSDeclaration, TypeDefinitionId>? = null
+
     fun convert(type: KSType): KspTypeConversionResult {
         reset()
         val root = use(type, listOf(type.displayName))
@@ -122,6 +148,46 @@ class KspTypeGraphConverter(
             )
         } else {
             KspTypeConversionResult.Failure(diagnostics.toList())
+        }
+    }
+
+    /**
+     * The templates of [positions], types written in the signature of [function], whose own type parameters are keyed
+     * by [owner]. A function is not a catalog definition, so [owner] is a synthetic id the caller chooses. Null after
+     * the diagnostics are returned through [failures].
+     */
+    fun convertSignature(
+        function: KSDeclaration,
+        owner: TypeDefinitionId,
+        positions: List<KSTypeReference>,
+        failures: (List<KspTypeDiagnostic>) -> Unit,
+    ): KspSignatureConversion? {
+        reset()
+        signatureOwner = function to owner
+        try {
+            val path = listOf(function.simpleName.asString())
+            val parameters =
+                function.typeParameters.mapIndexed { index, parameter ->
+                    TypeParameter(
+                        key = ParameterKey(owner = owner, index = index),
+                        name = parameter.name.asString(),
+                        bounds =
+                            parameter.bounds
+                                .map(KSTypeReference::resolve)
+                                .filterNot { it.declaration.qualifiedName?.asString() == "kotlin.Any" }
+                                .mapNotNull { template(it, null, path + parameter.name.asString()) }
+                                .toList(),
+                        derived = false,
+                    )
+                }
+            val templates = positions.map { template(it.resolve(), null, path, it.explicitNullable) }
+            if (diagnostics.isNotEmpty()) {
+                failures(diagnostics.toList())
+                return null
+            }
+            return KspSignatureConversion(parameters, templates.map(::checkNotNull), definitions.values.toList(), declarations.toMap())
+        } finally {
+            signatureOwner = null
         }
     }
 
@@ -157,6 +223,13 @@ class KspTypeGraphConverter(
                 value.use
             }
 
+            is TypeTemplate.FunctionWrapper -> {
+                val context = value.context.map { it.name to (it.type.complete(path + it.name) ?: return null) }
+                val parameters = value.parameters.map { it.name to (it.type.complete(path + it.name) ?: return null) }
+                val result = value.result.complete(path + "result") ?: return null
+                functionUse(context = context, parameters = parameters, result = result)
+            }
+
             else -> {
                 unknownVariant(this)
             }
@@ -183,6 +256,10 @@ class KspTypeGraphConverter(
         owner: KSClassDeclaration?,
         path: List<String>,
     ): TypeTemplate? {
+        signatureOwner?.let { (function, key) ->
+            val index = function.typeParameters.indexOf(parameter)
+            if (index >= 0) return ParameterKey(owner = key, index = index).template
+        }
         if (owner == null) return failure(path, "A free type parameter has no declaration owner.")
         val index = owner.typeParameters.indexOf(parameter)
         if (index < 0) return failure(path, "A type parameter belongs to another declaration.")
@@ -196,22 +273,25 @@ class KspTypeGraphConverter(
         path: List<String>,
     ): TypeTemplate? {
         type.portableScalarKind()?.let { return it.template }
+        if (type.isFunctionType) return kotlinFunctionTemplate(type, owner, path)
         if (declaration isType Ref::class.asClassName()) return referenceTemplate(type, owner, path)
+        if (declaration isType Api.Var) return varTemplate(type, declaration, owner, path)
         val collection = declaration.collectionIdentity()
         if (collection != null) {
             ensureCollectionDefinition(collection)
-            val arguments =
-                type.arguments.mapIndexed { index, argument ->
-                    argument.type?.let { reference ->
-                        template(reference.resolve(), owner, path + "argument $index", reference.explicitNullable)
-                    }
-                        ?: failure(path + "argument $index", "Star projections are not authorable.")
-                }
-            if (arguments.any { it == null }) return null
-            return collection.template(arguments.filterNotNull())
+            return collection.template(typeArguments(type, owner, path) ?: return null)
         }
         val identity = identity(declaration, path) ?: return null
         buildDefinition(declaration, identity, path)
+        return identity.template(typeArguments(type, owner, path) ?: return null)
+    }
+
+    /** The templates of [type]'s arguments, or null when one of them is not authorable. */
+    private fun typeArguments(
+        type: KSType,
+        owner: KSClassDeclaration?,
+        path: List<String>,
+    ): List<TypeTemplate>? {
         val arguments =
             type.arguments.mapIndexed { index, argument ->
                 argument.type?.let { reference ->
@@ -219,8 +299,75 @@ class KspTypeGraphConverter(
                 }
                     ?: failure(path + "argument $index", "Star projections are not authorable.")
             }
-        if (arguments.any { it == null }) return null
-        return identity.template(arguments.filterNotNull())
+        return arguments.takeIf { all -> all.none { it == null } }?.filterNotNull()
+    }
+
+    /**
+     * A Kotlin function type lowers to a structural function type. Names are part of the type, so each parameter of a
+     * function with two or more parameters must be named; a single unnamed parameter is named `it`.
+     */
+    private fun kotlinFunctionTemplate(
+        type: KSType,
+        owner: KSClassDeclaration?,
+        path: List<String>,
+    ): TypeTemplate? {
+        val inputs = type.arguments.dropLast(1)
+        val names = inputs.map { it.parameterName() }
+        if (inputs.size >= 2 && names.any { it == null }) {
+            return failure(path, "Name each parameter of a function type with two or more parameters.", property)
+        }
+        val parameters =
+            inputs.mapIndexed { index, argument ->
+                val name = names[index] ?: "it"
+                val reference = argument.type ?: return failure(path + name, "Star projections are not authorable.")
+                name to (template(reference.resolve(), owner, path + name, reference.explicitNullable) ?: return null)
+            }
+        val result = type.arguments.last().type ?: return failure(path + "result", "Star projections are not authorable.")
+        return functionTemplate(
+            parameters = parameters,
+            result = template(result.resolve(), owner, path + "result", result.explicitNullable) ?: return null,
+        )
+    }
+
+    /**
+     * `Var<T, C>` lowers to the Var record applied to `T` and the function type its formulas have: no parameters, the
+     * properties of the scope `C` as context, and `T` as result. Inside Var's own declaration `C` stays its parameter.
+     */
+    private fun varTemplate(
+        type: KSType,
+        declaration: KSClassDeclaration,
+        owner: KSClassDeclaration?,
+        path: List<String>,
+    ): TypeTemplate? {
+        val identity = identity(declaration, path) ?: return null
+        buildDefinition(declaration, identity, path)
+        val valueType = type.arguments[0].type ?: return failure(path + "value", "Star projections are not authorable.")
+        val value = template(valueType.resolve(), owner, path + "value", valueType.explicitNullable) ?: return null
+        val scopeType = type.arguments[1].type?.resolve() ?: return failure(path + "context", "Star projections are not authorable.")
+        val formula =
+            when (val scope = scopeType.declaration) {
+                is KSTypeParameter -> {
+                    parameterTemplate(scope, owner, path + "context") ?: return null
+                }
+
+                is KSClassDeclaration -> {
+                    if (scope.classKind != ClassKind.INTERFACE) {
+                        return failure(path + "context", "The context of a Var must be an interface.", property)
+                    }
+                    val context =
+                        scope.getAllProperties().toList().map { slot ->
+                            val name = slot.simpleName.asString()
+                            name to
+                                (template(slot.type.resolve(), owner, path + "context" + name, slot.type.explicitNullable) ?: return null)
+                        }
+                    functionTemplate(context = context, result = value)
+                }
+
+                else -> {
+                    return failure(path + "context", "The context of a Var must be an interface.", property)
+                }
+            }
+        return identity.template(listOf(value, formula))
     }
 
     private fun referenceTemplate(
@@ -241,12 +388,48 @@ class KspTypeGraphConverter(
         val targetType =
             type.arguments[1].type?.resolve()
                 ?: return failure(path + "target", "A resource reference target cannot use a star projection.")
-        val target = template(targetType, owner, path + "target", type.arguments[1].type?.explicitNullable == true) ?: return null
         val endpointName = endpointDeclaration.qualifiedName?.asString() ?: endpointDeclaration.simpleName.asString()
         val identity = relationLinkId(endpointName)
+        val targetStars = targetType.starShape()
+        if (targetStars == StarShape.MIXED) {
+            return failure(path + "target", "A resource reference target takes a star for every argument or for none.", property)
+        }
+        val star = endpointDeclaration.starOpposite()
+        if (star != null) return starLinkTemplate(targetType, star, endpointName, endpoint, path)
+        if (targetStars == StarShape.EVERY) {
+            return failure(
+                path + "target",
+                "Relation endpoint $endpointName links to a typed endpoint, so a star target would widen it.",
+                property,
+            )
+        }
+        val target = template(targetType, owner, path + "target", type.arguments[1].type?.explicitNullable == true) ?: return null
         definitions.putIfAbsent(identity, relationLinkDefinition(endpointName, endpoint))
         ownedFields.putIfAbsent(identity, emptyList())
         return identity.template(listOf(target))
+    }
+
+    /** The link of the endpoint [endpointName], whose opposite admits every [star]: its field must name that star. */
+    private fun starLinkTemplate(
+        target: KSType,
+        star: KSClassDeclaration,
+        endpointName: String,
+        endpoint: EndpointId,
+        path: List<String>,
+    ): TypeTemplate? {
+        if (target.starShape() != StarShape.EVERY || target.declaration.qualifiedName?.asString() != star.qualifiedName?.asString()) {
+            return failure(
+                path + "target",
+                "Relation endpoint $endpointName links to a star endpoint, so its links name the star: ${star.starName()}.",
+                property,
+            )
+        }
+        val admitted = identity(star, path + "target") ?: return null
+        buildDefinition(star, admitted, path + "target")
+        val identity = relationLinkId(endpointName)
+        definitions.putIfAbsent(identity, relationLinkDefinition(endpointName, endpoint, starOpposite = admitted))
+        ownedFields.putIfAbsent(identity, emptyList())
+        return identity.template(emptyList())
     }
 
     private fun buildDefinition(
@@ -271,6 +454,7 @@ class KspTypeGraphConverter(
                                     template(bound, declaration, path + parameter.name.asString())
                                 }
                             }.toList(),
+                    derived = false,
                 )
             }
         val parents =
@@ -278,9 +462,7 @@ class KspTypeGraphConverter(
                 .mapNotNull { reference ->
                     val parent = reference.resolve()
                     val qualified = parent.declaration.qualifiedName?.asString()
-                    if (qualified == "kotlin.Any" || parent.declaration isType Resource::class.asClassName() ||
-                        (declaration.classKind == ClassKind.ENUM_CLASS && qualified == "kotlin.Enum")
-                    ) {
+                    if (qualified == "kotlin.Any" || (declaration.classKind == ClassKind.ENUM_CLASS && qualified == "kotlin.Enum")) {
                         return@mapNotNull null
                     }
                     template(parent, declaration, path + "parent")?.named
@@ -303,14 +485,8 @@ class KspTypeGraphConverter(
                 }
 
                 declaration.classKind == ClassKind.ENUM_CLASS -> {
-                    RepresentationTemplate.createEnumeration(
-                        cases =
-                            declaration.declarations
-                                .filterIsInstance<KSClassDeclaration>()
-                                .filter { it.classKind == ClassKind.ENUM_ENTRY }
-                                .map { EnumVariant(key = it.serialName ?: it.simpleName.asString()) }
-                                .toList(),
-                    )
+                    val cases = declaration.enumEntries().map { entry -> unitCase(identity, entry) }
+                    RepresentationTemplate.createRecord(fields = emptyList(), form = closedForm(cases))
                 }
 
                 declaration.classKind == ClassKind.OBJECT && fields.isEmpty() -> {
@@ -328,12 +504,80 @@ class KspTypeGraphConverter(
                                     hasConstructorDefault = field.hasConstructorDefault,
                                 )
                             },
-                        abstract_ = declaration.classKind == ClassKind.INTERFACE || Modifier.ABSTRACT in declaration.modifiers,
+                        form =
+                            when {
+                                Modifier.SEALED in declaration.modifiers -> {
+                                    closedForm(
+                                        declaration
+                                            .casesInDeclarationOrder()
+                                            .mapNotNull { case -> caseTemplate(declaration, case, path + case.simpleName.asString()) }
+                                            .toList(),
+                                    )
+                                }
+
+                                declaration.classKind == ClassKind.INTERFACE || Modifier.ABSTRACT in declaration.modifiers -> {
+                                    RecordForm.OPEN
+                                }
+
+                                else -> {
+                                    RecordForm.CONCRETE
+                                }
+                            },
                     )
                 }
             }
         definitions[identity] = TypeDefinition(id = identity, parameters = parameters, representation = representation, parents = parents)
         visiting.remove(identity)
+    }
+
+    /** Declares the unit case [entry] of the enum [owner] and returns its template. */
+    private fun unitCase(
+        owner: TypeDefinitionId,
+        entry: KSClassDeclaration,
+    ): NamedTypeTemplate {
+        val case = owner.member(entry.serialName ?: entry.simpleName.asString())
+        definitions[case] =
+            TypeDefinition(
+                id = case,
+                parameters = emptyList(),
+                representation = RepresentationTemplate.createScalar(kind = ScalarKind.UNIT),
+                parents = listOf(owner.namedTemplate()),
+            )
+        ownedFields[case] = emptyList()
+        return case.namedTemplate()
+    }
+
+    /**
+     * The template of the sealed subtype [case] in the parameters of [parent]. A generic case must pass each of its
+     * own parameters straight to the parent, so the parent's arguments decide the case's arguments.
+     */
+    private fun caseTemplate(
+        parent: KSClassDeclaration,
+        case: KSClassDeclaration,
+        path: List<String>,
+    ): NamedTypeTemplate? {
+        if (case.annotation<TypewriterType>() == null && case.parentDeclaration != parent) {
+            return failure(path, "A sealed subtype must be nested in its parent or carry its own @TypewriterType.", case)
+        }
+        val identity = identity(case, path) ?: return null
+        buildDefinition(case, identity, path)
+        val parentIdentity = identity(parent, path) ?: return null
+        val passed =
+            case.superTypes
+                .map { it.resolve() }
+                .firstOrNull { it.declaration == parent }
+                ?.arguments
+                ?.map { it.type?.resolve()?.declaration }
+                .orEmpty()
+        val arguments =
+            case.typeParameters.map { parameter ->
+                val index = passed.indexOf(parameter)
+                if (index < 0) {
+                    return failure(path, "A generic sealed subtype must pass each of its type parameters to its parent.", case)
+                }
+                ParameterKey(owner = parentIdentity, index = index).template
+            }
+        return identity.namedTemplate(arguments)
     }
 
     private fun ensureCollectionDefinition(identity: TypeDefinitionId) {
@@ -357,8 +601,14 @@ class KspTypeGraphConverter(
             .filter(KSPropertyDeclaration::isStoredTypeProperty)
             .mapNotNull { property ->
                 val name = property.serialName ?: property.simpleName.asString()
+                val outer = this.property
+                this.property = property
                 val fieldType =
-                    template(property.type.resolve(), declaration, path + name, property.type.explicitNullable) ?: return@mapNotNull null
+                    try {
+                        template(property.type.resolve(), declaration, path + name, property.type.explicitNullable)
+                    } finally {
+                        this.property = outer
+                    } ?: return@mapNotNull null
                 val overrides =
                     declaration
                         .getAllSuperTypes()
@@ -384,8 +634,9 @@ class KspTypeGraphConverter(
     private fun failure(
         path: List<String>,
         message: String,
+        symbol: KSNode? = null,
     ): Nothing? {
-        diagnostics += KspTypeDiagnostic(path, message)
+        diagnostics += KspTypeDiagnostic(path, message, symbol)
         return null
     }
 }
@@ -397,9 +648,49 @@ class KspTypeGraphConverter(
 fun KSClassDeclaration.typeDefinitionIdentity(): TypeDefinitionId? {
     val type =
         annotation<TypewriterType>()
+            ?: sealedParent()?.let { parent -> return parent.typeDefinitionIdentity()?.member(serialName ?: simpleName.asString()) }
             ?: return TypeDefinitionId.qualified("kotlin", qualifiedName?.asString() ?: simpleName.asString())
     return type.identity()
 }
+
+/** The sealed declaration this one is nested in and extends, which names it as one of its cases. */
+private fun KSClassDeclaration.sealedParent(): KSClassDeclaration? =
+    (parentDeclaration as? KSClassDeclaration)?.takeIf { parent ->
+        Modifier.SEALED in parent.modifiers && superTypes.any { it.resolve().declaration == parent }
+    }
+
+/**
+ * The sealed subtypes of this declaration in an order that depends on the source alone, never on how KSP lists them:
+ * nested ones in source order, then the others in this file in source order, then those of other files by package,
+ * file name and line. The order is part of the catalog shape, and an enum's first case is its default.
+ */
+private fun KSClassDeclaration.casesInDeclarationOrder(): Sequence<KSClassDeclaration> {
+    val nested = declarations.filterIsInstance<KSClassDeclaration>().toList()
+    return getSealedSubclasses().sortedWith(
+        compareBy(
+            { case -> nested.indexOf(case).takeIf { it >= 0 } ?: Int.MAX_VALUE },
+            { case -> case.containingFile != containingFile },
+            { case -> case.packageName.asString() },
+            { case -> case.containingFile?.fileName.orEmpty() },
+            { case -> (case.location as? FileLocation)?.lineNumber ?: Int.MAX_VALUE },
+            { case -> case.qualifiedName?.asString().orEmpty() },
+        ),
+    )
+}
+
+/** The entries of this enum class in declaration order. */
+private fun KSClassDeclaration.enumEntries(): List<KSClassDeclaration> =
+    declarations.filterIsInstance<KSClassDeclaration>().filter { it.classKind == ClassKind.ENUM_ENTRY }.toList()
+
+/** The name a function type gives this argument, as `(level: Int) -> Int` does through `@ParameterName`. */
+private fun KSTypeArgument.parameterName(): String? =
+    (annotations + type?.annotations.orEmpty())
+        .firstOrNull { it.shortName.asString() == "ParameterName" }
+        ?.arguments
+        ?.firstOrNull()
+        ?.value as? String
+
+private fun closedForm(cases: List<NamedTypeTemplate>): RecordForm = RecordForm.createClosed(cases = cases)
 
 private fun TypewriterType.identity(): TypeDefinitionId? {
     val declared = runCatching { DeclaredTypeId.parse(id) }.getOrNull() ?: return null
@@ -418,6 +709,7 @@ private fun KSClassDeclaration.collectionIdentity(): TypeDefinitionId? =
         this isOneOf KnownTypes.lists -> StandardTypes.list
         this isOneOf KnownTypes.sets -> StandardTypes.set
         this isOneOf KnownTypes.maps -> StandardTypes.map
+        this isType KnownTypes.intRange -> StandardTypes.intRange
         else -> null
     }
 
@@ -434,5 +726,5 @@ private val KSPropertyDeclaration.hasConstructorDefault: Boolean
 private val KSType.displayName: String
     get() = declaration.qualifiedName?.asString() ?: declaration.simpleName.asString()
 
-private val com.google.devtools.ksp.symbol.KSTypeReference.explicitNullable: Boolean
+private val KSTypeReference.explicitNullable: Boolean
     get() = resolve().isMarkedNullable

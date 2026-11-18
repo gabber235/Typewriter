@@ -26,9 +26,35 @@ final class AppliedEndpointBinding {
 
   final skir.EndpointBindingTemplate template;
   final skir.NamedTypeUse? containingResource;
-  final skir.TypeUse? target;
+  final skir.ResourceMatch? target;
 
   bool get isAvailable => containingResource != null && target != null;
+}
+
+/// Whether a resource fits a [skir.ResourceMatch]: yes, no, or not until a
+/// creator chooses more arguments.
+enum ResourceFit { yes, no, undecided }
+
+extension ResourceMatchDefinition on skir.ResourceMatch {
+  /// The definition this match names, or null for every resource.
+  skir.TypeDefinitionId? get definition => switch (this) {
+    skir.ResourceMatch_typeWrapper(:final value) => value.definition,
+    skir.ResourceMatch_definitionWrapper(:final value) => value,
+    _ => null,
+  };
+}
+
+extension ResourceMatchTemplateDefinition on skir.ResourceMatchTemplate {
+  /// The definition this template names, or null for every resource and for
+  /// a type that is a bare parameter.
+  skir.TypeDefinitionId? get definition => switch (this) {
+    skir.ResourceMatchTemplate_typeWrapper(
+      value: skir.TypeTemplate_namedWrapper(:final value),
+    ) =>
+      value.definition,
+    skir.ResourceMatchTemplate_definitionWrapper(:final value) => value,
+    _ => null,
+  };
 }
 
 /// Interprets one published editor catalog snapshot for panel consumers.
@@ -77,6 +103,8 @@ final class CheckedEditorCatalog {
     return switch (definition.typeId) {
       skir.TypeId_qualifiedWrapper(:final value) => value.name,
       skir.TypeId_declaredWrapper(:final value) => value.value,
+      skir.TypeId_memberWrapper(:final value) => value.name,
+      skir.TypeId_contentWrapper() => "Custom type",
       _ => "Unknown type",
     };
   }
@@ -86,14 +114,26 @@ final class CheckedEditorCatalog {
     skir.TypeUse_nullableWrapper(:final value) =>
       "${typeUseName(value.value)}?",
     skir.TypeUse_scalarWrapper(:final value) => _scalarName(value),
+    skir.TypeUse_functionWrapper(:final value) =>
+      "(${value.parameters.map((parameter) => "${parameter.name}: ${typeUseName(parameter.type)}").join(", ")}) -> ${typeUseName(value.result)}",
     _ => "Unknown type",
   };
 
-  String typeSelectionName(skir.TypeSelection selection) => switch (selection) {
-    skir.TypeSelection_completeWrapper(:final value) => _namedTypeName(value),
-    skir.TypeSelection_pendingWrapper(:final value) => _pendingTypeName(value),
-    _ => "Unknown type",
-  };
+  String typeSelectionName(skir.TypeSelection selection) {
+    final complete = completeUse(selection);
+    if (complete != null) return _namedTypeName(complete);
+    return _pendingTypeName(selection);
+  }
+
+  /// Whether a creator has chosen everything [selection] needs: an argument
+  /// for every parameter of its definition that is not derived.
+  bool isFullyChosen(skir.TypeSelection selection) =>
+      selection.isFullyChosenIn(selected(selection));
+
+  /// The fully applied type the creator's choices in [selection] make, or
+  /// null while one is missing or a parameter of its definition is derived.
+  skir.NamedTypeUse? completeUse(skir.TypeSelection selection) =>
+      selection.completeUseIn(selected(selection));
 
   String _namedTypeName(skir.NamedTypeUse type) {
     final name = typeDefinitionName(type.definition);
@@ -102,14 +142,22 @@ final class CheckedEditorCatalog {
     return "$name<${arguments.map(typeUseName).join(", ")}>";
   }
 
-  String _pendingTypeName(skir.PendingTypeSelection type) {
+  /// The name of [type] with the arguments a creator chooses, each chosen
+  /// one by name and each missing one as Unfilled. Derived parameters are not
+  /// chosen, so they are not shown.
+  String _pendingTypeName(skir.TypeSelection type) {
     final name = typeDefinitionName(type.definition);
-    final arguments = type.arguments.toList(growable: false);
-    if (arguments.isEmpty) return name;
-    return "$name<${arguments.map((argument) => switch (argument) {
-      skir.ArgumentSelection_chosenWrapper(:final value) => typeUseName(value),
-      _ => "Unfilled",
-    }).join(", ")}>";
+    final chosen = [
+      for (final (index, parameter)
+          in (type.parametersIn(selected(type)) ?? const []).indexed)
+        if (!parameter.derived)
+          switch (type.chosenAt(index)) {
+            final value? => typeUseName(value),
+            null => "Unfilled",
+          },
+    ];
+    if (chosen.isEmpty) return name;
+    return "$name<${chosen.join(", ")}>";
   }
 
   String _scalarName(skir.ScalarKind scalar) => switch (scalar) {
@@ -120,6 +168,7 @@ final class CheckedEditorCatalog {
     skir.ScalarKind.decimal => "Decimal",
     skir.ScalarKind.timestamp => "Timestamp",
     skir.ScalarKind.duration => "Duration",
+    skir.ScalarKind.type => "Type",
     skir.ScalarKind_integerWrapper(:final value) => switch (value.width) {
       skir.IntegerWidth.signedEight => "Signed 8 bit integer",
       skir.IntegerWidth.signedSixteen => "Signed 16 bit integer",
@@ -160,6 +209,18 @@ final class CheckedEditorCatalog {
     return _apply(template, _bindings(containing, definition));
   }
 
+  /// The match [template] names under the arguments [containing] binds, or
+  /// null while a type it names needs an argument [containing] leaves open or
+  /// is not a named type.
+  skir.ResourceMatch? applyMatch(
+    skir.ResourceMatchTemplate template,
+    skir.TypeSelection containing,
+  ) {
+    final definition = selected(containing);
+    if (definition == null) return null;
+    return _applyMatch(template, _bindings(containing, definition));
+  }
+
   skir.TypeUse? concreteType(skir.TypeTemplate template) =>
       _concreteTemplateType(template);
 
@@ -181,10 +242,7 @@ final class CheckedEditorCatalog {
       selected(selection)?.placementField;
 
   skir.PublishedType? selected(skir.TypeSelection selection) =>
-      switch (selection.definition) {
-        final definition? => published(definition),
-        null => null,
-      };
+      published(selection.definition);
 
   /// Applies effective field templates to the chosen type arguments.
   /// Unfinished arguments leave individual field types unavailable; missing or
@@ -233,20 +291,16 @@ final class CheckedEditorCatalog {
           final named = _namedValueUse(
             current ??
                 (index == 0
-                    ? switch (root) {
-                        skir.TypeSelection_completeWrapper(:final value) =>
-                          skir.TypeUse.wrapNamed(value),
-                        _ => null,
+                    ? switch (completeUse(root)) {
+                        final value? => skir.TypeUse.wrapNamed(value),
+                        null => null,
                       }
                     : null),
           );
           if (named == null) return null;
           final containing = _selectionForUse(named, currentValue);
           if (containing == null) return null;
-          final actual = switch (containing) {
-            skir.TypeSelection_completeWrapper(:final value) => value,
-            _ => null,
-          };
+          final actual = completeUse(containing);
           if (actual == null) return null;
           final representation = published(actual.definition)
               ?.definition
@@ -311,10 +365,7 @@ final class CheckedEditorCatalog {
     }
     final bindings = _bindings(selection, definition);
     final applications = <skir.NamedTypeUse>{};
-    final selectedUse = switch (selection) {
-      skir.TypeSelection_completeWrapper(:final value) => value,
-      _ => null,
-    };
+    final selectedUse = completeUse(selection);
     if (selectedUse != null) applications.add(selectedUse);
     for (final template in definition.ancestorTemplates) {
       final applied = _applyNamed(template, bindings);
@@ -355,7 +406,7 @@ final class CheckedEditorCatalog {
               template.containingResource,
               bindings,
             ),
-            target: _apply(template.target, bindings),
+            target: _applyMatch(template.target, bindings),
           ),
     ];
     // A concrete declaration's binding carries its overridden field type.
@@ -398,7 +449,7 @@ final class CheckedEditorCatalog {
     if (representation case skir.RepresentationTemplate_sequenceWrapper(
       :final value,
     )) {
-      return applyTemplate(value.item, skir.TypeSelection.wrapComplete(named));
+      return applyTemplate(value.item, selectionOfUse(named));
     }
     return null;
   }
@@ -423,27 +474,19 @@ final class CheckedEditorCatalog {
   skir.TypeSelection beginSelection(skir.TypeDefinitionId definition) {
     final published = this.published(definition);
     if (published == null || published.status != skir.DeclarationStatus.ready) {
-      return skir.TypeSelection.unknown;
+      return skir.TypeSelection.defaultInstance;
     }
-    final count = published.definition.parameters.length;
-    if (count == 0) {
-      return skir.TypeSelection.createComplete(
-        definition: definition,
-        arguments: const [],
-      );
-    }
-    return skir.TypeSelection.createPending(
-      definition: definition,
-      arguments: List.filled(count, skir.ArgumentSelection.unfilled),
-    );
+    return selectionOfDefinition(definition);
   }
 
-  bool isAbstractRecordSelection(skir.TypeSelection selection) =>
-      switch (selected(selection)?.definition.representation) {
-        skir.RepresentationTemplate_recordWrapper(:final value) =>
-          value.abstract_,
-        _ => false,
-      };
+  bool isAbstractRecordSelection(skir.TypeSelection selection) {
+    final definition = selected(selection)?.definition;
+    return definition != null &&
+        definition.representation
+            is skir.RepresentationTemplate_recordWrapper &&
+        !definition.representation.isInstantiable &&
+        enumCases(definition.id) == null;
+  }
 
   List<skir.TypeSelection> concreteRecordSelections(
     skir.TypeSelection expected,
@@ -455,7 +498,7 @@ final class CheckedEditorCatalog {
       final representation = published.definition.representation;
       if (published.status != skir.DeclarationStatus.ready ||
           representation is! skir.RepresentationTemplate_recordWrapper ||
-          representation.value.abstract_ ||
+          !representation.isInstantiable ||
           !isNominalSubtype(published.definition.id, root)) {
         continue;
       }
@@ -481,29 +524,28 @@ final class CheckedEditorCatalog {
         "The type argument position is invalid",
       );
     }
-    final arguments = argumentSelections(selection, parameters.length);
-    arguments[index] = skir.ArgumentSelection.wrapChosen(argument);
-    final pending = skir.TypeSelection.createPending(
+    if (parameters[index].derived) {
+      return const TypeArgumentChoice.rejected(
+        "A derived type argument is never chosen",
+      );
+    }
+    final chosen = skir.TypeSelection(
       definition: published.definition.id,
-      arguments: arguments,
+      arguments: [
+        for (var position = 0; position < parameters.length; position++)
+          if (position == index)
+            skir.ChosenArgument(parameter: position, type: argument)
+          else if (selection.chosenAt(position) case final existing?)
+            skir.ChosenArgument(parameter: position, type: existing),
+      ],
     );
-    final bindings = _bindings(pending, published);
-    var complete = true;
+    final bindings = _bindings(chosen, published);
     for (var position = 0; position < parameters.length; position++) {
-      final chosenArgument = switch (arguments[position]) {
-        skir.ArgumentSelection_chosenWrapper(:final value) => value,
-        _ => null,
-      };
-      if (chosenArgument == null) {
-        complete = false;
-        continue;
-      }
+      final chosenArgument = chosen.chosenAt(position);
+      if (chosenArgument == null) continue;
       for (final bound in parameters[position].bounds) {
         final expected = _apply(bound, bindings);
-        if (expected == null) {
-          complete = false;
-          continue;
-        }
+        if (expected == null) continue;
         if (!isReadableAs(chosenArgument, expected)) {
           return const TypeArgumentChoice.rejected(
             "The type argument does not satisfy its bound",
@@ -511,39 +553,109 @@ final class CheckedEditorCatalog {
         }
       }
     }
-    if (!complete) return TypeArgumentChoice.accepted(pending);
-    final chosen = <skir.TypeUse>[];
-    for (final selection in arguments) {
-      chosen.add((selection as skir.ArgumentSelection_chosenWrapper).value);
-    }
-    return TypeArgumentChoice.accepted(
-      skir.TypeSelection.createComplete(
-        definition: published.definition.id,
-        arguments: chosen,
-      ),
-    );
+    return TypeArgumentChoice.accepted(chosen);
   }
 
   skir.TypeSelection clearArgument(skir.TypeSelection selection, int index) {
     final published = selected(selection);
-    if (published == null) return skir.TypeSelection.unknown;
-    final arguments = argumentSelections(
-      selection,
-      published.definition.parameters.length,
-    );
-    if (index < 0 || index >= arguments.length) return selection;
-    arguments[index] = skir.ArgumentSelection.unfilled;
-    return skir.TypeSelection.createPending(
+    if (published == null) return skir.TypeSelection.defaultInstance;
+    final count = published.definition.parameters.length;
+    if (index < 0 || index >= count) return selection;
+    return skir.TypeSelection(
       definition: published.definition.id,
-      arguments: arguments,
+      arguments: [
+        for (var position = 0; position < count; position++)
+          if (position != index)
+            if (selection.chosenAt(position) case final existing?)
+              skir.ChosenArgument(parameter: position, type: existing),
+      ],
     );
   }
 
+  /// Whether a resource configured by [selection] fits [match], as the realm
+  /// answers it from the creator's choices. A definition fits its nominal
+  /// subtypes whatever their arguments; a type fits a complete selection
+  /// readable as it, and a pending one through an application its choices
+  /// already fix, or is undecided while the definition could still become it:
+  /// every argument of the type its choices already fix reads as the expected
+  /// one. A fixed argument that does not makes it no.
+  ResourceFit fits(skir.TypeSelection selection, skir.ResourceMatch match) {
+    switch (match) {
+      case skir.ResourceMatch_definitionWrapper(:final value):
+        return nominalDefinitions(selection).contains(value)
+            ? ResourceFit.yes
+            : ResourceFit.no;
+      case skir.ResourceMatch_typeWrapper(:final value):
+        final expected = skir.TypeUse.wrapNamed(value);
+        if (completeUse(selection) case final complete?) {
+          return isReadableAs(skir.TypeUse.wrapNamed(complete), expected)
+              ? ResourceFit.yes
+              : ResourceFit.no;
+        }
+        if (knownApplications(selection).any(
+          (known) => isReadableAs(skir.TypeUse.wrapNamed(known), expected),
+        )) {
+          return ResourceFit.yes;
+        }
+        return _couldBecome(selection, value)
+            ? ResourceFit.undecided
+            : ResourceFit.no;
+      default:
+        return match == skir.ResourceMatch.anyResource
+            ? ResourceFit.yes
+            : ResourceFit.no;
+    }
+  }
+
+  /// Whether choosing the open arguments of [selection] could still make it
+  /// read as [expected]: one way its definition reaches [expected]'s fixes no
+  /// argument that does not read as the expected one.
+  bool _couldBecome(skir.TypeSelection selection, skir.NamedTypeUse expected) {
+    final published = selected(selection);
+    if (published == null) return false;
+    final own = published.definition;
+    final bindings = _bindings(selection, published);
+    final applications = [
+      if (own.id == expected.definition)
+        skir.NamedTypeTemplate(
+          definition: own.id,
+          arguments: [
+            for (final parameter in own.parameters)
+              skir.TypeTemplate.wrapParameter(parameter.key),
+          ],
+        ),
+      for (final ancestor in published.ancestorTemplates)
+        if (ancestor.definition == expected.definition) ancestor,
+    ];
+    final wanted = expected.arguments.toList(growable: false);
+    return applications.any((application) {
+      final arguments = application.arguments.toList(growable: false);
+      if (arguments.length != wanted.length) return false;
+      for (final (index, argument) in arguments.indexed) {
+        final fixed = _apply(argument, bindings);
+        if (fixed != null && !isReadableAs(fixed, wanted[index])) return false;
+      }
+      return true;
+    });
+  }
+
+  /// The match [template] answers while its parameters are unknown: a closed
+  /// type is that type, an open one fits its definition's nominal subtypes
+  /// whatever their arguments, and a type naming no definition, such as a
+  /// bare parameter, fits every resource.
+  skir.ResourceMatch widestMatch(skir.ResourceMatchTemplate template) =>
+      _applyMatch(template, const {}) ??
+      switch (template.definition) {
+        final definition? => skir.ResourceMatch.wrapDefinition(definition),
+        null => skir.ResourceMatch.anyResource,
+      };
+
   bool selectionMatches(skir.TypeSelection actual, skir.TypeUse? expected) =>
-      switch (actual) {
-        skir.TypeSelection_completeWrapper(:final value)
-            when expected != null =>
-          isReadableAs(skir.TypeUse.wrapNamed(value), expected),
+      switch (completeUse(actual)) {
+        final value? when expected != null => isReadableAs(
+          skir.TypeUse.wrapNamed(value),
+          expected,
+        ),
         _ => false,
       };
 
@@ -558,6 +670,13 @@ final class CheckedEditorCatalog {
 
   bool _isReadyApplication(skir.NamedTypeUse application, int depth) {
     if (depth > _maximumCheckedTypeDepth) return false;
+    // Patch: this catalog holds only the published code snapshot, so it cannot
+    // resolve a type a resource declares. The realm judges those; the layer
+    // that gives the panel a catalog over the document's declarations removes
+    // this.
+    if (application.definition.typeId is skir.TypeId_contentWrapper) {
+      return true;
+    }
     final published = this.published(application.definition);
     if (published == null || published.status != skir.DeclarationStatus.ready) {
       return false;
@@ -568,7 +687,7 @@ final class CheckedEditorCatalog {
     for (final argument in arguments) {
       if (!_isReadyTypeUse(argument, depth + 1)) return false;
     }
-    final selection = skir.TypeSelection.wrapComplete(application);
+    final selection = selectionOfUse(application);
     final bindings = _bindings(selection, published);
     for (var index = 0; index < parameters.length; index++) {
       for (final bound in parameters[index].bounds) {
@@ -593,6 +712,9 @@ final class CheckedEditorCatalog {
         value,
         depth + 1,
       ),
+      skir.TypeUse_functionWrapper(:final value) => value.parts.every(
+        (part) => _isReadyTypeUse(part, depth + 1),
+      ),
       _ => false,
     };
   }
@@ -610,7 +732,8 @@ final class CheckedEditorCatalog {
         scalar == skir.ScalarKind.bytes ||
         scalar == skir.ScalarKind.decimal ||
         scalar == skir.ScalarKind.timestamp ||
-        scalar == skir.ScalarKind.duration;
+        scalar == skir.ScalarKind.duration ||
+        scalar == skir.ScalarKind.type;
   }
 
   bool _isReadableAs(skir.TypeUse actual, skir.TypeUse expected, int depth) {
@@ -625,7 +748,7 @@ final class CheckedEditorCatalog {
     }
     if (actual case skir.TypeUse_namedWrapper(:final value)) {
       if (expected case skir.TypeUse_namedWrapper(value: final expectedUse)) {
-        final selection = skir.TypeSelection.wrapComplete(value);
+        final selection = selectionOfUse(value);
         return knownApplications(selection).any(
           (application) =>
               application.definition == expectedUse.definition &&
@@ -689,6 +812,20 @@ final class CheckedEditorCatalog {
     return true;
   }
 
+  bool _partsMatch(
+    List<skir.TypeTemplate> expected,
+    List<skir.TypeUse> actual,
+    Map<skir.ParameterKey, skir.TypeUse> bindings,
+  ) {
+    if (expected.length != actual.length) return false;
+    for (var index = 0; index < expected.length; index++) {
+      if (!_templateMatches(expected[index], actual[index], bindings)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   bool _templateMatches(
     skir.TypeTemplate expected,
     skir.TypeUse actual,
@@ -706,11 +843,14 @@ final class CheckedEditorCatalog {
     skir.TypeTemplate_namedWrapper(:final value) =>
       actual is skir.TypeUse_namedWrapper &&
           (_templateMatchesUse(value, actual.value, bindings) ||
-              knownApplications(skir.TypeSelection.wrapComplete(actual.value))
-                  .any(
-                    (application) =>
-                        _templateMatchesUse(value, application, bindings),
-                  )),
+              knownApplications(selectionOfUse(actual.value)).any(
+                (application) =>
+                    _templateMatchesUse(value, application, bindings),
+              )),
+    skir.TypeTemplate_functionWrapper(:final value) =>
+      actual is skir.TypeUse_functionWrapper &&
+          value.sameSlots(actual.value) &&
+          _partsMatch(value.parts, actual.value.parts, bindings),
     _ => false,
   };
 
@@ -847,6 +987,9 @@ final class CheckedEditorCatalog {
         value.value,
         nullable: true,
       ),
+      skir.TypeTemplate_functionWrapper(:final value) => value.toUse(
+        _concreteTemplateType,
+      ),
       _ => null,
     };
     if (use == null || !nullable) return use;
@@ -854,7 +997,7 @@ final class CheckedEditorCatalog {
   }
 
   skir.RepresentationKind? representationKind(skir.TypeSelection selection) =>
-      _representationKind(selected(selection)?.definition.representation);
+      _representationKind(selected(selection)?.definition);
 
   skir.RepresentationKind? _representationKindForUse(skir.TypeUse? use) {
     var current = use;
@@ -864,31 +1007,42 @@ final class CheckedEditorCatalog {
     return switch (current) {
       skir.TypeUse_scalarWrapper(:final value) => _scalarRepresentation(value),
       skir.TypeUse_namedWrapper(:final value) => _representationKind(
-        published(value.definition)?.definition.representation,
+        published(value.definition)?.definition,
+      ),
+      skir.TypeUse_functionWrapper() => _representationKindForUse(
+        current.storedUse,
       ),
       _ => null,
     };
   }
 
+  /// The case names of the enum [id] in declaration order, or null when it is
+  /// not an enum.
+  List<String>? enumCases(skir.TypeDefinitionId id) =>
+      published(id)?.definition
+          .enumCases((caseId) => published(caseId)?.definition);
+
   skir.RepresentationKind? _representationKind(
-    skir.RepresentationTemplate? representation,
-  ) => switch (representation) {
-    skir.RepresentationTemplate_scalarWrapper(:final value) =>
-      switch (value.kind) {
-        final kind => _scalarRepresentation(kind),
-      },
-    skir.RepresentationTemplate_recordWrapper() =>
-      skir.RepresentationKind.record,
-    skir.RepresentationTemplate_sequenceWrapper(:final value) =>
-      value.kind == skir.CollectionKind.list
-          ? skir.RepresentationKind.list
-          : skir.RepresentationKind.set_,
-    skir.RepresentationTemplate_mappingWrapper() => skir.RepresentationKind.map,
-    skir.RepresentationTemplate_enumerationWrapper() =>
-      skir.RepresentationKind.enumeration,
-    skir.RepresentationTemplate_linkWrapper() => skir.RepresentationKind.link,
-    _ => null,
-  };
+    skir.TypeDefinition? definition,
+  ) => definition != null && enumCases(definition.id) != null
+      ? skir.RepresentationKind.enumeration
+      : switch (definition?.representation) {
+          skir.RepresentationTemplate_scalarWrapper(:final value) =>
+            switch (value.kind) {
+              final kind => _scalarRepresentation(kind),
+            },
+          skir.RepresentationTemplate_recordWrapper() =>
+            skir.RepresentationKind.record,
+          skir.RepresentationTemplate_sequenceWrapper(:final value) =>
+            value.kind == skir.CollectionKind.list
+                ? skir.RepresentationKind.list
+                : skir.RepresentationKind.set_,
+          skir.RepresentationTemplate_mappingWrapper() =>
+            skir.RepresentationKind.map,
+          skir.RepresentationTemplate_linkWrapper() =>
+            skir.RepresentationKind.link,
+          _ => null,
+        };
 
   skir.RepresentationKind? _scalarRepresentation(skir.ScalarKind kind) =>
       switch (kind) {
@@ -919,24 +1073,9 @@ final class CheckedEditorCatalog {
     skir.PublishedType definition,
   ) {
     final result = <skir.ParameterKey, skir.TypeUse>{};
-    final arguments = switch (selection) {
-      skir.TypeSelection_completeWrapper(:final value) => [
-        for (final argument in value.arguments)
-          skir.ArgumentSelection.wrapChosen(argument),
-      ],
-      skir.TypeSelection_pendingWrapper(:final value) =>
-        value.arguments.toList(),
-      _ => const <skir.ArgumentSelection>[],
-    };
     final parameters = definition.definition.parameters.toList();
-    for (
-      var index = 0;
-      index < parameters.length && index < arguments.length;
-      index++
-    ) {
-      if (arguments[index] case skir.ArgumentSelection_chosenWrapper(
-        :final value,
-      )) {
+    for (var index = 0; index < parameters.length; index++) {
+      if (selection.chosenAt(index) case final value?) {
         result[parameters[index].key] = value;
       }
     }
@@ -981,6 +1120,29 @@ final class CheckedEditorCatalog {
     skir.TypeTemplate_scalarWrapper(:final value) => skir.TypeUse.wrapScalar(
       value,
     ),
+    skir.TypeTemplate_functionWrapper(:final value) => value.toUse(
+      (part) => _apply(part, bindings),
+    ),
+    _ => null,
+  };
+
+  skir.ResourceMatch? _applyMatch(
+    skir.ResourceMatchTemplate template,
+    Map<skir.ParameterKey, skir.TypeUse> bindings,
+  ) => switch (template) {
+    skir.ResourceMatchTemplate_typeWrapper(:final value) => switch (_apply(
+      value,
+      bindings,
+    )) {
+      skir.TypeUse_namedWrapper(:final value) => skir.ResourceMatch.wrapType(
+        value,
+      ),
+      _ => null,
+    },
+    skir.ResourceMatchTemplate_definitionWrapper(:final value) =>
+      skir.ResourceMatch.wrapDefinition(value),
+    _ when template == skir.ResourceMatchTemplate.anyResource =>
+      skir.ResourceMatch.anyResource,
     _ => null,
   };
 
@@ -1040,26 +1202,4 @@ sealed class TypeArgumentChoice with _$TypeArgumentChoice {
       TypeArgumentAccepted;
   const factory TypeArgumentChoice.rejected(String message) =
       TypeArgumentRejected;
-}
-
-/// The argument selections of [selection], padded with unfilled selections or
-/// cut to [count] parameters.
-List<skir.ArgumentSelection> argumentSelections(
-  skir.TypeSelection selection,
-  int count,
-) {
-  final current = switch (selection) {
-    skir.TypeSelection_completeWrapper(:final value) => [
-      for (final argument in value.arguments)
-        skir.ArgumentSelection.wrapChosen(argument),
-    ],
-    skir.TypeSelection_pendingWrapper(:final value) => value.arguments.toList(),
-    _ => <skir.ArgumentSelection>[],
-  };
-  return List.generate(
-    count,
-    (index) => index < current.length
-        ? current[index]
-        : skir.ArgumentSelection.unfilled,
-  );
 }

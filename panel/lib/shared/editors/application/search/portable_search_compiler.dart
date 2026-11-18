@@ -565,15 +565,16 @@ String? _text(PortableExpressionResult result) => switch (result) {
   _ => null,
 };
 
-String? _dataText(skir.DataValue value) => switch (value.authoredPayload) {
-  skir.DataValue_stringValueWrapper(:final value) => value,
-  skir.DataValue_integerWrapper(:final value) => value,
-  skir.DataValue_decimalWrapper(:final value) => value,
-  skir.DataValue_floatWrapper(:final value) => value.toString(),
-  skir.DataValue_booleanWrapper(:final value) => value.toString(),
-  skir.DataValue_enumCaseWrapper(:final value) => value,
-  _ => null,
-};
+String? _dataText(skir.DataValue value) =>
+    value.enumCaseName ??
+    switch (value.authoredPayload) {
+      skir.DataValue_stringValueWrapper(:final value) => value,
+      skir.DataValue_integerWrapper(:final value) => value,
+      skir.DataValue_decimalWrapper(:final value) => value,
+      skir.DataValue_floatWrapper(:final value) => value.toString(),
+      skir.DataValue_booleanWrapper(:final value) => value.toString(),
+      _ => null,
+    };
 
 int? _integer(PortableExpressionResult result) => switch (result) {
   PortableExpressionAvailable(

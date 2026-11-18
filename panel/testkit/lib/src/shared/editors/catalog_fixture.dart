@@ -80,14 +80,22 @@ skir.RelationContract testOwnershipRelation(
   first: skir.EndpointDefinition(
     id: skir.EndpointId(value: "$id:first"),
     slot: skir.EndpointSlot.first,
-    resource: skir.NamedTypeTemplate(definition: owner, arguments: const []),
+    resource: skir.ResourceMatchTemplate.wrapType(
+      skir.TypeTemplate.wrapNamed(
+        skir.NamedTypeTemplate(definition: owner, arguments: const []),
+      ),
+    ),
     cardinality: skir.EndpointCardinality.one,
     onDelete: skir.RelationDeletePolicy.cascade,
   ),
   second: skir.EndpointDefinition(
     id: skir.EndpointId(value: "$id:second"),
     slot: skir.EndpointSlot.second,
-    resource: skir.NamedTypeTemplate(definition: member, arguments: const []),
+    resource: skir.ResourceMatchTemplate.wrapType(
+      skir.TypeTemplate.wrapNamed(
+        skir.NamedTypeTemplate(definition: member, arguments: const []),
+      ),
+    ),
     cardinality: skir.EndpointCardinality.many,
     onDelete: skir.RelationDeletePolicy.clear,
   ),
@@ -114,6 +122,8 @@ skir.PublishedType publishedType(
   String? searchKey,
   skir.ValuePath? placementField,
 }) => skir.PublishedType(
+  name: "",
+  extension_: "",
   definition: skir.TypeDefinition(
     id: id,
     parameters: parameters,

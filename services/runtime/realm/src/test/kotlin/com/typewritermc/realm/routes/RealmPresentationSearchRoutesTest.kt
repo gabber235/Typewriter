@@ -20,7 +20,6 @@ import com.typewritermc.testing.routes.fixtureTimelinePage
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
-import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly

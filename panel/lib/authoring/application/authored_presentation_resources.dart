@@ -271,10 +271,12 @@ extension _AuthoredPresentationResources on AuthoredPresentationHost {
 
   skir.DataValue _resourceRow(skir.AuthoringRecord record) {
     final payload = skir.DataValue.createRecord(fields: record.fields);
-    return switch (record.configuration) {
-      skir.TypeSelection_completeWrapper(:final value) =>
-        skir.DataValue.createNamed(actualType: value, payload: payload),
-      _ => payload,
+    return switch (authored.catalog.completeUse(record.configuration)) {
+      final value? => skir.DataValue.createNamed(
+        actualType: value,
+        payload: payload,
+      ),
+      null => payload,
     };
   }
 }

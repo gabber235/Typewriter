@@ -39,6 +39,7 @@ fun includeProject(name: String, directory: String) {
     project(":$name").projectDir = file(directory)
 }
 
+includeProject("failures", "platform/failures")
 includeProject("internal-utils", "platform/internal-utils")
 includeProject("protocol", "protocol")
 includeProject("protocol-transport", "protocol/transport-adapters/kotlin")
@@ -64,6 +65,7 @@ includeProject("engine-conformance-composite", "runtime/engine/capabilities/conf
 includeProject("engine-panel", "runtime/engine/runtimes/panel")
 includeProject("engine-paper", "runtime/engine/runtimes/paper")
 includeProject("engine-conformance", "runtime/engine/runtimes/conformance")
+includeProject("formula", "runtime/formula")
 includeProject("realm", "runtime/realm")
 includeProject("basic-extension", "extensions/basic")
 includeProject("conformance-extension", "extensions/conformance")

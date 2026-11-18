@@ -24,13 +24,13 @@ skir.PublishedType _publishedRecord({
   definition,
   representation: skir.RepresentationTemplate.createRecord(
     fields: fields,
-    abstract_: false,
+    form: skir.RecordForm.concrete,
   ),
   fields: effectiveFields,
 );
 
 /// A catalog where Shelves own Quest Books and each Book owns Entries, an
-/// abstract record that SimpleMessage refines; [manyEntries] adds 26 more
+/// open record that SimpleMessage refines; [manyEntries] adds 26 more
 /// Entry kinds and [reversedOwnership] declares the Book's ownership with
 /// its endpoints swapped.
 CheckedEditorCatalog shelfCatalog({
@@ -44,7 +44,11 @@ CheckedEditorCatalog shelfCatalog({
     slot: reversedOwnership
         ? skir.EndpointSlot.second
         : skir.EndpointSlot.first,
-    resource: skir.NamedTypeTemplate(definition: book, arguments: const []),
+    resource: skir.ResourceMatchTemplate.wrapType(
+      skir.TypeTemplate.wrapNamed(
+        skir.NamedTypeTemplate(definition: book, arguments: const []),
+      ),
+    ),
     cardinality: skir.EndpointCardinality.one,
     onDelete: skir.RelationDeletePolicy.clear,
   );
@@ -53,7 +57,11 @@ CheckedEditorCatalog shelfCatalog({
     slot: reversedOwnership
         ? skir.EndpointSlot.first
         : skir.EndpointSlot.second,
-    resource: skir.NamedTypeTemplate(definition: entry, arguments: const []),
+    resource: skir.ResourceMatchTemplate.wrapType(
+      skir.TypeTemplate.wrapNamed(
+        skir.NamedTypeTemplate(definition: entry, arguments: const []),
+      ),
+    ),
     cardinality: skir.EndpointCardinality.many,
     onDelete: skir.RelationDeletePolicy.cascade,
   );
@@ -71,7 +79,7 @@ CheckedEditorCatalog shelfCatalog({
         ),
       ),
       declaredRecord(testTypeId("Shelf"), searchKey: "shelf"),
-      declaredRecord(entry, abstract: true),
+      declaredRecord(entry, open: true),
       declaredRecord(
         testTypeId("SimpleMessage"),
         parents: [
@@ -101,9 +109,13 @@ CheckedEditorCatalog shelfCatalog({
         first: skir.EndpointDefinition(
           id: skir.EndpointId(value: "shelf.books.shelf"),
           slot: skir.EndpointSlot.first,
-          resource: skir.NamedTypeTemplate(
-            definition: testTypeId("Shelf"),
-            arguments: const [],
+          resource: skir.ResourceMatchTemplate.wrapType(
+            skir.TypeTemplate.wrapNamed(
+              skir.NamedTypeTemplate(
+                definition: testTypeId("Shelf"),
+                arguments: const [],
+              ),
+            ),
           ),
           cardinality: skir.EndpointCardinality.one,
           onDelete: skir.RelationDeletePolicy.cascade,
@@ -111,9 +123,10 @@ CheckedEditorCatalog shelfCatalog({
         second: skir.EndpointDefinition(
           id: skir.EndpointId(value: "shelf.books.book"),
           slot: skir.EndpointSlot.second,
-          resource: skir.NamedTypeTemplate(
-            definition: book,
-            arguments: const [],
+          resource: skir.ResourceMatchTemplate.wrapType(
+            skir.TypeTemplate.wrapNamed(
+              skir.NamedTypeTemplate(definition: book, arguments: const []),
+            ),
           ),
           cardinality: skir.EndpointCardinality.many,
           onDelete: skir.RelationDeletePolicy.clear,
@@ -383,9 +396,9 @@ final class AuthoredDraft {
     );
     final resource = skir.ResourceId(value: "message:one");
     final record = skir.AuthoringRecord(
-      configuration: skir.TypeSelection.createComplete(
-        definition: definition,
-        arguments: const [],
+      types: const [],
+      configuration: selectionOfUse(
+        skir.NamedTypeUse(definition: definition, arguments: const []),
       ),
       fields: [
         skir.FieldValue(
@@ -520,9 +533,9 @@ final class AuthoredDraft {
     );
     final resource = skir.ResourceId(value: "repeating:one");
     final record = skir.AuthoringRecord(
-      configuration: skir.TypeSelection.createComplete(
-        definition: definition,
-        arguments: const [],
+      types: const [],
+      configuration: selectionOfUse(
+        skir.NamedTypeUse(definition: definition, arguments: const []),
       ),
       fields: [
         skir.FieldValue(
@@ -612,9 +625,9 @@ final class AuthoredDraft {
     );
     final resource = skir.ResourceId(value: "page:empty");
     final record = skir.AuthoringRecord(
-      configuration: skir.TypeSelection.createComplete(
-        definition: definition,
-        arguments: const [],
+      types: const [],
+      configuration: selectionOfUse(
+        skir.NamedTypeUse(definition: definition, arguments: const []),
       ),
       fields: [
         skir.FieldValue(name: "elements", value: skir.DataValue.unfilled),
@@ -775,9 +788,9 @@ final class AuthoredDraft {
         skir.AuthoringResource(
           id: resource,
           content: skir.AuthoringRecord(
-            configuration: skir.TypeSelection.createComplete(
-              definition: tag,
-              arguments: const [],
+            types: const [],
+            configuration: selectionOfUse(
+              skir.NamedTypeUse(definition: tag, arguments: const []),
             ),
             fields: [
               skir.FieldValue(
@@ -843,9 +856,10 @@ final class AuthoredDraft {
       first: skir.EndpointDefinition(
         id: skir.EndpointId(value: "test.page.elements.page"),
         slot: skir.EndpointSlot.first,
-        resource: skir.NamedTypeTemplate(
-          definition: pageType,
-          arguments: const [],
+        resource: skir.ResourceMatchTemplate.wrapType(
+          skir.TypeTemplate.wrapNamed(
+            skir.NamedTypeTemplate(definition: pageType, arguments: const []),
+          ),
         ),
         cardinality: skir.EndpointCardinality.one,
         onDelete: skir.RelationDeletePolicy.clear,
@@ -853,9 +867,10 @@ final class AuthoredDraft {
       second: skir.EndpointDefinition(
         id: skir.EndpointId(value: "test.page.elements.child"),
         slot: skir.EndpointSlot.second,
-        resource: skir.NamedTypeTemplate(
-          definition: childType,
-          arguments: const [],
+        resource: skir.ResourceMatchTemplate.wrapType(
+          skir.TypeTemplate.wrapNamed(
+            skir.NamedTypeTemplate(definition: childType, arguments: const []),
+          ),
         ),
         cardinality: skir.EndpointCardinality.many,
         onDelete: skir.RelationDeletePolicy.clear,

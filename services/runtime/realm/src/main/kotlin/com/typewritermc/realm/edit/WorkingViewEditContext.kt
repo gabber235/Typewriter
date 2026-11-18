@@ -76,14 +76,16 @@ internal class WorkingViewEditContext(
         value: V,
     ) {
         require(path.binding.readContext === readContext) { "The editable path belongs to another operation observation" }
+        // The staged catalog, so a value of a type this edit has just declared encodes against that declaration.
+        val catalog = session.stagedCatalog
         val checked =
-            when (val result = baseline.catalog.checked.resolve(path.expected)) {
+            when (val result = catalog.checked.resolve(path.expected)) {
                 is Resolution.Ready -> result.value
                 is Resolution.Invalid -> error(result.diagnostics.joinToString())
             }
 
         @Suppress("UNCHECKED_CAST")
-        val binding = baseline.catalog.nativeBindings.bind(checked) as NativeBinding<V>
+        val binding = catalog.nativeBindings.bind(checked) as NativeBinding<V>
         append(EditIntent.createSetValue(at = path.location, value = binding.encode(value)))
     }
 

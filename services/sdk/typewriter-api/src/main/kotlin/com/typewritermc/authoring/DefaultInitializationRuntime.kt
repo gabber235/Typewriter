@@ -7,22 +7,28 @@ import com.typewritermc.types.bytes
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.duration
+import com.typewritermc.types.enumCases
 import com.typewritermc.types.field
 import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fields
 import com.typewritermc.types.integer
+import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.items
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
+import com.typewritermc.types.member
 import com.typewritermc.types.named
-import com.typewritermc.types.namedUse
+import com.typewritermc.types.parts
 import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
+import com.typewritermc.types.storedUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import com.typewritermc.types.walk
 import skirout.editor.v1.catalog.InputAnswer
 import skirout.editor.v1.catalog.PreparationDraft
 import skirout.editor.v1.catalog.PreparationOperation
@@ -33,12 +39,12 @@ import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.catalog.RequiredInput
 import skirout.editor.v1.catalog.ValuePreparationRequest
 import skirout.editor.v1.diagnostic.InitializationDiagnostic
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedField
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
@@ -105,7 +111,7 @@ class DefaultInitializationRuntime(
         val expected =
             when (val target = request.target) {
                 is PreparationTarget.ValueWrapper -> target.value
-                is PreparationTarget.RecordWrapper -> target.value.completeUse()?.use
+                is PreparationTarget.RecordWrapper -> completeUse(target.value)?.use
                 else -> unknownVariant(target)
             }
         val failed =
@@ -186,7 +192,7 @@ class DefaultInitializationRuntime(
         return when (val representation = checked.schema.representation) {
             is ResolvedRepresentation.RecordWrapper -> {
                 val record = payload as? DataValue.RecordWrapper ?: return false
-                if (representation.value.abstract_) return false
+                if (!checked.schema.representation.isInstantiable()) return false
                 record.fields.all { supplied ->
                     val field = representation.value.fields.singleOrNull { it.key == supplied.name }
                     field != null && admissibleInput(field.type, supplied.value, depth + 1)
@@ -214,7 +220,6 @@ class DefaultInitializationRuntime(
             }
 
             is ResolvedRepresentation.ScalarWrapper,
-            is ResolvedRepresentation.EnumerationWrapper,
             is ResolvedRepresentation.LinkWrapper,
             -> {
                 when (completeSample(expected, value)) {
@@ -293,7 +298,6 @@ class DefaultInitializationRuntime(
                 }
 
                 is ResolvedRepresentation.ScalarWrapper,
-                is ResolvedRepresentation.EnumerationWrapper,
                 is ResolvedRepresentation.LinkWrapper,
                 -> {}
 
@@ -305,7 +309,7 @@ class DefaultInitializationRuntime(
         val type =
             when (target) {
                 is PreparationTarget.ValueWrapper -> target.value
-                is PreparationTarget.RecordWrapper -> target.value.completeUse()?.use
+                is PreparationTarget.RecordWrapper -> completeUse(target.value)?.use
                 else -> unknownVariant(target)
             } ?: return
         walk(type, content.portableValue(), ValuePath.root)
@@ -403,7 +407,6 @@ class DefaultInitializationRuntime(
                 }
 
                 is ResolvedRepresentation.ScalarWrapper,
-                is ResolvedRepresentation.EnumerationWrapper,
                 is ResolvedRepresentation.LinkWrapper,
                 -> {
                     payload
@@ -446,6 +449,10 @@ class DefaultInitializationRuntime(
         return PreparedValue(content = PreparedContent.ValueWrapper(value), findings = findings)
     }
 
+    /** The complete type the creator's choices in [selection] make, or null while one is missing or it does not resolve. */
+    private fun completeUse(selection: TypeSelection): NamedTypeUse? =
+        ((catalog.authoredTypeOf(selection) as? Resolution.Ready)?.value as? ResourceType.Complete)?.checked?.use?.named
+
     private fun prepareRecord(
         request: ValuePreparationRequest,
         selection: TypeSelection,
@@ -454,18 +461,17 @@ class DefaultInitializationRuntime(
         context.unavailable = true
         val suppliedFields =
             suppliedRecord(request) ?: return unavailable(request, "invalid_supplied_value", "Record preparation requires a record value.")
-        if (selection is TypeSelection.PendingWrapper) return preparePending(request, selection)
-        val use =
-            selection.completeUse()
-                ?: return unavailable(request, "incomplete_type_selection", "Initialization requires every type argument to be selected.")
         val checked =
-            when (val resolution = catalog.resolve(use.use)) {
+            when (val resolution = catalog.authoredTypeOf(selection)) {
                 is Resolution.Invalid -> {
                     return unavailable(request, "invalid_type_selection", resolution.diagnostics.joinToString { it.code })
                 }
 
                 is Resolution.Ready -> {
-                    resolution.value
+                    when (val type = resolution.value) {
+                        is ResourceType.Partial -> return preparePartial(request, selection, type.schema)
+                        is ResourceType.Complete -> type.checked
+                    }
                 }
             }
         rejectUnknownFields(
@@ -476,7 +482,7 @@ class DefaultInitializationRuntime(
         context.unavailable = false
         val prepared = prepareRecordFields(checked, suppliedFields, context, ValuePath.root)
         return PreparedValue(
-            content = PreparedContent.RecordWrapper(AuthoringRecord.of(TypeSelection.CompleteWrapper(use), prepared.fields)),
+            content = PreparedContent.RecordWrapper(AuthoringRecord.of(selection, prepared.fields)),
             findings = prepared.findings,
         )
     }
@@ -588,22 +594,13 @@ class DefaultInitializationRuntime(
         return RecordPreparation(fields, findings.distinct())
     }
 
-    private fun preparePending(
+    private fun preparePartial(
         request: ValuePreparationRequest,
-        selection: TypeSelection.PendingWrapper,
+        selection: TypeSelection,
+        partial: PartialSchema,
     ): PreparedValue {
         val supplied =
             suppliedRecord(request) ?: return unavailable(request, "invalid_supplied_value", "Record preparation requires a record value.")
-        val partial =
-            when (val resolution = catalog.resolvePartial(selection)) {
-                is Resolution.Invalid -> {
-                    return unavailable(request, "invalid_type_selection", resolution.diagnostics.joinToString { it.code })
-                }
-
-                is Resolution.Ready -> {
-                    resolution.value
-                }
-            }
         val knownKeys = partial.knownFields.mapTo(linkedSetOf(), ResolvedField::key)
         val dependentKeys = partial.dependentFields.mapTo(linkedSetOf()) { it.owner.name }
         rejectUnknownFields(request, supplied, knownKeys + dependentKeys)?.let { return it }
@@ -733,8 +730,14 @@ class DefaultInitializationRuntime(
         return try {
             when (use) {
                 is TypeUse.NullableWrapper -> DataValue.NULL
+
                 is TypeUse.ScalarWrapper -> use.value.authoredDefault()
+
                 is TypeUse.NamedWrapper -> namedDefault(use.value, context, findings, path)
+
+                // A function body has no ordinary default; the author writes it.
+                is TypeUse.FunctionWrapper -> DataValue.UNFILLED
+
                 else -> unknownVariant(use)
             }
         } finally {
@@ -777,18 +780,13 @@ class DefaultInitializationRuntime(
                     DataValue.mapValue(emptyList())
                 }
 
-                is ResolvedRepresentation.EnumerationWrapper -> {
-                    representation.value.cases
-                        .firstOrNull()
-                        ?.let { DataValue.EnumCaseWrapper(it.key) } ?: DataValue.UNFILLED
-                }
-
                 is ResolvedRepresentation.LinkWrapper -> {
                     DataValue.UNFILLED
                 }
 
                 is ResolvedRepresentation.RecordWrapper -> {
-                    if (representation.value.abstract_) return DataValue.UNFILLED
+                    checked.enumCases()?.let { cases -> return DataValue.named(use.member(cases.first()), DataValue.UNIT) }
+                    if (!representation.isInstantiable()) return DataValue.UNFILLED
                     val prepared = prepareRecordFields(checked, emptyMap(), context, path)
                     findings += prepared.findings
                     DataValue.record(prepared.fields)
@@ -835,6 +833,7 @@ class DefaultInitializationRuntime(
                 is TypeUse.NamedWrapper -> use
                 is TypeUse.NullableWrapper -> use.value.value as? TypeUse.NamedWrapper
                 is TypeUse.ScalarWrapper -> null
+                is TypeUse.FunctionWrapper -> use.storedUse as TypeUse.NamedWrapper
                 else -> unknownVariant(use)
             } ?: return null
         return when (val resolution = catalog.resolve(named)) {
@@ -879,25 +878,7 @@ private class DefaultInitializationContext(
     }
 }
 
-private fun TypeUse.strictlyContains(candidate: TypeUse): Boolean {
-    val pending = ArrayDeque<TypeUse>()
-    when (this) {
-        is TypeUse.NamedWrapper -> pending.addAll(value.arguments)
-        is TypeUse.NullableWrapper -> pending += value.value
-        is TypeUse.ScalarWrapper -> Unit
-        else -> unknownVariant(this)
-    }
-    while (pending.isNotEmpty()) {
-        when (val current = pending.removeFirst()) {
-            candidate -> return true
-            is TypeUse.NamedWrapper -> pending.addAll(current.value.arguments)
-            is TypeUse.NullableWrapper -> pending += current.value.value
-            is TypeUse.ScalarWrapper -> Unit
-            else -> unknownVariant(current)
-        }
-    }
-    return false
-}
+private fun TypeUse.strictlyContains(candidate: TypeUse): Boolean = walk().drop(1).any { it == candidate }
 
 private const val MAX_DEFAULT_DEPTH = 512
 
@@ -911,24 +892,8 @@ fun ScalarKind.authoredDefault(): DataValue =
         is ScalarKind.FloatWrapper -> DataValue.FloatWrapper(0.0)
         ScalarKind.DECIMAL -> DataValue.DecimalWrapper("0")
         ScalarKind.DURATION -> DataValue.duration(kotlin.time.Duration.ZERO)
-        ScalarKind.TIMESTAMP -> DataValue.UNFILLED
+        ScalarKind.TIMESTAMP, ScalarKind.TYPE -> DataValue.UNFILLED
         else -> unknownVariant(this)
-    }
-
-private fun TypeSelection.completeUse(): NamedTypeUse? =
-    when (this) {
-        is TypeSelection.CompleteWrapper -> {
-            use
-        }
-
-        is TypeSelection.PendingWrapper -> {
-            val chosen = arguments.map { (it as? ArgumentSelection.ChosenWrapper)?.type ?: return null }
-            definition.namedUse(chosen)
-        }
-
-        else -> {
-            unknownVariant(this)
-        }
     }
 
 private fun PreparedContent.portableValue(): DataValue =

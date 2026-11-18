@@ -20,7 +20,7 @@ abstract class PortableLinkPlan with _$PortableLinkPlan {
     required skir.LinkOccurrence source,
     required skir.RelationContract relation,
     required skir.EndpointDefinition opposite,
-    required skir.TypeUse targetType,
+    required skir.ResourceMatch targetMatch,
     required List<PortableLinkTargetChoice> targets,
   }) = _PortableLinkPlan;
 }

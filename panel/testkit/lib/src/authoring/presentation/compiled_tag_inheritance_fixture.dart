@@ -27,6 +27,7 @@ AuthoringDocument compiledTagInheritanceDocument({
   ) => skir.AuthoringResource(
     id: id,
     content: skir.AuthoringRecord(
+      types: const [],
       configuration: template.configuration,
       fields: [
         for (final field in template.fields)

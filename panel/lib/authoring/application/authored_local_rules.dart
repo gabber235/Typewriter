@@ -126,7 +126,7 @@ final class _RuleProjectionBuilder {
     if (depth > 512) return;
     if (value case skir.DataValue_namedWrapper(:final value)) {
       visitContext(
-        skir.TypeSelection.wrapComplete(value.actualType),
+        selectionOfUse(value.actualType),
         value.payload,
         path,
         depth,

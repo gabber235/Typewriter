@@ -911,12 +911,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}}, "name": "Nfc"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Nfc"}
+                  "payload": "unit"
                 }
               }
             }
@@ -941,12 +941,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}}, "name": "Nfd"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Nfd"}
+                  "payload": "unit"
                 }
               }
             }
@@ -971,12 +971,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}}, "name": "Nfkc"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Nfkc"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1001,12 +1001,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}}, "name": "Nfkd"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Nfkd"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1031,12 +1031,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "c01027913879448aa695e7f3416a8528"}}, "name": "Nfc"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Nfc"}
+                  "payload": "unit"
                 }
               }
             }

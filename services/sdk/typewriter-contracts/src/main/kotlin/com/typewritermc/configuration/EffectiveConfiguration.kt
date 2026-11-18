@@ -1,8 +1,8 @@
 package com.typewritermc.configuration
 
+import com.typewritermc.types.catalog.CheckedType
 import skirout.editor.v1.catalog.ConfigurationRecipe
 import skirout.editor.v1.catalog.OwnedRule
-import skirout.editor.v1.type_catalog.AppliedSchema
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 
 data class EffectiveFieldConfiguration(
@@ -13,8 +13,8 @@ data class EffectiveConfiguration(
     val fields: Map<RelativeFieldPattern, EffectiveFieldConfiguration>,
 )
 
-fun List<ConfigurationRecipe>.bindTo(schema: AppliedSchema): EffectiveConfiguration {
-    val kind = schema.representation.kind()
+fun List<ConfigurationRecipe>.bindTo(checked: CheckedType): EffectiveConfiguration {
+    val kind = checked.representationKind()
     val fields =
         asSequence()
             .filter { it.representationCondition == null || it.representationCondition == kind }

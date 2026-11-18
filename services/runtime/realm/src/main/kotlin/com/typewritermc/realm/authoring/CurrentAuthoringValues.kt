@@ -1,7 +1,9 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.links
+import com.typewritermc.authoring.of
 import com.typewritermc.authoring.resourceIds
+import com.typewritermc.checking.InputIdentity
 import com.typewritermc.types.actualType
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.unknownVariant
@@ -9,9 +11,11 @@ import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.authoring_facts.ExpectationConflict
 import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.authoring_facts.TraversalDirection
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -25,8 +29,11 @@ internal interface CurrentAuthoringValues {
         if (at.path.segments.isEmpty()) {
             resource(at.resource)?.configuration
         } else {
-            (value(at) as? DataValue.NamedWrapper)?.actualType?.let(TypeSelection::CompleteWrapper)
+            (value(at) as? DataValue.NamedWrapper)?.actualType?.let { TypeSelection.of(it) }
         }
+
+    /** The types [resource] declares; empty when it declares none or does not exist. */
+    fun types(resource: ResourceId): List<TypeDefinition> = resource(resource)?.types.orEmpty()
 
     fun resourceIds(): Set<ResourceId>
 
@@ -35,11 +42,24 @@ internal interface CurrentAuthoringValues {
         contract: RelationId,
         direction: TraversalDirection,
     ): Set<LinkProjection>
+
+    /** What [name] means where the formula at [at] looks it up. */
+    fun scope(
+        at: ValueLocation,
+        name: String,
+    ): List<ResourceId>
 }
 
+/**
+ * Values of one view. Links are read per node from [projectionsAt], so reading one node's links judges only that node;
+ * what a name means comes from [scopes], which only the realm's graph can answer.
+ */
 internal class CapturedAuthoringValues(
     private val resources: Map<ResourceId, AuthoringRecord>,
-    private val projections: Collection<LinkProjection>,
+    private val scopes: (ValueLocation, String) -> List<ResourceId> = { _, _ ->
+        throw IllegalStateException("These values cannot judge what a name means.")
+    },
+    private val projectionsAt: (ResourceId) -> Collection<LinkProjection>,
 ) : CurrentAuthoringValues {
     override fun value(at: ValueLocation): DataValue? = resources[at.resource]?.valueAt(at.path)
 
@@ -47,12 +67,17 @@ internal class CapturedAuthoringValues(
 
     override fun resourceIds(): Set<ResourceId> = resources.keys
 
+    override fun scope(
+        at: ValueLocation,
+        name: String,
+    ): List<ResourceId> = scopes(at, name)
+
     override fun links(
         resource: ResourceId,
         contract: RelationId,
         direction: TraversalDirection,
     ): Set<LinkProjection> =
-        projections.filterTo(linkedSetOf()) { projection ->
+        projectionsAt(resource).filterTo(linkedSetOf()) { projection ->
             projection.contract == contract &&
                 when (direction) {
                     TraversalDirection.FORWARD -> projection.first == resource
@@ -62,6 +87,58 @@ internal class CapturedAuthoringValues(
                 }
         }
 }
+
+/** The commit guard expectations a read of [identity] stands for in this view. */
+internal fun AuthoringView.expectations(identity: InputIdentity): List<EditExpectation> =
+    when (identity) {
+        is InputIdentity.Value, is InputIdentity.Membership, is InputIdentity.Order -> {
+            val at = identity.locationOf()
+            listOf(EditExpectation.createValue(at = at, expected = values.value(at)))
+        }
+
+        is InputIdentity.Form -> {
+            listOf(EditExpectation.createConfiguration(at = identity.at, expected = values.configuration(identity.at)))
+        }
+
+        is InputIdentity.Existence -> {
+            listOf(EditExpectation.createResourceExists(id = identity.resource, expected = values.resource(identity.resource) != null))
+        }
+
+        is InputIdentity.Resource -> {
+            listOf(EditExpectation.createResource(id = identity.resource, expected = values.resource(identity.resource)))
+        }
+
+        is InputIdentity.Selection -> {
+            listOf(EditExpectation.resourceIds(values.resourceIds()))
+        }
+
+        is InputIdentity.Incoming -> {
+            catalog.relations.filter { identity.relation == null || it.id == identity.relation }.map { contract ->
+                EditExpectation.links(
+                    identity.resource,
+                    contract.id,
+                    TraversalDirection.BOTH,
+                    values.links(identity.resource, contract.id, TraversalDirection.BOTH),
+                )
+            }
+        }
+
+        is InputIdentity.Types -> {
+            listOf(EditExpectation.createTypes(resource = identity.resource, expected = values.types(identity.resource)))
+        }
+
+        is InputIdentity.Catalog -> {
+            emptyList()
+        }
+    }
+
+private fun InputIdentity.locationOf(): ValueLocation =
+    when (this) {
+        is InputIdentity.Value -> at
+        is InputIdentity.Membership -> at
+        is InputIdentity.Order -> at
+        else -> error("$this has no value location.")
+    }
 
 internal fun CurrentAuthoringValues.actual(expected: EditExpectation): EditExpectation =
     when (expected) {
@@ -94,8 +171,22 @@ internal fun CurrentAuthoringValues.actual(expected: EditExpectation): EditExpec
             )
         }
 
+        is EditExpectation.TypesWrapper -> {
+            EditExpectation.createTypes(resource = expected.value.resource, expected = types(expected.value.resource))
+        }
+
         else -> {
             unknownVariant(expected)
+        }
+    }
+
+/** Whether everything a check read still holds here: each fact as these values have it, and what each name means. */
+internal fun CurrentAuthoringValues.holds(evidence: List<CheckEvidence>): Boolean =
+    evidence.all { entry ->
+        when (entry) {
+            is CheckEvidence.FactWrapper -> actual(entry.value) == entry.value
+            is CheckEvidence.ScopeWrapper -> scope(entry.value.at, entry.value.name) == entry.value.expected
+            else -> unknownVariant(entry)
         }
     }
 

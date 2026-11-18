@@ -115,7 +115,7 @@ final class InheritedFieldPresentationScenario {
             ..types = [
               _published(
                 inheritedElementDefinition,
-                abstract: true,
+                open: true,
                 nameType: nameType,
               ),
               _published(inheritedActionDefinition, nameType: nameType),
@@ -316,7 +316,7 @@ skir.PresentationDescriptor _descriptor(
 
 skir.PublishedType _published(
   skir.TypeDefinitionId id, {
-  bool abstract = false,
+  bool open = false,
   skir.TypeTemplate? nameType,
 }) {
   final base = skir.NamedTypeTemplate(
@@ -343,10 +343,10 @@ skir.PublishedType _published(
           id: id,
           parameters: const [],
           representation: skir.RepresentationTemplate.createRecord(
-            fields: abstract ? fields : const [],
-            abstract_: abstract,
+            fields: open ? fields : const [],
+            form: open ? skir.RecordForm.open : skir.RecordForm.concrete,
           ),
-          parents: abstract ? const [] : [base],
+          parents: open ? const [] : [base],
         )
         ..status = skir.DeclarationStatus.ready
         ..effectiveFields = [
@@ -358,7 +358,7 @@ skir.PublishedType _published(
               rules: const [],
             ),
         ]
-        ..ancestorTemplates = abstract ? const [] : [base])
+        ..ancestorTemplates = open ? const [] : [base])
       .toFrozen();
 }
 
@@ -385,7 +385,7 @@ skir.PublishedType _envelopePublished() {
           parents: const [],
           representation: skir.RepresentationTemplate.createRecord(
             fields: fields,
-            abstract_: false,
+            form: skir.RecordForm.concrete,
           ),
         )
         ..status = skir.DeclarationStatus.ready

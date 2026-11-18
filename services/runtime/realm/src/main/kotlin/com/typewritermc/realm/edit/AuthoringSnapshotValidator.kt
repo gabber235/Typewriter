@@ -1,77 +1,140 @@
 package com.typewritermc.realm.edit
 
+import com.typewritermc.authoring.Misfit
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.record
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.validateStructure
+import com.typewritermc.authoring.unavailableType
+import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.formula.isWithin
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.contentOwner
+import com.typewritermc.types.catalog.misfiledDeclarations
+import com.typewritermc.types.catalog.misfits
+import com.typewritermc.types.catalog.namesDerivedKey
+import com.typewritermc.types.definition
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.record
-import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring_facts.LinkProjection
 import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RelationContract
-import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.kernel.v1.resource_id.ResourceId
 
-/** Validates an authored snapshot against structure, relation and realm structure rules. */
+/**
+ * Validates an authored snapshot against structure, relation and realm structure rules. [catalog] reads the proposed
+ * state and [savedCatalog] the saved one.
+ */
 internal class AuthoringSnapshotValidator(
     private val catalog: CheckedCatalog,
+    private val savedCatalog: CheckedCatalog,
     private val contracts: List<RelationContract>,
+    /** The view the change started from: what binds compute over a set of resources is read against it. */
+    private val saved: AuthoringView,
 ) {
     /**
      * Validates the same affected graph boundary for replay and caller supplied working overlays. [before] holds the
      * resources the change started from, so removing the realm root or a realm section is detected.
+     *
+     * A value can stop fitting its schema through an edit on another resource or a new generation, so a record is
+     * refused only for what this change made worse: its misfits now, less the ones it already had. The old record is
+     * judged twice, under the saved catalog and under the proposed one with its own declarations as they were, so a
+     * delete or retype elsewhere is tolerated however the change groups it, while a change whose own declarations make
+     * its own value misfit is refused.
      */
     fun validate(
         before: Map<ResourceId, AuthoringRecord>,
         resources: Map<ResourceId, AuthoringRecord>,
         affected: Set<ResourceId>,
-        projection: ProjectionResult = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, contracts, catalog),
+        links: PlannedLinks,
+        savedFit: (ResourceId) -> List<ValueProblem>,
     ): List<ValueProblem> {
         val problems = mutableListOf<ValueProblem>()
+        val touching = links.touching
         resources.filterKeys { it in affected }.forEach { (id, record) ->
-            when (val structural = record.validateStructure(catalog)) {
-                StructuralResult.VALID -> Unit
-                is StructuralResult.InvalidWrapper -> problems += structural.value.map { it.on(id) }
-                else -> unknownVariant(structural)
-            }
+            problems += record.misfiledDeclarations(id)
+            val old = before[id]
+            val baseline =
+                old
+                    ?.let { previous ->
+                        val ownAsBefore =
+                            if (previous.types == record.types) {
+                                catalog
+                            } else {
+                                val asBefore = resources + (id to record.copy(types = previous.types))
+                                catalog.withContent(saved.staged(asBefore).content)
+                            }
+                        val alone = projectAlone(id, previous, resources, ownAsBefore)
+                        previous.misfits(id, savedCatalog) { savedFit(id) } +
+                            previous.misfits(id, ownAsBefore) { alone.fit.on(id) }
+                    }.orEmpty()
+                    .toSet()
+            problems +=
+                record
+                    .misfits(id, catalog) { touching.fit.on(id) }
+                    .withoutOwnBinds(id)
+                    .filter { it.isNewAgainst(baseline) }
+                    .map { it.problem }
         }
-        val affectedLocations =
-            ResourceValueMapper
-                .discover(resources)
-                .filter { it.source in affected || it.target.resource in affected }
-                .mapTo(hashSetOf()) { it.id.location }
-        problems += projection.problems.filter { it.location in affectedLocations }
-        validateOwnership(projection.projections, contracts, affected, problems)
-        validateRealmStructure(before, resources, affected, projection.projections, contracts, catalog, problems)
-        validateCardinality(projection.projections, contracts, affected, problems)
-        validateAcyclic(projection.projections, contracts, affected, problems)
-        return problems
+        problems += touching.problems
+        validateOwnership(links, contracts, problems)
+        validateRealmStructure(before, resources, affected, links, contracts, catalog, problems)
+        validateCardinality(links, contracts, problems)
+        validateAcyclic(links, contracts, affected, problems)
+        return problems.distinct()
+    }
+
+    /** One record's own links judged over [resources] with that record put back as [record]. */
+    private fun projectAlone(
+        id: ResourceId,
+        record: AuthoringRecord,
+        resources: Map<ResourceId, AuthoringRecord>,
+        catalog: CheckedCatalog,
+    ): ProjectionResult {
+        val state = resources + (id to record)
+        return ResourceValueMapper.project(ResourceValueMapper.discover(mapOf(id to record)), state, contracts, catalog)
     }
 }
 
+/** The problems located on [resource]. */
+private fun List<ValueProblem>.on(resource: ResourceId): List<ValueProblem> = filter { it.location.resource == resource }
+
+/**
+ * These misfits without the ones a type [owner]'s own binds compute causes: each misfit naming such a type, and whatever
+ * sits under a value of it. That type is extension output, not a choice the write made, so its failure shows as a
+ * finding on [owner] and blocks publish but never refuses the write. A bind that answers another resource's computed type
+ * makes [owner]'s type fail with it, and that failure counts as [owner]'s own too, since only the other resource can fix it. A misfit naming another resource's computed type
+ * stays, so a new use of it is refused like a use of any missing type, and one [owner] already had is not.
+ */
+private fun List<Misfit>.withoutOwnBinds(owner: ResourceId): List<Misfit> {
+    val own = filter { misfit -> misfit.unavailableType?.let { it.namesDerivedKey() && it.contentOwner() == owner } == true }.toSet()
+    // A use at the root names the type from the configuration, not a value, so nothing sits under it.
+    val values = own.map { it.problem.location }.filter { it.path.segments.isNotEmpty() }
+    return filterNot { misfit -> misfit in own || values.any { misfit.problem.location.isWithin(it) } }
+}
+
+/** A resource with more than one owner, where one of its ownership links has an affected end. */
 private fun validateOwnership(
-    projections: List<LinkProjection>,
+    links: PlannedLinks,
     contracts: List<RelationContract>,
-    affected: Set<ResourceId>,
     problems: MutableList<ValueProblem>,
 ) {
-    val ownership =
-        contracts.filter { it.ownsResources }.mapTo(hashSetOf(), RelationContract::id)
-    val owned = projections.filter { it.contract in ownership }.groupBy { it.second }
-    owned
-        .filterValues { links -> links.size > 1 && links.any { it.first in affected || it.second in affected } }
-        .forEach { (resource, _) -> problems += problem(resource, "multiple_immediate_owners") }
+    val ownership = contracts.filter { it.ownsResources }
+    links.touching.projections
+        .filter { link -> ownership.any { it.id == link.contract } }
+        .mapTo(linkedSetOf()) { it.second }
+        .filter { owned -> ownership.sumOf { links.at(owned, it.id, EndpointSlot.SECOND).size } > 1 }
+        .forEach { resource -> problems += problem(resource, "multiple_immediate_owners") }
 }
 
 /**
@@ -85,7 +148,7 @@ private fun validateRealmStructure(
     before: Map<ResourceId, AuthoringRecord>,
     resources: Map<ResourceId, AuthoringRecord>,
     affected: Set<ResourceId>,
-    projections: List<LinkProjection>,
+    links: PlannedLinks,
     contracts: List<RelationContract>,
     catalog: CheckedCatalog,
     problems: MutableList<ValueProblem>,
@@ -104,11 +167,13 @@ private fun validateRealmStructure(
         }
 
     val ownership = contracts.filter { it.ownsResources }
+    // A member endpoint naming every resource, with no definition, makes every resource ownable.
     val members = ownership.map { it.second.resource.definition }
-    val owned = projections.filter { projection -> ownership.any { it.id == projection.contract } }.mapTo(hashSetOf()) { it.second }
+
+    fun ResourceId.isOwned() = ownership.any { links.at(this, it.id, EndpointSlot.SECOND).isNotEmpty() }
 
     fun AuthoringRecord.isOwnable() =
-        configuration.definition.let { type -> members.any { it == type || catalog.isNominalSubtype(type, it) } }
+        configuration.definition.let { type -> members.any { it == null || it == type || catalog.isNominalSubtype(type, it) } }
 
     // A member without a back reference loses its owner when only the owner's record changes, so the resources an
     // affected resource owned before the change are checked too.
@@ -120,7 +185,7 @@ private fun validateRealmStructure(
             .map { it.second }
     (affected + formerlyOwned)
         .distinct()
-        .filter { id -> resources[id]?.let { !it.isRealmRoot() && it.isOwnable() } == true && id !in owned }
+        .filter { id -> resources[id]?.let { !it.isRealmRoot() && it.isOwnable() } == true && !id.isOwned() }
         .forEach { id -> problems += problem(id, "owner_required") }
     val singletons = resources.entries.groupBy({ it.value.singletonKey() }, { it.key })
     singletons
@@ -136,30 +201,26 @@ private fun validateRealmStructure(
         }
 }
 
+/** An end of a link with an affected end that holds more links of its relation than its endpoint allows. */
 private fun validateCardinality(
-    projections: List<LinkProjection>,
+    links: PlannedLinks,
     contracts: List<RelationContract>,
-    affected: Set<ResourceId>,
     problems: MutableList<ValueProblem>,
 ) {
-    val byContract = projections.groupBy { it.contract }
+    val touching = links.touching.projections.groupBy { it.contract }
     contracts.forEach { contract ->
-        val links = byContract[contract.id].orEmpty()
+        val touched = touching[contract.id].orEmpty()
         if (contract.first.cardinality == EndpointCardinality.ONE) {
-            links
-                .groupBy { it.second }
-                .filterValues { grouped -> grouped.size > 1 && grouped.any { it.first in affected || it.second in affected } }
-                .forEach { (resource, _) ->
-                    problems += problem(resource, "first_endpoint_cardinality_exceeded")
-                }
+            touched
+                .mapTo(linkedSetOf()) { it.second }
+                .filter { links.at(it, contract.id, EndpointSlot.SECOND).size > 1 }
+                .forEach { resource -> problems += problem(resource, "first_endpoint_cardinality_exceeded") }
         }
         if (contract.second.cardinality == EndpointCardinality.ONE) {
-            links
-                .groupBy { it.first }
-                .filterValues { grouped -> grouped.size > 1 && grouped.any { it.first in affected || it.second in affected } }
-                .forEach { (resource, _) ->
-                    problems += problem(resource, "second_endpoint_cardinality_exceeded")
-                }
+            touched
+                .mapTo(linkedSetOf()) { it.first }
+                .filter { links.at(it, contract.id, EndpointSlot.FIRST).size > 1 }
+                .forEach { resource -> problems += problem(resource, "second_endpoint_cardinality_exceeded") }
         }
     }
 }
@@ -171,14 +232,13 @@ private fun validateCardinality(
  * once per contract.
  */
 private fun validateAcyclic(
-    projections: List<LinkProjection>,
+    links: PlannedLinks,
     contracts: List<RelationContract>,
     affected: Set<ResourceId>,
     problems: MutableList<ValueProblem>,
 ) {
-    val byContract = projections.groupBy { it.contract }
     contracts.filter { it.isAcyclic }.forEach { contract ->
-        val next = byContract[contract.id].orEmpty().groupBy({ it.first }, { it.second })
+        val next = { id: ResourceId -> links.at(id, contract.id, EndpointSlot.FIRST).map { it.second } }
         val finished = hashSetOf<ResourceId>()
         affected.forEach root@{ root ->
             val active = hashSetOf<ResourceId>()
@@ -196,10 +256,50 @@ private fun validateAcyclic(
                     return@root
                 }
                 stack.addLast(id to true)
-                next[id].orEmpty().forEach { stack.addLast(it to false) }
+                next(id).forEach { stack.addLast(it to false) }
             }
         }
     }
 }
 
-private fun ValueProblem.on(resource: ResourceId): ValueProblem = copy(location = location.copy(resource = resource))
+/**
+ * The links of the state a change proposes, as the rules read them: every link with an affected end, judged with its
+ * problems and misfits, and any resource's links of one relation at one end, which a rule asks for by name.
+ */
+internal interface PlannedLinks {
+    /** The judged links with an affected end: only these can change, so only their problems refuse a change. */
+    val touching: ProjectionResult
+
+    /** The links of [contract] in which [resource] is the [slot] end. */
+    fun at(
+        resource: ResourceId,
+        contract: RelationId,
+        slot: EndpointSlot,
+    ): List<LinkProjection>
+}
+
+/** The links of a whole judged state, for a change to [affected] read from its [occurrences]. */
+internal fun ProjectionResult.planned(
+    occurrences: Collection<LinkOccurrence>,
+    affected: Set<ResourceId>,
+): PlannedLinks {
+    val locations = occurrences.filter { it.source in affected || it.target.resource in affected }.mapTo(hashSetOf()) { it.id.location }
+    val touching =
+        ProjectionResult(
+            projections = projections.filter { it.first in affected || it.second in affected },
+            problems = problems.filter { it.location in locations },
+            fit = fit,
+        )
+    val byEnd =
+        projections.groupBy { Triple(it.contract, EndpointSlot.FIRST, it.first) } +
+            projections.groupBy { Triple(it.contract, EndpointSlot.SECOND, it.second) }
+    return object : PlannedLinks {
+        override val touching = touching
+
+        override fun at(
+            resource: ResourceId,
+            contract: RelationId,
+            slot: EndpointSlot,
+        ) = byEnd[Triple(contract, slot, resource)].orEmpty()
+    }
+}

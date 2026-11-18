@@ -39,11 +39,12 @@ final class CompiledSearchFixture {
       skir.TypeDefinitionId type,
       Map<String, skir.DataValue> values,
     ) {
-      final selection = skir.TypeSelection.createComplete(
+      final selection = skir.TypeSelection(
         definition: type,
         arguments: const [],
       );
       return skir.AuthoringRecord(
+        types: const [],
         configuration: selection,
         fields: [
           for (final field in catalog.fields(selection))
@@ -61,6 +62,7 @@ final class CompiledSearchFixture {
       String name,
       String label,
     ) => skir.AuthoringRecord(
+      types: const [],
       configuration: source.configuration,
       fields: [
         for (final field in source.fields)
@@ -73,7 +75,7 @@ final class CompiledSearchFixture {
             field,
       ],
     );
-    final pageSelection = skir.TypeSelection.createComplete(
+    final pageSelection = skir.TypeSelection(
       definition: pageType.definition.id,
       arguments: const [],
     );
@@ -185,7 +187,7 @@ skir.PublishedType _subtype(
             parameters: const [],
             representation: skir.RepresentationTemplate.createRecord(
               fields: const [],
-              abstract_: false,
+              form: skir.RecordForm.concrete,
             ),
             parents: [
               skir.NamedTypeTemplate(

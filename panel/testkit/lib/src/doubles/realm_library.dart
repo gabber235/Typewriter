@@ -37,6 +37,7 @@ AuthoringDocument realmDocument({
   ) => entries[id] = skir.AuthoringResource(
     id: id,
     content: skir.AuthoringRecord(
+      types: const [],
       configuration: _selection(kind),
       fields: [
         for (final entry in fields.entries) _field(entry.key, entry.value),
@@ -423,13 +424,16 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
   final types = <skir.PublishedType>[
     _published(
       "section",
-      skir.RepresentationTemplate.createRecord(abstract_: true, fields: []),
+      skir.RepresentationTemplate.createRecord(
+        form: skir.RecordForm.open,
+        fields: [],
+      ),
     ),
     for (final type in fields.entries)
       _published(
         type.key,
         skir.RepresentationTemplate.createRecord(
-          abstract_: false,
+          form: skir.RecordForm.concrete,
           fields: [
             for (final field in type.value.entries)
               skir.FieldDeclaration(
@@ -457,7 +461,7 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
         "${spec.kind}Link",
         skir.RepresentationTemplate.createLink(
           endpoint: spec.first,
-          target: _template(spec.member),
+          target: skir.ResourceMatchTemplate.wrapType(_template(spec.member)),
         ),
       ),
     );
@@ -481,7 +485,7 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
             skir.FieldPatternSegment.items,
           ],
         ),
-        target: _template(spec.member),
+        target: skir.ResourceMatchTemplate.wrapType(_template(spec.member)),
         containsCollection: true,
       ),
     );
@@ -491,7 +495,7 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
           "${spec.kind}BackLink",
           skir.RepresentationTemplate.createLink(
             endpoint: spec.second,
-            target: _template(spec.owner),
+            target: skir.ResourceMatchTemplate.wrapType(_template(spec.owner)),
           ),
         ),
       );
@@ -503,7 +507,7 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
           relativePath: skir.RelativeFieldPattern(
             segments: [skir.FieldPatternSegment.createField(name: field)],
           ),
-          target: _template(spec.owner),
+          target: skir.ResourceMatchTemplate.wrapType(_template(spec.owner)),
           containsCollection: false,
         ),
       );
@@ -514,7 +518,9 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
         first: skir.EndpointDefinition(
           id: spec.first,
           slot: skir.EndpointSlot.first,
-          resource: _namedTemplate(spec.owner),
+          resource: skir.ResourceMatchTemplate.wrapType(
+            skir.TypeTemplate.wrapNamed(_namedTemplate(spec.owner)),
+          ),
           cardinality: spec.ownership
               ? skir.EndpointCardinality.one
               : skir.EndpointCardinality.many,
@@ -525,7 +531,9 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
         second: skir.EndpointDefinition(
           id: spec.second,
           slot: skir.EndpointSlot.second,
-          resource: _namedTemplate(spec.member),
+          resource: skir.ResourceMatchTemplate.wrapType(
+            skir.TypeTemplate.wrapNamed(_namedTemplate(spec.member)),
+          ),
           cardinality: skir.EndpointCardinality.many,
           onDelete: skir.RelationDeletePolicy.clear,
         ),
@@ -784,13 +792,13 @@ skir.ExpressionNode _number(double value) =>
 /// library resources are named exactly as Realm names them.
 final _libraryDisplays = [
   for (final display in compiledSdkControlCatalog.resourceDisplays)
-    if (display.target == skir.ResourceTarget.anyResource)
+    if (display.target == skir.ResourceMatch.anyResource)
       display
     else
       for (final name
           in _displayStandIns[_displayTarget(display)] ?? const <String>[])
         skir.ResourceDisplayFormulas(
-          target: skir.ResourceTarget.wrapType(_template(name)),
+          target: skir.ResourceMatch.wrapDefinition(_definition(name)),
           label: display.label,
           accent: display.accent,
           icon: display.icon,
@@ -831,10 +839,7 @@ final _displayStandIns = {
 
 skir.TypeDefinitionId? _displayTarget(skir.ResourceDisplayFormulas display) =>
     switch (display.target) {
-      skir.ResourceTarget_typeWrapper(
-        value: skir.TypeTemplate_namedWrapper(:final value),
-      ) =>
-        value.definition,
+      skir.ResourceMatch_definitionWrapper(:final value) => value,
       _ => null,
     };
 
@@ -870,8 +875,7 @@ skir.TypeDefinitionId _definition(String name) =>
     );
 skir.NamedTypeUse _use(String name) =>
     skir.NamedTypeUse(definition: _definition(name), arguments: const []);
-skir.TypeSelection _selection(String name) =>
-    skir.TypeSelection.wrapComplete(_use(name));
+skir.TypeSelection _selection(String name) => selectionOfUse(_use(name));
 skir.NamedTypeTemplate _namedTemplate(String name) =>
     skir.NamedTypeTemplate(definition: _definition(name), arguments: const []);
 skir.TypeTemplate _template(String name) =>
@@ -942,8 +946,8 @@ AuthoringDocument ownerChainDocument(Book book, {required String id}) {
     relations.add(
       testOwnershipRelation(
         relation.value,
-        owner: owner.second.resource.definition,
-        member: owner.second.resource.definition,
+        owner: owner.second.resource.definition!,
+        member: owner.second.resource.definition!,
       ),
     );
     entries[item] = skir.AuthoringResource(

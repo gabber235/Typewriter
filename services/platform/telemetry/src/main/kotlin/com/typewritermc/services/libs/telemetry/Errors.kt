@@ -1,6 +1,6 @@
 package com.typewritermc.services.libs.telemetry
 
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.failures.rethrowExceptional
 
 /**
  * Provides a stable machine readable failure identity independent of exception text.

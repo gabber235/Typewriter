@@ -8,6 +8,7 @@ void main() {
   final catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
   final book = skir.ResourceId(value: "book:compiled");
   final record = skir.AuthoringRecord(
+    types: const [],
     configuration: compiledSdkBookRecord.configuration,
     fields: [
       for (final field in compiledSdkBookRecord.fields)
@@ -36,10 +37,7 @@ void main() {
           value: compiledSdkBookValue,
           location: skir.ValueLocation(resource: book, path: editorRootPath),
           schema: CompletePortablePresentationBinding(
-            skir.TypeUse.wrapNamed(
-              (record.configuration as skir.TypeSelection_completeWrapper)
-                  .value,
-            ),
+            skir.TypeUse.wrapNamed(catalog.completeUse(record.configuration)!),
           ),
         ),
         presentationSubjectIdentifierBindingId: book.toExpressionBinding(),

@@ -4,9 +4,15 @@ import com.typewritermc.authoring.CaptureResult
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.complete
+import com.typewritermc.formula.NamedValue
+import com.typewritermc.formula.RecordValue
+import com.typewritermc.formula.Var
+import com.typewritermc.formula.formulaForm
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
+import com.typewritermc.types.catalog.isNominalSubtype
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
@@ -39,10 +45,47 @@ interface NativeBinding<T> {
     fun encode(value: T): DataValue
 
     fun decode(value: CompleteValue): T
+
+    /** The Kotlin value of an evaluation value, with no DataValue between. Reads a nested value only to convert it, through [values]. */
+    fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): T
+
+    /** The evaluation value of a Kotlin value, in the catalog's representation: the form the stored value walk gives. */
+    fun toValue(
+        value: T,
+        values: EvaluationValues,
+    ): Any?
+}
+
+/**
+ * What a conversion between evaluation values and Kotlin needs from the evaluation that runs it. A formula function
+ * call is one, so a provider's values cross at its own edge.
+ */
+interface EvaluationValues {
+    /** A value not yet evaluated, evaluated one level; any other value as it is. */
+    fun resolve(value: Any?): Any?
+
+    /** [value] with everything inside it evaluated. */
+    fun force(value: Any?): Any?
+
+    /** Stops the current call with [message], as a failure the provider caused. */
+    fun fail(message: String): Nothing
 }
 
 interface NativeBindingRegistry {
     fun bind(actual: CheckedType): NativeBinding<*>
+
+    /**
+     * The stored fields of [value], a code record of a resource whose type is still [type], such as one whose computed
+     * argument its own content gives once saved: each known field through its own binding, and each field that waits on
+     * an open argument unfilled, as a partial record holds it. A waiting field's Kotlin value is not read.
+     */
+    fun encodePartial(
+        type: ResourceType.Partial,
+        value: Any,
+    ): Map<String, DataValue>
 
     fun defaultedFields(actual: CheckedType): Set<FieldOwner>
 
@@ -57,6 +100,20 @@ interface NativeBindingRegistry {
         actual: CheckedType,
         supplied: Map<FieldOwner, CompleteValue>,
     ): CaptureResult
+
+    /** The same bindings over [catalog], such as a view's catalog with its content types. */
+    fun over(catalog: CheckedCatalog): NativeBindingRegistry
+
+    /**
+     * A code record of [actual] from the evaluation values a formula gave, each converted through its field's binding:
+     * the binding's constructor when every field is given, the construction plan's when a defaulted one is left out.
+     * Init checks run either way, and what they throw reaches the caller. The answer is the instance's evaluation value.
+     */
+    fun construct(
+        actual: CheckedType,
+        fields: Map<String, Any?>,
+        values: EvaluationValues,
+    ): Any?
 }
 
 class NativeBindingException(
@@ -78,15 +135,17 @@ sealed interface NativeValidationResult {
  * Bindings are cached by concrete type and reject checked types from another generation. Deferred bindings allow
  * recursive record factories to refer to themselves during construction, but fail if used before initialization.
  * Nullable and container child bindings resolve only when a value or signature needs them.
- * Concrete definitions without a native factory retain [PortableValue] content; abstract records dispatch through
+ * Concrete definitions without a native factory retain [PortableValue] content; open records dispatch through
  * the actual authored type. Native sets and maps reject duplicates that their Kotlin containers would discard.
  */
 class FactoryNativeBindingRegistry(
     private val catalog: CheckedCatalog,
-    factories: List<NativeBindingFactory>,
+    private val factories: List<NativeBindingFactory>,
 ) : NativeBindingRegistry {
     private val factoriesByDefinition = factories.groupBy(NativeBindingFactory::definition)
     private val bindings = mutableMapOf<TypeUse, DeferredNativeBinding>()
+
+    override fun over(catalog: CheckedCatalog): NativeBindingRegistry = FactoryNativeBindingRegistry(catalog, factories)
 
     override fun bind(actual: CheckedType): NativeBinding<*> {
         if (actual.catalog != catalog.generation) {
@@ -106,6 +165,26 @@ class FactoryNativeBindingRegistry(
                 }
             }
         }
+    }
+
+    override fun encodePartial(
+        type: ResourceType.Partial,
+        value: Any,
+    ): Map<String, DataValue> {
+        val plan =
+            factoriesByDefinition[type.definition]?.singleOrNull()?.constructionPlan
+                ?: throw NativeBindingException(
+                    "no_partial_native_fields",
+                    "${type.definition} has no generated fields to encode a partial value from.",
+                )
+        val read = plan.read(value).mapKeys { (owner, _) -> owner.name }
+        val known =
+            type.schema.knownFields.associate { field ->
+                @Suppress("UNCHECKED_CAST")
+                val binding = bind(resolve(field.type)) as NativeBinding<Any?>
+                field.key to binding.encode(read.getValue(field.key))
+            }
+        return known + type.schema.dependentFields.associate { it.owner.name to DataValue.UNFILLED }
     }
 
     override fun defaultedFields(actual: CheckedType): Set<FieldOwner> {
@@ -168,6 +247,32 @@ class FactoryNativeBindingRegistry(
         return plan.sample(appliedArguments(use.value), supplied)
     }
 
+    override fun construct(
+        actual: CheckedType,
+        fields: Map<String, Any?>,
+        values: EvaluationValues,
+    ): Any? {
+        requireCurrentCatalog(actual)
+        val binding = bind(actual)
+        val declared = actual.schema.fields
+        if (declared.all { it.key in fields }) {
+            return binding.toValueAny(
+                binding.fromValueAny(RecordValue(actual.use, fields), values),
+                values,
+            )
+        }
+        val use = actual.use as? TypeUse.NamedWrapper ?: values.fail("Only a record has a constructor.")
+        val plan =
+            factoriesByDefinition[use.value.definition]?.singleOrNull()?.constructionPlan
+                ?: values.fail("${actual.use.canonicalText} has no constructor defaults.")
+        val supplied =
+            declared.filter { it.key in fields }.associate { field ->
+                FieldOwner(definition = use.value.definition, name = field.key) to
+                    binding(resolve(field.type)).fromValueAny(fields[field.key], values)
+            }
+        return binding.toValueAny(plan.construct(supplied), values)
+    }
+
     private fun requireCurrentCatalog(actual: CheckedType) {
         if (actual.catalog != catalog.generation) {
             throw NativeBindingException(
@@ -190,34 +295,67 @@ class FactoryNativeBindingRegistry(
             }
 
             is TypeUse.NamedWrapper -> {
-                collectionBinding(actual, use.value) ?: run {
-                    val candidates = factoriesByDefinition[use.value.definition].orEmpty()
-                    if (candidates.isEmpty()) {
-                        val record = actual.schema.representation as? ResolvedRepresentation.RecordWrapper
-                        if (record?.value?.abstract_ == true) {
-                            PolymorphicNativeBinding(actual, use.value, catalog, this)
-                        } else {
-                            PortableNativeBinding(actual, use.value)
-                        }
-                    } else {
-                        require(candidates.size == 1) {
-                            "Expected one native binding factory for ${use.value.definition}, found ${candidates.size}."
-                        }
-                        FactoryCheckedNativeBinding(
-                            actual,
-                            candidates.single().bind(
-                                actual,
-                                appliedArguments(use.value),
-                            ),
-                        )
-                    }
-                }
+                varBinding(actual, use.value) ?: rangeBinding(actual, use.value) ?: collectionBinding(actual, use.value)
+                    ?: namedBinding(actual, use.value)
+            }
+
+            // A function value is its stored body: the Formula record's binding reads and writes it.
+            is TypeUse.FunctionWrapper -> {
+                binding(resolve(use.storedUse))
             }
 
             else -> {
                 unknownVariant(use)
             }
         }
+
+    /**
+     * A named type's generated binding. Without a factory, a record that is never constructed itself binds through its
+     * cases' own bindings, unless it is an enum whose cases have no Kotlin class (a content or canonical enum), which
+     * crosses as a portable value. A Kotlin sealed type made only of objects is enum shaped too, but each object case
+     * has its own factory, so it binds polymorphically.
+     */
+    private fun namedBinding(
+        actual: CheckedType,
+        use: NamedTypeUse,
+    ): NativeBinding<*> {
+        val candidates = factoriesByDefinition[use.definition].orEmpty()
+        if (candidates.isEmpty()) {
+            val representation = actual.schema.representation
+            val classlessEnum =
+                actual.enumCases() != null &&
+                    representation.closedCases().orEmpty().none { case -> case.definition in factoriesByDefinition }
+            return if (representation is ResolvedRepresentation.RecordWrapper && !representation.isInstantiable() && !classlessEnum) {
+                PolymorphicNativeBinding(actual, use, catalog, this)
+            } else {
+                PortableNativeBinding(actual, use)
+            }
+        }
+        require(candidates.size == 1) { "Expected one native binding factory for ${use.definition}, found ${candidates.size}." }
+        return FactoryCheckedNativeBinding(actual, candidates.single().bind(actual, appliedArguments(use)))
+    }
+
+    /**
+     * Var is an interface with no generated binding: stored data reads and writes it by each value's own case, and an
+     * evaluation value crosses as a Var.Value of its value type.
+     */
+    private fun varBinding(
+        actual: CheckedType,
+        use: NamedTypeUse,
+    ): NativeBinding<*>? {
+        if (use.definition != VAR_DEFINITION) return null
+        val value = use.arguments.firstOrNull() ?: return null
+        return VarNativeBinding(actual, PolymorphicNativeBinding(actual, use, catalog, this), value) { binding(resolve(value)) }
+    }
+
+    /** IntRange is Kotlin's own class, with no generated binding: it crosses as an IntRange wherever it appears. */
+    private fun rangeBinding(
+        actual: CheckedType,
+        use: NamedTypeUse,
+    ): NativeBinding<*>? {
+        if (use.definition != StandardTypes.intRange) return null
+        return IntRangeNativeBinding(use, actual) { binding(resolve(integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use)) }
+    }
 
     private fun appliedArguments(use: NamedTypeUse): com.typewritermc.authoring.AppliedNativeArguments =
         com.typewritermc.authoring.AppliedNativeArguments(
@@ -295,6 +433,27 @@ private fun TypeTemplate.concreteFor(actual: TypeUse): TypeUse =
             }
         }
 
+        is TypeTemplate.FunctionWrapper -> {
+            val function = actual.function
+            if (function != null && function.parts.size == value.parts.size) {
+                TypeUse.FunctionWrapper(
+                    function.copy(
+                        context =
+                            value.context.zip(
+                                function.context,
+                            ) { template, slot -> slot.copy(type = template.type.concreteFor(slot.type)) },
+                        parameters =
+                            value.parameters.zip(
+                                function.parameters,
+                            ) { template, slot -> slot.copy(type = template.type.concreteFor(slot.type)) },
+                        result = value.result.concreteFor(function.result),
+                    ),
+                )
+            } else {
+                actual
+            }
+        }
+
         else -> {
             unknownVariant(this)
         }
@@ -329,6 +488,16 @@ private class DeferredNativeBinding(
 
     override fun decodeAuthored(value: DataValue): Any? = requireDelegate().decodeAuthoredAny(value)
 
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any? = requireDelegate().fromValueAny(value, values)
+
+    override fun toValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any? = requireDelegate().toValueAny(value, values)
+
     private fun requireDelegate(): NativeBinding<*> =
         delegate
             ?: throw NativeBindingException(
@@ -339,24 +508,59 @@ private class DeferredNativeBinding(
 
 private val FRAMEWORK_NATIVE_BINDING = NativeBindingId(value = "typewriter.framework")
 
+/**
+ * A type with no Kotlin class, such as a content type. Stored data decodes to a [PortableValue]; an evaluation value
+ * stays its forced RecordValue or NamedValue in a Kotlin slot, and comes back as it went.
+ */
 private class PortableNativeBinding(
     override val checked: CheckedType,
     private val application: NamedTypeUse,
-) : NativeBinding<PortableValue>,
+) : NativeBinding<Any>,
     GeneratedCheckedNativeBinding {
     override val actualType: TypeUse = application.use
     override val provider: NativeBindingId = NativeBindingId(value = "typewriter.portable")
     override val signature: String = "portable(${actualType.canonicalText})"
     override val opaque: Boolean = true
 
-    override fun encode(value: PortableValue): DataValue {
-        if (value.actualType != actualType) {
+    /** Encodes [value] as its own actual type, which is this binding's type or, for a closed union, one of its cases. */
+    override fun encode(value: Any): DataValue {
+        if (value !is PortableValue) {
+            throw NativeBindingException(
+                "wrong_portable_value",
+                "Only a portable value encodes through a portable binding.",
+            )
+        }
+        val actual = value.actualType.named
+        if (value.actualType != actualType && (actual == null || !checked.isNominalSubtype(actual.definition, application.definition))) {
             throw NativeBindingException("wrong_portable_actual_type", "The portable value type does not match its native binding.")
         }
-        return DataValue.named(application, value.payload)
+        return DataValue.named(actual ?: application, value.payload)
     }
 
-    override fun decode(value: CompleteValue): PortableValue = PortableValue(actualType = actualType, payload = value.payload<DataValue>())
+    /** Decodes the stored value as the type it was written with, so a union value keeps its case. */
+    override fun decode(value: CompleteValue): PortableValue =
+        PortableValue(
+            actualType = (value.value as? DataValue.NamedWrapper)?.value?.actualType?.use ?: actualType,
+            payload = value.payload<DataValue>(),
+        )
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any =
+        when (val forced = values.force(value)) {
+            is RecordValue, is NamedValue -> forced
+            else -> values.fail("Expected a value of ${actualType.canonicalText}, got $forced.")
+        }
+
+    override fun toValue(
+        value: Any,
+        values: EvaluationValues,
+    ): Any? =
+        when (value) {
+            is RecordValue, is NamedValue -> value
+            else -> values.fail("A provider returned ${value::class.simpleName} where a ${actualType.canonicalText} was expected.")
+        }
 }
 
 private class PolymorphicNativeBinding(
@@ -371,23 +575,50 @@ private class PolymorphicNativeBinding(
     override val provider: NativeBindingId = NativeBindingId(value = "typewriter.polymorphic")
     override val signature: String = "polymorphic(${actualType.canonicalText})"
 
-    override fun encode(value: Any): DataValue {
+    override fun encode(value: Any): DataValue = concreteBinding(value).encodeAny(value)
+
+    override fun decode(value: CompleteValue): Any = decodeAuthored(value.value)
+
+    /** Binds by the value's own type, which a RecordValue and a NamedValue carry. */
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any {
+        val actual =
+            when (val resolved = values.resolve(value)) {
+                is RecordValue -> resolved.type
+                is NamedValue -> resolved.type
+                else -> values.fail("Expected a value of ${actualType.canonicalText}, got $resolved.")
+            }
+        if (!catalog.isReadableAs(actual, actualType)) values.fail("A ${actual.canonicalText} is not a ${actualType.canonicalText}.")
+        val concrete =
+            when (val resolution = catalog.resolve(actual)) {
+                is Resolution.Ready -> resolution.value
+                is Resolution.Invalid -> values.fail("The type ${actual.canonicalText} is not available.")
+            }
+        return registry.bind(concrete).fromValueAny(value, values) as Any
+    }
+
+    /** Binds by the instance's class, as encode does. */
+    override fun toValue(
+        value: Any,
+        values: EvaluationValues,
+    ): Any? = concreteBinding(value).toValueAny(value, values)
+
+    private fun concreteBinding(value: Any): NativeBinding<*> {
         val candidates =
             catalog
                 .concreteForms(checked)
-                .map { concrete -> concrete to registry.bind(concrete) }
-                .filter { (_, binding) -> binding.nativeClass?.isInstance(value) == true }
+                .map { concrete -> registry.bind(concrete) }
+                .filter { binding -> binding.nativeClass?.isInstance(value) == true }
         if (candidates.size != 1) {
             throw NativeBindingException(
                 "ambiguous_polymorphic_native_type",
                 "Expected one concrete native binding for ${value::class.qualifiedName}, found ${candidates.size}.",
             )
         }
-        @Suppress("UNCHECKED_CAST")
-        return (candidates.single().second as NativeBinding<Any>).encode(value)
+        return candidates.single()
     }
-
-    override fun decode(value: CompleteValue): Any = decodeAuthored(value.value)
 
     override fun decodeAuthored(value: DataValue): Any {
         val named =
@@ -440,6 +671,161 @@ private class FactoryCheckedNativeBinding(
     override fun encode(value: Any?): DataValue = delegate.encodeAny(value)
 
     override fun decode(value: CompleteValue): Any? = delegate.decodeAny(value)
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any? = delegate.fromValueAny(value, values)
+
+    override fun toValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any? = delegate.toValueAny(value, values)
+}
+
+/**
+ * A `Var<T, C>`: stored data through the polymorphic binding, by each value's own case. An evaluation value crosses as a
+ * Var.Value of [value]'s Kotlin value; a function typed Var cannot cross in this layer, since its engine form is not
+ * settled, and a Var.Computed coming back is a formula where a value was expected.
+ */
+private class VarNativeBinding(
+    override val checked: CheckedType,
+    private val stored: PolymorphicNativeBinding,
+    private val value: TypeUse,
+    resolveValue: () -> NativeBinding<*>,
+) : NativeBinding<Any>,
+    CheckedNativeBinding,
+    AuthoredNativeBinding {
+    private val valueBinding by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveValue)
+    override val provider: NativeBindingId get() = stored.provider
+    override val signature: String get() = "var(${checked.use.canonicalText})"
+    override val actualType: TypeUse get() = checked.use
+
+    override fun encode(value: Any): DataValue = stored.encode(value)
+
+    override fun decode(value: CompleteValue): Any = stored.decode(value)
+
+    override fun decodeAuthored(value: DataValue): Any = stored.decodeAuthored(value)
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any {
+        if (this.value is TypeUse.FunctionWrapper) values.fail("A function typed Var cannot reach a provider yet.")
+        return Var.Value<Any?, Any?>(valueBinding.fromValueAny(values.resolve(value), values))
+    }
+
+    override fun toValue(
+        value: Any,
+        values: EvaluationValues,
+    ): Any? =
+        when (value) {
+            is Var.Value<*, *> -> valueBinding.toValueAny(value.value, values)
+            else -> values.fail("A provider returned a formula where a value was expected.")
+        }
+}
+
+/**
+ * The stored scalar of a Kotlin value, chosen by its class: the inverse of [scalarValue] for every scalar kind, so any
+ * value [scalarValue] returns comes back as the stored value it was read from. A value of no scalar class fails.
+ */
+fun scalarData(value: Any?): DataValue =
+    when (value) {
+        null -> DataValue.NULL
+        Unit -> DataValue.UNIT
+        is Boolean -> DataValue.BooleanWrapper(value)
+        is String -> DataValue.StringValueWrapper(value)
+        is ByteArray -> DataValue.bytes(value)
+        is kotlin.time.Instant -> DataValue.timestamp(value)
+        is kotlin.time.Duration -> DataValue.duration(value)
+        is Type -> DataValue.TypeUseWrapper(value.use)
+        else -> numberData(value) ?: throw IllegalArgumentException("${value::class.simpleName} is not a scalar.")
+    }
+
+/** The stored integer, float or decimal of a Kotlin number, or null for a value of no number class. */
+private fun numberData(value: Any): DataValue? =
+    when (value) {
+        is Byte, is Short, is Int, is Long, is UByte, is UShort, is UInt, is ULong, is BigInteger -> {
+            DataValue.integer(value.toBigInteger(IntegerWidth.SIGNED_SIXTY_FOUR))
+        }
+
+        is Float -> {
+            DataValue.FloatWrapper(value.toDouble())
+        }
+
+        is Double -> {
+            DataValue.FloatWrapper(value)
+        }
+
+        is BigDecimal -> {
+            DataValue.DecimalWrapper(value.toPlainString())
+        }
+
+        else -> {
+            null
+        }
+    }
+
+/**
+ * The Kotlin value of the stored scalar [this] of [kind], as its native binding decodes it: an integer at its declared
+ * width, a float as Float or Double, a type as [Type]. A Float32 that would lose precision fails.
+ */
+fun DataValue.scalarValue(kind: ScalarKind): Any? =
+    when (kind) {
+        ScalarKind.UNIT -> {
+            Unit
+        }
+
+        ScalarKind.BOOLEAN -> {
+            (this as DataValue.BooleanWrapper).value
+        }
+
+        ScalarKind.TEXT -> {
+            (this as DataValue.StringValueWrapper).value
+        }
+
+        ScalarKind.BYTES -> {
+            (this as DataValue.BytesWrapper).value.toByteArray()
+        }
+
+        is ScalarKind.IntegerWrapper -> {
+            (this as DataValue.IntegerWrapper).bigInteger.toNativeInteger(kind.value.width)
+        }
+
+        is ScalarKind.FloatWrapper -> {
+            (this as DataValue.FloatWrapper).value.atWidth(kind.value.width)
+        }
+
+        ScalarKind.DECIMAL -> {
+            BigDecimal((this as DataValue.DecimalWrapper).value)
+        }
+
+        ScalarKind.TIMESTAMP -> {
+            (this as DataValue.TimestampWrapper).instant
+        }
+
+        ScalarKind.DURATION -> {
+            (this as DataValue.DurationWrapper).duration
+        }
+
+        ScalarKind.TYPE -> {
+            Type((this as DataValue.TypeUseWrapper).value)
+        }
+
+        else -> {
+            unknownVariant(kind)
+        }
+    }
+
+/** The float at [width]: a Double, or a Float that holds it exactly. */
+private fun Double.atWidth(width: FloatWidth): Any {
+    if (width != FloatWidth.THIRTY_TWO) return this
+    val narrowed = toFloat()
+    if (!narrowed.isFinite()) throw NativeBindingException("float32_out_of_range", "Float32 value is out of range.")
+    if (narrowed.toDouble() != this) {
+        throw NativeBindingException("float32_precision_loss", "Float32 cannot represent the authored value exactly.")
+    }
+    return narrowed
 }
 
 private class ScalarNativeBinding(
@@ -506,66 +892,48 @@ private class ScalarNativeBinding(
                 DataValue.duration(value as kotlin.time.Duration)
             }
 
+            ScalarKind.TYPE -> {
+                DataValue.TypeUseWrapper((value as Type).use)
+            }
+
             else -> {
                 unknownVariant(kind)
             }
         }
 
-    override fun decode(value: CompleteValue): Any? =
-        when (val kind = actualType.value) {
-            ScalarKind.UNIT -> {
-                Unit
-            }
+    override fun decode(value: CompleteValue): Any? = value.value.scalarValue(actualType.value)
 
-            ScalarKind.BOOLEAN -> {
-                (value.value as DataValue.BooleanWrapper).value
-            }
-
-            ScalarKind.TEXT -> {
-                (value.value as DataValue.StringValueWrapper).value
-            }
-
-            ScalarKind.BYTES -> {
-                (value.value as DataValue.BytesWrapper).value.toByteArray()
-            }
-
+    /** The value at its Kotlin width: an integer narrowed or widened to its declared width, a float to Float or Double. */
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any? {
+        val resolved = values.resolve(value)
+        return when (val kind = actualType.value) {
             is ScalarKind.IntegerWrapper -> {
-                (value.value as DataValue.IntegerWrapper).bigInteger.toNativeInteger(kind.value.width)
+                resolved.toBigInteger(kind.value.width).toNativeInteger(kind.value.width)
             }
 
             is ScalarKind.FloatWrapper -> {
-                val number = (value.value as DataValue.FloatWrapper).value
-                if (kind.value.width == FloatWidth.THIRTY_TWO) {
-                    val narrowed = number.toFloat()
-                    if (!narrowed.isFinite()) throw NativeBindingException("float32_out_of_range", "Float32 value is out of range.")
-                    if (narrowed.toDouble() != number) {
-                        throw NativeBindingException(
-                            "float32_precision_loss",
-                            "Float32 cannot represent the authored value exactly.",
-                        )
-                    }
-                    narrowed
+                if (kind.value.width ==
+                    FloatWidth.THIRTY_TWO
+                ) {
+                    (resolved as Number).toFloat()
                 } else {
-                    number
+                    (resolved as Number).toDouble()
                 }
             }
 
-            ScalarKind.DECIMAL -> {
-                BigDecimal((value.value as DataValue.DecimalWrapper).value)
-            }
-
-            ScalarKind.TIMESTAMP -> {
-                (value.value as DataValue.TimestampWrapper).instant
-            }
-
-            ScalarKind.DURATION -> {
-                (value.value as DataValue.DurationWrapper).duration
-            }
-
             else -> {
-                unknownVariant(kind)
+                resolved
             }
         }
+    }
+
+    override fun toValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any? = if (value is BigDecimal) value.formulaForm() else value
 }
 
 private class NullableNativeBinding(
@@ -581,6 +949,55 @@ private class NullableNativeBinding(
     override fun encode(value: Any?): DataValue = if (value == null) DataValue.NULL else inner.encodeAny(value)
 
     override fun decode(value: CompleteValue): Any? = if (value.value == DataValue.NULL) null else inner.decodeAuthoredAny(value.value)
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any? = values.resolve(value)?.let { inner.fromValueAny(it, values) }
+
+    override fun toValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Any? = value?.let { inner.toValueAny(it, values) }
+}
+
+private class IntRangeNativeBinding(
+    private val application: NamedTypeUse,
+    override val checked: CheckedType,
+    resolveBound: () -> NativeBinding<*>,
+) : NativeBinding<IntRange>,
+    CheckedNativeBinding {
+    override val actualType: TypeUse = application.use
+    override val provider: NativeBindingId = FRAMEWORK_NATIVE_BINDING
+    override val signature: String = "intRange"
+    override val nativeClass: kotlin.reflect.KClass<*> = IntRange::class
+    private val bound by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveBound)
+
+    override fun encode(value: IntRange): DataValue =
+        DataValue.named(application, DataValue.record("first" to bound.encodeAny(value.first), "last" to bound.encodeAny(value.last)))
+
+    override fun decode(value: CompleteValue): IntRange {
+        val record = value.payload<DataValue.RecordWrapper>()
+
+        fun bound(name: String): Int =
+            bound.decodeAuthoredAny(
+                record.field(name) ?: throw NativeBindingException("missing_native_field", "Missing native field $name."),
+            ) as Int
+        return IntRange(bound("first"), bound("last"))
+    }
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): IntRange {
+        val fields = (values.force(value) as RecordValue).fields
+        return IntRange(fields.getValue("first") as Int, fields.getValue("last") as Int)
+    }
+
+    override fun toValue(
+        value: IntRange,
+        values: EvaluationValues,
+    ): Any? = RecordValue(actualType, mapOf("first" to value.first, "last" to value.last))
 }
 
 private class ListNativeBinding(
@@ -611,6 +1028,16 @@ private class ListNativeBinding(
         value.payload<DataValue.ListValueWrapper>().items.map {
             item.decodeAuthoredAny(it.value)
         }
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): List<*> = (values.resolve(value) as List<*>).map { item.fromValueAny(it, values) }
+
+    override fun toValue(
+        value: List<*>,
+        values: EvaluationValues,
+    ): Any? = value.map { item.toValueAny(it, values) }
 }
 
 private class SetNativeBinding(
@@ -639,7 +1066,7 @@ private class SetNativeBinding(
 
     override fun decode(value: CompleteValue): Set<*> {
         val authored = value.payload<DataValue.SetValueWrapper>().items.map { it.value }
-        if (authored.map(DataValue::canonicalValueKey).distinct().size != authored.size) {
+        if (authored.map(DataValue::identityKey).distinct().size != authored.size) {
             throw NativeBindingException("duplicate_set_value", "A native Set cannot preserve duplicate authored values.")
         }
         val decoded = authored.map { row -> item.decodeAuthoredAny(row) }
@@ -648,6 +1075,16 @@ private class SetNativeBinding(
         }
         return decoded.toSet()
     }
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Set<*> = (values.resolve(value) as Set<*>).mapTo(LinkedHashSet()) { item.fromValueAny(it, values) }
+
+    override fun toValue(
+        value: Set<*>,
+        values: EvaluationValues,
+    ): Any? = value.mapTo(LinkedHashSet()) { item.toValueAny(it, values) }
 }
 
 private class MapNativeBinding(
@@ -675,7 +1112,7 @@ private class MapNativeBinding(
 
     override fun decode(value: CompleteValue): Map<*, *> {
         val authored = value.payload<DataValue.MapValueWrapper>().rows
-        if (authored.map { it.key.canonicalValueKey() }.distinct().size != authored.size) {
+        if (authored.map { it.key.identityKey() }.distinct().size != authored.size) {
             throw NativeBindingException("duplicate_map_key", "A native Map cannot preserve duplicate authored keys.")
         }
         val rows =
@@ -687,6 +1124,23 @@ private class MapNativeBinding(
         }
         return rows.toMap()
     }
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Map<*, *> =
+        (values.resolve(value) as Map<*, *>).entries.associateTo(LinkedHashMap()) { (key, item) ->
+            this.key.fromValueAny(key, values) to this.value.fromValueAny(item, values)
+        }
+
+    override fun toValue(
+        value: Map<*, *>,
+        values: EvaluationValues,
+    ): Any? =
+        value.entries.associateTo(LinkedHashMap()) { (key, item) ->
+            this.key.toValueAny(key, values) to
+                this.value.toValueAny(item, values)
+        }
 }
 
 private class LinkNativeBinding(
@@ -713,6 +1167,16 @@ private class LinkNativeBinding(
         val target = link.value.target
         return Ref<RelationshipEndpoint<Resource, Resource>, Resource>(target.resource.toResourceId(), target.opposite)
     }
+
+    override fun fromValue(
+        value: Any?,
+        values: EvaluationValues,
+    ): Ref<*, *> = values.resolve(value) as? Ref<*, *> ?: values.fail("Expected a reference, got $value.")
+
+    override fun toValue(
+        value: Ref<*, *>,
+        values: EvaluationValues,
+    ): Any? = value
 }
 
 private fun NativeBinding<*>.encodeAny(value: Any?): DataValue {
@@ -721,6 +1185,23 @@ private fun NativeBinding<*>.encodeAny(value: Any?): DataValue {
 }
 
 private fun NativeBinding<*>.decodeAny(value: CompleteValue): Any? = decode(value)
+
+/** The Kotlin value of an evaluation [value], through a binding of any type. */
+fun NativeBinding<*>.fromValueAny(
+    value: Any?,
+    values: EvaluationValues,
+): Any? = fromValue(value, values)
+
+/** The evaluation value of a Kotlin [value], through a binding of any type. */
+fun NativeBinding<*>.toValueAny(
+    value: Any?,
+    values: EvaluationValues,
+): Any? {
+    @Suppress("UNCHECKED_CAST")
+    return (this as NativeBinding<Any?>).toValue(value, values)
+}
+
+private val VAR_DEFINITION: TypeDefinitionId = TypeDefinitionId.declared(VAR_TYPE_ID)
 
 private fun NativeBinding<*>.decodeAuthoredAny(value: DataValue): Any? =
     if (this is AuthoredNativeBinding) decodeAuthored(value) else decodeAny(complete(this, value))

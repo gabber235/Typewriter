@@ -183,11 +183,13 @@ extension ReferencePlanning on PortableAuthoringView {
     final sourceEndpoint = relation.first.id == reference.endpoint
         ? relation.first
         : relation.second;
-    final sourceType = catalog.applyTemplate(
-      skir.TypeTemplate.wrapNamed(sourceEndpoint.resource),
+    final sourceMatch = catalog.applyMatch(
+      sourceEndpoint.resource,
       sourceRecord.configuration,
     );
-    if (!catalog.selectionMatches(sourceRecord.configuration, sourceType)) {
+    if (sourceMatch == null ||
+        catalog.fits(sourceRecord.configuration, sourceMatch) !=
+            ResourceFit.yes) {
       return const PortableLinkPlanUnavailable(
         "The relation endpoint does not accept this resource type",
       );
@@ -207,10 +209,8 @@ extension ReferencePlanning on PortableAuthoringView {
     );
     final targets = <PortableLinkTargetChoice>[];
     for (final entry in resources.entries) {
-      if (!catalog.selectionMatches(
-        entry.value.configuration,
-        reference.target,
-      )) {
+      if (catalog.fits(entry.value.configuration, reference.target) !=
+          ResourceFit.yes) {
         continue;
       }
       final oppositeBindings = catalog
@@ -219,12 +219,12 @@ extension ReferencePlanning on PortableAuthoringView {
           .toList(growable: false);
       final compatibleBindings = oppositeBindings
           .where(
-            (candidate) =>
-                candidate.isAvailable &&
-                catalog.selectionMatches(
-                  sourceRecord.configuration,
-                  candidate.target,
-                ),
+            (candidate) => switch (candidate.target) {
+              final target? when candidate.isAvailable =>
+                catalog.fits(sourceRecord.configuration, target) ==
+                    ResourceFit.yes,
+              _ => false,
+            },
           )
           .toList(growable: false);
       final direct =
@@ -243,16 +243,14 @@ extension ReferencePlanning on PortableAuthoringView {
           .where((location) => location.endpoint == opposite.id)
           .toList();
       final compatibleLocations = locations.where(
-        (location) => catalog.selectionMatches(
-          sourceRecord.configuration,
-          location.target,
-        ),
+        (location) =>
+            catalog.fits(sourceRecord.configuration, location.target) ==
+            ResourceFit.yes,
       );
       final compatibleCollections = collections.where(
-        (location) => catalog.selectionMatches(
-          sourceRecord.configuration,
-          location.target,
-        ),
+        (location) =>
+            catalog.fits(sourceRecord.configuration, location.target) ==
+            ResourceFit.yes,
       );
       for (final location in compatibleLocations) {
         final previous = switch (entry.value.readAt(location.path)) {
@@ -332,7 +330,7 @@ extension ReferencePlanning on PortableAuthoringView {
         source: sourceOccurrence,
         relation: relation,
         opposite: opposite,
-        targetType: reference.target,
+        targetMatch: reference.target,
         targets: List.unmodifiable(targets),
       ),
     ]);
@@ -406,10 +404,8 @@ extension ReferencePlanning on PortableAuthoringView {
           prepared.recordContent,
         ))
           if (reference.endpoint == plan.opposite.id &&
-              catalog.selectionMatches(
-                sourceRecord.configuration,
-                reference.target,
-              ))
+              catalog.fits(sourceRecord.configuration, reference.target) ==
+                  ResourceFit.yes)
             skir.ValuePath(
               segments: [...embedded.path.segments, ...reference.path.segments],
             ),
@@ -598,7 +594,7 @@ Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
         );
         final named = catalog.namedUse(field.type);
         if (named == null) return;
-        yield* visit(next, skir.TypeSelection.wrapComplete(named), index + 1);
+        yield* visit(next, selectionOfUse(named), index + 1);
       case final value when value == skir.FieldPatternSegment.items:
         final collectionType = path.segments.isEmpty
             ? null
@@ -609,7 +605,7 @@ Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
         if (named.definition == binding.template.valueOwner) {
           yield PortableNewCounterpartChoice(
             containing: skir.ValueLocation(resource: resource, path: path),
-            selection: skir.TypeSelection.wrapComplete(named),
+            selection: selectionOfUse(named),
           );
         }
         final items = switch (record.readAt(path)) {
@@ -624,7 +620,7 @@ Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
                 skir.PathSegment.createItem(id: item.id),
               ],
             ),
-            skir.TypeSelection.wrapComplete(named),
+            selectionOfUse(named),
             index + 1,
           );
         }

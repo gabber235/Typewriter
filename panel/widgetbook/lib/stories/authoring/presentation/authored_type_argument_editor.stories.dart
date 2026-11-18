@@ -71,6 +71,8 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
     List<skir.TypeParameter> parameters = const [],
     List<skir.NamedTypeTemplate> parents = const [],
   }) => skir.PublishedType(
+    name: "",
+    extension_: "",
     searchKey: null,
     placementField: null,
     definition: skir.TypeDefinition(
@@ -78,7 +80,7 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
       parameters: parameters,
       representation: skir.RepresentationTemplate.createRecord(
         fields: const [],
-        abstract_: false,
+        form: skir.RecordForm.concrete,
       ),
       parents: parents,
     ),
@@ -115,6 +117,7 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
                     arguments: const [],
                   ),
                 ],
+                derived: false,
               ),
           ],
         ),
@@ -163,23 +166,17 @@ class _TypeArgumentEditor extends HookWidget {
     final catalog = useMemoized(() => _catalog(twoArguments: twoArguments), [
       twoArguments,
     ]);
-    final selection = useMemoized(
-      () => skir.TypeSelection.createPending(
-        definition: _variable,
-        arguments: [
-          if (chosen)
-            skir.ArgumentSelection.wrapChosen(
+    final selection = useMemoized(() {
+      final pending = selectionOfDefinition(_variable);
+      return chosen
+          ? pending.withChosen(
+              0,
               skir.TypeUse.wrapNamed(
                 skir.NamedTypeUse(definition: _coins, arguments: const []),
               ),
             )
-          else
-            skir.ArgumentSelection.unfilled,
-          if (twoArguments) skir.ArgumentSelection.unfilled,
-        ],
-      ),
-      [twoArguments, chosen],
-    );
+          : pending;
+    }, [twoArguments, chosen]);
     final status = useState("No type change staged");
     return SizedBox(
       width: width,

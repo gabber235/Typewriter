@@ -26,6 +26,6 @@ val OperationObservationTest by testSuite {
             saved,
             upserts = mapOf(quest to record(name = "Quest").with("unknown", DataValue.StringValueWrapper("stray"))),
         ) shouldStartWith
-            "An overlay resource has invalid authored structure"
+            "An overlay violates resource structure or relation policy"
     }
 }

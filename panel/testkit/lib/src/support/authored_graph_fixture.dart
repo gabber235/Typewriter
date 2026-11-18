@@ -40,9 +40,10 @@ final class AuthoredGraphFixture {
     ) => skir.EndpointDefinition(
       id: _endpoint(id),
       slot: slot,
-      resource: skir.NamedTypeTemplate(
-        definition: _type(type),
-        arguments: const [],
+      resource: skir.ResourceMatchTemplate.wrapType(
+        skir.TypeTemplate.wrapNamed(
+          skir.NamedTypeTemplate(definition: _type(type), arguments: const []),
+        ),
       ),
       cardinality: cardinality,
       onDelete: skir.RelationDeletePolicy.clear,
@@ -66,7 +67,7 @@ final class AuthoredGraphFixture {
           if (collection) skir.FieldPatternSegment.items,
         ],
       ),
-      target: named(target),
+      target: skir.ResourceMatchTemplate.wrapType(named(target)),
       containsCollection: collection,
     );
     final snapshot = authoredCatalog(const []).snapshot.toMutable()
@@ -268,7 +269,8 @@ final class AuthoredGraphFixture {
     ) => skir.AuthoringResource(
       id: id,
       content: skir.AuthoringRecord(
-        configuration: skir.TypeSelection.wrapComplete(use(type)),
+        types: const [],
+        configuration: selectionOfUse(use(type)),
         fields: fields,
       ),
     );
@@ -573,7 +575,7 @@ final class AuthoredGraphFixture {
 const fixtureOperations = ["moveToOwner", "linkWith", "delete"];
 
 final fixtureOperationTargets = skir.OperationTargets(
-  subject: skir.ResourceTarget.anyResource,
+  subject: skir.ResourceMatch.anyResource,
   cardinality: skir.OperationCardinality.selection,
 );
 

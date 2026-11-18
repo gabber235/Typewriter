@@ -52,7 +52,7 @@ void main() {
               ),
               presentation: presentation,
               targets: skir.OperationTargets(
-                subject: skir.ResourceTarget.anyResource,
+                subject: skir.ResourceMatch.anyResource,
                 cardinality: skir.OperationCardinality.selection,
               ),
               capability: skir.CapabilityId(value: "operations:Delete"),

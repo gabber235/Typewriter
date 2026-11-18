@@ -47,9 +47,11 @@ void main() {
       );
       for (final actual in [
         fixture.catalog.beginSelection(fixture.root),
-        skir.TypeSelection.createComplete(
-          definition: fixture.root,
-          arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+        selectionOfUse(
+          skir.NamedTypeUse(
+            definition: fixture.root,
+            arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+          ),
         ),
       ]) {
         final selected = catalog.fieldPresentation(
@@ -92,9 +94,8 @@ void main() {
       expect(checked.typeDefinitionName(fallback), "ScenePage");
       expect(
         checked.typeSelectionName(
-          skir.TypeSelection.createComplete(
-            definition: displayed,
-            arguments: const [],
+          selectionOfUse(
+            skir.NamedTypeUse(definition: displayed, arguments: const []),
           ),
         ),
         "Sequence",
@@ -105,10 +106,7 @@ void main() {
 
   test("pending arguments leave independent fields available", () {
     final fixture = inheritedPresentationCatalog();
-    final selection = skir.TypeSelection.createPending(
-      definition: fixture.root,
-      arguments: [skir.ArgumentSelection.unfilled],
-    );
+    final selection = selectionOfDefinition(fixture.root);
 
     final fields = fixture.catalog.fields(selection);
 
@@ -130,9 +128,8 @@ void main() {
     final integer = skir.TypeUse.wrapScalar(
       skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
     );
-    final selection = skir.TypeSelection.createComplete(
-      definition: fixture.root,
-      arguments: [integer],
+    final selection = selectionOfUse(
+      skir.NamedTypeUse(definition: fixture.root, arguments: [integer]),
     );
 
     final fields = fixture.catalog.fields(selection);
@@ -156,16 +153,15 @@ void main() {
     );
 
     final begun = fixture.catalog.beginSelection(fixture.root);
-    expect(begun, isA<skir.TypeSelection_pendingWrapper>());
+    expect(fixture.catalog.completeUse(begun), isNull);
     final chosen = fixture.catalog.chooseArgument(begun, 0, integer);
     expect(chosen, isA<TypeArgumentAccepted>());
     final complete = (chosen as TypeArgumentAccepted).selection;
-    expect(complete, isA<skir.TypeSelection_completeWrapper>());
+    expect(fixture.catalog.completeUse(complete), isNotNull);
 
     final cleared = fixture.catalog.clearArgument(complete, 0);
-    expect(cleared, isA<skir.TypeSelection_pendingWrapper>());
-    final pending = (cleared as skir.TypeSelection_pendingWrapper).value;
-    expect(pending.arguments, [skir.ArgumentSelection.unfilled]);
+    expect(fixture.catalog.completeUse(cleared), isNull);
+    expect(cleared.arguments, isEmpty);
   });
 
   test("readability follows checked nominal ancestry", () {
@@ -184,6 +180,22 @@ void main() {
 
     expect(fixture.catalog.isReadableAs(root, base), isTrue);
     expect(fixture.catalog.isReadableAs(base, root), isFalse);
+  });
+
+  test("a function type shows as (level: Text) -> Boolean", () {
+    final fixture = inheritedPresentationCatalog();
+    final function = skir.TypeUse.createFunction(
+      context: const [],
+      parameters: [
+        skir.FunctionParameterUse(
+          name: "level",
+          type: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+        ),
+      ],
+      result: skir.TypeUse.wrapScalar(skir.ScalarKind.boolean),
+    );
+
+    expect(fixture.catalog.typeUseName(function), "(level: Text) -> Boolean");
   });
 
   test("readability is covariant through matching generic arguments", () {
@@ -273,11 +285,13 @@ void main() {
       ),
     );
     final selected = checked.selectPresentation(
-      skir.TypeSelection.createComplete(
-        definition: wrapper,
-        arguments: [
-          skir.TypeUse.createNamed(definition: coin, arguments: const []),
-        ],
+      selectionOfUse(
+        skir.NamedTypeUse(
+          definition: wrapper,
+          arguments: [
+            skir.TypeUse.createNamed(definition: coin, arguments: const []),
+          ],
+        ),
       ),
       skir.PresentationRole.workspace,
     );
@@ -296,7 +310,7 @@ void main() {
     final first = fixture.catalog.chooseArgument(begun, 0, integer);
     expect(first, isA<TypeArgumentAccepted>());
     final pending = (first as TypeArgumentAccepted).selection;
-    expect(pending, isA<skir.TypeSelection_pendingWrapper>());
+    expect(fixture.catalog.completeUse(pending), isNull);
 
     expect(
       fixture.catalog.chooseArgument(pending, 1, text),
@@ -304,8 +318,8 @@ void main() {
     );
     final accepted = fixture.catalog.chooseArgument(pending, 1, integer);
     expect(
-      (accepted as TypeArgumentAccepted).selection,
-      isA<skir.TypeSelection_completeWrapper>(),
+      fixture.catalog.completeUse((accepted as TypeArgumentAccepted).selection),
+      isNotNull,
     );
   });
 
@@ -317,16 +331,19 @@ void main() {
     expect(pendingBindings, hasLength(1));
     expect(pendingBindings.single.isAvailable, isFalse);
 
-    final integer = skir.TypeUse.wrapScalar(
-      skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
+    final marker = skir.NamedTypeUse(
+      definition: fixture.marker,
+      arguments: const [],
     );
-    final complete = skir.TypeSelection.createComplete(
-      definition: fixture.root,
-      arguments: [integer],
+    final complete = selectionOfUse(
+      skir.NamedTypeUse(
+        definition: fixture.root,
+        arguments: [skir.TypeUse.wrapNamed(marker)],
+      ),
     );
     final applied = fixture.catalog.endpointBindings(complete).single;
     expect(applied.isAvailable, isTrue);
-    expect(applied.target, integer);
+    expect(applied.target, skir.ResourceMatch.wrapType(marker));
     expect(applied.containingResource?.definition, fixture.base);
   });
 
@@ -343,9 +360,11 @@ void main() {
 
   test("presentation selection uses fallback specificity then priority", () {
     final fixture = inheritedPresentationCatalog();
-    final actual = skir.TypeSelection.createComplete(
-      definition: fixture.root,
-      arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+    final actual = selectionOfUse(
+      skir.NamedTypeUse(
+        definition: fixture.root,
+        arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+      ),
     );
 
     final selected = fixture.catalog.selectPresentation(
@@ -412,9 +431,11 @@ void main() {
         roleFallbacks: original.roleFallbacks,
       ),
     );
-    final actual = skir.TypeSelection.createComplete(
-      definition: fixture.root,
-      arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+    final actual = selectionOfUse(
+      skir.NamedTypeUse(
+        definition: fixture.root,
+        arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+      ),
     );
 
     final selected = checked.selectPresentation(
@@ -473,6 +494,36 @@ void main() {
     expect(
       (selected as SelectedEditorPresentation).descriptor.id,
       fixture.first,
+    );
+  });
+
+  test("a pending resource whose chosen argument does not read as the expected one does not fit", () {
+    final fixture = repeatedParameterCatalog(repeated: true);
+    final pair = fixture.actual.definition;
+    final text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
+    final boolean = skir.TypeUse.wrapScalar(skir.ScalarKind.boolean);
+    final chosenText = skir.TypeSelection(
+      definition: pair,
+      arguments: [skir.ChosenArgument(parameter: 0, type: text)],
+    );
+
+    expect(
+      fixture.catalog.fits(
+        chosenText,
+        skir.ResourceMatch.wrapType(
+          skir.NamedTypeUse(definition: pair, arguments: [boolean, boolean]),
+        ),
+      ),
+      ResourceFit.no,
+    );
+    expect(
+      fixture.catalog.fits(
+        chosenText,
+        skir.ResourceMatch.wrapType(
+          skir.NamedTypeUse(definition: pair, arguments: [text, boolean]),
+        ),
+      ),
+      ResourceFit.undecided,
     );
   });
 }

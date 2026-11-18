@@ -41,7 +41,7 @@ Widget authoredResourceEditorUseCase(BuildContext context) {
 }
 
 /// A Realm of one quest message with a text title, typed by a catalog that
-/// also declares four concrete page types below an abstract Page.
+/// also declares four concrete page types below an open Page.
 ({
   skir.ResourceId resource,
   AuthoringEdit draft,
@@ -73,9 +73,11 @@ messageFixture({bool unfilled = false}) {
   );
   skir.PublishedType pageType(
     skir.TypeDefinitionId id, {
-    required bool abstract,
+    required bool open,
     skir.TypeDisplay? display,
   }) => skir.PublishedType(
+    name: "",
+    extension_: "",
     searchKey: null,
     placementField: null,
     display: display ?? defaultTypeDisplay(""),
@@ -84,7 +86,7 @@ messageFixture({bool unfilled = false}) {
       parameters: const [],
       representation: skir.RepresentationTemplate.createRecord(
         fields: const [],
-        abstract_: abstract,
+        form: open ? skir.RecordForm.open : skir.RecordForm.concrete,
       ),
       parents: id == page ? const [] : [pageParent],
     ),
@@ -118,6 +120,8 @@ messageFixture({bool unfilled = false}) {
       generation: generation,
       types: [
         skir.PublishedType(
+          name: "",
+          extension_: "",
           searchKey: null,
           placementField: null,
           display: defaultTypeDisplay(""),
@@ -133,7 +137,7 @@ messageFixture({bool unfilled = false}) {
                   hasConstructorDefault: false,
                 ),
               ],
-              abstract_: false,
+              form: skir.RecordForm.concrete,
             ),
             parents: const [],
           ),
@@ -148,10 +152,10 @@ messageFixture({bool unfilled = false}) {
           ],
           ancestorTemplates: const [],
         ),
-        pageType(page, abstract: true),
+        pageType(page, open: true),
         pageType(
           sequence,
-          abstract: false,
+          open: false,
           display: pageDisplay(
             "Sequence",
             "A linear sequence of entries",
@@ -161,7 +165,7 @@ messageFixture({bool unfilled = false}) {
         ),
         pageType(
           staticPage,
-          abstract: false,
+          open: false,
           display: pageDisplay(
             "Static",
             "A fixed collection of entries",
@@ -171,7 +175,7 @@ messageFixture({bool unfilled = false}) {
         ),
         pageType(
           scene,
-          abstract: false,
+          open: false,
           display: pageDisplay(
             "Scene",
             "A spatial scene of connected entries",
@@ -181,7 +185,7 @@ messageFixture({bool unfilled = false}) {
         ),
         pageType(
           manifest,
-          abstract: false,
+          open: false,
           display: pageDisplay(
             "Manifest",
             "A manifest of reusable entries",
@@ -252,7 +256,8 @@ messageFixture({bool unfilled = false}) {
   );
   final resource = skir.ResourceId(value: "message:widgetbook");
   final record = skir.AuthoringRecord(
-    configuration: skir.TypeSelection.createComplete(
+    types: const [],
+    configuration: skir.TypeSelection(
       definition: definition,
       arguments: const [],
     ),

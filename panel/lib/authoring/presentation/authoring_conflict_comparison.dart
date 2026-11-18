@@ -128,6 +128,8 @@ extension _ConflictFactDisplay on skir.EditExpectation {
     skir.EditExpectation_resourceIdsWrapper() => "Resources",
     skir.EditExpectation_linksWrapper(:final value) =>
       "Connections of ${value.resource.label(document)}",
+    skir.EditExpectation_typesWrapper(:final value) =>
+      "Types of ${value.resource.label(document)}",
     _ => "Unavailable fact",
   };
   String describe(AuthoringDocument document) => switch (this) {
@@ -156,6 +158,12 @@ extension _ConflictFactDisplay on skir.EditExpectation {
                       "${link.first.label(document)}${link.firstLocation?.diagnosticLabel.substring(1) ?? ""} to ${link.second.label(document)}${link.secondLocation?.diagnosticLabel.substring(1) ?? ""}",
                 )
                 .join("\n"),
+    skir.EditExpectation_typesWrapper(:final value) =>
+      value.expected.isEmpty
+          ? "No types"
+          : value.expected
+                .map((type) => document.catalog.typeDefinitionName(type.id))
+                .join(", "),
     _ => "Unavailable",
   };
 }
@@ -186,6 +194,9 @@ extension _ConflictValueDisplay on skir.DataValue {
           .map((item) => "${item.id.value}: ${item.value.describe(document)}")
           .join("\n"),
     skir.DataValue_linkWrapper(:final value) => value.target.resource.value,
+    skir.DataValue_typeUseWrapper(:final value) => document.catalog.typeUseName(
+      value,
+    ),
     skir.DataValue_bytesWrapper(:final value) => value.toBase16(),
     skir.DataValue_mapValueWrapper(:final value) =>
       value.rows

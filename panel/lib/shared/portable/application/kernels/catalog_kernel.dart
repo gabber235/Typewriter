@@ -21,10 +21,7 @@ final class PanelCatalogKernel implements skir.CatalogKernel {
         error.message,
       );
     }
-    final definition = decoded.definition;
-    final published = definition == null
-        ? null
-        : resources.declaration(definition);
+    final published = resources.declaration(decoded.definition);
     if (published == null) return const skir.PortableMaybeMissing([]);
     return skir.PortableMaybeValue(
       canonicalReadModels.project(

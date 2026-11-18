@@ -4,17 +4,17 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.of
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.authoring.RealmServices
 import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
 import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.TEST_TYPE
 import com.typewritermc.realm.authoring.TestDraftType
 import com.typewritermc.realm.authoring.record
 import com.typewritermc.realm.checking.RealmCheckRuntime
-import com.typewritermc.realm.checking.RealmSelectionPredicateEvaluator
+import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.checksOf
@@ -24,6 +24,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -39,7 +40,7 @@ val PublicationAcceptanceTest by testSuite {
 
         val assessment =
             RealmFixture.of(catalog, mapOf(firstResource to record(name = "ready"))).use { realm ->
-                RealmCheckRuntime(realm.views, selectionPredicates = RealmSelectionPredicateEvaluator()).use { checks ->
+                RealmCheckRuntime(realm.views).use { checks ->
                     val acceptance = AuthoringAcceptance(realm.views, checks)
                     acceptance.capture().use { captured -> acceptance.evaluate(captured) }
                 }
@@ -57,7 +58,7 @@ val PublicationAcceptanceTest by testSuite {
                     realm {
                         select(
                             TypedSelection(
-                                TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE)),
+                                TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE)),
                                 ExpressionNode.LiteralWrapper(DataValue.BooleanWrapper(true)),
                             ),
                         )
@@ -79,12 +80,17 @@ val PublicationAcceptanceTest by testSuite {
             }
 
         val assessment =
-            RealmFixture.of(catalog, mapOf(firstResource to record(name = "ready"))).use { realm ->
-                RealmCheckRuntime(realm.views, selectionPredicates = traversalLimit).use { checks ->
-                    val acceptance = AuthoringAcceptance(realm.views, checks)
-                    acceptance.capture().use { captured -> acceptance.evaluate(captured) }
+            RealmFixture
+                .of(
+                    catalog,
+                    mapOf(firstResource to record(name = "ready")),
+                    services = RealmServices(predicates = traversalLimit, names = checkingServices().names),
+                ).use { realm ->
+                    RealmCheckRuntime(realm.views).use { checks ->
+                        val acceptance = AuthoringAcceptance(realm.views, checks)
+                        acceptance.capture().use { captured -> acceptance.evaluate(captured) }
+                    }
                 }
-            }
 
         assessment.resources.getValue(firstResource).shouldBeInstanceOf<ResourceReadiness.Ready>()
         assessment.findings.map { it.code to it.message } shouldBe

@@ -1,5 +1,6 @@
 package com.typewritermc.types.codegen
 
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -40,9 +41,12 @@ internal class SdkDeclaration(
     val display: TypeDisplay,
     /** The search scope keyword of a resource type, or null for a type that is not a resource. */
     val searchKey: String?,
+    /** The unit case definitions of an enum, which no declaration of their own emits. */
+    val cases: List<TypeDefinition> = emptyList(),
 ) {
     val resource: Boolean = source.implements(Resource::class)
-    val record: Boolean = definition.representation is RepresentationTemplate.RecordWrapper
+    val enumeration: Boolean = source.classKind == ClassKind.ENUM_CLASS
+    val record: Boolean = definition.representation is RepresentationTemplate.RecordWrapper && !enumeration
     val abstract: Boolean = source.isAbstractDeclaration
     val generic: Boolean = typeVariables.isNotEmpty()
 

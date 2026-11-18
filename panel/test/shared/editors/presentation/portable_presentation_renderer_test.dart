@@ -494,7 +494,7 @@ void main() {
       final published = publishedType(
         definition,
         representation: skir.RepresentationTemplate.createRecord(
-          abstract_: false,
+          form: skir.RecordForm.concrete,
           fields: fields,
         ),
         fields: [
@@ -828,9 +828,7 @@ void main() {
               icon: skir.Icon.wrapIconify("material-symbols:category"),
             ),
             value: skir.DataValue.createNamed(
-              actualType:
-                  (record.configuration as skir.TypeSelection_completeWrapper)
-                      .value,
+              actualType: document.catalog.completeUse(record.configuration)!,
               payload: skir.DataValue.createRecord(fields: record.fields),
             ),
           ),
@@ -1025,7 +1023,19 @@ void main() {
     ),
     (
       "an enum status uses its case as the default label",
-      skir.DataValue.wrapEnumCase("Connected"),
+      skir.DataValue.createNamed(
+        actualType: skir.NamedTypeUse(
+          definition: skir.TypeDefinitionId(
+            typeId: skir.TypeId.createQualified(
+              namespace: "test",
+              name: "connection",
+            ),
+            revision: 1,
+          ).member("Connected"),
+          arguments: const [],
+        ),
+        payload: skir.DataValue.unit,
+      ),
     ),
   ]) {
     testWidgets(name, (tester) async {
@@ -1707,6 +1717,73 @@ void main() {
     expect(visibleFieldValues(), ["material-symbols:book"]);
   });
 
+  testWidgets("an enum's control offers its cases and saves the chosen one", (
+    tester,
+  ) async {
+    final fixture = EditedValue(
+      enumValue("Door", "Shut"),
+      skir.TypeUse.wrapNamed(typeUse("Door")),
+    );
+    final panel = await fixture.show(
+      tester,
+      skir.PresentationElement.createDefaultPresentation(
+        control: fixture.control,
+        presentationId: null,
+      ),
+      catalog: authoredCatalog(declaredEnum("Door", ["Shut", "Open", "Ajar"])),
+    );
+    bool chosen(String name) => semanticsLabeled(name).any(
+      (node) =>
+          node.getSemanticsData().flagsCollection.isSelected == Tristate.isTrue,
+    );
+    for (final name in ["Shut", "Open", "Ajar"]) {
+      expect(panel.shows(name), isTrue);
+    }
+    expect(chosen("Shut"), isTrue);
+    await panel.tapOn(panel.labeled("Open"));
+
+    expect(fixture.value, enumValue("Door", "Open"));
+    expect(chosen("Open"), isTrue);
+    expect(chosen("Shut"), isFalse);
+  });
+
+  testWidgets("a closed union with a case holding fields shows no dropdown", (
+    tester,
+  ) async {
+    final fixture = EditedValue(
+      typedValue(
+        "Circle",
+        skir.DataValue.createRecord(
+          fields: [
+            skir.FieldValue(
+              name: "label",
+              value: skir.DataValue.wrapStringValue("round"),
+            ),
+          ],
+        ),
+      ),
+      skir.TypeUse.wrapNamed(typeUse("Shape")),
+    );
+    final panel = await fixture.show(
+      tester,
+      skir.PresentationElement.createDefaultPresentation(
+        control: fixture.control,
+        presentationId: null,
+      ),
+      catalog: authoredCatalog([
+        declaredRecord("Shape", cases: ["Circle"]),
+        declaredRecord(
+          "Circle",
+          fields: {"label": skir.ScalarKind.text},
+          parents: ["Shape"],
+        ),
+      ]),
+    );
+
+    expect(panel.shows("The enumeration binding is unavailable"), isFalse);
+    expect(visibleFieldValues(), contains("round"));
+  });
+
   testWidgets("record input preserves authored absolute field paths", (
     tester,
   ) async {
@@ -2213,7 +2290,7 @@ void main() {
                                   ..representation =
                                       skir.RepresentationTemplate.createRecord(
                                         fields: const [],
-                                        abstract_: false,
+                                        form: skir.RecordForm.concrete,
                                       ))
                                 .toFrozen())
                       .toFrozen(),
@@ -2224,7 +2301,8 @@ void main() {
         catalog: catalog,
         resources: {
           RendererWorkspace.resource: skir.AuthoringRecord(
-            configuration: skir.TypeSelection.unknown,
+            types: const [],
+            configuration: skir.TypeSelection.defaultInstance,
             fields: [
               skir.FieldValue(name: "icon", value: skir.DataValue.unfilled),
             ],
@@ -2238,6 +2316,7 @@ void main() {
           return skir.PreparedValue(
             content: skir.PreparedContent.wrapRecord(
               skir.AuthoringRecord(
+                types: const [],
                 configuration: value.recordSelection,
                 fields: [
                   skir.FieldValue(
@@ -2331,10 +2410,7 @@ void main() {
       await tester.tap(find.text("Iconify").last);
       await tester.pumpAndSettle();
 
-      expect(
-        request?.recordSelection,
-        skir.TypeSelection.wrapComplete(_iconifyType),
-      );
+      expect(request?.recordSelection, selectionOfUse(_iconifyType));
       expect(
         document.workspace.document
             .resource(RendererWorkspace.resource)!

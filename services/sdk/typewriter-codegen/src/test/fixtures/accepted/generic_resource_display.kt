@@ -2,7 +2,7 @@
 
 package fixture
 
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import com.typewritermc.authoring.defaultLabel
 import com.typewritermc.expression.shortcuts.orIfBlank
 import com.typewritermc.types.DeletionPolicy
@@ -12,6 +12,7 @@ import com.typewritermc.types.Owning
 import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceDefinition
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.discovery.CatalogAssemblyContext
@@ -61,7 +62,7 @@ fun main(args: Array<String>) {
         .load(
             listOf(
                 GeneratedProviderArtifact(ArtifactId("fixture"), Path.of(args.single())),
-                GeneratedProviderArtifact(ArtifactId("core"), Path.of(Resource::class.java.protectionDomain.codeSource.location.toURI())),
+                GeneratedProviderArtifact(ArtifactId("core"), Path.of(ResourceDefinition::class.java.protectionDomain.codeSource.location.toURI())),
             ),
             DeploymentFacts(emptyMap()),
             DiscoveryDomains.Realm,
@@ -70,7 +71,7 @@ fun main(args: Array<String>) {
             val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture")))
             withClue(assembly.editorCatalog.diagnostics) {
                 assembly.displays.displayFor(BoxDefinition.id, assembly.checked)?.target shouldBe
-                    ResourceTarget.TypeWrapper(LabeledDefinition.id.template())
+                    ResourceMatch.DefinitionWrapper(LabeledDefinition.id)
             }
         }
 }

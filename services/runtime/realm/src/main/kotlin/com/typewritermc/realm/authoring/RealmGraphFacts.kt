@@ -1,24 +1,26 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.RealmSectionDefinition
-import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.text
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.AuthoringGraphFacts
 import com.typewritermc.operations.Cloneability
 import com.typewritermc.operations.LinkCapacity
+import com.typewritermc.realm.catalog.graphLinkRelationIds
 import com.typewritermc.realm.catalog.ownershipRelationIds
+import com.typewritermc.types.catalog.Fit
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.fits
+import com.typewritermc.types.definition
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toResourceIds
 import com.typewritermc.types.toSkir
-import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
@@ -54,8 +56,8 @@ internal class RealmGraphFacts(
     override fun ownerOf(id: AuthorResourceId): AuthorResourceId? = ownerOf(id.toSkir())?.toResourceId()
 
     private fun ownerOf(id: ResourceId): ResourceId? {
-        relations.reads.observeInput(InputIdentity.Incoming(id, null))
         val ownership = catalog.ownershipRelationIds
+        ownership.forEach { relations.reads.observeInput(InputIdentity.Incoming(id, it)) }
         return relations.projections
             .filter { it.contract in ownership && it.second == id }
             .map { it.first }
@@ -82,7 +84,11 @@ internal class RealmGraphFacts(
 
     override fun canBeOwned(id: AuthorResourceId): Boolean {
         val type = typeOf(id.toSkir()) ?: return false
-        return catalog.relations.any { it.ownsResources && catalog.checked.isNominalSubtype(type, it.second.resource.definition) }
+        return catalog.relations.any { relation ->
+            relation.ownsResources &&
+                relation.second.resource.definition
+                    .let { member -> member == null || catalog.checked.isNominalSubtype(type, member) }
+        }
     }
 
     override fun isSingleton(id: AuthorResourceId): Boolean {
@@ -119,8 +125,8 @@ internal class RealmGraphFacts(
 
     private fun linkCapacityOf(id: ResourceId): LinkCapacity {
         relations.observeForm(id)
-        val actual = (relations.recordOf(id).configuration as? TypeSelection.CompleteWrapper)?.use ?: return LinkCapacity.None
-        val slots = referenceSlots(id).filter { slot -> catalog.checked.isReadableAs(actual.use, slot.target) }
+        val selection = relations.recordOf(id).configuration
+        val slots = referenceSlots(id).filter { slot -> catalog.checked.fits(selection, slot.target, owner = id) == Fit.YES }
         if (slots.isEmpty()) return LinkCapacity.None
         val current = relations.links.values.associateBy { it.id.location }
         return if (slots.any { it.collection || current[it.at] == null }) LinkCapacity.Available else LinkCapacity.Full
@@ -159,7 +165,7 @@ internal class RealmGraphFacts(
         while (pending.isNotEmpty()) {
             val id = pending.removeFirst()
             if (!closure.add(id)) continue
-            relations.reads.observeInput(InputIdentity.Incoming(id, null))
+            catalog.ownershipRelationIds.forEach { relations.reads.observeInput(InputIdentity.Incoming(id, it)) }
             owned[id].orEmpty().forEach(pending::add)
         }
         return closure
@@ -171,12 +177,12 @@ internal class RealmGraphFacts(
             record.configuration.definition
         }
 
-    /** The non owning reference slots of [id] at their first endpoints, including room for one more collection item. */
+    /** The graph link slots of [id] at their first endpoints, including room for one more collection item. */
     private fun referenceSlots(id: ResourceId): List<ReferenceSlot> {
         val record = relations.recordOf(id)
         val slots = mutableListOf<ReferenceSlot>()
         catalog.relations
-            .filterNot { it.ownsResources }
+            .filter { it.id in catalog.graphLinkRelationIds }
             .forEach { relation ->
                 val endpoint = relation.first.id
                 val evidence = with(relations) { id.bindingEvidence(endpoint) }
@@ -185,7 +191,7 @@ internal class RealmGraphFacts(
                 if (binding is CounterpartBinding.Collection) locations += binding.location.item(candidateItem("capacity")) to true
                 locations.forEach { (at, collection) ->
                     relations.reads.observeInput(InputIdentity.Value(at))
-                    val declared = record.authoredTypeAt(at.path, catalog.checked) ?: return@forEach
+                    val declared = record.authoredTypeAt(id, at.path, catalog.checked) ?: return@forEach
                     val resolved =
                         catalog.checked.resolve(
                             if (declared is TypeUse.NullableWrapper) declared.value.value else declared,
@@ -201,7 +207,7 @@ internal class RealmGraphFacts(
     private data class ReferenceSlot(
         val at: ValueLocation,
         val collection: Boolean,
-        val target: TypeUse,
+        val target: ResourceMatch,
     )
 }
 

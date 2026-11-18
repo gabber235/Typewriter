@@ -7,9 +7,12 @@ import com.typewritermc.types.bigInteger
 import com.typewritermc.types.bits
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.enumCases
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
+import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.signed
+import com.typewritermc.types.storedUse
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
@@ -36,11 +39,10 @@ class CatalogPortableTypes(
         type: TypeUse,
     ): Boolean = fits(value, type, validatePayloads = false)
 
-    /** The case names of the enumeration [type] in declaration order; empty when [type] is not an enumeration. */
+    /** The case names of the enum [type] in declaration order; empty when [type] is not an enum. */
     override fun enumCases(type: TypeUse): List<String> {
         val resolved = catalog.resolve(type) as? Resolution.Ready ?: return emptyList()
-        val enumeration = resolved.value.schema.representation as? ResolvedRepresentation.EnumerationWrapper ?: return emptyList()
-        return enumeration.value.cases.map { it.key }
+        return resolved.value.enumCases().orEmpty()
     }
 
     /**
@@ -75,6 +77,10 @@ class CatalogPortableTypes(
                 } else {
                     fitsShape(value, type, validatePayloads)
                 }
+            }
+
+            is TypeUse.FunctionWrapper -> {
+                fits(value, type.storedUse, validatePayloads)
             }
 
             else -> {
@@ -129,14 +135,9 @@ class CatalogPortableTypes(
             is ResolvedRepresentation.RecordWrapper -> {
                 val record = value as? DataValue.RecordWrapper
                 val fields = resolved.value.schema.fields
-                record != null && !representation.value.abstract_ &&
+                record != null && representation.isInstantiable() &&
                     record.fields.size == fields.size &&
                     fields.all { field -> record.field(field.key)?.let { fits(it, field.type, validatePayloads) } == true }
-            }
-
-            is ResolvedRepresentation.EnumerationWrapper -> {
-                val case = (value as? DataValue.EnumCaseWrapper)?.value
-                case != null && representation.value.cases.any { it.key == case }
             }
 
             is ResolvedRepresentation.LinkWrapper -> {
@@ -187,6 +188,10 @@ private fun fitsScalar(
 
         ScalarKind.DURATION -> {
             value is DataValue.DurationWrapper
+        }
+
+        ScalarKind.TYPE -> {
+            value is DataValue.TypeUseWrapper
         }
 
         is ScalarKind.IntegerWrapper -> {

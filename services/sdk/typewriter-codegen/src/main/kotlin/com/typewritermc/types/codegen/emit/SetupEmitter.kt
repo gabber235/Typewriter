@@ -1,5 +1,6 @@
 package com.typewritermc.types.codegen.emit
 
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -14,6 +15,7 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.UNIT
+import com.squareup.kotlinpoet.asClassName
 import com.typewritermc.codegen.completeUseCode
 import com.typewritermc.codegen.implements
 import com.typewritermc.codegen.isType
@@ -21,7 +23,10 @@ import com.typewritermc.types.codegen.FieldShape
 import com.typewritermc.types.codegen.SdkDeclaration
 import com.typewritermc.types.codegen.SdkEmitter
 import com.typewritermc.types.codegen.SdkField
+import com.typewritermc.types.codegen.parameterizedOrSelf
 import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
+import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
 
 /**
@@ -29,15 +34,16 @@ import com.typewritermc.codegen.TypewriterApi as Api
  * and every concrete resource type gets one builder on `SetupList<T>`. `SetupList` is contravariant, so the builder
  * applies to every owning list whose element type the resource implements, wherever that list is declared; cues,
  * which have no link back to their owner, are covered the same way. A concrete realm section gets an accessor on
- * `SetupRoot` instead of a builder, because the realm creates sections. Abstract and generic types get nothing.
+ * `SetupRoot` instead of a builder, because the realm creates sections. A generic type's builder takes one type use per
+ * type parameter, the application the resource is created as. Abstract types and generic sections get nothing.
  */
 internal object SetupEmitter : SdkEmitter {
     override fun FileSpec.Builder.emit(declaration: SdkDeclaration) {
-        if (!declaration.resource || declaration.generic || declaration.abstract) return
+        if (!declaration.resource || declaration.abstract) return
         val lists = declaration.fields.filter { it.link?.isOwningListOfChildren == true }
         when {
             declaration.source.implements(Api.RealmSection) -> {
-                if (lists.isEmpty()) return
+                if (lists.isEmpty() || declaration.generic) return
                 addType(declaration.sectionClass(lists))
                 addFunction(declaration.sectionAccessor())
             }
@@ -55,11 +61,19 @@ internal object SetupEmitter : SdkEmitter {
 
     private val SdkDeclaration.builderName: String get() = names.baseName.replaceFirstChar(Char::lowercaseChar)
 
+    /** `BookSetup`, or `DefinitionSetup<T>` for a generic type. */
+    private val SdkDeclaration.setupType: TypeName get() = names.setup.parameterizedOrSelf(typeVariables)
+
+    /** The builder parameter that names the application of each type parameter, `T` as `t`. */
+    private val SdkDeclaration.argumentParameters: List<String>
+        get() = typeVariables.map { it.name.replaceFirstChar(Char::lowercaseChar) }
+
     /** `class BookSetup(scope) : SetupFields<Book>(scope)` with its owning lists and one property per settable field. */
     private fun SdkDeclaration.fieldsClass(lists: List<SdkField>): TypeSpec {
         val settable = fields.filter { field -> field !in lists && field.link?.isOwnerLinkOfChild != true && !field.placement }
         return TypeSpec
             .classBuilder(names.setup)
+            .addTypeVariables(typeVariables)
             .primaryConstructor(
                 FunSpec
                     .constructorBuilder()
@@ -92,17 +106,28 @@ internal object SetupEmitter : SdkEmitter {
             .build()
     }
 
-    /** `fun <H> SetupList<Book>.book(key, configure: BookSetup.() -> H): H`; a type without owning lists returns its handle. */
+    /**
+     * `fun <H> SetupList<Book>.book(key, configure: BookSetup.() -> H): H`; a type without owning lists returns its
+     * handle. A generic type takes the application of each type parameter after the key:
+     * `fun <T> SetupList<Definition<T>>.definition(key, t: TypeUse, configure)`.
+     */
     private fun SdkDeclaration.builder(hasLists: Boolean): FunSpec {
         val handle = Api.SetupHandle.parameterizedBy(selfType)
         val result = if (hasLists) TypeVariableName("H") else handle
         val ownerField = fields.singleOrNull { it.link?.isOwnerLinkOfChild == true }
         val placement = fields.singleOrNull { it.placement }
+        val type =
+            if (generic) {
+                CodeBlock.of("%T::class·as·%T", names.source, KClass::class.asClassName().parameterizedBy(selfType))
+            } else {
+                CodeBlock.of("%T::class", selfType)
+            }
         val arguments =
             CodeBlock.of(
-                "key,♢%T::class,♢%T.id,♢%L,♢%L,♢::%T",
-                selfType,
+                "key,♢%L,♢%T.id,♢%L,♢%L,♢%L,♢::%T",
+                type,
                 names.definition,
+                CodeBlock.of("listOf(%L)", argumentParameters.joinToString()),
                 ownerField?.let { CodeBlock.of("%T(%S,♢%S)", Api.SetupFieldName, it.property, it.name) } ?: "null",
                 placement?.let { CodeBlock.of("%S", it.property) } ?: "null",
                 names.setup,
@@ -110,11 +135,14 @@ internal object SetupEmitter : SdkEmitter {
         return FunSpec
             .builder(builderName)
             .receiver(Api.SetupList.parameterizedBy(selfType))
+            .addTypeVariables(typeVariables)
             .apply { if (hasLists) addTypeVariable(TypeVariableName("H")) }
+            .apply { if (generic) addAnnotation(AnnotationSpec.builder(Suppress::class).addMember("%S", "UNCHECKED_CAST").build()) }
             .addParameter("key", STRING)
+            .addParameters(argumentParameters.map { ParameterSpec(it, TypeUse::class.asClassName()) })
             .addParameter(
                 ParameterSpec
-                    .builder("configure", LambdaTypeName.get(receiver = names.setup, returnType = if (hasLists) result else UNIT))
+                    .builder("configure", LambdaTypeName.get(receiver = setupType, returnType = if (hasLists) result else UNIT))
                     .apply { if (!hasLists) defaultValue("{}") }
                     .build(),
             ).returns(result)

@@ -1,10 +1,10 @@
 package com.typewritermc.types
 
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.ContentKey
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.EndpointId
-import skirout.editor.v1.type_catalog.EnumVariant
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FloatWidth
@@ -12,6 +12,7 @@ import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -50,6 +51,21 @@ fun TypeId.requireValid(): TypeId =
                 require(value.name.isNotBlank()) { "Type name must not be blank." }
             }
 
+            is TypeId.MemberWrapper -> {
+                value.owner.requireValid()
+                require(value.name.isNotBlank()) { "Member name must not be blank." }
+            }
+
+            is TypeId.ContentWrapper -> {
+                require(value.resource.value.isNotBlank()) { "Content type resource must not be blank." }
+                when (val key = value.key) {
+                    is ContentKey.GeneratedWrapper -> require(key.value.isNotBlank()) { "Content type key must not be blank." }
+                    is ContentKey.FieldWrapper -> require(key.value.isNotBlank()) { "Content type field must not be blank." }
+                    is ContentKey.DerivedWrapper -> require(key.value.isNotBlank()) { "Derived type key must not be blank." }
+                    else -> throw IllegalArgumentException("Unknown content key variant.")
+                }
+            }
+
             else -> {
                 throw IllegalArgumentException("Unknown type identity variant.")
             }
@@ -72,7 +88,7 @@ fun ScalarKind.requireValid(): ScalarKind =
     apply {
         when (this) {
             ScalarKind.UNIT, ScalarKind.BOOLEAN, ScalarKind.TEXT, ScalarKind.BYTES,
-            ScalarKind.DECIMAL, ScalarKind.TIMESTAMP, ScalarKind.DURATION,
+            ScalarKind.DECIMAL, ScalarKind.TIMESTAMP, ScalarKind.DURATION, ScalarKind.TYPE,
             -> Unit
 
             is ScalarKind.IntegerWrapper -> require(value.width != IntegerWidth.UNKNOWN) { "Unknown integer width." }
@@ -113,13 +129,20 @@ fun FieldDeclaration.requireValid(): FieldDeclaration =
         overrides.forEach { it.requireValid() }
     }
 
-fun EnumVariant.requireValid(): EnumVariant = apply { require(key.isNotBlank()) { "Enum variant key must not be blank." } }
-
 fun EndpointId.requireValid(): EndpointId = apply { require(value.isNotBlank()) { "Endpoint ids must not be blank." } }
 
 fun RelationId.requireValid(): RelationId = apply { require(value.isNotBlank()) { "Relation ids must not be blank." } }
 
 fun RelationFamilyId.requireValid(): RelationFamilyId = apply { require(value.isNotBlank()) { "Relation family ids must not be blank." } }
+
+fun RecordForm.requireValid(): RecordForm =
+    apply {
+        when (this) {
+            RecordForm.CONCRETE, RecordForm.OPEN -> Unit
+            is RecordForm.ClosedWrapper -> value.cases.forEach { it.requireValid() }
+            else -> throw IllegalArgumentException("Unknown record form.")
+        }
+    }
 
 fun RepresentationTemplate.requireValid(): RepresentationTemplate =
     apply {
@@ -130,6 +153,7 @@ fun RepresentationTemplate.requireValid(): RepresentationTemplate =
 
             is RepresentationTemplate.RecordWrapper -> {
                 value.fields.forEach { it.requireValid() }
+                value.form.requireValid()
             }
 
             is RepresentationTemplate.SequenceWrapper -> {
@@ -140,10 +164,6 @@ fun RepresentationTemplate.requireValid(): RepresentationTemplate =
             is RepresentationTemplate.MappingWrapper -> {
                 value.key.requireValid()
                 value.value.requireValid()
-            }
-
-            is RepresentationTemplate.EnumerationWrapper -> {
-                value.cases.forEach { it.requireValid() }
             }
 
             is RepresentationTemplate.LinkWrapper -> {
@@ -182,38 +202,46 @@ val TypeTemplate.isValid: Boolean get() = runCatching { requireValid() }.isSucce
 /** Whether this named template passes [requireValid]; for values that may come from outside the runtime. */
 val NamedTypeTemplate.isValid: Boolean get() = runCatching { requireValid() }.isSuccess
 
+/** Checks what this node says itself, then each part one level deeper. */
 private fun TypeUse.requireValid(depth: Int) {
     requireTypeDepth(depth)
     when (this) {
-        is TypeUse.NamedWrapper -> value.requireValid(depth)
-        is TypeUse.NullableWrapper -> value.value.requireValid(depth + 1)
+        is TypeUse.NamedWrapper -> value.definition.requireValid()
+        is TypeUse.NullableWrapper -> Unit
         is TypeUse.ScalarWrapper -> value.requireValid()
+        is TypeUse.FunctionWrapper -> value.slotNames.let { (context, parameters) -> requireFunctionNames(context, parameters) }
         else -> throw IllegalArgumentException("Unknown type use variant.")
     }
+    parts().forEach { it.requireValid(depth + 1) }
 }
 
-private fun NamedTypeUse.requireValid(depth: Int) {
-    requireTypeDepth(depth)
-    definition.requireValid()
-    arguments.forEach { it.requireValid(depth + 1) }
-}
+private fun NamedTypeUse.requireValid(depth: Int) = use.requireValid(depth)
 
+/** Checks what this node says itself, then each part one level deeper. */
 private fun TypeTemplate.requireValid(depth: Int) {
     requireTypeDepth(depth)
     when (this) {
         is TypeTemplate.ParameterWrapper -> value.requireValid()
-        is TypeTemplate.NamedWrapper -> value.requireValid(depth)
-        is TypeTemplate.NullableWrapper -> value.value.requireValid(depth + 1)
+        is TypeTemplate.NamedWrapper -> value.definition.requireValid()
+        is TypeTemplate.NullableWrapper -> Unit
         is TypeTemplate.ScalarWrapper -> value.requireValid()
+        is TypeTemplate.FunctionWrapper -> value.slotNames.let { (context, parameters) -> requireFunctionNames(context, parameters) }
         else -> throw IllegalArgumentException("Unknown type template variant.")
+    }
+    parts().forEach { it.requireValid(depth + 1) }
+}
+
+private fun requireFunctionNames(
+    context: List<String>,
+    parameters: List<String>,
+) {
+    require((context + parameters).all(String::isNotBlank)) { "Function type slots must be named." }
+    require(context.toSet().size == context.size && parameters.toSet().size == parameters.size) {
+        "Function type slot names must be distinct."
     }
 }
 
-private fun NamedTypeTemplate.requireValid(depth: Int) {
-    requireTypeDepth(depth)
-    definition.requireValid()
-    arguments.forEach { it.requireValid(depth + 1) }
-}
+private fun NamedTypeTemplate.requireValid(depth: Int) = template.requireValid(depth)
 
 private fun requireTypeDepth(depth: Int) = require(depth <= MAX_TYPE_DEPTH) { "Type expression exceeds the supported nesting depth." }
 

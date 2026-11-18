@@ -128,9 +128,7 @@ void main() {
   }
 }
 
-final _entry = skir.TypeSelection.wrapComplete(
-  compiledSdkElementValue.authoredActualType!,
-);
+final _entry = selectionOfUse(compiledSdkElementValue.authoredActualType!);
 final _catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
 
 /// One compiled entry named "Compiled entry", its other fields at their
@@ -141,6 +139,7 @@ final _document = AuthoringDocument(
     _resource: skir.AuthoringResource(
       id: _resource,
       content: skir.AuthoringRecord(
+        types: const [],
         configuration: _entry,
         fields: [
           for (final field in _catalog.fields(_entry))

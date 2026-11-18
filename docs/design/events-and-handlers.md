@@ -64,6 +64,7 @@ class BlockBreakSource(paper: PaperEvents) : Source<BlockBreak> by
 - `origin` comes from the event's subject: a Minecraft session id is the UUID, so the protagonist gives the session.
 - A `change` verdict is applied with `apply = { damage = it.event.damage }`, read from `outcome.event`.
 - `PaperEvents.listen` is the fallback for unusual cases, such as a cause that is not the subject.
+- `PaperEvents.own(player) { ... }` marks a game change as Typewriter's own: a Paper event raised inside the block, for that player, reaches the conversion with `own` true, and a source returns `null` for it. Other plugins still see the Paper event. The block is not suspending, so the mark covers exactly the call that raises the event. The same rule as `wire.send` for packets ([packets.md](packets.md#5-typewriters-own-packets-get-through)); first use is the camera's body follow ([scenes.md](scenes.md#5-typewriters-own-moves)).
 
 | Detail | Who does it |
 | --- | --- |
@@ -93,7 +94,7 @@ The occurrence dedupe key is (connection, kind, client sequence number) when the
 
 ### Configured events
 
-An event type may take a configuration type parameter: `Tick<C : TickConfig>`. The source only emits for matching configurations and passes the configuration to the handler as `config`.
+An event type may take a configuration type parameter: `Tick<Config : TickConfig>`. The source only emits for matching configurations and passes the configuration to the handler as `config`.
 
 ```kotlin
 object EveryTick : TickConfig
@@ -108,7 +109,7 @@ How it works:
 
 1. KSP indexes every (event, configuration type) pair used by a handler.
 2. Publication turns each pair into configuration instances: one for an object, one per published entry or item for a content type. These stay live across hot publish.
-3. The source receives only the configurations that currently have a runnable handler, through `ConfiguredSource<E, C>.open(demand: Demand<C>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region).
+3. The source receives only the configurations that currently have a runnable handler, through `ConfiguredSource<E, Config>.open(demand: Demand<Config>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region).
 
 Configurations a source cannot index are not configured events. Use `Candidate<E>` plus an `if` in the handler instead; entries stay pure data.
 
@@ -116,7 +117,7 @@ Appearing and disappearing state (being in a region, being near an NPC) is not a
 
 ## Demand
 
-`Demand<C>` is the source input for configured events: the configurations that currently have a handler whose other parameters are satisfiable. Demand is computed from handler parameters, so a source never runs work no handler could use. Demand for mirrors (`Demanded<X>`) follows the same rule and is described in [live-data.md](live-data.md).
+`Demand<Config>` is the source input for configured events: the configurations that currently have a handler whose other parameters are satisfiable. Demand is computed from handler parameters, so a source never runs work no handler could use. Demand for mirrors (`Demanded<T>`) follows the same rule and is described in [live-data.md](live-data.md).
 
 ## Handler
 
@@ -150,10 +151,11 @@ Core resolution is a small fixed set. Extensions add value types, not resolution
 | A live capability trait (`HasChat`, `HasInventory`, `HasHealth`) | The engine object for that identity; for a group subject, one per member. |
 | `List<T>` | One run with the values that exist at these keys, filled like `T` from a list field or by `@From`; missing keys drop out. |
 | `All<T>` | Every value of type `T`; for a mirror, on every engine ([live-data.md](live-data.md#demand-across-engines)). |
-| `Candidate<E>` | One run per published entry of type `E` whose book applies to the subject. |
+| `Candidate<E>` | One run per published entry of type `E` whose book applies to the subject ([book-composition.md](book-composition.md#6-conditions)). |
 | A plain value named like a `Var` field of the receiver's entry | That field's current value, context filled from the subject; reruns when its `Watched<T>` changes ([formula-language.md](formula-language.md#the-formula-primitive-in-kotlin)). |
 | `Outcome` | The final outcome; lets an after handler also see denied events. |
 | `Origin` | Who caused this occurrence: the session and its `PrincipalId`. Absent for events without a cause (`Tick`), which skips the handler; `Origin?` makes it optional. |
+| A hold's snapshot type (`LeashCenter`) | That hold's stored snapshot at the hold's keys ([interactions.md](interactions.md#snapshot-and-restore)). |
 | `Snapshot<H>` | A hold's stored snapshot, readable and writable ([interactions.md](interactions.md)). |
 
 Live capability traits are provided by the engine (`PaperProtagonist : Player, HasChat, ...`). Optional capabilities are plain Kotlin type checks.
@@ -233,7 +235,7 @@ Parameter types decide placement. The realm sees this statically, and the panel 
 
 | Handler asks for | Runs |
 | --- | --- |
-| Only stored data | Once, on an engine where the event happened; for realm delivered events (`Changed<X>`, `Due`), on the realm ([stored-data.md](stored-data.md#offline-changes)). |
+| Only stored data | Once, on an engine where the event happened; for realm delivered events (`Changed<T>`, `Due`), on the realm ([stored-data.md](stored-data.md#offline-changes)). |
 | Mirrors, no live trait | On the engine that owns the mirror, without live object access. |
 | A live trait | On the engine where its subject is live. The handler runs on a worker; the engine's trait implementation places each read and effect ([tick pipeline](#tick-pipeline)). |
 | A live trait on a group subject | On each member's engine. |
@@ -405,7 +407,7 @@ fun <E : Event> E.fire(entry: Candidate<EventEntry<E>>) {
 }
 ```
 
-That shared handler serves most events ([Event entries](#event-entries)); `event.message.contains("hello")` in the condition replaces the legacy chat entry. An extension can write its own trigger the same way. Extra needs are extra parameters (traits, stored values, formulas). Entries stay plain data; trigger code only says it fired, the core follows the links. Book narrowing happens inside `fire`. Firing for a group instead of the current subject (`fire(context, for = group)`) is described in [interactions.md](interactions.md).
+That shared handler serves most events ([Event entries](#event-entries)); `event.message.contains("hello")` in the condition replaces the legacy chat entry. An extension can write its own trigger the same way. Extra needs are extra parameters (traits, stored values, formulas). Entries stay plain data; trigger code only says it fired, the core follows the links. Book narrowing happens inside `fire`: a link into an entry whose book does not apply to the subject is skipped ([book-composition.md](book-composition.md#6-conditions)). Firing for a group instead of the current subject (`fire(context, for = group)`) is described in [interactions.md](interactions.md).
 
 Forwarding is declared by the trigger type: the extension marks it forwardable.
 
@@ -590,10 +592,10 @@ Of the 30 legacy events, 24 use the shared entry. `PlayerDamaged`, `PlayerKillPl
 | 8 Mirrors | `FactChange` | |
 | 10 Minecraft types | `BlockPlace`, `ConsumeItem`, `CraftItem`, `DropItem`, `PickupItem`, `Fish`, `Interact`, `InteractBlock`, `ChangeWorld`, `Teleport`, `PlayerRespawn`, `PlayerMove`; `BlockBreak` gains its fields | `GiveItem`, `RemoveItem`, `RemoveItemFromSlot`, `SetItem`, `DropItem`, `Teleport`, `ApplyVelocity`, `BurnPlayer`, `AddPotionEffect`, `RemovePotionEffect`, `SwitchServer` |
 | 16 Dialogue | | `Message`, `ActionBarSimpleMessage`, `ShowTitle`, `SendToast` |
-| 18 Scenes | | `PlaySound`, `StopSound`, `SpawnParticle`, `Firework`, `SetBlock`, `Cinematic` |
+| 18 Scenes | `PlayerDamaged`, `ClientLoaded` | `PlaySound`, `StopSound`, `SpawnParticle`, `Firework`, `SetBlock`; legacy `Cinematic` becomes the `PlaySceneEntry` step |
 | 20 Assets | `ResourcePack` | |
 | 21 Entities | `LeashEntity`, `PlayerHitEntity`, `PlayerKillEntity`, `PlayerKillPlayer`, `PlayerProjectileHitBlock`, `PlayerProjectileHitEntity` | |
-| 22 Regions, rules | `PlayerDamaged`, `PlayerDeath` | |
+| 22 Regions, rules | `PlayerDeath` | |
 
 `PlayerMove` holds the player, `from`, and `to`. A condition covers what legacy needed fields for:
 

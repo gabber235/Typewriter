@@ -7,7 +7,9 @@ import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -15,17 +17,17 @@ import skirout.editor.v1.type_catalog.TypeTemplate
 
 /**
  * A single record type [id] with the [fields] given, in place of a [CatalogDefinitions] block when a test needs one
- * definition. It is abstract when [abstract] and inherits the [parents].
+ * definition. It has the record [form] and inherits the [parents].
  */
 fun recordType(
     id: TypeDefinitionId,
     vararg fields: FieldDeclaration,
-    abstract: Boolean = false,
+    form: RecordForm = RecordForm.CONCRETE,
     parents: List<NamedTypeTemplate> = emptyList(),
 ): TypeDefinition =
     TypeDefinition.partial(
         id = id,
-        representation = RepresentationTemplate.createRecord(fields = fields.toList(), abstract_ = abstract),
+        representation = RepresentationTemplate.createRecord(fields = fields.toList(), form = form),
         parents = parents,
     )
 
@@ -52,7 +54,7 @@ class CatalogDefinitions internal constructor() {
     /** A record type whose fields [fields] declares in order. */
     fun record(
         id: TypeDefinitionId,
-        abstract: Boolean = false,
+        form: RecordForm = RecordForm.CONCRETE,
         parameters: List<TypeParameter> = emptyList(),
         parents: List<NamedTypeTemplate> = emptyList(),
         fields: RecordFields.() -> Unit = {},
@@ -61,7 +63,7 @@ class CatalogDefinitions internal constructor() {
             TypeDefinition.partial(
                 id = id,
                 parameters = parameters,
-                representation = RepresentationTemplate.createRecord(fields = RecordFields(id).apply(fields).fields, abstract_ = abstract),
+                representation = RepresentationTemplate.createRecord(fields = RecordFields(id).apply(fields).fields, form = form),
                 parents = parents,
             )
     }
@@ -92,7 +94,7 @@ class CatalogDefinitions internal constructor() {
             TypeDefinition.partial(
                 id = id,
                 parameters = parameters,
-                representation = RepresentationTemplate.createLink(endpoint = endpoint, target = target),
+                representation = RepresentationTemplate.createLink(endpoint = endpoint, target = ResourceMatchTemplate.TypeWrapper(target)),
             )
     }
 

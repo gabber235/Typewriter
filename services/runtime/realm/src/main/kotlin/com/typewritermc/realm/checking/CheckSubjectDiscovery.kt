@@ -4,8 +4,9 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.reason
-import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
+import com.typewritermc.realm.catalog.CheckPlan
+import com.typewritermc.realm.catalog.ExtensionCatalog
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.type_catalog.RuleId
@@ -13,17 +14,19 @@ import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
-/** Discovers the current subjects of every plan in this catalog over [lease]. */
-internal fun ActiveCatalog.discoverSubjects(
-    lease: AuthoringLease,
-    captureReads: (AuthoringLease) -> CapturedAuthoringReads,
-    diagnostics: CheckDiagnosticIds,
+/**
+ * Discovers the current subjects of every plan of these extensions. Each plan reads the view only through a reader
+ * [newReads] gives it, so its reads and its health are its own. [contentSubjects] gives the resources that have
+ * something for the content rule to report.
+ */
+internal fun ExtensionCatalog.discoverSubjects(
+    newReads: () -> CapturedAuthoringReads,
+    contentSubjects: () -> List<ResourceId>,
 ): SubjectDiscovery {
-    if (lease.root.catalog.generation != generation) return SubjectDiscovery(emptyList(), emptySet())
     val subjects = mutableListOf<CheckSubject>()
     val incompleteRules = linkedSetOf<RuleId>()
     plans.forEach { plan ->
-        val reads = captureReads(lease)
+        val reads = newReads()
         subjects +=
             when (plan) {
                 is CheckPlan.Simple -> {
@@ -56,11 +59,16 @@ internal fun ActiveCatalog.discoverSubjects(
                     listOf(plan.subject(REALM_SUBJECT_KEY))
                 }
 
+                is CheckPlan.Content -> {
+                    contentSubjects().map { resource -> plan.subject(ValueLocation.of(resource)) }
+                }
+
                 is CheckPlan.DiscoveryFailure -> {
                     emptyList()
                 }
             }
-        val outcome = reads.health().outcome(plan.rule.origin)
+        val diagnostics = CheckRunDiagnostics.of(plan.rule, "discovery")
+        val outcome = reads.health().outcome(plan.rule.origin, diagnostics)
         if (outcome != CheckOutcome.FINISHED) {
             incompleteRules += plan.rule
             val findings =
@@ -82,7 +90,6 @@ internal fun ActiveCatalog.discoverSubjects(
                         rule = plan.rule,
                         outcome = outcome,
                         findings = findings,
-                        observed = reads.observations().flatMap { it.dependencies() },
                     ).subject(DISCOVERY_SUBJECT_KEY)
         }
     }
@@ -110,7 +117,7 @@ internal data class CheckSubject(
     val findingLocation: ValueLocation?
         get() =
             when (plan) {
-                is CheckPlan.Simple, is CheckPlan.Portable, is CheckPlan.Each<*> -> location
+                is CheckPlan.Simple, is CheckPlan.Portable, is CheckPlan.Each<*>, is CheckPlan.Content -> location
                 is CheckPlan.Realm, is CheckPlan.RegistrationFailure, is CheckPlan.DiscoveryFailure -> null
             }
 }

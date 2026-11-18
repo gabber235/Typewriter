@@ -6,15 +6,23 @@ import com.typewritermc.types.bits
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
+import com.typewritermc.types.catalog.Unavailability
+import com.typewritermc.types.catalog.contentOwner
+import com.typewritermc.types.catalog.referencedDefinitions
+import com.typewritermc.types.catalog.unavailability
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
+import com.typewritermc.types.identityKey
 import com.typewritermc.types.isCanonicalDecimal
 import com.typewritermc.types.items
+import com.typewritermc.types.named
 import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
 import com.typewritermc.types.signed
+import com.typewritermc.types.storedUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
@@ -23,19 +31,20 @@ import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.EnumerationResolvedRepresentation
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.LinkResolvedRepresentation
 import skirout.editor.v1.type_catalog.MappingResolvedRepresentation
+import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.RecordResolvedRepresentation
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.SequenceResolvedRepresentation
-import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigInteger
+import skirout.kernel.v1.resource_id.ResourceId as SkirResourceId
 
 /** A value admitted against [schema] with no structural problems or unfinished locations. */
 class CompleteValue internal constructor(
@@ -57,39 +66,97 @@ sealed interface CompletenessResult {
     ) : CompletenessResult
 }
 
-/** Checks record shape and type compatibility while allowing [DataValue.UNFILLED] at otherwise valid locations. */
-fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult {
-    val root = ValueLocation.of(AUTHORING_ROOT)
-    return when (val configuration = configuration) {
-        is TypeSelection.CompleteWrapper -> {
-            when (val resolved = catalog.resolve(configuration.use.use)) {
-                is Resolution.Invalid -> {
-                    StructuralResult.InvalidWrapper(resolved.diagnostics.map { it.asValueProblem(root) })
-                }
+/**
+ * A way a value does not fit its schema, at the problem's location, and why. Two misfits are the same when their
+ * location, code and cause agree, so a second use of a missing type is a new one.
+ */
+data class Misfit(
+    val problem: ValueProblem,
+    val cause: MisfitCause = MisfitCause.Shape,
+) {
+    /**
+     * Whether a change made this misfit, given the ones the value had [before]. A link that does not fit and now points
+     * at another target is new, as a new link would be; one that was removed is not, since that leaves less misfit.
+     */
+    fun isNewAgainst(before: Set<Misfit>): Boolean =
+        this !in before && (cause is MisfitCause.Link || before.none { it.withoutLink() == this })
 
-                is Resolution.Ready -> {
-                    val inspection = ValueInspection(catalog)
-                    inspection.validatePayload(DataValue.RecordWrapper(payload), resolved.value, root)
-                    inspection.structuralResult()
-                }
+    private fun withoutLink(): Misfit = if (cause is MisfitCause.Link) copy(cause = MisfitCause.Shape) else this
+}
+
+/** Why a value does not fit; the problem's code says the same for clients. */
+sealed interface MisfitCause {
+    /** The value does not have the shape its schema asks for. */
+    data object Shape : MisfitCause
+
+    /** The value sits at a position its type does not declare, so no slot judges what it holds. */
+    data object Undeclared : MisfitCause
+
+    /** The link stored here, to [target], does not fit the slot its position declares. */
+    data class Link(
+        val target: SkirResourceId,
+    ) : MisfitCause
+
+    /** A type used here, [type], stands in as the error type for the reason [why]. */
+    data class TypeUnavailable(
+        val type: TypeDefinitionId,
+        val why: Unavailability,
+    ) : MisfitCause
+}
+
+/** The type this misfit is a use of when that type is unavailable, or null for any other misfit. */
+val Misfit.unavailableType: TypeDefinitionId? get() = (cause as? MisfitCause.TypeUnavailable)?.type
+
+/** Checks record shape and type compatibility while allowing [DataValue.UNFILLED] at otherwise valid locations. */
+fun AuthoringRecord.validateStructure(
+    owner: SkirResourceId,
+    catalog: CheckedCatalog,
+): StructuralResult {
+    val problems = inspectStructure(owner, catalog).problems
+    return if (problems.isEmpty()) StructuralResult.VALID else StructuralResult.InvalidWrapper(problems)
+}
+
+/**
+ * Every structural problem of this record on [owner], with each use of a type that is gone or invalid inside its values
+ * as its own misfit at its location: a named value's actual type or a stored type use.
+ */
+fun AuthoringRecord.structuralMisfits(
+    owner: SkirResourceId,
+    catalog: CheckedCatalog,
+): List<Misfit> {
+    val inspection = inspectStructure(owner, catalog)
+    return inspection.misfits.map { misfit ->
+        misfit.copy(problem = misfit.problem.copy(location = misfit.problem.location.copy(resource = owner)))
+    }
+}
+
+private fun AuthoringRecord.inspectStructure(
+    owner: SkirResourceId,
+    catalog: CheckedCatalog,
+): ValueInspection {
+    val root = ValueLocation.of(AUTHORING_ROOT)
+    val inspection = ValueInspection()
+    val walk = ValueWalk(catalog, inspection)
+    when (val type = catalog.typeOf(owner, configuration)) {
+        is Resolution.Invalid -> {
+            type.diagnostics.forEach { inspection.misfits += Misfit(it.asValueProblem(root)) }
+        }
+
+        is Resolution.Ready -> {
+            when (val resolved = type.value) {
+                is ResourceType.Complete -> walk.walkPayload(DataValue.RecordWrapper(payload), resolved.checked, root)
+                is ResourceType.Partial -> inspectPartial(resolved.schema, walk, inspection, root)
             }
         }
-
-        is TypeSelection.PendingWrapper -> {
-            validatePending(configuration, catalog, root)
-        }
-
-        else -> {
-            unknownVariant(configuration)
-        }
     }
+    return inspection
 }
 
 /** Admits a complete value for native use, distinguishing unfinished locations from structurally invalid content. */
 fun CheckedType.complete(value: DataValue): CompletenessResult {
-    val inspection = ValueInspection(resolver)
+    val inspection = ValueInspection()
     val root = ValueLocation.of(AUTHORING_ROOT)
-    inspection.validateCheckedValue(value, this, root)
+    ValueWalk(resolver, inspection).walkChecked(value, this, root)
     return when {
         inspection.problems.isNotEmpty() -> CompletenessResult.Invalid(inspection.problems)
         inspection.unfinished.isNotEmpty() -> CompletenessResult.Unfinished(inspection.unfinished)
@@ -97,82 +164,177 @@ fun CheckedType.complete(value: DataValue): CompletenessResult {
     }
 }
 
-private fun AuthoringRecord.validatePending(
-    selection: TypeSelection.PendingWrapper,
-    catalog: CheckedCatalog,
+private fun AuthoringRecord.inspectPartial(
+    partial: PartialSchema,
+    walk: ValueWalk<Unit>,
+    inspection: ValueInspection,
     root: ValueLocation,
-): StructuralResult {
-    val partial = catalog.resolvePartial(selection)
-    if (partial is Resolution.Invalid) {
-        return StructuralResult.InvalidWrapper(partial.diagnostics.map { it.asValueProblem(root) })
-    }
-    partial as Resolution.Ready
-    val known = partial.value.knownFields.associateBy { it.key }
-    val dependent = partial.value.dependentFields.associateBy { it.owner.name }
+) {
+    val known = partial.knownFields.associateBy { it.key }
+    val dependent = partial.dependentFields.associateBy { it.owner.name }
     val expectedKeys = known.keys + dependent.keys
-    val problems = mutableListOf<ValueProblem>()
+    val problems = mutableListOf<Misfit>()
     val present = fields.mapView.keys
-    (present - expectedKeys).forEach { key -> problems += ValueProblem(location = root.field(key), code = "unknown_field") }
-    (expectedKeys - present).forEach { key -> problems += ValueProblem(location = root.field(key), code = "missing_field") }
-    val inspection = ValueInspection(catalog)
+    (present - expectedKeys).forEach { key ->
+        problems += Misfit(ValueProblem(location = root.field(key), code = UNDECLARED_FIELD), MisfitCause.Undeclared)
+    }
+    (expectedKeys - present).forEach { key -> problems += Misfit(ValueProblem(location = root.field(key), code = "missing_field")) }
     known.forEach { (name, field) ->
         val value = field(name) ?: return@forEach
-        inspection.validateUse(value, field.type, root.field(name))
+        walk.walk(value, field.type, root.field(name))
     }
     dependent.forEach { (name, _) ->
         val value = field(name) ?: return@forEach
-        if (value != DataValue.UNFILLED) problems += ValueProblem(location = root.field(name), code = "dependent_field_requires_type")
+        if (value !=
+            DataValue.UNFILLED
+        ) {
+            problems += Misfit(ValueProblem(location = root.field(name), code = "dependent_field_requires_type"))
+        }
     }
-    problems += inspection.problems
-    return if (problems.isEmpty()) StructuralResult.VALID else StructuralResult.InvalidWrapper(problems)
+    inspection.misfits += problems
 }
 
-private class ValueInspection(
+/**
+ * What the one schema walk does at each node it reaches. Inspection records a problem and goes on; evaluation stops at
+ * the first. Every node sees a non null type: a nullable use around a value walks its inner type.
+ */
+interface ValueVisitor<R> {
+    /** A check failed at [at] with [code], for the reason [cause]. */
+    fun problem(
+        at: ValueLocation,
+        code: String,
+        cause: MisfitCause = MisfitCause.Shape,
+    )
+
+    /** What a node that failed a check stands for, so inspection can go on. A visitor that throws in [problem] never reaches it. */
+    fun placeholder(at: ValueLocation): R
+
+    fun unfinished(at: ValueLocation): R
+
+    fun nullValue(at: ValueLocation): R
+
+    fun scalar(
+        value: DataValue,
+        kind: ScalarKind,
+        at: ValueLocation,
+    ): R
+
+    fun link(
+        link: DataValue.LinkWrapper,
+        at: ValueLocation,
+    ): R
+
+    fun sequence(
+        kind: CollectionKind,
+        items: List<R>,
+        at: ValueLocation,
+    ): R
+
+    fun mapping(
+        rows: List<Pair<R, R>>,
+        at: ValueLocation,
+    ): R
+
+    /** A named record; [actual] is the stored value's own type, expanded and applied, never a field key. */
+    fun record(
+        actual: TypeUse,
+        fields: Map<String, R>,
+        at: ValueLocation,
+    ): R
+
+    /** Any other named value, an enum case or a value class, with its payload's answer. */
+    fun named(
+        actual: TypeUse,
+        payload: R,
+        at: ValueLocation,
+    ): R
+
+    /** True for a Var or function typed position this visitor reads later; the walk then calls [deferred] and does not descend. */
+    fun defers(use: TypeUse): Boolean = false
+
+    fun deferred(
+        value: DataValue,
+        use: TypeUse,
+        at: ValueLocation,
+    ): R = error("This visitor reads every position now.")
+}
+
+/**
+ * The one schema walk over a stored value, so fit, evaluation and the formula sites cannot drift apart. It resolves each
+ * node's type, checks it, and hands the node to [visitor]: one set of locations (item ids, map key and value), one
+ * nullable rule, one actual type rule (a named value's own type decides its record), and the collection rules by
+ * identity key. A content type that is gone or invalid is a problem at the named value or stored type use that names it.
+ */
+class ValueWalk<R>(
     private val catalog: CheckedCatalog?,
+    private val visitor: ValueVisitor<R>,
 ) {
-    val problems = mutableListOf<ValueProblem>()
-    val unfinished = mutableListOf<ValueLocation>()
+    /** [value] at the declared [use]. */
+    fun walk(
+        value: DataValue,
+        use: TypeUse,
+        at: ValueLocation,
+    ): R = validateUse(value, use, at, 0)
 
-    fun structuralResult(): StructuralResult = if (problems.isEmpty()) StructuralResult.VALID else StructuralResult.InvalidWrapper(problems)
-
-    fun validateCheckedValue(
+    /** The payload [value] of [checked], such as a resource's fields under its configuration. */
+    fun walkPayload(
         value: DataValue,
         checked: CheckedType,
         at: ValueLocation,
-    ) = validateCheckedValue(value, checked, at, 0)
+    ): R = validatePayload(value, checked, checked.use, at, 0)
+
+    /** [value] admitted against the applied [checked] type itself. */
+    fun walkChecked(
+        value: DataValue,
+        checked: CheckedType,
+        at: ValueLocation,
+    ): R = validateCheckedValue(value, checked, at, 0)
+
+    /** Reports each content type [use] names that stands in as the error type, at [at]. */
+    private fun noteUnavailable(
+        use: TypeUse,
+        at: ValueLocation,
+    ) {
+        val resolver = catalog ?: return
+        use.referencedDefinitions().distinct().filter { it.contentOwner() != null }.forEach { id ->
+            resolver.unavailability(id)?.let { visitor.problem(at, it.code, MisfitCause.TypeUnavailable(id, it)) }
+        }
+    }
 
     private fun validateCheckedValue(
         value: DataValue,
         checked: CheckedType,
         at: ValueLocation,
         depth: Int,
-    ) {
-        if (!withinDepth(at, depth)) return
-        if (value == DataValue.UNFILLED) {
-            unfinished += at
-            return
-        }
-        when (val use = checked.use) {
+    ): R {
+        if (!withinDepth(at, depth)) return visitor.placeholder(at)
+        if (visitor.defers(checked.use)) return visitor.deferred(value, checked.use, at)
+        if (value == DataValue.UNFILLED) return visitor.unfinished(at)
+        return when (val use = checked.use) {
             is TypeUse.NullableWrapper -> {
-                if (value == DataValue.NULL) return
-                validateUseWithResolver(value, use.value.value, at, depth + 1)
+                if (value == DataValue.NULL) {
+                    visitor.nullValue(at)
+                } else {
+                    validateUseWithResolver(value, use.value.value, at, depth + 1)
+                }
             }
 
             is TypeUse.NamedWrapper -> {
-                val named = value as? DataValue.NamedWrapper
-                if (named == null) {
-                    problem(at, "expected_named")
-                    return
+                val named = value as? DataValue.NamedWrapper ?: return problem(at, "expected_named")
+                if (named.actualType == use.value) {
+                    noteUnavailable(named.actualType.use, at)
+                    validatePayload(named.payload, checked, expanded(named.actualType.use), at, depth + 1)
+                } else {
+                    validateUse(value, use, at, depth)
                 }
-                if (named.actualType != use.value) {
-                    problem(at, "wrong_actual_type")
-                    return
-                }
-                validatePayload(named.payload, checked, at, depth + 1)
             }
 
             is TypeUse.ScalarWrapper -> {
                 validateScalar(value, use.value, at)
+            }
+
+            is TypeUse.FunctionWrapper -> {
+                validateUse(value, use.storedUse, at, depth)
             }
 
             else -> {
@@ -181,27 +343,18 @@ private class ValueInspection(
         }
     }
 
-    fun validateUse(
-        value: DataValue,
-        expected: TypeUse,
-        at: ValueLocation,
-    ) = validateUse(value, expected, at, 0)
-
     private fun validateUse(
         value: DataValue,
         expected: TypeUse,
         at: ValueLocation,
         depth: Int,
-    ) {
-        if (!withinDepth(at, depth)) return
-        if (value == DataValue.UNFILLED) {
-            unfinished += at
-            return
-        }
-        when (expected) {
+    ): R {
+        if (!withinDepth(at, depth)) return visitor.placeholder(at)
+        if (visitor.defers(expected)) return visitor.deferred(value, expected, at)
+        if (value == DataValue.UNFILLED) return visitor.unfinished(at)
+        return when (expected) {
             is TypeUse.NullableWrapper -> {
-                if (value == DataValue.NULL) return
-                validateUse(value, expected.value.value, at, depth + 1)
+                if (value == DataValue.NULL) visitor.nullValue(at) else validateUse(value, expected.value.value, at, depth + 1)
             }
 
             is TypeUse.ScalarWrapper -> {
@@ -209,24 +362,11 @@ private class ValueInspection(
             }
 
             is TypeUse.NamedWrapper -> {
-                val named = value as? DataValue.NamedWrapper
-                if (named == null) {
-                    problem(at, "expected_named")
-                    return
-                }
-                val resolver = catalog
-                if (resolver == null) {
-                    if (named.actualType != expected.value) problem(at, "wrong_actual_type")
-                    return
-                }
-                if (!resolver.isReadableAs(named.actualType.use, expected)) {
-                    problem(at, "unreadable_actual_type")
-                    return
-                }
-                when (val actual = resolver.resolve(named.actualType.use)) {
-                    is Resolution.Invalid -> problems += actual.diagnostics.map { it.asValueProblem(at) }
-                    is Resolution.Ready -> validatePayload(named.payload, actual.value, at, depth + 1)
-                }
+                validateNamed(value, expected, at, depth)
+            }
+
+            is TypeUse.FunctionWrapper -> {
+                validateUse(value, expected.storedUse, at, depth)
             }
 
             else -> {
@@ -235,29 +375,47 @@ private class ValueInspection(
         }
     }
 
-    fun validatePayload(
+    /** A value at a named position: it carries its own type, which must be readable as [expected]. */
+    private fun validateNamed(
         value: DataValue,
-        checked: CheckedType,
+        expected: TypeUse.NamedWrapper,
         at: ValueLocation,
-    ) = validatePayload(value, checked, at, 0)
+        depth: Int,
+    ): R {
+        val named = value as? DataValue.NamedWrapper ?: return problem(at, "expected_named")
+        val resolver = catalog
+        if (resolver == null) {
+            return if (named.actualType != expected.value) problem(at, "wrong_actual_type") else visitor.placeholder(at)
+        }
+        if (!resolver.isReadableAs(named.actualType.use, expected)) return problem(at, "unreadable_actual_type")
+        noteUnavailable(named.actualType.use, at)
+        return when (val actual = resolver.resolve(named.actualType.use)) {
+            is Resolution.Invalid -> {
+                actual.diagnostics.forEach { visitor.problem(at, it.code) }
+                visitor.placeholder(at)
+            }
 
+            is Resolution.Ready -> {
+                validatePayload(named.payload, actual.value, expanded(named.actualType.use), at, depth + 1)
+            }
+        }
+    }
+
+    /** [actual] is the named value's own type; a record answers through it, a scalar representation as a named value. */
     private fun validatePayload(
         value: DataValue,
         checked: CheckedType,
+        actual: TypeUse,
         at: ValueLocation,
         depth: Int,
-    ) {
-        if (!withinDepth(at, depth)) return
-        if (value == DataValue.UNFILLED) {
-            unfinished += at
-            return
-        }
-        when (val representation = checked.schema.representation) {
-            is ResolvedRepresentation.ScalarWrapper -> validateScalar(value, representation.value.kind, at)
-            is ResolvedRepresentation.RecordWrapper -> validateRecord(value, representation.value, at, depth)
+    ): R {
+        if (!withinDepth(at, depth)) return visitor.placeholder(at)
+        if (value == DataValue.UNFILLED) return visitor.unfinished(at)
+        return when (val representation = checked.schema.representation) {
+            is ResolvedRepresentation.ScalarWrapper -> visitor.named(actual, validateScalar(value, representation.value.kind, at), at)
+            is ResolvedRepresentation.RecordWrapper -> validateRecord(value, representation.value, actual, at, depth)
             is ResolvedRepresentation.SequenceWrapper -> validateSequence(value, representation.value, at, depth)
             is ResolvedRepresentation.MappingWrapper -> validateMapping(value, representation.value, at, depth)
-            is ResolvedRepresentation.EnumerationWrapper -> validateEnumeration(value, representation.value, at)
             is ResolvedRepresentation.LinkWrapper -> validateLink(value, representation.value, at)
             else -> unknownVariant(representation)
         }
@@ -268,28 +426,24 @@ private class ValueInspection(
         use: TypeUse,
         at: ValueLocation,
         depth: Int,
-    ) {
-        if (!withinDepth(at, depth)) return
-        val resolver = catalog
-        if (resolver != null) {
-            validateUse(value, use, at, depth)
-        } else {
-            when (use) {
-                is TypeUse.ScalarWrapper -> {
-                    validateScalar(value, use.value, at)
-                }
+    ): R {
+        if (!withinDepth(at, depth)) return visitor.placeholder(at)
+        if (catalog != null) return validateUse(value, use, at, depth)
+        return when (use) {
+            is TypeUse.ScalarWrapper -> {
+                validateScalar(value, use.value, at)
+            }
 
-                is TypeUse.NullableWrapper -> {
-                    if (value != DataValue.NULL) validateUseWithResolver(value, use.value.value, at, depth + 1)
-                }
+            is TypeUse.NullableWrapper -> {
+                if (value != DataValue.NULL) validateUseWithResolver(value, use.value.value, at, depth + 1) else visitor.nullValue(at)
+            }
 
-                is TypeUse.NamedWrapper -> {
-                    problem(at, "catalog_required_for_nested_named")
-                }
+            is TypeUse.NamedWrapper, is TypeUse.FunctionWrapper -> {
+                problem(at, "catalog_required_for_nested_named")
+            }
 
-                else -> {
-                    unknownVariant(use)
-                }
+            else -> {
+                unknownVariant(use)
             }
         }
     }
@@ -297,21 +451,20 @@ private class ValueInspection(
     private fun validateRecord(
         value: DataValue,
         representation: RecordResolvedRepresentation,
+        actual: TypeUse,
         at: ValueLocation,
         depth: Int,
-    ) {
-        val record = value as? DataValue.RecordWrapper
-        if (record == null) {
-            problem(at, "expected_record")
-            return
-        }
+    ): R {
+        val record = value as? DataValue.RecordWrapper ?: return problem(at, "expected_record")
         val fields = representation.fields.associateBy { it.key }
         val present = record.fields.mapView
-        (present.keys - fields.keys).forEach { name -> problem(at.field(name), "unknown_field") }
-        (fields.keys - present.keys).forEach { name -> problem(at.field(name), "missing_field") }
-        fields.forEach { (name, field) ->
-            present[name]?.let { validateUse(it.value, field.type, at.field(name), depth + 1) }
-        }
+        (present.keys - fields.keys).forEach { name -> visitor.problem(at.field(name), UNDECLARED_FIELD, MisfitCause.Undeclared) }
+        (fields.keys - present.keys).forEach { name -> visitor.problem(at.field(name), "missing_field") }
+        val answers =
+            fields.entries.mapNotNull { (name, field) ->
+                present[name]?.let { name to validateUse(it.value, field.type, at.field(name), depth + 1) }
+            }
+        return visitor.record(actual, answers.toMap(), at)
     }
 
     private fun validateSequence(
@@ -319,20 +472,23 @@ private class ValueInspection(
         representation: SequenceResolvedRepresentation,
         at: ValueLocation,
         depth: Int,
-    ) {
+    ): R {
         val items =
             when (representation.kind) {
                 CollectionKind.LIST -> (value as? DataValue.ListValueWrapper)?.items
                 CollectionKind.SET -> (value as? DataValue.SetValueWrapper)?.items
                 else -> unknownVariant(representation.kind)
-            }
-        if (items == null) {
-            problem(at, if (representation.kind == CollectionKind.LIST) "expected_list" else "expected_set")
-            return
-        }
+            } ?: return problem(at, if (representation.kind == CollectionKind.LIST) "expected_list" else "expected_set")
         val duplicateIds = items.groupBy { it.id }.filterValues { it.size > 1 }.keys
-        duplicateIds.forEach { id -> problem(at.item(id), "duplicate_item_id") }
-        items.forEach { item -> validateUse(item.value, representation.item, at.item(item.id), depth + 1) }
+        duplicateIds.forEach { id -> visitor.problem(at.item(id), "duplicate_item_id") }
+        if (representation.kind == CollectionKind.SET) {
+            items.repeatsBy { it.value.identityKey() }.forEach { item -> visitor.problem(at.item(item.id), "duplicate_set_value") }
+        }
+        return visitor.sequence(
+            representation.kind,
+            items.map { item -> validateUse(item.value, representation.item, at.item(item.id), depth + 1) },
+            at,
+        )
     }
 
     private fun validateMapping(
@@ -340,82 +496,93 @@ private class ValueInspection(
         representation: MappingResolvedRepresentation,
         at: ValueLocation,
         depth: Int,
-    ) {
-        val rows = (value as? DataValue.MapValueWrapper)?.rows
-        if (rows == null) {
-            problem(at, "expected_map")
-            return
-        }
+    ): R {
+        val rows = (value as? DataValue.MapValueWrapper)?.rows ?: return problem(at, "expected_map")
         val duplicateIds = rows.groupBy { it.id }.filterValues { it.size > 1 }.keys
-        duplicateIds.forEach { id -> problem(at.item(id), "duplicate_item_id") }
-        rows.forEach { row ->
-            validateUse(row.key, representation.key, at.item(row.id).mapKey(), depth + 1)
-            validateUse(row.value, representation.value, at.item(row.id).mapValue(), depth + 1)
-        }
-    }
-
-    private fun validateEnumeration(
-        value: DataValue,
-        representation: EnumerationResolvedRepresentation,
-        at: ValueLocation,
-    ) {
-        val enum = value as? DataValue.EnumCaseWrapper
-        if (enum == null) {
-            problem(at, "expected_enum")
-            return
-        }
-        if (representation.cases.none { it.key == enum.value }) problem(at, "unknown_enum_case")
+        duplicateIds.forEach { id -> visitor.problem(at.item(id), "duplicate_item_id") }
+        rows.repeatsBy { it.key.identityKey() }.forEach { row -> visitor.problem(at.item(row.id).mapKey(), "duplicate_map_key") }
+        return visitor.mapping(
+            rows.map { row ->
+                validateUse(row.key, representation.key, at.item(row.id).mapKey(), depth + 1) to
+                    validateUse(row.value, representation.value, at.item(row.id).mapValue(), depth + 1)
+            },
+            at,
+        )
     }
 
     private fun validateLink(
         value: DataValue,
         representation: LinkResolvedRepresentation,
         at: ValueLocation,
-    ) {
-        val link = value as? DataValue.LinkWrapper
-        if (link == null) {
-            problem(at, "expected_link")
-            return
-        }
-        if (link.endpoint != representation.endpoint) problem(at, "wrong_endpoint")
+    ): R {
+        val link = value as? DataValue.LinkWrapper ?: return problem(at, "expected_link")
+        if (link.endpoint != representation.endpoint) return problem(at, "wrong_endpoint")
+        return visitor.link(link, at)
     }
 
     private fun validateScalar(
         value: DataValue,
         kind: ScalarKind,
         at: ValueLocation,
-    ) {
-        if (
-            kind is ScalarKind.FloatWrapper &&
+    ): R {
+        if (losesFloat32Precision(value, kind)) return problem(at, "float32_precision_loss")
+        if (!scalarFits(value, kind)) return problem(at, "wrong_scalar")
+        if (value is DataValue.TypeUseWrapper && !validateHeldType(value.value, at)) return visitor.placeholder(at)
+        return visitor.scalar(value, kind, at)
+    }
+
+    /** A finite float stored at a 32 bit position that a Float cannot hold exactly. */
+    private fun losesFloat32Precision(
+        value: DataValue,
+        kind: ScalarKind,
+    ): Boolean =
+        kind is ScalarKind.FloatWrapper &&
             kind.value.width == FloatWidth.THIRTY_TWO &&
             value is DataValue.FloatWrapper &&
             value.value.isFinite() &&
             value.value.toFloat().toDouble() != value.value
-        ) {
-            problem(at, "float32_precision_loss")
-            return
+
+    /** Whether [value] has the form of a [kind] scalar. */
+    private fun scalarFits(
+        value: DataValue,
+        kind: ScalarKind,
+    ): Boolean =
+        when (kind) {
+            is ScalarKind.IntegerWrapper -> value is DataValue.IntegerWrapper && value.fits(kind.value.width)
+            is ScalarKind.FloatWrapper -> value is DataValue.FloatWrapper && value.fits(kind.value.width)
+            ScalarKind.DECIMAL -> value is DataValue.DecimalWrapper && value.value.isCanonicalDecimal()
+            else -> plainScalarForms[kind]?.invoke(value) ?: unknownVariant(kind)
         }
-        val valid =
-            when (kind) {
-                ScalarKind.UNIT -> value == DataValue.UNIT
-                ScalarKind.BOOLEAN -> value is DataValue.BooleanWrapper
-                ScalarKind.TEXT -> value is DataValue.StringValueWrapper
-                ScalarKind.BYTES -> value is DataValue.BytesWrapper
-                is ScalarKind.IntegerWrapper -> value is DataValue.IntegerWrapper && value.fits(kind.value.width)
-                is ScalarKind.FloatWrapper -> value is DataValue.FloatWrapper && value.fits(kind.value.width)
-                ScalarKind.DECIMAL -> value is DataValue.DecimalWrapper && value.value.isCanonicalDecimal()
-                ScalarKind.TIMESTAMP -> value is DataValue.TimestampWrapper
-                ScalarKind.DURATION -> value is DataValue.DurationWrapper
-                else -> unknownVariant(kind)
+
+    /** A held type must resolve; a content type it names that is gone or invalid is its own problem here. False when one was found. */
+    private fun validateHeldType(
+        use: TypeUse,
+        at: ValueLocation,
+    ): Boolean {
+        val resolver = catalog ?: return true
+        var fits = true
+        (resolver.resolve(use) as? Resolution.Invalid)?.let { invalid ->
+            fits = false
+            invalid.diagnostics.forEach { visitor.problem(at, it.code) }
+        }
+        use.referencedDefinitions().distinct().filter { it.contentOwner() != null }.forEach { id ->
+            resolver.unavailability(id)?.let {
+                fits = false
+                visitor.problem(at, it.code, MisfitCause.TypeUnavailable(id, it))
             }
-        if (!valid) problem(at, "wrong_scalar")
+        }
+        return fits
     }
+
+    /** The named value's own type with every field key expanded, as the visitor receives it. */
+    private fun expanded(use: TypeUse): TypeUse = catalog?.expand(use) ?: use
 
     private fun problem(
         at: ValueLocation,
         code: String,
-    ) {
-        problems += ValueProblem(location = at, code = code)
+    ): R {
+        visitor.problem(at, code)
+        return visitor.placeholder(at)
     }
 
     private fun withinDepth(
@@ -423,9 +590,70 @@ private class ValueInspection(
         depth: Int,
     ): Boolean {
         if (depth <= MAX_AUTHORED_VALUE_DEPTH) return true
-        problem(at, "value_depth_limit")
+        visitor.problem(at, "value_depth_limit")
         return false
     }
+}
+
+/**
+ * complete(), validateStructure and the misfits: the walk as a visitor that collects. A use of a type that is gone or
+ * invalid is a misfit only misfits read; every other one is also a structural problem.
+ */
+private class ValueInspection : ValueVisitor<Unit> {
+    val misfits = mutableListOf<Misfit>()
+    val unfinished = mutableListOf<ValueLocation>()
+
+    val problems: List<ValueProblem> get() = misfits.filterNot { it.cause is MisfitCause.TypeUnavailable }.map { it.problem }
+
+    override fun problem(
+        at: ValueLocation,
+        code: String,
+        cause: MisfitCause,
+    ) {
+        misfits += Misfit(ValueProblem(location = at, code = code), cause)
+    }
+
+    override fun placeholder(at: ValueLocation) = Unit
+
+    override fun unfinished(at: ValueLocation) {
+        unfinished += at
+    }
+
+    override fun nullValue(at: ValueLocation) = Unit
+
+    override fun scalar(
+        value: DataValue,
+        kind: ScalarKind,
+        at: ValueLocation,
+    ) = Unit
+
+    override fun link(
+        link: DataValue.LinkWrapper,
+        at: ValueLocation,
+    ) = Unit
+
+    override fun sequence(
+        kind: CollectionKind,
+        items: List<Unit>,
+        at: ValueLocation,
+    ) = Unit
+
+    override fun mapping(
+        rows: List<Pair<Unit, Unit>>,
+        at: ValueLocation,
+    ) = Unit
+
+    override fun record(
+        actual: TypeUse,
+        fields: Map<String, Unit>,
+        at: ValueLocation,
+    ) = Unit
+
+    override fun named(
+        actual: TypeUse,
+        payload: Unit,
+        at: ValueLocation,
+    ) = Unit
 }
 
 private fun DataValue.IntegerWrapper.fits(width: IntegerWidth): Boolean = value.toBigIntegerOrNull()?.fits(width) == true
@@ -456,3 +684,24 @@ private fun DeclarationDiagnostic.asValueProblem(at: ValueLocation) = ValueProbl
 private val AUTHORING_ROOT = ResourceId("authoring")
 
 private const val MAX_AUTHORED_VALUE_DEPTH = 512
+
+/** Every element after the first whose [key] an earlier element already has. */
+private fun <T> List<T>.repeatsBy(key: (T) -> String): List<T> {
+    val seen = hashSetOf<String>()
+    return filterNot { seen.add(key(it)) }
+}
+
+/** The form of each scalar kind that has no width or canonical text to check. */
+private val plainScalarForms: Map<ScalarKind, (DataValue) -> Boolean> =
+    mapOf(
+        ScalarKind.UNIT to { value -> value == DataValue.UNIT },
+        ScalarKind.BOOLEAN to { value -> value is DataValue.BooleanWrapper },
+        ScalarKind.TEXT to { value -> value is DataValue.StringValueWrapper },
+        ScalarKind.BYTES to { value -> value is DataValue.BytesWrapper },
+        ScalarKind.TIMESTAMP to { value -> value is DataValue.TimestampWrapper },
+        ScalarKind.DURATION to { value -> value is DataValue.DurationWrapper },
+        ScalarKind.TYPE to { value -> value is DataValue.TypeUseWrapper },
+    )
+
+/** The code of a value at a position its type does not declare. */
+private const val UNDECLARED_FIELD = "unknown_field"

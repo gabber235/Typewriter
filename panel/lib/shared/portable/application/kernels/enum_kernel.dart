@@ -23,8 +23,8 @@ final class PanelEnumKernel implements skir.EnumKernel {
 
 skir.DataValue _case(skir.TypeUse type, String name) => switch (type) {
   skir.TypeUse_namedWrapper(:final value) => skir.DataValue.createNamed(
-    actualType: value,
-    payload: skir.DataValue.wrapEnumCase(name),
+    actualType: value.member(name),
+    payload: skir.DataValue.unit,
   ),
   _ => throw skir.PortableOperationFailure(
     skir.PortableFailures.illTypedArgument,

@@ -103,18 +103,19 @@ final class AuthoredPresentationHost extends ChangeNotifier
       throw StateError("The authoring catalog is unavailable");
     }
     final payload = skir.DataValue.createRecord(fields: record.fields);
-    final value = switch (record.configuration) {
-      skir.TypeSelection_completeWrapper(:final value) =>
-        skir.DataValue.createNamed(actualType: value, payload: payload),
-      _ => payload,
-    };
-    final schema = switch (record.configuration) {
-      skir.TypeSelection_completeWrapper(:final value) =>
-        CompletePortablePresentationBinding(skir.TypeUse.wrapNamed(value)),
-      skir.TypeSelection_pendingWrapper() => PartialPortablePresentationBinding(
-        record.configuration,
+    final complete = checked.completeUse(record.configuration);
+    final value = switch (complete) {
+      final value? => skir.DataValue.createNamed(
+        actualType: value,
+        payload: payload,
       ),
-      skir.TypeSelection_unknown() => null,
+      null => payload,
+    };
+    final schema = switch (complete) {
+      final value? => CompletePortablePresentationBinding(
+        skir.TypeUse.wrapNamed(value),
+      ),
+      null => PartialPortablePresentationBinding(record.configuration),
     };
     final observationIssues =
         issues ?? ResourceIssues.evaluate(document: observation);
@@ -144,16 +145,15 @@ final class AuthoredPresentationHost extends ChangeNotifier
           ),
           value: checked.appearanceOf(record).toExpressionValue(),
         ),
-        if (schema != null)
-          configuredValueBindingId: PortablePresentationBinding(
-            schema: schema,
-            value: value,
-            editable: true,
-            location: skir.ValueLocation(
-              resource: resource,
-              path: skir.ValuePath(segments: const []),
-            ),
+        configuredValueBindingId: PortablePresentationBinding(
+          schema: schema,
+          value: value,
+          editable: true,
+          location: skir.ValueLocation(
+            resource: resource,
+            path: skir.ValuePath(segments: const []),
           ),
+        ),
       },
       budget: budget,
       diagnosticFallback: PortableDiagnosticFallback.resource,
@@ -202,10 +202,12 @@ final class AuthoredPresentationHost extends ChangeNotifier
 
   skir.DataValue _recordValue(skir.AuthoringRecord record) {
     final payload = skir.DataValue.createRecord(fields: record.fields);
-    return switch (record.configuration) {
-      skir.TypeSelection_completeWrapper(:final value) =>
-        skir.DataValue.createNamed(actualType: value, payload: payload),
-      _ => payload,
+    return switch (authored.catalog.completeUse(record.configuration)) {
+      final value? => skir.DataValue.createNamed(
+        actualType: value,
+        payload: payload,
+      ),
+      null => payload,
     };
   }
 

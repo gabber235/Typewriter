@@ -90,12 +90,13 @@ final class BoundPage {
                 key: skir.ParameterKey(owner: type, index: 0),
                 name: "T",
                 bounds: const [],
+                derived: false,
               ),
             ]
           : const [],
       representation: skir.RepresentationTemplate.createRecord(
         fields: [name],
-        abstract_: false,
+        form: skir.RecordForm.concrete,
       ),
       parents: const [],
     );
@@ -104,7 +105,7 @@ final class BoundPage {
       parameters: const [],
       representation: skir.RepresentationTemplate.createRecord(
         fields: const [],
-        abstract_: false,
+        form: skir.RecordForm.concrete,
       ),
       parents: const [],
     );
@@ -147,11 +148,11 @@ final class BoundPage {
       resource: skir.AuthoringResource(
         id: resource,
         content: skir.AuthoringRecord(
+          types: const [],
           configuration:
               configuration ??
-              skir.TypeSelection.createComplete(
-                definition: type,
-                arguments: const [],
+              selectionOfUse(
+                skir.NamedTypeUse(definition: type, arguments: const []),
               ),
           fields: [
             skir.FieldValue(
@@ -200,9 +201,8 @@ skir.PublishedType linkType(
     parents: const [],
     representation: skir.RepresentationTemplate.createLink(
       endpoint: skir.EndpointId(value: "target"),
-      target: skir.TypeTemplate.createNamed(
-        definition: target,
-        arguments: const [],
+      target: skir.ResourceMatchTemplate.wrapType(
+        skir.TypeTemplate.createNamed(definition: target, arguments: const []),
       ),
     ),
   ),

@@ -87,9 +87,7 @@ fun DataValue.locate(
     for (segment in path.segments) {
         onStep(StructuralStep.Form(at))
         if (segment is PathSegment.ItemWrapper) onStep(StructuralStep.Membership(at))
-        node = node.unwrap(at)
-        if (node is LocatedPortableValue.Invalid) return node
-        node = node.readChild(segment, at)
+        node = node.child(segment, at)
         if (node is LocatedPortableValue.Missing || node is LocatedPortableValue.Invalid) return node
         at = at.append(segment)
     }
@@ -166,6 +164,16 @@ fun DataValue.writeField(
     rewrite(path.segments, 0) { value }
         ?.let(ValueReplacement::Replaced)
         ?: ValueReplacement.Unavailable(path)
+
+/** What [segment] leads to from this node at [at], read through nominal wrappers: one step of [locate]. */
+internal fun LocatedPortableValue.child(
+    segment: PathSegment,
+    at: ValuePath,
+): LocatedPortableValue =
+    when (val node = unwrap(at)) {
+        is LocatedPortableValue.Invalid -> node
+        else -> node.readChild(segment, at)
+    }
 
 private fun LocatedPortableValue.unwrap(at: ValuePath): LocatedPortableValue {
     var node = this

@@ -59,6 +59,7 @@ import com.typewritermc.testkit.fieldPattern
 import com.typewritermc.testkit.integerField
 import com.typewritermc.testkit.nullableTextField
 import com.typewritermc.testkit.origin
+import com.typewritermc.testkit.problemCodes
 import com.typewritermc.testkit.ready
 import com.typewritermc.testkit.recordType
 import com.typewritermc.testkit.rulePredicate
@@ -80,6 +81,7 @@ import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
+import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
@@ -114,8 +116,10 @@ import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -167,7 +171,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         )
 
@@ -183,14 +187,14 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         )
 
     val testMessageDefinition =
         TypeDefinition.partial(
             id = testMessageId,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
         )
 
     val testTextMessageDefinition =
@@ -205,7 +209,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
             parents = listOf(testMessageId.namedTemplate()),
         )
@@ -222,7 +226,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
             parents = listOf(testMessageId.namedTemplate()),
         )
@@ -247,7 +251,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = testMessageId.template().nullable(),
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         )
 
@@ -268,7 +272,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                 type = StandardTypes.list.template(listOf(TEST_TREE_ID.template(listOf(testTreeParameter.template)))),
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         )
 
@@ -629,7 +633,7 @@ val SdkRuntimeConformanceTest by testSuite {
                             endpoint =
                                 skirout.editor.v1.type_catalog
                                     .EndpointId(value = "link.$endpoint"),
-                            target = resource.template(),
+                            target = ResourceMatchTemplate.TypeWrapper(resource.template()),
                         ),
                 )
             }
@@ -639,7 +643,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 listOf(
                     TypeDefinition.partial(
                         id = resource,
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                     ),
                 ) +
                     links,
@@ -744,6 +748,51 @@ val SdkRuntimeConformanceTest by testSuite {
         (encoded.value.payload as DataValue.ListValueWrapper).value.items.map { it.value } shouldBe listOf(opaqueRecord)
     }
 
+    val portableDoorId = definitionId("PortableDoor")
+    val portableDoorUse = portableDoorId.namedUse().use
+    val portableDoorBindings =
+        CatalogContributions(
+            declarations =
+                (
+                    listOf(
+                        TypeDefinition.partial(
+                            id = portableDoorId,
+                            representation =
+                                RepresentationTemplate.createRecord(
+                                    fields = emptyList(),
+                                    form =
+                                        RecordForm.createClosed(
+                                            cases = listOf("Open", "Closed").map { portableDoorId.member(it).namedTemplate() },
+                                        ),
+                                ),
+                        ),
+                    ) +
+                        listOf("Open", "Closed").map {
+                            TypeDefinition.partial(
+                                id = portableDoorId.member(it),
+                                representation = RepresentationTemplate.createScalar(kind = ScalarKind.UNIT),
+                                parents = listOf(portableDoorId.namedTemplate()),
+                            )
+                        }
+                ).map { OwnedTypeDeclaration(origin("portable_door"), it) },
+        ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "portable door")))
+    val openDoor = DataValue.named(portableDoorId.member("Open").namedUse(), DataValue.UNIT)
+
+    test("a portable binding of a closed union decodes the case a value holds and encodes it back unchanged") {
+        val binding = portableDoorBindings.binding<PortableValue>(portableDoorUse)
+        val decoded =
+            binding.decode(
+                portableDoorBindings.checked
+                    .resolve(portableDoorUse)
+                    .ready()
+                    .complete(openDoor)
+                    .complete(),
+            )
+
+        decoded shouldBe PortableValue(actualType = portableDoorId.member("Open").namedUse().use, payload = DataValue.UNIT)
+        binding.encode(decoded) shouldBe openDoor
+    }
+
     test("a portable binding refuses to encode a value whose actual type is not its own") {
         shouldThrow<NativeBindingException> {
             portableBindings
@@ -763,7 +812,7 @@ val SdkRuntimeConformanceTest by testSuite {
         (invalid as CompletenessResult.Invalid).problems.map { it.code } shouldBe listOf("missing_field")
     }
 
-    test("native set and map reject canonical duplicate non data record values") {
+    test("complete() refuses canonical duplicate non data record values in a native set and map, before any binding decodes them") {
         val origin = origin("canonical_native_duplicates")
         val assembly =
             CatalogContributions(
@@ -803,10 +852,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 ),
             )
-        val setBinding = assembly.bindings.bind(setChecked)
-        shouldThrow<NativeBindingException> {
-            setBinding.decode(setChecked.complete(setValue).complete())
-        }.code shouldBe "duplicate_set_value"
+        setChecked.complete(setValue).problemCodes() shouldBe listOf("duplicate_set_value")
 
         val mapChecked = assembly.checked.resolve(testIdentityKeyMapUse.use).ready()
         val mapValue =
@@ -831,10 +877,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 ),
             )
-        val mapBinding = assembly.bindings.bind(mapChecked)
-        shouldThrow<NativeBindingException> {
-            mapBinding.decode(mapChecked.complete(mapValue).complete())
-        }.code shouldBe "duplicate_map_key"
+        mapChecked.complete(mapValue).problemCodes() shouldBe listOf("duplicate_map_key")
     }
 
     test("float32 native binding preserves exact width and rejects precision loss") {
@@ -875,7 +918,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val child =
             TypeDefinition.partial(
                 id = childId,
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(left.id.namedTemplate(), right.id.namedTemplate()),
             )
         val assembly =
@@ -935,7 +978,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val reserved =
             TypeDefinition.partial(
                 id = TypeDefinitionId.qualified("typewriter.parameter", "Reserved"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             )
         val assembly =
             CatalogContributions(
@@ -1006,31 +1049,31 @@ val SdkRuntimeConformanceTest by testSuite {
         val textNamed =
             TypeDefinition.partial(
                 id = definitionId("TextNamed"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(root.id.namedTemplate()),
             )
         val choiceNamed =
             TypeDefinition.partial(
                 id = definitionId("ChoiceNamed"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(root.id.namedTemplate()),
             )
         val conflicted =
             TypeDefinition.partial(
                 id = definitionId("ConflictedPresentationChild"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(textNamed.id.namedTemplate(), choiceNamed.id.namedTemplate()),
             )
         val resolved =
             TypeDefinition.partial(
                 id = definitionId("ResolvedPresentationChild"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(textNamed.id.namedTemplate(), choiceNamed.id.namedTemplate()),
             )
         val unrelated =
             TypeDefinition.partial(
                 id = definitionId("UnrelatedPresentationChild"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(root.id.namedTemplate()),
             )
         val textProvider =
@@ -1201,7 +1244,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val child =
             TypeDefinition.partial(
                 id = definitionId("BoundedChild"),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(parent.id.namedTemplate()),
             )
         val origin = origin("inherited_rules")
@@ -1249,7 +1292,7 @@ val SdkRuntimeConformanceTest by testSuite {
                                     type = parameter.template,
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val origin = origin("generic_rules")

@@ -102,6 +102,7 @@ final class ParentFieldFixture {
     return skir.PreparedValue(
       content: skir.PreparedContent.wrapRecord(
         skir.AuthoringRecord(
+          types: const [],
           configuration: request.recordSelection,
           fields: [
             skir.FieldValue(
@@ -141,7 +142,7 @@ final class PageCreationFixture {
           declaredRecord(
             "Page",
             fields: {"book": "BookPagesPage", "name": skir.ScalarKind.text},
-            abstract: true,
+            open: true,
           ),
           declaredRecord(
             "SequencePage",
@@ -265,6 +266,7 @@ final class RelationEditFixture {
     );
     final originalResource = saved.resources.single;
     final linkedRecord = skir.AuthoringRecord(
+      types: const [],
       configuration: originalResource.content.configuration,
       fields: [
         for (final field in originalResource.content.fields)
@@ -294,6 +296,7 @@ final class RelationEditFixture {
           skir.AuthoringResource(
             id: target,
             content: skir.AuthoringRecord(
+              types: const [],
               configuration: originalResource.content.configuration,
               fields: [
                 for (final name in ["back", "back2"])
@@ -341,14 +344,18 @@ final class RelationEditFixture {
             first: skir.EndpointDefinition(
               id: endpoint,
               slot: skir.EndpointSlot.first,
-              resource: selection,
+              resource: skir.ResourceMatchTemplate.wrapType(
+                skir.TypeTemplate.wrapNamed(selection),
+              ),
               cardinality: skir.EndpointCardinality.one,
               onDelete: firstDelete,
             ),
             second: skir.EndpointDefinition(
               id: opposite,
               slot: skir.EndpointSlot.second,
-              resource: selection,
+              resource: skir.ResourceMatchTemplate.wrapType(
+                skir.TypeTemplate.wrapNamed(selection),
+              ),
               cardinality: skir.EndpointCardinality.many,
               onDelete: secondDelete,
             ),
@@ -473,6 +480,7 @@ skir.PreparedValue preparedRecord(
 ) => skir.PreparedValue(
   content: skir.PreparedContent.wrapRecord(
     skir.AuthoringRecord(
+      types: const [],
       configuration: request.recordSelection,
       fields: fields,
     ),

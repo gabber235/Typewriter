@@ -33,6 +33,7 @@ skir.AuthoringRecord withField(
   String name,
   skir.DataValue value,
 ) => skir.AuthoringRecord(
+  types: const [],
   configuration: record.configuration,
   fields: [
     for (final field in record.fields)

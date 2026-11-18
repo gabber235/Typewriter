@@ -144,7 +144,8 @@ void main() {
         fixture.resource: skir.AuthoringResource(
           id: fixture.resource,
           content: skir.AuthoringRecord(
-            configuration: skir.TypeSelection.unknown,
+            types: const [],
+            configuration: skir.TypeSelection.defaultInstance,
             fields: record.fields,
           ),
         ),
@@ -200,10 +201,12 @@ void main() {
           ),
           evidence: skir.DiagnosticEvidence(
             catalog: fixture.draft.generation,
-            expectations: [
-              skir.EditExpectation.createResource(
-                id: fixture.resource,
-                expected: fixture.draft.resource(fixture.resource),
+            evidence: [
+              skir.CheckEvidence.wrapFact(
+                skir.EditExpectation.createResource(
+                  id: fixture.resource,
+                  expected: fixture.draft.resource(fixture.resource),
+                ),
               ),
             ],
           ),

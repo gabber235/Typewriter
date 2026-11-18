@@ -12,7 +12,6 @@ import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.DraftView
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.MapDraft
@@ -31,7 +30,6 @@ import com.typewritermc.authoring.materialize
 import com.typewritermc.authoring.nativeReadProjection
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.PartialSelection
@@ -96,6 +94,7 @@ import com.typewritermc.types.bigInteger
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -140,7 +139,6 @@ import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.FailureId
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
@@ -162,8 +160,10 @@ import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -184,7 +184,7 @@ internal class FixtureKeyDraft(
     override val catalog = binding.catalog
     override val readContext = binding.readContext
     override val location = binding.location
-    override val actualType = Availability.Available((binding.actual as TypeSelection.CompleteWrapper).use)
+    override val actualType = Availability.Available(binding.type.definition.namedUse())
 }
 
 internal class FixtureDraftReads(
@@ -232,10 +232,10 @@ internal class FixtureDraftReads(
                 catalog,
                 readContext,
                 path.location,
-                DraftExpectation.PartialRoot(
+                ResourceType.Partial(
+                    named.actualType.definition,
                     PartialSchema(knownFields = emptyList(), dependentFields = emptyList(), pendingArguments = emptyList()),
                 ),
-                TypeSelection.CompleteWrapper(named.actualType),
             ),
         )
     }
@@ -287,6 +287,10 @@ internal class SamplingPlan(
         return failure?.let { CaptureResult.Unavailable(listOf(it)) }
             ?: CaptureResult.Captured(mapOf(field to (value ?: DataValue.StringValueWrapper("capture:$calls"))))
     }
+
+    override fun construct(supplied: Map<FieldOwner, Any?>): Any = error("Initialization sampling builds no instance.")
+
+    override fun read(value: Any): Map<FieldOwner, Any?> = error("Initialization sampling reads no instance.")
 }
 
 internal class PlanFactory(
@@ -379,12 +383,12 @@ internal fun resumeFixture(
                                         type = marker.template(emptyList()),
                                     ),
                                 ),
-                            abstract_ = false,
+                            form = RecordForm.CONCRETE,
                         ),
                 ),
                 TypeDefinition.partial(
                     id = settings,
-                    representation = RepresentationTemplate.createRecord(fields = settingsFields, abstract_ = false),
+                    representation = RepresentationTemplate.createRecord(fields = settingsFields, form = RecordForm.CONCRETE),
                 ),
                 TypeDefinition.partial(
                     id = marker,
@@ -398,7 +402,7 @@ internal fun resumeFixture(
                                         hasConstructorDefault = true,
                                     ),
                                 ),
-                            abstract_ = false,
+                            form = RecordForm.CONCRETE,
                         ),
                 ),
             ),
@@ -431,18 +435,25 @@ internal fun id(name: String) = TypeDefinitionId.qualified("test.resume", name)
 internal fun NamedTypeUse.template() = definition.template(emptyList())
 
 internal fun resourceDefinition() =
-    TypeDefinition.partial(id = RESOURCE_ID, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
+    TypeDefinition.partial(
+        id = RESOURCE_ID,
+        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+    )
 
 internal fun linkDefinition() =
     TypeDefinition.partial(
         id = LINK_ID,
-        representation = RepresentationTemplate.createLink(endpoint = ENDPOINT, target = RESOURCE_ID.template(emptyList())),
+        representation =
+            RepresentationTemplate.createLink(
+                endpoint = ENDPOINT,
+                target = ResourceMatchTemplate.TypeWrapper(RESOURCE_ID.template(emptyList())),
+            ),
     )
 
 internal fun request(id: TypeDefinitionId) =
     ValuePreparationRequest(
         catalog = GENERATION,
-        target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(id.namedUse(emptyList()))),
+        target = PreparationTarget.RecordWrapper(TypeSelection.of(id.namedUse(emptyList()))),
         suppliedValue = DataValue.record(emptyMap()),
     )
 

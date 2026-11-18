@@ -436,7 +436,7 @@ abstract interface class PortableTypes {
   /// Whether [value]'s actual type is [type] or one of its descendants.
   bool isInstance(skir.DataValue value, skir.TypeUse type);
 
-  /// The case names of the enumeration [type], in declaration order.
+  /// The case names of the enum [type], in declaration order.
   List<String> enumCases(skir.TypeUse type);
 
   /// Whether the catalog admits [value] as a value of [type].
@@ -450,13 +450,14 @@ abstract interface class PortableResources {
   /// no such resource. Records a read of the resource either way.
   skir.AuthoringRecord? resource(skir.ResourceId id);
 
-  /// Whether a resource configured as [configuration] is a value of [type].
-  /// A pending configuration matches when its chosen arguments allow [type].
+  /// Whether a resource configured as [configuration] is a value of [type]:
+  /// the catalog's fit rule does not answer no, so a pending configuration
+  /// matches while its choices could still make it a [type].
   bool selects(skir.TypeSelection configuration, skir.TypeUse type);
 
-  /// Whether a resource configured as [configuration] belongs to the family
-  /// the opposite endpoint of [link]'s relation names, so the link still
-  /// targets the kind of resource it was authored for.
+  /// Whether a resource configured as [configuration] fits what the opposite
+  /// endpoint of [link]'s relation targets, by the same fit rule, so the link
+  /// still targets the kind of resource it was authored for.
   bool linkTargets(skir.LinkValue link, skir.TypeSelection configuration);
 
   /// The published declaration of [definition], or null when the catalog
@@ -649,10 +650,9 @@ extension PortableKernelValues on skir.DataValue {
     _ => throw _illTyped("Expected a link."),
   };
 
-  String asEnumCase() => switch (_structural) {
-    skir.DataValue_enumCaseWrapper(:final value) => value,
-    _ => throw _illTyped("Expected an enum case."),
-  };
+  /// The case name of an enum value: its actual type's member name.
+  String asMemberName() =>
+      enumCaseName ?? (throw _illTyped("Expected an enum case."));
 
   PortableNumber asNumber() => switch (_structural) {
     skir.DataValue_integerWrapper(:final value) => PortableInteger(

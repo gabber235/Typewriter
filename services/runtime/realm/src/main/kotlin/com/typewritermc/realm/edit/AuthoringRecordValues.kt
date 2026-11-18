@@ -1,15 +1,14 @@
 package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.ValueReplacement
+import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
-import com.typewritermc.authoring.use
 import com.typewritermc.authoring.writeField
 import com.typewritermc.realm.authoring.ResourceValueMapper
-import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -150,7 +149,7 @@ private fun AuthoringRecord.declaredCollection(
     location: ValueLocation,
     catalog: CheckedCatalog,
 ): AuthoredCollection? {
-    val type = authoredTypeAt(location.path, catalog).namedType() ?: return null
+    val type = authoredTypeAt(location.resource, location.path, catalog).namedType() ?: return null
     val checked = (catalog.resolve(type.use) as? Resolution.Ready)?.value ?: return null
     val representation = checked.schema.representation as? ResolvedRepresentation.SequenceWrapper ?: return null
     return AuthoredCollection(type, representation.value)
@@ -203,7 +202,8 @@ internal fun problem(
     code: String,
 ): ValueProblem = ValueProblem(location = ValueLocation.of(resource), code = code)
 
+/** The link occurrences at or below [at]: all a write at [at] can change, and what a lookup of one occurrence needs. */
 internal fun resourceLinks(
     resources: Map<ResourceId, AuthoringRecord>,
-    resource: ResourceId,
-): List<LinkOccurrence> = resources[resource]?.let { ResourceValueMapper.discover(mapOf(resource to it)) }.orEmpty()
+    at: ValueLocation,
+): List<LinkOccurrence> = resources[at.resource]?.let { ResourceValueMapper.discover(at.resource, it, at.path) }.orEmpty()

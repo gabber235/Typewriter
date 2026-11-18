@@ -3,6 +3,58 @@
 package fixture
 
 import build.skir.JsonFlavor
+import com.typewritermc.authoring.CaptureResult
+import com.typewritermc.authoring.CompletenessResult
+import com.typewritermc.authoring.DefaultInitializationRuntime
+import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.defaultLabel
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.configuration.name
+import com.typewritermc.discovery.CatalogAssemblyContext
+import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.DiscoveryDomains
+import com.typewritermc.discovery.GeneratedProviderArtifact
+import com.typewritermc.discovery.GeneratedProviderKind
+import com.typewritermc.discovery.GeneratedProviderLoader
+import com.typewritermc.discovery.assemble
+import com.typewritermc.expression.eq
+import com.typewritermc.expression.literal
+import com.typewritermc.expression.orElse
+import com.typewritermc.expression.shortcuts.orIfBlank
+import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.presentation.CollectionProjection
+import com.typewritermc.presentation.DefaultPresentationRuntime
+import com.typewritermc.presentation.PresentationRuntime
+import com.typewritermc.presentation.TypewriterCollectionProjection
+import com.typewritermc.presentation.collectionProjection
+import com.typewritermc.presentation.projectedCollectionSource
+import com.typewritermc.types.DeletionPolicy
+import com.typewritermc.types.Many
+import com.typewritermc.types.One
+import com.typewritermc.types.Owning
+import com.typewritermc.types.Ref
+import com.typewritermc.types.ReferenceContract
+import com.typewritermc.types.RelationDeletePolicy
+import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeDisplay
+import com.typewritermc.types.TypewriterDisplay
+import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.TypewriterTypeImports
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.items
+import com.typewritermc.types.member
+import com.typewritermc.types.named
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.record
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
@@ -12,80 +64,31 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.catalog.PreparationTarget
-import skirout.editor.v1.catalog.ValuePreparationRequest
-import com.typewritermc.types.type
-import skirout.editor.v1.type_catalog.ResourceTarget
-import com.typewritermc.configuration.name
-import skirout.editor.v1.type_catalog.CatalogGeneration
-import com.typewritermc.authoring.root
-import com.typewritermc.types.fields
-import com.typewritermc.types.items
-import com.typewritermc.types.integer
-import com.typewritermc.types.record
-import com.typewritermc.types.named
-import com.typewritermc.authoring.DefaultInitializationRuntime
-import com.typewritermc.authoring.field
-import com.typewritermc.authoring.fieldMap
 import skirout.editor.v1.catalog.PreparedContent
-import skirout.editor.v1.type_catalog.TypeSelection
-import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.IntegerWidth
-import java.math.BigInteger
-import kotlinx.serialization.Transient
-import kotlinx.serialization.SerialName
-import com.typewritermc.authoring.CaptureResult
-import com.typewritermc.discovery.CatalogAssemblyContext
-import com.typewritermc.discovery.DeploymentFacts
-import com.typewritermc.discovery.DiscoveryDomains
-import com.typewritermc.discovery.GeneratedProviderArtifact
-import com.typewritermc.discovery.GeneratedProviderKind
-import com.typewritermc.discovery.GeneratedProviderLoader
-import com.typewritermc.discovery.assemble
-import com.typewritermc.expression.literal
-import com.typewritermc.expression.eq
-import com.typewritermc.expression.orElse
-import skirout.editor.v1.type_catalog.ValuePath
-import skirout.editor.v1.expression.ExpressionNode
-import com.typewritermc.imprint.ArtifactId
-import com.typewritermc.presentation.CollectionProjection
-import com.typewritermc.presentation.DefaultPresentationRuntime
-import com.typewritermc.presentation.PresentationRuntime
-import com.typewritermc.presentation.TypewriterCollectionProjection
-import com.typewritermc.presentation.collectionProjection
-import com.typewritermc.presentation.projectedCollectionSource
 import skirout.editor.v1.catalog.PresentationRole
-import skirout.editor.v1.type_catalog.RepresentationTemplate
-import com.typewritermc.types.DeletionPolicy
-import com.typewritermc.types.Many
-import com.typewritermc.types.One
-import com.typewritermc.types.Owning
-import com.typewritermc.types.Ref
-import com.typewritermc.types.ReferenceContract
-import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.Resource
-import com.typewritermc.authoring.defaultLabel
-import com.typewritermc.expression.shortcuts.orIfBlank
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypewriterDisplay
-import com.typewritermc.types.TypewriterType
-import com.typewritermc.types.TypewriterTypeImports
-import com.typewritermc.types.catalog.Resolution
-import java.nio.file.Path
+import skirout.editor.v1.catalog.ValuePreparationRequest
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.PresentationNode
-import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeUse
-import com.typewritermc.types.use
-import com.typewritermc.types.template
-import com.typewritermc.types.namedTemplate
-import com.typewritermc.types.integerScalar
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatch
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValuePath
+import java.math.BigInteger
+import java.nio.file.Path
 
 /** Names an Example by its title, keeping the type display accent and icon. */
 object ExampleNaming : ExampleDisplay {
@@ -143,6 +146,23 @@ data class ExampleRow(
     val receiverExpression: String = "",
 )
 
+/** A sealed type made only of objects, beside an enum, so both kinds of unit cases cross a record field natively. */
+@TypewriterType(id = "a0000000000000000000000000000108")
+sealed interface TravelMode {
+    data object Walk : TravelMode
+
+    data object Fly : TravelMode
+}
+
+@TypewriterType(id = "a0000000000000000000000000000109")
+enum class TravelPace { SLOW, FAST }
+
+@TypewriterType(id = "a0000000000000000000000000000110")
+data class Travel(
+    val mode: TravelMode,
+    val pace: TravelPace,
+)
+
 @TypewriterType(id = "a0000000000000000000000000000098")
 sealed interface StoredContract {
     val stored: String
@@ -187,6 +207,13 @@ data class CancelledDefaults(val value: String = throw kotlinx.coroutines.Cancel
 @TypewriterType(id = "a0000000000000000000000000000105")
 data class TransientDefaults(@Transient val hidden: Int = 5, val derived: Int = hidden * 2)
 
+@TypewriterDisplay(name = "Prize pool")
+@TypewriterType(id = "a0000000000000000000000000000106")
+data class Reward(val coins: Int = 0) {
+    @TypewriterType(id = "a0000000000000000000000000000107")
+    data class Bonus(val coins: Int = 0)
+}
+
 @TypewriterCollectionProjection
 fun exampleCollectionProjection(): CollectionProjection<Example, ExampleRow, ExampleRowExpressions> =
     collectionProjection<Example, ExampleRow, ExampleRowExpressions>(
@@ -198,7 +225,8 @@ fun exampleCollectionProjection(): CollectionProjection<Example, ExampleRow, Exa
         content(ExampleRowFields.title, ExampleFields.title)
     }
 
-@TypewriterTypeImports(ResourceId::class)
+// Resource is the parent of every resource type, so this standalone artifact states its definition too.
+@TypewriterTypeImports(ResourceId::class, Resource::class)
 private object FixtureTypeImports
 
 object ExampleInspector : ExamplePresentation {
@@ -309,10 +337,31 @@ fun main(args: Array<String>) {
             val contributions = deployment.providers.contributions
             val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture")))
             requirement("the loaded artifact publishes the display and search key in the editor catalog") {
-                contributions.displays.single().provider.target shouldBe ResourceTarget.type(ExampleDefinition.id.namedTemplate())
+                contributions.displays.single().provider.target shouldBe ResourceMatch.DefinitionWrapper(ExampleDefinition.id)
                 assembly.editorCatalog.resourceDisplays.single().target shouldBe
-                    skirout.editor.v1.type_catalog.ResourceTarget.TypeWrapper(ExampleDefinition.id.template())
+                    skirout.editor.v1.type_catalog.ResourceMatch.DefinitionWrapper(ExampleDefinition.id)
                 assembly.editorCatalog.types.single { it.definition.id == ExampleDefinition.id }.searchKey shouldBe "example"
+            }
+            requirement("a sealed type made only of objects and an enum read and write natively through a record field") {
+                val checked = (assembly.checked.resolve(TravelDefinition.id.use()) as Resolution.Ready).value
+                @Suppress("UNCHECKED_CAST")
+                val binding = assembly.bindings.bind(checked) as com.typewritermc.types.NativeBinding<Any>
+                val stored =
+                    DataValue.named(
+                        TravelDefinition.use,
+                        DataValue.record(
+                            "mode" to DataValue.named(TravelModeFlyDefinition.use, DataValue.UNIT),
+                            "pace" to DataValue.named(TravelPaceDefinition.use.member("FAST"), DataValue.UNIT),
+                        ),
+                    )
+                val decoded = binding.decode(checked.complete(stored).shouldBeInstanceOf<CompletenessResult.Complete>().value)
+                decoded.toString() shouldBe "Travel(mode=Fly, pace=FAST)"
+                binding.encode(decoded) shouldBe stored
+            }
+            requirement("a type publishes its class name as its source name, whatever its display, and a nested class its own name") {
+                val names = assembly.editorCatalog.types.associate { it.definition.id to it.name }
+                names[RewardDefinition.id] shouldBe "Reward"
+                names[RewardBonusDefinition.id] shouldBe "Bonus"
             }
             requirement("configuration rules reach nested, item, key and value paths") {
                 contributions.configurations shouldHaveSize 1
@@ -349,7 +398,7 @@ fun main(args: Array<String>) {
                 initializer.prepareNow(
                     ValuePreparationRequest(
                         catalog = assembly.checked.generation,
-                        target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(type)),
+                        target = PreparationTarget.RecordWrapper(TypeSelection.of(type)),
                         suppliedValue = DataValue.record(fields),
                     ),
                 )
@@ -422,7 +471,7 @@ fun main(args: Array<String>) {
                     replacementInitializer.prepareNow(
                         ValuePreparationRequest(
                             catalog = replacement.checked.generation,
-                            target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(type)),
+                            target = PreparationTarget.RecordWrapper(TypeSelection.of(type)),
                             suppliedValue = DataValue.record(fields),
                         ),
                     )

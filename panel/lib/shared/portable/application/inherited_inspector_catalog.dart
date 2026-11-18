@@ -426,7 +426,7 @@ extension InheritedInspectorCatalog on CheckedEditorCatalog {
             footprintProblem ??= "the nested part record type is unavailable";
             return false;
           }
-          nestedOwner = skir.TypeSelection.wrapComplete(type.value);
+          nestedOwner = selectionOfUse(type.value);
         }
         final nested = _resolvePart(
           nestedOwner,

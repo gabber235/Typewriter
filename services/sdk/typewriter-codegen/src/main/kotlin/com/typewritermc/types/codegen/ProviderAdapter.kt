@@ -22,14 +22,13 @@ import com.typewritermc.codegen.namedArguments
 import com.typewritermc.codegen.sentenceCase
 import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.types.Resource
-import com.typewritermc.types.toTemplate
 import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PresentationId
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import com.typewritermc.codegen.TypewriterApi as Api
@@ -163,12 +162,12 @@ internal class ProviderAdapter(
         val spec: TypeName
         if (application == null) {
             draft = Api.ResourceDraft
-            target = CodeBlock.of("%T.ANY_RESOURCE", ResourceTarget::class)
+            target = CodeBlock.of("%T.ANY_RESOURCE", ResourceMatch::class)
             subjects = CodeBlock.of("%T", Api.AnyResourceSubjects)
             spec = Api.ResourceOperationSpecImpl.parameterizedBy(input)
         } else {
             draft = if (targetParameters == 0) targetNames.draft else targetNames.exactDraft.parameterizedBy(arguments)
-            target = CodeBlock.of("%T.%M(%L)", ResourceTarget::class, RESOURCE_TARGET_TYPE, application.toTemplate().kotlinCode())
+            target = CodeBlock.of("%T(%L)", ResourceMatch.TypeWrapper::class, application.kotlinCode())
             val projection =
                 if (targetParameters == 0) {
                     CodeBlock.of("%T", targetNames.draftProjection)
@@ -230,9 +229,9 @@ internal class ProviderAdapter(
         val anyResource = targetNames.source == Resource::class.asClassName()
         val target =
             if (anyResource) {
-                CodeBlock.of("%T.ANY_RESOURCE", ResourceTarget::class)
+                CodeBlock.of("%T.ANY_RESOURCE", ResourceMatch::class)
             } else {
-                CodeBlock.of("%T.%M(%L)", ResourceTarget::class, RESOURCE_TARGET_TYPE, symbolicTarget())
+                CodeBlock.of("%T(%T.id)", ResourceMatch.DefinitionWrapper::class, targetNames.definition)
             }
         val scope =
             if (anyResource) {
@@ -246,7 +245,7 @@ internal class ProviderAdapter(
                 .addSuperinterface(Api.GeneratedResourceDisplayProvider)
                 .addProperty(
                     PropertySpec
-                        .builder("target", ResourceTarget::class, KModifier.OVERRIDE)
+                        .builder("target", ResourceMatch::class, KModifier.OVERRIDE)
                         .getter(FunSpec.getterBuilder().addStatement("return %L", target).build())
                         .build(),
                 ).addFunction(
@@ -291,5 +290,3 @@ internal class ProviderAdapter(
 }
 
 private val PRESENTATION_DESCRIPTOR_OF = MemberName("com.typewritermc.presentation", "of", isExtension = true)
-
-private val RESOURCE_TARGET_TYPE = MemberName("com.typewritermc.types", "type", isExtension = true)

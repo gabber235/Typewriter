@@ -8,11 +8,11 @@ How any client writes authored state (entries, fields, resources, list items, re
 
 Today only the panel writes authored state, and only the panel knows how:
 
-- The contract is general. `PreparedEdit{catalog, expectations, intents}` (`skir-src/editor/v1/authoring.skir:168-172`) carries ordered `EditIntent`s (`:152-163`) and the original facts they relied on (`EditExpectation`, `authoring_facts.skir:34-58`). Admission (`SurrealAuthoringRepository.kt:59-107`) compares facts, plans, derives the **required** guards itself (`EditExpectations.kt:24-163`) and rejects any edit that lacks one with `missing_expectation` (`:90-95`).
-- The knowledge to build a valid edit lives in two places: the panel's Dart model (`panel/lib/authoring/application/authoring_expectations.dart`, `realm_edit_model.dart`) and the realm's in process path (`WorkingViewEditContext`, `AuthoringPlanningSession`, used by `RealmStructureProvisioning.kt:58-62`). Neither is usable by another service.
-- Reads are all or nothing. `QueryAuthoringState` (`authoring.skir:226-234`) returns every resource, link and finding set of the realm.
+- The contract is general. `PreparedEdit{catalog, expectations, intents}` (`skir-src/editor/v1/authoring.skir` `PreparedEdit`) carries ordered `EditIntent`s (`authoring.skir` `EditIntent`) and the original facts they relied on (`authoring_facts.skir` `EditExpectation`). Admission (`SurrealAuthoringRepository.kt` `admit`) compares facts, plans, derives the **required** guards itself (`EditExpectations.kt` `requiredExpectations`) and rejects any edit that lacks one with `missing_expectation` (also in `admit`).
+- The knowledge to build a valid edit lives in two places: the panel's Dart model (`panel/lib/authoring/application/authoring_expectations.dart`, `realm_edit_model.dart`) and the realm's in process path (`WorkingViewEditContext`, `AuthoringPlanningSession`, used by `RealmStructureProvisioning.kt` `ensure`). Neither is usable by another service.
+- Reads are all or nothing. `QueryAuthoringState` (`authoring.skir` `QueryAuthoringState`, `AuthoringState.findings`) returns every resource and link of the realm and every finding set with findings, an unfinished outcome, or an outdated status, each judged against the reply's view first (`FindingFreshness.kt` `forReply`); a check missing from the list has no findings known: it is clean, or it has not run yet. A set's evidence is `CheckEvidence` (`checking.skir` `CheckEvidence`): `fact` entries hold an `EditExpectation` an editor can judge, `scope` entries record a name lookup only the realm judges.
 - Only `organization_member` (a panel user) may call the authoring routes (`transport-routes.yaml:465-525`).
-- The realm does not know who committed. Realm routes have no caller identity in the subject, and handlers see only `IncomingUnaryCall{address, request, headers, ...}` (`CommunicatorRouter.kt:103-110`).
+- The realm does not know who committed. Realm routes have no caller identity in the subject, and handlers see only `IncomingUnaryCall{address, request, headers, ...}` (`CommunicatorRouter.kt` `IncomingUnaryCall`).
 
 Two kinds of clients need to write:
 
@@ -544,7 +544,7 @@ A missing guard (`missing_expectation`) means a client bug in a non SDK client; 
 - **Scoped planning is weaker than admission.** Rules that need the whole realm (`singleton_exists`, relation cycles across unread resources) can only be checked by the realm. The client planner reports what it can; admission stays authoritative, and such rejections arrive as `Refused` after a round trip.
 - **List guards.** Today an insert guards the whole list value; the settled change (Open 8) guards only the named items, a change to `requiredExpectations`, admission, and the 15 files using `resource_exists`.
 - **Transport generator work** for caller bound subjects, plus a second principal kind in grants.
-- **`valueFromJson`** is a new converter over every `ResolvedRepresentation` (scalar, record, sequence, mapping, enumeration, link, named wrappers).
+- **`valueFromJson`** is a new converter over every `ResolvedRepresentation` (scalar, record, sequence, mapping, link, named wrappers).
 - **`EditorCatalog` to `CheckedCatalog`**: a generic client needs a checked catalog. Whether `FetchEditorCatalog` carries enough to build `DefaultCheckedCatalog` needs verification.
 
 ## Open questions

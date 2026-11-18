@@ -32,6 +32,14 @@ abstract class AuthoringFacts with _$AuthoringFacts {
     return List.unmodifiable(result);
   }
 
+  /// Whether everything a check read still holds here. What a name means
+  /// comes from extension hooks, which only the realm runs, so the panel keeps
+  /// the realm's answer for a scope until the realm checks again.
+  bool holds(Iterable<skir.CheckEvidence> evidence) => conflicts([
+    for (final entry in evidence)
+      if (entry case skir.CheckEvidence_factWrapper(:final value)) value,
+  ]).isEmpty;
+
   skir.EditExpectation observe(skir.EditExpectation expected) {
     skir.DataValue? value(skir.ValueLocation at) {
       final record = resources[at.resource];
@@ -67,8 +75,9 @@ abstract class AuthoringFacts with _$AuthoringFacts {
           expected: config.at.path.segments.isEmpty
               ? resources[config.at.resource]?.configuration
               : switch (value(config.at)) {
-                  skir.DataValue_namedWrapper(:final value) =>
-                    skir.TypeSelection.wrapComplete(value.actualType),
+                  skir.DataValue_namedWrapper(:final value) => selectionOfUse(
+                    value.actualType,
+                  ),
                   _ => null,
                 },
         ),
@@ -98,6 +107,11 @@ abstract class AuthoringFacts with _$AuthoringFacts {
               )
               .toSet()
               .toList(),
+        ),
+      skir.EditExpectation_typesWrapper(:final value) =>
+        skir.EditExpectation.createTypes(
+          resource: value.resource,
+          expected: resources[value.resource]?.types ?? const [],
         ),
       _ => throw StateError("Unknown edit expectation"),
     };

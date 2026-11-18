@@ -341,7 +341,9 @@ skir.PublishedType _published(
             parameters: const [],
             representation: skir.RepresentationTemplate.createRecord(
               fields: own,
-              abstract_: id != inspectorMessageDefinition,
+              form: (id != inspectorMessageDefinition)
+                  ? skir.RecordForm.open
+                  : skir.RecordForm.concrete,
             ),
             parents: ancestors.isEmpty ? const [] : [_named(ancestors.first)],
           )

@@ -13,7 +13,6 @@ import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
-import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.of
@@ -96,9 +95,9 @@ val RealmGraphReadsTest by testSuite {
         graphReads(diamond) {
             reachable(a, selected, maxDepth = 3)
 
-            val dependencies = observations().flatMapTo(linkedSetOf()) { it.dependencies() }
+            val dependencies = observedInputs()
             (InputIdentity.Incoming(a, EDGE.id) in dependencies) shouldBe true
-            (InputIdentity.Value(ValueLocation.of(a, ValuePath.root.field("outgoing"))) in dependencies) shouldBe true
+            observedContentAt(ValueLocation.of(a, ValuePath.root.field("outgoing"))) shouldBe true
             (InputIdentity.Incoming(a, BAD.id) in dependencies) shouldBe false
             (InputIdentity.Incoming(a, null) in dependencies) shouldBe false
         }
@@ -184,9 +183,9 @@ val RealmGraphReadsTest by testSuite {
                 .shouldBeInstanceOf<Availability.Available<DraftBinding>>()
                 .value.location.resource shouldBe stagedTarget
 
-            val dependencies = observations().flatMapTo(linkedSetOf()) { it.dependencies() }
+            val dependencies = observedInputs()
             (InputIdentity.Incoming(source, EDGE.id) in dependencies) shouldBe true
-            (InputIdentity.Value(ValueLocation.of(source, ValuePath.root.field("outgoing"))) in dependencies) shouldBe true
+            observedContentAt(ValueLocation.of(source, ValuePath.root.field("outgoing"))) shouldBe true
         }
     }
 
@@ -195,14 +194,14 @@ val RealmGraphReadsTest by testSuite {
         val target = ResourceId(value = "pending_target")
         val pending =
             graphRecord(target, emptyList())
-                .copy(configuration = TypeSelection.createPending(definition = graphDefinition("missing"), arguments = emptyList()))
+                .copy(configuration = TypeSelection.of(graphDefinition("missing")))
         graphReads(mapOf(source to graphRecord(source, listOf(target)), target to pending)) {
             val incoming = RealmGraphReads.incomingResources(target, RelationFamilyId(value = "selected"))
 
             incoming.knownMatches shouldBe emptyList()
             incoming.undecided.map { it.resource.toSkir() } shouldBe listOf(source)
             incoming.completion shouldBe InspectionCompletion.Complete
-            (InputIdentity.Form(ValueLocation.of(target)) in observations().flatMapTo(linkedSetOf()) { it.dependencies() }) shouldBe true
+            (InputIdentity.Form(ValueLocation.of(target)) in observedInputs()) shouldBe true
         }
     }
 
@@ -243,9 +242,9 @@ val RealmGraphReadsTest by testSuite {
         graphReads(sourceAndTarget) {
             reachable(sourceResource, bothRelations, maxDepth = 1)
 
-            val dependencies = observations().flatMapTo(linkedSetOf()) { it.dependencies() }
+            val dependencies = observedInputs()
             listOf("bad", "outgoing", "buttons").forEach { field ->
-                (InputIdentity.Value(ValueLocation.of(sourceResource, ValuePath.root.field(field))) in dependencies) shouldBe true
+                observedContentAt(ValueLocation.of(sourceResource, ValuePath.root.field(field))) shouldBe true
             }
             listOf("optional", "message", "nested", "expanding").forEach { field ->
                 (InputIdentity.Form(ValueLocation.of(sourceResource, ValuePath.root.field(field))) in dependencies) shouldBe true

@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.kotlin.coroutines.core)
     implementation(libs.logback)
     implementation(project(":internal-utils"))
+    implementation(project(":failures"))
     implementation(project(":telemetry"))
     implementation(project(":messaging"))
     implementation(project(":protocol-transport"))
@@ -21,10 +22,14 @@ dependencies {
     imprintHostApi(project(":loader-api"))
     imprintPlatformApi(project(":typewriter-api"))
     implementation(project(":engine-api"))
+    implementation(project(":formula"))
     implementation(libs.surrealdb.java.sdk)
     implementation(libs.kotlin.serialize.json)
 
     testFixturesApi(project(":typewriter-test-kit"))
+    testFixturesApi(project(":formula"))
+    // Realm tests load the engine core artifact the way a deployment lists it, so its core pages are real.
+    testFixturesApi(project(":engine-core"))
     testFixturesApi(project(":loader-api"))
     testFixturesApi(testFixtures(project(":messaging")))
     testFixturesApi(testFixtures(project(":file-transfer")))
@@ -138,4 +143,28 @@ val verifyLoaderManagedArtifact =
 
 tasks.check {
     dependsOn(verifyLoaderManagedArtifact)
+}
+
+// The seeded realm measurement checks the realm's scale gates on a realm of thousands of resources and takes minutes,
+// so it runs on its own (`cargo xtask check realm-scale`) instead of in every test run.
+val seededRealmMeasurement = "com.typewritermc.realm.formula.SeededRealmMeasurement*"
+
+tasks.test {
+    filter { excludeTestsMatching(seededRealmMeasurement) }
+}
+
+tasks.register<Test>("realmScaleTest") {
+    group = "verification"
+    description = "Runs the seeded realm measurement and its scale gates"
+    val tests = sourceSets.test.get()
+    testClassesDirs = tests.output.classesDirs
+    classpath = tests.runtimeClasspath
+    filter { includeTestsMatching(seededRealmMeasurement) }
+}
+
+// Coverage comes from `test`; the merged report must not run the measurement.
+kover {
+    currentProject {
+        instrumentation { disabledForTestTasks.add("realmScaleTest") }
+    }
 }

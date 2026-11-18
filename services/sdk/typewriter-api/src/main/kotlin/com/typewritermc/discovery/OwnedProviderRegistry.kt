@@ -3,6 +3,8 @@ package com.typewritermc.discovery
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.configuration.ConfigurationProvider
+import com.typewritermc.formula.DynamicProvider
+import com.typewritermc.formula.FormulaFunction
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.types.NativeBindingFactory
@@ -49,6 +51,19 @@ data class OwnedCheck(
     val provider: RealmCheckProvider,
 )
 
+/** A dynamic provider and its rule origin, which names its registration failure. */
+data class OwnedDynamic(
+    val origin: ProviderOrigin,
+    val ruleOrigin: RuleOrigin,
+    val provider: DynamicProvider,
+)
+
+/** A formula function and the provider that declares it. */
+data class OwnedFormulaFunction(
+    val origin: ProviderOrigin,
+    val function: FormulaFunction,
+)
+
 data class OwnedCheckRecipe(
     val origin: ProviderOrigin,
     val recipe: CheckRecipe,
@@ -64,6 +79,10 @@ interface OwnedProviderRegistry {
     fun nativeBindings(): List<OwnedNativeBinding>
 
     fun checks(): List<OwnedCheck>
+
+    fun dynamics(): List<OwnedDynamic>
+
+    fun formulas(): List<OwnedFormulaFunction>
 }
 
 interface ProviderLease : AutoCloseable
@@ -78,6 +97,8 @@ data class CatalogContributions(
     val checks: List<OwnedCheck> = emptyList(),
     val operations: List<com.typewritermc.operations.OperationDeclaration> = emptyList(),
     val displays: List<OwnedResourceDisplay> = emptyList(),
+    val dynamics: List<OwnedDynamic> = emptyList(),
+    val formulas: List<OwnedFormulaFunction> = emptyList(),
 )
 
 internal class ImmutableOwnedProviderRegistry(
@@ -85,13 +106,17 @@ internal class ImmutableOwnedProviderRegistry(
     private val ownedPresentations: List<OwnedPresentation>,
     private val ownedNativeBindings: List<OwnedNativeBinding>,
     private val ownedChecks: List<OwnedCheck>,
+    private val ownedDynamics: List<OwnedDynamic>,
+    private val ownedFormulas: List<OwnedFormulaFunction>,
 ) : OwnedProviderRegistry {
     override fun retain(origin: ProviderOrigin): ProviderLease {
         require(
             ownedConfigurations.any { it.origin == origin } ||
                 ownedPresentations.any { it.origin == origin } ||
                 ownedNativeBindings.any { it.origin == origin } ||
-                ownedChecks.any { it.origin == origin },
+                ownedChecks.any { it.origin == origin } ||
+                ownedDynamics.any { it.origin == origin } ||
+                ownedFormulas.any { it.origin == origin },
         ) { "Unknown provider origin $origin." }
         return ImmutableProviderLease
     }
@@ -103,6 +128,10 @@ internal class ImmutableOwnedProviderRegistry(
     override fun nativeBindings(): List<OwnedNativeBinding> = ownedNativeBindings
 
     override fun checks(): List<OwnedCheck> = ownedChecks
+
+    override fun dynamics(): List<OwnedDynamic> = ownedDynamics
+
+    override fun formulas(): List<OwnedFormulaFunction> = ownedFormulas
 }
 
 private data object ImmutableProviderLease : ProviderLease {

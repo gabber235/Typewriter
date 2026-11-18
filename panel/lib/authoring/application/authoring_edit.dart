@@ -326,7 +326,12 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         );
       }
       working._initializationFindings.addAll(
-        _locatedInitializationFindings(plan.containing, containing, generation),
+        _locatedInitializationFindings(
+          plan.containing,
+          containing,
+          generation,
+          catalog,
+        ),
       );
       var parent = containing.recordContent.fields
           .where((field) => field.name == plan.field)
@@ -347,12 +352,14 @@ final class AuthoringEdit implements PortableAuthoringEdit {
           );
         }
         working._initializationFindings.addAll(
-          _locatedInitializationFindings(plan.location, child, generation),
+          _locatedInitializationFindings(
+            plan.location,
+            child,
+            generation,
+            catalog,
+          ),
         );
-        final actual = switch (child.recordContent.configuration) {
-          skir.TypeSelection_completeWrapper(:final value) => value,
-          _ => null,
-        };
+        final actual = catalog?.completeUse(child.recordContent.configuration);
         if (actual == null ||
             !(catalog?.isReadableAs(
                   skir.TypeUse.wrapNamed(actual),
@@ -485,10 +492,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         "The prepared collection item does not match the requested type",
       );
     }
-    final actual = switch (prepared.recordContent.configuration) {
-      skir.TypeSelection_completeWrapper(:final value) => value,
-      _ => null,
-    };
+    final actual = catalog?.completeUse(prepared.recordContent.configuration);
     if (actual == null) {
       return const PortablePathUnavailable(
         "The prepared collection item is not a complete named value",
@@ -522,6 +526,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
           ),
           prepared,
           generation,
+          catalog,
         ),
       );
       _adopt(branch);
@@ -601,10 +606,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         "The prepared form does not match the requested type",
       );
     }
-    final actual = switch (prepared.recordContent.configuration) {
-      skir.TypeSelection_completeWrapper(:final value) => value,
-      _ => null,
-    };
+    final actual = catalog?.completeUse(prepared.recordContent.configuration);
     if (actual == null) {
       return const PortablePathUnavailable(
         "The prepared form is not a complete named value",
@@ -622,7 +624,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     );
     if (result case PortablePathValue()) {
       branch._initializationFindings.addAll(
-        _locatedInitializationFindings(location, prepared, generation),
+        _locatedInitializationFindings(location, prepared, generation, catalog),
       );
       _adopt(branch);
     }
@@ -641,7 +643,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   void createPrepared(skir.ResourceId id, skir.PreparedValue prepared) {
     create(id, prepared.recordContent);
     _initializationFindings.addAll(
-      _locatedInitializationFindings(_root(id), prepared, generation),
+      _locatedInitializationFindings(_root(id), prepared, generation, catalog),
     );
   }
 
@@ -702,12 +704,34 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     _resources[resource] = skir.AuthoringRecord(
       configuration: configuration,
       fields: current.fields,
+      types: current.types,
     );
     _intents.add(
       skir.EditIntent.createConfigureResource(
         resource: resource,
         configuration: configuration,
       ),
+    );
+  }
+
+  /// Replaces the types [resource] declares with [types], as the realm replays set_types.
+  void setTypes(skir.ResourceId resource, List<skir.TypeDefinition> types) {
+    final current = _resources[resource];
+    if (current == null) throw StateError("The resource is absent");
+    _observe(_exists(resource: resource));
+    _observe(
+      skir.EditExpectation.createTypes(
+        resource: resource,
+        expected: current.types,
+      ),
+    );
+    _resources[resource] = skir.AuthoringRecord(
+      configuration: current.configuration,
+      fields: current.fields,
+      types: types,
+    );
+    _intents.add(
+      skir.EditIntent.createSetTypes(resource: resource, types: types),
     );
   }
 
@@ -734,6 +758,8 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         retag(value.at, value.type);
       case skir.EditIntent_configureResourceWrapper(:final value):
         configureResource(value.resource, value.configuration);
+      case skir.EditIntent_setTypesWrapper(:final value):
+        setTypes(value.resource, value.types.toList());
       case skir.EditIntent_unknown():
         return "The operation contains an unknown edit";
     }
@@ -905,9 +931,10 @@ final class AuthoringEdit implements PortableAuthoringEdit {
           );
         }
         selection = switch (childValue) {
-          skir.DataValue_namedWrapper(:final value) =>
-            skir.TypeSelection.wrapComplete(value.actualType),
-          _ => skir.TypeSelection.unknown,
+          skir.DataValue_namedWrapper(:final value) => selectionOfUse(
+            value.actualType,
+          ),
+          _ => skir.TypeSelection.defaultInstance,
         };
       } else {
         currentPath = [...currentPath, segment];
@@ -918,9 +945,10 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         }
         final childValue = (child as PortablePathValue<skir.DataValue>).value;
         selection = switch (childValue) {
-          skir.DataValue_namedWrapper(:final value) =>
-            skir.TypeSelection.wrapComplete(value.actualType),
-          _ => skir.TypeSelection.unknown,
+          skir.DataValue_namedWrapper(:final value) => selectionOfUse(
+            value.actualType,
+          ),
+          _ => skir.TypeSelection.defaultInstance,
         };
       }
     }
@@ -996,16 +1024,17 @@ final class AuthoringEdit implements PortableAuthoringEdit {
             childRequest: skir.ValuePreparationRequest(
               catalog: generation,
               target: skir.PreparationTarget.wrapRecord(
-                skir.TypeSelection.wrapComplete(expected),
+                selectionOfUse(expected),
               ),
               suppliedValue: skir.DataValue.createRecord(fields: const []),
             ),
           );
         }
         selection = switch (childValue) {
-          skir.DataValue_namedWrapper(:final value) =>
-            skir.TypeSelection.wrapComplete(value.actualType),
-          _ => skir.TypeSelection.unknown,
+          skir.DataValue_namedWrapper(:final value) => selectionOfUse(
+            value.actualType,
+          ),
+          _ => skir.TypeSelection.defaultInstance,
         };
         fields =
             childValue.authoredRecord?.fields.toList(growable: false) ??
@@ -1017,9 +1046,10 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         }
         final childValue = child.value;
         selection = switch (childValue) {
-          skir.DataValue_namedWrapper(:final value) =>
-            skir.TypeSelection.wrapComplete(value.actualType),
-          _ => skir.TypeSelection.unknown,
+          skir.DataValue_namedWrapper(:final value) => selectionOfUse(
+            value.actualType,
+          ),
+          _ => skir.TypeSelection.defaultInstance,
         };
         fields =
             childValue.authoredRecord?.fields.toList(growable: false) ??
@@ -1082,23 +1112,27 @@ Iterable<LocatedInitializationFinding> _locatedInitializationFindings(
   skir.ValueLocation base,
   skir.PreparedValue prepared,
   skir.CatalogGeneration generation,
+  CheckedEditorCatalog? catalog,
 ) sync* {
   final record = prepared.recordContent;
   final payload = skir.DataValue.createRecord(fields: record.fields);
-  final expected = switch (record.configuration) {
-    skir.TypeSelection_completeWrapper(:final value)
-        when base.path.segments.isNotEmpty =>
+  final expected = switch (catalog?.completeUse(record.configuration)) {
+    final value? when base.path.segments.isNotEmpty =>
       skir.DataValue.createNamed(actualType: value, payload: payload),
     _ => payload,
   };
   final evidence = skir.DiagnosticEvidence(
     catalog: generation,
-    expectations: [
-      skir.EditExpectation.createValue(at: base, expected: expected),
+    evidence: [
+      skir.CheckEvidence.wrapFact(
+        skir.EditExpectation.createValue(at: base, expected: expected),
+      ),
       if (base.path.segments.isEmpty)
-        skir.EditExpectation.createConfiguration(
-          at: base,
-          expected: record.configuration,
+        skir.CheckEvidence.wrapFact(
+          skir.EditExpectation.createConfiguration(
+            at: base,
+            expected: record.configuration,
+          ),
         ),
     ],
   );

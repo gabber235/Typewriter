@@ -48,8 +48,11 @@ val GeneratedPresentationScopeTest by testSuite {
                 CatalogGeneration(value = "generated presentation"),
                 listOf(
                     PlacementDefinition.definition,
+                    GraphPlacementDefinition.definition,
+                    TimelineEntryPlacementDefinition.definition,
                     TimelineCuePlacementDefinition.definition,
                     TimelineSegmentPlacementDefinition.definition,
+                    TimelineKeyframePlacementDefinition.definition,
                 ),
             )
         val checked =

@@ -9,14 +9,15 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.boundCollectionPath
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
+import com.typewritermc.checking.RealmChecks
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GENERATED_PROVIDER_INDEX_PATH
+import com.typewritermc.discovery.GeneratedCheckProvider
 import com.typewritermc.discovery.GeneratedPresentationProvider
 import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderDeployment
@@ -191,6 +192,7 @@ import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -204,6 +206,8 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 import kotlin.io.path.extension
@@ -422,15 +426,34 @@ internal class RealmModel(
         }
 
     /**
-     * The code the realm must refuse [action] for, or null when it must commit it. A tag named twice on a book or as a
-     * parent commits: authoring keeps the duplicate and publication reports it, so the model holds both.
+     * The code the realm must refuse [action] for, or null when it must commit it. Tags and parents are sets, so naming
+     * a tag a second time on a book or as a parent is refused as a repeated set value.
      */
     fun refusal(action: Action): String? =
         when (action) {
-            is Action.ParentTag -> "relation_cycle".takeIf { action.child == action.parent || action.child in ancestors(action.parent) }
-            is Action.UnlistPage -> "owner_required"
-            is Action.DeleteSection -> "singleton_required"
-            else -> null
+            is Action.TagBook -> {
+                "duplicate_set_value".takeIf { action.tag in books.getValue(action.book) }
+            }
+
+            is Action.ParentTag -> {
+                when {
+                    action.child == action.parent || action.child in ancestors(action.parent) -> "relation_cycle"
+                    action.parent in tags.getValue(action.child) -> "duplicate_set_value"
+                    else -> null
+                }
+            }
+
+            is Action.UnlistPage -> {
+                "owner_required"
+            }
+
+            is Action.DeleteSection -> {
+                "singleton_required"
+            }
+
+            else -> {
+                null
+            }
         }
 
     fun apply(action: Action) {
@@ -802,6 +825,12 @@ internal class RealmLifecycleFixture(
         realm.shutdown()
     }
 
+    /** The current sum of counter [metric] per value of [attribute], as the Realm reported it to telemetry. */
+    fun counts(
+        metric: String,
+        attribute: String,
+    ): Map<String?, Long> = telemetry.counts(metric, attribute)
+
     suspend fun close() {
         try {
             realm.shutdown()
@@ -892,8 +921,9 @@ internal val ALLOWED: Map<String, Set<String>> =
         "catalog" to setOf(),
         "authoring" to setOf("catalog"),
         "search" to setOf("authoring", "catalog", "storage"),
-        "checking" to setOf("authoring", "catalog"),
-        "edit" to setOf("authoring", "catalog", "search", "storage"),
+        "formula" to setOf("authoring", "catalog"),
+        "checking" to setOf("formula", "authoring", "catalog"),
+        "edit" to setOf("formula", "authoring", "catalog", "search", "storage"),
         "operation" to setOf("edit", "checking", "authoring", "catalog"),
         "publication" to setOf("checking", "authoring", "catalog", "storage"),
         "routes" to setOf("operation", "publication", "edit", "checking", "search", "authoring", "catalog"),
@@ -963,6 +993,65 @@ internal fun cycleIn(graph: Map<String, Set<String>>): List<String>? {
 
 internal val EXTENSION = ArtifactId("fixture:extension")
 
+/** The providers of the common fixture extension: one of each kind Realm binds, and parts it must never construct. */
+internal val REALM_COMMON_PROVIDERS =
+    listOf(
+        Triple("type", RealmCommonTypeProvider::class.java, "common"),
+        Triple("nativeBinding", RealmCommonBindingProvider::class.java, "common"),
+        Triple("presentation", RealmCommonPresentationProvider::class.java, "common"),
+        Triple("registrar", RealmCommonRegistrarProvider::class.java, "common"),
+        Triple("registrar", RealmExecutionRegistrarProvider::class.java, "common"),
+        Triple("type", RealmTargetedTypeProvider::class.java, "paper"),
+    )
+
+/**
+ * A catalog [generation] whose extension has one realm check that waits in [RealmCheckGate], loaded from a jar as a
+ * deployed extension is.
+ */
+internal fun blockedCheckCatalog(generation: String): RealmCatalogIncarnation {
+    val providers =
+        listOf(
+            Triple("type", RealmCommonTypeProvider::class.java, "common"),
+            Triple("check", BlockedRealmCheckProvider::class.java, "common"),
+        )
+    val deployment =
+        GeneratedProviderLoader().load(
+            extensionPackage(providers = providers).artifacts,
+            DeploymentFacts(),
+            DiscoveryDomains.Realm,
+        )
+    val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = generation)))
+    return RealmCatalogIncarnation(assembly, deployment)
+}
+
+/** Where [BlockedRealmCheckProvider]'s check waits. It lives outside the extension jar, so the test and the check share it. */
+object RealmCheckGate {
+    @Volatile
+    var entered = CountDownLatch(1)
+        private set
+
+    @Volatile
+    var release = CountDownLatch(1)
+        private set
+
+    fun reset() {
+        entered = CountDownLatch(1)
+        release = CountDownLatch(1)
+    }
+}
+
+/** A realm check that waits until [RealmCheckGate] releases it, as a slow extension check does. */
+class BlockedRealmCheckProvider : GeneratedCheckProvider {
+    override val target = RealmProviderFixture.type
+
+    override fun RealmChecks.register() {
+        realm {
+            RealmCheckGate.entered.countDown()
+            RealmCheckGate.release.await(30, TimeUnit.SECONDS)
+        }
+    }
+}
+
 /** A Realm runtime and one extension with a common part of [disposition] and a paper engine part. */
 internal class ExtensionPackage(
     val artifacts: List<GeneratedProviderArtifact>,
@@ -973,22 +1062,13 @@ internal class ExtensionPackage(
 
 internal fun extensionPackage(
     disposition: SourcePartDisposition = SourcePartDisposition.Ineligible(listOf("No local engine is available.")),
+    providers: List<Triple<String, Class<*>, String>> = REALM_COMMON_PROVIDERS,
 ): ExtensionPackage {
     val directory = Files.createTempDirectory("realm-common-providers")
     val runtime = directory.resolve("realm.jar").also { providerJar(it, emptyList()) }
     val extension =
         directory.resolve("extension.jar").also {
-            providerJar(
-                it,
-                listOf(
-                    Triple("type", RealmCommonTypeProvider::class.java, "common"),
-                    Triple("nativeBinding", RealmCommonBindingProvider::class.java, "common"),
-                    Triple("presentation", RealmCommonPresentationProvider::class.java, "common"),
-                    Triple("registrar", RealmCommonRegistrarProvider::class.java, "common"),
-                    Triple("registrar", RealmExecutionRegistrarProvider::class.java, "common"),
-                    Triple("type", RealmTargetedTypeProvider::class.java, "paper"),
-                ),
-            )
+            providerJar(it, providers)
         }
     val manifest =
         ExtensionManifest(
@@ -1050,7 +1130,7 @@ class RealmCommonTypeProvider : GeneratedTypeProvider {
     override val definition =
         TypeDefinition.partial(
             id = RealmProviderFixture.type,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
         )
 }
 
@@ -1098,7 +1178,7 @@ class RealmTargetedTypeProvider : GeneratedTypeProvider {
     override val definition =
         TypeDefinition.partial(
             id = RealmProviderFixture.type,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
         )
 }
 

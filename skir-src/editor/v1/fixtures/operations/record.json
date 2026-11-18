@@ -70,7 +70,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": true,
+              "form": "open",
               "fields": [
                 {
                   "owner": {
@@ -100,7 +100,7 @@
               "arguments": []
             }
           ],
-          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "concrete", "fields": []}}
         }
       ],
       "check": {
@@ -201,7 +201,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": true,
+              "form": "open",
               "fields": [
                 {
                   "owner": {
@@ -231,7 +231,7 @@
               "arguments": []
             }
           ],
-          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "concrete", "fields": []}}
         }
       ],
       "check": {

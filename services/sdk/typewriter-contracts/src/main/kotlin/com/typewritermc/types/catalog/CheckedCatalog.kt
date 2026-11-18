@@ -1,32 +1,34 @@
 package com.typewritermc.types.catalog
 
-import com.typewritermc.authoring.arguments
-import com.typewritermc.authoring.definition
-import com.typewritermc.authoring.type
-import com.typewritermc.authoring.use
-import com.typewritermc.authoring.validateStructure
+import com.typewritermc.types.FORMULA_USE
 import com.typewritermc.types.MAX_TYPE_DEPTH
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.reasons
+import com.typewritermc.types.closedCases
 import com.typewritermc.types.immutableListCopy
+import com.typewritermc.types.isInstantiable
+import com.typewritermc.types.mapTemplate
+import com.typewritermc.types.mapTypes
+import com.typewritermc.types.match
+import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.parameterKeys
+import com.typewritermc.types.parts
 import com.typewritermc.types.qualified
 import com.typewritermc.types.substitute
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.toUse
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
+import com.typewritermc.types.walk
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
-import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.type_catalog.AppliedSchema
 import skirout.editor.v1.type_catalog.ArgumentLocation
-import skirout.editor.v1.type_catalog.ArgumentSelection
-import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DependentField
 import skirout.editor.v1.type_catalog.FieldDeclaration
@@ -35,9 +37,13 @@ import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PartialSchema
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResolvedField
+import skirout.editor.v1.type_catalog.ResolvedRecordForm
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceMatch
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -46,6 +52,7 @@ import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.kernel.v1.resource_id.ResourceId
 import java.util.concurrent.ConcurrentHashMap
 
 /** A resolved application tied to the catalog generation and resolver that established its schema. */
@@ -90,9 +97,48 @@ interface CheckedCatalog {
 
     fun resolve(candidate: TypeUse): Resolution<CheckedType>
 
-    fun resolvePartial(selection: TypeSelection): Resolution<PartialSchema>
+    /**
+     * What [owner]'s configured [selection] means here: the creator's choices with every argument derived from the
+     * owner's content filled. Complete when every parameter has an argument, partial while one has none. This is what a
+     * resource's values mean; readers ask it and never read the stored selection.
+     */
+    fun typeOf(
+        owner: ResourceId,
+        selection: TypeSelection,
+    ): Resolution<ResourceType>
 
+    /**
+     * What the creator's choices in [selection] make, with no argument derived from content: the answer for which
+     * resources a selection is (matching, discovery) and for content that is on no resource yet.
+     */
+    fun authoredTypeOf(selection: TypeSelection): Resolution<ResourceType>
+
+    /**
+     * The arguments [owner]'s configured [selection] gives its definition's parameters, in order, as [typeOf] fills them
+     * before it resolves: a chosen one as its creator chose it, a computed one as [owner]'s derived id, and null while a
+     * creator has not chosen it yet. It runs no bind, so a reader that takes another resource's argument, as an alias
+     * does, never depends on what that resource's bind computes.
+     */
+    fun typeArguments(
+        owner: ResourceId,
+        selection: TypeSelection,
+    ): Resolution<List<TypeUse?>>
+
+    /**
+     * The applications the creator's choices in [selection] are known to read as: a complete type and its ancestors, or
+     * the ancestors a partial type already fixes. Empty when the selection does not resolve.
+     */
     fun knownApplications(selection: TypeSelection): Set<NamedTypeUse>
+
+    /**
+     * The applications of [definition] the creator's choices in [selection] fix in part, one per way [selection]'s
+     * definition reaches it: each argument by position, null while no choice fixes it. Empty when the selection does
+     * not resolve or is no nominal subtype of [definition].
+     */
+    fun partialApplications(
+        selection: TypeSelection,
+        definition: TypeDefinitionId,
+    ): List<List<TypeUse?>>
 
     fun isReadableAs(
         actual: TypeUse,
@@ -113,30 +159,50 @@ interface CheckedCatalog {
 
     fun concreteForms(expected: CheckedType): List<CheckedType>
 
-    fun validateAuthoring(record: AuthoringRecord): StructuralResult
+    /**
+     * The code catalog plus what [source] declares. Cheap: it validates and caches only what it reaches, so [source]
+     * must not change while the result is in use.
+     */
+    fun withContent(source: ContentTypes): CheckedCatalog
+
+    /** [use] with every field key replaced by where its chain leads. The code catalog has none, so it answers [use]. */
+    fun expand(use: TypeUse): TypeUse
+
+    /**
+     * Why the derived id [id], or a member of one, stands in as the error type, and whose bind failed: [id]'s own owner,
+     * or the owner of the computed type an alias chain from [id] ends at. Null when it leads somewhere or is no derived id.
+     */
+    fun derivedFailure(id: TypeDefinitionId): DerivedFailureAt?
 }
 
+/** This template with each parameter replaced by its use in [arguments]; invalid at the first parameter [arguments] leaves unbound. */
 fun TypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<TypeUse> =
+    toUse(arguments::get)?.let { Resolution.Ready(it) }
+        ?: Resolution.Invalid(listOf(diagnostic(parameterKeys().first { it !in arguments }.owner, "missing_parameter_binding")))
+
+/** Applies the arguments of this template, keeping it a named application. */
+fun NamedTypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<NamedTypeUse> =
+    this.arguments.mapResolution { it.apply(arguments) }.map { definition.namedUse(it) }
+
+/**
+ * The match this template names once [arguments] bind its parameters. A type must resolve to a named type; any other
+ * type is invalid as `invalid_resource_match`, owned by the first definition or parameter owner it is written with.
+ */
+fun ResourceMatchTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<ResourceMatch> =
     when (this) {
-        is TypeTemplate.ParameterWrapper -> {
-            val bound = arguments[value]
-            if (bound != null) {
-                Resolution.Ready(bound)
-            } else {
-                Resolution.Invalid(listOf(diagnostic(value.owner, "missing_parameter_binding")))
+        is ResourceMatchTemplate.TypeWrapper -> {
+            value.apply(arguments).flatMap { use ->
+                use.named?.let { Resolution.Ready(ResourceMatch.TypeWrapper(it)) }
+                    ?: Resolution.Invalid(listOf(diagnostic(value.diagnosticOwner(), "invalid_resource_match")))
             }
         }
 
-        is TypeTemplate.NamedWrapper -> {
-            value.apply(arguments).map { it.use }
+        is ResourceMatchTemplate.DefinitionWrapper -> {
+            Resolution.Ready(ResourceMatch.DefinitionWrapper(value))
         }
 
-        is TypeTemplate.NullableWrapper -> {
-            value.value.apply(arguments).map { it.nullable() }
-        }
-
-        is TypeTemplate.ScalarWrapper -> {
-            Resolution.Ready(value.use)
+        ResourceMatchTemplate.ANY_RESOURCE -> {
+            Resolution.Ready(ResourceMatch.ANY_RESOURCE)
         }
 
         else -> {
@@ -144,9 +210,10 @@ fun TypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<TypeUs
         }
     }
 
-/** Applies the arguments of this template, keeping it a named application. */
-fun NamedTypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<NamedTypeUse> =
-    this.arguments.mapResolution { it.apply(arguments) }.map { definition.namedUse(it) }
+/** The definition a diagnostic about this template names: the first it is written with, or a parameter's owner. */
+private fun TypeTemplate.diagnosticOwner(): TypeDefinitionId =
+    walk().firstNotNullOfOrNull { node -> node.named?.definition ?: (node as? TypeTemplate.ParameterWrapper)?.value?.owner }
+        ?: TYPE_USE_DIAGNOSTIC_OWNER
 
 /**
  * Owns an immutable declaration snapshot and memoized application results for one catalog generation.
@@ -155,50 +222,141 @@ fun NamedTypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<N
  * Resolution substitutes immediate field types without recursively expanding referenced record payloads, allowing
  * recursive authored structures. Application depth and reentrant resolution are bounded with declaration diagnostics.
  */
-class DefaultCheckedCatalog(
+class DefaultCheckedCatalog private constructor(
     override val generation: CatalogGeneration,
-    declarations: List<TypeDefinition>,
-    quarantine: List<DeclarationDiagnostic> = emptyList(),
+    private val validated: ValidatedDeclarations,
+    private val content: ContentLayer?,
 ) : CheckedCatalog {
-    private val depthInvalidDefinitions = declarations.filter(TypeDefinition::exceedsTypeDepth).map(TypeDefinition::id).toSet()
-    private val definitions =
-        declarations
-            .filterNot { it.id in depthInvalidDefinitions }
-            .groupBy(TypeDefinition::id)
-    private val unavailable = linkedMapOf<TypeDefinitionId, MutableList<DeclarationDiagnostic>>()
+    constructor(
+        generation: CatalogGeneration,
+        declarations: List<TypeDefinition>,
+        quarantine: List<DeclarationDiagnostic> = emptyList(),
+    ) : this(generation, ValidatedDeclarations(declarations, quarantine), null)
+
+    private val definitions get() = validated.definitions
+    private val unavailable get() = validated.unavailable
+
+    // The cache and the reentrancy guard stay per instance: an overlay's answers depend on its source.
     private val cache = ConcurrentHashMap<ResolutionKey, Resolution<CheckedType>>()
     private val resolving = mutableSetOf<TypeUse>()
 
-    init {
-        depthInvalidDefinitions.forEach { markUnavailable(it, "type_depth_limit") }
-        definitions.filterValues { it.size > 1 }.forEach { (id, _) -> markUnavailable(id, "duplicate_definition") }
-        definitions
-            .filterValues { it.size == 1 }
-            .values
-            .map(List<TypeDefinition>::single)
-            .forEach(::validateDeclaration)
-        markInheritanceCycles()
-        quarantine.forEach(::markUnavailable)
-        propagateUnavailableDependencies()
+    /** Shares the code catalog's validated declarations, so an overlay costs nothing until it reaches a content id. */
+    override fun withContent(source: ContentTypes): CheckedCatalog {
+        val base = content?.base ?: this
+        return DefaultCheckedCatalog(generation, base.validated, ContentLayer(base, source))
     }
 
+    /** The code catalog plus [source] judged by the declaration rules alone, which a declaration's bound check resolves through. */
+    internal fun withDeclaredContent(source: ContentTypes): DefaultCheckedCatalog =
+        DefaultCheckedCatalog(generation, validated, ContentLayer(this, source, checksBounds = false))
+
+    override fun expand(use: TypeUse): TypeUse {
+        val layer = content ?: return use
+        return if (use.mentionsContent()) layer.expandIndirectKeys(use, emptySet()) else use
+    }
+
+    /** The public answer, and the only one that says why a content id stands in as the error type. */
     override fun definition(id: TypeDefinitionId): DeclarationStatus {
-        val reasons = unavailable[id]
-        return when {
-            reasons != null -> DeclarationStatus.UnavailableWrapper(reasons.distinct())
-            definitions[id] == null -> DeclarationStatus.UnavailableWrapper(listOf(diagnostic(id, "unknown_definition")))
-            else -> DeclarationStatus.READY
+        val layer = content
+        if (layer == null || id.contentOwner() == null) return status(id)
+        return when (val target = layer.target(id)) {
+            is ContentTarget.Declared -> {
+                layer
+                    .invalid(target)
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { codes -> DeclarationStatus.UnavailableWrapper(codes.map { diagnostic(id, it) }) }
+                    ?: DeclarationStatus.READY
+            }
+
+            // An alias of a type that exists. One that contains itself (A := List<A>) or names a gone alias keeps a field key after expansion.
+            is ContentTarget.Plain -> {
+                layer
+                    .leftover(target.use, id)
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { codes -> DeclarationStatus.UnavailableWrapper(codes.map { diagnostic(id, it) }) }
+                    ?: DeclarationStatus.READY
+            }
+
+            is ContentTarget.Missing -> {
+                DeclarationStatus.UnavailableWrapper(listOf(diagnostic(id, target.code)))
+            }
+
+            ContentTarget.Loop -> {
+                DeclarationStatus.UnavailableWrapper(listOf(diagnostic(id, "content_alias_loop")))
+            }
         }
     }
 
-    override fun declaration(id: TypeDefinitionId): Resolution<TypeDefinition> =
-        when (val status = definition(id)) {
-            DeclarationStatus.READY -> Resolution.Ready(definitions.getValue(id).single())
+    override fun derivedFailure(id: TypeDefinitionId): DerivedFailureAt? =
+        (content?.takeIf { id.namesDerivedKey() }?.target(id) as? ContentTarget.Missing)?.failure
+
+    override fun declaration(id: TypeDefinitionId): Resolution<TypeDefinition> {
+        val expanded = content?.expandId(id) ?: id
+        return when (val status = definition(expanded)) {
+            DeclarationStatus.READY -> Resolution.Ready(checkNotNull(lookup(expanded)))
             is DeclarationStatus.UnavailableWrapper -> Resolution.Invalid(status.reasons)
             else -> unknownVariant(status)
         }
+    }
+
+    /** The resolver's status: the error type is READY, so a use of a gone content type resolves and no reader needs an exception. */
+    private fun status(id: TypeDefinitionId): DeclarationStatus {
+        unavailable[id]?.let { return DeclarationStatus.UnavailableWrapper(it.distinct()) }
+        return if (lookup(id) ==
+            null
+        ) {
+            DeclarationStatus.UnavailableWrapper(listOf(diagnostic(id, "unknown_definition")))
+        } else {
+            DeclarationStatus.READY
+        }
+    }
+
+    /** The definition behind [id] for the resolver. A content id whose chain loops, ends at nothing or is invalid answers the error type. */
+    private fun lookup(id: TypeDefinitionId): TypeDefinition? {
+        definitions[id]?.singleOrNull()?.let { return it }
+        val layer = content ?: return null
+        if (id.contentOwner() == null) return null
+        return when (val target = layer.target(id)) {
+            is ContentTarget.Declared -> {
+                if (layer.invalid(target).isEmpty()) layer.expandFields(target.definition) else errorRecord(id)
+            }
+
+            is ContentTarget.Plain, ContentTarget.Loop, is ContentTarget.Missing -> {
+                errorRecord(id)
+            }
+        }
+    }
 
     override fun resolve(candidate: TypeUse): Resolution<CheckedType> {
+        val layer = content ?: return resolveHere(candidate)
+        if (!candidate.mentionsContent()) return layer.base.resolve(candidate).resolvingHere()
+        return resolveHere(layer.expandIndirectKeys(candidate, emptySet()))
+    }
+
+    /**
+     * The code catalog's answer, resolving what it holds through this catalog: a code type can hold content, such as a
+     * `Type` value naming a declaration, so its nested values must reach the content this catalog sees.
+     */
+    private fun Resolution<CheckedType>.resolvingHere(): Resolution<CheckedType> =
+        when (this) {
+            is Resolution.Ready -> Resolution.Ready(CheckedType(value.catalog, value.use, value.schema, this@DefaultCheckedCatalog))
+            is Resolution.Invalid -> this
+        }
+
+    /**
+     * A part of a use [resolve] already expanded. Expanding it again would unfold an alias that contains itself one level
+     * deeper and meet the use being resolved, so its leftover field keys stay and resolve as the error type.
+     */
+    private fun resolveExpanded(part: TypeUse): Resolution<CheckedType> =
+        if (content == null ||
+            !part.mentionsContent()
+        ) {
+            resolve(part)
+        } else {
+            resolveHere(part)
+        }
+
+    private fun resolveHere(candidate: TypeUse): Resolution<CheckedType> {
         candidate.typeDepthFailure()?.let { return invalid(it, "type_depth_limit") }
         val key = ResolutionKey(candidate)
         cache[key]?.let { return it }
@@ -216,6 +374,7 @@ class DefaultCheckedCatalog(
                         is TypeUse.ScalarWrapper -> ready(candidate, ResolvedRepresentation.createScalar(kind = candidate.value))
                         is TypeUse.NullableWrapper -> resolveNullable(candidate)
                         is TypeUse.NamedWrapper -> resolveNamed(candidate.value)
+                        is TypeUse.FunctionWrapper -> resolveFunction(candidate)
                         else -> unknownVariant(candidate)
                     }
                 cache[key] = resolved
@@ -232,48 +391,117 @@ class DefaultCheckedCatalog(
             ?.named
             ?.definition
 
-    override fun resolvePartial(selection: TypeSelection): Resolution<PartialSchema> =
-        when (selection) {
-            is TypeSelection.CompleteWrapper -> {
-                when (val resolved = resolve(selection.use.use)) {
-                    is Resolution.Invalid -> {
-                        resolved
+    override fun typeOf(
+        owner: ResourceId,
+        selection: TypeSelection,
+    ): Resolution<ResourceType> = typeWith(selection) { definition -> definition.derivedArguments(owner) }
+
+    override fun authoredTypeOf(selection: TypeSelection): Resolution<ResourceType> = typeWith(selection) { emptyMap() }
+
+    override fun typeArguments(
+        owner: ResourceId,
+        selection: TypeSelection,
+    ): Resolution<List<TypeUse?>> =
+        when (val given = argumentsWith(selection) { definition -> definition.derivedArguments(owner) }) {
+            is Resolution.Invalid -> {
+                given
+            }
+
+            is Resolution.Ready -> {
+                given.value.let { (definition, arguments) ->
+                    Resolution.Ready(definition.parameters.map { arguments[it.key] })
+                }
+            }
+        }
+
+    /**
+     * The definition [selection] configures and the arguments its parameters have: the creator's choices plus what
+     * [derived] answers for the derived ones. A derived parameter is never chosen, so a stored choice for one is refused.
+     */
+    private fun argumentsWith(
+        selection: TypeSelection,
+        derived: (TypeDefinition) -> Map<ParameterKey, TypeUse>,
+    ): Resolution<Pair<TypeDefinition, Map<ParameterKey, TypeUse>>> {
+        val availability = status(selection.definition)
+        if (availability is DeclarationStatus.UnavailableWrapper) return Resolution.Invalid(availability.reasons)
+        val definition = checkNotNull(lookup(selection.definition))
+        val chosen = chosenArguments(selection, definition) ?: return invalid(selection.definition, "argument_arity")
+        if (definition.parameters.any { it.derived && it.key in chosen }) return invalid(selection.definition, "derived_argument_chosen")
+        return Resolution.Ready(definition to chosen + derived(definition))
+    }
+
+    /**
+     * The type [selection] makes with the arguments [derived] answers for the definition's derived parameters: complete
+     * once every parameter has an argument, partial before. A derived parameter is never chosen, so a stored choice for
+     * one is refused.
+     */
+    private fun typeWith(
+        selection: TypeSelection,
+        derived: (TypeDefinition) -> Map<ParameterKey, TypeUse>,
+    ): Resolution<ResourceType> {
+        val (definition, arguments) =
+            when (val given = argumentsWith(selection, derived)) {
+                is Resolution.Invalid -> return given
+                is Resolution.Ready -> given.value
+            }
+        if (arguments.size == definition.parameters.size) {
+            return when (
+                val resolved =
+                    resolve(
+                        selection.definition.namedUse(definition.parameters.map { arguments.getValue(it.key) }).use,
+                    )
+            ) {
+                is Resolution.Invalid -> resolved
+                is Resolution.Ready -> Resolution.Ready(ResourceType.Complete(resolved.value))
+            }
+        }
+        return resolvePartial(definition, arguments.mapValues { expand(it.value) })
+    }
+
+    override fun knownApplications(selection: TypeSelection): Set<NamedTypeUse> =
+        when (val type = authoredTypeOf(selection)) {
+            is Resolution.Invalid -> {
+                emptySet()
+            }
+
+            is Resolution.Ready -> {
+                when (val resolved = type.value) {
+                    is ResourceType.Complete -> {
+                        linkedSetOf(checkNotNull(resolved.checked.use.named)).apply { addAll(resolved.checked.schema.ancestors) }
                     }
 
-                    is Resolution.Ready -> {
-                        Resolution.Ready(
-                            PartialSchema(
-                                knownFields = resolved.value.schema.fields,
-                                dependentFields = emptyList(),
-                                pendingArguments = emptyList(),
-                            ),
+                    is ResourceType.Partial -> {
+                        val definition = checkNotNull(lookup(selection.definition))
+                        knownPartialApplications(
+                            definition,
+                            checkNotNull(chosenArguments(selection, definition)).mapValues { expand(it.value) },
                         )
                     }
                 }
             }
-
-            is TypeSelection.PendingWrapper -> {
-                resolvePending(selection)
-            }
-
-            else -> {
-                unknownVariant(selection)
-            }
         }
 
-    override fun knownApplications(selection: TypeSelection): Set<NamedTypeUse> =
-        when (selection) {
-            is TypeSelection.CompleteWrapper -> {
-                val resolved = resolve(selection.use.use) as? Resolution.Ready
-                if (resolved == null) emptySet() else linkedSetOf(selection.use).apply { addAll(resolved.value.schema.ancestors) }
-            }
+    /** The arguments a creator chose for [definition], by parameter key. Null when a choice names a parameter [definition] does not have, or names one twice. */
+    private fun chosenArguments(
+        selection: TypeSelection,
+        definition: TypeDefinition,
+    ): Map<ParameterKey, TypeUse>? {
+        val chosen = linkedMapOf<ParameterKey, TypeUse>()
+        for (argument in selection.arguments) {
+            val parameter = definition.parameters.getOrNull(argument.parameter) ?: return null
+            if (chosen.put(parameter.key, argument.type) != null) return null
+        }
+        return chosen
+    }
 
-            is TypeSelection.PendingWrapper -> {
-                knownPendingApplications(selection)
-            }
-
-            else -> {
-                unknownVariant(selection)
+    /** [template] with every indirect key replaced by where it leads. An indirect key names no parameters, so it expands as a use. */
+    private fun expandTemplate(template: TypeTemplate): TypeTemplate =
+        if (content == null) {
+            template
+        } else {
+            template.mapTypes { node ->
+                val named = node.named ?: return@mapTypes null
+                if (named.definition.namesIndirectKey()) expand(named.definition.use()).toTemplate() else null
             }
         }
 
@@ -281,43 +509,54 @@ class DefaultCheckedCatalog(
         actual: TypeUse,
         expected: TypeUse,
     ): Boolean {
-        val resolvedActual = resolve(actual) as? Resolution.Ready ?: return false
-        if (resolve(expected) !is Resolution.Ready) return false
-        return isResolvedReadableAs(actual, expected, resolvedActual.value.schema)
+        val expandedActual = expand(actual)
+        val expandedExpected = expand(expected)
+        val resolvedActual = resolve(expandedActual) as? Resolution.Ready ?: return false
+        if (resolve(expandedExpected) !is Resolution.Ready) return false
+        return isResolvedReadableAs(expandedActual, expandedExpected, resolvedActual.value.schema)
     }
 
     override fun isTemplateReadableAs(
         actual: TypeTemplate,
         expected: TypeTemplate,
         parameterBounds: Map<ParameterKey, List<TypeTemplate>>,
-    ): Boolean = isTemplateReadableAs(actual, expected, parameterBounds, linkedSetOf())
+    ): Boolean = isTemplateReadableAs(expandTemplate(actual), expandTemplate(expected), parameterBounds, linkedSetOf())
 
+    /** An id whose chain does not end at a declaration is the error type: a subtype of nothing but itself. */
     override fun isNominalSubtype(
         actual: TypeDefinitionId,
         expected: TypeDefinitionId,
     ): Boolean {
-        if (definition(actual) != DeclarationStatus.READY || definition(expected) != DeclarationStatus.READY) return false
+        val layer = content
+        val from = if (layer == null) actual else layer.expandId(actual) ?: return actual == expected
+        val to = if (layer == null) expected else layer.expandId(expected) ?: return false
+        if (status(from) != DeclarationStatus.READY || status(to) != DeclarationStatus.READY) return false
         val visited = mutableSetOf<TypeDefinitionId>()
         val pending = ArrayDeque<TypeDefinitionId>()
-        pending.add(actual)
+        pending.add(from)
         while (pending.isNotEmpty()) {
             val current = pending.removeFirst()
             if (!visited.add(current)) continue
-            if (current == expected) return true
-            definitions
-                .getValue(current)
-                .single()
-                .parents
-                .forEach { pending.add(it.definition) }
+            if (current == to) return true
+            lookup(current)?.parents?.forEach { pending.add(it.definition) }
         }
         return false
     }
 
-    override fun concreteForms(expected: CheckedType): List<CheckedType> =
-        definitions.values
+    override fun concreteForms(expected: CheckedType): List<CheckedType> {
+        expected.schema.representation.closedCases()?.let { cases ->
+            return cases
+                .mapNotNull { case -> (resolve(case.use) as? Resolution.Ready)?.value }
+                .flatMap { case -> if (case.schema.representation.isInstantiable()) listOf(case) else concreteForms(case) }
+                .distinct()
+                // A case of a generic union may fix its parent's arguments (`Count : Result<Int>`), so it is a form of
+                // only the applications it reads as.
+                .filter { case -> isResolvedReadableAs(case.use, expected.use, case.schema) }
+        }
+        return definitions.values
             .filter { it.size == 1 }
             .map(List<TypeDefinition>::single)
-            .filter { (it.representation as? RepresentationTemplate.RecordWrapper)?.value?.abstract_ != true }
+            .filter { it.representation.isInstantiable() }
             .flatMap { definition -> inferConcreteApplications(definition, expected.use) }
             .distinct()
             .mapNotNull { named ->
@@ -325,22 +564,40 @@ class DefaultCheckedCatalog(
                 val resolved = resolve(candidate) as? Resolution.Ready ?: return@mapNotNull null
                 resolved.value.takeIf { isResolvedReadableAs(candidate, expected.use, resolved.value.schema) }
             }
+    }
 
-    override fun validateAuthoring(record: AuthoringRecord): StructuralResult = record.validateStructure(this)
+    private fun knownPartialApplications(
+        root: TypeDefinition,
+        chosen: Map<ParameterKey, TypeUse>,
+    ): Set<NamedTypeUse> =
+        partialAncestry(root, chosen)
+            .mapNotNull { (current, known) ->
+                if (current.parameters.any { it.key !in known }) return@mapNotNull null
+                current.id.namedUse(current.parameters.map { known.getValue(it.key) }).takeIf { resolve(it.use) is Resolution.Ready }
+            }.toCollection(linkedSetOf())
 
-    private fun knownPendingApplications(selection: TypeSelection.PendingWrapper): Set<NamedTypeUse> {
-        if (definition(selection.definition) != DeclarationStatus.READY) return emptySet()
-        val root = definitions.getValue(selection.definition).single()
-        if (selection.arguments.size != root.parameters.size) return emptySet()
-        val bindings =
-            root.parameters
-                .zip(selection.arguments)
-                .mapNotNull { (parameter, argument) ->
-                    val chosen = argument as? ArgumentSelection.ChosenWrapper ?: return@mapNotNull null
-                    if (resolve(chosen.type) !is Resolution.Ready) return@mapNotNull null
-                    parameter.key to chosen.type
-                }.toMap()
-        val applications = linkedSetOf<NamedTypeUse>()
+    override fun partialApplications(
+        selection: TypeSelection,
+        definition: TypeDefinitionId,
+    ): List<List<TypeUse?>> {
+        if (authoredTypeOf(selection) !is Resolution.Ready) return emptyList()
+        val root = lookup(selection.definition) ?: return emptyList()
+        val chosen = chosenArguments(selection, root) ?: return emptyList()
+        val wanted = content?.expandId(definition) ?: definition
+        return partialAncestry(root, chosen.mapValues { expand(it.value) })
+            .filter { (current, _) -> current.id == wanted }
+            .map { (current, known) -> current.parameters.map { known[it.key] } }
+    }
+
+    /**
+     * [root] and every ready ancestor it reaches, each with the arguments [chosen] fixes for it by parameter key; a
+     * parameter a choice leaves open, or one whose choice does not resolve, is absent. One entry per distinct way.
+     */
+    private fun partialAncestry(
+        root: TypeDefinition,
+        chosen: Map<ParameterKey, TypeUse>,
+    ): List<Pair<TypeDefinition, Map<ParameterKey, TypeUse>>> {
+        val reached = mutableListOf<Pair<TypeDefinition, Map<ParameterKey, TypeUse>>>()
         val visited = mutableSetOf<Pair<TypeDefinitionId, Map<ParameterKey, TypeUse>>>()
 
         fun visit(
@@ -348,13 +605,10 @@ class DefaultCheckedCatalog(
             known: Map<ParameterKey, TypeUse>,
         ) {
             if (!visited.add(current.id to known)) return
-            if (current.parameters.all { it.key in known }) {
-                val application = current.id.namedUse(current.parameters.map { known.getValue(it.key) })
-                if (resolve(application.use) is Resolution.Ready) applications += application
-            }
+            reached += current to known
             current.parents.forEach { parentTemplate ->
-                val parentDefinition = definitions[parentTemplate.definition]?.singleOrNull() ?: return@forEach
-                if (definition(parentDefinition.id) != DeclarationStatus.READY) return@forEach
+                val parentDefinition = lookup(parentTemplate.definition) ?: return@forEach
+                if (status(parentDefinition.id) != DeclarationStatus.READY) return@forEach
                 val parentBindings =
                     parentDefinition.parameters
                         .zip(parentTemplate.arguments)
@@ -366,12 +620,24 @@ class DefaultCheckedCatalog(
             }
         }
 
-        visit(root, bindings)
-        return applications
+        visit(root, chosen.filterValues { resolve(it) is Resolution.Ready })
+        return reached
+    }
+
+    /**
+     * A function type checks as itself and stores as the Formula record: its schema is Formula's, under the function's
+     * own use, so checking sees the function and storage sees the record.
+     */
+    private fun resolveFunction(candidate: TypeUse.FunctionWrapper): Resolution<CheckedType> {
+        candidate.parts().forEach { part -> (resolveExpanded(part) as? Resolution.Invalid)?.let { return it } }
+        return when (val formula = resolveNamed(FORMULA_USE)) {
+            is Resolution.Invalid -> formula
+            is Resolution.Ready -> Resolution.Ready(CheckedType(generation, candidate, formula.value.schema.copy(use = candidate), this))
+        }
     }
 
     private fun resolveNullable(candidate: TypeUse.NullableWrapper): Resolution<CheckedType> =
-        when (val inner = resolve(candidate.value.value)) {
+        when (val inner = resolveExpanded(candidate.value.value)) {
             is Resolution.Invalid -> {
                 inner
             }
@@ -394,9 +660,9 @@ class DefaultCheckedCatalog(
         visiting: MutableSet<NamedTypeUse> = linkedSetOf(),
     ): Resolution<Map<ParameterKey, TypeUse>> {
         candidate.use.typeDepthFailure()?.let { return invalid(it, "type_depth_limit") }
-        val status = definition(candidate.definition)
-        if (status is DeclarationStatus.UnavailableWrapper) return Resolution.Invalid(status.reasons)
-        val definition = definitions.getValue(candidate.definition).single()
+        val availability = status(candidate.definition)
+        if (availability is DeclarationStatus.UnavailableWrapper) return Resolution.Invalid(availability.reasons)
+        val definition = checkNotNull(lookup(candidate.definition))
         if (candidate.arguments.size != definition.parameters.size) return invalid(candidate.definition, "argument_arity")
         if (!visiting.add(candidate)) return invalid(candidate.definition, "recursive_type_resolution")
         try {
@@ -439,20 +705,16 @@ class DefaultCheckedCatalog(
         visiting: MutableSet<NamedTypeUse> = linkedSetOf(),
     ): Resolution<Unit> {
         candidate.typeDepthFailure()?.let { return invalid(it, "type_depth_limit") }
-        return when (candidate) {
-            is TypeUse.ScalarWrapper -> Resolution.Ready(Unit)
-            is TypeUse.NullableWrapper -> validateTypeApplication(candidate.value.value, visiting)
-            is TypeUse.NamedWrapper -> validateApplication(candidate.value, visiting).map { Unit }
-            else -> unknownVariant(candidate)
-        }
+        candidate.named?.let { named -> return validateApplication(named, visiting).map { Unit } }
+        return candidate.parts().mapResolution { validateTypeApplication(it, visiting) }.map { Unit }
     }
 
     private fun resolveNamed(candidate: NamedTypeUse): Resolution<CheckedType> {
         val application = validateApplication(candidate)
         if (application is Resolution.Invalid) return application
         val bindings = (application as Resolution.Ready).value
-        val definition = definitions.getValue(candidate.definition).single()
-        val invalidArgument = candidate.arguments.firstNotNullOfOrNull { (resolve(it) as? Resolution.Invalid)?.diagnostics }
+        val definition = checkNotNull(lookup(candidate.definition))
+        val invalidArgument = candidate.arguments.firstNotNullOfOrNull { (resolveExpanded(it) as? Resolution.Invalid)?.diagnostics }
         if (invalidArgument != null) return Resolution.Invalid(invalidArgument)
         for (parameter in definition.parameters) {
             for (bound in parameter.bounds) {
@@ -494,34 +756,28 @@ class DefaultCheckedCatalog(
         return Resolution.Ready(CheckedType(generation, use, schema, this))
     }
 
-    private fun resolvePending(selection: TypeSelection.PendingWrapper): Resolution<PartialSchema> {
-        val status = definition(selection.definition)
-        if (status is DeclarationStatus.UnavailableWrapper) return Resolution.Invalid(status.reasons)
-        val definition = definitions.getValue(selection.definition).single()
-        if (selection.arguments.size != definition.parameters.size) return invalid(selection.definition, "argument_arity")
-        val bindings = mutableMapOf<ParameterKey, TypeUse>()
-        val pending = mutableListOf<ArgumentLocation>()
-        selection.arguments.forEachIndexed { index, argument ->
-            when (argument) {
-                is ArgumentSelection.ChosenWrapper -> {
-                    val resolution = resolve(argument.type)
-                    if (resolution is Resolution.Invalid) return resolution
-                    bindings[definition.parameters[index].key] = argument.type
-                }
+    /** The partial type of [definition] under the [bindings] a creator chose, while at least one parameter has none. */
+    private fun resolvePartial(
+        definition: TypeDefinition,
+        bindings: Map<ParameterKey, TypeUse>,
+    ): Resolution<ResourceType> {
+        bindings.values.firstNotNullOfOrNull { resolve(it) as? Resolution.Invalid }?.let { return it }
+        boundViolation(definition, bindings)?.let { return it }
+        val pending =
+            definition.parameters
+                .withIndex()
+                .filter { it.value.key !in bindings }
+                .map { ArgumentLocation(index = it.index) }
+        val partialFields = collectPartialFields(definition, bindings, linkedSetOf())
+        if (partialFields is Resolution.Invalid) return partialFields
+        return partialSchema((partialFields as Resolution.Ready).value, bindings, pending).map { ResourceType.Partial(definition.id, it) }
+    }
 
-                ArgumentSelection.UNFILLED -> {
-                    pending += ArgumentLocation(index = index)
-                }
-
-                else -> {
-                    unknownVariant(argument)
-                }
-            }
-        }
-        if (pending.isEmpty()) {
-            val complete = selection.definition.namedUse(definition.parameters.map { bindings.getValue(it.key) })
-            return resolvePartial(TypeSelection.CompleteWrapper(complete))
-        }
+    /** Why a chosen argument of [definition] breaks a bound its other chosen [bindings] already fix, or null when none does. */
+    private fun boundViolation(
+        definition: TypeDefinition,
+        bindings: Map<ParameterKey, TypeUse>,
+    ): Resolution.Invalid? {
         for (parameter in definition.parameters) {
             val actual = bindings[parameter.key] ?: continue
             for (bound in parameter.bounds) {
@@ -537,12 +793,18 @@ class DefaultCheckedCatalog(
                 }
             }
         }
-        val partialFields = collectPartialFields(definition, bindings, linkedSetOf())
-        if (partialFields is Resolution.Invalid) return partialFields
-        partialFields as Resolution.Ready
+        return null
+    }
+
+    /** [fields] split into those [bindings] already type and those that wait on a [pending] argument. */
+    private fun partialSchema(
+        fields: List<FieldDeclaration>,
+        bindings: Map<ParameterKey, TypeUse>,
+        pending: List<ArgumentLocation>,
+    ): Resolution<PartialSchema> {
         val known = mutableListOf<ResolvedField>()
         val dependent = mutableListOf<DependentField>()
-        for (field in partialFields.value) {
+        for (field in fields) {
             val missing =
                 field.type
                     .parameterKeys()
@@ -551,7 +813,7 @@ class DefaultCheckedCatalog(
             if (missing.isEmpty()) {
                 val applied = field.type.apply(bindings)
                 if (applied is Resolution.Invalid) return applied
-                known += resolvedField(field.owner, (applied as Resolution.Ready).value)
+                known += resolvedField(field, (applied as Resolution.Ready).value)
             } else {
                 dependent += DependentField(owner = field.owner, type = field.type, missing = missing)
             }
@@ -570,7 +832,9 @@ class DefaultCheckedCatalog(
             }
 
             is RepresentationTemplate.RecordWrapper -> {
-                Resolution.Ready(ResolvedRepresentation.createRecord(fields = fields, abstract_ = representation.value.abstract_))
+                representation.value.form
+                    .resolve(bindings)
+                    .map { form -> ResolvedRepresentation.createRecord(fields = fields, form = form) }
             }
 
             is RepresentationTemplate.SequenceWrapper -> {
@@ -586,10 +850,6 @@ class DefaultCheckedCatalog(
                 Resolution.Ready(
                     ResolvedRepresentation.createMapping(key = (key as Resolution.Ready).value, value = (value as Resolution.Ready).value),
                 )
-            }
-
-            is RepresentationTemplate.EnumerationWrapper -> {
-                Resolution.Ready(ResolvedRepresentation.createEnumeration(cases = representation.value.cases))
             }
 
             is RepresentationTemplate.LinkWrapper -> {
@@ -632,7 +892,7 @@ class DefaultCheckedCatalog(
                 return invalid(affected, "invalid_field_narrowing")
             }
             merged[field.owner.name] =
-                resolvedField(field.owner, applied.value, inheritedFields.flatMap(ResolvedField::guarantees).distinct())
+                resolvedField(field, applied.value, inheritedFields.flatMap(ResolvedField::guarantees).distinct())
         }
         for ((name, inheritedFields) in inheritedByName) {
             val distinctOwners = inheritedFields.map(ResolvedField::declarationOwner).distinct()
@@ -646,74 +906,31 @@ class DefaultCheckedCatalog(
         return Resolution.Ready(fieldOrder.map(merged::getValue))
     }
 
-    private fun validateDeclaration(definition: TypeDefinition) {
-        if (definition.parameters
-                .map(TypeParameter::name)
-                .distinct()
-                .size != definition.parameters.size
-        ) {
-            markUnavailable(definition.id, "duplicate_parameter_name")
-        }
-        definition.parameters.forEachIndexed { index, parameter ->
-            if (parameter.key.owner != definition.id || parameter.key.index != index) {
-                markUnavailable(definition.id, "invalid_parameter_key")
+    private fun RecordForm.resolve(bindings: Map<ParameterKey, TypeUse>): Resolution<ResolvedRecordForm> =
+        when (this) {
+            RecordForm.CONCRETE -> {
+                Resolution.Ready(ResolvedRecordForm.CONCRETE)
             }
-        }
-        val keys = definition.parameters.map(TypeParameter::key).toSet()
-        val templates =
-            buildList {
-                definition.parameters.flatMapTo(this) { it.bounds }
-                definition.parents.mapTo(this) { it.template }
-                addAll(definition.representation.templates())
-            }
-        if (templates.flatMap { it.parameterKeys() }.any { it !in keys }) {
-            markUnavailable(definition.id, "foreign_parameter")
-        }
-        templates.flatMap { it.namedTemplates() }.forEach { named ->
-            val target = definitions[named.definition]
-            if (target == null) {
-                markUnavailable(definition.id, "unknown_dependency")
-            } else if (target.size == 1 && named.arguments.size != target.single().parameters.size) {
-                markUnavailable(definition.id, "template_argument_arity")
-            }
-        }
-        val fields = (definition.representation as? RepresentationTemplate.RecordWrapper)?.value?.fields.orEmpty()
-        if (fields.map { it.owner.name }.distinct().size != fields.size) markUnavailable(definition.id, "duplicate_field")
-        if (fields.any { it.owner.definition != definition.id }) markUnavailable(definition.id, "invalid_field_owner")
-    }
 
-    private fun markInheritanceCycles() {
-        val visiting = linkedSetOf<TypeDefinitionId>()
-        val visited = mutableSetOf<TypeDefinitionId>()
-
-        fun visit(id: TypeDefinitionId) {
-            if (id in visiting) {
-                visiting.dropWhile { it != id }.forEach { markUnavailable(it, "inheritance_cycle") }
-                return
+            RecordForm.OPEN -> {
+                Resolution.Ready(ResolvedRecordForm.OPEN)
             }
-            if (!visited.add(id)) return
-            val definition = definitions[id]?.singleOrNull() ?: return
-            visiting += id
-            definition.parents.forEach { visit(it.definition) }
-            visiting -= id
+
+            is RecordForm.ClosedWrapper -> {
+                val cases =
+                    value.cases.map { case ->
+                        when (val applied = case.template.apply(bindings)) {
+                            is Resolution.Invalid -> return applied
+                            is Resolution.Ready -> applied.value.named ?: return invalid(case.definition, "invalid_case")
+                        }
+                    }
+                Resolution.Ready(ResolvedRecordForm.createClosed(cases = cases))
+            }
+
+            else -> {
+                unknownVariant(this)
+            }
         }
-        definitions.keys.forEach(::visit)
-    }
-
-    private fun propagateUnavailableDependencies() {
-        var changed: Boolean
-        do {
-            changed = false
-            definitions.values.mapNotNull(List<TypeDefinition>::singleOrNull).forEach { definition ->
-                if (definition.id in unavailable) return@forEach
-                val dependencies = definition.referencedDefinitions()
-                if (dependencies.any { it in unavailable }) {
-                    markUnavailable(definition.id, "unavailable_dependency")
-                    changed = true
-                }
-            }
-        } while (changed)
-    }
 
     private fun sameApplicationFamily(
         actual: NamedTypeUse,
@@ -734,8 +951,11 @@ class DefaultCheckedCatalog(
             .filter { it.definition == expected.definition && it.arguments.size == expected.arguments.size }
             .mapNotNull { template ->
                 val inferred = linkedMapOf<ParameterKey, TypeUse>()
-                val matched = template.arguments.zip(expected.arguments).all { (left, right) -> infer(left, right, inferred) }
-                if (!matched || definition.parameters.any { it.key !in inferred }) return@mapNotNull null
+                if (!template.template.match(expectedUse, inferred) ||
+                    definition.parameters.any { it.key !in inferred }
+                ) {
+                    return@mapNotNull null
+                }
                 definition.id.namedUse(definition.parameters.map { inferred.getValue(it.key) })
             }.toList()
     }
@@ -748,7 +968,7 @@ class DefaultCheckedCatalog(
         val ancestors = mutableListOf<NamedTypeTemplate>()
         for (parent in definition.parents) {
             ancestors += parent
-            val parentDefinition = definitions[parent.definition]?.singleOrNull() ?: continue
+            val parentDefinition = lookup(parent.definition) ?: continue
             val substitutions =
                 parentDefinition.parameters
                     .map(TypeParameter::key)
@@ -759,41 +979,6 @@ class DefaultCheckedCatalog(
         visiting -= definition.id
         return ancestors
     }
-
-    private fun infer(
-        template: TypeTemplate,
-        actual: TypeUse,
-        inferred: MutableMap<ParameterKey, TypeUse>,
-    ): Boolean =
-        when (template) {
-            is TypeTemplate.ParameterWrapper -> {
-                inferred[template.value]?.let { it == actual } ?: run {
-                    inferred[template.value] = actual
-                    true
-                }
-            }
-
-            is TypeTemplate.ScalarWrapper -> {
-                actual == template.value.use
-            }
-
-            is TypeTemplate.NullableWrapper -> {
-                actual is TypeUse.NullableWrapper && infer(template.value.value, actual.value.value, inferred)
-            }
-
-            is TypeTemplate.NamedWrapper -> {
-                val named = template.value
-                val actualNamed = actual.named
-                actualNamed != null &&
-                    named.definition == actualNamed.definition &&
-                    named.arguments.size == actualNamed.arguments.size &&
-                    named.arguments.zip(actualNamed.arguments).all { (left, right) -> infer(left, right, inferred) }
-            }
-
-            else -> {
-                unknownVariant(template)
-            }
-        }
 
     private fun isResolvedReadableAs(
         actual: TypeUse,
@@ -870,7 +1055,7 @@ class DefaultCheckedCatalog(
         while (pending.isNotEmpty()) {
             val current = pending.removeFirst()
             if (!visited.add(current)) continue
-            val definition = definitions[current.definition]?.singleOrNull() ?: continue
+            val definition = lookup(current.definition) ?: continue
             if (definition.parameters.size != current.arguments.size) continue
             val bindings =
                 definition.parameters
@@ -895,7 +1080,7 @@ class DefaultCheckedCatalog(
         val inherited = mutableListOf<FieldDeclaration>()
         for (parent in definition.parents) {
             val parentDefinition =
-                definitions[parent.definition]?.singleOrNull()
+                lookup(parent.definition)
                     ?: return invalid(definition.id, "unknown_dependency")
             val parentBindings = mutableMapOf<ParameterKey, TypeUse>()
             parent.arguments.forEachIndexed { index, argument ->
@@ -908,7 +1093,7 @@ class DefaultCheckedCatalog(
             if (partialParent is Resolution.Invalid) return partialParent
             inherited +=
                 (partialParent as Resolution.Ready).value.map { field ->
-                    field.copy(type = field.type.substituteKnown(parentBindings))
+                    field.copy(type = field.type.substitute(parentBindings.mapValues { (_, use) -> use.toTemplate() }))
                 }
         }
         visiting -= definition.id
@@ -933,6 +1118,89 @@ class DefaultCheckedCatalog(
         affected: TypeDefinitionId,
         code: String,
     ): Resolution.Invalid = Resolution.Invalid(listOf(diagnostic(affected, code)))
+}
+
+/**
+ * The validated code declarations of one generation. Overlays share them, so a view's catalog never validates code
+ * again. They are written only while this is built.
+ */
+private class ValidatedDeclarations(
+    declarations: List<TypeDefinition>,
+    quarantine: List<DeclarationDiagnostic>,
+) {
+    private val depthInvalidDefinitions = declarations.filter(TypeDefinition::exceedsTypeDepth).map(TypeDefinition::id).toSet()
+    val definitions: Map<TypeDefinitionId, List<TypeDefinition>> =
+        declarations
+            .filterNot { it.id in depthInvalidDefinitions }
+            .groupBy(TypeDefinition::id)
+    private val reasons = linkedMapOf<TypeDefinitionId, MutableList<DeclarationDiagnostic>>()
+    val unavailable: Map<TypeDefinitionId, List<DeclarationDiagnostic>> get() = reasons
+
+    init {
+        depthInvalidDefinitions.forEach { markUnavailable(it, "type_depth_limit") }
+        definitions
+            .filterValues { it.size == 1 }
+            .values
+            .map(List<TypeDefinition>::single)
+            .forEach(::validateDeclaration)
+        definitions.values
+            .flatten()
+            .structuralProblems()
+            .forEach { (id, codes) -> codes.forEach { markUnavailable(id, it) } }
+        quarantine.forEach(::markUnavailable)
+        propagateUnavailableDependencies()
+    }
+
+    private fun validateDeclaration(definition: TypeDefinition) {
+        if (definition.parameters
+                .map(TypeParameter::name)
+                .distinct()
+                .size != definition.parameters.size
+        ) {
+            markUnavailable(definition.id, "duplicate_parameter_name")
+        }
+        definition.parameters.forEachIndexed { index, parameter ->
+            if (parameter.key.owner != definition.id || parameter.key.index != index) {
+                markUnavailable(definition.id, "invalid_parameter_key")
+            }
+        }
+        val keys = definition.parameters.map(TypeParameter::key).toSet()
+        val templates =
+            buildList {
+                definition.parameters.flatMapTo(this) { it.bounds }
+                definition.parents.mapTo(this) { it.template }
+                addAll(definition.representation.templates())
+            }
+        if (templates.flatMap { it.parameterKeys() }.any { it !in keys }) {
+            markUnavailable(definition.id, "foreign_parameter")
+        }
+        templates.flatMap { template -> template.walk().mapNotNull { it.named } }.forEach { named ->
+            val target = definitions[named.definition]
+            if (target == null) {
+                markUnavailable(definition.id, "unknown_dependency")
+            } else if (target.size == 1 && named.arguments.size != target.single().parameters.size) {
+                markUnavailable(definition.id, "template_argument_arity")
+            }
+        }
+        if (definition.representation.matchedDefinitions().any { it !in definitions }) {
+            markUnavailable(definition.id, "unknown_dependency")
+        }
+    }
+
+    private fun propagateUnavailableDependencies() {
+        var changed: Boolean
+        do {
+            changed = false
+            definitions.values.mapNotNull(List<TypeDefinition>::singleOrNull).forEach { definition ->
+                if (definition.id in reasons) return@forEach
+                val dependencies = definition.storedDefinitions()
+                if (dependencies.any { it in reasons }) {
+                    markUnavailable(definition.id, "unavailable_dependency")
+                    changed = true
+                }
+            }
+        } while (changed)
+    }
 
     private fun markUnavailable(
         id: TypeDefinitionId,
@@ -940,16 +1208,273 @@ class DefaultCheckedCatalog(
     ) = markUnavailable(DeclarationDiagnostic.of(id, code))
 
     private fun markUnavailable(diagnostic: DeclarationDiagnostic) {
-        val reasons = unavailable.getOrPut(diagnostic.affected, ::mutableListOf)
-        val previous = reasons.indexOfFirst { it.code == diagnostic.code && it.field == diagnostic.field }
-        val origins = if (previous < 0) diagnostic.origins else reasons[previous].origins + diagnostic.origins
+        val existing = reasons.getOrPut(diagnostic.affected, ::mutableListOf)
+        val previous = existing.indexOfFirst { it.code == diagnostic.code && it.field == diagnostic.field }
+        val origins = if (previous < 0) diagnostic.origins else existing[previous].origins + diagnostic.origins
         val owned =
             diagnostic.copy(
                 origins = origins.distinct().immutableListCopy(),
                 field = diagnostic.field?.let { it.copy(segments = it.segments.immutableListCopy()) },
             )
-        if (previous < 0) reasons += owned else reasons[previous] = owned
+        if (previous < 0) existing += owned else existing[previous] = owned
     }
+}
+
+/**
+ * What a view's catalog adds to the code catalog: the content types [source] holds, written and derived, each validated
+ * once when first reached.
+ */
+private class ContentLayer(
+    val base: DefaultCheckedCatalog,
+    val source: ContentTypes,
+    private val checksBounds: Boolean = true,
+) {
+    private val problemsByOwner = ConcurrentHashMap<ResourceId, Map<TypeDefinitionId, List<String>>>()
+    private val problemsByDerived = ConcurrentHashMap<TypeDefinitionId, Map<TypeDefinitionId, List<String>>>()
+
+    /** The same content without bound checks, so judging a declaration's bounds never asks for its own judgement. */
+    private val declared by lazy { base.withDeclaredContent(source) }
+
+    /**
+     * The one walk for every content id: a generated key on its owner's written list, a field key through its chain, a
+     * derived key through its owner's bind blocks, and a member through its owner.
+     */
+    fun target(
+        id: TypeDefinitionId,
+        visiting: Set<TypeDefinitionId> = emptySet(),
+    ): ContentTarget {
+        val member = (id.typeId as? TypeId.MemberWrapper)?.value
+        if (member != null && id.namesIndirectKey()) {
+            return memberTarget(TypeDefinitionId(typeId = member.owner, revision = id.revision), member.name, visiting)
+        }
+        val owner = checkNotNull(id.contentOwner())
+        if (id.namesIndirectKey() && id in visiting) return ContentTarget.Loop
+        id.fieldKey()?.let { field -> return source.heldType(owner, field)?.let { follow(it, visiting + id) } ?: ContentTarget.Missing() }
+        id.derivedKey()?.let { key -> return derivedTarget(id, source.derived(owner, key), visiting) }
+        return source.written(owner).firstOrNull { it.id == id }?.let { ContentTarget.Declared(it) } ?: ContentTarget.Missing()
+    }
+
+    /** The case [name] of what [owner] leads to; an alias has no cases of its own. */
+    private fun memberTarget(
+        owner: TypeDefinitionId,
+        name: String,
+        visiting: Set<TypeDefinitionId>,
+    ): ContentTarget =
+        when (val found = target(owner, visiting)) {
+            is ContentTarget.Declared -> found.member(name)
+            is ContentTarget.Plain -> ContentTarget.Missing()
+            is ContentTarget.Missing, ContentTarget.Loop -> found
+        }
+
+    /** Where the derived id [id] leads, given what its owner's bind computed. */
+    private fun derivedTarget(
+        id: TypeDefinitionId,
+        derived: DerivedTarget,
+        visiting: Set<TypeDefinitionId>,
+    ): ContentTarget =
+        when (derived) {
+            is DerivedTarget.Declared -> {
+                ContentTarget.Declared(derived.definition, listOf(derived.definition) + derived.cases)
+            }
+
+            is DerivedTarget.Plain -> {
+                follow(derived.use, visiting + id)
+            }
+
+            is DerivedTarget.Missing -> {
+                ContentTarget.Missing(
+                    derived.failure.code,
+                    DerivedFailureAt(checkNotNull(id.contentOwner()), derived.failure),
+                )
+            }
+        }
+
+    /** Where a held or derived [use] leads: on through a bare content id, or a plain alias of anything else. */
+    private fun follow(
+        use: TypeUse,
+        visiting: Set<TypeDefinitionId>,
+    ): ContentTarget {
+        val next =
+            use.named?.definition?.takeIf { it.contentOwner() != null && use.named?.arguments.isNullOrEmpty() }
+                ?: return ContentTarget.Plain(use)
+        return target(next, visiting)
+    }
+
+    /** The case [name] of a found union: among the declarations it was derived with, or on the written list. */
+    private fun ContentTarget.Declared.member(name: String): ContentTarget {
+        val id = definition.id.member(name)
+        if (!definition.id.namesDerivedKey()) return target(id)
+        return family.firstOrNull { it.id == id }?.let { ContentTarget.Declared(it, family) } ?: ContentTarget.Missing()
+    }
+
+    /** Replaces each indirect key by where it leads, all through the use. A key whose chain loops or ends at nothing stays. */
+    fun expandIndirectKeys(
+        use: TypeUse,
+        visiting: Set<TypeDefinitionId>,
+    ): TypeUse =
+        use.mapNamed { named ->
+            if (!named.definition.namesIndirectKey() || named.definition in visiting) return@mapNamed null
+            when (val found = target(named.definition)) {
+                is ContentTarget.Declared -> found.definition.id.use()
+                is ContentTarget.Plain -> expandIndirectKeys(found.use, visiting + named.definition)
+                is ContentTarget.Missing, ContentTarget.Loop -> null
+            }
+        }
+
+    /** The declared id an id stands for, or null when its chain does not end at a declaration. */
+    fun expandId(id: TypeDefinitionId): TypeDefinitionId? =
+        if (!id.namesIndirectKey()) id else (target(id) as? ContentTarget.Declared)?.definition?.id
+
+    /** Why indirect keys stay in [use] after expansion from [id]: a key back to [id] or into a loop is an alias loop, a dead end says why. */
+    fun leftover(
+        use: TypeUse,
+        id: TypeDefinitionId,
+    ): List<String> =
+        expandIndirectKeys(use, setOf(id))
+            .referencedDefinitions()
+            .filter { it.namesIndirectKey() }
+            .mapNotNull { key ->
+                val found = target(key)
+                when {
+                    key == id || found == ContentTarget.Loop -> "content_alias_loop"
+                    found is ContentTarget.Declared -> null
+                    found is ContentTarget.Missing -> found.code
+                    else -> "content_type_missing"
+                }
+            }.distinct()
+            .sorted()
+
+    /**
+     * Why a found declaration stands in as the error type. A written one obeys the creator rules over its owner's whole
+     * list, the boundary check for untrusted declarations; a derived one, which code produced, obeys the structural rules
+     * over what it was derived with. Both are judged once.
+     */
+    fun invalid(found: ContentTarget.Declared): List<String> {
+        val id = found.definition.id
+        val problems =
+            if (id.namesDerivedKey()) {
+                val root = checkNotNull(found.family.firstOrNull()).id
+                problemsByDerived.getOrPut(root) { found.family.judged(found.family.derivedProblems()) }
+            } else {
+                val owner = checkNotNull(id.contentOwner())
+                problemsByOwner.getOrPut(owner) {
+                    val declarations = source.written(owner)
+                    declarations.judged(declarations.declarationProblems(owner))
+                }
+            }
+        return problems[id].orEmpty()
+    }
+
+    /** [problems] plus the bound problems of every declaration that has none yet, unless this layer skips bounds. */
+    private fun List<TypeDefinition>.judged(problems: Map<TypeDefinitionId, List<String>>): Map<TypeDefinitionId, List<String>> {
+        if (!checksBounds) return problems
+        return problems +
+            filter { it.id !in problems }
+                .associate { it.id to it.boundProblems() }
+                .filterValues { it.isNotEmpty() }
+    }
+
+    /** The rules a derived declaration obeys: the structural ones, and no parameters, since nothing applies a content type. */
+    private fun List<TypeDefinition>.derivedProblems(): Map<TypeDefinitionId, List<String>> {
+        val structural = structuralProblems()
+        return associate { definition ->
+            definition.id to
+                (
+                    structural[definition.id].orEmpty() +
+                        listOfNotNull("declaration_has_parameters".takeIf { definition.parameters.isNotEmpty() })
+                )
+        }.filterValues { it.isNotEmpty() }
+    }
+
+    /**
+     * `argument_bound` when a code type this declaration holds applies an argument outside its parameter's bound, as
+     * `Ref<Int>` and `Ref` to a content record do. Code declarations resolve each use when it is read; a content
+     * declaration is refused up front.
+     */
+    private fun TypeDefinition.boundProblems(): List<String> =
+        representation
+            .templates()
+            .mapNotNull { (it.apply(emptyMap()) as? Resolution.Ready)?.value }
+            .any { use -> (declared.resolve(use) as? Resolution.Invalid)?.diagnostics?.any { it.code == "argument_bound" } == true }
+            .let { if (it) listOf("argument_bound") else emptyList() }
+
+    /** The declaration with every indirect key in its templates replaced by where it leads. Content declarations take no parameters. */
+    fun expandFields(definition: TypeDefinition): TypeDefinition =
+        definition.mapTemplates { template ->
+            template.mapTypes { node ->
+                val named = node.named ?: return@mapTypes null
+                if (named.definition.namesIndirectKey()) expandIndirectKeys(named.definition.use(), emptySet()).toTemplate() else null
+            }
+        }
+}
+
+/** Where a content id leads. resolve and definition both ask this one walk. */
+private sealed interface ContentTarget {
+    /** A declaration; [family] holds the declarations derived with it, so a derived union finds its cases. */
+    data class Declared(
+        val definition: TypeDefinition,
+        val family: List<TypeDefinition> = emptyList(),
+    ) : ContentTarget
+
+    /** An alias: a held or derived type with no content id at its top. */
+    data class Plain(
+        val use: TypeUse,
+    ) : ContentTarget
+
+    data object Loop : ContentTarget
+
+    /** Nothing there; [code] says why the id stands in as the error type, and [failure] which bind failed when a computed type does. */
+    data class Missing(
+        val code: String = "content_type_missing",
+        val failure: DerivedFailureAt? = null,
+    ) : ContentTarget
+}
+
+/** The error type: an empty concrete record with no parents. definition(id) says why it stands in. */
+private fun errorRecord(id: TypeDefinitionId) =
+    TypeDefinition(
+        id = id,
+        parameters = emptyList(),
+        parents = emptyList(),
+        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+    )
+
+/** This declaration with [transform] applied to every template it holds: parents, bounds and its representation's. */
+private fun TypeDefinition.mapTemplates(transform: (TypeTemplate) -> TypeTemplate): TypeDefinition {
+    fun named(template: NamedTypeTemplate): NamedTypeTemplate =
+        (transform(template.template) as? TypeTemplate.NamedWrapper)?.value ?: template
+    val representation =
+        when (val shape = representation) {
+            is RepresentationTemplate.RecordWrapper -> {
+                val record = shape.value
+                val form =
+                    (record.form as? RecordForm.ClosedWrapper)?.let { closed ->
+                        RecordForm.createClosed(cases = closed.value.cases.map(::named))
+                    } ?: record.form
+                RepresentationTemplate.createRecord(fields = record.fields.map { it.copy(type = transform(it.type)) }, form = form)
+            }
+
+            is RepresentationTemplate.SequenceWrapper -> {
+                RepresentationTemplate.createSequence(item = transform(shape.value.item), kind = shape.value.kind)
+            }
+
+            is RepresentationTemplate.MappingWrapper -> {
+                RepresentationTemplate.createMapping(key = transform(shape.value.key), value = transform(shape.value.value))
+            }
+
+            is RepresentationTemplate.LinkWrapper -> {
+                RepresentationTemplate.createLink(endpoint = shape.value.endpoint, target = shape.value.target.mapTemplate(transform))
+            }
+
+            else -> {
+                shape
+            }
+        }
+    return copy(
+        parameters = parameters.map { parameter -> parameter.copy(bounds = parameter.bounds.map(transform)) },
+        parents = parents.map(::named),
+        representation = representation,
+    )
 }
 
 private fun diagnostic(
@@ -958,8 +1483,9 @@ private fun diagnostic(
 ) = DeclarationDiagnostic.of(affected, code)
 
 /**
- * Keys memoized resolutions by a structural hash computed without allocation; generated Skir hash codes build a list
- * per struct, which made every cache hit several times slower. Equality is the generated structural equality.
+ * Keys memoized resolutions by a structural hash that allocates nothing for named and scalar uses; generated Skir hash
+ * codes build a list per struct, which made every cache hit several times slower. Equality is the generated structural
+ * equality.
  */
 private class ResolutionKey(
     val use: TypeUse,
@@ -971,25 +1497,29 @@ private class ResolutionKey(
     override fun equals(other: Any?): Boolean = other is ResolutionKey && other.hash == hash && other.use == use
 }
 
-private fun TypeUse.structuralHash(): Int =
+private fun TypeUse.structuralHash(): Int = parts().fold(ownHash()) { hash, part -> 31 * hash + part.structuralHash() }
+
+/** The hash of what this node says itself, not counting its parts: its form, definition, scalar or slot names. */
+private fun TypeUse.ownHash(): Int =
     when (this) {
         is TypeUse.NamedWrapper -> {
-            value.arguments.fold(value.definition.structuralHash()) { hash, argument ->
-                31 * hash +
-                    argument.structuralHash()
-            }
+            value.definition.structuralHash()
         }
 
         is TypeUse.NullableWrapper -> {
-            31 * value.value.structuralHash() + 1
+            kind.ordinal
         }
 
         is TypeUse.ScalarWrapper -> {
             value.structuralHash()
         }
 
+        is TypeUse.FunctionWrapper -> {
+            (value.context + value.parameters).fold(kind.ordinal) { hash, slot -> 31 * hash + slot.name.hashCode() }
+        }
+
         else -> {
-            kind.ordinal
+            unknownVariant(this)
         }
     }
 
@@ -998,6 +1528,8 @@ private fun TypeDefinitionId.structuralHash(): Int {
         when (val id = typeId) {
             is TypeId.DeclaredWrapper -> id.value.value.hashCode()
             is TypeId.QualifiedWrapper -> 31 * id.value.namespace.hashCode() + id.value.name.hashCode()
+            is TypeId.MemberWrapper -> 31 * id.value.owner.hashCode() + id.value.name.hashCode()
+            is TypeId.ContentWrapper -> 31 * id.value.resource.hashCode() + id.value.key.hashCode()
             else -> id.kind.ordinal
         }
     return 31 * identity + revision
@@ -1021,21 +1553,10 @@ private fun TypeUse.typeDepthFailure(): TypeDefinitionId? {
         if (depth > MAX_TYPE_DEPTH) {
             return named?.definition ?: nearestDefinition ?: TYPE_USE_DIAGNOSTIC_OWNER
         }
-        when (current) {
-            is TypeUse.NamedWrapper -> {
-                current.value.arguments
-                    .asReversed()
-                    .forEach { pending.addLast(it to depth + 1) }
-            }
-
-            is TypeUse.NullableWrapper -> {
-                pending.addLast(current.value.value to depth + 1)
-            }
-
-            else -> {
-                Unit
-            }
-        }
+        current
+            .parts()
+            .asReversed()
+            .forEach { pending.addLast(it to depth + 1) }
     }
     return null
 }
@@ -1050,21 +1571,10 @@ private fun TypeDefinition.exceedsTypeDepth(): Boolean {
     while (pending.isNotEmpty()) {
         val (current, depth) = pending.removeLast()
         if (depth > MAX_TYPE_DEPTH) return true
-        when (current) {
-            is TypeTemplate.NamedWrapper -> {
-                current.value.arguments
-                    .asReversed()
-                    .forEach { pending.addLast(it to depth + 1) }
-            }
-
-            is TypeTemplate.NullableWrapper -> {
-                pending.addLast(current.value.value to depth + 1)
-            }
-
-            else -> {
-                Unit
-            }
-        }
+        current
+            .parts()
+            .asReversed()
+            .forEach { pending.addLast(it to depth + 1) }
     }
     return false
 }
@@ -1072,10 +1582,22 @@ private fun TypeDefinition.exceedsTypeDepth(): Boolean {
 private val TYPE_USE_DIAGNOSTIC_OWNER = TypeDefinitionId.qualified("typewriter", "TypeUse")
 
 private fun resolvedField(
-    owner: FieldOwner,
+    declaration: FieldDeclaration,
     type: TypeUse,
     guarantees: List<skirout.editor.v1.type_catalog.RuleId> = emptyList(),
-) = ResolvedField(key = owner.name, declarationOwner = owner.definition, type = type, guarantees = guarantees)
+) = ResolvedField(
+    key = declaration.owner.name,
+    declarationOwner = declaration.owner.definition,
+    type = type,
+    guarantees = guarantees,
+    hasConstructorDefault = declaration.hasConstructorDefault,
+)
+
+private fun <T, R> Resolution<T>.flatMap(transform: (T) -> Resolution<R>): Resolution<R> =
+    when (this) {
+        is Resolution.Invalid -> this
+        is Resolution.Ready -> transform(value)
+    }
 
 private fun <T, R> Resolution<T>.map(transform: (T) -> R): Resolution<R> =
     when (this) {
@@ -1094,21 +1616,6 @@ private fun <T, R> Iterable<T>.mapResolution(transform: (T) -> Resolution<R>): R
     return Resolution.Ready(values)
 }
 
-private fun TypeTemplate.namedTemplates(): List<NamedTypeTemplate> =
-    when (this) {
-        is TypeTemplate.NullableWrapper -> value.value.namedTemplates()
-        is TypeTemplate.NamedWrapper -> listOf(value) + value.arguments.flatMap { it.namedTemplates() }
-        else -> emptyList()
-    }
-
-private fun TypeTemplate.substituteKnown(bindings: Map<ParameterKey, TypeUse>): TypeTemplate =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> bindings[value]?.toTemplate() ?: this
-        is TypeTemplate.NamedWrapper -> value.copy(arguments = value.arguments.map { it.substituteKnown(bindings) }).template
-        is TypeTemplate.NullableWrapper -> value.value.substituteKnown(bindings).nullable()
-        else -> this
-    }
-
 /** Reports declaration readiness from this catalog generation's canonical quarantine. */
 fun CheckedCatalog.isReady(id: TypeDefinitionId): Boolean = definition(id) == DeclarationStatus.READY
 
@@ -1116,10 +1623,4 @@ fun CheckedCatalog.isReady(id: TypeDefinitionId): Boolean = definition(id) == De
 fun CheckedCatalog.isReady(template: NamedTypeTemplate): Boolean = isReady(template.definition) && template.arguments.all(::isReady)
 
 /** Checks referenced declarations while preserving symbolic free parameters. */
-fun CheckedCatalog.isReady(template: TypeTemplate): Boolean =
-    when (template) {
-        is TypeTemplate.ParameterWrapper, is TypeTemplate.ScalarWrapper -> true
-        is TypeTemplate.NullableWrapper -> isReady(template.value.value)
-        is TypeTemplate.NamedWrapper -> isReady(template.value)
-        else -> unknownVariant(template)
-    }
+fun CheckedCatalog.isReady(template: TypeTemplate): Boolean = template.walk().all { node -> node.named?.definition?.let(::isReady) ?: true }

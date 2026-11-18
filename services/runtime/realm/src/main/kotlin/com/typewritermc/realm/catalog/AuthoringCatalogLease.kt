@@ -4,6 +4,9 @@ import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.ResourceDisplayCatalog
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
+import com.typewritermc.formula.ContentReferences
+import com.typewritermc.formula.check.CatalogType
+import com.typewritermc.formula.check.ExtensionName
 import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -13,6 +16,7 @@ import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
 
 /**
@@ -39,9 +43,23 @@ interface AuthoringCatalogLease : AutoCloseable {
     /** The published placement field of each declared type that has one; other types are absent. */
     val placementFields: Map<TypeDefinitionId, ValuePath>
 
+    /**
+     * What extension code contributes to this code catalog, collected on first read. Every lease of one code catalog
+     * answers with the same instance, and it stays open while any lease of the catalog does.
+     */
+    val extensions: ExtensionCatalog
+
     /** The resource displays that name resources; a catalog without declared displays names none. */
     val displays: ResourceDisplayCatalog
         get() = ResourceDisplayCatalog()
+
+    /** The code types formulas name by their source name, such as the Kotlin class name, each with its extension. */
+    val formulaTypeNames: Map<String, List<CatalogType>>
+        get() = emptyMap()
+
+    /** The extensions formulas qualify code types by: every extension that declares one. */
+    val formulaExtensions: Set<ExtensionName>
+        get() = emptySet()
 
     fun retain(): AuthoringCatalogLease
 }
@@ -49,3 +67,10 @@ interface AuthoringCatalogLease : AutoCloseable {
 /** Identifies the relations of this catalog that belong to the resource ownership family. */
 val AuthoringCatalogLease.ownershipRelationIds: Set<RelationId>
     get() = relations.filter { it.ownsResources }.mapTo(hashSetOf(), RelationContract::id)
+
+/**
+ * The relations an author links resources with: every non owning relation except the content references, which say
+ * where content names a resource and are read as usages.
+ */
+val AuthoringCatalogLease.graphLinkRelationIds: Set<RelationId>
+    get() = relations.filter { !it.ownsResources && it.id != ContentReferences.id }.mapTo(hashSetOf(), RelationContract::id)

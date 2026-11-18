@@ -7,12 +7,11 @@ import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.complete
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.operations.AuthoringGraphFacts
 import com.typewritermc.operations.BoundResourceOperation
 import com.typewritermc.operations.NeedsChoices
@@ -23,7 +22,6 @@ import com.typewritermc.operations.OperationReads
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.operations.UnavailableAuthoredValue
 import com.typewritermc.operations.UnfinishedOperationInput
-import com.typewritermc.operations.asClosedUse
 import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.AuthoringView
@@ -33,11 +31,11 @@ import com.typewritermc.realm.authoring.RealmGraphFacts
 import com.typewritermc.realm.authoring.RelationReads
 import com.typewritermc.realm.edit.AuthoringPlanRejected
 import com.typewritermc.realm.edit.WorkingViewEditContext
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.types.catalog.Fit
+import com.typewritermc.types.catalog.fits
 import com.typewritermc.types.template
 import com.typewritermc.types.toResourceIds
 import com.typewritermc.types.toSkir
-import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.diagnostic.ValueProblem
@@ -53,9 +51,6 @@ import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
-import skirout.editor.v1.type_catalog.NamedTypeTemplate
-import skirout.editor.v1.type_catalog.ResourceTarget
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
@@ -315,31 +310,8 @@ private fun BoundResourceOperation.covers(
             else -> false
         }
     return count &&
-        when (val subject = target) {
-            ResourceTarget.ANY_RESOURCE -> true
-            is ResourceTarget.TypeWrapper -> records.all { it.matches(subject.template, view) }
-            else -> unknownVariant(subject)
-        }
+        records.all { view.catalog.checked.fits(it.configuration, target, owner = null) == Fit.YES }
 }
-
-private fun AuthoringRecord.matches(
-    target: NamedTypeTemplate,
-    view: AuthoringView,
-): Boolean =
-    when (val actual = configuration) {
-        is TypeSelection.CompleteWrapper -> {
-            view.catalog.checked.isReadableAs(actual.use.use, target.asClosedUse().use)
-        }
-
-        is TypeSelection.PendingWrapper -> {
-            target.arguments.isEmpty() &&
-                view.catalog.checked.isNominalSubtype(actual.definition, target.definition)
-        }
-
-        else -> {
-            unknownVariant(actual)
-        }
-    }
 
 /** The most destinations one operation offers for a drag; longer lists are capped and marked incomplete. */
 internal const val DROP_CANDIDATE_LIMIT = 200

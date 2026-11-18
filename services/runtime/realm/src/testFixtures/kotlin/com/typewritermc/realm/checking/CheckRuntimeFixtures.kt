@@ -9,7 +9,6 @@ import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.of
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
-import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.check
 import com.typewritermc.configuration.field
 import com.typewritermc.expression.eq
@@ -20,6 +19,8 @@ import com.typewritermc.expression.not
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.INT_USE
 import com.typewritermc.realm.authoring.LIST_USE
+import com.typewritermc.realm.authoring.PinnedReads
+import com.typewritermc.realm.authoring.RealmServices
 import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
 import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.TEST_TYPE
@@ -42,6 +43,7 @@ import com.typewritermc.types.use
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import skirout.editor.v1.authoring.EditIntent
@@ -58,6 +60,7 @@ import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -73,7 +76,9 @@ internal val REALM = ResourceId(value = "realm")
 
 /**
  * Runs [test] on a Realm of [catalog] that starts with [seed] saved, and a check runtime over its views that runs
- * checks on [dispatcher] and whose findings committed replies carry. The runtime is closed before the Realm.
+ * checks on [dispatcher] and whose findings committed replies carry. The runtime is closed before the Realm. A test
+ * dispatcher runs until idle before the close, since every commit queues a pass and a cancelled queued pass only ends
+ * once dispatched.
  */
 internal suspend fun checking(
     catalog: DefinitionCatalog,
@@ -83,28 +88,24 @@ internal suspend fun checking(
     selectionPredicates: SelectionPredicateEvaluator = RealmSelectionPredicateEvaluator(),
     test: suspend (RealmFixture, RealmCheckRuntime) -> Unit,
 ) {
-    RealmFixture.of(catalog, seed).use { realm ->
-        val runtime = RealmCheckRuntime(realm.views, dispatcher, selectionPredicates = selectionPredicates, readLimits = readLimits)
+    RealmFixture.of(catalog, seed, services = RealmServices(selectionPredicates, readLimits, checkingServices().names)).use { realm ->
+        val runtime = RealmCheckRuntime(realm.views, dispatcher)
         realm.findings = runtime::findings
-        runtime.use { test(realm, it) }
+        try {
+            test(realm, runtime)
+        } finally {
+            (dispatcher as? TestDispatcher)?.scheduler?.advanceUntilIdle()
+            runtime.close()
+        }
     }
 }
 
-/** Loads the catalog, runs the checks the test scheduler holds, and waits until every check has ended. */
+/** Starts the checks, runs the passes the test scheduler holds, and waits until every pass has ended. */
 context(scope: TestScope)
 internal suspend fun RealmCheckRuntime.settle() {
-    reloadCatalog()
+    start()
     scope.advanceUntilIdle()
     drain()
-}
-
-/** Commits [intent] and tells [runtime] about it, as the Realm does after every committed edit. */
-internal suspend fun RealmFixture.commitChecked(
-    runtime: RealmCheckRuntime,
-    intent: EditIntent,
-) {
-    commit(intent).shouldBeCommitted()
-    runtime.invalidateCurrent()
 }
 
 /** Renames [resource]. */
@@ -129,7 +130,7 @@ internal suspend fun membership(
     val provider =
         object : RealmCheckProvider {
             override fun RealmChecks.register() {
-                each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
+                each(TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE))) { draft ->
                     check(read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))) { it == "valid" }
                         .error("Name is invalid.", draft.binding.location)
                 }
@@ -164,7 +165,7 @@ internal class BlockingCheck {
     private val provider =
         object : RealmCheckProvider {
             override fun RealmChecks.register() {
-                each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
+                each(TestDraftType(ResourceMatch.DefinitionWrapper(TEST_TYPE))) { draft ->
                     val name = read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))
                     if ((name as? Availability.Available)?.value == "blocked") {
                         started.countDown()
@@ -189,7 +190,10 @@ internal class WorkerCancellation(
         runBlocking { runtime.drain() }
         runtime.close()
     },
-)
+) {
+    /** Whether the worker runs from the start, before [cancel]. */
+    val startsBlocked: Boolean get() = seed == "blocked"
+}
 
 /**
  * Runs [action] on its own thread and returns once that thread waits or ends, so everything [action] does before it
@@ -281,20 +285,21 @@ internal object TestResourceNativeBindingFactory : NativeBindingFactory {
         )
 }
 
-internal class BlockingCaptureStore(
-    private val delegate: com.typewritermc.realm.authoring.AuthoringViewStore,
+/** A view store whose pin numbered [blockedCall] waits until [release] opens, before it pins. */
+internal class BlockingPinStore(
+    private val delegate: AuthoringViewStore,
     private val blockedCall: Int,
-) : com.typewritermc.realm.authoring.AuthoringViewStore by delegate {
+) : AuthoringViewStore by delegate {
     private val calls = AtomicInteger()
     val entered = CountDownLatch(1)
     val release = CountDownLatch(1)
 
-    override fun capture(): com.typewritermc.realm.authoring.AuthoringLease {
+    override fun pin(): PinnedReads {
         if (calls.incrementAndGet() == blockedCall) {
             entered.countDown()
             release.await()
         }
-        return delegate.capture()
+        return delegate.pin()
     }
 }
 

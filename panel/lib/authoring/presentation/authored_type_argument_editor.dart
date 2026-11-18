@@ -58,12 +58,12 @@ final class _AuthoredTypeArgumentEditorState
   Widget build(BuildContext context) {
     final published = widget.catalog.selected(_selection);
     final parameters = published?.definition.parameters.toList() ?? const [];
-    if (parameters.isEmpty) return const SizedBox.shrink();
-    final arguments = argumentSelections(_selection, parameters.length);
+    // A derived parameter's argument is never chosen, so it gets no row.
+    if (parameters.every((parameter) => parameter.derived)) {
+      return const SizedBox.shrink();
+    }
     final changed = _selection != widget.selection;
-    final pending = arguments.any(
-      (argument) => argument == skir.ArgumentSelection.unfilled,
-    );
+    final pending = !widget.catalog.isFullyChosen(_selection);
     return Card(
       margin: EdgeInsets.only(bottom: context.spacing.space3),
       child: Padding(
@@ -76,13 +76,14 @@ final class _AuthoredTypeArgumentEditorState
               style: Theme.of(context).textTheme.titleSmall,
             ),
             SizedBox(height: context.spacing.space2),
-            for (final item in parameters.indexed)
-              _argumentRow(
-                context,
-                index: item.$1,
-                parameter: item.$2,
-                argument: arguments[item.$1],
-              ),
+            for (final (index, parameter) in parameters.indexed)
+              if (!parameter.derived)
+                _argumentRow(
+                  context,
+                  index: index,
+                  parameter: parameter,
+                  argument: _selection.chosenAt(index),
+                ),
             if (pending)
               Padding(
                 padding: EdgeInsets.only(top: context.spacing.space2),
@@ -130,12 +131,9 @@ final class _AuthoredTypeArgumentEditorState
     BuildContext context, {
     required int index,
     required skir.TypeParameter parameter,
-    required skir.ArgumentSelection argument,
+    required skir.TypeUse? argument,
   }) {
-    final chosen = switch (argument) {
-      skir.ArgumentSelection_chosenWrapper(:final value) => value,
-      _ => null,
-    };
+    final chosen = argument;
     return Padding(
       padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
       child: Row(

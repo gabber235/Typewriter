@@ -1,11 +1,14 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.types.canonicalText
+import com.typewritermc.types.mapTypes
+import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
 import com.typewritermc.types.toTemplate
-import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -20,7 +23,7 @@ const val OPAQUE_PARAMETER_NAMESPACE: String = "typewriter.parameter"
  * Opaque stand ins for the free type parameters of [definitions], so a generic template checks once as a closed type
  * that holds for every argument.
  *
- * Each parameter becomes an abstract record without fields of its own whose parents are its named bounds: an
+ * Each parameter becomes an open record without fields of its own whose parents are its named bounds: an
  * expression sees exactly what every argument guarantees (the bounds' fields and ancestry) and nothing a particular
  * argument might add. A bound that is not a named type has no record form and constrains nothing here, so such a
  * parameter checks as an unconstrained opaque value. [close] replaces parameters by their stand ins and [open] turns
@@ -32,17 +35,17 @@ internal class OpaqueParameters(
     private val keys: Map<ParameterKey, TypeDefinitionId> =
         definitions
             .flatMap { definition -> definition.parameters.map { it.key } }
-            .associateWith { key -> TypeDefinitionId.qualified(OPAQUE_PARAMETER_NAMESPACE, "${key.owner.canonicalText}#${key.index}") }
+            .associateWith(::opaqueParameterId)
     private val parameters: Map<TypeDefinitionId, ParameterKey> = keys.entries.associate { (key, id) -> id to key }
 
-    /** One abstract record per parameter, to join the declarations a presentation checker resolves against. */
+    /** One open record per parameter, to join the declarations a presentation checker resolves against. */
     val definitions: List<TypeDefinition> =
         definitions.flatMap { definition ->
             definition.parameters.map { parameter ->
                 TypeDefinition(
                     id = keys.getValue(parameter.key),
                     parameters = emptyList(),
-                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
                     parents = parameter.bounds.mapNotNull { (close(it) as? TypeTemplate.NamedWrapper)?.value },
                 )
             }
@@ -50,26 +53,10 @@ internal class OpaqueParameters(
 
     /** [template] with every free parameter replaced by its opaque stand in; it has no free parameters left. */
     fun close(template: TypeTemplate): TypeTemplate =
-        when (template) {
-            is TypeTemplate.ParameterWrapper -> {
-                val id = requireNotNull(keys[template.value]) { "Type parameter ${template.value} has no declaring definition." }
+        template.mapTypes { node ->
+            (node as? TypeTemplate.ParameterWrapper)?.let { parameter ->
+                val id = requireNotNull(keys[parameter.value]) { "Type parameter ${parameter.value} has no declaring definition." }
                 TypeTemplate.NamedWrapper(id.namedTemplate())
-            }
-
-            is TypeTemplate.NamedWrapper -> {
-                TypeTemplate.NamedWrapper(template.value.copy(arguments = template.value.arguments.map(::close)))
-            }
-
-            is TypeTemplate.NullableWrapper -> {
-                TypeTemplate.createNullable(value = close(template.value.value))
-            }
-
-            is TypeTemplate.ScalarWrapper -> {
-                template
-            }
-
-            else -> {
-                unknownVariant(template)
             }
         }
 
@@ -77,19 +64,11 @@ internal class OpaqueParameters(
     fun open(use: TypeUse): TypeTemplate = open(use.toTemplate())
 
     private fun open(template: TypeTemplate): TypeTemplate =
-        when (template) {
-            is TypeTemplate.NamedWrapper -> {
-                parameters[template.value.definition]?.let { TypeTemplate.ParameterWrapper(it) }
-                    ?: TypeTemplate.NamedWrapper(template.value.copy(arguments = template.value.arguments.map(::open)))
-            }
-
-            is TypeTemplate.NullableWrapper -> {
-                TypeTemplate.createNullable(value = open(template.value.value))
-            }
-
-            else -> {
-                template
-            }
+        template.mapTypes { node ->
+            node.named
+                ?.definition
+                ?.let(parameters::get)
+                ?.let { TypeTemplate.ParameterWrapper(it) }
         }
 
     companion object {
@@ -98,3 +77,10 @@ internal class OpaqueParameters(
             (id.typeId as? TypeId.QualifiedWrapper)?.value?.namespace == OPAQUE_PARAMETER_NAMESPACE
     }
 }
+
+/** The id of the opaque stand in for the type parameter [key]. */
+internal fun opaqueParameterId(key: ParameterKey): TypeDefinitionId =
+    TypeDefinitionId.qualified(OPAQUE_PARAMETER_NAMESPACE, "${key.owner.canonicalText}#${key.index}")
+
+/** The opaque stand in for the type parameter [key] as a type use. */
+internal fun opaqueParameterUse(key: ParameterKey): TypeUse = opaqueParameterId(key).use()

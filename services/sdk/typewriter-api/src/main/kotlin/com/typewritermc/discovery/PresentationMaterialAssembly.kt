@@ -8,6 +8,7 @@ import com.typewritermc.authoring.root
 import com.typewritermc.capability.id
 import com.typewritermc.configuration.field
 import com.typewritermc.configuration.name
+import com.typewritermc.configuration.representationKind
 import com.typewritermc.presentation.CheckedPresentationTemplate
 import com.typewritermc.presentation.NestedPresentationSlot
 import com.typewritermc.presentation.PresentationBuildBinding
@@ -16,6 +17,7 @@ import com.typewritermc.presentation.PresentationTyping
 import com.typewritermc.presentation.inferInheritableNodes
 import com.typewritermc.presentation.selectMostSpecificDescriptors
 import com.typewritermc.presentation.validateInheritableNodes
+import com.typewritermc.types.FORMULA_USE
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
@@ -26,12 +28,17 @@ import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.floatScalar
 import com.typewritermc.types.integerScalar
+import com.typewritermc.types.isEnum
 import com.typewritermc.types.isValid
+import com.typewritermc.types.mapTemplate
+import com.typewritermc.types.match
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.parameterKeys
+import com.typewritermc.types.parts
 import com.typewritermc.types.portableOrNull
 import com.typewritermc.types.substitute
 import com.typewritermc.types.template
+import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import com.typewritermc.types.validOrNull
@@ -254,42 +261,34 @@ private fun TypeTemplate.isValidMaterialTemplate(
     parameterBounds: Map<ParameterKey, List<TypeTemplate>>,
     catalog: CheckedCatalog,
 ): Boolean =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> {
-            value in parameterBounds
-        }
+    parts().all { it.isValidMaterialTemplate(definitions, parameterBounds, catalog) } &&
+        when (this) {
+            is TypeTemplate.ParameterWrapper -> {
+                value in parameterBounds
+            }
 
-        is TypeTemplate.NamedWrapper -> {
-            val definition = definitions[value.definition]
-            definition != null &&
-                catalog.definition(this.value.definition) == DeclarationStatus.READY &&
-                value.arguments.size == definition.parameters.size &&
-                value.arguments.all { it.isValidMaterialTemplate(definitions, parameterBounds, catalog) } &&
-                definition.parameters.zip(value.arguments).all { (parameter, argument) ->
-                    val bindings =
-                        definition.parameters
-                            .map(TypeParameter::key)
-                            .zip(value.arguments)
-                            .toMap()
-                    parameter.bounds.all { bound ->
-                        val expected = bound.substitute(bindings)
-                        catalog.isTemplateReadableAs(argument, expected, parameterBounds)
+            is TypeTemplate.NamedWrapper -> {
+                val definition = definitions[value.definition]
+                definition != null &&
+                    catalog.definition(this.value.definition) == DeclarationStatus.READY &&
+                    value.arguments.size == definition.parameters.size &&
+                    definition.parameters.zip(value.arguments).all { (parameter, argument) ->
+                        val bindings =
+                            definition.parameters
+                                .map(TypeParameter::key)
+                                .zip(value.arguments)
+                                .toMap()
+                        parameter.bounds.all { bound ->
+                            val expected = bound.substitute(bindings)
+                            catalog.isTemplateReadableAs(argument, expected, parameterBounds)
+                        }
                     }
-                }
-        }
+            }
 
-        is TypeTemplate.NullableWrapper -> {
-            value.value.isValidMaterialTemplate(definitions, parameterBounds, catalog)
+            else -> {
+                true
+            }
         }
-
-        is TypeTemplate.ScalarWrapper -> {
-            true
-        }
-
-        else -> {
-            unknownVariant(this)
-        }
-    }
 
 private fun TypeTemplate.acceptsLiteral(
     value: skirout.editor.v1.type_catalog.DataValue,
@@ -352,7 +351,7 @@ private fun PresentationTarget.presentationSubjects(definitions: Map<TypeDefinit
         is PresentationTarget.RepresentationWrapper -> {
             val named =
                 definitions.values
-                    .filter { it.representation.presentationKind() == value }
+                    .filter { it.presentationKind(definitions) == value }
                     .map { definition ->
                         definition.id.template(definition.parameters.map { it.key.template })
                     }
@@ -411,21 +410,14 @@ private fun RepresentationKind.scalarSubjects(): List<TypeTemplate> =
         }
     }
 
+/** The kind presentations target this declaration by, where an enum is its own kind rather than a record. */
+private fun TypeDefinition.presentationKind(definitions: Map<TypeDefinitionId, TypeDefinition>): RepresentationKind =
+    if (isEnum(definitions::get)) RepresentationKind.ENUMERATION else representation.presentationKind()
+
 private fun RepresentationTemplate.presentationKind(): RepresentationKind =
     when (this) {
         is RepresentationTemplate.ScalarWrapper -> {
-            when (val kind = value.kind) {
-                ScalarKind.UNIT -> RepresentationKind.UNIT
-                ScalarKind.BOOLEAN -> RepresentationKind.BOOLEAN
-                ScalarKind.TEXT -> RepresentationKind.TEXT
-                ScalarKind.BYTES -> RepresentationKind.BYTES
-                is ScalarKind.IntegerWrapper -> RepresentationKind.INTEGER
-                is ScalarKind.FloatWrapper -> RepresentationKind.FLOAT
-                ScalarKind.DECIMAL -> RepresentationKind.DECIMAL
-                ScalarKind.TIMESTAMP -> RepresentationKind.TIMESTAMP
-                ScalarKind.DURATION -> RepresentationKind.DURATION
-                else -> unknownVariant(kind)
-            }
+            value.kind.representationKind() ?: unknownVariant(value.kind)
         }
 
         is RepresentationTemplate.RecordWrapper -> {
@@ -444,56 +436,8 @@ private fun RepresentationTemplate.presentationKind(): RepresentationKind =
             RepresentationKind.MAP
         }
 
-        is RepresentationTemplate.EnumerationWrapper -> {
-            RepresentationKind.ENUMERATION
-        }
-
         is RepresentationTemplate.LinkWrapper -> {
             RepresentationKind.LINK
-        }
-
-        else -> {
-            unknownVariant(this)
-        }
-    }
-
-private fun TypeTemplate.matchesTemplate(
-    actual: TypeTemplate,
-    parameters: MutableMap<ParameterKey, TypeTemplate>,
-): Boolean =
-    when (this) {
-        is TypeTemplate.ParameterWrapper -> {
-            parameters[value]?.let { it == actual } ?: run {
-                parameters[value] = actual
-                true
-            }
-        }
-
-        is TypeTemplate.ScalarWrapper -> {
-            actual == this
-        }
-
-        is TypeTemplate.NullableWrapper -> {
-            actual is TypeTemplate.NullableWrapper && value.value.matchesTemplate(actual.value.value, parameters)
-        }
-
-        is TypeTemplate.NamedWrapper -> {
-            if (actual !is TypeTemplate.NamedWrapper || value.definition != actual.value.definition ||
-                value.arguments.size != actual.value.arguments.size
-            ) {
-                false
-            } else {
-                val candidateParameters = LinkedHashMap(parameters)
-                val matches =
-                    value.arguments.zip(actual.value.arguments).all { (expected, supplied) ->
-                        expected.matchesTemplate(supplied, candidateParameters)
-                    }
-                if (matches) {
-                    parameters.clear()
-                    parameters.putAll(candidateParameters)
-                }
-                matches
-            }
         }
 
         else -> {
@@ -518,7 +462,10 @@ private fun TypeTemplate.presentationTemplate(
         linkResolver = { parent ->
             parent.unwrapNullable().representation(definitions)?.let { (representation, arguments) ->
                 (representation as? RepresentationTemplate.LinkWrapper)?.let { link ->
-                    com.typewritermc.presentation.PresentationLinkTemplate(link.value.endpoint, link.value.target.substitute(arguments))
+                    com.typewritermc.presentation.PresentationLinkTemplate(
+                        link.value.endpoint,
+                        link.value.target.mapTemplate { it.substitute(arguments) },
+                    )
                 }
             }
         },
@@ -549,7 +496,7 @@ private fun PresentationTarget.appliesTo(
 
         is PresentationTarget.NamedWrapper -> {
             actual.presentationApplications(definitions, bounds, linkedSetOf()).any { application ->
-                value.template.matchesTemplate(application.template, linkedMapOf())
+                value.template.match(application.template, linkedMapOf())
             }
         }
 
@@ -582,10 +529,13 @@ private fun TypeTemplate.presentationKinds(
 
             is TypeTemplate.NamedWrapper -> {
                 definitions[value.definition]
-                    ?.representation
-                    ?.presentationKind()
+                    ?.presentationKind(definitions)
                     ?.let(::setOf)
                     .orEmpty()
+            }
+
+            is TypeTemplate.FunctionWrapper -> {
+                FORMULA_TEMPLATE.presentationKinds(definitions, bounds, visiting)
             }
 
             else -> {
@@ -632,6 +582,10 @@ private fun TypeTemplate.presentationApplications(
                     }
             }
 
+            is TypeTemplate.FunctionWrapper -> {
+                FORMULA_TEMPLATE.presentationApplications(definitions, bounds, visiting)
+            }
+
             else -> {
                 unknownVariant(this)
             }
@@ -673,3 +627,6 @@ private fun TypeTemplate.presentationNested(
         }
     }
 }
+
+/** The record a function type is presented as, since it stores its body as one. */
+private val FORMULA_TEMPLATE: TypeTemplate = FORMULA_USE.toTemplate().template

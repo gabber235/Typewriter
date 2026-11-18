@@ -40,11 +40,9 @@ extension _AuthoredPresentationCollections on AuthoredPresentationHost {
               .published(named.definition)
               ?.definition
               .representation;
-    final requiresPreparation = switch (representation) {
-      skir.RepresentationTemplate_recordWrapper(:final value) =>
-        !value.abstract_,
-      _ => false,
-    };
+    final requiresPreparation =
+        representation is skir.RepresentationTemplate_recordWrapper &&
+        representation.isInstantiable;
     if (!requiresPreparation) {
       return _stage("Add collection item", (operation) {
         operation.insert(
@@ -58,7 +56,7 @@ extension _AuthoredPresentationCollections on AuthoredPresentationHost {
     if (named == null || prepare == null) {
       return _reject("The collection item cannot be prepared", target: target);
     }
-    final selection = skir.TypeSelection.wrapComplete(named);
+    final selection = selectionOfUse(named);
     final request = skir.ValuePreparationRequest(
       catalog: authored.generation,
       target: skir.PreparationTarget.wrapRecord(selection),
@@ -264,7 +262,7 @@ extension _AuthoredPresentationCollections on AuthoredPresentationHost {
     }
     final projected = payload.authoredRecord;
     if (projected == null) return null;
-    final fields = catalog.fields(skir.TypeSelection.wrapComplete(expected));
+    final fields = catalog.fields(selectionOfUse(expected));
     final expectedNames = {for (final field in fields) field.template.key};
     if (projected.fields.any((field) => !expectedNames.contains(field.name))) {
       return null;
@@ -368,7 +366,7 @@ extension _AuthoredPresentationCollections on AuthoredPresentationHost {
           ?.definition
           .representation;
       if (representation is! skir.RepresentationTemplate_recordWrapper ||
-          representation.value.abstract_) {
+          !representation.isInstantiable) {
         return null;
       }
       final prepare = prepareValue;
@@ -377,9 +375,7 @@ extension _AuthoredPresentationCollections on AuthoredPresentationHost {
       }
       final request = skir.ValuePreparationRequest(
         catalog: observation.generation,
-        target: skir.PreparationTarget.wrapRecord(
-          skir.TypeSelection.wrapComplete(type.value),
-        ),
+        target: skir.PreparationTarget.wrapRecord(selectionOfUse(type.value)),
         suppliedValue: skir.DataValue.createRecord(fields: const []),
       );
       final prepared = await prepare(request);

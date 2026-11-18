@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     implementation(project(":internal-utils"))
+    implementation(project(":failures"))
     api(project(":telemetry"))
     api(project(":protocol"))
     api(platform(libs.koin.bom))

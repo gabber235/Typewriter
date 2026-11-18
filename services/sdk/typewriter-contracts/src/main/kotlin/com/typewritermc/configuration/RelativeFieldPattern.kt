@@ -1,5 +1,7 @@
 package com.typewritermc.configuration
 
+import com.typewritermc.types.catalog.CheckedType
+import com.typewritermc.types.enumCases
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.type_catalog.CollectionKind
@@ -37,21 +39,27 @@ fun RelativeFieldPattern.requireValid(): RelativeFieldPattern =
         }
     }
 
-fun ResolvedRepresentation.kind(): RepresentationKind =
+/**
+ * The representation kind of this type, where an enum is its own kind rather than a record, or null for a type value,
+ * which has no portable representation and so matches no representation condition.
+ */
+fun CheckedType.representationKind(): RepresentationKind? =
+    if (enumCases() !=
+        null
+    ) {
+        RepresentationKind.ENUMERATION
+    } else {
+        schema.representation.kind()
+    }
+
+/**
+ * The representation kind of this representation alone, or null for a type value, which has no portable
+ * representation; a closed record of unit cases needs [representationKind].
+ */
+fun ResolvedRepresentation.kind(): RepresentationKind? =
     when (this) {
         is ResolvedRepresentation.ScalarWrapper -> {
-            when (val kind = value.kind) {
-                ScalarKind.UNIT -> RepresentationKind.UNIT
-                ScalarKind.BOOLEAN -> RepresentationKind.BOOLEAN
-                ScalarKind.TEXT -> RepresentationKind.TEXT
-                ScalarKind.BYTES -> RepresentationKind.BYTES
-                is ScalarKind.IntegerWrapper -> RepresentationKind.INTEGER
-                is ScalarKind.FloatWrapper -> RepresentationKind.FLOAT
-                ScalarKind.DECIMAL -> RepresentationKind.DECIMAL
-                ScalarKind.TIMESTAMP -> RepresentationKind.TIMESTAMP
-                ScalarKind.DURATION -> RepresentationKind.DURATION
-                else -> unknownVariant(kind)
-            }
+            value.kind.representationKind()
         }
 
         is ResolvedRepresentation.RecordWrapper -> {
@@ -70,10 +78,6 @@ fun ResolvedRepresentation.kind(): RepresentationKind =
             RepresentationKind.MAP
         }
 
-        is ResolvedRepresentation.EnumerationWrapper -> {
-            RepresentationKind.ENUMERATION
-        }
-
         is ResolvedRepresentation.LinkWrapper -> {
             RepresentationKind.LINK
         }
@@ -81,4 +85,20 @@ fun ResolvedRepresentation.kind(): RepresentationKind =
         else -> {
             unknownVariant(this)
         }
+    }
+
+/** The representation kind of this scalar, or null for a type value, which has no portable representation. */
+fun ScalarKind.representationKind(): RepresentationKind? =
+    when (this) {
+        ScalarKind.TYPE -> null
+        ScalarKind.UNIT -> RepresentationKind.UNIT
+        ScalarKind.BOOLEAN -> RepresentationKind.BOOLEAN
+        ScalarKind.TEXT -> RepresentationKind.TEXT
+        ScalarKind.BYTES -> RepresentationKind.BYTES
+        is ScalarKind.IntegerWrapper -> RepresentationKind.INTEGER
+        is ScalarKind.FloatWrapper -> RepresentationKind.FLOAT
+        ScalarKind.DECIMAL -> RepresentationKind.DECIMAL
+        ScalarKind.TIMESTAMP -> RepresentationKind.TIMESTAMP
+        ScalarKind.DURATION -> RepresentationKind.DURATION
+        else -> unknownVariant(this)
     }

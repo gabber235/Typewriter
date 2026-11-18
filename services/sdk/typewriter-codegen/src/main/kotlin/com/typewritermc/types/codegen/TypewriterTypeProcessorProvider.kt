@@ -1,6 +1,7 @@
 package com.typewritermc.types.codegen
 
 import com.google.devtools.ksp.getAllSuperTypes
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
@@ -49,6 +50,8 @@ import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.codegen.RegistrarProviderProcessor
+import com.typewritermc.formula.codegen.DynamicProviderProcessor
+import com.typewritermc.formula.codegen.FormulaProviderProcessor
 import com.typewritermc.presentation.codegen.CollectionProjectionProviderProcessor
 import com.typewritermc.types.Color
 import com.typewritermc.types.DeletionPolicy
@@ -67,6 +70,8 @@ import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.TypewriterRelationFamily
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.TypewriterTypeImports
+import com.typewritermc.types.catalog.referencedDefinitions
+import com.typewritermc.types.codegen.emit.BindEmitter
 import com.typewritermc.types.codegen.emit.CheckEmitter
 import com.typewritermc.types.codegen.emit.ConfigurationEmitter
 import com.typewritermc.types.codegen.emit.DefinitionEmitter
@@ -82,12 +87,17 @@ import com.typewritermc.types.codegen.emit.SdkRelation
 import com.typewritermc.types.codegen.emit.SetupEmitter
 import com.typewritermc.types.codegen.emit.endpointBindingsFile
 import com.typewritermc.types.codegen.emit.file
-import com.typewritermc.types.codegen.emit.supportsNativeBinding
+import com.typewritermc.types.codegen.emit.hasNativeBinding
 import com.typewritermc.types.ksp.EndpointUsageValidator
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import com.typewritermc.types.ksp.OwnedFieldDeclaration
+import com.typewritermc.types.ksp.RELATION_LINK_TARGET_BOUND
+import com.typewritermc.types.ksp.StarShape
+import com.typewritermc.types.ksp.starShape
 import com.typewritermc.types.ksp.typeDefinitionIdentity
+import com.typewritermc.types.mapTemplate
+import com.typewritermc.types.memberOwner
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.nullable
 import com.typewritermc.types.substitute
@@ -103,6 +113,7 @@ import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -118,6 +129,7 @@ class TypewriterTypeProcessorProvider : SymbolProcessorProvider {
 internal val SDK_EMITTERS: List<SdkEmitter> =
     listOf(
         FieldsEmitter,
+        BindEmitter,
         ExpressionsEmitter,
         ConfigurationEmitter,
         OperationEmitter,
@@ -154,6 +166,12 @@ private class TypewriterTypeProcessor(
     private val registrarProviders = RegistrarProviderProcessor(output, logger)
     private val collectionProjectionProviders = CollectionProjectionProviderProcessor(output, logger)
     private val capabilityProviders = CapabilityProviderProcessor(output, owners, logger, options[SOURCE_PART_OPTION].orEmpty())
+    private val formulaProviders =
+        FormulaProviderProcessor(output, owners, logger) {
+            it.qualifiedName?.asString() in
+                explicitlyImportedTypes
+        }
+    private val dynamicProviders = DynamicProviderProcessor(output, logger)
     private val claimDependencyClosure = options[CLAIM_DEPENDENCY_CLOSURE_OPTION]?.toBooleanStrictOrNull() == true
     private var optionsValidated = false
 
@@ -217,6 +235,8 @@ private class TypewriterTypeProcessor(
                 generateAdapters(declaration)
             }
         }
+        deferred += formulaProviders.process(resolver)
+        deferred += dynamicProviders.process(resolver)
         return deferred.distinct()
     }
 
@@ -257,7 +277,13 @@ private class TypewriterTypeProcessor(
                 .sorted()
                 .toList()
         val (first, second) = sources.mapIndexed { index, source -> source.copy(slot = EndpointSlot.entries[index]).toEndpoint() }
-        val referenced = (first.resourceTemplate.referencedIds() + second.resourceTemplate.referencedIds()).toSet()
+        // Each endpoint's link definition bounds its target by Resource, so the relation names Resource's definition.
+        resolver.getClassDeclarationByName(checkNotNull(Resource::class.qualifiedName))?.let {
+            endpointDeclarations[RELATION_LINK_TARGET_BOUND] =
+                it
+        }
+        val referenced =
+            first.resourceMatch.referencedDefinitions() + second.resourceMatch.referencedDefinitions() + RELATION_LINK_TARGET_BOUND
         val references = owners.references(endpointDeclarations, referenced, declaration) ?: return
         val relation = SdkRelation(name, id, first, second, families, references)
         output.provide(relation.file(), name, GeneratedProviderKind.Relation, declaration)
@@ -284,13 +310,13 @@ private class TypewriterTypeProcessor(
             logger.error("Relation endpoints must name a registered resource declaration.", this)
             return null
         }
-        val resourceTemplate =
-            when (val endpoint = resource.endpointTemplate(declarations)) {
-                is EndpointTemplate.Ready -> {
-                    endpoint.template
+        val resourceMatch =
+            when (val endpoint = resource.endpointMatch(resourceDeclaration, declarations)) {
+                is EndpointMatch.Ready -> {
+                    endpoint.match
                 }
 
-                is EndpointTemplate.Rejected -> {
+                is EndpointMatch.Rejected -> {
                     logger.error(endpoint.reason, this)
                     return null
                 }
@@ -299,7 +325,7 @@ private class TypewriterTypeProcessor(
             name = simpleName.asString(),
             slot = EndpointSlot.First,
             resourceType = resource,
-            resourceTemplate = (resourceTemplate as TypeTemplate.NamedWrapper).value,
+            resource = resourceMatch,
             cardinality = if (marker.declaration isType One::class.asClassName()) EndpointCardinality.ONE else EndpointCardinality.MANY,
             onDelete =
                 rawAnnotation(DeletionPolicy::class)?.enumArgumentOrNull<RelationDeletePolicy>("onDelete") ?: RelationDeletePolicy.CLEAR,
@@ -317,7 +343,7 @@ private class TypewriterTypeProcessor(
         if (!declaration.hasValidTypeIdentity()) return
         val conversion = KspTypeGraphConverter().convertDeclaration(declaration)
         if (conversion is KspTypeConversionResult.Failure) {
-            conversion.diagnostics.forEach { logger.error(it.toString(), declaration) }
+            conversion.diagnostics.forEach { logger.error(it.toString(), it.symbol ?: declaration) }
             return
         }
         conversion as KspTypeConversionResult.Success
@@ -393,14 +419,19 @@ private class TypewriterTypeProcessor(
                     references = references,
                     display = display,
                     searchKey = searchKey.value,
+                    cases = conversion.casesWithoutDeclaration(typeDefinition),
                 )
             }
         val file = GeneratedFile.builder(model.names.definition.packageName, model.names.file)
         SDK_EMITTERS.forEach { emitter -> with(emitter) { file.emit(model) } }
         if (!output.write(file.build(), declaration)) return
         output.index(model.names.definition, GeneratedProviderKind.Type)
-        if (declaration.supportsNativeBinding()) output.index(model.names.nativeBindingFactory, GeneratedProviderKind.NativeBinding)
+        if (model.hasNativeBinding) output.index(model.names.nativeBindingFactory, GeneratedProviderKind.NativeBinding)
     }
+
+    /** The case definitions of [owner] that no Kotlin declaration emits, such as the unit cases of an enum. */
+    private fun KspTypeConversionResult.Success.casesWithoutDeclaration(owner: TypeDefinition): List<TypeDefinition> =
+        definitions.filter { case -> case.id.memberOwner == owner.id && case.id !in declarations }
 
     /** The declaration's type variables without their variance and without `Any` bounds, as every emitted type uses them. */
     context(parameters: TypeParameterResolver)
@@ -473,7 +504,7 @@ private class TypewriterTypeProcessor(
         root: TypeDefinition,
         conversion: KspTypeConversionResult.Success,
     ): List<EffectiveAccessorField>? {
-        if (root.representation !is RepresentationTemplate.RecordWrapper) return emptyList()
+        if (root.representation !is RepresentationTemplate.RecordWrapper || classKind == ClassKind.ENUM_CLASS) return emptyList()
         val definitions = conversion.definitions.associateBy(TypeDefinition::id)
         var valid = true
 
@@ -676,7 +707,8 @@ private class TypewriterTypeProcessor(
         val references =
             owners.references(
                 conversion.declarations + input.declarations,
-                conversion.definitions.flatMap(TypeDefinition::referencedIds).toSet() + application.referencedIds() + input.referenced,
+                conversion.definitions.flatMap(TypeDefinition::referencedIds).toSet() + application.referencedDefinitions() +
+                    input.referenced,
                 owner,
             ) ?: return null
         return context(references) {
@@ -706,7 +738,7 @@ private class TypewriterTypeProcessor(
             return null
         }
         val use = conversion.root as TypeUse.NamedWrapper
-        return OperationInputShape(type.toTypeName(), use.value, conversion.declarations, use.referencedIds())
+        return OperationInputShape(type.toTypeName(), use.value, conversion.declarations, use.referencedDefinitions())
     }
 
     private fun validateOptions(): Boolean {
@@ -781,11 +813,11 @@ private data class RelationEndpointSource(
     val name: String,
     val slot: EndpointSlot,
     val resourceType: KSType,
-    val resourceTemplate: NamedTypeTemplate,
+    val resource: ResourceMatchTemplate,
     val cardinality: EndpointCardinality,
     val onDelete: RelationDeletePolicy,
 ) {
-    fun toEndpoint(): SdkEndpoint = SdkEndpoint(name, slot, resourceType.toTypeName(), resourceTemplate, cardinality, onDelete)
+    fun toEndpoint(): SdkEndpoint = SdkEndpoint(name, slot, resourceType.toTypeName(), resource, cardinality, onDelete)
 }
 
 private fun discoverEndpointBindings(
@@ -806,7 +838,8 @@ private fun discoverEndpointBindings(
                 visit(template.value.value, path, containsCollection, valueOwner, stack)
             }
 
-            is TypeTemplate.ParameterWrapper, is TypeTemplate.ScalarWrapper -> {}
+            // A function stores a Formula, a core record this module does not declare, so it adds no binding here.
+            is TypeTemplate.ParameterWrapper, is TypeTemplate.ScalarWrapper, is TypeTemplate.FunctionWrapper -> {}
 
             is TypeTemplate.NamedWrapper -> {
                 val definition = definitions[template.value.definition] ?: return
@@ -823,7 +856,7 @@ private fun discoverEndpointBindings(
                                 containingResource = root,
                                 valueOwner = valueOwner,
                                 relativePath = RelativeFieldPattern(segments = path),
-                                target = representation.value.target.substitute(substitutions),
+                                target = representation.value.target.mapTemplate { it.substitute(substitutions) },
                                 containsCollection = containsCollection,
                             )
                     }
@@ -864,7 +897,7 @@ private fun discoverEndpointBindings(
                         )
                     }
 
-                    is RepresentationTemplate.EnumerationWrapper, is RepresentationTemplate.ScalarWrapper -> {}
+                    is RepresentationTemplate.ScalarWrapper -> {}
 
                     else -> {
                         unknownVariant(representation)
@@ -885,6 +918,52 @@ private fun discoverEndpointBindings(
 private fun classes(declarations: Sequence<KSDeclaration>): Sequence<KSClassDeclaration> =
     declarations.filterIsInstance<KSClassDeclaration>().flatMap { sequenceOf(it) + classes(it.declarations) }
 
+/** What a relation endpoint admits, or why an author's endpoint type admits nothing. */
+private sealed interface EndpointMatch {
+    data class Ready(
+        val match: ResourceMatchTemplate,
+    ) : EndpointMatch
+
+    data class Rejected(
+        val reason: String,
+    ) : EndpointMatch
+}
+
+/**
+ * What the relation endpoint resource [declaration], written as this type, admits: every resource of its definition
+ * when every argument is a star, otherwise its type. A star beside a written argument is rejected.
+ */
+private fun KSType.endpointMatch(
+    declaration: KSClassDeclaration,
+    declarations: MutableMap<TypeDefinitionId, KSClassDeclaration>,
+): EndpointMatch =
+    when (starShape()) {
+        StarShape.EVERY -> {
+            val identity = declaration.typeDefinitionIdentity() ?: return EndpointMatch.Rejected(MALFORMED_ENDPOINT_ID)
+            declarations[identity] = declaration
+            EndpointMatch.Ready(ResourceMatchTemplate.DefinitionWrapper(identity))
+        }
+
+        StarShape.MIXED -> {
+            EndpointMatch.Rejected("Relation endpoint resources take a star for every argument or for none.")
+        }
+
+        StarShape.NONE -> {
+            when (val template = endpointTemplate(declarations)) {
+                is EndpointTemplate.Ready -> EndpointMatch.Ready(ResourceMatchTemplate.TypeWrapper(template.template))
+                is EndpointTemplate.Rejected -> EndpointMatch.Rejected(template.reason)
+            }
+        }
+    }
+
+/** The definitions this match names: those of its type, or the definition it admits every resource of. */
+private fun ResourceMatchTemplate.referencedDefinitions(): Set<TypeDefinitionId> =
+    when (this) {
+        is ResourceMatchTemplate.TypeWrapper -> value.referencedDefinitions()
+        is ResourceMatchTemplate.DefinitionWrapper -> setOf(value)
+        else -> emptySet()
+    }
+
 /** The portable template of a relation endpoint resource, or why an author's endpoint type has none. */
 private sealed interface EndpointTemplate {
     data class Ready(
@@ -899,7 +978,8 @@ private sealed interface EndpointTemplate {
 /**
  * The portable template of a relation endpoint resource. Records each named declaration in [declarations], so the
  * relation can reference the generated definition that owns its id. Rejected when a declaration has a malformed type
- * id or an argument names a type alias or another type that is neither a class nor a declaration's parameter.
+ * id, an argument is a star, or an argument names a type alias or another type that is neither a class nor a
+ * declaration's parameter.
  */
 private fun KSType.endpointTemplate(declarations: MutableMap<TypeDefinitionId, KSClassDeclaration>): EndpointTemplate {
     (declaration as? KSTypeParameter)?.let { parameter -> return parameterEndpointTemplate(parameter, declarations) }
@@ -925,9 +1005,12 @@ private fun KSType.endpointTemplate(declarations: MutableMap<TypeDefinitionId, K
             }
         }
     val arguments =
-        arguments.mapIndexed { index, argument ->
-            argument.type?.resolve()?.endpointTemplate(declarations)
-                ?: EndpointTemplate.Ready(ParameterKey(owner = identity, index = index).template)
+        arguments.map { argument ->
+            argument.type
+                ?.takeUnless { argument.variance == Variance.STAR }
+                ?.resolve()
+                ?.endpointTemplate(declarations)
+                ?: EndpointTemplate.Rejected(NESTED_ENDPOINT_STAR)
         }
     arguments.filterIsInstance<EndpointTemplate.Rejected>().firstOrNull()?.let { return it }
     val templates = arguments.map { (it as EndpointTemplate.Ready).template }
@@ -949,10 +1032,17 @@ private fun KSType.parameterEndpointTemplate(
 
 private const val MALFORMED_ENDPOINT_ID = "Relation endpoint resources require valid Typewriter type ids."
 private const val NOT_CLASS_OR_PARAMETER = "Relation endpoint arguments must use class or parameter types."
+private const val NESTED_ENDPOINT_STAR = "Relation endpoint resources take stars only as their own arguments, never inside one."
 
 private fun TypeTemplate.withNullability(type: KSType): TypeTemplate = if (type.isMarkedNullable) this.nullable() else this
 
-private fun KSClassDeclaration.isTypeGraphReady(): Boolean {
+/**
+ * Whether every type this declaration's graph reaches resolves. Declarations of this compilation and the cases of a
+ * sealed declaration are followed, since the converter walks into their fields: a record nested in a list or a case
+ * can name an endpoint a later round generates.
+ */
+private fun KSClassDeclaration.isTypeGraphReady(visited: MutableSet<KSClassDeclaration> = mutableSetOf()): Boolean {
+    if (!visited.add(this)) return true
     val references =
         sequence {
             yieldAll(superTypes)
@@ -960,14 +1050,18 @@ private fun KSClassDeclaration.isTypeGraphReady(): Boolean {
             primaryConstructor?.parameters?.forEach { parameter -> yield(parameter.type) }
             getAllProperties().forEach { property -> yield(property.type) }
         }
-    return references.all { reference -> runCatching { reference.resolve().isResolvedTypeGraph() }.getOrDefault(false) }
+    return references.all { reference -> runCatching { reference.resolve().isResolvedTypeGraph(visited) }.getOrDefault(false) } &&
+        getSealedSubclasses().all { case -> case.origin.name != "KOTLIN" || case.isTypeGraphReady(visited) }
 }
 
 /** Star projections count as resolved, so the converter reports them at their declaration instead of deferring forever. */
-private fun KSType.isResolvedTypeGraph(): Boolean =
+private fun KSType.isResolvedTypeGraph(visited: MutableSet<KSClassDeclaration>): Boolean =
     !isError &&
+        (declaration as? KSClassDeclaration)?.let { source ->
+            source.origin.name != "KOTLIN" || source.isTypeGraphReady(visited)
+        } != false &&
         arguments.all { argument ->
-            argument.variance == Variance.STAR || argument.type?.resolve()?.isResolvedTypeGraph() == true
+            argument.variance == Variance.STAR || argument.type?.resolve()?.isResolvedTypeGraph(visited) == true
         }
 
 private val SEARCH_KEY = Regex("[a-z][a-z0-9]*")

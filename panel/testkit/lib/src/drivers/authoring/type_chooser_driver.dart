@@ -23,9 +23,8 @@ final class TypeChooserDriver extends ComponentDriver {
     final (_, outcome) = await tester.openFromButton<skir.TypeSelection>(
       (context) => showCreationConcreteTypePicker(
         context,
-        expected: skir.TypeSelection.createComplete(
-          definition: expected,
-          arguments: const [],
+        expected: selectionOfUse(
+          skir.NamedTypeUse(definition: expected, arguments: const []),
         ),
         catalog: catalog,
       ),

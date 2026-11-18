@@ -53,16 +53,11 @@ extension ResourceCreationCatalog on CheckedEditorCatalog? {
     final checked = this;
     if (checked == null) return null;
     final configuration = checked.beginSelection(type);
-    if (configuration == skir.TypeSelection.unknown) return null;
+    if (configuration == skir.TypeSelection.defaultInstance) return null;
     final creatable = checked.creatableTypes;
     if (!checked
         .concreteRecordSelections(configuration)
-        .any(
-          (concrete) => switch (concrete.definition) {
-            final definition? => creatable.contains(definition),
-            null => false,
-          },
-        )) {
+        .any((concrete) => creatable.contains(concrete.definition))) {
       return null;
     }
     return ResourceCreationTemplate(type: type, configuration: configuration);
@@ -103,7 +98,6 @@ extension OwnerRoutes on CheckedEditorCatalog {
   /// its own type; the walk still reaches it once.
   Iterable<OwnerRoute> ownerRoutes(skir.TypeSelection configuration) sync* {
     final start = configuration.definition;
-    if (start == null) return;
     var frontier = [
       OwnerRoute(ownerRoot: start, endpoints: const [], visited: const {}),
     ];
@@ -111,14 +105,10 @@ extension OwnerRoutes on CheckedEditorCatalog {
       final next = <OwnerRoute>[];
       for (final route in frontier) {
         for (final ownership in ownershipRelations) {
-          if (!isNominalSubtype(
-            route.ownerRoot,
-            ownership.member.resource.definition,
-          )) {
-            continue;
-          }
+          if (!endpointAdmits(ownership.member, route.ownerRoot)) continue;
+          // An owner endpoint naming every resource names no type to walk up to.
           final owner = ownership.owner.resource.definition;
-          if (route.visited.contains(owner)) continue;
+          if (owner == null || route.visited.contains(owner)) continue;
           final extended = route.extend(owner, ownership.member.id);
           yield extended;
           next.add(extended);

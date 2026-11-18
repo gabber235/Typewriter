@@ -4,6 +4,7 @@ import com.typewritermc.types.One
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceDefinition
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
@@ -13,6 +14,7 @@ import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeUse
 
 @TypewriterRecordContract
@@ -54,6 +56,7 @@ fun main() {
         DefaultCheckedCatalog(
             CatalogGeneration(value = "relation link fixture"),
             StandardTypes.definitions +
+                ResourceDefinition.definition +
                 LinkedRewardDefinition.definition +
                 LinkedCoinDefinition.definition +
                 LinkedGemDefinition.definition +
@@ -70,6 +73,6 @@ fun main() {
     // Both fields are links to the one source endpoint, each keeping its own target.
     check(coin.endpoint == LinkedTarget.contract.first.id)
     check(gem.endpoint == coin.endpoint)
-    check(coin.target == LinkedVariableDefinition.applied(listOf(LinkedCoinDefinition.use.use)).use)
-    check(gem.target == LinkedVariableDefinition.applied(listOf(LinkedGemDefinition.use.use)).use)
+    check(coin.target == ResourceMatch.TypeWrapper(LinkedVariableDefinition.applied(listOf(LinkedCoinDefinition.use.use))))
+    check(gem.target == ResourceMatch.TypeWrapper(LinkedVariableDefinition.applied(listOf(LinkedGemDefinition.use.use))))
 }

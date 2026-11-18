@@ -50,7 +50,7 @@ final class _ResourceCreationOperation {
       if (chosen == null) throw const _CreationCancelled();
       request = request.copyWith(configuration: chosen);
     }
-    if (request.configuration is! skir.TypeSelection_completeWrapper ||
+    if (!catalog.isFullyChosen(request.configuration) ||
         !catalog
             .nominalDefinitions(request.configuration)
             .contains(request.type) ||
@@ -203,7 +203,7 @@ final class _ResourceCreationOperation {
     }
     final named = catalog.namedUse(input.expected);
     if (named != null) {
-      final expected = skir.TypeSelection.wrapComplete(named);
+      final expected = selectionOfUse(named);
       if (catalog.isAbstractRecordSelection(expected)) {
         final selection = await _chooseConcreteType(expected);
         _checkCurrent();
@@ -218,12 +218,13 @@ final class _ResourceCreationOperation {
           location,
           creationContext,
           publish: (step) {
-            _values[location] = step.materialized.recordContent
-                .toCreationValue();
+            _values[location] = step.materialized.recordContent.toCreationValue(
+              catalog,
+            );
           },
         );
         _values.remove(location);
-        return prepared.recordContent.toCreationValue();
+        return prepared.recordContent.toCreationValue(catalog);
       }
     }
     throw StateError("No value can be prepared for ${location.path}");
@@ -447,8 +448,11 @@ final class _ResourceCreationOperation {
       candidates: candidates,
       presentationDocument: presentationDocument,
       presentationIssues: presentationIssues,
-      searchHint:
-          "Select or create ${catalog.typeSelectionName(catalog.beginSelection(plan.opposite.resource.definition))}",
+      searchHint: switch (plan.opposite.resource.definition) {
+        final definition? =>
+          "Select or create ${catalog.typeSelectionName(catalog.beginSelection(definition))}",
+        null => "Select or create a resource",
+      },
     );
     _checkCurrent();
     return switch (choice) {
@@ -473,18 +477,13 @@ final class _ResourceCreationOperation {
     PortableLinkPlan plan,
   ) sync* {
     final source = view.resource(plan.source.source)!;
-    final expected = catalog.namedUse(plan.targetType);
     for (final type in catalog.creatableTypes) {
       final configuration = catalog.beginSelection(type);
-      final complete = configuration is skir.TypeSelection_completeWrapper;
-      if (complete
-          ? !catalog.selectionMatches(configuration, plan.targetType)
-          : expected == null ||
-                !catalog
-                    .nominalDefinitions(configuration)
-                    .contains(expected.definition)) {
-        continue;
-      }
+      final chosen = catalog.isFullyChosen(configuration);
+      final fit = catalog.fits(configuration, plan.targetMatch);
+      // A pending type stays a candidate while a creator's choices could
+      // still make it fit; a fully chosen one only when it fits.
+      if (fit == ResourceFit.no || chosen && fit != ResourceFit.yes) continue;
       final inverse = catalog
           .endpointBindings(configuration)
           .where((binding) => binding.template.endpoint == plan.opposite.id)
@@ -492,9 +491,11 @@ final class _ResourceCreationOperation {
       final compatible =
           inverse.isEmpty ||
           inverse.any(
-            (binding) =>
-                binding.isAvailable &&
-                catalog.selectionMatches(source.configuration, binding.target),
+            (binding) => switch (binding.target) {
+              final target? when binding.isAvailable =>
+                catalog.fits(source.configuration, target) == ResourceFit.yes,
+              _ => false,
+            },
           );
       final label = catalog.typeSelectionName(configuration);
       yield ReferencePickerCandidate(
@@ -506,7 +507,7 @@ final class _ResourceCreationOperation {
         description: catalog.selectionDisplay(configuration)?.description ?? "",
         searchText: "create $label",
         display: catalog.selectionDisplay(configuration),
-        disabledReason: !complete
+        disabledReason: !chosen
             ? "This type requires concrete type arguments"
             : compatible
             ? null
@@ -543,7 +544,7 @@ final class _ResourceCreationOperation {
           catalog.valueTypeAt(
             owner.configuration,
             slot.containing.path,
-            value: owner.toCreationValue(),
+            value: owner.toCreationValue(catalog),
           ),
         ) !=
         null;
@@ -782,14 +783,9 @@ final class _ResourceCreationOperation {
     CreationContext creationContext,
   ) {
     final type = record.configuration.definition;
-    if (type == null) return null;
     final ownerships = [
       for (final ownership in catalog.ownershipRelations)
-        if (catalog.isNominalSubtype(
-          type,
-          ownership.member.resource.definition,
-        ))
-          ownership,
+        if (catalog.endpointAdmits(ownership.member, type)) ownership,
     ];
     if (ownerships.isEmpty) return null;
     // A destination named by the creation decides which ownership applies.
@@ -1014,11 +1010,10 @@ final class _ResourceCreationOperation {
 }
 
 extension on skir.AuthoringRecord {
-  skir.DataValue toCreationValue() {
-    final actual = switch (configuration) {
-      skir.TypeSelection_completeWrapper(:final value) => value,
-      _ => throw StateError("A prepared record must have a concrete type"),
-    };
+  skir.DataValue toCreationValue(CheckedEditorCatalog catalog) {
+    final actual =
+        catalog.completeUse(configuration) ??
+        (throw StateError("A prepared record must have a concrete type"));
     return skir.DataValue.createNamed(
       actualType: actual,
       payload: skir.DataValue.createRecord(fields: fields),

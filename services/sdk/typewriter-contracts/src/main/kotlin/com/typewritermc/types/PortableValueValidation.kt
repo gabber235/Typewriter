@@ -66,7 +66,7 @@ private fun DataValue.portable(depth: Int): DataValue {
     return when (this) {
         DataValue.UNFILLED, DataValue.NULL, DataValue.UNIT,
         is DataValue.BooleanWrapper, is DataValue.StringValueWrapper, is DataValue.BytesWrapper,
-        is DataValue.TimestampWrapper, is DataValue.EnumCaseWrapper,
+        is DataValue.TimestampWrapper,
         -> {
             this
         }
@@ -123,6 +123,10 @@ private fun DataValue.portable(depth: Int): DataValue {
                 value.endpoint.requireValid()
                 value.target.requireValid()
             }
+        }
+
+        is DataValue.TypeUseWrapper -> {
+            apply { value.requireValid() }
         }
 
         else -> {

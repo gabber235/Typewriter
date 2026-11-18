@@ -8,7 +8,7 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.ResourceTypeMatch
+import com.typewritermc.discovery.CollectedDynamics
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedConfiguration
 import com.typewritermc.discovery.OwnedNativeBinding
@@ -17,6 +17,9 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.CollectedExtensions
+import com.typewritermc.realm.catalog.ExtensionCatalog
+import com.typewritermc.realm.catalog.collectExtensions
 import com.typewritermc.testkit.definitions
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingFactory
@@ -49,6 +52,9 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -65,7 +71,7 @@ internal data class TestDraft(
 )
 
 internal data class TestDraftType(
-    override val match: ResourceTypeMatch,
+    override val match: ResourceMatch,
 ) : com.typewritermc.checking.DraftType<TestDraft> {
     override fun bind(binding: com.typewritermc.authoring.DraftBinding): TestDraft = TestDraft(binding)
 }
@@ -104,6 +110,7 @@ internal class TestCatalogLease private constructor(
     override val operations = com.typewritermc.operations.OperationCatalog()
     override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
     internal val openCount: Int get() = state.open.get()
+    override val extensions: ExtensionCatalog get() = state.extensions(checks, configuration, providers)
 
     override fun retain(): AuthoringCatalogLease {
         state.open.incrementAndGet()
@@ -120,11 +127,32 @@ internal class TestCatalogLease private constructor(
     }
 
     override fun close() {
-        state.open.decrementAndGet()
+        if (state.open.decrementAndGet() == 0) state.close()
     }
 
+    /** What every lease of one catalog shares: how many are open, and the extensions collected on first read. */
     private class State {
         val open = AtomicInteger(1)
+        private var collected: CollectedExtensions? = null
+
+        @Synchronized
+        fun extensions(
+            checks: List<OwnedCheckRecipe>,
+            configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe>,
+            providers: OwnedProviderRegistry,
+        ): ExtensionCatalog =
+            (
+                collected
+                    ?: CollectedExtensions { collectExtensions(checks, configuration, CollectedDynamics.NONE, providers) }.also {
+                        collected =
+                            it
+                    }
+            ).value
+
+        @Synchronized
+        fun close() {
+            collected?.close()
+        }
     }
 }
 
@@ -138,6 +166,10 @@ internal data object EmptyProviders : OwnedProviderRegistry {
     override fun nativeBindings(): List<OwnedNativeBinding> = emptyList()
 
     override fun checks(): List<com.typewritermc.discovery.OwnedCheck> = emptyList()
+
+    override fun dynamics(): List<com.typewritermc.discovery.OwnedDynamic> = emptyList()
+
+    override fun formulas(): List<com.typewritermc.discovery.OwnedFormulaFunction> = emptyList()
 }
 
 internal fun record(
@@ -146,7 +178,7 @@ internal fun record(
     numbers: List<Pair<String, Int>> = emptyList(),
 ): AuthoringRecord =
     AuthoringRecord.of(
-        configuration = TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
+        configuration = TypeSelection.of(TEST_TYPE.namedUse()),
         fields =
             mapOf(
                 "name" to DataValue.StringValueWrapper(name),
@@ -288,3 +320,25 @@ internal val TEST_DEFINITIONS =
             parameters = listOf(TypeParameter.partial(key = LIST_PARAMETER, name = "T")),
         )
     }
+
+/** A generic record type with one parameter and no fields: a selection that leaves its parameter unchosen is a partial type. */
+internal val PENDING_GENERIC = TypeDefinitionId.qualified("test", "pending_generic")
+internal val PENDING_GENERIC_DEFINITION =
+    TypeDefinition.partial(
+        id = PENDING_GENERIC,
+        parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = PENDING_GENERIC, index = 0), name = "T")),
+        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+    )
+
+/** A generic record type with two parameters and no fields: a selection can choose one argument and leave the other open. */
+internal val PENDING_PAIR = TypeDefinitionId.qualified("test", "pending_pair")
+internal val PENDING_PAIR_DEFINITION =
+    TypeDefinition.partial(
+        id = PENDING_PAIR,
+        parameters =
+            listOf(
+                TypeParameter.partial(key = ParameterKey(owner = PENDING_PAIR, index = 0), name = "T"),
+                TypeParameter.partial(key = ParameterKey(owner = PENDING_PAIR, index = 1), name = "U"),
+            ),
+        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
+    )

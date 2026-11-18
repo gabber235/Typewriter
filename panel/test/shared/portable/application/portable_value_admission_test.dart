@@ -86,7 +86,7 @@ void main() {
 
     expect(checked.admitsPortableValue(expected, payload), isFalse);
     final admitted = checked.admitPortablePayloadAt(
-      skir.TypeSelection.createComplete(definition: page, arguments: const []),
+      selectionOfUse(skir.NamedTypeUse(definition: page, arguments: const [])),
       skir.ValuePath(segments: [skir.PathSegment.createField(name: "chapter")]),
       payload,
     );
@@ -222,6 +222,33 @@ void main() {
         isFalse,
       );
     }
+  });
+
+  test("a value under a content type gets no local refusal", () {
+    final reward = contentTypeDefinition("reward", "k1");
+    final checked = testCheckedCatalog(
+      generation: _admissionGeneration,
+      types: const [],
+    );
+    final use = skir.NamedTypeUse(definition: reward, arguments: const []);
+
+    expect(
+      checked.admitsPortableValue(
+        skir.TypeUse.wrapNamed(use),
+        skir.DataValue.createNamed(
+          actualType: use,
+          payload: skir.DataValue.createRecord(
+            fields: [
+              skir.FieldValue(
+                name: "gold",
+                value: skir.DataValue.wrapInteger("70"),
+              ),
+            ],
+          ),
+        ),
+      ),
+      isTrue,
+    );
   });
 }
 

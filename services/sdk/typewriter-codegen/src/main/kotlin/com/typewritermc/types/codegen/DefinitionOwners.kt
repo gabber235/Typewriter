@@ -14,14 +14,10 @@ import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.codegen.emit.SdkRelation
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.RELATION_LINK_NAMESPACE
-import com.typewritermc.types.template
 import com.typewritermc.types.unknownVariant
-import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeId
-import skirout.editor.v1.type_catalog.TypeTemplate
-import skirout.editor.v1.type_catalog.TypeUse
 
 /**
  * Finds the generated object that owns each type definition id, so generated code references ids instead of
@@ -59,6 +55,7 @@ internal class DefinitionOwners(
         owners[StandardTypes.list] = StandardTypes.List::class.asClassName()
         owners[StandardTypes.set] = StandardTypes.Set::class.asClassName()
         owners[StandardTypes.map] = StandardTypes.Map::class.asClassName()
+        owners[StandardTypes.intRange] = StandardTypes.IntRange::class.asClassName()
         referenced
             .filterNot(owners::containsKey)
             .forEach { id ->
@@ -68,43 +65,29 @@ internal class DefinitionOwners(
                     owners[id] = endpoint.toClassName().nestedClass(SdkRelation.LINK_DEFINITION)
                 }
             }
-        val missing = referenced.filterNot(owners::containsKey)
+        val references = DefinitionReferences(owners)
+        val missing = referenced.filterNot(references::owns)
         missing.forEach { id ->
             logger.error(
                 "Type ${id.describe()} has no generated definition; declare it with @TypewriterType or import it with @TypewriterTypeImports.",
                 origin,
             )
         }
-        return DefinitionReferences(owners).takeIf { missing.isEmpty() }
+        return references.takeIf { missing.isEmpty() }
     }
 }
-
-/** Every definition id a template mentions. */
-internal fun TypeTemplate.referencedIds(): Set<TypeDefinitionId> =
-    when (this) {
-        is TypeTemplate.NamedWrapper -> setOf(value.definition) + value.arguments.flatMap { it.referencedIds() }
-        is TypeTemplate.NullableWrapper -> value.value.referencedIds()
-        is TypeTemplate.ParameterWrapper -> setOf(value.owner)
-        is TypeTemplate.ScalarWrapper -> emptySet()
-        else -> unknownVariant(this)
-    }
-
-/** Every definition id a named template mentions. */
-internal fun NamedTypeTemplate.referencedIds(): Set<TypeDefinitionId> = template.referencedIds()
-
-/** Every definition id a type use mentions. */
-internal fun TypeUse.referencedIds(): Set<TypeDefinitionId> =
-    when (this) {
-        is TypeUse.NamedWrapper -> setOf(value.definition) + value.arguments.flatMap { it.referencedIds() }
-        is TypeUse.NullableWrapper -> value.value.referencedIds()
-        is TypeUse.ScalarWrapper -> emptySet()
-        else -> unknownVariant(this)
-    }
 
 /** `namespace/qualified.Name` or the declared UUID, as authors write and read type identities. */
 internal fun TypeDefinitionId.describe(): String =
     when (val identity = typeId) {
         is TypeId.DeclaredWrapper -> identity.value.value
+
         is TypeId.QualifiedWrapper -> "${identity.value.namespace}/${identity.value.name}"
+
+        is TypeId.MemberWrapper -> "${TypeDefinitionId(
+            typeId = identity.value.owner,
+            revision = revision,
+        ).describe()}.${identity.value.name}"
+
         else -> unknownVariant(identity)
     }

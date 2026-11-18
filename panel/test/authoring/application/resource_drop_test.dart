@@ -306,7 +306,7 @@ final _document = realmDocument(
             publishedType(
               _inputType,
               representation: skir.RepresentationTemplate.createRecord(
-                abstract_: false,
+                form: skir.RecordForm.concrete,
                 fields: [
                   for (final (owner, type) in _inputFields)
                     skir.FieldDeclaration(
@@ -389,6 +389,6 @@ final _document = realmDocument(
 );
 
 final _targets = skir.OperationTargets(
-  subject: skir.ResourceTarget.anyResource,
+  subject: skir.ResourceMatch.anyResource,
   cardinality: skir.OperationCardinality.selection,
 );

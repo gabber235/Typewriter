@@ -534,6 +534,7 @@ decided:
     what: The framework holds no Typewriter code and may later move out
   - id: tick-clock
     what: Cinematics, sequences and engine step timing count ticks, not wall clock; each engine keeps a live StepClock per step
+    why: Superseded 2026-11-18 by engine-clock-test-driven
   - id: groups-and-pool
     what: Group behaviour must be testable, and requirements share a pool of 4 warm clients
   - id: full-wipe
@@ -799,6 +800,13 @@ decided:
     why: Finish review (typewriter) found nothing outside the design folder knew the game layer, obligations on Typewriter had not reached the layer docs, and the record's evidence pointed at branches Finish deletes
   - id: deferred-l-m
     what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
+  - id: engine-clock-test-driven
+    what: "Clock, test driven (Recommended)"
+    why: >-
+      Step time keeps the clock model (Running.startedAt, Duration contexts, Playhead since, KeyOffer by and
+      press): layers 17 and 18 build on clock time and a Playhead shared across engines, which a per engine
+      tick count cannot drive; legacy lag behaviour (scenes stay on time) is kept; tests stay exact because
+      the engine reads one clock source that the stepped test moves 50 ms per permitted tick (StepPolicy)
 
 open:
   - id: quiet-hook

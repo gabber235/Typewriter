@@ -34,7 +34,9 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -63,7 +65,7 @@ val RealmCheckInputsTest by testSuite {
                                     type = mapType.template(listOf(intKind.template, intKind.template)),
                                 ),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             )
         val map =
@@ -82,7 +84,7 @@ val RealmCheckInputsTest by testSuite {
             )
         val record =
             AuthoringRecord.of(
-                TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
+                TypeSelection.of(TEST_TYPE.namedUse()),
                 mapOf(
                     "mapping" to
                         DataValue.named(
@@ -160,7 +162,8 @@ val RealmCheckInputsTest by testSuite {
 
         val (result, health) = evaluate(recipe, record(numbers = listOf("a" to 1, "b" to 2)), ViewReadLimits(maxCheckTuples = 1))
 
-        health.outcome(recipe.owner) shouldBe CheckOutcome.IncompleteWrapper("check occurrence tuple limit exceeded")
+        health.outcome(recipe.owner, CheckRunDiagnostics.of(RuleId(origin = recipe.owner, localIndex = 0), "test")) shouldBe
+            CheckOutcome.IncompleteWrapper("check occurrence tuple limit exceeded")
         result.findings.map { it.primary } shouldBe listOf(listItemAt(RESOURCE, "numbers", "a"))
     }
 }

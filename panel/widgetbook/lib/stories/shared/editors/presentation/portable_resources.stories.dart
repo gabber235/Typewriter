@@ -276,10 +276,7 @@ _PageFixture _pageFixture() {
   ];
   final snapshot = skir.EditorCatalog(
     resourceDisplays: [
-      for (final type in [entryType, cueType])
-        nameResourceDisplay(
-          skir.TypeTemplate.createNamed(definition: type, arguments: const []),
-        ),
+      for (final type in [entryType, cueType]) nameResourceDisplay(type),
     ],
     resourceOperations: const [],
     generation: generation,
@@ -450,6 +447,8 @@ skir.TypeDefinitionId _qualified(String name) => skir.TypeDefinitionId(
 
 skir.PublishedType _published(skir.TypeDefinitionId id, List<_Field> fields) =>
     skir.PublishedType(
+      name: "",
+      extension_: "",
       searchKey: null,
       placementField: fields.any((field) => field.name == "placement")
           ? editorRootPath.field("placement")
@@ -468,7 +467,7 @@ skir.PublishedType _published(skir.TypeDefinitionId id, List<_Field> fields) =>
                 hasConstructorDefault: false,
               ),
           ],
-          abstract_: false,
+          form: skir.RecordForm.concrete,
         ),
         parents: const [],
       ),
@@ -534,7 +533,11 @@ skir.EndpointDefinition _endpoint(
 ) => skir.EndpointDefinition(
   id: id,
   slot: slot,
-  resource: skir.NamedTypeTemplate(definition: resource, arguments: const []),
+  resource: skir.ResourceMatchTemplate.wrapType(
+    skir.TypeTemplate.wrapNamed(
+      skir.NamedTypeTemplate(definition: resource, arguments: const []),
+    ),
+  ),
   cardinality: cardinality,
   onDelete: skir.RelationDeletePolicy.restrict,
 );
@@ -557,10 +560,8 @@ skir.AuthoringResource _resource(
 ) => skir.AuthoringResource(
   id: id,
   content: skir.AuthoringRecord(
-    configuration: skir.TypeSelection.createComplete(
-      definition: type,
-      arguments: const [],
-    ),
+    types: const [],
+    configuration: skir.TypeSelection(definition: type, arguments: const []),
     fields: [
       for (final entry in fields.entries)
         skir.FieldValue(name: entry.key, value: entry.value),

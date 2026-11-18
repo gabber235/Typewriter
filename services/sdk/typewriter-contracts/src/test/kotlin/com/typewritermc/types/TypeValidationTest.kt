@@ -7,16 +7,15 @@ import com.typewritermc.testkit.rejectionOf
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.ChosenArgument
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.DeclaredTypeId
 import skirout.editor.v1.type_catalog.EndpointId
-import skirout.editor.v1.type_catalog.EnumVariant
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -48,26 +47,26 @@ val TypeValidationTest by testSuite {
                 Rejection("Parameter index must not be negative.") { ParameterKey(owner = ownerType, index = -1).requireValid() },
             "a blank parameter name" to
                 Rejection("Type parameter name must not be blank.") {
-                    TypeParameter(key = ParameterKey(owner = ownerType, index = 0), name = "", bounds = emptyList()).requireValid()
+                    TypeParameter(
+                        key = ParameterKey(owner = ownerType, index = 0),
+                        name = "",
+                        bounds = emptyList(),
+                        derived = false,
+                    ).requireValid()
                 },
             "a blank field name" to
                 Rejection(
                     "Field name must not be blank.",
                 ) { FieldOwner(definition = ownerType, name = " ").requireValid() },
-            "a blank enum key" to Rejection("Enum variant key must not be blank.") { EnumVariant(key = "").requireValid() },
+            "a blank member name" to Rejection("Member name must not be blank.") { ownerType.member(" ").requireValid() },
             "a blank endpoint" to Rejection("Endpoint ids must not be blank.") { EndpointId(value = "").requireValid() },
             "a blank local identity" to
                 Rejection("Local declaration identity must not be blank.") {
                     DeclarationOwner(source = ownerContribution, localIdentity = "").requireValid()
                 },
-            "an enumeration with a blank case" to
-                Rejection("Enum variant key must not be blank.") {
-                    TypeDefinition(
-                        id = ownerType,
-                        parameters = emptyList(),
-                        representation = RepresentationTemplate.createEnumeration(cases = listOf(EnumVariant(key = " "))),
-                        parents = emptyList(),
-                    ).requireValid()
+            "a closed record with a blank case" to
+                Rejection("Member name must not be blank.") {
+                    closedRecord(ownerType, listOf(ownerType.member(" "))).requireValid()
                 },
             "an unknown type use" to Rejection("Unknown type use variant.") { TypeUse.UNKNOWN.requireValid() },
             "an unknown type template" to Rejection("Unknown type template variant.") { TypeTemplate.UNKNOWN.requireValid() },
@@ -75,6 +74,24 @@ val TypeValidationTest by testSuite {
                 Rejection("Unknown type use variant.") { ownerType.use(listOf(TypeUse.UNKNOWN)).requireValid() },
             "an unknown integer width" to Rejection("Unknown integer width.") { integerScalar(IntegerWidth.UNKNOWN).use.requireValid() },
             "an unknown representation" to Rejection("Unknown representation template.") { RepresentationTemplate.UNKNOWN.requireValid() },
+            "a type selection that chooses one parameter twice" to
+                Rejection("Type argument parameter 0 is chosen twice.") {
+                    TypeSelection(
+                        definition = ownerType,
+                        arguments =
+                            listOf(
+                                ChosenArgument(parameter = 0, type = ScalarKind.TEXT.use),
+                                ChosenArgument(parameter = 0, type = ScalarKind.TEXT.use),
+                            ),
+                    ).requireValid()
+                },
+            "a type selection that chooses a negative parameter" to
+                Rejection("Type argument parameter -1 is negative.") {
+                    TypeSelection(
+                        definition = ownerType,
+                        arguments = listOf(ChosenArgument(parameter = -1, type = ScalarKind.TEXT.use)),
+                    ).requireValid()
+                },
         )
 
     test("declared ids parse into one canonical form and reject any other text") {
@@ -100,7 +117,7 @@ val TypeValidationTest by testSuite {
     }
 
     test("an authored record read back from readable Skir JSON keeps its configuration") {
-        val record = AuthoringRecord.of(TypeSelection.CompleteWrapper(ownerType.namedUse(listOf(ScalarKind.TEXT.use))))
+        val record = AuthoringRecord.of(TypeSelection.of(ownerType.namedUse(listOf(ScalarKind.TEXT.use))))
         val encoded = AuthoringRecord.serializer.toJson(record, JsonFlavor.READABLE)
 
         AuthoringRecord.serializer
@@ -111,10 +128,7 @@ val TypeValidationTest by testSuite {
     test("an authored record read from JSON with a zero revision is rejected") {
         val invalid =
             AuthoringRecord.of(
-                TypeSelection.createPending(
-                    definition = TypeDefinitionId.qualified("test", "type", revision = 0),
-                    arguments = emptyList(),
-                ),
+                TypeSelection.of(TypeDefinitionId.qualified("test", "type", revision = 0)),
             )
         val decoded = AuthoringRecord.serializer.fromJson(AuthoringRecord.serializer.toJson(invalid, JsonFlavor.READABLE))
 

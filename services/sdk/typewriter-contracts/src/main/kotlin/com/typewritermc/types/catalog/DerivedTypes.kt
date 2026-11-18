@@ -1,0 +1,92 @@
+package com.typewritermc.types.catalog
+
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.kernel.v1.resource_id.ResourceId
+
+/*
+ * A derived type is computed: extension code runs over a resource's content and produces a type under a key code
+ * chooses. Its id, content(resource, derived(key)), never changes, so editing the content changes the type behind it
+ * and nothing is written back.
+ */
+
+/**
+ * One type parameter of the resource type [owner], named like the parameter, that a bind block may compute. The
+ * generated `XBind` object holds one per type parameter of a concrete resource class; registering a bind for it makes
+ * that parameter computed.
+ */
+data class BindKey(
+    val owner: TypeDefinitionId,
+    val name: String,
+)
+
+/** Where derived types come from in one view. */
+fun interface DerivedOrigin {
+    /** What [owner]'s bind blocks compute under [key]. */
+    fun derived(
+        owner: ResourceId,
+        key: String,
+    ): DerivedTarget
+}
+
+/** What a derived key leads to. */
+sealed interface DerivedTarget {
+    /** A declaration whose id is the derived id; a union brings its [cases], each a member of that id. */
+    data class Declared(
+        val definition: TypeDefinition,
+        val cases: List<TypeDefinition> = emptyList(),
+    ) : DerivedTarget
+
+    /** An alias: the derived id means [use]. */
+    data class Plain(
+        val use: TypeUse,
+    ) : DerivedTarget
+
+    /** Nothing was derived, and [failure] says why. */
+    data class Missing(
+        val failure: DerivedFailure,
+    ) : DerivedTarget
+}
+
+/**
+ * A derived key that leads nowhere because of what [owner]'s bind computes: the key's own owner, or, for a key whose bind
+ * answered another resource's computed type, the owner that alias chain ends at.
+ */
+data class DerivedFailureAt(
+    val owner: ResourceId,
+    val failure: DerivedFailure,
+)
+
+/** Why a derived key leads nowhere; each [code] makes the derived type stand in as the error type. */
+sealed interface DerivedFailure {
+    val code: String
+
+    /** No bind block of the resource computes this key. */
+    data object NoBlock : DerivedFailure {
+        override val code: String = "derived_type_missing"
+    }
+
+    /** More than one bind block computes this key. */
+    data class Conflict(
+        val origins: List<RuleOrigin>,
+    ) : DerivedFailure {
+        override val code: String = "derived_type_conflict"
+    }
+
+    /** Computing this key needs the key itself, through [through]. */
+    data class Loop(
+        val through: List<ResourceId>,
+    ) : DerivedFailure {
+        override val code: String = "derived_type_loop"
+    }
+
+    /** The bind block at [origin] threw. */
+    data class Failed(
+        val origin: RuleOrigin,
+        val message: String,
+    ) : DerivedFailure {
+        override val code: String = "derived_type_failed"
+    }
+}

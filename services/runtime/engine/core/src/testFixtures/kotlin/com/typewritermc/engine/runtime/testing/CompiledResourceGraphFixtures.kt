@@ -5,6 +5,7 @@ import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION
 import com.typewritermc.engine.Root
 import com.typewritermc.engine.runtime.CompiledResourceGraph
+import com.typewritermc.types.EvaluationValues
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
@@ -113,5 +114,15 @@ object TextBindingFactory : NativeBindingFactory {
             override fun encode(value: String): DataValue = DataValue.StringValueWrapper(value)
 
             override fun decode(value: CompleteValue): String = "hydrated value"
+
+            override fun fromValue(
+                value: Any?,
+                values: EvaluationValues,
+            ): String = value as String
+
+            override fun toValue(
+                value: String,
+                values: EvaluationValues,
+            ): Any? = value
         }
 }

@@ -103,7 +103,7 @@ All pending migrations run in the publication transaction, together with switchi
 
 - Any failure changes nothing: no data is converted and the old content stays live. The publication shows the error.
 - Change operations are applied by the realm's storage, which needs no engine running, so offline protagonists are migrated too.
-- After the commit, `Changed<X>` handlers run as for any other transaction.
+- After the commit, `Changed<T>` handlers run as for any other transaction.
 - Running interactions see the new content through hot publish (see [interactions.md](interactions.md)).
 
 Rolling a production realm back to an earlier revision is a realm mode feature, not part of a migration: see [../vision/realm-modes.md](../vision/realm-modes.md).
@@ -151,6 +151,9 @@ Instance changes run through the book's generated hook (decided 2026-11-05).
 | Instance removed | Its identities end, so its data goes by the owner rule. The dry run shows how much |
 | Instance renamed | The hook asks which old key became the new one, then moves the data. The default clears, as with other migrations |
 | First instance added to a book with data | The same question: the root copy's data moves to an instance |
+| `New` embed added, removed, or renamed | The same as an instance added, removed, or renamed; its key is the embed's name ([book-composition.md](book-composition.md#3-the-embed)) |
+| First `New` embed of a book with root data | The same question as a first instance |
+| Embed switched from `New` to `Existing` or `All` | Its copy ends, as for an instance removed |
 
 Moving uses the same step as [group entries](#group-entries).
 
@@ -171,7 +174,7 @@ When a type's revision changes, the migrator is the same step as a content migra
 
 Types without a revision never migrate this way:
 
-- Types declared by content (`content(at)` ids, revision 1: creator types, inline types, a book's `V`) change through publication and content migrations; `dynamic()` rebuilds them and `ValueAdmission` flags values that no longer fit.
+- Types declared by content (`content(resource, key)` ids, revision 1: creator types and inline types on a resource's `types` list, a book's `V` derived by `bind`) change through publication and content migrations; `FitOf` flags values that no longer fit.
 - Function types are structural and have no id.
 
 ## Importer for 0.9

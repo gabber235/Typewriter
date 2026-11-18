@@ -7,11 +7,14 @@ import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.RetainedOwnedProviderRegistry
+import com.typewritermc.formula.check.CatalogType
+import com.typewritermc.formula.check.ExtensionName
 import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.presentation.CollectionProjectionSpec
 import com.typewritermc.services.libs.utils.closeAll
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.use
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -20,6 +23,7 @@ import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -132,7 +136,10 @@ class RealmCatalogStore : AutoCloseable {
         override val operations: OperationCatalog get() = assembly.operations
         override val placementFields: Map<TypeDefinitionId, ValuePath> get() = assembly.placementFields
         override val displays: ResourceDisplayCatalog get() = assembly.displays
+        override val extensions: ExtensionCatalog get() = retention.extensions.value
         override val editorCatalog: EditorCatalog get() = assembly.editorCatalog
+        override val formulaTypeNames: Map<String, List<CatalogType>> get() = retention.typeNames
+        override val formulaExtensions: Set<ExtensionName> get() = retention.typeExtensions
         override val capabilities: List<RealmCapabilityProvider>
             get() =
                 incarnation.deployment.providers.capabilities
@@ -157,11 +164,22 @@ class RealmCatalogStore : AutoCloseable {
         val incarnation: RealmCatalogIncarnation,
         var current: Boolean,
     ) : AutoCloseable {
+        val typeNames: Map<String, List<CatalogType>> by lazy {
+            incarnation.assembly.editorCatalog.types
+                .groupBy({ it.name }, { CatalogType(it.definition.id.use(), ExtensionName.of(it.extension)) })
+        }
+
+        val typeExtensions: Set<ExtensionName> by lazy { typeNames.values.flatMapTo(linkedSetOf()) { types -> types.map { it.extension } } }
+
         val providers = RetainedOwnedProviderRegistry(incarnation.assembly.providers, incarnation.deployment)
+        val extensions =
+            CollectedExtensions {
+                collectExtensions(incarnation.assembly.checks, incarnation.assembly.configuration, incarnation.assembly.dynamics, providers)
+            }
         var leases = 0
 
         override fun close() {
-            incarnation.deployment.close()
+            listOf(extensions, incarnation.deployment).closeAll()
         }
     }
 }

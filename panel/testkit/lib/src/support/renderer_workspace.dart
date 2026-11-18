@@ -419,7 +419,7 @@ authoredLinkCollection({
   );
   final checked = CheckedEditorCatalog(
     testCatalogSnapshot(
-      resourceDisplays: [nameResourceDisplay(rootTemplate)],
+      resourceDisplays: [nameResourceDisplay(rootDefinition)],
       generation: skir.CatalogGeneration(value: "catalog:links"),
       types: [
         publishedType(
@@ -439,7 +439,7 @@ authoredLinkCollection({
                 hasConstructorDefault: false,
               ),
             ],
-            abstract_: false,
+            form: skir.RecordForm.concrete,
           ),
           fields: [
             skir.EffectiveFieldTemplate(
@@ -467,7 +467,7 @@ authoredLinkCollection({
           linkDefinition,
           representation: skir.RepresentationTemplate.createLink(
             endpoint: sourceEndpoint,
-            target: rootTemplate,
+            target: skir.ResourceMatchTemplate.wrapType(rootTemplate),
           ),
         ),
       ],
@@ -477,9 +477,13 @@ authoredLinkCollection({
           first: skir.EndpointDefinition(
             id: sourceEndpoint,
             slot: skir.EndpointSlot.first,
-            resource: skir.NamedTypeTemplate(
-              definition: rootDefinition,
-              arguments: const [],
+            resource: skir.ResourceMatchTemplate.wrapType(
+              skir.TypeTemplate.wrapNamed(
+                skir.NamedTypeTemplate(
+                  definition: rootDefinition,
+                  arguments: const [],
+                ),
+              ),
             ),
             cardinality: skir.EndpointCardinality.many,
             onDelete: skir.RelationDeletePolicy.clear,
@@ -487,9 +491,13 @@ authoredLinkCollection({
           second: skir.EndpointDefinition(
             id: targetEndpoint,
             slot: skir.EndpointSlot.second,
-            resource: skir.NamedTypeTemplate(
-              definition: rootDefinition,
-              arguments: const [],
+            resource: skir.ResourceMatchTemplate.wrapType(
+              skir.TypeTemplate.wrapNamed(
+                skir.NamedTypeTemplate(
+                  definition: rootDefinition,
+                  arguments: const [],
+                ),
+              ),
             ),
             cardinality: skir.EndpointCardinality.many,
             onDelete: skir.RelationDeletePolicy.clear,
@@ -536,7 +544,7 @@ authoredLinkCollection({
               skir.FieldPatternSegment.items,
             ],
           ),
-          target: rootTemplate,
+          target: skir.ResourceMatchTemplate.wrapType(rootTemplate),
           containsCollection: true,
         ),
       ],
@@ -560,7 +568,8 @@ authoredLinkCollection({
         ]
       : const <skir.ListItem>[];
   final sourceRecord = skir.AuthoringRecord(
-    configuration: skir.TypeSelection.wrapComplete(rootUse),
+    types: const [],
+    configuration: selectionOfUse(rootUse),
     fields: [
       skir.FieldValue(
         name: "links",
@@ -572,7 +581,8 @@ authoredLinkCollection({
     ],
   );
   skir.AuthoringRecord targetRecord(String name) => skir.AuthoringRecord(
-    configuration: skir.TypeSelection.wrapComplete(rootUse),
+    types: const [],
+    configuration: selectionOfUse(rootUse),
     fields: [
       skir.FieldValue(
         name: "name",
@@ -785,15 +795,18 @@ CheckedEditorCatalog _collectionCatalog() {
 
 skir.AuthoringRecord _collectionRecord(String field, skir.DataValue value) =>
     skir.AuthoringRecord(
-      configuration: skir.TypeSelection.createComplete(
-        definition: skir.TypeDefinitionId(
-          typeId: skir.TypeId.createQualified(
-            namespace: "test",
-            name: "Collections",
+      types: const [],
+      configuration: selectionOfUse(
+        skir.NamedTypeUse(
+          definition: skir.TypeDefinitionId(
+            typeId: skir.TypeId.createQualified(
+              namespace: "test",
+              name: "Collections",
+            ),
+            revision: 1,
           ),
-          revision: 1,
+          arguments: const [],
         ),
-        arguments: const [],
       ),
       fields: [skir.FieldValue(name: field, value: value)],
     );

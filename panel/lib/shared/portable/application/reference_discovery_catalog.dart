@@ -3,7 +3,7 @@ part of "checked_editor_catalog.dart";
 /// Reference discovery: where authored records hold references and which
 /// unselected forms could hold them.
 extension CheckedReferenceDiscovery on CheckedEditorCatalog {
-  ({skir.EndpointId endpoint, skir.TypeUse target})? referenceTypeAt(
+  ({skir.EndpointId endpoint, skir.ResourceMatch target})? referenceTypeAt(
     skir.AuthoringRecord record,
     skir.ValuePath path,
   ) => _referenceForUse(
@@ -16,7 +16,7 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
     ),
   );
 
-  ({skir.EndpointId endpoint, skir.TypeUse target})? _referenceForUse(
+  ({skir.EndpointId endpoint, skir.ResourceMatch target})? _referenceForUse(
     skir.NamedTypeUse? use,
   ) {
     if (use == null) return null;
@@ -24,10 +24,7 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
     if (declaration?.status != skir.DeclarationStatus.ready) return null;
     final representation = declaration?.definition.representation;
     if (representation is! skir.RepresentationTemplate_linkWrapper) return null;
-    final target = applyTemplate(
-      representation.value.target,
-      skir.TypeSelection.wrapComplete(use),
-    );
+    final target = applyMatch(representation.value.target, selectionOfUse(use));
     return target == null
         ? null
         : (endpoint: representation.value.endpoint, target: target);
@@ -35,7 +32,7 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
 
   /// Exact reference paths in the authored value, including unfinished links.
   Iterable<
-    ({skir.ValuePath path, skir.EndpointId endpoint, skir.TypeUse target})
+    ({skir.ValuePath path, skir.EndpointId endpoint, skir.ResourceMatch target})
   >
   referenceLocations(skir.AuthoringRecord record) sync* {
     for (final node in record._referenceValues) {
@@ -52,7 +49,7 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
 
   /// Existing collection containers whose item contract is a direct reference.
   Iterable<
-    ({skir.ValuePath path, skir.EndpointId endpoint, skir.TypeUse target})
+    ({skir.ValuePath path, skir.EndpointId endpoint, skir.ResourceMatch target})
   >
   referenceCollections(skir.AuthoringRecord record) sync* {
     for (final node in record._referenceValues) {
@@ -106,17 +103,17 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
     final use = namedUse(type);
     if (use == null || visited.contains(use)) return false;
     if (visited.length >= _maximumCheckedTypeDepth) return true;
-    final selection = skir.TypeSelection.wrapComplete(use);
+    final selection = selectionOfUse(use);
     final next = {...visited, use};
     final representation = published(use.definition)?.definition.representation;
     return switch (representation) {
       skir.RepresentationTemplate_linkWrapper(:final value) =>
         value.endpoint == endpoint,
-      skir.RepresentationTemplate_recordWrapper(:final value) =>
+      final skir.RepresentationTemplate_recordWrapper record =>
         fields(selection).any(
               (field) => _mayContainReference(field.type, endpoint, next),
             ) ||
-            (value.abstract_ &&
+            (!record.isInstantiable &&
                 concreteRecordSelections(selection).any(
                   (candidate) => fields(candidate).any(
                     (field) => _mayContainReference(field.type, endpoint, next),
@@ -149,23 +146,21 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
   ) {
     if (value case skir.DataValue_namedWrapper(:final value)) {
       final actual = value.actualType;
-      final compatible = switch (declared) {
-        skir.TypeSelection_completeWrapper(:final value) => isReadableAs(
+      final compatible = switch (completeUse(declared)) {
+        final value? => isReadableAs(
           skir.TypeUse.wrapNamed(actual),
           skir.TypeUse.wrapNamed(value),
         ),
-        skir.TypeSelection_pendingWrapper() =>
-          knownApplications(skir.TypeSelection.wrapComplete(actual)).any(
-            (candidate) => knownApplications(declared).any(
-              (expected) => isReadableAs(
-                skir.TypeUse.wrapNamed(candidate),
-                skir.TypeUse.wrapNamed(expected),
-              ),
+        null => knownApplications(selectionOfUse(actual)).any(
+          (candidate) => knownApplications(declared).any(
+            (expected) => isReadableAs(
+              skir.TypeUse.wrapNamed(candidate),
+              skir.TypeUse.wrapNamed(expected),
             ),
           ),
-        _ => false,
+        ),
       };
-      return compatible ? skir.TypeSelection.wrapComplete(actual) : null;
+      return compatible ? selectionOfUse(actual) : null;
     }
     return declared;
   }
@@ -181,9 +176,9 @@ extension CheckedReferenceDiscovery on CheckedEditorCatalog {
       )) {
         return null;
       }
-      return skir.TypeSelection.wrapComplete(value.actualType);
+      return selectionOfUse(value.actualType);
     }
-    return skir.TypeSelection.wrapComplete(declared);
+    return selectionOfUse(declared);
   }
 
   skir.DataValue? _namedPayload(skir.DataValue? value) => switch (value) {

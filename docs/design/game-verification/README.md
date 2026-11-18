@@ -249,7 +249,7 @@ lives in the design doc of the layer that owns it; this list only points there.
 
 | Obligation | Owner |
 |---|---|
-| Engine step timing counts ticks, so a stepped Paper drives scenes, typing and grace | [interactions.md](../interactions.md#steps) (`StepClock`), [dialogue.md](../dialogue.md) |
+| The engine reads time from one clock source: the system clock in production, a clock the stepped test moves 50 ms per permitted tick (`StepPolicy`) | [interactions.md](../interactions.md#steps) |
 | The realm purges every stored value of a subject in one operation | [stored-data.md](../stored-data.md#purging-a-subject) |
 | The realm's clock is given to it, and a test can advance it past a `Due` | [stored-data.md](../stored-data.md#due) |
 | Engine and realm report, per subject, whether chains or transactions are still busy (the done hook) | [events-and-handlers.md](../events-and-handlers.md#busy-per-subject), [stored-data.md](../stored-data.md#who-waits-for-a-commit) |
@@ -263,16 +263,9 @@ layers 3 and 6.
 
 Dated decisions, oldest first. The sections above describe what they add up to.
 
-- v1 cinematics and sequences advance on the **tick clock**, not wall clock (2026-11-06). A faster
-  server rate in tests speeds them up; under server lag they slow down instead of keeping pace.
-  Legacy used wall clock (`PlayerSession.kt:61`); this is a deliberate change.
-- Confirmed against the newer design docs (2026-11-06): **engine step timing counts ticks** (scenes,
-  typing, grace), so `Running.startedAt: Instant` and `elapsed = now - startedAt`
-  (`interactions.md:311`) and `optionDelay = 100.milliseconds` (`dialogue.md:96`) become ticks;
-  authors may still write durations, converted at 20 ticks per second. The realm's clock stays wall
-  time (`Due`, `stored-data.md:460`), and tests of realm timers need a realm clock the test can
-  advance. Applied 2026-11-07: each engine keeps a live `StepClock` per step from the tick it saw
-  the step start, and the stored rows carry no step time (`interactions.md`, `dialogue.md`).
+- Superseded 2026-11-18: v1 cinematics and sequences advance on the **tick clock**, not wall clock
+  (2026-11-06), applied 2026-11-07 as a live `StepClock` per step on each engine. See the
+  engine clock decision below.
 - **Group behaviour must be testable** (group chat, shared audiences, world groups), and requirements
   share a **pool of 4 warm clients**: a requirement claims as many as it needs and the rest keep
   running other requirements (2026-11-06). Books scoped per player are expected to remove most
@@ -428,6 +421,15 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   groups such requirements at a fitting server rate before it starts (2026-11-06). Superseded: stepped
   ticks replaced server rates, and clients perceive without drawing (P11), so only `visible()`, goldens
   and clips draw, each for its own span, and no requirement declares frames.
+- **The engine's clock is test driven** (2026-11-18, replacing the tick clock above). Answer to "How
+  should step time count, so the branch can merge with features/v1?": "Clock, test driven
+  (Recommended)". Step time keeps the clock model of the design records: `Running.startedAt`,
+  `StepContext` and `QueuedContext` with `Duration`, `Playhead` with `since: Instant`, `KeyOffer`
+  with `by` and `press`, and dialogue's `Instant` fields. The engine reads time from one clock source;
+  production gives it the system clock, and the stepped test moves it 50 ms per tick `StepPolicy`
+  permits, beside the realm clock a test can advance. Why: layers 17 and 18 build on clock time and a
+  `Playhead` shared across engines, which a per engine tick count cannot drive; legacy lag behaviour
+  (scenes stay on time) is kept; tests stay exact because time moves only with a step.
 
 ## The prototype search
 

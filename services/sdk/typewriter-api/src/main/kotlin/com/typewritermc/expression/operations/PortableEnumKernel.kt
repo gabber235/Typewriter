@@ -1,5 +1,6 @@
 package com.typewritermc.expression.operations
 
+import com.typewritermc.types.member
 import com.typewritermc.types.named
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ListItem
@@ -23,6 +24,6 @@ internal object PortableEnumKernel : EnumKernel {
         case: String,
     ): DataValue {
         val named = type as? TypeUse.NamedWrapper ?: throw illTyped("An enumeration is a named type.")
-        return DataValue.named(named.value, DataValue.EnumCaseWrapper(case))
+        return DataValue.named(named.value.member(case), DataValue.UNIT)
     }
 }

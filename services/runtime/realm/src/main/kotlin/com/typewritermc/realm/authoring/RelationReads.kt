@@ -1,18 +1,21 @@
 package com.typewritermc.realm.authoring
 
+import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.graphLinkRelationIds
+import com.typewritermc.realm.catalog.ownershipRelationIds
+import com.typewritermc.types.catalog.Fit
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.fits
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.payload
 import com.typewritermc.types.toSkir
-import com.typewritermc.types.use
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.authoring_facts.LinkProjection
@@ -23,7 +26,6 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -36,30 +38,15 @@ import skirout.kernel.v1.resource_id.ResourceId
 internal class RelationReads(
     val reads: CapturedAuthoringReads,
 ) {
-    val catalog: AuthoringCatalogLease get() = reads.view.original.catalog
+    val catalog: AuthoringCatalogLease get() = reads.viewCatalog
     val resources: Map<ResourceId, AuthoringRecord> get() = reads.view.resources
     val links: Map<LinkOccurrenceId, LinkOccurrence> get() = reads.view.links
 
     /** Changes whenever a staged write replaces the graph; saved and staged views never change. */
     val revision: Long get() = (reads.view as? AuthoredReadView.Working)?.revision ?: 0L
 
-    private var projected: Pair<Long, List<LinkProjection>>? = null
-
-    /** Relation projections of the current graph, recomputed only after a staged write replaces it. */
-    val projections: List<LinkProjection>
-        get() {
-            val revision = revision
-            projected?.let { (at, projections) -> if (at == revision) return projections }
-            val view = reads.view
-            val projections =
-                if (view.resources === view.original.resources) {
-                    view.original.projection.projections
-                } else {
-                    ResourceValueMapper.project(links.values, resources, catalog.relations, catalog.checked).projections
-                }
-            projected = revision to projections
-            return projections
-        }
+    /** Relation projections of the current graph; a working view rebuilds them after a staged write replaces it. */
+    val projections: List<LinkProjection> get() = reads.view.projection.projections
 
     fun contract(endpoint: EndpointId): RelationContract = catalog.relations.single { it.first.id == endpoint || it.second.id == endpoint }
 
@@ -72,9 +59,10 @@ internal class RelationReads(
     }
 
     fun observe(source: LinkOccurrence) {
+        val relation = contract(source.id.endpoint).id
         reads.observeInput(InputIdentity.Value(source.id.location))
-        reads.observeInput(InputIdentity.Incoming(source.source, null))
-        reads.observeInput(InputIdentity.Incoming(source.target.resource, null))
+        reads.observeInput(InputIdentity.Incoming(source.source, relation))
+        reads.observeInput(InputIdentity.Incoming(source.target.resource, relation))
     }
 
     /** Bindings this resource declares for [endpoint]; the evidence is recorded as read before anyone inspects it. */
@@ -92,7 +80,7 @@ internal class RelationReads(
         subject: ResourceId,
         origin: OperationOrigin = OperationOrigin(),
     ): LinkOccurrence? {
-        reads.observeInput(InputIdentity.Incoming(subject, null))
+        catalog.ownershipRelationIds.forEach { reads.observeInput(InputIdentity.Incoming(subject, it)) }
         val membership =
             origin.occurrences.singleOrNull { it.target.resource == subject && it.holdsOwnership() }
                 ?: links.values.singleOrNull { it.target.resource == subject && it.holdsOwnership() }
@@ -148,18 +136,17 @@ internal class RelationReads(
     ): Boolean {
         val sourceRecord = resources[source.source] ?: return false
         val destination = resources[target] ?: return false
-        val actual = (destination.configuration as? TypeSelection.CompleteWrapper)?.use ?: return false
         val expected =
             ResourceValueMapper.expectedTarget(source, sourceRecord, catalog.checked) ?: run {
-                val type = sourceRecord.authoredTypeAt(source.id.location.path, catalog.checked) ?: return false
+                val type = sourceRecord.authoredTypeAt(source.source, source.id.location.path, catalog.checked) ?: return false
                 val checked = catalog.checked.resolve(type) as? Resolution.Ready ?: return false
                 (checked.value.schema.representation as? ResolvedRepresentation.LinkWrapper)?.value?.target ?: return false
             }
-        return catalog.checked.isReadableAs(actual.use, expected)
+        return catalog.checked.fits(destination.configuration, expected, owner = target) == Fit.YES
     }
 
     /**
-     * Link occurrences that would connect [subject] and [target] through each non owning relation, the dragged side
+     * Link occurrences that would connect [subject] and [target] through each graph link relation, the dragged side
      * first. Bindings live at each relation's first endpoint, so the subject holds the link when it declares a binding
      * for the relation and the target holds it only otherwise: a tag dropped onto a book is written to the book's tags
      * while a tag dropped onto a tag gains the target as a parent. [item] names a new collection item.
@@ -170,7 +157,7 @@ internal class RelationReads(
         item: (String) -> ItemId,
     ): List<LinkOccurrence> =
         catalog.relations
-            .filterNot { it.ownsResources }
+            .filter { it.id in catalog.graphLinkRelationIds }
             .flatMap { relation ->
                 val endpoint = relation.first.id
                 listOf(subject to target, target to subject).firstNotNullOfOrNull { (holder, linked) ->
@@ -198,7 +185,7 @@ internal class RelationReads(
             val id = pending.removeFirst()
             if (!visited.add(id)) continue
             reads.observeInput(InputIdentity.Value(ValueLocation.of(id)))
-            reads.observeInput(InputIdentity.Incoming(id, null))
+            reads.observeInput(InputIdentity.Incoming(id, relation.id))
             if (id == other) return true
             next[id].orEmpty().forEach(pending::add)
         }
@@ -237,19 +224,22 @@ internal class RelationReads(
         }
     }
 
-    /** Non owning link occurrences between [id] and [target], whichever of them holds each. */
+    /** Graph link occurrences between [id] and [target], whichever of them holds each. */
     fun linksBetween(
         id: ResourceId,
         target: ResourceId,
     ): List<LinkOccurrence> = linksOf(id).filter { it.source == target || it.target.resource == target }
 
-    /** Non owning link occurrences held by [id] or pointing at it. */
+    /**
+     * Graph link occurrences held by [id] or pointing at it: links of non owning relations an author draws, not the
+     * content references that name [id] from content.
+     */
     fun linksOf(id: ResourceId): List<LinkOccurrence> {
+        val graphLinks = catalog.graphLinkRelationIds
         reads.observeInput(InputIdentity.Value(ValueLocation.of(id)))
-        reads.observeInput(InputIdentity.Incoming(id, null))
+        graphLinks.forEach { reads.observeInput(InputIdentity.Incoming(id, it)) }
         return links.values.filter { occurrence ->
-            (occurrence.source == id || occurrence.target.resource == id) &&
-                !contract(occurrence.id.endpoint).ownsResources
+            (occurrence.source == id || occurrence.target.resource == id) && contract(occurrence.id.endpoint).id in graphLinks
         }
     }
 }

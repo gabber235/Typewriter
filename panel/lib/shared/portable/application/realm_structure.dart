@@ -23,8 +23,9 @@ abstract class OwningField with _$OwningField {
 
   const OwningField._();
 
-  /// The type every member of this field has, such as Page for Book.pages.
-  skir.TypeDefinitionId get memberType => ownership.member.resource.definition;
+  /// The type every member of this field has, such as Page for Book.pages,
+  /// or null when the member endpoint names every resource.
+  skir.TypeDefinitionId? get memberType => ownership.member.resource.definition;
 
   /// The field path below the owner, such as `pages`.
   skir.ValuePath get path =>
@@ -72,30 +73,38 @@ extension RealmStructureCatalog on CheckedEditorCatalog {
   /// relation whose owner is the realm root.
   bool isRealmSection(skir.TypeSelection selection) {
     final nominal = nominalDefinitions(selection);
-    return _sectionBases.any(nominal.contains);
+    return ownershipRelations.any(
+      (ownership) =>
+          endpointAdmits(ownership.owner, snapshot.realmRoot) &&
+          switch (ownership.member.resource.definition) {
+            final member? => nominal.contains(member),
+            null => true,
+          },
+    );
   }
 
-  Set<skir.TypeDefinitionId> get _sectionBases => {
-    for (final ownership in ownershipRelations)
-      if (isNominalSubtype(
-        snapshot.realmRoot,
-        ownership.owner.resource.definition,
-      ))
-        ownership.member.resource.definition,
+  /// Whether resources of [definition] fit [endpoint] by definition alone:
+  /// a nominal subtype of the definition it names, and every resource when it
+  /// names none.
+  bool endpointAdmits(
+    skir.EndpointDefinition endpoint,
+    skir.TypeDefinitionId definition,
+  ) => switch (endpoint.resource.definition) {
+    final named? => isNominalSubtype(definition, named),
+    null => true,
   };
 
   /// Concrete, ready resource types: the realm root and every concrete record
   /// type that is a member of an ownership relation, in catalog order.
   List<skir.TypeDefinitionId> get concreteResourceTypes {
-    final members = {
-      for (final ownership in ownershipRelations)
-        ownership.member.resource.definition,
-    };
+    final members = [
+      for (final ownership in ownershipRelations) ownership.member,
+    ];
     bool concreteRecord(skir.PublishedType published) =>
         published.status == skir.DeclarationStatus.ready &&
         switch (published.definition.representation) {
-          skir.RepresentationTemplate_recordWrapper(:final value) =>
-            !value.abstract_,
+          final skir.RepresentationTemplate_recordWrapper record =>
+            record.isInstantiable,
           _ => false,
         };
     return [
@@ -103,7 +112,7 @@ extension RealmStructureCatalog on CheckedEditorCatalog {
         if (concreteRecord(published) &&
             (published.definition.id == snapshot.realmRoot ||
                 members.any(
-                  (member) => isNominalSubtype(published.definition.id, member),
+                  (member) => endpointAdmits(member, published.definition.id),
                 )))
           published.definition.id,
     ];

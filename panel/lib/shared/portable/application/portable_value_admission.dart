@@ -118,6 +118,14 @@ final class _PortableValueInspector {
           problem(path, scalarProblem(scalar, value));
         }
       case skir.TypeUse_namedWrapper(value: final expectedNamed):
+        // Patch: a value under a type a resource declares is the realm's to
+        // judge, since this catalog holds only the published code snapshot.
+        if (expectedNamed.definition.typeId is skir.TypeId_contentWrapper ||
+            (value is skir.DataValue_namedWrapper &&
+                value.value.actualType.definition.typeId
+                    is skir.TypeId_contentWrapper)) {
+          return;
+        }
         if (value is! skir.DataValue_namedWrapper) {
           problem(path, "expected_named");
           return;
@@ -136,7 +144,7 @@ final class _PortableValueInspector {
           return;
         }
         payload(
-          skir.TypeSelection.wrapComplete(named.actualType),
+          selectionOfUse(named.actualType),
           catalog
               .published(named.actualType.definition)!
               .definition
@@ -145,6 +153,8 @@ final class _PortableValueInspector {
           path,
           depth + 2,
         );
+      case skir.TypeUse_functionWrapper():
+        visit(expected.storedUse, value, path, depth + 1);
       default:
         problem(path, "unknown_type");
     }
@@ -241,18 +251,6 @@ final class _PortableValueInspector {
             ...at,
             skir.PathSegment.mapValue,
           ], depth + 2);
-        }
-      case skir.RepresentationTemplate_enumerationWrapper(
-        value: final enumeration,
-      ):
-        if (value is! skir.DataValue_enumCaseWrapper ||
-            !enumeration.cases.any((c) => c.key == value.value)) {
-          problem(
-            path,
-            value is skir.DataValue_enumCaseWrapper
-                ? "unknown_enum_case"
-                : "expected_enum",
-          );
         }
       case skir.RepresentationTemplate_linkWrapper(value: final link):
         if (value is! skir.DataValue_linkWrapper ||

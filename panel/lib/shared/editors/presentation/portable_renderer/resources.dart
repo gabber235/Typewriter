@@ -719,9 +719,7 @@ skir.DataValue _hierarchyGroupValue(
 ) {
   final types = {
     for (final field
-        in catalog?.fields(
-              skir.TypeSelection.wrapComplete(hierarchyGroupUse),
-            ) ??
+        in catalog?.fields(selectionOfUse(hierarchyGroupUse)) ??
             const <AppliedEditorField>[])
       field.template.key: field.type,
   };

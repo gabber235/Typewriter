@@ -175,6 +175,7 @@ extension PortableRecordTree on skir.AuthoringRecord {
       return PortablePathValue(
         skir.AuthoringRecord(
           configuration: configuration,
+          types: types,
           fields: index < 0
               ? [...current, updated]
               : List.generate(
@@ -198,6 +199,7 @@ extension PortableRecordTree on skir.AuthoringRecord {
       PortablePathValue(:final value) => PortablePathValue(
         skir.AuthoringRecord(
           configuration: configuration,
+          types: types,
           fields: List.generate(
             current.length,
             (fieldIndex) => fieldIndex == index

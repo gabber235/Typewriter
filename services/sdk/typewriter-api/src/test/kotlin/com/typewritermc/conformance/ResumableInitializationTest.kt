@@ -52,6 +52,7 @@ import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -120,7 +121,7 @@ val ResumableInitializationTest by testSuite {
                                             type = LINK_USE.template(),
                                         ),
                                     ),
-                                abstract_ = false,
+                                form = RecordForm.CONCRETE,
                             ),
                     ),
                     TypeDefinition.partial(
@@ -154,7 +155,7 @@ val ResumableInitializationTest by testSuite {
                                             type = mapping.template(emptyList()),
                                         ),
                                     ),
-                                abstract_ = false,
+                                form = RecordForm.CONCRETE,
                             ),
                     ),
                 ),
@@ -268,7 +269,7 @@ val ResumableInitializationTest by testSuite {
                     linkDefinition(),
                     TypeDefinition.partial(
                         id = abstractId,
-                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
                     ),
                     TypeDefinition.partial(
                         id = concreteId,
@@ -281,7 +282,7 @@ val ResumableInitializationTest by testSuite {
                                             type = LINK_USE.template(),
                                         ),
                                     ),
-                                abstract_ = false,
+                                form = RecordForm.CONCRETE,
                             ),
                         parents = listOf(abstractId.namedTemplate(emptyList())),
                     ),
@@ -296,7 +297,7 @@ val ResumableInitializationTest by testSuite {
                                             type = abstractId.template(emptyList()),
                                         ),
                                     ),
-                                abstract_ = false,
+                                form = RecordForm.CONCRETE,
                             ),
                     ),
                 ),
@@ -369,7 +370,7 @@ val ResumableInitializationTest by testSuite {
                                     listOf(
                                         FieldDeclaration.partial(owner = field, type = LINK_USE.template(), hasConstructorDefault = true),
                                     ),
-                                abstract_ = false,
+                                form = RecordForm.CONCRETE,
                             ),
                     ),
                 ),

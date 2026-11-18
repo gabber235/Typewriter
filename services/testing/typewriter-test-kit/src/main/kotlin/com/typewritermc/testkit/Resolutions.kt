@@ -15,6 +15,9 @@ fun CheckedCatalog.ready(use: TypeUse): CheckedType = resolve(use).ready()
 /** The complete value of this result; fails when the value is not complete. */
 fun CompletenessResult.complete() = (this as CompletenessResult.Complete).value
 
+/** The problem codes of this refusal, in order; fails when the value was not refused. */
+fun CompletenessResult.problemCodes(): List<String> = (this as CompletenessResult.Invalid).problems.map { it.code }
+
 /** The native binding of [use] in this assembly, as a binding of [T]; fails when [use] does not resolve. */
 @Suppress("UNCHECKED_CAST")
 fun <T> CatalogAssembly.binding(use: TypeUse): NativeBinding<T> = bindings.bind(checked.ready(use)) as NativeBinding<T>

@@ -504,7 +504,8 @@ AuthoringEdit _interactionDraft() {
       skir.AuthoringResource(
         id: _interactionResource,
         content: skir.AuthoringRecord(
-          configuration: skir.TypeSelection.wrapComplete(configuration),
+          types: const [],
+          configuration: selectionOfUse(configuration),
           fields: [
             skir.FieldValue(
               name: "status",
@@ -569,6 +570,8 @@ CheckedEditorCatalog _interactionCatalog() {
     skir.RepresentationTemplate representation, {
     List<skir.EffectiveFieldTemplate> effective = const [],
   }) => skir.PublishedType(
+    name: "",
+    extension_: "",
     searchKey: null,
     placementField: null,
     definition: skir.TypeDefinition(
@@ -590,7 +593,7 @@ CheckedEditorCatalog _interactionCatalog() {
         published(
           root,
           skir.RepresentationTemplate.createRecord(
-            abstract_: false,
+            form: skir.RecordForm.concrete,
             fields: [
               for (final field in fields.entries)
                 skir.FieldDeclaration(

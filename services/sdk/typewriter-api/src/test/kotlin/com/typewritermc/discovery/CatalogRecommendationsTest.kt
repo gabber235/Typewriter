@@ -18,6 +18,7 @@ import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -35,7 +36,7 @@ val CatalogRecommendationsTest by testSuite {
                 TypeDefinition.partial(
                     id = weighted,
                     parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = weighted, index = 0), name = "T")),
-                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 ),
                 recordType(
                     source,
@@ -57,11 +58,11 @@ val CatalogRecommendationsTest by testSuite {
             listOf(
                 TypeDefinition.partial(
                     id = available,
-                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 ),
                 TypeDefinition.partial(
                     id = unavailable,
-                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 ),
                 recordType(parent, fieldDeclaration(parent, "value", available.template())),
                 recordType(
@@ -87,11 +88,11 @@ val CatalogRecommendationsTest by testSuite {
             listOf(
                 TypeDefinition.partial(
                     id = alpha,
-                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 ),
                 TypeDefinition.partial(
                     id = beta,
-                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 ),
                 recordType(
                     source,

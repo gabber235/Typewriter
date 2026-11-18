@@ -1,15 +1,19 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.capability.RealmCapabilityProvider
+import com.typewritermc.formula.GeneratedDynamicProvider
+import com.typewritermc.formula.GeneratedFormulaProvider
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.requireValid
 import com.typewritermc.types.NativeBindingFactory
+import com.typewritermc.types.qualified
 import com.typewritermc.types.requireValid
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.net.URL
 import java.net.URLClassLoader
 import java.nio.file.Files
@@ -126,6 +130,10 @@ class RetainedOwnedProviderRegistry(
     override fun nativeBindings(): List<OwnedNativeBinding> = delegate.nativeBindings()
 
     override fun checks(): List<OwnedCheck> = delegate.checks()
+
+    override fun dynamics(): List<OwnedDynamic> = delegate.dynamics()
+
+    override fun formulas(): List<OwnedFormulaFunction> = delegate.formulas()
 }
 
 private class CombinedProviderLease(
@@ -240,6 +248,8 @@ class GeneratedProviderLoader {
                 GeneratedProviderKind.CollectionProjection -> GeneratedCollectionProjectionProvider::class.java
                 GeneratedProviderKind.ResourceOperation -> GeneratedResourceOperationProvider::class.java
                 GeneratedProviderKind.ResourceDisplay -> GeneratedResourceDisplayProvider::class.java
+                GeneratedProviderKind.Formula -> GeneratedFormulaProvider::class.java
+                GeneratedProviderKind.Dynamic -> GeneratedDynamicProvider::class.java
             }
         require(expected.isAssignableFrom(providerClass)) {
             "Generated ${kind.key} provider ${providerClass.name} must implement ${expected.name}."
@@ -428,6 +438,8 @@ class GeneratedProviderLoader {
         val collectionProjections = mutableListOf<OwnedCollectionProjection>()
         val operations = mutableListOf<com.typewritermc.operations.OperationDeclaration>()
         val displays = mutableListOf<OwnedResourceDisplay>()
+        val formulas = mutableListOf<OwnedFormulaFunction>()
+        val dynamics = mutableListOf<OwnedDynamic>()
 
         loaded.forEach { loadedProvider ->
             val origin = loadedProvider.origin
@@ -441,7 +453,9 @@ class GeneratedProviderLoader {
                             provider.display,
                             provider.nativeClass,
                             provider.searchKey,
+                            provider.name,
                         )
+                    provider.cases.forEach { case -> declarations += OwnedTypeDeclaration(origin, case.requireValid()) }
                 }
 
                 GeneratedProviderKind.NativeBinding -> {
@@ -502,6 +516,16 @@ class GeneratedProviderLoader {
                         )
                 }
 
+                GeneratedProviderKind.Formula -> {
+                    formulas += loadedProvider.require<GeneratedFormulaProvider>().functions.map { OwnedFormulaFunction(origin, it) }
+                }
+
+                GeneratedProviderKind.Dynamic -> {
+                    val ruleOrigin =
+                        RuleOrigin(owner = TypeDefinitionId.qualified("dynamic", loadedProvider.entry.providerClass), ordinal = 0)
+                    dynamics += OwnedDynamic(origin, ruleOrigin, loadedProvider.require<GeneratedDynamicProvider>())
+                }
+
                 GeneratedProviderKind.CollectionProjection -> {
                     collectionProjections +=
                         OwnedCollectionProjection(
@@ -529,6 +553,8 @@ class GeneratedProviderLoader {
                     checks = ownedChecks,
                     operations = operations,
                     displays = displays,
+                    dynamics = dynamics,
+                    formulas = formulas,
                 ),
             capabilities = capabilities,
             registrars = registrars,

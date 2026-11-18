@@ -6,7 +6,7 @@ import "compiled_sdk_control_fixture.dart";
 /// The display Realm publishes for elements, which names a resource by its
 /// `name` field, retargeted to [target] so a test catalog names its resources
 /// exactly as Realm does.
-skir.ResourceDisplayFormulas nameResourceDisplay(skir.TypeTemplate target) {
+skir.ResourceDisplayFormulas nameResourceDisplay(skir.TypeDefinitionId target) {
   final element = skir.TypeDefinitionId(
     typeId: skir.TypeId.createQualified(
       namespace: "kotlin",
@@ -16,15 +16,12 @@ skir.ResourceDisplayFormulas nameResourceDisplay(skir.TypeTemplate target) {
   );
   final display = compiledSdkControlCatalog.resourceDisplays.singleWhere(
     (display) => switch (display.target) {
-      skir.ResourceTarget_typeWrapper(
-        value: skir.TypeTemplate_namedWrapper(:final value),
-      ) =>
-        value.definition == element,
+      skir.ResourceMatch_definitionWrapper(:final value) => value == element,
       _ => false,
     },
   );
   return skir.ResourceDisplayFormulas(
-    target: skir.ResourceTarget.wrapType(target),
+    target: skir.ResourceMatch.wrapDefinition(target),
     label: display.label,
     accent: display.accent,
     icon: display.icon,

@@ -5,15 +5,16 @@ import com.surrealdb.RecordId
 import com.surrealdb.Surreal
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompiledArtifact
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
+import com.typewritermc.realm.authoring.forReply
 import com.typewritermc.realm.authoring.judgedForRelease
 import com.typewritermc.realm.storage.decodeSkir
 import com.typewritermc.realm.storage.encodeSkir
 import com.typewritermc.realm.storage.inTransaction
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.mainSpanScope
-import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.unknownVariant
 import io.opentelemetry.context.Context
@@ -34,6 +35,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.compilation_root.CompilationRoot
 import skirout.editor.v1.compiled_content.PublishedContent
@@ -241,9 +243,11 @@ internal class RealmPublicationCoordinator(
                         evidence[finding.id] =
                             DiagnosticEvidence(
                                 catalog = captured.root.catalog.generation,
-                                expectations =
+                                evidence =
                                     dependencies.map { id ->
-                                        EditExpectation.createResource(id = id, expected = captured.root.resources[id])
+                                        CheckEvidence.FactWrapper(
+                                            EditExpectation.createResource(id = id, expected = captured.root.resources[id]),
+                                        )
                                     },
                             )
                     }
@@ -434,7 +438,7 @@ internal class RealmPublicationCoordinator(
         }
     }
 
-    private fun capturedFindings(root: AuthoringView) = findings().map { it.judgedForRelease(root) }
+    private fun capturedFindings(root: AuthoringView) = findings().forReply { it.judgedForRelease(root) }
 
     private fun updateForPrepared(next: Prepared) {
         val active = releasing

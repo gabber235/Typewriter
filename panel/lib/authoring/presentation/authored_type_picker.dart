@@ -48,10 +48,10 @@ Future<skir.TypeUse?> showAuthoredTypeUsePicker(
   if (selected == null || !context.mounted) return null;
   return switch (selected) {
     AuthoredDirectTypeUseCandidate(:final type) => type,
-    AuthoredTypeSelectionCandidate(:final selection) => switch (selection) {
-      skir.TypeSelection_completeWrapper(:final value) =>
-        skir.TypeUse.wrapNamed(value),
-      skir.TypeSelection_pendingWrapper() => showDialog<skir.TypeUse>(
+    AuthoredTypeSelectionCandidate(:final selection) => switch (catalog
+        .completeUse(selection)) {
+      final value? => skir.TypeUse.wrapNamed(value),
+      null => showDialog<skir.TypeUse>(
         context: context,
         barrierDismissible: false,
         builder: (context) => SelectionOperationsRoot(
@@ -63,7 +63,6 @@ Future<skir.TypeUse?> showAuthoredTypeUsePicker(
           ),
         ),
       ),
-      _ => null,
     },
   };
 }
@@ -74,10 +73,13 @@ List<AuthoredTypeUseCandidate> _typeUseSearchCandidates(
   final candidates = <AuthoredTypeUseCandidate>[];
   for (final published in catalog.snapshot.types) {
     if (published.status != skir.DeclarationStatus.ready) continue;
+    // A derived parameter is computed by the resource that owns it, and a
+    // type use has no owner, so such a generic could never complete here.
+    if (published.definition.parameters.any((p) => p.derived)) continue;
     final selection = catalog.beginSelection(published.definition.id);
-    if (selection == skir.TypeSelection.unknown) continue;
+    if (selection == skir.TypeSelection.defaultInstance) continue;
     candidates.add(AuthoredTypeUseCandidate.selection(selection));
-    if (selection case skir.TypeSelection_completeWrapper(:final value)) {
+    if (catalog.completeUse(selection) case final value?) {
       final nullable = skir.TypeUse.createNullable(
         value: skir.TypeUse.wrapNamed(value),
       );
@@ -188,13 +190,12 @@ final class _TypeUseCompositionPickerState
     final selectedDefinition = widget.catalog.selected(_selection);
     final parameters =
         selectedDefinition?.definition.parameters.toList() ?? const [];
-    final arguments = argumentSelections(_selection, parameters.length);
-    final complete = switch (_selection) {
-      skir.TypeSelection_completeWrapper(:final value) =>
+    final complete = switch (widget.catalog.completeUse(_selection)) {
+      final value? =>
         _nullable
             ? skir.TypeUse.createNullable(value: skir.TypeUse.wrapNamed(value))
             : skir.TypeUse.wrapNamed(value),
-      _ => null,
+      null => null,
     };
     return AlertDialog(
       title: Text(widget.title),
@@ -209,20 +210,21 @@ final class _TypeUseCompositionPickerState
                 style: context.theme.textTheme.titleSmall,
               ),
               for (final item in parameters.indexed)
-                Padding(
-                  padding: EdgeInsets.only(top: context.spacing.space2),
-                  child: OutlinedButton(
-                    onPressed: () => _chooseNested(item.$1, item.$2.name),
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(switch (arguments[item.$1]) {
-                        skir.ArgumentSelection_chosenWrapper(:final value) =>
-                          "${item.$2.name}: ${widget.catalog.typeUseName(value)}",
-                        _ => "${item.$2.name}: Choose a type",
-                      }),
+                if (!item.$2.derived)
+                  Padding(
+                    padding: EdgeInsets.only(top: context.spacing.space2),
+                    child: OutlinedButton(
+                      onPressed: () => _chooseNested(item.$1, item.$2.name),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(switch (_selection.chosenAt(item.$1)) {
+                          final value? =>
+                            "${item.$2.name}: ${widget.catalog.typeUseName(value)}",
+                          null => "${item.$2.name}: Choose a type",
+                        }),
+                      ),
                     ),
                   ),
-                ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text("Allow no value"),

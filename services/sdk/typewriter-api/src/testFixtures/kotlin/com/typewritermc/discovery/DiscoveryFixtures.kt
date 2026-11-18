@@ -16,7 +16,6 @@ import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.ConfigurationProvider
@@ -79,7 +78,6 @@ import com.typewritermc.types.record
 import com.typewritermc.types.template
 import com.typewritermc.types.text
 import com.typewritermc.types.toWire
-import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -112,10 +110,12 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -232,6 +232,7 @@ internal fun providerArtifact(
     corruptClass: Boolean = false,
     referencedClass: ByteArray? = null,
     providerClass: KClass<*> = ShadowRegistrar::class,
+    kind: GeneratedProviderKind = GeneratedProviderKind.Registrar,
 ): Path {
     val providerName = providerClass.java.name
     val classPath = providerName.replace('.', '/') + ".class"
@@ -239,7 +240,7 @@ internal fun providerArtifact(
     if (corruptClass) classBytes[classBytes.lastIndex] = (classBytes.last() + 1).toByte()
     JarOutputStream(Files.newOutputStream(path)).use { archive ->
         archive.putNextEntry(JarEntry(GENERATED_PROVIDER_INDEX_PATH))
-        archive.write("registrar\t$providerName\t$sourcePart\n".encodeToByteArray())
+        archive.write("${kind.key}\t$providerName\t$sourcePart\n".encodeToByteArray())
         archive.closeEntry()
         archive.putNextEntry(JarEntry(classPath))
         archive.write(classBytes)
@@ -259,7 +260,7 @@ internal fun nativeIdentityAssembly(ambiguous: Boolean): CatalogAssembly {
     val origin = origin("native identity", "test:native_identity")
     val id = TypeDefinitionId.qualified("query.test", "Abstract")
     val definition =
-        TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true))
+        TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN))
     val descriptor =
         PresentationDescriptor.of(
             PresentationId(namespace = "test", name = "native_identity"),
@@ -319,7 +320,7 @@ internal val sectionsRelation = ownership("realm.sections", RealmRootDefinition.
 internal fun structure(): List<OwnedTypeDeclaration> =
     listOf(
         resource(RealmRootDefinition.id),
-        resource(RealmSectionDefinition.id, abstract = true),
+        resource(RealmSectionDefinition.id, form = RecordForm.OPEN),
         resource(section, parents = listOf(RealmSectionDefinition.id)),
     )
 
@@ -335,13 +336,13 @@ internal fun assemble(definitions: List<TypeDefinition>): CatalogAssembly = asse
 
 internal fun resource(
     id: TypeDefinitionId,
-    abstract: Boolean = false,
+    form: RecordForm = RecordForm.CONCRETE,
     parents: List<TypeDefinitionId> = emptyList(),
 ) = OwnedTypeDeclaration(
     origin,
     recordType(
         id,
-        abstract = abstract,
+        form = form,
         parents =
             parents.map {
                 it.namedTemplate()
@@ -360,7 +361,7 @@ internal fun ownership(
         EndpointDefinition(
             id = EndpointId(value = "$relation:first"),
             slot = EndpointSlot.FIRST,
-            resource = owner.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(owner.template()),
             cardinality = EndpointCardinality.ONE,
             onDelete = RelationDeletePolicy.CASCADE,
         ),
@@ -368,7 +369,7 @@ internal fun ownership(
         EndpointDefinition(
             id = EndpointId(value = "$relation:second"),
             slot = EndpointSlot.SECOND,
-            resource = member.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(member.template()),
             cardinality = EndpointCardinality.MANY,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
@@ -404,7 +405,7 @@ internal fun genericType(id: TypeDefinitionId): Pair<TypeDefinitionId, Pair<Type
                                 field("title", ScalarKind.TEXT.template),
                                 field("contents", TypeTemplate.ParameterWrapper(parameter)),
                             ),
-                        abstract_ = false,
+                        form = RecordForm.CONCRETE,
                     ),
             ),
             null,
@@ -422,7 +423,7 @@ internal fun fixtureType(
             representation =
                 RepresentationTemplate.createRecord(
                     fields = emptyList(),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
             parents =
                 listOfNotNull(parent).map {
@@ -439,14 +440,14 @@ internal fun endpoint(
 ) = EndpointDefinition(
     id = EndpointId(value = id),
     slot = slot,
-    resource = resource.namedTemplate(),
+    resource = ResourceMatchTemplate.TypeWrapper(resource.template()),
     cardinality = EndpointCardinality.MANY,
     onDelete = RelationDeletePolicy.CLEAR,
 )
 
 internal fun book(title: String) =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(BookDefinition.use),
+        TypeSelection.of(BookDefinition.use),
         mapOf(
             "title" to DataValue.StringValueWrapper(title),
             "icon" to DataValue.UNFILLED,
@@ -457,14 +458,14 @@ internal fun book(title: String) =
     )
 
 internal class FixtureDisplay(
-    override val target: ResourceTarget,
+    override val target: ResourceMatch,
     private val build: () -> DisplayFormulas,
 ) : GeneratedResourceDisplayProvider {
     override fun formulas(): DisplayFormulas = build()
 }
 
 internal fun displayProvider(
-    target: ResourceTarget,
+    target: ResourceMatch,
     build: () -> DisplayFormulas,
 ) = OwnedResourceDisplay(origin("type_display", "test:type_display"), FixtureDisplay(target, build))
 
@@ -479,7 +480,7 @@ internal fun assemble(
     val generated = generatedProviders<GeneratedTypeProvider>(GeneratedProviderKind.Type).distinctBy { it.definition.id }
     val generatedDisplays =
         generatedProviders<GeneratedResourceDisplayProvider>(GeneratedProviderKind.ResourceDisplay)
-            .filter { includeGenerated || it.target == ResourceTarget.ANY_RESOURCE }
+            .filter { includeGenerated || it.target == ResourceMatch.ANY_RESOURCE }
             .map { OwnedResourceDisplay(origin, it) }
     return CatalogContributions(
         declarations =
@@ -495,9 +496,15 @@ internal fun assemble(
 internal fun CatalogAssembly.diagnosticCodes(type: TypeDefinitionId): List<String> =
     editorCatalog.diagnostics.filter { it.affected == type }.map { it.code }
 
-internal fun CatalogAssembly.label(record: AuthoringRecord): String? =
+/** The display label of [record], held by a resource named [owner]. */
+internal fun CatalogAssembly.label(
+    record: AuthoringRecord,
+    owner: skirout.kernel.v1.resource_id.ResourceId =
+        skirout.kernel.v1.resource_id
+            .ResourceId(value = "labelled"),
+): String? =
     with(com.typewritermc.expression.FixtureReads) {
-        displays.label(record, checked)
+        displays.label(owner, record, checked)
     }
 
 internal fun artifact(

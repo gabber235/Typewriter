@@ -23,7 +23,7 @@ import skirout.editor.v1.operation.OperationShortcut
 import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.type_catalog.NamedTypeUse
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -126,7 +126,7 @@ class CollectedOperation internal constructor(
 class OperationDeclaration internal constructor(
     val origin: ProviderOrigin,
     val id: ResourceOperationId,
-    val target: ResourceTarget,
+    val target: ResourceMatch,
     val input: OperationInput,
     val collected: CollectedOperation?,
     val failure: Throwable?,
@@ -141,7 +141,7 @@ class OperationDeclaration internal constructor(
 fun <D : ResourceDraft, I> collectOperation(
     origin: ProviderOrigin,
     declaration: String,
-    target: ResourceTarget,
+    target: ResourceMatch,
     subjects: OperationSubjects<D>,
     input: OperationInput,
     defaultLabel: String,

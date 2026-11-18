@@ -6,6 +6,7 @@ import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.TEST_TYPE
 import com.typewritermc.realm.authoring.captured
 import com.typewritermc.realm.authoring.location
+import com.typewritermc.realm.catalog.CONTENT_RULE
 import com.typewritermc.realm.testing.DefinitionCatalog
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.withClue
@@ -98,7 +99,12 @@ val PortablePatternConformanceTest by testSuite {
                 ) { _, runtime ->
                     runtime.settle()
 
-                    val actual = runtime.findings().associateBy { it.ticket.instance.location }
+                    // The cases seed records the test catalog does not fully declare; the content rule reports those apart.
+                    val actual =
+                        runtime
+                            .findings()
+                            .filter { it.ticket.instance.rule != CONTENT_RULE }
+                            .associateBy { it.ticket.instance.location }
                     val expected = case.getValue("expected").jsonArray.map { it.jsonObject }
                     actual.keys shouldBe expected.map { compactLocation(it.string("subject")) }.toSet()
                     expected.forEach { entry ->

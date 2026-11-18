@@ -11,6 +11,7 @@ import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.testkit.definitions
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
+import com.typewritermc.types.member
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
@@ -22,13 +23,13 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.authoring.EditIntent
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -43,7 +44,7 @@ val SurrealAuthoringSearchRepositoryTest by testSuite {
         val catalog =
             DefinitionCatalog(
                 definitions {
-                    record(parent, abstract = true)
+                    record(parent, form = RecordForm.OPEN)
                     record(compatible, parents = listOf(parent.namedTemplate()))
                     record(incompatible)
                 },
@@ -65,7 +66,7 @@ val SurrealAuthoringSearchRepositoryTest by testSuite {
         }
     }
 
-    test("a search for an applied generic type finds a pending resource only when its chosen argument matches") {
+    test("a search for an applied generic type finds a resource only when its chosen argument matches") {
         val box = definition("box")
         val first = definition("first")
         val second = definition("second")
@@ -78,13 +79,13 @@ val SurrealAuthoringSearchRepositoryTest by testSuite {
                 },
             )
         RealmFixture.surreal(catalog).use { realm ->
-            val pending = TypeSelection.createPending(definition = box, arguments = listOf(ArgumentSelection.ChosenWrapper(first.use())))
+            val boxed = TypeSelection.of(box, mapOf(0 to first.use()))
             realm
                 .commit(
-                    EditIntent.createCreateResource(id = ResourceId(value = "pending"), record = AuthoringRecord.of(pending, emptyMap())),
+                    EditIntent.createCreateResource(id = ResourceId(value = "boxed"), record = AuthoringRecord.of(boxed, emptyMap())),
                 ).shouldBeCommitted()
 
-            realm.search(target = box.namedUse(listOf(first.use()))) shouldBe listOf(ResourceId(value = "pending"))
+            realm.search(target = box.namedUse(listOf(first.use()))) shouldBe listOf(ResourceId(value = "boxed"))
             realm.search(target = box.namedUse(listOf(second.use()))) shouldBe emptyList()
         }
     }
@@ -104,7 +105,7 @@ val SurrealAuthoringSearchRepositoryTest by testSuite {
         RealmFixture.surreal(DefinitionCatalog(definitions { record(book) { field("title", ScalarKind.TEXT.template) } })).use { realm ->
             val record =
                 AuthoringRecord.of(
-                    TypeSelection.CompleteWrapper(book.namedUse()),
+                    TypeSelection.of(book.namedUse()),
                     mapOf("title" to DataValue.StringValueWrapper("Metadata verification 20261004")),
                 )
             realm.commit(EditIntent.createCreateResource(id = ResourceId(value = "book"), record = record)).shouldBeCommitted()
@@ -119,13 +120,13 @@ val SurrealAuthoringSearchRepositoryTest by testSuite {
         fun items(vararg values: String) = values.map { ListItem(id = ItemId(value = it), value = text(it)) }
         val record =
             AuthoringRecord.of(
-                TypeSelection.CompleteWrapper(definition("holder").namedUse()),
+                TypeSelection.of(definition("holder").namedUse()),
                 mapOf(
                     "nested" to DataValue.named(definition("nested").namedUse(), DataValue.record("inner" to text("inner"))),
                     "list" to DataValue.listValue(items("listed")),
                     "set" to DataValue.setValue(items("member")),
                     "map" to DataValue.mapValue(listOf(MapRow(id = ItemId(value = "row"), key = text("key"), value = text("mapped")))),
-                    "mood" to DataValue.EnumCaseWrapper("cheerful"),
+                    "mood" to DataValue.named(definition("mood").member("cheerful").namedUse(), DataValue.UNIT),
                     "done" to DataValue.BooleanWrapper(true),
                 ),
             )

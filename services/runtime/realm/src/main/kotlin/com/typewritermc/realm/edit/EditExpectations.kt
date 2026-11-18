@@ -136,6 +136,12 @@ internal fun CurrentAuthoringValues.requiredExpectations(
                 links(intent.value.resource)
             }
 
+            is EditIntent.SetTypesWrapper -> {
+                required +=
+                    EditExpectation.createResourceExists(id = intent.value.resource, expected = resource(intent.value.resource) != null)
+                required += EditExpectation.createTypes(resource = intent.value.resource, expected = types(intent.value.resource))
+            }
+
             else -> {
                 unknownVariant(intent)
             }
@@ -162,31 +168,38 @@ internal fun CurrentAuthoringValues.requiredExpectations(
     return required.toList()
 }
 
-internal fun EditExpectation.sameFact(other: EditExpectation): Boolean =
+/**
+ * What fact this expectation guards, regardless of the value it expects: two expectations with equal keys guard the
+ * same fact. As a key, a set of expectations is checked against another in one pass instead of pair by pair.
+ */
+internal fun EditExpectation.factKey(): Any =
     when (this) {
         is EditExpectation.ValueWrapper -> {
-            other is EditExpectation.ValueWrapper && value.at == other.value.at
+            listOf("value", value.at)
         }
 
         is EditExpectation.ResourceWrapper -> {
-            other is EditExpectation.ResourceWrapper && value.id == other.value.id
+            listOf("resource", value.id)
         }
 
         is EditExpectation.ResourceExistsWrapper -> {
-            other is EditExpectation.ResourceExistsWrapper && value.id == other.value.id
+            listOf("resource_exists", value.id)
         }
 
         is EditExpectation.ConfigurationWrapper -> {
-            other is EditExpectation.ConfigurationWrapper && value.at == other.value.at
+            listOf("configuration", value.at)
         }
 
         is EditExpectation.ResourceIdsWrapper -> {
-            other is EditExpectation.ResourceIdsWrapper
+            listOf("resource_ids")
         }
 
         is EditExpectation.LinksWrapper -> {
-            other is EditExpectation.LinksWrapper && value.resource == other.value.resource && value.contract == other.value.contract &&
-                value.direction == other.value.direction
+            listOf("links", value.resource, value.contract, value.direction)
+        }
+
+        is EditExpectation.TypesWrapper -> {
+            listOf("types", value.resource)
         }
 
         else -> {

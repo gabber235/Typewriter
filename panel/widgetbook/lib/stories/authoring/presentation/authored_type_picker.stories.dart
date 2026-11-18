@@ -25,7 +25,7 @@ class _PagePicker extends HookWidget {
         unawaited(
           showCreationConcreteTypePicker(
             context,
-            expected: skir.TypeSelection.createComplete(
+            expected: skir.TypeSelection(
               definition: message.page,
               arguments: const [],
             ),

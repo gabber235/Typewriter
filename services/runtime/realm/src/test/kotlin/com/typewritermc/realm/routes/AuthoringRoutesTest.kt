@@ -78,7 +78,12 @@ val AuthoringRoutesTest by testSuite {
                 encode(edit.copy(expectations = edit.expectations + EditExpectation.UNKNOWN).submitted())
             } to "Unknown edit expectation",
             InvalidCommit("a created record with duplicate field names") { book ->
-                val duplicate = AuthoringRecord(configuration = resources.getValue(book.resource).configuration, fields = duplicateTitles())
+                val duplicate =
+                    AuthoringRecord(
+                        configuration = resources.getValue(book.resource).configuration,
+                        fields = duplicateTitles(),
+                        types = emptyList(),
+                    )
                 encode(edit(EditIntent.createCreateResource(id = ResourceId(value = "copy"), record = duplicate)).submitted())
             } to "Record field title is duplicated",
             InvalidCommit("a nested record with duplicate field names") { book ->
@@ -203,7 +208,7 @@ val AuthoringRoutesTest by testSuite {
         runTest {
             val removed =
                 AuthoringRecord.of(
-                    configuration = TypeSelection.CompleteWrapper(TypeDefinitionId.qualified("removed", "resource").namedUse()),
+                    configuration = TypeSelection.of(TypeDefinitionId.qualified("removed", "resource").namedUse()),
                     fields = mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                 )
             val book = record(name = "book")
@@ -248,7 +253,7 @@ val AuthoringRoutesTest by testSuite {
             withSetup(tutorial) { book ->
                 authoringRoutes().use { wire ->
                     val saved = resources.getValue(book.resource).configuration
-                    val tag = TypeSelection.CompleteWrapper(TagDefinition.id.namedUse())
+                    val tag = TypeSelection.of(TagDefinition.id.namedUse())
 
                     wire
                         .call(

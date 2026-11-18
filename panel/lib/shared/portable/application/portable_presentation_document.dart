@@ -79,7 +79,7 @@ abstract class PortablePresentationDocument
     }
     for (final value in bindings.values) {
       if (value.schema case PartialPortablePresentationBinding(:final selection)
-          when selection is! skir.TypeSelection_pendingWrapper) {
+          when catalog.completeUse(selection) != null) {
         throw ArgumentError.value(
           selection,
           "bindings",

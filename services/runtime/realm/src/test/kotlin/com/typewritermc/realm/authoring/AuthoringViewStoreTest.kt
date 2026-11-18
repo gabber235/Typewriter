@@ -152,7 +152,7 @@ val AuthoringViewStoreTest by testSuite {
                 "count" to DataValue.integer(BigInteger.ONE),
                 "numbers" to DataValue.named(LIST_TYPE.namedUse(arguments), DataValue.listValue(items)),
             )
-        val seed = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), fields))
+        val seed = mutableMapOf(id to AuthoringRecord.of(TypeSelection.of(TEST_TYPE.namedUse()), fields))
         RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), seed).use { realm ->
             seed.clear()
             fields["name"] = DataValue.StringValueWrapper("Changed")
@@ -178,7 +178,7 @@ val AuthoringViewStoreTest by testSuite {
                     "count" to DataValue.integer(BigInteger.TWO),
                     "numbers" to DataValue.named(LIST_USE, DataValue.listValue(items)),
                 )
-            val upserts = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), fields))
+            val upserts = mutableMapOf(id to AuthoringRecord.of(TypeSelection.of(TEST_TYPE.namedUse()), fields))
             val staged = lease.stagedView(upserts)
 
             upserts.clear()

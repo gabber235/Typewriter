@@ -54,7 +54,7 @@ final class TagGraph {
           ),
           _field(type, "next", listOfResourcesTemplate),
         ],
-        abstract_: false,
+        form: skir.RecordForm.concrete,
       ),
       fields: [
         _effective(
@@ -81,6 +81,7 @@ final class TagGraph {
                 key: listParameter,
                 name: "T",
                 bounds: const [],
+                derived: false,
               ),
             ],
           ),
@@ -376,9 +377,9 @@ skir.AuthoringResource _resource(
 ) => skir.AuthoringResource(
   id: id,
   content: skir.AuthoringRecord(
-    configuration: skir.TypeSelection.createComplete(
-      definition: type,
-      arguments: const [],
+    types: const [],
+    configuration: selectionOfUse(
+      skir.NamedTypeUse(definition: type, arguments: const []),
     ),
     fields: [
       skir.FieldValue(

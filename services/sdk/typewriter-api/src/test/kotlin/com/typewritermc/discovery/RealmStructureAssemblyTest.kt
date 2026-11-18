@@ -24,6 +24,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
@@ -71,7 +72,7 @@ val RealmStructureAssemblyTest by testSuite {
             assemble(
                 structure() +
                     listOf(
-                        resource(member, abstract = true),
+                        resource(member, form = RecordForm.OPEN),
                         resource(concrete, parents = listOf(member)),
                         OwnedTypeDeclaration(origin, recordType(value)),
                     ),
@@ -88,7 +89,7 @@ val RealmStructureAssemblyTest by testSuite {
             TypeDefinition(
                 id = generic,
                 parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = generic, index = 0), name = "T")),
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                 parents = listOf(RealmSectionDefinition.id.namedTemplate()),
             )
 

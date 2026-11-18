@@ -6,9 +6,11 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.realm.authoring.EmptyProviders
 import com.typewritermc.realm.authoring.TestCatalogLease
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.code
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.of
 import com.typewritermc.types.requireValid
+import com.typewritermc.types.template
 import skirout.editor.v1.catalog.ConfigurationRecipe
 import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.catalog.EndpointCardinality
@@ -20,6 +22,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 
 /** The catalog a [RealmFixture] activates on each start. */
@@ -70,14 +73,14 @@ fun oneToOneRelation(
         EndpointDefinition(
             id = first,
             slot = EndpointSlot.FIRST,
-            resource = firstResource,
+            resource = ResourceMatchTemplate.TypeWrapper(firstResource.template),
             cardinality = EndpointCardinality.ONE,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
             id = second,
             slot = EndpointSlot.SECOND,
-            resource = secondResource,
+            resource = ResourceMatchTemplate.TypeWrapper(secondResource.template),
             cardinality = EndpointCardinality.ONE,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
@@ -131,10 +134,20 @@ private fun endpoint(endpoint: EndpointDefinition): EndpointDefinition =
     )
 
 /**
- * Counts the leases still open on the catalog this Realm of a [DefinitionCatalog] runs now; the count stays readable
- * after the Realm is closed, so a test can prove that closing released every lease.
+ * Counts the leases still open on the catalog this Realm runs now; the count stays readable after the Realm is closed,
+ * so a test can prove that closing released every lease.
  */
-internal fun RealmFixture.openCatalogLeases(): () -> Int {
-    val lease = views.read { it.catalog } as TestCatalogLease
-    return { lease.openCount }
-}
+internal fun RealmFixture.openCatalogLeases(): () -> Int =
+    when (val lease = views.read { it.catalog.code }) {
+        is TestCatalogLease -> {
+            { lease.openCount }
+        }
+
+        is CountedCatalogLease -> {
+            { lease.openCount }
+        }
+
+        else -> {
+            error("The catalog lease ${lease::class.simpleName} counts no leases.")
+        }
+    }

@@ -26,6 +26,7 @@ import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
@@ -112,10 +113,10 @@ class CheckedPresentationTemplate internal constructor(
     internal fun payloadType(): TypeTemplate = payloadResolver(type)
 }
 
-/** A link type: the endpoint of its relation on the side of the resource holding it, and its target type. */
+/** A link type: the endpoint of its relation on the side of the resource holding it, and the resources it may target. */
 internal data class PresentationLinkTemplate(
     val endpoint: EndpointId,
-    val target: TypeTemplate,
+    val target: ResourceMatchTemplate,
 )
 
 internal data class PresentationNestedTemplate(

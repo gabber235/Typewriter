@@ -37,14 +37,14 @@ fun EditExpectation.requireValid(): EditExpectation =
         }
 
         is EditExpectation.ResourceExistsWrapper -> {
-            apply { value.id.requireValid() }
+            value.id.requireValid()
+            this
         }
 
         is EditExpectation.ConfigurationWrapper -> {
-            apply {
-                value.at.requireValid()
-                value.expected?.requireValid()
-            }
+            value.at.requireValid()
+            value.expected?.requireValid()
+            this
         }
 
         is EditExpectation.ResourceIdsWrapper -> {
@@ -56,6 +56,11 @@ fun EditExpectation.requireValid(): EditExpectation =
             value.contract.requireValid()
             require(value.direction != TraversalDirection.UNKNOWN) { "Unknown traversal direction." }
             EditExpectation.links(value.resource, value.contract, value.direction, value.expected.map { it.requireValid() })
+        }
+
+        is EditExpectation.TypesWrapper -> {
+            value.resource.requireValid()
+            EditExpectation.createTypes(resource = value.resource, expected = value.expected.map { it.requireValid() })
         }
 
         else -> {
@@ -133,6 +138,14 @@ fun EditIntent.requireValid(): EditIntent =
             apply {
                 value.resource.requireValid()
                 value.configuration.requireValid()
+            }
+        }
+
+        // The shape only: whether a creator may declare these is the catalog overlay's judgement at commit.
+        is EditIntent.SetTypesWrapper -> {
+            apply {
+                value.resource.requireValid()
+                value.types.forEach { it.requireValid() }
             }
         }
 

@@ -10,7 +10,7 @@ import com.typewritermc.types.TypeDisplay
 import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.RelationContract
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import kotlin.reflect.KClass
@@ -20,6 +20,10 @@ interface GeneratedTypeProvider {
     val nativeClass: KClass<*>?
         get() = null
 
+    /** The name the source gives the type, its Kotlin class name; null only for providers codegen does not own. */
+    val name: String?
+        get() = null
+
     /** The complete display codegen fills for every declared type; null only for providers codegen does not own. */
     val display: TypeDisplay?
         get() = null
@@ -27,6 +31,10 @@ interface GeneratedTypeProvider {
     /** The search scope keyword of a resource type, or null for a type that is not a resource. */
     val searchKey: String?
         get() = null
+
+    /** The unit case definitions of an enum, which have no provider of their own. */
+    val cases: List<TypeDefinition>
+        get() = emptyList()
 }
 
 interface GeneratedRelationProvider {
@@ -49,7 +57,7 @@ interface GeneratedPresentationProvider : PresentationProvider {
 
 /** One authored resource display: the resources it applies to and its formulas, built on demand at assembly. */
 interface GeneratedResourceDisplayProvider {
-    val target: ResourceTarget
+    val target: ResourceMatch
 
     fun formulas(): DisplayFormulas
 }

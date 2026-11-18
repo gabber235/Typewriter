@@ -14,6 +14,19 @@ extension PortableTypeUseTemplate on skir.TypeUse {
       definition: value.definition,
       arguments: value.arguments.map((argument) => argument.portableTemplate),
     ),
+    skir.TypeUse_functionWrapper(:final value) =>
+      skir.TypeTemplate.createFunction(
+        context: value.context.map(_parameterTemplate),
+        parameters: value.parameters.map(_parameterTemplate),
+        result: value.result.portableTemplate,
+      ),
     skir.TypeUse_unknown() => skir.TypeTemplate.unknown,
   };
 }
+
+skir.FunctionParameterTemplate _parameterTemplate(
+  skir.FunctionParameterUse parameter,
+) => skir.FunctionParameterTemplate(
+  name: parameter.name,
+  type: parameter.type.portableTemplate,
+);

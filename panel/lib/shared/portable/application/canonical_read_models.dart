@@ -24,12 +24,12 @@ const _maxReadDepth = 512;
 ///
 /// - A Skir struct is a record. Its fields are the Skir fields in field number
 ///   order, keyed by their Skir names.
-/// - A Skir enum whose variants are all constants is an enumeration whose cases
-///   are the variant names.
-/// - Any other Skir enum is an abstract record without fields. Each variant is
-///   a concrete record with the enum as its parent; a wrapper variant has one
-///   field, `value`, holding the wrapped value, and a constant variant has
-///   none.
+/// - A Skir enum whose variants are all constants is an enum: a closed record
+///   without fields whose cases are unit members named by the variant names.
+/// - Any other Skir enum is a closed record without fields that lists its
+///   variants. Each variant is a concrete record with the enum as its parent;
+///   a wrapper variant has one field, `value`, holding the wrapped value, and a
+///   constant variant has none.
 /// - A record is identified by the qualified type id
 ///   ([canonicalReadNamespace], record id) at revision 1, where the record id
 ///   is Skir's own `<module path>:<qualified name>`, for example
@@ -58,7 +58,13 @@ final class CanonicalReadModels {
         skir.RepresentationTemplate_recordWrapper(:final value) => value.fields,
         _ => const <skir.FieldDeclaration>[],
       };
+      final name =
+          _frameworkReadNames[definition.id] ??
+          definition.id.memberName ??
+          _readIdName(definition.id).split(":").last;
       _published[definition.id] = skir.PublishedType(
+        name: name,
+        extension_: "",
         placementField: null,
         definition: definition,
         status: skir.DeclarationStatus.ready,
@@ -72,10 +78,7 @@ final class CanonicalReadModels {
             ),
         ],
         ancestorTemplates: definition.parents,
-        display: defaultTypeDisplay(
-          _frameworkReadNames[definition.id] ??
-              _readIdName(definition.id).split(":").last,
-        ),
+        display: defaultTypeDisplay(name),
         searchKey: null,
       );
     }
@@ -313,10 +316,10 @@ final class CanonicalReadModels {
         final variant = _readVariantOf(descriptor, value);
         return skir.DataValue.createNamed(
           actualType: skir.NamedTypeUse(
-            definition: record.id,
+            definition: record.id.member(variant.name),
             arguments: const [],
           ),
-          payload: skir.DataValue.wrapEnumCase(variant.name),
+          payload: skir.DataValue.unit,
         );
       case _UnionRecord():
         final variant = _readVariantOf(descriptor, value);
@@ -400,13 +403,14 @@ final class CanonicalReadModels {
             ),
         };
       case _EnumerationRecord():
-        _expectReadType(actual, record.id);
-        final payload = named.payload;
-        if (payload is! skir.DataValue_enumCaseWrapper ||
-            !record.cases.contains(payload.value)) {
+        final caseName = actual.memberName;
+        if (caseName == null || actual != record.id.member(caseName)) {
+          throw FormatException("Expected a case of ${_readIdName(record.id)}");
+        }
+        if (!record.cases.contains(caseName)) {
           throw const FormatException("Unknown canonical enum case");
         }
-        return payload.value;
+        return caseName;
       case _UnionRecord():
         final read = record.variants
             .where((variant) => variant.id == actual)
@@ -446,7 +450,12 @@ final class _StructRecord extends _ReadRecord {
 
   @override
   List<skir.TypeDefinition> get definitions => [
-    _readRecordDefinition(id, fields, parent: null, abstract: false),
+    _readRecordDefinition(
+      id,
+      fields,
+      parent: null,
+      form: skir.RecordForm.concrete,
+    ),
   ];
 }
 
@@ -456,14 +465,21 @@ final class _EnumerationRecord extends _ReadRecord {
 
   @override
   List<skir.TypeDefinition> get definitions => [
-    skir.TypeDefinition(
-      id: id,
-      parameters: const [],
-      representation: skir.RepresentationTemplate.createEnumeration(
-        cases: [for (final key in cases) skir.EnumVariant(key: key)],
-      ),
-      parents: const [],
+    _readRecordDefinition(
+      id,
+      const [],
+      parent: null,
+      form: _closed([for (final name in cases) id.member(name)]),
     ),
+    for (final name in cases)
+      skir.TypeDefinition(
+        id: id.member(name),
+        parameters: const [],
+        representation: skir.RepresentationTemplate.createScalar(
+          kind: skir.ScalarKind.unit,
+        ),
+        parents: [skir.NamedTypeTemplate(definition: id, arguments: const [])],
+      ),
   ];
 }
 
@@ -473,13 +489,18 @@ final class _UnionRecord extends _ReadRecord {
 
   @override
   List<skir.TypeDefinition> get definitions => [
-    _readRecordDefinition(id, const [], parent: null, abstract: true),
+    _readRecordDefinition(
+      id,
+      const [],
+      parent: null,
+      form: _closed([for (final variant in variants) variant.id]),
+    ),
     for (final variant in variants)
       _readRecordDefinition(
         variant.id,
         [if (variant.value case final value?) (_valueField, value)],
         parent: id,
-        abstract: false,
+        form: skir.RecordForm.concrete,
       ),
   ];
 }
@@ -557,6 +578,7 @@ final _frameworkReadDefinitions = List<skir.TypeDefinition>.unmodifiable(
           key: skir.ParameterKey(owner: _readListId, index: 0),
           name: "T",
           bounds: const [],
+          derived: false,
         ),
       ],
       representation: skir.RepresentationTemplate.createSequence(
@@ -581,19 +603,19 @@ final _frameworkReadDefinitions = List<skir.TypeDefinition>.unmodifiable(
       expressionIconUse.definition,
       const [],
       parent: null,
-      abstract: true,
+      form: _closed([_iconifyUse.definition, _svgIconUse.definition]),
     ),
     _readRecordDefinition(
       _iconifyUse.definition,
       [("value", skir.TypeTemplate.wrapScalar(skir.ScalarKind.text))],
       parent: expressionIconUse.definition,
-      abstract: false,
+      form: skir.RecordForm.concrete,
     ),
     _readRecordDefinition(
       _svgIconUse.definition,
       [("source", skir.TypeTemplate.wrapScalar(skir.ScalarKind.text))],
       parent: expressionIconUse.definition,
-      abstract: false,
+      form: skir.RecordForm.concrete,
     ),
   ]..sort((a, b) => _readIdName(a.id).compareTo(_readIdName(b.id))),
 );
@@ -617,6 +639,8 @@ String _readRecordId(skir.ReflectiveRecordDescriptor<dynamic> descriptor) =>
 String _readIdName(skir.TypeDefinitionId id) => switch (id.typeId) {
   skir.TypeId_qualifiedWrapper(:final value) => value.name,
   skir.TypeId_declaredWrapper(:final value) => value.value,
+  skir.TypeId_memberWrapper(:final value) =>
+    "${_readIdName(skir.TypeDefinitionId(typeId: value.owner, revision: id.revision))}#${value.name}",
   _ => "",
 };
 
@@ -635,7 +659,7 @@ skir.TypeDefinition _readRecordDefinition(
   skir.TypeDefinitionId id,
   List<(String, skir.TypeTemplate)> fields, {
   required skir.TypeDefinitionId? parent,
-  required bool abstract,
+  required skir.RecordForm form,
 }) => skir.TypeDefinition(
   id: id,
   parameters: const [],
@@ -649,13 +673,21 @@ skir.TypeDefinition _readRecordDefinition(
           hasConstructorDefault: false,
         ),
     ],
-    abstract_: abstract,
+    form: form,
   ),
   parents: [
     if (parent != null)
       skir.NamedTypeTemplate(definition: parent, arguments: const []),
   ],
 );
+
+skir.RecordForm _closed(List<skir.TypeDefinitionId> cases) =>
+    skir.RecordForm.createClosed(
+      cases: [
+        for (final id in cases)
+          skir.NamedTypeTemplate(definition: id, arguments: const []),
+      ],
+    );
 
 List<skir.ReflectiveStructField<dynamic, dynamic, dynamic>> _readFields(
   skir.ReflectiveStructDescriptor<dynamic, dynamic> descriptor,

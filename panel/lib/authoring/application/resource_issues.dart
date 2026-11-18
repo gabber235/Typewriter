@@ -118,8 +118,8 @@ abstract class ResourceIssues with _$ResourceIssues {
           ),
         ),
       );
-      switch (record.configuration) {
-        case skir.TypeSelection_completeWrapper(:final value):
+      switch (document.catalog.completeUse(record.configuration)) {
+        case final value?:
           if (!document.catalog.isReadyApplication(value)) {
             local(
               "unresolved_type",
@@ -145,12 +145,16 @@ abstract class ResourceIssues with _$ResourceIssues {
               problem.path,
             );
           }
-        default:
+        case null when !document.catalog.isFullyChosen(record.configuration):
           local(
             "pending_type",
             "Resource ${id.value} has incomplete type arguments.",
             skir.ValuePath(segments: const []),
           );
+        case null:
+        // Every chosen argument is there and the rest are derived: the type
+        // is the resource's bound type, which this panel does not resolve, so
+        // there is nothing it can inspect.
       }
       for (final check in AuthoredRuleProjection.evaluate(
         draft: document,
@@ -232,8 +236,7 @@ Iterable<skir.Diagnostic> checkIssues(
 
 extension DiagnosticEvidenceApplicability on skir.DiagnosticEvidence {
   bool appliesTo(AuthoringDocument working) =>
-      catalog == working.generation &&
-      working.facts.conflicts(expectations).isEmpty;
+      catalog == working.generation && working.facts.holds(evidence);
 }
 
 extension PublicationIssueProjection on RealmPublicationView {
@@ -264,7 +267,7 @@ extension PublicationIssueProjection on RealmPublicationView {
               document != null &&
               set.status == skir.FindingStatus.current &&
               set.ticket.catalog == document.generation &&
-              document.facts.conflicts(set.expectations).isEmpty,
+              document.facts.holds(set.evidence),
         );
       }
     }

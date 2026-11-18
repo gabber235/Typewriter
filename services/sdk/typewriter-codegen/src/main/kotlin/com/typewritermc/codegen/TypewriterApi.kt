@@ -17,10 +17,22 @@ internal object TypewriterApi {
     private const val CONFIGURATION = "com.typewritermc.configuration"
     private const val DISCOVERY = "com.typewritermc.discovery"
     private const val EXPRESSION = "com.typewritermc.expression"
+    private const val FORMULA = "com.typewritermc.formula"
     private const val OPERATIONS = "com.typewritermc.operations"
     private const val PRESENTATION = "com.typewritermc.presentation"
     private const val SETUP = "com.typewritermc.setup"
     private const val TYPES = "com.typewritermc.types"
+
+    // Formula
+    val BindParameter = ClassName(FORMULA, "BindParameter")
+    val Formula = ClassName(FORMULA, "Formula")
+    val FormulaCall = ClassName(FORMULA, "FormulaCall")
+    val FormulaFunction = ClassName(FORMULA, "FormulaFunction")
+    val GeneratedFormulaProvider = ClassName(FORMULA, "GeneratedFormulaProvider")
+    val GeneratedDynamicProvider = ClassName(FORMULA, "GeneratedDynamicProvider")
+    val Dynamics = ClassName(FORMULA, "Dynamics")
+    val NotProvided = ClassName(FORMULA, "NotProvided")
+    val Var = ClassName(FORMULA, "Var")
 
     // Authoring
     val AppliedNativeArguments = ClassName(AUTHORING, "AppliedNativeArguments")
@@ -56,6 +68,7 @@ internal object TypewriterApi {
     val listDraftProjection = MemberName(AUTHORING, "listDraftProjection")
     val mapDraftProjection = MemberName(AUTHORING, "mapDraftProjection")
     val nativeReadProjection = MemberName(AUTHORING, "nativeReadProjection")
+    val unboundReadProjection = MemberName(AUTHORING, "unboundReadProjection")
     val nullableReadProjection = MemberName(AUTHORING, "nullableReadProjection")
     val read = MemberName(AUTHORING, "read", isExtension = true)
     val representationReadProjection = MemberName(AUTHORING, "representationReadProjection")
@@ -83,9 +96,6 @@ internal object TypewriterApi {
     val DraftType = ClassName(CHECKING, "DraftType")
     val RealmCheckProvider = ClassName(CHECKING, "RealmCheckProvider")
     val RealmChecks = ClassName(CHECKING, "RealmChecks")
-    val ResourceTypeMatch = ClassName(CHECKING, "ResourceTypeMatch")
-    val ResourceTypeMatchApplication = ResourceTypeMatch.nestedClass("Application")
-    val ResourceTypeMatchDefinition = ResourceTypeMatch.nestedClass("Definition")
     val TypedSelection = ClassName(CHECKING, "TypedSelection")
     val compileSelection = MemberName(CHECKING, "compileSelection")
 

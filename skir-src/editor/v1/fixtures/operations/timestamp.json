@@ -792,12 +792,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Wide"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Wide"}
+                  "payload": "unit"
                 }
               }
             }
@@ -823,12 +823,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Abbreviated"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Abbreviated"}
+                  "payload": "unit"
                 }
               }
             }
@@ -854,12 +854,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Narrow"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Narrow"}
+                  "payload": "unit"
                 }
               }
             }
@@ -885,12 +885,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Wide"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Wide"}
+                  "payload": "unit"
                 }
               }
             }
@@ -916,12 +916,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Wide"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Wide"}
+                  "payload": "unit"
                 }
               }
             }
@@ -947,12 +947,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Wide"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Wide"}
+                  "payload": "unit"
                 }
               }
             }
@@ -978,12 +978,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Wide"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Wide"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1009,12 +1009,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Wide"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Wide"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1040,12 +1040,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Abbreviated"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Abbreviated"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1071,12 +1071,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Narrow"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Narrow"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1102,12 +1102,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Wide"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Wide"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1133,12 +1133,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Wide"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Wide"}
+                  "payload": "unit"
                 }
               }
             }
@@ -1164,12 +1164,12 @@
                 "value": {
                   "actual_type": {
                     "definition": {
-                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "type_id": {"kind": "member", "value": {"owner": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}}, "name": "Wide"}},
                       "revision": 1
                     },
                     "arguments": []
                   },
-                  "payload": {"kind": "enum_case", "value": "Wide"}
+                  "payload": "unit"
                 }
               }
             }

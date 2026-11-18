@@ -42,16 +42,16 @@ class SpokenDialogueEntry(
 
 ### 3. Core holds the layers
 
-`Configuration` is one root resource type, like `Tag` or `Book`. Its `C` is the picked type argument, as on `Definition<T>`. Every layer is the same `Partial<C>`: `C`'s fields, each nullable.
+`Configuration` is one root resource type, like `Tag` or `Book`. Its `T` is the picked type argument, as on `Definition<T>`. Every layer is the same `Partial<T>`: `C`'s fields, each nullable.
 
 ```kotlin
-data class Configuration<C>(val values: Partial<C>) : Resource
+data class Configuration<T>(val values: Partial<T>) : Resource
 
-data class Configured<C>(
-    val selected: Ref<Configuration<C>>? = null,
-    val overrides: Partial<C> = Partial.empty,
+data class Configured<T>(
+    val selected: Ref<Configuration<T>>? = null,
+    val overrides: Partial<T> = Partial.empty,
 ) {
-    val value: C   // filled at publish
+    val value: T   // filled at publish
 }
 
 // Book, Page, and RealmRoot.
@@ -203,7 +203,7 @@ struct NullableControl {
 - **Function field with a default.** Function fields are designed ([formula-language.md](formula-language.md#type-checking)), but not with a default in Kotlin.
 - **Computations.** They exist, but no one confirmed that a presentation can read one's result.
 - **`item` role.** It is documented for resources, so using it for a value needs checking.
-- **A record's own look.** A presentation written for `C` must also work over `Partial<C>`.
+- **A record's own look.** A presentation written for `T` must also work over `Partial<T>`.
 - **`group`.** `PresentationDescriptor` has no such field yet, and the renderer must resolve each field's presentation first.
 - **Cards grouped by type.** Not checked against the grid layout.
-- **Name clash.** "Configuration" already means something in code (`AuthoringRecord.configuration`, `ConfigurationProvider`) and in `Tick<C>`. One of them needs renaming in the plan.
+- **Name clash.** "Configuration" already means something in code (`AuthoringRecord.configuration`, `ConfigurationProvider`) and in `Tick<Config>`. One of them needs renaming in the plan.

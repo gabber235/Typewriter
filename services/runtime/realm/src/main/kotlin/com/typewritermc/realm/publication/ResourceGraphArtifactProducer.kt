@@ -20,7 +20,7 @@ internal object ResourceGraphArtifactProducer : CompiledArtifactProducer {
     override fun roots(view: AuthoringView): Set<CompilationRoot> =
         view.resources.entries
             .asSequence()
-            .filter { (_, record) -> record.isCompilationUnit(view.catalog.checked) }
+            .filter { (resource, record) -> record.isCompilationUnit(resource, view.catalog.checked) }
             .map { (resource, _) -> CompilationRoot(projection = projection, resource = resource) }
             .sortedBy { root -> root.resource.value }
             .toCollection(linkedSetOf())

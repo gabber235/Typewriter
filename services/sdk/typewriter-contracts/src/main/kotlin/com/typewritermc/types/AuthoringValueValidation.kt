@@ -6,7 +6,6 @@ import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.diagnostic.InitializationDiagnostic
 import skirout.editor.v1.diagnostic.ValueProblem
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.FieldValue
 import skirout.editor.v1.type_catalog.TypeSelection
@@ -18,41 +17,36 @@ import skirout.editor.v1.type_catalog.TypeSelection
  */
 
 /**
- * Checks the selection and every field value with requirePortable and rejects a field name that appears twice.
- * Returns the canonical form: fields in name order and canonical values.
+ * Checks the selection, every field value with requirePortable and every declared type, and rejects a field name that
+ * appears twice. Returns the canonical form: fields in name order and canonical values. Whether a declaration is one a
+ * creator may set is the catalog overlay's judgement, not this shape check.
  */
 fun AuthoringRecord.requireValid(): AuthoringRecord {
+    types.forEach { it.requireValid() }
     val selection = configuration.requireValid()
     val checked = fields.map { field -> FieldValue(name = field.name, value = field.value.requirePortable()) }.sortedBy { it.name }
     checked.zipWithNext { previous, next -> require(previous.name != next.name) { "Record field ${next.name} is duplicated." } }
     val unchanged =
         selection === configuration && checked.indices.all { checked[it].value === fields[it].value && checked[it].name == fields[it].name }
-    return if (unchanged) this else AuthoringRecord(configuration = selection, fields = checked)
+    return if (unchanged) this else AuthoringRecord(configuration = selection, fields = checked, types = types)
 }
 
-fun TypeSelection.requireValid(): TypeSelection =
-    apply {
-        when (this) {
-            is TypeSelection.CompleteWrapper -> {
-                value.requireValid()
-            }
-
-            is TypeSelection.PendingWrapper -> {
-                value.definition.requireValid()
-                value.arguments.forEach { argument ->
-                    when (argument) {
-                        is ArgumentSelection.ChosenWrapper -> argument.value.requireValid()
-                        ArgumentSelection.UNFILLED -> Unit
-                        else -> throw IllegalArgumentException("Unknown argument selection variant.")
-                    }
-                }
-            }
-
-            else -> {
-                throw IllegalArgumentException("Unknown type selection variant.")
-            }
-        }
+/**
+ * Checks the definition and every chosen argument, and rejects a negative parameter index or one chosen twice. Returns
+ * the canonical form: arguments in parameter order.
+ */
+fun TypeSelection.requireValid(): TypeSelection {
+    definition.requireValid()
+    arguments.forEach { argument ->
+        require(argument.parameter >= 0) { "Type argument parameter ${argument.parameter} is negative." }
+        argument.type.requireValid()
     }
+    val ordered = arguments.sortedBy { it.parameter }
+    ordered.zipWithNext { previous, next ->
+        require(previous.parameter != next.parameter) { "Type argument parameter ${next.parameter} is chosen twice." }
+    }
+    return if (ordered == arguments.toList()) this else copy(arguments = ordered)
+}
 
 fun LinkOccurrenceId.requireValid(): LinkOccurrenceId =
     apply {

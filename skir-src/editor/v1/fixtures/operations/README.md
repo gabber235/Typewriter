@@ -74,13 +74,13 @@ above. A case without `reads` is invalid.
 | bytes | `{"bytes": "<base64>"}` |
 | timestamp | `{"timestamp": "2024-01-02T03:04:05.000Z"}` |
 | duration | `{"duration": "90500"}` (milliseconds) |
-| enum case | `{"enum_case": "Floor"}` |
 | record | `{"record": {"name": <value>}}` (fields compare as a map) |
 | list, set | `{"list": [{"id": "a", "value": <value>}]}`, same for `set` |
 | map | `{"map": [{"id": "r1", "key": <value>, "value": <value>}]}` |
 | link | `{"link": {"endpoint": "<endpoint>", "resource": "<resource>"}}` |
 | named | `{"named": {"declared": "<32 hex>", "revision": 1, "arguments": [<TypeUse>], "payload": <value>}}` |
 | named (qualified) | `{"named": {"namespace": "...", "name": "...", "revision": 1, "arguments": [], "payload": <value>}}` |
+| enum case | `{"named": {"declared": "<32 hex>", "member": "Floor", "revision": 1, "arguments": [], "payload": {"unit": true}}}`: a named unit whose actual type is the case `member` of the enum the other keys name |
 
 Item ids are part of the result: list, set and map results compare in order, with their ids.
 

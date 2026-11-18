@@ -25,6 +25,7 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckTicket
@@ -36,10 +37,10 @@ import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.publication.PublicationStatus
 import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
@@ -174,11 +175,9 @@ internal class PublicationFixture(
                             rule = RuleId(origin = RuleOrigin(owner = PUBLICATION_PAGE, ordinal = 0), localIndex = rule),
                             location = location,
                         ),
-                    incarnation = "external_input",
-                    execution = CheckExecutionId(value = "execution"),
                     catalog = views.read { it.catalog.generation },
                 ),
-            expectations = expectations,
+            evidence = expectations.map(CheckEvidence::FactWrapper),
             outcome = CheckOutcome.FINISHED,
             findings = listOf(compilationDiagnostic("external_check", "An external input requires attention.", location = location)),
             status = status,
@@ -197,7 +196,7 @@ internal class PublicationFixture(
 /** A complete publication page whose text value is [value]. */
 internal fun publicationPageRecord(value: String) =
     AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(PUBLICATION_PAGE_USE),
+        TypeSelection.of(PUBLICATION_PAGE_USE),
         mapOf("value" to DataValue.StringValueWrapper(value)),
     )
 
@@ -210,7 +209,7 @@ internal val PUBLICATION_DEFINITIONS =
     listOf(
         TypeDefinition.partial(
             id = CompilationUnitDefinition.id,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
         ),
         TypeDefinition.partial(
             id = PUBLICATION_PAGE,
@@ -223,7 +222,7 @@ internal val PUBLICATION_DEFINITIONS =
                                 type = ScalarKind.TEXT.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
             parents = listOf(CompilationUnitDefinition.id.namedTemplate()),
         ),

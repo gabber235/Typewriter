@@ -1,5 +1,6 @@
 package com.typewritermc.types.codegen.emit
 
+import com.google.devtools.ksp.symbol.ClassKind
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -142,22 +143,22 @@ private fun SdkDeclaration.rootConfiguration(): RootConfiguration =
             )
         }
 
-        is RepresentationTemplate.EnumerationWrapper -> {
-            RootConfiguration(
-                scope = Api.EnumField.parameterizedBy(starType),
-                kind = RepresentationKind.ENUMERATION,
-                expected = template.template,
-                expressions = Api.EnumExpressions.factory(),
-            )
-        }
-
         else -> {
-            RootConfiguration(
-                scope = Api.RecordField.parameterizedBy(starType, names.expressions.parameterizedOrSelf(typeVariables.map { STAR })),
-                kind = RepresentationKind.RECORD,
-                expected = template.template,
-                expressions = names.expressionsFactory,
-            )
+            if (source.classKind == ClassKind.ENUM_CLASS) {
+                RootConfiguration(
+                    scope = Api.EnumField.parameterizedBy(starType),
+                    kind = RepresentationKind.ENUMERATION,
+                    expected = template.template,
+                    expressions = Api.EnumExpressions.factory(),
+                )
+            } else {
+                RootConfiguration(
+                    scope = Api.RecordField.parameterizedBy(starType, names.expressions.parameterizedOrSelf(typeVariables.map { STAR })),
+                    kind = RepresentationKind.RECORD,
+                    expected = template.template,
+                    expressions = names.expressionsFactory,
+                )
+            }
         }
     }
 

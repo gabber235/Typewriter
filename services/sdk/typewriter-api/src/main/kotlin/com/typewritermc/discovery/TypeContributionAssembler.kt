@@ -26,11 +26,13 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.catalog.of
+import com.typewritermc.types.definition
 import com.typewritermc.types.entries
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.immutableMapCopy
+import com.typewritermc.types.isInstantiable
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.substitute
 import com.typewritermc.types.template
@@ -64,8 +66,9 @@ import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.ValuePath
 
 /**
- * One contributed type declaration. Codegen supplies the complete [display] of every declared type and the
- * [searchKey] of every resource type; a declaration without a display publishes one derived from its type id.
+ * One contributed type declaration. Codegen supplies the source [name] and complete [display] of every declared type
+ * and the [searchKey] of every resource type; a declaration without a name or display publishes one derived from its
+ * type id.
  */
 data class OwnedTypeDeclaration(
     val origin: ProviderOrigin,
@@ -73,6 +76,7 @@ data class OwnedTypeDeclaration(
     val display: TypeDisplay? = null,
     val nativeClass: kotlin.reflect.KClass<*>? = null,
     val searchKey: String? = null,
+    val name: String? = null,
 )
 
 data class CatalogAssemblyContext(
@@ -103,6 +107,8 @@ data class CatalogAssembly(
     val operations: com.typewritermc.operations.OperationCatalog = com.typewritermc.operations.OperationCatalog(),
     val callbackFailures: List<CatalogCallbackFailure> = emptyList(),
     val displays: com.typewritermc.authoring.ResourceDisplayCatalog = com.typewritermc.authoring.ResourceDisplayCatalog(),
+    /** What the dynamic providers registered at load: their hooks, their binds, and the registrations load rejected. */
+    val dynamics: CollectedDynamics = CollectedDynamics.NONE,
 ) {
     /** The published relations. */
     val relations: List<RelationContract> get() = editorCatalog.relations
@@ -126,7 +132,7 @@ sealed interface CatalogCallback {
     ) : CatalogCallback
 
     data class Display(
-        val target: skirout.editor.v1.type_catalog.ResourceTarget,
+        val target: skirout.editor.v1.type_catalog.ResourceMatch,
     ) : CatalogCallback
 }
 
@@ -148,7 +154,9 @@ data class CatalogCallbackFailure(
  */
 fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssembly {
     val standardDeclarations = StandardTypes.definitions.map { OwnedTypeDeclaration(STANDARD_TYPE_ORIGIN, it) }
-    val assembledDeclarations = standardDeclarations + declarations
+    // Binds decide which parameters are computed, so they register before any catalog reads a definition.
+    val collectedDynamics = collectDynamics(dynamics, declarations)
+    val assembledDeclarations = standardDeclarations + declarations.map { it.withBinds(collectedDynamics.bound) }
     val definitions = assembledDeclarations.map(OwnedTypeDeclaration::definition)
     val declarationGroups = assembledDeclarations.groupBy { it.definition.id }
     val definitionIndex = declarationGroups.mapNotNull { (id, owned) -> owned.singleOrNull()?.definition?.let { id to it } }.toMap()
@@ -176,7 +184,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         }
     val symbolicDiagnostics =
         definitionIndex.values.flatMap { definition -> definition.templateFields(definitionIndex).diagnostics }
-    val providerRegistry = ImmutableOwnedProviderRegistry(configurations, presentations, nativeBindings, checks)
+    val providerRegistry = ImmutableOwnedProviderRegistry(configurations, presentations, nativeBindings, checks, dynamics, formulas)
     val structural = DefaultCheckedCatalog(context.generation, definitions, quarantine = reservedDiagnostics)
     val resourceTypes = assembledDeclarations.filter { it.searchKey != null }.mapTo(linkedSetOf()) { it.definition.id }
     val publishedRelations = (relations + context.relations).distinctBy(RelationContract::id)
@@ -265,6 +273,11 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                 display = (owned.first().display ?: id.derivedDisplay()).toWire(),
                 searchKey = scopeKeys[id]?.takeUnless { id in conflictingKeys },
                 placementField = placementField,
+                name = owned.first().name ?: id.derivedName(),
+                extension =
+                    owned
+                        .first()
+                        .origin.artifact.value,
             )
         }
     val publishedPresentations =
@@ -325,6 +338,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             (configurationFailures.map { it.evidence } + materialCollection.callbackFailures + displayCollection.callbackFailures)
                 .immutableListCopy(),
         displays = com.typewritermc.authoring.ResourceDisplayCatalog(displayCollection.displays, published),
+        dynamics = collectedDynamics,
     )
 }
 
@@ -340,11 +354,13 @@ private fun realmStructureDiagnostics(
     relations: List<RelationContract>,
     catalog: CheckedCatalog,
 ): List<DeclarationDiagnostic> {
+    // A member endpoint naming every resource owns every type.
     val members = relations.filter { it.ownsResources }.map { it.second.resource.definition }
     return declarations
         .filter {
             it.definition.id in resourceTypes &&
-                (it.definition.representation as? RepresentationTemplate.RecordWrapper)?.value?.abstract_ == false
+                it.definition.representation is RepresentationTemplate.RecordWrapper &&
+                it.definition.representation.isInstantiable()
         }.mapNotNull { owned ->
             val id = owned.definition.id
             val origins = listOf(DeclarationOrigin(owner = owned.origin.owner))
@@ -357,7 +373,7 @@ private fun realmStructureDiagnostics(
                     DeclarationDiagnostic.of(id, "generic_realm_section", origins)
                 }
 
-                members.none { member -> catalog.isNominalSubtype(id, member) } -> {
+                members.none { member -> member == null || catalog.isNominalSubtype(id, member) } -> {
                     DeclarationDiagnostic.of(id, "unowned_resource_type", origins)
                 }
 
@@ -371,27 +387,26 @@ private fun realmStructureDiagnostics(
 /** The owner side endpoints of ownership relations: the link fields that hold owned resources. */
 private fun List<RelationContract>.ownershipEndpoints(): Set<EndpointId> = filter { it.ownsResources }.mapTo(linkedSetOf()) { it.first.id }
 
-/** The owner endpoint types of ownership relations: the first endpoint, which holds the owned resources. */
+/** The owner endpoint types of ownership relations: the first endpoint, which holds the owned resources; an owner naming every resource names no type. */
 private fun List<RelationContract>.ownerTypes(): Set<TypeDefinitionId> =
-    filter { it.ownsResources }.mapTo(linkedSetOf()) { it.first.resource.definition }
+    filter { it.ownsResources }.mapNotNullTo(linkedSetOf()) { it.first.resource.definition }
 
 /** Whether [id] is the realm root or a realm section type, which the realm creates and every resource sits inside. */
 private fun CheckedCatalog.isRealmStructure(id: TypeDefinitionId): Boolean =
     id == RealmRootDefinition.id || isNominalSubtype(id, RealmRootDefinition.id) || isNominalSubtype(id, RealmSectionDefinition.id)
 
-/** The display of a declaration codegen did not supply one for: its name from the type id, default icon and color. */
+/** The name of a declaration codegen did not supply one for, from its type id: the last part of a qualified name, a case's name. */
+private fun TypeDefinitionId.derivedName(): String =
+    when (val id = typeId) {
+        is TypeId.QualifiedWrapper -> id.value.name.substringAfterLast('.')
+        is TypeId.DeclaredWrapper -> "Type"
+        is TypeId.MemberWrapper -> id.value.name
+        else -> unknownVariant(id)
+    }
+
+/** The display of a declaration codegen did not supply one for: its derived name, default icon and color. */
 private fun TypeDefinitionId.derivedDisplay(): TypeDisplay =
-    TypeDisplay(
-        name =
-            when (val id = typeId) {
-                is TypeId.QualifiedWrapper -> id.value.name.substringAfterLast('.')
-                is TypeId.DeclaredWrapper -> "Type"
-                else -> unknownVariant(id)
-            },
-        description = "",
-        icon = TypeDisplay.DEFAULT_ICON,
-        color = TypeDisplay.DEFAULT_COLOR,
-    )
+    TypeDisplay(name = derivedName(), description = "", icon = TypeDisplay.DEFAULT_ICON, color = TypeDisplay.DEFAULT_COLOR)
 
 /**
  * The single effective field typed as a [com.typewritermc.authoring.Placement], or null when there is none.

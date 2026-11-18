@@ -124,15 +124,15 @@ fun Added<CameraHold>.spectate(player: PaperPlayer) = ...
 
 ### Snapshot and restore
 
-A Hold type that changes real game state declares how to put it back, through two handlers. They are handlers and not methods because a handler can ask for several small traits: a camera needs `HasLocation`, `HasFlight`, and `HasVelocity`.
+A Hold type that changes real game state declares how to put it back, through two handlers. They are handlers and not methods because a handler can ask for several small traits: a camera needs `HasLocation` and `HasVelocity`.
 
 ```kotlin
 @Handler
-fun TakeSnapshot<CameraHold>.save(location: HasLocation, flight: HasFlight, velocity: HasVelocity) =
-    CameraSnapshot(location.location, flight.flying, velocity.velocity)
+fun TakeSnapshot<CameraHold>.save(location: HasLocation, velocity: HasVelocity) =
+    CameraSnapshot(location.location, velocity.velocity)
 
 @Handler
-fun RestoreSnapshot<CameraHold>.back(location: HasLocation, flight: HasFlight, velocity: HasVelocity,
+fun RestoreSnapshot<CameraHold>.back(location: HasLocation, velocity: HasVelocity,
     snapshot: CameraSnapshot) = ...
 ```
 
@@ -150,7 +150,7 @@ The stored snapshot row decides everything, so a crash has no path of its own:
 
 Everything else goes into `Added<H>` and `Removed<H>` handlers. `Added<H>` handlers, `Removed<H>` handlers, and `RestoreSnapshot<H>` handlers must be safe to repeat.
 
-A `Snapshot<H>` parameter reads and updates a Hold's stored snapshot. Content uses it to change where the protagonist lands after a camera scene, so the protagonist gets one teleport instead of being sent back first.
+A parameter of a Hold's snapshot type (`LeashCenter`, `CameraSnapshot`) reads that snapshot at the Hold's keys, as `RestoreSnapshot` already does. One `TakeSnapshot<H>` handler per Hold type makes this unambiguous; KSP rejects a snapshot type returned for two Hold types. A `Snapshot<H>` parameter reads and updates a Hold's stored snapshot. Content uses it to change where the protagonist lands after a camera scene, so the protagonist gets one teleport instead of being sent back first.
 
 ### Lifecycle
 
@@ -214,7 +214,8 @@ Each one proves a different part of the design. Legacy has 16 displays and 17 fi
 | --- | --- |
 | Weather, freeze time, experience | Conversion track, small once core exists |
 | Particle | Layer 25, with `RegionOutlineHold` |
-| Fake block, looping cinematic | Layer 18 |
+| Fake block | Layer 18 ([scenes.md](scenes.md)) |
+| Looping cinematic | Later, as the vision says |
 | Compass, quest item, item slot binder | Layer 23 |
 | Timer | No Hold: `Due` from layer 7 |
 | Trigger | No Hold: enter and exit entries from layer 8 |
@@ -223,7 +224,7 @@ A display is a node in the audience tree, so it has its own `InAudience`, and a 
 
 ### Holds: not proven
 
-- **Nothing ran.** All Kotlin here is a sketch, and `TrackedGraph` exists only in design records, not in `services/` or `backend/`.
+- **Nothing ran.** All Kotlin here is a sketch. `TrackedGraph` was built in layer 1 for realm checks (`runtime/formula`); its engine inputs and observers come with layers 6 to 8.
 - **Slow loading.** If a formula's values take longer than the grace on rejoin, the restore fires too early and then the Hold returns. The grace may need to start once formulas settle, and a formula that never gets a value then needs a limit.
 - **Restore on another server.** A saved location may name a world that server does not have.
 - **Restore order.** Two Holds touching the same game state restore in an unknown order.
@@ -276,13 +277,14 @@ data class StepRules(
     val onRejoin: OnRejoin = OnRejoin.Drop,
     val protected: Var<Boolean, StepContext> = Var.Value(false),
     val giveUp: Var<Boolean, QueuedContext> = Var.Value(false),
+    val leavable: Var<Boolean, StepContext> = Var.Value(true),   // see Ways out
 )
 
 enum class OnClash { Drop, Queue, Replace }
 enum class OnRejoin { Drop, RestartStep, RestartInteraction }
 
-interface StepContext : MemberContext { val elapsed: Ticks }
-interface QueuedContext : MemberContext { val waited: Ticks }
+interface StepContext : MemberContext { val elapsed: Duration }
+interface QueuedContext : MemberContext { val waited: Duration }
 
 // Most creators never open this. giveUp is hidden when the entry can never queue.
 object StepRulesInspector : StepRulesPresentation {
@@ -293,6 +295,7 @@ object StepRulesInspector : StepRulesPresentation {
         showIf(onClash.read() eq literal(OnClash.Drop), whenFalse = { giveUp.input() }) {}
         onRejoin.input()
         protected.input()
+        leavable.input()
     }
 }
 
@@ -308,7 +311,10 @@ data class Running<E : StepEntry>(
     val entry: E,
     val subject: Holder,
     val context: ChainContext,
-) : Stored
+    val startedAt: Instant,
+) : Stored {
+    val elapsed: Duration get() = now - startedAt
+}
 
 data class Queued<E : StepEntry>(
     @Key val step: Step,
@@ -316,16 +322,8 @@ data class Queued<E : StepEntry>(
     val entry: E,
     val subject: Holder,
     val context: ChainContext,
-    val queuedAt: Instant,   // orders the queue only
+    val queuedAt: Instant,
 ) : Stored
-
-// Live on each engine with a member of the subject, written on Added<Running> or Added<Queued>.
-data class StepClock(@Key val step: Step, val startedAt: GameTick) : Live {
-    val elapsed: Ticks get() = tick - startedAt
-}
-data class QueueClock(@Key val step: Step, val queuedAt: GameTick) : Live {
-    val waited: Ticks get() = tick - queuedAt
-}
 
 data class InteractionStart(
     @Key val interaction: Interaction,
@@ -334,9 +332,7 @@ data class InteractionStart(
 ) : Stored
 ```
 
-Step timing counts engine ticks, not wall time (decided 2026-11-07), so a scene, typing, or a queue wait slows down under server lag instead of skipping, and a test that steps ticks decides it exactly. `tick: GameTick` is the engine's tick count, a provider like `now`. Authors still write durations; a `Duration` becomes `Ticks` at 20 ticks per second when the step reads it.
-
-The stored rows carry no step time. A tick count belongs to one engine, so each engine with a member of the subject keeps its own `StepClock` from the tick it saw `Added<Running>`. Every reader of step time (scene end, dialogue typing, `protected`, `giveUp`) runs on a member's engine, and no step continues across engines ([Leaving and rejoining](#leaving-and-rejoining)). Group members on two engines therefore start a few ticks apart, by the realm commit latency. Stored only handlers cannot read `elapsed`. Timers that must survive engines stay on the realm's wall clock through `Due` ([stored-data.md](stored-data.md#due)), such as a delay step.
+The engine reads time from one clock source (decided 2026-11-18 for [game verification](game-verification/README.md#obligations-on-typewriter)): `now`, `startedAt`, `elapsed`, `waited`, and every `Playhead` read come from it. Production gives the engine the system clock. The stepped game test gives it a clock that moves 50 ms with each tick its `StepPolicy` permits, so step time stays wall clock time in production, scenes stay on time under lag, and a test decides timing exactly, alongside the realm clock a test can advance ([stored-data.md](stored-data.md#due)).
 
 What an extension writes for the smallest step:
 
@@ -364,10 +360,10 @@ Other steps use the same row:
 
 | Need | Code |
 | --- | --- |
-| A scene ends | `Tick<EveryTick>` comparing `clock.elapsed` with its length in ticks |
+| A scene ends | `Tick<EveryTick>` comparing the `Playhead` frame with the page's last frame ([scenes.md](scenes.md)) |
 | A delay | `Added<Running<DelayEntry>>` writes `DelayDue(step, at) : Due`, and `Elapsed<DelayDue>` completes the step |
 | A search and a click | An event handler that takes `Running<E>` and completes it |
-| A skip | `Skipped(@Key step, at) : Stored`, removed with the step |
+| A scene's clock, skip, and pause | `Playhead(@Key step, frame, since, waits) : Stored`, removed with the step |
 | A preview | `Simulating(@Key step) : Stored` |
 
 Stored values keyed by a step are removed when the step ends, so step data cannot leak after a crash, a server move, or a hot publish. Everything the protagonist sees is a derive over `Running` plus its entry, so a hot publish updates a running step in place ([live-data.md](live-data.md#hot-publish)).
@@ -408,7 +404,7 @@ Interactions stay inside one engine kind. Engines share stored state only throug
 
 ## Clashes
 
-The step system does not limit anyone to one at a time. Any number of steps and interactions run together. Two clash only when they need the same Hold type for the same protagonist. Only a `Hold` returned by a derive on `Running<E>` counts; a `Live` value from a step never clashes.
+The step system does not limit anyone to one at a time. Any number of steps and interactions run together. Two clash only when they need the same Hold type for the same protagonist. A `Hold` counts for a step when its derive is on `Running<E>`, or on content (an element, such as a scene track) and asks for a `Live` made on that `Running<E>` ([scenes.md](scenes.md#clashes-for-page-content)); a `Live` value from a step never clashes.
 
 An incoming step counts every Hold type its derives can return. A running step counts what it holds now, so a released Hold can be taken. If a step later wants a Hold that someone took, its own `onClash` applies.
 
@@ -472,7 +468,7 @@ fun <E : StepEntry> Triggered<E>.start(
     val ahead = waiting.any {
         it.interaction != interaction && (holdTypes(it.entry) intersect types).isNotEmpty()
     }
-    val row = Running(step, interaction, entry, subject, context)
+    val row = Running(step, interaction, entry, subject, context, now)
     val _ = when (val decision = decideClash(entry.rules, entry.priority, others, ahead)) {
         Decision.Begin -> BeginStep(row, siblingsOf(mine, types, interaction))
         Decision.Queue -> QueueStep(Queued(step, interaction, entry, subject, context, now))
@@ -555,19 +551,22 @@ fun Added<Ready>.begin(row: Queued<*>) {
 @Transaction context(tx: Transaction)
 fun beginQueued(row: Queued<*>) {
     queued(row.step).clear()
-    running(row.step).set(Running(row.step, row.interaction, row.entry, row.subject, row.context))
+    running(row.step).set(Running(row.step, row.interaction, row.entry, row.subject, row.context, now))
 }
 
 @Transaction context(tx: Transaction)
 fun replaceAndBeginQueued(ended: List<Interaction>, row: Queued<*>) {
     ended.forEach { interactionStart(it).clear() }
     queued(row.step).clear()
-    running(row.step).set(Running(row.step, row.interaction, row.entry, row.subject, row.context))
+    running(row.step).set(Running(row.step, row.interaction, row.entry, row.subject, row.context, now))
 }
 
-// waited reads the QueueClock, so this rechecks each tick while queued.
+// waited reads now, so this rechecks on the timer.
 data class GaveUp(@Key val step: Step) : Live
-@Derive fun Queued<*>.gaveUp(context: QueuedContext) = if (entry.rules.giveUp(context)) GaveUp(step) else null
+// A step whose book no longer applies leaves too (book-composition.md).
+@Derive
+fun Queued<*>.gaveUp(context: QueuedContext) =
+    if (entry.rules.giveUp(context) || !entry.appliesTo(subject)) GaveUp(step) else null
 
 @Handler
 fun Added<GaveUp>.leave(row: Queued<*>) {
@@ -580,7 +579,7 @@ fun leaveQueue(step: Step) {
 }
 ```
 
-- A queued step never drops: it begins, replaces, or waits. Only `giveUp` removes it, for example `waited > 10s || !protagonist.inRegion(arena)`, where `10s` is 200 ticks. It also ends when its book stops applying or its interaction ends.
+- A queued step never drops: it begins, replaces, or waits. Only `giveUp` removes it, for example `waited > 10s || !protagonist.inRegion(arena)`. It also ends when its book stops applying or its interaction ends.
 - The oldest queued step for a Hold type goes first, whatever its priority.
 
 ### Clashes: not proven
@@ -596,7 +595,6 @@ Nothing compiled or ran.
 - **Chain settle** needs a counter across guard waits.
 - **Static needs are cautious.** A camera used only at minute 5 clashes at the start.
 - **Realm latency** on every step start, skip, and end.
-- **Clock lifetime.** A `StepClock` written by a handler on `Added<Running>` and removed with the row; the plan decides whether core writes it.
 
 ## Leaving and rejoining
 
@@ -605,7 +603,7 @@ The step rule `onRejoin` says what happens to running steps when the protagonist
 | Value | Effect |
 | --- | --- |
 | `Drop` (default) | The step ends on leave, like legacy teardown on quit |
-| `RestartStep` | The step starts again with its stored context and a new `Step`, so its clocks start again |
+| `RestartStep` | The step starts again with its stored context, a new `Step`, and a new `startedAt` |
 | `RestartInteraction` | The interaction starts again from its start |
 
 With several branches running, the strictest wins: `Drop`, then `RestartInteraction`, then `RestartStep`.
@@ -621,6 +619,211 @@ It takes the strictest `entry.rules.onRejoin`; `RestartStep` fires `Triggered(ro
 
 A server move is a leave and a rejoin, and the step's `onRejoin` applies. There is no separate "continue" choice and no follow setting.
 
+## Ways out
+
+Layer 17 rough design, decided 2026-11-06. Replaces legacy interaction bounds (`InteractionBound`, `InteractionScope` on `origin/develop`). A legacy bound bundled four needs in one object; three of them are existing primitives here:
+
+| Need | Legacy | Here |
+| --- | --- | --- |
+| Effects while it runs: camera locked, slow down near the edge | `LockInteractionBound`, `PlayerRadiusInteractionBound.updateZoom` | [Holds](#holds) under an audience |
+| Don't break things: no dropping the quest item | `DropItemInteractionBound` | A verdict while a hold exists, like `ChatSent.block` ([dialogue.md](dialogue.md)); the quest item is layer 23 |
+| A way out: walk away, a command | `interruptInteraction()` and `interruptTriggers` | A way out entry and `LeaveAsked` |
+| Whether leaving is allowed now | Implicit: `interaction.priority > bound.priority` gave blocking, otherwise interrupting | `StepRules.leavable`, explicit |
+
+Every way out is explicit. Nothing has one by default, a camera hold included.
+
+Nothing here is built yet. See [Ways out: not proven](#ways-out-not-proven).
+
+### The rule
+
+`leavable` is the player side counterpart of `protected`: `protected` says whether another interaction may interrupt, `leavable` whether the player may leave ([Steps](#steps)). Core keeps each member's running steps:
+
+```kotlin
+// Written by core at tick end, like Held.
+data class InSteps(@Key val who: Protagonist, val steps: Map<Step, InStep>) : Live
+
+data class InStep(
+    val entry: StepEntry,
+    val interaction: Interaction,
+    val leavable: Boolean,   // the whole interaction: every running step, every member
+)
+```
+
+`leavable` is interaction wide. One member for whom a running step is not leavable blocks leaving for the whole group; otherwise one member leaving ends the interaction for everyone, following the group rule. To decide per person, fire per member (`ContinueForEachMember`).
+
+### Leaving
+
+```kotlin
+// The intent, like Confirm. way: the entry whose links fire.
+@TypewriterType(id = "...")
+data class LeaveAsked(val who: Holder, val way: Triggerable, val interactions: Set<Interaction>) : Event
+
+@Handler
+fun LeaveAsked.leave() {
+    val _ = Leave(interactions).attempt()
+    way.complete(context)   // as in E.fire
+}
+
+@Transaction context(tx: Transaction)
+fun leave(interactions: Set<Interaction>) {
+    interactions.forEach { interactionStart(it).clear() }
+}
+```
+
+The way out's links start a new chain: legacy `interruptTriggers` (the smith shrugs).
+
+### Lifetime: running audiences
+
+Rules and effects for a stretch of play hang under an audience, so their lifetime is the audience membership and nothing starts or ends them by hand ([live-data.md](live-data.md#audiences)). Next to the formula audience, one new kind is in while one of its steps runs:
+
+```kotlin
+data class RunningAudienceEntry(
+    override val children: List<Ref<AudienceEntry>> = emptyList(),
+    val during: Var<Set<Ref<RunningAudience.Steps, StepEntry>>, PublishScope> = Var.Value(emptySet()),
+) : AudienceEntry
+
+@Derive
+fun RunningAudienceEntry.inside(
+    protagonist: Protagonist,
+    @From(Parent::class) inParents: List<InAudience>,
+    steps: InSteps,
+    during: Set<Ref<RunningAudience.Steps, StepEntry>>,
+): InAudience? = ...   // in while one of the steps in `steps` is in `during`
+```
+
+`during` is a [link query](formula-language.md#link-fields-as-queries): picked by hand, or `page.elements.filter { it is StepEntry }`. Switching on and off is the audience membership and the steps' `leavable`.
+
+### Gesture ways out
+
+A gesture must block the raw input when leaving is not allowed, so it is a hold with a verdict handler. A way out is an audience child with links:
+
+```kotlin
+interface WayOut : AudienceEntry, Triggerable
+
+// Written by core at tick end, for members inside the way out's audience.
+// interactions: those of the steps that put the member in the RunningAudience above it,
+// or all of the member's interactions under any other audience.
+// allowed: every one of them is leavable (InStep.leavable).
+data class Exits(
+    @Key val who: Protagonist,
+    @Key val way: WayOut,
+    val interactions: Set<Interaction>,
+    val allowed: Boolean,
+) : Live
+```
+
+The leash replaces the legacy player radius bound, including its slow down near the edge:
+
+```kotlin
+class LeashEntry(
+    /* page, name, placement, triggers, refused, changes */
+    override val children: List<Ref<AudienceEntry>> = emptyList(),
+    val radius: Var<Double, MemberContext> = Var.Value(4.0),
+) : WayOut
+
+data class Leash(@Key val who: Protagonist, val way: LeashEntry, val radius: Double) : Hold
+data class LeashCenter(val at: Position)
+
+// The same shape as PotionEffectEntry.hold.
+@Derive
+fun LeashEntry.hold(who: Protagonist, inside: InAudience, radius: Double) = Leash(who, this, radius)
+
+@Handler
+fun TakeSnapshot<Leash>.center(location: HasLocation) = LeashCenter(location.location)
+
+// A verdict reads cached data only. exit's way key is free, so it iterates.
+@Handler
+fun PlayerMove.leash(leash: Leash, center: LeashCenter, exit: Exits): Verdict {
+    if (exit.way != leash.way) return pass()
+    val distance = to.distance(center.at) ?: Double.MAX_VALUE   // null: another world
+    if (distance <= leash.radius) return pass()
+    if (!exit.allowed) return deny()
+    return pass { emit(LeaveAsked(player, leash.way, exit.interactions)) }
+}
+```
+
+The slow down is a keyed attribute modifier, so another plugin's speed change still applies, and only ours is removed. It is transient (Paper `addTransientModifier`, checked on paper-api 1.21.4), so it is never saved with the player and a crash cannot leave it behind; legacy used `addModifier`, which is saved.
+
+```kotlin
+// Minecraft capability trait. Paper: removeModifier(key), then addTransientModifier.
+interface HasAttributes {
+    fun set(attribute: Attribute, modifier: AttributeModifier)   // replaces one with the same key
+    fun remove(attribute: Attribute, key: NamespacedKey)
+}
+
+val LEASH_KEY: NamespacedKey = ...      // typewriter:leash
+val MOVEMENT_SPEED: Attribute = ...     // minecraft:movement_speed
+
+@Handler
+fun PlayerMove.slow(leash: Leash, center: LeashCenter, attributes: HasAttributes) {
+    val distance = to.distance(center.at) ?: return
+    // edgeSlowdown is legacy calculateZoom: 0 at the center, -0.6 at the edge
+    attributes.set(MOVEMENT_SPEED, AttributeModifier(LEASH_KEY, edgeSlowdown(distance, leash.radius), AddMultipliedTotal))
+}
+
+@Handler
+fun Removed<Leash>.release(attributes: HasAttributes) = attributes.remove(MOVEMENT_SPEED, LEASH_KEY)
+```
+
+`Attribute`, `AttributeModifier`, and `NamespacedKey` are planned Minecraft types ([minecraft-types.md](minecraft-types.md#types-still-to-design)); the planned modifier also has a `slot`, which only items use. `AddMultipliedTotal` is Paper's `MULTIPLY_SCALAR_1`, what legacy used.
+
+Two leashes under two audiences are the same hold type and keys, so the highest priority wins ([Priority](#priority)).
+
+### Action way out
+
+Any trigger can end an interaction through one action, so a command, an item, or an NPC click needs no code of its own:
+
+```kotlin
+class LeaveEntry(
+    /* page, name, placement, triggers, refused, changes */
+    val of: Var<Set<Ref<LeaveSteps.Leave, StepEntry>>, PublishScope> = Var.Value(emptySet()),   // empty: any
+) : ActionEntry, Triggerable
+
+@Handler
+fun Triggered<LeaveEntry>.leave(steps: InSteps, of: Set<Ref<LeaveSteps.Leave, StepEntry>>) {
+    val chosen = steps.steps.values.filter { of.isEmpty() || of.points(it.entry) }
+    if (chosen.isEmpty()) return
+    if (chosen.all { it.leavable }) emit(LeaveAsked(subject, entry, chosen.map { it.interaction }.toSet()))
+    else entry.refused.fire(context)   // "You cannot leave now."
+}
+```
+
+`CommandEntry "leave"` ([commands.md](commands.md)) triggers a `LeaveEntry`.
+
+### Key and not ready ways out
+
+Layer 18 adds two ways out ([scenes.md](scenes.md)). `KeyWayOutEntry` offers a key whose press emits `LeaveAsked`, through a `KeyOffer` that carries its press ([dialogue.md](dialogue.md#6-the-key)). `NotReadyEntry` leaves for a member whose preparation in a scene ended `Failed` or `TimedOut`; when leaving is blocked, the member plays on.
+
+### End to end
+
+```
+Manifest page "Smith talk"
+  RunningAudience "talking"     during = page.elements.filter { it is StepEntry }
+    LeashEntry  radius = 4      triggers -> shrug_line
+
+ask_line   rules.leavable = false
+question   rules.leavable = true
+
+CommandEntry "leave" -> LeaveEntry(of = empty)    refused -> cannot_leave_line
+```
+
+| Moment | What happens |
+| --- | --- |
+| Ann starts `ask_line` | `InSteps` has it, so she enters "talking". The leash derive runs, the snapshot saves her spot, and `Exits.allowed` is false |
+| She walks 5 blocks | She slows near the edge; past it, the move is denied |
+| `question` starts | The same `Leash` continues (same keys); `allowed` is true |
+| She walks 5 blocks | `LeaveAsked`: the interaction ends and `shrug_line` fires |
+| She leaves "talking" | After the grace, `Removed<Leash>` removes the modifier |
+| She types `/leave` during `ask_line` | `LeaveEntry` finds the step not leavable and fires `refused` |
+
+### Ways out: not proven
+
+- **`of.points(entry)`**: matching a running entry against a hydrated link set (a `CompiledResourceKey`, [book-composition.md](book-composition.md#4-publish)) has no designed helper.
+- **Types of `PlayerMove.to` and `HasLocation.location`**: the docs name the fields, not the types; `Position` is assumed.
+- **Cost**: `InSteps` and `Exits` are rewritten at tick end for members of running steps, and `PlayerMove` runs both leash handlers on every move of a leashed player.
+- **`RunningAudienceEntry.inside`**: a derive reading a core written `Live` and a publish time link query together; both forms exist, not together.
+- **Nothing ran.** It rests on layers 8, 12, 15, and 16, none of which are built.
+
 ## Contexts
 
 Interaction fields read `group`, `chain`, and `protagonist` through `InteractionContext` and `MemberContext`; see [formula-language.md](formula-language.md#formula-contexts).
@@ -631,12 +834,12 @@ Interaction fields read `group`, `chain`, and `protagonist` through `Interaction
 
 A **grouping** is a way to bucket protagonists by a key: island 42, team red. Decided 2026-11-05 in the layer 11 rough design. There are two kinds of group entry, because there are two ways to land in a group: outside facts decide it, or something assigns you.
 
-The entry's picked type argument `K` decides everything (decided 2026-11-05), chosen with the same editor as `Definition<T>`. `X` means one group per player, and `List<X>` means several. `X` can be a creator type, such as a union.
+The entry's picked type argument `K` decides everything (decided 2026-11-05), chosen with the same editor as `Definition<T>`. A plain `K` such as `Team` means one group per player, and a list such as `List<Team>` means several. `K` can be a creator type, such as a union.
 
 ```kotlin
 interface GroupEntry<K> : StaticEntry
 
-// Outside facts decide: the formula is checked against K. With X?, null means in no group.
+// Outside facts decide: the formula is checked against K. With a nullable `K` such as `Team?`, null means in no group.
 @TypewriterType(id = FORMULA_GROUP_ENTRY_TYPE_ID)
 class FormulaGroupEntry<K>(/* page, name, placement */ val key: Var<K, MemberContext>) : GroupEntry<K>
 
@@ -644,17 +847,17 @@ class FormulaGroupEntry<K>(/* page, name, placement */ val key: Var<K, MemberCon
 @TypewriterType(id = MANUAL_GROUP_ENTRY_TYPE_ID)
 class ManualGroupEntry<K>(/* page, name, placement */) : GroupEntry<K>
 
-// X is bound from the group's K.
-class JoinGroupEntry<X>(
+// K is bound from the group's K (its element type when the group's K is a list).
+class JoinGroupEntry<K>(
     /* page, name, placement, triggers */
     val group: Ref<ManualGroupEntry<*>>,
-    val key: Var<X, MemberContext>,
+    val key: Var<K, MemberContext>,
 ) : ActionEntry
 
-class LeaveGroupEntry<X>(
+class LeaveGroupEntry<K>(
     /* page, name, placement, triggers */
     val group: Ref<ManualGroupEntry<*>>,
-    val key: Var<X?, MemberContext>,   // null: every group of this entry
+    val key: Var<K?, MemberContext>,   // null: every group of this entry
 ) : ActionEntry
 ```
 
@@ -663,7 +866,7 @@ A group identity says what members belong to. Our two entries use `EntryGroup`; 
 ```kotlin
 interface GroupIdentity : Identity
 
-data class EntryGroup<X>(val entry: GroupEntry<*>, val key: X) : GroupIdentity
+data class EntryGroup<K>(val entry: GroupEntry<*>, val key: K) : GroupIdentity
 
 // ContinueForEveryone. Ends with the interaction.
 data class Snapshot(val interaction: Interaction) : GroupIdentity
@@ -684,7 +887,7 @@ fun join(entry: ManualGroupEntry<*>, who: Protagonist, key: Any) {
 }
 
 // FormulaGroupEntry: core compares with what is stored, not with the old formula value,
-// because the formula can differ after a rejoin. keys() makes a Set from X? or a List,
+// because the formula can differ after a rejoin. keys() makes a Set from a nullable K or a List,
 // so one and many are the same code.
 @Handler
 fun Added<Watched<K>>.sync(group: Candidate<FormulaGroupEntry<K>>, who: Protagonist) =
@@ -738,7 +941,7 @@ Changing `K` reuses [migrations](migrations.md#group-entries).
 - One for a party where joining another moves you; many for overlapping regions or several guilds. Joining a group you are already in changes nothing.
 - `Ref<ManualGroupEntry<*>>` means `JoinGroup` cannot point at a formula group; the panel only offers manual ones.
 - Party is not a Typewriter concept; creators build parties with a manual group.
-- Each group entry exports its own identity type through `bind` (`islands` gives `Island`). Formulas name the grouping, `protagonist.island`; there is no ambiguous `protagonist.group`.
+- Each group entry exports its own identity type through `bind` (`islands` gives `Island`). A bind computes a type parameter of its resource's type (node 1b), so a group entry type needs a type parameter for its identity; open for node 11. Formulas name the grouping, `protagonist.island`; there is no ambiguous `protagonist.group`.
 - Anything else about a group, such as an island's name, is a provider or a variable keyed by the group, unless it belongs in the key type.
 
 Every legacy group is one of these:
@@ -776,7 +979,7 @@ A mirror updates at its poll rate. An extension that needs a change at once adds
 | Group entry deleted | All its groups end: memberships and values keyed by them are removed. A variable keyed by its type and a `JoinGroup` pointing at it are errors that block publishing until fixed. |
 | Leaving a group you are not in | Nothing happens. |
 
-Not proven: `dynamic()` and `bind` are not built, and `bind` is planned after groups, so the layer order needs checking in the plan; how a key of any allowed type is written as a stable row key; narrowing a watched formula to one entry is already open for the plan; which engine writes when a key reads a mirror and a player is held by two engines; the cost of one watched formula per online player per formula group.
+Not proven: `dynamic()` is built with `scope` and `exports` only (layer 1), and `bind` comes in its own node 1b before groups ([build-graph.md](build-graph.md)); how a key of any allowed type is written as a stable row key; narrowing a watched formula to one entry is already open for the plan; which engine writes when a key reads a mirror and a player is held by two engines; the cost of one watched formula per online player per formula group.
 
 ### Widening
 
@@ -792,7 +995,7 @@ entry.triggers.fire(context, for = group)   // default: the current subject
 | `ContinueForEachMember(who: Var<List<Protagonist>, InteractionContext>)` | One copy per listed member, like legacy `GroupTriggerActionEntry`, each deciding its own clashes | none, only `protagonist` |
 | `ContinueForEveryone(who: Var<List<Protagonist>, InteractionContext>)` | Evaluates the list and creates a snapshot group keyed by the new interaction, ending with it | `Snapshot` |
 
-Book narrowing happens inside `fire`. Which `group` type a field sees after widening is in [formula-language.md](formula-language.md#group-fields).
+Book narrowing happens inside `fire`; a group is never rewritten, and a member a book does not apply to only loses their view. A condition turning false mid interaction stops the part from that book at once ([book-composition.md](book-composition.md#7-stopping)). Which `group` type a field sees after widening is in [formula-language.md](formula-language.md#group-fields).
 
 ### Live members
 
@@ -810,13 +1013,13 @@ A widened chain's events have a group subject; how handlers then iterate members
 
 ## Scenes
 
-Scenes are steps whose Holds take the camera and hide the protagonist. Their feature details are decided when scenes are built (roadmap layer 18); the primitive level rules are:
+A scene is a step that plays a scene page: a shared `Playhead`, tracks that derive Holds at the current frame, the camera on a fake entity, and preparation waits. See [scenes.md](scenes.md). The primitive level rules:
 
-- The filming protagonist is hidden by packets, not by an invisibility potion, so nothing is persisted and nothing needs restoring.
-- `CameraHold` takes a snapshot of the protagonist's location, flight, and velocity, and restores them at the end. Content can overwrite the snapshot through `Snapshot<CameraHold>` to land the protagonist somewhere else with one teleport.
+- The filming protagonist is hidden from others by packets, so nothing is persisted and nothing needs restoring.
+- `CameraHold` takes a snapshot of the protagonist's location and velocity, and restores them at the end. A teleport during the camera is denied into that snapshot, so the protagonist lands somewhere else with one teleport.
 - While `CameraHold` is held, the formula member `protagonist.position` reads the camera position. Covers legacy `PlayerPositionOverride` in the context: the override disappears with the Hold.
 - Back to back scenes adopt the camera Hold within grace, so the cut has no restore in between.
-- A cinematic has the normal step rule `onRejoin`, so the creator decides. The default is `Drop`, like legacy; `RestartStep` plays the scene again from its start.
+- A scene has the normal step rule `onRejoin`, so the creator decides. The default is `Drop`, like legacy; `RestartStep` plays the scene again from its start.
 
 ## NPC scope
 
@@ -887,4 +1090,4 @@ Writes go through [transaction functions](stored-data.md#transaction-functions).
 
 ## Open
 
-- Interaction bounds (blocking versus interrupting, changing over time; roadmap layer 17) are not designed yet.
+- A default way out for every conversation needs a query over the whole library; the name of that scope is open.

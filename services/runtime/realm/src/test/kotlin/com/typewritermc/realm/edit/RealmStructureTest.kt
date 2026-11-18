@@ -46,6 +46,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -99,7 +100,7 @@ val RealmStructureTest by testSuite {
                                 core.declarations.first().origin,
                                 TypeDefinition.partial(
                                     id = extraSection,
-                                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                                    representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
                                     parents = listOf(RealmSectionDefinition.id.namedTemplate()),
                                 ),
                                 searchKey = "extrasection",

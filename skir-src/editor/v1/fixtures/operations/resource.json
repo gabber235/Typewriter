@@ -23,7 +23,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -40,7 +40,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -68,7 +68,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -90,27 +90,21 @@
       "resources": {
         "book_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"title": {"string": "Dune"}}
         },
         "author_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"name": {"string": "Frank"}}
         }
@@ -151,7 +145,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -168,7 +162,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -196,7 +190,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -218,27 +212,21 @@
       "resources": {
         "book_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"title": {"string": "Dune"}}
         },
         "author_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"name": {"string": "Frank"}}
         }
@@ -288,7 +276,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -305,7 +293,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -333,7 +321,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -355,27 +343,21 @@
       "resources": {
         "book_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"title": {"string": "Dune"}}
         },
         "author_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"name": {"string": "Frank"}}
         }
@@ -436,7 +418,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -453,7 +435,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -481,7 +463,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -503,27 +485,21 @@
       "resources": {
         "book_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"title": {"string": "Dune"}}
         },
         "author_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"name": {"string": "Frank"}}
         }
@@ -584,7 +560,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -601,7 +577,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -629,7 +605,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -651,27 +627,21 @@
       "resources": {
         "book_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"title": {"string": "Dune"}}
         },
         "author_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"name": {"string": "Frank"}}
         }
@@ -701,7 +671,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -718,7 +688,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -746,7 +716,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -768,27 +738,21 @@
       "resources": {
         "book_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"title": {"string": "Dune"}}
         },
         "author_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"name": {"string": "Frank"}}
         }
@@ -829,7 +793,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -846,7 +810,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -874,7 +838,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -896,27 +860,21 @@
       "resources": {
         "book_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"title": {"string": "Dune"}}
         },
         "author_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"name": {"string": "Frank"}}
         }
@@ -955,7 +913,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -972,7 +930,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -1000,7 +958,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -1022,27 +980,21 @@
       "resources": {
         "book_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"title": {"string": "Dune"}}
         },
         "author_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"name": {"string": "Frank"}}
         }
@@ -1051,49 +1003,37 @@
         "available": {
           "named": {
             "namespace": "skir",
-            "name": "editor/v1/type_catalog.skir:TypeSelection.complete",
+            "name": "editor/v1/type_catalog.skir:TypeSelection",
             "revision": 1,
             "arguments": [],
             "payload": {
               "record": {
-                "value": {
+                "arguments": {"list": []},
+                "definition": {
                   "named": {
                     "namespace": "skir",
-                    "name": "editor/v1/type_catalog.skir:NamedTypeUse",
+                    "name": "editor/v1/type_catalog.skir:TypeDefinitionId",
                     "revision": 1,
                     "arguments": [],
                     "payload": {
                       "record": {
-                        "arguments": {"list": []},
-                        "definition": {
+                        "revision": {"integer": "1"},
+                        "type_id": {
                           "named": {
                             "namespace": "skir",
-                            "name": "editor/v1/type_catalog.skir:TypeDefinitionId",
+                            "name": "editor/v1/type_catalog.skir:TypeId.qualified",
                             "revision": 1,
                             "arguments": [],
                             "payload": {
                               "record": {
-                                "revision": {"integer": "1"},
-                                "type_id": {
+                                "value": {
                                   "named": {
                                     "namespace": "skir",
-                                    "name": "editor/v1/type_catalog.skir:TypeId.qualified",
+                                    "name": "editor/v1/type_catalog.skir:QualifiedTypeId",
                                     "revision": 1,
                                     "arguments": [],
                                     "payload": {
-                                      "record": {
-                                        "value": {
-                                          "named": {
-                                            "namespace": "skir",
-                                            "name": "editor/v1/type_catalog.skir:QualifiedTypeId",
-                                            "revision": 1,
-                                            "arguments": [],
-                                            "payload": {
-                                              "record": {"name": {"string": "Book"}, "namespace": {"string": "fixture"}}
-                                            }
-                                          }
-                                        }
-                                      }
+                                      "record": {"name": {"string": "Book"}, "namespace": {"string": "fixture"}}
                                     }
                                   }
                                 }
@@ -1144,7 +1084,7 @@
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Work"}}, "revision": 1},
           "parameters": [],
           "parents": [],
-          "representation": {"kind": "record", "value": {"abstract": true, "fields": []}}
+          "representation": {"kind": "record", "value": {"form": "open", "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}}, "revision": 1},
@@ -1161,7 +1101,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -1189,7 +1129,7 @@
           "representation": {
             "kind": "record",
             "value": {
-              "abstract": false,
+              "form": "concrete",
               "fields": [
                 {
                   "owner": {
@@ -1211,27 +1151,21 @@
       "resources": {
         "book_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Book"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"title": {"string": "Dune"}}
         },
         "author_1": {
           "configuration": {
-            "kind": "complete",
-            "value": {
-              "definition": {
-                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
-                "revision": 1
-              },
-              "arguments": []
-            }
+            "definition": {
+              "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Author"}},
+              "revision": 1
+            },
+            "arguments": []
           },
           "fields": {"name": {"string": "Frank"}}
         }

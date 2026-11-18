@@ -9,7 +9,6 @@ import skirout.editor.v1.catalog.PreparationTarget
 import skirout.editor.v1.catalog.PreparedContent
 import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.catalog.ValuePreparationRequest
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -32,7 +31,7 @@ internal fun request(
         catalog = catalog,
         target =
             PreparationTarget.RecordWrapper(
-                TypeSelection.createPending(definition = CREATION_TYPE, arguments = listOf(ArgumentSelection.UNFILLED)),
+                TypeSelection.of(CREATION_TYPE),
             ),
         suppliedValue = DataValue.record(mapOf("seed" to DataValue.StringValueWrapper(supplied))),
     )
@@ -42,7 +41,7 @@ internal fun prepared(value: String) =
         content =
             PreparedContent.RecordWrapper(
                 AuthoringRecord.of(
-                    configuration = TypeSelection.createPending(definition = CREATION_TYPE, arguments = listOf(ArgumentSelection.UNFILLED)),
+                    configuration = TypeSelection.of(CREATION_TYPE),
                     fields = mapOf("value" to DataValue.StringValueWrapper(value)),
                 ),
             ),

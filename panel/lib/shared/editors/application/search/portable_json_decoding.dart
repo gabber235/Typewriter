@@ -42,7 +42,17 @@ skir.DataValue _decodePortableJsonNamed(
   if (published == null || published.status != skir.DeclarationStatus.ready) {
     throw FormatException("Expected an available named type at $path");
   }
-  final containing = skir.TypeSelection.wrapComplete(expected);
+  final cases = catalog.enumCases(expected.definition);
+  if (cases != null) {
+    if (source is String && cases.contains(source)) {
+      return skir.DataValue.createNamed(
+        actualType: expected.member(source),
+        payload: skir.DataValue.unit,
+      );
+    }
+    throw _invalidPortableJson(path, "a declared enum case", source);
+  }
+  final containing = selectionOfUse(expected);
   final payload = switch (published.definition.representation) {
     skir.RepresentationTemplate_scalarWrapper(:final value) =>
       _decodePortableJsonScalar(source, value.kind, path),
@@ -56,8 +66,6 @@ skir.DataValue _decodePortableJsonNamed(
       _decodePortableJsonSequence(source, value, containing, catalog, path),
     skir.RepresentationTemplate_mappingWrapper(:final value) =>
       _decodePortableJsonMapping(source, value, containing, catalog, path),
-    skir.RepresentationTemplate_enumerationWrapper(:final value) =>
-      _decodePortableJsonEnumeration(source, value, path),
     skir.RepresentationTemplate_linkWrapper(:final value) =>
       _decodePortableJsonLink(source, value, path),
     _ => throw FormatException("Expected a supported named type at $path"),
@@ -241,18 +249,6 @@ skir.DataValue _decodePortableJsonMapping(
         ),
     ],
   );
-}
-
-skir.DataValue _decodePortableJsonEnumeration(
-  Object? source,
-  skir.EnumerationRepresentationTemplate representation,
-  String path,
-) {
-  if (source is String &&
-      representation.cases.any((candidate) => candidate.key == source)) {
-    return skir.DataValue.wrapEnumCase(source);
-  }
-  throw _invalidPortableJson(path, "a declared enum case", source);
 }
 
 skir.DataValue _decodePortableJsonLink(

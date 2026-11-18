@@ -1,8 +1,8 @@
 //! The pull request gate as data. Each step is one program invocation (or one native function),
 //! so `--print` can show the plain command and anyone can run it by hand.
 //!
-//! [`GENERATE`] runs first whenever a selected step needs generated sources; the other steps then
-//! run in parallel and heavy steps queue on the machine wide [`HeavyLock`]. Every step runs as a
+//! [`GENERATE`] runs first whenever a selected step needs generated sources and one is stale; the
+//! other steps then run in parallel and heavy steps queue on the machine wide [`HeavyLock`]. Every step runs as a
 //! process in its own group, native steps as `xtask step <name>`, so an interrupt or a budget
 //! overrun stops everything the step started. Every step writes its output to
 //! `.xtask/logs/<step>.log` and its `TestRun` to `.xtask/results/steps/<step>.json`, and has a time
@@ -35,6 +35,8 @@ const FAILURE_TAIL: usize = 20;
 pub enum Area {
     /// Kotlin services, including the imprint build, tests and ktlint.
     Services,
+    /// The seeded realm measurement and the realm's scale gates, minutes on their own.
+    RealmScale,
     /// Backend clippy, unit tests and the component test support crates.
     Backend,
     /// The embedded component test suite, every fixture.
@@ -57,6 +59,7 @@ impl Area {
     fn name(self) -> &'static str {
         match self {
             Self::Services => "services",
+            Self::RealmScale => "realm-scale",
             Self::Backend => "backend",
             Self::Components => "components",
             Self::Protocol => "protocol",
@@ -72,6 +75,31 @@ impl Area {
     fn paths(self) -> &'static [&'static str] {
         match self {
             Self::Services => &["services/"],
+            // The Gradle closure of the realm's tests: every project `:realm` reaches through its
+            // dependencies and test fixtures (the engine core and route fixtures the measurement
+            // loads among them), the build's plugins, its version catalog and the Gradle wrapper that
+            // runs it. A test keeps the list in step with the build files.
+            Self::RealmScale => &[
+                "services/runtime/realm/",
+                "services/runtime/formula/",
+                "services/runtime/engine/api/",
+                "services/runtime/engine/core/",
+                "services/runtime/loader/api/",
+                "services/sdk/typewriter-api/",
+                "services/sdk/typewriter-contracts/",
+                "services/sdk/typewriter-codegen/",
+                "services/platform/",
+                "services/testing/typewriter-test-kit/",
+                "services/testing/realm-route-fixtures/",
+                "services/build-logic/",
+                "services/imprint/",
+                "services/gradle/wrapper/",
+                "services/gradlew",
+                "services/build.gradle.kts",
+                "services/settings.gradle.kts",
+                "services/gradle.properties",
+                "services/libs.versions.toml",
+            ],
             Self::Backend | Self::Components | Self::Gitops => &["backend/"],
             Self::Panel => &["panel/"],
             Self::Docs => &[DOCS_SITE],
@@ -190,8 +218,8 @@ impl Step {
     }
 }
 
-/// Brings the generated sources up to date. Not heavy itself: it takes the heavy lock only around
-/// build_runner, the one generator that saturates the machine.
+/// Brings the generated sources up to date. Heavy, so waiting for the lock never counts against
+/// its budget; the graph skips it when every generator is current, so a warm run never queues.
 pub const GENERATE: Step = Step {
     name: "generate",
     area: Area::Protocol,
@@ -199,7 +227,7 @@ pub const GENERATE: Step = Step {
         describe: generate::DESCRIBE,
         run: generate::step,
     },
-    heavy: false,
+    heavy: true,
     // A cold CI runner builds every generator from scratch.
     budget: mins(20),
     needs_generate: false,
@@ -221,6 +249,17 @@ pub const CHECKS: &[Step] = &[
     .heavy()
     .coverage("services.xml")
     .junit("services"),
+    // `:realm:test` leaves the measurement out, so it runs here alone.
+    program(
+        "realm-scale",
+        Area::RealmScale,
+        15,
+        "services",
+        "./gradlew",
+        &[":realm:realmScaleTest"],
+    )
+    .heavy()
+    .junit("services/runtime/realm"),
     program(
         "backend:lint",
         Area::Backend,
@@ -576,7 +615,7 @@ pub fn run(ctx: &Context, steps: &[&'static Step]) -> Result<()> {
         .trim()
         .to_owned();
     let run = |step: &Step| run_step(ctx, step, &logs, &commit);
-    if needs_generate(steps) && !run(&GENERATE) {
+    if needs_generate(steps) && !generate::is_up_to_date(ctx)? && !run(&GENERATE) {
         bail!("generate failed, so no step ran");
     }
     let failed = thread::scope(|scope| {
@@ -755,6 +794,67 @@ mod tests {
             )),
             BTreeSet::from(["panel", "quality"].map(String::from))
         );
+    }
+
+    #[test]
+    fn a_realm_change_runs_the_realm_scale_gates_and_another_service_change_does_not() {
+        let areas = |path: &str| area_names(&affected(select(None), &[PathBuf::from(path)]));
+        assert!(areas("services/runtime/realm/src/main/kotlin/A.kt").contains("realm-scale"));
+        assert!(
+            areas("services/sdk/typewriter-contracts/src/main/kotlin/A.kt").contains("realm-scale")
+        );
+        assert!(areas("services/runtime/engine/core/src/main/kotlin/A.kt").contains("realm-scale"));
+        assert!(
+            !areas("services/runtime/loader/core/src/main/kotlin/A.kt").contains("realm-scale")
+        );
+    }
+
+    #[test]
+    fn a_gradle_wrapper_change_runs_the_realm_scale_gates() {
+        let areas = |path: &str| area_names(&affected(select(None), &[PathBuf::from(path)]));
+        assert!(areas("services/gradle/wrapper/gradle-wrapper.properties").contains("realm-scale"));
+        assert!(areas("services/gradlew").contains("realm-scale"));
+    }
+
+    /// Every project the realm's tests reach in Gradle, read from the build files, lies under a
+    /// realm scale path, so a change the measurement runs cannot skip its gate.
+    #[test]
+    fn the_realm_scale_paths_cover_the_realm_tests_gradle_closure() {
+        let services = Path::new(env!("CARGO_MANIFEST_DIR")).join("../services");
+        let settings = fs::read_to_string(services.join("settings.gradle.kts")).unwrap();
+        let directory_of = |name: &str| {
+            let call = format!("includeProject(\"{name}\", \"");
+            let start = settings.find(&call).map(|at| at + call.len());
+            start.map(|start| &settings[start..start + settings[start..].find('"').unwrap()])
+        };
+        let mut pending = vec!["realm".to_owned()];
+        let mut closure = BTreeSet::new();
+        while let Some(name) = pending.pop() {
+            if !closure.insert(name.clone()) {
+                continue;
+            }
+            let directory = directory_of(&name).unwrap_or_else(|| panic!(":{name} is no project"));
+            let build = fs::read_to_string(services.join(directory).join("build.gradle.kts"));
+            let build = build.unwrap();
+            pending.extend(
+                build
+                    .split("project(\":")
+                    .skip(1)
+                    .map(|rest| rest[..rest.find('"').unwrap()].to_owned()),
+            );
+        }
+        assert!(closure.contains("engine-core") && closure.contains("realm-route-fixtures"));
+        let uncovered: Vec<_> = closure
+            .iter()
+            .map(|name| format!("services/{}/build.gradle.kts", directory_of(name).unwrap()))
+            .filter(|path| {
+                !EVERY_AREA
+                    .iter()
+                    .chain(Area::RealmScale.paths())
+                    .any(|prefix| path.starts_with(prefix))
+            })
+            .collect();
+        assert!(uncovered.is_empty(), "realm scale misses {uncovered:?}");
     }
 
     #[test]

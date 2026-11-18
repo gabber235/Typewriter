@@ -2,26 +2,23 @@ package com.typewritermc.realm.publication
 
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.append
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.root
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.diagnostics
 import com.typewritermc.checking.locations
 import com.typewritermc.checking.reason
+import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CapturedCheckReport
-import com.typewritermc.realm.checking.CheckAdmissionTarget
 import com.typewritermc.realm.checking.RealmCheckRuntime
-import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.NativeBindingException
-import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.named
@@ -36,6 +33,7 @@ import com.typewritermc.types.use
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
@@ -46,10 +44,8 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.NativeBindingId
-import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -142,8 +138,7 @@ internal class AuthoringAcceptance(
     override suspend fun evaluate(capture: AuthoringLease): CapturedAssessment {
         val snapshot = capture
         return run {
-            val target = CheckAdmissionTarget.CapturedAcceptance(snapshot.root)
-            val report = checks.evaluateCapture(target)
+            val report = checks.evaluateCapture(snapshot.root)
             val evidence = linkedMapOf<DiagnosticId, DiagnosticEvidence>()
             val findings =
                 report.results
@@ -178,12 +173,13 @@ internal class AuthoringAcceptance(
                             evidence[finding.id] =
                                 DiagnosticEvidence(
                                     catalog = snapshot.root.catalog.generation,
-                                    expectations = (evidence[finding.id]?.expectations.orEmpty() + result.expectations).distinct(),
+                                    evidence = (evidence[finding.id]?.evidence.orEmpty() + result.evidence).distinct(),
                                 )
                         }
                         emitted
                     }.toMutableList()
             val resources = linkedMapOf<ResourceId, ResourceReadiness>()
+            val checkFindings = findings.toList()
             snapshot.root.resources.forEach { (id, record) ->
                 val firstFinding = findings.size
 
@@ -193,12 +189,14 @@ internal class AuthoringAcceptance(
                     val witness =
                         DiagnosticEvidence(
                             catalog = snapshot.root.catalog.generation,
-                            expectations = listOf(EditExpectation.createResource(id = id, expected = record)),
+                            evidence = listOf(CheckEvidence.FactWrapper(EditExpectation.createResource(id = id, expected = record))),
                         )
                     own.forEach { evidence[it.id] = witness }
                 }
-                val actual = (record.configuration as? TypeSelection.CompleteWrapper)?.use
-                if (actual == null) {
+                val type =
+                    snapshot.root.catalog.checked
+                        .typeOf(id, record.configuration)
+                if ((type as? Resolution.Ready)?.value is ResourceType.Partial) {
                     findings +=
                         publicationDiagnostic(
                             "pending_type",
@@ -208,10 +206,7 @@ internal class AuthoringAcceptance(
                     blocked()
                     return@forEach
                 }
-                val resolved =
-                    snapshot.root.catalog.checked
-                        .resolve(actual.use)
-                val checked = (resolved as? Resolution.Ready)?.value
+                val checked = ((type as? Resolution.Ready)?.value as? ResourceType.Complete)?.checked
                 if (checked == null) {
                     findings +=
                         publicationDiagnostic(
@@ -222,10 +217,8 @@ internal class AuthoringAcceptance(
                     blocked()
                     return@forEach
                 }
+                val actual = checkNotNull(checked.use.named)
                 val value = DataValue.named(actual, DataValue.RecordWrapper(record.payload))
-                intrinsicCollectionProblems(value, ValueLocation.of(id)).forEach { problem ->
-                    findings += publicationDiagnostic(problem.code, problem.message, problem.location)
-                }
                 when (val complete = checked.complete(value)) {
                     is CompletenessResult.Unfinished -> {
                         complete.locations.forEach { location ->
@@ -239,14 +232,16 @@ internal class AuthoringAcceptance(
                     }
 
                     is CompletenessResult.Invalid -> {
-                        complete.problems.forEach { problem ->
-                            findings +=
-                                publicationDiagnostic(
-                                    problem.code,
-                                    "The authored value is structurally invalid.",
-                                    problem.location.copy(resource = id),
-                                )
+                        // The content rule's fit finding reports each such problem and blocks publish, because
+                        // complete() and fit share one structural validation. So publication adds none of its own.
+                        // Holds by construction: a misfit makes the resource a content subject, whose run reports its
+                        // fit findings there, or a check_callback_failed there when the run fails.
+                        val atResource = checkFindings.filter { it.primary?.resource == id }
+                        check(atResource.isNotEmpty()) {
+                            "A value complete() refuses on ${id.value} has no check finding at that resource: ${complete.problems}."
                         }
+                        resources[id] = ResourceReadiness.Blocked(atResource + findings.drop(firstFinding))
+                        return@forEach
                     }
 
                     is CompletenessResult.Complete -> {
@@ -286,82 +281,6 @@ internal class AuthoringAcceptance(
         }
     }
 }
-
-private data class IntrinsicCollectionProblem(
-    val code: String,
-    val message: String,
-    val location: ValueLocation,
-)
-
-private fun intrinsicCollectionProblems(
-    value: DataValue,
-    at: ValueLocation,
-): List<IntrinsicCollectionProblem> =
-    buildList {
-        when (value) {
-            is DataValue.NamedWrapper -> {
-                addAll(intrinsicCollectionProblems(value.payload, at))
-            }
-
-            is DataValue.RecordWrapper -> {
-                value.fields.forEach { field ->
-                    addAll(intrinsicCollectionProblems(field.value, at.append(PathSegment.createField(name = field.name))))
-                }
-            }
-
-            is DataValue.ListValueWrapper -> {
-                value.items.forEach { item ->
-                    addAll(intrinsicCollectionProblems(item.value, at.append(PathSegment.createItem(id = item.id))))
-                }
-            }
-
-            is DataValue.SetValueWrapper -> {
-                value.items
-                    .groupBy { item -> item.value.canonicalValueKey() }
-                    .values
-                    .filter { duplicates -> duplicates.size > 1 }
-                    .flatMap { duplicates -> duplicates.drop(1) }
-                    .forEach { duplicate ->
-                        add(
-                            IntrinsicCollectionProblem(
-                                "duplicate_set_value",
-                                "A set contains the same authored value more than once.",
-                                at.append(PathSegment.createItem(id = duplicate.id)),
-                            ),
-                        )
-                    }
-                value.items.forEach { item ->
-                    addAll(intrinsicCollectionProblems(item.value, at.append(PathSegment.createItem(id = item.id))))
-                }
-            }
-
-            is DataValue.MapValueWrapper -> {
-                value.rows
-                    .groupBy { row -> row.key.canonicalValueKey() }
-                    .values
-                    .filter { duplicates -> duplicates.size > 1 }
-                    .flatMap { duplicates -> duplicates.drop(1) }
-                    .forEach { duplicate ->
-                        add(
-                            IntrinsicCollectionProblem(
-                                "duplicate_map_key",
-                                "A map contains the same authored key more than once.",
-                                at.append(PathSegment.createItem(id = duplicate.id), PathSegment.MAP_KEY),
-                            ),
-                        )
-                    }
-                value.rows.forEach { row ->
-                    val rowLocation = at.append(PathSegment.createItem(id = row.id))
-                    addAll(intrinsicCollectionProblems(row.key, rowLocation.append(PathSegment.MAP_KEY)))
-                    addAll(intrinsicCollectionProblems(row.value, rowLocation.append(PathSegment.MAP_VALUE)))
-                }
-            }
-
-            else -> {
-                Unit
-            }
-        }
-    }
 
 /**
  * Builds a publication finding. The identity digests location, code, and message so distinct findings

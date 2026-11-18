@@ -10,7 +10,7 @@ import {
 import {
   CapabilityId,
   PresentationId,
-  ResourceTarget,
+  ResourceMatch,
   TypeUse,
   ValuePath,
 } from "editor/v1/type_catalog.skir";
@@ -25,7 +25,7 @@ struct ResourceOperationId(84130001) {
 
 /// The resources an operation applies to and how many it accepts at once.
 struct OperationTargets(84130002) {
-  subject: ResourceTarget = 0;
+  subject: ResourceMatch = 0;
   cardinality: OperationCardinality = 1;
 }
 

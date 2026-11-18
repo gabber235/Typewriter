@@ -16,6 +16,8 @@ enum class GeneratedProviderKind(
     CollectionProjection("collectionProjection"),
     ResourceOperation("resourceOperation"),
     ResourceDisplay("resourceDisplay"),
+    Formula("formula"),
+    Dynamic("dynamic"),
 }
 
 /** Classpath resource that lists the generated providers of one compiled source part. */

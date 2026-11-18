@@ -8,6 +8,13 @@ final class _AuthoringDefaults {
     if (checked == null) return skir.DataValue.unfilled;
     final published = checked.published(actual.definition);
     if (published == null) return skir.DataValue.unfilled;
+    final cases = checked.enumCases(actual.definition);
+    if (cases != null) {
+      return skir.DataValue.createNamed(
+        actualType: actual.member(cases.first),
+        payload: skir.DataValue.unit,
+      );
+    }
     final payload = switch (published.definition.representation) {
       skir.RepresentationTemplate_scalarWrapper(:final value) => _scalarDefault(
         value.kind,
@@ -18,10 +25,6 @@ final class _AuthoringDefaults {
             : skir.DataValue.createSetValue(items: const []),
       skir.RepresentationTemplate_mappingWrapper() =>
         skir.DataValue.createMapValue(rows: const []),
-      skir.RepresentationTemplate_enumerationWrapper(:final value) =>
-        value.cases.firstOrNull == null
-            ? skir.DataValue.unfilled
-            : skir.DataValue.wrapEnumCase(value.cases.first.key),
       skir.RepresentationTemplate_linkWrapper() => skir.DataValue.unfilled,
       skir.RepresentationTemplate_recordWrapper() => skir.DataValue.unfilled,
       skir.RepresentationTemplate_unknown() => skir.DataValue.unfilled,

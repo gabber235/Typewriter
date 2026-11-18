@@ -25,7 +25,6 @@ import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
@@ -38,8 +37,10 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceMatchTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -84,14 +85,17 @@ internal val DUAL_RELATION =
         EndpointDefinition(
             id = SOURCE_ENDPOINT,
             slot = EndpointSlot.FIRST,
-            resource = DUAL.namedTemplate(listOf(DUAL_FIRST_PARAMETER.template, DUAL_SECOND_PARAMETER.template)),
+            resource =
+                ResourceMatchTemplate.TypeWrapper(
+                    DUAL.template(listOf(DUAL_FIRST_PARAMETER.template, DUAL_SECOND_PARAMETER.template)),
+                ),
             cardinality = EndpointCardinality.ONE,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
             id = TARGET_ENDPOINT,
             slot = EndpointSlot.SECOND,
-            resource = REWARD.namedTemplate(),
+            resource = ResourceMatchTemplate.TypeWrapper(REWARD.template()),
             cardinality = EndpointCardinality.ONE,
             onDelete = RelationDeletePolicy.CLEAR,
         ),
@@ -99,15 +103,18 @@ internal val DUAL_RELATION =
 
 internal val REPAIR_DEFINITIONS =
     listOf(
-        TypeDefinition.partial(id = REWARD, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true)),
+        TypeDefinition.partial(
+            id = REWARD,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.OPEN),
+        ),
         TypeDefinition.partial(
             id = COIN,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             parents = listOf(REWARD.namedTemplate()),
         ),
         TypeDefinition.partial(
             id = GEM,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), form = RecordForm.CONCRETE),
             parents = listOf(REWARD.namedTemplate()),
         ),
         TypeDefinition.partial(
@@ -126,7 +133,7 @@ internal val REPAIR_DEFINITIONS =
                                 type = BUNDLE_PARAMETER.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         ),
         TypeDefinition.partial(
@@ -150,13 +157,17 @@ internal val REPAIR_DEFINITIONS =
                                 type = CONTAINER_PARAMETER.template,
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         ),
         TypeDefinition.partial(
             id = LINK,
             parameters = listOf(TypeParameter.partial(key = LINK_PARAMETER, name = "target")),
-            representation = RepresentationTemplate.createLink(endpoint = SOURCE_ENDPOINT, target = LINK_PARAMETER.template),
+            representation =
+                RepresentationTemplate.createLink(
+                    endpoint = SOURCE_ENDPOINT,
+                    target = ResourceMatchTemplate.TypeWrapper(LINK_PARAMETER.template),
+                ),
         ),
         TypeDefinition.partial(
             id = DUAL,
@@ -183,7 +194,7 @@ internal val REPAIR_DEFINITIONS =
                                 type = LINK.template(listOf(DUAL_SECOND_PARAMETER.template)),
                             ),
                         ),
-                    abstract_ = false,
+                    form = RecordForm.CONCRETE,
                 ),
         ),
     )
@@ -197,30 +208,27 @@ internal val bundleItem = ItemId(value = "bundle")
 
 /** A pending dual selection: the first argument chosen as coin, the second left open. */
 internal val pendingCoin =
-    TypeSelection.createPending(
-        definition = DUAL,
-        arguments = listOf(ArgumentSelection.ChosenWrapper(COIN_USE.use), ArgumentSelection.UNFILLED),
-    )
+    TypeSelection.of(DUAL, mapOf(0 to COIN_USE.use))
 
 /** A container of rewards whose one bundle holds a gem, and whose own reward is a coin. */
 internal val rewardContainer =
     mapOf(container to containerRecord(CONTAINER_REWARD, LIST_BUNDLE_REWARD, BUNDLE_REWARD, gemValue()))
 
 /** A dual of coin and gem with a name and both values filled. */
-internal val coinGemDual = mapOf(dual to dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM)))
+internal val coinGemDual = mapOf(dual to dualRecord(TypeSelection.of(DUAL_COIN_GEM)))
 
 /** The coin and gem dual linked to a gem resource through its second argument. */
 internal val linkedDual =
     mapOf(
         dual to
-            dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM)).with(
+            dualRecord(TypeSelection.of(DUAL_COIN_GEM)).with(
                 "target",
                 DataValue.named(
                     LINK_GEM,
                     DataValue.createLink(endpoint = SOURCE_ENDPOINT, target = LinkTarget(resource = gem, opposite = null)),
                 ),
             ),
-        gem to AuthoringRecord.of(TypeSelection.CompleteWrapper(GEM_USE), emptyMap()),
+        gem to AuthoringRecord.of(TypeSelection.of(GEM_USE), emptyMap()),
     )
 
 internal val REPAIR_CATALOG = DefinitionCatalog(REPAIR_DEFINITIONS, listOf(DUAL_RELATION))
@@ -268,7 +276,7 @@ internal fun containerRecord(
     value: DataValue,
 ): AuthoringRecord =
     AuthoringRecord.of(
-        configuration = TypeSelection.CompleteWrapper(configuration),
+        configuration = TypeSelection.of(configuration),
         fields =
             mapOf(
                 "bundles" to

@@ -31,10 +31,13 @@ interface AuthoringGraphFacts {
      */
     fun linkTargetsOf(ids: List<ResourceId>): Sequence<ResourceId>
 
-    /** Resources linked with [id] through non owning relations, whichever side holds each link. */
+    /**
+     * Resources linked with [id] through non owning relations, whichever side holds each link. Content references, which
+     * say where content names a resource, are usages and not links.
+     */
     fun linksOf(id: ResourceId): Sequence<ResourceId>
 
-    /** Whether [id] and [target] are linked through a non owning relation, whichever of them holds the link. */
+    /** Whether [id] and [target] are linked as [linksOf] lists them, whichever of them holds the link. */
     fun isLinked(
         id: ResourceId,
         target: ResourceId,

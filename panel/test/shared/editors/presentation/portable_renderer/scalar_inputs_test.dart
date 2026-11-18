@@ -274,9 +274,9 @@ void main() {
           skir.AuthoringResource(
             id: location.resource,
             content: skir.AuthoringRecord(
-              configuration: skir.TypeSelection.createComplete(
-                definition: root,
-                arguments: const [],
+              types: const [],
+              configuration: selectionOfUse(
+                skir.NamedTypeUse(definition: root, arguments: const []),
               ),
               fields: [
                 skir.FieldValue(name: "count", value: skir.DataValue.unfilled),

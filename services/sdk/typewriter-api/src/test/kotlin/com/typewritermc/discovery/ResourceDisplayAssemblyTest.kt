@@ -9,7 +9,6 @@ import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.of
-import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.elements.CueDefinition
@@ -38,7 +37,6 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.template
 import com.typewritermc.types.toWire
-import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
@@ -64,7 +62,7 @@ import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
-import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -94,13 +92,13 @@ val ResourceDisplayAssemblyTest by testSuite {
         val displays = assembly.displays
 
         displays.displayFor(BookDefinition.id, assembly.checked)?.target shouldBe
-            ResourceTarget.type(BookDefinition.id.namedTemplate())
+            ResourceMatch.DefinitionWrapper(BookDefinition.id)
         displays.displayFor(fixturePage, assembly.checked)?.target shouldBe
-            ResourceTarget.type(PageDefinition.id.namedTemplate())
-        displays.displayFor(CueDefinition.id, assembly.checked)?.target shouldBe ResourceTarget.ANY_RESOURCE
+            ResourceMatch.DefinitionWrapper(PageDefinition.id)
+        displays.displayFor(CueDefinition.id, assembly.checked)?.target shouldBe ResourceMatch.ANY_RESOURCE
         assembly.label(
             AuthoringRecord.of(
-                TypeSelection.CompleteWrapper(fixturePage.namedUse()),
+                TypeSelection.of(fixturePage.namedUse()),
                 mapOf("name" to DataValue.StringValueWrapper("Intro")),
             ),
         ) shouldBe
@@ -117,7 +115,7 @@ val ResourceDisplayAssemblyTest by testSuite {
             )
 
         // The default formulas read the published declaration, a panel profile read: the panel evaluates them to these values.
-        assembly.displays.displayFor(fixtureResource, assembly.checked)?.target shouldBe ResourceTarget.ANY_RESOURCE
+        assembly.displays.displayFor(fixtureResource, assembly.checked)?.target shouldBe ResourceMatch.ANY_RESOURCE
         assembly.editorCatalog.types
             .single { it.definition.id == fixtureResource }
             .display shouldBe display.toWire()
@@ -125,7 +123,7 @@ val ResourceDisplayAssemblyTest by testSuite {
 
     test("a display formula that reads a host context input is rejected") {
         val contextual =
-            displayProvider(ResourceTarget.type(BookDefinition.id.namedTemplate())) {
+            displayProvider(ResourceMatch.DefinitionWrapper(BookDefinition.id)) {
                 DisplayFormulas(
                     label = input<String>(ExpressionBindingId(value = "context:active")).orElse(literal("Book")),
                     accent = literal(Color(0xFF000000u)),
@@ -136,7 +134,7 @@ val ResourceDisplayAssemblyTest by testSuite {
 
         assembly.diagnosticCodes(BookDefinition.id) shouldBe listOf("display_reads_context")
         val otherResource =
-            displayProvider(ResourceTarget.type(BookDefinition.id.namedTemplate())) {
+            displayProvider(ResourceMatch.DefinitionWrapper(BookDefinition.id)) {
                 val other =
                     RuntimePresentationQueries(mapOf(Book::class to BookDefinition.id.namedTemplate()))
                         .resource(literal(ResourceId("other")), Book::class)
@@ -159,7 +157,7 @@ val ResourceDisplayAssemblyTest by testSuite {
 
     test("a display of a generic resource type checks against every application of its parameters") {
         val generic = genericType(fixtureBox)
-        val target = ResourceTarget.type(fixtureBox.namedTemplate())
+        val target = ResourceMatch.DefinitionWrapper(fixtureBox)
         val reading = { field: String ->
             displayProvider(target) {
                 DisplayFormulas(
@@ -179,7 +177,7 @@ val ResourceDisplayAssemblyTest by testSuite {
     }
 
     test("two displays for one target are rejected and the resource falls back to a less specific display") {
-        val target = ResourceTarget.type(BookDefinition.id.namedTemplate())
+        val target = ResourceMatch.DefinitionWrapper(BookDefinition.id)
         val constant = { label: String ->
             displayProvider(target) {
                 DisplayFormulas(literal(label), literal(Color(0xFF000000u)), literal(Icon.Iconify("mdi:book")))
@@ -189,13 +187,13 @@ val ResourceDisplayAssemblyTest by testSuite {
 
         assembly.diagnosticCodes(BookDefinition.id) shouldBe listOf("duplicate_resource_display")
         assembly.editorCatalog.resourceDisplays
-            .map { it.target } shouldBe listOf(skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE)
-        assembly.displays.displayFor(BookDefinition.id, assembly.checked)?.target shouldBe ResourceTarget.ANY_RESOURCE
+            .map { it.target } shouldBe listOf(skirout.editor.v1.type_catalog.ResourceMatch.ANY_RESOURCE)
+        assembly.displays.displayFor(BookDefinition.id, assembly.checked)?.target shouldBe ResourceMatch.ANY_RESOURCE
     }
 
     test("an extension's any resource display is rejected while the framework default keeps naming every resource") {
         val extension =
-            displayProvider(ResourceTarget.ANY_RESOURCE) {
+            displayProvider(ResourceMatch.ANY_RESOURCE) {
                 DisplayFormulas(literal("Extension"), literal(Color(0xFF000000u)), literal(Icon.Iconify("mdi:book")))
             }
         val assembly = assemble(displays = listOf(extension), includeGenerated = false)
@@ -207,7 +205,7 @@ val ResourceDisplayAssemblyTest by testSuite {
                     .DeclarationOrigin(owner = extension.origin.owner),
             )
         assembly.editorCatalog.resourceDisplays
-            .map { it.target } shouldBe listOf(skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE)
+            .map { it.target } shouldBe listOf(skirout.editor.v1.type_catalog.ResourceMatch.ANY_RESOURCE)
         assembly.displays.displayFor(BookDefinition.id, assembly.checked)!!.label shouldNotBe
             ExpressionNode.LiteralWrapper(DataValue.StringValueWrapper("Extension"))
     }

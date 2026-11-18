@@ -12,7 +12,6 @@ import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.RealmSections
 import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.boundCollectionPath
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.record
 import com.typewritermc.realm.authoring.AuthoringView
@@ -110,7 +109,7 @@ internal class RealmStructureProvisioning(
     private fun rootRecord(view: AuthoringView): AuthoringRecord {
         val encoded = view.catalog.binding<RealmRoot>(RealmRootDefinition.id.use()).encode(RealmRoot()) as DataValue.NamedWrapper
         return AuthoringRecord.of(
-            TypeSelection.CompleteWrapper(encoded.actualType),
+            TypeSelection.of(encoded.actualType),
             (encoded.payload as DataValue.RecordWrapper).value,
         )
     }
@@ -124,7 +123,7 @@ internal class RealmStructureProvisioning(
             DefaultInitializationRuntime(catalog.checked, catalog.nativeBindings).prepare(
                 ValuePreparationRequest(
                     catalog = catalog.generation,
-                    target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(type)),
+                    target = PreparationTarget.RecordWrapper(TypeSelection.of(type)),
                     suppliedValue = null,
                 ),
             )

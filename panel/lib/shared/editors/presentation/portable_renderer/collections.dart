@@ -458,12 +458,11 @@ final class _ResourceReferenceAppearance extends HookWidget {
     final configured = PortableExpressionBinding(
       value: projection.value,
       location: skir.ValueLocation(resource: resource, path: editorRootPath),
-      schema: switch (projection.configuration) {
-        skir.TypeSelection_completeWrapper(:final value) =>
-          CompletePortablePresentationBinding(skir.TypeUse.wrapNamed(value)),
-        skir.TypeSelection_pendingWrapper() =>
-          PartialPortablePresentationBinding(projection.configuration),
-        _ => null,
+      schema: switch (catalog.completeUse(projection.configuration)) {
+        final value? => CompletePortablePresentationBinding(
+          skir.TypeUse.wrapNamed(value),
+        ),
+        null => PartialPortablePresentationBinding(projection.configuration),
       },
     );
     final PortablePresentationScope targetScope;

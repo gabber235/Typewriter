@@ -12,7 +12,7 @@
 ///     }, type: typeUse("Quest")),
 ///   ],
 ///   catalog: authoredCatalog([
-///     declaredRecord("Step", abstract: true),
+///     declaredRecord("Step", open: true),
 ///     declaredRecord("Quest", fields: {"title": skir.ScalarKind.text}),
 ///   ]),
 /// );
@@ -55,6 +55,13 @@ skir.NamedTypeTemplate _named(Object type) => switch (type) {
   _ => skir.NamedTypeTemplate(definition: _id(type), arguments: const []),
 };
 
+/// The resources [target] matches: a [skir.ResourceMatchTemplate] stays
+/// itself, and anything else is the type [typeTemplateOf] reads.
+skir.ResourceMatchTemplate _match(Object target) => switch (target) {
+  final skir.ResourceMatchTemplate match => match,
+  _ => skir.ResourceMatchTemplate.wrapType(typeTemplateOf(target)),
+};
+
 /// [payload] held as the test type [type].
 skir.DataValue typedValue(String type, skir.DataValue payload) =>
     skir.DataValue.createNamed(actualType: typeUse(type), payload: payload);
@@ -83,8 +90,9 @@ skir.TypeDisplay typeDisplay(
 /// but those it inherits from that type.
 ///
 /// It refines [parents], whose fields [authoredCatalog] adds to its own; it
-/// is concrete unless [abstract]; its [parameters] are bounded by the types
-/// listed under each name. It is ready unless [status] says otherwise,
+/// is concrete unless [open], or closed over [cases] when given; its [parameters] are bounded by the types
+/// listed under each name, and those named in [derived] are derived, never
+/// chosen by a creator. It is ready unless [status] says otherwise,
 /// places by [placementField] when given and shows [display], the default
 /// display unless given.
 skir.PublishedType declaredRecord(
@@ -93,9 +101,11 @@ skir.PublishedType declaredRecord(
   Set<String> defaulted = const {},
   Map<String, List<skir.RuleId>> rules = const {},
   Object? inheritedFrom,
-  bool abstract = false,
+  bool open = false,
+  List<Object>? cases,
   List<Object> parents = const [],
   Map<String, List<Object>> parameters = const {},
+  Set<String> derived = const {},
   skir.DeclarationStatus status = skir.DeclarationStatus.ready,
   skir.ValuePath? placementField,
   skir.TypeDisplay? display,
@@ -118,7 +128,13 @@ skir.PublishedType declaredRecord(
               hasConstructorDefault: defaulted.contains(field),
             ),
       ],
-      abstract_: abstract,
+      form: cases != null
+          ? skir.RecordForm.createClosed(
+              cases: [for (final case_ in cases) _named(case_)],
+            )
+          : open
+          ? skir.RecordForm.open
+          : skir.RecordForm.concrete,
     ),
     parameters: [
       for (final (index, MapEntry(key: parameter, value: bounds))
@@ -127,6 +143,7 @@ skir.PublishedType declaredRecord(
           key: skir.ParameterKey(owner: id, index: index),
           name: parameter,
           bounds: [for (final bound in bounds) typeTemplateOf(bound)],
+          derived: derived.contains(parameter),
         ),
     ],
     parents: [for (final parent in parents) _named(parent)],
@@ -145,6 +162,33 @@ skir.PublishedType declaredRecord(
     searchKey: searchKey,
   );
 }
+
+/// The enum [type], a test type name or a [skir.TypeDefinitionId]: a closed
+/// record over the unit [cases], followed by one declaration per case.
+List<skir.PublishedType> declaredEnum(Object type, List<String> cases) {
+  final id = _id(type);
+  return [
+    declaredRecord(id, cases: [for (final name in cases) id.member(name)]),
+    for (final name in cases)
+      publishedType(
+        id.member(name),
+        representation: skir.RepresentationTemplate.createScalar(
+          kind: skir.ScalarKind.unit,
+        ),
+        parents: [_named(id)],
+      ),
+  ];
+}
+
+/// The value of the case [name] of the enum [type].
+skir.DataValue enumValue(Object type, String name) =>
+    skir.DataValue.createNamed(
+      actualType: skir.NamedTypeUse(
+        definition: _id(type).member(name),
+        arguments: const [],
+      ),
+      payload: skir.DataValue.unit,
+    );
 
 /// The ready scalar type [type] of [kind].
 skir.PublishedType declaredScalar(Object type, skir.ScalarKind kind) =>
@@ -206,7 +250,8 @@ skir.PublishedType declaredMap(
   ),
 );
 
-/// The ready link type [type] through [endpoint] to a [target].
+/// The ready link type [type] through [endpoint] to a [target], a type as
+/// [typeTemplateOf] reads it or a [skir.ResourceMatchTemplate].
 skir.PublishedType declaredLink(
   Object type, {
   required String endpoint,
@@ -215,13 +260,15 @@ skir.PublishedType declaredLink(
   _id(type),
   representation: skir.RepresentationTemplate.createLink(
     endpoint: skir.EndpointId(value: endpoint),
-    target: typeTemplateOf(target),
+    target: _match(target),
   ),
 );
 
-/// The endpoint [id] of a relation at a [resource], one per resource unless
-/// [cardinality] says otherwise, cleared when its counterpart is deleted
-/// unless [onDelete] says otherwise. The relation it joins places it.
+/// The endpoint [id] of a relation at a [resource], a type as
+/// [typeTemplateOf] reads it or a [skir.ResourceMatchTemplate], one per
+/// resource unless [cardinality] says otherwise, cleared when its
+/// counterpart is deleted unless [onDelete] says otherwise. The relation it
+/// joins places it.
 skir.EndpointDefinition endpointOf(
   String id,
   Object resource, {
@@ -230,7 +277,7 @@ skir.EndpointDefinition endpointOf(
 }) => skir.EndpointDefinition(
   id: skir.EndpointId(value: id),
   slot: skir.EndpointSlot.first,
-  resource: _named(resource),
+  resource: _match(resource),
   cardinality: cardinality,
   onDelete: onDelete,
 );
@@ -252,7 +299,8 @@ skir.RelationContract declaredRelation(
 /// Binds [endpoint] to the value a [resource] holds at [path], whose names
 /// are fields and whose [skir.FieldPatternSegment.items] reads each item of a
 /// collection; the value is declared by [owner], the [resource] unless
-/// given, and links to a [target].
+/// given, and links to a [target], a type as [typeTemplateOf] reads it or a
+/// [skir.ResourceMatchTemplate].
 skir.EndpointBindingTemplate endpointBinding(
   String endpoint, {
   required String resource,
@@ -275,7 +323,7 @@ skir.EndpointBindingTemplate endpointBinding(
         },
     ],
   ),
-  target: typeTemplateOf(target),
+  target: _match(target),
   containsCollection: path.contains(skir.FieldPatternSegment.items),
 );
 
@@ -388,9 +436,10 @@ skir.AuthoringResource authoredRecord(
     _ => skir.ResourceId(value: "$id"),
   },
   content: skir.AuthoringRecord(
+    types: const [],
     configuration: type == null
-        ? skir.TypeSelection.unknown
-        : skir.TypeSelection.wrapComplete(type),
+        ? skir.TypeSelection.defaultInstance
+        : selectionOfUse(type),
     fields: [
       for (final MapEntry(:key, :value) in fields.entries)
         skir.FieldValue(name: key, value: value),
