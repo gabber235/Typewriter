@@ -506,6 +506,9 @@ val ArtifactDistributionTest by testSuite {
         assignment?.roles shouldBe RuntimePlacement.entries.toSet()
         assignment?.primaryEngine?.id shouldBe ArtifactId("typewritermc:paper")
         assignment?.intent?.panelEngine shouldBe panel
+        assignment?.engineIdOf(RuntimePlacement.PRIMARY_ENGINE) shouldBe "engine"
+        assignment?.engineIdOf(RuntimePlacement.PANEL_ENGINE) shouldBe "panel.realm"
+        assignment?.engineIdOf(RuntimePlacement.REALM) shouldBe null
         desired?.revision?.value shouldBe 1
         desired?.revision?.serviceId shouldBe ServiceId("service-id")
         val removal =

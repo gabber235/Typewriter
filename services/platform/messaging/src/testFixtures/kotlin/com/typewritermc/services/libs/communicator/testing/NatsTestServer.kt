@@ -33,10 +33,15 @@ class NatsTestServer private constructor(
 
     companion object {
         /** Starts a server on [config], a nats-server configuration file's text, and waits until it accepts clients. */
-        fun start(config: String = ""): NatsTestServer {
+        fun start(config: String = ""): NatsTestServer = start { config }
+
+        /** Starts a server with JetStream, its store inside the server's own state, for key value buckets and streams. */
+        fun startWithJetStream(): NatsTestServer = start { state -> "jetstream { store_dir: \"${state.resolve("jetstream")}\" }\n" }
+
+        private fun start(config: (state: Path) -> String): NatsTestServer {
             val state = Files.createTempDirectory("nats-test-server")
             val file = state.resolve("nats.conf")
-            file.writeText(config)
+            file.writeText(config(state))
             val binary = System.getenv("NATS_SERVER_BIN") ?: "nats-server"
             val process =
                 ProcessBuilder(binary, "--config", file.toString(), "--addr", "127.0.0.1", "--port", "-1")

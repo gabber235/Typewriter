@@ -30,6 +30,7 @@ import com.typewritermc.loader.deployment.HostDeploymentProjection
 import com.typewritermc.loader.deployment.ProjectedExtension
 import com.typewritermc.loader.deployment.ProjectedRuntime
 import com.typewritermc.loader.deployment.ProjectedSourcePart
+import com.typewritermc.loader.rollout.ArtifactHostAssignment
 import com.typewritermc.loader.rollout.HostRolloutParticipant
 import com.typewritermc.loader.rollout.ProjectionSource
 import com.typewritermc.loader.rollout.RealmId
@@ -144,6 +145,7 @@ class ParticipantFixture(
                 serviceId.value,
                 realmId.value,
                 RuntimePlacement.PRIMARY_ENGINE,
+                "engine",
             ),
         directories =
             com.typewritermc.loader.api.HostedRuntimeDirectories(
@@ -251,6 +253,7 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
     val participant =
         HostRolloutParticipant(
             realmId,
+            ArtifactHostAssignment(realmId, setOf(RuntimePlacement.PRIMARY_ENGINE), engineInstance = "engine")::engineIdOf,
             serviceId,
             root,
             host,

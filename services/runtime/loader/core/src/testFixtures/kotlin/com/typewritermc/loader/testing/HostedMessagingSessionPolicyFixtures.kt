@@ -26,6 +26,7 @@ fun hostedSession(
     id,
     "organization",
     Communicator(transport, OpenTelemetry.noop().serviceTelemetry("loader test"), ContextPropagators.noop()),
+    com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets,
 )
 
 fun degradedState() =

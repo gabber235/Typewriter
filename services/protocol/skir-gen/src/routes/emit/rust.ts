@@ -77,6 +77,9 @@ function grantExpression(tokens: readonly GrantToken[]): [string, string] {
         case "consumer":
           captures = true;
           return `{${token.projection}}`;
+        case "bucket":
+          captures = true;
+          return `${token.stream ? "KV_" : ""}${token.name}_{realm}`;
       }
     })
     .join(".");
@@ -129,10 +132,12 @@ function consumerBinding(role: RoleDeclaration, projection: string): string {
  * inserts every subject its routes derive for it; the function takes the connection session when
  * one of its roles receives persistent projections, whose consumer names depend on it.
  */
-function emitGrants({ roles, routes }: ResolvedRoutes): string[] {
+function emitGrants({ roles, routes, buckets }: ResolvedRoutes): string[] {
   const grouped = new Map<ScopeKind, Map<string, Grant[]>>();
   for (const role of roles.values()) {
-    const grants = routes.flatMap((route) => route.grants.filter((grant) => grant.role === role.name));
+    const grants = [...routes.flatMap((route) => route.grants), ...buckets.flatMap((bucket) => bucket.grants)].filter(
+      (grant) => grant.role === role.name,
+    );
     if (grants.length === 0) {
       continue;
     }

@@ -28,6 +28,8 @@ interface LoaderServiceConnection {
 
     suspend fun communicatorFor(connectionGeneration: Long): LoaderServiceResult<Communicator>
 
+    suspend fun bucketsFor(connectionGeneration: Long): LoaderServiceResult<com.typewritermc.services.libs.communicator.kv.KeyValueBuckets>
+
     suspend fun rotateAuthorization(): LoaderServiceResult<Long>
 
     suspend fun releaseAuthorizationRotation(connectionGeneration: Long): LoaderServiceResult<Unit>
@@ -67,6 +69,9 @@ class RegistrarLoaderService(
 
     override suspend fun communicatorFor(connectionGeneration: Long): RegistrarResult<Communicator> =
         service.communicatorFor(connectionGeneration)
+
+    override suspend fun bucketsFor(connectionGeneration: Long): RegistrarResult<com.typewritermc.services.libs.communicator.kv.KeyValueBuckets> =
+        service.bucketsFor(connectionGeneration)
 
     override suspend fun rotateAuthorization(): RegistrarResult<Long> = service.rotateAuthorization()
 

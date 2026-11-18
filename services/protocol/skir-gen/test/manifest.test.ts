@@ -63,6 +63,25 @@ describe("manifest admission", () => {
     expect(() => parseManifest(sampleSource.replace(pattern, replacement), "routes.yaml")).toThrow(error);
   });
 
+  test("rejects a bucket writer that is not bound to one realm", () => {
+    expect(() =>
+      parseManifest(
+        manifestSource(
+          "",
+          [],
+          `  - name: sessions
+    scope: realm
+    key: [principal_kind, principal_id, session]
+    owner: { role: realm_coordinator }
+    writers: [{ role: organization_member }]
+    marker_ttl_seconds: 60
+`,
+        ),
+        "routes.yaml",
+      ),
+    ).toThrow("buckets[0].writers[0].role: role organization_member is not bound to one realm");
+  });
+
   test("rejects a party naming an undeclared role", () => {
     expect(() => parse(unary("unknown_role", "{ role: native_client }", "user.{user}.sample"))).toThrow(
       'routes.yaml:12:23: routes[0].callers[0].role: unknown role "native_client"',

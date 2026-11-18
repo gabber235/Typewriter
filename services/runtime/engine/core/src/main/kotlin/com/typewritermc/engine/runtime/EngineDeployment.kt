@@ -8,7 +8,6 @@ import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.assemble
 import com.typewritermc.imprint.COMMON_SOURCE_PART
-import com.typewritermc.imprint.ImprintRuntimeEntrypoint
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.HostedRuntimeEntrypoint
 import com.typewritermc.loader.api.RuntimePlacement
@@ -17,10 +16,24 @@ import com.typewritermc.loader.api.StagedHostedRuntime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import org.koin.core.module.Module
 import skirout.editor.v1.type_catalog.CatalogGeneration
 
-@ImprintRuntimeEntrypoint
-class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
+/**
+ * Stages one deployment of an engine kind. Each engine kind declares its runtime entrypoint by delegating here with
+ * the Koin module of its own parts:
+ *
+ * ```kotlin
+ * @ImprintRuntimeEntrypoint
+ * class PaperEngineEntrypoint : HostedRuntimeEntrypoint by EngineDeployment(paperModule)
+ * ```
+ *
+ * The deployment's Koin joins engine-core's parts with [kind]'s and closes with the runtime; the registrars it holds run
+ * with every activation after the discovered ones.
+ */
+class EngineDeployment(
+    private val kind: Module,
+) : HostedRuntimeEntrypoint {
     override suspend fun stage(context: HostedDeploymentContext): StagedHostedRuntime {
         val implementation = requireNotNull(context.engineImplementation) { "Engine runtime implementation is missing." }
         require(implementation.placement == context.identity.placement) {
@@ -56,7 +69,9 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
                 parentClassLoader = requireNotNull(javaClass.classLoader),
             )
         val deploymentScope = CoroutineScope(Dispatchers.Default)
+        var wiring: EngineWiring? = null
         return try {
+            val engine = EngineWiring(context, deploymentScope, kind).also { wiring = it }
             val assembly =
                 deployment.providers.contributions.assemble(
                     CatalogAssemblyContext(CatalogGeneration(value = executionCatalogIdentity(artifacts))),
@@ -64,7 +79,7 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
             val runtime =
                 ReloadableEngineRuntime(
                     deployment = deployment,
-                    registrars = deployment.providers.registrars.map { it.registrar },
+                    registrars = deployment.providers.registrars.map { it.registrar } + engine.registrars,
                     parentScope = deploymentScope,
                     implementationToken = implementation.fingerprint(),
                     enforceImplementationCompatibility =
@@ -72,8 +87,9 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
                     contentGateway = ResourceGraphContentGateway(assembly.checked, assembly.bindings, assembly.relations),
                     contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, deploymentScope),
                 )
-            ScopedEngineRuntime(runtime, deploymentScope)
+            ScopedEngineRuntime(runtime, engine, deploymentScope)
         } catch (failure: Throwable) {
+            runCatching { wiring?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
             deploymentScope.cancel()
             runCatching { deployment.close() }.exceptionOrNull()?.let(failure::addSuppressed)
             throw failure
@@ -81,16 +97,21 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
     }
 }
 
-/** Owns the coroutine scope of one staged engine deployment and cancels it after final closure. */
+/** Owns the Koin and the coroutine scope of one staged engine deployment and closes both after final closure. */
 private class ScopedEngineRuntime(
     private val runtime: ReloadableEngineRuntime,
+    private val wiring: EngineWiring,
     private val scope: CoroutineScope,
 ) : StagedHostedRuntime by runtime {
     override suspend fun close() {
         try {
             runtime.close()
         } finally {
-            scope.cancel()
+            try {
+                wiring.close()
+            } finally {
+                scope.cancel()
+            }
         }
     }
 }

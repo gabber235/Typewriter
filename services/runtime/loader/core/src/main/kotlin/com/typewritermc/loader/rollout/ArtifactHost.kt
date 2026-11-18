@@ -56,20 +56,34 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Describes the Realm and roles assigned to a loader host.
  *
- * A Realm role requires a primary engine target and panel engine intent for deployment coordination.
+ * A Realm role requires a primary engine target and panel engine intent for deployment coordination. A primary engine
+ * role requires the [engineInstance] it runs as: the topology engine instance id, or `local.<realm id>` for a host
+ * running without topology.
  */
 data class ArtifactHostAssignment(
     val realmId: RealmId,
     val roles: Set<RuntimePlacement>,
     val primaryEngine: PrimaryEngineTarget? = null,
     val intent: RealmLoaderIntent? = null,
+    val engineInstance: String? = null,
 ) {
     init {
         if (RuntimePlacement.REALM in roles) {
             requireNotNull(primaryEngine) { "A Realm host assignment requires a primary engine target." }
             requireNotNull(intent) { "A Realm host assignment requires Realm loader intent." }
         }
+        if (RuntimePlacement.PRIMARY_ENGINE in roles) {
+            requireNotNull(engineInstance) { "A primary engine assignment requires the engine instance it runs as." }
+        }
     }
+
+    /** The engine identity a runtime of [placement] runs as in this Realm, or null for the Realm itself. */
+    fun engineIdOf(placement: RuntimePlacement): String? =
+        when (placement) {
+            RuntimePlacement.REALM -> null
+            RuntimePlacement.PANEL_ENGINE -> "panel.${realmId.value}"
+            RuntimePlacement.PRIMARY_ENGINE -> engineInstance
+        }
 }
 
 /**
@@ -141,6 +155,7 @@ class ArtifactHost(
                                             id = it.connectionGeneration,
                                             organizationId = it.session.binding.organizationId,
                                             communicator = service.communicatorFor(it.connectionGeneration).requireSuccess(),
+                                            buckets = service.bucketsFor(it.connectionGeneration).requireSuccess(),
                                         )
                                     }
                                 if (session == null && !state.invalidatesHostedMessagingSession()) return@withLock
@@ -219,6 +234,7 @@ class ArtifactHost(
                     id = ready.connectionGeneration,
                     organizationId = ready.session.binding.organizationId,
                     communicator = service.communicatorFor(ready.connectionGeneration).requireSuccess(),
+                    buckets = service.bucketsFor(ready.connectionGeneration).requireSuccess(),
                 )
         } else if (pendingAuthorizationReleases.isNotEmpty()) {
             error("Authorization rotation did not produce a ready session.")
@@ -283,6 +299,7 @@ internal class AssignmentRuntime(
     private val participant =
         HostRolloutParticipant(
             assignment.realmId,
+            assignment::engineIdOf,
             serviceId,
             workDirectory,
             object : HostedRuntimeHost {

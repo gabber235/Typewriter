@@ -116,6 +116,10 @@ class ServiceRegistrar(
     suspend fun communicatorFor(connectionGeneration: Long): RegistrarResult<Communicator> =
         request { RegistrarCommand.CommunicatorFor(connectionGeneration, it) }
 
+    /** Borrows the key value buckets of the requested generation's connection only while that generation is ready. */
+    suspend fun bucketsFor(connectionGeneration: Long): RegistrarResult<com.typewritermc.services.libs.communicator.kv.KeyValueBuckets> =
+        request { RegistrarCommand.BucketsFor(connectionGeneration, it) }
+
     /**
      * Requests a fresh authorized runtime while retaining prior runtime resources for handover.
      *
@@ -156,7 +160,11 @@ class ServiceRegistrar(
                 }
 
                 is RegistrarCommand.CommunicatorFor -> {
-                    command.response.complete(communicatorForOwned(command.connectionGeneration))
+                    command.response.complete(readyRuntime(command.connectionGeneration) { it.communicator })
+                }
+
+                is RegistrarCommand.BucketsFor -> {
+                    command.response.complete(readyRuntime(command.connectionGeneration) { it.buckets })
                 }
 
                 is RegistrarCommand.ReleaseAuthorizationRotation -> {
@@ -213,15 +221,16 @@ class ServiceRegistrar(
         return RegistrarResult.Success(Unit)
     }
 
-    private fun communicatorForOwned(connectionGeneration: Long): RegistrarResult<Communicator> {
+    private fun <Value> readyRuntime(
+        connectionGeneration: Long,
+        borrow: (RegistrarRuntime) -> Value,
+    ): RegistrarResult<Value> {
         val ready = mutableStates.value.state as? RegistrarState.Ready
         if (ready?.connectionGeneration != connectionGeneration) {
             return RegistrarResult.Failure(RegistrarFailure.Internal("ready_generation_changed"))
         }
-        val communicator =
-            runtime?.communicator
-                ?: return RegistrarResult.Failure(RegistrarFailure.Internal("ready_runtime_unavailable"))
-        return RegistrarResult.Success(communicator)
+        val current = runtime ?: return RegistrarResult.Failure(RegistrarFailure.Internal("ready_runtime_unavailable"))
+        return RegistrarResult.Success(borrow(current))
     }
 
     private suspend fun releaseAuthorizationRotationOwned(connectionGeneration: Long): RegistrarResult<Unit> {
@@ -1013,6 +1022,11 @@ private sealed interface RegistrarCommand {
     data class CommunicatorFor(
         val connectionGeneration: Long,
         val response: CompletableDeferred<RegistrarResult<Communicator>>,
+    ) : RegistrarCommand
+
+    data class BucketsFor(
+        val connectionGeneration: Long,
+        val response: CompletableDeferred<RegistrarResult<com.typewritermc.services.libs.communicator.kv.KeyValueBuckets>>,
     ) : RegistrarCommand
 
     data class ReleaseAuthorizationRotation(

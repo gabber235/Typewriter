@@ -20,6 +20,7 @@ import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.edit.AuthoringRepository
 import com.typewritermc.realm.edit.RealmAuthoringOwner
 import com.typewritermc.realm.edit.RealmStructureProvisioning
+import com.typewritermc.realm.session.RealmSessionsBucket
 import com.typewritermc.realm.edit.SurrealAuthoringStorage
 import com.typewritermc.realm.operation.PreparationCoordinator
 import com.typewritermc.realm.operation.PreparationEvaluator
@@ -103,6 +104,7 @@ internal class Realm(
     private var router: CommunicatorRouter? = null
     private var routerSession: Long? = null
     private var serviceMonitor: Job? = null
+    private var sessionsBucket: Job? = null
 
     context(main: MainSpanScope)
     suspend fun start(realmId: String) {
@@ -170,6 +172,8 @@ internal class Realm(
                     capabilityInvocations = RealmCapabilityInvocationSource(catalogs),
                     editorUpdates = editorUpdates,
                 )
+            val bucket = RealmSessionsBucket(realmId, telemetry, retryPolicy)
+            sessionsBucket = scope.launch { host.messaging.collectLatest { session -> session?.let { bucket.ensure(it) } } }
             val routesReady = CompletableDeferred<Unit>()
             serviceMonitor =
                 scope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -188,7 +192,7 @@ internal class Realm(
     }
 
     suspend fun shutdown() {
-        if (database == null && router == null && serviceMonitor == null) return
+        if (database == null && router == null && serviceMonitor == null && sessionsBucket == null) return
         telemetry.mainSpan(
             name = "realm.routes.shutdown",
             unhandledFailureSlug = ErrorSlug.of("realm-routes-shutdown-failed"),
@@ -203,6 +207,8 @@ internal class Realm(
         closeAll(primary) {
             attempt { serviceMonitor?.cancelAndJoin() }
             serviceMonitor = null
+            attempt { sessionsBucket?.cancelAndJoin() }
+            sessionsBucket = null
             attempt { catalogInvalidations.stop() }
             attempt {
                 lifecycle.withLock {

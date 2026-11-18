@@ -117,6 +117,78 @@ async fn an_attached_engine_follows_rollout_but_cannot_lead_it(
 }
 
 #[component_test(AuthTypewriterPermissions)]
+async fn an_attached_engine_keeps_sessions_in_its_own_realms_bucket_only(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let permissions = service_grants(context, "engine_one", Realm::Attached("quests")).await?;
+
+    for subject in [
+        "$JS.API.STREAM.INFO.KV_sessions_quests",
+        "$JS.API.DIRECT.GET.KV_sessions_quests.$KV.sessions_quests.minecraft.player.player",
+        "$JS.API.CONSUMER.CREATE.KV_sessions_quests.listing.$KV.sessions_quests.minecraft.player.*",
+        "$KV.sessions_quests.minecraft.player.player",
+    ] {
+        assert!(
+            permits(&permissions.publish, subject),
+            "the engine cannot reach {subject}"
+        );
+    }
+    // Only the realm host creates the bucket, and no engine reaches another realm's.
+    assert!(!permits(
+        &permissions.publish,
+        "$JS.API.STREAM.CREATE.KV_sessions_quests"
+    ));
+    for subject in [
+        "$JS.API.STREAM.INFO.KV_sessions_foreign_realm",
+        "$KV.sessions_foreign_realm.minecraft.player.player",
+    ] {
+        assert!(
+            !permits(&permissions.publish, subject),
+            "the engine reaches {subject}"
+        );
+    }
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
+async fn an_attached_engine_receives_the_panel_presence_of_its_organization_only(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let permissions = service_grants(context, "engine_one", Realm::Attached("quests")).await?;
+
+    assert!(permits(
+        &permissions.subscribe,
+        "typewriter.presence.organization.acme.user.*"
+    ));
+    assert!(!permits(
+        &permissions.subscribe,
+        "typewriter.presence.organization.globex.user.*"
+    ));
+    assert!(!permits(
+        &permissions.publish,
+        "typewriter.presence.organization.acme.user.user_ada"
+    ));
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
+async fn a_realm_host_creates_its_realms_sessions_bucket_only(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let permissions = service_grants(context, "realm_host", Realm::Owned("quests")).await?;
+
+    assert!(permits(
+        &permissions.publish,
+        "$JS.API.STREAM.CREATE.KV_sessions_quests"
+    ));
+    assert!(!permits(
+        &permissions.publish,
+        "$JS.API.STREAM.CREATE.KV_sessions_foreign_realm"
+    ));
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
 async fn a_bound_service_reports_its_lifecycle_on_its_own_subjects(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {

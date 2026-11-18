@@ -60,6 +60,8 @@ class StartupLoaderService(
 
     override suspend fun communicatorFor(connectionGeneration: Long): Nothing = error("No messaging session is needed.")
 
+    override suspend fun bucketsFor(connectionGeneration: Long): Nothing = error("No messaging session is needed.")
+
     override suspend fun rotateAuthorization(): Nothing = error("No assignment is applied.")
 
     override suspend fun releaseAuthorizationRotation(connectionGeneration: Long): Nothing = error("No authorization was rotated.")

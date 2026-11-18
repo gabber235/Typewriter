@@ -89,6 +89,7 @@ private fun NatsConnectionState.toRuntimeConnectivity(): RuntimeConnectivity =
  */
 internal class TypewriterRegistrarRuntime(
     override val communicator: Communicator,
+    override val buckets: com.typewritermc.services.libs.communicator.kv.KeyValueBuckets,
     private val service: ServiceRouteScope,
     private val nats: NatsLifecycle,
     private val accessTokens: AccessTokenCache,
@@ -330,6 +331,7 @@ class TypewriterRegistrarRuntimeFactory(
         return RuntimeCreateResult.Success(
             TypewriterRegistrarRuntime(
                 communicator,
+                com.typewritermc.services.libs.communicator.kv.NatsKeyValueBuckets(connection),
                 ServiceRouteScope(credentials.identity.serviceId.value),
                 ProductionNatsLifecycle(connection),
                 access,

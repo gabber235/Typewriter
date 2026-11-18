@@ -139,6 +139,7 @@ internal fun WatchHostExecutionResponse.toDesiredHostExecution(
                         PrimaryEngineTarget(ArtifactId(target.engineId), VersionConstraint(target.versionConstraint))
                     },
                 intent = realm?.let { RealmLoaderIntent(panelEngine) },
+                engineInstance = engine?.engineId?.stringKey(),
             )
         }
     return DesiredHostExecution(ExecutionRevision(serviceId, desired.topologyRevision), assignment)

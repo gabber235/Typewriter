@@ -96,6 +96,8 @@ internal class ArtifactLoaderBootstrap(
                                     VersionConstraint(settings.get("TYPEWRITER_PRIMARY_ENGINE_VERSION", "^1")),
                                 ),
                             intent = RealmLoaderIntent(panelEngine),
+                            // No topology runs this host, so its engine is named after the Realm alone.
+                            engineInstance = "local.$localRealmId",
                         ),
                 ),
             )

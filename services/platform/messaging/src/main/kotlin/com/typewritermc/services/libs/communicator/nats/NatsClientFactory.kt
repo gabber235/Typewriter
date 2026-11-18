@@ -70,6 +70,9 @@ internal interface NatsClientAdapter {
         subject: String,
         queueGroup: String?,
     ): NatsClientSubscription
+
+    /** JetStream over this client, for key value buckets. */
+    val jetStream: io.natskt.jetstream.api.JetStreamClient
 }
 
 /**
@@ -121,6 +124,8 @@ private class RealNatsClientAdapter(
                     else -> NatsClientConnectivity.Disconnected
                 }
             }.stateIn(clientScope, SharingStarted.Eagerly, NatsClientConnectivity.Disconnected)
+
+    override val jetStream: io.natskt.jetstream.api.JetStreamClient by lazy { io.natskt.jetstream.JetStreamClient(client) }
 
     override suspend fun connect(): Result<Unit> = client.connect()
 

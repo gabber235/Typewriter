@@ -97,6 +97,7 @@ fun interface ParticipantStatusListener {
  */
 class HostRolloutParticipant(
     internal val realmId: RealmId,
+    private val engineIdOf: (RuntimePlacement) -> String?,
     internal val serviceId: ServiceId,
     private val workDirectory: Path,
     private val host: HostedRuntimeHost,
@@ -422,7 +423,7 @@ class HostRolloutParticipant(
                         .also(Path::createDirectories)
                 val context =
                     HostedDeploymentContext(
-                        identity = HostedRuntimeIdentity(serviceId.value, realmId.value, runtime.placement),
+                        identity = HostedRuntimeIdentity(serviceId.value, realmId.value, runtime.placement, engineIdOf(runtime.placement)),
                         directories = HostedRuntimeDirectories(stateDirectory, deploymentDirectory),
                         artifacts = artifactPackage,
                         publicationTarget = projection.publicationTarget,

@@ -1,6 +1,7 @@
 package com.typewritermc.protocol.transport
 
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
+import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
 
@@ -36,3 +37,25 @@ fun String.serviceTemplate(): AddressTemplate<ServiceRouteScope> =
         render = { addressValuesOf("service" to it.serviceId) },
         parse = { ServiceRouteScope(it.require("service")) },
     )
+
+/**
+ * The identities of an organization actor route subject: the organization and the member acting in it.
+ *
+ * Every generated organization contract a service role takes part in is an extension on this scope. A service that
+ * receives every member's events subscribes to the contract's address with the member left open.
+ */
+data class OrganizationActorRouteScope(
+    val organizationId: String,
+    val userId: String,
+)
+
+/** Reads this subject as a typed address whose `{organization}` and `{user}` tokens render an [OrganizationActorRouteScope]. */
+fun String.organizationActorTemplate(): AddressTemplate<OrganizationActorRouteScope> =
+    addressTemplate(
+        render = { addressValuesOf("organization" to it.organizationId, "user" to it.userId) },
+        parse = { OrganizationActorRouteScope(it.require("organization"), it.require("user")) },
+    )
+
+/** This event of every member of [organizationId], as a service that receives every member's events subscribes to it. */
+fun <Event : Any> EventContract<OrganizationActorRouteScope, Event>.everyMemberOf(organizationId: String): EventContract<OrganizationActorRouteScope, Event> =
+    EventContract(name, address.subscribedWhere("organization" to organizationId), codec, failureSlug)

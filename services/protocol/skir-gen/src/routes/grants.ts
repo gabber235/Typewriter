@@ -1,4 +1,4 @@
-import type { Direction, Party, RoleDeclaration, RoleDeclarations } from "./manifest.js";
+import type { BucketDeclaration, Direction, Party, RoleDeclaration, RoleDeclarations } from "./manifest.js";
 import type { RouteChannel, SubjectTemplate, SubjectToken } from "./subject.js";
 
 /**
@@ -8,7 +8,15 @@ import type { RouteChannel, SubjectTemplate, SubjectToken } from "./subject.js";
 export type GrantToken =
   | SubjectToken
   | { readonly kind: "wildcard" }
-  | { readonly kind: "consumer"; readonly projection: string };
+  | { readonly kind: "consumer"; readonly projection: string }
+  | { readonly kind: "bucket"; readonly name: string; readonly stream: boolean };
+
+/**
+ * The name of a realm's key value bucket, `<name>_<realm id>`, and of the JetStream stream that
+ * holds it, `KV_<name>_<realm id>`. Emitted into Rust and Kotlin, so the grant and the bucket the
+ * realm creates always agree.
+ */
+export const bucketName = (name: string, realm: string) => `${name}_${realm}`;
 
 /** One broker permission a route grants to a role. */
 export interface Grant {
@@ -57,6 +65,8 @@ export function grantText(tokens: readonly GrantToken[]): string {
           return "*";
         case "consumer":
           return `{consumer:${token.projection}}`;
+        case "bucket":
+          return `${token.stream ? "KV_" : ""}${bucketName(token.name, "{realm}")}`;
       }
     })
     .join(".");
@@ -145,4 +155,41 @@ export function routeGrants(channels: readonly RouteChannel[], roles: RoleDeclar
     }
   }
   return grants;
+}
+
+/**
+ * Derives the broker permissions of a realm key value bucket. Its writers open it, read and write
+ * keys of exactly the declared tokens and list them through consumers on its stream; its owner also
+ * creates it. Every subject binds the realm, so a role reaches only its own realm's bucket.
+ */
+export function bucketGrants(bucket: BucketDeclaration, roles: RoleDeclarations): Grant[] {
+  const stream: GrantToken = { kind: "bucket", stream: true, name: bucket.name };
+  const subjectRoot: GrantToken = { kind: "bucket", stream: false, name: bucket.name };
+  const keys: GrantToken[] = bucket.key.map(() => ({ kind: "wildcard" }));
+  const key: GrantToken[] = [...literals("$KV"), subjectRoot, ...keys];
+  const consumer: GrantToken = { kind: "wildcard" };
+  // The subjects the natskt key value client uses: stream info to open, direct get of a key's last
+  // message (or the message get fallback), a filtered ephemeral consumer to list keys with its flow
+  // control replies, and a publish per key write.
+  const read: GrantToken[][] = [
+    [...literals("$JS.API.STREAM.INFO"), stream],
+    [...literals("$JS.API.DIRECT.GET"), stream, ...key],
+    [...literals("$JS.API.STREAM.MSG.GET"), stream],
+    [...literals("$JS.API.CONSUMER.CREATE"), stream, consumer, ...key],
+    [...literals("$JS.API.CONSUMER.DELETE"), stream, consumer],
+    [...literals("$JS.FC"), stream, { kind: "wildcard" }, { kind: "wildcard" }],
+    key,
+  ];
+  const own: GrantToken[][] = [[...literals("$JS.API.STREAM.CREATE"), stream]];
+  const grant = (role: string, subjects: GrantToken[][]): Grant[] =>
+    subjects.map((tokens) => ({ role, direction: "publish", tokens }));
+  for (const name of [bucket.owner, ...bucket.writers]) {
+    if (!roles.get(name)?.tenant.includes("realm")) {
+      throw new Error(`bucket ${bucket.name} role ${name} is not bound to one realm`);
+    }
+  }
+  return [
+    ...grant(bucket.owner, [...own, ...read]),
+    ...bucket.writers.flatMap((writer) => grant(writer, read)),
+  ];
 }

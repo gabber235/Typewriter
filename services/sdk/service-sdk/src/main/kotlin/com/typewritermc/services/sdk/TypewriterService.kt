@@ -64,6 +64,9 @@ class TypewriterService private constructor(
     /** Borrows the communicator only when the supplied ready generation is still current. */
     suspend fun communicatorFor(connectionGeneration: Long): RegistrarResult<Communicator> = registrar.communicatorFor(connectionGeneration)
 
+    /** Borrows the key value buckets only when the supplied ready generation is still current. */
+    suspend fun bucketsFor(connectionGeneration: Long): RegistrarResult<com.typewritermc.services.libs.communicator.kv.KeyValueBuckets> = registrar.bucketsFor(connectionGeneration)
+
     /** Builds a replacement authorized runtime and returns its new connection generation. */
     suspend fun rotateAuthorization(): RegistrarResult<Long> = registrar.rotateAuthorization()
 
