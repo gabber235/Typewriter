@@ -123,8 +123,33 @@ internal class Pool(
         var peer: Peer? = null
         var lost = false
 
+        /** Where its player stands while its attempt sent it away from Paper, or null while it plays as usual. */
+        var away: Away? = null
+
         /** The Paper the client is on, or is told to join. */
         lateinit var on: Server
+    }
+
+    /**
+     * A player its attempt sent away from its Paper as a person quits, from its quit until its client steps
+     * with that Paper again. It stays on the attempt's lease and is no lost client meanwhile.
+     */
+    private sealed interface Away {
+        /**
+         * Its client leaves; Paper seeing it leave answers the session's quit [request]. Without a request
+         * the attempt ended meanwhile, and the player comes back to the shared Paper once it left.
+         */
+        data class Leaving(
+            val request: Long?,
+        ) : Away
+
+        /** It is off Paper until its attempt asks it back. */
+        data object Gone : Away
+
+        /** Its client joins its Paper again; Paper taking it back answers the session's rejoin [request]. */
+        data class Joining(
+            val request: Long,
+        ) : Away
     }
 
     /**
@@ -496,30 +521,52 @@ internal class Pool(
                 reclaim(session, message.value)
             }
 
-            // A lost own Paper runs no work that could still reach a later attempt, nor does an attempt whose lease ran out.
             is Message.SettleWrapper -> {
-                val id = message.value.id
-                val attempt = attemptOf(session, id) ?: return session.send(Message.createSettled(id = id, covered = listOf()))
-                attempt.server.peer?.send(Message.createSettle(id = attempt.id.value))
-                    ?: session.send(Message.createSettled(id = id, covered = attempt.submission.coverage.latest))
+                settle(session, message.value.id)
             }
 
             is Message.RestartWrapper -> {
-                val restart = message.value
-                val attempt =
-                    attemptOf(session, restart.submission)
-                        ?: return System.err.println("$session asked to restart the Paper of an attempt that no longer runs")
-                act(attempt.server, attempt.server.rules.restart(restart.request))
+                restart(session, message.value)
             }
 
             is Message.ResultWrapper -> {
                 result(session, message.value)
             }
 
+            is Message.QuitWrapper -> {
+                quit(session, message.value)
+            }
+
+            is Message.RejoinWrapper -> {
+                rejoin(session, message.value)
+            }
+
             else -> {
                 toGame(session, message)
             }
         }
+    }
+
+    /** [session]'s attempt for submission [id] ended its body; it is settled once its players' work is quiet. */
+    private fun settle(
+        session: Peer,
+        id: Long,
+    ) {
+        // A lost own Paper runs no work that could still reach a later attempt, nor does an attempt whose lease ran out.
+        val attempt = attemptOf(session, id) ?: return session.send(Message.createSettled(id = id, covered = listOf()))
+        attempt.server.peer?.send(Message.createSettle(id = attempt.id.value))
+            ?: session.send(Message.createSettled(id = id, covered = attempt.submission.coverage.latest))
+    }
+
+    /** [session]'s attempt asks for its own Paper to be killed and booted again. */
+    private fun restart(
+        session: Peer,
+        restart: Message.Restart,
+    ) {
+        val attempt =
+            attemptOf(session, restart.submission)
+                ?: return System.err.println("$session asked to restart the Paper of an attempt that no longer runs")
+        act(attempt.server, attempt.server.rules.restart(restart.request))
     }
 
     /**
@@ -647,11 +694,95 @@ internal class Pool(
     private fun serverOf(
         session: Peer,
         player: String,
-    ): Server? =
-        attempts.all
-            .firstOrNull { attempt ->
-                attempt.session == session && attempt.players.any { it.uuid == player }
-            }?.server
+    ): Server? = attemptHeldBy(session, player)?.server
+
+    /** The leased attempt [session] runs on [player], if it holds that player. */
+    private fun attemptHeldBy(
+        session: Peer,
+        player: String,
+    ): Attempt? =
+        attempts.all.firstOrNull { attempt ->
+            attempt.session == session && attempt.started && attempt.players.any { it.uuid == player }
+        }
+
+    /**
+     * [session]'s attempt sends its player away as a person quits: the client leaves its Paper and joins
+     * none, and the player stays on the lease. Paper seeing it leave answers the quit.
+     */
+    private fun quit(
+        session: Peer,
+        quit: Message.Quit,
+    ) {
+        if (attemptHeldBy(session, quit.player) ==
+            null
+        ) {
+            return System.err.println("$session asked ${quit.player} to quit, which none of its attempts holds")
+        }
+        val client =
+            clientOf(quit.player)?.takeIf { it.away == null && !it.lost }
+                ?: return System.err.println("$session asked ${quit.player} to quit, whose client is away or lost")
+        client.away = Away.Leaving(quit.request)
+        client.peer?.send(Message.LEAVE)
+    }
+
+    /** [session]'s attempt asks its player, away since its quit, back: the client joins the attempt's Paper again. */
+    private fun rejoin(
+        session: Peer,
+        rejoin: Message.Rejoin,
+    ) {
+        val attempt =
+            attemptHeldBy(session, rejoin.player)
+                ?: return System.err.println("$session asked ${rejoin.player} to rejoin, which none of its attempts holds")
+        val client =
+            clientOf(rejoin.player)?.takeIf { it.away == Away.Gone && !it.lost }
+                ?: return System.err.println("$session asked ${rejoin.player} to rejoin, which is not away")
+        client.away = Away.Joining(rejoin.request)
+        moveTo(client, attempt.server)
+        connect(client)
+    }
+
+    /**
+     * [server] saw [left]'s player leave. A player its attempt sent away left on purpose: the quit is
+     * answered, or, once its attempt ended, it comes back; any other leave loses its client.
+     */
+    private fun playerLeft(
+        server: Server,
+        left: Message.PlayerLeft,
+    ) {
+        val client = clientNamed(left.player)
+        val leaving = client?.away as? Away.Leaving
+        if (client == null || leaving == null) {
+            return lostOn(server, left.player, ClientLossKind.LEFT_PAPER, "its player left Paper (${left.reason.lowercase()})")
+        }
+        val request = leaving.request ?: return comeBack(client)
+        client.away = Away.Gone
+        attemptHolding(left.player)?.session?.send(Message.createReply(request = request, answer = Answer.createQuitDone(tick = left.tick)))
+    }
+
+    /** [client], away since its attempt ended, joins the shared Paper again; its player serves claims once it steps there. */
+    private fun comeBack(client: Client) {
+        client.away = null
+        moveTo(client, shared)
+        connect(client)
+    }
+
+    /**
+     * [attempt] ends with players it sent away: each sits out of every claim until its client steps with
+     * the shared Paper again. One that left comes back now, one still leaving once Paper saw it leave, and
+     * one joining its Paper again goes on; its own Paper's end sends it on to the shared one.
+     */
+    private fun bringBack(attempt: Attempt) {
+        for (player in attempt.players) {
+            val client = clientOf(player.uuid) ?: continue
+            val away = client.away ?: continue
+            claims.holdOut(client.player, Out.AWAY)
+            when (away) {
+                is Away.Leaving -> client.away = Away.Leaving(request = null)
+                Away.Gone -> comeBack(client)
+                is Away.Joining -> client.away = null
+            }
+        }
+    }
 
     /** The Paper that opened the connection [peer]. */
     private fun serverOf(peer: Peer): Server? = papers.all.firstOrNull { it.peer == peer }
@@ -690,12 +821,7 @@ internal class Pool(
             }
 
             is Message.PlayerLeftWrapper -> {
-                lostOn(
-                    server,
-                    message.value.player,
-                    ClientLossKind.LEFT_PAPER,
-                    "its player left Paper (${message.value.reason.lowercase()})",
-                )
+                playerLeft(server, message.value)
             }
 
             is Message.ClientStalledWrapper -> {
@@ -737,12 +863,19 @@ internal class Pool(
         attempt.session.send(Message.createSettled(id = attempt.submit.submission, covered = lines))
     }
 
-    /** [server] resumed its attempt after a restart, or could not. */
+    /** [server] resumed its attempt after a restart or took back a player that rejoined it, or could not. */
     private fun resumed(
         server: Server,
         message: Message.Resumed,
     ) {
         val failure = message.failure
+        attempts[message.attempt]?.let { attempt ->
+            val client = attempt.players.mapNotNull { clientOf(it.uuid) }.firstOrNull { it.away is Away.Joining } ?: return@let
+            val joining = client.away as Away.Joining
+            client.away = null
+            val answer = Answer.createRejoined(tick = message.tick, failure = failure?.let { "${server.name} could not take it back: $it" })
+            return attempt.session.send(Message.createReply(request = joining.request, answer = answer))
+        }
         val rules = server.rules
         if (failure != null) {
             val cause = "${server.name} could not resume its attempt: $failure"
@@ -1342,6 +1475,7 @@ internal class Pool(
         why: String,
     ) {
         attempt.server.peer?.send(Message.createRelease(attempt = attempt.id.value))
+        bringBack(attempt)
         attempts.end(attempt.id.value, why) { act(attempt.server, it) }
     }
 
@@ -1372,6 +1506,7 @@ internal class Pool(
         if (client.lost || failure != null) return
         val name = client.player.name
         client.lost = true
+        client.away = null
         client.peer?.close()
         client.peer = null
         // The new client joins the shared Paper.
@@ -1403,9 +1538,22 @@ internal class Pool(
         clientNamed(player)?.let { lost(it, kind, cause) }
     }
 
-    /** [client] steps with the Paper it is on. */
+    /** [client] steps with the Paper it is on; one that rejoined its attempt's Paper belongs to that attempt again there. */
     private fun ready(client: Client) {
         act(client.on, client.on.rules.ready(client.player.name))
+        when (client.away) {
+            is Away.Joining -> {
+                val attempt = attemptHolding(client.player.name) ?: return
+                attempt.server.peer?.send(Message.createResume(attempt = attempt.id.value, players = listOf(client.player.uuid)))
+            }
+
+            // Its attempt ended while it left an own Paper that stopped before it saw the leave.
+            is Away.Leaving -> {
+                client.away = null
+            }
+
+            Away.Gone, null -> {}
+        }
     }
 
     /** Reports into the loop once [part]'s process ends. */

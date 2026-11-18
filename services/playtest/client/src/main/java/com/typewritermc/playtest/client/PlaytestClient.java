@@ -59,6 +59,7 @@ public final class PlaytestClient implements ClientModInitializer {
                 var to = connect.getValue();
                 mc.execute(() -> Session.connect(mc, to.getHost(), to.getPort()));
             }
+            case Message.LEAVE leave -> mc.execute(() -> Session.leave(mc));
             case Message.RESET reset -> mc.execute(() -> {
                 Inputs.reset(mc);
                 Looks.reset();

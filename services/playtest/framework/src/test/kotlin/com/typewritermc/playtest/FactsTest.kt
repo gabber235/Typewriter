@@ -234,4 +234,16 @@ val FactsTest by testSuite {
         anyToast().shownAs(toast, before) shouldBe "toast \"New Recipe(s) Unlocked!\""
         anyToast().shownIn(onlyChat, before) shouldBe false
     }
+
+    test("a player is listed while the player list holds its name, and unlisted once it no longer does") {
+        val alex = GamePlayer("gv-2", UUID(0, 2))
+        val both = perception(104).copy(listed = listOf("gv-1", "gv-2"))
+        val alone = perception(105).copy(listed = listOf("gv-1"))
+
+        listed(alex).shownIn(both, before) shouldBe true
+        listed(alex).shownIn(alone, before) shouldBe false
+        unlisted(alex).shownIn(alone, before) shouldBe true
+        unlisted(alex).shownIn(both, before) shouldBe false
+        unlisted(alex).observed(both) shouldBe "the player list holding gv-1, gv-2"
+    }
 }

@@ -61,6 +61,7 @@ class PlaytestPlugin :
             ::reportEnded,
             Acks(System::nanoTime),
             ::reportStalled,
+            ::connected,
         )
     private val wipe = Wipe()
     private val owned = Owned(this)
@@ -245,9 +246,9 @@ class PlaytestPlugin :
     }
 
     /**
-     * Gives the attempt its players again after this Paper was killed and booted under it: as a claim
-     * does, but without the wipe or the move, so they keep what Paper loaded for them. Resumed once each
-     * of their clients holds all Paper sends them.
+     * Gives the attempt its players again after this Paper was killed and booted under it, or after an
+     * away player of it joined again: as a claim does, but without the wipe or the move, so they keep what
+     * Paper loaded for them. Resumed once each of their clients holds all Paper sends them.
      */
     private fun resume(resume: Message.Resume) {
         val ranAfter = policy.lastEnded()
@@ -282,14 +283,16 @@ class PlaytestPlugin :
     }
 
     /**
-     * A player left: its client crashed, froze until Paper timed it out, or quit. It holds back no tick
-     * from now on, and the pool replaces its client.
+     * A player left: its client crashed, froze until Paper timed it out, or its attempt sent it away as a
+     * person quits. It holds back no tick from now on; the pool, which knows which, replaces a lost client.
      */
     @EventHandler
     fun onQuit(event: PlayerQuitEvent) {
         val player = event.player
         policy.lose(player.uniqueId)
-        if (::pool.isInitialized) pool.send(Message.createPlayerLeft(player = player.name, reason = event.reason.name))
+        if (::pool.isInitialized) {
+            pool.send(Message.createPlayerLeft(player = player.name, reason = event.reason.name, tick = policy.lastEnded()))
+        }
     }
 
     @EventHandler
@@ -400,6 +403,13 @@ private fun nothingLeftToSend(id: UUID): Boolean {
         }
     }
     return true
+}
+
+/** Whether the player's client is still connected; Paper notices a closed connection only in its next tick. */
+private fun connected(id: UUID): Boolean {
+    val player = Bukkit.getPlayer(id) ?: return false
+    return (player as CraftPlayer)
+        .handle.connection.connection.isConnected
 }
 
 private fun onMainThread(task: () -> Unit) {

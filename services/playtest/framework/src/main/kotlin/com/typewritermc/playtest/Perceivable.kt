@@ -227,6 +227,27 @@ class EntityFacts internal constructor(
 /** Facts about [ref], an entity a probe spawned: `player sees entity(guide).named("Ouch")`. */
 fun entity(ref: EntityRef): EntityFacts = EntityFacts(ref)
 
+/** The player list, which pressing Tab shows, holds [player]: it is on Paper and among the players this one sees. */
+fun listed(player: GamePlayer): Perceivable = playerList("${player.name} in the player list") { player.name in it }
+
+/** The player list does not hold [player], as once it quit: `stayer sees unlisted(leaver)`. */
+fun unlisted(player: GamePlayer): Perceivable = playerList("${player.name} gone from the player list") { player.name !in it }
+
+private fun playerList(
+    description: String,
+    shows: (List<String>) -> Boolean,
+): Perceivable =
+    object : Perceivable {
+        override val description = description
+
+        override fun shownIn(
+            perception: Perception,
+            stimulus: Stimulus,
+        ) = shows(perception.listed)
+
+        override fun observed(perception: Perception): String = "the player list holding ${perception.listed.joinToString()}"
+    }
+
 private fun drawnItem(
     name: String,
     element: String,

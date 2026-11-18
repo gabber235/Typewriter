@@ -14,9 +14,10 @@ import skirout.harness.v1.wire.Message;
 
 /**
  * Joining the Paper the pool names, leaving it again, and telling the pool once the player is in the
- * world. A client the pool sends to another Paper leaves the one it is on the way the pause menu
- * leaves. A client that loses its Paper without being told to leave, or cannot join, tells the pool and
- * draws nothing until the pool names a Paper again: a killed Paper boots while its clients stay quiet.
+ * world. A client the pool sends to another Paper, or away as a person quits, leaves the one it is on
+ * the way the pause menu leaves. A client that loses its Paper without being told to leave, or cannot
+ * join, tells the pool. Either way it draws nothing until the pool names a Paper again: a killed Paper
+ * boots while its clients stay quiet, and a player who quit waits for its rejoin.
  * Render thread only.
  */
 final class Session {
@@ -46,6 +47,16 @@ final class Session {
         if (mc.getConnection() != null) {
             leaving = true;
             mc.disconnectFromWorld(Component.literal("The game pool moves this player to another Paper"));
+        }
+    }
+
+    /** The pool sends the player away as a person quits: it leaves its Paper the way the pause menu leaves and joins none until the pool names one. */
+    static void leave(Minecraft mc) {
+        host = null;
+        connectingTo = null;
+        if (mc.getConnection() != null) {
+            leaving = true;
+            mc.disconnectFromWorld(Component.literal("The player quits"));
         }
     }
 

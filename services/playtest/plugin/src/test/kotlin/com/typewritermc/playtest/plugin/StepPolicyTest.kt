@@ -11,7 +11,7 @@ val StepPolicyTest by testSuite {
     test("a free player's client behind the last tick holds back the next tick until it acks it") {
         var granted = 0
         val policy =
-            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, WorkLedger { _, _ -> }, {}, Acks { 0L }, {})
+            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, WorkLedger { _, _ -> }, {}, Acks { 0L }, {}, { true })
         policy.claim(listOf(claimed))
         policy.acked(claimed, 9, false)
         policy.acked(free, 9, false)
@@ -30,7 +30,7 @@ val StepPolicyTest by testSuite {
     test("a client that never acked a tick, still joining, holds back no tick") {
         var granted = 0
         val policy =
-            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, WorkLedger { _, _ -> }, {}, Acks { 0L }, {})
+            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, WorkLedger { _, _ -> }, {}, Acks { 0L }, {}, { true })
         policy.claim(listOf(claimed))
         policy.tickEnded(10)
         policy.acked(claimed, 10, false)
@@ -56,6 +56,7 @@ val StepPolicyTest by testSuite {
                 {},
                 Acks { now },
                 { stalled += it.player() },
+                { true },
             )
         policy.claim(listOf(claimed))
         policy.acked(claimed, 9, false)
@@ -69,6 +70,27 @@ val StepPolicyTest by testSuite {
         policy.run()
 
         stalled shouldBe listOf(free)
+        granted shouldBe 1
+    }
+
+    test("a client whose connection closed holds back no tick, though Paper notices its player leave only in a tick") {
+        var granted = 0
+        val closed = mutableSetOf<UUID>()
+        val policy =
+            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, WorkLedger { _, _ -> }, {}, Acks { 0L }, {}, {
+                it !in
+                    closed
+            })
+        policy.claim(listOf(claimed))
+        policy.acked(claimed, 9, false)
+        policy.acked(free, 9, false)
+        policy.tickEnded(10)
+        policy.acked(claimed, 10, false)
+        policy.stepUntil(claimed, 20, 1)
+
+        closed += free
+        policy.run()
+
         granted shouldBe 1
     }
 }

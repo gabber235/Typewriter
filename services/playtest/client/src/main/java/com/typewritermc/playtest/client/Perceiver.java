@@ -152,6 +152,7 @@ final class Perceiver {
                 frame.visibleItems(),
                 blocks(mc),
                 entities(),
+                listed(mc),
                 null);
         if (forced || Clips.recordsEveryPass() || lastSent == null || !sameContent(perception, lastSent)) {
             var perceived = new PlayerEvent.Happened.PerceivedWrapper(perception);
@@ -171,7 +172,15 @@ final class Perceiver {
                 && Objects.equals(a.getCamera(), b.getCamera())
                 && a.getItems().equals(b.getItems())
                 && a.getBlocks().equals(b.getBlocks())
-                && a.getEntities().equals(b.getEntities());
+                && a.getEntities().equals(b.getEntities())
+                && a.getListed().equals(b.getListed());
+    }
+
+    /** The names of the players the player list holds, which pressing Tab shows, in name order. */
+    private static List<String> listed(Minecraft mc) {
+        var connection = mc.getConnection();
+        if (connection == null) return List.of();
+        return connection.getListedOnlinePlayers().stream().map(info -> info.getProfile().name()).sorted().toList();
     }
 
     /** The view the frame was drawn from, rounded so that a still view gives the same record every frame. */

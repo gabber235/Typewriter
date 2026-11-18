@@ -56,6 +56,11 @@ class ProbeFailed(
     message: String,
 ) : AssertionError(message)
 
+/** Paper could not take back a player who quit and joined again; [message] says why. */
+class RejoinFailed(
+    message: String,
+) : AssertionError(message)
+
 /** The client could not perform an input as a person would; [message] says which step failed. */
 class InputFailed(
     message: String,
@@ -329,6 +334,22 @@ internal class PoolSession private constructor(
         } finally {
             restarts.remove(asked)
         }
+    }
+
+    /** [player]'s client leaves its Paper as a person quits; returns, once Paper saw the player leave, the tick after which it left. */
+    override suspend fun quit(player: GamePlayer): Int =
+        answer<Answer.QuitDoneWrapper>(requests.incrementAndGet()) { request ->
+            Message.createQuit(request = request, player = player.uuid.toString())
+        }.value.tick
+
+    /** [player]'s client joins its Paper again; returns, once it holds what Paper sends it, the tick after which it is back. */
+    override suspend fun rejoin(player: GamePlayer): Int {
+        val rejoined =
+            answer<Answer.RejoinedWrapper>(requests.incrementAndGet()) { request ->
+                Message.createRejoin(request = request, player = player.uuid.toString())
+            }.value
+        rejoined.failure?.let { throw RejoinFailed(it) }
+        return rejoined.tick
     }
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
