@@ -68,6 +68,9 @@ in
       pkgs.gtk3
       # The panel's Linux build links flutter_secure_storage_linux against it.
       pkgs.libsecret
+      # path_provider finds the panel's documents folder through `xdg-user-dir`, which a runner
+      # image need not have.
+      pkgs.xdg-user-dirs
       pkgs.chromium
     ];
     env = {
