@@ -813,6 +813,14 @@ decided:
       press): layers 17 and 18 build on clock time and a Playhead shared across engines, which a per engine
       tick count cannot drive; legacy lag behaviour (scenes stay on time) is kept; tests stay exact because
       the engine reads one clock source that the stepped test moves 50 ms per permitted tick (StepPolicy)
+  - id: ci-on-namespace
+    what: "Switch inside #570"
+    why: >-
+      Every CI job but the gate runs on Namespace (nscloud-ubuntu-24.04-amd64-4x16-with-cache, 4 vCPU and
+      16 GB as before) with the shared typewriter cache volume for the Nix store and the downloads every
+      job shares; run 44247548234 against the GitHub hosted 44203399779 cut job setup from 160 to 340 s to
+      21 to 39 s, the backend check from 2938 s to 1860 s and the game suite from 818 s to 557 s, with the
+      same renderer and goldens
 
 open:
   - id: quiet-hook
