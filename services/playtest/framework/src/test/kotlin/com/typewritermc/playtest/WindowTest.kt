@@ -309,4 +309,30 @@ val WindowTest by testSuite {
 
         refusal.message shouldContain "positive check"
     }
+
+    test("a state check holds at the first tick it is seen to hold, and the window passes once every check held") {
+        val listed = StateCheck("Steve's session listed") { true }
+        val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(steveSeesBank), states = listOf(listed))
+
+        window.perceived(steve, bankArrived) shouldBe Open
+        window.statesSeen(at = 101, held = listOf()) shouldBe Open
+        window.openStates shouldBe listOf(listed)
+        window.statesSeen(at = 104, held = listOf(listed)) shouldBe Passed(104)
+    }
+
+    test("a window with only a state check is a positive window") {
+        val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(), states = listOf(StateCheck("listed") { true }))
+
+        window.barrierSeen(steve, 1).shouldBeInstanceOf<Missed>()
+    }
+
+    test("the barrier with a state check still open fails, naming the state") {
+        val window =
+            Window(anchor = 100, length = 5.ticks, barrier = 7, checks = listOf(), states = listOf(StateCheck("Steve's session listed") { false }))
+
+        window.statesSeen(at = 105, held = listOf()) shouldBe Open
+        val missed = window.barrierSeen(steve, 7).shouldBeInstanceOf<Missed>()
+
+        missed.report shouldContain "Steve's session listed did not hold within 5 ticks (ticks 101 to 105)."
+    }
 }

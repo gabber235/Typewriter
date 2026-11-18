@@ -156,8 +156,19 @@ class RequirementScope internal constructor(
         val at = attempt.requirementLine(Throwable().stackTrace)
         val mark = anchor ?: throw RequirementRefused("within needs a stimulus before it; its window counts from the last one")
         val declared = WindowChecks().apply(checks)
-        val rules = Window(mark.tick, window, attempt.nextBarrier(), declared.checks, declared.nevers)
-        val checked = (declared.checks + declared.nevers).map { it.player }.distinct()
+        // A window of state checks alone steps every player of the attempt, so its ticks run for them.
+        val checked = (declared.checks + declared.nevers).map { it.player }.distinct().ifEmpty { attempt.players }
+        val rules =
+            Window(
+                mark.tick,
+                window,
+                attempt.nextBarrier(),
+                declared.checks,
+                declared.nevers,
+                declared.states,
+                declared.neverStates,
+                checked,
+            )
         val opened = System.currentTimeMillis()
         val ranBefore = attempt.ranUntil
         // What the players perceived since the attempt began counts too: a window opened late still
@@ -199,26 +210,64 @@ class RequirementScope internal constructor(
             }
         val checks =
             declared.checks.map { "${it.player.name} sees ${it.fact.description}" } +
-                declared.nevers.map { "${it.player.name} never sees ${it.fact.description}" }
+                declared.nevers.map { "${it.player.name} never sees ${it.fact.description}" } +
+                declared.states.map { "state ${it.description}" } +
+                declared.neverStates.map { "never state ${it.description}" }
         return "window of ${window.count} ticks $how, stepped ${maxOf(0, decided - maxOf(ranBefore, mark.tick))}: ${checks.joinToString()}"
     }
 
     /** Paper runs the window's ticks for [checked] until the window decides, then stops running them. */
     private suspend fun Window.stepUntilDecided(checked: List<GamePlayer>): Window.Verdict {
-        checked.forEach { attempt.send(Message.createStepUntil(player = it.uuid.toString(), tick = end, barrier = barrier)) }
         try {
-            var verdict: Window.Verdict = Window.Verdict.Open
-            while (verdict == Window.Verdict.Open) {
-                val event = attempt.nextEvent()
-                // Hung work or a lost client fails the attempt at once, whatever the window would decide.
-                if (event is Attempt.Event.Failed) throw attempt.observed(event.failure)
-                verdict = judge(event)
-            }
+            var verdict = if (readsStates) stepTickByTick(checked) else Window.Verdict.Open
+            if (verdict != Window.Verdict.Open) return verdict
+            checked.forEach { stepUntil(it, end, barrier) }
+            while (verdict == Window.Verdict.Open) verdict = judge(nextEvent())
             return verdict
         } finally {
             checked.forEach { attempt.send(Message.createStopStepping(player = it.uuid.toString())) }
         }
     }
+
+    /**
+     * Runs the window one tick at a time while it reads state checks: each tick ends with a barrier of its
+     * own, after every record of it, and then the window's state checks are read. The last tick's barrier
+     * is the window's, handed to it only after that tick's reads. Returns once the window decided, or open
+     * once it reads no more state checks or its last tick's barrier is still to come.
+     */
+    private suspend fun Window.stepTickByTick(checked: List<GamePlayer>): Window.Verdict {
+        var verdict: Window.Verdict = Window.Verdict.Open
+        for (tick in this.anchor + 1..end) {
+            if (!readsStates) return verdict
+            val last = tick == end
+            val id = if (last) barrier else attempt.nextBarrier()
+            checked.forEach { stepUntil(it, tick, id) }
+            val waiting = checked.toMutableSet()
+            while (waiting.isNotEmpty()) {
+                val event = nextEvent()
+                if (event is Attempt.Event.Barrier && event.id == id) {
+                    waiting -= event.player
+                    continue
+                }
+                verdict = judge(event)
+                if (verdict != Window.Verdict.Open) return verdict
+            }
+            verdict = statesSeen(tick, held = openStates.filter { it.holds() }, broken = neverStates.filter { it.holds() })
+            if (verdict != Window.Verdict.Open) return verdict
+            if (last) checked.forEach { verdict = barrierSeen(it, barrier) }
+        }
+        return verdict
+    }
+
+    private fun stepUntil(
+        player: GamePlayer,
+        tick: Int,
+        barrier: Int,
+    ) = attempt.send(Message.createStepUntil(player = player.uuid.toString(), tick = tick, barrier = barrier))
+
+    /** The attempt's next event; hung work or a lost client fails the attempt at once, whatever a window would decide. */
+    private suspend fun nextEvent(): Attempt.Event =
+        attempt.nextEvent().also { if (it is Attempt.Event.Failed) throw attempt.observed(it.failure) }
 
     private fun Window.judge(event: Attempt.Event): Window.Verdict =
         when (event) {
@@ -233,16 +282,50 @@ class WindowChecks internal constructor() {
     internal val checks = mutableListOf<Check>()
     internal val nevers = mutableListOf<Check>()
 
+    internal val states = mutableListOf<StateCheck>()
+    internal val neverStates = mutableListOf<StateCheck>()
+
     /** The player perceives [fact] in some tick of the window. */
     infix fun GamePlayer.sees(fact: Perceivable) {
         checks += Check(this, fact)
     }
 
     /**
+     * State no player perceives, such as a record in a store, holds after some tick of the window:
+     * [holds] reads it from the test JVM after each tick, and the first true passes the check. A window
+     * that reads state runs one tick at a time; [description] names the state in a failure.
+     */
+    fun state(
+        description: String,
+        holds: suspend () -> Boolean,
+    ) {
+        states += StateCheck(description, holds)
+    }
+
+    /**
+     * State checks that must read false after every tick of the window: `never.state("session gone") { ... }`.
+     * The window then runs all its ticks, and still needs a positive check.
+     */
+    val never: NeverState = NeverState(neverStates)
+
+    /**
      * The player perceives a fact in no tick of the window: `outsider.never sees anyChat()`. The window
      * then runs all its ticks, and still needs a positive check.
      */
     val GamePlayer.never: Absence get() = Absence(this, nevers)
+}
+
+/** State that must not hold after any tick of a window; see [WindowChecks.never]. */
+class NeverState internal constructor(
+    private val neverStates: MutableList<StateCheck>,
+) {
+    /** [holds] reads false after every tick of the window; [description] names the state in a failure. */
+    fun state(
+        description: String,
+        holds: suspend () -> Boolean,
+    ) {
+        neverStates += StateCheck(description, holds)
+    }
 }
 
 /** A player that must not perceive a fact in a window; see [WindowChecks.never]. */

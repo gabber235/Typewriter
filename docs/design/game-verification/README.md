@@ -51,6 +51,11 @@ clients hold none.
 - Test JVMs share the pool, so every module and extension shares the warm clients, and a warm single
   requirement takes about 2 s ([p6-pool-process.md](spikes/p6-pool-process.md)). The pool takes turns
   between test JVMs.
+- A module adds what its requirements need to every Paper with `gamePaper { pluginJars; files { };
+  environment }` in its build file: plugin jars, files at a path in Paper's folder, and Paper's
+  environment. As every module shares the pool's Papers, the pool takes the union of every module's
+  additions, for the shared Paper and each own Paper, and fails before Paper starts when two modules
+  disagree on a file or a variable. The framework itself still holds no Typewriter code.
 
 ## How a requirement runs
 
@@ -94,6 +99,21 @@ attempt's timeline after a window. A window needs one positive check; `never` ch
 fails as refused: a window that held, a `looksLike` whose compare matched, or a framework outcome the
 body caught (`shouldThrow<WindowMissed>`, `WorkHung`, `ClientLost`, `PaperLost`). A bare read never
 counts.
+
+State no player perceives, such as a record in a store, is checked inside a window too:
+
+```kotlin
+within(40.ticks) {
+    state("Alex's session listed") { sessions.holder(alex) == engine }
+    never.state("Alex's session gone") { sessions.holder(alex) == null }
+}
+```
+
+The test JVM reads each state check after every tick of the window, so a window that reads state runs
+one tick at a time: each tick ends with a barrier of its own after its records, then the reads run. A
+`state` holds at the first tick it reads true and counts as a positive check; a `never.state` fails at
+the first tick it reads true and keeps the window open for all its ticks. Checks stay on ticks, never
+wall clock: state that changes only with real time (a store's TTL) is proven outside the game.
 
 ## Ticks
 
@@ -479,6 +499,17 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   permits, beside the realm clock a test can advance. Why: layers 17 and 18 build on clock time and a
   `Playhead` shared across engines, which a per engine tick count cannot drive; legacy lag behaviour
   (scenes stay on time) is kept; tests stay exact because time moves only with a step.
+- **Typewriter runs on the game Paper inside the stack** (2026-11-18). Answer to "How should
+  Typewriter on the game Paper reach real NATS, backend and realm?": "A. Inside the stack
+  (Recommended)". `cargo xtask e2e game` runs under a stack spec whose Paper loader is bound like the
+  realm host. Why: real grants and a real `engine_instance`, and no loader mode that only tests use.
+- **State checks count as proof** (2026-11-18). Answer to "May a check on state no player sees (like a
+  session entry) count as a requirement's proof?": "A. State check (Recommended)", a test JVM read
+  after each tick inside a window. Answer to "Keep G3 to tick windows only, or add wall clock too?":
+  "A. Ticks only (Recommended)": `never.state` covers state that must stay, and state that changes only
+  with real time is proven outside the game.
+- **Modules add to Paper** (2026-11-18): a module's `gamePaper { }` adds plugin jars, files and
+  environment to every Paper; the pool takes the union of every module's additions.
 
 ## The prototype search
 

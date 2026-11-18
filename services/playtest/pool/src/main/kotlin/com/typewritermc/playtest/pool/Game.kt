@@ -156,6 +156,7 @@ internal class Game private constructor(
         again: Boolean,
     ): Part =
         startPaper(
+            settings,
             folder,
             Launches.ownPaper(settings, poolPort, folder, PaperServer.of(settings.paperDir), coverageOptions(settings, folder.dir), flags),
             append = again,
@@ -198,6 +199,7 @@ internal class Game private constructor(
             preparePaper(settings, paper.dir, paper.port)
             val paperPart =
                 startPaper(
+                    settings,
                     paper,
                     Launches.sharedPaper(
                         settings,
@@ -274,10 +276,16 @@ internal class Game private constructor(
             // The pool runs Paper only for the framework, inside its own build folder.
             dir.resolve("eula.txt").writeText("eula=true\n")
             dir.resolve("server.properties").writeText(serverProperties(port))
+            // Last, so a module that would replace one of the framework's files fails instead.
+            settings.paperAdditions.copyInto(dir)
         }
 
-        /** Starts the Paper in [folder] with [command], its output into its log (added to it when [append]). */
+        /**
+         * Starts the Paper in [folder] with [command] and the environment the game modules add, its output
+         * into its log (added to it when [append]).
+         */
         private fun startPaper(
+            settings: PoolSettings,
             folder: PaperFolder,
             command: List<String>,
             append: Boolean,
@@ -293,7 +301,7 @@ internal class Game private constructor(
                 command,
                 folder.dir,
                 folder.log,
-                mapOf(),
+                settings.paperAdditions.environment,
                 append = append,
             )
 

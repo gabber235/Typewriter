@@ -9,6 +9,16 @@ internal data class Check(
 )
 
 /**
+ * One check of a window on state no player perceives, such as a record in a store: [holds] reads it from
+ * the test JVM after each tick of the window. As a positive check it holds at the first tick [holds]
+ * returns true; as a never check it fails at the first tick [holds] returns true.
+ */
+internal class StateCheck(
+    val description: String,
+    val holds: suspend () -> Boolean,
+)
+
+/**
  * The rules of one `within` window, fed each checked player's perception stream in order. The window
  * covers the ticks after [anchor], the tick in which the last stimulus ran, up to and including [end].
  * A check holds at the first tick inside the window whose perception shows its fact. A client sends a
@@ -24,23 +34,41 @@ internal data class Check(
  * with never checks can pass only once every checked player's barrier arrived, since a later tick could
  * still show it; it needs a positive check all the same, so a requirement always proves something
  * happened.
+ *
+ * State checks are read between ticks, never from a record: the requirement steps the window one tick
+ * at a time and reports what each tick's reads found through [statesSeen]. [stepping] are the players
+ * whose barrier closes the window, which a window of state checks alone names itself.
  */
 internal class Window(
-    private val anchor: Int,
+    val anchor: Int,
     private val length: Ticks,
     val barrier: Int,
     checks: List<Check>,
     nevers: List<Check> = listOf(),
+    states: List<StateCheck> = listOf(),
+    /** The never state checks, read after every tick of the window. */
+    val neverStates: List<StateCheck> = listOf(),
+    stepping: Collection<GamePlayer> = (checks + nevers).map { it.player },
 ) {
     init {
-        if (checks.isEmpty()) throw RequirementRefused("a window needs a positive check: without one it could never fail")
+        if (checks.isEmpty() && states.isEmpty()) {
+            throw RequirementRefused("a window needs a positive check: without one it could never fail")
+        }
     }
 
     val end: Int = anchor + length.count
 
     private val open = checks.toMutableList()
     private val nevers = nevers.toList()
-    private val waitingFor = (checks + nevers).map { it.player }.toMutableSet()
+    private val states = states.toMutableList()
+    private val waitingFor = stepping.toMutableSet()
+
+    /** The positive state checks that have not held yet. */
+    val openStates: List<StateCheck> get() = states.toList()
+
+    /** Whether the window reads state checks after each tick, and so steps one tick at a time. */
+    val readsStates: Boolean get() = states.isNotEmpty() || neverStates.isNotEmpty()
+
     private val lastSeen = mutableMapOf<GamePlayer, Perception>()
     private val atStimulus = mutableMapOf<GamePlayer, Perception>()
     private var heldUntil = anchor
@@ -86,9 +114,36 @@ internal class Window(
         lastSeen[player]?.takeIf { it.tick <= anchor }?.let { judge(player, it, at = anchor + 1) }
         if (verdict != Verdict.Open) return verdict
         waitingFor -= player
-        if (waitingFor.isEmpty()) verdict = if (open.isEmpty()) Verdict.Passed(heldUntil) else Verdict.Missed(end, report())
+        if (waitingFor.isEmpty()) verdict = if (allHeld()) Verdict.Passed(heldUntil) else Verdict.Missed(end, report())
         return verdict
     }
+
+    /**
+     * The window after the reads of tick [at]: [held] are the open state checks that read true, and
+     * [broken] the never state checks that did.
+     */
+    fun statesSeen(
+        at: Int,
+        held: List<StateCheck>,
+        broken: List<StateCheck> = listOf(),
+    ): Verdict {
+        if (verdict != Verdict.Open || at > end) return verdict
+        broken.firstOrNull()?.let {
+            verdict =
+                Verdict.Missed(
+                    at,
+                    "${it.description} held at tick ${at - anchor} of the ${length.count} tick window (tick $at); it must never hold.",
+                )
+            return verdict
+        }
+        if (held.isEmpty()) return verdict
+        states -= held.toSet()
+        heldUntil = maxOf(heldUntil, at)
+        if (allHeld() && nevers.isEmpty() && neverStates.isEmpty()) verdict = Verdict.Passed(heldUntil)
+        return verdict
+    }
+
+    private fun allHeld(): Boolean = open.isEmpty() && states.isEmpty()
 
     /** What [perception], shown to [player] from tick [at], decides: a never check it breaks, or the checks it holds. */
     private fun judge(
@@ -114,11 +169,14 @@ internal class Window(
         if (held.isEmpty()) return
         open -= held
         heldUntil = maxOf(heldUntil, at)
-        if (open.isEmpty() && nevers.isEmpty()) verdict = Verdict.Passed(heldUntil)
+        if (allHeld() && nevers.isEmpty() && neverStates.isEmpty()) verdict = Verdict.Passed(heldUntil)
     }
 
     private fun report(): String =
         buildString {
+            states.forEach {
+                append("${it.description} did not hold within ${this@Window.length.count} ticks (ticks ${anchor + 1} to $end).\n")
+            }
             open.forEach {
                 append(
                     "${it.player.name} did not see ${it.fact.description} within ${this@Window.length.count} ticks (ticks ${anchor + 1} to $end).\n",
