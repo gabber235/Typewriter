@@ -30,9 +30,11 @@ runs:
   steps:
     # Trusted runs (pushes to the long lived branches, pull requests from this repository, and
     # dispatched runs, which only a maintainer can start) push to the shared Nix cache and save the
-    # tool caches; a dispatched run saves them for its own branch. A pull request reads only its own caches
-    # and its base branch's, so one into a branch that never saves (a stacked pull request) would
-    # otherwise start every run cold; the 10 GB the repository gets evicts the oldest copies.
+    # tool caches. A pull request reads only its own caches and its base branch's, so one into a
+    # branch that never saves (a stacked pull request) would otherwise start every run cold; the
+    # 10 GB the repository gets evicts the oldest copies. A dispatched run therefore saves only on a
+    # long lived branch and restores elsewhere: dispatched work branches once filled the 10 GB and
+    # evicted the base branch's caches, so pull requests into it started cold.
     - id: trust
       shell: bash
       env:
@@ -43,14 +45,21 @@ runs:
         HAS_TOKEN: ${{ inputs.op-service-account-token != '' }}
       run: |
         long_lived=false
-        if [[ $EVENT == push && ( $REF == refs/heads/develop || $REF == refs/heads/features/v1 ) ]]; then
+        if [[ $REF == refs/heads/develop || $REF == refs/heads/features/v1 ]]; then
           long_lived=true
         fi
-        trusted=$long_lived
+        trusted=false
+        if [[ $EVENT == push && $long_lived == true ]]; then
+          trusted=true
+        fi
         if [[ $EVENT == pull_request && $HEAD_REPO == "$REPO" || $EVENT == workflow_dispatch ]]; then
           trusted=true
         fi
-        echo "save-caches=$trusted" >> "$GITHUB_OUTPUT"
+        save=$trusted
+        if [[ $EVENT == workflow_dispatch && $long_lived != true ]]; then
+          save=false
+        fi
+        echo "save-caches=$save" >> "$GITHUB_OUTPUT"
         echo "push-nix=$([[ $trusted == true && $HAS_TOKEN == true ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
         # Incremental artifacts only grow a cache that starts each job from the same state.
         echo "CARGO_INCREMENTAL=0" >> "$GITHUB_ENV"
