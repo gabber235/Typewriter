@@ -1,0 +1,59 @@
+# docs/drive/game-verification-gaps/record.yaml: the working state of the four gaps node 3 found in
+# the in-game verification framework (services/playtest) before its first in-game test could be written.
+# The framework's own record is docs/drive/game-verification/record.yaml; its design record is
+# docs/design/game-verification/README.md.
+goal: Close the G gaps so Typewriter's first in-game test (node 3, sessions) can be written on the framework.
+
+pieces:
+  - id: g1-paper-additions
+    status: building
+    open: none; one union of every gameTest module's plugin jars, files and Paper env, collected before the pool starts
+    tries:
+      - id: per-module-additions
+        what: Each gameTest module adds plugin jars, files into the Paper folder and Paper env
+        taught: One pool and one shared Paper serve every module; the first gameTest task's parts define the pool (build-logic com.typewritermc.game-test.gradle.kts:66-76,154,216), so additions must be one union for the build
+        state: picked
+        why: The framework stays free of Typewriter code; a module names what it needs
+        evidence: [services/playtest/pool/src/main/kotlin/com/typewritermc/playtest/pool/Game.kt:263-296]
+  - id: g2-quit-rejoin
+    status: building
+    open: none
+    tries:
+      - id: quit-rejoin-verbs
+        what: player.quit() and player.rejoin(); an intended leave on the wire, the player held away on its lease, not lost
+        taught: Today player_left and disconnected both end in lost(), which replaces the client (Pool.kt:1367); the away hold Out.AWAY exists (Pool.kt:1098)
+        state: picked
+        evidence: []
+  - id: g3-outside-proof
+    status: building
+    open: none
+    tries:
+      - id: state-check-in-window
+        what: A named test JVM predicate inside a window, evaluated after each stepped tick, counts as the positive check
+        state: picked
+        why: Any state from anywhere (NATS, realm); Flexible ranks first
+        evidence: []
+  - id: g4-services
+    status: figuring-out
+    open: How the loader gets the Paper engine artifact from the local backend; whether one bind survives restart attempts
+    tries:
+      - id: inside-stack
+        what: cargo xtask e2e game runs under a game stack spec (the panel spec plus binding the Paper loader as engine), real grants and engine_instance
+        taught: stack run --spec panel already runs NATS, backend, a realm host and binds it with primary engine typewritermc:paper (bind.rs:39,119), as local processes without k3d
+        state: picked
+        why: Same path as production, no test only loader mode
+        evidence: [xtask/src/stack/typewriter.rs:52-54, backend/tests/component/crates/typewriter-stack/src/bind.rs]
+
+decided:
+  - id: g4-inside-stack
+    what: "A. Inside the stack (Recommended)"
+    why: Real grants and engine_instance; no loader local mode
+  - id: g3-state-check
+    what: "A. State check (Recommended)"
+    why: Test JVM predicate polled each tick inside a window; counts as proof
+
+open: []
+
+slices: []
+
+next: Build G3 and G1 in the main thread; G2 built by a delegate in its own worktree; G4 prototyped by a delegate (artifact source, bind across restarts)
