@@ -223,7 +223,9 @@ own Papers run at once.
   or Paper by it; Linux shows Java only the first page of a command line.
 - **The run file** (`test_run.json`) survives a pool crash: the pool writes it as it takes up the run
   and rewrites it atomically after every attempt. It carries the run's id, which xtask chose and handed
-  to the build, so xtask rejects a file another run wrote, and fails a run that left none. Its `end` is
+  to the build, so xtask rejects a file another run wrote, and fails a run that left none, since it
+  proved nothing: no game test ran, so the build never started the pool, or the pool wrote nothing, and
+  the message names `pool.log`. Its `end` is
   one variant: `cut_short` until the build ends the run, so a pool that crashed leaves the finished
   cases and `cut_short`; `completed` once the build ended it with no session still open; and
   `could_not_run` with why the game could not serve the run, as when it never booted. xtask fails
@@ -399,8 +401,8 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   at once with the cause in `pool.log`, and the run file reads cut short. Review round 2 traced the pool outliving the heavy lock by 60 to 120 s.
 - **Selection** is testBalloon's (2026-11-15): `cargo xtask e2e game --only` passes each id as a test
   pattern, and the framework holds no selection code. A game module the selection leaves empty passes,
-  as Gradle's "no matching tests" check is off for gameTest tasks; xtask's selection check names each
-  id that matched no case of the run. A Gradle run that passed while no test JVM opened a pool
+  as Gradle's "no matching tests" check is off for gameTest tasks; xtask's selection check fails as
+  `--only <ids> matched nothing`, naming each id that matched no requirement or case of the run. A Gradle run that passed while no test JVM opened a pool
   session is a run without cases, which fails as "no requirements ran".
 - **Steady tick counts** (2026-11-15): a requirement takes the same ticks on every run. Work that
   already runs when it begins holds the next tick; a task handed to Bukkit's async scheduler holds the
