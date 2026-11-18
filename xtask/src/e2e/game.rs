@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitStatus;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use anyhow::{Context as _, Result, bail};
+use anyhow::{Context as _, Result, anyhow, bail};
 
 use super::{E2eArgs, take_turn};
 use crate::lock;
@@ -204,7 +204,7 @@ pub(crate) fn own_run(ran: &Ran) -> Result<TestRun> {
     let log = ran.pool_log.display();
     if !ran.file.exists() {
         bail!(
-            "game: the run wrote no run file at {} (Gradle exited with {}); see {log}",
+            "game: the run wrote no run file at {}, so it proved nothing: no game test ran, so the build never started the pool, or the pool wrote nothing (Gradle exited with {}); see {log}",
             ran.file.display(),
             ran.gradle,
         );
@@ -257,7 +257,7 @@ pub(crate) fn judge(
 ) -> Result<()> {
     // A run cut short still lists the cases that finished, whose evidence stages.
     results::report(run, quarantine, Some(shown), out)?;
-    results::selection_matches(run, only)?;
+    results::selection_matches(run, only).map_err(|unmatched| anyhow!("game: {unmatched}"))?;
     if run.cases.is_empty() {
         bail!(
             "game: no requirements ran ({})",
@@ -316,6 +316,8 @@ mod tests {
             pool_log: root.path("pool.log"),
         }));
         assert!(error.contains("wrote no run file"), "{error}");
+        assert!(error.contains("no game test ran"), "{error}");
+        assert!(error.contains("the pool wrote nothing"), "{error}");
         assert!(
             error.contains(&root.path("pool.log").display().to_string()),
             "{error}"
@@ -331,7 +333,10 @@ mod tests {
             ..TestRun::default()
         };
         for (only, says) in [
-            (vec!["NOPE-1".to_owned()], "no case matches NOPE-1"),
+            (
+                vec!["NOPE-1".to_owned()],
+                "game: --only NOPE-1 matched nothing",
+            ),
             (vec![], "no requirements ran"),
         ] {
             let error = refusal(judge(
@@ -524,7 +529,10 @@ mod tests {
             Path::new("results/game"),
             &mut Vec::new(),
         ));
-        assert_eq!(error, "no case matches PROBE-9");
+        assert_eq!(
+            error,
+            "game: --only PROBE-9 matched nothing: no requirement or case has that id"
+        );
     }
 
     #[test]

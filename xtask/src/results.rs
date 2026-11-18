@@ -256,7 +256,7 @@ pub fn attempts(
     Ok(folded)
 }
 
-/// Fails when an id of `selection` names no case of `run`.
+/// Fails when an id of `selection`, the run's `--only`, names no case of `run`.
 pub fn selection_matches(run: &TestRun, selection: &[String]) -> Result<()> {
     let unmatched: Vec<&str> = selection
         .iter()
@@ -268,7 +268,10 @@ pub fn selection_matches(run: &TestRun, selection: &[String]) -> Result<()> {
         .map(String::as_str)
         .collect();
     if !unmatched.is_empty() {
-        bail!("no case matches {}", unmatched.join(", "));
+        bail!(
+            "--only {} matched nothing: no requirement or case has that id",
+            unmatched.join(", ")
+        );
     }
     Ok(())
 }
@@ -724,7 +727,10 @@ mod tests {
             once(run(&[("a", Outcome::Passed)])),
         )
         .unwrap_err();
-        assert_eq!(error.to_string(), "no case matches CONN-9");
+        assert_eq!(
+            error.to_string(),
+            "--only CONN-9 matched nothing: no requirement or case has that id"
+        );
     }
 
     #[test]
@@ -864,7 +870,10 @@ mod tests {
         assert!(selection_matches(&reported, &selected).is_ok());
         let error =
             selection_matches(&reported, &["CONN-2".to_owned(), "AUTH-1".to_owned()]).unwrap_err();
-        assert_eq!(error.to_string(), "no case matches CONN-2, AUTH-1");
+        assert_eq!(
+            error.to_string(),
+            "--only CONN-2, AUTH-1 matched nothing: no requirement or case has that id"
+        );
     }
 
     #[test]
