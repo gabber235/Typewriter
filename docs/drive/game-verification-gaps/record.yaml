@@ -41,8 +41,8 @@ pieces:
         state: dropped
         why: The developer kept the framework tick based; GAME-S3 stays in node 3's two engine harness with injected short TTLs
   - id: g4-services
-    status: figuring-out
-    open: How the loader gets the Paper engine artifact from the local backend; whether one bind survives restart attempts
+    status: building
+    open: none; built on feat/game-verification-g4 by the prototype's delegate
     tries:
       - id: inside-stack
         what: cargo xtask e2e game runs under a game stack spec (the panel spec plus binding the Paper loader as engine), real grants and engine_instance
@@ -50,6 +50,12 @@ pieces:
         state: picked
         why: Same path as production, no test only loader mode
         evidence: [xtask/src/stack/typewriter.rs:52-54, backend/tests/component/crates/typewriter-stack/src/bind.rs]
+      - id: paper-loader-second-host
+        parent: inside-stack
+        what: The Paper loader registers as a second host, bound with primary_engine typewritermc:paper on the stack's realm
+        taught: Real engine_instance; the engine comes from the realm host over NATS, no staging; stack about 65 s, bind to Active 12 to 21 s; the loader drops engine.engine_id (BackendArtifactHostAssignmentSource.kt:119-149), node 3 owns that; a second plugin bundling Kotlin crashed coverage; a fresh own Paper folder registers a new host
+        state: picked
+        evidence: [spike/g4-paper-engine-stack 8155e149d1 (local, deleted after the build), SIBLING-TW SIBLING-1 RESTART-1 passed in run 2]
 
 decided:
   - id: g4-inside-stack
@@ -58,6 +64,12 @@ decided:
   - id: g3-state-check
     what: "A. State check (Recommended)"
     why: Test JVM predicate polled each tick inside a window; counts as proof
+  - id: coverage-own-code
+    what: "Yes count only our code"
+    why: The loader's bundled Kotlin crashed coverage analysis
+  - id: restart-identity-slots
+    what: "A. 3 fixed slots (Recommended)"
+    why: Bind the shared Paper plus 2 own slots once; copy identity per folder; no 20 s bind per restart
   - id: g3-ticks-only
     what: "A. Ticks only (Recommended)"
     why: Add never.state for S2; S3 stays in node 3's harness
@@ -66,4 +78,4 @@ open: []
 
 slices: []
 
-next: Build G3 and G1 in the main thread; G2 built by a delegate in its own worktree; G4 prototyped by a delegate (artifact source, bind across restarts)
+next: Merge G2 and G4 from their delegates' branches, run e2e game once, then typewriter-review and Finish
