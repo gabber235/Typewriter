@@ -1,10 +1,9 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.PoolFile
+import com.typewritermc.playtest.launch.PoolFile
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.nio.file.Path
-import kotlin.io.path.Path
 
 /**
  * A process standing in for a game pool in a pool folder: it runs [process], and a pool file of its run
@@ -24,27 +23,23 @@ class StandInPool(
 }
 
 /**
- * Starts a stand in pool of [run] in [poolDir] running [command] (by default a shell with a child that
- * stands for its game), and names it in the folder's pool file; it answers once it listens unless it
- * is [going], as a pool on its way out no longer does.
+ * Starts a stand in pool of [run] in [poolDir], a shell with a child that stands for its game, and names
+ * it in the folder's pool file; it answers on its server.
  */
 fun standInPool(
     poolDir: Path,
     run: String,
-    going: Boolean = false,
-    command: List<String> = listOf("sh", "-c", "sleep 300 & sleep 300"),
 ): StandInPool {
-    val process = ProcessBuilder(command).start()
+    val process = ProcessBuilder("sh", "-c", "sleep 300 & sleep 300").start()
     val server = ServerSocket(0, 16, InetAddress.getLoopbackAddress())
-    if (going) server.close()
     PoolFile.of(server.localPort, run, process.toHandle()).write(poolDir.resolve(PoolFile.NAME))
     // The shell starts its game children as it runs; a stand in counts once they exist.
     val deadline = System.nanoTime() + 5_000_000_000L
-    while (command.first() == "sh" && process.descendants().count() < 2 && System.nanoTime() < deadline) Thread.sleep(10)
+    while (process.descendants().count() < 2 && System.nanoTime() < deadline) Thread.sleep(10)
     return StandInPool(process, server)
 }
 
-/** Settings of a test JVM of [run] whose pool lives in [poolDir]; nothing here starts a real pool. */
+/** Settings of a test JVM of [run] whose pool lives in [poolDir]. */
 internal fun launcherSettings(
     poolDir: Path,
     run: String,
@@ -52,8 +47,6 @@ internal fun launcherSettings(
     PlaytestSettings(
         poolDir = poolDir,
         logs = poolDir.resolve("logs"),
-        poolClasspath = "",
-        java = Path("java"),
         run = run,
         testRun = poolDir.resolve("test_run.json"),
         root = poolDir,
@@ -61,5 +54,4 @@ internal fun launcherSettings(
         goldenImages = poolDir.resolve("images"),
         mesa = "",
         pinnedRunner = false,
-        forwarded = mapOf(),
     )

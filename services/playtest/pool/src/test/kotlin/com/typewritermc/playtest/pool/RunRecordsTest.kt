@@ -20,7 +20,6 @@ val RunRecordsTest by testSuite {
     test("a run's file holds each case in the order its first attempt ended, with the failure and its line") {
         val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
         val records = RunRecords("run-1", file, retries, clock = { 1_000 })
-        records.joined("session")
         records.record(
             submitted(1, "PROBE-1 a chat line the probe sends reaches the player"),
             Result.partial(submission = 1, durationMillis = 420),
@@ -35,7 +34,7 @@ val RunRecordsTest by testSuite {
             ),
         )
 
-        records.ended("session")
+        records.finished()
 
         val run = TestRun.serializer.fromJsonCode(Files.readString(file))
         run.runner shouldBe Runner.GAME
@@ -51,7 +50,6 @@ val RunRecordsTest by testSuite {
     test("the frames and golden candidates an attempt wrote land in the run file as its artifacts in its folder") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, retries, clock = { 1_000 })
-        records.joined("session")
         records.record(
             submitted(1, "GOLDEN-1 a sidebar matches its golden"),
             Result.partial(
@@ -68,7 +66,7 @@ val RunRecordsTest by testSuite {
             ),
         )
 
-        records.ended("session")
+        records.finished()
 
         val attempt =
             TestRun.serializer
@@ -89,7 +87,6 @@ val RunRecordsTest by testSuite {
     test("a demo lands in its case's demo with its clips, and never counts as an attempt") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, retries, clock = { 1_000 })
-        records.joined("session")
         val probe = "PROBE-1 a chat line reaches the player"
         records.record(
             submitted(1, probe),
@@ -105,7 +102,7 @@ val RunRecordsTest by testSuite {
             ),
         )
 
-        records.ended("session")
+        records.finished()
 
         val case =
             TestRun.serializer
@@ -122,7 +119,6 @@ val RunRecordsTest by testSuite {
     test("every attempt of one case lands in that case, in the order the attempts ended") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, retries, clock = { 1_000 })
-        records.joined("session")
         val flaky = "FLAKY-1 a requirement that fails its first attempt and passes its second is flaky"
         records.record(
             submitted(1, flaky, Demonstrates.FAILURE),
@@ -137,7 +133,7 @@ val RunRecordsTest by testSuite {
             Result.partial(submission = 7, durationMillis = 310),
         )
 
-        records.ended("session")
+        records.finished()
 
         val cases = TestRun.serializer.fromJsonCode(Files.readString(file)).cases
         cases.map { it.requirement } shouldBe listOf("FLAKY-1", "PROBE-1")
@@ -148,8 +144,7 @@ val RunRecordsTest by testSuite {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, AttemptPolicy.ExactlyWrapper(3), clock = { 1_000 })
 
-        records.joined("session")
-        records.ended("session")
+        records.finished()
 
         TestRun.serializer.fromJsonCode(Files.readString(file)).attemptPolicy shouldBe AttemptPolicy.ExactlyWrapper(3)
     }
@@ -157,7 +152,6 @@ val RunRecordsTest by testSuite {
     test("each case says what its requirement declares it demonstrates") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, retries, clock = { 1_000 })
-        records.joined("session")
         listOf(Demonstrates.HAPPY_PATH, Demonstrates.FAILURE, Demonstrates.EDGE_CASE).forEachIndexed { index, demonstrates ->
             records.record(
                 submitted(index.toLong(), "CASE-$index", demonstrates = demonstrates),
@@ -165,7 +159,7 @@ val RunRecordsTest by testSuite {
             )
         }
 
-        records.ended("session")
+        records.finished()
 
         TestRun.serializer
             .fromJsonCode(Files.readString(file))
@@ -177,7 +171,6 @@ val RunRecordsTest by testSuite {
     test("an attempt's steps hold the pool's claim and wipe, then what its body did, each with its start and duration") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, retries, clock = { 1_000 })
-        records.joined("session")
         records.record(
             submitted(1, "PROBE-1 a chat line reaches the player"),
             Result.partial(
@@ -196,7 +189,7 @@ val RunRecordsTest by testSuite {
                 ),
         )
 
-        records.ended("session")
+        records.finished()
 
         TestRun.serializer
             .fromJsonCode(Files.readString(file))
@@ -213,33 +206,20 @@ val RunRecordsTest by testSuite {
             )
     }
 
-    test("an attempt whose test JVM ended first fails in its run's file, whichever session of the run writes it") {
-        val dir = Files.createTempDirectory("run-records")
-        val killed =
-            submitted(3, "PROBE-2 the first input after a far teleport acts there")
-        val gone = Outcome.createFailed(message = "its test JVM ended before the attempt did; see pool.log", firstBroken = null)
-        val siblingEndsFirst = RunRecords("run-1", dir.resolve("run-1.json"), retries, clock = { 1_000 })
-        val killedLeavesFirst = RunRecords("run-2", dir.resolve("run-2.json"), retries, clock = { 1_000 })
-        listOf(siblingEndsFirst, killedLeavesFirst).forEach { records ->
-            records.joined("sibling")
-            records.joined("killed")
-        }
+    test("an attempt whose test JVM ended first fails in its run's file") {
+        val file = Files.createTempDirectory("run-records").resolve("test_run.json")
+        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        val killed = submitted(3, "PROBE-2 the first input after a far teleport acts there")
 
-        // The sibling session ended before the killed one left: its leaving writes the file again.
-        siblingEndsFirst.record(
-            submitted(1, "SIBLING-1 a second module's requirement reaches its player"),
-            Result.partial(submission = 1, durationMillis = 400),
-        )
-        siblingEndsFirst.ended("sibling")
-        siblingEndsFirst.abandoned("killed", listOf(killed), "its test JVM ended before the attempt did; see pool.log")
-        // The killed session left first: the file holds the failure from then on.
-        killedLeavesFirst.abandoned("killed", listOf(killed), "its test JVM ended before the attempt did; see pool.log")
-        killedLeavesFirst.ended("sibling")
+        records.abandoned(listOf(killed), "its test JVM ended before the attempt did; see pool.log")
 
-        for (file in listOf("run-1.json", "run-2.json")) {
-            val cases = TestRun.serializer.fromJsonCode(Files.readString(dir.resolve(file))).cases
-            cases.single { it.requirement == "PROBE-2" }.attempts.map { it.outcome } shouldBe listOf(gone)
-        }
+        TestRun.serializer
+            .fromJsonCode(Files.readString(file))
+            .cases
+            .single()
+            .attempts
+            .map { it.outcome } shouldBe
+            listOf(Outcome.createFailed(message = "its test JVM ended before the attempt did; see pool.log", firstBroken = null))
     }
 
     test("a player still out at the end of the run is named on the case whose work hung on it") {
@@ -249,7 +229,6 @@ val RunRecordsTest by testSuite {
             RunRecords("run-1", file, retries, clock = { 1_000 }) {
                 mapOf(hung to "gv-1 stayed out of the pool for the rest of the run: its work \"Ledger lookup\" never ended.")
             }
-        records.joined("session")
         records.record(
             submitted(1, hung, Demonstrates.FAILURE),
             Result.partial(
@@ -264,7 +243,7 @@ val RunRecordsTest by testSuite {
             Result.partial(submission = 2, durationMillis = 420),
         )
 
-        records.ended("session")
+        records.finished()
 
         val cases = TestRun.serializer.fromJsonCode(Files.readString(file)).cases
         cases[0].attempts.single().outcome shouldBe
@@ -277,96 +256,70 @@ val RunRecordsTest by testSuite {
         cases[1].attempts.single().outcome shouldBe Outcome.PASSED
     }
 
-    test("the run file names its run, holds every attempt so far and reads as cut short until the run's last session ends") {
+    test("the run file reads as this run, cut short, from the moment the pool takes it up, over a file an earlier run left") {
+        val file = Files.createTempDirectory("run-records").resolve("test_run.json")
+        RunRecords("run-1", file, retries, clock = { 1_000 }).record(
+            submitted(1, "PROBE-1 a chat line reaches the player"),
+            Result.partial(submission = 1, durationMillis = 420),
+        )
+
+        RunRecords("run-2", file, retries, clock = { 9_000 })
+
+        val run = TestRun.serializer.fromJsonCode(Files.readString(file))
+        run.runId shouldBe "run-2"
+        run.cases shouldBe listOf()
+        run.end shouldBe RunEnd.CUT_SHORT
+    }
+
+    test("the run file of a pool that crashed reads cut short and keeps every attempt that ended") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, retries, clock = { 1_000 })
-        val read = { TestRun.serializer.fromJsonCode(Files.readString(file)) }
-        records.joined("first module")
-        records.joined("second module")
-
         records.record(
             submitted(1, "PROBE-1 a chat line reaches the player"),
             Result.partial(submission = 1, durationMillis = 420),
         )
-        read().runId shouldBe "run-1"
-        read().cases.map { it.requirement } shouldBe listOf("PROBE-1")
-        read().end shouldBe RunEnd.CUT_SHORT
 
-        records.ended("first module")
-        read().end shouldBe RunEnd.CUT_SHORT
+        // The pool dies here: nothing ends the run.
 
+        val run = TestRun.serializer.fromJsonCode(Files.readString(file))
+        run.cases.map { it.requirement } shouldBe listOf("PROBE-1")
+        run.end shouldBe RunEnd.CUT_SHORT
+    }
+
+    test("a run the pool ended reads completed, with every attempt of every module") {
+        val file = Files.createTempDirectory("run-records").resolve("test_run.json")
+        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        records.record(
+            submitted(1, "PROBE-1 a chat line reaches the player"),
+            Result.partial(submission = 1, durationMillis = 420),
+        )
         records.record(
             submitted(1, "SIBLING-1 a second module's requirement reaches its player"),
             Result.partial(submission = 1, durationMillis = 400),
         )
-        records.ended("second module")
-        read().cases.map { it.requirement } shouldBe listOf("PROBE-1", "SIBLING-1")
-        read().end shouldBe RunEnd.COMPLETED
+
+        records.finished()
+
+        val run = TestRun.serializer.fromJsonCode(Files.readString(file))
+        run.cases.map { it.requirement } shouldBe listOf("PROBE-1", "SIBLING-1")
+        run.end shouldBe RunEnd.COMPLETED
     }
 
-    test("a run the game could not serve says why in its file, even while sessions are open, and keeps the attempts that ended") {
+    test("a run the game could not serve says why in its file, also once the pool ended it, and keeps the attempts that ended") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, retries, clock = { 1_000 })
         val read = { TestRun.serializer.fromJsonCode(Files.readString(file)) }
-        records.joined("session")
         records.record(
             submitted(1, "PROBE-1 a chat line reaches the player"),
             Result.partial(submission = 1, durationMillis = 420),
         )
 
         records.failed("Paper stopped; see paper.log")
-        val whileOpen = read().end
-        records.ended("session")
+        val whileRunning = read().end
+        records.finished()
 
-        whileOpen shouldBe RunEnd.CouldNotRunWrapper("Paper stopped; see paper.log")
+        whileRunning shouldBe RunEnd.CouldNotRunWrapper("Paper stopped; see paper.log")
         read().end shouldBe RunEnd.CouldNotRunWrapper("Paper stopped; see paper.log")
         read().cases.map { it.requirement } shouldBe listOf("PROBE-1")
-    }
-
-    test("a later pool of the run takes up the file an earlier pool of it left, and adds its attempts") {
-        val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val read = { TestRun.serializer.fromJsonCode(Files.readString(file)) }
-        val earlier = RunRecords("run-1", file, retries, clock = { 1_000 })
-        earlier.joined("first module")
-        earlier.record(
-            submitted(1, "PROBE-1 a chat line reaches the player"),
-            Result.partial(submission = 1, durationMillis = 420),
-        )
-        earlier.ended("first module")
-        read().end shouldBe RunEnd.COMPLETED
-
-        val later = RunRecords("run-1", file, retries, clock = { 9_000 })
-        later.continueFrom() shouldBe true
-        later.joined("second module")
-        // The run goes on, so a pool that dies now leaves a run that was cut short.
-        read().end shouldBe RunEnd.CUT_SHORT
-        later.record(
-            submitted(1, "SIBLING-1 a second module's requirement reaches its player"),
-            Result.partial(submission = 1, durationMillis = 400),
-        )
-        later.ended("second module")
-
-        read().cases.map { it.requirement } shouldBe listOf("PROBE-1", "SIBLING-1")
-        read().startedAtMillis shouldBe 1_000
-        read().end shouldBe RunEnd.COMPLETED
-    }
-
-    test("a pool takes up no file another run left, and writes its own run over it") {
-        val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val earlier = RunRecords("run-1", file, retries, clock = { 1_000 })
-        earlier.joined("session")
-        earlier.record(
-            submitted(1, "PROBE-1 a chat line reaches the player"),
-            Result.partial(submission = 1, durationMillis = 420),
-        )
-
-        val other = RunRecords("run-2", file, retries, clock = { 9_000 })
-        other.continueFrom() shouldBe false
-        other.joined("session")
-        other.ended("session")
-
-        val run = TestRun.serializer.fromJsonCode(Files.readString(file))
-        run.runId shouldBe "run-2"
-        run.cases shouldBe listOf()
     }
 }

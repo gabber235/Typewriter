@@ -1,10 +1,10 @@
-package com.typewritermc.playtest.wire;
+package com.typewritermc.playtest.launch;
 
 /**
  * The share of the machine's memory each kind of game JVM may take for its heap, as
  * {@code -XX:MaxRAMPercentage}, so the caps scale with the machine: without one every JVM may grow to
  * a quarter of it, and the parts that run at once outgrew a 16 GB CI runner. The pool starts every
- * part with its kind's share, and the test JVM starts the pool with the pool's.
+ * part with its kind's share, and the build starts the pool with the pool's.
  */
 public enum HeapShare {
     /** The shared Paper: 2.6 GB on a 16 GB runner, where its heap peaked at 2.7 GB used under a 4 GB cap. */

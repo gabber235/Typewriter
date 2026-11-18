@@ -548,9 +548,9 @@ internal class PoolSession private constructor(
     private fun Attempt.player(name: String): GamePlayer = players.first { it.name == name }
 
     companion object {
-        /** Connects to the worktree's game pool, starting it when none runs. */
+        /** Connects to the game pool of this run, which the build started. */
         fun open(settings: PlaytestSettings = PlaytestSettings.fromSystemProperties()): PoolSession {
-            val socket = PoolLauncher(settings).connect()
+            val socket = connectToPool(settings)
             val session = PoolSession(socket, settings)
             session.send(Message.HelloWrapper(Hello(role = Role.SESSION, name = "pid ${ProcessHandle.current().pid()}")))
             session.send(Message.createJoin(run = settings.run))

@@ -1,6 +1,6 @@
 package com.typewritermc.playtest
 
-import com.typewritermc.playtest.wire.PartFile
+import com.typewritermc.playtest.launch.PartFile
 import kotlin.jvm.optionals.getOrNull
 
 /**

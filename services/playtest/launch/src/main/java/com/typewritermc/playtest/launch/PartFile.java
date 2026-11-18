@@ -1,4 +1,4 @@
-package com.typewritermc.playtest.wire;
+package com.typewritermc.playtest.launch;
 
 import java.io.IOException;
 import java.io.Reader;

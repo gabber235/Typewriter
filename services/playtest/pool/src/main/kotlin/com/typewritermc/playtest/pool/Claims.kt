@@ -1,6 +1,6 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.wire.HeapShare
+import com.typewritermc.playtest.launch.HeapShare
 
 /** Why a player sits out of every claim. */
 internal enum class Out {

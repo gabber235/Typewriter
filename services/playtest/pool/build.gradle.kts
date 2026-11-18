@@ -7,6 +7,7 @@ plugins {
 
 dependencies {
     implementation(project(":playtest-wire"))
+    implementation(project(":playtest-launch"))
     implementation(project(":protocol"))
     implementation(libs.kotlin.serialize.json)
     // Reads the JaCoCo counts each Paper hands over into the lines every attempt ran.

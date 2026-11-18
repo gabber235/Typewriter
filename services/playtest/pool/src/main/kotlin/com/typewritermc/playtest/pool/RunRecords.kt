@@ -20,11 +20,11 @@ import java.nio.file.StandardCopyOption
 /**
  * The attempts of [run], the one run the pool serves, written into its [file] under its [policy]. Every
  * attempt of one case, a requirement retried or repeated, lands in that case, and its demo in the case's
- * demo. The file is written again as each session joins and ends and after every attempt the run
- * records, so a pool that dies leaves the attempts that ended. It reads as cut short while a session of
- * the run is open, and names why the game could not serve the run once it failed, also when that
- * happened before any session joined; [stillOut] names, by case, the players hung work keeps out of the
- * pool. A later pool of the run takes up the file an earlier one left ([continueFrom]).
+ * demo. The file is written as the pool takes up the run, over whatever an earlier run left, and again
+ * after every attempt the run records, so a pool that dies leaves the attempts that ended. It reads as
+ * cut short until the pool ends the run, and names why the game could not serve the run once it
+ * failed, also when that happened before any session joined; [stillOut] names, by case, the players
+ * hung work keeps out of the pool.
  */
 internal class RunRecords(
     private val run: String,
@@ -33,19 +33,16 @@ internal class RunRecords(
     clock: () -> Long = System::currentTimeMillis,
     private val stillOut: () -> Map<String, String> = { mapOf() },
 ) {
-    private var startedAtMillis = clock()
+    private val startedAtMillis = clock()
     private val cases = linkedMapOf<String, TestCase>()
 
     /** Why the game could not serve the run; null while it could. */
     private var failure: String? = null
 
-    /** The sessions of the run that joined and have neither ended nor left. */
-    private val open = mutableSetOf<Any>()
+    /** Whether the pool ended the run, as the build's last tests ended. */
+    private var finished = false
 
-    /** [session] joined the run: its file reads as cut short from now until its last session ended. */
-    fun joined(session: Any) {
-        open += session
-        // The run goes on again, as when a later module's session joins after the others ended.
+    init {
         write()
     }
 
@@ -72,20 +69,18 @@ internal class RunRecords(
         write()
     }
 
-    /** [session] left before [unfinished] ended: each gets a failed attempt saying [reason]. */
+    /** A session left before [unfinished] ended: each gets a failed attempt saying [reason]. */
     fun abandoned(
-        session: Any,
         unfinished: List<Submit>,
         reason: String,
     ) {
         unfinished.forEach { add(it, Outcome.createFailed(message = reason, firstBroken = null), 0, listOf()) }
-        open -= session
         write()
     }
 
-    /** [session] ended. */
-    fun ended(session: Any) {
-        open -= session
+    /** The pool ended the run, every test of the build done: the file reads as complete. */
+    fun finished() {
+        finished = true
         write()
     }
 
@@ -93,22 +88,6 @@ internal class RunRecords(
     fun failed(reason: String) {
         failure = reason
         write()
-    }
-
-    /**
-     * Takes up the run where an earlier pool of it left its file, as when that pool stopped before a
-     * later module's tests started, so this pool adds to the run instead of starting it over. Returns
-     * whether the file held this run; a file of another run is written over once this run records
-     * something.
-     */
-    fun continueFrom(): Boolean {
-        if (!Files.exists(file)) return false
-        val earlier = TestRun.serializer.fromJsonCode(Files.readString(file))
-        if (earlier.runId != run) return false
-        startedAtMillis = earlier.startedAtMillis
-        earlier.cases.forEach { cases[it.id] = it }
-        failure = (earlier.end as? RunEnd.CouldNotRunWrapper)?.value
-        return true
     }
 
     private fun add(
@@ -165,9 +144,9 @@ internal class RunRecords(
         Files.move(partial, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
     }
 
-    /** How the run ends as its file says now: a game that failed outweighs the sessions still open. */
+    /** How the run ends as its file says now: a game that failed outweighs the pool's end of the run. */
     private val end: RunEnd
-        get() = failure?.let { RunEnd.CouldNotRunWrapper(it) } ?: if (open.isNotEmpty()) RunEnd.CUT_SHORT else RunEnd.COMPLETED
+        get() = failure?.let { RunEnd.CouldNotRunWrapper(it) } ?: if (finished) RunEnd.COMPLETED else RunEnd.CUT_SHORT
 
     /** This case with [note] joined to each failure. */
     private fun TestCase.noting(note: String): TestCase =
