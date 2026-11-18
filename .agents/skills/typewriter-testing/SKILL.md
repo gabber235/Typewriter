@@ -80,6 +80,31 @@ expect(realm.document.valueAt(title), saved);
 expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
 ```
 
+## Game requirements
+
+- When a requirement is about what a player perceives, write it as `requirement(id, sentence) { }` in
+  the module's `src/gameTest`, inside `val X by testSuite(compartment = { GameCompartment }) { }`.
+- When it needs several players, a failure case or a Paper restart, set `players = n`,
+  `demonstrates = Demonstrates.FAILURE` or `EDGE_CASE`, and `restartsPaper = true` (then
+  `restartPaper()` kills and boots that Paper).
+- Every body makes a positive check, or it fails as refused: a `within(n.ticks) { player sees ... }`
+  that holds, a `player.looksLike("name")` golden, the test kit's `holds`/`lacks` state check, or
+  `shouldThrow<WindowMissed>` (also `WorkHung`, `ClientLost`, `PaperLost`) for a framework outcome the
+  requirement expects. A read after one check held is not caught, so assert every read.
+- Set up the scene with `probe.*` and drive the player with its input (`typeInChat`, `press`,
+  `click`, `aimAt`, `walkTo`); the window counts from the last of them.
+- When something must not happen, add a broad `player.never sees anyChat()` beside a positive check
+  in the same window; a window of only `never` checks is refused.
+- When a still scene must look exact, use `looksLike`. A new or changed golden fails on the pinned
+  renderer until approved: `cargo xtask goldens approve` for a local Linux run, `cargo xtask goldens
+  approve --pr <n>` for the frames a pull request's CI run captured. A Mac reports goldens as not
+  checked.
+- When a plugin keeps state per player, it resets that state on `PlayerWipeEvent`; a leak shows up as
+  an unrelated requirement failing.
+- When the thing to prove is a harness flag or launch setting (a heap cap, a JVM option), write a unit
+  test of the command the pool builds, not a game requirement: a requirement must perceive something
+  (HEAP-1 read JVM flags with no perceived check and became a unit test).
+
 ## Watch the harness
 
 A test file holds only its entry point and its test cases; `cargo xtask check quality` fails on

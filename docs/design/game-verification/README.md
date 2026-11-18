@@ -30,7 +30,7 @@ clients hold none.
 | Part | Process | Java | Role |
 |---|---|---|---|
 | Test JVM | Gradle's `gameTest` task, one per module with a `src/gameTest` source set | 21 (services' toolchain) | Declares requirements in testBalloon, submits them to the pool, judges windows, decides retries |
-| Pool | one process per checkout, started by the first test JVM | 25 | Owns the warm clients and the Papers, queues and grants claims, records the run file |
+| Pool | one process per checkout, started and stopped by the Gradle build | 25 | Owns the warm clients and the Papers, queues and grants claims, records the run file |
 | Shared Paper | stock Paper 26.3 with the step agent and the framework plugin | 25 | Runs every requirement that does not restart Paper, each in a region of its own |
 | Own Paper | the same, booted per restart requirement (at most 2 at once) | 25 | Runs a requirement that kills and boots Paper |
 | Client | Minecraft 26.3 with the framework's Fabric mod, 4 by default | 25 | Steps one tick per step ping, perceives without drawing, sends real window input |
@@ -43,8 +43,9 @@ clients hold none.
 - The **client mod** holds the clock still between step pings, builds a perception record after each
   tick, sends input as window events (XTest on its own Xvfb display on Linux, its own SDL queue
   elsewhere) and drops every input event it did not send itself.
-- The **wire** module holds the messages every part shares, the pool and part files and the heap
-  shares.
+- The **wire** is Skir: every message the parts exchange is declared in
+  `skir-src/harness/v1/wire.skir`. The wire module only frames those messages on a socket and holds
+  the pool and part files and the heap shares.
 - Test JVMs share the pool, so every module and extension shares the warm clients, and a warm single
   requirement takes about 2 s ([p6-pool-process.md](spikes/p6-pool-process.md)). The pool takes turns
   between test JVMs.
@@ -168,8 +169,8 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
   renderer drew fails with the approve command. Any other machine reports "not checked".
 - `cargo xtask goldens approve` takes the frames a run captured, refuses any the pinned renderer did
   not draw, writes the golden files and pushes the images. A Mesa or Minecraft upgrade fails every
-  golden, and its pull request approves them again. The weekly prune drops images no golden on
-  `develop` names once they are 30 days old.
+  golden, and its pull request approves them again. The weekly prune drops images no golden on a
+  long lived branch (`develop` or `features/v1`) names once they are 30 days old.
 
 ## Coverage and demo clips
 
@@ -198,17 +199,23 @@ own Papers run at once.
 
 ## The pool's life and the run file
 
-- The first test JVM starts the pool; a lock keeps one per checkout, and `pool.running` names its port,
-  run and process. A pool of another run is stopped and replaced; one that has not answered for 90 s
-  is replaced.
-- The pool stays in its starter's process tree, so Gradle's cancel stops it, and it outlives a normal
-  exit of its starter. A pool no test JVM reached stops after 60 s.
+- **The pool lives exactly as long as the Gradle build.** The build service `GameRun` starts it when
+  the build's first `gameTest` task runs and stops it in `close()` when the build ends. The pool also
+  stops when its stdin closes, so a killed Gradle takes it down too. Nothing waits for a later session:
+  every test JVM of the build reaches the same pool while the build runs.
+- A lock keeps one pool per checkout, and `pool.running` names its port, run and process. A pool of
+  another run is stopped and replaced; one that has not answered for 90 s is replaced.
 - A leased attempt fails with `LeaseExpired` after 300 s.
 - Each part writes its pid and start time into its folder (`part.running`), and tests find a client
   or Paper by it; Linux shows Java only the first page of a command line.
-- **The run file** (`test_run.json`) survives a pool crash: a session names it when it joins, the pool
-  rewrites it atomically after every attempt and marks it `ended` once every session left. xtask
-  fails a run file without the mark as cut short; the finished cases' evidence still stages.
+- **The run file** (`test_run.json`) survives a pool crash: a session names it when it joins, and the
+  pool rewrites it atomically after every attempt for as long as the build runs. A pool that crashes
+  fails the rest of the build, and its file reads cut short, since a session was still open. It
+  carries the run's id, which xtask chose and handed to every test JVM, so xtask rejects a file another
+  run wrote. A run
+  the game could not serve says why in `failure`; a run that stopped while a session was still open is
+  marked `cut_short`. xtask fails either as the whole run's trouble, and the finished cases' evidence
+  still stages.
 - Each run keeps its pool, Paper and client logs in a folder of its own; the newest 3 are kept.
 
 ## Memory
@@ -346,6 +353,7 @@ Dated decisions, oldest first. The sections above describe what they add up to.
 - **The pool stays attached to its starter** (2026-11-17): the test JVM starts the pool without `setsid`.
   It outlives its starter's normal exit anyway, since the system reparents an orphan, and staying in the
   starter's process tree is what lets Gradle's cancel stop it: Gradle destroys every descendant by pid.
+  Superseded by the build service owning the pool (2026-11-18, below): `GameRun` starts and stops it.
 - **A run file survives a pool crash** (2026-11-17): a session names the run file and attempt policy in a
   `Join` right after its `Hello`, and the pool refuses a session of the run that names others. The pool
   rewrites the file atomically when a session joins and after every attempt it records, with
@@ -361,6 +369,13 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   another session of the run, so with `--max-workers=1` a module whose tests start later joins the same
   pool and game instead of booting another. A pool that starts for a run whose file already holds that
   run id takes it up and adds to it, and adds to the run's logs instead of emptying them.
+  Superseded (2026-11-18): the build service owns the pool, so the 60 s wait and the run file pick-up
+  are gone.
+- **The build service owns the pool** (2026-11-18): the Gradle build service `GameRun` starts the pool
+  on the build's first `gameTest` task and stops it in `close()` at build end; the pool also stops when
+  its stdin closes, which covers a killed Gradle. The 60 s grace after the last session, the owner timer
+  and the run file pick-up are deleted. A pool crash fails the rest of the build, and the run file reads
+  cut short. Review round 2 traced the pool outliving the heavy lock by 60 to 120 s.
 - **Selection** is testBalloon's (2026-11-15): `cargo xtask e2e game --only` passes each id as a test
   pattern, and the framework holds no selection code. A game module the selection leaves empty passes,
   as Gradle's "no matching tests" check is off for gameTest tasks; xtask's selection check names each
@@ -415,8 +430,9 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   whose checks are all `never` or all client state: it needs one positive check (2026-11-06). A body
   that returns without one fails as refused (2026-11-18). A positive check is a window whose checks
   held, a `looksLike`, an outcome the framework observed that the body caught (a missed window, hung
-  work, a lost client or Paper), or the test kit's `holds`/`lacks` state check. A bare read of state
-  never counts: the rule catches a body that reads and forgets to assert.
+  work, a lost client or Paper, caught with `shouldThrow`), or the test kit's `holds`/`lacks` state
+  check. The rule covers whole bodies: a body with no positive check at all fails. A bare read made
+  after one check already held is not caught.
 - A requirement that needs rendered frames **declares it** (`player(frames = 60.hz)`), so the runner
   groups such requirements at a fitting server rate before it starts (2026-11-06). Superseded: stepped
   ticks replaced server rates, and clients perceive without drawing (P11), so only `visible()`, goldens

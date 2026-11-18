@@ -411,7 +411,7 @@ pieces:
           Cost on the runner: 1.5 times gated at 30 fps, 2.6 at 60, against 4 to 5 for real time. Same
           machine reruns give identical mp4 bytes except particles (client randomness).
         state: working
-        evidence: ["branch proto/gv-video f1bb8683a: prototypes/game-verification/RESULTS.md", CI run 43312553335]
+        evidence: [docs/design/game-verification/spikes/p9-frames-between-steps.md, CI run 43312553335]
       - id: clips-in-demo-reruns
         parent: frames-between-steps
         what: >-
@@ -455,7 +455,7 @@ pieces:
           far edges), so upgrades rebuild goldens as decided. The profile also needs libglvnd and the X
           libraries; building the devenv shell cost 300 to 480 s per job without the Nix cache.
         state: working
-        evidence: ["branch proto/gv-goldens 82b1cdf0a: prototypes/game-verification/RESULTS.md", CI runs 42343076555 42344338415]
+        evidence: [docs/design/game-verification/spikes/p5-devenv-mesa.md, CI runs 42343076555 42344338415]
       - id: exact-on-pinned-runner
         what: Exact comparison, approved from the runner's own frames, hash in the repo and PNG on the evidence branch
         taught: Zero differing pixels across repeats and CPU models with the knobs on
@@ -752,7 +752,7 @@ decided:
     why: The heap budget assumed 2 own Papers but CI ran 3 at once (57% of the machine against the 50% limit); the pool runs at most HeapShare.OWN_PAPERS own Papers, counting ones still stopping, a further restart attempt waits in the queue, and the budget test reads the same number
   - id: prune-unused-goldens
     what: "Unused, 30 days old (Recommended)"
-    why: Every re-approve leaves the old image on the evidence branch and prune skipped goldens/, so it grew forever and approve's clone slowed; approve writes when it pushed each image, and the weekly prune drops an image no golden file on develop names once it is older than the retention, the same 30 days as pull request media
+    why: Every re-approve leaves the old image on the evidence branch and prune skipped goldens/, so it grew forever and approve's clone slowed; approve writes when it pushed each image, and the weekly prune drops an image no golden file on a long lived branch (develop or features/v1) names once it is older than the retention, the same 30 days as pull request media
   - id: keep-slice-9-built
     what: "Keep all three (Recommended)"
     why: Slice 9's built decisions stand; a leased attempt fails with LeaseExpired after 300 s, a pool no test JVM reaches stops after 60 s, a pool that stopped answering is replaced after 90 s; a dispatched run, which only a maintainer can start, is trusted and saves caches for its own branch; game logs stay off CI's public output, as every suite's logs do
@@ -779,7 +779,10 @@ decided:
     why: Finish review found a failed boot recorded as test JVMs ending, xtask telling runs apart by timestamps and the cause by searching pool.log, and only the game runner reading ended; TestRun carries run_id (made by xtask, passed as -Pplaytest.runId), a run level failure the pool writes when the game cannot run, and cut_short in place of ended (false by default, set only by the game pool), judged once in results for every suite and the pull request evidence
   - id: one-pool-per-run
     what: "Pool waits, file continues (Recommended)"
-    why: The pool stopped once its last session left, so a later module's test JVM started a second pool that rewrote the run file from empty; the pool waits 60 s after its last session for another session of the same run, and a pool that starts later for the same run_id loads the run file and adds to it
+    why: The pool stopped once its last session left, so a later module's test JVM started a second pool that rewrote the run file from empty; the pool waits 60 s after its last session for another session of the same run, and a pool that starts later for the same run_id loads the run file and adds to it; superseded by build-service-owns-pool (2026-11-18), which deletes the 60 s wait and the run file pick-up because the Gradle build now starts and stops the pool
+  - id: build-service-owns-pool
+    what: "Build service (Recommended)"
+    why: Asked "Who should stop the game pool when a test run ends?". Review round 2 traced the pool outliving the heavy lock by 60 to 120 s. The Gradle build service GameRun starts the pool on the first gameTest task of a build and stops it in close() at build end; the pool stops when its stdin closes, which also covers a killed Gradle. This deletes the 60 s grace, the owner timer and the run file pick-up of one-pool-per-run; a pool crash fails the rest of the build and the run file reads cut short
   - id: wire-in-skir
     what: "skir everywhere but no spike needed."
     why: The four game parts spoke a hand written Java wire (52 messages, about 800 codec lines, 4 run file types copied from test_run.skir, one drifted) outside the Skir contract boundary; the wire's messages move into a harness Skir file, every part uses the generated types, the Paper plugin bundles the Kotlin and Skir runtimes, and the hand codec, the copies and the run file translation go
@@ -954,7 +957,7 @@ slices:
     status: done
     what: CI job and caches; detach, stale pool, lease deadline
     green: the suite runs on a pull request
-    evidence: ["branch feat/game-verification-slice-9 at cb261151d", "CI run 44063821447: e2e (game) green on the slice head; commits, quality and gate fail only on the known diff against develop", "CI run 44041628191: 97 passed, lowest free memory 3785M, no Kotlin daemon during the suite, devenv step median 212 s", "CI run 44000816804: the one pixel proof failed GOLDEN-1 with 1 of 409920 pixels differ and a sidebar.diff.png", "CI run 44013168715: never more than 2 own Papers alive"]
+    evidence: ["commit cb261151d, the slice 9 head", "CI run 44063821447: e2e (game) green on the slice head; commits, quality and gate fail only on the known diff against develop", "CI run 44041628191: 97 passed, lowest free memory 3785M, no Kotlin daemon during the suite, devenv step median 212 s", "CI run 44000816804: the one pixel proof failed GOLDEN-1 with 1 of 409920 pixels differ and a sidebar.diff.png", "CI run 44013168715: never more than 2 own Papers alive"]
     taught: >-
       The game job runs in CI's e2e matrix on the free runner, about 13 to 14 min warm (it generates only
       the protocol's Skir types). Each game part writes a pid file (PartFile) that fixtures read, since
