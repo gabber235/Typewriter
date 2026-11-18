@@ -30,6 +30,9 @@ const IDENTITIES = [
 ] as const satisfies readonly Parameter[];
 export type Identity = (typeof IDENTITIES)[number];
 
+/** The identifiers that name one grantee rather than a tenant it belongs to. */
+const PERSONAL_IDENTITIES: readonly Identity[] = ["service", "user"];
+
 /**
  * Identities whose values live inside another identity, so a role bound to the outer one may
  * address any inner value: every realm belongs to one organization.
@@ -267,6 +270,19 @@ export interface TransportLimits {
  */
 export const ENVELOPE_HEADROOM_BYTES = 64 * 1024;
 
+/**
+ * A JetStream key value bucket, one per realm, named `<name>_<realm id>`. Its owner creates it;
+ * its writers read, write and list keys of exactly the declared tokens. Every key carries its own
+ * time to live, and an expired key leaves a marker for `markerTtlSeconds`, so a watcher sees it.
+ */
+export interface BucketDeclaration {
+  readonly name: string;
+  readonly key: readonly string[];
+  readonly owner: string;
+  readonly writers: readonly string[];
+  readonly markerTtlSeconds: number;
+}
+
 /** The admitted route manifest. */
 export interface Manifest {
   readonly limits: TransportLimits;
@@ -274,6 +290,7 @@ export interface Manifest {
   /** Backend component name to its deploy/base directory, relative to the repository root. */
   readonly components: ReadonlyMap<string, string>;
   readonly routes: readonly Route[];
+  readonly buckets: readonly BucketDeclaration[];
 }
 
 const Limits = z.strictObject({
@@ -285,12 +302,26 @@ const Limits = z.strictObject({
   reply_ttl_ms: z.int().positive(),
 });
 
+const KeyToken = z.string().regex(/^[a-z][a-z0-9_]*$/, {
+  error: (issue) => `invalid key token ${JSON.stringify(issue.input)}`,
+});
+
+const BucketShape = z.strictObject({
+  name: KeyToken,
+  scope: z.literal("realm"),
+  key: z.array(KeyToken).min(1),
+  owner: z.strictObject({ role: RoleName }),
+  writers: z.array(z.strictObject({ role: RoleName })).min(1),
+  marker_ttl_seconds: z.int().positive(),
+});
+
 const RawManifest = z
   .strictObject({
     limits: Limits,
     roles: z.record(RoleName, RoleDeclaration),
     components: z.record(ComponentName, z.string().min(1)),
     routes: z.array(RouteShape),
+    buckets: z.array(BucketShape).default([]),
   })
   .superRefine((manifest, context) => {
     const issue = (path: Array<string | number>, message: string) =>
@@ -348,8 +379,14 @@ const RawManifest = z
         if (role.personal) {
           bound.add(role.personal);
         }
+        // An event subscriber receives every publisher of its tenant, so the publisher's own identifier
+        // stays unbound in its grant.
+        const receivesOthers = event && path[0] === "subscribers";
         for (const parameter of scopeParameters(route.scope) as readonly Identity[]) {
           const outer = NESTED_IN[parameter];
+          if (receivesOthers && PERSONAL_IDENTITIES.includes(parameter)) {
+            continue;
+          }
           if (!bound.has(parameter) && !(outer && role.tenant.includes(outer))) {
             issue(
               [...at, ...path, "role"],
@@ -361,6 +398,20 @@ const RawManifest = z
       admitAddresses(route.scope, route.flow, (path, message) =>
         issue([...at, "flow", ...path], message),
       );
+    });
+    manifest.buckets.forEach((bucket, index) => {
+      const parties: Array<[Array<string | number>, string]> = [
+        [["owner"], bucket.owner.role],
+        ...bucket.writers.map((writer, position): [Array<string | number>, string] => [["writers", position], writer.role]),
+      ];
+      for (const [path, name] of parties) {
+        const role = manifest.roles[name];
+        if (!role) {
+          issue(["buckets", index, ...path, "role"], `unknown role ${JSON.stringify(name)}`);
+        } else if (role.side !== "service" || !role.tenant.includes("realm")) {
+          issue(["buckets", index, ...path, "role"], `role ${name} is not bound to one realm, so it cannot reach a realm bucket`);
+        }
+      }
     });
     for (const component of Object.keys(manifest.components)) {
       if (!used.has(component)) {
@@ -406,7 +457,7 @@ function admitAddresses(
  * `routes[3].flow.request` and the line.
  */
 export function parseManifest(source: string, file: string): Manifest {
-  const { limits, roles, components, routes } = parseYamlManifest(source, file, RawManifest).data;
+  const { limits, roles, components, routes, buckets } = parseYamlManifest(source, file, RawManifest).data;
   return {
     limits: {
       chunkBytes: limits.chunk_bytes,
@@ -424,5 +475,12 @@ export function parseManifest(source: string, file: string): Manifest {
         ? { name, scope, publishers: publishers!, subscribers: subscribers!, flow }
         : { name, scope, callers: callers!, server: server!, flow },
     ),
+    buckets: buckets.map((bucket) => ({
+      name: bucket.name,
+      key: bucket.key,
+      owner: bucket.owner.role,
+      writers: bucket.writers.map((writer) => writer.role),
+      markerTtlSeconds: bucket.marker_ttl_seconds,
+    })),
   };
 }

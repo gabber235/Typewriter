@@ -107,6 +107,8 @@ class MemoryNatsBroker(
 
     private inner class Client : NatsClientAdapter {
         override val connectivity = MutableStateFlow(NatsClientConnectivity.Connected)
+        override val jetStream: io.natskt.jetstream.api.JetStreamClient
+            get() = throw UnsupportedOperationException("The memory broker has no JetStream; use NatsTestServer.startWithJetStream")
 
         override suspend fun connect(): Result<Unit> = Result.success(Unit)
 

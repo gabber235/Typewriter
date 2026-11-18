@@ -37,7 +37,7 @@ val CompiledContentDeliveryTest by testSuite {
                 }
                 transport.respondWith { request, _ -> absentContentReply(request) }
                 val session =
-                    HostedMessagingSession(1, "organization", Communicator(transport, telemetry.telemetry, ContextPropagators.noop()))
+                    HostedMessagingSession(1, "organization", Communicator(transport, telemetry.telemetry, ContextPropagators.noop()), com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets)
                 val host = deliveryHost(session, telemetry)
                 val delivery = MessagingEngineContentDelivery(host, REALM, backgroundScope)
                 delivery.start { error("No content was returned") }

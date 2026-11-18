@@ -144,6 +144,7 @@ class FakeIdentityIssuer(
 class FakeRegistrarRuntime(
     override val communicator: Communicator,
     val ledger: RegistrarActionLedger = RegistrarActionLedger(),
+    override val buckets: com.typewritermc.services.libs.communicator.kv.KeyValueBuckets = com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets,
 ) : RegistrarRuntime {
     private val connectionResults = ArrayDeque<RuntimeResult<Unit>>()
     private val reconnectResults = ArrayDeque<RuntimeResult<Unit>>()

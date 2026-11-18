@@ -45,7 +45,19 @@ val stagePaperArtifacts =
         }
     }
 
+// Paper 26.3 runs on and publishes its API for Java 25.
+kotlin {
+    jvmToolchain(25)
+}
+
+repositories {
+    maven("https://repo.papermc.io/repository/maven-public/")
+}
+
 dependencies {
+    // Paper and the loader plugin are present wherever a Paper engine runs; the engine reaches Paper through them.
+    compileOnly(libs.paper.api)
+    compileOnly(project(":loader-paper"))
     imprintEngineCore(project(":engine-core"))
     imprintHostApi(project(":loader-api"))
     imprintPlatformApi(project(":typewriter-api"))

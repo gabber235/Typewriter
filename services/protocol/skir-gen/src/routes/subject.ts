@@ -121,7 +121,8 @@ const isComponent = (party: Party): party is { readonly component: string } => "
  *   one flow seen from each side (`cloud.from` and `typewriter.to` back); component callers of a
  *   bridged request also get the bare address;
  * - component to component uses the bare address;
- * - events between panel roles only use the `typewriter` prefix.
+ * - events panel roles publish use the `typewriter` prefix, whether panel or service roles receive
+ *   them.
  *
  * Throws for party combinations that have no subject family.
  */
@@ -159,10 +160,10 @@ export function channelSubjects(
   if (internal) {
     return { internal: address };
   }
-  const panelOnly = parties.every(
+  const panelPublished = publishers.every(
     (party) => isRole(party) && roles.get(party.role)?.side === "panel",
   );
-  if (kind === "event" && panelOnly) {
+  if (kind === "event" && panelPublished) {
     return { client: address.prefixed("typewriter") };
   }
   throw new Error(

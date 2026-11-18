@@ -197,6 +197,21 @@ val HostRolloutParticipantTest by testSuite {
         }
     }
 
+    test("a staged primary engine runs as the engine instance it was assigned") {
+        runTest {
+            val fixture = participantFixture(this)
+            val reference = fixture.reference("first")
+            fixture.projections[reference] = fixture.projection(reference)
+
+            fixture.participant.apply(fixture.stage(attempt(2, 1), reference)) shouldBe fixture.accepted
+
+            fixture.stagedContexts
+                .single()
+                .identity.engineId shouldBe "engine"
+            fixture.participant.close()
+        }
+    }
+
     test("a repeated commit is accepted again and activates the runtime once") {
         runTest {
             val fixture = participantFixture(this)

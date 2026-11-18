@@ -123,6 +123,26 @@ class AddressTemplate<Address : Any> internal constructor(
             AddressPattern.of(render(address).value),
         )
 
+    /**
+     * Restricts transport subscriptions to the addresses whose [bound] placeholders hold these values; every other
+     * placeholder stays a single segment wildcard. Use it to receive an event from every publisher of one tenant.
+     */
+    fun subscribedWhere(vararg bound: Pair<String, String>): AddressTemplate<Address> {
+        val values = mapOf(*bound)
+        require(values.keys.all { it in placeholders }) { "Bound placeholders ${values.keys} must be among $placeholders" }
+        return AddressTemplate(
+            template,
+            renderValues,
+            parseValues,
+            AddressPattern.of(
+                segments.joinToString(".") { segment ->
+                    val placeholder = segment.placeholder ?: return@joinToString segment.source
+                    values[placeholder]?.let { validateToken(it, "Bound value '$placeholder'") } ?: "*"
+                },
+            ),
+        )
+    }
+
     /** Appends a validated literal segment. */
     operator fun div(literal: String): AddressTemplate<Address> {
         validateLiteral(literal)

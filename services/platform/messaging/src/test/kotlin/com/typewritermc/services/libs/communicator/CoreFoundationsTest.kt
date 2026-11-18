@@ -73,6 +73,15 @@ val CoreFoundationsTest by testSuite {
         bound.match(bound.render(value)) shouldBe value
     }
 
+    test("a partly bound subscription listens on every value of its open placeholders and still reads them") {
+        val bound = template.subscribedWhere("organization" to "org-1")
+
+        bound.subscriptionPattern.value shouldBe "realm.*.organization.org-1"
+        bound.match(MessageAddress.of("realm.engine.organization.org-1")) shouldBe ExampleAddress("engine", "org-1")
+        shouldThrow<IllegalArgumentException> { template.subscribedWhere("member" to "org-1") }
+        shouldThrow<IllegalArgumentException> { template.subscribedWhere("organization" to "*") }
+    }
+
     test("patterns reject malformed literals and placeholders") {
         listOf(
             "",

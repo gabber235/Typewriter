@@ -789,10 +789,15 @@ internal class RealmLifecycleFixture(
                 },
         )
 
-    fun session(id: Long): TestSession {
+    /** A messaging session [id] whose requests travel over a fake transport and whose buckets are [buckets]. */
+    fun session(
+        id: Long,
+        buckets: com.typewritermc.services.libs.communicator.kv.KeyValueBuckets =
+            com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets,
+    ): TestSession {
         val transport = FakeMessageTransport()
         val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
-        return TestSession(HostedMessagingSession(id, "organization", communicator), transport)
+        return TestSession(HostedMessagingSession(id, "organization", communicator, buckets), transport)
     }
 
     suspend fun <Request : Any, Response : Any> request(

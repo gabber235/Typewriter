@@ -2,12 +2,13 @@ import type { CodeGenerator } from "skir-internal";
 
 import { UNKNOWN_SLUG, type Outcome, type OutcomeResponse } from "../../outcomes.js";
 import { fillTemplate, importedKotlinSymbol } from "../../symbols.js";
-import { lowerCamel, quoted } from "../../text.js";
-import { REPLY_INBOX } from "../grants.js";
+import { lowerCamel, quoted, upperCamel } from "../../text.js";
+import { bucketName, REPLY_INBOX } from "../grants.js";
 import {
   ENVELOPE_HEADROOM_BYTES,
   type Channel,
   type RoleDeclarations,
+  type ScopeKind,
   type TransportLimits,
 } from "../manifest.js";
 import { IDENTITY_PARAMETERS, replyInboxes, replyInboxText } from "../replies.js";
@@ -15,6 +16,7 @@ import {
   clientSubject,
   hasSide,
   routeChannel,
+  type ResolvedBucket,
   type ResolvedMethod,
   type ResolvedRoute,
   type ResolvedRoutes,
@@ -153,21 +155,27 @@ function replyAddresses(route: ResolvedRoute, roles: RoleDeclarations): string {
   return `\n    // Answers ${comment}.\n    replyAddresses = ReplyAddressRule { ${scope}, reply -> ${checks.length === 0 ? "false" : checks.join(" || ")} },`;
 }
 
+/** The hand written Kotlin scope, its subject template reader and the generated file of each route scope services take part in. */
+const KOTLIN_SCOPES: Partial<Record<ScopeKind, { scope: string; template: string; path: string }>> = {
+  realm: { scope: "RealmRouteScope", template: "realmTemplate", path: "RealmRoutes.kt" },
+  service: { scope: "ServiceRouteScope", template: "serviceTemplate", path: "ServiceRegistrationRoutes.kt" },
+  organization_actor: {
+    scope: "OrganizationActorRouteScope",
+    template: "organizationActorTemplate",
+    path: "OrganizationRoutes.kt",
+  },
+};
+
 function routeFile(
   routes: readonly ResolvedRoute[],
-  realm: boolean,
-  path: string,
+  kind: ScopeKind,
   symbols: CodeGenerator.SymbolProvider,
   defaults: TransportLimits,
   roles: RoleDeclarations,
 ): CodeGenerator.OutputFile {
-  const scope = realm ? "RealmRouteScope" : "ServiceRouteScope";
-  const template = realm ? "realmTemplate()" : "serviceTemplate()";
-  const imports = [
-    ...ROUTE_IMPORTS,
-    `${SCOPES}.${scope}`,
-    `${SCOPES}.${realm ? "realmTemplate" : "serviceTemplate"}`,
-  ].map((name) => `import ${name}`);
+  const { scope, template: reader, path } = KOTLIN_SCOPES[kind]!;
+  const template = `${reader}()`;
+  const imports = [...ROUTE_IMPORTS, `${SCOPES}.${scope}`, `${SCOPES}.${reader}`].map((name) => `import ${name}`);
   const policies = new Map<string, string>();
   const policyOf = (method: ResolvedMethod): string => {
     const key = method.response.record.key;
@@ -308,33 +316,55 @@ fun serviceReplyInboxPrefix(${parameters}): String = "${prefix}"`;
  * answers its callers by.
  */
 export function emitKotlin(
-  { limits, roles, routes }: ResolvedRoutes,
+  { limits, roles, routes, buckets }: ResolvedRoutes,
   symbols: CodeGenerator.SymbolProvider,
 ): CodeGenerator.OutputFile[] {
   const serviceRoutes = routes.filter((route) => hasSide(route, roles, "service"));
   for (const route of serviceRoutes) {
-    if (route.scope !== "realm" && route.scope !== "service") {
+    if (!KOTLIN_SCOPES[route.scope]) {
       throw new Error(`Kotlin route ${route.name} has unsupported scope ${route.scope}`);
     }
   }
+  const scopes = Object.keys(KOTLIN_SCOPES) as ScopeKind[];
   return [
-    routeFile(
-      serviceRoutes.filter((route) => route.scope === "realm"),
-      true,
-      "RealmRoutes.kt",
-      symbols,
-      limits,
-      roles,
-    ),
-    routeFile(
-      serviceRoutes.filter((route) => route.scope === "service"),
-      false,
-      "ServiceRegistrationRoutes.kt",
-      symbols,
-      limits,
-      roles,
+    ...scopes.map((kind) =>
+      routeFile(
+        serviceRoutes.filter((route) => route.scope === kind),
+        kind,
+        symbols,
+        limits,
+        roles,
+      ),
     ),
     limitsFile(limits),
     replyInboxFile(),
+    bucketsFile(buckets),
   ];
+}
+
+/**
+ * Each realm key value bucket's name and the declaration its owner creates it with, so the realm
+ * that creates a bucket and the engines that write it name the same one.
+ */
+function bucketsFile(buckets: readonly ResolvedBucket[]): CodeGenerator.OutputFile {
+  const imports = [`import ${COMMUNICATOR}.kv.KeyValueBucketDeclaration`, "import kotlin.time.Duration.Companion.seconds"];
+  const blocks = buckets.map(({ declaration }) => {
+    const name = `${upperCamel(declaration.name)}Bucket`;
+    const key = declaration.key.map((token) => `<${token}>`).join(".");
+    return `/** The \`${declaration.name}\` key value bucket of one realm; its keys are \`${key}\`. */
+object ${name} {
+    /** The bucket of [realm], \`${bucketName(declaration.name, "<realm>")}\`. */
+    fun name(realm: String): String {
+        require(realm.matches(BUCKET_REALM)) { "A realm id in a bucket name holds only letters, digits, - and _: $realm" }
+        return "${bucketName(declaration.name, "$realm")}"
+    }
+
+    /** How the realm creates the bucket of [realm]. */
+    fun declaration(realm: String): KeyValueBucketDeclaration =
+        KeyValueBucketDeclaration(name(realm), markerTtl = ${declaration.markerTtlSeconds}.seconds)
+}`;
+  });
+  const realm = `/** The characters a bucket name allows, which a realm id must keep to. */
+private val BUCKET_REALM = Regex("[A-Za-z0-9_-]+")`;
+  return { path: "TransportBuckets.kt", code: kotlinFile(GENERATED_PACKAGE, imports, [realm, ...blocks]) };
 }

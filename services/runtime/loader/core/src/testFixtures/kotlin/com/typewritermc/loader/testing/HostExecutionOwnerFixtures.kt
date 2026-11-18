@@ -30,4 +30,4 @@ class TestRuntime(
     }
 }
 
-val assignment = ArtifactHostAssignment(RealmId("realm"), setOf(RuntimePlacement.PRIMARY_ENGINE))
+val assignment = ArtifactHostAssignment(RealmId("realm"), setOf(RuntimePlacement.PRIMARY_ENGINE), engineInstance = "engine")

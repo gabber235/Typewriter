@@ -678,10 +678,11 @@ routes:
       operation: realm.rollout.status
       request: rollout.status
 
+  # The realm's panel engine reads its members' heartbeats to report their panel sessions.
   - name: organization_presence
     scope: organization_actor
     publishers: [{ role: organization_member }]
-    subscribers: [{ role: organization_member }]
+    subscribers: [{ role: organization_member }, { role: realm_participant }]
     flow:
       kind: event
       payload: "organization/v1/presence.skir:PresenceEvent"
@@ -708,3 +709,16 @@ routes:
       method: "access/v1/permission.skir:GetEntityPermission"
       operation: auth.permissions.services
       request: auth.permissions.typewriter-services
+
+# JetStream key value buckets, one per realm, named `<name>_<realm id>`. The owner creates the
+# bucket when the realm starts; writers open it, read and write keys of exactly the declared
+# tokens, and list them. Every key carries its own time to live; an expired key leaves a marker
+# for marker_ttl_seconds, so a watcher sees the expiry.
+buckets:
+  # One key per session of a protagonist, rewritten by the engine that holds it.
+  - name: sessions
+    scope: realm
+    key: [principal_kind, principal_id, session]
+    owner: { role: realm_coordinator }
+    writers: [{ role: realm_participant }]
+    marker_ttl_seconds: 60

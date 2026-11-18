@@ -122,14 +122,17 @@ private fun MessageDigest.updateFramed(value: String) {
 }
 
 /**
- * Separates the physical host, logical Realm, and placement of one runtime.
+ * Separates the physical host, logical Realm, placement, and engine identity of one runtime.
  *
- * Use the Realm id for Realm routing and the service id for participant coordination.
+ * Use the Realm id for Realm routing and the service id for participant coordination. [engineId] is the identity an
+ * engine runs as in its Realm, and null for the Realm itself: the topology engine instance id for a primary engine,
+ * `panel.<realm id>` for the Realm's panel engine, and `local.<realm id>` for a host running without topology.
  */
 data class HostedRuntimeIdentity(
     val serviceId: String,
     val realmId: String,
     val placement: RuntimePlacement,
+    val engineId: String?,
 )
 
 /**
@@ -212,15 +215,17 @@ sealed interface SourcePartDisposition {
 }
 
 /**
- * Borrows the communicator for one organization bound host connection generation.
+ * Borrows the communicator and the key value buckets of one organization bound host connection generation.
  *
  * The id distinguishes replacements. Runtime subscriptions must be recreated when the host emits a new session;
- * consumers must not close this shared communicator.
+ * consumers must not close this shared communicator. The buckets reach only what the host's grants allow, such as
+ * its own Realm's sessions bucket.
  */
 data class HostedMessagingSession(
     val id: Long,
     val organizationId: String,
     val communicator: Communicator,
+    val buckets: com.typewritermc.services.libs.communicator.kv.KeyValueBuckets,
 )
 
 /**

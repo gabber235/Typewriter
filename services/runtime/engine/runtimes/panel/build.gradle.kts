@@ -7,6 +7,7 @@ dependencies {
     imprintEngineCore(project(":engine-core"))
     imprintHostApi(project(":loader-api"))
     imprintPlatformApi(project(":typewriter-api"))
+    testImplementation(testFixtures(project(":engine-core")))
 }
 
 typewriter {

@@ -310,10 +310,12 @@ sealed interface RuntimeCloseResult {
  *
  * Connectivity and organization binding are separate concerns. The registrar drives connection, binding
  * observation, permission refresh, heartbeats, shutdown notification, and final closure. The communicator is
- * borrowed by service callers and must not be independently closed.
+ * borrowed by service callers and must not be independently closed, and so are the key value buckets reached through
+ * the same connection.
  */
 interface RegistrarRuntime {
     val communicator: Communicator
+    val buckets: com.typewritermc.services.libs.communicator.kv.KeyValueBuckets
     val connectivity: Flow<RuntimeConnectivity>
     val currentConnectivity: RuntimeConnectivity
 

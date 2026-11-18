@@ -11,7 +11,8 @@ logback = "1.6.7"
 mordant = "3.1.1"
 opentelemetry = "1.68.0"
 opentelemetry-semconv = "1.45.0"
-paper = "1.21.4-R0.1-SNAPSHOT"
+# The Paper API of the server the Paper engine runs on: minecraft and paper-build.
+paper = "26.3.build.255-stable"
 semver = "3.1.0"
 kotlinpoet = "2.4.0"
 
@@ -86,6 +87,7 @@ skir-client = { module = "build.skir:skir-client", version.ref = "skir" }
 okio = { module = "com.squareup.okio:okio-jvm", version.ref = "okio" }
 
 nats-core = { module = "io.github.n-hass:natskt-core", version.ref = "nats" }
+nats-jetstream = { module = "io.github.n-hass:natskt-jetstream", version.ref = "nats" }
 cryptography-provider-jdk = { module = "dev.whyoleg.cryptography:cryptography-provider-jdk", version.ref = "cryptography" }
 surrealdb-java-sdk = { module = "com.surrealdb:surrealdb", version.ref = "surrealdb-java-sdk" }
 

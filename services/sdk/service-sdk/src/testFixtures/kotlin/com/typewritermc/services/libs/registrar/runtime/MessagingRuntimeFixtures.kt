@@ -146,6 +146,7 @@ internal suspend fun runtimeFixture(): RuntimeFixture {
     return RuntimeFixture(
         TypewriterRegistrarRuntime(
             Communicator(transport, harness.telemetry, harness.openTelemetry.propagators),
+            com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets,
             ServiceRouteScope("service-id"),
             nats,
             access,

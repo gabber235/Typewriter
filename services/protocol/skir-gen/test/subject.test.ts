@@ -106,6 +106,19 @@ describe("subject rule", () => {
     ).toEqual({ client: "typewriter.presence.organization.{organization}.user.{user}" });
   });
 
+  test("events panel roles publish reach service subscribers on the same typewriter subject", () => {
+    expect(
+      derive(
+        "organization_actor",
+        "event",
+        address("presence.organization.{organization}.user.{user}"),
+        [role("organization_member")],
+        [role("organization_member"), role("realm_participant")],
+        roles,
+      ),
+    ).toEqual({ client: "typewriter.presence.organization.{organization}.user.{user}" });
+  });
+
   test("rejects party combinations without a subject family", () => {
     expect(() =>
       channelSubjects("realm", "request", address("x"), [component("auth-callout")], [role("realm_coordinator")], roles),

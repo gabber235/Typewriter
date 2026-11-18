@@ -7,3 +7,4 @@ library;
 export "auth.dart";
 export "organization_scope.dart";
 export "route_scope.dart";
+export "tab_session.dart";

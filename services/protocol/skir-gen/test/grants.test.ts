@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { grantSubject, grantText, routeGrants } from "../src/routes/grants.js";
+import { bucketGrants, grantSubject, grantText, routeGrants } from "../src/routes/grants.js";
 import { parseManifest } from "../src/routes/manifest.js";
 import { routeChannels, SubjectTemplate } from "../src/routes/subject.js";
 import { manifestSource } from "./support.js";
@@ -85,6 +85,56 @@ describe("grant rule", () => {
       "realm_coordinator publish service.from.{realm}.organization.{organization}.realm.editor.catalog.invalidate",
       "organization_member subscribe service.from.*.organization.{organization}.realm.editor.catalog.invalidate",
     ]);
+  });
+
+  test("a realm participant receives the panel events of every member of its organization", () => {
+    expect(
+      grants(`  - name: organization_presence
+    scope: organization_actor
+    publishers: [{ role: organization_member }]
+    subscribers: [{ role: organization_member }, { role: realm_participant }]
+    flow:
+      kind: event
+      payload: "organization/v1/presence.skir:PresenceEvent"
+      operation: organization.presence
+      address: presence.organization.{organization}.user.{user}
+      delivery: { kind: transient }
+`),
+    ).toEqual([
+      "organization_member publish typewriter.presence.organization.{organization}.user.{user}",
+      "organization_member subscribe typewriter.presence.organization.{organization}.user.*",
+      "realm_participant subscribe typewriter.presence.organization.{organization}.user.*",
+    ]);
+  });
+
+  test("a realm bucket's writers reach their own realm's keys and only its owner creates it", () => {
+    const parsed = parseManifest(
+      manifestSource(
+        "",
+        [],
+        `  - name: sessions
+    scope: realm
+    key: [principal_kind, principal_id, session]
+    owner: { role: realm_coordinator }
+    writers: [{ role: realm_participant }]
+    marker_ttl_seconds: 60
+`,
+      ),
+      "routes.yaml",
+    );
+    const granted = bucketGrants(parsed.buckets[0]!, parsed.roles).map(
+      (grant) => `${grant.role} ${grant.direction} ${grantText(grant.tokens)}`,
+    );
+    expect(granted.filter((grant) => grant.startsWith("realm_participant "))).not.toContainEqual(
+      expect.stringContaining("STREAM.CREATE"),
+    );
+    expect(granted).toContain("realm_coordinator publish $JS.API.STREAM.CREATE.KV_sessions_{realm}");
+    expect(granted).toContain("realm_participant publish $KV.sessions_{realm}.*.*.*");
+    expect(granted).toContain("realm_participant publish $JS.API.DIRECT.GET.KV_sessions_{realm}.$KV.sessions_{realm}.*.*.*");
+    expect(granted).toContain(
+      "realm_participant publish $JS.API.CONSUMER.CREATE.KV_sessions_{realm}.*.$KV.sessions_{realm}.*.*.*",
+    );
+    expect(granted.every((grant) => grant.includes("sessions_{realm}"))).toBe(true);
   });
 
   test("persistent updates grant named consumer operations instead of a subscription", () => {

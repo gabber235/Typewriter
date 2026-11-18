@@ -143,6 +143,8 @@ function grantExpression(tokens: readonly GrantToken[]): string {
         return { variable: token.parameter };
       case "consumer":
         throw new Error("panel subscriptions never name a consumer");
+      case "bucket":
+        throw new Error("panel connections never reach a realm bucket");
     }
   });
   return interpolated(dotted(parts));

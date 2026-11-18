@@ -136,6 +136,9 @@ class NatsConnection internal constructor(
             } ?: NatsLifecycleResult.Success
         }
 
+    /** JetStream over the connected client, or null while disconnected. */
+    internal fun jetStream(): io.natskt.jetstream.api.JetStreamClient? = connectedClient()?.jetStream
+
     internal fun connectedClient(): NatsClientAdapter? =
         activeClient?.takeIf {
             mutableState.value == NatsConnectionState.Connected && it.connectivity.value == NatsClientConnectivity.Connected

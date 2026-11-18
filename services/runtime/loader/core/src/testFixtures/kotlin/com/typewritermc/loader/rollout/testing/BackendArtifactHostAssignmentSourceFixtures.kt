@@ -95,6 +95,8 @@ class Backend(
 
                 override suspend fun communicatorFor(connectionGeneration: Long) = RegistrarResult.Success(communicator)
 
+                override suspend fun bucketsFor(connectionGeneration: Long) = error("Not used by assignments.")
+
                 override suspend fun rotateAuthorization() = error("Not used by assignments.")
 
                 override suspend fun releaseAuthorizationRotation(connectionGeneration: Long) = error("Not used by assignments.")

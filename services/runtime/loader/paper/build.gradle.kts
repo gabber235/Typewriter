@@ -12,7 +12,7 @@ paperPluginYaml {
     version = project.version.toString()
 
     main = "com.typewritermc.loader.paper.TypewriterLoaderPlugin"
-    apiVersion = "1.21.4"
+    apiVersion = "26.3"
 
     foliaSupported = false
 
@@ -24,6 +24,11 @@ paperPluginYaml {
 //    }
 //
 //    loader = "com.typewritermc.engine.paper.TypewriterPaperLoader"
+}
+
+// Paper 26.3 runs on and publishes its API for Java 25.
+kotlin {
+    jvmToolchain(25)
 }
 
 repositories {

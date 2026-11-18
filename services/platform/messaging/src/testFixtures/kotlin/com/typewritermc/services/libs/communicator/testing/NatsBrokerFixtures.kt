@@ -1,5 +1,7 @@
 package com.typewritermc.services.libs.communicator.testing
 
+import com.typewritermc.services.libs.communicator.kv.KeyValueBuckets
+import com.typewritermc.services.libs.communicator.kv.NatsKeyValueBuckets
 import com.typewritermc.services.libs.communicator.nats.NatsAuthentication
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
 import com.typewritermc.services.libs.communicator.nats.NatsConnectionConfiguration
@@ -33,7 +35,12 @@ class BrokerClients(
     val connections = mutableListOf<NatsConnection>()
 
     /** A transport on a new connection to the broker; the connection must succeed. */
-    suspend fun transport(inboxPrefix: String = "_INBOX."): NatsMessageTransport {
+    suspend fun transport(inboxPrefix: String = "_INBOX."): NatsMessageTransport = NatsMessageTransport(connect(inboxPrefix), brokerLimits)
+
+    /** The key value buckets of a new connection to the broker, which must run JetStream. */
+    suspend fun buckets(): KeyValueBuckets = NatsKeyValueBuckets(connect())
+
+    private suspend fun connect(inboxPrefix: String = "_INBOX."): NatsConnection {
         val connection =
             NatsConnection(
                 { NatsConnectionConfiguration(url, inboxPrefix = inboxPrefix, maxReconnects = 0) },
@@ -42,7 +49,7 @@ class BrokerClients(
         connections += connection
         val connected = connection.connect()
         check(connected == NatsLifecycleResult.Success) { "The broker connection failed with $connected" }
-        return NatsMessageTransport(connection, brokerLimits)
+        return connection
     }
 }
 

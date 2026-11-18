@@ -8,10 +8,11 @@ import type {
 } from "skir-internal";
 
 import { OutcomeAdmissionError, outcomeResponse, skirPosition, type OutcomeResponse } from "../outcomes.js";
-import { routeGrants, type Grant } from "./grants.js";
+import { bucketGrants, routeGrants, type Grant } from "./grants.js";
 import {
   routeParties,
   symbolRefText,
+  type BucketDeclaration,
   type Channel,
   type Delivery,
   type Manifest,
@@ -73,6 +74,13 @@ export interface ResolvedRoutes {
   readonly roles: RoleDeclarations;
   readonly components: ReadonlyMap<string, string>;
   readonly routes: readonly ResolvedRoute[];
+  readonly buckets: readonly ResolvedBucket[];
+}
+
+/** A key value bucket with the broker permissions its owner and writers need. */
+export interface ResolvedBucket {
+  readonly declaration: BucketDeclaration;
+  readonly grants: readonly Grant[];
 }
 
 /** The channel of a route of the given kind, if the route has one. */
@@ -304,5 +312,9 @@ export function resolveRoutes(
       limits,
     }),
   );
-  return { limits: manifest.limits, roles, components: manifest.components, routes };
+  const buckets = manifest.buckets.map((declaration): ResolvedBucket => ({
+    declaration,
+    grants: bucketGrants(declaration, roles),
+  }));
+  return { limits: manifest.limits, roles, components: manifest.components, routes, buckets };
 }

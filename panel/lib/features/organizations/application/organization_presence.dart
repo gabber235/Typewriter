@@ -33,14 +33,14 @@ abstract class ActivePanelPresence with _$ActivePanelPresence {
 
 /// Publishes and observes ephemeral collaboration presence for one organization.
 ///
-/// The provider owns one session identity, its heartbeat timers, subscription,
+/// The provider publishes as the tab's session ([tabSessionId]) and owns its heartbeat timers, subscription,
 /// sequence counter, and cleanup. Heartbeats are best effort and remote sessions
 /// expire locally after missed heartbeats. Presence is never used as durable
 /// organization state. Unknown subject identities and older active sequence
 /// numbers are ignored; payload decoding still reports malformed wire data.
 @riverpod
 class OrganizationPresence extends _$OrganizationPresence {
-  final _sessionId = uuid.v4();
+  final _sessionId = tabSessionId();
   var _sequence = 0;
   Timer? _heartbeat;
   Timer? _expiry;

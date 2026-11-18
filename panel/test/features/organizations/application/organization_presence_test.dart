@@ -38,6 +38,28 @@ void main() {
     );
   });
 
+  testWidgets("a remounted panel keeps its session, as a browser tab keeps it "
+      "across a reload", (tester) async {
+    Future<String> publishedSession() async {
+      final panel = await tester.pumpPanel([signedIn(ada, organization: acme)]);
+      late String session;
+      await panel.eventually(() {
+        final event = panel.world.nats
+            .presencePublished(ada.id, acme.organizationId)
+            .last;
+        expect(event, isA<skir.PresenceEvent_activeWrapper>());
+        session = (event as skir.PresenceEvent_activeWrapper).value.sessionId;
+      });
+      await tester.pumpWidget(const SizedBox.shrink());
+      return session;
+    }
+
+    final before = await publishedSession();
+    final after = await publishedSession();
+
+    expect(after, before);
+  });
+
   testWidgets("another member's newest location shows until they leave", (
     tester,
   ) async {
