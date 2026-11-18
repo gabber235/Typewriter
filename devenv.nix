@@ -66,6 +66,10 @@ in
       pkgs.mesa
       pkgs.vulkan-loader
       pkgs.gtk3
+      # The panel's Linux build: `flutter build linux` generates with CMake for Ninja, and the
+      # shell's clang and pkg-config compile it, so nothing comes from the runner image.
+      pkgs.cmake
+      pkgs.ninja
       # The panel's Linux build links flutter_secure_storage_linux against it.
       pkgs.libsecret
       # path_provider finds the panel's documents folder through `xdg-user-dir`, which a runner
