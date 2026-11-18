@@ -755,7 +755,7 @@ decided:
     why: Every re-approve leaves the old image on the evidence branch and prune skipped goldens/, so it grew forever and approve's clone slowed; approve writes when it pushed each image, and the weekly prune drops an image no golden file on a long lived branch (develop or features/v1) names once it is older than the retention, the same 30 days as pull request media
   - id: keep-slice-9-built
     what: "Keep all three (Recommended)"
-    why: Slice 9's built decisions stand; a leased attempt fails with LeaseExpired after 300 s, a pool no test JVM reaches stops after 60 s, a pool that stopped answering is replaced after 90 s; a dispatched run, which only a maintainer can start, is trusted and saves caches for its own branch; game logs stay off CI's public output, as every suite's logs do
+    why: Slice 9's built decisions stand; a leased attempt fails with LeaseExpired after 300 s, a pool no test JVM reaches stops after 60 s, a pool that stopped answering is replaced after 90 s; a dispatched run, which only a maintainer can start, is trusted and saves caches for its own branch; game logs stay off CI's public output, as every suite's logs do; superseded in part (2026-11-18), as build-service-owns-pool makes the pool live exactly as long as the Gradle build, so the 60 s stop and the 90 s replacement are gone, and dispatched-caches-on-long-lived-branches lets a dispatched run save caches only on develop or features/v1
   - id: cachix-token
     what: "I add it (Recommended)"
     why: Every CI job rebuilt about 70 Nix paths (3.5 min) because the Cachix push token was missing from the Typewriter vault and continue-on-error hid the failure; the developer adds CACHIX_AUTH_TOKEN to the cache profile, and a failed push becomes a visible warning
@@ -783,6 +783,9 @@ decided:
   - id: build-service-owns-pool
     what: "Build service (Recommended)"
     why: Asked "Who should stop the game pool when a test run ends?". Review round 2 traced the pool outliving the heavy lock by 60 to 120 s. The Gradle build service GameRun starts the pool on the first gameTest task of a build and stops it in close() at build end; the pool stops when its stdin closes, which also covers a killed Gradle. This deletes the 60 s grace, the owner timer and the run file pick-up of one-pool-per-run; a pool crash fails the rest of the build and the run file reads cut short; as built, GameRun launches the pool through PoolProcess in the launch module, which holds the pool's command and process; a test JVM only connects and never starts, replaces or stops a pool
+  - id: dispatched-caches-on-long-lived-branches
+    what: Dispatched runs save GitHub Actions caches only on develop or features/v1, and only restore them elsewhere
+    why: Dispatched work branches evicted the base branch's caches past the 10 GB limit, so PR 570's first run started cold and hit Maven Central's 429; decided during full send, 2026-11-18
   - id: wire-in-skir
     what: "skir everywhere but no spike needed."
     why: The four game parts spoke a hand written Java wire (52 messages, about 800 codec lines, 4 run file types copied from test_run.skir, one drifted) outside the Skir contract boundary; the wire's messages move into a harness Skir file, every part uses the generated types, the Paper plugin bundles the Kotlin and Skir runtimes, and the hand codec, the copies and the run file translation go
@@ -972,6 +975,10 @@ slices:
       cut short. The Cachix push token was missing from the vault, so every job rebuilt 70 Nix paths;
       with it the devenv step fell from 383 s to 212 s. FROZEN-1 allows 15 s. Open: memory outside the
       heap (about 1 GB per client, mostly the software renderer); the commits, quality and gate jobs judge
-      the whole long lived branch on dispatched runs.
+      the whole long lived branch on dispatched runs. Superseded since (2026-11-18): build-service-owns-pool
+      replaced the stale pool replacement and the 60 s owner stop (the pool lives exactly as long as the
+      Gradle build), the run file's ended mark became the run's end variant, and
+      dispatched-caches-on-long-lived-branches limits a dispatched run's cache saves to develop and
+      features/v1.
 
 next: "Merge PR #570 into features/v1, then delete the remaining game verification branches and worktrees"

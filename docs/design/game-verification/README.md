@@ -256,6 +256,8 @@ profile (Xvfb, Mesa, lavapipe), about 13 to 14 minutes warm ([h-ci-runner.md](sp
   compile daemon sits beside the suite, then the suite.
 - Caches: Gradle's build cache (which holds the patched Paper), Loom's caches, and the AOT cache of
   the restart Paper.
+- A dispatched run saves these caches only on `develop` or `features/v1` and only restores them on
+  any other branch, so work branches cannot evict the base branch's caches past the 10 GB limit.
 - The job checks out full history for the touched lines, and stages and uploads evidence even when
   the suite failed.
 

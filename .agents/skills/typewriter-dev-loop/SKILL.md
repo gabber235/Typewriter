@@ -34,7 +34,8 @@ description: Run Typewriter locally: builds, the agent stack, Paper, the panel, 
 ## Game suite
 - `cargo xtask e2e game` runs every `src/gameTest` requirement against real Minecraft clients on a
   stepped Paper. It builds first, then boots its own pool, Papers and clients; never start them by
-  hand. A pool left from an earlier run is replaced by the next run.
+  hand. The pool lives exactly as long as the Gradle build. When a stuck pool still holds
+  `pool.lock`, the next run fails with `GameUnavailable` naming `pool.log`; read that log.
 - `--only GROUP-1,WINDOW-1` runs those requirements; `--repeat <n>` runs exactly n attempts of each,
   to hunt a flaky one.
 - A smaller pool: `cargo xtask heavy -- ./gradlew gameTest -Pplaytest.clients=1` from `services/`
