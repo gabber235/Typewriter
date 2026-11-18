@@ -258,7 +258,8 @@ was proven on ([h-ci-runner.md](spikes/h-ci-runner.md)) took 13 to 14.
 - `cargo xtask e2e game` first runs `gameTestBuild` in a Gradle of its own without a daemon, so no
   compile daemon sits beside the suite, then the suite.
 - Caches: Gradle's build cache (which holds the patched Paper), Loom's caches, and the AOT cache of
-  the restart Paper.
+  the restart Paper. The build cache and the AOT cache are kept per job kind (`cache-scope`), so the
+  game job and the services check each save their own.
 - A dispatched run saves these caches only on `develop` or `features/v1` and only restores them on
   any other branch, so work branches cannot evict the base branch's caches past the 10 GB limit.
 - Runners: every CI job but the gate runs on `nscloud-ubuntu-24.04-amd64-4x16-with-cache` with

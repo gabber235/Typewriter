@@ -76,6 +76,7 @@ jobs:
       - uses: ./.github/actions/devenv
         with:
           caches: gradle flutter frame-vectors ${{ matrix.area.area == 'services' && 'gradle-outputs' || '' }}
+          cache-scope: check-${{ matrix.area.area }}
       # Untimed: the budget covers the area's steps, not the shell's first build or xtask's
       # compile.
       - run: devenv shell -- cargo xtask --help > /dev/null
@@ -146,6 +147,7 @@ jobs:
         with:
           caches: ${{ matrix.caches }}
           profile: e2e
+          cache-scope: e2e-${{ matrix.suite }}
       # The game suite's demo reruns follow the lines the change added since the same base the
       # checks compare with.
       - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }} --base "$BASE_SHA"
