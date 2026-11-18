@@ -1,0 +1,26 @@
+name: devenv-save
+description: >-
+  Saves the Gradle caches the devenv action restored, as a job's last step with `if: always()`,
+  so a job that failed or ran out of its budget still keeps the dependencies and build cache
+  entries it downloaded and built. Runs only where the devenv action allowed saving, and skips a
+  cache whose restore already matched its key exactly.
+
+runs:
+  using: composite
+  steps:
+    - if: >-
+        env.DEVENV_SAVE_CACHES == 'true' && contains(env.DEVENV_CACHES, 'gradle')
+        && env.DEVENV_GRADLE_KEY != '' && env.DEVENV_GRADLE_HIT != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.gradle/caches/modules-2
+          ~/.gradle/wrapper
+        key: ${{ env.DEVENV_GRADLE_KEY }}
+    - if: >-
+        env.DEVENV_SAVE_CACHES == 'true' && contains(env.DEVENV_CACHES, 'gradle-outputs')
+        && env.DEVENV_GRADLE_OUTPUTS_KEY != '' && env.DEVENV_GRADLE_OUTPUTS_HIT != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.gradle/caches/build-cache-1
+        key: ${{ env.DEVENV_GRADLE_OUTPUTS_KEY }}

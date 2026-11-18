@@ -12,6 +12,11 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    subprojects.forEach { "kover"(it) }
+// Only projects that measure coverage join. A project without Kover (the Fabric client, a plain Java
+// agent) has no Kover variant, and depending on it makes the root resolve that project's own
+// dependencies from the root's repositories.
+subprojects.forEach { serviceProject ->
+    serviceProject.pluginManager.withPlugin("org.jetbrains.kotlinx.kover") {
+        dependencies { "kover"(project(serviceProject.path)) }
+    }
 }

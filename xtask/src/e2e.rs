@@ -15,6 +15,7 @@
 //! what receives the scenarios' results and screenshots.
 
 pub(crate) mod failures;
+mod game;
 
 use std::io::Write;
 use std::net::{Ipv4Addr, TcpListener};
@@ -72,6 +73,11 @@ pub struct E2eArgs {
     /// Attempts per selected scenario, instead of one attempt plus a rerun of failures.
     #[arg(long, default_value_t = NonZeroU32::MIN)]
     repeat: NonZeroU32,
+    /// The commit the change starts from, whose added lines pick the game suite's demo reruns;
+    /// by default the pull request's base or the nearest branch the head descends from. CI names
+    /// it, as its checkout of a pull request is a detached merge commit `gh` cannot place.
+    #[arg(long)]
+    pub(crate) base: Option<String>,
 }
 
 impl E2eArgs {
@@ -94,6 +100,9 @@ pub enum Suite {
     /// A fresh CI cluster with this commit's backend deployed, and the panel web scenarios
     /// against its real Authentik, operator mode NATS and runtime operator.
     Full,
+    /// The game requirements (`gameTest` source sets) against real Minecraft clients on a
+    /// stepped Paper, which the game pool boots on this machine.
+    Game,
 }
 
 impl Suite {
@@ -134,6 +143,7 @@ pub fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
         Suite::Panel => scenarios::<WorktreeStack>(ctx, args, Device::Desktop),
         Suite::PanelWeb => scenarios::<WorktreeStack>(ctx, args, Device::Chrome),
         Suite::Full => scenarios::<CiCluster>(ctx, args, Device::Chrome),
+        Suite::Game => game::run(ctx, args),
     }
 }
 
@@ -202,14 +212,28 @@ impl Target for CiCluster {
     }
 }
 
-/// Takes the heavy lock at `lock`, then clears the previous run's results in `evidence`.
-/// Clearing only once the lock is held means a run that waits for its turn never removes
-/// the results of the run still writing them.
-fn take_turn(lock: &Path, holder: &str, evidence: &Path) -> Result<HeavyLock> {
+/// Takes the heavy lock at `lock`, then clears the previous run's results in `evidence`, all but
+/// the entries named in `kept`, which outlive a run (the game's folders of earlier runs' logs).
+/// Clearing only once the lock is held means a run that waits for its turn never removes the
+/// results of the run still writing them.
+fn take_turn(lock: &Path, holder: &str, evidence: &Path, kept: &[&str]) -> Result<HeavyLock> {
     let held = HeavyLock::acquire_at(lock, holder)?;
     if evidence.exists() {
-        std::fs::remove_dir_all(evidence)
-            .with_context(|| format!("cannot clear {}", evidence.display()))?;
+        for entry in std::fs::read_dir(evidence)? {
+            let path = entry?.path();
+            if kept
+                .iter()
+                .any(|name| path.file_name() == Some(name.as_ref()))
+            {
+                continue;
+            }
+            let cleared = if path.is_dir() {
+                std::fs::remove_dir_all(&path)
+            } else {
+                std::fs::remove_file(&path)
+            };
+            cleared.with_context(|| format!("cannot clear {}", path.display()))?;
+        }
     }
     Ok(held)
 }
@@ -234,6 +258,7 @@ fn scenarios<T: Target>(ctx: &Context, args: &E2eArgs, device: Device) -> Result
             Path::new(lock::HEAVY_LOCK),
             &format!("e2e {name}"),
             &evidence,
+            &[],
         )
     };
     let defines = ctx.root.join(PANEL_DEFINES);
@@ -776,20 +801,21 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let (lock, evidence) = (dir.path().join("heavy.lock"), dir.path().join("panel"));
         std::fs::create_dir(&evidence).unwrap();
+        std::fs::write(evidence.join("test_run.json"), "{}").unwrap();
         let running = HeavyLock::acquire_at(&lock, "first run").unwrap();
         let waiting = std::thread::spawn({
             let (lock, evidence) = (lock.clone(), evidence.clone());
-            move || take_turn(&lock, "second run", &evidence).map(drop)
+            move || take_turn(&lock, "second run", &evidence, &[]).map(drop)
         });
         std::thread::sleep(std::time::Duration::from_millis(300));
         assert!(
-            evidence.exists(),
+            evidence.join("test_run.json").exists(),
             "a waiting run must not clear the running run's results"
         );
         drop(running);
         waiting.join().unwrap().unwrap();
         assert!(
-            !evidence.exists(),
+            !evidence.join("test_run.json").exists(),
             "its turn starts by clearing the previous results"
         );
     }

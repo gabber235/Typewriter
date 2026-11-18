@@ -4,8 +4,8 @@
 //! passes, and passing after a failure makes it flaky, which gates like a failure: the rerun tells
 //! a test that fails sometimes from one that always fails, and only a test that always passes is
 //! trusted. Under `Exactly` any failed attempt fails the case. A case listed in [`QUARANTINE`] still runs and is reported but
-//! does not gate; each entry names a reason and an issue, and every report lists the quarantined
-//! cases so they cannot be forgotten.
+//! does not gate; each entry names a case by its id or by its requirement, a reason and an issue,
+//! and every report lists the quarantined cases so they cannot be forgotten.
 
 use std::fs;
 use std::io::Write;
@@ -17,7 +17,7 @@ use serde::Deserialize;
 use crate::Context;
 use crate::skirout::base::harness::v1::test_run::Runner;
 pub use crate::skirout::base::harness::v1::test_run::{
-    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, TestCase, TestRun,
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, RunEnd, TestCase, TestRun,
 };
 
 /// The quarantine file, relative to the repository root.
@@ -48,9 +48,26 @@ impl Quarantine {
         toml::from_str(&text).with_context(|| format!("{} is invalid", path.display()))
     }
 
-    fn entry(&self, runner: &Runner, case: &str) -> Option<&QuarantinedCase> {
-        let id = format!("{}/{case}", runner_name(runner));
-        self.cases.iter().find(|entry| entry.id == id)
+    /// The cases of `runner` the quarantine holds, as their entries name them: a case id or a
+    /// requirement. A runner that retries inside its own run, such as the game pool, gets these.
+    pub fn held(&self, runner: &Runner) -> Vec<&str> {
+        let prefix = format!("{}/", runner_name(runner));
+        self.cases
+            .iter()
+            .filter_map(|entry| entry.id.strip_prefix(&prefix))
+            .collect()
+    }
+
+    /// The entry that holds `case` of `runner`: one naming its id, or the requirement it
+    /// demonstrates, which holds every case of that requirement.
+    fn entry(&self, runner: &Runner, case: &TestCase) -> Option<&QuarantinedCase> {
+        let prefix = format!("{}/", runner_name(runner));
+        self.cases.iter().find(|entry| {
+            entry
+                .id
+                .strip_prefix(&prefix)
+                .is_some_and(|name| name == case.id || case.requirement.as_deref() == Some(name))
+        })
     }
 }
 
@@ -67,25 +84,52 @@ pub enum Verdict {
 }
 
 /// The one policy every reader applies to a case of `run`. An attempt whose outcome this build
-/// does not know proves nothing, so it counts as a failure.
+/// does not know proves nothing, so it counts as a failure, and so does a demo that ended otherwise
+/// than the case's last attempt.
 pub fn verdict(run: &TestRun, case: &TestCase, quarantine: &Quarantine) -> Result<Verdict> {
     let Some(last) = case.attempts.last() else {
         bail!("{} has no attempts", case.id);
     };
     let failed = failed_attempts(case).count();
     let passed_last = matches!(last.outcome, Outcome::Passed);
+    let demo_differs = differing_demo(case).is_some();
     Ok(
         match (
             failed,
-            quarantine.entry(&run.runner, &case.id),
+            demo_differs,
+            quarantine.entry(&run.runner, case),
             &run.attempt_policy,
         ) {
-            (0, _, _) => Verdict::Passed,
-            (_, Some(_), _) => Verdict::Quarantined,
-            (_, None, AttemptPolicy::RerunFailures(_)) if passed_last => Verdict::Flaky,
+            (0, false, _, _) => Verdict::Passed,
+            (_, _, Some(_), _) => Verdict::Quarantined,
+            (_, false, None, AttemptPolicy::RerunFailures(_)) if passed_last => Verdict::Flaky,
             _ => Verdict::Failed,
         },
     )
+}
+
+/// Why `run` as a whole proves less than its cases say, judged once for every suite and the pull
+/// request's evidence: it could not run at all, or it stopped before it was over, so cases it
+/// never reached are missing from it. An end this xtask does not know proves nothing either.
+pub fn run_trouble(run: &TestRun) -> Option<String> {
+    match &run.end {
+        RunEnd::Completed => None,
+        RunEnd::CouldNotRun(why) => Some(format!("could not run: {why}")),
+        RunEnd::CutShort => Some(format!(
+            "was cut short after {} cases, so the cases after them never ran",
+            run.cases.len()
+        )),
+        RunEnd::Unknown(_) => Some("ended in a way this xtask does not know".to_owned()),
+    }
+}
+
+/// `case`'s demo when it ended otherwise than the last attempt: its clip shows another outcome,
+/// so it proves nothing.
+fn differing_demo(case: &TestCase) -> Option<&Attempt> {
+    let passed_last = matches!(case.attempts.last()?.outcome, Outcome::Passed);
+    case.demo
+        .as_ref()
+        .filter(|demo| matches!(demo.outcome, Outcome::Passed) != passed_last)
 }
 
 /// The failure of `case`'s last failed attempt, when that attempt says how it failed.
@@ -99,10 +143,10 @@ pub fn last_failure(case: &TestCase) -> Option<&Failure> {
         })
 }
 
-/// Every artifact of every attempt of `case`, in attempt order, with its path relative to the
+/// Every artifact of every attempt of `case`, in attempt order and its demo last, with its path relative to the
 /// run file's folder (the attempt's folder joined with the artifact's path).
 pub fn artifacts(case: &TestCase) -> impl Iterator<Item = (PathBuf, &Artifact)> {
-    case.attempts.iter().flat_map(|attempt| {
+    case.attempts.iter().chain(&case.demo).flat_map(|attempt| {
         attempt.artifacts.iter().map(move |artifact| {
             let path = match attempt_folder(attempt) {
                 Some(folder) => folder.join(&artifact.path),
@@ -121,10 +165,11 @@ pub fn attempt_folder(attempt: &Attempt) -> Option<&Path> {
 
 impl ArtifactKind {
     /// Whether an artifact of this kind is proof for review that `cargo xtask evidence stage`
-    /// makes public. Logs and spans stay on the machine, so no token they print can leak
+    /// makes public; a golden candidate travels so `cargo xtask goldens approve --pr` can approve
+    /// the frame CI drew. Logs and spans stay on the machine, so no token they print can leak
     /// through a scrub rule that missed it.
     pub fn published(&self) -> bool {
-        matches!(self, Self::Clip | Self::Screenshot)
+        matches!(self, Self::Clip | Self::Screenshot | Self::Golden)
     }
 }
 
@@ -158,19 +203,7 @@ pub fn attempts(
         .filter(|limit| *limit > 0)
         .context("an attempt policy needs at least one attempt")?;
     let first = run(1, selection)?;
-    let unmatched: Vec<&str> = selection
-        .iter()
-        .filter(|id| {
-            !first
-                .cases
-                .iter()
-                .any(|case| case.id == **id || case.requirement.as_ref() == Some(*id))
-        })
-        .map(String::as_str)
-        .collect();
-    if !unmatched.is_empty() {
-        bail!("no case matches {}", unmatched.join(", "));
-    }
+    selection_matches(&first, selection)?;
     let mut folded = TestRun {
         attempt_policy: policy.clone(),
         ..first
@@ -185,7 +218,7 @@ pub fn attempts(
                     case.attempts
                         .last()
                         .is_some_and(|last| !matches!(last.outcome, Outcome::Passed))
-                        && quarantine.entry(&folded.runner, &case.id).is_none()
+                        && quarantine.entry(&folded.runner, case).is_none()
                 })
                 .map(|case| case.id.clone())
                 .collect(),
@@ -223,6 +256,26 @@ pub fn attempts(
     Ok(folded)
 }
 
+/// Fails when an id of `selection`, the run's `--only`, names no case of `run`.
+pub fn selection_matches(run: &TestRun, selection: &[String]) -> Result<()> {
+    let unmatched: Vec<&str> = selection
+        .iter()
+        .filter(|id| {
+            !run.cases
+                .iter()
+                .any(|case| case.id == **id || case.requirement.as_ref() == Some(*id))
+        })
+        .map(String::as_str)
+        .collect();
+    if !unmatched.is_empty() {
+        bail!(
+            "--only {} matched nothing: no requirement or case has that id",
+            unmatched.join(", ")
+        );
+    }
+    Ok(())
+}
+
 /// Reads the `TestRun` at `path`.
 pub fn read(path: &Path) -> Result<TestRun> {
     let text =
@@ -237,7 +290,11 @@ pub const ATTEMPTS: &str = "attempts";
 
 /// Folders inside a run's folder that hold its evidence, never another run, so a drive's own
 /// `test_run.json` below `attempts/` is read only through the suite's run.
-pub const RUN_EVIDENCE: [&str; 4] = [ATTEMPTS, "failures", "screenshots", "logs"];
+pub const RUN_EVIDENCE: [&str; 4] = [ATTEMPTS, "failures", "screenshots", LOGS];
+
+/// The folder of a run's logs below the run file's folder; the game runner keeps one `logs/<n>/`
+/// per run.
+pub const LOGS: &str = "logs";
 
 /// Every `TestRun` under `dir`, at any depth, with the path it was read from, skipping run
 /// evidence folders.
@@ -278,8 +335,9 @@ pub fn write(run: &TestRun, path: &Path) -> Result<()> {
 }
 
 /// Lists every case whose verdict is not a plain pass, and every case when the run repeated
-/// each case, then fails when any case failed. `evidence`, the run's folder,
-/// points each failing case at the evidence of its first failed attempt.
+/// each case, then fails when the run could not run or was cut short ([`run_trouble`]), or any
+/// case failed. `evidence`, the run's folder,
+/// points each failing case at the evidence of its first failed attempt and at the run's logs.
 pub fn report(
     run: &TestRun,
     quarantine: &Quarantine,
@@ -306,14 +364,20 @@ pub fn report(
                 .collect::<Vec<_>>()
                 .join(", ")
         );
-        let first = failures.first().map(|first| &case.attempts[first - 1]);
-        let see = match (evidence, first) {
+        let see_of = |attempt: Option<&Attempt>| match (evidence, attempt) {
             (Some(evidence), Some(attempt)) => match attempt_folder(attempt) {
                 Some(folder) => format!("; see {}/", evidence.join(folder).display()),
                 None => format!("; see {}/", evidence.display()),
             },
             _ => String::new(),
         };
+        let logs = match evidence {
+            Some(evidence) if !run.logs.is_empty() => {
+                format!("; logs in {}/", evidence.join(&run.logs).display())
+            }
+            _ => String::new(),
+        };
+        let see = see_of(failures.first().map(|first| &case.attempts[first - 1])) + &logs;
         match verdict {
             Verdict::Passed if repeated => writeln!(
                 out,
@@ -324,14 +388,32 @@ pub fn report(
             )?,
             Verdict::Passed => {}
             Verdict::Failed => {
-                writeln!(out, "{}: failed {attempts}{see}", case.id)?;
+                match differing_demo(case) {
+                    Some(demo) => {
+                        let ended = match &demo.outcome {
+                            Outcome::Failed(failure) => format!(
+                                "failed: {}",
+                                failure.message.lines().next().unwrap_or_default()
+                            ),
+                            _ => "passed".to_owned(),
+                        };
+                        let attempts = if failures.is_empty() {
+                            format!("passed {0} of {0} attempts", case.attempts.len())
+                        } else {
+                            format!("failed {attempts}{see}")
+                        };
+                        let see = see_of(Some(demo)) + &logs;
+                        writeln!(out, "{}: {attempts}, but its demo {ended}{see}", case.id)?;
+                    }
+                    None => writeln!(out, "{}: failed {attempts}{see}", case.id)?,
+                }
                 failed.push(case.id.as_str());
             }
             Verdict::Flaky => {
                 writeln!(out, "{}: flaky, failed {attempts}{see}", case.id)?;
                 flaky.push(case.id.as_str());
             }
-            Verdict::Quarantined => match quarantine.entry(&run.runner, &case.id) {
+            Verdict::Quarantined => match quarantine.entry(&run.runner, case) {
                 Some(entry) => writeln!(
                     out,
                     "{}: quarantined ({}, issue #{}), failed {attempts}{see}",
@@ -340,6 +422,15 @@ pub fn report(
                 None => writeln!(out, "{}: quarantined, failed {attempts}{see}", case.id)?,
             },
         }
+    }
+    if let Some(trouble) = run_trouble(run) {
+        let logs = match evidence {
+            Some(evidence) if !run.logs.is_empty() => {
+                format!("; logs in {}/", evidence.join(&run.logs).display())
+            }
+            _ => String::new(),
+        };
+        bail!("the run {trouble}{logs}");
     }
     if !failed.is_empty() {
         bail!(
@@ -369,6 +460,7 @@ pub fn runner_name(runner: &Runner) -> &'static str {
         Runner::PanelWeb => "panel-web",
         Runner::Step => "step",
         Runner::Junit => "junit",
+        Runner::Game => "game",
         Runner::Unknown(_) => "unknown",
     }
 }
@@ -377,7 +469,8 @@ pub fn runner_name(runner: &Runner) -> &'static str {
 mod tests {
     use super::*;
     use crate::test_support::{
-        attempted, case, failed, once, outcomes, quarantining, report_text, run, unknown,
+        attempted, case, failed, once, outcomes, quarantining, report_text, requirement_run, run,
+        unknown,
     };
 
     #[test]
@@ -634,7 +727,153 @@ mod tests {
             once(run(&[("a", Outcome::Passed)])),
         )
         .unwrap_err();
-        assert_eq!(error.to_string(), "no case matches CONN-9");
+        assert_eq!(
+            error.to_string(),
+            "--only CONN-9 matched nothing: no requirement or case has that id"
+        );
+    }
+
+    #[test]
+    fn a_demo_that_ends_otherwise_than_the_last_attempt_fails_the_case() {
+        // The case's attempts, its demo's outcome and the verdict.
+        let table = [
+            (vec![Outcome::Passed], Outcome::Passed, Verdict::Passed),
+            (vec![Outcome::Passed], failed("demo"), Verdict::Failed),
+            (vec![failed("x")], failed("demo"), Verdict::Failed),
+            (vec![failed("x")], Outcome::Passed, Verdict::Failed),
+            (
+                vec![failed("x"), Outcome::Passed],
+                Outcome::Passed,
+                Verdict::Flaky,
+            ),
+            (
+                vec![failed("x"), Outcome::Passed],
+                failed("demo"),
+                Verdict::Failed,
+            ),
+        ];
+        for (attempts, demo, expected) in table {
+            let mut run = attempted(AttemptPolicy::RerunFailures(4), &attempts);
+            run.cases[0].demo = Some(Attempt {
+                outcome: demo.clone(),
+                ..Attempt::default()
+            });
+            let verdict = verdict(&run, &run.cases[0], &Quarantine::default()).unwrap();
+            assert_eq!(verdict, expected, "{attempts:?} with a demo that {demo:?}");
+        }
+    }
+
+    #[test]
+    fn a_failed_case_names_the_folder_of_its_run_s_logs() {
+        let mut run = attempted(AttemptPolicy::RerunFailures(1), &[failed("lost")]);
+        run.logs = "logs/7".to_owned();
+
+        let (_, out) = report_text(&run, &Quarantine::default());
+
+        assert_eq!(
+            out,
+            "a: failed 1 of 1 attempts (1); see results/panel/; logs in results/panel/logs/7/\n"
+        );
+    }
+
+    #[test]
+    fn a_run_cut_short_fails_after_naming_its_finished_cases_and_where_its_logs_are() {
+        let mut run = attempted(AttemptPolicy::RerunFailures(1), &[failed("lost")]);
+        run.end = RunEnd::CutShort;
+        run.logs = "logs/7".to_owned();
+
+        let (result, out) = report_text(&run, &Quarantine::default());
+
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "the run was cut short after 1 cases, so the cases after them never ran; logs in results/panel/logs/7/"
+        );
+        assert!(out.starts_with("a: failed 1 of 1 attempts"), "{out}");
+    }
+
+    #[test]
+    fn a_run_that_could_not_run_fails_with_why_even_when_its_cases_passed() {
+        let mut run = attempted(AttemptPolicy::RerunFailures(1), &[Outcome::Passed]);
+        run.end = RunEnd::CouldNotRun("the game was not ready within 300 s".to_owned());
+
+        let (result, _) = report_text(&run, &Quarantine::default());
+
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "the run could not run: the game was not ready within 300 s"
+        );
+    }
+
+    #[test]
+    fn a_run_whose_end_this_xtask_does_not_know_fails_even_when_its_cases_passed() {
+        let mut run = attempted(AttemptPolicy::RerunFailures(1), &[Outcome::Passed]);
+        run.end = RunEnd::default();
+
+        let (result, _) = report_text(&run, &Quarantine::default());
+
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "the run ended in a way this xtask does not know"
+        );
+    }
+
+    #[test]
+    fn a_case_its_demo_fails_says_how_the_demo_ended_and_points_at_its_evidence() {
+        let mut run = attempted(AttemptPolicy::RerunFailures(4), &[Outcome::Passed]);
+        run.cases[0].demo = Some(Attempt {
+            outcome: failed("saw the diamond"),
+            folder: "a/demo".to_owned(),
+            ..Attempt::default()
+        });
+
+        let (result, out) = report_text(&run, &Quarantine::default());
+
+        assert_eq!(result.unwrap_err().to_string(), "1 of 1 cases failed: a");
+        assert_eq!(
+            out,
+            "a: passed 1 of 1 attempts, but its demo failed: saw the diamond; see results/panel/a/demo/\n"
+        );
+    }
+
+    #[test]
+    fn a_quarantine_entry_names_a_case_by_its_id_or_by_its_requirement() {
+        let mut held = attempted(AttemptPolicy::RerunFailures(4), &[failed("x")]);
+        held.runner = Runner::Game;
+        held.cases[0].id = "WINDOW-1 a check that never holds fails".to_owned();
+        held.cases[0].requirement = Some("WINDOW-1".to_owned());
+        for entry in [
+            "game/WINDOW-1",
+            "game/WINDOW-1 a check that never holds fails",
+        ] {
+            let verdict = verdict(&held, &held.cases[0], &quarantining(entry)).unwrap();
+            assert_eq!(verdict, Verdict::Quarantined, "{entry}");
+        }
+        let verdict = verdict(&held, &held.cases[0], &quarantining("game/WINDOW-2")).unwrap();
+        assert_eq!(verdict, Verdict::Failed);
+    }
+
+    #[test]
+    fn a_quarantine_lists_the_cases_it_holds_for_one_runner() {
+        let quarantine: Quarantine = toml::from_str(
+            "[[case]]\nid = \"game/WINDOW-1\"\nreason = \"r\"\nissue = 1\n\
+             [[case]]\nid = \"panel/CONN-1\"\nreason = \"r\"\nissue = 2\n\
+             [[case]]\nid = \"game/HUNG-1\"\nreason = \"r\"\nissue = 3\n",
+        )
+        .unwrap();
+        assert_eq!(quarantine.held(&Runner::Game), ["WINDOW-1", "HUNG-1"]);
+    }
+
+    #[test]
+    fn a_selection_names_each_case_by_its_id_or_its_requirement() {
+        let reported = requirement_run("CONN-1", "[CONN-1] Reconnects", Outcome::Passed);
+        let selected = ["CONN-1".to_owned(), "[CONN-1] Reconnects".to_owned()];
+        assert!(selection_matches(&reported, &selected).is_ok());
+        let error =
+            selection_matches(&reported, &["CONN-2".to_owned(), "AUTH-1".to_owned()]).unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "--only CONN-2, AUTH-1 matched nothing: no requirement or case has that id"
+        );
     }
 
     #[test]

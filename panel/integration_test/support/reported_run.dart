@@ -46,8 +46,10 @@ final class ReportedRun {
             folder: "",
             steps: const [],
             taps: const [],
+            covered: const [],
           ),
         ],
+        demo: null,
       ),
     );
   }
@@ -80,8 +82,10 @@ final class ReportedRun {
           folder: "",
           steps: steps,
           taps: taps,
+          covered: const [],
         ),
       ],
+      demo: null,
     );
     final listed = _cases.indexWhere((known) => known.id == reported.id);
     if (listed < 0) {
@@ -114,19 +118,27 @@ final class ReportedRun {
           folder: attempt.folder,
           steps: attempt.steps,
           taps: attempt.taps,
+          covered: attempt.covered,
         ),
       ],
+      demo: reported.demo,
     );
   }
 
   /// The cases so far as one run.
   results.TestRun get testRun => results.TestRun(
+    // Only a game run spans test JVMs, so only it names its run.
+    runId: "",
     runner: runner,
     // `cargo xtask e2e` knows the commit; the runner does not.
     commit: "",
     startedAtMillis: _startedAt,
     attemptPolicy: results.AttemptPolicy.wrapExactly(1),
     cases: _cases,
+    // The panel runner keeps no logs folder of its own.
+    logs: "",
+    // The app reports the run once it ran whole; a drive that never reports it fails on its own.
+    end: results.RunEnd.completed,
   );
 
   /// The run as JSON, the form the app reports it to the host driver in.

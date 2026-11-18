@@ -1,0 +1,5 @@
+name: Playtest
+version: '0'
+main: com.typewritermc.playtest.plugin.PlaytestPlugin
+api-version: '26.3'
+description: The game verification framework's side of Paper. Runs only on Papers the game pool boots.

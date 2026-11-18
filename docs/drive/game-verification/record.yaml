@@ -1,0 +1,992 @@
+# docs/drive/game-verification/record.yaml: the working state of the in-game verification framework.
+# Spike details: docs/design/game-verification/README.md, spikes/ and research/. Prototype code: git
+# 86724c794 (spikes J, K, N) and 9c9275f22 (earlier spikes); the P1 to P11 prototype branches are
+# deleted once Finish ends, their results live in spikes/p*.md.
+goal: Prove what a player experiences in a real Minecraft client, as tests that run on every pull request, built in full before L3.
+
+pieces:
+  - id: paper-topology
+    status: done
+    open: none; a restart Paper runs bestq (AOT cache trained in the same job, C1 only, SerialGC, clients gated while it boots)
+    tries:
+      - id: d1-one-client
+        what: One client runs requirements in sequence
+        taught: Simple, but the throughput is that of a single client
+        state: dropped
+        why: The pool of 4 warm clients was decided for group behaviour and throughput
+        evidence: [docs/design/game-verification/spikes/d-clients.md]
+      - id: d2-shared-paper
+        what: Several clients run separate requirements on one Paper
+        taught: Scales linearly when gated; wrong verdicts came only from broadcast chat and titles, fixed by per player effects and regions 1024 blocks apart. Tick rate, main thread lag and coverage still leak between attempts
+        state: working
+        evidence: [docs/design/game-verification/spikes/d-clients.md, CI runs 42184657603 42187755498]
+      - id: d3-paper-per-group
+        what: One Paper per few clients
+        taught: The only way to isolate tick rate, main thread lag and coverage; best throughput was 2 Papers with 4 clients each
+        state: working
+        evidence: [docs/design/game-verification/spikes/d-clients.md]
+      - id: shared-stepped-paper
+        parent: d2-shared-paper
+        what: Every attempt shares one Paper whose next tick waits for every claimed client and every claimed player's work
+        taught: >-
+          P1: 14 to 17 s per 1,000 requirements without restarts, 0 wrong verdicts in 36,000. One
+          attempt's async work holds every attempt's tick (about 100 ms per attempt hit). Needs a fence,
+          regions and approximate coverage. Lessons: count only acks of ticks after the stimulus (a stale
+          ack passed a broken requirement), switch the client clock on the render thread.
+        state: picked
+        why: Picked by the developer from P1
+        evidence: [docs/design/game-verification/spikes/p1-topology.md, CI run 42345155973]
+      - id: paper-per-attempt
+        parent: d3-paper-per-group
+        what: 4 long lived Papers, one per running attempt, wiped and reused; clients move for a group claim
+        taught: >-
+          P1: 2.3 times faster than shared with no groups and no restarts (6 s per 1,000), but every group
+          claim moves clients (0.33 to 0.95 s each, holding that Paper): +390% at 10% groups, +777% at
+          30%. Restart boots compete with three busy Papers: +41% at 1% restarts. An idle stepped Paper
+          needs a keepalive tick or the watchdog stops it.
+        state: dropped
+        why: 41 to 777% slower once groups or restarts appear
+        evidence: [docs/design/game-verification/spikes/p1-topology.md, CI runs 42345155973 42339156447]
+      - id: fresh-paper-per-attempt
+        parent: d3-paper-per-group
+        what: A fresh Paper per requirement, booted ahead while others run
+        taught: P1 computed it. A boot costs 22 to 39 CPU s, so 1,000 requirements take 1.5 to 2.8 hours on 4 vCPU; matching shared would need about 850 booters
+        state: dropped
+        why: Hours per 1,000 requirements
+        evidence: [docs/design/game-verification/spikes/k-restarts.md, docs/design/game-verification/spikes/c-speed.md]
+      - id: k-own-paper-for-restarts
+        what: A requirement that kills Paper runs on a Paper of its own
+        taught: >-
+          A kill drops every client on that Paper. P1: at 1% restart requirements, restarts are 82 to 89%
+          of suite time (boot 8 to 14 s each, CPU bound, so parallel boots do not help); the other 990
+          requirements finish in 20 to 27 s. AppCDS needs -XX:+AllowArchivingWithJavaAgent with the agent
+        state: picked
+        why: Decided by the developer from spike K
+        evidence: [docs/design/game-verification/spikes/k-restarts.md, CI run 42345155973]
+      - id: faster-boot
+        parent: k-own-paper-for-restarts
+        what: Cut Paper's boot with Java 25's AOT cache, AppCDS with the agent, a slim world and only needed plugins
+        taught: >-
+          P7 T1: kill to state 5.0 s against 8.8 s today (bestq: Java 25 AOT cache trained on a boot with
+          the agent and a join, C1 only, SerialGC, and the client kept gated while Paper boots). Four at
+          once: a round of 4 in 15.5 to 23.2 s against 48 to 72 s, so overlapping restarts pay off only
+          with these flags. 0 wrong of 1,494. The two real levers are C1 only (minus 27%) and a quiet
+          client during the boot (minus 23%); the slim world buys nothing. Java 26 is no faster and
+          drops AppCDS with an agent. The cache must match JDK, Paper, plugins and module flags or the
+          JVM stops. What is left is Minecraft's bootstrap and datapack load (about 5.5 CPU s).
+        state: picked
+        why: Picked by the developer; 5.0 s on the normal Java 25 and the Mac, against T2's 9.0 s with a special JDK
+        evidence: [docs/design/game-verification/spikes/p7-faster-boot.md, CI runs 42430101477 42433205261]
+      - id: checkpoint-restore
+        parent: k-own-paper-for-restarts
+        what: Restore a snapshot of a booted, empty Paper instead of booting (Azul Zulu 25 CRaC, Linux only)
+        taught: >-
+          P7 T2: works only with the checkpoint right after Paper's Bootstrap.validate, before it reads
+          the server folder; later points bake stale data (7 of 84 wrong) or die. Kill to ready 8.8 to
+          9.1 s against 13.9 to 14.5 s booting; 0 wrong of 84. Needs Azul's CRaC JDK (not in nixpkgs),
+          a 400 MB image per machine, about 170 lines of hooks; no restore on the Mac.
+        state: dropped
+        why: Slower than the faster boot and needs Azul's CRaC JDK, a 400 MB image and Linux
+        evidence: [docs/design/game-verification/spikes/p7-checkpoint-restore.md, CI run 42432909519]
+
+  - id: stepped-ticks
+    status: done
+    open: Stepping is proven for one subject. How it behaves with several attempts depends on paper-topology
+    tries:
+      - id: c2-faster-rate
+        what: Run Paper faster than 20 TPS
+        taught: Rate is server wide, and a tick window shrinks with the rate while wall clock async work does not
+        state: dropped
+        why: Replaced by stepped ticks
+        evidence: [docs/design/game-verification/spikes/c-speed.md, docs/design/game-verification/spikes/d-clients.md]
+      - id: wall-clock-fail-rule
+        what: Fail only when the window barrier arrived and the player's counted work is quiet, at a fixed rate
+        taught: Correct, but kept wall clock in the rule
+        state: dropped
+        why: Stepped ticks carry the rule inside the step
+        evidence: [docs/design/game-verification/spikes/d-clients.md]
+      - id: n1-vanilla-freeze
+        what: Paper's tick manager frozen and stepped
+        taught: Plugin tasks, players and the block break clock keep running on wall clock
+        state: dropped
+        why: Not a real freeze
+        evidence: [docs/design/game-verification/spikes/n-stepped-ticks.md]
+      - id: n2-step-agent
+        what: A Java agent makes Paper's main loop wait for a permit; the client moves one tick per step ping
+        taught: Exact windows, async work passes with no wall clock window, hung work fails at the 1 s limit, a few ms per requirement. Packet limiter, read timeout and watchdog must be relaxed
+        state: picked
+        why: Decided by the developer, as an agent on the stock Paper jar
+        evidence: [docs/design/game-verification/spikes/n-stepped-ticks.md, CI runs 42304863563 42310014228]
+
+  - id: perception
+    status: done
+    open: "How A4 asks stay cheap (smaller window for A4 frames, or fewer asks); live gaps: fades, wrapped chat lines, grey completion text, cursor blink"
+    tries:
+      - id: a1-client-state
+        what: Read the client's state
+        taught: Many false positives on lying scenes
+        state: dropped
+        why: Only arranges scenes and names causes
+        evidence: [docs/design/game-verification/spikes/a-observers.md]
+      - id: a3-pixels
+        what: Pixels in a region
+        taught: Good for frames and goldens, weak as a verdict
+        state: dropped
+        why: Kept for goldens only
+        evidence: [docs/design/game-verification/spikes/a-observers.md]
+      - id: a2-drawn-plus-a4-visible
+        what: "Seen means drawn legibly plus owns visible pixels"
+        taught: Every verdict right on the lying battery, gated or rendered; new kinds cost no observer code
+        state: picked
+        why: The only honest pair
+        evidence: [docs/design/game-verification/spikes/a-observers.md]
+      - id: live-stream
+        parent: a2-drawn-plus-a4-visible
+        what: The client streams full perception records over TCP after every drawn frame, only when they change; barriers echoed in the stream
+        taught: >-
+          P4: works. About 3 records of 61 bytes per requirement (212 KB per 1,000), so full records, no
+          diffs. Building a record costs under 0.2 ms; the cost is the frame a gated stepped client must
+          now draw each tick: stepped tick 2.4 to 8.1 ms on the runner. Record arrives 12 ms after its
+          tick on the runner. HUD element tags 14 of 14 right. Same record counts on Mac and runner.
+          A4 pixel counts in every record double the tick, so A4 must be asked for by a check, not
+          streamed. Live gaps: fades count as legible from alpha 8, chat lines wrap into several runs,
+          grey completion text looks typed, the text cursor blink adds records.
+        state: working
+        evidence: [docs/design/game-verification/spikes/p4-live-stream.md, CI run 42336338774]
+      - id: frame-every-tick-at-scale
+        parent: live-stream
+        what: 4 clients on the shared stepped Paper each draw a frame every tick and stream, judged from the stream
+        taught: >-
+          P8: +408% per 1,000 requirements (15.4 s to 78.6 s at 10% groups; +545% at 30%). Four lavapipe
+          clients saturate the 4 vCPU; a frame costs about 40 ms of client CPU with four against 6 ms
+          with one, and Paper idles waiting. Best levers combined (214x120 window, frames only after a
+          game packet, only while a check waits, barrier wake): +53%, and titles likely clip at that
+          size. Only the window size helps much; thread counts and waiting checks do nothing. 0 wrong
+          verdicts in 210,000. Judging from the stream itself adds about 24%. A record's tick label can
+          lag up to 4 ticks on an idle client.
+        state: dropped
+        why: Over the developer's 50% line even with every lever
+        evidence: [docs/design/game-verification/spikes/p8-frames-every-tick.md, CI runs 43306724605 43320141634]
+      - id: perceive-without-drawing
+        parent: live-stream
+        what: Clients run the extract and submit stages each tick and skip the GPU draw; pixels only for A4 checks, goldens and clips
+        taught: >-
+          P11: works. +7%, +15% and +10% per 1,000 at 0, 10 and 30% groups (P8's frame every tick on the
+          same jobs: +374 to +580%); runs after the warm up drift are +8 to +11%. A perceive frame is
+          about 1 ms against about 40 ms drawn; window size no longer matters. It must keep the submit
+          stage, section compile, buffer upload and occlusion update from LevelRenderer.render; only the
+          GPU work is cut. 0 wrong in 249,000; the lying scene battery gave 0 flips in 238 runs; nothing
+          stale for a later drawn frame. A4 on demand is now the cost: 10% of requirements asking once
+          adds 6 to 27 points (smaller window helps), because each ask holds the shared Paper for two
+          drawn frames.
+        state: working
+        evidence: [docs/design/game-verification/spikes/p11-perceive-without-drawing.md, CI runs 43330492175 43333247905]
+      - id: a4-on-demand
+        parent: perceive-without-drawing
+        what: "visible() asks a player's client to draw real frames only while its window holds; the asked entity's pixels are those that change when it is left out"
+        taught: >-
+          Slice 6: a measured frame costs 5.8 ms on the Mac window (1708x960) and 4.1 ms at the runner's
+          854x480; an asking requirement adds 30 to 80 ms; 5 of 87 asking add about 0.25% to the suite, far
+          below P11's 6 to 27 points. A smaller window does not help, the draw dominates. The lying scenes
+          (behind a wall, fully transparent, off screen, behind an open inventory) are seen correctly. The
+          threshold counts pixels, so it means 4x less area on the Mac window than on the runner. New
+          chunks fade in, so visibility windows need 10 ticks.
+        state: working
+        evidence: [commit d1bfaf7cb, "cargo xtask e2e game: 87 passed, three runs in a row"]
+
+  - id: readiness-and-done
+    status: done
+    open: Which side counts Typewriter's work for the done signal (Paper only, or Paper plus a test side hook); decided with layers 3 and 6
+    tries:
+      - id: e-bare-barrier-and-chunk-signals
+        what: A bare echo barrier, or chunk and mesh signals
+        taught: A bare barrier is wrong when effects are delayed; chunk signals fire early
+        state: dropped
+        why: Wrong verdicts
+        evidence: [docs/design/game-verification/spikes/e-readiness.md]
+      - id: e3t-window-barrier
+        what: Read the fact every client loop, pass when it holds, fail at a barrier after the window in ticks
+        taught: No wrong verdicts; a pass costs nothing beyond the truth
+        state: picked
+        evidence: [docs/design/game-verification/spikes/e-readiness.md, CI run 42174196154]
+      - id: per-subject-work
+        what: Engine and realm count work per player; the step waits until it is quiet; hung work is reported after 1 s and never cancelled
+        taught: Replaces server wide quiet and counted dispatchers
+        state: picked
+        why: Decided by the developer
+        evidence: [docs/design/game-verification/spikes/d-clients.md, docs/design/game-verification/spikes/i-coverage.md]
+
+  - id: input
+    status: done
+    open: "Lost suggestion replies: a 1 thread suggestion pool on the test Paper, or a retype inside the window like a player would. Mac run of the SDL path under stepped ticks"
+    tries:
+      - id: j-packets-and-game-actions
+        what: Send packets, or call the game's own actions
+        taught: Packets miss aim and get kicked when walking; game actions never match typed tab completion
+        state: dropped
+        why: Not what a player does
+        evidence: [docs/design/game-verification/spikes/j-input.md]
+      - id: j-window-events
+        what: Real window events (XTest on Linux, SDL queue push on the Mac)
+        taught: Same server events as direct handler calls on all 17 inputs, gated or rendered; typed suggestions sometimes get no reply
+        state: picked
+        evidence: [docs/design/game-verification/spikes/j-input.md, CI runs 42211818480 42215647584 42218505138]
+      - id: input-from-the-client
+        parent: j-window-events
+        what: The client mod sends the window input itself; the pool process sends only commands
+        taught: >-
+          P10: works. Linux: XTest from inside the client through the foreign function API, with one
+          Xvfb display per client; on a shared display every key goes to the focused window. Mac: the
+          SDL queue push, which also works on Linux. Both match direct calls on all 18 inputs, 100 of
+          100, gated and rendered, under stepped ticks, always exactly one tick later. 4 clients at the
+          same step: 0 inputs on the wrong client. XTest needs a one pixel nudge after the grab. Sent X
+          events to the own window fail on pointer motion. Lost suggestion replies (4 to 6%) come from
+          Paper's 4 thread suggestion pool reordering requests; a 1 thread pool or a retype after 6
+          ticks fixes it. Mac run not done (devenv shell hung).
+        state: working
+        evidence: [docs/design/game-verification/spikes/p10-input-from-client.md, CI runs 43306835761 43309694858 43311267445]
+
+  - id: client-pool
+    status: done
+    open: The client shows a "Chat messages can't be verified" toast after joining; a toast check could see it (slice 1)
+    tries:
+      - id: fresh-client-per-requirement
+        what: Boot a client per requirement
+        taught: A boot costs far more than a requirement
+        state: dropped
+        why: Unaffordable
+        evidence: [docs/design/game-verification/spikes/s0-real-client-on-paper.md, docs/design/game-verification/spikes/c-speed.md]
+      - id: fresh-identity
+        what: A new player identity per requirement
+        taught: Leaked nothing but costs a join per requirement
+        state: dropped
+        why: Replaced by the full wipe
+        evidence: [docs/design/game-verification/spikes/k-restarts.md]
+      - id: full-wipe
+        what: Wipe all 17 kinds of player state between requirements, on warm clients
+        taught: Leaked nothing; the obvious partial wipe leaked 11 kinds
+        state: picked
+        why: Decided by the developer
+        evidence: [docs/design/game-verification/spikes/k-restarts.md, CI run 42235574190]
+      - id: leave-like-pause-menu
+        what: Reconnect by leaving like the pause menu, then joining
+        taught: The earlier client side close made Paper keep the old player for about 30 s
+        state: picked
+        evidence: [docs/design/game-verification/spikes/k-restarts.md]
+      - id: lease-time
+        what: Split the 1.2 s from grant to lease into timed parts
+        taught: >-
+          Paper's wall clock chunk send cap (player-max-chunk-send-rate 75, unchanged in the test Paper)
+          is about 1.08 s of the 1.13 s median: the claim waits for 81 chunks (radius 3 plus the edge ring,
+          while the client draws render distance 2). The wipe itself costs 1.4 ms; the synchronous claim
+          18 ms, mostly generating the centre chunk. Cap removed: 499 ms; plus regions loaded ahead: 291
+          ms; render distance 4: 1661 ms. Every region is fresh. What remains without the cap is 11 to 13
+          stepped ticks, with the moving client acking about 28 ms late (guess: section compiles, not
+          timed). A separate 8 to 17 s tail (3 or 4 claims per run): a free player holds back no ticks, its
+          client falls up to 235 ticks behind, and once claimed every attempt waits for it to catch up
+          (StepPolicy allAcked(claimed)). Why the client reports view distance 3 with render distance 2,
+          and why Paper sends only about 10 chunks per tick without the cap, are unknown.
+        state: working
+        evidence: [docs/design/game-verification/spikes/lease-time.md, "4 full suite runs, 82 passed each", "fixes in e5f88a238: cargo xtask e2e game 83 passed, grant to lease median 409 ms, p90 684 ms, max 5284 ms (was 1132, 1422, 16353)"]
+      - id: why-runs-vary
+        what: Find what wall clock work moves tick counts and frames
+        taught: >-
+          Variance shows even when requirements run alone. BREAK: the client's 5 tick break delay carries
+          over from an earlier attempt on that client (proven 10 of 10). CHAT: Paper sends chat from its
+          async chat thread at wall clock times. CMD: an input can start after the client acked the tick, so
+          Paper moves on first. GOLDEN-3: after a teleport the client computes visible sections on a
+          background thread (inferred; did not recur in 25 runs). Regions loaded ahead and Paper's async
+          chunk and light work cause none of it. The neighbour ring is needed: with a first tick check
+          PROBE-3 passed 20 of 20 with it and failed 20 of 20 without.
+          Fixed since: the wipe resets the break delay, chat and suggestion requests count as player work,
+          the client acks only once its pending input is handled, the watch travels with the probe on
+          Paper's connection, typing takes a tick per key, and the record goes out right after its tick.
+          Open: BREAK-2 once turned 132 px sideways that the playtest never sent (likely the real cursor
+          over a background client window on the Mac, unproven); once the client acked before SDL delivered
+          its own pushed mouse events, so a turn landed a tick late. Both fixed in 349cda7e0: the client
+          marks its own SDL events and drops and logs every other mouse and key event while stepping (the
+          old flake reproduced exactly with an unmarked motion, and a real cursor's 35 events were dropped
+          during a full run); the ack waits until every pushed event reached the game. Linux trusts its own
+          Xvfb display, unproven until slice 9.
+        state: working
+        evidence: [commit ed15cc7b3, "fixes ed15cc7b3 ee84f2844 f802c922a 39742a7d1 18e698ef9 2b40b8aea: steadied requirements same ticks 10 of 10 under load, 96 passed in three full runs"]
+
+  - id: requirement-shape
+    status: done
+    open: "IDE single runs unchecked"
+    tries:
+      - id: fabric-client-gametest
+        what: Fabric's client game test API as the runner
+        taught: Test code runs inside one client, sequentially, against an in process server; no external server API
+        state: dropped
+        why: Conflicts with real Paper, several clients and a test JVM
+        evidence: [docs/design/game-verification/research/real-client-precedent.md]
+      - id: g2-await-and-g3-timeline-only
+        what: Await style, or judge only the recorded timeline afterwards
+        taught: Await silently grows limits; timeline only waits its whole recording on every pass
+        state: dropped
+        why: Await silently grows limits; timeline only waits its whole recording on every pass
+        evidence: [docs/design/game-verification/spikes/g-requirement-shape.md]
+      - id: g1-windows-plus-timeline
+        what: Every check in a within(n.ticks) window from the last stimulus; order and gaps from the timeline
+        taught: Fits one mechanism, the streamed perception with the barrier inside it
+        state: picked
+        why: Decided by the developer
+        evidence: [docs/design/game-verification/spikes/g-requirement-shape.md]
+      - id: root-compilation
+        parent: runner-c-testballoon
+        what: One root compilation reads every module's gameTest folder
+        taught: P2 proved 200 tests, one JVM, one scheduler; works only inside one Gradle build, so not for extensions built elsewhere
+        state: dropped
+        why: Services build only, and every run boots the clients again
+        evidence: [docs/design/game-verification/spikes/p2-testballoon-runner.md]
+      - id: classloader-per-compilation
+        parent: runner-c-testballoon
+        what: One JVM loads each compilation in its own class loader and runs testBalloon per loader; scheduler and pool in the shared parent loader
+        taught: Not tried
+        state: dropped
+        why: The pool process covers it, plus extensions and warm single runs
+        evidence: []
+      - id: pool-process
+        parent: runner-c-testballoon
+        what: The warm pool and scheduler run as their own process; every test JVM (module, extension, IDE run) submits to it
+        taught: >-
+          P6: works. Two test JVMs shared one pool of 4; the first JVM starts the pool, a lock file keeps
+          it single; a warm single requirement takes 2 s of Gradle time against 20 s cold. The pool must
+          rotate between test JVMs (325 ms against 4,071 ms for a late single). Killed test JVM, killed
+          pool and version mismatch all fail clearly. Open: detach the pool on purpose (it survives only
+          by process group luck), replace a stale idle pool automatically, a heartbeat or lease deadline
+          for a stuck pool, keep the report safe from a pool crash. About 590 lines against 217.
+        state: picked
+        why: Picked by the developer; modules and extensions share warm clients, single runs take 2 s
+        evidence: [docs/design/game-verification/spikes/p6-pool-process.md]
+      - id: runner-a-and-b
+        what: Tests in a pool (A), or requirement values run by the framework (B)
+        taught: A shows flaky as green; B loses the IDE gutter and test filters
+        state: dropped
+        why: A shows flaky as green; B loses the IDE gutter and test filters
+        evidence: [docs/design/game-verification/research/runner-directions.md]
+      - id: runner-c-testballoon
+        what: Declared in testBalloon with players, demonstrates and restartsPaper; a framework scheduler runs, retries and reports
+        taught: >-
+          P2: works. 200 mirror tests submit at once (1.08 of ideal), flaky shows as failed, --tests
+          selects before submission (testBalloon path syntax), finish runs after every test. One JVM
+          holds one test compilation only (fixed JvmEntryPoint class name), so every module's
+          requirements must compile together. A failure in finish is silent in testBalloon; xtask
+          must gate on TestRun being written. The flaky error must carry the body's frame first.
+        state: picked
+        why: Decided by the developer
+        evidence: [docs/design/game-verification/research/runner-directions.md, docs/design/game-verification/spikes/p2-testballoon-runner.md]
+
+  - id: video
+    status: done
+    open: Clips show game time only, so a requirement of a few ticks gives a clip under a second; a run has no cap on its clips
+    tries:
+      - id: b2-window-capture
+        what: Capture the window
+        taught: Up to 16 frames off, no sync
+        state: dropped
+        why: Frames drift from the facts
+        evidence: [docs/design/game-verification/spikes/b-video.md]
+      - id: b3-packet-replay
+        what: Record packets, render offline on demand
+        taught: Not worth building
+        state: dropped
+        why: Not worth building
+        evidence: [docs/design/game-verification/spikes/b-video.md]
+      - id: b1-readback-demo-rerun
+        what: In client readback to ffmpeg, recorded in a demo rerun, never in the gated suite
+        taught: Clip lines up with facts; same verdict in every rerun
+        state: picked
+        evidence: [docs/design/game-verification/spikes/b-video.md, CI run 42111131229]
+      - id: frames-between-steps
+        parent: b1-readback-demo-rerun
+        what: In a demo rerun the stepped client draws 2 or 3 frames per tick at even partial tick positions, each with its own record
+        taught: >-
+          P9: works at 30 and 60 fps. Exactly 1/fps game time per frame, no repeated or skipped frames,
+          no jump at tick boundaries, steadier than a real time recording (which dropped frames). Every
+          frame has its own record, so frame f is record f; pixels agree with the facts. Verdicts 12 of
+          12 the same in gated, demo 30, demo 60 and a rerun; facts the client smooths between ticks may
+          first hold one tick earlier or later, so a check right at its deadline needs a one tick margin.
+          Cost on the runner: 1.5 times gated at 30 fps, 2.6 at 60, against 4 to 5 for real time. Same
+          machine reruns give identical mp4 bytes except particles (client randomness).
+        state: working
+        evidence: [docs/design/game-verification/spikes/p9-frames-between-steps.md, CI run 43312553335]
+      - id: clips-in-demo-reruns
+        parent: frames-between-steps
+        what: >-
+          At 30 fps each pair of ticks gets 3 frames at partial ticks 2/3, 1/3 and 1; every tick still
+          ends with a pass at partial 1, the gated run's draw at the end of the tick, and its record,
+          ack, held packets and the input's next events wait for that pass
+        taught: >-
+          Each pass sends its own record with its partial tick and frame; windows read only records at
+          partial 1, so a demo verdict comes from the same tick-end records as the gated one and the one
+          tick margin never applies. Over 91 demos (run D) 52 windows held at the same tick as gated and 3
+          at another, against 55 and 4 between two gated runs; every shift sat on a wall clock step
+          (work hung for 1 s, the rejoin after a restart), so a demo counts as the same only when it
+          passes or fails as the last attempt did, with no margin. The forced record of every pass
+          exposed four real faults the gated run hides by sending records only on change: a key typed
+          after a tick reached the game before the tick's last pass (TAB-1), a lost client was asked to
+          stop its clip (FROZEN-1, LOST-1), and records of a killed Paper counted as the new Paper's
+          ticks, both queued in the session before the restart's answer and kept by the pool until the
+          client stepped with the new boot (RESTART-2), and a golden capture that arrived while a clip's
+          passes were due was answered from a pass between ticks (GOLDEN-2, once in five runs). Cost: demo time over gated time per requirement
+          median 1.68 and summed 1.20 (run D, load 76 to 155), 1.84 and 1.31 in run B (load 240 to 360),
+          against P9's 1.5.
+        state: working
+        evidence: [commits 0ec31acfe 4e61bf097, "cargo xtask e2e game on 4e61bf097: 96 passed, 91 demos, 132 clips"]
+
+  - id: goldens
+    status: done
+    open: CI setup cost of the devenv e2e shell (300 to 480 s per job on an uncached branch)
+    tries:
+      - id: tolerant-compare
+        what: SSIM, blur or threshold comparison
+        taught: Every tolerant method missed a colour off by 3
+        state: dropped
+        why: Misses real breaks
+        evidence: [docs/design/game-verification/spikes/f-goldens.md]
+      - id: devenv-mesa
+        parent: exact-on-pinned-runner
+        what: The same goldens on devenv's Mesa 26.2.5
+        taught: >-
+          P5: one hash per scene across 6 CPU models on Vulkan and 4 on OpenGL, 0 differing identical
+          pairs, every small break caught. The Mesa upgrade changed all 18 goldens (off by 1 level at
+          far edges), so upgrades rebuild goldens as decided. The profile also needs libglvnd and the X
+          libraries; building the devenv shell cost 300 to 480 s per job without the Nix cache.
+        state: working
+        evidence: [docs/design/game-verification/spikes/p5-devenv-mesa.md, CI runs 42343076555 42344338415]
+      - id: exact-on-pinned-runner
+        what: Exact comparison, approved from the runner's own frames, hash in the repo and PNG on the evidence branch
+        taught: Zero differing pixels across repeats and CPU models with the knobs on
+        state: picked
+        why: Decided by the developer
+        evidence: [docs/design/game-verification/spikes/f-goldens.md]
+
+  - id: coverage
+    status: done
+    open: Attribution with several attempts on one Paper is approximate; exact with a Paper per attempt (paper-topology)
+    tries:
+      - id: plain-or-tcp-dump
+        what: Dump after each requirement, or over TCP
+        taught: Late work goes to the wrong requirement; TCP costs 41 ms
+        state: dropped
+        why: Wrong attribution
+        evidence: [docs/design/game-verification/spikes/i-coverage.md]
+      - id: i3-read-reset-in-plugin
+        what: JaCoCo limited to plugin classes, read and reset inside the plugin after work is idle
+        taught: Correct attribution at no measurable cost
+        state: picked
+        evidence: [docs/design/game-verification/spikes/i-coverage.md, CI run 42162248604]
+      - id: read-when-attempts-start-and-settle
+        parent: i3-read-reset-in-plugin
+        what: >-
+          The plugin reads and resets when an attempt starts or resumes and once its work is quiet at its
+          settle; each read goes to every attempt that ran since the read before, the pool analyses it
+          against the class files the agent dumped, and each case in the run file lists its classes and lines
+        taught: >-
+          On the shared Paper a read cannot tell overlapping attempts apart, so it over attributes and
+          never loses a line. Against a pool of one client (82 single player cases), 79 cases carried
+          extra lines, a median of 70 over an exact median of 590, at most 349 (LEAK-1, whose hung work
+          outlives its attempt), and 76 carried extra classes; the lines the shared run lacked (52 cases,
+          at most 10) were code that runs only alone, the idle tick of StepPolicy. Extra lines only add
+          demo reruns. Cost per attempt (run D, load 76 to 155): a median of 5 reads holding Paper's main
+          thread 0.40 ms in all, at most 20.5 ms; the pool's analysis a median of 24.5 ms, at most 210 ms,
+          on its event loop. A restart attempt's coverage before the kill is lost with its Paper.
+        state: working
+        evidence: [commit a88505c91, "cargo xtask e2e game on 4e61bf097 against a gameTest run with -Pplaytest.clients=1"]
+
+  - id: results-and-ci
+    status: done
+    open: none beyond the pieces above; the TestRun additions follow from them
+    tries:
+      - id: xtask-reruns
+        what: Let xtask rerun failed requirements as for other suites
+        taught: Each rerun would boot the clients again (results.rs:174)
+        state: dropped
+        why: Retries run inside the test JVM on warm clients
+        evidence: [docs/design/game-verification/research/xtask-integration.md]
+      - id: free-runner
+        what: The free GitHub runner, 4 vCPU, software rendering
+        taught: Holds the gated clients with the same throughput as the Mac
+        state: picked
+        evidence: [docs/design/game-verification/spikes/h-ci-runner.md]
+
+  - id: build
+    status: done
+    open: Which of P3's build file fixes to adopt, and how CI caches Loom (about 700 MB) and the patched Paper (about 216 MB)
+    tries:
+      - id: one-services-build
+        what: Loom client mod, patched Paper jar, framework plugin, agent and gameTest all inside the services Gradle build
+        taught: >-
+          P3: works, no included build, configuration time unchanged (new projects 31 ms), configuration
+          cache holds. Needed three existing build file changes: run-task in build-logic (detekt puts an
+          old kotlinx-serialization on every project's parent loader, and two run-paper projects clash),
+          Kover must skip gameTest (koverVerify depends on every Test task), coverage-merge must add only
+          Kover projects. Patching Paper stays in check while the plugin compiles against it.
+        state: working
+        evidence: [docs/design/game-verification/spikes/p3-one-build.md]
+
+decided:
+  - id: real-clients-only
+    what: Real clients only, no packet level tier; stimuli are player input or API, not chat commands; full suite on every pull request
+  - id: framework-holds-no-typewriter
+    what: The framework holds no Typewriter code and may later move out
+  - id: tick-clock
+    what: Cinematics, sequences and engine step timing count ticks, not wall clock; each engine keeps a live StepClock per step
+    why: Superseded 2026-11-18 by engine-clock-test-driven
+  - id: groups-and-pool
+    what: Group behaviour must be testable, and requirements share a pool of 4 warm clients
+  - id: full-wipe
+    what: Each requirement gets a full wipe of its player; the realm gets a general purge of a subject's data
+  - id: runner-steps-ticks
+    what: The test runner decides when a tick happens, as a Java agent on the stock Paper jar
+  - id: retries
+    what: A failed requirement is retried later, up to 3 times; a pass on a retry is flaky and blocks the pull request like every suite; lossy inputs may repeat inside the window
+  - id: full-framework-first
+    what: The full framework is built first, before L3
+  - id: per-subject-done
+    what: Done and fail signals use a per subject view; hung work is reported by a 1 s wall clock limit, never cancelled
+  - id: clips
+    what: Video clips go to failing requirements plus requirements the pull request touches, from coverage
+  - id: goldens
+    what: A frame that differs from its golden fails; goldens are exact on the pinned runner; the repo holds a hash, the PNG lives on the evidence branch; approve takes the PR's CI frames
+    why: Mesa or Minecraft upgrades rebuild the goldens in the weekly upgrade pull request; since review round 2 (2026-11-18) the golden file is readable Skir JSON of a Golden (skir-src/harness/v1/golden.skir), the frame's hash and size and the Renderer that drew it, instead of a properties file
+  - id: windows
+    what: Requirements are G1 windows plus the recorded timeline; a window counts from the last action or probe call
+  - id: never-needs-positive
+    what: never checks are broad, and a requirement needs one positive check
+  - id: test-jvm
+    what: Requirement code runs in a test JVM; the client streams what its player perceived
+  - id: testballoon-runner
+    what: Requirements are declared in testBalloon with players, demonstrates and restartsPaper; the framework scheduler runs them and writes TestRun
+  - id: one-gametest-task
+    what: One root gameTest task runs every module's requirements in one JVM; cargo xtask e2e game runs it
+  - id: topology-by-speed
+    what: Prototype both topologies, then decide. The prototypes report how much slower each is at 1,000 to 2,000 tests; 10% slower is fine, 20% is already rough, over 50% is probably a no go
+    why: Thousands of small tests; slow feedback makes every later drive worse over time
+  - id: all-prototypes-in-waves
+    what: Run all proposed prototypes (P1 to P5), just not all at the same time
+  - id: p6-pool-process
+    what: Prototype a separate pool process that every test JVM (modules, extensions, IDE runs) submits to, faked without Minecraft
+  - id: shared-topology
+    what: "A: shared stepped Paper"
+    why: P1, a Paper per attempt is 41 to 777% slower once groups or restarts appear
+  - id: p7-restart-tries
+    what: Prototype T1 faster boot and T2 checkpoint and restore for restart requirements
+  - id: pool-process
+    what: Test JVMs share a separate pool process
+    why: Modules and extensions share warm clients; single runs take 2 s, not 20 s
+  - id: tests-beside-code
+    what: Tests are placed where it makes sense; in the future each extension and every entry is tested
+  - id: restart-faster-boot
+    what: "T1 faster boot (Recommended)"
+    why: 5.0 s kill to state on the normal Java 25, works on the Mac
+  - id: p8-p9-p10
+    what: Run P8 suite speed with frames, P9 video under stepping and P10 input from the client
+  - id: perception-no-drawing
+    what: "A. No drawing (Recommended)"
+    why: P8, a frame every tick is +408%, +53% with every lever
+  - id: build-in-nine-slices
+    what: "Yes, start slice 1 (Recommended)"
+    why: Every piece has a proven direction; the walking skeleton proves the parts fit end to end
+  - id: p3-build-fixes-in-slice-1
+    what: "Yes, in slice 1 (Recommended)"
+    why: run-task in build-logic, Kover skips gameTest, coverage merge takes only Kover projects
+  - id: keep-slice-1-decisions
+    what: "Keep them, start slice 2 (Recommended)"
+    why: The wire project, records that hold until the next one, and separate Joined and Ready signals stay
+  - id: non-text-perception
+    what: "D. Stream more perception (Recommended)"
+    why: Inputs whose result is not drawn text are checked on camera, items, blocks and entities from A2. Checks read what the player perceives; a Paper event channel would be a second source of truth
+  - id: general-probes
+    what: "A. General probes (Recommended)"
+    why: probe.give, probe.gameMode, probe.block and the like live in the framework plugin. Every requirement shows what it sets up, and extensions build on the same probes
+  - id: probe-done-at-client
+    what: "A. Client has the effect (Recommended)"
+    why: A probe returns only once its effect reached the client (chunks sent, command tree sent); Paper steps until then, so requirement code never waits for readiness
+  - id: keep-slice-2-built-decisions
+    what: "Keep them (Recommended)"
+    why: Busy flag on the step ack, input window from the tick before its first event, watches only for probe placed things, name tag reactions, becomes and gone need a change, prioritizeChunkUpdates 2, a floor per requirement, ProbeFailed and InputFailed, retype in the client
+  - id: keep-slice-2-last-decisions
+    what: "Keep, start slice 3 (Recommended)"
+    why: Probes wait for chunks within the client's view distance, a bedrock layer under the void world, only the command sending pool watched as an async sender; slice 3 also takes relative spots, a matched view distance and the chat toast
+  - id: wipe-proof-back-to-back
+    what: "A. Back to back in the kit (Recommended)"
+    why: A test fixture runs two attempts on the same clients through the pool; no public ordering API
+  - id: wipe-split-by-owner
+    what: "A. Split by owner (Recommended)"
+    why: The framework wipes vanilla and Paper player state (spike K's kinds plus recipes and advancements); each plugin resets what it owns (stored values, attached permissions, metadata it set, sessions, mail) through a reset hook the framework calls, later Typewriter's realm purge; no reflection; unseen kinds are proven by a query probe only the framework's own tests use
+  - id: keep-slice-3-built-decisions
+    what: "Keep them (Recommended)"
+    why: PlayerWipeEvent as the reset hook, Reclaim for back to back, regions never reused, attempts kept apart (players hidden, chat per attempt), Declined for requirements the pool can never run, pool size from -Pplaytest.clients
+  - id: last-damage-cause-server-call
+    what: "A. Server call, fix comment (Recommended)"
+    why: Bukkit's Entity.setLastDamageCause is deprecated for removal and internal, so the wipe keeps calling the server's own player, like its other wipes; replaces an earlier pick made on the belief that a public API existed
+  - id: start-slice-4
+    what: You can start slice 4
+  - id: claim-side-by-side-together
+    what: "A. Claim them together (Recommended)"
+    why: The pool grants side by side attempts' players at the same moment; holding one while the partner queued behind a group of 4 deadlocked run 4
+  - id: frozen-client-5s
+    what: "A. 5 s framework limit (Recommended)"
+    why: A client that has not acked for 5 s of wall clock counts as lost; about 18 times the worst stall seen, and provable by freezing a client
+  - id: hold-out-hung-players
+    what: "A. Hold it out (Recommended)"
+    why: A player whose work hung leaves the pool until that work ends, is wiped again, then returns; nothing is cancelled. A replacement client keeps the same player name, so it would not escape the work; a player whose work never ends stays out for the rest of the run and the run says so
+  - id: keep-slice-4-built-decisions
+    what: "Keep, start slice 5 (Recommended)"
+    why: One Queue message per side by side group, a partner lost before its lease requeues alone, hold reasons apart from attempts, only acked clients watched, never ending hung work noted on the failing case
+  - id: keep-slice-5-built-decisions
+    what: "Keep them (Recommended)"
+    why: Kotlin decides retries and fails the mirror test, Rust judges every runner's run file for the gate; each rule has its own unit tests
+  - id: flaky-proof-in-unit-tests
+    what: "A. Unit tests and evidence (Recommended)"
+    why: VerdictTest and the gate tests cover the rule and the real run proof with a temporary FLAKY-1 stays recorded; no hidden requirement path in the runner
+  - id: measure-lease-time-beside-slice-6
+    what: "C. Both in parallel (Recommended)"
+    why: Grant to lease costs about 1.2 s per requirement with an unknown cause; a subagent splits it into timed parts and only reports while slice 6 builds, and the fix is chosen afterwards
+  - id: lease-time-fixes
+    what: "Fixes 1, 2 and 3"
+    why: The test Paper turns off the chunk send and load caps, a claim waits only for the chunks the client draws plus the neighbour ring it needs to draw them, and Paper loads the next few regions during earlier attempts; regions are still never reused
+  - id: free-clients-in-step
+    what: "Keep free clients in step (Recommended)"
+    why: A free client fell up to 235 ticks behind and stalled every attempt once claimed; every player gets step pings, one rule, lost clients still go after 5 s
+  - id: goldens-on-the-runner-only
+    what: "E, also ci should work again. If not we can try to move to namespace"
+    why: The Mac renders different pixels, so goldens stay exact on the pinned runner only; compare, hashing, diff and approve are built now and the Mac reports a golden as not checked; the first real green comes with CI, on Actions or else Namespace runners
+  - id: a4-threshold-share
+    what: "Share of the frame (Recommended)"
+    why: A pixel count means 4x less area on the Mac window than on the runner; a share of the frame means the same on every window size
+  - id: pin-client-graphics
+    what: "Pin custom settings (Recommended)"
+    why: The default FANCY preset overrides renderDistance 2 with 3 at start (Minecraft.java:576), so a move waits for 81 chunks; graphicsPreset custom with render distance 2 cuts that and keeps a preset change from moving the goldens; built after slice 6 merges, before any golden hash exists
+  - id: ring-proof-probe-3
+    what: "Tighten PROBE-3 (Recommended)"
+    why: PROBE-3 passes even without the neighbour ring; checking on the first tick after the move, with and without the ring, shows whether the ring is needed, without a build change
+  - id: wipe-resets-blends
+    what: "A. The wipe resets them (Recommended)"
+    why: A golden frame showed the place the player came from, because the client blends sky, fog, rain level and rain fog over ticks (a rain fade lasts about 100 ticks); the client wipe resets them, proven back to back like every other wipe kind
+  - id: draw-at-end-of-tick
+    what: "Draw at end of tick (Recommended)"
+    why: The stepped clock drew at partial tick 0, so every blended value and entity position showed the previous tick; drawing at partial tick 1 makes a frame and a perception record show the same tick
+  - id: only-check-in-xtask
+    what: "A. xtask owns the check (Recommended)"
+    why: Gradle fails a gameTest module that matches no --tests filter; xtask already fails any id that matches no case in the whole run, so every gameTest task turns off failOnNoMatchingTests and selection uses testBalloon's own filter
+  - id: keep-slice-6-built-decisions
+    what: "Keep, approve runner only (Recommended)"
+    why: Rain and thunder stay with Paper's wipe, the wipe also resets the FOV ease and clients set fovEffectScale 0; approve refuses frames not made on the pinned runner, so no Mac golden slips in
+  - id: mesa-pin-from-devenv
+    what: "B. devenv exports it (Recommended)"
+    why: The pinned Mesa version comes from the Mesa devenv ships, so it cannot drift from nixpkgs; on the pinned runner a golden made on another renderer fails with re-approve, never quietly not checked, so a Mesa bump makes the weekly upgrade pull request re-approve
+  - id: renderer-has-os
+    what: "Add os (Recommended)"
+    why: A renderer names the OS so the pin says Linux outright instead of relying on no other OS matching Vulkan, llvmpipe, Mesa and CPU
+  - id: keep-slice-6-built-decisions
+    what: "Keep, missing golden fails (Recommended)"
+    why: The wire's Request, PaperRequest and ClientRequest mirror Reply; on the pinned runner a missing golden fails with the approve command instead of not checked, since the game runs in CI only from slice 9, which approves the first goldens
+  - id: steadiness-beside-slice-7
+    what: "Steadiness first, slice 7 beside (Recommended)"
+    why: GOLDEN-3 flaked once and tick counts vary between runs (BREAK-1 6 to 11), which a stepped design should repeat exactly; the speed builder proves the PROBE-3 ring, fixes the missing golden and finds why runs vary (measure, then a choice), while slice 7 builds
+  - id: steadiness-fixes
+    what: "Build all four (Recommended)"
+    why: Runs varied from four causes; the client wipe resets the break delay, Paper's async chat counts as player work, and the client holds its ack until a pending input is handled and its visible section set is current; two existing rules, no change to how Paper or Minecraft behave
+  - id: keep-chat-chain-hook
+    what: "Keep it (Recommended)"
+    why: Paper's public AsyncChatEvent fires after the packet read, so a tick could slip in; the plugin appends to the player's private chat chain on the pinned Paper and fails loudly at load if it is gone
+  - id: remove-visible-set-hold
+    what: "Remove until proven (Recommended)"
+    why: GOLDEN-3 flaked once in 7 full runs and never in 25 since, with or without the fix; no code without a failing test, and one less Minecraft hook
+  - id: keep-slice-7-built-decisions
+    what: "Keep them (Recommended)"
+    why: The step agent retransforms classes the AOT cache loaded before premain and no longer joins the boot class path; both Papers launch from Paper's class path; one fresh Paper per restart attempt, players resumed without a wipe; the cache is trained on a restart boot and kept only after a clean halt
+  - id: rules-per-paper
+    what: "Yes, one per Paper (Recommended)"
+    why: The restart Paper has a rules class while the shared Paper's rules sit in about 8 branches in Pool; every Paper gets a rules object and Pool forwards each event to its server's rules
+  - id: watch-with-the-probe
+    what: "A. Watch with the probe (Recommended)"
+    why: SEEN-1 and SEEN-4 drifted between 2 and 4 ticks because Watch and Look went over the pool link after the probe was done; Paper sends the watch on the player's own connection ahead of the spawn so the check holds when the entity shows; the cost of starting looks at the probe is measured first
+  - id: find-tab-1-cause
+    what: "Find the cause (Recommended)"
+    why: TAB-1's first window took 1 to 9 ticks under load, close to its window; measure, then a choice
+  - id: watched-means-measured
+    what: "Keep it (Recommended)"
+    why: The watch travels with the probe on Paper's connection and the client measures pixels of every watched entity from the probe until the wipe; no look step, 0.6 to 0.7% of the suite against 0.1% for visible() entities only
+  - id: type-like-a-person
+    what: "A. Type like a person (Recommended)"
+    why: Paper answers suggestions on 4 threads and keeps only the last request it saw, so a burst of keys got a stale answer and a retype after 6 ticks; typing sends one key per tick and a suggestion request counts as player work until Paper answers
+  - id: find-break-2-flake
+    what: "Yes, find the cause (Recommended)"
+    why: BREAK-2, the first attempt on a freshly joined client, aimed 19.8 degrees past its target once in 3 full runs; it may come from the new packet hold or an ungrabbed mouse
+  - id: record-right-after-tick
+    what: "Record right after tick (Recommended)"
+    why: The record of tick 7 was taken after the next key cleared the suggestion list, so TAB-1 held at 8; the client takes its record right after the tick and only its ack waits for its own pending input
+  - id: only-own-input
+    what: "A. Only own input (Recommended)"
+    why: BREAK-2 turned 132 px sideways that the playtest never sent, likely the real cursor over a background client window; the client marks the events the playtest pushes and, while stepping, drops and logs every other mouse and key event
+  - id: start-slice-8
+    what: "Yes, start slice 8 (Recommended)"
+  - id: clips-30-fps
+    what: "30 fps (Recommended)"
+    why: P9 showed 30 and 60 fps both exact; 30 costs 1.5 times the gated time per rerun requirement against 2.6 at 60, and only demo reruns pay
+  - id: keep-slice-8-built-decisions
+    what: "Keep, drop the duplicate (Recommended)"
+    why: No margin for demos; demos for failed, flaky, quarantined and touched requirements; touched means added lines; ffmpeg in the base devenv profile; golden frames from the tick's end; a killed Paper's records are dropped only in the restart Paper's rules, and Pool's fresh.clear goes
+  - id: logs-per-run
+    what: "Own folder, keep 3 (Recommended)"
+    why: FROZEN-1's demo once saw its stall after 10.07 s and the next runs overwrote its logs; each run writes pool and Paper logs to a folder of its own and the last 3 are kept
+  - id: slice-9-dispatched-runs
+    what: "Dispatch runs on its branch (Recommended)"
+    why: CI works again (features/v1 CI and Full tier green on 2026-11-16); slice 9 proves the game job, caches and the Linux paths with workflow_dispatch runs on its own branch, no pull request; if Actions fails again it stops and Namespace runners come next
+  - id: pid-file-per-part
+    what: "Pid file per part (Recommended)"
+    why: On Linux Java reads only 4 KB of a command line, so LOST-1, FROZEN-1 and RESTART-3 found no process on CI; the pool writes each part's pid and start time into its folder, the same check PoolFile uses, so a left behind file counts only while that exact process runs; asked "what happens when something crashed and that file gets left behind?"
+  - id: golden-images-on-evidence-branch
+    what: "Evidence branch (Recommended)"
+    why: The repo holds only a golden's hash, so a changed frame on CI failed without a diff; approve also pushes the PNG to the evidence branch as goldens/<hash>.png, outside the pruned pr/ folders, and cargo xtask e2e game fetches any image it lacks before the run, so the framework stays offline; committing the PNG would add about 210 KB per golden to the history on every re-approve
+  - id: heap-share-of-machine
+    what: "Share of the machine"
+    why: No game JVM had a heap cap, so on the 16 GB runner one grew to 3.85 GB beside four at 1.5 GB and the runner ran out of memory; every game JVM gets a MaxRAMPercentage share by part kind, so the caps scale with the machine; chosen over a fixed cap per part (recommended) and fewer parts at once
+  - id: at-most-two-own-papers
+    what: "At most 2 (Recommended)"
+    why: The heap budget assumed 2 own Papers but CI ran 3 at once (57% of the machine against the 50% limit); the pool runs at most HeapShare.OWN_PAPERS own Papers, counting ones still stopping, a further restart attempt waits in the queue, and the budget test reads the same number
+  - id: prune-unused-goldens
+    what: "Unused, 30 days old (Recommended)"
+    why: Every re-approve leaves the old image on the evidence branch and prune skipped goldens/, so it grew forever and approve's clone slowed; approve writes when it pushed each image, and the weekly prune drops an image no golden file on a long lived branch (develop or features/v1) names once it is older than the retention, the same 30 days as pull request media
+  - id: keep-slice-9-built
+    what: "Keep all three (Recommended)"
+    why: Slice 9's built decisions stand; a leased attempt fails with LeaseExpired after 300 s, a pool no test JVM reaches stops after 60 s, a pool that stopped answering is replaced after 90 s; a dispatched run, which only a maintainer can start, is trusted and saves caches for its own branch; game logs stay off CI's public output, as every suite's logs do; superseded in part (2026-11-18), as build-service-owns-pool makes the pool live exactly as long as the Gradle build, so the 60 s stop and the 90 s replacement are gone, and dispatched-caches-on-long-lived-branches lets a dispatched run save caches only on develop or features/v1
+  - id: cachix-token
+    what: "I add it (Recommended)"
+    why: Every CI job rebuilt about 70 Nix paths (3.5 min) because the Cachix push token was missing from the Typewriter vault and continue-on-error hid the failure; the developer adds CACHIX_AUTH_TOKEN to the cache profile, and a failed push becomes a visible warning
+  - id: build-then-suite
+    what: "Two calls, build task (Recommended)"
+    why: Three idle Kotlin compile daemons held about 4 GB through the suite on CI (lowest free memory 1.0 GB); a gameTestBuild task in the game test plugin builds what gameTest runs, cargo xtask e2e game runs it in a Gradle without a daemon first, then the suite, so the compile daemons exit before it (3.8 GB free, 46 s more); chosen over an empty test selection, Kotlin's internal idle shutdown and in-process compiling, which grew Gradle to 3.1 GB
+  - id: drop-dead-in-process-line
+    what: "Remove Kotlin half (Recommended)"
+    why: The devenv action's GRADLE_OPTS asked for in-process Kotlin compiling, but GRADLE_OPTS reaches only Gradle's client JVM, so it never applied; removing that half changes nothing and stops the file claiming it
+  - id: no-detach
+    what: "Close it, no detach (Recommended)"
+    why: The pool outlives its starter's normal exit, SIGTERM and SIGKILL by moving under pid 1 (checked on the Mac), and Gradle's cancel kills every descendant by pid, so setsid would change no case; a cancel stopping the whole game is wanted; superseded by build-service-owns-pool (2026-11-18), as the build service GameRun starts and stops the pool, so a test JVM is no longer its starter
+  - id: run-file-survives-crash
+    what: "Rewrite + ended mark (Recommended)"
+    why: The pool kept the run only in memory and wrote the run file at End, so a pool crash lost every finished result; the session names the run file and attempt policy when it joins, the pool rewrites the file atomically after every recorded attempt, the file is marked ended once every session of the run ended or left (a run of two modules has two sessions), and xtask fails a run file without the mark as cut short; superseded in review round 2 (2026-11-18), as the pool writes the file as it takes up the run, and the ended mark became the run's end, one variant of cut_short until the build ends the run, completed, or could_not_run
+  - id: frozen-1-15-seconds
+    what: "Loosen to 15 s"
+    why: FROZEN-1 missed its 10 s limit once (10.098 s) on a 10 core Mac at load 50 to 98 while passing on CI; a frozen client is reported lost within 15 s, the pool still calls it lost after 5 s without an ack; chosen over keeping 10 s (recommended) and measuring from the last ack
+  - id: run-id-and-failure
+    what: "Yes, this shape (Recommended)"
+    why: Finish review found a failed boot recorded as test JVMs ending, xtask telling runs apart by timestamps and the cause by searching pool.log, and only the game runner reading ended; TestRun carries run_id (made by xtask, passed as -Pplaytest.runId), a run level failure the pool writes when the game cannot run, and cut_short in place of ended (false by default, set only by the game pool), judged once in results for every suite and the pull request evidence; changed in review round 2 (2026-11-18), as the run level failure is now the run end's could_not_run variant, and cut_short is no longer set while a session is open but is the end until the build ends the run (beside completed); run_id stays
+  - id: one-pool-per-run
+    what: "Pool waits, file continues (Recommended)"
+    why: The pool stopped once its last session left, so a later module's test JVM started a second pool that rewrote the run file from empty; the pool waits 60 s after its last session for another session of the same run, and a pool that starts later for the same run_id loads the run file and adds to it; superseded by build-service-owns-pool (2026-11-18), which deletes the 60 s wait and the run file pick-up because the Gradle build now starts and stops the pool
+  - id: build-service-owns-pool
+    what: "Build service (Recommended)"
+    why: Asked "Who should stop the game pool when a test run ends?". Review round 2 traced the pool outliving the heavy lock by 60 to 120 s. The Gradle build service GameRun starts the pool on the first gameTest task of a build and stops it in close() at build end; the pool stops when its stdin closes, which also covers a killed Gradle. This deletes the 60 s grace, the owner timer and the run file pick-up of one-pool-per-run; a pool crash fails the rest of the build and the run file reads cut short; as built, GameRun launches the pool through PoolProcess in the launch module, which holds the pool's command and process; a test JVM only connects and never starts, replaces or stops a pool
+  - id: dispatched-caches-on-long-lived-branches
+    what: Dispatched runs save GitHub Actions caches only on develop or features/v1, and only restore them elsewhere
+    why: Dispatched work branches evicted the base branch's caches past the 10 GB limit, so PR 570's first run started cold and hit Maven Central's 429; decided during full send, 2026-11-18
+  - id: wire-in-skir
+    what: "skir everywhere but no spike needed."
+    why: The four game parts spoke a hand written Java wire (52 messages, about 800 codec lines, 4 run file types copied from test_run.skir, one drifted) outside the Skir contract boundary; the wire's messages move into a harness Skir file, every part uses the generated types, the Paper plugin bundles the Kotlin and Skir runtimes, and the hand codec, the copies and the run file translation go
+  - id: full-send-finish
+    what: "Also you can full send this."
+    why: The developer handed the rest of Finish over; the defaults taken without asking are the decided items below, each the recommendation or the smallest change that meets the goal
+  - id: probes-stay-closed-until-l3
+    what: Probes stay a closed set for now; an open probe registry is an open question for L3
+    why: Finish review (think bigger) found L3 and extensions cannot add setup without editing the framework; nothing needs it before L3, and the wire's move into Skir changes how an open body would travel, so L3 designs it
+  - id: positive-check-per-requirement
+    what: A requirement that made no positive check fails; HEAP-1 becomes a unit test of the commands the pool builds
+    why: The never-needs-positive decision is per requirement but was enforced per window, so a requirement without a window passed with no check; HEAP-1 checked harness flags through jcmd with no perceived check, and the lowest layer that sees a part's flag is the command the pool builds for it; since review round 2 (2026-11-18) a looksLike counts as a positive check only when its compare matched, since one not checked proves nothing
+  - id: one-submission-owner
+    what: The pool gets one Submission object with one finish(outcome)
+    why: One submission's state was spread over five maps with five end paths repeating record, forget and release; no behaviour changes
+  - id: docs-in-finish
+    what: Finish also updates the testing and dev loop skills, services/DEVELOPMENT.md, the gameTest helper lint, the design README's description of the built framework, L3's obligations, and copies every prototype result into docs/design/game-verification/spikes before the branches go
+    why: Finish review (typewriter) found nothing outside the design folder knew the game layer, obligations on Typewriter had not reached the layer docs, and the record's evidence pointed at branches Finish deletes
+  - id: deferred-l-m
+    what: Spikes L (1.21.4 client) and M (dialogue redraws) are deferred from the first working version
+  - id: engine-clock-test-driven
+    what: "Clock, test driven (Recommended)"
+    why: >-
+      Step time keeps the clock model (Running.startedAt, Duration contexts, Playhead since, KeyOffer by and
+      press): layers 17 and 18 build on clock time and a Playhead shared across engines, which a per engine
+      tick count cannot drive; legacy lag behaviour (scenes stay on time) is kept; tests stay exact because
+      the engine reads one clock source that the stepped test moves 50 ms per permitted tick (StepPolicy)
+  - id: ci-on-namespace
+    what: "Switch inside #570"
+    why: >-
+      Every CI job but the gate runs on Namespace (nscloud-ubuntu-24.04-amd64-4x16-with-cache, 4 vCPU and
+      16 GB as before) with the shared typewriter cache volume for the Nix store and the downloads every
+      job shares; run 44247548234 against the GitHub hosted 44203399779 cut job setup from 160 to 340 s to
+      21 to 39 s, the backend check from 2938 s to 1860 s and the game suite from 818 s to 557 s, with the
+      same renderer and goldens
+
+open:
+  - id: quiet-hook
+    ask: The old draft dropped the test side quiet hook (done signal from Paper's SubjectWork only). Keep that?
+  - id: open-probes
+    ask: "L3: should probes become an open registry (plugins register named probe handlers) so Typewriter and extensions set up their own state without editing the framework?"
+  - id: async-work-one-executor
+    ask: Paper's async player work is tracked three ways (ChatWork reflection, SuggestionWork's copied rules, the command tree queue poll); would one counted executor installed by the step agent cover all three? Needs a small spike.
+
+slices:
+  - id: walking-skeleton
+    status: done
+    what: 1 client, stepped Paper, perceive stream, within and sees chat, pool process, TestRun, cargo xtask e2e game
+    green: PROBE-1 passes; WINDOW-1 proves a check that never holds fails after its window, naming the tick and what the player perceived
+    evidence: [commits d855a4f70 5808d8113 bd431c724 3234d522f, "cargo xtask e2e game on 5d519e4b8: 2 passed, .xtask/results/game/test_run.json"]
+    taught: >-
+      A seventh project, :playtest-wire, holds the wire every part shares. A record stands for every
+      tick until the next one, so a record from before a window shows the window's first tick. The
+      client signals Joined (Paper starts stepping) apart from Ready (it takes a lease); without it the
+      first lease after boot raced the first step ping. Paperclip cannot see the agent's classes, so
+      the agent puts its jar on the bootstrap path. Gaps: every case is written as happy_path (no way
+      to declare demonstrates yet); no run file when the game cannot boot; RunRecords was not built
+      test first; commits need the devenv shell for rustfmt.
+  - id: input-from-the-client
+    status: done
+    what: type, click, look and use through XTest per display and SDL on the Mac; retype for lost suggestions
+    green: spike J's 18 inputs as requirements, plus PROBE-2 (a probe is done once the client holds its effect)
+    evidence: [commits 61a922c3e a0563d116, "cargo xtask e2e game on a0563d116: 21 passed, .xtask/results/game/test_run.json"]
+    taught: >-
+      Non text results are checked on the camera, GUI items, watched blocks and watched entities.
+      A probe's done waits until a tick ends with nothing left to send to its player (chunks within
+      the client's view distance, Paper's command sending pool idle), then a marker task. Probes let
+      time pass, so the void world needs a bedrock layer. Flipping one expectation in eight
+      requirements made seven fail with a clear report. Gaps: the Linux XTest path is built but
+      unproven until slice 9; tests first slipped for Aim, Retype and the GUI item rule; each
+      requirement hand picks its spot coordinates (regions in slice 3 should make spots relative);
+      a dead client stops acking and lockstep waits forever (slice 4); the pool's view distance 10
+      makes Paper send chunks a distance 2 client never draws; the game suite has no --only or
+      --repeat (slice 5); heavy lock waits make each check 15 to 35 minutes.
+  - id: pool-of-four-and-groups
+    status: done
+    what: claims, regions with relative spots, never checks, full wipe, leave like the pause menu, rotation between test JVMs, matched view distance, no chat toast
+    green: a group of 3; no leak in 17 kinds
+    evidence: [commits ca7937f18 c25684983 d6382fcbe 69f3fbb49 95bae3945 67a7e096d, "cargo xtask e2e game on 244542090: 69 passed, .xtask/results/game/test_run.json"]
+    taught: >-
+      Four clients run up to four attempts at once, each in a region of its own, with head
+      reservation for groups; a pool of one declines a group of 3 with its reason. Every gameTest
+      task of a build shares one pool, which takes turns between them. The wipe is split by owner:
+      the framework wipes 18 vanilla and Paper kinds (spike K's plus recipes, advancements, game mode,
+      held slot), and plugins reset their own through PlayerWipeEvent. A back to back fixture
+      (Reclaim) proves each kind, and every kind failed with its wipe off. Vanilla grants the
+      crafting table recipe and its advancement at once, so those checks look for one marked item.
+      A sweep added 24 more kinds (health, food, flight, attributes, spawn point, statistics, open
+      container, riding, fire, freeze, cooldowns, appearance and more), each with its own leak
+      requirement; one enum, PaperState, holds each kind's wipe, mark and check. Plugin owned:
+      keyless boss bars, custom cooldown groups and anything that exists only as packets a plugin
+      sent. Leaked state breaks unrelated requirements (ENTITY-3 failed in the red run). Open: a
+      plugin registered attribute cannot be removed; the setLastDamageCause call uses the server's own
+      player because the Bukkit method is deprecated for removal; the game suite
+      still takes no --only or --repeat (slice 5).
+  - id: done-and-hung-work
+    status: done
+    what: per player quiet in the step, 1 s hung report, a dead client fails its attempt and is replaced; Paper side counting only (the test side hook stays open for layers 3 and 6)
+    green: an async lookup passes; a hung one is reported; a killed client fails only its attempt
+    evidence: [commits 25e49ff86 071c99eef, "cargo xtask e2e game on 071c99eef: 82 passed, .xtask/results/game/test_run.json"]
+    taught: >-
+      Plugins report work per player through a public PlayerWork API; the next tick waits while it
+      runs, and work past 1 s fails its attempt. Side by side attempts travel in one Queue message and
+      get their leases together. Claims tracks why a player is out (lost client, hung work) apart from
+      the attempt holding it. A client silent for 5 s is lost and replaced; in a stepped Paper the
+      keepalive timeout never fires, so the 5 s limit is the only bound short of the watchdog. A hung
+      player sits out until its work ends; work that never ends is noted on the failing case. Each
+      rule was seen failing first. LEAK-1 depends on timing (work must outlast the next reclaim).
+      Long windows step at 13 to 33 ms per tick. Median per requirement unchanged (about 1.2 s).
+      Open: xtask can report a pass from a sibling session's run file when a test JVM is killed
+      (slice 5).
+  - id: retries-and-results
+    status: done
+    what: retries at the queue end, Flaky, quarantine, xtask gate on TestRun (no run file, sibling run files), --only and --repeat, demonstrates, attempt steps with times and a measured breakdown of where time per requirement goes
+    green: a flaky probe blocks the run
+    evidence: [commit 443541aab, "cargo xtask e2e game on 443541aab: 82 passed (67 happy path, 11 failure, 4 edge case), .xtask/results/game/test_run.json", "three fresh full runs and --repeat 3 green in the slice thread"]
+    taught: >-
+      A failed attempt runs again at the queue end, up to 4 attempts; a pass after a failure is Flaky
+      and fails both the mirror test (body frame first) and the xtask gate; GameUnavailable and
+      refusals never retry; side by side groups retry whole. Quarantine runs once and never blocks. A
+      killed test JVM now records its unfinished cases as failed and xtask exits 1, so a sibling's run
+      file can no longer pass a run. The verdict rule lives twice: Kotlin decides retries and fails the
+      mirror test, Rust judges every runner's run file for the gate. The flaky end to end proof used a
+      temporary FLAKY-1 outside the repo. Each attempt records steps with times. With all tests submitted
+      at once, the queue wait is about 96% of an attempt; of the time an attempt holds its players, the
+      grant to lease step (wipe plus the move into the region) takes a median of about 1.2 s, against
+      about 18 ms for the wipe itself in spike K; probes take a median of 64 ms, windows 52 ms, inputs 16 ms.
+  - id: pixels
+    status: done
+    what: A4 on demand, goldens on devenv Mesa
+    green: an entity behind a wall is not seen; a sidebar golden
+    evidence: [commits d1bfaf7cb c79a80861 68b78c1ca, "cargo xtask e2e game on 68b78c1ca: 92 passed first attempt, grant to lease median 472 ms", "slice thread: 6 green full runs in a row after one GOLDEN-3 flake; --only GOLDEN-1 and --only NOPE-1 behave"]
+    taught: >-
+      visible() costs 30 to 80 ms per asking requirement and about 0.25% of the suite. Golden frames
+      carried the previous place through blended fog, sky and FOV values and a one tick late draw; the
+      wipe now resets the blends and clients draw at the end of the tick. Drawn frames used the lightmap
+      from client launch because perceive frames used up its update; fixed. Goldens hash exactly, record
+      their renderer (with os), and compare only on the pinned runner (Linux, amd64, Vulkan, llvmpipe, the
+      Mesa devenv ships); the Mac reports not checked, so golden requirements prove nothing there until
+      slice 9. The custom graphics preset makes render distance 2 real: a claim now waits for 49 chunks.
+      Open: GOLDEN-3 flaked once under full suite load (cause unknown); tick counts vary between runs
+      (BREAK-1 6 to 11); a missing golden on the pinned runner still reports not checked; "no session
+      opened" is inferred from the pool log; the driver token is unseen on a real runner; weather is not
+      pinned.
+  - id: restart-paper
+    status: done
+    what: fast boot flags, AOT cache training, clients gated during boot
+    green: a deposit survives a killed Paper
+    evidence: [commits f1a5ac210 8effd83c5, "slice thread: three fresh full runs, 95 passed each", "cargo xtask e2e game on 8effd83c5: 95 passed first attempt; restarts about 11 s while the cache trained"]
+    taught: >-
+      requirement(restartsPaper = true) with restartPaper() runs on a fresh Paper of its own; its players
+      move there by Connect and are resumed without a wipe after a kill. Kill to every player back is 5.3
+      to 6.7 s on the Mac from the cache (P7 5.0 s), about 10.3 s on a boot that trains the cache; three
+      restart requirements add about 11 s to the suite. With an AOT cache the JVM loads MinecraftServer
+      before premain, so the step agent's prefixes silently missed and Paper stopped itself; the agent no
+      longer joins the boot class path and retransforms classes already loaded, and both Papers launch
+      from Paper's class path. The cache is trained on a restart boot, kept only on a clean halt, keyed
+      on JDK, files and flags. Every Paper now has a rules object behind PaperRules and Pool forwards events to it (6e5128c00, 0 own branches left). Every way an attempt ends tells its Paper's rules (ba28ff607), and each restart Paper and folder is named after its attempt (fe4f66b9e). Open: a training Paper's halt prints a watchdog dump; 4 restarts at once could
+      starve the shared Paper.
+  - id: coverage-and-clips
+    status: done
+    what: coverage per requirement, demo reruns with clips
+    green: a touched requirement gets its clip
+    evidence: [commits a88505c91 0ec31acfe 4e61bf097 9fab36169 f6b364f9c 22c913c66, "cargo xtask e2e game on 4e61bf097: 96 passed, 91 demos, 132 clips", "slice thread: 8 of 10 full runs green; one GOLDEN-2 demo (fixed in f6b364f9c) and one FROZEN-1 demo stall", "cargo xtask e2e game on 22c913c66: 96 passed first attempt, 91 demos (load 136 to 203)"]
+    taught: >-
+      cargo xtask e2e game writes the lines the change added since the merge base with the default
+      branch to touched.txt; a requirement reruns as a demo when it failed (not refused or unavailable),
+      is flaky or quarantined, or covered a touched line, and the demo's clips join the case's demo
+      attempt as clip artifacts. A demo that passes or fails otherwise than the last attempt fails the
+      case in Kotlin and in the xtask gate, whose report says how the demo ended and points at its
+      folder; evidence stage publishes demo clips with the attempts' artifacts. Any change to the framework's plugin makes every requirement
+      touched, so this branch's runs demo nearly the whole suite. A temporary TEMPCLIP-1 that always
+      fails got its clip in its demo (run B, never committed). A clip with no frame, from a body that
+      runs no tick, is left out. ffmpeg now ships in the base devenv profile. Open: touched counts only
+      added lines, so a change that only deletes code reruns nothing; the coverage maps of a session that
+      leaves without ending stay in the pool (slice 9); a client lost while others of its attempt record
+      loses their clips too; FROZEN-1's demo once saw its stall after 10.07 s, against about 5.1 s in 15
+      other demos and in every gated run, and that run's logs were overwritten before they were read. Since 7684c4558 and ea956c027 a killed Paper's records are dropped only by its restart rules and each run keeps its logs in results/game/logs/<n>, the newest 3 kept; a pool left alive from an earlier run still writes into that run's folder (slice 9).
+  - id: ci-and-pool-lifecycle
+    status: done
+    what: CI job and caches; detach, stale pool, lease deadline
+    green: the suite runs on a pull request
+    evidence: ["commit cb261151d, the slice 9 head", "CI run 44063821447: e2e (game) green on the slice head; commits, quality and gate fail only on the known diff against develop", "CI run 44041628191: 97 passed, lowest free memory 3785M, no Kotlin daemon during the suite, devenv step median 212 s", "CI run 44000816804: the one pixel proof failed GOLDEN-1 with 1 of 409920 pixels differ and a sidebar.diff.png", "CI run 44013168715: never more than 2 own Papers alive"]
+    taught: >-
+      The game job runs in CI's e2e matrix on the free runner, about 13 to 14 min warm (it generates only
+      the protocol's Skir types). Each game part writes a pid file (PartFile) that fixtures read, since
+      Linux truncates long command lines. Golden images live on the evidence branch as goldens/<hash>.png
+      with an approved-at file; a game run fetches missing ones, and the weekly prune drops images develop
+      no longer names after 30 days. Every game JVM caps its heap with a HeapShare of the machine (the
+      shared Paper had grown to 3.85 GB); the pool runs at most 2 own Papers; HEAP-1 reads each part's
+      flag through jcmd. A gameTestBuild call compiles first so no Kotlin daemon sits beside the suite.
+      The pool file replaces a stale pool, a lease runs out after 300 s, a pool without its owner stops
+      after 60 s, and a session that leaves releases its coverage. The pool rewrites the run file after
+      every attempt and marks it ended once every session left; xtask fails a run without the mark as
+      cut short. The Cachix push token was missing from the vault, so every job rebuilt 70 Nix paths;
+      with it the devenv step fell from 383 s to 212 s. FROZEN-1 allows 15 s. Open: memory outside the
+      heap (about 1 GB per client, mostly the software renderer); the commits, quality and gate jobs judge
+      the whole long lived branch on dispatched runs. Superseded since (2026-11-18): build-service-owns-pool
+      replaced the stale pool replacement and the 60 s owner stop (the pool lives exactly as long as the
+      Gradle build), the run file's ended mark became the run's end variant, and
+      dispatched-caches-on-long-lived-branches limits a dispatched run's cache saves to develop and
+      features/v1.
+
+next: "Merge PR #570 into features/v1, then delete the remaining game verification branches and worktrees"

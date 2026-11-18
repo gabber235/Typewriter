@@ -23,7 +23,7 @@ use clap::ValueEnum;
 use crate::junit;
 use crate::lock::HeavyLock;
 use crate::process::{self, Group};
-use crate::results::{self, Attempt, AttemptPolicy, Failure, Outcome, TestCase, TestRun};
+use crate::results::{self, Attempt, AttemptPolicy, Failure, Outcome, RunEnd, TestCase, TestRun};
 use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::{CommandExt as _, Context, components, display, docs, generate, gitops, review};
 
@@ -681,7 +681,9 @@ fn run_step(ctx: &Context, step: &Step, logs: &Path, commit: &str) -> bool {
             }],
             ..TestCase::default()
         }],
-        _unrecognized: None,
+        logs: String::new(),
+        end: RunEnd::Completed,
+        ..TestRun::default()
     };
     let path = ctx.root.join(format!(".xtask/results/steps/{name}.json"));
     let written = results::write(&run, &path);

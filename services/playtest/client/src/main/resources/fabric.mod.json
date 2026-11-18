@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "playtest",
+  "version": "0",
+  "name": "Playtest",
+  "description": "The game verification framework's client: steps with Paper and perceives every tick without drawing.",
+  "environment": "client",
+  "entrypoints": { "client": ["com.typewritermc.playtest.client.PlaytestClient"] },
+  "mixins": ["playtest.mixins.json"],
+  "depends": { "fabricloader": ">=0.20.0", "minecraft": "26.3", "fabric-api": "*" }
+}

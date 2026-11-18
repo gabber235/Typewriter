@@ -2,6 +2,8 @@
 # runs exactly what a developer runs; `gate` is the one required check. Pushes to the long lived
 # branches run it too: they check what each push changed and save the tool caches every pull
 # request into them restores (.github/actions/devenv).
+# Jobs run on Namespace runners of 4 vCPU and 16 GB that share the `typewriter` cache volume for
+# the Nix store; .github/actions/devenv says what lives there.
 name: CI
 
 on:
@@ -33,7 +35,10 @@ jobs:
   # A change of only Markdown outside the documentation site affects none, so every other job
   # skips and the gate passes.
   plan:
-    runs-on: ubuntu-latest
+    runs-on:
+      - nscloud-ubuntu-24.04-amd64-4x16-with-cache
+      - nscloud-cache-tag-typewriter
+      - nscloud-cache-size-50gb
     outputs:
       areas: ${{ steps.plan.outputs.areas }}
     steps:
@@ -41,10 +46,11 @@ jobs:
         with:
           fetch-depth: 0
       # Every other job waits for this one, so the shell it pushes to the Nix cache is theirs to
-      # pull.
+      # pull, and the e2e shell it builds on the cache volume is there when the suites start.
       - uses: ./.github/actions/devenv
         with:
           op-service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          volume-profiles: e2e
       # The last line only: the shell may print its own messages before the JSON.
       - id: plan
         run: echo "areas=$(devenv shell -- cargo xtask check --list --base "$BASE_SHA" | tail -n 1)" >> "$GITHUB_OUTPUT"
@@ -53,7 +59,10 @@ jobs:
     name: check (${{ matrix.area.area }})
     needs: plan
     if: needs.plan.outputs.areas != '[]'
-    runs-on: ubuntu-latest
+    runs-on:
+      - nscloud-ubuntu-24.04-amd64-4x16-with-cache
+      - nscloud-cache-tag-typewriter
+      - nscloud-cache-size-50gb
     strategy:
       fail-fast: false
       matrix:
@@ -67,6 +76,7 @@ jobs:
       - uses: ./.github/actions/devenv
         with:
           caches: gradle flutter frame-vectors ${{ matrix.area.area == 'services' && 'gradle-outputs' || '' }}
+          cache-scope: check-${{ matrix.area.area }}
       # Untimed: the budget covers the area's steps, not the shell's first build or xtask's
       # compile.
       - run: devenv shell -- cargo xtask --help > /dev/null
@@ -87,11 +97,17 @@ jobs:
           name: results-check-${{ matrix.area.area }}
           path: .xtask/public/
           if-no-files-found: ignore
+      # Last, and whatever happened before: a failed or timed out job still keeps its Gradle caches.
+      - if: always()
+        uses: ./.github/actions/devenv-save
 
   # full.yml checks the commits of pushes.
   commits:
     if: github.event_name != 'push'
-    runs-on: ubuntu-latest
+    runs-on:
+      - nscloud-ubuntu-24.04-amd64-4x16-with-cache
+      - nscloud-cache-tag-typewriter
+      - nscloud-cache-size-50gb
     steps:
       - uses: actions/checkout@v6
         with:
@@ -99,24 +115,48 @@ jobs:
       - uses: ./.github/actions/devenv
       - run: devenv shell -- cargo xtask hook commit-msg --range "$BASE_SHA..$HEAD_SHA"
 
-  # The display, Mesa, Vulkan, GTK and Chromium come from the devenv e2e profile, not apt.
+  # The display, Mesa, Vulkan, GTK and Chromium come from the devenv e2e profile, not apt. The
+  # game suite runs four Minecraft clients, each on a virtual display of its own, against Paper on
+  # this runner; it also keeps Gradle's outputs (the patched Paper among them) and its downloads.
   e2e:
     name: e2e (${{ matrix.suite }})
     needs: plan
     if: needs.plan.outputs.areas != '[]'
-    runs-on: ubuntu-latest
+    runs-on:
+      - nscloud-ubuntu-24.04-amd64-4x16-with-cache
+      - nscloud-cache-tag-typewriter
+      - nscloud-cache-size-50gb
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        suite: [panel, panel-web]
+        include:
+          - suite: panel
+            caches: gradle flutter frame-vectors
+          - suite: panel-web
+            caches: gradle flutter frame-vectors
+          - suite: game
+            caches: gradle gradle-outputs game
     steps:
       - uses: actions/checkout@v6
+        # The game suite reruns as demos the requirements that covered a line the change added
+        # since the merge base with the default branch.
+        with:
+          fetch-depth: ${{ matrix.suite == 'game' && '0' || '1' }}
       - uses: ./.github/actions/devenv
         with:
-          caches: gradle flutter frame-vectors
+          caches: ${{ matrix.caches }}
           profile: e2e
-      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }}
+          cache-scope: e2e-${{ matrix.suite }}
+      # The game suite's demo reruns follow the lines the change added since the same base the
+      # checks compare with.
+      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }} --base "$BASE_SHA"
+        env:
+          # The game suite fetches approved golden images from the evidence branch through gh.
+          GH_TOKEN: ${{ github.token }}
+          # This runner is the pinned one: a golden frame from any other renderer fails instead of
+          # passing unchecked, so a runner that drifts from the pin cannot let every golden through.
+          PLAYTEST_PINNED_RUNNER: ${{ matrix.suite == 'game' && '1' || '' }}
       # Artifacts of this public repository are downloadable, so only the staged public folder
       # is uploaded.
       - if: always()
@@ -127,6 +167,9 @@ jobs:
           name: results-e2e-${{ matrix.suite }}
           path: .xtask/public/
           if-no-files-found: ignore
+      # Last, and whatever happened before: a failed or timed out job still keeps its Gradle caches.
+      - if: always()
+        uses: ./.github/actions/devenv-save
 
   # Runs when checks or suites fail too, since a failure is what the description must show. Jobs
   # of other pull requests and the prune write the media branches at the same time; the publish
@@ -134,7 +177,10 @@ jobs:
   report:
     needs: [plan, check, e2e]
     if: always() && needs.plan.outputs.areas != '[]'
-    runs-on: ubuntu-latest
+    runs-on:
+      - nscloud-ubuntu-24.04-amd64-4x16-with-cache
+      - nscloud-cache-tag-typewriter
+      - nscloud-cache-size-50gb
     # The media branches, the description and code scanning. Fork pull requests get a read
     # only token whatever is asked here, so they get the job summary instead.
     permissions:
@@ -168,7 +214,7 @@ jobs:
   gate:
     needs: [plan, check, commits, e2e, report]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: nscloud-ubuntu-24.04-amd64-2x4
     steps:
       - env:
           PLAN: ${{ needs.plan.result }}

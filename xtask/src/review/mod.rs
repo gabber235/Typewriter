@@ -1,7 +1,7 @@
 //! `cargo xtask review`: the change report, the detectors behind it, and the investigation tools
 //! the typewriter-review skill uses. Every command compares the working tree with a base commit.
 
-mod change;
+pub(crate) mod change;
 mod coverage;
 mod detectors;
 mod index;

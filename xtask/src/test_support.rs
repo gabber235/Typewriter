@@ -19,7 +19,8 @@ use crate::e2e::E2eArgs;
 use crate::graph::{Area, Run, Step};
 use crate::hooks::commit_msg::Scopes;
 use crate::results::{
-    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, TestCase, TestRun,
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase,
+    TestRun,
 };
 use crate::skirout::base::harness::v1::test_run::{Runner, Span, Step as ScenarioStep};
 use crate::stack::StackRecord;
@@ -149,6 +150,7 @@ pub fn run(cases: &[(&str, Outcome)]) -> TestRun {
             .iter()
             .map(|(id, outcome)| case(id, std::slice::from_ref(outcome)))
             .collect(),
+        end: RunEnd::Completed,
         ..TestRun::default()
     }
 }
@@ -160,12 +162,31 @@ pub fn requirement_run(requirement: &str, id: &str, outcome: Outcome) -> TestRun
     reported
 }
 
+/// A game run under `policy` with one case per requirement, `<REQ> the requirement`, whose
+/// attempts had these outcomes, in order.
+pub fn game_run(policy: AttemptPolicy, cases: &[(&str, &[Outcome])]) -> TestRun {
+    TestRun {
+        runner: Runner::Game,
+        attempt_policy: policy,
+        cases: cases
+            .iter()
+            .map(|(requirement, outcomes)| TestCase {
+                requirement: Some((*requirement).to_owned()),
+                ..case(&format!("{requirement} the requirement"), outcomes)
+            })
+            .collect(),
+        end: RunEnd::Completed,
+        ..TestRun::default()
+    }
+}
+
 /// A components run under `policy` whose cases made `attempts`, in order.
 pub fn attempted(policy: AttemptPolicy, attempts: &[Outcome]) -> TestRun {
     TestRun {
         runner: Runner::Components,
         attempt_policy: policy,
         cases: vec![case("a", attempts)],
+        end: RunEnd::Completed,
         ..TestRun::default()
     }
 }
@@ -234,6 +255,7 @@ pub fn scenario_step(at_millis: i64, actor: Option<&str>, says: &str) -> Scenari
         at_millis,
         actor: actor.map(str::to_owned),
         says: says.to_owned(),
+        duration_millis: 0,
         _unrecognized: None,
     }
 }
@@ -293,6 +315,7 @@ pub fn run_of(id: &str, attempts: Vec<Attempt>) -> TestRun {
             attempts,
             ..TestCase::default()
         }],
+        end: RunEnd::Completed,
         ..TestRun::default()
     }
 }
@@ -589,4 +612,33 @@ pub fn drive_attempts<T: crate::e2e::Target>(
         },
     )?;
     Ok((folded, drove.into_inner()))
+}
+
+/// A frame a game run captured as `<frame>.png` in `run`, beside the `<frame>.golden` candidate
+/// file that names its golden, hash, size and renderer, recorded as a golden artifact of a new
+/// attempt in the folder of `<frame>` in the run file `test_run.json` of `run`.
+pub fn captured_golden(run: &TempRoot, frame: &str, candidate: &str, png: &str) {
+    run.write(&format!("{frame}.golden"), candidate);
+    run.write(&format!("{frame}.png"), png);
+    let file = run.path("test_run.json");
+    let mut test_run = if file.exists() {
+        crate::results::read(&file).unwrap()
+    } else {
+        run_of("GOLDEN-1 a sidebar", vec![])
+    };
+    let (folder, name) = frame.rsplit_once('/').unwrap();
+    let mut attempt = failed_attempt((0, 1), &[(ArtifactKind::Golden, &format!("{name}.golden"))]);
+    attempt.folder = folder.to_owned();
+    test_run.cases[0].attempts.push(attempt);
+    crate::results::write(&test_run, &file).unwrap();
+}
+
+/// The working tree file `path`, modified with `added` lines added or rewritten.
+pub fn changed(path: &str, added: &[u32]) -> crate::review::change::FileChange {
+    crate::review::change::FileChange {
+        path: PathBuf::from(path),
+        from: None,
+        status: crate::review::change::Status::Modified,
+        added: added.to_vec(),
+    }
 }

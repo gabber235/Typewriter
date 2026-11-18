@@ -1,7 +1,8 @@
 name: Evidence prune
 
 # Drops media from the evidence and gh-pages branches once nobody can see it: when a pull request
-# closes, and in a weekly run that expires merged pull requests and squashes both histories.
+# closes, and in a weekly run that expires merged pull requests and the golden images no golden file
+# on a long lived branch (develop, features/v1) names, then squashes both histories.
 on:
   pull_request_target:
     types: [closed]

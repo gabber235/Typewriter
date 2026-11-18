@@ -21,6 +21,16 @@ valid:
             authored(tidy(" hello ")) shouldBe Resolution.Found
         }
     }
+  # A game requirement is a test case, so declarations inside its body stay.
+  - |
+    val GroupRequirements by testSuite(compartment = { GameCompartment }) {
+        requirement("GROUP-1", "a line reaches each member", players = 3) {
+            fun line(n: Int) = "Bank: $n"
+            val greet = { text: String -> probe.chat(to = players, text) }
+            greet(line(1))
+            within(10.ticks) { players.first() sees chat(line(1)) }
+        }
+    }
 invalid:
   # A top level helper function.
   - |
@@ -52,4 +62,10 @@ invalid:
     val OrderTest by testSuite {
         val order = { Order() }
         test("orders") { order() shouldBe Order() }
+    }
+  # A named function inside a game suite, outside every requirement.
+  - |
+    val GroupRequirements by testSuite(compartment = { GameCompartment }) {
+        fun line(n: Int) = "Bank: $n"
+        requirement("GROUP-1", "a line reaches each member") { probe.chat(to = players, line(1)) }
     }

@@ -1,0 +1,448 @@
+package com.typewritermc.playtest.client;
+
+import com.typewritermc.playtest.client.mixin.AbstractContainerScreenAccessor;
+import com.typewritermc.playtest.client.mixin.ChatScreenAccessor;
+import com.typewritermc.playtest.client.mixin.MouseHandlerAccessor;
+import build.skir.internal.MustNameArguments;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Queue;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import skirout.harness.v1.wire.Answer;
+import skirout.harness.v1.wire.ClientTask;
+import skirout.harness.v1.wire.InputStep;
+import skirout.harness.v1.wire.KeyboardKey;
+import skirout.harness.v1.wire.Message;
+import skirout.harness.v1.wire.Reply;
+
+/**
+ * The player's hands: each input the session asks for becomes a script of steps that send window events through the
+ * {@link InputDevice}. Steps run only right after a tick, so the next tick handles what they sent, and that
+ * tick's ack waits until each of them reached the game: what they make the client send reaches Paper before Paper
+ * can run the next tick. An input that arrives while Paper is idle asks it for a tick to start after. A step
+ * runs first right after the step before it ended, and after that once after every tick until it ends;
+ * while an input waits to start or a script waits on ticks the client is busy, and Paper keeps stepping
+ * for it. Render thread only, except {@link #arrive}.
+ */
+final class Inputs {
+    /** Ticks a step waits for the game to answer, such as a screen opening, before it fails. */
+    private static final int PATIENCE = 20;
+
+    /** Degrees the view may miss its aim by. */
+    private static final double AIM_TOLERANCE = 0.5;
+
+    /** Distance to the point at which walking lets go of the forward key; the player slides the rest. */
+    private static final double WALK_RELEASE = 0.35;
+
+    private static final Queue<Arrived> arrived = new ConcurrentLinkedQueue<>();
+    private static final Set<KeyboardKey> keysDown = new HashSet<>();
+    private static final Set<Integer> buttonsDown = new HashSet<>();
+    private static InputDevice device;
+    private static Script running;
+
+    private Inputs() {}
+
+    /** Whether the window's focus and mouse grab are pretended, because the device cannot give real ones. */
+    static boolean pretendsFocus() {
+        return !"xtest".equals(System.getProperty("playtest.input", "sdl"));
+    }
+
+    /** The session's request {@code request} asks for {@code input}; it starts right after the next tick. Any thread. */
+    static void arrive(long request, ClientTask.Input input) {
+        arrived.add(new Arrived(request, input));
+    }
+
+    /** An input the session asked for under {@code request}, waiting to start. */
+    private record Arrived(long request, ClientTask.Input input) {}
+
+    /** Whether an input waits to start, or a script waits on further ticks. */
+    static boolean busy() {
+        return running != null || !arrived.isEmpty();
+    }
+
+    /** Whether events the client's input sent have yet to reach the game. */
+    static boolean pending() {
+        return device != null && device.pending();
+    }
+
+    /** A new attempt: drop every input, let go of every key and button, close every screen, take the mouse. */
+    static void reset(Minecraft mc) {
+        arrived.clear();
+        running = null;
+        InputDevice hands = device(mc);
+        keysDown.forEach(key -> hands.key(key, false));
+        buttonsDown.forEach(button -> hands.button(button, false));
+        keysDown.clear();
+        buttonsDown.clear();
+        KeyMapping.releaseAll();
+        mc.gui.setScreen(null);
+        mc.gui.hud.getChat().discardDraft();
+        hands.focus();
+        mc.mouseHandler.grabMouse();
+    }
+
+    /**
+     * A point between ticks: after a tick ended ({@code tickRan}), or in a loop pass that runs no tick.
+     * After a tick it moves the running script on and starts the next input once nothing runs; in a pass
+     * without a tick it asks Paper for a tick when an input waits to start.
+     */
+    static void betweenTicks(Minecraft mc, boolean tickRan) {
+        InputDevice hands = device(mc);
+        if (!tickRan) {
+            if (running == null && !arrived.isEmpty()) Stepper.needTicks();
+            return;
+        }
+        if (running != null) running.advance(mc, hands);
+        while (running == null) {
+            Arrived next = arrived.poll();
+            if (next == null) return;
+            running = new Script(next, Stepper.lastRan());
+            running.advance(mc, hands);
+        }
+    }
+
+    /** The game dropped every queued mouse and key event, the device's own among them. */
+    static void flushed() {
+        if (device != null) device.flushed();
+    }
+
+    /** The device the client's input enters through, opened on first use. */
+    static InputDevice device(Minecraft mc) {
+        if (device == null) {
+            device = InputDevice.open(mc);
+            device.focus();
+        }
+        return device;
+    }
+
+    /** One input's steps in order, from the tick that ended before its first event. */
+    private static final class Script {
+        private final long request;
+        private final int mark;
+        private final Deque<Step> steps = new ArrayDeque<>();
+
+        Script(Arrived arrived, int mark) {
+            this.request = arrived.request();
+            this.mark = mark;
+            arrived.input().getSteps().forEach(step -> steps.add(step(step)));
+        }
+
+        /** Runs steps until one waits on a tick, the last one ended, or one failed. */
+        void advance(Minecraft mc, InputDevice hands) {
+            while (!steps.isEmpty()) {
+                Progress progress = steps.peek().run(mc, hands);
+                if (progress == Progress.WAIT) return;
+                steps.poll();
+                if (progress != Progress.DONE) {
+                    finish(progress.failure());
+                    return;
+                }
+            }
+            finish(null);
+        }
+
+        private void finish(String failure) {
+            running = null;
+            var answer = Answer.Companion.createInputDone(MustNameArguments.INSTANCE, mark, failure);
+            PlaytestClient.send(new Message.ReplyWrapper(new Reply(MustNameArguments.INSTANCE, request, answer, null)));
+        }
+    }
+
+    /** How a step's run went: it ended, it waits on the next tick, or it failed with a reason. */
+    private record Progress(boolean ended, String failure) {
+        static final Progress DONE = new Progress(true, null);
+        static final Progress WAIT = new Progress(false, null);
+
+        static Progress failed(String failure) {
+            return new Progress(true, failure);
+        }
+    }
+
+    private interface Step {
+        Progress run(Minecraft mc, InputDevice hands);
+    }
+
+    private static Step step(InputStep step) {
+        return switch (step) {
+            case InputStep.KeyWrapper wrapper -> {
+                var key = wrapper.getValue();
+                yield (mc, hands) -> {
+                    hands.key(key.getKey(), key.getDown());
+                    if (key.getDown()) keysDown.add(key.getKey());
+                    else keysDown.remove(key.getKey());
+                    return Progress.DONE;
+                };
+            }
+            case InputStep.ButtonWrapper wrapper -> {
+                var button = wrapper.getValue();
+                yield (mc, hands) -> {
+                    hands.button(button.getButton(), button.getDown());
+                    if (button.getDown()) buttonsDown.add(button.getButton());
+                    else buttonsDown.remove(button.getButton());
+                    return Progress.DONE;
+                };
+            }
+            case InputStep.ScrollWrapper scroll -> (mc, hands) -> {
+                hands.scroll(scroll.getValue().getAmount());
+                return Progress.DONE;
+            };
+            case InputStep.WaitWrapper wait -> new Waiting(wait.getValue().getTicks());
+            case InputStep.TypeInChatWrapper type -> new TypingInChat(type.getValue().getText());
+            case InputStep.AimAtEntityWrapper aim -> new Aiming(UUID.fromString(aim.getValue().getEntity()), null);
+            case InputStep.AimAtBlockWrapper wrapper -> {
+                var at = wrapper.getValue().getBlock();
+                yield new Aiming(null, new BlockPos(at.getX(), at.getY(), at.getZ()));
+            }
+            case InputStep.PointAtSlotWrapper point -> new PointingAtSlot(point.getValue().getSlot());
+            case InputStep.WalkToWrapper wrapper -> {
+                var walk = wrapper.getValue();
+                yield new Walking(walk.getX(), walk.getZ(), walk.getMaxTicks());
+            }
+            default -> (mc, hands) -> Progress.failed("the step " + step + " is none this client knows");
+        };
+    }
+
+    /** A step that counts the ticks since it first ran. */
+    private abstract static class Timed implements Step {
+        private int from = -1;
+
+        final int elapsed() {
+            if (from < 0) from = Stepper.lastRan();
+            return Stepper.lastRan() - from;
+        }
+    }
+
+    private static final class Waiting extends Timed {
+        private final int ticks;
+
+        Waiting(int ticks) {
+            this.ticks = ticks;
+        }
+
+        @Override
+        public Progress run(Minecraft mc, InputDevice hands) {
+            return elapsed() >= ticks ? Progress.DONE : Progress.WAIT;
+        }
+    }
+
+    /**
+     * Opens the chat with its key when it is closed, then types one character after each tick, as a
+     * person types, and waits until the chat shows what was typed. Each character is its own edit, so
+     * the client asks Paper for suggestions at most once per tick, and Paper answers each request
+     * before the next tick.
+     */
+    private static final class TypingInChat extends Timed {
+        private final int[] characters;
+        private boolean opening;
+        private String expected;
+        private int next;
+        private int typedAt;
+
+        TypingInChat(String text) {
+            this.characters = text.codePoints().toArray();
+        }
+
+        @Override
+        public Progress run(Minecraft mc, InputDevice hands) {
+            int elapsed = elapsed();
+            if (!(mc.gui.screen() instanceof ChatScreen chat)) {
+                if (expected != null) return Progress.failed("the chat closed while typing \"" + typed() + "\"");
+                if (!opening) {
+                    opening = true;
+                    hands.key(KeyboardKey.T.INSTANCE, true);
+                    hands.key(KeyboardKey.T.INSTANCE, false);
+                    return Progress.WAIT;
+                }
+                return elapsed > PATIENCE ? Progress.failed("the chat key opened no chat in " + PATIENCE + " ticks") : Progress.WAIT;
+            }
+            String shown = ((ChatScreenAccessor) chat).playtest$input().getValue();
+            if (expected == null) expected = shown + typed();
+            if (next < characters.length) {
+                hands.type(new String(characters, next++, 1));
+                typedAt = elapsed;
+                return Progress.WAIT;
+            }
+            if (shown.equals(expected)) return Progress.DONE;
+            return elapsed - typedAt > PATIENCE ? Progress.failed("the chat shows \"" + shown + "\", not \"" + expected + "\"") : Progress.WAIT;
+        }
+
+        private String typed() {
+            return new String(characters, 0, characters.length);
+        }
+    }
+
+    /** Turns the view with the mouse onto an entity or a block, then checks what the crosshair rests on. */
+    private static final class Aiming extends Timed {
+        private final UUID entity;
+        private final BlockPos block;
+        private Aim.Direction wanted;
+
+        Aiming(UUID entity, BlockPos block) {
+            this.entity = entity;
+            this.block = block;
+        }
+
+        @Override
+        public Progress run(Minecraft mc, InputDevice hands) {
+            int elapsed = elapsed();
+            var player = mc.player;
+            if (player == null || mc.level == null) return Progress.failed("the player is not in a world");
+            if (wanted == null) {
+                Vec3 target;
+                if (entity != null) {
+                    Entity subject = mc.level.getEntity(entity);
+                    if (subject == null) return Progress.failed("the client knows no entity " + entity);
+                    target = subject.getBoundingBox().getCenter();
+                } else {
+                    target = Vec3.atCenterOf(block);
+                }
+                Vec3 eye = player.getEyePosition();
+                wanted = Aim.toward(eye.x, eye.y, eye.z, target.x, target.y, target.z);
+                turn(mc, hands, wanted);
+                return Progress.WAIT;
+            }
+            // The view turns after the tick that handled the motion, so the tick after it picked with it.
+            if (!facing(mc, wanted, AIM_TOLERANCE)) {
+                return elapsed > PATIENCE ? Progress.failed("the view did not turn onto the target: " + view(mc) + ", wanted " + wanted) : Progress.WAIT;
+            }
+            HitResult hit = mc.hitResult;
+            String missed = entity != null ? missedEntity(hit) : missedBlock(hit);
+            if (missed == null) return Progress.DONE;
+            return Progress.failed("the crosshair rests on " + missed + ", not on " + target(mc) + " (" + view(mc) + ", wanted " + wanted + ")");
+        }
+
+        private String target(Minecraft mc) {
+            if (block != null) return "the block at " + block.toShortString() + ", which the client holds as " + mc.level.getBlockState(block);
+            Entity subject = mc.level.getEntity(entity);
+            return subject == null ? "entity " + entity + ", which the client no longer knows" : subject.getType().toShortString() + " at " + subject.position();
+        }
+
+        private String missedEntity(HitResult hit) {
+            if (hit instanceof EntityHitResult on && on.getEntity().getUUID().equals(entity)) return null;
+            return describe(hit);
+        }
+
+        private String missedBlock(HitResult hit) {
+            if (hit instanceof BlockHitResult on && hit.getType() == HitResult.Type.BLOCK && on.getBlockPos().equals(block)) return null;
+            return describe(hit);
+        }
+    }
+
+    /** Moves the pointer over the open screen's slot for a slot of the player's inventory. */
+    private static final class PointingAtSlot extends Timed {
+        private final int slot;
+
+        PointingAtSlot(int slot) {
+            this.slot = slot;
+        }
+
+        @Override
+        public Progress run(Minecraft mc, InputDevice hands) {
+            int elapsed = elapsed();
+            if (!(mc.gui.screen() instanceof AbstractContainerScreen<?> screen) || mc.player == null) {
+                return elapsed > PATIENCE ? Progress.failed("no screen with slots opened in " + PATIENCE + " ticks") : Progress.WAIT;
+            }
+            for (Slot candidate : screen.getMenu().slots) {
+                if (candidate.container != mc.player.getInventory() || candidate.getContainerSlot() != slot) continue;
+                var origin = (AbstractContainerScreenAccessor) screen;
+                double guiX = origin.playtest$leftPos() + candidate.x + 8;
+                double guiY = origin.playtest$topPos() + candidate.y + 8;
+                var window = mc.getWindow();
+                hands.moveTo(guiX * window.getScreenWidth() / window.getGuiScaledWidth(), guiY * window.getScreenHeight() / window.getGuiScaledHeight());
+                return Progress.DONE;
+            }
+            return Progress.failed("the open screen shows no slot for inventory slot " + slot);
+        }
+    }
+
+    /** Faces a point, holds the forward key, and lets go once the player will slide onto it. */
+    private static final class Walking extends Timed {
+        private final double x;
+        private final double z;
+        private final int maxTicks;
+        private Aim.Direction facing;
+        private boolean walking;
+
+        Walking(double x, double z, int maxTicks) {
+            this.x = x;
+            this.z = z;
+            this.maxTicks = maxTicks;
+        }
+
+        @Override
+        public Progress run(Minecraft mc, InputDevice hands) {
+            int elapsed = elapsed();
+            var player = mc.player;
+            if (player == null) return Progress.failed("the player is not in a world");
+            double remaining = Math.hypot(x - player.getX(), z - player.getZ());
+            if (facing == null) {
+                var toward = Aim.toward(player.getX(), 0, player.getZ(), x, 0, z);
+                facing = new Aim.Direction(toward.yaw(), player.getXRot());
+                turn(mc, hands, facing);
+                return Progress.WAIT;
+            }
+            if (!walking) {
+                if (!facing(mc, facing, AIM_TOLERANCE)) {
+                    return elapsed > PATIENCE ? Progress.failed("the view did not turn toward the point: " + view(mc)) : Progress.WAIT;
+                }
+                walking = true;
+                hands.key(KeyboardKey.W.INSTANCE, true);
+                keysDown.add(KeyboardKey.W.INSTANCE);
+                return Progress.WAIT;
+            }
+            if (remaining <= WALK_RELEASE) {
+                hands.key(KeyboardKey.W.INSTANCE, false);
+                keysDown.remove(KeyboardKey.W.INSTANCE);
+                return Progress.DONE;
+            }
+            if (elapsed > maxTicks) {
+                hands.key(KeyboardKey.W.INSTANCE, false);
+                keysDown.remove(KeyboardKey.W.INSTANCE);
+                return Progress.failed("after " + maxTicks + " ticks the player stands " + String.format("%.2f", remaining) + " blocks from the point");
+            }
+            return Progress.WAIT;
+        }
+    }
+
+    /** Sends the mouse motion that turns the view onto {@code wanted}, settling the pointer first after a grab. */
+    private static void turn(Minecraft mc, InputDevice hands, Aim.Direction wanted) {
+        var player = mc.player;
+        var from = new Aim.Direction(player.getYRot(), player.getXRot());
+        var motion = Aim.motion(from, wanted, Aim.degreesPerPixel(mc.options.sensitivity().get()));
+        if (((MouseHandlerAccessor) mc.mouseHandler).playtest$ignoreFirstMove()) hands.settle();
+        hands.move(motion.x(), motion.y());
+    }
+
+    private static boolean facing(Minecraft mc, Aim.Direction wanted, double tolerance) {
+        var player = mc.player;
+        return Math.abs(Aim.wrap(player.getYRot() - wanted.yaw())) <= tolerance && Math.abs(player.getXRot() - wanted.pitch()) <= tolerance;
+    }
+
+    private static String view(Minecraft mc) {
+        Vec3 eye = mc.player.getEyePosition();
+        return String.format("eye %.2f %.2f %.2f, yaw %.1f pitch %.1f", eye.x, eye.y, eye.z, Aim.wrap(mc.player.getYRot()), mc.player.getXRot());
+    }
+
+    private static String describe(HitResult hit) {
+        return switch (hit) {
+            case null -> "nothing";
+            case EntityHitResult on -> on.getEntity().getType().toShortString() + " " + on.getEntity().getUUID();
+            case BlockHitResult on when hit.getType() == HitResult.Type.BLOCK -> "the block at " + on.getBlockPos().toShortString();
+            default -> "nothing";
+        };
+    }
+}

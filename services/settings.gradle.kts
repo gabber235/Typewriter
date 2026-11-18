@@ -6,6 +6,7 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
         google()
+        maven("https://maven.fabricmc.net/") { name = "Fabric" }
     }
 }
 
@@ -71,3 +72,13 @@ includeProject("conformance-extension", "extensions/conformance")
 
 includeProject("typewriter-test-kit", "testing/typewriter-test-kit")
 includeProject("realm-route-fixtures", "testing/realm-route-fixtures")
+
+includeProject("playtest", "playtest/framework")
+includeProject("playtest-wire", "playtest/wire")
+includeProject("playtest-launch", "playtest/launch")
+includeProject("playtest-agent", "playtest/agent")
+includeProject("playtest-paper", "playtest/paper")
+includeProject("playtest-plugin", "playtest/plugin")
+includeProject("playtest-client", "playtest/client")
+includeProject("playtest-pool", "playtest/pool")
+includeProject("playtest-sibling", "playtest/sibling")

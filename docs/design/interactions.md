@@ -332,6 +332,8 @@ data class InteractionStart(
 ) : Stored
 ```
 
+The engine reads time from one clock source (decided 2026-11-18 for [game verification](game-verification/README.md#obligations-on-typewriter)): `now`, `startedAt`, `elapsed`, `waited`, and every `Playhead` read come from it. Production gives the engine the system clock. The stepped game test gives it a clock that moves 50 ms with each tick its `StepPolicy` permits, so step time stays wall clock time in production, scenes stay on time under lag, and a test decides timing exactly, alongside the realm clock a test can advance ([stored-data.md](stored-data.md#due)).
+
 What an extension writes for the smallest step:
 
 ```kotlin

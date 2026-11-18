@@ -1,0 +1,339 @@
+package com.typewritermc.playtest.client;
+
+import build.skir.internal.MustNameArguments;
+import com.typewritermc.playtest.client.mixin.GuiTextRenderStateAccessor;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.renderer.chunk.CompiledSectionMesh;
+import net.minecraft.client.renderer.chunk.SectionMesh;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.state.gui.BlitRenderState;
+import net.minecraft.client.renderer.state.gui.ColoredRectangleRenderState;
+import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
+import net.minecraft.client.renderer.state.gui.GuiItemRenderState;
+import net.minecraft.client.renderer.state.gui.GuiTextRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
+import skirout.harness.v1.wire.Block;
+import skirout.harness.v1.wire.Camera;
+import skirout.harness.v1.wire.ChatLine;
+import skirout.harness.v1.wire.Entity;
+import skirout.harness.v1.wire.Message;
+import skirout.harness.v1.wire.Perception;
+import skirout.harness.v1.wire.PlayerEvent;
+import skirout.harness.v1.wire.Watch;
+
+/**
+ * What the player perceives, built from what each frame's extract hands the GUI and the world renderer,
+ * and the stream of records to the pool: a record is sent whole after a perceived frame, and only when
+ * it changed. Render thread only.
+ */
+final class Perceiver {
+    private static final int MAX_DEPTH = 16;
+
+    /** A watched block's last change: the tick it came in, and the section mesh that did not show it yet. */
+    private record Change(int tick, SectionMesh before) {}
+
+    private static final String[] elements = new String[MAX_DEPTH];
+    private static final List<ChatLine> chat = new ArrayList<>();
+    private static final Set<BlockPos> watchedBlocks = new LinkedHashSet<>();
+    private static final Set<UUID> watchedEntities = new LinkedHashSet<>();
+    private static final Map<BlockPos, Change> changes = new HashMap<>();
+    private static final Map<UUID, Entity> drawnEntities = new LinkedHashMap<>();
+    private static final Map<UUID, Double> ownedShares = new HashMap<>();
+    private static int depth;
+    private static GuiFrame frame = new GuiFrame(0, 0);
+    private static String itemElement;
+    private static int itemSlot = -1;
+    private static ItemStack itemStack;
+    private static boolean selectionFrame;
+    private static boolean scoped;
+    private static Perception lastSent;
+    private static boolean forced;
+    private static boolean resetPending;
+    private static boolean muted;
+
+    private Perceiver() {}
+
+    /**
+     * A new attempt: forget the chat, the toasts and the watches so far and send a fresh record, then
+     * confirm the reset. A toast lasts seconds of real time, such as the one joining shows, so without
+     * this it would cover the start of the next attempts.
+     */
+    static void reset(Minecraft mc) {
+        mc.gui.hud.getChat().clearMessages(false);
+        mc.gui.toastManager().clear();
+        chat.clear();
+        watchedBlocks.clear();
+        watchedEntities.clear();
+        changes.clear();
+        forced = true;
+        resetPending = true;
+    }
+
+    /**
+     * The client left its Paper. The game drops its chat as it leaves, and the chat lines and block
+     * changes so far carry that Paper's ticks, so they go too; the next frame perceived on the next
+     * Paper sends its record whatever it shows. The watches stay, so a block or entity can be checked
+     * across a restart.
+     */
+    static void leftPaper() {
+        chat.clear();
+        changes.clear();
+        lastSent = null;
+    }
+
+    /** From now on every record also carries these blocks and entities. */
+    static void watch(Watch watch) {
+        watch.getBlocks().forEach(at -> watchedBlocks.add(new BlockPos(at.getX(), at.getY(), at.getZ())));
+        watch.getEntities().forEach(entity -> watchedEntities.add(UUID.fromString(entity)));
+    }
+
+    /** The next frame perceives and sends its record, changed or not. */
+    static void force() {
+        forced = true;
+    }
+
+    static boolean forced() {
+        return forced;
+    }
+
+    /**
+     * While muted, what a frame extracts is not what the player perceives: {@link Looks} extracts the
+     * same frame again without an entity, and nothing of it may reach the record.
+     */
+    static void mute(boolean mute) {
+        muted = mute;
+    }
+
+    /** The watched entities the frame draws. */
+    static List<UUID> drawn() {
+        return List.copyOf(drawnEntities.keySet());
+    }
+
+    /** The frame drawn without {@code entity} showed {@code share} of its pixels in another colour. */
+    static void owns(UUID entity, double share) {
+        ownedShares.put(entity, share);
+    }
+
+    static void beginFrame(Minecraft mc) {
+        frame = new GuiFrame(mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+        drawnEntities.clear();
+        ownedShares.clear();
+        scoped = false;
+    }
+
+    /**
+     * After a frame's extract and render ran: sends the record of {@code tick} when it changed or is
+     * forced, and the record of every pass while a clip records.
+     */
+    static void endFrame(Minecraft mc, int tick) {
+        var perception = new Perception(
+                MustNameArguments.INSTANCE,
+                tick,
+                Clips.partial(),
+                Clips.frame(),
+                frame.legibleTexts(),
+                List.copyOf(chat),
+                camera(mc),
+                frame.visibleItems(),
+                blocks(mc),
+                entities(),
+                null);
+        if (forced || Clips.recordsEveryPass() || lastSent == null || !sameContent(perception, lastSent)) {
+            var perceived = new PlayerEvent.Happened.PerceivedWrapper(perception);
+            PlaytestClient.send(new Message.PlayerEventWrapper(new PlayerEvent(MustNameArguments.INSTANCE, PlaytestClient.player(), perceived, null)));
+            lastSent = perception;
+        }
+        forced = false;
+        if (resetPending) {
+            resetPending = false;
+            PlaytestClient.send(Message.RESET_DONE.INSTANCE);
+        }
+    }
+
+    private static boolean sameContent(Perception a, Perception b) {
+        return a.getTexts().equals(b.getTexts())
+                && a.getChat().equals(b.getChat())
+                && Objects.equals(a.getCamera(), b.getCamera())
+                && a.getItems().equals(b.getItems())
+                && a.getBlocks().equals(b.getBlocks())
+                && a.getEntities().equals(b.getEntities());
+    }
+
+    /** The view the frame was drawn from, rounded so that a still view gives the same record every frame. */
+    private static Camera camera(Minecraft mc) {
+        if (mc.level == null) return null;
+        CameraRenderState view = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState;
+        if (!view.initialized) return null;
+        float fov = (float) Math.toDegrees(2 * Math.atan(1 / view.projectionMatrix.m11()));
+        return new Camera(
+                MustNameArguments.INSTANCE,
+                round(view.pos.x, 100),
+                round(view.pos.y, 100),
+                round(view.pos.z, 100),
+                (float) round(view.yRot, 10),
+                (float) round(view.xRot, 10),
+                (float) round(fov, 10),
+                scoped,
+                null);
+    }
+
+    private static double round(double value, int steps) {
+        return Math.round(value * steps) / (double) steps;
+    }
+
+    private static List<Block> blocks(Minecraft mc) {
+        if (mc.level == null) return List.of();
+        var blocks = new ArrayList<Block>();
+        for (BlockPos at : watchedBlocks) {
+            String id = BuiltInRegistries.BLOCK.getKey(mc.level.getBlockState(at).getBlock()).toString();
+            Change change = changes.get(at);
+            var pos = new skirout.harness.v1.wire.BlockPos(MustNameArguments.INSTANCE, at.getX(), at.getY(), at.getZ(), null);
+            blocks.add(new Block(MustNameArguments.INSTANCE, pos, id, seen(mc, at, change), change == null ? -1 : change.tick(), null));
+        }
+        return blocks;
+    }
+
+    /**
+     * Whether the frame shows the block as it is: blocks have no draw of their own, so its section must be
+     * compiled since the block last changed, among the sections the frame draws, and the block inside the
+     * view.
+     */
+    private static boolean seen(Minecraft mc, BlockPos at, Change change) {
+        var area = mc.levelRenderer.viewArea();
+        var section = area == null ? null : area.getRenderSectionAt(at);
+        if (section == null) return false;
+        SectionMesh mesh = section.getSectionMesh();
+        if (mesh == CompiledSectionMesh.UNCOMPILED) return false;
+        if (change != null && mesh == change.before()) return false;
+        if (!mc.levelRenderer.visibleSections().contains(section)) return false;
+        return mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.cullFrustum.isVisible(new AABB(at));
+    }
+
+    private static List<Entity> entities() {
+        var entities = new ArrayList<Entity>();
+        for (UUID uuid : watchedEntities) {
+            Entity drawn = drawnEntities.get(uuid);
+            // A frame the client drew as any client does, before it steps, measures no share.
+            if (drawn != null) entities.add(new Entity(MustNameArguments.INSTANCE, drawn.getUuid(), drawn.getHurt(), drawn.getName(), ownedShares.get(uuid), null));
+        }
+        return entities;
+    }
+
+    static void onChat(String text) {
+        chat.add(new ChatLine(MustNameArguments.INSTANCE, Stepper.arrivalTick(), text, null));
+    }
+
+    /** A block changed in the client's world, from the server or the client's own prediction. */
+    static void onBlockChanged(BlockPos pos) {
+        if (!watchedBlocks.contains(pos)) return;
+        var area = Minecraft.getInstance().levelRenderer.viewArea();
+        var section = area == null ? null : area.getRenderSectionAt(pos);
+        changes.put(pos.immutable(), new Change(Stepper.currentTick(), section == null ? null : section.getSectionMesh()));
+    }
+
+    /** The frame draws {@code entity} after culling, as {@code state}. */
+    static void onEntity(net.minecraft.world.entity.Entity entity, EntityRenderState state) {
+        if (muted) return;
+        if (!watchedEntities.contains(entity.getUUID())) return;
+        boolean hurt = state instanceof LivingEntityRenderState living && living.hasRedOverlay;
+        String name = state.nameTag == null ? null : state.nameTag.getString();
+        drawnEntities.put(entity.getUUID(), new Entity(MustNameArguments.INSTANCE, entity.getUUID().toString(), hurt, name, null, null));
+    }
+
+    static void onText(GuiTextRenderState state) {
+        if (muted) return;
+        ScreenRectangle box = state.bounds();
+        if (box == null) return;
+        var text = (GuiTextRenderStateAccessor) (Object) state;
+        var run = new StringBuilder();
+        text.playtest$text().accept((index, style, codePoint) -> {
+            run.appendCodePoint(codePoint);
+            return true;
+        });
+        frame.text(element(), run.toString(), box.left(), box.top(), box.right(), box.bottom(), text.playtest$color());
+    }
+
+    static void onElement(GuiElementRenderState state) {
+        if (muted) return;
+        ScreenRectangle box = state.bounds();
+        if (box == null) return;
+        if (selectionFrame) frame.selection(box.left(), box.top(), box.right(), box.bottom());
+        switch (state) {
+            case ColoredRectangleRenderState fill -> frame.element(GuiFrame.Kind.FILL, box.left(), box.top(), box.right(), box.bottom(), fill.col1());
+            case BlitRenderState blit -> frame.element(GuiFrame.Kind.IMAGE, box.left(), box.top(), box.right(), box.bottom(), blit.color());
+            default -> frame.element(GuiFrame.Kind.IMAGE, box.left(), box.top(), box.right(), box.bottom(), -1);
+        }
+    }
+
+    /** The GUI starts drawing {@code stack} as an item; its render state follows. */
+    static void onItemStack(ItemStack stack) {
+        if (muted) return;
+        itemStack = stack;
+    }
+
+    static void onItem(GuiItemRenderState state) {
+        if (muted) return;
+        ItemStack stack = itemStack;
+        itemStack = null;
+        ScreenRectangle box = state.bounds();
+        if (stack == null || box == null) return;
+        String id = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+        String element = itemElement == null ? "other" : itemElement;
+        frame.item(element, itemSlot, id, stack.getCount(), box.left(), box.top(), box.right(), box.bottom());
+    }
+
+    /** The items drawn from now on stand in {@code slot} of {@code element}; null ends it. */
+    static void itemSlot(String element, int slot) {
+        itemElement = element;
+        itemSlot = slot;
+    }
+
+    /** The hotbar's selection frame is being drawn. */
+    static void selectionFrame(boolean drawing) {
+        selectionFrame = drawing;
+    }
+
+    static void onSpyglass() {
+        if (muted) return;
+        scoped = true;
+    }
+
+    static void onBlur() {
+        if (muted) return;
+        frame.blur();
+    }
+
+    /** The HUD starts extracting; an element left open by an exception must not name the next frame's text. */
+    static void beginHud() {
+        depth = 0;
+    }
+
+    /** A named game element starts adding its text, for example {@code chat}. */
+    static void enter(String element) {
+        if (depth < MAX_DEPTH) elements[depth] = element;
+        depth++;
+    }
+
+    static void leave() {
+        if (depth > 0) depth--;
+    }
+
+    private static String element() {
+        return depth == 0 ? null : elements[Math.min(depth, MAX_DEPTH) - 1];
+    }
+}

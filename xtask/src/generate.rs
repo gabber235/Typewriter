@@ -197,18 +197,34 @@ const fn build_runner(package: &'static str, inputs: &'static [&'static str]) ->
 /// Takes the heavy lock before the first generator that has to run, so a run with nothing stale
 /// never queues behind another build.
 pub fn generate(ctx: &Context, log: Option<&File>) -> Result<()> {
-    bring_up_to_date(ctx, log, Lock::BeforeFirstRun)
+    bring_up_to_date(ctx, log, GENERATORS, Lock::BeforeFirstRun)
+}
+
+/// Brings only the protocol's generated sources up to date: the Skir types the services compile
+/// against, all the game suite needs. Takes the heavy lock as [`generate`] does.
+pub fn protocol(ctx: &Context) -> Result<()> {
+    bring_up_to_date(ctx, None, through("protocol"), Lock::BeforeFirstRun)
 }
 
 /// The graph step: [`generate`] with its output in the step's log, run as a heavy step that
 /// already holds the lock.
 pub fn step(ctx: &Context, log: &File) -> Result<()> {
-    bring_up_to_date(ctx, Some(log), Lock::Held)
+    bring_up_to_date(ctx, Some(log), GENERATORS, Lock::Held)
 }
 
 /// Whether every generator is current, so [`generate`] would run nothing.
 pub fn is_up_to_date(ctx: &Context) -> Result<bool> {
     is_up_to_date_over(ctx, GENERATORS)
+}
+
+/// The generators up to and including the one named `last`, in order. Each builds on the ones
+/// before it, so only a leading part of the list can run on its own.
+fn through(last: &str) -> &'static [Generator] {
+    let end = GENERATORS
+        .iter()
+        .position(|it| it.name == last)
+        .unwrap_or_else(|| panic!("no generator is named {last}"));
+    &GENERATORS[..=end]
 }
 
 /// Who holds the heavy lock while generators run.
@@ -219,10 +235,15 @@ enum Lock {
     BeforeFirstRun,
 }
 
-fn bring_up_to_date(ctx: &Context, log: Option<&File>, lock: Lock) -> Result<()> {
+fn bring_up_to_date(
+    ctx: &Context,
+    log: Option<&File>,
+    generators: &[Generator],
+    lock: Lock,
+) -> Result<()> {
     let mut upstream = Digest::new();
     let mut held = None;
-    for generator in GENERATORS {
+    for generator in generators {
         let before = generator.digest(ctx, &upstream)?;
         if is_current(ctx, &stamp_path(ctx, generator), &before) {
             upstream = before;
@@ -519,6 +540,15 @@ mod tests {
     use super::*;
 
     use crate::test_support::TempRoot;
+
+    #[test]
+    fn the_protocol_alone_runs_without_the_panel_and_fixture_generators_after_it() {
+        let names =
+            |generators: &[Generator]| generators.iter().map(|it| it.name).collect::<Vec<_>>();
+
+        assert_eq!(names(through("protocol")), ["protocol"]);
+        assert_eq!(names(through("frame-vectors")), names(GENERATORS));
+    }
 
     #[test]
     fn unchanged_inputs_with_every_output_present_are_current() {

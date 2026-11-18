@@ -32,6 +32,9 @@ in
     # xtask's secretspec crate, and the 1Password CLI its vault provider calls.
     pkgs.secretspec
     pkgs._1password-cli
+    # The game clients encode demo clips with it, and `cargo xtask evidence` records with it on Linux.
+    # The full build: the default one leaves out the x11grab input the recorder captures with.
+    pkgs.ffmpeg-full
   ];
 
   # Xcode and the macOS SDK come from the system: Flutter's native asset builds and
@@ -45,6 +48,10 @@ in
 
   env = {
     NATS_SERVER_BIN = "${pins.nats-server}/bin/nats-server";
+
+    # The Mesa release the game clients render with on Linux (the e2e profile's `pkgs.mesa`): the game
+    # framework pins goldens to it, so a nixpkgs Mesa upgrade asks for every golden again.
+    PLAYTEST_MESA = pkgs.mesa.version;
   };
 
   # The end to end suites on Linux (CI): `devenv --profile e2e shell`. The virtual display and
@@ -56,13 +63,18 @@ in
     env.EVIDENCE_FONT = "${pkgs.dejavu_fonts}/share/fonts/truetype/DejaVuSans.ttf";
     packages = [
       pkgs.xvfb
-      # The full build: the default one leaves out the x11grab input the recorder captures with.
-      pkgs.ffmpeg-full
       pkgs.mesa
       pkgs.vulkan-loader
       pkgs.gtk3
+      # The panel's Linux build: `flutter build linux` generates with CMake for Ninja, and the
+      # shell's clang and pkg-config compile it, so nothing comes from the runner image.
+      pkgs.cmake
+      pkgs.ninja
       # The panel's Linux build links flutter_secure_storage_linux against it.
       pkgs.libsecret
+      # path_provider finds the panel's documents folder through `xdg-user-dir`, which a runner
+      # image need not have.
+      pkgs.xdg-user-dirs
       pkgs.chromium
     ];
     env = {
@@ -72,7 +84,25 @@ in
       # GTK 3 on X11 makes its GL contexts through GLX, and Nix's libglvnd looks for the vendor
       # library in /run/opengl-driver, which only NixOS has; Mesa's libGLX_mesa is named here.
       __GLX_VENDOR_LIBRARY_NAME = "mesa";
-      LD_LIBRARY_PATH = "${pkgs.mesa}/lib";
+      # The game clients' SDL and LWJGL open the X libraries, libGL through libglvnd and libvulkan
+      # by name, and their XTest input opens libX11 and libXtst, so all of them are on the path.
+      LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+        pkgs.mesa
+        pkgs.libglvnd
+        pkgs.vulkan-loader
+        pkgs.libx11
+        pkgs.libxext
+        pkgs.libxcursor
+        pkgs.libxi
+        pkgs.libxrandr
+        pkgs.libxfixes
+        pkgs.libxscrnsaver
+        pkgs.libxtst
+        pkgs.libxkbcommon
+      ];
+      # OpenAL Soft finds no audio device on a virtual display; its null device keeps the game
+      # clients' sound engine running.
+      ALSOFT_DRIVERS = "null";
       # Flutter's web device looks for Chrome here; chromedriver drives the same browser.
       CHROME_EXECUTABLE = "${pkgs.chromium}/bin/chromium";
     };

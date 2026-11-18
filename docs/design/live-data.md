@@ -378,6 +378,17 @@ interface SessionReporter {
 
 `Engine(id: EngineId) : Identity` is one engine, a core identity like `Session`. `EngineId` is the stable topology `engine_instance` record id, so the identity survives restarts and ends only when the engine leaves the topology. The panel engine has no record: one runs per realm, so its id is `panel.<realm id>` and it ends with the realm. The engine kind is the engine artifact id from the topology, open to third party engines ([panel-engine-communication.md](panel-engine-communication.md) question 10).
 
+### Wiping a protagonist
+
+Game verification runs every requirement on a warm player and wipes that player first (decided 2026-11-07, [game-verification/README.md](game-verification/README.md#obligations-on-typewriter)). The framework wipes Minecraft's and Paper's own player state, then fires its `PlayerWipeEvent` on the main thread and starts the requirement once every listener returned. Each plugin resets what it keeps for the player on that event; the framework never reaches into a plugin.
+
+Typewriter's Paper engine owes two things on that event:
+
+- It clears its live state for the protagonist as if the player had never joined: mirrors keyed by the protagonist, holds and their snapshots, running steps, queued chain starts, and session values.
+- It asks the realm to [purge the subject](stored-data.md#purging-a-subject), so stored values go too.
+
+The purge commits after the listener returned, so the engine counts it as the protagonist's work until the realm answers, and the framework steps no tick past it ([Busy per subject](events-and-handlers.md#busy-per-subject)). The event exists only on the test Paper, so the engine's listener lives in a part that loads there and nowhere else (how that part ships is for the plan).
+
 ## Engines and traits
 
 An engine runs published content through extensions ([../vision/engines.md](../vision/engines.md)). None of the primitives is Minecraft shaped, so the same model serves Paper, the panel engine, and future engines.

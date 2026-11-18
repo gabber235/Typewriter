@@ -8,7 +8,7 @@ use std::time::SystemTime;
 
 use anyhow::{Context as _, Result};
 
-use crate::results::{Attempt, AttemptPolicy, Failure, Outcome, TestCase, TestRun};
+use crate::results::{Attempt, AttemptPolicy, Failure, Outcome, RunEnd, TestCase, TestRun};
 use crate::skirout::base::harness::v1::test_run::Runner;
 
 /// Every test of the `TEST-*.xml` reports below `root` written at or after `since`, so a test
@@ -35,7 +35,9 @@ pub fn run(
         started_at_millis,
         attempt_policy: AttemptPolicy::Exactly(1),
         cases,
-        _unrecognized: None,
+        logs: String::new(),
+        end: RunEnd::Completed,
+        ..TestRun::default()
     })
 }
 

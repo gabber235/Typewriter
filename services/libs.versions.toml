@@ -33,6 +33,13 @@ test-balloon = "1.1.0"
 kotest = "6.2.6"
 kctfork = "0.14.0"
 kover = "0.9.11"
+jacoco = "0.8.14"
+
+run-task = "3.1.0"
+fabric-loom = "1.19.3"
+fabric-loader = "0.20.1"
+fabric-api = "0.165.0+26.3"
+minecraft = "26.3"
 
 [libraries]
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
@@ -47,6 +54,7 @@ semver = { module = "io.github.z4kn4fein:semver", version.ref = "semver" }
 ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle.ktlint:org.jlleitschuh.gradle.ktlint.gradle.plugin", version.ref = "ktlint-gradle" }
 detekt-gradle-plugin = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 kover-gradle-plugin = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version.ref = "kover" }
+run-task-gradle-plugin = { module = "xyz.jpenilla:run-task", version.ref = "run-task" }
 
 jline = { module = "org.jline:jline", version.ref = "jline" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
@@ -61,6 +69,8 @@ test-balloon = { module = "de.infix.testBalloon:testBalloon-framework-core", ver
 test-balloon-gradle-plugin = { module = "de.infix.testBalloon:de.infix.testBalloon.gradle.plugin", version.ref = "test-balloon" }
 test-balloon-kotest-assertions = {module = "de.infix.testBalloon:testBalloon-integration-kotest-assertions", version.ref = "test-balloon"}
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+jacoco-agent = { module = "org.jacoco:org.jacoco.agent", version.ref = "jacoco" }
+jacoco-core = { module = "org.jacoco:org.jacoco.core", version.ref = "jacoco" }
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
 kctfork-core = { module = "dev.zacsweers.kctfork:core", version.ref = "kctfork" }
 kctfork-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref = "kctfork" }
@@ -88,6 +98,10 @@ opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporte
 opentelemetry-semconv = { module = "io.opentelemetry.semconv:opentelemetry-semconv", version.ref = "opentelemetry-semconv" }
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
+fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric-api" }
+
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialize = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -95,6 +109,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 
 gradle-buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "gradle-buildconfig" }
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
 
 [bundles]
 basic-test = ["test-balloon", "test-balloon-kotest-assertions", "kotest-assertions"]
