@@ -52,6 +52,9 @@ runs:
         fi
         echo "save-caches=$trusted" >> "$GITHUB_OUTPUT"
         echo "push-nix=$([[ $trusted == true && $HAS_TOKEN == true ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+        # A Namespace runner with a cache volume (its `-with-cache` label) keeps the Nix store and
+        # the tool caches on that volume instead of in the repository's Actions cache.
+        echo "volume=$([[ -n ${NSC_CACHE_PATH:-} ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
         # Incremental artifacts only grow a cache that starts each job from the same state.
         echo "CARGO_INCREMENTAL=0" >> "$GITHUB_ENV"
         # A job never reuses a Gradle daemon, and an idle one held 2.4 GB that the panel's
@@ -65,6 +68,28 @@ runs:
       run: |
         sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/share/swift
         df -h /
+    # The volume holds the Nix store and Nix's user cache, mounted before Nix is installed into
+    # them, and the same tool caches as the `actions/cache` pairs below, which then skip. The
+    # first fetch of a path from cache.nixos.org is slow from Namespace's network, so a store that
+    # survives the job is what makes its runners fast.
+    - if: steps.trust.outputs.volume == 'true'
+      uses: namespacelabs/nscloud-cache-action@v1
+      with:
+        cache: nix
+        path: |
+          ~/.cargo/registry/index
+          ~/.cargo/registry/cache
+          ~/.cargo/git/db
+          ${{ github.workspace }}/xtask/target/debug
+          ${{ github.workspace }}/.xtask/frame-vectors-target/debug
+          ~/.gradle/caches/modules-2
+          ~/.gradle/wrapper
+          ~/.gradle/caches/build-cache-1
+          ~/.pub-cache
+          ~/.gradle/caches/fabric-loom
+          ~/.gradle/caches/run-task-jars
+          ${{ github.workspace }}/services/.gradle/loom-cache
+          ${{ github.workspace }}/services/build/playtest/pool/aot
     - uses: cachix/install-nix-action@v31
     # Reads gabber235.cachix.org (Flutter, the Rust toolchain and every other path a trusted run
     # built) and the public devenv cache. Pushing is the explicit step below, with a token only
@@ -122,7 +147,7 @@ runs:
     # xtask's dependencies, which every job compiles before its first command. The toolchain is
     # pinned in devenv.nix and devenv.lock, so a new toolchain starts empty instead of restoring
     # artifacts it would rebuild anyway; a new Cargo.lock starts from the same toolchain's last.
-    - if: steps.trust.outputs.save-caches == 'true'
+    - if: steps.trust.outputs.save-caches == 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache@v4
       with:
         path: |
@@ -132,7 +157,7 @@ runs:
           xtask/target/debug
         key: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-${{ hashFiles('xtask/Cargo.lock') }}
         restore-keys: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
-    - if: steps.trust.outputs.save-caches != 'true'
+    - if: steps.trust.outputs.save-caches != 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache/restore@v4
       with:
         path: |
@@ -147,7 +172,7 @@ runs:
     # own target (xtask/src/generate.rs) holds them without debug info: about 700 MB, 200 MB
     # compressed. Not part of xtask's cache: the plan job saves that one first and never generates.
     # The writer's own crate is left out; a fresh checkout's file times rebuild it anyway.
-    - if: contains(inputs.caches, 'frame-vectors') && steps.trust.outputs.save-caches == 'true'
+    - if: contains(inputs.caches, 'frame-vectors') && steps.trust.outputs.save-caches == 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache@v4
       with:
         path: |
@@ -155,7 +180,7 @@ runs:
           !.xtask/frame-vectors-target/debug/deps/*wasmcloud_utils*
         key: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-${{ hashFiles('backend/Cargo.lock') }}
         restore-keys: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
-    - if: contains(inputs.caches, 'frame-vectors') && steps.trust.outputs.save-caches != 'true'
+    - if: contains(inputs.caches, 'frame-vectors') && steps.trust.outputs.save-caches != 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache/restore@v4
       with:
         path: |
@@ -165,7 +190,7 @@ runs:
         restore-keys: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
 
     # Gradle's downloaded dependencies and distribution, keyed by the build files that pin them.
-    - if: contains(inputs.caches, 'gradle') && steps.trust.outputs.save-caches == 'true'
+    - if: contains(inputs.caches, 'gradle') && steps.trust.outputs.save-caches == 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache@v4
       with:
         path: |
@@ -173,7 +198,7 @@ runs:
           ~/.gradle/wrapper
         key: gradle-${{ runner.os }}-${{ hashFiles('services/**/*.gradle.kts', 'services/gradle/libs.versions.toml', 'services/gradle/wrapper/gradle-wrapper.properties') }}
         restore-keys: gradle-${{ runner.os }}-
-    - if: contains(inputs.caches, 'gradle') && steps.trust.outputs.save-caches != 'true'
+    - if: contains(inputs.caches, 'gradle') && steps.trust.outputs.save-caches != 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache/restore@v4
       with:
         path: |
@@ -192,13 +217,13 @@ runs:
       run: |
         mkdir -p ~/.gradle
         echo "org.gradle.caching=true" >> ~/.gradle/gradle.properties
-    - if: contains(inputs.caches, 'gradle-outputs') && steps.trust.outputs.save-caches == 'true'
+    - if: contains(inputs.caches, 'gradle-outputs') && steps.trust.outputs.save-caches == 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache@v4
       with:
         path: ~/.gradle/caches/build-cache-1
         key: gradle-outputs-${{ runner.os }}-${{ github.sha }}
         restore-keys: gradle-outputs-${{ runner.os }}-
-    - if: contains(inputs.caches, 'gradle-outputs') && steps.trust.outputs.save-caches != 'true'
+    - if: contains(inputs.caches, 'gradle-outputs') && steps.trust.outputs.save-caches != 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache/restore@v4
       with:
         path: ~/.gradle/caches/build-cache-1
@@ -206,13 +231,13 @@ runs:
         restore-keys: gradle-outputs-${{ runner.os }}-
 
     # The packages of the panel, its testkit and its widgetbook.
-    - if: contains(inputs.caches, 'flutter') && steps.trust.outputs.save-caches == 'true'
+    - if: contains(inputs.caches, 'flutter') && steps.trust.outputs.save-caches == 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache@v4
       with:
         path: ~/.pub-cache
         key: pub-${{ runner.os }}-${{ hashFiles('panel/**/pubspec.lock') }}
         restore-keys: pub-${{ runner.os }}-
-    - if: contains(inputs.caches, 'flutter') && steps.trust.outputs.save-caches != 'true'
+    - if: contains(inputs.caches, 'flutter') && steps.trust.outputs.save-caches != 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache/restore@v4
       with:
         path: ~/.pub-cache
@@ -223,7 +248,7 @@ runs:
     # Minecraft jars, mappings and assets (shared and per project) and run-paper's Paper download.
     # The patched Paper comes from Gradle's build cache (`gradle-outputs`), as its task is
     # cacheable.
-    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches == 'true'
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches == 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache@v4
       with:
         path: |
@@ -232,7 +257,7 @@ runs:
           services/.gradle/loom-cache
         key: game-${{ runner.os }}-${{ hashFiles('services/libs.versions.toml', 'services/playtest/**/*.gradle.kts') }}
         restore-keys: game-${{ runner.os }}-
-    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches != 'true'
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches != 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache/restore@v4
       with:
         path: |
@@ -244,13 +269,13 @@ runs:
     # The restart Papers' ahead of time cache. The pool keys it on the JDK, the plugin's and Paper's
     # files and the flags, and trains a new one, replacing the old, when the restored one does not
     # match; so each commit saves what its run left, restored by prefix like Gradle's outputs.
-    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches == 'true'
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches == 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache@v4
       with:
         path: services/build/playtest/pool/aot
         key: game-aot-${{ runner.os }}-${{ github.sha }}
         restore-keys: game-aot-${{ runner.os }}-
-    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches != 'true'
+    - if: contains(inputs.caches, 'game') && steps.trust.outputs.save-caches != 'true' && steps.trust.outputs.volume != 'true'
       uses: actions/cache/restore@v4
       with:
         path: services/build/playtest/pool/aot
