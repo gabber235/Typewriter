@@ -27,6 +27,8 @@ internal class PoolSettings(
     val clientLaunch: Path,
     /** How many warm clients the pool keeps, each with a player of its own. */
     val clients: Int,
+    /** The packages of the build's own code, the only classes coverage counts. */
+    val coveredPackages: List<String> = listOf("com.typewritermc"),
     /** What the build's game modules add to every Paper. */
     val paperAdditions: PaperAdditions = PaperAdditions(listOf()),
 ) {
@@ -40,7 +42,7 @@ internal class PoolSettings(
         fun fromSystemProperties() =
             PoolSettings(
                 poolDir = path("playtest.poolDir"),
-                run = checkNotNull(System.getProperty("playtest.run")) { "playtest.run is not set: the game test task sets it" },
+                run = required("playtest.run"),
                 testRun = path("playtest.testRun"),
                 policy = AttemptPolicy.ofRepeat(System.getProperty("playtest.repeat")),
                 logs = path("playtest.logs"),
@@ -51,6 +53,7 @@ internal class PoolSettings(
                 pluginJar = path("playtest.plugin"),
                 clientLaunch = path("playtest.clientLaunch"),
                 clients = System.getProperty("playtest.clients", "4").toInt(),
+                coveredPackages = required("playtest.coveredPackages").split(",").filter(String::isNotEmpty),
                 paperAdditions =
                     PaperAdditions(
                         System
@@ -61,7 +64,9 @@ internal class PoolSettings(
                     ),
             )
 
-        private fun path(name: String): Path =
-            Path.of(checkNotNull(System.getProperty(name)) { "$name is not set: the game test task sets it" })
+        private fun path(name: String): Path = Path.of(required(name))
+
+        private fun required(name: String): String =
+            checkNotNull(System.getProperty(name)) { "$name is not set: the game test task sets it" }
     }
 }
