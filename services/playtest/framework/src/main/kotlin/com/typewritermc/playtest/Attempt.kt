@@ -59,6 +59,12 @@ internal interface AttemptPool {
         steps: List<InputStep>,
     ): Int
 
+    /** [player]'s client leaves its Paper as a person quits; returns, once Paper saw the player leave, the tick after which it left. */
+    suspend fun quit(player: GamePlayer): Int
+
+    /** [player]'s client joins its Paper again; returns, once it holds what Paper sends it, the tick after which it is back. */
+    suspend fun rejoin(player: GamePlayer): Int
+
     /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */
     suspend fun capture(
         player: GamePlayer,
@@ -121,6 +127,9 @@ internal class Attempt(
     private val lost = CompletableDeferred<AssertionError>()
     private val thrown = mutableSetOf<AssertionError>()
     private val taken = mutableListOf<Step>()
+
+    /** The players who quit and have not rejoined: no window, input or frame can reach their clients. */
+    private val away = mutableSetOf<GamePlayer>()
 
     /** Every event the body has taken so far, in arrival order. */
     val timeline: List<Event> get() = received
@@ -272,6 +281,7 @@ internal class Attempt(
                 "restartPaper needs restartsPaper = true on the requirement: a kill drops every client on a Paper, so only an attempt on a Paper of its own may restart it",
             )
         }
+        players.forEach { onPaper(it, "restartPaper, as the restarted Paper waits for every player of the attempt") }
         val mark = step("restart Paper") { Mark(unlessLost { session.restart(this, submission) }) }
         received.clear()
         ranUntil = mark.tick
@@ -283,7 +293,49 @@ internal class Attempt(
         player: GamePlayer,
         steps: List<InputStep>,
         says: String,
-    ): Mark = step("input ${player.name} $says") { Mark(unlessLost { session.input(player, steps) }) }.also { ran(it.tick) }
+    ): Mark {
+        onPaper(player, "an input")
+        return step("input ${player.name} $says") { Mark(unlessLost { session.input(player, steps) }) }.also { ran(it.tick) }
+    }
+
+    /**
+     * [player]'s client leaves its Paper as a person quits and stays away until [rejoin]; the mark is the
+     * tick after which Paper saw it leave. It stays the attempt's player meanwhile.
+     */
+    suspend fun quit(player: GamePlayer): Mark {
+        if (player in away) {
+            called()
+            throw RequirementRefused("${player.name} already quit; rejoin it before it quits again")
+        }
+        // The client leaves even when no answer comes, so nothing may wait for it from here on.
+        away += player
+        return step("quit ${player.name}") { Mark(unlessLost { session.quit(player) }) }.also { ran(it.tick) }
+    }
+
+    /** [player], away since its [quit], joins its Paper again; the mark is the tick after which its client is back. */
+    suspend fun rejoin(player: GamePlayer): Mark {
+        if (player !in away) {
+            called()
+            throw RequirementRefused("${player.name} is on Paper; only a player who quit can rejoin")
+        }
+        val mark = step("rejoin ${player.name}") { Mark(unlessLost { session.rejoin(player) }) }
+        away -= player
+        ran(mark.tick)
+        return mark
+    }
+
+    /** The attempt's players on Paper: every one but those away since their [quit]. */
+    val present: List<GamePlayer> get() = players.filter { it !in away }
+
+    /** Refuses [use] of [player], which needs its client on Paper, while it is away since its [quit]. */
+    fun onPaper(
+        player: GamePlayer,
+        use: String,
+    ) {
+        if (player !in away) return
+        called()
+        throw RequirementRefused("${player.name} quit and is not on Paper; rejoin it before $use")
+    }
 
     /** Where the attempt keeps the frames it writes; the session sets it once the attempt holds its lease. */
     lateinit var evidence: Evidence
@@ -335,6 +387,7 @@ internal class Attempt(
         name: String,
     ): Captured {
         called()
+        onPaper(player, "its frame is captured")
         val png = evidence.file("$name.png")
         val renderer = unlessLost { session.capture(player, png) }
         evidence.artifacts += Artifact(kind = ArtifactKind.SCREENSHOT, path = png.fileName.toString())

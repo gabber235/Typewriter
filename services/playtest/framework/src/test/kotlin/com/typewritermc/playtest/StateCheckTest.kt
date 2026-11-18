@@ -103,4 +103,16 @@ val StateCheckTest by testSuite {
         missed.message shouldContain "Steve's session gone held at tick 4 of the 8 tick window"
         game.ranTo shouldBe 104
     }
+
+    test("a window of state checks alone is refused while every player quit, as no tick could run for it") {
+        val game = StandInGame()
+
+        val failure =
+            game.attempt.outcome {
+                player.quit()
+                within(5.ticks) { state("Steve's session listed") { true } }
+            }
+
+        failure.shouldBeInstanceOf<RequirementRefused>().message shouldContain "needs a player on Paper"
+    }
 }

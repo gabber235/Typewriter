@@ -53,6 +53,11 @@ final class Acks {
         return acked.getOrDefault(player, -1);
     }
 
+    /** The players whose clients are watched. */
+    List<UUID> watched() {
+        return List.copyOf(acked.keySet());
+    }
+
     /** Whether every watched client acked the tick that ended last. */
     boolean allCaughtUp() {
         for (int last : acked.values()) {

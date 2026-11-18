@@ -33,7 +33,8 @@ import java.util.function.Predicate;
  * deadline by the ledger and holds no tick from then on. An attempt is settled once its players' work is quiet, stepping on
  * meanwhile so work handed to Bukkit's async scheduler can start.
  *
- * <p>A client that {@link Acks} finds stalled holds back no tick from then on, and counts as lost.
+ * <p>A client that {@link Acks} finds stalled holds back no tick from then on, and counts as lost. Nor
+ * does a client whose connection closed: Paper notices its player leave only in the next tick.
  */
 final class StepPolicy {
     /** Step pings carry the tick plus this, so they never collide with a barrier. */
@@ -75,6 +76,7 @@ final class StepPolicy {
     private final Consumer<WorkLedger.Hung> reportEnded;
     private final Acks acks;
     private final Consumer<Acks.Stalled> reportStalled;
+    private final Predicate<UUID> connected;
     private int lastEnded = -1;
     private long lastIdleTick;
 
@@ -88,6 +90,7 @@ final class StepPolicy {
      * @param reportEnded tells the pool that work reported hung ended
      * @param acks the tick each client acked last
      * @param reportStalled tells the pool that a client stalled
+     * @param connected whether the player's client is still connected to Paper
      */
     StepPolicy(
             BooleanSupplier tickPending,
@@ -98,7 +101,8 @@ final class StepPolicy {
             WorkLedger work,
             Consumer<WorkLedger.Hung> reportEnded,
             Acks acks,
-            Consumer<Acks.Stalled> reportStalled) {
+            Consumer<Acks.Stalled> reportStalled,
+            Predicate<UUID> connected) {
         this.tickPending = tickPending;
         this.grantTick = grantTick;
         this.sendBarrier = sendBarrier;
@@ -108,6 +112,7 @@ final class StepPolicy {
         this.reportEnded = reportEnded;
         this.acks = acks;
         this.reportStalled = reportStalled;
+        this.connected = connected;
     }
 
     /** The tick that ended last; a stimulus between ticks takes effect from the next one. */
@@ -181,6 +186,10 @@ final class StepPolicy {
     void run() {
         if (tickPending.getAsBoolean()) return;
         work.ended().forEach(reportEnded);
+        // A client whose connection closed acks nothing more, and Paper notices its player leave only in a tick.
+        for (UUID player : acks.watched()) {
+            if (!connected.test(player)) lose(player);
+        }
         for (Acks.Stalled stalled : acks.stalled()) {
             lose(stalled.player());
             reportStalled.accept(stalled);

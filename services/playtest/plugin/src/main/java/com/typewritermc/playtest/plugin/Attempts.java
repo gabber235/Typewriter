@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,9 +30,12 @@ final class Attempts implements Listener {
         this.plugin = plugin;
     }
 
-    /** [claimed] belong to [attempt] from now on; they see one another and nobody else sees them. */
+    /**
+     * [claimed] belong to [attempt] from now on, beside the players it holds already; they see one another
+     * and nobody else sees them.
+     */
     void claim(long attempt, List<UUID> claimed) {
-        players.put(attempt, List.copyOf(claimed));
+        players.merge(attempt, List.copyOf(claimed), (held, more) -> Stream.concat(held.stream(), more.stream()).distinct().toList());
         for (UUID id : claimed) attemptOf.put(id, attempt);
         for (UUID id : claimed) {
             Player player = Bukkit.getPlayer(id);

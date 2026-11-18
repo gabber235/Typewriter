@@ -92,6 +92,15 @@ case) and whether it restarts Paper. Then:
 7. **Settle.** After the body, Paper steps until the players' counted work is quiet, then the attempt
    ends, coverage is read and the players go back to the pool.
 
+A body may send a player away and back: `player.quit()` makes its client leave Paper the way a person
+quits, through the pause menu, and returns once Paper saw it leave; `player.rejoin()` joins the same
+Paper again, unwiped and where Paper kept the player, and returns once its client steps and holds what
+Paper sends it. Each marks the tick windows count from. The player stays on the attempt's lease
+meanwhile and is no lost client; the other players' windows decide as usual, and a window, input or
+frame of the away player is refused, as are a restart and a second quit. An attempt that ends with a
+player away brings its client back to the shared Paper before the player serves another claim. Both
+verbs work on the shared Paper and on an own Paper.
+
 Requirements are G1 windows plus the recorded timeline
 ([g-requirement-shape.md](spikes/g-requirement-shape.md)): order, gaps and motion are read from the
 attempt's timeline after a window. A window needs one positive check; `never` checks are broad
@@ -129,7 +138,9 @@ never waits for wall clock timers ([n-stepped-ticks.md](spikes/n-stepped-ticks.m
 - **Input.** An input starts right after a tick; the client's ack waits until the game took every
   event it queued, so its packets reach Paper first. Typing sends one key per tick, as a person does.
 - **Lost clients.** A client that does not ack for 5 s is lost: its attempt fails and the pool boots a
-  replacement under the same name.
+  replacement under the same name. A client that crashes or drops while its player is away is lost
+  the same way; the intended leave of a quit is not.
+- **Away players.** Paper holds back no tick for a player that quit, as for any player that left.
 
 All requirements share one stepped Paper ([p1-topology.md](spikes/p1-topology.md)): a Paper per
 attempt was 41 to 777 percent slower once groups or restarts appear. The cost is that one attempt's

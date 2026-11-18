@@ -116,6 +116,23 @@ class RequirementScope internal constructor(
     suspend fun restartPaper(): Mark = attempt.restart().also { anchor = it }
 
     /**
+     * The player leaves Paper the way a person quits, through the pause menu, and returns once Paper saw
+     * it leave. It stays the attempt's player, away until [rejoin]: Paper holds back no tick for it, the
+     * other players' windows decide as usual, and a window, input or frame of it is refused meanwhile.
+     * Its client crashing while away still fails the attempt with [ClientLost]. The mark is the tick
+     * after which it left; windows count from it.
+     */
+    suspend fun GamePlayer.quit(): Mark = attempt.quit(this).also { anchor = it }
+
+    /**
+     * The player, away since its [quit], joins the same Paper again and returns once its client steps
+     * with Paper and holds what Paper sends it. Nothing wipes it: it is where Paper kept it, with what
+     * Paper kept for it, in the attempt's region. The mark is the tick after which it is back; windows
+     * count from it.
+     */
+    suspend fun GamePlayer.rejoin(): Mark = attempt.rejoin(this).also { anchor = it }
+
+    /**
      * The frame the player's client holds now is the golden [name], to the pixel. It is compared only
      * on the pinned renderer, where a frame that differs, a golden never approved, or one another
      * renderer drew fails; any other machine notes it as not checked. Ask once a window let the scene
@@ -145,8 +162,8 @@ class RequirementScope internal constructor(
      * Passes once every check of [checks] held in a tick of the window, the [window] ticks after the
      * last stimulus. Fails with [WindowMissed] once those ticks ran and a check never held, and with
      * [WorkHung] or [ClientLost] as soon as work a plugin counted for a player of the attempt hangs or
-     * a player's client is lost. Ticks run only
-     * while a window waits, so a pass costs no more ticks than the truth needs.
+     * a player's client is lost. Ticks run only while a window waits, so a pass costs no more ticks than
+     * the truth needs. A window that checks a player away since its [quit] is refused.
      */
     suspend fun within(
         window: Ticks,
@@ -156,8 +173,15 @@ class RequirementScope internal constructor(
         val at = attempt.requirementLine(Throwable().stackTrace)
         val mark = anchor ?: throw RequirementRefused("within needs a stimulus before it; its window counts from the last one")
         val declared = WindowChecks().apply(checks)
-        // A window of state checks alone steps every player of the attempt, so its ticks run for them.
-        val checked = (declared.checks + declared.nevers).map { it.player }.distinct().ifEmpty { attempt.players }
+        val checked = (declared.checks + declared.nevers).map { it.player }.distinct()
+        // A player away since its quit sends no record and sees no barrier, so a window on it could never decide.
+        checked.forEach { attempt.onPaper(it, "a window checks it") }
+        // A window of state checks alone steps the attempt's players on Paper, so its ticks run for them.
+        val stepping = checked.ifEmpty { attempt.present }
+        if (stepping.isEmpty()) {
+            attempt.called()
+            throw RequirementRefused("a window of state checks alone needs a player on Paper to run its ticks, and every player quit")
+        }
         val rules =
             Window(
                 mark.tick,
@@ -167,7 +191,7 @@ class RequirementScope internal constructor(
                 declared.nevers,
                 declared.states,
                 declared.neverStates,
-                checked,
+                stepping,
             )
         val opened = System.currentTimeMillis()
         val ranBefore = attempt.ranUntil
@@ -176,7 +200,7 @@ class RequirementScope internal constructor(
         var verdict: Window.Verdict = Window.Verdict.Open
         try {
             attempt.timeline.filter { it !is Attempt.Event.Failed }.forEach { verdict = rules.judge(it) }
-            if (verdict == Window.Verdict.Open) verdict = rules.stepUntilDecided(checked)
+            if (verdict == Window.Verdict.Open) verdict = rules.stepUntilDecided(stepping)
         } finally {
             attempt.took(opened, says(window, verdict, mark, ranBefore, declared))
         }
