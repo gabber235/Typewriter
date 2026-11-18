@@ -17,14 +17,14 @@ pieces:
         taught: Declared as gamePaper { pluginJars; files { CopySpec }; environment }, like runPaper; each module's playtestPaperAdditions folder (files/, env.properties) is collected from every game-test project, the pool copies them after its own files and merges env, failing on disagreement
         evidence: [services/playtest/pool/src/test/kotlin/com/typewritermc/playtest/pool/PaperAdditionsTest.kt, services/playtest/pool/src/main/kotlin/com/typewritermc/playtest/pool/Game.kt:263-296]
   - id: g2-quit-rejoin
-    status: building
+    status: done
     open: none
     tries:
       - id: quit-rejoin-verbs
         what: player.quit() and player.rejoin(); an intended leave on the wire, the player held away on its lease, not lost
-        taught: Today player_left and disconnected both end in lost(), which replaces the client (Pool.kt:1367); the away hold Out.AWAY exists (Pool.kt:1098)
+        taught: Today player_left and disconnected both end in lost(), which replaces the client (Pool.kt:1367); the away hold Out.AWAY exists (Pool.kt:1098). Building it found Paper's step policy waited on acks of a client whose connection closed (a 5 s stall, then a lost client) and that no check could show the player list; both fixed. A window of state checks alone needs a player on Paper to run its ticks, so it is refused while every player quit
         state: picked
-        evidence: []
+        evidence: [3c05b6b8f0, QUIT-1 to QUIT-6, AwayTest.kt, full game suite 102 of 102 on the G2 branch]
   - id: g3-outside-proof
     status: building
     open: none
