@@ -33,7 +33,7 @@ jobs:
   # A change of only Markdown outside the documentation site affects none, so every other job
   # skips and the gate passes.
   plan:
-    runs-on: ubuntu-latest
+    runs-on: nscloud-ubuntu-24.04-amd64-4x16
     outputs:
       areas: ${{ steps.plan.outputs.areas }}
     steps:
@@ -53,7 +53,7 @@ jobs:
     name: check (${{ matrix.area.area }})
     needs: plan
     if: needs.plan.outputs.areas != '[]'
-    runs-on: ubuntu-latest
+    runs-on: nscloud-ubuntu-24.04-amd64-4x16
     strategy:
       fail-fast: false
       matrix:
@@ -91,7 +91,7 @@ jobs:
   # full.yml checks the commits of pushes.
   commits:
     if: github.event_name != 'push'
-    runs-on: ubuntu-latest
+    runs-on: nscloud-ubuntu-24.04-amd64-4x16
     steps:
       - uses: actions/checkout@v6
         with:
@@ -106,7 +106,7 @@ jobs:
     name: e2e (${{ matrix.suite }})
     needs: plan
     if: needs.plan.outputs.areas != '[]'
-    runs-on: ubuntu-latest
+    runs-on: nscloud-ubuntu-24.04-amd64-4x16
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -154,7 +154,7 @@ jobs:
   report:
     needs: [plan, check, e2e]
     if: always() && needs.plan.outputs.areas != '[]'
-    runs-on: ubuntu-latest
+    runs-on: nscloud-ubuntu-24.04-amd64-4x16
     # The media branches, the description and code scanning. Fork pull requests get a read
     # only token whatever is asked here, so they get the job summary instead.
     permissions:
@@ -188,7 +188,7 @@ jobs:
   gate:
     needs: [plan, check, commits, e2e, report]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: nscloud-ubuntu-24.04-amd64-2x4
     steps:
       - env:
           PLAN: ${{ needs.plan.result }}
