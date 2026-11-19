@@ -44,11 +44,19 @@ val PapersTest by testSuite {
                 folderOf = { name, slot -> PaperFolder(name, pool.resolve(name).createDirectories(), 0, pool.resolve("$name.log"), slot) },
                 remove = { it.dir.toFile().deleteRecursively() },
             )
-        papers.add(Server(PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log"), slot = 0), SharedPaper("paper", setOf("gv-1"))))
+        papers.add(
+            Server(
+                PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log"), slot = 0),
+                SharedPaper("paper", setOf("gv-1")),
+            ),
+        )
 
         shouldThrow<IllegalStateException> {
             papers.add(
-                Server(PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log"), slot = 0), SharedPaper("paper", setOf("gv-1"))),
+                Server(
+                    PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log"), slot = 0),
+                    SharedPaper("paper", setOf("gv-1")),
+                ),
             )
         }
     }
@@ -60,7 +68,12 @@ val PapersTest by testSuite {
                 folderOf = { name, slot -> PaperFolder(name, pool.resolve(name).createDirectories(), 0, pool.resolve("$name.log"), slot) },
                 remove = { it.dir.toFile().deleteRecursively() },
             )
-        papers.add(Server(PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log"), slot = 0), SharedPaper("paper", setOf("gv-1"))))
+        papers.add(
+            Server(
+                PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log"), slot = 0),
+                SharedPaper("paper", setOf("gv-1")),
+            ),
+        )
 
         val first = papers.restart(1, setOf("gv-2"))
         val second = papers.restart(2, setOf("gv-3"))
