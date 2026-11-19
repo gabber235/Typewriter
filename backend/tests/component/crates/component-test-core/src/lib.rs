@@ -337,19 +337,25 @@ fn admission_limit(available: usize, configured: Option<&str>) -> Result<usize, 
 pub fn run_case<F, B>(descriptor: &'static TestDescriptor, body: B)
 where
     F: FixtureSpec,
-    B: for<'a> FnOnce(&'a mut TestContext<F>) -> BoxTestFuture<'a>,
+    B: for<'a> FnOnce(&'a mut TestContext<F>) -> BoxTestFuture<'a> + Send + 'static,
 {
     let globals = match globals() {
         Ok(value) => value,
         Err(error) => panic!("component test failed: {error:#}"),
     };
     let started = Instant::now();
-    let outcome = globals.runtime.block_on(run::<F, B>(
+    // The case runs on a worker thread, whose stack the embedded SurrealDB needs; the libtest
+    // thread only waits for it.
+    let outcome = match globals.runtime.block_on(globals.runtime.spawn(run::<F, B>(
         globals.admission.clone(),
         globals.engine.clone(),
         descriptor,
         body,
-    ));
+    ))) {
+        Ok(outcome) => outcome,
+        Err(error) if error.is_panic() => std::panic::resume_unwind(error.into_panic()),
+        Err(error) => panic!("component test failed: the case task ended: {error}"),
+    };
     let failure = match &outcome {
         Outcome::Pass => None,
         Outcome::Error(report) | Outcome::Panic(_, report) => Some(report.as_str()),
