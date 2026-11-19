@@ -118,6 +118,8 @@ jobs:
   # The display, Mesa, Vulkan, GTK and Chromium come from the devenv e2e profile, not apt. The
   # game suite runs four Minecraft clients, each on a virtual display of its own, against Paper on
   # this runner; it also keeps Gradle's outputs (the patched Paper among them) and its downloads.
+  # Every suite runs inside the agent stack, whose backend build generates the panel's sources and
+  # frame vectors, so every suite keeps those caches.
   e2e:
     name: e2e (${{ matrix.suite }})
     needs: plan
@@ -136,7 +138,7 @@ jobs:
           - suite: panel-web
             caches: gradle flutter frame-vectors
           - suite: game
-            caches: gradle gradle-outputs game
+            caches: gradle flutter frame-vectors gradle-outputs game
     steps:
       - uses: actions/checkout@v6
         # The game suite reruns as demos the requirements that covered a line the change added

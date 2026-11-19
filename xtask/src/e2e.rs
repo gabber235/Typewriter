@@ -78,6 +78,10 @@ pub struct E2eArgs {
     /// it, as its checkout of a pull request is a detached merge commit `gh` cannot place.
     #[arg(long)]
     pub(crate) base: Option<String>,
+    /// How many Minecraft clients the game suite's pool runs (4 by default); fewer fit a busy
+    /// machine.
+    #[arg(long)]
+    pub(crate) clients: Option<NonZeroU32>,
 }
 
 impl E2eArgs {

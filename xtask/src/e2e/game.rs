@@ -10,7 +10,7 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::ExitStatus;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result, anyhow, bail};
 
@@ -19,6 +19,7 @@ use crate::lock;
 use crate::results::{self, Quarantine, TestRun};
 use crate::review::change::Change;
 use crate::skirout::base::harness::v1::test_run::Runner;
+use crate::stack::{self, Stack, typewriter};
 use crate::{CommandExt as _, Context, evidence, generate, goldens};
 
 /// Runs the selected game requirements and reports the run the game pool wrote.
@@ -34,44 +35,19 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
         .trim()
         .to_owned();
     let quarantine = Quarantine::load(ctx)?;
-    // The folders of the last runs' logs outlive the clear; `next_run_folder` keeps the newest.
-    let _lock = take_turn(
-        Path::new(lock::HEAVY_LOCK),
-        "e2e game",
-        &evidence,
-        &[results::LOGS],
-    )?;
-    let file = evidence.join("test_run.json");
-    // A requirement that covered a line the change added reruns in demo mode.
-    let touched = evidence.join("touched.txt");
-    fs::create_dir_all(&evidence)?;
-    fs::write(
-        &touched,
-        touched_lines(&Change::load(ctx, args.base.as_deref())?),
-    )
-    .with_context(|| format!("cannot write {}", touched.display()))?;
-    // The pool, Paper and every client log into a folder of this run's own.
-    let logs = next_run_folder(&evidence.join(results::LOGS))?;
-    // The run's pool writes this id into the run file, and its test JVMs connect only to a pool of
-    // it, so a file or pool an earlier run left never passes for this one.
-    let run_id = format!("{}-{}", now_millis(), std::process::id());
-    let ran = Ran {
-        file: file.clone(),
-        run_id: run_id.clone(),
-        gradle: build_then_run(
-            |gradle| {
-                ctx.tool(
-                    "services",
-                    "./gradlew",
-                    &gradle.iter().map(String::as_str).collect::<Vec<_>>(),
-                )
-                .status()
-                .context("cannot start Gradle for the game suite")
-            },
-            &gradle_args(args, &quarantine, &run_id, &file, &touched, &logs),
-        )?,
-        pool_log: logs.join("pool.log"),
-    };
+    // Every game Paper runs Typewriter against this worktree's stack, which builds its own services
+    // before the run takes the heavy lock; Gradle gets the stack's environment.
+    let keep = ctx.root.join(super::STACK_EVIDENCE).join("game");
+    let (ran, _) =
+        stack::run_keeping_evidence(ctx, &typewriter::game(), GAME_BUDGET, &keep, |stack| {
+            suite(ctx, args, &evidence, &quarantine, stack)
+        })?;
+    let file = ran.file.clone();
+    let logs = ran
+        .pool_log
+        .parent()
+        .context("the pool log has no folder")?
+        .to_owned();
     let run = TestRun {
         commit,
         logs: logs.strip_prefix(&evidence)?.to_string_lossy().into_owned(),
@@ -92,6 +68,58 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
         file.display()
     );
     Ok(())
+}
+
+/// How long the stack lets the suite run, its build included.
+const GAME_BUDGET: Duration = Duration::from_secs(50 * 60);
+
+/// Builds and runs the suite in Gradle with the stack's environment, under the heavy lock, and
+/// returns how it ran.
+fn suite(
+    ctx: &Context,
+    args: &E2eArgs,
+    evidence: &Path,
+    quarantine: &Quarantine,
+    stack: &mut Stack,
+) -> Result<Ran> {
+    // The folders of the last runs' logs outlive the clear; `next_run_folder` keeps the newest.
+    let _lock = take_turn(
+        Path::new(lock::HEAVY_LOCK),
+        "e2e game",
+        evidence,
+        &[results::LOGS],
+    )?;
+    let file = evidence.join("test_run.json");
+    // A requirement that covered a line the change added reruns in demo mode.
+    let touched = evidence.join("touched.txt");
+    fs::create_dir_all(evidence)?;
+    fs::write(
+        &touched,
+        touched_lines(&Change::load(ctx, args.base.as_deref())?),
+    )
+    .with_context(|| format!("cannot write {}", touched.display()))?;
+    // The pool, Paper and every client log into a folder of this run's own.
+    let logs = next_run_folder(&evidence.join(results::LOGS))?;
+    // The run's pool writes this id into the run file, and its test JVMs connect only to a pool of
+    // it, so a file or pool an earlier run left never passes for this one.
+    let run_id = format!("{}-{}", now_millis(), std::process::id());
+    Ok(Ran {
+        file: file.clone(),
+        run_id: run_id.clone(),
+        gradle: build_then_run(
+            |gradle| {
+                stack
+                    .run_command(&mut ctx.tool(
+                        "services",
+                        "./gradlew",
+                        &gradle.iter().map(String::as_str).collect::<Vec<_>>(),
+                    ))
+                    .context("cannot run Gradle for the game suite")
+            },
+            &gradle_args(args, quarantine, &run_id, &file, &touched, &logs),
+        )?,
+        pool_log: logs.join("pool.log"),
+    })
 }
 
 /// One Gradle run of the game suite: where its run file belongs, how Gradle exited and where the
@@ -154,6 +182,9 @@ pub(crate) fn gradle_args(
     }
     if args.repeat.get() > 1 {
         gradle.push(format!("-Pplaytest.repeat={}", args.repeat));
+    }
+    if let Some(clients) = args.clients {
+        gradle.push(format!("-Pplaytest.clients={clients}"));
     }
     let held = quarantine.held(&Runner::Game);
     if !held.is_empty() {
@@ -536,7 +567,7 @@ mod tests {
     }
 
     #[test]
-    fn gradle_gets_the_run_id_the_run_file_the_logs_folder_the_selection_the_repeat_and_the_quarantine()
+    fn gradle_gets_the_run_id_the_run_file_the_logs_folder_the_selection_the_repeat_the_quarantine_and_the_clients()
      {
         let file = Path::new("/repo/.xtask/results/game/test_run.json");
         let args = parsed(&[
@@ -545,6 +576,8 @@ mod tests {
             "WINDOW-1,HUNG-1 work still running fails",
             "--repeat",
             "3",
+            "--clients",
+            "1",
         ])
         .unwrap();
         let touched = Path::new("/repo/.xtask/results/game/touched.txt");
@@ -565,6 +598,7 @@ mod tests {
             "-Pplaytest.logs=/repo/.xtask/results/game/logs/4",
             "-Pplaytest.repeat=3",
             "-Pplaytest.quarantine=LEAK-1",
+            "-Pplaytest.clients=1",
         ] {
             assert!(
                 gradle.contains(&expected.to_owned()),
@@ -591,7 +625,7 @@ mod tests {
         );
         assert!(
             !plain.iter().any(|arg| arg == "--tests"
-                || ["repeat", "quarantine"]
+                || ["repeat", "quarantine", "clients"]
                     .iter()
                     .any(|name| arg.starts_with(&format!("-Pplaytest.{name}=")))),
             "{plain:?}"
