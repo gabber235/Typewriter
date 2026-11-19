@@ -10,7 +10,6 @@ use wasmcloud_utils::skir::base::kernel::v1::record_id::{RecordId, RecordIdKey};
 use wasmcloud_utils::skir::base::organization::v1::organization::{
     CreateOrganizationRequest, CreateOrganizationResponse,
 };
-use wasmcloud_utils::transport_routes::UserOrganizationCreateRoute;
 
 use crate::session::{Session, StackEndpoints, record_token};
 
@@ -21,17 +20,23 @@ pub struct ProvisionArgs {
 }
 
 /// What `provision` created.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Provisioned {
     /// The organization's record key, its subject token.
     pub organization: String,
     pub organization_name: String,
     pub owner: String,
+    /// The owner's subject token, which the owner's request subjects and reply inboxes name.
+    pub owner_token: String,
 }
 
 impl Provisioned {
     pub fn read(endpoints: &StackEndpoints) -> Result<Self> {
-        let file = StackEndpoints::provisioned_file(&endpoints.state);
+        Self::read_from(&endpoints.state)
+    }
+
+    pub fn read_from(state: &std::path::Path) -> Result<Self> {
+        let file = StackEndpoints::provisioned_file(state);
         serde_json::from_str(
             &std::fs::read_to_string(&file)
                 .with_context(|| format!("cannot read {}; did `provision` run?", file.display()))?,
@@ -57,8 +62,8 @@ pub async fn run(args: ProvisionArgs) -> Result<()> {
     let name = owner.organizations[0].clone();
     let session = sign_in_once_known(&endpoints, &owner).await?;
     let subject = format!("cloud.to.user.{}.organization.create", session.user());
-    let response = session
-        .request::<UserOrganizationCreateRoute>(
+    let response: CreateOrganizationResponse = session
+        .request(
             subject,
             &CreateOrganizationRequest {
                 name: name.clone(),
@@ -76,6 +81,7 @@ pub async fn run(args: ProvisionArgs) -> Result<()> {
             .to_owned(),
         organization_name: name,
         owner: owner.username,
+        owner_token: session.user().as_str().to_owned(),
     };
     let file = StackEndpoints::provisioned_file(&endpoints.state);
     std::fs::write(&file, serde_json::to_string_pretty(&provisioned)?)

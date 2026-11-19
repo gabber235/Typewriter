@@ -133,23 +133,31 @@ pub async fn organization_with_hosts<F>(
 
 /// The service `key` registers as a host that can run a Realm and the listed engines.
 pub async fn register_host<F>(context: &TestContext<F>, key: &str, engines: &[&str]) -> Result<()> {
-    let reply: RegisterServiceHostResponse = context
+    let reply = context
         .arrange(
             from_service(key, "execution.register"),
-            &RegisterServiceHostRequest {
-                entrypoint: "PAPER".into(),
-                can_host_realm: true,
-                supported_engines: engines
-                    .iter()
-                    .map(|engine| SupportedEngine {
-                        engine_id: (*engine).to_owned(),
-                        ..Default::default()
-                    })
-                    .collect(),
-                ..Default::default()
-            },
+            &advertisement(engines),
         )
         .await?;
+    registered(key, reply)
+}
+
+fn advertisement(engines: &[&str]) -> RegisterServiceHostRequest {
+    RegisterServiceHostRequest {
+        entrypoint: "PAPER".into(),
+        can_host_realm: true,
+        supported_engines: engines
+            .iter()
+            .map(|engine| SupportedEngine {
+                engine_id: (*engine).to_owned(),
+                ..Default::default()
+            })
+            .collect(),
+        ..Default::default()
+    }
+}
+
+fn registered(key: &str, reply: RegisterServiceHostResponse) -> Result<()> {
     match reply {
         RegisterServiceHostResponse::Success(_) => Ok(()),
         reply => anyhow::bail!("registering host `{key}` failed: {reply:?}"),
@@ -339,4 +347,49 @@ pub enum InvalidHostConfiguration {
     MissingRealmWithHostedRealm,
     /// The engine is one the host does not advertise.
     IncompatibleEngine,
+}
+
+/// Seeds `organization`, founded by `founder`, with the host `key` running a Realm whose primary
+/// engine is `target`, and returns that Realm.
+pub async fn seed_realm_host<F>(
+    context: &TestContext<F>,
+    organization: &Organization,
+    founder: &StackUser,
+    key: &str,
+    target: EngineTarget,
+) -> Result<RecordId> {
+    seed_organization_services(context, organization, founder, &[key]).await?;
+    register_host(context, key, &[target.engine_id.as_str()]).await?;
+    let change = arrange_host_configuration(context, key, 1, realm_only(target)).await?;
+    Ok(change
+        .realm
+        .ok_or_else(|| anyhow::anyhow!("the Realm host {key} got no Realm"))?
+        .realm_id)
+}
+
+/// What a loader does once its service `key` is bound to an organization: it registers its host
+/// with `engines`. Waits at most `patience` for the bind. The registration is part of the case,
+/// not its setup, so the topology publish it causes must be expected.
+pub async fn register_once_bound<F>(
+    context: &TestContext<F>,
+    key: &str,
+    engines: &[&str],
+    patience: Duration,
+) -> Result<()> {
+    let bound = format!("SELECT VALUE organization != NONE FROM ONLY service:`{key}`");
+    tokio::time::timeout(patience, async {
+        while context.database()?.query_json(&bound).await? != serde_json::json!(true) {
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        Ok::<_, anyhow::Error>(())
+    })
+    .await
+    .map_err(|_| anyhow::anyhow!("service {key} was not bound within {}s", patience.as_secs()))??;
+    let reply = context
+        .request(
+            from_service(key, "execution.register"),
+            &advertisement(engines),
+        )
+        .await?;
+    registered(key, reply)
 }

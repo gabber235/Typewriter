@@ -16,13 +16,14 @@ use futures_util::StreamExt as _;
 use nkeys::KeyPair;
 use serde::Deserialize;
 use typewriter_component_test::StackUser;
+use wasmcloud_utils::SkirType;
 use wasmcloud_utils::skir::base::access::v1::permission::{
     EntityPermissionQualifier, EntityPermissionQualifier_User,
 };
 use wasmcloud_utils::skir::base::access::v1::sentinel::GetSentinelCredentialsResponse;
 use wasmcloud_utils::skir::base::kernel::v1::record_id::{RecordId, RecordIdKey};
 use wasmcloud_utils::skir_client::UnrecognizedValues;
-use wasmcloud_utils::transport::{ConnectionSession, RequestRoute, SubjectToken};
+use wasmcloud_utils::transport::{ConnectionSession, SubjectToken};
 use wasmcloud_utils::transport_routes::panel_reply_inbox_prefix;
 
 /// The OAuth application the panel signs in with.
@@ -30,7 +31,7 @@ const PANEL_CLIENT_ID: &str = "typewriter-panel";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// Where a signed in person reaches the stack.
-#[derive(clap::Args)]
+#[derive(clap::Args, Clone)]
 pub struct StackEndpoints {
     /// The fixture users (`backend/tests/component/fixtures/stack-users.json`).
     #[arg(long)]
@@ -142,13 +143,13 @@ impl Session {
             .context("the session is not scoped to an organization")
     }
 
-    /// Sends `request` on route `R` at `subject` and decodes its response.
-    pub async fn request<R: RequestRoute>(
+    /// Sends `request` at `subject` and decodes its response, with serializers taken from the
+    /// types.
+    pub async fn request<Req: SkirType, Resp: SkirType>(
         &self,
         subject: String,
-        request: &R::Request,
-    ) -> Result<R::Response> {
-        let method = R::method();
+        request: &Req,
+    ) -> Result<Resp> {
         // Panel connections may only receive replies on single tokens below their inbox prefix,
         // so each request gets its own inbox instead of async-nats' multiplexed one.
         let inbox = self.client.new_inbox();
@@ -161,7 +162,7 @@ impl Session {
             .publish_with_reply(
                 subject.clone(),
                 inbox,
-                method.request_serializer.to_bytes(request).into(),
+                Req::serializer().to_bytes(request).into(),
             )
             .await
             .with_context(|| format!("requesting {subject}"))?;
@@ -177,8 +178,7 @@ impl Session {
         if reply.status == Some(async_nats::StatusCode::NO_RESPONDERS) {
             bail!("nothing serves {subject}");
         }
-        method
-            .response_serializer
+        Resp::serializer()
             .from_bytes(&reply.payload, UnrecognizedValues::Drop)
             .with_context(|| format!("{subject} answered with an unreadable response"))
     }
