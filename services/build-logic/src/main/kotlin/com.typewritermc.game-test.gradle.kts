@@ -333,7 +333,7 @@ tasks.register<Test>("gameTest") {
             // Libraries the plugins bundle stay out: two plugins can bundle one in different versions.
             coveredPackages.set(listOf("com.typewritermc"))
             java.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) }.map { it.executablePath.asFile.path })
-            // `-Pplaytest.clients=1` runs the suite on a pool of one client.
+            // `cargo xtask e2e game --clients 1` passes `-Pplaytest.clients=1`: a pool of one client.
             clients.set(providers.gradleProperty("playtest.clients").map(String::toInt).orElse(4))
             runId.set(gameRun.map { it.id })
             poolDir.set(servicesDirectory.resolve("build/playtest/pool").path)
