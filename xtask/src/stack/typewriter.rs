@@ -43,6 +43,13 @@ pub fn panel() -> StackSpec {
     with_realm(backend())
 }
 
+/// The panel stack plus what the game suite needs: an engine binder that binds each game Paper's
+/// loader as the Realm's Paper engine, and observer credentials the game requirements read the
+/// topology and the Realm's session keys with.
+pub fn game() -> StackSpec {
+    panel().with(Observer).with(BindEngines)
+}
+
 /// `ci`'s backend, which `cargo xtask deploy ci` released, plus the same organization and Realm
 /// host [`panel`] adds, for the full suite.
 pub fn ci_cluster_panel(ci: &CiCluster) -> StackSpec {
@@ -479,6 +486,84 @@ impl Service for BindRealmHost {
     }
 }
 
+/// How many game Papers the engine binder binds: the shared Paper (slot 0) and the at most two
+/// own Papers of restart requirements (slots 1 and 2), as the game pool numbers them.
+const GAME_PAPER_SLOTS: u8 = 3;
+
+/// Binds the loader of each game Paper slot as the Paper engine of the stack's Realm, through the
+/// real routes, the first time the slot's loader writes its registration token to
+/// `<STACK_GAME_ENGINES>/<slot>/registration-token`. It names each slot's service
+/// `game_paper_<slot>`, so the game requirements find their engine in the topology. It keeps
+/// running for the slots whose Papers boot later.
+pub struct BindEngines;
+
+impl Service for BindEngines {
+    const ID: ServiceId = ServiceId("bind-engines");
+    fn needs(&self) -> &'static [ServiceId] {
+        &[BindRealmHost::ID]
+    }
+    fn needs_roles(&self) -> &'static [Role] {
+        &[BACKEND]
+    }
+    fn command(&self, ctx: &StackContext) -> Result<Command> {
+        let mut command = stack_binary(ctx, "bind")?;
+        command
+            .args(owner_args(ctx)?)
+            .arg("--work-dir")
+            .arg(game_engines_dir(ctx))
+            .arg("--as-engine")
+            .args(["--slots", &GAME_PAPER_SLOTS.to_string()]);
+        Ok(command)
+    }
+    /// It signed the owner in and waits for the slots' tokens.
+    fn ready(&self, ctx: &StackContext) -> Probe {
+        Probe::FileExists(game_engines_dir(ctx).join("watching"))
+    }
+    fn publish(&self, ctx: &StackContext, out: &mut Published) -> Result<()> {
+        out.values.insert(
+            "STACK_GAME_ENGINES".into(),
+            game_engines_dir(ctx).display().to_string(),
+        );
+        Ok(())
+    }
+}
+
+/// Where each game Paper slot writes its registration token, one folder per slot.
+fn game_engines_dir(ctx: &StackContext) -> PathBuf {
+    ctx.state().join("game-engines")
+}
+
+/// Read only NATS credentials in the TYPEWRITER account for the game requirements: the owner's
+/// topology snapshot request, and reads of the Realm's `sessions_<realm>` key value bucket.
+pub struct Observer;
+
+impl Service for Observer {
+    const ID: ServiceId = ServiceId("observer");
+    fn needs(&self) -> &'static [ServiceId] {
+        &[BindRealmHost::ID]
+    }
+    fn command(&self, ctx: &StackContext) -> Result<Command> {
+        let mut command = stack_binary(ctx, "observer")?;
+        command.arg("--state").arg(ctx.state());
+        Ok(command)
+    }
+    fn ready(&self, _: &StackContext) -> Probe {
+        Probe::ExitSuccess
+    }
+    fn publish(&self, ctx: &StackContext, out: &mut Published) -> Result<()> {
+        let observer = read_json(&ctx.state().join("observer.json"))?;
+        out.values.extend([
+            ("STACK_OBSERVER_CREDS".into(), field(&observer, "creds")?),
+            ("STACK_OBSERVER_INBOX".into(), field(&observer, "inbox")?),
+            (
+                "STACK_OBSERVER_TOPOLOGY".into(),
+                field(&observer, "topology")?,
+            ),
+        ]);
+        Ok(())
+    }
+}
+
 /// The work directory of the standalone Realm host, cleared with the rest of the run's state.
 fn realm_host_dir(ctx: &StackContext) -> PathBuf {
     ctx.state().join("realm-host")
@@ -585,6 +670,14 @@ mod tests {
         let order = ids(&panel().ordered().unwrap());
         let position = |id: &str| order.iter().position(|ordered| *ordered == id).unwrap();
         assert!(position("backend-routes") < position("provision"));
+    }
+
+    #[test]
+    fn the_game_stack_attaches_its_engines_and_observer_to_the_bound_realm() {
+        let order = ids(&game().ordered().unwrap());
+        let position = |id: &str| order.iter().position(|ordered| *ordered == id).unwrap();
+        assert!(position("bind-realm-host") < position("observer"));
+        assert!(position("bind-realm-host") < position("bind-engines"));
     }
 
     #[test]

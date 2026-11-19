@@ -441,6 +441,8 @@ pub enum Spec {
     Backend,
     /// The backend plus the provisioned organization and its bound Realm host.
     Panel,
+    /// The panel stack plus the game suite's engine binder and observer credentials.
+    Game,
 }
 
 impl Spec {
@@ -448,6 +450,7 @@ impl Spec {
         match self {
             Self::Backend => typewriter::backend(),
             Self::Panel => typewriter::panel(),
+            Self::Game => typewriter::game(),
         }
     }
 }
