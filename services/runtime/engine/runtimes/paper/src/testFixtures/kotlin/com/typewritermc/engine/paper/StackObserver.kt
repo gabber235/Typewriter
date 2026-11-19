@@ -1,8 +1,8 @@
 package com.typewritermc.engine.paper
 
 import com.typewritermc.protocol.transport.generated.TRANSPORT_LIMITS
-import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.address.addressTemplate
+import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
@@ -52,10 +52,14 @@ class StackObserver private constructor(
                 { _, _ -> true },
             )
         return when (val result = communicator.request(contract, Unit, WatchOrganizationTopologyRequest.partial())) {
-            is CommunicationResult.Success ->
+            is CommunicationResult.Success -> {
                 (result.value as? WatchOrganizationTopologyResponse.ListWrapper)?.value
                     ?: error("the topology snapshot request answered ${result.value}")
-            is CommunicationResult.Failure -> error("the topology snapshot request failed: ${result.error}")
+            }
+
+            is CommunicationResult.Failure -> {
+                error("the topology snapshot request failed: ${result.error}")
+            }
         }
     }
 
