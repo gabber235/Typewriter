@@ -20,7 +20,7 @@ use wash_runtime::{
         wasi_otel::{WasiOtel, WasiOtelConfig},
     },
     types::{Component, LocalResources, Workload, WorkloadStartRequest, WorkloadState},
-    wit::WitInterface,
+    wit::{Config, WitInterface},
 };
 
 use crate::{
@@ -89,7 +89,11 @@ fn merge_interface(interfaces: &mut Vec<WitInterface>, interface: WitInterface) 
         .find(|item| item.instance() == interface.instance())
     {
         for (key, value) in &interface.config {
-            if existing.config.get(key).is_some_and(|old| old != value) {
+            if existing
+                .config
+                .get_value(key)
+                .is_some_and(|old| old != value)
+            {
                 bail!(
                     "conflicting interface config for `{}` key `{key}`",
                     interface.instance()
@@ -145,7 +149,7 @@ pub(crate) async fn start<F: FixtureDeclaration>(
     if builder.http_host.is_some() || !builder.mock_handles.is_empty() {
         if let Some(host) = &builder.http_host {
             let mut interface = WitInterface::from("wasi:http/incoming-handler@0.3.0");
-            interface.config.insert("host".into(), host.clone());
+            interface.config.insert("host", host.clone());
             merge_interface(&mut interfaces, interface)?;
         }
         let value = Arc::new(
@@ -173,13 +177,13 @@ pub(crate) async fn start<F: FixtureDeclaration>(
         plugin_bindings = plugin_bindings.with_plugin(
             PluginBindingSet::new("wasmcloud-nats")
                 .with_workload_config(WorkloadConfigPolicy::Deny)
-                .with_base(HashMap::from([
-                    ("servers".into(), driver.account.endpoint().to_owned()),
-                    ("jwt".into(), driver.credentials.jwt().to_owned()),
-                    ("nkey-seed".into(), driver.credentials.seed().to_owned()),
-                    ("subject-allow".into(), ">".into()),
+                .with_base(Config::from([
+                    ("servers", driver.account.endpoint().to_owned()),
+                    ("jwt", driver.credentials.jwt().to_owned()),
+                    ("nkey-seed", driver.credentials.seed().to_owned()),
+                    ("subject-allow", ">".into()),
                     (
-                        "stream-allow".into(),
+                        "stream-allow",
                         builder
                             .streams
                             .iter()
@@ -193,12 +197,10 @@ pub(crate) async fn start<F: FixtureDeclaration>(
             let config = &builder.components[descriptor.package];
             let mut interface =
                 WitInterface::from("wasmcloud:nats/core-handler,core,jetstream@0.1.0");
+            interface.config.insert("component", descriptor.target);
             interface
                 .config
-                .insert("component".into(), descriptor.target.into());
-            interface
-                .config
-                .insert("core-subscriptions".into(), config.subscriptions.join(","));
+                .insert("core-subscriptions", config.subscriptions.join(","));
             interfaces.push(interface);
         }
         messaging = Some(driver);

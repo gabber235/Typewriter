@@ -30,7 +30,7 @@ use wash_runtime::plugin::{HostPlugin, PluginBindingSet, PluginBindings, Workloa
 use wash_runtime::types::{
     Component, LocalResources, Workload, WorkloadStartRequest, WorkloadState,
 };
-use wash_runtime::wit::WitInterface;
+use wash_runtime::wit::{Config, WitInterface};
 use wasmcloud_plugin_surrealdb::{ConnectionKey, WasmcloudSurrealdb};
 use wasmcloud_utils::transport_routes;
 use wasmtime_wasi_http::{Error as HttpError, RequestOptions, WasiBody};
@@ -169,10 +169,10 @@ pub async fn run(args: HostArgs) -> Result<()> {
     create_faults_link(&args, "realm-nats", args.realm_nats_proxy, nats).await?;
 
     let database = Arc::new(WasmcloudSurrealdb::new());
-    let database_key = ConnectionKey::from_config(&HashMap::from([
-        ("url".into(), "memory".into()),
-        ("namespace".into(), "typewriter".into()),
-        ("database".into(), "typewriter".into()),
+    let database_key = ConnectionKey::from_config(&Config::from([
+        ("url", "memory"),
+        ("namespace", "typewriter"),
+        ("database", "typewriter"),
     ]))?;
     let connection = database.get_or_create_connection(&database_key).await?;
     database_schema::Preset::Full
@@ -208,13 +208,13 @@ pub async fn run(args: HostArgs) -> Result<()> {
     let bindings = PluginBindings::new().with_plugin(
         PluginBindingSet::new("wasmcloud-nats")
             .with_workload_config(WorkloadConfigPolicy::Deny)
-            .with_base(HashMap::from([
-                ("servers".into(), broker.endpoint.clone()),
-                ("jwt".into(), broker.host_jwt.clone()),
-                ("nkey-seed".into(), broker.host_seed.clone()),
-                ("subject-allow".into(), ">".into()),
+            .with_base(Config::from([
+                ("servers", broker.endpoint.clone()),
+                ("jwt", broker.host_jwt.clone()),
+                ("nkey-seed", broker.host_seed.clone()),
+                ("subject-allow", ">".into()),
                 (
-                    "stream-allow".into(),
+                    "stream-allow",
                     topology::STREAMS
                         .iter()
                         .map(|stream| stream.name)
@@ -284,9 +284,9 @@ fn workload(
     let mut interfaces = vec![WitInterface::from("wasi:otel/tracing@0.2.0-rc.2")];
     if !wiring.subscriptions.is_empty() {
         let mut nats = WitInterface::from("wasmcloud:nats/core-handler,core,jetstream@0.1.0");
-        nats.config.insert("component".into(), name.clone());
+        nats.config.insert("component", name.clone());
         nats.config
-            .insert("core-subscriptions".into(), wiring.subscriptions.join(","));
+            .insert("core-subscriptions", wiring.subscriptions.join(","));
         interfaces.push(nats);
     }
     if wiring.http_path.is_some() {
@@ -294,13 +294,13 @@ fn workload(
     }
     if wiring.database {
         let mut surrealdb = WitInterface::from("seamlezz:surrealdb/call@0.4.0");
-        surrealdb.config.insert("url".into(), database.url.clone());
+        surrealdb.config.insert("url", database.url.clone());
         surrealdb
             .config
-            .insert("namespace".into(), database.namespace.clone());
+            .insert("namespace", database.namespace.clone());
         surrealdb
             .config
-            .insert("database".into(), database.database.clone());
+            .insert("database", database.database.clone());
         interfaces.push(surrealdb);
     }
     let allowed_hosts: Vec<AllowedHost> = if wiring.identity {
