@@ -42,7 +42,7 @@ pieces:
         why: The developer kept the framework tick based; GAME-S3 stays in node 3's two engine harness with injected short TTLs
   - id: g4-services
     status: building
-    open: none; built on feat/game-verification-g4 by the prototype's delegate
+    open: who gates a Typewriter requirement on the engine being Active on a restart Paper (see open)
     tries:
       - id: inside-stack
         what: cargo xtask e2e game runs under a game stack spec (the panel spec plus binding the Paper loader as engine), real grants and engine_instance
@@ -56,6 +56,20 @@ pieces:
         taught: Real engine_instance; the engine comes from the realm host over NATS, no staging; stack about 65 s, bind to Active 12 to 21 s; the loader drops engine.engine_id (BackendArtifactHostAssignmentSource.kt:119-149), node 3 owns that; a second plugin bundling Kotlin crashed coverage; a fresh own Paper folder registers a new host
         state: picked
         evidence: [spike/g4-paper-engine-stack 8155e149d1 (local, deleted after the build), SIBLING-TW SIBLING-1 RESTART-1 passed in run 2]
+      - id: slot-identities
+        parent: paper-loader-second-host
+        what: Every Paper has a slot (0 shared, 1..2 own, lowest free); a module adds env per slot and keeps paths per slot across that slot's Papers; the binder binds a slot when its token appears
+        taught: Slot environment (a token path per slot into the stack state) replaces slot files, since the binder never reads pool folders; the kept path is plugins/Typewriter/state, which holds service-identity.cbor; services are renamed game_paper_<slot> so the topology names each slot's engine
+        state: picked
+        why: Loaders exist only once the pool boots their Papers, so binding happens during the run (developer, option A)
+        evidence: [services/playtest/pool/src/test/kotlin/com/typewritermc/playtest/pool/SlotKeepTest.kt, PapersTest.kt, PaperAdditionsTest.kt, backend/tests/component/crates/typewriter-stack/src/bind.rs]
+      - id: observer-reads-topology
+        parent: inside-stack
+        what: The stack mints read only observer credentials (STACK_OBSERVER_CREDS, _INBOX, _TOPOLOGY); the test JVM requests the owner's topology snapshot and may read sessions_<realm> keys
+        taught: Grants are exact subjects for the stack's realm ($JS.API.STREAM.INFO, STREAM.MSG.GET, DIRECT.GET .$KV.sessions_<realm>.*.*.*), since NATS wildcards match whole tokens; the Kotlin generator emits only service routes, so the test builds the topology contract by hand on the panel reply inbox
+        state: picked
+        why: Read real state, never a binder side file (developer)
+        evidence: [backend/tests/component/crates/typewriter-stack/src/observer.rs (tests), services/runtime/engine/runtimes/paper/src/gameTest/kotlin/com/typewritermc/engine/paper/PaperEngineRequirements.kt (PAPER-ENGINE-1)]
 
 decided:
   - id: g4-inside-stack
@@ -73,8 +87,17 @@ decided:
   - id: g3-ticks-only
     what: "A. Ticks only (Recommended)"
     why: Add never.state for S2; S3 stays in node 3's harness
+  - id: g4-bind-during-run
+    what: "A. Bind during run"
+    why: Loaders exist only inside the pool; generic slot keep; no engine wait inside a window; Typewriter's suite setup waits for slot 0
+  - id: g4-observer-topology
+    what: "1. Observer reads topology"
+    why: Read only credentials read the real topology and sessions bucket; no binder side file
 
-open: []
+open:
+  - id: restart-paper-engine-gate
+    what: Who gates a Typewriter requirement on the engine being Active on a restart Paper (slots 1 and 2 are bound and keep their identity, but nothing waits for them yet)
+    tied_to: the readiness and done obligation (docs/design/game-verification/README.md, Obligations on Typewriter)
 
 slices: []
 

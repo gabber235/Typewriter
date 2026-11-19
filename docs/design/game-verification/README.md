@@ -56,6 +56,19 @@ clients hold none.
   environment. As every module shares the pool's Papers, the pool takes the union of every module's
   additions, for the shared Paper and each own Paper, and fails before Paper starts when two modules
   disagree on a file or a variable. The framework itself still holds no Typewriter code.
+- Every Paper has a slot: 0 for the shared Paper, 1 and 2 for own Papers, which take the lowest free
+  slot and give it back when they end. Paper learns its slot from `PLAYTEST_PAPER_SLOT`. A module adds
+  environment to one slot's Papers with `gamePaper { slot(n) { environment } }`, and keeps paths
+  across a slot's Papers with `keptPerSlot`: when an own Paper ends, the pool keeps those paths of its
+  folder and puts them into the slot's next Paper, so a service identity a Paper wrote comes back on
+  that slot. A run starts with nothing kept.
+- Typewriter's module (`services/runtime/engine/runtimes/paper`) adds the Paper loader, the stack's
+  config and a registration token path per slot. `cargo xtask e2e game` runs the suite inside the
+  stack's `game` spec: the panel spec plus a binder that binds each slot's loader as the engine of
+  the stack's Realm when its token appears (service `game_paper_<slot>`), and read only observer
+  credentials (`STACK_OBSERVER_*`) for the owner's topology and the Realm's sessions bucket. The
+  module's suite setup waits once, outside any window, until slot 0's engine is active. Its
+  requirements therefore run only through `cargo xtask e2e game`.
 
 ## How a requirement runs
 
@@ -288,6 +301,8 @@ was proven on ([h-ci-runner.md](spikes/h-ci-runner.md)) took 13 to 14.
 
 - `cargo xtask e2e game` first runs `gameTestBuild` in a Gradle of its own without a daemon, so no
   compile daemon sits beside the suite, then the suite.
+- The suite runs inside the stack's `game` spec, which builds and starts the services first, so
+  the job also keeps the panel's generated sources and the frame vectors, as the panel suites do.
 - Caches: Gradle's build cache (which holds the patched Paper), Loom's caches, and the AOT cache of
   the restart Paper. The build cache and the AOT cache are kept per job kind (`cache-scope`), so the
   game job and the services check each save their own.
@@ -521,6 +536,16 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   with real time is proven outside the game.
 - **Modules add to Paper** (2026-11-18): a module's `gamePaper { }` adds plugin jars, files and
   environment to every Paper; the pool takes the union of every module's additions.
+- **Restart identities use 3 fixed slots** (2026-11-19). Answer to "How should restart Papers get an
+  engine identity?": "A. 3 fixed slots (Recommended)". Each slot's identity is bound once per run
+  and kept across that slot's Papers. Answer to "When are the slots bound?": "A. Bind during the
+  run": the binder binds a slot when its loader's token appears, the framework keeps a generic path
+  per slot, and no requirement waits for an engine inside a window; Typewriter's suite setup waits
+  for slot 0. Why: loaders exist only once the pool boots their Papers, and a wall clock wait inside
+  a tick window is wrong.
+- **The observer reads real state** (2026-11-19): the test JVM reads with read only credentials the
+  stack mints, the owner's topology snapshot request and exact reads of `sessions_<realm>`, never
+  a file the binder writes.
 
 ## The prototype search
 
