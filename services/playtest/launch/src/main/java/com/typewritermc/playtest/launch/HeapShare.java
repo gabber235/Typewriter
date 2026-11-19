@@ -54,6 +54,6 @@ public enum HeapShare {
         if (share <= CONCURRENT_LIMIT) return null;
         int fit = (int) Math.floor((CONCURRENT_LIMIT - concurrent(0)) / CLIENT.percent);
         return clients + " clients would take " + share + "% of the machine's memory in heaps with the Papers and the pool, over the "
-                + CONCURRENT_LIMIT + "% limit; run at most " + fit + " clients (-Pplaytest.clients)";
+                + CONCURRENT_LIMIT + "% limit; run at most " + fit + " clients (cargo xtask e2e game --clients " + fit + ")";
     }
 }
