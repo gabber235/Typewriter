@@ -1,4 +1,5 @@
 import com.typewritermc.buildlogic.realmDatabaseCredentials
+import com.typewritermc.playtest.launch.HeapShare
 import xyz.jpenilla.runpaper.task.RunServer
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -7,6 +8,8 @@ plugins {
     id("com.typewritermc.basic-conventions")
     id("com.typewritermc.imprint")
     id("xyz.jpenilla.run-paper")
+    id("com.typewritermc.game-test")
+    `java-test-fixtures`
 }
 
 val loaderPlugin =
@@ -47,6 +50,35 @@ dependencies {
     imprintHostApi(project(":loader-api"))
     imprintPlatformApi(project(":typewriter-api"))
     loaderPlugin(project(":loader-distribution"))
+    "gameTestImplementation"(project(":playtest"))
+    // The stack observer the game requirements read the topology through.
+    testFixturesImplementation(project(":messaging"))
+    testFixturesImplementation(project(":protocol-transport"))
+}
+
+/** A value of the stack `cargo xtask e2e game` runs the game suite in, which it hands Gradle. */
+fun stackValue(name: String): Provider<String> =
+    providers.environmentVariable(name).orElse(
+        provider {
+            throw GradleException("$name is not set: the game suite runs inside the stack `cargo xtask e2e game` starts")
+        },
+    )
+
+// Every game Paper runs the Typewriter loader against the stack. Each slot's loader writes its
+// registration token where the stack's engine binder waits for that slot, and keeps the identity it
+// was bound with, so every own Paper of a slot is the same engine host.
+gamePaper {
+    pluginJars.from(loaderPlugin)
+    environment.put("TYPEWRITER_CONFIG_FILE", stackValue("TYPEWRITER_CONFIG_FILE"))
+    (0..HeapShare.OWN_PAPERS).forEach { slot ->
+        slot(slot) {
+            environment.put(
+                "TYPEWRITER_REGISTRATION_TOKEN_FILE",
+                stackValue("STACK_GAME_ENGINES").map { "$it/$slot/registration-token" },
+            )
+        }
+    }
+    keptPerSlot.add("plugins/Typewriter/state")
 }
 
 runPaper {
