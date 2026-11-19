@@ -26,6 +26,8 @@ val allowedNestedBuilds =
 val unexpectedNestedBuilds =
     settingsDir
         .walkTopDown()
+        // Build output is not a project source: TestKit runs keep copies of their settings scripts there.
+        .onEnter { it.name != "build" && it.name != ".gradle" }
         .filter { it.name == "settings.gradle.kts" && it.parentFile != settingsDir }
         .map(File::getCanonicalFile)
         .filterNot(allowedNestedBuilds::contains)

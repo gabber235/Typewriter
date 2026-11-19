@@ -54,8 +54,12 @@ runPaper {
 }
 
 private fun RunServer.configurePaperRuntime(configurationFile: String) {
-    minecraftVersion("26.3")
-    build(200)
+    minecraftVersion(libs.versions.minecraft.get())
+    build(
+        libs.versions.paper.build
+            .get()
+            .toInt(),
+    )
     javaLauncher.set(
         javaToolchains.launcherFor {
             languageVersion.set(JavaLanguageVersion.of(25))

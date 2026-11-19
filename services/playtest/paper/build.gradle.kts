@@ -58,7 +58,7 @@ abstract class PreparePaper : DefaultTask() {
 }
 
 val minecraftRelease = libs.versions.minecraft.get()
-val paperBuildNumber = 242
+val paperBuildNumber = libs.versions.paper.build.get().toInt()
 
 val preparePaper =
     tasks.register<PreparePaper>("preparePaper") {
