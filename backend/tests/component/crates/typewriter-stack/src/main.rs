@@ -8,8 +8,11 @@ mod bind;
 mod broker;
 mod front;
 mod host;
+mod observer;
 mod provision;
 mod session;
+#[cfg(test)]
+mod test_support;
 
 use std::path::PathBuf;
 
@@ -29,8 +32,11 @@ enum Command {
     Host(host::HostArgs),
     /// Creates the stack's organization as its owner, then exits.
     Provision(provision::ProvisionArgs),
-    /// Binds a host to the stack's organization and assigns it a Realm, then exits.
+    /// Binds a host to the stack's organization and assigns it a Realm, then exits; with
+    /// `--as-engine`, binds each game Paper slot as the Realm's Paper engine and keeps running.
     Bind(bind::BindArgs),
+    /// Mints read only observer credentials for the game requirements, then exits.
+    Observer(observer::ObserverArgs),
 }
 
 #[tokio::main]
@@ -53,6 +59,7 @@ async fn main() -> Result<()> {
         Command::Host(args) => host::run(args).await,
         Command::Provision(args) => provision::run(args).await,
         Command::Bind(args) => bind::run(args).await,
+        Command::Observer(args) => observer::run(args).await,
     };
     flush();
     result

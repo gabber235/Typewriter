@@ -265,12 +265,32 @@ impl Credentials {
 
     /// Connects to the broker at `endpoint` as this user.
     pub async fn connect(&self, endpoint: &str) -> Result<async_nats::Client> {
+        Ok(self.options()?.connect(endpoint).await?)
+    }
+
+    /// Connects as this user with its reply inboxes below `prefix`, as a user whose permissions
+    /// allow replies only there must.
+    pub async fn connect_with_inbox(
+        &self,
+        endpoint: &str,
+        prefix: &str,
+    ) -> Result<async_nats::Client> {
+        Ok(self
+            .options()?
+            .custom_inbox_prefix(prefix)
+            .connect(endpoint)
+            .await?)
+    }
+
+    fn options(&self) -> Result<async_nats::ConnectOptions> {
         let key = KeyPair::from_seed(&self.seed)?;
-        let options = async_nats::ConnectOptions::with_jwt(self.jwt.clone(), move |nonce| {
-            let key = key.clone();
-            async move { key.sign(&nonce).map_err(async_nats::AuthError::new) }
-        });
-        Ok(options.connect(endpoint).await?)
+        Ok(async_nats::ConnectOptions::with_jwt(
+            self.jwt.clone(),
+            move |nonce| {
+                let key = key.clone();
+                async move { key.sign(&nonce).map_err(async_nats::AuthError::new) }
+            },
+        ))
     }
 }
 

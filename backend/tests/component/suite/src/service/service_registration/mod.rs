@@ -1,6 +1,7 @@
 use typewriter_component_test::prelude::*;
 
 mod binding;
+mod engine_slots;
 mod lifecycle;
 mod management;
 mod status;

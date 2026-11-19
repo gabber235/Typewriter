@@ -1,25 +1,23 @@
-//! Binds a host to the stack's organization the way an owner does by hand, every step a real
-//! route with the owner's credentials: `BindService` with the token the loader wrote, then the
-//! organization topology until the host advertises, then `ConfigureServiceHost` assigning it a
-//! hosted Realm, then the topology again until that Realm reports active. Each wait has a deadline
-//! and fails naming its step, so a host that never advertises says so instead of hanging.
+//! Binds hosts to the stack's organization the way an owner does by hand, through the owner's
+//! panel session and the binder the component suite proves (`typewriter_component_test::binder`).
+//!
+//! The Realm host gets a hosted Realm, and `bind` exits once that Realm is active. With
+//! `--as-engine`, `bind` serves the game suite's Paper slots instead: each slot's loader writes its
+//! token to `<work-dir>/<slot>/registration-token` when its Paper first boots, and `bind` names that
+//! service `game_paper_<slot>` and attaches it to the stack's Realm as the Paper engine. It keeps
+//! running, since own Papers boot only when a restart requirement runs.
 
-use std::future::Future;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::Duration;
 
 use anyhow::{Context as _, Result, bail};
 use serde::Serialize;
-use wasmcloud_utils::skir::base::service::v1::registration::{
-    BindServiceRequest, BindServiceResponse,
+use typewriter_component_test::binder::{
+    self, EngineSlots, OwnerRoutes, configure, deadline, paper_engine, topology,
 };
+use wasmcloud_utils::SkirType;
 use wasmcloud_utils::skir::base::service::v1::topology::{
-    ChildRuntimeStatus, ConfigureServiceHostRequest, ConfigureServiceHostResponse, EngineTarget,
-    HostExecutionConfiguration, HostedRealmConfiguration, OrganizationTopologySnapshot,
-    ServiceHost, WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse,
-};
-use wasmcloud_utils::transport_routes::{
-    OrganizationTopologyWatchRoute, ServiceBindRoute, ServiceTopologyConfigureRoute,
+    ChildRuntimeStatus, HostExecutionConfiguration, HostedRealmConfiguration,
 };
 
 use crate::provision::Provisioned;
@@ -29,14 +27,20 @@ use crate::session::{Session, StackEndpoints, record_token};
 pub struct BindArgs {
     #[command(flatten)]
     endpoints: StackEndpoints,
-    /// The host's work directory, where it writes `state/registration-token`.
+    /// The host's work directory, where it writes `state/registration-token`; with `--as-engine`,
+    /// the folder holding one folder per game Paper slot.
     #[arg(long = "work-dir")]
     work_dir: PathBuf,
+    /// Binds each game Paper slot as the Paper engine of the stack's Realm, and keeps running.
+    #[arg(long = "as-engine")]
+    as_engine: bool,
+    /// How many game Paper slots `--as-engine` binds, numbered from 0.
+    #[arg(long, default_value_t = 1)]
+    slots: u8,
 }
 
-/// The engine the hosted Realm targets. A standalone host advertises no engine of its own, so the
-/// Realm targets the Paper engine its game servers attach with.
-const REALM_ENGINE: &str = "typewritermc:paper";
+/// How long a bound host may take to advertise itself in the topology.
+const ADVERTISE_WITHIN: Duration = Duration::from_secs(60);
 const POLL: Duration = Duration::from_millis(500);
 
 /// What `bind` bound, written to `bound.json` in the stack's state directory and printed.
@@ -49,89 +53,34 @@ struct Bound {
 }
 
 pub async fn run(args: BindArgs) -> Result<()> {
+    if args.as_engine {
+        return bind_engines(args).await;
+    }
     let endpoints = args.endpoints;
     let provisioned = Provisioned::read(&endpoints)?;
-    let owner = endpoints.owner()?;
-    let owner =
-        Session::sign_in(&endpoints, &owner, Some(&provisioned.organization_record())).await?;
-    let scope = format!(
-        "cloud.to.user.{}.organization.{}",
-        owner.user(),
-        owner.organization()?
-    );
-
-    let token_file = args.work_dir.join("state/registration-token");
-    let service = deadline("BindService", Duration::from_secs(60), async {
-        loop {
-            let token = wait_for_file(&token_file).await?;
-            let response = owner
-                .request::<ServiceBindRoute>(
-                    format!("{scope}.services.bind"),
-                    &BindServiceRequest {
-                        registration_token: token.trim().to_owned(),
-                        ..Default::default()
-                    },
-                )
-                .await?;
-            match response {
-                BindServiceResponse::Success(success) => return Ok(success.service_id),
-                // The token rotated between reading and binding; read the new one.
-                BindServiceResponse::InvalidRegistrationTokenError(_) => {
-                    tokio::time::sleep(POLL).await;
-                }
-                other => bail!("BindService failed: {other:?}"),
-            }
-        }
-    })
+    let owner = Owner::sign_in(&endpoints, &provisioned).await?;
+    let host = deadline(
+        "the Realm host to bind",
+        ADVERTISE_WITHIN * 2,
+        binder::bind(
+            &owner,
+            &args.work_dir.join("state/registration-token"),
+            ADVERTISE_WITHIN,
+        ),
+    )
     .await?;
-
-    let topology = || async {
-        match owner
-            .request::<OrganizationTopologyWatchRoute>(
-                format!("{scope}.topology.watch"),
-                &WatchOrganizationTopologyRequest::default(),
-            )
-            .await?
-        {
-            WatchOrganizationTopologyResponse::List(snapshot) => Ok(*snapshot),
-            other => bail!("WatchOrganizationTopology failed: {other:?}"),
-        }
-    };
-    let host = deadline("the host to advertise", Duration::from_secs(60), async {
-        loop {
-            if let Some(host) = advertised(&topology().await?, &service) {
-                return Ok(host);
-            }
-            tokio::time::sleep(POLL).await;
-        }
-    })
-    .await?;
-
-    let response = owner
-        .request::<ServiceTopologyConfigureRoute>(
-            format!("{scope}.topology.configure"),
-            &ConfigureServiceHostRequest {
-                host_id: host.host_id.clone(),
-                expected_revision: host.revision,
-                execution: HostExecutionConfiguration {
-                    realm: Some(HostedRealmConfiguration {
-                        primary_engine: EngineTarget {
-                            engine_id: REALM_ENGINE.into(),
-                            version_constraint: ">=0.0.0".into(),
-                            ..Default::default()
-                        },
-                        ..Default::default()
-                    }),
-                    ..Default::default()
-                },
+    let change = configure(
+        &owner,
+        &host,
+        HostExecutionConfiguration {
+            realm: Some(HostedRealmConfiguration {
+                primary_engine: paper_engine(),
                 ..Default::default()
-            },
-        )
-        .await
-        .context("ConfigureServiceHost")?;
-    let ConfigureServiceHostResponse::Success(change) = response else {
-        bail!("ConfigureServiceHost failed: {response:?}");
-    };
+            }),
+            ..Default::default()
+        },
+    )
+    .await?;
     let realm = change
         .realm
         .context("ConfigureServiceHost assigned no Realm")?
@@ -142,7 +91,7 @@ pub async fn run(args: BindArgs) -> Result<()> {
         Duration::from_secs(120),
         async {
             loop {
-                let snapshot = topology().await?;
+                let snapshot = topology(&owner).await?;
                 let state = snapshot
                     .realms
                     .iter()
@@ -165,7 +114,7 @@ pub async fn run(args: BindArgs) -> Result<()> {
 
     let bound = Bound {
         organization: provisioned.organization,
-        service,
+        service: record_token(&host.service_id)?.as_str().to_owned(),
         host: record_token(&host.host_id)?.as_str().to_owned(),
         realm: record_token(&realm)?.as_str().to_owned(),
     };
@@ -176,36 +125,67 @@ pub async fn run(args: BindArgs) -> Result<()> {
     Ok(())
 }
 
-/// The host the bound service advertised, matched by the service's record key.
-fn advertised(snapshot: &OrganizationTopologySnapshot, service: &str) -> Option<ServiceHost> {
-    snapshot
-        .hosts
-        .iter()
-        .find(|host| {
-            record_token(&host.service_id).is_ok_and(|token| token.as_str() == service)
-                || host.service_id.to_string() == service
-        })
-        .cloned()
-}
-
-async fn wait_for_file(file: &Path) -> Result<String> {
-    loop {
-        match tokio::fs::read_to_string(file).await {
-            Ok(text) if !text.trim().is_empty() => return Ok(text),
-            Ok(_) => {}
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-            Err(error) => return Err(error).with_context(|| format!("reading {}", file.display())),
+/// Binds every game Paper slot when its loader first asks to be bound, until the stack stops.
+async fn bind_engines(args: BindArgs) -> Result<()> {
+    let endpoints = args.endpoints;
+    let provisioned = Provisioned::read(&endpoints)?;
+    // Signing in once before the slots wait proves the owner can bind them later.
+    Owner::sign_in(&endpoints, &provisioned).await?;
+    let slots = EngineSlots {
+        work_dir: args.work_dir.clone(),
+        slots: args.slots,
+        advertise_within: ADVERTISE_WITHIN,
+    };
+    slots.prepare()?;
+    std::fs::write(args.work_dir.join("watching"), "")
+        .context("cannot mark the engine binder as watching")?;
+    let bind_all = slots.bind_all(|| Owner::sign_in(&endpoints, &provisioned));
+    tokio::select! {
+        _ = crate::shutdown_signal() => Ok(()),
+        bound = bind_all => {
+            for slot in bound? {
+                println!(
+                    "bound game Paper slot {}: service {}, engine {:?}",
+                    slot.slot,
+                    slot.host.service_id,
+                    slot.change.engine.map(|engine| engine.engine_id.to_string())
+                );
+            }
+            // Every slot is bound; wait for the stack to stop.
+            crate::shutdown_signal().await;
+            Ok(())
         }
-        tokio::time::sleep(POLL).await;
     }
 }
 
-async fn deadline<T>(
-    step: &str,
-    limit: Duration,
-    work: impl Future<Output = Result<T>>,
-) -> Result<T> {
-    tokio::time::timeout(limit, work)
-        .await
-        .with_context(|| format!("timed out after {}s waiting for {step}", limit.as_secs()))?
+/// The stack's owner, signed in to its organization through the panel's gateway.
+struct Owner {
+    session: Session,
+    scope: String,
+}
+
+impl Owner {
+    async fn sign_in(endpoints: &StackEndpoints, provisioned: &Provisioned) -> Result<Self> {
+        let owner = endpoints.owner()?;
+        let session =
+            Session::sign_in(endpoints, &owner, Some(&provisioned.organization_record())).await?;
+        let scope = format!(
+            "cloud.to.user.{}.organization.{}",
+            session.user(),
+            session.organization()?
+        );
+        Ok(Self { session, scope })
+    }
+}
+
+impl OwnerRoutes for Owner {
+    async fn request<Req: SkirType + Sync, Resp: SkirType + Send>(
+        &self,
+        route: &str,
+        request: &Req,
+    ) -> Result<Resp> {
+        self.session
+            .request(format!("{}.{route}", self.scope), request)
+            .await
+    }
 }

@@ -216,7 +216,7 @@ async fn create_streams(endpoint: &str, jwt: &str, user: &KeyPair) -> Result<()>
     Ok(())
 }
 
-fn user_jwt(
+pub(crate) fn user_jwt(
     account: &KeyPair,
     user: &KeyPair,
     name: &str,
@@ -230,7 +230,7 @@ fn user_jwt(
     claims.encode(account)
 }
 
-fn creds_file(jwt: &str, seed: &str) -> String {
+pub(crate) fn creds_file(jwt: &str, seed: &str) -> String {
     format!(
         "-----BEGIN NATS USER JWT-----\n{jwt}\n------END NATS USER JWT------\n\n\
          -----BEGIN USER NKEY SEED-----\n{seed}\n------END USER NKEY SEED------\n"
@@ -239,18 +239,26 @@ fn creds_file(jwt: &str, seed: &str) -> String {
 
 /// The keys a stack keeps across runs, as seeds.
 #[derive(Serialize, Deserialize)]
-struct StackKeys {
+pub(crate) struct StackKeys {
     operator: String,
     system: String,
     /// The account of the components and the auth callout, which signs the callout's responses.
     wasmcloud: String,
     /// The account signed in users and services are placed in.
-    typewriter: String,
+    pub(crate) typewriter: String,
     /// Signs the user JWTs the auth callout issues.
     typewriter_signing: String,
 }
 
 impl StackKeys {
+    /// The keys `broker` created in the stack's state directory `state`.
+    pub(crate) fn of_stack(state: &Path) -> Result<Self> {
+        let file = state.join("broker-keys/keys.json");
+        let text = std::fs::read_to_string(&file)
+            .with_context(|| format!("cannot read {}", file.display()))?;
+        serde_json::from_str(&text).with_context(|| format!("{} is not a key file", file.display()))
+    }
+
     fn load_or_create(dir: &Path) -> Result<Self> {
         let file = dir.join("keys.json");
         if let Ok(text) = std::fs::read_to_string(&file) {
@@ -296,7 +304,7 @@ impl BrokerConnection {
 }
 
 /// Writes a file only its owner can read; it holds seeds.
-fn write_private(file: &Path, contents: &str) -> Result<()> {
+pub(crate) fn write_private(file: &Path, contents: &str) -> Result<()> {
     use std::io::Write as _;
     use std::os::unix::fs::OpenOptionsExt as _;
     if let Some(parent) = file.parent() {

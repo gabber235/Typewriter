@@ -3,12 +3,13 @@
 //!
 //! Test files hold only fixtures and cases; everything they share lives here. The prelude holds
 //! what every case uses. Each domain module holds the requests, doubles, builders and
-//! expectations of one area: [`access`], [`broker`], [`callout`], [`identity`],
+//! expectations of one area: [`access`], [`binder`], [`broker`], [`callout`], [`identity`],
 //! [`organization`] and [`service`].
 
 #![forbid(unsafe_code)]
 
 pub mod access;
+pub mod binder;
 pub mod broker;
 pub mod callout;
 mod database;
