@@ -6,7 +6,7 @@ goal: Close the G gaps so Typewriter's first in-game test (node 3, sessions) can
 
 pieces:
   - id: g1-paper-additions
-    status: building
+    status: done
     open: none; one union of every gameTest module's plugin jars, files and Paper env, collected before the pool starts
     tries:
       - id: per-module-additions
@@ -26,7 +26,7 @@ pieces:
         state: picked
         evidence: [3c05b6b8f0, QUIT-1 to QUIT-6, AwayTest.kt, full game suite 102 of 102 on the G2 branch]
   - id: g3-outside-proof
-    status: building
+    status: done
     open: none
     tries:
       - id: state-check-in-window
@@ -41,7 +41,7 @@ pieces:
         state: dropped
         why: The developer kept the framework tick based; GAME-S3 stays in node 3's two engine harness with injected short TTLs
   - id: g4-services
-    status: building
+    status: done
     open: who gates a Typewriter requirement on the engine being Active on a restart Paper (see open)
     tries:
       - id: inside-stack
@@ -99,6 +99,9 @@ open:
     what: Who gates a Typewriter requirement on the engine being Active on a restart Paper (slots 1 and 2 are bound and keep their identity, but nothing waits for them yet)
     tied_to: the readiness and done obligation (docs/design/game-verification/README.md, Obligations on Typewriter)
 
-slices: []
+slices:
+  - id: g-gaps
+    what: G1 to G4 on one branch, feat/game-verification-gaps
+    evidence: [cargo xtask e2e game 105 of 105, check quality docs xtask components services green on 2026-11-19]
 
-next: Merge G2 and G4 from their delegates' branches, run e2e game once, then typewriter-review and Finish
+next: Open the pull request for feat/game-verification-gaps; node 3 writes its first in-game test on it. The restart Paper engine gate stays open until a Typewriter requirement needs a restart
