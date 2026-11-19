@@ -1,14 +1,19 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.launch.HeapShare
+
 /**
  * The Papers the pool runs, each under a name and in a folder of its own: the shared Paper, and the own
  * Paper of each restart attempt, named after its attempt. Nothing that ends an older Paper, its exit or
  * the removal of its folder, so reaches a newer one, even the Paper of a later attempt of the same
- * submission. [folderOf] sets up a fresh folder for a name; [remove] removes a Paper's folder.
+ * submission. Each Paper also holds a slot: the shared Paper 0, an own Paper the lowest of 1 to
+ * [ownSlots] no running Paper holds, freed when that Paper is gone. [folderOf] sets up a fresh folder for
+ * a name and slot; [remove] removes a Paper's folder.
  */
 internal class Papers(
-    private val folderOf: (String) -> PaperFolder,
+    private val folderOf: (String, Int) -> PaperFolder,
     private val remove: (PaperFolder) -> Unit,
+    private val ownSlots: Int = HeapShare.OWN_PAPERS,
 ) {
     private val byName = linkedMapOf<String, Server>()
 
@@ -29,7 +34,11 @@ internal class Papers(
         attempt: Long,
         players: Set<String>,
     ): Server {
-        val folder = folderOf(Game.OWN_PAPER + attempt)
+        val held = byName.values.map { it.folder.slot }.toSet()
+        val slot =
+            (1..ownSlots).firstOrNull { it !in held }
+                ?: error("every own Paper slot is held, but the claims let no more than $ownSlots own Papers run at once")
+        val folder = folderOf(Game.OWN_PAPER + attempt, slot)
         return Server(folder, OwnPaper(folder.name, players)).also(::add)
     }
 
