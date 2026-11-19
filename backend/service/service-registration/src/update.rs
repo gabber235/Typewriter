@@ -33,10 +33,16 @@ use wasmcloud_utils::{
 #[derive(Debug, Deserialize)]
 #[serde(tag = "outcome", rename_all = "kebab-case")]
 enum ServiceUpdateOutcome {
-    Updated { service: ServiceRecord },
+    Updated {
+        service: ServiceRecord,
+    },
     /// A stale request whose name is already stored; nothing was written.
-    Unchanged { service: ServiceRecord },
-    ConflictError { actual: ServiceRecord },
+    Unchanged {
+        service: ServiceRecord,
+    },
+    ConflictError {
+        actual: ServiceRecord,
+    },
     ServiceNotFoundError,
     NameInvalid,
 }

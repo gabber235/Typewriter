@@ -273,7 +273,7 @@ fn subject_of(token: &str) -> Result<String> {
 /// A fresh 32 character lowercase hexadecimal connection session, as the panel chooses one.
 fn connection_session() -> Result<ConnectionSession> {
     let mut bytes = [0; 16];
-    getrandom::getrandom(&mut bytes).context("generating a connection session")?;
+    getrandom::fill(&mut bytes).context("generating a connection session")?;
     let session: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
     ConnectionSession::try_from(session.as_str()).map_err(|error| anyhow!("{error}"))
 }

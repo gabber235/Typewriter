@@ -402,8 +402,7 @@ async fn repeated_configuration_after_it_landed_answers_and_republishes_the_stor
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
     organization_with_hosts(context, &acme(), ada(), &["lobby"], &["paper"]).await?;
-    let first =
-        arrange_host_configuration(context, "lobby", 1, realm_with_engine(paper())).await?;
+    let first = arrange_host_configuration(context, "lobby", 1, realm_with_engine(paper())).await?;
     expect_configuration_change(context, &acme(), |change| {
         change.host.revision == 2 && change.removed_resources.is_empty()
     })?;

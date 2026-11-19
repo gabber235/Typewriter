@@ -45,7 +45,7 @@ const TOKEN_LIFETIME_SECONDS: u64 = 3600;
 pub async fn run(args: IdentityArgs) -> Result<()> {
     let users = StackUser::read_all(&args.users)?;
     let mut seed = [0; 32];
-    getrandom::getrandom(&mut seed).context("generating the signing key")?;
+    getrandom::fill(&mut seed).context("generating the signing key")?;
     let stand_in = Arc::new(AuthentikStandIn {
         base: format!("http://127.0.0.1:{}", args.identity),
         signing: SigningKey::from_bytes(&seed),
@@ -240,7 +240,7 @@ impl AuthentikStandIn {
         }
         let pk = this.next_account.fetch_add(1, Ordering::Relaxed);
         let mut secret = [0; 24];
-        if getrandom::getrandom(&mut secret).is_err() {
+        if getrandom::fill(&mut secret).is_err() {
             return StatusCode::INTERNAL_SERVER_ERROR.into_response();
         }
         let token = URL_SAFE_NO_PAD.encode(secret);

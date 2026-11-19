@@ -10,7 +10,7 @@ use surrealdb::{
     types::{SurrealValue, Value},
 };
 use uuid::Uuid;
-use wash_runtime::wit::WitInterface;
+use wash_runtime::wit::{Config, WitInterface};
 use wasmcloud_utils::skir::base::kernel::v1::record_id::RecordId;
 
 use crate::{Organization, StackUser, database_record_key, skir_record_id};
@@ -200,10 +200,10 @@ impl FixtureExtension for TypewriterDatabase {
 
     async fn provision(&mut self, context: &mut ProvisionContext) -> Result<Self::Handle> {
         let unique = Uuid::new_v4().simple().to_string();
-        let key = ConnectionKey::from_config(&std::collections::HashMap::from([
-            ("url".into(), "memory".into()),
-            ("namespace".into(), format!("component_test_{unique}")),
-            ("database".into(), format!("fixture_{unique}")),
+        let key = ConnectionKey::from_config(&Config::from([
+            ("url", "memory".to_owned()),
+            ("namespace", format!("component_test_{unique}")),
+            ("database", format!("fixture_{unique}")),
         ]))?;
         let plugin = Arc::new(WasmcloudSurrealdb::new());
         let handle = DatabaseHandle {
@@ -214,13 +214,9 @@ impl FixtureExtension for TypewriterDatabase {
         self.preset.apply(&*connection.read().await).await?;
         context.plugin(plugin);
         let mut interface = WitInterface::from("seamlezz:surrealdb/call@0.4.0");
-        interface.config.insert("url".into(), key.url.clone());
-        interface
-            .config
-            .insert("namespace".into(), key.namespace.clone());
-        interface
-            .config
-            .insert("database".into(), key.database.clone());
+        interface.config.insert("url", key.url.clone());
+        interface.config.insert("namespace", key.namespace.clone());
+        interface.config.insert("database", key.database.clone());
         context.interface(interface);
         Ok(handle)
     }
@@ -249,28 +245,35 @@ impl<F: FixtureDeclaration> TypewriterFixtureBuilderExt<F> for FixtureBuilder<F>
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn every_preset_applies_to_a_fresh_database() -> Result<()> {
-        for preset in [
-            SchemaPreset::Service,
-            SchemaPreset::Organization,
-            SchemaPreset::Registration,
-            SchemaPreset::Full,
-        ] {
-            let unique = Uuid::new_v4().simple().to_string();
-            let key = ConnectionKey::from_config(&std::collections::HashMap::from([
-                ("url".into(), "memory".into()),
-                ("namespace".into(), format!("test_{unique}")),
-                ("database".into(), "test".into()),
-            ]))?;
-            let database = DatabaseHandle {
-                plugin: Arc::new(WasmcloudSurrealdb::new()),
-                key,
-            };
-            for file in preset.files()? {
-                database.execute(file.sql).await?;
+    // The embedded engine needs the deep stacks of the plugin's worker threads, which the
+    // future `block_on` polls on the test thread does not have.
+    #[test]
+    fn every_preset_applies_to_a_fresh_database() -> Result<()> {
+        let presets = async {
+            for preset in [
+                SchemaPreset::Service,
+                SchemaPreset::Organization,
+                SchemaPreset::Registration,
+                SchemaPreset::Full,
+            ] {
+                let unique = Uuid::new_v4().simple().to_string();
+                let key = ConnectionKey::from_config(&Config::from([
+                    ("url", "memory".to_owned()),
+                    ("namespace", format!("test_{unique}")),
+                    ("database", "test".to_owned()),
+                ]))?;
+                let database = DatabaseHandle {
+                    plugin: Arc::new(WasmcloudSurrealdb::new()),
+                    key,
+                };
+                for file in preset.files()? {
+                    database.execute(file.sql).await?;
+                }
             }
-        }
-        Ok(())
+            anyhow::Ok(())
+        };
+        wasmcloud_plugin_surrealdb::runtime_builder()
+            .build()?
+            .block_on(async { tokio::spawn(presets).await? })
     }
 }
