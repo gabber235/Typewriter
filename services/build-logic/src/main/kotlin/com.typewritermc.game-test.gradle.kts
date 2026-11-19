@@ -50,11 +50,17 @@ val coverageAgentPart = gamePart("playtestCoverageAgent", ":playtest-plugin", "p
  * gameTest shares the build's pool and its Papers, so the pool takes the union of every module's
  * additions; two modules that disagree on a file or a variable fail before Paper starts.
  *
+ * Each Paper runs in a slot, which it finds in `PLAYTEST_PAPER_SLOT`: the shared Paper in 0, the own
+ * Papers of restart requirements in 1 and 2, each taking a free slot and freeing it when it ends.
+ * [slot] adds environment for one slot's Paper only, and [keptPerSlot] names paths in Paper's folder a
+ * slot keeps: what one own Paper wrote there is in the slot's next own Paper too.
+ *
  * ```
  * gamePaper {
  *     pluginJars.from(project(":loader-distribution"))
- *     files { into("plugins/Typewriter/artifacts/inbox/manual") { from(stagedArtifacts) } }
  *     environment.put("TYPEWRITER_CONFIG_FILE", configFile)
+ *     slot(0) { environment.put("TYPEWRITER_REGISTRATION_TOKEN_FILE", tokenOfSlot0) }
+ *     keptPerSlot.add("plugins/Typewriter/state")
  * }
  * ```
  */
@@ -67,11 +73,28 @@ abstract class GamePaper
 
         abstract val environment: MapProperty<String, String>
 
+        /** Paths in Paper's folder each slot keeps across its own Papers. */
+        abstract val keptPerSlot: ListProperty<String>
+
         /** The files that go into Paper's folder, by their path in it. */
         val files: CopySpec = project.copySpec()
 
+        /** What only the Paper of each slot adds, by slot. */
+        val slots: MutableMap<Int, GamePaperSlot> = mutableMapOf()
+
         fun files(action: Action<CopySpec>) = action.execute(files)
+
+        /** Adds to the Paper of slot [slot] only. */
+        fun slot(
+            slot: Int,
+            action: Action<GamePaperSlot>,
+        ) = action.execute(slots.getOrPut(slot) { project.objects.newInstance(GamePaperSlot::class.java) })
     }
+
+/** What one slot's Paper adds to the environment every Paper of the build starts with. */
+abstract class GamePaperSlot {
+    abstract val environment: MapProperty<String, String>
+}
 
 val gamePaper = extensions.create<GamePaper>("gamePaper", project)
 
@@ -86,24 +109,53 @@ val paperAdditionFiles =
         with(gamePaper.files)
     }
 
-/** This module's environment for Paper, as the pool reads it: `env.properties` of its additions. */
+/**
+ * This module's environment and kept paths for Paper, as the pool reads them from its additions:
+ * `env.properties` for every Paper, `slots/<n>/env.properties` for slot n's, and `kept.txt`.
+ */
 abstract class WritePaperEnvironment : DefaultTask() {
     @get:Input abstract val environment: MapProperty<String, String>
 
+    /** Each slot's environment, by slot. */
+    @get:Input abstract val slotEnvironments: MapProperty<Int, Map<String, String>>
+
+    @get:Input abstract val kept: ListProperty<String>
+
     @get:OutputFile abstract val file: RegularFileProperty
+
+    @get:OutputDirectory abstract val slots: DirectoryProperty
+
+    @get:OutputFile abstract val keptFile: RegularFileProperty
 
     @TaskAction
     fun write() {
-        val properties = Properties().apply { putAll(environment.get()) }
-        file.get().asFile.outputStream().use { properties.store(it, null) }
+        write(file.get().asFile, environment.get())
+        slots.get().asFile.apply { deleteRecursively() }
+        slotEnvironments.get().forEach { (slot, environment) ->
+            write(slots.get().dir(slot.toString()).file("env.properties").asFile.also { it.parentFile.mkdirs() }, environment)
+        }
+        slots.get().asFile.mkdirs()
+        keptFile.get().asFile.writeText(kept.get().joinToString("\n"))
+    }
+
+    private fun write(
+        file: File,
+        environment: Map<String, String>,
+    ) {
+        val properties = Properties().apply { putAll(environment) }
+        file.outputStream().use { properties.store(it, null) }
     }
 }
 
 val paperAdditionEnvironment =
     tasks.register<WritePaperEnvironment>("playtestPaperEnvironment") {
-        description = "Writes the environment this module sets for every Paper of the game pool."
+        description = "Writes the environment and the kept paths this module sets for the Papers of the game pool."
         environment.set(gamePaper.environment)
+        slotEnvironments.set(provider { gamePaper.slots.mapValues { (_, slot) -> slot.environment.get() } })
+        kept.set(gamePaper.keptPerSlot)
         file.set(paperAdditionsDir.map { it.file("env.properties") })
+        slots.set(paperAdditionsDir.map { it.dir("slots") })
+        keptFile.set(paperAdditionsDir.map { it.file("kept.txt") })
     }
 
 configurations.consumable("playtestPaperAdditions") {

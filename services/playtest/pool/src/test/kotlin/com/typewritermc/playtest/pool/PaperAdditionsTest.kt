@@ -49,10 +49,48 @@ val PaperAdditionsTest by testSuite {
         val sibling = addition(env = mapOf("SIBLING" to "1", "TYPEWRITER_CONFIG_FILE" to "/stack/paper.properties"))
         val other = addition(env = mapOf("TYPEWRITER_CONFIG_FILE" to "/elsewhere.properties"))
 
-        PaperAdditions(listOf(typewriter, sibling)).environment shouldBe
-            mapOf("TYPEWRITER_CONFIG_FILE" to "/stack/paper.properties", "SIBLING" to "1")
-        shouldThrow<IllegalStateException> { PaperAdditions(listOf(typewriter, other)).environment }.message shouldContain
+        PaperAdditions(listOf(typewriter, sibling)).environment(slot = 0) shouldBe
+            mapOf("TYPEWRITER_CONFIG_FILE" to "/stack/paper.properties", "SIBLING" to "1", "PLAYTEST_PAPER_SLOT" to "0")
+        shouldThrow<IllegalStateException> { PaperAdditions(listOf(typewriter, other)).environment(slot = 0) }.message shouldContain
             "TYPEWRITER_CONFIG_FILE"
+    }
+
+    test("a slot's environment reaches only that slot's Paper, which also learns its slot") {
+        val typewriter =
+            addition(
+                env = mapOf("TYPEWRITER_CONFIG_FILE" to "/stack/paper.properties"),
+                slotEnv =
+                    mapOf(
+                        0 to mapOf("TYPEWRITER_REGISTRATION_TOKEN_FILE" to "/stack/0/token"),
+                        2 to mapOf("TYPEWRITER_REGISTRATION_TOKEN_FILE" to "/stack/2/token"),
+                    ),
+            )
+        val additions = PaperAdditions(listOf(typewriter))
+
+        additions.environment(slot = 0) shouldBe
+            mapOf(
+                "TYPEWRITER_CONFIG_FILE" to "/stack/paper.properties",
+                "TYPEWRITER_REGISTRATION_TOKEN_FILE" to "/stack/0/token",
+                "PLAYTEST_PAPER_SLOT" to "0",
+            )
+        additions.environment(slot = 1) shouldBe
+            mapOf("TYPEWRITER_CONFIG_FILE" to "/stack/paper.properties", "PLAYTEST_PAPER_SLOT" to "1")
+        additions.environment(slot = 2)["TYPEWRITER_REGISTRATION_TOKEN_FILE"] shouldBe "/stack/2/token"
+    }
+
+    test("a slot's environment that disagrees with another module's for the same slot fails naming the variable") {
+        val first = addition(slotEnv = mapOf(1 to mapOf("TOKEN" to "/a")))
+        val second = addition(env = mapOf("TOKEN" to "/b"))
+
+        shouldThrow<IllegalStateException> { PaperAdditions(listOf(first, second)).environment(slot = 1) }.message shouldContain "TOKEN"
+        PaperAdditions(listOf(first, second)).environment(slot = 2)["TOKEN"] shouldBe "/b"
+    }
+
+    test("the paths kept per slot are every module's, each once") {
+        val typewriter = addition(kept = listOf("plugins/Typewriter/state"))
+        val sibling = addition(kept = listOf("plugins/Sibling/data", "plugins/Typewriter/state"))
+
+        PaperAdditions(listOf(typewriter, sibling)).kept shouldBe listOf("plugins/Typewriter/state", "plugins/Sibling/data")
     }
 
     test("a build whose modules add nothing leaves Paper's folder and environment as the framework sets them") {
@@ -61,6 +99,7 @@ val PaperAdditionsTest by testSuite {
         PaperAdditions(listOf(addition())).copyInto(paper)
 
         Files.list(paper).use { it.count() } shouldBe 0
-        PaperAdditions(listOf()).environment shouldBe mapOf()
+        PaperAdditions(listOf()).environment(slot = 0) shouldBe mapOf("PLAYTEST_PAPER_SLOT" to "0")
+        PaperAdditions(listOf()).kept shouldBe listOf()
     }
 }

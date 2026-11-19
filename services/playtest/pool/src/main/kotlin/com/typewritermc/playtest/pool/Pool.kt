@@ -338,7 +338,7 @@ internal class Pool(
     private lateinit var shared: Server
 
     // Every Paper the pool runs, the shared one included, each under a name and in a folder of its own.
-    private val papers = Papers(folderOf = { game.ownFolder(it) }, remove = { game.removeOwn(it) })
+    private val papers = Papers(folderOf = { name, slot -> game.ownFolder(name, slot) }, remove = { game.removeOwn(it) })
     private val aot = AotCache(settings.aotDir)
 
     // Every restart Paper of the pool boots the same JDK, class path, plugins and flags, its heap share included.

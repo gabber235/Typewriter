@@ -64,6 +64,8 @@ internal class PaperFolder(
     val dir: Path,
     val port: Int,
     val log: Path,
+    /** The Paper's slot: 0 for the shared Paper, 1 and up for the own Papers that run at once. */
+    val slot: Int,
 ) {
     /** Where the JaCoCo agent dumps each plugin class as Paper defined it, which its counts refer to. */
     val classes: Path get() = classesIn(dir)
@@ -111,6 +113,9 @@ internal class Game private constructor(
     private val running = started.toMutableList()
     private var lost = 0
 
+    // What each slot keeps across its own Papers; a run starts with nothing kept.
+    private val keep = SlotKeep.fresh(settings.poolDir.resolve("slots"), settings.paperAdditions.kept)
+
     /** Every part that runs now, a replaced client's new process in place of its old one. */
     val parts: List<Part> @Synchronized get() = running.toList()
 
@@ -139,12 +144,16 @@ internal class Game private constructor(
     }
 
     /**
-     * A fresh folder and free port for [name], a restart attempt's own Paper, set up as the shared
-     * Paper's folder is. A folder of that name an earlier pool run left goes.
+     * A fresh folder and free port for [name], a restart attempt's own Paper in slot [slot], set up as
+     * the shared Paper's folder is, with what the slot kept. A folder of that name an earlier pool run left goes.
      */
-    fun ownFolder(name: String): PaperFolder {
-        val folder = PaperFolder(name, settings.poolDir.resolve(name), freePort(), logOf(settings, name))
+    fun ownFolder(
+        name: String,
+        slot: Int,
+    ): PaperFolder {
+        val folder = PaperFolder(name, settings.poolDir.resolve(name), freePort(), logOf(settings, name), slot)
         preparePaper(settings, folder.dir, folder.port)
+        keep.restore(slot, folder.dir)
         return folder
     }
 
@@ -168,8 +177,11 @@ internal class Game private constructor(
         running -= part
     }
 
-    /** Removes the folder of an own Paper whose attempt ended. */
-    fun removeOwn(folder: PaperFolder) = remove(folder.dir)
+    /** Removes the folder of an own Paper whose attempt ended, once its slot kept what it keeps. */
+    fun removeOwn(folder: PaperFolder) {
+        keep.save(folder.slot, folder.dir)
+        remove(folder.dir)
+    }
 
     /** Stops every part: asks first, then forces whatever still runs. */
     fun stop() {
@@ -195,7 +207,7 @@ internal class Game private constructor(
                     dirs.filter { it.fileName.toString().startsWith(OWN_PAPER) }.toList()
                 }.forEach { remove(it) }
             Files.list(settings.logs).use { logs -> logs.filter { it != settings.poolLog }.toList() }.forEach { remove(it) }
-            val paper = PaperFolder("paper", settings.poolDir.resolve("paper"), freePort(), logOf(settings, "paper"))
+            val paper = PaperFolder("paper", settings.poolDir.resolve("paper"), freePort(), logOf(settings, "paper"), slot = 0)
             preparePaper(settings, paper.dir, paper.port)
             val paperPart =
                 startPaper(
@@ -301,7 +313,7 @@ internal class Game private constructor(
                 command,
                 folder.dir,
                 folder.log,
-                settings.paperAdditions.environment,
+                settings.paperAdditions.environment(folder.slot),
                 append = append,
             )
 

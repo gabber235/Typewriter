@@ -29,7 +29,7 @@ val LaunchesTest by testSuite {
             """{"jvmArgs": [], "classpath": ["client.jar"], "main": "net.minecraft.client.main.Main", "args": []}""",
         )
         val server = PaperServer(listOf(dir.resolve("server.jar")), "io.papermc.paper.PaperBootstrap")
-        val folder = PaperFolder("paper", dir.resolve("paper"), 25565, dir.resolve("paper.log"))
+        val folder = PaperFolder("paper", dir.resolve("paper"), 25565, dir.resolve("paper.log"), slot = 0)
 
         Launches.sharedPaper(settings, 4000, folder, server, "output=none") shouldContain HeapShare.PAPER.flag()
         Launches.ownPaper(settings, 4000, folder, server, "output=none", listOf()) shouldContain HeapShare.OWN_PAPER.flag()

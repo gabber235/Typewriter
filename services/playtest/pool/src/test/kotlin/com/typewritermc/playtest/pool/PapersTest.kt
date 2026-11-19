@@ -18,7 +18,7 @@ val PapersTest by testSuite {
         val pool = Files.createTempDirectory("papers")
         val papers =
             Papers(
-                folderOf = { PaperFolder(it, pool.resolve(it).createDirectories(), 0, pool.resolve("$it.log")) },
+                folderOf = { name, slot -> PaperFolder(name, pool.resolve(name).createDirectories(), 0, pool.resolve("$name.log"), slot) },
                 remove = { it.dir.toFile().deleteRecursively() },
             )
         val old = papers.restart(23, setOf("gv-1"))
@@ -41,15 +41,34 @@ val PapersTest by testSuite {
         val pool = Files.createTempDirectory("papers")
         val papers =
             Papers(
-                folderOf = { PaperFolder(it, pool.resolve(it).createDirectories(), 0, pool.resolve("$it.log")) },
+                folderOf = { name, slot -> PaperFolder(name, pool.resolve(name).createDirectories(), 0, pool.resolve("$name.log"), slot) },
                 remove = { it.dir.toFile().deleteRecursively() },
             )
-        papers.add(Server(PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log")), SharedPaper("paper", setOf("gv-1"))))
+        papers.add(Server(PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log"), slot = 0), SharedPaper("paper", setOf("gv-1"))))
 
         shouldThrow<IllegalStateException> {
             papers.add(
-                Server(PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log")), SharedPaper("paper", setOf("gv-1"))),
+                Server(PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log"), slot = 0), SharedPaper("paper", setOf("gv-1"))),
             )
         }
+    }
+
+    test("each own Paper running at once has a slot of its own after the shared Paper's 0, and a gone Paper's slot serves the next") {
+        val pool = Files.createTempDirectory("papers")
+        val papers =
+            Papers(
+                folderOf = { name, slot -> PaperFolder(name, pool.resolve(name).createDirectories(), 0, pool.resolve("$name.log"), slot) },
+                remove = { it.dir.toFile().deleteRecursively() },
+            )
+        papers.add(Server(PaperFolder("paper", pool.resolve("paper"), 0, pool.resolve("paper.log"), slot = 0), SharedPaper("paper", setOf("gv-1"))))
+
+        val first = papers.restart(1, setOf("gv-2"))
+        val second = papers.restart(2, setOf("gv-3"))
+        papers.gone(first)
+        val third = papers.restart(3, setOf("gv-4"))
+
+        first.folder.slot shouldBe 1
+        second.folder.slot shouldBe 2
+        third.folder.slot shouldBe 1
     }
 }
