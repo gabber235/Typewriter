@@ -26,13 +26,13 @@ DEFINE FUNCTION OVERWRITE fn::hex_digit($char: string) -> int {
     };
 
     LET $c = string::uppercase($char);
-    LET $value = $digits[$c];
+    LET $digit = $digits[$c];
 
-    IF $value = NONE {
+    IF $digit = NONE {
         THROW "Invalid hex character: " + $char;
     };
 
-    RETURN $value;
+    RETURN $digit;
 };
 
 -- Parse RGB or ARGB hex strings to an integer.

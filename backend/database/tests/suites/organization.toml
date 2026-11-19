@@ -212,11 +212,11 @@ kind = "sql_expect"
 actor = "root"
 sql = """
 RETURN {
-LET $before = SELECT in, roles FROM member_of WHERE out = organization:acme;
+LET $members_before = SELECT in, roles FROM member_of WHERE out = organization:acme ORDER BY in;
 LET $result = fn::organization::members::update_roles(organization:acme, [user:bob, user:absent], [organization_role:acme_member]);
 RETURN $result.outcome = 'user-not-found-error'
     AND $result.user_ids = [user:absent]
-    AND $before = (SELECT in, roles FROM member_of WHERE out = organization:acme);
+    AND $members_before = (SELECT in, roles FROM member_of WHERE out = organization:acme ORDER BY in);
 };
 """
 allow = true
@@ -329,10 +329,10 @@ actor = "root"
 sql = """
 RETURN {
     LET $founder = (SELECT VALUE id FROM organization_role WHERE organization = organization:acme AND name = 'founder')[0];
-    LET $before = SELECT in, roles FROM member_of WHERE out = organization:acme;
+    LET $members_before = SELECT in, roles FROM member_of WHERE out = organization:acme ORDER BY in;
     LET $result = fn::organization::members::update_roles(organization:acme, [user:alice, user:bob], [$founder]);
     RETURN $result.outcome = 'roles-not-assignable-error' AND $result.user_ids = [user:bob]
-        AND $before = (SELECT in, roles FROM member_of WHERE out = organization:acme);
+        AND $members_before = (SELECT in, roles FROM member_of WHERE out = organization:acme ORDER BY in);
 };
 """
 allow = true

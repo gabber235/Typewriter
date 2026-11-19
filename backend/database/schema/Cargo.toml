@@ -11,7 +11,7 @@ description = "The backend's SurrealDB schema files and the presets of capabilit
 anyhow = "1"
 indexmap = { version = "2", features = ["serde"] }
 serde.workspace = true
-surrealdb = { version = "3.2.4", default-features = false }
+surrealdb = { version = "4.0.1", default-features = false }
 toml = { version = "1", features = ["preserve_order"] }
 
 [build-dependencies]
