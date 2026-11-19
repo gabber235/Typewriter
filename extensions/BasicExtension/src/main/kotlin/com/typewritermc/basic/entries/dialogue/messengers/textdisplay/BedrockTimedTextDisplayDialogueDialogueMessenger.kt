@@ -16,6 +16,7 @@ import com.typewritermc.engine.paper.utils.stripped
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicBoolean
 
 private val timedTextDisplayTitle: String by snippet(
     "dialogue.textDisplay.timed.bedrock.title",
@@ -37,12 +38,15 @@ class BedrockTimedTextDisplayDialogueDialogueMessenger(
 ) : DialogueMessenger<TimedTextDisplayDialogueEntry>(player, context, entry) {
     private var playTime = Duration.ZERO
     private var totalDuration = Duration.ZERO
+    private var typingDuration = Duration.ZERO
+    private val confirmed = AtomicBoolean()
 
     override fun init() {
         super.init()
         val text = entry.text.get(player, context).parsePlaceholders(player).stripped()
-        val typingDuration = typingDurationType.totalDuration(text, entry.typingDuration.get(player, context))
-        totalDuration = typingDuration.coerceAtLeast(Duration.ZERO) +
+        typingDuration = typingDurationType.totalDuration(text, entry.typingDuration.get(player, context))
+            .coerceAtLeast(Duration.ZERO)
+        totalDuration = typingDuration +
             entry.waitDuration.get(player, context).coerceAtLeast(Duration.ZERO)
         sendForm()
     }
@@ -50,6 +54,16 @@ class BedrockTimedTextDisplayDialogueDialogueMessenger(
     override fun tick(context: TickContext) {
         if (state != MessengerState.RUNNING) return
         playTime += context.deltaTime
+        if (confirmed.getAndSet(false)) {
+            if (entry.allowSkip.get(player, this.context)) {
+                if (playTime >= typingDuration) {
+                    state = MessengerState.FINISHED
+                    return
+                }
+                playTime = typingDuration
+            }
+            sendForm()
+        }
         if (playTime < totalDuration) return
 
         state = MessengerState.FINISHED
@@ -79,8 +93,7 @@ class BedrockTimedTextDisplayDialogueDialogueMessenger(
             },
             onConfirm = onConfirm@{
                 if (state != MessengerState.RUNNING) return@onConfirm
-                if (entry.allowSkip.get(player, context)) state = MessengerState.FINISHED
-                else sendForm()
+                confirmed.set(true)
             },
         )
     }

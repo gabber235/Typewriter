@@ -63,6 +63,9 @@ internal class JavaOptionTextDisplayDialogueDialogueMessenger(
     private val scrolledSlots = AtomicInteger()
     @Volatile
     private var acceptingScroll = false
+    @Volatile
+    override var confirmationTarget: Any? = null
+        private set
     override var completionTime: Duration = Duration.ZERO
         private set
     private var usableOptions: List<Option> = emptyList()
@@ -119,6 +122,7 @@ internal class JavaOptionTextDisplayDialogueDialogueMessenger(
             }
         }
         refreshDisplayedOptions()
+        confirmationTarget = selected
     }
 
     override fun stopInput() {

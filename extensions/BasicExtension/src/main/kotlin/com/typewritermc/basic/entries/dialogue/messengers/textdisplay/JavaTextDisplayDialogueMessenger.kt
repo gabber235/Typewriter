@@ -29,7 +29,7 @@ internal abstract class JavaTextDisplayDialogueMessenger<E : DialogueEntry>(
     private val orientation: TextDisplayOrientation,
     private val format: String,
 ) : DialogueMessenger<E>(player, context, entry) {
-    private val confirmed = AtomicBoolean()
+    private val confirmed = TextDisplayConfirmationInput()
     private val respawned = AtomicBoolean()
     private val animationRequest = AtomicReference<Boolean?>()
     @Volatile
@@ -43,12 +43,13 @@ internal abstract class JavaTextDisplayDialogueMessenger<E : DialogueEntry>(
     protected var display: TextDisplayDialogueDisplay? = null
         private set
     protected open val canConfirm: Boolean get() = true
+    protected open val confirmationTarget: Any? get() = Unit
     protected open val completionTime: Duration get() = typingDuration
     protected open val animationEnd: Duration get() = completionTime
     protected open val autoContinue: Boolean get() = false
 
     override var animationComplete: Boolean
-        get() = animationDone
+        get() = canConfirm && animationDone
         set(value) {
             animationRequest.set(value)
         }
@@ -91,7 +92,7 @@ internal abstract class JavaTextDisplayDialogueMessenger<E : DialogueEntry>(
         var close = false
         val text = if (activeDisplay.isClosing) null else {
             val canConfirm = canConfirm
-            val pressed = confirmed.getAndSet(false)
+            val pressed = confirmed.consume()
             refreshConfirmation(canConfirm)
             if (activeDisplay.ready) playedTime += context.deltaTime
             animationRequest.getAndSet(null)?.let {
@@ -99,7 +100,7 @@ internal abstract class JavaTextDisplayDialogueMessenger<E : DialogueEntry>(
             }
             updateDialogue()
             if (state != MessengerState.RUNNING) return
-            if (pressed && canConfirm) {
+            if (pressed != null && pressed === confirmationTarget && canConfirm) {
                 if (playedTime >= animationEnd) close = true
                 else {
                     playedTime = animationEnd
@@ -138,11 +139,11 @@ internal abstract class JavaTextDisplayDialogueMessenger<E : DialogueEntry>(
 
     private fun refreshConfirmation(enabled: Boolean) {
         if (enabled && confirmation == null) {
-            confirmation = player.awaitConfirmation { confirmed.set(true) }
+            confirmation = player.awaitConfirmation { confirmed.press(confirmationTarget) }
         } else if (!enabled && confirmation != null) {
             confirmation?.dispose()
             confirmation = null
-            confirmed.set(false)
+            confirmed.consume()
         }
     }
 
