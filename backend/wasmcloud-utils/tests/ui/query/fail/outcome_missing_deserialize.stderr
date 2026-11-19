@@ -33,7 +33,7 @@ note: required by a bound in `TransactionQuery`
   |                                    ^^^^^^^^^^^^^^^^ required by this bound in `TransactionQuery`
   = note: this error originates in the macro `transaction_query` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error[E0599]: the associated item `__from_literal` exists for struct `TransactionQuery<'_, Outcome>`, but its trait bounds were not satisfied
+error[E0599]: the associated function or constant `__from_literal` exists for struct `TransactionQuery<'_, Outcome>`, but its trait bounds were not satisfied
  --> tests/ui/query/fail/outcome_missing_deserialize.rs:6:18
   |
 3 |   struct Outcome;
@@ -44,7 +44,7 @@ error[E0599]: the associated item `__from_literal` exists for struct `Transactio
 7 | |         Outcome,
 8 | |         "BEGIN TRANSACTION; RETURN true; COMMIT TRANSACTION;",
 9 | |     );
-  | |_____^ associated item cannot be called on `TransactionQuery<'_, Outcome>` due to unsatisfied trait bounds
+  | |_____^ associated function or constant cannot be called on `TransactionQuery<'_, Outcome>` due to unsatisfied trait bounds
   |
   = note: the following trait bounds were not satisfied:
           `Outcome: serde_core::de::Deserialize<'de>`

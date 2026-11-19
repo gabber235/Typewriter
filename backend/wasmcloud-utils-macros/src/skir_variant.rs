@@ -19,7 +19,8 @@ pub(crate) struct SkirVariantInput {
 
 struct FieldEntry {
     name: Ident,
-    value: Expr,
+    /// `None` for the shorthand `name`, which takes the binding of that name.
+    value: Option<Expr>,
 }
 
 impl Parse for SkirVariantInput {
@@ -76,16 +77,12 @@ impl Parse for FieldEntry {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let name: Ident = input.parse()?;
 
-        // An omitted value is the field identifier itself, matching Rust struct literal shorthand.
+        // An omitted value is Rust struct literal shorthand, which the expansion keeps.
         let value = if input.peek(Token![:]) {
             let _: Token![:] = input.parse()?;
-            input.parse()?
+            Some(input.parse()?)
         } else {
-            Expr::Path(syn::ExprPath {
-                attrs: Vec::new(),
-                qself: None,
-                path: name.clone().into(),
-            })
+            None
         };
 
         Ok(Self { name, value })
@@ -99,13 +96,18 @@ pub(crate) fn expand(input: SkirVariantInput) -> syn::Result<TokenStream> {
 
     let payload_ty = crate::paths::payload_ty(response_ty, variant, "skir_variant!")?;
 
-    let field_names: Vec<_> = input.fields.iter().map(|f| &f.name).collect();
-    let field_values: Vec<_> = input.fields.iter().map(|f| &f.value).collect();
+    let fields = input.fields.iter().map(|field| {
+        let name = &field.name;
+        match &field.value {
+            Some(value) => quote! { #name: #value },
+            None => quote! { #name },
+        }
+    });
 
     Ok(quote! {
         #response_ty::#variant(::std::boxed::Box::new(
             #payload_ty {
-                #(#field_names: #field_values,)*
+                #(#fields,)*
                 _unrecognized: ::std::option::Option::None,
             },
         ))
