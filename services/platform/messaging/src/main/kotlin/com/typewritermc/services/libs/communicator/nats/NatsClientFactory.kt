@@ -111,7 +111,7 @@ internal object DefaultNatsClientFactory : NatsClientFactory {
     }
 }
 
-private class RealNatsClientAdapter(
+internal class RealNatsClientAdapter(
     private val client: io.natskt.api.NatsClient,
 ) : NatsClientAdapter {
     private val clientScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -127,7 +127,21 @@ private class RealNatsClientAdapter(
 
     override val jetStream: io.natskt.jetstream.api.JetStreamClient by lazy { io.natskt.jetstream.JetStreamClient(client) }
 
-    override suspend fun connect(): Result<Unit> = client.connect()
+    /**
+     * Returns once [connectivity] reports the new connection. natskt resolves its connect before its connection state
+     * says so, because that state reaches collectors through its own coroutines; a caller that used the connection
+     * right away would otherwise find it disconnected.
+     */
+    override suspend fun connect(): Result<Unit> {
+        val connected = client.connect()
+        if (connected.isFailure) return connected
+        val reported = withTimeoutOrNull(ROUND_TRIP_TIMEOUT) { connectivity.first { it == NatsClientConnectivity.Connected } }
+        return if (reported != null) {
+            connected
+        } else {
+            Result.failure(IllegalStateException("The NATS client did not report its connection within $ROUND_TRIP_TIMEOUT"))
+        }
+    }
 
     override suspend fun disconnect() {
         try {
