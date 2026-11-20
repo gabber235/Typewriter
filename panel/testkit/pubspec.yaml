@@ -4,7 +4,8 @@ publish_to: "none"
 version: 0.0.0
 
 environment:
-  sdk: ">=3.13.0 <4.0.0"
+  sdk: ^3.14.0
+  flutter: ">=3.51.0-0.1.pre"
 
 dependencies:
   analyzer: ^14.0.0
@@ -23,7 +24,7 @@ dependency_overrides:
   nats_core:
     git:
       url: https://github.com/gabber235/nats.dart.git
-      ref: 50231b430d1f5f37226ac36da30dd22c1c1859d9
+      ref: 20f25dac81b97ce5f42179ae0cf60e6e7b770c6a
       path: packages/nats_core
 
 flutter:
