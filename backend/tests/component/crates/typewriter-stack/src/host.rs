@@ -178,7 +178,7 @@ pub async fn run(args: HostArgs) -> Result<()> {
         .get_or_create_connection(&ConnectionKey::from_config(&database_config)?)
         .await?;
     database_schema::Preset::Full
-        .apply(&*connection.read().await)
+        .apply(&*connection)
         .await
         .context("applying the database schema")?;
 
