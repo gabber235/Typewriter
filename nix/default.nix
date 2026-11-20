@@ -29,7 +29,7 @@ let
     };
 in
 {
-  # The newest release, pinned so the shell does not wait for nixpkgs to pick a broker release up.
+  # The newest release of the 2.15 line the brokers Infrastructure deploys run; nixpkgs trails it.
   nats-server = releaseBinary rec {
     pname = "nats-server";
     version = "2.15.3";
