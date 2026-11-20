@@ -1,4 +1,7 @@
 inputs:
+  # Held at its locked revision: newer revisions build Go 1.27, which otelcol-contrib 0.155.0
+  # (cockroachdb/swiss) does not compile with, and darwin has no cached build. Update it with
+  # `devenv update nixpkgs` once otelcol-contrib builds there again.
   nixpkgs:
     url: github:NixOS/nixpkgs/nixpkgs-unstable
   # languages.rust pins an exact toolchain and the wasm32-wasip2 target through it.

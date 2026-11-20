@@ -29,18 +29,18 @@ let
     };
 in
 {
-  # nixpkgs carries 2.14.7; the brokers the backend deploys run 2.15.0.
+  # The newest release of the 2.15 line the brokers Infrastructure deploys run; nixpkgs trails it.
   nats-server = releaseBinary rec {
     pname = "nats-server";
-    version = "2.15.0";
+    version = "2.15.3";
     platform = asset {
       aarch64-darwin = "darwin-arm64";
       x86_64-linux = "linux-amd64";
     };
     url = "https://github.com/nats-io/nats-server/releases/download/v${version}/nats-server-v${version}-${platform}.tar.gz";
     hash = asset {
-      aarch64-darwin = "sha256-4cTiLXC9RKv6C8s8FvfPDGb2SMLnKMWJJOihzoiRPMg=";
-      x86_64-linux = "sha256-XSxRysqVAzOrqEkR3303f4JvOlnsNgYcZTkQUIT2XJI=";
+      aarch64-darwin = "sha256-p+JeMiRwJESeMty3Ep/0Ftyjos1Wn+PCBWA+z4/l+BA=";
+      x86_64-linux = "sha256-MuGMHnjX70+G5IMHDu86uyZHw9TWfilmgHfHrYHaB5c=";
     };
     binary = "nats-server-v${version}-${platform}/nats-server";
   };

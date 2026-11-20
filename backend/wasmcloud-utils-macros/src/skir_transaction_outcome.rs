@@ -35,9 +35,10 @@ struct ErrorEntry {
     fields: Vec<FieldEntry>,
 }
 
+/// A payload field: `name: value`, or the shorthand `name` that takes the binding of that name.
 struct FieldEntry {
     name: Ident,
-    value: Expr,
+    value: Option<Expr>,
 }
 
 impl Parse for SkirTransactionOutcomeInput {
@@ -110,13 +111,9 @@ impl Parse for FieldEntry {
         let name: Ident = input.parse()?;
         let value = if input.peek(Token![:]) {
             let _: Token![:] = input.parse()?;
-            input.parse()?
+            Some(input.parse()?)
         } else {
-            Expr::Path(syn::ExprPath {
-                attrs: Vec::new(),
-                qself: None,
-                path: name.clone().into(),
-            })
+            None
         };
         Ok(Self { name, value })
     }
@@ -147,13 +144,19 @@ fn error_arm(response_ty: &Path, entry: &ErrorEntry) -> syn::Result<TokenStream>
     let pattern = &entry.pattern;
     let variant = pattern_variant(pattern)?;
     let payload_ty = crate::paths::payload_ty(response_ty, variant, "skir_transaction_outcome!")?;
-    let field_names = entry.fields.iter().map(|field| &field.name);
-    let field_values = entry.fields.iter().map(|field| &field.value);
+    // Shorthand fields stay shorthand, so the expansion reads as the caller wrote it.
+    let fields = entry.fields.iter().map(|field| {
+        let name = &field.name;
+        match &field.value {
+            Some(value) => quote! { #name: #value },
+            None => quote! { #name },
+        }
+    });
 
     Ok(quote! {
         #pattern => {
             let payload = #payload_ty {
-                #(#field_names: #field_values,)*
+                #(#fields,)*
                 _unrecognized: ::std::option::Option::None,
             };
             return ::std::result::Result::Ok(

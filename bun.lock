@@ -5,7 +5,7 @@
     "": {
       "name": "typewriter-build-tools",
       "dependencies": {
-        "skir": "1.2.25",
+        "skir": "1.2.26",
         "skir-dart-gen": "1.0.10",
         "skir-kotlin-gen": "1.0.13",
         "skir-rust-gen": "0.1.6",
@@ -14,8 +14,8 @@
         "zod": "4.6.7",
       },
       "devDependencies": {
-        "@types/bun": "1.3.14",
-        "@types/node": "26.6.5",
+        "@types/bun": "1.4.4",
+        "@types/node": "26.6.6",
         "skir-internal": "0.2.22",
         "typescript": "7.0.2",
       },
@@ -25,9 +25,9 @@
     },
   },
   "packages": {
-    "@types/bun": ["@types/bun@1.3.14", "", { "dependencies": { "bun-types": "1.3.14" } }, "sha512-h1hFqFVcvAvD9j9K7ZW7vd82aSA+rTdznZa+5bwvCwqSB1jmmfLcbIWhOLx1/+boy/xmjgCs/OMUL8hRJSmnPw=="],
+    "@types/bun": ["@types/bun@1.4.4", "", { "dependencies": { "bun-types": "1.4.4" } }, "sha512-9wkRDXUXK124pEnAutE6n/l18j+i9GC5IAHK8TmX/2nlySETmky0OU6yL5U8pW1AoKh++AN9auDCr647BfurjQ=="],
 
-    "@types/node": ["@types/node@26.6.5", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg=="],
+    "@types/node": ["@types/node@26.6.6", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog=="],
 
     "@typescript/typescript-aix-ppc64": ["@typescript/typescript-aix-ppc64@7.0.2", "", { "os": "aix", "cpu": "ppc64" }, "sha512-MTKKkWB7p/0E9xi1d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhgIgi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ=="],
 
@@ -73,7 +73,7 @@
 
     "brace-expansion": ["brace-expansion@5.0.12", "", { "dependencies": { "balanced-match": "^4.0.2" } }, "sha512-YovQ3rzhaLMIrDjNDMkNS01tea93qhEhG5xy8f6+R0l+dw3Ki+5sCoIoI942iuLZTHWogWktgwVDhU09iNEimQ=="],
 
-    "bun-types": ["bun-types@1.3.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-4N0ig0fEomHt5R0KCFWjovxow98rIoRwKolrYdCcknNwMekCXRnWEUvgu5soYV8QXtVsrUD8B95MBOZGPvr6KQ=="],
+    "bun-types": ["bun-types@1.4.4", "", { "dependencies": { "@types/node": "*", "undici-types": "*" } }, "sha512-yjrJh5oGX7mMPKGd19YXyIjmEuj4G4zNC30bs7PM9Az7NQ3ndF3j6hbeRdvJTRQEhJ/FYQwW0a2moweEi2hMxQ=="],
 
     "dettle": ["dettle@1.0.5", "", {}, "sha512-ZVyjhAJ7sCe1PNXEGveObOH9AC8QvMga3HJIghHawtG7mE4K5pW9nz/vDGAr/U7a3LWgdOzEE7ac9MURnyfaTA=="],
 
@@ -91,7 +91,7 @@
 
     "promise-make-naked": ["promise-make-naked@3.0.2", "", {}, "sha512-B+b+kQ1YrYS7zO7P7bQcoqqMUizP06BOyNSBEnB5VJKDSWo8fsVuDkfSmwdjF0JsRtaNh83so5MMFJ95soH5jg=="],
 
-    "skir": ["skir@1.2.25", "", { "dependencies": { "glob": "^13.0.6", "skir-cc-gen": "^1.0.16", "skir-csharp-gen": "^0.1.1", "skir-dart-gen": "^1.0.10", "skir-elixir-gen": "^0.1.3", "skir-gleam-gen": "^0.1.4", "skir-go-gen": "^0.1.7", "skir-internal": "^0.2.21", "skir-java-gen": "^1.0.10", "skir-kotlin-gen": "^1.0.13", "skir-moonbit-gen": "^0.1.0", "skir-python-gen": "^1.0.9", "skir-rust-gen": "^0.1.6", "skir-swift-gen": "^0.1.7", "skir-typescript-gen": "^1.0.11", "skir-zig-gen": "^0.1.8", "watcher": "^2.3.1", "yaml": "^2.7.1", "zod": "^4.3.6" }, "bin": { "skir": "dist/compiler.js" } }, "sha512-4cjO3613hhQFOEbX0qQLBo13H2KhKhXLy9W25gCJjGH7em7qgYbbQ2rFs3K84ThsnhJFCF5SBOQMXmMAlGx+IQ=="],
+    "skir": ["skir@1.2.26", "", { "dependencies": { "glob": "^13.0.6", "skir-cc-gen": "^1.0.16", "skir-csharp-gen": "^0.1.1", "skir-dart-gen": "^1.0.10", "skir-elixir-gen": "^0.1.3", "skir-gleam-gen": "^0.1.4", "skir-go-gen": "^0.1.7", "skir-internal": "^0.2.21", "skir-java-gen": "^1.0.10", "skir-kotlin-gen": "^1.0.13", "skir-moonbit-gen": "^0.1.0", "skir-python-gen": "^1.0.9", "skir-rust-gen": "^0.1.6", "skir-swift-gen": "^0.1.7", "skir-typescript-gen": "^1.0.11", "skir-zig-gen": "^0.1.8", "watcher": "^2.3.1", "yaml": "^2.7.1", "zod": "^4.3.6" }, "bin": { "skir": "dist/compiler.js" } }, "sha512-5zquE0ff4GYe36xBN1LGo4SJK8Uv4v71E3cdZqAvx15MJulY0337anLz5DYjtjCen677FdMxIGyP2eksArVgIw=="],
 
     "skir-cc-gen": ["skir-cc-gen@1.0.16", "", { "dependencies": { "skir-internal": "^0.2.19", "zod": "^4.2.1" } }, "sha512-BpL81tWcOndPtIReX3ek+ZGK6wblCiTUvX2rf0tcc8LuMtVMD1y7iCT4+Mh2aZmnWTxjmJYjqIBiTXooLPyhCg=="],
 

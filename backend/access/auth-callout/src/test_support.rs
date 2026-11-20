@@ -219,12 +219,12 @@ pub(crate) fn token(seeds: &[String], input: &[u8]) -> String {
         0 => {
             let (&choice, edits) = rest.split_first().unwrap_or((&0, &[]));
             let mut token = seed(choice).clone().into_bytes();
-            for edit in edits.chunks_exact(3) {
-                let position = usize::from(u16::from_le_bytes([edit[0], edit[1]]));
-                let character = ALPHABET[usize::from(edit[2]) % ALPHABET.len()];
+            for &[low, high, pick] in edits.as_chunks::<3>().0 {
+                let position = usize::from(u16::from_le_bytes([low, high]));
+                let character = ALPHABET[usize::from(pick) % ALPHABET.len()];
                 match token.len() {
                     0 => token.push(character),
-                    length if edit[2] & 0x80 != 0 => {
+                    length if pick & 0x80 != 0 => {
                         token.remove(position % length);
                     }
                     length => token[position % length] = character,

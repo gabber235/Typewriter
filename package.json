@@ -3,13 +3,13 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "@types/bun": "1.3.14",
-    "@types/node": "26.6.5",
+    "@types/bun": "1.4.4",
+    "@types/node": "26.6.6",
     "skir-internal": "0.2.22",
     "typescript": "7.0.2"
   },
   "dependencies": {
-    "skir": "1.2.25",
+    "skir": "1.2.26",
     "skir-kotlin-gen": "1.0.13",
     "skir-rust-gen": "0.1.6",
     "skir-dart-gen": "1.0.10",

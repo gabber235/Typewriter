@@ -111,7 +111,7 @@ in
   languages.rust = {
     enable = true;
     channel = "stable";
-    version = "1.95.0";
+    version = "1.100.0";
     targets = [ "wasm32-wasip2" ];
     components = [
       "rustc"

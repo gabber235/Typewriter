@@ -441,7 +441,10 @@ fn write_manifest(
 
 fn sha256(path: &Path) -> Result<String> {
     let bytes = fs::read(path).with_context(|| format!("cannot read {}", path.display()))?;
-    Ok(format!("{:x}", Sha256::digest(bytes)))
+    Ok(Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect())
 }
 
 /// Runs cases of the suite against one manifest.

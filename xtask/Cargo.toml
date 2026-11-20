@@ -2,7 +2,7 @@
 name = "xtask"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.95.0"
+rust-version = "1.100.0"
 publish = false
 description = "The Typewriter harness: every check, deploy and toolchain command behind `cargo xtask`."
 
@@ -13,7 +13,7 @@ clap = { version = "4", features = ["derive"] }
 # Process groups and signals for the stack supervisor.
 libc = "0.2"
 # JaCoCo coverage reports (Kover).
-roxmltree = "0.20"
+roxmltree = "0.21"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # Secrets (`secretspec.toml`, `crate::secrets`), the heaviest dependency: about 45 seconds of a cold
@@ -21,12 +21,12 @@ serde_json = "1"
 # default features only the built in providers compile, which include 1Password and dotenv.
 secretspec = { version = "=0.21.1", default-features = false }
 secretspec-derive = "=0.21.1"
-sha2 = "0.10"
+sha2 = "0.11"
 # The runtime of the generated Skir types (build.rs).
 skir-client = "0.1"
 toml = "1"
 tree-sitter = "0.27"
-tree-sitter-dart = "0.2"
+tree-sitter-dart = "0.3"
 tree-sitter-kotlin-ng = "1.1"
 tree-sitter-rust = "0.24"
 
