@@ -200,11 +200,12 @@ impl FixtureExtension for TypewriterDatabase {
 
     async fn provision(&mut self, context: &mut ProvisionContext) -> Result<Self::Handle> {
         let unique = Uuid::new_v4().simple().to_string();
-        let key = ConnectionKey::from_config(&Config::from([
+        let config = Config::from([
             ("url", "memory".to_owned()),
             ("namespace", format!("component_test_{unique}")),
             ("database", format!("fixture_{unique}")),
-        ]))?;
+        ]);
+        let key = ConnectionKey::from_config(&config)?;
         let plugin = Arc::new(WasmcloudSurrealdb::new());
         let handle = DatabaseHandle {
             plugin: plugin.clone(),
@@ -214,9 +215,7 @@ impl FixtureExtension for TypewriterDatabase {
         self.preset.apply(&*connection.read().await).await?;
         context.plugin(plugin);
         let mut interface = WitInterface::from("seamlezz:surrealdb/call@0.4.0");
-        interface.config.insert("url", key.url.clone());
-        interface.config.insert("namespace", key.namespace.clone());
-        interface.config.insert("database", key.database.clone());
+        interface.config = config;
         context.interface(interface);
         Ok(handle)
     }

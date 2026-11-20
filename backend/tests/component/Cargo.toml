@@ -19,6 +19,8 @@ repository = "https://github.com/gabber235/Typewriter"
 [workspace.dependencies]
 anyhow = "1"
 async-trait = "0.1"
+# Held at the release wash-runtime takes in its public API (`wasmcloud_nats::synchronize`); moves
+# with the wash-runtime pin.
 async-nats = "0.49.1"
 base64 = "0.23"
 bytes = "1"
