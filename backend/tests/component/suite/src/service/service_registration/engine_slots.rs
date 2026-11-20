@@ -28,7 +28,7 @@ async fn every_game_paper_slot_binds_as_an_engine_of_the_realm(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
     let realm = seed_realm_host(context, &acme(), ada(), "realm", paper_engine()).await?;
-    let slots = ScratchSlots::new(3, Duration::from_secs(10))?;
+    let slots = ScratchSlots::new(3)?;
     for (slot, token) in [(0, "SLOTAAAAAA"), (1, "SLOTBBBBBB"), (2, "SLOTCCCCCC")] {
         seed_registration_lease(context, &format!("paper_{slot}"), token, LEASE).await?;
         slots.write_token(slot, token)?;
@@ -102,7 +102,7 @@ async fn a_slot_whose_token_is_bound_already_waits_for_its_next_token(
         matches!(reply, BindServiceResponse::Success(_)),
         "{reply:?}"
     );
-    let slots = ScratchSlots::new(1, Duration::from_secs(10))?;
+    let slots = ScratchSlots::new(1)?;
     slots.write_token(0, "EARLIERAAA")?;
     expect_slot(context, &acme(), "paper_0", true)?;
     let loader = async {
@@ -144,33 +144,36 @@ async fn a_slot_whose_token_is_bound_already_waits_for_its_next_token(
 }
 
 #[component_test(ServiceRegistration)]
-async fn a_bound_slot_whose_host_never_advertises_fails_naming_the_wait(
+async fn a_slot_whose_paper_stops_before_advertising_binds_when_its_next_paper_advertises(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
-    seed_realm_host(context, &acme(), ada(), "realm", paper_engine()).await?;
-    seed_registration_lease(context, "paper_0", "SLOTAAAAAA", LEASE).await?;
-    let slots = ScratchSlots::new(1, Duration::from_secs(1))?;
-    slots.write_token(0, "SLOTAAAAAA")?;
-    expect_slot(context, &acme(), "paper_0", false)?;
+    let realm = seed_realm_host(context, &acme(), ada(), "realm", paper_engine()).await?;
+    seed_registration_lease(context, "paper_2", "SLOTCCCCCC", LEASE).await?;
+    let slots = ScratchSlots::new(3)?;
+    slots.write_token(2, "SLOTCCCCCC")?;
+    expect_slot(context, &acme(), "paper_2", true)?;
+    // Slot 2's first Paper stops right after the binder bound it; the slot's next Paper keeps
+    // its identity and advertises the same service a while later.
+    let next_paper = async {
+        tokio::time::sleep(Duration::from_secs(3)).await;
+        register_once_bound(context, "paper_2", &[PAPER], PATIENCE).await
+    };
 
-    let failed = tokio::time::timeout(
-        PATIENCE,
-        slots.0.bind_all(|| async {
-            Ok(MemberRoutes {
-                context: &*context,
-                user: ada(),
-                organization: acme(),
-            })
-        }),
-    )
-    .await?
-    .expect_err("a host that never advertised was attached");
+    let owner = MemberRoutes {
+        context: &*context,
+        user: ada(),
+        organization: acme(),
+    };
 
-    let message = format!("{failed:#}");
-    assert!(message.contains("slot 0"), "{message}");
-    assert!(
-        message.contains("service paper_0 to advertise its host"),
-        "{message}"
+    let (bound, next_paper) = tokio::join!(
+        tokio::time::timeout(PATIENCE, slots.0.bind_slot(&owner, 2)),
+        next_paper,
     );
+
+    next_paper?;
+    let BoundSlot { host, change, .. } = bound??;
+    assert_eq!(host.service_id, skir_record_id("service", "paper_2"));
+    let engine = change.engine.expect("the slot was attached as an engine");
+    assert_eq!(engine.realm.realm_id, realm);
     Ok(())
 }

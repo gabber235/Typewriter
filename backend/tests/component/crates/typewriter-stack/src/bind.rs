@@ -39,8 +39,8 @@ pub struct BindArgs {
     slots: u8,
 }
 
-/// How long a bound host may take to advertise itself in the topology.
-const ADVERTISE_WITHIN: Duration = Duration::from_secs(60);
+/// How long the Realm host may take to write its token, be bound and advertise itself.
+const REALM_HOST_WITHIN: Duration = Duration::from_secs(120);
 const POLL: Duration = Duration::from_millis(500);
 
 /// What `bind` bound, written to `bound.json` in the stack's state directory and printed.
@@ -61,12 +61,8 @@ pub async fn run(args: BindArgs) -> Result<()> {
     let owner = Owner::sign_in(&endpoints, &provisioned).await?;
     let host = deadline(
         "the Realm host to bind",
-        ADVERTISE_WITHIN * 2,
-        binder::bind(
-            &owner,
-            &args.work_dir.join("state/registration-token"),
-            ADVERTISE_WITHIN,
-        ),
+        REALM_HOST_WITHIN,
+        binder::bind(&owner, &args.work_dir.join("state/registration-token")),
     )
     .await?;
     let change = configure(
@@ -134,7 +130,6 @@ async fn bind_engines(args: BindArgs) -> Result<()> {
     let slots = EngineSlots {
         work_dir: args.work_dir.clone(),
         slots: args.slots,
-        advertise_within: ADVERTISE_WITHIN,
     };
     slots.prepare()?;
     std::fs::write(args.work_dir.join("watching"), "")
