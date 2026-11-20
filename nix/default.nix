@@ -48,15 +48,15 @@ in
   # The Seamlezz wasmCloud fork, which the deployed runtime matches.
   wash = releaseBinary rec {
     pname = "wash";
-    version = "2.10.3-1";
+    version = "2.12.2-1";
     target = asset {
       aarch64-darwin = "aarch64-apple-darwin";
       x86_64-linux = "x86_64-unknown-linux-gnu";
     };
     url = "https://github.com/gabber235/wasmCloud/releases/download/typewriter-v${version}/wash-${target}";
     hash = asset {
-      aarch64-darwin = "sha256-i06o97BABXbIbxZoxsjXoOtgLV8cPoZYtnJx3iepd3g=";
-      x86_64-linux = "sha256-UyoXJNpNcGWjy4VSrjOsUlQ50PwIbxagBYeCB/MxdNQ=";
+      aarch64-darwin = "sha256-XrvAPTUrkak1l95U/+GGZW9yPiprr9u2iYNBZ+BvcM8=";
+      x86_64-linux = "sha256-xgI1kKhMHxl4K5JG63klizrrgFcE0aTReJyGPBuTYwU=";
     };
   };
 }
