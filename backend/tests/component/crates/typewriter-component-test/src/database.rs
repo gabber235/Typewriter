@@ -243,8 +243,8 @@ impl<F: FixtureDeclaration> TypewriterFixtureBuilderExt<F> for FixtureBuilder<F>
 mod tests {
     use super::*;
 
-    // The embedded engine needs the deep stacks of the plugin's worker threads, which the
-    // future `block_on` polls on the test thread does not have.
+    // The embedded engine needs the deep stacks of the harness runtime's worker threads, which
+    // the test thread does not have.
     #[test]
     fn every_preset_applies_to_a_fresh_database() -> Result<()> {
         let presets = async {
@@ -270,8 +270,6 @@ mod tests {
             }
             anyhow::Ok(())
         };
-        wasmcloud_plugin_surrealdb::runtime_builder()
-            .build()?
-            .block_on(async { tokio::spawn(presets).await? })
+        component_test::block_on_worker(&component_test::runtime_builder().build()?, presets)
     }
 }
