@@ -1,5 +1,6 @@
 plugins {
     id("com.typewritermc.basic-conventions")
+    `java-test-fixtures`
     id("com.typewritermc.imprint")
 }
 
@@ -7,7 +8,8 @@ dependencies {
     imprintEngineCore(project(":engine-core"))
     imprintHostApi(project(":loader-api"))
     imprintPlatformApi(project(":typewriter-api"))
-    testImplementation(testFixtures(project(":engine-core")))
+    testFixturesApi(testFixtures(project(":engine-core")))
+    testFixturesImplementation(project(":protocol-transport"))
 }
 
 typewriter {

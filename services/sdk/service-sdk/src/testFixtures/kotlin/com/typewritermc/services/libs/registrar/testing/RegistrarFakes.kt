@@ -1,6 +1,8 @@
 package com.typewritermc.services.libs.registrar.testing
 
 import com.typewritermc.services.libs.communicator.client.Communicator
+import com.typewritermc.services.libs.communicator.kv.KeyValueBuckets
+import com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets
 import com.typewritermc.services.libs.registrar.BindingObservation
 import com.typewritermc.services.libs.registrar.BindingStatus
 import com.typewritermc.services.libs.registrar.CredentialLoadResult
@@ -144,7 +146,7 @@ class FakeIdentityIssuer(
 class FakeRegistrarRuntime(
     override val communicator: Communicator,
     val ledger: RegistrarActionLedger = RegistrarActionLedger(),
-    override val buckets: com.typewritermc.services.libs.communicator.kv.KeyValueBuckets = com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets,
+    override val buckets: KeyValueBuckets = UnreachableKeyValueBuckets,
 ) : RegistrarRuntime {
     private val connectionResults = ArrayDeque<RuntimeResult<Unit>>()
     private val reconnectResults = ArrayDeque<RuntimeResult<Unit>>()

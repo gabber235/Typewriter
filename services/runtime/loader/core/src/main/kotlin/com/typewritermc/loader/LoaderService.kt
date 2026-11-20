@@ -70,8 +70,9 @@ class RegistrarLoaderService(
     override suspend fun communicatorFor(connectionGeneration: Long): RegistrarResult<Communicator> =
         service.communicatorFor(connectionGeneration)
 
-    override suspend fun bucketsFor(connectionGeneration: Long): RegistrarResult<com.typewritermc.services.libs.communicator.kv.KeyValueBuckets> =
-        service.bucketsFor(connectionGeneration)
+    override suspend fun bucketsFor(
+        connectionGeneration: Long,
+    ): RegistrarResult<com.typewritermc.services.libs.communicator.kv.KeyValueBuckets> = service.bucketsFor(connectionGeneration)
 
     override suspend fun rotateAuthorization(): RegistrarResult<Long> = service.rotateAuthorization()
 

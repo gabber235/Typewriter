@@ -47,7 +47,10 @@ class PresenceSessions(
     suspend fun serve(messaging: HostedMessagingSession): Unit =
         coroutineScope {
             val presence =
-                OrganizationActorRouteScope(messaging.organizationId, ANY_MEMBER).organizationPresence.everyMemberOf(messaging.organizationId)
+                OrganizationActorRouteScope(
+                    messaging.organizationId,
+                    ANY_MEMBER,
+                ).organizationPresence.everyMemberOf(messaging.organizationId)
             val router =
                 messaging.communicator.createRouter(
                     communicatorRoutes { event(presence) { call -> receive(this@coroutineScope, call.address.userId, call.event) } },
@@ -70,10 +73,23 @@ class PresenceSessions(
         when (event) {
             is PresenceEvent.ActiveWrapper -> {
                 val tab = SessionId(event.value.sessionId)
-                if (event.value.location.isIn(realmId)) heartbeat(scope, Protagonist(PrincipalId(PrincipalId.USER, userId)), tab) else end(tab)
+                if (event.value.location.isIn(
+                        realmId,
+                    )
+                ) {
+                    heartbeat(scope, Protagonist(PrincipalId(PrincipalId.USER, userId)), tab)
+                } else {
+                    end(tab)
+                }
             }
-            is PresenceEvent.LeftWrapper -> end(SessionId(event.value.sessionId))
-            else -> Unit
+
+            is PresenceEvent.LeftWrapper -> {
+                end(SessionId(event.value.sessionId))
+            }
+
+            else -> {
+                Unit
+            }
         }
     }
 

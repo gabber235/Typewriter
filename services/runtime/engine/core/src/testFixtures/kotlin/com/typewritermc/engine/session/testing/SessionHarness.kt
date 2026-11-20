@@ -5,10 +5,10 @@ import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.readSessionEntry
 import com.typewritermc.identity.EngineId
-import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.SessionId
+import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
@@ -82,6 +82,16 @@ class SessionHarness private constructor(
         id: SessionId,
     ): SessionEntry? = bucket().readSessionEntry(protagonist, id)
 
+    /** [engine] reports that [protagonist] connected with session [id]; returns once the bucket names it the holder. */
+    suspend fun joined(
+        engine: HarnessEngine,
+        protagonist: Protagonist,
+        id: SessionId,
+    ) {
+        engine.keeper.connected(protagonist, id)
+        eventually { entry(protagonist, id)?.holder == engine.id }
+    }
+
     /** Waits until [condition] holds, polling the broker, and fails after [within]. */
     suspend fun eventually(
         within: Duration = 10.seconds,
@@ -99,7 +109,12 @@ class SessionHarness private constructor(
         return HostedMessagingSession(
             id = 1,
             organizationId = ORGANIZATION,
-            communicator = Communicator(NatsMessageTransport(connection, brokerLimits), telemetry.serviceTelemetry("session harness"), ContextPropagators.noop()),
+            communicator =
+                Communicator(
+                    NatsMessageTransport(connection, brokerLimits),
+                    telemetry.serviceTelemetry("session harness"),
+                    ContextPropagators.noop(),
+                ),
             buckets = NatsKeyValueBuckets(connection),
         )
     }

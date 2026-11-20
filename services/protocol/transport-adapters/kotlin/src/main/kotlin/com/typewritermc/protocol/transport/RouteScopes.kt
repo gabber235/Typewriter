@@ -1,9 +1,9 @@
 package com.typewritermc.protocol.transport
 
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
-import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
+import com.typewritermc.services.libs.communicator.contract.EventContract
 
 /**
  * The identities of a realm route subject: the organization that owns the realm and the realm itself.
@@ -57,5 +57,7 @@ fun String.organizationActorTemplate(): AddressTemplate<OrganizationActorRouteSc
     )
 
 /** This event of every member of [organizationId], as a service that receives every member's events subscribes to it. */
-fun <Event : Any> EventContract<OrganizationActorRouteScope, Event>.everyMemberOf(organizationId: String): EventContract<OrganizationActorRouteScope, Event> =
+fun <Event : Any> EventContract<OrganizationActorRouteScope, Event>.everyMemberOf(
+    organizationId: String,
+): EventContract<OrganizationActorRouteScope, Event> =
     EventContract(name, address.subscribedWhere("organization" to organizationId), codec, failureSlug)

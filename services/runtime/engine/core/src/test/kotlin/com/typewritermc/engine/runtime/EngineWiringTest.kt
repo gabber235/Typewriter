@@ -37,12 +37,15 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
                 val buckets = buckets()
                 check(buckets.ensure(SessionsBucket.declaration("realm")) is KeyValueOpen.Opened)
                 val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-                val wiring = EngineWiring(wiredDeploymentContext(buckets), scope, module { single<SessionTimings> { SessionHarness.SHORT } })
+                val wiring =
+                    EngineWiring(wiredDeploymentContext(buckets), scope, module { single<SessionTimings> { SessionHarness.SHORT } })
                 try {
                     val uuid = UUID.randomUUID().toString()
                     val protagonist = Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid))
 
-                    wiring.application.koin.get<SessionReporter>().connected(protagonist, SessionId(uuid))
+                    wiring.application.koin
+                        .get<SessionReporter>()
+                        .connected(protagonist, SessionId(uuid))
 
                     val observer = (buckets.open(SessionsBucket.name("realm")) as KeyValueOpen.Opened).bucket
                     eventually(10.seconds) {

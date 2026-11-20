@@ -1,11 +1,11 @@
 package com.typewritermc.realm.session
 
-import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
+import com.typewritermc.services.libs.telemetry.SluggedException
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.RetryPolicy
 import kotlinx.coroutines.delay
@@ -36,8 +36,8 @@ internal class RealmSessionsBucket(
                     }
                 }
                 return
-            } catch (failure: Throwable) {
-                failure.rethrowExceptional()
+            } catch (_: SluggedException) {
+                // The span recorded the failure; mainSpan rethrows ordinary failures as SluggedException only.
                 delay(retryPolicy.delayFor(retry++, 0.5))
             }
         }

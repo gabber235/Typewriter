@@ -45,9 +45,10 @@ val stagePaperArtifacts =
         }
     }
 
-// Paper 26.3 runs on and publishes its API for Java 25.
-kotlin {
-    jvmToolchain(25)
+// The module targets Java 21 and runs on Paper's Java 25. Paper publishes its API for Java 25 only, so compilation
+// asks for libraries that run on Java 25; every other library on the classpath runs on 21 and so on 25 as well.
+configurations.named("compileClasspath") {
+    attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
 }
 
 repositories {

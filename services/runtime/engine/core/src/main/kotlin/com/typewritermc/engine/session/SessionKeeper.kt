@@ -138,11 +138,15 @@ class SessionKeeper(
                             val entry = decodeSessionEntry(read.entry.value).copy(holder = engine)
                             bucket.update(key, entry.encode(), timings.ttl, read.entry.revision).heldAs(key, entry)
                         }
+
                         KeyValueRead.Absent -> {
                             val entry = SessionEntry(protagonist, engine, clock.instant())
                             bucket.create(key, entry.encode(), timings.ttl).heldAs(key, entry)
                         }
-                        is KeyValueRead.Failed -> null
+
+                        is KeyValueRead.Failed -> {
+                            null
+                        }
                     }
                 if (written != null) return written
             }
@@ -163,11 +167,17 @@ class SessionKeeper(
             delay(timings.refresh)
             val bucket = bucket() ?: continue
             when (val written = bucket.update(held.key, held.entry.encode(), timings.ttl, held.revision)) {
-                is KeyValueWrite.Written -> held = held.copy(revision = written.revision)
+                is KeyValueWrite.Written -> {
+                    held = held.copy(revision = written.revision)
+                }
+
                 KeyValueWrite.Conflict -> {
                     held = recover(bucket, held) ?: return slot.letGo()
                 }
-                is KeyValueWrite.Failed -> Unit
+
+                is KeyValueWrite.Failed -> {
+                    Unit
+                }
             }
             slot.held = held
         }
@@ -183,11 +193,15 @@ class SessionKeeper(
                 val current = decodeSessionEntry(read.entry.value)
                 if (current.holder != engine) null else held.copy(entry = current, revision = read.entry.revision)
             }
+
             KeyValueRead.Absent -> {
                 val entry = held.entry.copy(since = clock.instant())
                 bucket.create(held.key, entry.encode(), timings.ttl).heldAs(held.key, entry) ?: held
             }
-            is KeyValueRead.Failed -> held
+
+            is KeyValueRead.Failed -> {
+                held
+            }
         }
 
     /** Shortens the key to the grace, unless another engine holds the session by now. */

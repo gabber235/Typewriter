@@ -36,7 +36,10 @@ internal fun SessionEntry.encode(): ByteArray =
     WireSessionEntry.serializer
         .toBytes(
             WireSessionEntry(
-                protagonist = WireProtagonist(principal = WirePrincipalId(kind = protagonist.principal.kind, id = protagonist.principal.id)),
+                protagonist =
+                    WireProtagonist(
+                        principal = WirePrincipalId(kind = protagonist.principal.kind, id = protagonist.principal.id),
+                    ),
                 holder = WireEngineId(value = holder.value),
                 since = since,
             ),
