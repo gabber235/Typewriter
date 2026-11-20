@@ -296,6 +296,11 @@ pub const RUN_EVIDENCE: [&str; 4] = [ATTEMPTS, "failures", "screenshots", LOGS];
 /// per run.
 pub const LOGS: &str = "logs";
 
+/// The log the game pool writes in a run's logs folder. Only the framework's own code writes it
+/// (attempts, boots, lost clients, never Paper's or a client's output), so it is the one log
+/// `cargo xtask evidence stage` makes public, for a run that did not pass.
+pub const POOL_LOG: &str = "pool.log";
+
 /// Every `TestRun` under `dir`, at any depth, with the path it was read from, skipping run
 /// evidence folders.
 pub fn read_all(dir: &Path) -> Result<Vec<(PathBuf, TestRun)>> {

@@ -118,7 +118,7 @@ fn suite(
             },
             &gradle_args(args, quarantine, &run_id, &file, &touched, &logs),
         )?,
-        pool_log: logs.join("pool.log"),
+        pool_log: logs.join(results::POOL_LOG),
     })
 }
 

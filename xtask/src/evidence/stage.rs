@@ -3,7 +3,8 @@
 //! and every publish reads only what this writes to [`PUBLIC`]: each `TestRun` with only its
 //! published artifacts ([`ArtifactKind::published`]: clips, and screenshots and golden candidates
 //! of failed attempts, since a clip shows a passing one better and a passing golden needs no
-//! approval), their files with a clip's preview, the coverage files, and the widgetbook story images below [`STORIES`]. Nothing
+//! approval), their files with a clip's preview, the pool log of a game run that did not pass
+//! ([`results::POOL_LOG`]), the coverage files, and the widgetbook story images below [`STORIES`]. Nothing
 //! is written while any public text holds a known secret or any run lists a file missing on disk.
 
 use std::fs;
@@ -85,6 +86,14 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
         for file in published_files(folder, &run) {
             files.push((folder.join(&file), below.join(&file).display().to_string()));
         }
+        // A run that did not pass shows where it stopped through its pool log.
+        let pool_log = Path::new(&run.logs).join(results::POOL_LOG);
+        if !run.logs.is_empty() && !passed(&run) && folder.join(&pool_log).exists() {
+            files.push((
+                folder.join(&pool_log),
+                below.join(&pool_log).display().to_string(),
+            ));
+        }
         runs.push((at, run));
     }
     // Coverage is the check jobs' public output besides their runs.
@@ -130,6 +139,16 @@ pub(super) fn published_files(folder: &Path, run: &TestRun) -> Vec<PathBuf> {
         files.extend(companion.filter(|it| folder.join(it).exists()));
     }
     files
+}
+
+/// Whether `run` ran to its end and every attempt of every case passed.
+fn passed(run: &TestRun) -> bool {
+    results::run_trouble(run).is_none()
+        && run
+            .cases
+            .iter()
+            .flat_map(|case| &case.attempts)
+            .all(|attempt| attempt.outcome == Outcome::Passed)
 }
 
 /// The still image the recorder writes beside `clip`, which the pull request shows in its place.
@@ -297,6 +316,38 @@ mod tests {
         attempt.outcome = Outcome::Passed;
         attempt.folder = "GOLDEN-1-a-sidebar/attempt-1".to_owned();
         let run = run_of("GOLDEN-1 a sidebar", vec![attempt]);
+        results::write(&run, &root.path("results/game/test_run.json")).unwrap();
+
+        staged(&root.path(""), Path::new("results"), &[]).unwrap();
+
+        assert_eq!(files_below(&root.path(PUBLIC)), ["game/test_run.json"]);
+    }
+
+    #[test]
+    fn a_game_run_that_could_not_run_publishes_its_pool_log_but_no_paper_or_client_log() {
+        let root = TempRoot::new();
+        for file in ["pool.log", "paper.log", "client-gv-1.log"] {
+            root.write(&format!("results/game/logs/1/{file}"), "log");
+        }
+        let mut run = run_of("PROBE-1", vec![]);
+        run.logs = "logs/1".to_owned();
+        run.end = results::RunEnd::CouldNotRun("the game was not ready within 300 s".to_owned());
+        results::write(&run, &root.path("results/game/test_run.json")).unwrap();
+
+        staged(&root.path(""), Path::new("results"), &[]).unwrap();
+
+        assert_eq!(
+            files_below(&root.path(PUBLIC)),
+            ["game/logs/1/pool.log", "game/test_run.json"]
+        );
+    }
+
+    #[test]
+    fn a_game_run_whose_cases_all_passed_keeps_its_pool_log_on_the_machine() {
+        let root = TempRoot::new();
+        root.write("results/game/logs/1/pool.log", "log");
+        let mut run = run_of("PROBE-1", vec![crate::test_support::passed_attempt((0, 1))]);
+        run.logs = "logs/1".to_owned();
         results::write(&run, &root.path("results/game/test_run.json")).unwrap();
 
         staged(&root.path(""), Path::new("results"), &[]).unwrap();
