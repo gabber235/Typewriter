@@ -45,8 +45,9 @@ in
     binary = "nats-server-v${version}-${platform}/nats-server";
   };
 
-  # The SurrealDB server release production runs, which the database suites run against
-  # (`cargo xtask check backend`); nixpkgs trails it.
+  # The SurrealDB server release every Infrastructure environment runs (the one image tag in its
+  # platform/surrealdb/base), which the database suites run against (`cargo xtask check backend`).
+  # Nothing checks that the two agree, so a bump moves both. nixpkgs trails it.
   surreal = releaseBinary rec {
     pname = "surreal";
     version = "3.3.5";
