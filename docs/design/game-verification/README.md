@@ -552,6 +552,15 @@ Dated decisions, oldest first. The sections above describe what they add up to.
 - **The observer reads real state** (2026-11-19): the test JVM reads with read only credentials the
   stack mints, the owner's topology snapshot request and exact reads of `sessions_<realm>`, never
   a file the binder writes.
+- **The observer's grants stay hand written** (2026-11-20). Answer to "The read-only test observer
+  lists its NATS grants by hand (observer.rs:64), against the rule that grants are never hand
+  written. What should happen?": "A. Keep, record why (Recommended)". Why: it is a test only
+  credential, and its JetStream reads of `sessions_<realm>` have no transport route to derive
+  grants from; an observer role in `transport-routes.yaml` would put a test role into production
+  routes.
+- **Every game Paper loads Typewriter** (2026-11-20): the union of module additions reaches every
+  Paper, so the framework's own requirements also run beside the stack and the loader, and run only
+  through `cargo xtask e2e game`. Accepted as the cost of one shared pool.
 
 ## The prototype search
 
