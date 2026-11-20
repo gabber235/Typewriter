@@ -34,8 +34,7 @@ pub struct DatabaseHandle {
 
 impl DatabaseHandle {
     async fn response(&self, sql: &str, bindings: Vec<(String, Value)>) -> Result<IndexedResults> {
-        let connection = self.plugin.get_or_create_connection(&self.key).await?;
-        let database = connection.read().await;
+        let database = self.plugin.get_or_create_connection(&self.key).await?;
         let mut query = database.query(sql);
         for (name, value) in bindings {
             query = query.bind((name, value));
@@ -212,7 +211,7 @@ impl FixtureExtension for TypewriterDatabase {
             key: key.clone(),
         };
         let connection = plugin.get_or_create_connection(&key).await?;
-        self.preset.apply(&*connection.read().await).await?;
+        self.preset.apply(&*connection).await?;
         context.plugin(plugin);
         let mut interface = WitInterface::from("seamlezz:surrealdb/call@0.4.0");
         interface.config = config;
