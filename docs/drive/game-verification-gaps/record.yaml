@@ -11,10 +11,9 @@ pieces:
     tries:
       - id: per-module-additions
         what: Each gameTest module adds plugin jars, files into the Paper folder and Paper env
-        taught: One pool and one shared Paper serve every module; the first gameTest task's parts define the pool (build-logic com.typewritermc.game-test.gradle.kts:66-76,154,216), so additions must be one union for the build
+        taught: One pool and one shared Paper serve every module; the first gameTest task's parts define the pool (build-logic com.typewritermc.game-test.gradle.kts:66-76,154,216), so additions must be one union for the build. Declared as gamePaper { pluginJars; files { CopySpec }; environment }, like runPaper; each module's playtestPaperAdditions folder (files/, env.properties) is collected from every game-test project, the pool copies them after its own files and merges env, failing on disagreement
         state: picked
         why: The framework stays free of Typewriter code; a module names what it needs
-        taught: Declared as gamePaper { pluginJars; files { CopySpec }; environment }, like runPaper; each module's playtestPaperAdditions folder (files/, env.properties) is collected from every game-test project, the pool copies them after its own files and merges env, failing on disagreement
         evidence: [services/playtest/pool/src/test/kotlin/com/typewritermc/playtest/pool/PaperAdditionsTest.kt, services/playtest/pool/src/main/kotlin/com/typewritermc/playtest/pool/Game.kt:263-296]
   - id: g2-quit-rejoin
     status: done
@@ -62,6 +61,7 @@ pieces:
         taught: Slot environment (a token path per slot into the stack state) replaces slot files, since the binder never reads pool folders; the kept path is plugins/Typewriter/state, which holds service-identity.cbor; services are renamed game_paper_<slot> so the topology names each slot's engine
         state: picked
         why: Loaders exist only once the pool boots their Papers, so binding happens during the run (developer, option A)
+        evidence: [services/playtest/pool/src/test/kotlin/com/typewritermc/playtest/pool/SlotKeepTest.kt, PapersTest.kt, PaperAdditionsTest.kt, backend/tests/component/crates/typewriter-stack/src/bind.rs]
       - id: slot-binds-without-deadline
         parent: slot-identities
         what: The binder waits for a bound slot's host however long it takes; the slot's next Paper advertises the same service
@@ -69,7 +69,6 @@ pieces:
         state: picked
         why: "A. Wait for the slot (Recommended)"
         evidence: [backend/tests/component/suite/src/service/service_registration/engine_slots.rs (a_slot_whose_paper_stops_before_advertising_binds_when_its_next_paper_advertises)]
-        evidence: [services/playtest/pool/src/test/kotlin/com/typewritermc/playtest/pool/SlotKeepTest.kt, PapersTest.kt, PaperAdditionsTest.kt, backend/tests/component/crates/typewriter-stack/src/bind.rs]
       - id: observer-reads-topology
         parent: inside-stack
         what: The stack mints read only observer credentials (STACK_OBSERVER_CREDS, _INBOX, _TOPOLOGY); the test JVM requests the owner's topology snapshot and may read sessions_<realm> keys
@@ -100,11 +99,20 @@ decided:
   - id: g4-slot-binds
     what: "A. Wait for the slot (Recommended)"
     why: No deadline per Paper; the slot's next Paper advertises the bound service
+  - id: g4-observer-grants
+    what: "A. Keep, record why (Recommended)"
+    why: Test only credential; its JetStream reads have no transport route to derive grants from
   - id: g4-observer-topology
     what: "1. Observer reads topology"
     why: Read only credentials read the real topology and sessions bucket; no binder side file
 
 open:
+  - id: topology-contract-by-hand
+    what: StackObserver.kt builds the topology route's contract by hand, since the Kotlin generator emits only service routes; a generator gap
+    tied_to: services/sdk/typewriter-codegen
+  - id: paper-engine-1-placeholder
+    what: PAPER-ENGINE-1 proves little beyond the suite setup's own wait for Active; node 3's GAME-S1 replaces it
+    tied_to: node 3 (sessions)
   - id: restart-paper-engine-gate
     what: Who gates a Typewriter requirement on the engine being Active on a restart Paper (slots 1 and 2 are bound and keep their identity, but nothing waits for them yet)
     tied_to: the readiness and done obligation (docs/design/game-verification/README.md, Obligations on Typewriter)
