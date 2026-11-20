@@ -19,6 +19,7 @@ use wasmcloud_utils::SkirType;
 use wasmcloud_utils::skir::base::service::v1::topology::{
     ChildRuntimeStatus, HostExecutionConfiguration, HostedRealmConfiguration,
 };
+use wasmcloud_utils::transport::RequestRoute;
 
 use crate::provision::Provisioned;
 use crate::session::{Session, StackEndpoints, record_token};
@@ -34,9 +35,6 @@ pub struct BindArgs {
     /// Binds each game Paper slot as the Paper engine of the stack's Realm, and keeps running.
     #[arg(long = "as-engine")]
     as_engine: bool,
-    /// How many game Paper slots `--as-engine` binds, numbered from 0.
-    #[arg(long, default_value_t = 1)]
-    slots: u8,
 }
 
 /// How long the Realm host may take to write its token, be bound and advertise itself.
@@ -129,27 +127,26 @@ async fn bind_engines(args: BindArgs) -> Result<()> {
     Owner::sign_in(&endpoints, &provisioned).await?;
     let slots = EngineSlots {
         work_dir: args.work_dir.clone(),
-        slots: args.slots,
     };
     slots.prepare()?;
     std::fs::write(args.work_dir.join("watching"), "")
         .context("cannot mark the engine binder as watching")?;
-    let bind_all = slots.bind_all(|| Owner::sign_in(&endpoints, &provisioned));
+    let bind_every = slots.bind_every(
+        || Owner::sign_in(&endpoints, &provisioned),
+        |slot| {
+            println!(
+                "bound game Paper slot {}: service {}, engine {:?}",
+                slot.slot,
+                slot.host.service_id,
+                slot.change
+                    .engine
+                    .map(|engine| engine.engine_id.to_string())
+            );
+        },
+    );
     tokio::select! {
         _ = crate::shutdown_signal() => Ok(()),
-        bound = bind_all => {
-            for slot in bound? {
-                println!(
-                    "bound game Paper slot {}: service {}, engine {:?}",
-                    slot.slot,
-                    slot.host.service_id,
-                    slot.change.engine.map(|engine| engine.engine_id.to_string())
-                );
-            }
-            // Every slot is bound; wait for the stack to stop.
-            crate::shutdown_signal().await;
-            Ok(())
-        }
+        failed = bind_every => match failed? {},
     }
 }
 
@@ -174,13 +171,17 @@ impl Owner {
 }
 
 impl OwnerRoutes for Owner {
-    async fn request<Req: SkirType + Sync, Resp: SkirType + Send>(
+    async fn request<R: RequestRoute>(
         &self,
         route: &str,
-        request: &Req,
-    ) -> Result<Resp> {
+        request: &R::Request,
+    ) -> Result<R::Response>
+    where
+        R::Request: SkirType + Sync,
+        R::Response: SkirType + Send,
+    {
         self.session
-            .request(format!("{}.{route}", self.scope), request)
+            .request::<R>(format!("{}.{route}", self.scope), request)
             .await
     }
 }
