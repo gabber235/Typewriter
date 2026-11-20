@@ -54,13 +54,11 @@ pub fn paper_engine() -> EngineTarget {
 }
 
 /// Binds the service whose pending token is in `token_file`, and returns its host once it
-/// advertised within `advertise_within`. A token that no longer binds, because its loader
-/// rotated it or its service is bound already, is waited past until the file holds another.
-pub async fn bind(
-    owner: &impl OwnerRoutes,
-    token_file: &Path,
-    advertise_within: Duration,
-) -> Result<ServiceHost> {
+/// advertised, however long that takes: the process that wrote the token may stop first, and a
+/// later process with the same identity advertises the service. A token that no longer binds,
+/// because its loader rotated it or its service is bound already, is waited past until the file
+/// holds another. A caller that needs a bound host by some time sets its own [`deadline`].
+pub async fn bind(owner: &impl OwnerRoutes, token_file: &Path) -> Result<ServiceHost> {
     let mut refused = None;
     let service = loop {
         let token = wait_for_token(token_file, refused.as_deref()).await?;
@@ -80,19 +78,12 @@ pub async fn bind(
             other => bail!("BindService failed: {other:?}"),
         }
     };
-    deadline(
-        &format!("service {service} to advertise its host"),
-        advertise_within,
-        async {
-            loop {
-                if let Some(host) = advertised(&topology(owner).await?, &service) {
-                    return Ok(host);
-                }
-                tokio::time::sleep(POLL).await;
-            }
-        },
-    )
-    .await
+    loop {
+        if let Some(host) = advertised(&topology(owner).await?, &service) {
+            return Ok(host);
+        }
+        tokio::time::sleep(POLL).await;
+    }
 }
 
 /// The organization's topology as the backend holds it now.
@@ -163,12 +154,12 @@ pub async fn rename(owner: &impl OwnerRoutes, service: &RecordId, name: &str) ->
     }
 }
 
-/// The game suite's Paper slots, numbered from 0, each with a folder in `work_dir`.
+/// The game suite's Paper slots, numbered from 0, each with a folder in `work_dir`. A slot keeps
+/// its loader's identity across its Papers, so a slot whose Paper stopped before it advertised is
+/// attached once a later Paper of that slot advertises.
 pub struct EngineSlots {
     pub work_dir: PathBuf,
     pub slots: u8,
-    /// How long a bound slot's host may take to advertise.
-    pub advertise_within: Duration,
 }
 
 /// A slot the binder attached to the Realm.
@@ -230,7 +221,7 @@ impl EngineSlots {
     /// Binds slot `slot`, names its service `game_paper_<slot>` and attaches its host to the
     /// organization's Realm as the Paper engine.
     pub async fn bind_slot(&self, owner: &impl OwnerRoutes, slot: u8) -> Result<BoundSlot> {
-        let host = bind(owner, &self.token_file(slot), self.advertise_within).await?;
+        let host = bind(owner, &self.token_file(slot)).await?;
         rename(owner, &host.service_id, &format!("game_paper_{slot}")).await?;
         let realm = topology(owner)
             .await?
@@ -289,12 +280,11 @@ pub async fn deadline<T>(
 pub struct ScratchSlots(pub EngineSlots);
 
 impl ScratchSlots {
-    /// `slots` slots whose hosts must advertise within `advertise_within`.
-    pub fn new(slots: u8, advertise_within: Duration) -> Result<Self> {
+    /// `slots` slots in a fresh scratch folder.
+    pub fn new(slots: u8) -> Result<Self> {
         let engines = EngineSlots {
             work_dir: std::env::temp_dir().join(format!("engine-slots-{}", uuid::Uuid::new_v4())),
             slots,
-            advertise_within,
         };
         engines.prepare()?;
         Ok(Self(engines))

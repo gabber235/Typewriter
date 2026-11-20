@@ -62,6 +62,13 @@ pieces:
         taught: Slot environment (a token path per slot into the stack state) replaces slot files, since the binder never reads pool folders; the kept path is plugins/Typewriter/state, which holds service-identity.cbor; services are renamed game_paper_<slot> so the topology names each slot's engine
         state: picked
         why: Loaders exist only once the pool boots their Papers, so binding happens during the run (developer, option A)
+      - id: slot-binds-without-deadline
+        parent: slot-identities
+        what: The binder waits for a bound slot's host however long it takes; the slot's next Paper advertises the same service
+        taught: CI's RESTART-3 stopped its own Paper seconds after slot 2 was bound; the 60 s advertise deadline then failed bind-engines and with it the game run, though all 105 requirements passed. The identity is stored before the token is written (service-identity.cbor), and the slot keeps plugins/Typewriter/state
+        state: picked
+        why: "A. Wait for the slot (Recommended)"
+        evidence: [backend/tests/component/suite/src/service/service_registration/engine_slots.rs (a_slot_whose_paper_stops_before_advertising_binds_when_its_next_paper_advertises)]
         evidence: [services/playtest/pool/src/test/kotlin/com/typewritermc/playtest/pool/SlotKeepTest.kt, PapersTest.kt, PaperAdditionsTest.kt, backend/tests/component/crates/typewriter-stack/src/bind.rs]
       - id: observer-reads-topology
         parent: inside-stack
@@ -90,6 +97,9 @@ decided:
   - id: g4-bind-during-run
     what: "A. Bind during run"
     why: Loaders exist only inside the pool; generic slot keep; no engine wait inside a window; Typewriter's suite setup waits for slot 0
+  - id: g4-slot-binds
+    what: "A. Wait for the slot (Recommended)"
+    why: No deadline per Paper; the slot's next Paper advertises the bound service
   - id: g4-observer-topology
     what: "1. Observer reads topology"
     why: Read only credentials read the real topology and sessions bucket; no binder side file

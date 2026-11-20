@@ -65,7 +65,8 @@ clients hold none.
 - Typewriter's module (`services/runtime/engine/runtimes/paper`) adds the Paper loader, the stack's
   config and a registration token path per slot. `cargo xtask e2e game` runs the suite inside the
   stack's `game` spec: the panel spec plus a binder that binds each slot's loader as the engine of
-  the stack's Realm when its token appears (service `game_paper_<slot>`), and read only observer
+  the stack's Realm when its token appears (service `game_paper_<slot>`); a slot whose Paper ends
+  before it advertises is attached once a later Paper of that slot advertises; and read only observer
   credentials (`STACK_OBSERVER_*`) for the owner's topology and the Realm's sessions bucket. The
   module's suite setup waits once, outside any window, until slot 0's engine is active. Its
   requirements therefore run only through `cargo xtask e2e game`.
@@ -543,6 +544,11 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   per slot, and no requirement waits for an engine inside a window; Typewriter's suite setup waits
   for slot 0. Why: loaders exist only once the pool boots their Papers, and a wall clock wait inside
   a tick window is wrong.
+- **A slot binds, not one Paper** (2026-11-20). Answer to "The stack's binder fails when a short
+  restart Paper stops before advertising. How should slots 1 and 2 bind?": "A. Wait for the slot
+  (Recommended)". The binder has no deadline per Paper: a slot keeps its identity, so the slot's
+  next Paper advertises the bound service. Why: CI's RESTART-3 ended its own Paper seconds after
+  the binder bound it, and the 60 s advertise deadline then stopped the whole stack.
 - **The observer reads real state** (2026-11-19): the test JVM reads with read only credentials the
   stack mints, the owner's topology snapshot request and exact reads of `sessions_<realm>`, never
   a file the binder writes.
