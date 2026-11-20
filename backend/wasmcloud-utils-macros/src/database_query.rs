@@ -380,7 +380,7 @@ mod tests {
     #[test]
     fn locates_the_final_top_level_return() {
         let statements = top_level_statements(
-            "BEGIN TRANSACTION; LET $value = { RETURN 'nested' }; RETURN $value; COMMIT TRANSACTION;",
+            "BEGIN TRANSACTION; LET $nested = { RETURN 'nested' }; RETURN $nested; COMMIT TRANSACTION;",
         )
         .unwrap();
 
