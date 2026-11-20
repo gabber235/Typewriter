@@ -1,6 +1,6 @@
 //! Runs the surrealkit database suites (backend/database/tests) against the SurrealDB server
-//! release production runs: an in memory server on a free loopback port, started for the step and
-//! stopped with it.
+//! release every Infrastructure environment runs (devenv's `surreal`, `nix/default.nix`): an in
+//! memory server on a free loopback port, started for the step and stopped with it.
 
 use std::fs::File;
 use std::io::Write as _;
