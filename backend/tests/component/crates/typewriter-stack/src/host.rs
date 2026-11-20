@@ -169,12 +169,14 @@ pub async fn run(args: HostArgs) -> Result<()> {
     create_faults_link(&args, "realm-nats", args.realm_nats_proxy, nats).await?;
 
     let database = Arc::new(WasmcloudSurrealdb::new());
-    let database_key = ConnectionKey::from_config(&Config::from([
+    let database_config = Config::from([
         ("url", "memory"),
         ("namespace", "typewriter"),
         ("database", "typewriter"),
-    ]))?;
-    let connection = database.get_or_create_connection(&database_key).await?;
+    ]);
+    let connection = database
+        .get_or_create_connection(&ConnectionKey::from_config(&database_config)?)
+        .await?;
     database_schema::Preset::Full
         .apply(&*connection.read().await)
         .await
@@ -242,7 +244,7 @@ pub async fn run(args: HostArgs) -> Result<()> {
         let artifact = artifacts
             .get(wiring.package)
             .with_context(|| format!("xtask passed no artifact for `{}`", wiring.package))?;
-        let workload = workload(wiring, artifact, &broker, &identity, &database_key)?;
+        let workload = workload(wiring, artifact, &broker, &identity, &database_config)?;
         let response = host
             .workload_start(WorkloadStartRequest {
                 workload_id: wiring.package.to_owned(),
@@ -278,7 +280,7 @@ fn workload(
     artifact: &PathBuf,
     broker: &BrokerConnection,
     identity: &str,
-    database: &ConnectionKey,
+    database: &Config,
 ) -> Result<Workload> {
     let name = wiring.package.replace('-', "_");
     let mut interfaces = vec![WitInterface::from("wasi:otel/tracing@0.2.0-rc.2")];
@@ -294,13 +296,7 @@ fn workload(
     }
     if wiring.database {
         let mut surrealdb = WitInterface::from("seamlezz:surrealdb/call@0.4.0");
-        surrealdb.config.insert("url", database.url.clone());
-        surrealdb
-            .config
-            .insert("namespace", database.namespace.clone());
-        surrealdb
-            .config
-            .insert("database", database.database.clone());
+        surrealdb.config = database.clone();
         interfaces.push(surrealdb);
     }
     let allowed_hosts: Vec<AllowedHost> = if wiring.identity {
