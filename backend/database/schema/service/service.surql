@@ -19,13 +19,9 @@ DEFINE FIELD OVERWRITE role ON service TYPE object
 DEFINE FIELD OVERWRITE role.type ON service
     TYPE "host" | "custom";
 
-DEFINE FIELD OVERWRITE role.version ON service TYPE option<string>
-    ASSERT {
-        IF !string::is_semver($value) {
-            THROW "role-version-invalid-error"
-        };
-        RETURN true;
-    };
+-- Optional here so a missing version reaches fn::service::valid_role, which refuses it with
+-- role-version-invalid-error.
+DEFINE FIELD OVERWRITE role.version ON service TYPE option<string>;
 
 DEFINE FIELD OVERWRITE role.name ON service TYPE option<string>;
 
