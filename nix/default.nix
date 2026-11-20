@@ -45,6 +45,40 @@ in
     binary = "nats-server-v${version}-${platform}/nats-server";
   };
 
+  # The SurrealDB server release production runs, which the database suites run against
+  # (`cargo xtask check backend`); nixpkgs trails it.
+  surreal = releaseBinary rec {
+    pname = "surreal";
+    version = "3.3.5";
+    platform = asset {
+      aarch64-darwin = "darwin-arm64";
+      x86_64-linux = "linux-amd64";
+    };
+    url = "https://github.com/surrealdb/surrealdb/releases/download/v${version}/surreal-v${version}.${platform}.tgz";
+    hash = asset {
+      aarch64-darwin = "sha256-U0FAI25yRthpaQFbqa6N0vf48nftFBLLF/PTl/laEJA=";
+      x86_64-linux = "sha256-jzvBY0BQhTQ/xtuXRqjgzVVQPJOYAq0rNaRmZ1qcCc8=";
+    };
+    binary = "surreal";
+  };
+
+  # The surrealkit release the database deploy jobs run (`SURREALKIT_IMAGE` in xtask/src/deploy.rs),
+  # which runs the database suites; nixpkgs lacks it.
+  surrealkit = releaseBinary rec {
+    pname = "surrealkit";
+    version = "0.6.3";
+    target = asset {
+      aarch64-darwin = "aarch64-apple-darwin";
+      x86_64-linux = "x86_64-unknown-linux-gnu";
+    };
+    url = "https://github.com/surrealdb/surrealkit/releases/download/v${version}/surrealkit-v${version}-${target}.tar.gz";
+    hash = asset {
+      aarch64-darwin = "sha256-614svcQRBG+0H3edybN1dePK5E3zCvBGwr854XNrdHM=";
+      x86_64-linux = "sha256-99TDEdxTlyFx8OIL4ay19abOdR6spqBgnF1iXRDlzPs=";
+    };
+    binary = "surrealkit";
+  };
+
   # The Seamlezz wasmCloud fork, which the deployed runtime matches.
   wash = releaseBinary rec {
     pname = "wash";

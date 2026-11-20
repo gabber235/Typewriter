@@ -10,6 +10,8 @@ in
   packages = [
     flutter # `devenv update flutter-overlay` moves it to the newest release
     pins.nats-server
+    pins.surreal
+    pins.surrealkit
     pins.wash
     pkgs.bun # Skir code generation and checks, and the documentation site's package manager
     pkgs.nodejs_24 # runs Astro, which builds the documentation site (`cargo xtask check docs`)

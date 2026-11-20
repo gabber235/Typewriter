@@ -5,6 +5,7 @@
 mod branch;
 mod cluster;
 mod components;
+mod database;
 mod deploy;
 mod docs;
 mod doctor;

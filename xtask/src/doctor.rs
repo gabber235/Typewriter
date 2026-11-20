@@ -16,6 +16,9 @@ const NATIVE_TOOLS: &[&str] = &[
     "dart",
     "kustomize",
     "kubeconform",
+    // The database suites (`backend:database`).
+    "surreal",
+    "surrealkit",
     "yamllint",
     "gh",
     // `secretspec run` for the tools outside xtask, and the vault provider's CLI.
