@@ -47,8 +47,8 @@ fn main() -> Result<()> {
         .map_err(|_| anyhow::anyhow!("a rustls crypto provider was installed before main"))?;
     // The host subcommand embeds SurrealDB, whose engine needs deeper stacks than tokio's default.
     // Its schema setup runs in the command's future, so that runs on a worker thread of the
-    // plugin's runtime rather than on this thread.
-    let runtime = wasmcloud_plugin_surrealdb::runtime_builder().build()?;
+    // harness runtime rather than on this thread.
+    let runtime = component_test_core::runtime_builder().build()?;
     let _context = runtime.enter();
 
     // The wash runtime's own setup, as the `wash` host has it: console logs, and with an
@@ -56,7 +56,7 @@ fn main() -> Result<()> {
     // on NATS messages and exports the host's and the components' spans.
     let flush =
         wash_runtime::observability::initialize_observability(tracing::Level::INFO, false, false)?;
-    let result = runtime.block_on(async { tokio::spawn(run(Command::parse())).await? });
+    let result = component_test_core::block_on_worker(&runtime, run(Command::parse()));
     flush();
     result
 }

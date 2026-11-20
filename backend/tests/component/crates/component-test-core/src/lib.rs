@@ -271,8 +271,30 @@ struct Globals {
     admission: Arc<Semaphore>,
     _host_tracer_provider: SdkTracerProvider,
 }
-/// Stack of every runtime worker thread.
+/// Stack of every worker thread of [`runtime_builder`]. An embedded SurrealDB in an unoptimized
+/// build recurses deeper than tokio's default 2 MiB on some transactions.
 const WORKER_STACK_BYTES: usize = 16 * 1024 * 1024;
+
+/// The multi threaded runtime the harness runs cases on, and that hosts built on it (the
+/// Typewriter stack) run on too: every worker thread gets [`WORKER_STACK_BYTES`].
+pub fn runtime_builder() -> Builder {
+    let mut builder = Builder::new_multi_thread();
+    builder.enable_all().thread_stack_size(WORKER_STACK_BYTES);
+    builder
+}
+
+/// Runs `future` to completion on a worker thread of `runtime`, whose stack the embedded
+/// SurrealDB needs; the calling thread only waits. A panic in `future` resumes on the caller.
+pub fn block_on_worker<T: Send + 'static>(
+    runtime: &Runtime,
+    future: impl Future<Output = T> + Send + 'static,
+) -> T {
+    match runtime.block_on(runtime.spawn(future)) {
+        Ok(value) => value,
+        Err(error) if error.is_panic() => std::panic::resume_unwind(error.into_panic()),
+        Err(error) => panic!("the task on the harness runtime ended: {error}"),
+    }
+}
 
 static GLOBALS: OnceLock<Result<Globals, String>> = OnceLock::new();
 fn globals() -> Result<&'static Globals> {
@@ -291,11 +313,7 @@ fn globals() -> Result<&'static Globals> {
             );
             tracing::subscriber::set_global_default(subscriber)
                 .map_err(|error| format!("initialization phase: host tracing: {error}"))?;
-            // An embedded SurrealDB in an unoptimized build recurses deeper than the default
-            // worker stack allows on some transactions.
-            let runtime = Builder::new_multi_thread()
-                .enable_all()
-                .thread_stack_size(WORKER_STACK_BYTES)
+            let runtime = runtime_builder()
                 .build()
                 .map_err(|e| format!("initialization phase: Tokio runtime: {e}"))?;
             let engine = Engine::builder()
@@ -344,18 +362,15 @@ where
         Err(error) => panic!("component test failed: {error:#}"),
     };
     let started = Instant::now();
-    // The case runs on a worker thread, whose stack the embedded SurrealDB needs; the libtest
-    // thread only waits for it.
-    let outcome = match globals.runtime.block_on(globals.runtime.spawn(run::<F, B>(
-        globals.admission.clone(),
-        globals.engine.clone(),
-        descriptor,
-        body,
-    ))) {
-        Ok(outcome) => outcome,
-        Err(error) if error.is_panic() => std::panic::resume_unwind(error.into_panic()),
-        Err(error) => panic!("component test failed: the case task ended: {error}"),
-    };
+    let outcome = block_on_worker(
+        &globals.runtime,
+        run::<F, B>(
+            globals.admission.clone(),
+            globals.engine.clone(),
+            descriptor,
+            body,
+        ),
+    );
     let failure = match &outcome {
         Outcome::Pass => None,
         Outcome::Error(report) | Outcome::Panic(_, report) => Some(report.as_str()),
