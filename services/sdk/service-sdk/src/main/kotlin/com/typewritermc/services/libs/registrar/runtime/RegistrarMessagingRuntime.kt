@@ -331,7 +331,8 @@ class TypewriterRegistrarRuntimeFactory(
         return RuntimeCreateResult.Success(
             TypewriterRegistrarRuntime(
                 communicator,
-                com.typewritermc.services.libs.communicator.kv.NatsKeyValueBuckets(connection),
+                com.typewritermc.services.libs.communicator.kv
+                    .NatsKeyValueBuckets(connection),
                 ServiceRouteScope(credentials.identity.serviceId.value),
                 ProductionNatsLifecycle(connection),
                 access,

@@ -924,6 +924,7 @@ internal val ALLOWED: Map<String, Set<String>> =
     mapOf(
         "storage" to setOf(),
         "catalog" to setOf(),
+        "session" to setOf(),
         "authoring" to setOf("catalog"),
         "search" to setOf("authoring", "catalog", "storage"),
         "formula" to setOf("authoring", "catalog"),
@@ -932,7 +933,7 @@ internal val ALLOWED: Map<String, Set<String>> =
         "operation" to setOf("edit", "checking", "authoring", "catalog"),
         "publication" to setOf("checking", "authoring", "catalog", "storage"),
         "routes" to setOf("operation", "publication", "edit", "checking", "search", "authoring", "catalog"),
-        ROOT to setOf("routes", "operation", "publication", "edit", "checking", "search", "authoring", "catalog", "storage"),
+        ROOT to setOf("routes", "operation", "publication", "edit", "checking", "search", "authoring", "catalog", "storage", "session"),
     )
 
 internal val PACKAGE_LINE = Regex("""^package com\.typewritermc\.realm(?:\.(\w+))?""", RegexOption.MULTILINE)

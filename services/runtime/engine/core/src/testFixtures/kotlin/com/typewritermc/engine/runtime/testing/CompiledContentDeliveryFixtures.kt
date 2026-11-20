@@ -37,7 +37,12 @@ fun TestScope.delivery(
     telemetry: TelemetryTestHarness,
 ) = MessagingEngineContentDelivery(
     deliveryHost(
-        HostedMessagingSession(1, "organization", Communicator(transport, telemetry.telemetry, ContextPropagators.noop()), com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets),
+        HostedMessagingSession(
+            1,
+            "organization",
+            Communicator(transport, telemetry.telemetry, ContextPropagators.noop()),
+            com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets,
+        ),
         telemetry,
     ),
     REALM,

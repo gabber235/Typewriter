@@ -14,10 +14,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.koin.core.KoinApplication
 import org.koin.core.module.Module
-import org.koin.dsl.onClose
 import org.koin.dsl.binds
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
+import org.koin.dsl.onClose
 
 /**
  * The Koin of one engine deployment: engine-core's parts, such as the engine's identity and its session keeping,
@@ -53,7 +53,13 @@ private fun engineCoreModule(
     single(createdAtStart = true) {
         SessionKeeper(
             engine = get<Engine>().id,
-            buckets = context.host.messaging.map { it?.buckets }.stateIn(scope, SharingStarted.Eagerly, context.host.messaging.value?.buckets),
+            buckets =
+                context.host.messaging.map { it?.buckets }.stateIn(
+                    scope,
+                    SharingStarted.Eagerly,
+                    context.host.messaging.value
+                        ?.buckets,
+                ),
             bucketName = SessionsBucket.name(context.identity.realmId),
             timings = get(),
             parent = scope,

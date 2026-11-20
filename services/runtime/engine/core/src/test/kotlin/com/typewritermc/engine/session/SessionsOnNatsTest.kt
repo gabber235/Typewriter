@@ -36,8 +36,7 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         harness().createBucket()
         val engine = harness().engine("engine-a")
         val (protagonist, session) = harness().player()
-        engine.keeper.connected(protagonist, session)
-        harness().eventually { harness().entry(protagonist, session) != null }
+        harness().joined(engine, protagonist, session)
 
         delay(SessionHarness.SHORT.ttl * 2)
 
@@ -48,8 +47,7 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         harness().createBucket()
         val engine = harness().engine("engine-a")
         val (protagonist, session) = harness().player()
-        engine.keeper.connected(protagonist, session)
-        harness().eventually { harness().entry(protagonist, session) != null }
+        harness().joined(engine, protagonist, session)
 
         engine.keeper.disconnected(session)
 
@@ -60,8 +58,7 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         harness().createBucket()
         val engine = harness().engine("engine-a")
         val (protagonist, session) = harness().player()
-        engine.keeper.connected(protagonist, session)
-        harness().eventually { harness().entry(protagonist, session) != null }
+        harness().joined(engine, protagonist, session)
         val since = harness().entry(protagonist, session).shouldNotBeNull().since
 
         engine.keeper.disconnected(session)
@@ -76,11 +73,9 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         val old = harness().engine("engine-a")
         val new = harness().engine("engine-b")
         val (protagonist, session) = harness().player()
-        old.keeper.connected(protagonist, session)
-        harness().eventually { harness().entry(protagonist, session) != null }
+        harness().joined(old, protagonist, session)
 
-        new.keeper.connected(protagonist, session)
-        harness().eventually { harness().entry(protagonist, session)?.holder == EngineId("engine-b") }
+        harness().joined(new, protagonist, session)
         old.keeper.disconnected(session)
         delay(SessionHarness.SHORT.ttl * 2)
 
@@ -92,8 +87,7 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         val old = harness().engine("engine-a")
         val new = harness().engine("engine-b")
         val (protagonist, session) = harness().player()
-        old.keeper.connected(protagonist, session)
-        harness().eventually { harness().entry(protagonist, session) != null }
+        harness().joined(old, protagonist, session)
 
         old.keeper.disconnected(session)
         new.keeper.connected(protagonist, session)
@@ -106,8 +100,7 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         harness().createBucket()
         val engine = harness().engine("engine-a")
         val (protagonist, session) = harness().player()
-        engine.keeper.connected(protagonist, session)
-        harness().eventually { harness().entry(protagonist, session) != null }
+        harness().joined(engine, protagonist, session)
 
         engine.crash()
 
@@ -118,8 +111,7 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         harness().createBucket()
         val before = harness().engine("engine-a")
         val (protagonist, session) = harness().player()
-        before.keeper.connected(protagonist, session)
-        harness().eventually { harness().entry(protagonist, session) != null }
+        harness().joined(before, protagonist, session)
         val since = harness().entry(protagonist, session).shouldNotBeNull().since
 
         before.keeper.close()
@@ -162,11 +154,9 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         val old = harness().engine("engine-a")
         val new = harness().engine("engine-b")
         val (protagonist, session) = harness().player()
-        old.keeper.connected(protagonist, session)
-        harness().eventually { harness().entry(protagonist, session) != null }
+        harness().joined(old, protagonist, session)
 
-        new.keeper.connected(protagonist, session)
-        harness().eventually { harness().entry(protagonist, session)?.holder == EngineId("engine-b") }
+        harness().joined(new, protagonist, session)
         delay(SessionHarness.SHORT.refresh * 2)
         new.keeper.disconnected(session)
         delay(SessionHarness.SHORT.ttl * 2)

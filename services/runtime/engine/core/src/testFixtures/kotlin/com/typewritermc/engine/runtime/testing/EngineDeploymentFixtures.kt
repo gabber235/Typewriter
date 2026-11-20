@@ -67,7 +67,9 @@ fun wiredDeploymentContext(
 private class MessagingHost(
     buckets: com.typewritermc.services.libs.communicator.kv.KeyValueBuckets,
 ) : HostedRuntimeHost {
-    private val telemetry = io.opentelemetry.api.OpenTelemetry.noop()
+    private val telemetry =
+        io.opentelemetry.api.OpenTelemetry
+            .noop()
     override val messaging =
         kotlinx.coroutines.flow.MutableStateFlow<com.typewritermc.loader.api.HostedMessagingSession?>(
             com.typewritermc.loader.api.HostedMessagingSession(
@@ -75,9 +77,11 @@ private class MessagingHost(
                 organizationId = "organization",
                 communicator =
                     com.typewritermc.services.libs.communicator.client.Communicator(
-                        com.typewritermc.services.libs.communicator.testing.FakeMessageTransport(),
+                        com.typewritermc.services.libs.communicator.testing
+                            .FakeMessageTransport(),
                         telemetry.serviceTelemetry("engine test"),
-                        io.opentelemetry.context.propagation.ContextPropagators.noop(),
+                        io.opentelemetry.context.propagation.ContextPropagators
+                            .noop(),
                     ),
                 buckets = buckets,
             ),

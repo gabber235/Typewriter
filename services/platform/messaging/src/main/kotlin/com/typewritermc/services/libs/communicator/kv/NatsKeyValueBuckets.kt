@@ -1,16 +1,21 @@
 package com.typewritermc.services.libs.communicator.kv
 
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
+import io.natskt.api.NatsClientException
 import io.natskt.jetstream.api.JetStreamApiException
-import io.natskt.jetstream.api.KvKeyNotFoundException
 import io.natskt.jetstream.api.kv.KeyValueOperation
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import java.io.IOException
 import kotlin.time.Duration
 import io.natskt.jetstream.api.kv.KeyValueBucket as NatsBucket
 
 /**
  * The key value buckets of one NATS connection, through JetStream. A key whose time to live ran out reads as absent
- * although the broker keeps its expiry marker for a while; a create over such a marker succeeds.
+ * although the broker keeps its expiry marker for a while; a create over such a marker succeeds. A request natskt gives
+ * up on surfaces from natskt as a cancellation; it is a failure here unless the caller itself was cancelled, so the
+ * caller retries it. natskt's own failures and transport I/O errors are failures; anything else is a bug and propagates.
  */
 class NatsKeyValueBuckets(
     private val connection: NatsConnection,
@@ -27,9 +32,10 @@ class NatsKeyValueBuckets(
 
     override suspend fun ensure(bucket: KeyValueBucketDeclaration): KeyValueOpen =
         when (val opened = open(bucket.name)) {
-            KeyValueOpen.Missing ->
+            KeyValueOpen.Missing -> {
                 attempt {
-                    val jetStream = connection.jetStream() ?: return@attempt KeyValueOpen.Failed(IllegalStateException("NATS is not connected"))
+                    val jetStream =
+                        connection.jetStream() ?: return@attempt KeyValueOpen.Failed(IllegalStateException("NATS is not connected"))
                     val created =
                         jetStream.keyValueManager.create {
                             name = bucket.name
@@ -38,19 +44,26 @@ class NatsKeyValueBuckets(
                         }
                     KeyValueOpen.Opened(JetStreamBucket(created))
                 }
-            else -> opened
+            }
+
+            else -> {
+                opened
+            }
         }
 
-    private inline fun attempt(block: () -> KeyValueOpen): KeyValueOpen =
+    private suspend inline fun attempt(block: () -> KeyValueOpen): KeyValueOpen =
         try {
             block()
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (failure: Exception) {
+        } catch (failure: CancellationException) {
+            currentCoroutineContext().ensureActive()
+            KeyValueOpen.Failed(failure)
+        } catch (failure: NatsClientException) {
+            KeyValueOpen.Failed(failure)
+        } catch (failure: IOException) {
             KeyValueOpen.Failed(failure)
         }
 
-    private class JetStreamBucket(
+    internal class JetStreamBucket(
         private val bucket: NatsBucket,
     ) : KeyValueBucket {
         override suspend fun get(key: String): KeyValueRead =
@@ -60,15 +73,17 @@ class NatsKeyValueBuckets(
                     // natskt 0.9.1 returns the broker's not found reply to a get of a missing key as an entry of
                     // revision 0, which no stored entry has. Remove once natskt's key value get fails with not found.
                     entry.revision == 0uL -> KeyValueRead.Absent
+
                     else -> entry.read()
                 }
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: KvKeyNotFoundException) {
-                KeyValueRead.Absent
+            } catch (failure: CancellationException) {
+                currentCoroutineContext().ensureActive()
+                KeyValueRead.Failed(failure)
             } catch (failure: JetStreamApiException) {
                 if (failure.error?.code == NOT_FOUND) KeyValueRead.Absent else KeyValueRead.Failed(failure)
-            } catch (failure: Exception) {
+            } catch (failure: NatsClientException) {
+                KeyValueRead.Failed(failure)
+            } catch (failure: IOException) {
                 KeyValueRead.Failed(failure)
             }
 
@@ -95,20 +110,26 @@ class NatsKeyValueBuckets(
         override suspend fun keys(filter: String): KeyValueKeys =
             try {
                 KeyValueKeys.Listed(bucket.keys(filter))
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (failure: Exception) {
+            } catch (failure: CancellationException) {
+                currentCoroutineContext().ensureActive()
+                KeyValueKeys.Failed(failure)
+            } catch (failure: NatsClientException) {
+                KeyValueKeys.Failed(failure)
+            } catch (failure: IOException) {
                 KeyValueKeys.Failed(failure)
             }
 
-        private inline fun write(block: () -> ULong): KeyValueWrite =
+        private suspend inline fun write(block: () -> ULong): KeyValueWrite =
             try {
                 KeyValueWrite.Written(block().toLong())
-            } catch (cancelled: CancellationException) {
-                throw cancelled
+            } catch (failure: CancellationException) {
+                currentCoroutineContext().ensureActive()
+                KeyValueWrite.Failed(failure)
             } catch (failure: JetStreamApiException) {
                 if (failure.error?.errCode == WRONG_LAST_SEQUENCE) KeyValueWrite.Conflict else KeyValueWrite.Failed(failure)
-            } catch (failure: Exception) {
+            } catch (failure: NatsClientException) {
+                KeyValueWrite.Failed(failure)
+            } catch (failure: IOException) {
                 KeyValueWrite.Failed(failure)
             }
     }

@@ -10,7 +10,8 @@ import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
  * [NatsTestServer.startWithJetStream].
  */
 object UnreachableKeyValueBuckets : KeyValueBuckets {
-    override suspend fun open(name: String): KeyValueOpen = KeyValueOpen.Failed(UnsupportedOperationException("This test messaging reaches no bucket: $name"))
+    override suspend fun open(name: String): KeyValueOpen =
+        KeyValueOpen.Failed(UnsupportedOperationException("This test messaging reaches no bucket: $name"))
 
     override suspend fun ensure(bucket: KeyValueBucketDeclaration): KeyValueOpen = open(bucket.name)
 }

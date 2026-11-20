@@ -20,7 +20,6 @@ import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.edit.AuthoringRepository
 import com.typewritermc.realm.edit.RealmAuthoringOwner
 import com.typewritermc.realm.edit.RealmStructureProvisioning
-import com.typewritermc.realm.session.RealmSessionsBucket
 import com.typewritermc.realm.edit.SurrealAuthoringStorage
 import com.typewritermc.realm.operation.PreparationCoordinator
 import com.typewritermc.realm.operation.PreparationEvaluator
@@ -40,6 +39,7 @@ import com.typewritermc.realm.routes.RealmCatalogInvalidationProcess
 import com.typewritermc.realm.routes.RealmRouteFactory
 import com.typewritermc.realm.routes.RetainedRealmEditorCatalogSource
 import com.typewritermc.realm.search.SurrealAuthoringSearchRepository
+import com.typewritermc.realm.session.RealmSessionsBucket
 import com.typewritermc.realm.storage.RealmDatabaseProvider
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
