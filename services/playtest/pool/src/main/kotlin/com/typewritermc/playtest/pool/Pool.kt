@@ -131,28 +131,6 @@ internal class Pool(
     }
 
     /**
-     * A player its attempt sent away from its Paper as a person quits, from its quit until its client steps
-     * with that Paper again. It stays on the attempt's lease and is no lost client meanwhile.
-     */
-    private sealed interface Away {
-        /**
-         * Its client leaves; Paper seeing it leave answers the session's quit [request]. Without a request
-         * the attempt ended meanwhile, and the player comes back to the shared Paper once it left.
-         */
-        data class Leaving(
-            val request: Long?,
-        ) : Away
-
-        /** It is off Paper until its attempt asks it back. */
-        data object Gone : Away
-
-        /** Its client joins its Paper again; Paper taking it back answers the session's rejoin [request]. */
-        data class Joining(
-            val request: Long,
-        ) : Away
-    }
-
-    /**
      * One attempt from its claim to its result. Paper claims its players first, then each client resets,
      * then the session gets the lease and the records the clients sent since their reset. Attempts run
      * side by side, its [group], get their leases at the same moment, once every one of them reset.
@@ -743,20 +721,34 @@ internal class Pool(
 
     /**
      * [server] saw [left]'s player leave. A player its attempt sent away left on purpose: the quit is
-     * answered, or, once its attempt ended, it comes back; any other leave loses its client.
+     * answered, or, once its attempt ended, it comes back; any other leave loses its client. A leave
+     * [server] reports after the pool moved the player off it changes nothing ([Away.left]).
      */
     private fun playerLeft(
         server: Server,
         left: Message.PlayerLeft,
     ) {
         val client = clientNamed(left.player)
-        val leaving = client?.away as? Away.Leaving
-        if (client == null || leaving == null) {
-            return lostOn(server, left.player, ClientLossKind.LEFT_PAPER, "its player left Paper (${left.reason.lowercase()})")
+        val cause = "its player left Paper (${left.reason.lowercase()})"
+        val away = client?.away ?: return lostOn(server, left.player, ClientLossKind.LEFT_PAPER, cause)
+        when (val meaning = away.left(onItsPaper = client.on == server)) {
+            Away.Left.Moved -> {}
+
+            is Away.Left.QuitDone -> {
+                client.away = Away.Gone
+                attemptHolding(left.player)?.session?.send(
+                    Message.createReply(request = meaning.request, answer = Answer.createQuitDone(tick = left.tick)),
+                )
+            }
+
+            Away.Left.ComeBack -> {
+                comeBack(client)
+            }
+
+            Away.Left.Lost -> {
+                clientLost(left.player, ClientLossKind.LEFT_PAPER, cause)
+            }
         }
-        val request = leaving.request ?: return comeBack(client)
-        client.away = Away.Gone
-        attemptHolding(left.player)?.session?.send(Message.createReply(request = request, answer = Answer.createQuitDone(tick = left.tick)))
     }
 
     /** [client], away since its attempt ended, joins the shared Paper again; its player serves claims once it steps there. */
