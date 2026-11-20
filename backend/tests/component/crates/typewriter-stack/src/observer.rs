@@ -126,7 +126,7 @@ fn write_minted(state: &Path, minted: &Minted) -> Result<()> {
 /// A connection session as the backend accepts one: 32 lowercase hex digits.
 fn session() -> Result<String> {
     let mut bytes = [0; 16];
-    getrandom::getrandom(&mut bytes).map_err(|error| anyhow!("{error}"))?;
+    getrandom::fill(&mut bytes).map_err(|error| anyhow!("{error}"))?;
     Ok(bytes.iter().map(|byte| format!("{byte:02x}")).collect())
 }
 
