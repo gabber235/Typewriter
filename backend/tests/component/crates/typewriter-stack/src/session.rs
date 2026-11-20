@@ -16,14 +16,13 @@ use futures_util::StreamExt as _;
 use nkeys::KeyPair;
 use serde::Deserialize;
 use typewriter_component_test::StackUser;
-use wasmcloud_utils::SkirType;
 use wasmcloud_utils::skir::base::access::v1::permission::{
     EntityPermissionQualifier, EntityPermissionQualifier_User,
 };
 use wasmcloud_utils::skir::base::access::v1::sentinel::GetSentinelCredentialsResponse;
 use wasmcloud_utils::skir::base::kernel::v1::record_id::{RecordId, RecordIdKey};
 use wasmcloud_utils::skir_client::UnrecognizedValues;
-use wasmcloud_utils::transport::{ConnectionSession, SubjectToken};
+use wasmcloud_utils::transport::{ConnectionSession, RequestRoute, SubjectToken};
 use wasmcloud_utils::transport_routes::panel_reply_inbox_prefix;
 
 /// The OAuth application the panel signs in with.
@@ -143,13 +142,13 @@ impl Session {
             .context("the session is not scoped to an organization")
     }
 
-    /// Sends `request` at `subject` and decodes its response, with serializers taken from the
-    /// types.
-    pub async fn request<Req: SkirType, Resp: SkirType>(
+    /// Sends `request` on route `R` at `subject` and decodes its response.
+    pub async fn request<R: RequestRoute>(
         &self,
         subject: String,
-        request: &Req,
-    ) -> Result<Resp> {
+        request: &R::Request,
+    ) -> Result<R::Response> {
+        let method = R::method();
         // Panel connections may only receive replies on single tokens below their inbox prefix,
         // so each request gets its own inbox instead of async-nats' multiplexed one.
         let inbox = self.client.new_inbox();
@@ -162,7 +161,7 @@ impl Session {
             .publish_with_reply(
                 subject.clone(),
                 inbox,
-                Req::serializer().to_bytes(request).into(),
+                method.request_serializer.to_bytes(request).into(),
             )
             .await
             .with_context(|| format!("requesting {subject}"))?;
@@ -178,7 +177,8 @@ impl Session {
         if reply.status == Some(async_nats::StatusCode::NO_RESPONDERS) {
             bail!("nothing serves {subject}");
         }
-        Resp::serializer()
+        method
+            .response_serializer
             .from_bytes(&reply.payload, UnrecognizedValues::Drop)
             .with_context(|| format!("{subject} answered with an unreadable response"))
     }

@@ -486,10 +486,6 @@ impl Service for BindRealmHost {
     }
 }
 
-/// How many game Papers the engine binder binds: the shared Paper (slot 0) and the at most two
-/// own Papers of restart requirements (slots 1 and 2), as the game pool numbers them.
-const GAME_PAPER_SLOTS: u8 = 3;
-
 /// Binds the loader of each game Paper slot as the Paper engine of the stack's Realm, through the
 /// real routes, the first time the slot's loader writes its registration token to
 /// `<STACK_GAME_ENGINES>/<slot>/registration-token`. It names each slot's service
@@ -511,8 +507,7 @@ impl Service for BindEngines {
             .args(owner_args(ctx)?)
             .arg("--work-dir")
             .arg(game_engines_dir(ctx))
-            .arg("--as-engine")
-            .args(["--slots", &GAME_PAPER_SLOTS.to_string()]);
+            .arg("--as-engine");
         Ok(command)
     }
     /// It signed the owner in and waits for the slots' tokens.

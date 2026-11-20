@@ -10,6 +10,7 @@ use wasmcloud_utils::skir::base::kernel::v1::record_id::{RecordId, RecordIdKey};
 use wasmcloud_utils::skir::base::organization::v1::organization::{
     CreateOrganizationRequest, CreateOrganizationResponse,
 };
+use wasmcloud_utils::transport_routes::UserOrganizationCreateRoute;
 
 use crate::session::{Session, StackEndpoints, record_token};
 
@@ -62,8 +63,8 @@ pub async fn run(args: ProvisionArgs) -> Result<()> {
     let name = owner.organizations[0].clone();
     let session = sign_in_once_known(&endpoints, &owner).await?;
     let subject = format!("cloud.to.user.{}.organization.create", session.user());
-    let response: CreateOrganizationResponse = session
-        .request(
+    let response = session
+        .request::<UserOrganizationCreateRoute>(
             subject,
             &CreateOrganizationRequest {
                 name: name.clone(),

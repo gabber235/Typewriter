@@ -6,14 +6,16 @@
 //! [`EngineSlots`] serves the game suite's Paper slots: each slot's loader writes its pending
 //! registration token to `<work-dir>/<slot>/registration-token` when its Paper first boots, and the
 //! binder names that service `game_paper_<slot>` and attaches its host to the organization's Realm
-//! as the Paper engine.
+//! as the Paper engine. The binder knows no slot count: the pool decides how many slots run, and
+//! every slot whose loader writes a token is bound.
 
 use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use anyhow::{Context as _, Result, bail};
-use futures_util::future::try_join_all;
+use futures_util::StreamExt as _;
+use futures_util::stream::FuturesUnordered;
 use wasmcloud_utils::SkirType;
 use wasmcloud_utils::skir::base::kernel::v1::record_id::RecordId;
 use wasmcloud_utils::skir::base::service::v1::organization::{
@@ -27,6 +29,11 @@ use wasmcloud_utils::skir::base::service::v1::topology::{
     HostConfigurationChange, HostExecutionConfiguration, OrganizationTopologySnapshot, ServiceHost,
     WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse,
 };
+use wasmcloud_utils::transport::RequestRoute;
+use wasmcloud_utils::transport_routes::{
+    OrganizationServiceUpdateRoute, OrganizationTopologyWatchRoute, ServiceBindRoute,
+    ServiceTopologyConfigureRoute,
+};
 
 use crate::service::engine_in;
 use crate::skir_record_id;
@@ -36,12 +43,15 @@ const POLL: Duration = Duration::from_millis(200);
 
 /// The routes of an organization's owner, named relative to the organization (`services.bind`).
 pub trait OwnerRoutes: Send + Sync {
-    /// Sends `request` on the organization's `route` and decodes the reply.
-    fn request<Req: SkirType + Sync, Resp: SkirType + Send>(
+    /// Sends `request` on route `R`, at the organization's `route`, and decodes the reply.
+    fn request<R: RequestRoute>(
         &self,
         route: &str,
-        request: &Req,
-    ) -> impl Future<Output = Result<Resp>> + Send;
+        request: &R::Request,
+    ) -> impl Future<Output = Result<R::Response>> + Send
+    where
+        R::Request: SkirType + Sync,
+        R::Response: SkirType + Send;
 }
 
 /// The engine every game Paper slot runs.
@@ -62,8 +72,8 @@ pub async fn bind(owner: &impl OwnerRoutes, token_file: &Path) -> Result<Service
     let mut refused = None;
     let service = loop {
         let token = wait_for_token(token_file, refused.as_deref()).await?;
-        let response: BindServiceResponse = owner
-            .request(
+        let response = owner
+            .request::<ServiceBindRoute>(
                 "services.bind",
                 &BindServiceRequest {
                     registration_token: token.clone(),
@@ -88,8 +98,8 @@ pub async fn bind(owner: &impl OwnerRoutes, token_file: &Path) -> Result<Service
 
 /// The organization's topology as the backend holds it now.
 pub async fn topology(owner: &impl OwnerRoutes) -> Result<OrganizationTopologySnapshot> {
-    let response: WatchOrganizationTopologyResponse = owner
-        .request(
+    let response = owner
+        .request::<OrganizationTopologyWatchRoute>(
             "topology.watch",
             &WatchOrganizationTopologyRequest::default(),
         )
@@ -108,7 +118,7 @@ pub async fn configure(
     execution: HostExecutionConfiguration,
 ) -> Result<HostConfigurationChange> {
     let response: ConfigureServiceHostResponse = owner
-        .request(
+        .request::<ServiceTopologyConfigureRoute>(
             "topology.configure",
             &ConfigureServiceHostRequest {
                 host_id: host.host_id.clone(),
@@ -130,8 +140,8 @@ pub async fn configure(
 pub async fn rename(owner: &impl OwnerRoutes, service: &RecordId, name: &str) -> Result<()> {
     let mut revision = 0;
     loop {
-        let response: UpdateOrganizationServiceResponse = owner
-            .request(
+        let response = owner
+            .request::<OrganizationServiceUpdateRoute>(
                 "services.update",
                 &UpdateOrganizationServiceRequest {
                     service_id: service.clone(),
@@ -154,12 +164,11 @@ pub async fn rename(owner: &impl OwnerRoutes, service: &RecordId, name: &str) ->
     }
 }
 
-/// The game suite's Paper slots, numbered from 0, each with a folder in `work_dir`. A slot keeps
-/// its loader's identity across its Papers, so a slot whose Paper stopped before it advertised is
-/// attached once a later Paper of that slot advertises.
+/// The game suite's Paper slots, numbered from 0, each with a folder in `work_dir` its loader
+/// creates. A slot keeps its loader's identity across its Papers, so a slot whose Paper stopped
+/// before it advertised is attached once a later Paper of that slot advertises.
 pub struct EngineSlots {
     pub work_dir: PathBuf,
-    pub slots: u8,
 }
 
 /// A slot the binder attached to the Realm.
@@ -178,44 +187,70 @@ impl EngineSlots {
             .join("registration-token")
     }
 
-    /// Creates every slot's folder, without a token: a token an earlier run left names a
-    /// service of that run.
+    /// Empties `work_dir`: a token an earlier run left names a service of that run.
     pub fn prepare(&self) -> Result<()> {
-        for slot in 0..self.slots {
-            let token = self.token_file(slot);
-            let folder = token.parent().context("a token file has no folder")?;
-            std::fs::create_dir_all(folder)
-                .with_context(|| format!("cannot create {}", folder.display()))?;
-            match std::fs::remove_file(&token) {
-                Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
-                    return Err(error).with_context(|| format!("cannot clear {}", token.display()));
-                }
-                _ => {}
+        match std::fs::remove_dir_all(&self.work_dir) {
+            Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
+                return Err(error)
+                    .with_context(|| format!("cannot clear {}", self.work_dir.display()));
             }
+            _ => {}
         }
-        Ok(())
+        std::fs::create_dir_all(&self.work_dir)
+            .with_context(|| format!("cannot create {}", self.work_dir.display()))
     }
 
-    /// Binds every slot once its loader wrote a token, signing in again for each slot, since a
-    /// slot's Paper may boot long after the binder started. Fails as soon as one slot fails.
-    pub async fn bind_all<O, S, F>(&self, sign_in: S) -> Result<Vec<BoundSlot>>
+    /// Binds each slot, once, when its loader first writes a token, signing in again for each
+    /// slot, since a slot's Paper may boot long after the binder started, and hands each bound
+    /// slot to `bound`. Runs until it is dropped, or fails as soon as one slot fails.
+    pub async fn bind_every<O, S, F>(
+        &self,
+        sign_in: S,
+        mut bound: impl FnMut(BoundSlot),
+    ) -> Result<std::convert::Infallible>
     where
         O: OwnerRoutes,
         S: Fn() -> F,
         F: Future<Output = Result<O>>,
     {
-        try_join_all((0..self.slots).map(|slot| {
-            let token = self.token_file(slot);
-            let sign_in = &sign_in;
-            async move {
-                wait_for_token(&token, None).await?;
-                let owner = sign_in().await?;
-                self.bind_slot(&owner, slot)
-                    .await
-                    .with_context(|| format!("binding game Paper slot {slot}"))
+        let mut seen = std::collections::BTreeSet::new();
+        let mut binding = FuturesUnordered::new();
+        loop {
+            for slot in self.written_slots()? {
+                if seen.insert(slot) {
+                    let sign_in = &sign_in;
+                    binding.push(async move {
+                        let owner = sign_in().await?;
+                        self.bind_slot(&owner, slot)
+                            .await
+                            .with_context(|| format!("binding game Paper slot {slot}"))
+                    });
+                }
             }
-        }))
-        .await
+            tokio::select! {
+                Some(slot) = binding.next() => bound(slot?),
+                () = tokio::time::sleep(POLL) => {}
+            }
+        }
+    }
+
+    /// The slots whose folder holds a token file now.
+    fn written_slots(&self) -> Result<Vec<u8>> {
+        let entries = std::fs::read_dir(&self.work_dir)
+            .with_context(|| format!("cannot list {}", self.work_dir.display()))?;
+        let mut slots = Vec::new();
+        for entry in entries {
+            let entry = entry?;
+            if let Some(slot) = entry
+                .file_name()
+                .to_str()
+                .and_then(|name| name.parse().ok())
+                && self.token_file(slot).exists()
+            {
+                slots.push(slot);
+            }
+        }
+        Ok(slots)
     }
 
     /// Binds slot `slot`, names its service `game_paper_<slot>` and attaches its host to the
@@ -280,20 +315,46 @@ pub async fn deadline<T>(
 pub struct ScratchSlots(pub EngineSlots);
 
 impl ScratchSlots {
-    /// `slots` slots in a fresh scratch folder.
-    pub fn new(slots: u8) -> Result<Self> {
+    /// Slots in a fresh scratch folder.
+    pub fn new() -> Result<Self> {
         let engines = EngineSlots {
             work_dir: std::env::temp_dir().join(format!("engine-slots-{}", uuid::Uuid::new_v4())),
-            slots,
         };
         engines.prepare()?;
         Ok(Self(engines))
     }
 
-    /// Writes `token` as slot `slot`'s pending registration token, as its loader does.
+    /// Writes `token` as slot `slot`'s pending registration token, creating its folder, as its
+    /// loader does.
     pub fn write_token(&self, slot: u8, token: &str) -> Result<()> {
         let file = self.0.token_file(slot);
+        let folder = file.parent().context("a token file has no folder")?;
+        std::fs::create_dir_all(folder)
+            .with_context(|| format!("cannot create {}", folder.display()))?;
         std::fs::write(&file, token).with_context(|| format!("cannot write {}", file.display()))
+    }
+
+    /// The first `count` slots the binder binds, by slot number.
+    pub async fn first_bound<O, S, F>(&self, count: usize, sign_in: S) -> Result<Vec<BoundSlot>>
+    where
+        O: OwnerRoutes,
+        S: Fn() -> F,
+        F: Future<Output = Result<O>>,
+    {
+        let mut bound = Vec::new();
+        let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();
+        let binding = self.0.bind_every(sign_in, |slot| {
+            let _ = sender.send(slot);
+        });
+        tokio::pin!(binding);
+        while bound.len() < count {
+            tokio::select! {
+                failed = &mut binding => match failed? {},
+                Some(slot) = receiver.recv() => bound.push(slot),
+            }
+        }
+        bound.sort_by_key(|slot: &BoundSlot| slot.slot);
+        Ok(bound)
     }
 }
 
@@ -316,11 +377,15 @@ where
     component_test::TestContext<F>: Sync,
     F: Sync,
 {
-    fn request<Req: SkirType + Sync, Resp: SkirType + Send>(
+    fn request<R: RequestRoute>(
         &self,
         route: &str,
-        request: &Req,
-    ) -> impl Future<Output = Result<Resp>> + Send {
+        request: &R::Request,
+    ) -> impl Future<Output = Result<R::Response>> + Send
+    where
+        R::Request: SkirType + Sync,
+        R::Response: SkirType + Send,
+    {
         crate::TypewriterContext::request(
             self.context,
             crate::topology::from_member(self.user, &self.organization, route),

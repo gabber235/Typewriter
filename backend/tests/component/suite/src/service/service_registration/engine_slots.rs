@@ -24,18 +24,19 @@ const LEASE: Duration = Duration::from_secs(300);
 const PATIENCE: Duration = Duration::from_secs(30);
 
 #[component_test(ServiceRegistration)]
-async fn every_game_paper_slot_binds_as_an_engine_of_the_realm(
+async fn every_game_paper_slot_whose_loader_writes_a_token_binds_as_an_engine_of_the_realm(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
     let realm = seed_realm_host(context, &acme(), ada(), "realm", paper_engine()).await?;
-    let slots = ScratchSlots::new(3)?;
-    for (slot, token) in [(0, "SLOTAAAAAA"), (1, "SLOTBBBBBB"), (2, "SLOTCCCCCC")] {
+    // The binder is told no slot count: slot 5 binds as well as 0 and 2.
+    let slots = ScratchSlots::new()?;
+    for (slot, token) in [(0, "SLOTAAAAAA"), (2, "SLOTBBBBBB"), (5, "SLOTCCCCCC")] {
         seed_registration_lease(context, &format!("paper_{slot}"), token, LEASE).await?;
         slots.write_token(slot, token)?;
         expect_slot(context, &acme(), &format!("paper_{slot}"), true)?;
     }
     let loaders = async {
-        for slot in 0..3 {
+        for slot in [0, 2, 5] {
             register_once_bound(context, &format!("paper_{slot}"), &[PAPER], PATIENCE).await?;
         }
         Ok::<_, anyhow::Error>(())
@@ -44,7 +45,7 @@ async fn every_game_paper_slot_binds_as_an_engine_of_the_realm(
     let (bound, loaders) = tokio::join!(
         tokio::time::timeout(
             PATIENCE,
-            slots.0.bind_all(|| async {
+            slots.first_bound(3, || async {
                 Ok(MemberRoutes {
                     context: &*context,
                     user: ada(),
@@ -59,7 +60,7 @@ async fn every_game_paper_slot_binds_as_an_engine_of_the_realm(
     let bound = bound??;
     assert_eq!(
         bound.iter().map(|slot| slot.slot).collect::<Vec<_>>(),
-        [0, 1, 2]
+        [0, 2, 5]
     );
     for BoundSlot { slot, host, change } in &bound {
         assert_eq!(
@@ -76,9 +77,9 @@ async fn every_game_paper_slot_binds_as_an_engine_of_the_realm(
     assert_eq!(
         context
             .database()?
-            .query_json("SELECT VALUE name FROM service WHERE id IN [service:`paper_0`, service:`paper_1`, service:`paper_2`] ORDER BY name")
+            .query_json("SELECT VALUE name FROM service WHERE id IN [service:`paper_0`, service:`paper_2`, service:`paper_5`] ORDER BY name")
             .await?,
-        serde_json::json!(["game_paper_0", "game_paper_1", "game_paper_2"])
+        serde_json::json!(["game_paper_0", "game_paper_2", "game_paper_5"])
     );
     Ok(())
 }
@@ -102,7 +103,7 @@ async fn a_slot_whose_token_is_bound_already_waits_for_its_next_token(
         matches!(reply, BindServiceResponse::Success(_)),
         "{reply:?}"
     );
-    let slots = ScratchSlots::new(1)?;
+    let slots = ScratchSlots::new()?;
     slots.write_token(0, "EARLIERAAA")?;
     expect_slot(context, &acme(), "paper_0", true)?;
     let loader = async {
@@ -116,7 +117,7 @@ async fn a_slot_whose_token_is_bound_already_waits_for_its_next_token(
     let (bound, loader) = tokio::join!(
         tokio::time::timeout(
             PATIENCE,
-            slots.0.bind_all(|| async {
+            slots.first_bound(1, || async {
                 Ok(MemberRoutes {
                     context: &*context,
                     user: ada(),
@@ -149,7 +150,7 @@ async fn a_slot_whose_paper_stops_before_advertising_binds_when_its_next_paper_a
 ) -> TestResult {
     let realm = seed_realm_host(context, &acme(), ada(), "realm", paper_engine()).await?;
     seed_registration_lease(context, "paper_2", "SLOTCCCCCC", LEASE).await?;
-    let slots = ScratchSlots::new(3)?;
+    let slots = ScratchSlots::new()?;
     slots.write_token(2, "SLOTCCCCCC")?;
     expect_slot(context, &acme(), "paper_2", true)?;
     // Slot 2's first Paper stops right after the binder bound it; the slot's next Paper keeps
