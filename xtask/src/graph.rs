@@ -25,7 +25,9 @@ use crate::lock::HeavyLock;
 use crate::process::{self, Group};
 use crate::results::{self, Attempt, AttemptPolicy, Failure, Outcome, RunEnd, TestCase, TestRun};
 use crate::skirout::base::harness::v1::test_run::Runner;
-use crate::{CommandExt as _, Context, components, display, docs, generate, gitops, review};
+use crate::{
+    CommandExt as _, Context, components, database, display, docs, generate, gitops, review,
+};
 
 /// How many trailing log lines a failure prints.
 const FAILURE_TAIL: usize = 20;
@@ -37,7 +39,7 @@ pub enum Area {
     Services,
     /// The seeded realm measurement and the realm's scale gates, minutes on their own.
     RealmScale,
-    /// Backend clippy, unit tests and the component test support crates.
+    /// Backend clippy, unit tests, the component test support crates and the database suites.
     Backend,
     /// The embedded component test suite, every fixture.
     Components,
@@ -321,6 +323,20 @@ pub const CHECKS: &[Step] = &[
     )
     .heavy()
     .coverage("backend-support.lcov"),
+    // Light and independent of generated sources: a server starts, the suites take seconds.
+    Step {
+        name: "backend:database",
+        area: Area::Backend,
+        run: Run::Native {
+            describe: database::DESCRIBE,
+            run: database::step,
+        },
+        heavy: false,
+        budget: mins(3),
+        needs_generate: false,
+        coverage: None,
+        junit: None,
+    },
     Step {
         name: "components",
         area: Area::Components,
@@ -500,7 +516,8 @@ pub const CHECKS: &[Step] = &[
             &["fmt", "--check", "--manifest-path", "xtask/Cargo.toml"],
         )
     },
-    // The harness's own tests; temp dirs and `sh` children only, never a stack.
+    // The harness's own tests; temp dirs, `sh` children and the database step's server only,
+    // never a stack.
     Step {
         needs_generate: false,
         ..program(

@@ -17,7 +17,8 @@ use crate::{CommandExt, Context, Scratch, secrets};
 /// Tools deploy runs, for the doctor.
 pub const TOOLS: &[&str] = &["wash", "crane", "kubectl", "tar", "git"];
 
-/// The database jobs run surrealkit from this image's binary (`deploy/base/start/job.yaml`).
+/// The database jobs run surrealkit from this image's binary (`deploy/base/start/job.yaml`). The
+/// database suites run devenv's surrealkit (`nix/default.nix`), which stays at the same release.
 const SURREALKIT_IMAGE: &str = "ghcr.io/surrealdb/surrealkit:0.6.3";
 /// The base of the database jobs, which need `/bin/sh`. surrealkit is linked against glibc, and
 /// its image is built on Debian 12; on a musl base such as Alpine it does not start, which the

@@ -394,7 +394,7 @@ fn probe_passes(probe: &Probe) -> bool {
 }
 
 /// Whether `GET path` on a local port answers with a 2xx status.
-fn http_ok(port: u16, path: &str) -> bool {
+pub fn http_ok(port: u16, path: &str) -> bool {
     let attempt = || -> std::io::Result<bool> {
         let mut stream = TcpStream::connect((Ipv4Addr::LOCALHOST, port))?;
         stream.set_read_timeout(Some(Duration::from_secs(2)))?;
