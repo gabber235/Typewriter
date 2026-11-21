@@ -54,12 +54,13 @@ internal fun decodeSessionEntry(bytes: ByteArray): SessionEntry {
     )
 }
 
-/** The live entry of [protagonist]'s session [id] in this sessions bucket, or null when there is none or it cannot be read. */
+/** The live entry of [protagonist]'s session [id] in this sessions bucket, or null when there is none; a failed read throws its cause. */
 suspend fun KeyValueBucket.readSessionEntry(
     protagonist: Protagonist,
     id: SessionId,
 ): SessionEntry? =
     when (val read = get(sessionKey(protagonist, id))) {
         is KeyValueRead.Found -> decodeSessionEntry(read.entry.value)
-        else -> null
+        KeyValueRead.Absent -> null
+        is KeyValueRead.Failed -> throw read.cause
     }
