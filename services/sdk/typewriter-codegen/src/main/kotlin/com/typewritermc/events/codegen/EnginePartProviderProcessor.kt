@@ -57,6 +57,18 @@ internal class EnginePartProviderProcessor(
             }
     }
 
+    /**
+     * Provides a part this compilation generates, such as a handler plan, built by its no argument constructor. Its
+     * file only becomes a source in a later round, so it is provided here and skipped when a later round finds it.
+     */
+    fun provideGenerated(
+        part: ClassName,
+        supertypes: List<ClassName>,
+        origin: KSDeclaration,
+    ) {
+        if (seen.add(part.canonicalName)) emit(part, listOf(part) + supertypes, CodeBlock.of(""), casts = false, origin)
+    }
+
     private fun KSClassDeclaration.isConcretePart(): Boolean =
         classKind == ClassKind.CLASS &&
             Modifier.ABSTRACT !in modifiers &&
@@ -74,14 +86,7 @@ internal class EnginePartProviderProcessor(
             return
         }
         val part = declaration.toClassName()
-        val provider = ClassName(part.packageName, part.simpleNames.joinToString("_") + "EnginePartProvider")
-        val binds =
-            (sequenceOf(part) + declaration.getAllSuperTypes().mapNotNull { (it.declaration as? KSClassDeclaration)?.toClassName() })
-                .filter { it != ANY }
-                .distinct()
-                .map { CodeBlock.of("%T::class", it) }
-                .toList()
-                .joinToCode(", ")
+        val binds = listOf(part) + declaration.getAllSuperTypes().mapNotNull { (it.declaration as? KSClassDeclaration)?.toClassName() }
         var casts = false
         val arguments =
             constructor.parameters
@@ -96,6 +101,23 @@ internal class EnginePartProviderProcessor(
                         CodeBlock.of("%L as %T", asked, parameter.type.toTypeName())
                     }
                 }.joinToCode(",\n")
+        emit(part, binds, arguments, casts, declaration)
+    }
+
+    private fun emit(
+        part: ClassName,
+        supertypes: List<ClassName>,
+        arguments: CodeBlock,
+        casts: Boolean,
+        origin: KSDeclaration,
+    ) {
+        val provider = ClassName(part.packageName, part.simpleNames.joinToString("_") + "EnginePartProvider")
+        val binds =
+            supertypes
+                .filter { it != ANY }
+                .distinct()
+                .map { CodeBlock.of("%T::class", it) }
+                .joinToCode(", ")
         val create =
             FunSpec
                 .builder("create")
@@ -125,7 +147,7 @@ internal class EnginePartProviderProcessor(
             GeneratedFile.builder(provider.packageName, provider.simpleName).addType(type).build(),
             provider,
             GeneratedProviderKind.EnginePart,
-            declaration,
+            origin,
         )
     }
 }

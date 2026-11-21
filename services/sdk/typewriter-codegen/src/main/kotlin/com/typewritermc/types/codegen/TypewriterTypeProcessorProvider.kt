@@ -1,6 +1,8 @@
 package com.typewritermc.types.codegen
 
 import com.typewritermc.events.codegen.EnginePartProviderProcessor
+import com.typewritermc.events.codegen.EventTypeEmitter
+import com.typewritermc.events.codegen.HandlerPlanProcessor
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -174,6 +176,8 @@ private class TypewriterTypeProcessor(
         }
     private val dynamicProviders = DynamicProviderProcessor(output, logger)
     private val engineParts = EnginePartProviderProcessor(output, logger)
+    private val handlerPlans = HandlerPlanProcessor(output, engineParts, logger)
+    private val eventTypes = EventTypeEmitter(output, engineParts, logger)
     private val claimDependencyClosure = options[CLAIM_DEPENDENCY_CLOSURE_OPTION]?.toBooleanStrictOrNull() == true
     private var optionsValidated = false
 
@@ -239,6 +243,7 @@ private class TypewriterTypeProcessor(
         }
         deferred += formulaProviders.process(resolver)
         deferred += dynamicProviders.process(resolver)
+        deferred += handlerPlans.process(resolver)
         engineParts.process(resolver)
         return deferred.distinct()
     }
@@ -385,6 +390,7 @@ private class TypewriterTypeProcessor(
     ) {
         val qualified = declaration.qualifiedName?.asString() ?: return
         if (!generatedTypes.add(qualified)) return
+        eventTypes.emit(declaration)
         val accessors = declaration.effectiveAccessorFields(typeDefinition, conversion) ?: return
         val display = declaration.validatedDisplay() ?: return
         val searchKey = declaration.validatedSearchKey() ?: return

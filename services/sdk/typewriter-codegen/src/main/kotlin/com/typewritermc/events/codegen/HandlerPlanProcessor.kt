@@ -1,0 +1,300 @@
+package com.typewritermc.events.codegen
+
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeAlias
+import com.google.devtools.ksp.symbol.KSTypeParameter
+import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.Variance
+import com.google.devtools.ksp.validate
+import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LIST
+import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STAR
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.joinToCode
+import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.toTypeName
+import com.typewritermc.codegen.GeneratedFile
+import com.typewritermc.codegen.GeneratedOutput
+import com.typewritermc.codegen.implements
+import kotlin.reflect.KClass
+import com.typewritermc.codegen.TypewriterApi as Api
+
+/**
+ * Emits a handler plan for each top level `@Handler` function: an engine part that names the event it takes, describes
+ * each parameter as a `Param`, and calls the function with the values the runtime resolved. A `Verdict` return makes a
+ * `VerdictHandler`, a `Unit` return an `AfterHandler`.
+ */
+internal class HandlerPlanProcessor(
+    private val output: GeneratedOutput,
+    private val engineParts: EnginePartProviderProcessor,
+    private val logger: KSPLogger,
+) {
+    private val seen = mutableSetOf<String>()
+
+    fun process(resolver: Resolver): List<KSAnnotated> {
+        val deferred = mutableListOf<KSAnnotated>()
+        resolver
+            .getSymbolsWithAnnotation(Api.Handler.canonicalName)
+            .filterIsInstance<KSFunctionDeclaration>()
+            .forEach { function ->
+                if (!function.validate()) {
+                    deferred += function
+                    return@forEach
+                }
+                val key = "${function.qualifiedName?.asString()}:${function.extensionReceiver}"
+                if (seen.add(key)) context(resolver) { plan(function) }
+            }
+        return deferred
+    }
+
+    context(resolver: Resolver)
+    private fun plan(function: KSFunctionDeclaration) {
+        val receiver = function.extensionReceiver?.resolve()
+        val event = receiver?.boundClass()
+        if (receiver == null || event == null || !event.isEvent()) {
+            logger.error("A handler's receiver must be an event.", function)
+            return
+        }
+        val verdict =
+            when (function.returnType?.resolve()?.declaration?.qualifiedName?.asString()) {
+                Api.Verdict.canonicalName -> true
+                "kotlin.Unit" -> false
+                else -> {
+                    logger.error("A handler returns a Verdict to decide or Unit to run after the outcome.", function)
+                    return
+                }
+            }
+        if (verdict && Modifier.SUSPEND in function.modifiers) {
+            logger.error("A verdict handler decides inline and never suspends.", function)
+            return
+        }
+        val generic = receiver.declaration as? KSTypeParameter
+        val eventType = if (generic != null) event.starred() else receiver.bounded().copy(nullable = false)
+        val params =
+            function.parameters.map { parameter ->
+                classify(parameter, receiver, generic) ?: run {
+                    logger.error(
+                        "A handler parameter must be a Candidate, Origin, Outcome, identity, configuration, triggered entry field " +
+                            "or trait interface.",
+                        parameter,
+                    )
+                    null
+                }
+            }
+        if (null in params) return
+
+        val plan = ClassName(function.packageName.asString(), "${event.simpleName.asString()}_${function.simpleName.asString()}Handler")
+        val kind = if (verdict) Api.VerdictHandler else Api.AfterHandler
+        val kClass = KClass::class.asClassName()
+        val eventKClass =
+            if (eventType is ParameterizedTypeName) {
+                CodeBlock.of("%T::class as %T", eventType.rawType, kClass.parameterizedBy(eventType))
+            } else {
+                CodeBlock.of("%T::class", eventType)
+            }
+        val entry = receiver.triggeredEntry()?.let { CodeBlock.of("%T::class", it.toClassName()) } ?: CodeBlock.of("null")
+        val arguments =
+            function.parameters
+                .mapIndexed { index, parameter -> CodeBlock.of("values[%L] as %T", index, parameter.type.resolve().bounded()) }
+                .joinToCode(", ")
+        val call = CodeBlock.of("event.%M(%L)", MemberName(function.packageName.asString(), function.simpleName.asString()), arguments)
+        val run =
+            FunSpec
+                .builder("run")
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter("event", eventType)
+                .addParameter("values", LIST.parameterizedBy(ANY.copy(nullable = true)))
+        if (verdict) {
+            run.returns(Api.Verdict).addStatement("return %L", call)
+        } else {
+            run.addModifiers(KModifier.SUSPEND).addStatement("%L", call)
+        }
+        val type =
+            TypeSpec
+                .classBuilder(plan)
+                .addSuperinterface(kind.parameterizedBy(eventType))
+                .addProperty(
+                    PropertySpec
+                        .builder("event", kClass.parameterizedBy(eventType), KModifier.OVERRIDE)
+                        .initializer(eventKClass)
+                        .build(),
+                ).addProperty(
+                    PropertySpec
+                        .builder("entry", kClass.parameterizedBy(WildcardTypeName.producerOf(Api.Entry)).copy(nullable = true), KModifier.OVERRIDE)
+                        .initializer(entry)
+                        .build(),
+                ).addProperty(
+                    PropertySpec
+                        .builder("params", LIST.parameterizedBy(Api.Param), KModifier.OVERRIDE)
+                        .initializer("listOf(\n⇥%L\n⇤)", params.filterNotNull().joinToCode(",\n"))
+                        .build(),
+                ).addFunction(run.build())
+                .build()
+        if (output.write(GeneratedFile.builder(plan.packageName, plan.simpleName).addType(type).build(), function)) {
+            engineParts.provideGenerated(plan, listOf(kind, Api.HandlerPlan, Api.EnginePart), function)
+        }
+    }
+
+    /** The `Param` of [parameter], or null when it matches no kind. The order of the checks is the classification order. */
+    context(resolver: Resolver)
+    private fun classify(
+        parameter: KSValueParameter,
+        receiver: KSType,
+        generic: KSTypeParameter?,
+    ): CodeBlock? {
+        val type = parameter.type.resolve()
+        val optional = type.isMarkedNullable
+        val declaration = type.declaration
+        val name = declaration.qualifiedName?.asString()
+        val classDeclaration = declaration as? KSClassDeclaration
+        return when {
+            name == Api.Candidate.canonicalName -> {
+                val entry = type.arguments.singleOrNull()?.type?.resolve() ?: return null
+                val entryClass = entry.boundClass() ?: return null
+                val ofEvent =
+                    entry.arguments.any { argument ->
+                        val argumentType = argument.type?.resolve() ?: return@any false
+                        if (generic != null) {
+                            (argumentType.declaration as? KSTypeParameter)?.name?.asString() == generic.name.asString()
+                        } else {
+                            argumentType.bounded().copy(nullable = false) == receiver.bounded().copy(nullable = false)
+                        }
+                    }
+                CodeBlock.of("%T.Candidate(%T::class, ofEvent = %L, optional = %L)", Api.Param, entryClass.toClassName(), ofEvent, optional)
+            }
+
+            name == Api.EventOrigin.canonicalName -> CodeBlock.of("%T.Origin(optional = %L)", Api.Param, optional)
+
+            name == Api.Outcome.canonicalName -> CodeBlock.of("%T.Outcome", Api.Param)
+
+            classDeclaration != null && (name == Api.Identity.canonicalName || classDeclaration.implements(Api.Identity)) ->
+                CodeBlock.of("%T.Identity(%T::class, optional = %L)", Api.Param, classDeclaration.toClassName(), optional)
+
+            classDeclaration != null && receiver.isConfiguredBy(type) ->
+                CodeBlock.of("%T.Config(%T::class, optional = %L)", Api.Param, classDeclaration.toClassName(), optional)
+
+            receiver.hasTriggeredField(parameter, type) -> {
+                val entry = checkNotNull(receiver.triggeredEntry())
+                CodeBlock.of(
+                    "%T.Field(%S, read = { (it as %T).%N }, optional = %L)",
+                    Api.Param,
+                    parameter.name?.asString(),
+                    entry.starred(),
+                    parameter.name?.asString(),
+                    optional,
+                )
+            }
+
+            classDeclaration?.classKind == ClassKind.INTERFACE ->
+                CodeBlock.of("%T.Trait(%T::class, optional = %L)", Api.Param, classDeclaration.toClassName(), optional)
+
+            else -> null
+        }
+    }
+
+    /** Whether this receiver is a `ConfiguredEvent` whose configuration is [type]. */
+    context(resolver: Resolver)
+    private fun KSType.isConfiguredBy(type: KSType): Boolean {
+        val configured = resolver.getClassDeclarationByName(resolver.getKSNameFromString(Api.ConfiguredEvent.canonicalName)) ?: return false
+        if (declaration !is KSClassDeclaration) return false
+        val argument = resolver.getTypeArgument(resolver.createKSTypeReferenceFromKSType(type.makeNotNullable()), Variance.INVARIANT)
+        return configured.asType(listOf(argument)).isAssignableFrom(this)
+    }
+
+    /** The entry class of a `Triggered<X>` receiver: X, or X's bound when X is a type parameter. */
+    private fun KSType.triggeredEntry(): KSClassDeclaration? {
+        if (declaration.qualifiedName?.asString() != Api.Triggered.canonicalName) return null
+        return arguments
+            .singleOrNull()
+            ?.type
+            ?.resolve()
+            ?.boundClass()
+    }
+
+    /** Whether the triggered entry has a `Var<T, *>` property named like [parameter] whose T is [type]. */
+    private fun KSType.hasTriggeredField(
+        parameter: KSValueParameter,
+        type: KSType,
+    ): Boolean {
+        val entry = triggeredEntry() ?: return false
+        val property = entry.getAllProperties().singleOrNull { it.simpleName.asString() == parameter.name?.asString() } ?: return false
+        val propertyType = property.type.resolve()
+        if (propertyType.isMarkedNullable || propertyType.declaration.qualifiedName?.asString() != Api.Var.canonicalName) return false
+        val value = propertyType.arguments.firstOrNull()?.type?.resolve() ?: return false
+        return value.bounded().copy(nullable = false) == type.bounded().copy(nullable = false)
+    }
+}
+
+/** Whether this class is an event: `Event` itself or any of its subtypes. */
+internal fun KSClassDeclaration.isEvent(): Boolean = qualifiedName?.asString() == Api.Event.canonicalName || implements(Api.Event)
+
+/** The class of this type, or the class bound of a type parameter. */
+internal fun KSType.boundClass(): KSClassDeclaration? =
+    when (val declaration = declaration) {
+        is KSClassDeclaration -> declaration
+        is KSTypeParameter -> declaration.bounds.firstOrNull()?.resolve()?.boundClass()
+        is KSTypeAlias -> declaration.type.resolve().boundClass()
+        else -> null
+    }
+
+/** This class with every type parameter star projected, so a generic class can be named without its arguments. */
+internal fun KSClassDeclaration.starred(): TypeName {
+    val name = toClassName()
+    return if (typeParameters.isEmpty()) name else name.parameterizedBy(typeParameters.map { STAR })
+}
+
+/** This type with each type parameter replaced by its bound, so a generic handler can be called from a plain class. */
+internal fun KSType.bounded(): TypeName {
+    val name: TypeName =
+        when (val declaration = declaration) {
+            is KSTypeParameter ->
+                declaration.bounds
+                    .firstOrNull()
+                    ?.resolve()
+                    ?.bounded() ?: ANY.copy(nullable = true)
+
+            is KSClassDeclaration -> {
+                val raw = declaration.toClassName()
+                if (arguments.isEmpty()) {
+                    raw
+                } else {
+                    raw.parameterizedBy(
+                        arguments.map { argument ->
+                            val argumentType = argument.type?.resolve()
+                            if (argument.variance == Variance.STAR || argumentType == null) {
+                                STAR
+                            } else {
+                                val bounded = argumentType.bounded()
+                                when (argument.variance) {
+                                    Variance.COVARIANT -> WildcardTypeName.producerOf(bounded)
+                                    Variance.CONTRAVARIANT -> WildcardTypeName.consumerOf(bounded)
+                                    else -> bounded
+                                }
+                            }
+                        },
+                    )
+                }
+            }
+
+            else -> toTypeName()
+        }
+    return name.copy(nullable = name.isNullable || isMarkedNullable)
+}
