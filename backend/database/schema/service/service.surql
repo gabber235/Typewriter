@@ -16,11 +16,10 @@ DEFINE FIELD OVERWRITE revision ON service TYPE int
 DEFINE FIELD OVERWRITE role ON service TYPE object
     ASSERT fn::service::valid_role($value);
 
-DEFINE FIELD OVERWRITE role.type ON service
-    TYPE "host" | "custom";
-
--- Optional here so a missing version reaches fn::service::valid_role, which refuses it with
--- role-version-invalid-error.
+-- fn::service::valid_role, the role's assertion, is the one place that refuses a bad role, with
+-- the slug of what is wrong. The nested fields only declare their shape and stay optional, so a
+-- missing or unknown type or version reaches it instead of failing on the field type first.
+DEFINE FIELD OVERWRITE role.type ON service TYPE option<string>;
 DEFINE FIELD OVERWRITE role.version ON service TYPE option<string>;
 
 DEFINE FIELD OVERWRITE role.name ON service TYPE option<string>;
