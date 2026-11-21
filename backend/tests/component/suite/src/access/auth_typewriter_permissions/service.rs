@@ -46,6 +46,30 @@ async fn a_service_may_answer_every_frame_of_its_largest_reply(
 }
 
 #[component_test(AuthTypewriterPermissions)]
+async fn a_service_listens_at_any_depth_below_its_own_reply_inbox_only(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let permissions = service_grants(context, "engine_one", Realm::Attached("quests")).await?;
+    let own = permissions
+        .subscribe
+        .allow
+        .iter()
+        .find_map(|subject| subject.strip_suffix(".>"))
+        .filter(|prefix| prefix.starts_with("_INBOX."))
+        .ok_or_else(|| anyhow::anyhow!("the service has no reply inbox at any depth"))?
+        .to_owned();
+
+    // A JetStream client listens one token below a reply inbox of its own.
+    assert!(permits(&permissions.subscribe, &format!("{own}.reply")));
+    assert!(permits(&permissions.subscribe, &format!("{own}.request.*")));
+    assert!(!permits(
+        &permissions.subscribe,
+        "_INBOX.another_service.request.*"
+    ));
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
 async fn an_attached_engine_reads_published_content_of_its_realm_only(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
@@ -138,6 +162,7 @@ async fn an_attached_engine_keeps_sessions_in_its_own_realms_bucket_only(
         &permissions.publish,
         "$JS.API.STREAM.CREATE.KV_sessions_quests"
     ));
+    assert!(!permits(&permissions.publish, "$JS.API.INFO"));
     for subject in [
         "$JS.API.STREAM.INFO.KV_sessions_foreign_realm",
         "$KV.sessions_foreign_realm.minecraft.player.player",
@@ -181,6 +206,8 @@ async fn a_realm_host_creates_its_realms_sessions_bucket_only(
         &permissions.publish,
         "$JS.API.STREAM.CREATE.KV_sessions_quests"
     ));
+    // The key value client reads the account's JetStream info before it creates a bucket.
+    assert!(permits(&permissions.publish, "$JS.API.INFO"));
     assert!(!permits(
         &permissions.publish,
         "$JS.API.STREAM.CREATE.KV_sessions_foreign_realm"

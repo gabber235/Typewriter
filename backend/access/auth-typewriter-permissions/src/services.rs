@@ -73,8 +73,10 @@ pub async fn handle_service(
     service_scope.grant(ServiceRole::RegisteredService, &mut grants);
     let mut tags = vec![format!("service:{service_id}")];
 
+    // The one subscription at any depth: a JetStream client listens one token below a reply inbox
+    // of its own, and every subject below the prefix is still the service's own.
     grants.subscribe.insert(format!(
-        "{}.*",
+        "{}.>",
         service_reply_inbox_prefix(&service_scope.service)
     ));
     main_attribute!("auth.permissions.category.registration" = true);
