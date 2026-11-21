@@ -174,8 +174,9 @@ runs:
     # `actions/cache/restore` only reads everywhere else. Keep the pair's values the same.
     #
     # xtask's dependencies, which every job compiles before its first command. The toolchain is
-    # pinned in devenv.nix and devenv.lock, so a new toolchain starts empty instead of restoring
-    # artifacts it would rebuild anyway; a new Cargo.lock starts from the same toolchain's last.
+    # pinned in devenv.nix and devenv.lock and the profile in .cargo/config.toml, so a new toolchain
+    # or profile starts empty instead of restoring artifacts it would rebuild anyway; a new
+    # Cargo.lock starts from the same toolchain's last.
     - if: steps.trust.outputs.save-caches == 'true'
       uses: actions/cache@v4
       with:
@@ -184,8 +185,8 @@ runs:
           ~/.cargo/registry/cache
           ~/.cargo/git/db
           xtask/target/debug
-        key: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-${{ hashFiles('xtask/Cargo.lock') }}
-        restore-keys: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
+        key: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock', '.cargo/config.toml') }}-${{ hashFiles('xtask/Cargo.lock') }}
+        restore-keys: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock', '.cargo/config.toml') }}-
     - if: steps.trust.outputs.save-caches != 'true'
       uses: actions/cache/restore@v4
       with:
@@ -194,8 +195,8 @@ runs:
           ~/.cargo/registry/cache
           ~/.cargo/git/db
           xtask/target/debug
-        key: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-${{ hashFiles('xtask/Cargo.lock') }}
-        restore-keys: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
+        key: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock', '.cargo/config.toml') }}-${{ hashFiles('xtask/Cargo.lock') }}
+        restore-keys: xtask-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock', '.cargo/config.toml') }}-
 
     # The dependencies of the frame vector writer, which every job that generates compiles. Its
     # own target (xtask/src/generate.rs) holds them without debug info: about 700 MB, 200 MB
@@ -207,16 +208,16 @@ runs:
         path: |
           .xtask/frame-vectors-target/debug
           !.xtask/frame-vectors-target/debug/deps/*wasmcloud_utils*
-        key: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-${{ hashFiles('backend/Cargo.lock') }}
-        restore-keys: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
+        key: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock', '.cargo/config.toml') }}-${{ hashFiles('backend/Cargo.lock') }}
+        restore-keys: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock', '.cargo/config.toml') }}-
     - if: contains(inputs.caches, 'frame-vectors') && steps.trust.outputs.save-caches != 'true'
       uses: actions/cache/restore@v4
       with:
         path: |
           .xtask/frame-vectors-target/debug
           !.xtask/frame-vectors-target/debug/deps/*wasmcloud_utils*
-        key: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-${{ hashFiles('backend/Cargo.lock') }}
-        restore-keys: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock') }}-
+        key: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock', '.cargo/config.toml') }}-${{ hashFiles('backend/Cargo.lock') }}
+        restore-keys: frame-vectors-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.lock', '.cargo/config.toml') }}-
 
     # The Gradle caches are only restored here; the job's last step saves them through the
     # devenv-save action with `if: always()`. A save in actions/cache's post step happens only

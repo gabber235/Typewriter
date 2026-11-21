@@ -1,2 +1,10 @@
 [alias]
 xtask = "run --quiet --locked --manifest-path xtask/Cargo.toml --"
+
+# Dependencies build without debug info, which shrinks every Rust target (the backend's test build
+# by about a fifth) and builds faster; the repository's own crates keep full debug info. It lives
+# here rather than in a workspace manifest so it also reaches xtask and the projects trybuild
+# generates below `target/tests/trybuild`, which copy no profile from the workspace but do read
+# this file.
+[profile.dev.package."*"]
+debug = false
