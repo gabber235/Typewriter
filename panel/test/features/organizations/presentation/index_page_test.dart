@@ -36,6 +36,46 @@ void main() {
     );
   });
 
+  testWidgets("a join request answered after its screen closed still lands "
+      "and breaks nothing", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, others: [organization("acme")]),
+      userBackend(),
+    ], at: const PanelLocation.route(IndexRoute()));
+    final answers = panel.world.nats.holdRequests(submit);
+    // The request outlives the screen, as it does when the reply arrives
+    // before the providers the screen used are disposed.
+    final requests = panel.watch(userJoinRequestsProvider);
+    await panel.eventually(
+      () => expect(semanticsButton("Join").isEnabled, isTrue),
+    );
+    await panel.field("Invite URL or code").type("k3y");
+    await panel.activateWithScreenReader("Join", settle: false);
+    await panel.eventually(() => expect(answers, hasLength(1)));
+
+    await panel.router.replaceAll([OrganizationRoute(organizationId: "acme")]);
+    await panel.eventually(() {
+      expect(panel.path, "/organization/acme/services");
+      expect(find.text("Join", skipOffstage: false), findsNothing);
+    });
+    final made = userJoinRequest("acme");
+    answers.single.complete(
+      skir.SubmitUserJoinRequestResponse.serializer.toBytes(
+        skir.SubmitUserJoinRequestResponse.createRequestMade(
+          request: made,
+          event: skir.UserJoinRequestsChanged(
+            sequence: 2,
+            changes: [skir.UserJoinRequestsChange.wrapAdd(made)],
+          ),
+        ),
+      ),
+    );
+    await panel.settle();
+
+    expect(requests.read().value, [made]);
+    expect(tester.takeException(), isNull);
+  });
+
   final invalidInvites = {
     "": "Please enter an invite URL or code.",
     "https://panel.typewritermc.com/join/": "Invalid invite URL or code.",
