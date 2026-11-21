@@ -1,6 +1,5 @@
-package com.typewritermc.extensions.basic.entries.sequence
+package com.typewritermc.engine.pages
 
-import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.types.Many
 import com.typewritermc.types.ReferenceContract
 
