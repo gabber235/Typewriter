@@ -20,6 +20,8 @@ val paperModule =
         single<Plugin> { JavaPlugin.getPlugin(TypewriterLoaderPlugin::class.java) }
         single { SessionTimings.MINECRAFT }
         single { SessionListener(get(), get()) } bind RuntimeRegistrar::class
+        single { PaperEvents(get()) }
+        single { PaperChainPickup(get(), get()) } bind RuntimeRegistrar::class
     }
 
 /** Stages a Paper engine deployment. */

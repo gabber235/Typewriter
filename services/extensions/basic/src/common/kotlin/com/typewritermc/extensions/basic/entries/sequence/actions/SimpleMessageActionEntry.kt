@@ -1,7 +1,14 @@
 package com.typewritermc.extensions.basic.entries.sequence.actions
 
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.engine.events.Triggerable
+import com.typewritermc.engine.events.complete
 import com.typewritermc.engine.pages.SequenceEntry
+import com.typewritermc.events.Handler
+import com.typewritermc.events.HasChat
+import com.typewritermc.events.InteractionContext
+import com.typewritermc.events.Triggered
+import com.typewritermc.formula.Var
 import com.typewritermc.engine.pages.SequencePage
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
@@ -24,9 +31,19 @@ class SimpleMessageActionEntry(
     override val page: Ref<PageElements.Element, SequencePage>,
     override val name: String,
     override val placement: GraphPlacement,
-    val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>>,
-    val message: String,
-) : SequenceEntry
+    override val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>>,
+    val message: Var<String, InteractionContext>,
+) : Triggerable
+
+/** Sends the entry's message to the protagonist the chain runs for, then continues the chain. */
+@Handler
+suspend fun Triggered<SimpleMessageActionEntry>.send(
+    chat: HasChat,
+    message: String,
+) {
+    chat.send(message)
+    complete()
+}
 
 object SimpleMessageActionEntryInspector : SimpleMessageActionEntryPresentation {
     override fun SimpleMessageActionEntryPresentationScope.present() {

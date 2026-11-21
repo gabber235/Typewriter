@@ -9,6 +9,8 @@ plugins {
     id("com.typewritermc.imprint")
     id("xyz.jpenilla.run-paper")
     id("com.typewritermc.game-test")
+    id("com.typewritermc.paper-api")
+    `java-library`
     `java-test-fixtures`
 }
 
@@ -45,22 +47,10 @@ val stagePaperArtifacts =
         }
     }
 
-// The module targets Java 21 and runs on Paper's Java 25. Paper publishes its API for Java 25 only, so compilation
-// asks for libraries that run on Java 25; every other library on the classpath runs on 21 and so on 25 as well. The
-// game requirements compile against the module's classes, Paper's API among them.
-listOf("compileClasspath", "gameTestCompileClasspath").forEach { classpath ->
-    configurations.named(classpath) {
-        attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
-    }
-}
-
-repositories {
-    maven("https://repo.papermc.io/repository/maven-public/")
-}
-
 dependencies {
-    // Paper and the loader plugin are present wherever a Paper engine runs; the engine reaches Paper through them.
-    compileOnly(libs.paper.api)
+    // Paper and the loader plugin are present wherever a Paper engine runs; the engine reaches Paper through them, and
+    // every extension's Paper part compiles against the same Paper API through this engine.
+    compileOnlyApi(libs.paper.api)
     compileOnly(project(":loader-paper"))
     imprintEngineCore(project(":engine-core"))
     imprintHostApi(project(":loader-api"))
