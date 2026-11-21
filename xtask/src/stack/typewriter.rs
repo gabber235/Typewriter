@@ -44,10 +44,11 @@ pub fn panel() -> StackSpec {
 }
 
 /// The panel stack plus what the game suite needs: an engine binder that binds each game Paper's
-/// loader as the Realm's Paper engine, and observer credentials the game requirements read the
-/// topology and the Realm's session keys with.
+/// loader as the Realm's Paper engine, observer credentials the game requirements read the
+/// topology and the Realm's session keys with, and author credentials they write and publish the
+/// Realm's content with.
 pub fn game() -> StackSpec {
-    panel().with(Observer).with(BindEngines)
+    panel().with(Observer).with(Author).with(BindEngines)
 }
 
 /// `ci`'s backend, which `cargo xtask deploy ci` released, plus the same organization and Realm
@@ -559,6 +560,34 @@ impl Service for Observer {
     }
 }
 
+/// NATS credentials in the TYPEWRITER account for the game requirements to author with: the stack
+/// owner's calls of the Realm routes that edit, commit and publish content and read what was
+/// published.
+pub struct Author;
+
+impl Service for Author {
+    const ID: ServiceId = ServiceId("author");
+    fn needs(&self) -> &'static [ServiceId] {
+        &[BindRealmHost::ID]
+    }
+    fn command(&self, ctx: &StackContext) -> Result<Command> {
+        let mut command = stack_binary(ctx, "author")?;
+        command.arg("--state").arg(ctx.state());
+        Ok(command)
+    }
+    fn ready(&self, _: &StackContext) -> Probe {
+        Probe::ExitSuccess
+    }
+    fn publish(&self, ctx: &StackContext, out: &mut Published) -> Result<()> {
+        let author = read_json(&ctx.state().join("author.json"))?;
+        out.values.extend([
+            ("STACK_AUTHOR_CREDS".into(), field(&author, "creds")?),
+            ("STACK_AUTHOR_INBOX".into(), field(&author, "inbox")?),
+        ]);
+        Ok(())
+    }
+}
+
 /// The work directory of the standalone Realm host, cleared with the rest of the run's state.
 fn realm_host_dir(ctx: &StackContext) -> PathBuf {
     ctx.state().join("realm-host")
@@ -668,10 +697,11 @@ mod tests {
     }
 
     #[test]
-    fn the_game_stack_attaches_its_engines_and_observer_to_the_bound_realm() {
+    fn the_game_stack_attaches_its_engines_observer_and_author_to_the_bound_realm() {
         let order = ids(&game().ordered().unwrap());
         let position = |id: &str| order.iter().position(|ordered| *ordered == id).unwrap();
         assert!(position("bind-realm-host") < position("observer"));
+        assert!(position("bind-realm-host") < position("author"));
         assert!(position("bind-realm-host") < position("bind-engines"));
     }
 

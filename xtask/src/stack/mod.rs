@@ -441,7 +441,7 @@ pub enum Spec {
     Backend,
     /// The backend plus the provisioned organization and its bound Realm host.
     Panel,
-    /// The panel stack plus the game suite's engine binder and observer credentials.
+    /// The panel stack plus the game suite's engine binder, observer and author credentials.
     Game,
 }
 

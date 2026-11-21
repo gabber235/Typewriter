@@ -4,6 +4,7 @@
 //! run once and record what they created in the stack's state directory.
 
 mod authentik;
+mod author;
 mod bind;
 mod broker;
 mod front;
@@ -37,6 +38,9 @@ enum Command {
     Bind(bind::BindArgs),
     /// Mints read only observer credentials for the game requirements, then exits.
     Observer(observer::ObserverArgs),
+    /// Mints author credentials for the game requirements, which commit and publish in the stack
+    /// Realm, then exits.
+    Author(author::AuthorArgs),
 }
 
 fn main() -> Result<()> {
@@ -70,6 +74,7 @@ async fn run(command: Command) -> Result<()> {
         Command::Provision(args) => provision::run(args).await,
         Command::Bind(args) => bind::run(args).await,
         Command::Observer(args) => observer::run(args).await,
+        Command::Author(args) => author::run(args).await,
     }
 }
 
