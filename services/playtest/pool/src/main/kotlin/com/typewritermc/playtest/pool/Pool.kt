@@ -951,6 +951,7 @@ internal class Pool(
     ) {
         val server = client.on
         if (message.port != server.port) return
+        System.err.println("The client of ${client.player.name} dropped off ${server.name}: ${message.reason}")
         // The client may tell before the pool hears the process exit.
         act(server, server.rules.dropped(client.player.name, message.reason, paperAlive = server.part?.process?.isAlive != false))
     }
@@ -1211,6 +1212,7 @@ internal class Pool(
     /** [client]'s player serves claims again: a new client in place of a lost one frees it, as does one back from a restart attempt's Paper. */
     private fun free(client: Client) {
         if (client.lost) {
+            System.err.println("The new client of ${client.player.name} steps with ${client.on.name}; its player serves claims again.")
             client.lost = false
             claims.letBack(client.player, Out.LOST_CLIENT)
         }
