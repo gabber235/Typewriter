@@ -43,14 +43,9 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
             suite(ctx, args, &evidence, &quarantine, stack)
         })?;
     let file = ran.file.clone();
-    let logs = ran
-        .pool_log
-        .parent()
-        .context("the pool log has no folder")?
-        .to_owned();
+    // The pool names the run's logs folder itself, so a run cut short points at its pool log too.
     let run = TestRun {
         commit,
-        logs: logs.strip_prefix(&evidence)?.to_string_lossy().into_owned(),
         ..own_run(&ran)?
     };
     results::write(&run, &file)?;

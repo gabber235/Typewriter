@@ -18,9 +18,9 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
 /**
- * The attempts of [run], the one run the pool serves, written into its [file] under its [policy]. Every
- * attempt of one case, a requirement retried or repeated, lands in that case, and its demo in the case's
- * demo. The file is written as the pool takes up the run, over whatever an earlier run left, and again
+ * The attempts of [run], the one run the pool serves, written into its [file] under its [policy], naming
+ * its [logs] folder relative to the file. Every attempt of one case, a requirement retried or repeated,
+ * lands in that case, and its demo in the case's demo. The file is written as the pool takes up the run, over whatever an earlier run left, and again
  * after every attempt the run records, so a pool that dies leaves the attempts that ended. It reads as
  * cut short until the pool ends the run, and names why the game could not serve the run once it
  * failed, also when that happened before any session joined; [stillOut] names, by case, the players
@@ -29,11 +29,21 @@ import java.nio.file.StandardCopyOption
 internal class RunRecords(
     private val run: String,
     private val file: Path,
+    logs: Path,
     private val policy: AttemptPolicy,
     clock: () -> Long = System::currentTimeMillis,
     private val stillOut: () -> Map<String, String> = { mapOf() },
 ) {
     private val startedAtMillis = clock()
+
+    /** The logs folder as the run file names it, relative to the file. */
+    private val logsFolder =
+        file
+            .toAbsolutePath()
+            .parent
+            .relativize(logs.toAbsolutePath())
+            .toString()
+
     private val cases = linkedMapOf<String, TestCase>()
 
     /** Why the game could not serve the run; null while it could. */
@@ -134,8 +144,9 @@ internal class RunRecords(
                 startedAtMillis = startedAtMillis,
                 attemptPolicy = policy,
                 cases = cases.values.map { case -> notes[case.id]?.let { note -> case.noting(note) } ?: case },
-                // `cargo xtask e2e game` names the commit and the run's logs folder, as it chose both.
-                logs = "",
+                // `cargo xtask e2e game` names the commit. The logs folder is named from the start, so a run
+                // cut short, as a job that hit its time limit leaves it, still points at its pool log.
+                logs = logsFolder,
                 end = end,
             )
         Files.createDirectories(file.toAbsolutePath().parent)
