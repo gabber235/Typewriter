@@ -308,7 +308,7 @@ internal class Pool(
     private val hung = mutableMapOf<String, HungWork>()
 
     // The run's file is written as the pool takes up the run, naming the players hung work keeps out.
-    private val runs = RunRecords(settings.run, settings.testRun, settings.policy, stillOut = { stillOut() })
+    private val runs = RunRecords(settings.run, settings.testRun, settings.logs, settings.policy, stillOut = { stillOut() })
     private val attempts = Attempts<Attempt>()
     private val requests = Routes<Peer, Long>()
     private val barriers = Routes<Peer, Int>()

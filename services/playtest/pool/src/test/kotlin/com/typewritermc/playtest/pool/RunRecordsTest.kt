@@ -19,7 +19,7 @@ val RunRecordsTest by testSuite {
 
     test("a run's file holds each case in the order its first attempt ended, with the failure and its line") {
         val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
-        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         records.record(
             submitted(1, "PROBE-1 a chat line the probe sends reaches the player"),
             Result.partial(submission = 1, durationMillis = 420),
@@ -49,7 +49,7 @@ val RunRecordsTest by testSuite {
 
     test("the frames and golden candidates an attempt wrote land in the run file as its artifacts in its folder") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         records.record(
             submitted(1, "GOLDEN-1 a sidebar matches its golden"),
             Result.partial(
@@ -86,7 +86,7 @@ val RunRecordsTest by testSuite {
 
     test("a demo lands in its case's demo with its clips, and never counts as an attempt") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         val probe = "PROBE-1 a chat line reaches the player"
         records.record(
             submitted(1, probe),
@@ -118,7 +118,7 @@ val RunRecordsTest by testSuite {
 
     test("every attempt of one case lands in that case, in the order the attempts ended") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         val flaky = "FLAKY-1 a requirement that fails its first attempt and passes its second is flaky"
         records.record(
             submitted(1, flaky, Demonstrates.FAILURE),
@@ -142,7 +142,7 @@ val RunRecordsTest by testSuite {
 
     test("the run file states the attempt policy the run makes its attempts under") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val records = RunRecords("run-1", file, AttemptPolicy.ExactlyWrapper(3), clock = { 1_000 })
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), AttemptPolicy.ExactlyWrapper(3), clock = { 1_000 })
 
         records.finished()
 
@@ -151,7 +151,7 @@ val RunRecordsTest by testSuite {
 
     test("each case says what its requirement declares it demonstrates") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         listOf(Demonstrates.HAPPY_PATH, Demonstrates.FAILURE, Demonstrates.EDGE_CASE).forEachIndexed { index, demonstrates ->
             records.record(
                 submitted(index.toLong(), "CASE-$index", demonstrates = demonstrates),
@@ -170,7 +170,7 @@ val RunRecordsTest by testSuite {
 
     test("an attempt's steps hold the pool's claim and wipe, then what its body did, each with its start and duration") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         records.record(
             submitted(1, "PROBE-1 a chat line reaches the player"),
             Result.partial(
@@ -208,7 +208,7 @@ val RunRecordsTest by testSuite {
 
     test("an attempt whose test JVM ended first fails in its run's file") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         val killed = submitted(3, "PROBE-2 the first input after a far teleport acts there")
 
         records.abandoned(listOf(killed), "its test JVM ended before the attempt did; see pool.log")
@@ -226,7 +226,7 @@ val RunRecordsTest by testSuite {
         val hung = "HUNG-1 work still running 1 s after it began fails the attempt"
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records =
-            RunRecords("run-1", file, retries, clock = { 1_000 }) {
+            RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 }) {
                 mapOf(hung to "gv-1 stayed out of the pool for the rest of the run: its work \"Ledger lookup\" never ended.")
             }
         records.record(
@@ -258,12 +258,12 @@ val RunRecordsTest by testSuite {
 
     test("the run file reads as this run, cut short, from the moment the pool takes it up, over a file an earlier run left") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        RunRecords("run-1", file, retries, clock = { 1_000 }).record(
+        RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 }).record(
             submitted(1, "PROBE-1 a chat line reaches the player"),
             Result.partial(submission = 1, durationMillis = 420),
         )
 
-        RunRecords("run-2", file, retries, clock = { 9_000 })
+        RunRecords("run-2", file, file.resolveSibling("logs/1"), retries, clock = { 9_000 })
 
         val run = TestRun.serializer.fromJsonCode(Files.readString(file))
         run.runId shouldBe "run-2"
@@ -271,9 +271,19 @@ val RunRecordsTest by testSuite {
         run.end shouldBe RunEnd.CUT_SHORT
     }
 
+    test("a run cut short names its logs folder beside its file, so the pool log of a run that never ended can be published") {
+        val file = Files.createTempDirectory("run-records").resolve("game/test_run.json")
+
+        RunRecords("run-1", file, file.resolveSibling("logs/4"), retries, clock = { 1_000 })
+
+        val run = TestRun.serializer.fromJsonCode(Files.readString(file))
+        run.end shouldBe RunEnd.CUT_SHORT
+        run.logs shouldBe "logs/4"
+    }
+
     test("the run file of a pool that crashed reads cut short and keeps every attempt that ended") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         records.record(
             submitted(1, "PROBE-1 a chat line reaches the player"),
             Result.partial(submission = 1, durationMillis = 420),
@@ -288,7 +298,7 @@ val RunRecordsTest by testSuite {
 
     test("a run the pool ended reads completed, with every attempt of every module") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         records.record(
             submitted(1, "PROBE-1 a chat line reaches the player"),
             Result.partial(submission = 1, durationMillis = 420),
@@ -307,7 +317,7 @@ val RunRecordsTest by testSuite {
 
     test("a run the game could not serve says why in its file, also once the pool ended it, and keeps the attempts that ended") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
-        val records = RunRecords("run-1", file, retries, clock = { 1_000 })
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         val read = { TestRun.serializer.fromJsonCode(Files.readString(file)) }
         records.record(
             submitted(1, "PROBE-1 a chat line reaches the player"),
