@@ -1,6 +1,7 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.capability.RealmCapabilityProvider
+import com.typewritermc.events.EnginePartProvider
 import com.typewritermc.formula.GeneratedDynamicProvider
 import com.typewritermc.formula.GeneratedFormulaProvider
 import com.typewritermc.imprint.ArtifactId
@@ -53,6 +54,8 @@ data class LoadedGeneratedProviders(
     val capabilities: List<OwnedRealmCapability>,
     val registrars: List<OwnedRuntimeRegistrar>,
     val collectionProjections: List<OwnedCollectionProjection>,
+    /** The engine parts an engine builds, from the source parts it accepted. */
+    val engineParts: List<EnginePartProvider>,
 )
 
 /**
@@ -250,6 +253,7 @@ class GeneratedProviderLoader {
                 GeneratedProviderKind.ResourceDisplay -> GeneratedResourceDisplayProvider::class.java
                 GeneratedProviderKind.Formula -> GeneratedFormulaProvider::class.java
                 GeneratedProviderKind.Dynamic -> GeneratedDynamicProvider::class.java
+                GeneratedProviderKind.EnginePart -> EnginePartProvider::class.java
             }
         require(expected.isAssignableFrom(providerClass)) {
             "Generated ${kind.key} provider ${providerClass.name} must implement ${expected.name}."
@@ -434,6 +438,7 @@ class GeneratedProviderLoader {
         val checks = mutableListOf<Pair<LoadedProvider, GeneratedCheckProvider>>()
         val capabilities = mutableListOf<OwnedRealmCapability>()
         val registrars = mutableListOf<OwnedRuntimeRegistrar>()
+        val engineParts = mutableListOf<EnginePartProvider>()
         val registrarIds = mutableSetOf<Pair<String, RuntimeRegistrarId>>()
         val collectionProjections = mutableListOf<OwnedCollectionProjection>()
         val operations = mutableListOf<com.typewritermc.operations.OperationDeclaration>()
@@ -533,6 +538,10 @@ class GeneratedProviderLoader {
                             loadedProvider.require<GeneratedCollectionProjectionProvider>().specification,
                         )
                 }
+
+                GeneratedProviderKind.EnginePart -> {
+                    engineParts += loadedProvider.require<EnginePartProvider>()
+                }
             }
         }
         val ownedChecks =
@@ -559,6 +568,7 @@ class GeneratedProviderLoader {
             capabilities = capabilities,
             registrars = registrars,
             collectionProjections = collectionProjections,
+            engineParts = engineParts,
         )
     }
 }

@@ -16,6 +16,7 @@ internal object TypewriterApi {
     private const val CHECKING = "com.typewritermc.checking"
     private const val CONFIGURATION = "com.typewritermc.configuration"
     private const val DISCOVERY = "com.typewritermc.discovery"
+    private const val EVENTS = "com.typewritermc.events"
     private const val EXPRESSION = "com.typewritermc.expression"
     private const val FORMULA = "com.typewritermc.formula"
     private const val OPERATIONS = "com.typewritermc.operations"
@@ -153,6 +154,11 @@ internal object TypewriterApi {
     val ProviderOrigin = ClassName(DISCOVERY, "ProviderOrigin")
     val RuntimeRegistrar = ClassName(DISCOVERY, "RuntimeRegistrar")
     val RuntimeRegistrarDescriptor = ClassName(DISCOVERY, "RuntimeRegistrarDescriptor")
+
+    // Events
+    val EnginePart = ClassName(EVENTS, "EnginePart")
+    val EnginePartDependencies = ClassName(EVENTS, "EnginePartDependencies")
+    val EnginePartProvider = ClassName(EVENTS, "EnginePartProvider")
 
     // Expression
     val Expr = ClassName(EXPRESSION, "Expr")

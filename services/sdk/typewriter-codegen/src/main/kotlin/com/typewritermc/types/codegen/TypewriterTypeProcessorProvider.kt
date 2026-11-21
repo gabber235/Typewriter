@@ -1,5 +1,6 @@
 package com.typewritermc.types.codegen
 
+import com.typewritermc.events.codegen.EnginePartProviderProcessor
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -172,6 +173,7 @@ private class TypewriterTypeProcessor(
                 explicitlyImportedTypes
         }
     private val dynamicProviders = DynamicProviderProcessor(output, logger)
+    private val engineParts = EnginePartProviderProcessor(output, logger)
     private val claimDependencyClosure = options[CLAIM_DEPENDENCY_CLOSURE_OPTION]?.toBooleanStrictOrNull() == true
     private var optionsValidated = false
 
@@ -237,6 +239,7 @@ private class TypewriterTypeProcessor(
         }
         deferred += formulaProviders.process(resolver)
         deferred += dynamicProviders.process(resolver)
+        engineParts.process(resolver)
         return deferred.distinct()
     }
 
