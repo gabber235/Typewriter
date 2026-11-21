@@ -1490,14 +1490,16 @@ internal class Pool(
      * [client] crashed, froze until Paper timed its player out, or left, as [kind] says: its attempt fails
      * with [cause] and the lost client's log, Paper already holds back no tick for it, and the pool starts a new
      * client for the player. Until that one is ready, no claim gets the player. An attempt still being
-     * claimed goes back in line.
+     * claimed goes back in line. A new client lost before it stepped is replaced the same way, so its
+     * player never waits for a client that is gone; what Paper reports of the lost one meanwhile changes
+     * nothing ([losesNewClient]).
      */
     private fun lost(
         client: Client,
         kind: ClientLossKind,
         cause: String,
     ) {
-        if (client.lost || failure != null) return
+        if ((client.lost && !kind.losesNewClient) || failure != null) return
         val name = client.player.name
         client.lost = true
         client.away = null
