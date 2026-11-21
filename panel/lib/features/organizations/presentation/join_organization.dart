@@ -159,10 +159,10 @@ class _JoinOrganization extends HookConsumerWidget {
       await ref
           .read(userJoinRequestsProvider.notifier)
           .requestToJoin(_extractCode(controller.text));
-      controller.clear();
       if (!context.mounted) {
         return;
       }
+      controller.clear();
       showSuccessSnackBar(context, "Join request submitted successfully.");
     } on Exception catch (error) {
       if (!context.mounted) {
