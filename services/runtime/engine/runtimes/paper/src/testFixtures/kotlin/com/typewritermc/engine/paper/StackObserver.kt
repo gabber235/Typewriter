@@ -1,5 +1,12 @@
 package com.typewritermc.engine.paper
 
+import com.typewritermc.engine.session.SessionEntry
+import com.typewritermc.engine.session.readSessionEntry
+import com.typewritermc.identity.EngineId
+import com.typewritermc.identity.PrincipalId
+import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.SessionId
+import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.protocol.transport.generated.TRANSPORT_LIMITS
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
@@ -7,6 +14,8 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
+import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
+import com.typewritermc.services.libs.communicator.kv.NatsKeyValueBuckets
 import com.typewritermc.services.libs.communicator.nats.NatsAuthentication
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
 import com.typewritermc.services.libs.communicator.nats.NatsConnectionConfiguration
@@ -20,6 +29,7 @@ import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import skirout.kernel.v1.errors.InternalError
+import skirout.kernel.v1.record_id.RecordIdKey
 import skirout.service.v1.topology.ChildRuntimeStatus
 import skirout.service.v1.topology.EngineInstance
 import skirout.service.v1.topology.OrganizationTopologySnapshot
@@ -27,6 +37,7 @@ import skirout.service.v1.topology.WatchOrganizationTopology
 import skirout.service.v1.topology.WatchOrganizationTopologyRequest
 import skirout.service.v1.topology.WatchOrganizationTopologyResponse
 import java.nio.file.Path
+import java.util.UUID
 import kotlin.io.path.readText
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -34,12 +45,15 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Reads the stack the game suite runs in, with the read only observer credentials `cargo xtask e2e game`
  * hands the test JVM: `STACK_NATS_URL`, `STACK_OBSERVER_CREDS`, `STACK_OBSERVER_INBOX` (the prefix its
- * replies arrive below) and `STACK_OBSERVER_TOPOLOGY` (the owner's topology snapshot request).
+ * replies arrive below), `STACK_OBSERVER_TOPOLOGY` (the owner's topology snapshot request) and `STACK_REALM`
+ * (the Realm whose sessions bucket it reads).
  */
 class StackObserver private constructor(
     private val connection: NatsConnection,
     private val communicator: Communicator,
     private val topologySubject: String,
+    /** The record key of the stack's Realm. */
+    val realm: String,
 ) : AutoCloseable {
     /** The organization topology as the backend holds it now. */
     suspend fun topology(): OrganizationTopologySnapshot {
@@ -65,6 +79,18 @@ class StackObserver private constructor(
 
     /** The engine whose host's service is named [service], as the topology holds it now. */
     suspend fun engine(service: String): EngineInstance? = topology().engines.firstOrNull { it.ownerHost.name == service }
+
+    /** The id of [service]'s engine, as its sessions name their holder, or null while the topology has none. */
+    suspend fun engineId(service: String): EngineId? =
+        (engine(service)?.engineId?.key as? RecordIdKey.StringWrapper)?.value?.let(::EngineId)
+
+    /** The live entry of the Minecraft [player]'s session in the Realm's sessions bucket, or null when there is none. */
+    suspend fun session(player: UUID): SessionEntry? {
+        val opened = NatsKeyValueBuckets(connection).open(SessionsBucket.name(realm))
+        check(opened is KeyValueOpen.Opened) { "the observer could not open the sessions bucket of $realm: $opened" }
+        val id = player.toString()
+        return opened.bucket.readSessionEntry(Protagonist(PrincipalId(PrincipalId.MINECRAFT, id)), SessionId(id))
+    }
 
     /** Whether the engine of [service] reports active. */
     suspend fun active(service: String): Boolean = engine(service)?.state?.status == ChildRuntimeStatus.ACTIVE
@@ -99,7 +125,7 @@ class StackObserver private constructor(
             val telemetry = ServiceTelemetry(OpenTelemetry.noop(), InstrumentationScope("typewriter-game-tests"))
             val communicator =
                 Communicator(NatsMessageTransport(connection, TRANSPORT_LIMITS), telemetry, OpenTelemetry.noop().propagators)
-            return StackObserver(connection, communicator, env("STACK_OBSERVER_TOPOLOGY"))
+            return StackObserver(connection, communicator, env("STACK_OBSERVER_TOPOLOGY"), env("STACK_REALM"))
         }
 
         private val topologyResponses =
