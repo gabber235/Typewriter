@@ -41,7 +41,7 @@ val item: Item = stack.fromPlatform()         // specific bridges first, the fal
 
 ## Version layers
 
-Extensions and most engine code never mention a Minecraft version (decided 2026-11-05). Code is written once, compiled against the oldest supported Paper (1.21.4), and runs on every release. A newer layer holds only what really changed.
+Extensions and most engine code never mention a Minecraft version (decided 2026-11-05). Code is written once, compiled against the oldest supported Paper (1.21.4), and runs on every release. A newer layer holds only what really changed. Until version layers are built, the Paper engine compiles against the one Paper the game server runs (26.3, `paper` in `services/libs.versions.toml`; node 3, 2026-11-21).
 
 ```kotlin
 typewriter {
@@ -71,7 +71,12 @@ Not proven: the loader only adds parts today, so "newest wins" is new; a part pe
 
 ## Wiring inside an engine
 
-Engine internals are plain classes wired with Koin (decided 2026-11-03). Each engine deployment has one isolated `koinApplication`, closed with its runtime; `startKoin` is never used, because a global Koin would keep old engine classes alive after a reload and two engines in one test process would share it. Each engine kind brings its own module.
+Engine internals are plain classes wired with Koin (decided 2026-11-03). Each engine deployment has one isolated `koinApplication`, closed with its runtime; `startKoin` is never used, because a global Koin would keep old engine classes alive after a reload and two engines in one test process would share it. Each engine kind brings its own module and hands it over through its own runtime entrypoint, with no provider discovery (node 3, 2026-11-21):
+
+```kotlin
+@ImprintRuntimeEntrypoint
+class PaperEngineEntrypoint : HostedRuntimeEntrypoint by EngineDeployment(paperModule)
+```
 
 Paper engine code loads outside Paper's plugin system, so one line in the Paper module brings in the plugin object, and every class needing it receives it through its constructor:
 

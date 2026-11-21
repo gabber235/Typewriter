@@ -5,7 +5,7 @@ Which work can start once other work is done. It replaces the strict layer stack
 ## Rules
 
 - **Node ids** keep the layer numbers used across the records. A letter marks a part split from a layer (`10A`, `15w`); a `p` marks a layer's panel part (`9p`).
-- **Start:** a node starts when every need is built. Built means merged into `features/v1`; a node branches from `features/v1`, never from another open pull request.
+- **Start:** a node starts when every need is built or open as a pull request. Built means merged into `features/v1`. A node whose needs are all built branches from `features/v1`. A node may instead stack on the open pull request of one need (2026-11-18): it branches from that pull request's branch, targets it, and retargets to `features/v1` once that need merges. A node stacks only once the need's plan is approved, so the code it builds on has a settled shape.
 - **Edges:** a `hard` need is one the code cannot be written without. A `demo` need is one only the demo uses; the node's plan may change the demo to drop it, and says so.
 - **In game tests:** every node whose demo has a real player needs `G`, because layers are built test first and the first failing test is an in game test with a real client. That is every Paper node, from 3 on; only 1b and the panel only nodes run without it.
 - **Panel:** panel nodes wait on the panel redesign (`P`). A non panel node never waits on a panel node. A contract change in a non panel node still makes the Dart compile fixes that generated code forces, with no new UI.
@@ -102,15 +102,15 @@ Dotted arrows are demo needs. `G` is drawn only into 3, since every Paper node r
 | 0 | Agent harness and test review (#542, #543, #546) | none | built (2026-11-05) |
 | 1 | Formula core (#560) | 0 | built (2026-11-11) |
 | P | Panel redesign: look, motion, and behavior (#548, #549) | none | building |
-| G | In game testing with real clients (prototypes, `feat/game-verification-prototypes`) | 0 | building |
+| G | In game testing with real clients (#570, #574) | 0 | built (2026-11-20) |
 
 ### Non panel
 
 | Node | What | Needs | Runs in | Status |
 | --- | --- | --- | --- | --- |
-| 1b | `bind`: a generic parameter derived from content | 1 | realm, codegen, engine admission | building |
-| 3 | Paper runtime, sessions, `Engine` identity | 0, G | engine, realm | roughly designed |
-| 4 | Event core: sources, verdicts, handlers, chains, delivery | 1, 3, G | engine, realm, codegen | roughly designed |
+| 1b | `bind`: a generic parameter derived from content (#566) | 1 | realm, codegen, engine admission | built (2026-11-16) |
+| 3 | Paper runtime, sessions, `Engine` identity (#576) | 0, G | engine, realm | built (2026-11-21) |
+| 4 | Event core: sources, verdicts, handlers, chains, delivery | 1, 3, G | engine, realm, codegen | building |
 | 6 | Stored data: transactions, `Changes`, stored derives | 4, G | realm, engine, codegen | roughly designed |
 | 7 | Time and reactions: `Due`, `Schedule`, `now`, `random`, `BoundPath` identity | 6, G | realm, engine, contract | roughly designed |
 | 8 | Mirrors and audiences: `Live`, demand, `Health`, `Position`, `Watched<T>` and formula starts | 6, G | engine, realm | roughly designed |
@@ -175,9 +175,8 @@ Each wave can start once the nodes it needs are built, assuming enough threads. 
 
 | Wave | Non panel nodes |
 | --- | --- |
-| now | 1b |
-| after G | 3 |
-| 1 | 4 |
+| built | 1b, 3 |
+| 1 (now) | 4 |
 | 2 | 6, 12 |
 | 3 | 7, 8, 13 |
 | 4 | 9, 10A, 11, 24, 31a |

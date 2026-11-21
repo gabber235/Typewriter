@@ -376,7 +376,7 @@ interface SessionReporter {
 - Values keyed by a session are removed when it ends.
 - Sessions hold no write lease: every stored write is a realm transaction ([stored-data.md](stored-data.md#where-values-live-at-runtime)). Mirrors live on the engine that produces them.
 
-`Engine(id: EngineId) : Identity` is one engine, a core identity like `Session`. `EngineId` is the stable topology `engine_instance` record id, so the identity survives restarts and ends only when the engine leaves the topology. The panel engine has no record: one runs per realm, so its id is `panel.<realm id>` and it ends with the realm. The engine kind is the engine artifact id from the topology, open to third party engines ([panel-engine-communication.md](panel-engine-communication.md) question 10).
+`Engine(id: EngineId) : Identity` is one engine, a core identity like `Session`. `EngineId` is the stable topology `engine_instance` record id, so the identity survives restarts and ends only when the engine leaves the topology. The panel engine has no record: one runs per realm, so its id is `panel.<realm id>` and it ends with the realm. A local engine run with no topology is named after its realm alone, `local.<realm id>`. The engine kind is the engine artifact id from the topology, open to third party engines ([panel-engine-communication.md](panel-engine-communication.md) question 10).
 
 ### Wiping a protagonist
 
