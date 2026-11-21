@@ -26,7 +26,10 @@ import com.typewritermc.services.libs.communicator.skir.skirUnaryContract
 import com.typewritermc.services.libs.telemetry.InstrumentationScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withTimeoutOrNull
 import skirout.kernel.v1.errors.InternalError
 import skirout.kernel.v1.record_id.RecordIdKey
@@ -84,8 +87,25 @@ class StackObserver private constructor(
     suspend fun engineId(service: String): EngineId? =
         (engine(service)?.engineId?.key as? RecordIdKey.StringWrapper)?.value?.let(::EngineId)
 
-    /** The live entry of the Minecraft [player]'s session in the Realm's sessions bucket, or null when there is none. */
+    /**
+     * The live entry of the Minecraft [player]'s session in the Realm's sessions bucket, or null when there is none.
+     *
+     * natskt 0.9.1 can drop a JetStream reply, so now and then a read ends in natskt's 5 s request timeout although
+     * the broker answered; a read that timed out is tried again, up to [READ_ATTEMPTS] reads in all. Remove the retry
+     * once natskt delivers every reply.
+     */
     suspend fun session(player: UUID): SessionEntry? {
+        repeat(READ_ATTEMPTS - 1) {
+            try {
+                return readSession(player)
+            } catch (_: TimeoutCancellationException) {
+                currentCoroutineContext().ensureActive()
+            }
+        }
+        return readSession(player)
+    }
+
+    private suspend fun readSession(player: UUID): SessionEntry? {
         val opened = NatsKeyValueBuckets(connection).open(SessionsBucket.name(realm))
         check(opened is KeyValueOpen.Opened) { "the observer could not open the sessions bucket of $realm: $opened" }
         val id = player.toString()
@@ -127,6 +147,9 @@ class StackObserver private constructor(
                 Communicator(NatsMessageTransport(connection, TRANSPORT_LIMITS), telemetry, OpenTelemetry.noop().propagators)
             return StackObserver(connection, communicator, env("STACK_OBSERVER_TOPOLOGY"), env("STACK_REALM"))
         }
+
+        /** How often [session] reads before a timed out read fails. */
+        private const val READ_ATTEMPTS = 3
 
         private val topologyResponses =
             ResponsePolicy<WatchOrganizationTopologyResponse>(
