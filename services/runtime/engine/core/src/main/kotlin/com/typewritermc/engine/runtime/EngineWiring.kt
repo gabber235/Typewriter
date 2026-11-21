@@ -2,6 +2,7 @@ package com.typewritermc.engine.runtime
 
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.engine.events.ChainQueue
+import com.typewritermc.engine.events.ChainWorker
 import com.typewritermc.engine.events.EventParts
 import com.typewritermc.engine.events.EventRuntime
 import com.typewritermc.engine.events.NoSubjectWork
@@ -79,6 +80,7 @@ private fun engineCoreModule(
         )
     } onClose { it?.close() } binds arrayOf(SessionReporter::class, Sessions::class)
     single { ChainQueue(getAll<SubjectWork>().singleOrNull() ?: NoSubjectWork) }
+    single { ChainWorker(get(), scope) }
     single(createdAtStart = true) {
         EventRuntime(EventParts(handlers = getAll(), shapes = getAll(), sources = getAll(), live = getAll()), get())
     } onClose { it?.close() }
