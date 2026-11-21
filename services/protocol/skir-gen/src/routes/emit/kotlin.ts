@@ -301,7 +301,8 @@ function replyInboxFile(): CodeGenerator.OutputFile {
   const parameters = values.map((value) => `${value}: String`).join(", ");
   const block = `/**
  * The reply inbox prefix of a service connection, \`${pattern}\`. Its reply inboxes are single tokens below
- * it, and the backend grants the connection exactly those.
+ * it; the backend lets the connection listen at any depth below it, since a JetStream client listens one token
+ * deeper.
  */
 fun serviceReplyInboxPrefix(${parameters}): String = "${prefix}"`;
   const imports = [`import ${COMMUNICATOR}.address.MessageAddress`];

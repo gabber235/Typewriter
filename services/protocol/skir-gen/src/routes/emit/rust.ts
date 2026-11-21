@@ -235,7 +235,9 @@ function emitReplyInboxes(): string[] {
     const format = JSON.stringify([REPLY_INBOX.root, ...values.map(() => "{}")].join("."));
     return [
       `/// The reply inbox prefix of a ${side} connection, \`${pattern}\`. Its reply inboxes are`,
-      "/// single tokens below it.",
+      side === "service"
+        ? "/// single tokens below it; the connection listens at any depth below it, as JetStream does."
+        : "/// single tokens below it.",
       `pub fn ${side}_reply_inbox_prefix(${parameters}) -> String {`,
       `    format!(${format}, ${values.map((value) => `${value}.as_str()`).join(", ")})`,
       "}",

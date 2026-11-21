@@ -129,12 +129,18 @@ describe("grant rule", () => {
       expect.stringContaining("STREAM.CREATE"),
     );
     expect(granted).toContain("realm_coordinator publish $JS.API.STREAM.CREATE.KV_sessions_{realm}");
+    expect(granted).toContain("realm_coordinator publish $JS.API.INFO");
+    expect(granted.filter((grant) => grant.startsWith("realm_participant "))).not.toContain(
+      "realm_participant publish $JS.API.INFO",
+    );
     expect(granted).toContain("realm_participant publish $KV.sessions_{realm}.*.*.*");
     expect(granted).toContain("realm_participant publish $JS.API.DIRECT.GET.KV_sessions_{realm}.$KV.sessions_{realm}.*.*.*");
     expect(granted).toContain(
       "realm_participant publish $JS.API.CONSUMER.CREATE.KV_sessions_{realm}.*.$KV.sessions_{realm}.*.*.*",
     );
-    expect(granted.every((grant) => grant.includes("sessions_{realm}"))).toBe(true);
+    expect(granted.filter((grant) => !grant.endsWith(" $JS.API.INFO")).every((grant) => grant.includes("sessions_{realm}"))).toBe(
+      true,
+    );
   });
 
   test("persistent updates grant named consumer operations instead of a subscription", () => {

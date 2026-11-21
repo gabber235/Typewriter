@@ -160,7 +160,8 @@ export function routeGrants(channels: readonly RouteChannel[], roles: RoleDeclar
 /**
  * Derives the broker permissions of a realm key value bucket. Its writers open it, read and write
  * keys of exactly the declared tokens and list them through consumers on its stream; its owner also
- * creates it. Every subject binds the realm, so a role reaches only its own realm's bucket.
+ * creates it. Every subject but the owner's account info binds the realm, so a role reaches only its
+ * own realm's bucket.
  */
 export function bucketGrants(bucket: BucketDeclaration, roles: RoleDeclarations): Grant[] {
   const stream: GrantToken = { kind: "bucket", stream: true, name: bucket.name };
@@ -180,7 +181,9 @@ export function bucketGrants(bucket: BucketDeclaration, roles: RoleDeclarations)
     [...literals("$JS.FC"), stream, { kind: "wildcard" }, { kind: "wildcard" }],
     key,
   ];
-  const own: GrantToken[][] = [[...literals("$JS.API.STREAM.CREATE"), stream]];
+  // natskt reads the account's JetStream info before it creates a key value stream; the account
+  // info subject carries no stream, so it is the one owner grant not bound to the realm.
+  const own: GrantToken[][] = [[...literals("$JS.API.STREAM.CREATE"), stream], [...literals("$JS.API.INFO")]];
   const grant = (role: string, subjects: GrantToken[][]): Grant[] =>
     subjects.map((tokens) => ({ role, direction: "publish", tokens }));
   for (const name of [bucket.owner, ...bucket.writers]) {
