@@ -38,6 +38,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:no_role_type SET name = 'no_role_type', role = { version: '1.0.0' };"
 allow = false
+error_contains = "role-type-invalid-error"
 
 [[cases]]
 name = "role_type_must_be_known"
@@ -45,6 +46,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:bad_role_type SET name = 'bad_role_type', role = { type: 'database', version: '1.0.0' };"
 allow = false
+error_contains = "role-type-invalid-error"
 
 [[cases]]
 name = "role_version_is_required"
