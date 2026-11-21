@@ -1,6 +1,13 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.discovery.RuntimeRegistrar
+import com.typewritermc.engine.events.ChainQueue
+import com.typewritermc.engine.events.EventParts
+import com.typewritermc.engine.events.EventRuntime
+import com.typewritermc.engine.events.NoSubjectWork
+import com.typewritermc.engine.events.SubjectWork
+import com.typewritermc.events.EnginePartDependencies
+import com.typewritermc.events.EnginePartProvider
 import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.identity.Engine
 import com.typewritermc.identity.EngineId
@@ -14,10 +21,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.koin.core.KoinApplication
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.binds
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.dsl.onClose
+import kotlin.reflect.KClass
 
 /**
  * The Koin of one engine deployment: engine-core's parts, such as the engine's identity and its session keeping,
@@ -29,13 +38,17 @@ internal class EngineWiring(
     context: HostedDeploymentContext,
     scope: CoroutineScope,
     kind: Module,
+    parts: List<EnginePartProvider> = emptyList(),
 ) : AutoCloseable {
     val application: KoinApplication =
         koinApplication {
             allowOverride(false)
-            modules(engineCoreModule(context, scope), kind)
+            modules(engineCoreModule(context, scope), enginePartModule(parts), kind)
             createEagerInstances()
         }
+
+    /** The event runtime of this deployment, which each publication is handed to. */
+    val events: EventRuntime get() = application.koin.get()
 
     /** The activation work the engine kind declared, run with every activation of the deployment. */
     val registrars: List<RuntimeRegistrar> get() = application.koin.getAll<RuntimeRegistrar>()
@@ -65,4 +78,28 @@ private fun engineCoreModule(
             parent = scope,
         )
     } onClose { it?.close() } binds arrayOf(SessionReporter::class, Sessions::class)
+    single { ChainQueue(getAll<SubjectWork>().singleOrNull() ?: NoSubjectWork) }
+    single(createdAtStart = true) {
+        EventRuntime(EventParts(handlers = getAll(), shapes = getAll(), sources = getAll(), live = getAll()), get())
+    } onClose { it?.close() }
 }
+
+/**
+ * One single per generated engine part, bound to every supertype it declares, so handlers, sources, and resolvers are
+ * found by their role. A part's constructor parameters come from this Koin; one it cannot provide fails the start and
+ * names both types.
+ */
+private fun enginePartModule(parts: List<EnginePartProvider>) =
+    module {
+        parts.forEach { part ->
+            single(named(part.type.java.name), createdAtStart = true) {
+                val scope = this
+                part.create(
+                    object : EnginePartDependencies {
+                        override fun <T : Any> get(type: KClass<T>): T =
+                            scope.getOrNull(type) ?: error("${part.type.simpleName} needs ${type.simpleName}, which this engine does not provide.")
+                    },
+                )
+            } binds part.binds.toTypedArray()
+        }
+    }

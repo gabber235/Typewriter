@@ -42,6 +42,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
 import kotlin.reflect.KClass
 
+@TypewriterType(id = "a0000000000000000000000000000939")
 data class Smashed(
     val player: Protagonist,
 ) : CancelableEvent
@@ -51,10 +52,9 @@ interface AboutEvent<E : Event> {
     val event: E
 }
 
-// One guard serves every event: its type argument is the event. Its bound is Event, since the api imports no
-// definition of CancelableEvent yet.
+// One guard serves every cancelable event: its type argument is the event.
 @TypewriterType(id = "a0000000000000000000000000000932")
-data class GuardEntry<E : Event>(
+data class GuardEntry<E : CancelableEvent>(
     override val page: Ref<PageElements.Element, Page>,
     override val name: String = "",
     override val placement: GraphPlacement = GraphPlacement(),

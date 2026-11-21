@@ -19,12 +19,15 @@ import skirout.editor.v1.compiled_content.CompiledResource
 import skirout.editor.v1.compiled_content.CompiledResourceKey
 import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
 import skirout.editor.v1.type_catalog.RelationId
+import kotlin.reflect.KClass
 
 /** Hydrated resource roles and the compiled links between them. */
 class CompiledResourceGraph private constructor(
     val resources: Map<CompiledResourceKey, Any>,
     val edges: List<CompiledEdge>,
     private val ownershipRelations: Set<RelationId>,
+    /** The Kotlin classes of each resource's type arguments, such as `BlockBreak` for `CancelableEventEntry<BlockBreak>`. */
+    val typeArguments: Map<CompiledResourceKey, List<KClass<*>>>,
 ) {
     val elements: Map<CompiledResourceKey, Element> =
         resources
@@ -112,11 +115,17 @@ class CompiledResourceGraph private constructor(
                         "Compiled resource $key decoded to null."
                     }
                 }
+            val typeArguments =
+                records.mapValues { (_, record) ->
+                    record.actualType.arguments.mapNotNull { argument ->
+                        (catalog.resolve(argument) as? Resolution.Ready)?.let { bindings.bind(it.value).nativeClass }
+                    }
+                }
             val ownership =
                 knownRelations.values
                     .filter { it.ownsResources }
                     .mapTo(linkedSetOf(), RelationContract::id)
-            return CompiledResourceGraph(decoded, edges.toList(), ownership)
+            return CompiledResourceGraph(decoded, edges.toList(), ownership, typeArguments)
         }
     }
 }

@@ -7,6 +7,8 @@ import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.assemble
+import com.typewritermc.engine.events.WrittenValues
+import com.typewritermc.engine.events.publishedEntries
 import com.typewritermc.imprint.COMMON_SOURCE_PART
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.HostedRuntimeEntrypoint
@@ -71,7 +73,7 @@ class EngineDeployment(
         val deploymentScope = CoroutineScope(Dispatchers.Default)
         var wiring: EngineWiring? = null
         return try {
-            val engine = EngineWiring(context, deploymentScope, kind).also { wiring = it }
+            val engine = EngineWiring(context, deploymentScope, kind, deployment.providers.engineParts).also { wiring = it }
             val assembly =
                 deployment.providers.contributions.assemble(
                     CatalogAssemblyContext(CatalogGeneration(value = executionCatalogIdentity(artifacts))),
@@ -84,7 +86,10 @@ class EngineDeployment(
                     implementationToken = implementation.fingerprint(),
                     enforceImplementationCompatibility =
                         context.identity.placement == RuntimePlacement.PRIMARY_ENGINE,
-                    contentGateway = ResourceGraphContentGateway(assembly.checked, assembly.bindings, assembly.relations),
+                    contentGateway =
+                        ResourceGraphContentGateway(assembly.checked, assembly.bindings, assembly.relations) { graph ->
+                            engine.events.publish(publishedEntries(graph, WrittenValues))
+                        },
                     contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, deploymentScope),
                 )
             ScopedEngineRuntime(runtime, engine, deploymentScope)
@@ -126,4 +131,5 @@ private val EXECUTION_PROVIDER_KINDS =
         GeneratedProviderKind.Relation,
         GeneratedProviderKind.EndpointBindings,
         GeneratedProviderKind.Registrar,
+        GeneratedProviderKind.EnginePart,
     )

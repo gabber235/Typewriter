@@ -1,6 +1,14 @@
 package com.typewritermc.engine.events.testing
 
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.elements.Entry
+import com.typewritermc.engine.events.CancelableEventEntry
+import com.typewritermc.engine.events.EventEntry
+import com.typewritermc.engine.pages.SequenceEntry
+import com.typewritermc.engine.pages.SequenceTriggers
+import com.typewritermc.events.CancelableEvent
+import com.typewritermc.formula.Var
+import com.typewritermc.types.Ref
 import com.typewritermc.engine.events.ChainQueue
 import com.typewritermc.engine.events.EventParts
 import com.typewritermc.engine.events.EventRuntime
@@ -10,6 +18,8 @@ import com.typewritermc.engine.events.SubjectWork
 import com.typewritermc.engine.events.WrittenValues
 import com.typewritermc.events.AfterHandler
 import com.typewritermc.events.EnginePart
+import com.typewritermc.events.EnginePartDependencies
+import com.typewritermc.events.EnginePartProvider
 import com.typewritermc.events.Event
 import com.typewritermc.events.HandlerPlan
 import com.typewritermc.events.LiveResolver
@@ -159,3 +169,48 @@ class CountingWork : SubjectWork {
     @Synchronized
     fun history(protagonist: Protagonist): List<Int> = counts[protagonist].orEmpty().toList()
 }
+
+/**
+ * [part] as the provider KSP generates for it, bound to [binds]; with [needs], building it first asks the engine for
+ * that type, as a constructor parameter would.
+ */
+fun provided(
+    part: EnginePart,
+    binds: List<KClass<*>>,
+    needs: KClass<*>? = null,
+): EnginePartProvider =
+    object : EnginePartProvider {
+        override val type: KClass<out EnginePart> = part::class
+        override val binds: List<KClass<*>> = binds
+
+        override fun create(dependencies: EnginePartDependencies): EnginePart {
+            needs?.let { dependencies.get(it) }
+            return part
+        }
+    }
+
+/** A published event entry about [E] named [name] whose condition is the written value [condition]. */
+inline fun <reified E : Event> eventEntry(
+    name: String,
+    next: List<String> = emptyList(),
+    condition: Boolean = true,
+): PublishedEntry<EventEntry<E>> =
+    published(
+        EventEntry<E>(Ref(ResourceId("sequence")), name, GraphPlacement(), links(next), Var.Value(condition)),
+        about = E::class,
+    )
+
+/** A published cancelable event entry about [E] named [name] with written [condition] and [cancel] values. */
+inline fun <reified E : CancelableEvent> cancelableEntry(
+    name: String,
+    next: List<String> = emptyList(),
+    condition: Boolean = true,
+    cancel: Boolean = false,
+): PublishedEntry<CancelableEventEntry<E>> =
+    published(
+        CancelableEventEntry<E>(Ref(ResourceId("sequence")), name, GraphPlacement(), links(next), Var.Value(condition), Var.Value(cancel)),
+        about = E::class,
+    )
+
+/** Links to the entries named in [names]. */
+fun links(names: List<String>): Set<Ref<SequenceTriggers.Entry, SequenceEntry>> = names.mapTo(linkedSetOf()) { Ref(ResourceId(it)) }

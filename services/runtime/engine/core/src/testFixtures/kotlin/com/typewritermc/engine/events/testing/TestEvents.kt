@@ -66,5 +66,5 @@ class StepEntry(
     override val page: Ref<PageElements.Element, SequencePage> = Ref(ResourceId("sequence")),
     override val placement: GraphPlacement = GraphPlacement(),
 ) : Triggerable {
-    override val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>> = next.mapTo(linkedSetOf()) { Ref(ResourceId(it)) }
+    override val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>> = links(next)
 }

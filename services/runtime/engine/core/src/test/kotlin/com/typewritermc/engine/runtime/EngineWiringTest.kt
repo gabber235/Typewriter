@@ -1,9 +1,21 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.engine.events.PublishedEntries
+import com.typewritermc.engine.events.testing.Poke
+import com.typewritermc.engine.events.testing.TestSource
+import com.typewritermc.engine.events.testing.provided
+import com.typewritermc.engine.events.testing.reason
+import com.typewritermc.engine.events.testing.verdict
 import com.typewritermc.engine.runtime.testing.wiredDeploymentContext
 import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.readSessionEntry
 import com.typewritermc.engine.session.testing.SessionHarness
+import com.typewritermc.events.HandlerPlan
+import com.typewritermc.events.HasChat
+import com.typewritermc.events.Outcome
+import com.typewritermc.events.Source
+import com.typewritermc.events.VerdictHandler
+import com.typewritermc.events.deny
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
@@ -65,6 +77,48 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
             val failure = shouldThrow<Exception> { EngineWiring(wiredDeploymentContext(), scope, module { }) }
 
             generateSequence<Throwable>(failure) { it.cause }.joinToString(" | ") { it.message.orEmpty() } shouldContain "SessionTimings"
+        } finally {
+            scope.cancel()
+        }
+    }
+
+    test("an engine part's handler runs for its source's occurrences once the engine starts") {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val pokes = TestSource(Poke::class)
+        val guard = verdict(Poke::class) { _, _ -> deny(reason("guarded")) }
+        val wiring =
+            EngineWiring(
+                wiredDeploymentContext(),
+                scope,
+                module { single<SessionTimings> { SessionHarness.SHORT } },
+                listOf(provided(pokes, listOf(Source::class)), provided(guard, listOf(VerdictHandler::class, HandlerPlan::class))),
+            )
+        try {
+            wiring.events.publish(PublishedEntries.EMPTY)
+
+            pokes.fire(Poke()) shouldBe Outcome.Denied(Poke(), reason("guarded"))
+        } finally {
+            wiring.close()
+            scope.cancel()
+        }
+    }
+
+    test("an engine part that needs what the engine does not provide fails at start naming both") {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        try {
+            val needy = TestSource(Poke::class)
+            val failure =
+                shouldThrow<Exception> {
+                    EngineWiring(
+                        wiredDeploymentContext(),
+                        scope,
+                        module { single<SessionTimings> { SessionHarness.SHORT } },
+                        listOf(provided(needy, listOf(Source::class), needs = HasChat::class)),
+                    )
+                }
+
+            val messages = generateSequence<Throwable>(failure) { it.cause }.joinToString(" | ") { it.message.orEmpty() }
+            messages shouldContain "TestSource needs HasChat"
         } finally {
             scope.cancel()
         }

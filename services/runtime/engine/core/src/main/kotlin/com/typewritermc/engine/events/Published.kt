@@ -1,11 +1,16 @@
 package com.typewritermc.engine.events
 
 import com.typewritermc.elements.Entry
+import com.typewritermc.engine.runtime.CompiledResourceGraph
+import com.typewritermc.events.Candidate
 import com.typewritermc.events.Event
 import com.typewritermc.events.VarReader
+import com.typewritermc.formula.Var
 import com.typewritermc.identity.Identity
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.library.Page
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.toResourceId
 import kotlin.reflect.KClass
 
 /**
@@ -50,11 +55,30 @@ class PublishedEntries(
 /** Reads only written values; a computed field fails, as it does before an engine can evaluate formulas. */
 object WrittenValues : VarReader {
     override fun <T> read(
-        field: com.typewritermc.formula.Var<T, *>,
-        candidate: com.typewritermc.events.Candidate<*>,
+        field: Var<T, *>,
+        candidate: Candidate<*>,
     ): T =
         when (field) {
-            is com.typewritermc.formula.Var.Value -> field.value
-            is com.typewritermc.formula.Var.Computed -> error("Field of ${candidate.entry.name} is a formula, which needs a publication.")
+            is Var.Value -> field.value
+            is Var.Computed -> error("Field of ${candidate.entry.name} is a formula, which needs a publication.")
         }
 }
+
+/**
+ * The entries of [graph] as handlers see them: each with its page's priority and the event its type argument names.
+ * Every entry applies to every protagonist until books carry conditions.
+ */
+@Suppress("UNCHECKED_CAST")
+fun publishedEntries(
+    graph: CompiledResourceGraph,
+    reader: VarReader,
+): PublishedEntries =
+    PublishedEntries(
+        graph.elements.mapNotNull { (key, element) ->
+            val entry = element as? Entry ?: return@mapNotNull null
+            val page = graph.pageOf(key)?.let { graph.resources[it] } as? Page
+            val about = graph.typeArguments[key].orEmpty().firstOrNull { Event::class.java.isAssignableFrom(it.java) }
+            PublishedEntry(key.source.toResourceId(), entry, page?.priority ?: 0, about as KClass<out Event>?)
+        },
+        reader,
+    )
