@@ -6,14 +6,12 @@ import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.aroundAll
 import de.infix.testBalloon.framework.core.testSuite
-import skirout.kernel.v1.record_id.RecordIdKey
-import skirout.service.v1.topology.ChildRuntimeStatus
 import kotlin.time.Duration.Companion.minutes
 
 /** The service of the shared Paper's loader, as the stack's engine binder names slot 0. */
 private const val SHARED_PAPER = "game_paper_0"
 
-val PaperEngineRequirements by testSuite(
+val PaperSessionRequirements by testSuite(
     compartment = { GameCompartment },
     // Once, before any requirement claims a player: the shared Paper's engine must run before a
     // requirement can rely on it. The wait is wall clock, so it stays outside every window.
@@ -23,22 +21,38 @@ val PaperEngineRequirements by testSuite(
             requirements()
         },
 ) {
-    // Node 3's GAME-S1 (a player joins, then its session key appears) replaces this requirement.
     requirement(
-        "PAPER-ENGINE-1",
-        "a player who joins the game Paper finds Typewriter's Paper engine active on the stack's Realm",
+        "GAME-S1",
+        "a player who joins the game Paper has a session in the stack's Realm, held by that Paper's engine",
     ) {
-        val realm = System.getenv("STACK_REALM") ?: error("STACK_REALM is not set: run the game suite through cargo xtask e2e game")
-        player.quit()
-
         StackObserver.fromEnvironment().use { observer ->
+            val engine = observer.engineId(SHARED_PAPER)
+            player.quit()
             player.rejoin()
             within(20.ticks) {
-                state("the shared Paper's engine reports active on the stack's Realm in the organization topology") {
-                    val engine = observer.engine(SHARED_PAPER)
-                    val key = engine?.realm?.realmId?.key as? RecordIdKey.StringWrapper
-                    engine?.state?.status == ChildRuntimeStatus.ACTIVE && key?.value == realm
+                state("the player's session is held by the shared Paper's engine") {
+                    observer.session(player.uuid)?.holder == engine
                 }
+            }
+        }
+    }
+
+    requirement(
+        "GAME-S2",
+        "a player who quits and rejoins the game Paper keeps their session and when it began",
+    ) {
+        StackObserver.fromEnvironment().use { observer ->
+            val engine = observer.engineId(SHARED_PAPER)
+            val before = observer.session(player.uuid) ?: error("the player had no session before quitting")
+
+            player.quit()
+            player.rejoin()
+            within(20.ticks) {
+                state("the session is held by the shared Paper's engine since it first began") {
+                    val session = observer.session(player.uuid)
+                    session != null && session.holder == engine && session.since == before.since
+                }
+                never.state("the session is gone") { observer.session(player.uuid) == null }
             }
         }
     }

@@ -46,9 +46,12 @@ val stagePaperArtifacts =
     }
 
 // The module targets Java 21 and runs on Paper's Java 25. Paper publishes its API for Java 25 only, so compilation
-// asks for libraries that run on Java 25; every other library on the classpath runs on 21 and so on 25 as well.
-configurations.named("compileClasspath") {
-    attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
+// asks for libraries that run on Java 25; every other library on the classpath runs on 21 and so on 25 as well. The
+// game requirements compile against the module's classes, Paper's API among them.
+listOf("compileClasspath", "gameTestCompileClasspath").forEach { classpath ->
+    configurations.named(classpath) {
+        attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
+    }
 }
 
 repositories {
@@ -64,9 +67,11 @@ dependencies {
     imprintPlatformApi(project(":typewriter-api"))
     loaderPlugin(project(":loader-distribution"))
     "gameTestImplementation"(project(":playtest"))
-    // The stack observer the game requirements read the topology through.
+    // The stack observer the game requirements read the topology and the sessions bucket through.
     testFixturesImplementation(project(":messaging"))
     testFixturesImplementation(project(":protocol-transport"))
+    testFixturesApi(project(":engine-core"))
+    testFixturesApi(project(":typewriter-api"))
 }
 
 /** A value of the stack `cargo xtask e2e game` runs the game suite in, which it hands Gradle. */
