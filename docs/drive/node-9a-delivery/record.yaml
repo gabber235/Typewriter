@@ -92,9 +92,10 @@ slices:
     note: DELIVER-1 to 14 pass; still missing holder_restarted, timeout, subject_mismatch, an engine subject, and the unit tests (merge order, ask gaps, occurrence window). testEngineKind is a function now, since a shared Koin module shared its singles between two wired engines. Open point for the PR: a source opens only while a handler of its own engine could run, so a source event whose handlers live only on another kind of engine never fires.
   - id: panel-gateway
     tests: [PANEL-EMIT-1, PANEL-EMIT-2, PANEL-HOLD-1]
-    status: todo
+    status: done
+    note: the inbox and the gateway share one Occurrences table; the gateway relays without decoding, asking itself through its own inbox
   - id: stack-proof
     tests: [GAME-D1]
     status: todo
 
-next: finish delivery tests, commit stable slices, then the panel gateway; GAME-D1 still to run on a stable tree
+next: GAME-D1 on the stack, design record changes, checks, typewriter-review, PR

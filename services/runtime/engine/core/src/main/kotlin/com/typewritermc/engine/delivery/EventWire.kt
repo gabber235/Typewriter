@@ -10,6 +10,7 @@ import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
+import skirout.editor.v1.type_catalog.DataValue
 import java.util.logging.Logger
 import skirout.editor.v1.event.EventOrigin as WireOrigin
 import skirout.editor.v1.event.EventReason as WireReason
@@ -53,7 +54,10 @@ internal fun WireOrigin.toOrigin(): Origin {
     return Origin(Session(Protagonist(principal), SessionId(session.value)), principal)
 }
 
-/** [this] on the wire, its detail encoded by [codec]; a detail without a catalog type is logged and left out. */
+/**
+ * [this] on the wire, its detail encoded by [codec]; a detail that arrived encoded and that this engine could not decode
+ * goes on as it came, and a detail without a catalog type is logged and left out.
+ */
 internal fun EventResult.toWire(codec: EventCodec): WireResult =
     when (this) {
         EventResult.Done -> WireResult.DONE
@@ -73,15 +77,16 @@ internal fun WireResult.toResult(codec: EventCodec): EventResult =
 private fun EventReason.toWire(codec: EventCodec): WireReason {
     val encoded =
         detail?.let { detail ->
-            codec.encode(detail).also {
+            (detail as? DataValue ?: codec.encode(detail)).also {
                 if (it == null) log.warning("The detail of reason $code has no catalog type, so it is sent without its detail.")
             }
         }
     return WireReason(code = code, message = message, detail = encoded)
 }
 
+/** The reason of a wire reason, its detail decoded by [codec], or kept encoded when this engine lacks its type. */
 private fun WireReason.toReason(codec: EventCodec): EventReason =
-    EventReason(code = code, message = message, detail = detail?.let { (codec.decode(it) as? Decoded.Value)?.value })
+    EventReason(code = code, message = message, detail = detail?.let { (codec.decode(it) as? Decoded.Value)?.value ?: it })
 
 /** A reason of a failure delivery itself gives. */
 internal fun deliveryFailure(

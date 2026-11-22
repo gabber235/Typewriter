@@ -9,6 +9,7 @@ import com.typewritermc.engine.delivery.Holders
 import com.typewritermc.engine.delivery.Inbox
 import com.typewritermc.engine.delivery.InboxRegistrar
 import com.typewritermc.engine.delivery.NatsEngineLink
+import com.typewritermc.engine.delivery.Occurrences
 import com.typewritermc.engine.events.ChainPickup
 import com.typewritermc.engine.events.ChainQueue
 import com.typewritermc.engine.events.ChainWorker
@@ -119,7 +120,7 @@ private fun engineCoreModule(
     single {
         Delivery(get<Engine>().id, get(), get(), get(), get(), get(), scope, getOrNull<DeliveryTimings>() ?: DeliveryTimings())
     } binds arrayOf(Emitter::class, Elsewhere::class)
-    single { Inbox(get(), get(), get(), scope, getOrNull<DeliveryTimings>() ?: DeliveryTimings()) }
+    single { Inbox(get(), get(), get(), Occurrences(scope, getOrNull<DeliveryTimings>() ?: DeliveryTimings())) }
     // Named, since an engine kind binds its own registrars to the same type.
     single(named("inbox")) { InboxRegistrar(get(), get()) } bind RuntimeRegistrar::class
     single { ChainQueue(subjectWork(getAll())) }

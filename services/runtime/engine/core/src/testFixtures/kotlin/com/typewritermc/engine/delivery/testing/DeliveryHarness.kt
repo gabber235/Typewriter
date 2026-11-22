@@ -9,12 +9,17 @@ import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.protocol.transport.generated.serviceReplyInboxPrefix
+import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
 import com.typewritermc.services.libs.communicator.testing.BrokerClients
 import com.typewritermc.services.libs.communicator.testing.NatsTestServer
 import com.typewritermc.services.libs.communicator.testing.onBroker
+import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.shouldBe
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.context.propagation.ContextPropagators
+import org.koin.core.module.Module
 import org.koin.dsl.module
 import kotlin.time.Duration.Companion.seconds
 
@@ -28,25 +33,40 @@ class DeliveryHarness private constructor(
     private val engines = mutableListOf<WiredEngine>()
 
     /**
-     * A wired engine [id] with [parts], crossing events with [codec] and waiting by [timings], whose event asks and
-     * answers go through [lossy].
+     * A wired engine [id] of engine kind [kind] with [parts], crossing events with [codec] and waiting by [timings],
+     * whose event asks and answers go through [lossy].
      */
     suspend fun engine(
         id: String,
         parts: List<EnginePartProvider> = emptyList(),
         codec: EventCodec = TestEventCodec(),
         timings: DeliveryTimings = DeliveryTimings(),
+        kind: Module = testEngineKind(),
         lossy: (LossyTransport) -> Unit = {},
     ): WiredEngine {
-        val kind =
+        val wired =
             module {
-                includes(testEngineKind())
+                includes(kind)
                 single { timings }
             }
         // An engine's host asks from its service reply inbox, the only one the inbox route answers.
         val transport = LossyTransport(clients.transport(inboxPrefix = "${serviceReplyInboxPrefix(id)}.")).also(lossy)
-        return WiredEngine(kind, parts, clients.buckets(), id, transport, codec).also { engines += it }
+        return WiredEngine(wired, parts, clients.buckets(), id, transport, codec).also { engines += it }
     }
+
+    /**
+     * A panel tab [session] of user [user] in organization `organization`: its connection answers from the tab's own
+     * reply inboxes, `_INBOX.<user>.<session>.<token>`, as the panel's do.
+     */
+    suspend fun tab(
+        user: String,
+        session: String,
+    ): Communicator =
+        Communicator(
+            clients.transport(inboxPrefix = "_INBOX.$user.$session."),
+            OpenTelemetry.noop().serviceTelemetry("panel tab"),
+            ContextPropagators.noop(),
+        )
 
     /** Waits until [engine] sees exactly [holders] holding [protagonist]. */
     suspend fun sees(

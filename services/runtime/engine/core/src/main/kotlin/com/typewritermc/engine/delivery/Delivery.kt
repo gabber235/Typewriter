@@ -100,12 +100,26 @@ class Delivery(
         scope.launch(start = CoroutineStart.UNDISPATCHED) { deliver(occurrence, waits = false, here = false, tried = tried) }
     }
 
+    /**
+     * Sends [event], already encoded and about [subject], as occurrence [id] caused by [origin], to every engine holding
+     * [subject], this one included through its own inbox, and waits for their merged result. A client gateway relays
+     * this way without decoding, since it may lack the event's type.
+     */
+    suspend fun relay(
+        id: OccurrenceId,
+        subject: Identity,
+        event: DataValue,
+        origin: Origin,
+    ): EventResult = deliver(Occurrence(id, null, subject, origin).also { it.encoded = event }, waits = true, here = false, tried = emptySet())
+
+    /** One occurrence on its way: [event] when this engine has it decoded, and its encoding once a holder needs it. */
     private class Occurrence(
         val id: OccurrenceId,
-        val event: Event,
+        val event: Event?,
         val subject: Identity,
         val origin: Origin?,
     ) {
+        @Volatile
         var encoded: DataValue? = null
     }
 
@@ -133,7 +147,7 @@ class Delivery(
         coroutineScope {
             val answered = tried.toMutableSet()
             val results = mutableListOf<EventResult>()
-            val local = if (here) async(start = CoroutineStart.UNDISPATCHED) { runtime.run(occurrence.event, occurrence.origin) } else null
+            val local = if (here) async(start = CoroutineStart.UNDISPATCHED) { runtime.run(checkNotNull(occurrence.event), occurrence.origin) } else null
             var notHeld = emptySet<EngineId>()
             while (true) {
                 val seen = holders.version
@@ -179,7 +193,7 @@ class Delivery(
         waits: Boolean,
     ): Asked {
         val event =
-            occurrence.encoded ?: codec.encode(occurrence.event)?.also { occurrence.encoded = it }
+            occurrence.encoded ?: occurrence.event?.let { codec.encode(it) }?.also { occurrence.encoded = it }
                 ?: return Asked.Answered(notEncodable(occurrence.event))
         val delivery = EventDelivery(occurrence = occurrence.id, subject = occurrence.subject.toWire(), event = event, origin = occurrence.origin?.toWire())
         val started = time.markNow()
@@ -268,6 +282,7 @@ class Delivery(
         val HOLDER_RESTARTED = deliveryFailure("holder_restarted", "The engine holding the subject restarted and lost the event.")
         val HOLDER_ERROR = deliveryFailure("holder_error", "The engine holding the subject failed to take the event.")
 
-        fun notEncodable(event: Event) = deliveryFailure("unknown_type", "The event ${event::class.simpleName} has no catalog type, so it cannot leave this engine.")
+        fun notEncodable(event: Event?) =
+            deliveryFailure("unknown_type", "The event ${event?.let { it::class.simpleName }} has no catalog type, so it cannot leave this engine.")
     }
 }
