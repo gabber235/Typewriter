@@ -167,6 +167,7 @@ internal object TypewriterApi {
     val EventShape = ClassName(EVENTS, "EventShape")
     val Handler = ClassName(EVENTS, "Handler")
     val HandlerPlan = ClassName(EVENTS, "HandlerPlan")
+    val HandlerConfig = ClassName(EVENTS, "HandlerConfig")
     val Outcome = ClassName(EVENTS, "Outcome")
     val Param = ClassName(EVENTS, "Param")
     val Triggered = ClassName(EVENTS, "Triggered")

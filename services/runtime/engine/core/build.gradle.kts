@@ -15,6 +15,8 @@ dependencies {
     // Engine kinds reach messaging, its key value buckets and the generated contracts through engine-core.
     api(project(":messaging"))
     api(project(":protocol-transport"))
+    // Published entries' formulas are checked and evaluated on the engine.
+    api(project(":formula"))
     implementation(libs.kotlin.serialize.json)
     testFixturesApi(project(":loader-api"))
     testFixturesApi(project(":messaging"))

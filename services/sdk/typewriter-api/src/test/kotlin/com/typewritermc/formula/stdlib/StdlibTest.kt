@@ -35,6 +35,11 @@ val StdlibTest by testSuite {
     ) { callFormula("distinct", listOf(2, 1, 2, 3, 1)) shouldBe listOf(2, 1, 3) }
     test("String length counts code points, like portable text") { callFormula("length", "😀a") shouldBe 2 }
     test("substring counts code points, like portable text") { callFormula("substring", "😀ab", 1, 2) shouldBe "a" }
+    test("a text answers whether it holds another text anywhere") {
+        callFormula("contains", "hello there", "hello") shouldBe true
+        callFormula("contains", "say hello", "hello") shouldBe true
+        callFormula("contains", "bye", "hello") shouldBe false
+    }
     test("a template joins its parts") { callFormula("template", listOf("Total: ", "3")) shouldBe "Total: 3" }
     test("the provider index lists the stdlib, and it loads") {
         formulaFunctions.map { it.name } shouldContainAll listOf("plus", "minus", "sumOf", "filter", "map", "template")

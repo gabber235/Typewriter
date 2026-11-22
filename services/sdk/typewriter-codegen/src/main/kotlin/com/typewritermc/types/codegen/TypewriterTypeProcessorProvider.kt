@@ -1,8 +1,5 @@
 package com.typewritermc.types.codegen
 
-import com.typewritermc.events.codegen.EnginePartProviderProcessor
-import com.typewritermc.events.codegen.EventTypeEmitter
-import com.typewritermc.events.codegen.HandlerPlanProcessor
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -53,6 +50,9 @@ import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.codegen.RegistrarProviderProcessor
+import com.typewritermc.events.codegen.EnginePartProviderProcessor
+import com.typewritermc.events.codegen.EventTypeEmitter
+import com.typewritermc.events.codegen.HandlerPlanProcessor
 import com.typewritermc.formula.codegen.DynamicProviderProcessor
 import com.typewritermc.formula.codegen.FormulaProviderProcessor
 import com.typewritermc.presentation.codegen.CollectionProjectionProviderProcessor
@@ -249,6 +249,7 @@ private class TypewriterTypeProcessor(
     }
 
     override fun finish() {
+        handlerPlans.finish()
         output.finish()
     }
 
@@ -434,6 +435,7 @@ private class TypewriterTypeProcessor(
         val file = GeneratedFile.builder(model.names.definition.packageName, model.names.file)
         SDK_EMITTERS.forEach { emitter -> with(emitter) { file.emit(model) } }
         if (!output.write(file.build(), declaration)) return
+        eventTypes.accessors(model)
         output.index(model.names.definition, GeneratedProviderKind.Type)
         if (model.hasNativeBinding) output.index(model.names.nativeBindingFactory, GeneratedProviderKind.NativeBinding)
     }

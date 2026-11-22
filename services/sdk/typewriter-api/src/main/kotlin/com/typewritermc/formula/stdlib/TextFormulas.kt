@@ -28,6 +28,10 @@ object TextFormulas {
         from: Int = 0,
     ): Int = PortableTextKernel.indexOf(this, needle, from)
 
+    /** Whether [needle] occurs anywhere in this text. */
+    @TypewriterFormulaName("contains")
+    fun String.holds(needle: String): Boolean = PortableTextKernel.indexOf(this, needle, 0) >= 0
+
     @TypewriterFormulaName("plus")
     fun String.concat(other: String): String = this + other
 

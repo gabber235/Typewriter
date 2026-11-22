@@ -78,6 +78,7 @@ val ExpressionTypeSafetyTest by testSuite {
                 override val color get() = error("unused")
                 override val tags get() = error("unused")
                 override val pages get() = error("unused")
+                override val condition get() = error("unused")
             }
         val computed: Expr<String, Handled> = expressions.title.orElse(literal("Untitled"))
 

@@ -2,6 +2,7 @@
 
 package fixture
 
+import com.typewritermc.authoring.FieldPath
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -17,6 +18,7 @@ import com.typewritermc.events.Context
 import com.typewritermc.events.EnginePartDependencies
 import com.typewritermc.events.Event
 import com.typewritermc.events.Handler
+import com.typewritermc.events.HandlerConfig
 import com.typewritermc.events.Origin
 import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
@@ -31,12 +33,19 @@ import com.typewritermc.formula.Var
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.imprint.EntryTypeId
+import com.typewritermc.imprint.HandledEntriesMetadataCodec
+import com.typewritermc.imprint.IMPRINT_HANDLED_ENTRIES_PATH
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.canonicalText
+import com.typewritermc.types.declared
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import java.nio.file.Path
+import kotlin.io.path.readBytes
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
@@ -101,17 +110,29 @@ suspend fun Tick<EveryTick>.animate(
 ) {
 }
 
+// An entry configuration: one configuration per published vault, and the candidate is the vault the tick is for.
+@Handler
+suspend fun Tick<VaultEntry>.ring(vault: Candidate<VaultEntry>) {
+}
+
 private val page = Ref<PageElements.Element, Page>(ResourceId("page"))
 private val steve = Protagonist(PrincipalId(PrincipalId.MINECRAFT, "steve"))
 
-/** Reads a candidate's fields as their written values. */
+/** Reads a candidate's fields at their generated paths as their written values. */
 private val written =
     object : VarReader {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T> read(
-            field: Var<T, *>,
+        override fun read(
+            field: FieldPath,
             candidate: Candidate<*>,
-        ): T = (field as Var.Value<T, *>).value
+        ): Any? {
+            val held =
+                when (field) {
+                    GuardEntryFields.cancel -> (candidate.entry as GuardEntry<*>).cancel
+                    VaultEntryFields.greeting -> (candidate.entry as VaultEntry).greeting
+                    else -> error("${field.path} is no fixture field")
+                }
+            return (held as Var.Value<*, *>).value
+        }
     }
 
 private fun <E : Entry> candidate(entry: E) = Candidate(entry, priority = 0, subject = steve, context = Context.EMPTY, reader = written)
@@ -121,6 +142,13 @@ private fun <T> runSuspending(block: suspend () -> T) {
 }
 
 fun main(args: Array<String>) {
+    // The part records the entries its handlers give behaviour: the triggered vault entry and the guards they read.
+    val handled = HandledEntriesMetadataCodec.decode(Path.of(args.single()).resolve(IMPRINT_HANDLED_ENTRIES_PATH).readBytes()).entries
+    val expected =
+        listOf("a0000000000000000000000000000932", "a0000000000000000000000000000933")
+            .map { EntryTypeId(TypeDefinitionId.declared(it).canonicalText) }
+    check(handled.toSet() == expected.toSet() && handled.size == expected.size) { handled.toString() }
+
     val deployment =
         GeneratedProviderLoader().load(
             artifacts = listOf(GeneratedProviderArtifact(ArtifactId("fixture:handler-plans"), Path.of(args.single()))),
@@ -156,7 +184,7 @@ fun main(args: Array<String>) {
         check(
             greet.params ==
                 listOf(
-                    Param.Field("greeting", read = { error("equality ignores the reader") }),
+                    Param.Field(VaultEntryFields.greeting),
                     Param.Trait(Shouts::class),
                     Param.Identity(Protagonist::class),
                     Param.Origin(optional = true),
@@ -164,8 +192,6 @@ fun main(args: Array<String>) {
                 ),
         ) { greet.params.toString() }
         val vault = VaultEntry(page, greeting = Var.Value("welcome"))
-        val field = greet.params.first() as Param.Field
-        check(field.read(vault) == vault.greeting) { "the field reads the triggered entry's Var" }
         check(candidate(vault).greeting == "welcome") { "a candidate reads its entry's field" }
         val triggered = Triggered(vault, steve, Context.EMPTY)
         val shouted = mutableListOf<String>()
@@ -184,5 +210,14 @@ fun main(args: Array<String>) {
         check(
             animate.params == listOf(Param.Config(EveryTick::class), Param.Candidate(GuardEntry::class, ofEvent = false, optional = true)),
         ) { animate.params.toString() }
+        check(animate.config == HandlerConfig.Object(EveryTick)) { animate.config.toString() }
+
+        // An entry configuration names its entry type, and a candidate of that type is the configuration's own entry.
+        val ring = parts.getValue("Tick_ringHandler").create(noDependencies) as AfterHandler<*>
+        check(ring.config == HandlerConfig.Entries(VaultEntry::class)) { ring.config.toString() }
+        check(ring.params == listOf(Param.Candidate(VaultEntry::class, ofConfig = true))) { ring.params.toString() }
+
+        // A handler on an event that is not configured has no configuration.
+        check(greet.config == null) { greet.config.toString() }
     }
 }

@@ -69,6 +69,14 @@ internal class GeneratedOutput(
         entries += GeneratedProviderIndexEntry(kind, provider.reflectionName(), sourcePart)
     }
 
+    /** Writes one resource aggregated over every source file, such as metadata gathered across all rounds. */
+    fun resource(
+        path: String,
+        content: ByteArray,
+    ) {
+        codeGenerator.createNewFileByPath(Dependencies.ALL_FILES, path, "").use { it.write(content) }
+    }
+
     /** Writes the provider index of everything this compilation provided. */
     fun finish() {
         if (entries.isEmpty()) return

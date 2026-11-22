@@ -6,6 +6,9 @@ import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.RealmSection
 import com.typewritermc.elements.Element
+import com.typewritermc.formula.Var
+import com.typewritermc.identity.Engine
+import com.typewritermc.identity.Protagonist
 import com.typewritermc.types.Acyclic
 import com.typewritermc.types.Color
 import com.typewritermc.types.DeletionPolicy
@@ -68,6 +71,7 @@ interface TaxonomyTagsContract : Owning {
  * Groups authored pages through the core resource ownership relation and classifies them with independent tags.
  * Pages and their elements remain separate resources connected by generated endpoint references, so library
  * operations and graph reads can reason about ownership without decoding every concrete page or element type.
+ * A book is published as its own shard beside its pages, so an engine can decide whom its [condition] applies to.
  */
 @TypewriterType(id = "bbb646b300cf4dd2b7aab051854e4dd1")
 @com.typewritermc.types.TypewriterDisplay(
@@ -83,7 +87,15 @@ data class Book(
     val color: Color = Color(0xff3f51b5u),
     val tags: Set<Ref<BookTags.Book, Tag>> = emptySet(),
     val pages: List<Ref<BookPages.Book, Page>> = emptyList(),
-) : Resource
+    /** Whom the book's content applies to: an element runs for a protagonist only while this holds for it. */
+    val condition: Var<Boolean, BookContext> = Var.Value(true),
+) : CompilationUnit
+
+/** What a book's condition reads: the protagonist it is asked about and the engine asking. */
+interface BookContext {
+    val protagonist: Protagonist
+    val engine: Engine
+}
 
 @ReferenceContract(BOOK_TAGS_RELATION_ID)
 interface BookTagsContract {

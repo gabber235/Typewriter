@@ -1,5 +1,8 @@
 package com.typewritermc.events
 
+import com.typewritermc.authoring.FieldPath
+import com.typewritermc.authoring.GenericField
+import com.typewritermc.authoring.TypedPath
 import com.typewritermc.elements.Entry
 import com.typewritermc.formula.Var
 import com.typewritermc.identity.Identity
@@ -47,29 +50,22 @@ sealed interface Param {
 
     /**
      * One run per published entry of [entry] that applies to the subject. With [ofEvent], the entry's type argument is
-     * the event, so `Candidate<CancelableEventEntry<E>>` only finds entries about the occurring event.
+     * the event, so `Candidate<CancelableEventEntry<E>>` only finds entries about the occurring event. With [ofConfig],
+     * the entry is the configured event's configuration type, so `Candidate<IntervalEventEntry>` on
+     * `Tick<IntervalEventEntry>` only finds the entry the occurrence was emitted for.
      */
     data class Candidate(
         val entry: KClass<out Entry>,
         val ofEvent: Boolean = false,
+        val ofConfig: Boolean = false,
         override val optional: Boolean = false,
     ) : Param
 
-    /**
-     * The current value of the receiver entry's `Var` field [name], evaluated for the subject. [read] picks the field
-     * from the triggered entry without reflection; equality ignores it, since a lambda has none.
-     */
-    class Field(
-        val name: String,
-        val read: (Entry) -> Var<*, *>,
+    /** The current value of the receiver entry's `Var` field at [field], evaluated for the subject. */
+    data class Field(
+        val field: FieldPath,
         override val optional: Boolean = false,
-    ) : Param {
-        override fun equals(other: Any?): Boolean = other is Field && other.name == name && other.optional == optional
-
-        override fun hashCode(): Int = 31 * name.hashCode() + optional.hashCode()
-
-        override fun toString(): String = "Field(name=$name, optional=$optional)"
-    }
+    ) : Param
 
     /** Who caused the occurrence; an event without a cause skips the handler unless [optional]. */
     data class Origin(
@@ -100,6 +96,33 @@ sealed interface HandlerPlan<E : Event> : EnginePart {
     val entry: KClass<out Entry>?
 
     val params: List<Param>
+
+    /**
+     * The configuration type of a configured event receiver (`Tick<EveryTick>` names [HandlerConfig.Object] of
+     * `EveryTick`), or null for any other event. KSP writes it, so the runtime knows every (event, configuration type)
+     * pair a handler uses without reflection; the handler only runs for occurrences of that configuration.
+     */
+    val config: HandlerConfig? get() = null
+}
+
+/**
+ * The configuration type a handler on a configured event uses, and how publication turns it into configurations: one
+ * for a Kotlin object, one per published entry for an entry type.
+ */
+sealed interface HandlerConfig {
+    val type: KClass<*>
+
+    /** A Kotlin object configuration: [instance] is its only configuration, present while its handler can run. */
+    data class Object(
+        val instance: Any,
+    ) : HandlerConfig {
+        override val type: KClass<*> get() = instance::class
+    }
+
+    /** An entry configuration type: every published entry of [type] is one configuration. */
+    data class Entries(
+        override val type: KClass<out Entry>,
+    ) : HandlerConfig
 }
 
 /** A decision handler: pure, inline, never suspends. A handler that throws counts as [pass] and is logged. */
@@ -130,16 +153,30 @@ class Candidate<out E : Entry>(
     val context: Context,
     private val reader: VarReader,
 ) {
-    /** The value of [field] for this run; a formula that fails throws, which fails the handler. */
-    fun <T> read(field: Var<T, *>): T = reader.read(field, this)
+    /** The value of the `Var` field at [field] for this run; a formula that fails throws, which fails the handler. */
+    fun <T> read(field: TypedPath<in @UnsafeVariance E, out Var<T, *>>): T {
+        @Suppress("UNCHECKED_CAST")
+        return reader.read(field, this) as T
+    }
+
+    /** The value of the optional `Var` field at [field] for this run, or null while the entry holds none. */
+    @JvmName("readOptional")
+    fun <T> read(field: TypedPath<in @UnsafeVariance E, out Var<T, *>?>): T? {
+        @Suppress("UNCHECKED_CAST")
+        return reader.read(field, this) as T?
+    }
+
+    /** The value of the `Var` field at [field], whose type depends on the entry's type arguments. */
+    fun read(field: GenericField<in @UnsafeVariance E>): Any? = reader.read(field, this)
 }
 
-/** Evaluates a candidate's `Var` fields; the engine supplies it. */
+/** Evaluates a candidate's `Var` fields by their path in the entry's type; the engine supplies it. */
 interface VarReader {
-    fun <T> read(
-        field: Var<T, *>,
+    /** The value of the `Var` field at [field] of [candidate]'s entry, or null while the entry holds none there. */
+    fun read(
+        field: FieldPath,
         candidate: Candidate<*>,
-    ): T
+    ): Any?
 }
 
 /**
