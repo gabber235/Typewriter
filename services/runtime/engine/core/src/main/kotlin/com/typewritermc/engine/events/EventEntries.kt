@@ -56,7 +56,7 @@ suspend fun <E : Event> E.start(entry: Candidate<EventEntry<E>>) {
 fun <E : CancelableEvent> E.rule(entry: Candidate<CancelableEventEntry<E>>): Verdict =
     when {
         !entry.condition -> pass()
-        entry.cancel -> deny(EventReason(code = "cancelled", message = "${entry.entry.name} cancels this.")) { entry.fire() }
+        entry.cancel -> deny(EventReason(code = "cancelled", message = "${entry.name} cancels this.")) { entry.fire() }
         else -> pass { entry.fire() }
     }
 

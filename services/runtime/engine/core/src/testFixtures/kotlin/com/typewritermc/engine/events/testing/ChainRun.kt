@@ -1,10 +1,9 @@
 package com.typewritermc.engine.events.testing
 
 import com.typewritermc.elements.Entry
-import com.typewritermc.events.Context
 import com.typewritermc.events.EnginePart
-import com.typewritermc.events.Triggered
-import com.typewritermc.events.emit
+import com.typewritermc.events.Param
+import com.typewritermc.events.TriggeredEvent
 
 /**
  * Chains that start at [entry], an extension's action, with its `Var` fields read as written: each [run] triggers it
@@ -22,8 +21,8 @@ class ChainRun(
         EventHarness(
             pokes,
             *parts,
-            after(Poke::class) { poke, _ -> emit(Triggered(entry, poke.protagonist, Context.EMPTY)) },
-            after(Triggered::class, entry = StepEntry::class) { triggered, _ -> reached += triggered.entry.name },
+            pokeTriggers(entry),
+            after(TriggeredEvent::class, Param.Triggered(StepEntry::class)) { triggered, _ -> reached += triggered.entry.name },
         )
 
     init {

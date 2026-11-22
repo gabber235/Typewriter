@@ -13,26 +13,16 @@ import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.joinToCode
 import com.squareup.kotlinpoet.ksp.toClassName
-import com.squareup.kotlinpoet.ksp.toTypeName
-import com.squareup.kotlinpoet.ksp.toTypeParameterResolver
-import com.squareup.kotlinpoet.ksp.toTypeVariableName
 import com.typewritermc.codegen.GeneratedFile
 import com.typewritermc.codegen.GeneratedOutput
 import com.typewritermc.codegen.implements
-import com.typewritermc.types.codegen.SdkDeclaration
-import com.typewritermc.types.codegen.containsParameter
 import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
 
-/**
- * Emits what the event runtime needs of a Typewriter type whose SDK this compilation emits: an `EventShape` engine part
- * for each concrete event, and a `Candidate` accessor per `Var` field of each entry, so a handler reads `entry.cancel`
- * as a plain value. An accessor reads through the field's path in the entry's generated `XFields`.
- */
+/** Emits what the event runtime needs of a Typewriter type whose SDK this compilation emits: an `EventShape` engine part for each concrete event. */
 internal class EventTypeEmitter(
     private val output: GeneratedOutput,
     private val engineParts: EnginePartProviderProcessor,
@@ -40,11 +30,6 @@ internal class EventTypeEmitter(
 ) {
     fun emit(declaration: KSClassDeclaration) {
         if (declaration.isEvent() && declaration.isConcrete()) shape(declaration)
-    }
-
-    /** The `Candidate` accessors of an entry, each reading its `Var` field through the field's generated path. */
-    fun accessors(model: SdkDeclaration) {
-        if (model.source.implements(Api.Entry)) accessors(model.source, model)
     }
 
     private fun KSClassDeclaration.isConcrete(): Boolean =
@@ -112,48 +97,5 @@ internal class EventTypeEmitter(
         if (output.write(GeneratedFile.builder(shape.packageName, shape.simpleName).addType(type).build(), declaration)) {
             engineParts.provideGenerated(shape, listOf(Api.EventShape, Api.EnginePart), declaration)
         }
-    }
-
-    private fun accessors(
-        declaration: KSClassDeclaration,
-        model: SdkDeclaration,
-    ) {
-        val parameters = declaration.typeParameters.toTypeParameterResolver()
-        val variables =
-            declaration.typeParameters.map {
-                it.toTypeVariableName(parameters).let { variable ->
-                    TypeVariableName(variable.name, variable.bounds)
-                }
-            }
-        val name = declaration.toClassName()
-        val entry = if (variables.isEmpty()) name else name.parameterizedBy(variables)
-        val receiver = Api.Candidate.parameterizedBy(entry)
-        val properties =
-            declaration
-                .getAllProperties()
-                .mapNotNull { property ->
-                    val type = property.type.resolve()
-                    if (type.declaration.qualifiedName?.asString() != Api.Var.canonicalName) return@mapNotNull null
-                    val value = type.arguments.firstOrNull()?.type ?: return@mapNotNull null
-                    val field = property.simpleName.asString()
-                    val path = model.fields.singleOrNull { it.property == field } ?: return@mapNotNull null
-                    val result = value.toTypeName(parameters).copy(nullable = type.isMarkedNullable || value.resolve().isMarkedNullable)
-                    val getter =
-                        if (path.template.containsParameter) {
-                            CodeBlock.of("return read(%T.%N) as %T", model.names.fields, field, result)
-                        } else {
-                            CodeBlock.of("return read(%T.%N)", model.names.fields, field)
-                        }
-                    PropertySpec
-                        .builder(field, result)
-                        .addTypeVariables(variables)
-                        .receiver(receiver)
-                        .getter(FunSpec.getterBuilder().addStatement("%L", getter).build())
-                        .build()
-                }.toList()
-        if (properties.isEmpty()) return
-        val file = GeneratedFile.builder(name.packageName, name.simpleNames.joinToString("") + "CandidateFields")
-        properties.forEach(file::addProperty)
-        output.write(file.build(), declaration)
     }
 }

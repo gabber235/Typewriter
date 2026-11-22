@@ -1,10 +1,7 @@
 package com.typewritermc.events
 
-import com.typewritermc.authoring.FieldPath
-import com.typewritermc.authoring.GenericField
-import com.typewritermc.authoring.TypedPath
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.elements.Entry
-import com.typewritermc.formula.Var
 import com.typewritermc.identity.Identity
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
@@ -12,13 +9,14 @@ import kotlin.coroutines.coroutineContext
 import kotlin.reflect.KClass
 
 /**
- * Marks a function as a handler: the event is its receiver, its parameters say when and where it runs, and its return
- * type says its phase. A [Verdict] decides inline and never suspends; `Unit` runs after the outcome was applied and may
- * suspend. KSP generates a [HandlerPlan] for it.
+ * Marks a function as a handler: the event, or the [Triggered] step for a triggered entry, is its receiver, its
+ * parameters say when and where it runs, and its return type says its phase. A [Verdict] decides inline and never
+ * suspends; `Unit` runs after the outcome was applied and may suspend. KSP generates a [HandlerPlan] for it. The body
+ * reads entry values through the generated accessors: bare on a [Triggered] receiver, on the candidate otherwise.
  *
  * ```kotlin
  * @Handler
- * fun Triggered<SimpleMessageActionEntry>.send(chat: HasChat, message: String) {
+ * suspend fun Triggered<SimpleMessageActionEntry>.send(chat: HasChat) {
  *     chat.send(message)
  *     complete()
  * }
@@ -61,11 +59,15 @@ sealed interface Param {
         override val optional: Boolean = false,
     ) : Param
 
-    /** The current value of the receiver entry's `Var` field at [field], evaluated for the subject. */
-    data class Field(
-        val field: FieldPath,
-        override val optional: Boolean = false,
-    ) : Param
+    /**
+     * The receiver of a handler on `Triggered<X>`: the step a [TriggeredEvent] of an [entry] fired into, built with the
+     * engine's entry reader. KSP puts it first, ahead of the declared parameters.
+     */
+    data class Triggered(
+        val entry: KClass<out Entry>,
+    ) : Param {
+        override val optional: Boolean get() = false
+    }
 
     /** Who caused the occurrence; an event without a cause skips the handler unless [optional]. */
     data class Origin(
@@ -92,8 +94,8 @@ sealed interface HandlerPlan<E : Event> : EnginePart {
     /** The event class it takes; for a generic handler, the bound every matching event implements. */
     val event: KClass<E>
 
-    /** For a handler on `Triggered<X>`, the entry class X it runs for; null for any other event. */
-    val entry: KClass<out Entry>?
+    /** For a handler on `Triggered<X>`, the entry class X it runs for; null for any other handler. */
+    val entry: KClass<out Entry>? get() = params.firstNotNullOfOrNull { (it as? Param.Triggered)?.entry }
 
     val params: List<Param>
 
@@ -142,41 +144,19 @@ interface AfterHandler<E : Event> : HandlerPlan<E> {
 }
 
 /**
- * A published entry a handler runs for, with what it needs to read its fields: KSP generates one accessor per `Var`
- * field, so `entry.cancel` reads a formula as a plain value. [priority] is the entry's inherited priority, which its
- * verdict carries.
+ * A published entry a handler runs for, as the scope its generated accessors read through: `entry.cancel` reads a
+ * formula as a plain value for [subject] and [context]. [priority] is the entry's inherited priority, which its verdict
+ * carries.
  */
 class Candidate<out E : Entry>(
-    val entry: E,
+    override val entry: E,
     val priority: Int,
-    val subject: Identity?,
-    val context: Context,
-    private val reader: VarReader,
-) {
-    /** The value of the `Var` field at [field] for this run; a formula that fails throws, which fails the handler. */
-    fun <T> read(field: TypedPath<in @UnsafeVariance E, out Var<T, *>>): T {
-        @Suppress("UNCHECKED_CAST")
-        return reader.read(field, this) as T
-    }
-
-    /** The value of the optional `Var` field at [field] for this run, or null while the entry holds none. */
-    @JvmName("readOptional")
-    fun <T> read(field: TypedPath<in @UnsafeVariance E, out Var<T, *>?>): T? {
-        @Suppress("UNCHECKED_CAST")
-        return reader.read(field, this) as T?
-    }
-
-    /** The value of the `Var` field at [field], whose type depends on the entry's type arguments. */
-    fun read(field: GenericField<in @UnsafeVariance E>): Any? = reader.read(field, this)
-}
-
-/** Evaluates a candidate's `Var` fields by their path in the entry's type; the engine supplies it. */
-interface VarReader {
-    /** The value of the `Var` field at [field] of [candidate]'s entry, or null while the entry holds none there. */
-    fun read(
-        field: FieldPath,
-        candidate: Candidate<*>,
-    ): Any?
+    override val subject: Identity?,
+    override val context: Context,
+    @property:GeneratedSdkApi
+    override val reader: EntryReader,
+) : EntryScope<E> {
+    override fun toString(): String = "Candidate(${entry.name}, $subject)"
 }
 
 /**

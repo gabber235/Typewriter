@@ -39,7 +39,6 @@ import com.typewritermc.imprint.HandledEntriesMetadata
 import com.typewritermc.imprint.HandledEntriesMetadataCodec
 import com.typewritermc.imprint.IMPRINT_HANDLED_ENTRIES_PATH
 import com.typewritermc.types.canonicalText
-import com.typewritermc.types.codegen.SdkNames
 import com.typewritermc.types.ksp.typeDefinitionIdentity
 import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
@@ -50,6 +49,9 @@ import com.typewritermc.codegen.TypewriterApi as Api
  * `VerdictHandler`, a `Unit` return an `AfterHandler`. A handler on a configured event (`Tick<EveryTick>`) records its
  * configuration type as the plan's `HandlerConfig`, the (event, configuration type) pair the runtime builds demand from:
  * a Kotlin object is one configuration, an entry type one per published entry; any other configuration type is rejected.
+ * A handler on a `Triggered<X>` step takes `TriggeredEvent<X>`, and its plan's first `Param.Triggered` asks the runtime
+ * for the step to call it on. A parameter named like a field of the entries it reads is rejected: entry values are read
+ * through the generated accessors.
  *
  * The entries a handler gives behaviour, its triggered entry and the entries of its candidates, are recorded for the
  * source part in [IMPRINT_HANDLED_ENTRIES_PATH], so the manifest can tell which part runs an entry.
@@ -93,8 +95,10 @@ internal class HandlerPlanProcessor(
             } else {
                 null
             }
-        val eventType = if (generic != null) event.starred() else receiver.bounded().copy(nullable = false)
-        val params = params(function, receiver, generic, config) ?: return
+        val eventType = eventType(receiver, event, generic)
+        val triggered = receiver.triggeredEntry()
+        val declared = params(function, receiver, generic, config) ?: return
+        val params = listOfNotNull(triggered?.let { CodeBlock.of("%T.Triggered(%T::class)", Api.Param, it.toClassName()) }) + declared
 
         val plan = ClassName(function.packageName.asString(), "${event.simpleName.asString()}_${function.simpleName.asString()}Handler")
         val kind = if (verdict) Api.VerdictHandler else Api.AfterHandler
@@ -105,11 +109,31 @@ internal class HandlerPlanProcessor(
         }
     }
 
-    /** [function]'s receiver type when it is an event; null, reported, otherwise. */
+    /** The event a plan takes: `TriggeredEvent<X>` for a `Triggered<X>` receiver, the event class of a generic one, else the receiver. */
+    private fun eventType(
+        receiver: KSType,
+        event: KSClassDeclaration,
+        generic: KSTypeParameter?,
+    ): TypeName =
+        when {
+            receiver.triggeredEntry() != null -> {
+                Api.TriggeredEvent.parameterizedBy((receiver.bounded() as ParameterizedTypeName).typeArguments.single())
+            }
+
+            generic != null -> {
+                event.starred()
+            }
+
+            else -> {
+                receiver.bounded().copy(nullable = false)
+            }
+        }
+
+    /** [function]'s receiver type when it is an event or a `Triggered` step; null, reported, otherwise. */
     private fun eventReceiver(function: KSFunctionDeclaration): KSType? {
         val receiver = function.extensionReceiver?.resolve()
-        if (receiver?.boundClass()?.isEvent() != true) {
-            logger.error("A handler's receiver must be an event.", function)
+        if (receiver?.boundClass()?.isEvent() != true && receiver?.triggeredEntry() == null) {
+            logger.error("A handler's receiver must be an event or a Triggered step.", function)
             return null
         }
         return receiver
@@ -154,13 +178,21 @@ internal class HandlerPlanProcessor(
         generic: KSTypeParameter?,
         config: Configuration?,
     ): List<CodeBlock>? {
+        val accessors = accessorsOf(function, receiver)
         val params =
             function.parameters.map { parameter ->
+                val accessor = accessors[parameter.name?.asString()]
+                if (accessor != null) {
+                    logger.error(
+                        "A handler reads entry values through accessors: read `$accessor` in the body instead of a parameter.",
+                        parameter,
+                    )
+                    return@map null
+                }
                 classify(parameter, receiver, generic, config).also {
                     if (it == null) {
                         logger.error(
-                            "A handler parameter must be a Candidate, Origin, Outcome, identity, configuration, triggered entry " +
-                                "field or trait interface.",
+                            "A handler parameter must be a Candidate, Origin, Outcome, identity, configuration or trait interface.",
                             parameter,
                         )
                     }
@@ -169,7 +201,34 @@ internal class HandlerPlanProcessor(
         return if (null in params) null else params.filterNotNull()
     }
 
-    /** The generated plan class [plan] for [function]: its event, triggered entry, parameters, configuration and run. */
+    /**
+     * The accessor that reads each field a handler could mean by a parameter's name: a field of the triggered entry reads
+     * bare, a field of a candidate's entry on that candidate.
+     */
+    private fun accessorsOf(
+        function: KSFunctionDeclaration,
+        receiver: KSType,
+    ): Map<String, String> {
+        val candidates =
+            function.parameters.mapNotNull { parameter ->
+                val type = parameter.type.resolve()
+                if (type.declaration.qualifiedName?.asString() != Api.Candidate.canonicalName) return@mapNotNull null
+                val entry =
+                    type.arguments
+                        .singleOrNull()
+                        ?.type
+                        ?.resolve()
+                        ?.boundClass() ?: return@mapNotNull null
+                parameter.name?.asString()?.let { name -> entry to "$name." }
+            }
+        return (listOfNotNull(receiver.triggeredEntry()?.let { it to "" }) + candidates)
+            .flatMap { (entry, prefix) ->
+                entry.getAllProperties().map { it.simpleName.asString() to "$prefix${it.simpleName.asString()}" }
+            }.reversed()
+            .toMap()
+    }
+
+    /** The generated plan class [plan] for [function]: its event, parameters, configuration and run. */
     private fun planType(
         plan: ClassName,
         kind: ClassName,
@@ -187,12 +246,15 @@ internal class HandlerPlanProcessor(
             } else {
                 CodeBlock.of("%T::class", eventType)
             }
-        val entry = receiver.triggeredEntry()?.let { CodeBlock.of("%T::class", it.toClassName()) } ?: CodeBlock.of("null")
+        // A Triggered receiver is the scope the runtime built for the event, resolved as the first value.
+        val triggered = receiver.triggeredEntry() != null
+        val offset = if (triggered) 1 else 0
         val arguments =
             function.parameters
-                .mapIndexed { index, parameter -> CodeBlock.of("values[%L] as %T", index, parameter.type.resolve().bounded()) }
+                .mapIndexed { index, parameter -> CodeBlock.of("values[%L] as %T", index + offset, parameter.type.resolve().bounded()) }
                 .joinToCode(", ")
-        val call = CodeBlock.of("event.%M(%L)", MemberName(function.packageName.asString(), function.simpleName.asString()), arguments)
+        val target = if (triggered) CodeBlock.of("(values[0] as %T)", receiver.bounded().copy(nullable = false)) else CodeBlock.of("event")
+        val call = CodeBlock.of("%L.%M(%L)", target, MemberName(function.packageName.asString(), function.simpleName.asString()), arguments)
         val run =
             FunSpec
                 .builder("run")
@@ -211,14 +273,6 @@ internal class HandlerPlanProcessor(
                 PropertySpec
                     .builder("event", kClass.parameterizedBy(eventType), KModifier.OVERRIDE)
                     .initializer(eventKClass)
-                    .build(),
-            ).addProperty(
-                PropertySpec
-                    .builder(
-                        "entry",
-                        kClass.parameterizedBy(WildcardTypeName.producerOf(Api.Entry)).copy(nullable = true),
-                        KModifier.OVERRIDE,
-                    ).initializer(entry)
                     .build(),
             ).addProperty(
                 PropertySpec
@@ -343,11 +397,6 @@ internal class HandlerPlanProcessor(
                 CodeBlock.of("%T.Config(%T::class, optional = %L)", Api.Param, classDeclaration.toClassName(), optional)
             }
 
-            receiver.hasTriggeredField(parameter, type) -> {
-                val entry = checkNotNull(receiver.triggeredEntry())
-                CodeBlock.of("%T.Field(%T.%N, optional = %L)", Api.Param, SdkNames.of(entry).fields, parameter.name?.asString(), optional)
-            }
-
             classDeclaration?.classKind == ClassKind.INTERFACE -> {
                 CodeBlock.of("%T.Trait(%T::class, optional = %L)", Api.Param, classDeclaration.toClassName(), optional)
             }
@@ -412,23 +461,6 @@ internal class HandlerPlanProcessor(
             ?.type
             ?.resolve()
             ?.boundClass()
-    }
-
-    /** Whether the triggered entry has a `Var<T, *>` property named like [parameter] whose T is [type]. */
-    private fun KSType.hasTriggeredField(
-        parameter: KSValueParameter,
-        type: KSType,
-    ): Boolean {
-        val entry = triggeredEntry() ?: return false
-        val property = entry.getAllProperties().singleOrNull { it.simpleName.asString() == parameter.name?.asString() } ?: return false
-        val propertyType = property.type.resolve()
-        if (propertyType.isMarkedNullable || propertyType.declaration.qualifiedName?.asString() != Api.Var.canonicalName) return false
-        val value =
-            propertyType.arguments
-                .firstOrNull()
-                ?.type
-                ?.resolve() ?: return false
-        return value.bounded().copy(nullable = false) == type.bounded().copy(nullable = false)
     }
 }
 

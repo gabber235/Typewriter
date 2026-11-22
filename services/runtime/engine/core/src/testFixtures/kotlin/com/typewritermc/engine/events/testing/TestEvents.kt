@@ -19,6 +19,8 @@ import com.typewritermc.events.ConfiguredEvent
 import com.typewritermc.events.Event
 import com.typewritermc.events.EventReason
 import com.typewritermc.events.EventShape
+import com.typewritermc.events.RecordScope
+import com.typewritermc.events.readField
 import com.typewritermc.formula.Var
 import com.typewritermc.identity.Identity
 import com.typewritermc.identity.PrincipalId
@@ -100,7 +102,7 @@ class GuardEntry<E : CancelableEvent>(
 ) : Entry
 
 /**
- * The paths of the test entries' `Var` fields, as codegen emits them for a real entry. The test entries have no catalog
+ * The paths of the test entries' `Var` fields, as codegen emits them for a real entry, read by their accessors below. The test entries have no catalog
  * type, so both name one stand in owner.
  */
 object TestFields {
@@ -110,6 +112,12 @@ object TestFields {
 
     val message: TypedPath<StepEntry, Var<String, Any>> = typedPath(owner, ValuePath.root.field("message"), ScalarKind.TEXT.use)
 }
+
+/** The accessor of [GuardEntry.cancel], as codegen emits it for a real entry. */
+val RecordScope<GuardEntry<*>>.cancel: Boolean get() = readField(TestFields.cancel)
+
+/** The accessor of [StepEntry.message], as codegen emits it for a real entry. */
+val RecordScope<StepEntry>.message: String get() = readField(TestFields.message)
 
 /** A sequence entry a chain passes through; it links to the entries named in [next]. */
 class StepEntry(

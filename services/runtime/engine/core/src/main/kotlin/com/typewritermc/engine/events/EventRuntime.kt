@@ -20,6 +20,7 @@ import com.typewritermc.events.ProtagonistLeft
 import com.typewritermc.events.Sink
 import com.typewritermc.events.Source
 import com.typewritermc.events.Triggered
+import com.typewritermc.events.TriggeredEvent
 import com.typewritermc.events.VerdictHandler
 import com.typewritermc.events.pass
 import com.typewritermc.identity.Identity
@@ -175,7 +176,7 @@ class EventRuntime(
         val subject = subjectOf(event)
         val key =
             when {
-                event !is Triggered<*> -> null
+                event !is TriggeredEvent<*> -> null
                 repeat == 0 -> event
                 else -> event to repeat
             }
@@ -335,7 +336,7 @@ class EventRuntime(
         outcome: Outcome<*>?,
         content: PublishedEntries,
     ): List<Run> {
-        val context = if (event is Triggered<*>) event.context else Context.EMPTY.with(event)
+        val context = if (event is TriggeredEvent<*>) event.context else Context.EMPTY.with(event)
         val options =
             plan.params.map { param ->
                 when (param) {
@@ -375,9 +376,8 @@ class EventRuntime(
                 subject?.let { liveOf(it) }?.takeIf { param.type.isInstance(it) }
             }
 
-            is Param.Field -> {
-                val triggered = event as? Triggered<*> ?: return null
-                content.reader.read(param.field, Candidate(triggered.entry, EXTENSION_PRIORITY, subject, context, content.reader))
+            is Param.Triggered -> {
+                (event as? TriggeredEvent<*>)?.let { Triggered(it, content.reader) }
             }
 
             is Param.Origin -> {
@@ -402,7 +402,7 @@ class EventRuntime(
         val config = config
         if (config != null && !config.type.isInstance((event as? ConfiguredEvent<*>)?.config)) return false
         val entry = entry ?: return true
-        return event is Triggered<*> && entry.isInstance(event.entry)
+        return event is TriggeredEvent<*> && entry.isInstance(event.entry)
     }
 
     /** Whether this handler could run for an occurrence of [event] given [content]: every required candidate exists. */
@@ -430,7 +430,7 @@ class EventRuntime(
     @Suppress("UNCHECKED_CAST")
     private fun subjectOf(event: Event): Identity? =
         when (event) {
-            is Triggered<*> -> event.subject
+            is TriggeredEvent<*> -> event.subject
             else -> (shapes[event::class] as EventShape<Event>?)?.subject(event)
         }
 

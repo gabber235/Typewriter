@@ -2,17 +2,22 @@ package com.typewritermc.engine.formula
 
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.FieldPath
+import com.typewritermc.authoring.append
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.name
 import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.authoring.text
 import com.typewritermc.elements.Element
+import com.typewritermc.elements.Entry
 import com.typewritermc.engine.Root
 import com.typewritermc.engine.pages.Definition
+import com.typewritermc.engine.reading.EntryLocation
+import com.typewritermc.engine.reading.PublishedValues
+import com.typewritermc.engine.reading.loaded
 import com.typewritermc.engine.runtime.CompiledResourceGraph
-import com.typewritermc.events.Candidate
-import com.typewritermc.events.VarReader
+import com.typewritermc.events.EntryScope
 import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.Deferred
 import com.typewritermc.formula.Formula
@@ -43,6 +48,7 @@ import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResourceType
+import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.field
 import com.typewritermc.types.fromValueAny
 import com.typewritermc.types.named
@@ -58,17 +64,19 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FunctionParameterUse
 import skirout.editor.v1.type_catalog.FunctionTypeUse
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.IdentityHashMap
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Formulas over one publication: the checker and the interpreter ask it about the published [graph], and handlers read
- * their entries' `Var` fields through it. Each formula is checked once, on its first read, and the check is kept for
- * the publication's life; a new publication builds a new environment.
+ * Formulas over one publication: the checker and the interpreter ask it about the published [graph], and the entry
+ * reader turns a value an entry stores at a path into what an accessor gives through it. Each formula is checked once,
+ * on its first read, and the check is kept for the publication's life; a new publication builds a new environment.
  *
  * A name reads what the resource gives: a [Definition] its value, any other resource a Ref to it. A stored value that
  * is not in the publication, such as a protagonist's stored fact, is not read yet and fails as unfilled.
@@ -79,15 +87,14 @@ class EngineEvaluationEnvironment(
     bindings: NativeBindingRegistry,
     private val formulas: EngineFormulas,
 ) : CatalogEvaluationEnvironment(catalog, bindings),
-    FormulaEnvironment,
-    VarReader {
+    FormulaEnvironment {
     /** Each resource by id, at its root compilation where it has several. */
     private val keys: Map<ResourceId, CompiledResourceKey> =
         graph.stored.keys
             .groupBy { it.source.toResourceId() }
             .mapValues { (_, keys) -> keys.firstOrNull { it.context == CompilationContext.Root } ?: keys.first() }
 
-    /** The key of each published instance, so a candidate's entry finds its resource. */
+    /** The key of each published instance, so a scope's entry finds its resource. */
     private val instances =
         IdentityHashMap<Any, CompiledResourceKey>().apply {
             graph.resources.forEach { (key, value) -> put(value, key) }
@@ -99,22 +106,36 @@ class EngineEvaluationEnvironment(
     /** The resources whose exported value is being evaluated on this thread, so Definitions that read each other fail. */
     private val exporting = ThreadLocal.withInitial { linkedSetOf<CompiledResourceKey>() }
 
+    /** Every value of this publication as it was compiled, the stored values the entry reader reads by default. */
+    val published: PublishedValues = PublishedValues(graph)
+
+    private val types = ConcurrentHashMap<EntryLocation, TypeUse>()
+
+    /** Where [entry] stores the value at [path]. Throws [FormulaReadException] for an entry of another publication. */
+    fun locationOf(
+        entry: Entry,
+        path: ValuePath,
+    ): EntryLocation {
+        val key = instances[entry] ?: throw FormulaReadException("${entry.name} is not part of this publication.")
+        return EntryLocation(key, path)
+    }
+
     /**
-     * The value of the `Var` field at [field] on the candidate's entry: a written value as written, a formula evaluated
-     * with the candidate's subject as `protagonist` and each context parameter's record from the candidate's context,
-     * such as the `event`, and null where the entry holds no value. Throws [FormulaReadException] when the formula has
-     * problems or its evaluation fails.
+     * What an accessor of [scope] gives for [stored], the value at [location]: a written `Var` value as written, a
+     * formula evaluated with the scope's subject as `protagonist` and each other context parameter's record from the
+     * scope's context, such as the `event`, any other value decoded as its declared type, and null where nothing is
+     * stored. Throws [FormulaReadException] when the formula has problems or its evaluation fails.
      */
-    override fun read(
-        field: FieldPath,
-        candidate: Candidate<*>,
+    fun valueAt(
+        location: EntryLocation,
+        stored: DataValue?,
+        scope: EntryScope<*>,
     ): Any? {
-        val key = instances[candidate.entry] ?: throw FormulaReadException("${candidate.entry.name} is not part of this publication.")
-        val site = siteAt(key, field)
-        if (site.value !is Var.Computed) return read(key, site, emptyMap())
-        val context =
-            site.expected.context.associate { parameter -> parameter.name to contextValue(parameter, candidate) }
-        return read(key, site, context)
+        val type = typeAt(location)
+        val site = varSite(location.path, type, stored) ?: return stored?.let { decode(type, it) }
+        if (site.value !is Var.Computed) return read(location.resource, site, emptyMap())
+        val context = site.expected.context.associate { parameter -> parameter.name to contextValue(parameter, scope) }
+        return read(location.resource, site, context)
     }
 
     /**
@@ -128,7 +149,11 @@ class EngineEvaluationEnvironment(
         context: Map<String, Any?> = emptyMap(),
     ): Any? {
         val key = keys[resource] ?: throw FormulaReadException("${resource.value} is not part of this publication.")
-        return read(key, siteAt(key, field), context)
+        val location = EntryLocation(key, field.path)
+        val site =
+            varSite(field.path, typeAt(location), published.loaded(location))
+                ?: throw FormulaReadException("${resourceName(resource)} has no Var field at ${field.path.text}.")
+        return read(key, site, context)
     }
 
     private fun read(
@@ -164,26 +189,80 @@ class EngineEvaluationEnvironment(
         }
     }
 
-    /** The context value [parameter] takes for [candidate]: its subject as `protagonist`, else the context record of its type. */
+    /** The context value [parameter] takes for [scope]: its subject as `protagonist`, else the context record of its type. */
     private fun contextValue(
         parameter: FunctionParameterUse,
-        candidate: Candidate<*>,
+        scope: EntryScope<*>,
     ): Any {
-        val missing = { FormulaReadException("${candidate.entry.name} reads ${parameter.name}, which this run does not have.") }
-        if (parameter.name == PROTAGONIST) return candidate.subject as? Protagonist ?: throw missing()
+        val missing = { FormulaReadException("${scope.entry.name} reads ${parameter.name}, which this run does not have.") }
+        if (parameter.name == PROTAGONIST) return scope.subject as? Protagonist ?: throw missing()
         val type = binding(parameter.type).nativeClass ?: throw missing()
-        return candidate.context.all.firstOrNull(type::isInstance) ?: throw missing()
+        return scope.context.all.firstOrNull(type::isInstance) ?: throw missing()
     }
 
-    /** The Var field of [key] at [field]'s path, which names one field of the resource's record. */
-    private fun siteAt(
-        key: CompiledResourceKey,
-        field: FieldPath,
-    ): VarSite {
-        val name = (field.path.segments.singleOrNull() as? PathSegment.FieldWrapper)?.name
-        return sitesOf(key).firstOrNull { it.field == name }
-            ?: throw FormulaReadException("${resourceName(key.source.toResourceId())} has no Var field at ${field.path.text}.")
+    /** The `Var` at [path] when [type] is a `Var` type: the type it holds, its formula's function type, and [stored] decoded. */
+    private fun varSite(
+        path: ValuePath,
+        type: TypeUse,
+        stored: DataValue?,
+    ): VarSite? {
+        val use = type.withoutNullable().named?.takeIf { it.definition == VarDefinition.id } ?: return null
+        val held = use.arguments.getOrNull(0) ?: return null
+        val expected = (use.arguments.getOrNull(1) as? TypeUse.FunctionWrapper)?.value ?: return null
+        return VarSite(path, held, expected, stored?.let { decode(type, it) as Var<*, *>? })
     }
+
+    /**
+     * The declared type of the value at [location], walking the resource's checked type field by field, into the item
+     * type of a list or set, and into the key or value type of a map row.
+     */
+    private fun typeAt(location: EntryLocation): TypeUse =
+        types.getOrPut(location) {
+            val root =
+                graph.stored[location.resource]?.schema ?: throw FormulaReadException("${location.resource.source.value} is not published.")
+            location.path.segments.fold(root.use) { type, segment ->
+                val checked = if (type == root.use) root else checkedOf(type)
+                checked?.typeBelow(type, segment)
+                    ?: throw FormulaReadException(
+                        "${resourceName(location.resource.source.toResourceId())} has no value at ${location.path.text}.",
+                    )
+            }
+        }
+
+    /**
+     * The type one [segment] below [type], whose checked form this is. An item of a map stays at the map's type, so the
+     * following key or value segment reads the map's key or value type.
+     */
+    private fun CheckedType.typeBelow(
+        type: TypeUse,
+        segment: PathSegment,
+    ): TypeUse? {
+        val representation = schema.representation
+        return when (segment) {
+            is PathSegment.FieldWrapper -> {
+                schema.fields.firstOrNull { it.key == segment.name }?.type
+            }
+
+            is PathSegment.ItemWrapper -> {
+                (representation as? ResolvedRepresentation.SequenceWrapper)?.value?.item
+                    ?: type.takeIf { representation is ResolvedRepresentation.MappingWrapper }
+            }
+
+            PathSegment.MAP_KEY -> {
+                (representation as? ResolvedRepresentation.MappingWrapper)?.value?.key
+            }
+
+            PathSegment.MAP_VALUE -> {
+                (representation as? ResolvedRepresentation.MappingWrapper)?.value?.value
+            }
+
+            else -> {
+                null
+            }
+        }
+    }
+
+    private fun checkedOf(type: TypeUse): CheckedType? = (catalog.resolve(type.withoutNullable()) as? Resolution.Ready)?.value
 
     /** The Var fields of [key]'s stored record, each with its lowered type and its value, null where none is stored. */
     private fun sitesOf(key: CompiledResourceKey): List<VarSite> =
@@ -195,7 +274,7 @@ class EngineEvaluationEnvironment(
                 val held = use.arguments.getOrNull(0) ?: return@mapNotNull null
                 val expected = (use.arguments.getOrNull(1) as? TypeUse.FunctionWrapper)?.value ?: return@mapNotNull null
                 val value = record.field(declared.key)?.let { data -> decode(declared.type, data) as Var<*, *>? }
-                VarSite(declared.key, held, expected, value)
+                VarSite(ValuePath.root.field(declared.key), held, expected, value)
             }
         }
 
@@ -252,7 +331,7 @@ class EngineEvaluationEnvironment(
 
     /**
      * The evaluation value [site] holds: a written value through its binding, a function body as a function value,
-     * and a pure formula evaluated now. A formula that reads context has no value outside a candidate.
+     * and a pure formula evaluated now. A formula that reads context has no value outside a scope.
      */
     private fun valueOf(
         key: CompiledResourceKey,
@@ -365,17 +444,22 @@ class EngineEvaluationEnvironment(
     private fun locationOf(
         key: CompiledResourceKey,
         site: VarSite,
-    ): ValueLocation = ValueLocation.of(key.source).field(site.field)
+    ): ValueLocation = ValueLocation.of(key.source).append(site.path)
 
     private fun dependency(resource: ResourceId) = FailedEvaluation(FormulaFailure.Dependency(resource.toSkir()))
 
+    private fun TypeUse.withoutNullable(): TypeUse = if (this is TypeUse.NullableWrapper) value.value.withoutNullable() else this
+
     /** One `Var` field of a published resource: the type it holds, the function type its formula is checked as, and its value. */
     private data class VarSite(
-        val field: String,
+        val path: ValuePath,
         val held: TypeUse,
         val expected: FunctionTypeUse,
         val value: Var<*, *>?,
-    )
+    ) {
+        /** The site's path as text: its name in messages and its key among the checked formulas. */
+        val field: String = path.text
+    }
 
     private companion object {
         const val PROTAGONIST = "protagonist"

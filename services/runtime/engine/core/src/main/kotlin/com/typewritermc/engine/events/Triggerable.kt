@@ -6,6 +6,7 @@ import com.typewritermc.events.Candidate
 import com.typewritermc.events.Context
 import com.typewritermc.events.Event
 import com.typewritermc.events.Triggered
+import com.typewritermc.events.TriggeredEvent
 import com.typewritermc.identity.Identity
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
@@ -18,11 +19,14 @@ interface Triggerable : SequenceEntry {
     val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>>
 }
 
-/** Fires this entry's links for its subject with its context: an event entry starts its chain this way. */
-suspend fun Candidate<Triggerable>.fire() = entry.triggers.fire(context, subject)
+/**
+ * Fires this entry's links, read through the entry reader, for its subject with its context: an event entry starts its
+ * chain this way.
+ */
+suspend fun Candidate<Triggerable>.fire() = triggers.fire(context, subject)
 
-/** Ends this step and fires the entry's links, carrying the chain's context on. */
-suspend fun Triggered<Triggerable>.complete() = entry.triggers.fire(context, subject)
+/** Ends this step and fires the entry's links, read through the entry reader, carrying the chain's context on. */
+suspend fun Triggered<Triggerable>.complete() = triggers.fire(context, subject)
 
 /**
  * Fires these links for [subject] with [context]; an entry that picks which of its links go on (a random gate) fires its
@@ -41,7 +45,7 @@ suspend fun Collection<Ref<SequenceTriggers.Entry, SequenceEntry>>.fire(
         .forEach { linked ->
             val repeat = repeats.getOrDefault(linked.id, 0)
             repeats[linked.id] = repeat + 1
-            chain.start(Triggered(linked.entry, subject, context), repeat)
+            chain.start(TriggeredEvent(linked.entry, subject, context), repeat)
         }
 }
 

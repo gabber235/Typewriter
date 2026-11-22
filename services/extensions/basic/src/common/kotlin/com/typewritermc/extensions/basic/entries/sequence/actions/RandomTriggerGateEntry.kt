@@ -37,8 +37,8 @@ class RandomTriggerGateEntry(
  * of them. The draw uses an unseeded random until the chain carries its seed record.
  */
 @Handler
-suspend fun Triggered<RandomTriggerGateEntry>.pickLinks(amount: Int) {
-    entry.triggers
+suspend fun Triggered<RandomTriggerGateEntry>.pickLinks() {
+    triggers
         .shuffled()
         .take(amount.coerceAtLeast(0))
         .fire(context, subject)

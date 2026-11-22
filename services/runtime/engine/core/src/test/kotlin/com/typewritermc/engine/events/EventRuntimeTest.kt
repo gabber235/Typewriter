@@ -4,23 +4,22 @@ import com.typewritermc.engine.events.testing.EventHarness
 import com.typewritermc.engine.events.testing.GuardEntry
 import com.typewritermc.engine.events.testing.Poke
 import com.typewritermc.engine.events.testing.Shove
-import com.typewritermc.engine.events.testing.StepEntry
-import com.typewritermc.engine.events.testing.TestFields
 import com.typewritermc.engine.events.testing.TestSource
 import com.typewritermc.engine.events.testing.after
+import com.typewritermc.engine.events.testing.cancel
+import com.typewritermc.engine.events.testing.pokeTriggers
 import com.typewritermc.engine.events.testing.protagonist
 import com.typewritermc.engine.events.testing.published
 import com.typewritermc.engine.events.testing.reason
+import com.typewritermc.engine.events.testing.sendsStepMessages
 import com.typewritermc.engine.events.testing.step
 import com.typewritermc.engine.events.testing.verdict
 import com.typewritermc.events.CancelableEvent
 import com.typewritermc.events.Candidate
 import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
-import com.typewritermc.events.Triggered
 import com.typewritermc.events.allow
 import com.typewritermc.events.deny
-import com.typewritermc.events.emit
 import com.typewritermc.events.pass
 import com.typewritermc.identity.Protagonist
 import de.infix.testBalloon.framework.core.testSuite
@@ -77,7 +76,7 @@ val EventRuntimeTest by testSuite {
                 pokes,
                 verdict(CancelableEvent::class, Param.Candidate(GuardEntry::class, ofEvent = true)) { _, values ->
                     val guard = values.single() as Candidate<GuardEntry<*>>
-                    if (guard.read(TestFields.cancel)) deny(reason(guard.entry.name)) else pass()
+                    if (guard.cancel) deny(reason(guard.entry.name)) else pass()
                 },
                 verdict(Poke::class) { _, _ -> allow() },
             )
@@ -122,13 +121,8 @@ val EventRuntimeTest by testSuite {
         val events =
             EventHarness(
                 pokes,
-                after(
-                    Poke::class,
-                ) { poke, _ -> repeat(2) { emit(Triggered(first.entry, poke.protagonist, com.typewritermc.events.Context.EMPTY)) } },
-                after(Triggered::class, Param.Field(TestFields.message), entry = StepEntry::class) { triggered, values ->
-                    sent += values.single() as String
-                    (triggered as Triggered<StepEntry>).complete()
-                },
+                pokeTriggers(first.entry, times = 2),
+                sendsStepMessages(sent),
             )
         events.publish(first, step("second"))
         pokes.fire(Poke())
@@ -143,11 +137,8 @@ val EventRuntimeTest by testSuite {
         val events =
             EventHarness(
                 pokes,
-                after(Poke::class) { poke, _ -> emit(Triggered(first.entry, poke.protagonist, com.typewritermc.events.Context.EMPTY)) },
-                after(Triggered::class, Param.Field(TestFields.message), entry = StepEntry::class) { triggered, values ->
-                    sent += values.single() as String
-                    (triggered as Triggered<StepEntry>).complete()
-                },
+                pokeTriggers(first.entry),
+                sendsStepMessages(sent),
             )
         events.publish(first, step("second"))
         pokes.fire(Poke(protagonist("alex")))

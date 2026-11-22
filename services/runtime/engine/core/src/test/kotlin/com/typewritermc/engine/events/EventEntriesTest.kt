@@ -9,7 +9,8 @@ import com.typewritermc.engine.events.testing.cancelableEntry
 import com.typewritermc.engine.events.testing.eventEntry
 import com.typewritermc.engine.events.testing.step
 import com.typewritermc.events.Outcome
-import com.typewritermc.events.Triggered
+import com.typewritermc.events.Param
+import com.typewritermc.events.TriggeredEvent
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -24,7 +25,7 @@ val EventEntriesTest by testSuite {
             EventHarness(
                 pokes,
                 Event_startHandler(),
-                after(Triggered::class, entry = StepEntry::class) { triggered, _ -> reached += triggered.entry.name },
+                after(TriggeredEvent::class, Param.Triggered(StepEntry::class)) { triggered, _ -> reached += triggered.entry.name },
             )
         events.publish(eventEntry<Poke>("on poke", next = listOf("reward"), condition = false), step("reward"))
         pokes.fire(Poke())
@@ -44,7 +45,7 @@ val EventEntriesTest by testSuite {
             EventHarness(
                 pokes,
                 CancelableEvent_ruleHandler(),
-                after(Triggered::class, entry = StepEntry::class) { triggered, _ -> reached += triggered.entry.name },
+                after(TriggeredEvent::class, Param.Triggered(StepEntry::class)) { triggered, _ -> reached += triggered.entry.name },
             )
         events.publish(cancelableEntry<Poke>("guard", next = listOf("warning"), cancel = true), step("warning"))
         pokes.fire(Poke()).shouldBeInstanceOf<Outcome.Denied<Poke>>()
@@ -63,7 +64,7 @@ val EventEntriesTest by testSuite {
             EventHarness(
                 pokes,
                 CancelableEvent_ruleHandler(),
-                after(Triggered::class, entry = StepEntry::class) { triggered, _ -> reached += triggered.entry.name },
+                after(TriggeredEvent::class, Param.Triggered(StepEntry::class)) { triggered, _ -> reached += triggered.entry.name },
             )
         events.publish(cancelableEntry<Poke>("guard", next = listOf("warning"), condition = false, cancel = true), step("warning"))
         pokes.fire(Poke()) shouldBe Outcome.Allowed(Poke())

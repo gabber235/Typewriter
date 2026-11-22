@@ -1,27 +1,24 @@
 package com.typewritermc.engine.events.testing
 
-import com.typewritermc.authoring.FieldPath
 import com.typewritermc.authoring.GraphPlacement
-import com.typewritermc.authoring.text
 import com.typewritermc.elements.Entry
 import com.typewritermc.engine.events.CancelableEventEntry
-import com.typewritermc.engine.events.CancelableEventEntryFields
 import com.typewritermc.engine.events.ChainPickup
 import com.typewritermc.engine.events.ChainQueue
 import com.typewritermc.engine.events.EventEntry
-import com.typewritermc.engine.events.EventEntryFields
 import com.typewritermc.engine.events.EventParts
 import com.typewritermc.engine.events.EventRuntime
 import com.typewritermc.engine.events.HandlerCosts
 import com.typewritermc.engine.events.PublishedEntries
 import com.typewritermc.engine.events.PublishedEntry
 import com.typewritermc.engine.events.SubjectWork
+import com.typewritermc.engine.events.complete
 import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.engine.pages.SequenceTriggers
 import com.typewritermc.events.AfterHandler
 import com.typewritermc.events.CancelableEvent
-import com.typewritermc.events.Candidate
 import com.typewritermc.events.ConfiguredSource
+import com.typewritermc.events.Context
 import com.typewritermc.events.Demand
 import com.typewritermc.events.EnginePart
 import com.typewritermc.events.EnginePartDependencies
@@ -36,9 +33,11 @@ import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
 import com.typewritermc.events.Sink
 import com.typewritermc.events.Source
-import com.typewritermc.events.VarReader
+import com.typewritermc.events.Triggered
+import com.typewritermc.events.TriggeredEvent
 import com.typewritermc.events.Verdict
 import com.typewritermc.events.VerdictHandler
+import com.typewritermc.events.emit
 import com.typewritermc.formula.Var
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
@@ -79,7 +78,7 @@ class EventHarness(
         runtime.publish(PublishedEntries.EMPTY)
     }
 
-    fun publish(vararg entries: PublishedEntry<*>) = runtime.publish(PublishedEntries(entries.toList(), WrittenTestFields))
+    fun publish(vararg entries: PublishedEntry<*>) = runtime.publish(written(*entries))
 
     /** Publishes [entries] as an engine publishes a compiled publication, with the reader it came with. */
     fun publish(entries: PublishedEntries) = runtime.publish(entries)
@@ -94,28 +93,6 @@ class EventHarness(
 /** The harness's pickup: queued chains wait for the test's [EventHarness.tick]. */
 private object TickedPickup : ChainPickup {
     override fun queued() = Unit
-}
-
-/** Reads the fields of the test entries and the core event entries as written; the harness evaluates no formulas. */
-private object WrittenTestFields : VarReader {
-    override fun read(
-        field: FieldPath,
-        candidate: Candidate<*>,
-    ): Any? {
-        val held =
-            when (field) {
-                TestFields.cancel -> (candidate.entry as GuardEntry<*>).cancel
-                TestFields.message -> (candidate.entry as StepEntry).message
-                EventEntryFields.condition -> (candidate.entry as EventEntry<*>).condition
-                CancelableEventEntryFields.condition -> (candidate.entry as CancelableEventEntry<*>).condition
-                CancelableEventEntryFields.cancel -> (candidate.entry as CancelableEventEntry<*>).cancel
-                else -> error("${field.path.text} is no test entry field.")
-            }
-        return when (held) {
-            is Var.Value -> held.value
-            is Var.Computed -> error("${candidate.entry.name} holds a formula, which the event harness does not evaluate.")
-        }
-    }
 }
 
 /** [entry] as published on a page of [priority], about [about], in a book that applies where [appliesTo] holds. */
@@ -133,19 +110,17 @@ fun step(
 ): PublishedEntry<StepEntry> = published(StepEntry(name, next))
 
 /**
- * A verdict handler on [event] with [params]; for a `Triggered` handler, [entry] is the entry class it runs for, and for
- * a configured event, [config] is the configuration type of its receiver.
+ * A verdict handler on [event] with [params]; a handler on a triggered step takes `TriggeredEvent` and asks for the step
+ * with a first `Param.Triggered`, and for a configured event, [config] is the configuration type of its receiver.
  */
 fun <E : Event> verdict(
     event: KClass<E>,
     vararg params: Param,
-    entry: KClass<out Entry>? = null,
     config: HandlerConfig? = null,
     run: (E, List<Any?>) -> Verdict,
 ): VerdictHandler<E> =
     object : VerdictHandler<E> {
         override val event = event
-        override val entry = entry
         override val params = params.toList()
         override val config = config
 
@@ -156,19 +131,17 @@ fun <E : Event> verdict(
     }
 
 /**
- * An after handler on [event] with [params]; for a `Triggered` handler, [entry] is the entry class it runs for, and for
- * a configured event, [config] is the configuration type of its receiver.
+ * An after handler on [event] with [params]; a handler on a triggered step takes `TriggeredEvent` and asks for the step
+ * with a first `Param.Triggered`, and for a configured event, [config] is the configuration type of its receiver.
  */
 fun <E : Event> after(
     event: KClass<E>,
     vararg params: Param,
-    entry: KClass<out Entry>? = null,
     config: HandlerConfig? = null,
     run: suspend (E, List<Any?>) -> Unit,
 ): AfterHandler<E> =
     object : AfterHandler<E> {
         override val event = event
-        override val entry = entry
         override val params = params.toList()
         override val config = config
 
@@ -176,6 +149,24 @@ fun <E : Event> after(
             event: E,
             values: List<Any?>,
         ) = run(event, values)
+    }
+
+/** An after handler on [Poke] that fires [entry] for the poking protagonist [times] times, each start with no context. */
+fun pokeTriggers(
+    entry: Entry,
+    times: Int = 1,
+): AfterHandler<Poke> = after(Poke::class) { poke, _ -> repeat(times) { emit(TriggeredEvent(entry, poke.protagonist, Context.EMPTY)) } }
+
+/**
+ * An after handler on each triggered test step, as an action entry's handler runs: it keeps the step's message in
+ * [sent], read through the step's accessor, and continues the chain.
+ */
+fun sendsStepMessages(sent: MutableList<String>): AfterHandler<TriggeredEvent<*>> =
+    after(TriggeredEvent::class, Param.Triggered(StepEntry::class)) { _, values ->
+        @Suppress("UNCHECKED_CAST")
+        val step = values.single() as Triggered<StepEntry>
+        sent += step.message
+        step.complete()
     }
 
 /** A source the test fires by hand; [fire] returns the applied outcome, or null while the runtime keeps it closed. */

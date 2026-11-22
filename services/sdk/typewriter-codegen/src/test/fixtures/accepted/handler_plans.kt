@@ -2,7 +2,6 @@
 
 package fixture
 
-import com.typewritermc.authoring.FieldPath
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -15,6 +14,8 @@ import com.typewritermc.events.CancelableEvent
 import com.typewritermc.events.Candidate
 import com.typewritermc.events.ConfiguredEvent
 import com.typewritermc.events.Context
+import com.typewritermc.events.EntryReader
+import com.typewritermc.events.EntryScope
 import com.typewritermc.events.EnginePartDependencies
 import com.typewritermc.events.Event
 import com.typewritermc.events.Handler
@@ -23,7 +24,7 @@ import com.typewritermc.events.Origin
 import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
 import com.typewritermc.events.Triggered
-import com.typewritermc.events.VarReader
+import com.typewritermc.events.TriggeredEvent
 import com.typewritermc.events.Verdict
 import com.typewritermc.events.VerdictHandler
 import com.typewritermc.events.deny
@@ -43,7 +44,10 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.canonicalText
 import com.typewritermc.types.declared
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValuePath
 import java.nio.file.Path
 import kotlin.io.path.readBytes
 import kotlin.coroutines.Continuation
@@ -76,7 +80,22 @@ data class VaultEntry(
     override val name: String = "",
     override val placement: GraphPlacement = GraphPlacement(),
     val greeting: Var<String, DefinitionScope>,
+    val spoken: Spoken = Spoken(Var.Value(1)),
+    val choices: List<Choice> = emptyList(),
+    val prices: Map<String, Choice> = emptyMap(),
 ) : Entry
+
+// Records inside an entry: accessors reach their fields at any depth, through lists and maps too.
+@TypewriterType(id = "a0000000000000000000000000000934")
+data class Spoken(
+    val minLines: Var<Int, DefinitionScope>,
+    val voice: String = "calm",
+)
+
+@TypewriterType(id = "a0000000000000000000000000000935")
+data class Choice(
+    val text: Var<String, DefinitionScope>,
+)
 
 object EveryTick
 
@@ -94,13 +113,14 @@ fun <E : CancelableEvent> E.rule(guard: Candidate<GuardEntry<E>>): Verdict = if 
 
 @Handler
 fun Triggered<VaultEntry>.greet(
-    greeting: String,
     shouts: Shouts,
     protagonist: Protagonist,
     origin: Origin?,
-    outcome: Outcome<Triggered<VaultEntry>>,
+    outcome: Outcome<TriggeredEvent<VaultEntry>>,
 ) {
-    shouts.shout("$greeting ${protagonist.principal.id}")
+    val lines = List(spoken.minLines) { greeting }
+    val options = choices.indices.joinToString("/") { choices[it].text }
+    shouts.shout("${lines.joinToString(" ")} ${protagonist.principal.id} ${spoken.voice} $options ${prices.getValue("gold").text}")
 }
 
 @Handler
@@ -118,21 +138,60 @@ suspend fun Tick<VaultEntry>.ring(vault: Candidate<VaultEntry>) {
 private val page = Ref<PageElements.Element, Page>(ResourceId("page"))
 private val steve = Protagonist(PrincipalId(PrincipalId.MINECRAFT, "steve"))
 
-/** Reads a candidate's fields at their generated paths as their written values. */
+/**
+ * Reads an entry as written, following each path through its Kotlin properties: a list item's id is its index, a map
+ * row's id is its key. A `Var` reads as its written value.
+ */
 private val written =
-    object : VarReader {
+    object : EntryReader {
         override fun read(
-            field: FieldPath,
-            candidate: Candidate<*>,
-        ): Any? {
-            val held =
-                when (field) {
-                    GuardEntryFields.cancel -> (candidate.entry as GuardEntry<*>).cancel
-                    VaultEntryFields.greeting -> (candidate.entry as VaultEntry).greeting
-                    else -> error("${field.path} is no fixture field")
+            scope: EntryScope<*>,
+            path: ValuePath,
+        ): Any? =
+            when (val held = valueAt(scope.entry, path)) {
+                is Var.Value<*, *> -> held.value
+                else -> held
+            }
+
+        override fun has(
+            scope: EntryScope<*>,
+            path: ValuePath,
+        ): Boolean = valueAt(scope.entry, path) != null
+
+        override fun items(
+            scope: EntryScope<*>,
+            path: ValuePath,
+        ): List<ItemId> =
+            when (val held = valueAt(scope.entry, path)) {
+                is List<*> -> held.indices.map { ItemId(value = "$it") }
+                is Map<*, *> -> held.keys.map { ItemId(value = "$it") }
+                else -> error("$path holds no items")
+            }
+
+        private fun valueAt(
+            root: Any?,
+            path: ValuePath,
+        ): Any? =
+            path.segments.fold(root to null as Map.Entry<*, *>?) { (value, row), segment ->
+                when (segment) {
+                    is PathSegment.FieldWrapper -> {
+                        val name = segment.value.name
+                        value!!.javaClass.getMethod("get${name.replaceFirstChar(Char::uppercaseChar)}").invoke(value) to null
+                    }
+
+                    is PathSegment.ItemWrapper -> {
+                        when (value) {
+                            is List<*> -> value[segment.value.id.value.toInt()] to null
+                            is Map<*, *> -> value.entries.single { "${it.key}" == segment.value.id.value }.let { it to it }
+                            else -> error("$path is no collection")
+                        }
+                    }
+
+                    PathSegment.MAP_KEY -> row!!.key to null
+                    PathSegment.MAP_VALUE -> row!!.value to null
+                    else -> error("$path has an unknown segment")
                 }
-            return (held as Var.Value<*, *>).value
-        }
+            }.first
     }
 
 private fun <E : Entry> candidate(entry: E) = Candidate(entry, priority = 0, subject = steve, context = Context.EMPTY, reader = written)
@@ -176,24 +235,34 @@ fun main(args: Array<String>) {
         check(rule.run(smashed, listOf(cancelling)) is Verdict.Deny) { "a cancelling guard denies" }
         check(rule.run(smashed, listOf(allowing)) is Verdict.Pass) { "an allowing guard passes" }
 
-        // An after handler on a triggered entry reads the entry's field, the live trait and the identity.
+        // An after handler on a triggered step is called on the step the runtime built, and reads the entry's fields
+        // through accessors at any depth, through lists and maps too.
         @Suppress("UNCHECKED_CAST")
-        val greet = parts.getValue("Triggered_greetHandler").create(noDependencies) as AfterHandler<Triggered<VaultEntry>>
-        check(greet.event == Triggered::class) { greet.event.toString() }
+        val greet = parts.getValue("Triggered_greetHandler").create(noDependencies) as AfterHandler<TriggeredEvent<VaultEntry>>
+        check(greet.event == TriggeredEvent::class) { greet.event.toString() }
         check(greet.entry == VaultEntry::class) { greet.entry.toString() }
         check(
             greet.params ==
                 listOf(
-                    Param.Field(VaultEntryFields.greeting),
+                    Param.Triggered(VaultEntry::class),
                     Param.Trait(Shouts::class),
                     Param.Identity(Protagonist::class),
                     Param.Origin(optional = true),
                     Param.Outcome,
                 ),
         ) { greet.params.toString() }
-        val vault = VaultEntry(page, greeting = Var.Value("welcome"))
+        val vault =
+            VaultEntry(
+                page,
+                greeting = Var.Value("welcome"),
+                spoken = Spoken(Var.Value(2), voice = "warm"),
+                choices = listOf(Choice(Var.Value("stay")), Choice(Var.Value("leave"))),
+                prices = mapOf("gold" to Choice(Var.Value("ten"))),
+            )
         check(candidate(vault).greeting == "welcome") { "a candidate reads its entry's field" }
-        val triggered = Triggered(vault, steve, Context.EMPTY)
+        check(candidate(vault).spoken.minLines == 2) { "a candidate reads a field of a nested record" }
+        val event = TriggeredEvent(vault, steve, Context.EMPTY)
+        val triggered = Triggered(event, written)
         val shouted = mutableListOf<String>()
         val shouts =
             object : Shouts {
@@ -201,8 +270,8 @@ fun main(args: Array<String>) {
                     shouted += text
                 }
             }
-        runSuspending { greet.run(triggered, listOf("welcome", shouts, steve, null, Outcome.Allowed(triggered))) }
-        check(shouted == listOf("welcome steve")) { shouted.toString() }
+        runSuspending { greet.run(event, listOf(triggered, shouts, steve, null, Outcome.Allowed(event))) }
+        check(shouted == listOf("welcome welcome steve warm stay/leave ten")) { shouted.toString() }
 
         // A configured event hands its configuration to the handler.
         val animate = parts.getValue("Tick_animateHandler").create(noDependencies) as AfterHandler<*>

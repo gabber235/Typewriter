@@ -85,6 +85,7 @@ import com.typewritermc.types.codegen.emit.FieldsEmitter
 import com.typewritermc.types.codegen.emit.NativeBindingEmitter
 import com.typewritermc.types.codegen.emit.OperationEmitter
 import com.typewritermc.types.codegen.emit.PresentationEmitter
+import com.typewritermc.types.codegen.emit.ScopeEmitter
 import com.typewritermc.types.codegen.emit.SdkEndpoint
 import com.typewritermc.types.codegen.emit.SdkRelation
 import com.typewritermc.types.codegen.emit.SetupEmitter
@@ -132,6 +133,7 @@ class TypewriterTypeProcessorProvider : SymbolProcessorProvider {
 internal val SDK_EMITTERS: List<SdkEmitter> =
     listOf(
         FieldsEmitter,
+        ScopeEmitter,
         BindEmitter,
         ExpressionsEmitter,
         ConfigurationEmitter,
@@ -432,12 +434,26 @@ private class TypewriterTypeProcessor(
                     cases = conversion.casesWithoutDeclaration(typeDefinition),
                 )
             }
+        if (model.record && !model.accessorsReachable()) return
         val file = GeneratedFile.builder(model.names.definition.packageName, model.names.file)
         SDK_EMITTERS.forEach { emitter -> with(emitter) { file.emit(model) } }
         if (!output.write(file.build(), declaration)) return
-        eventTypes.accessors(model)
         output.index(model.names.definition, GeneratedProviderKind.Type)
         if (model.hasNativeBinding) output.index(model.names.nativeBindingFactory, GeneratedProviderKind.NativeBinding)
+    }
+
+    /** Reports every field whose accessor a member of the record scope would hide; true when there is none. */
+    private fun SdkDeclaration.accessorsReachable(): Boolean {
+        val hidden = fields.filter { it.property in ScopeEmitter.SCOPE_MEMBERS }
+        val properties = source.getAllProperties().associateBy { it.simpleName.asString() }
+        hidden.forEach { field ->
+            logger.error(
+                "A record field cannot be named `${field.property}`: the record scope's own `${field.property}` hides its " +
+                    "accessor; rename the field.",
+                properties[field.property] ?: source,
+            )
+        }
+        return hidden.isEmpty()
     }
 
     /** The case definitions of [owner] that no Kotlin declaration emits, such as the unit cases of an enum. */

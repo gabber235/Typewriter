@@ -28,12 +28,17 @@ import com.typewritermc.engine.pages.Definition
 import com.typewritermc.engine.pages.DefinitionDefinition
 import com.typewritermc.engine.pages.SequencePage
 import com.typewritermc.engine.pages.SequencePageDefinition
+import com.typewritermc.engine.reading.PublishedEntryReader
+import com.typewritermc.engine.reading.StoredValues
 import com.typewritermc.engine.runtime.CompiledResourceGraph
 import com.typewritermc.events.Candidate
 import com.typewritermc.events.Context
+import com.typewritermc.events.EntryReader
 import com.typewritermc.events.Event
 import com.typewritermc.events.EventContext
 import com.typewritermc.events.EventDefinition
+import com.typewritermc.events.Triggered
+import com.typewritermc.events.TriggeredEvent
 import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.DefinitionScope
 import com.typewritermc.formula.Formula
@@ -262,22 +267,42 @@ class FormulaPublication(
     fun environment(formulas: EngineFormulas = fixtureFormulas): EngineEvaluationEnvironment =
         EngineEvaluationEnvironment(graph, fixtureAssembly.checked, fixtureAssembly.bindings, formulas)
 
-    /** The entries of this publication as the engine [engine] gives them to handlers, reading their fields through [environment]. */
+    /**
+     * The entries of this publication as the engine [engine] gives them to handlers, reading their fields through
+     * [environment] from [values], its published values unless a test answers at the seam in their place.
+     */
     fun entries(
         environment: EngineEvaluationEnvironment = environment(),
         engine: Engine = Engine(EngineId("engine")),
-    ): PublishedEntries = publishedEntries(graph, environment, engine)
+        values: StoredValues = environment.published,
+    ): PublishedEntries = publishedEntries(graph, environment, engine, values)
 
-    /** The published entry [id], as a candidate for [subject] in [context], reading through [environment]. */
+    /**
+     * The published entry [id], as a candidate for [subject] in [context], read by [reader]: the entry reader of
+     * [environment] over its published values unless a test gives its own.
+     */
     fun <E : Entry> candidate(
         id: String,
         context: Context,
         environment: EngineEvaluationEnvironment = environment(),
         subject: Protagonist = protagonist(),
+        reader: EntryReader = PublishedEntryReader(environment),
     ): Candidate<E> {
         val published = checkNotNull(entries(environment).entry(ResourceId(id))) { "$id is not a published entry." }
         @Suppress("UNCHECKED_CAST")
-        return Candidate(published.entry as E, published.priority, subject, context, environment)
+        return Candidate(published.entry as E, published.priority, subject, context, reader)
+    }
+
+    /** The published entry [id], as the step a chain fired into for [subject] in [context], read through [environment]. */
+    fun <E : Entry> triggered(
+        id: String,
+        context: Context,
+        environment: EngineEvaluationEnvironment = environment(),
+        subject: Protagonist = protagonist(),
+    ): Triggered<E> {
+        val published = checkNotNull(entries(environment).entry(ResourceId(id))) { "$id is not a published entry." }
+        @Suppress("UNCHECKED_CAST")
+        return Triggered(TriggeredEvent(published.entry as E, subject, context), PublishedEntryReader(environment))
     }
 }
 
@@ -324,7 +349,7 @@ private fun PublishedResource.compiled(): CompiledResource {
     )
 }
 
-/** The core artifact and engine core as a deployment loads them, plus the fixture event and entry. */
+/** The core artifact and engine core as a deployment loads them, plus the fixture event, entries and records. */
 private val fixtureAssembly: CatalogAssembly by lazy {
     val deployment =
         GeneratedProviderLoader().load(
@@ -350,10 +375,21 @@ private val fixtureAssembly: CatalogAssembly by lazy {
             declarations =
                 loaded.declarations +
                     OwnedTypeDeclaration(origin, SaidDefinition.definition, nativeClass = Said::class, name = "Said") +
-                    OwnedTypeDeclaration(origin, TallyEntryDefinition.definition, nativeClass = TallyEntry::class, name = "TallyEntry"),
+                    OwnedTypeDeclaration(origin, TallyEntryDefinition.definition, nativeClass = TallyEntry::class, name = "TallyEntry") +
+                    OwnedTypeDeclaration(origin, SpokenDefinition.definition, nativeClass = Spoken::class, name = "Spoken") +
+                    OwnedTypeDeclaration(origin, ChoiceDefinition.definition, nativeClass = Choice::class, name = "Choice") +
+                    OwnedTypeDeclaration(
+                        origin,
+                        DialogueEntryDefinition.definition,
+                        nativeClass = DialogueEntry::class,
+                        name = "DialogueEntry",
+                    ),
             nativeBindings =
                 loaded.nativeBindings + OwnedNativeBinding(origin, SaidNativeBindingFactory) +
-                    OwnedNativeBinding(origin, TallyEntryNativeBindingFactory),
+                    OwnedNativeBinding(origin, TallyEntryNativeBindingFactory) +
+                    OwnedNativeBinding(origin, SpokenNativeBindingFactory) +
+                    OwnedNativeBinding(origin, ChoiceNativeBindingFactory) +
+                    OwnedNativeBinding(origin, DialogueEntryNativeBindingFactory),
         ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "engine formula test")))
 }
 

@@ -1,13 +1,14 @@
 package com.typewritermc.engine.events
 
-import com.typewritermc.authoring.FieldPath
 import com.typewritermc.elements.Entry
 import com.typewritermc.engine.formula.EngineEvaluationEnvironment
 import com.typewritermc.engine.formula.FormulaReadException
+import com.typewritermc.engine.reading.PublishedEntryReader
+import com.typewritermc.engine.reading.StoredValues
 import com.typewritermc.engine.runtime.CompiledResourceGraph
-import com.typewritermc.events.Candidate
+import com.typewritermc.events.EntryReader
+import com.typewritermc.events.EntryScope
 import com.typewritermc.events.Event
-import com.typewritermc.events.VarReader
 import com.typewritermc.formula.Var
 import com.typewritermc.identity.Engine
 import com.typewritermc.identity.Identity
@@ -17,6 +18,8 @@ import com.typewritermc.library.BookFields
 import com.typewritermc.library.Page
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.toResourceId
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -37,10 +40,10 @@ class PublishedEntry<out E : Entry>(
     fun appliesTo(subject: Identity?): Boolean = subject !is Protagonist || condition(subject)
 }
 
-/** The entries of one publication, with the reader that evaluates their `Var` fields. */
+/** The entries of one publication, with the entry reader every scope of them reads through. */
 class PublishedEntries(
     entries: List<PublishedEntry<*>>,
-    val reader: VarReader,
+    val reader: EntryReader,
 ) {
     private val byId = entries.associateBy { it.id }
     private val all = entries
@@ -60,23 +63,35 @@ class PublishedEntries(
     }
 }
 
-/** The reader before the first publication, which has no entries whose fields it could read. */
-private object Unpublished : VarReader {
+/** The entry reader before the first publication, which has no entries it could read. */
+private object Unpublished : EntryReader {
     override fun read(
-        field: FieldPath,
-        candidate: Candidate<*>,
-    ): Any? = error("${candidate.entry.name} is read before any publication.")
+        scope: EntryScope<*>,
+        path: ValuePath,
+    ): Any? = error("${scope.entry.name} is read before any publication.")
+
+    override fun has(
+        scope: EntryScope<*>,
+        path: ValuePath,
+    ): Boolean = error("${scope.entry.name} is read before any publication.")
+
+    override fun items(
+        scope: EntryScope<*>,
+        path: ValuePath,
+    ): List<ItemId> = error("${scope.entry.name} is read before any publication.")
 }
 
 /**
  * The entries of [graph] as handlers see them on [engine]: each with its page's priority, the event its type argument
- * names, and its book's condition, read through [environment].
+ * names, and its book's condition, read through [environment], the publication its entry reader evaluates values in,
+ * from [values], the values stored at the entry reader's seam.
  */
 @Suppress("UNCHECKED_CAST")
 fun publishedEntries(
     graph: CompiledResourceGraph,
     environment: EngineEvaluationEnvironment,
     engine: Engine,
+    values: StoredValues = environment.published,
 ): PublishedEntries {
     val conditions = hashMapOf<ResourceId?, (Protagonist) -> Boolean>()
     return PublishedEntries(
@@ -88,7 +103,7 @@ fun publishedEntries(
             val condition = conditions.getOrPut(book) { bookCondition(graph, book, environment, engine) }
             PublishedEntry(key.source.toResourceId(), entry, page?.priority ?: 0, about as KClass<out Event>?, condition)
         },
-        environment,
+        PublishedEntryReader(environment, values),
     )
 }
 

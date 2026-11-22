@@ -11,8 +11,9 @@ import com.typewritermc.authoring.root
 import com.typewritermc.authoring.typedPath
 import com.typewritermc.elements.Entry
 import com.typewritermc.engine.pages.SequencePage
-import com.typewritermc.events.Candidate
 import com.typewritermc.events.EventContext
+import com.typewritermc.events.RecordScope
+import com.typewritermc.events.readField
 import com.typewritermc.formula.Var
 import com.typewritermc.formula.VarDefinition
 import com.typewritermc.identity.ProtagonistDefinition
@@ -104,9 +105,10 @@ object TallyEntryFields {
         typedPath(TallyEntryDefinition.id, ValuePath.root.field("total"), formulaOf(long))
 }
 
-val Candidate<TallyEntry>.count: Int get() = read(TallyEntryFields.count)
+/** The accessors of [TallyEntry]'s fields, as codegen emits them. */
+val RecordScope<TallyEntry>.count: Int get() = readField(TallyEntryFields.count)
 
-val Candidate<TallyEntry>.total: Long get() = read(TallyEntryFields.total)
+val RecordScope<TallyEntry>.total: Long get() = readField(TallyEntryFields.total)
 
 /** A [TallyEntry] named [id] holding [count] and [total]. */
 fun tallyEntry(
@@ -116,7 +118,7 @@ fun tallyEntry(
 ): PublishedResource = PublishedResource(id, TallyEntryDefinition.id.use(), TallyEntry(id, count, total))
 
 /** `Var<T, (event: Said, protagonist: Protagonist) -> T>`, the catalog type of a formula field about [Said]. */
-private fun formulaOf(result: TypeUse): TypeUse =
+internal fun formulaOf(result: TypeUse): TypeUse =
     VarDefinition.id.use(
         listOf(
             result,

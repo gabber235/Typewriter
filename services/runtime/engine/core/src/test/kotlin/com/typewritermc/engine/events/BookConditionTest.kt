@@ -14,7 +14,7 @@ import com.typewritermc.engine.formula.testing.saidEntry
 import com.typewritermc.engine.formula.testing.sequencePage
 import com.typewritermc.events.Candidate
 import com.typewritermc.events.Param
-import com.typewritermc.events.Triggered
+import com.typewritermc.events.TriggeredEvent
 import com.typewritermc.events.pass
 import com.typewritermc.formula.Var
 import com.typewritermc.identity.Engine
@@ -62,7 +62,10 @@ val BookConditionTest by testSuite {
             EventHarness(
                 said,
                 Event_startHandler(),
-                after(Triggered::class, entry = EventEntry::class) { triggered, _ -> reached += triggered.entry.name to triggered.subject },
+                after(TriggeredEvent::class, Param.Triggered(EventEntry::class)) { triggered, _ ->
+                    reached +=
+                        triggered.entry.name to triggered.subject
+                },
             )
         events.publish(
             FormulaPublication(

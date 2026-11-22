@@ -37,10 +37,7 @@ class SimpleMessageActionEntry(
 
 /** Sends the entry's message to the protagonist the chain runs for, then continues the chain. */
 @Handler
-suspend fun Triggered<SimpleMessageActionEntry>.send(
-    chat: HasChat,
-    message: String,
-) {
+suspend fun Triggered<SimpleMessageActionEntry>.send(chat: HasChat) {
     chat.send(message)
     complete()
 }

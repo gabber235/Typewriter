@@ -31,10 +31,12 @@ data class ProtagonistLeft(
 ) : Event
 
 /**
- * A link fired into [entry] for [subject], carrying the chain's [context]. Actions and steps react to it; nothing
- * follows links on its own. It is queued like any emitted event and stays on the engine that fired it.
+ * A link fired into [entry] for [subject], carrying the chain's [context]. Actions and steps react to it through a
+ * handler on [Triggered], which the engine builds from it with its entry reader; nothing follows links on its own. It is
+ * queued like any emitted event and stays on the engine that fired it; two equal starts in one tick merge into one
+ * chain.
  */
-data class Triggered<out E : Entry>(
+data class TriggeredEvent<out E : Entry>(
     val entry: E,
     val subject: Identity,
     val context: Context,

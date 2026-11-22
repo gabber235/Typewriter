@@ -7,6 +7,7 @@ import com.typewritermc.engine.pages.SequencePage
 import com.typewritermc.engine.pages.SequenceTriggers
 import com.typewritermc.events.Handler
 import com.typewritermc.events.InteractionContext
+import com.typewritermc.events.RecordScope
 import com.typewritermc.events.Triggered
 import com.typewritermc.formula.Var
 import com.typewritermc.library.PageElements
@@ -47,15 +48,15 @@ data class WeightedLink(
  * all zero fires nothing. The draw uses an unseeded random until the chain carries its seed record.
  */
 @Handler
-suspend fun Triggered<WeightedRandomTriggerGateEntry>.pickWeighted(amount: Int) {
-    val drawable = entry.links.filter { it.weight > 0 }
+suspend fun Triggered<WeightedRandomTriggerGateEntry>.pickWeighted() {
+    val drawable = links.filter { it.weight > 0 }
     if (drawable.isEmpty()) return
     val total = drawable.sumOf { it.weight.toLong() }
     List(amount.coerceAtLeast(0)) { drawable.drawn(Random.nextLong(total)) }.fire(context, subject)
 }
 
 /** The link whose share of the cumulative weights holds [roll], a number from zero up to the total weight. */
-private fun List<WeightedLink>.drawn(roll: Long): Ref<SequenceTriggers.Entry, SequenceEntry> {
+private fun List<RecordScope<WeightedLink>>.drawn(roll: Long): Ref<SequenceTriggers.Entry, SequenceEntry> {
     var remaining = roll
     return first { link -> (remaining < link.weight).also { remaining -= link.weight } }.link
 }

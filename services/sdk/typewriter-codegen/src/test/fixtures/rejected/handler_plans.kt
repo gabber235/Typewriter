@@ -1,22 +1,32 @@
 package fixture
 
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.elements.Entry
+import com.typewritermc.events.Candidate
 import com.typewritermc.events.ConfiguredEvent
 import com.typewritermc.events.Event
 import com.typewritermc.events.Handler
+import com.typewritermc.events.Triggered
 import com.typewritermc.events.Verdict
 import com.typewritermc.events.pass
+import com.typewritermc.formula.DefinitionScope
+import com.typewritermc.formula.Var
+import com.typewritermc.library.Page
+import com.typewritermc.library.PageElements
+import com.typewritermc.types.Ref
+import com.typewritermc.types.TypewriterType
 
 class Poked : Event
 
 @Handler suspend fun Poked.slowly(): Verdict = pass() // error: A verdict handler decides inline and never suspends.
 
-@Handler fun String.notAnEvent() {} // error: A handler's receiver must be an event.
+@Handler fun String.notAnEvent() {} // error: A handler's receiver must be an event or a Triggered step.
 
 @Handler fun Poked.answer(): Int = 1 // error: A handler returns a Verdict to decide or Unit to run after the outcome.
 
 @Handler
 fun Poked.count(
-    times: Int, // error: A handler parameter must be a Candidate, Origin, Outcome, identity, configuration, triggered entry field or trait interface.
+    times: Int, // error: A handler parameter must be a Candidate, Origin, Outcome, identity, configuration or trait interface.
 ) {
 }
 
@@ -29,3 +39,31 @@ class Loose
 @Handler fun Ticked<Loose>.loose() {} // error: A configured event's configuration must be a Kotlin object or an entry type.
 
 @Handler fun <C : Any> Ticked<C>.anyConfig() {} // error: A configured event's configuration must be a Kotlin object or an entry type.
+
+@TypewriterType(id = "a0000000000000000000000000000951")
+class NoteEntry(
+    override val page: Ref<PageElements.Element, Page>,
+    override val name: String,
+    override val placement: GraphPlacement,
+    val message: Var<String, DefinitionScope>,
+) : Entry
+
+@Handler
+fun Triggered<NoteEntry>.note(
+    message: String, // error: A handler reads entry values through accessors: read `message` in the body instead of a parameter.
+) {
+}
+
+@Handler
+fun Poked.check(
+    note: Candidate<NoteEntry>,
+    message: String, // error: A handler reads entry values through accessors: read `note.message` in the body instead of a parameter.
+) {
+}
+
+@TypewriterType(id = "a0000000000000000000000000000952")
+class Reply(
+    val text: String,
+    val context: String, // error: A record field cannot be named `context`: the record scope's own `context` hides its accessor; rename the field.
+    val reader: Int, // error: A record field cannot be named `reader`: the record scope's own `reader` hides its accessor; rename the field.
+)
