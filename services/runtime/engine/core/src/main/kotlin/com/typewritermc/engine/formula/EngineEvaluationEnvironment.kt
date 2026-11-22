@@ -110,6 +110,7 @@ class EngineEvaluationEnvironment(
     val published: PublishedValues = PublishedValues(graph)
 
     private val types = ConcurrentHashMap<EntryLocation, TypeUse>()
+    private val decoded = ConcurrentHashMap<EntryLocation, Decoded>()
 
     /** Where [entry] stores the value at [path]. Throws [FormulaReadException] for an entry of another publication. */
     fun locationOf(
@@ -132,7 +133,7 @@ class EngineEvaluationEnvironment(
         scope: EntryScope<*>,
     ): Any? {
         val type = typeAt(location)
-        val site = varSite(location.path, type, stored) ?: return stored?.let { decode(type, it) }
+        val site = varSite(location, type, stored) ?: return stored?.let { decodeAt(location, type, it) }
         if (site.value !is Var.Computed) return read(location.resource, site, emptyMap())
         val context = site.expected.context.associate { parameter -> parameter.name to contextValue(parameter, scope) }
         return read(location.resource, site, context)
@@ -151,7 +152,7 @@ class EngineEvaluationEnvironment(
         val key = keys[resource] ?: throw FormulaReadException("${resource.value} is not part of this publication.")
         val location = EntryLocation(key, field.path)
         val site =
-            varSite(field.path, typeAt(location), published.loaded(location))
+            varSite(location, typeAt(location), published.loaded(location))
                 ?: throw FormulaReadException("${resourceName(resource)} has no Var field at ${field.path.text}.")
         return read(key, site, context)
     }
@@ -200,16 +201,33 @@ class EngineEvaluationEnvironment(
         return scope.context.all.firstOrNull(type::isInstance) ?: throw missing()
     }
 
-    /** The `Var` at [path] when [type] is a `Var` type: the type it holds, its formula's function type, and [stored] decoded. */
+    /**
+     * The `Var` at [location] when [type] is a `Var` type: the type it holds, its formula's function type, and [stored]
+     * decoded.
+     */
     private fun varSite(
-        path: ValuePath,
+        location: EntryLocation,
         type: TypeUse,
         stored: DataValue?,
     ): VarSite? {
         val use = type.withoutNullable().named?.takeIf { it.definition == VarDefinition.id } ?: return null
         val held = use.arguments.getOrNull(0) ?: return null
         val expected = (use.arguments.getOrNull(1) as? TypeUse.FunctionWrapper)?.value ?: return null
-        return VarSite(path, held, expected, stored?.let { decode(type, it) as Var<*, *>? })
+        return VarSite(location.path, held, expected, stored?.let { decodeAt(location, type, it) as Var<*, *>? })
+    }
+
+    /**
+     * [stored], the value at [location], decoded as [type]. A decode is kept while [location] still stores the very same
+     * object: a published value decodes once for the publication's life, and a value answered at the seam in its place
+     * is another object, so it decodes again.
+     */
+    private fun decodeAt(
+        location: EntryLocation,
+        type: TypeUse,
+        stored: DataValue,
+    ): Any? {
+        decoded[location]?.takeIf { it.stored === stored }?.let { return it.value }
+        return decode(type, stored).also { decoded[location] = Decoded(stored, it) }
     }
 
     /**
@@ -460,6 +478,12 @@ class EngineEvaluationEnvironment(
         /** The site's path as text: its name in messages and its key among the checked formulas. */
         val field: String = path.text
     }
+
+    /** The last value decoded at a location, with the stored object it was decoded from. */
+    private class Decoded(
+        val stored: DataValue,
+        val value: Any?,
+    )
 
     private companion object {
         const val PROTAGONIST = "protagonist"
