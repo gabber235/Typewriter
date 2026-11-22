@@ -35,6 +35,7 @@ import kotlinx.coroutines.sync.withLock
 import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import java.util.logging.Logger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -198,7 +199,8 @@ class SessionKeeper(
     private fun MutableMap<String, SessionEntry>.record(change: KeyValueChange) {
         when (change) {
             is KeyValueChange.Put -> {
-                this[change.entry.key] = decodeSessionEntry(change.entry.value)
+                val entry = readable(change) ?: return
+                this[change.entry.key] = entry
             }
 
             is KeyValueChange.Expired -> {
@@ -209,6 +211,18 @@ class SessionKeeper(
             }
         }
     }
+
+    /**
+     * The session entry [change] wrote, or null when no engine can read it: a damaged or foreign value is logged and
+     * skipped, so the copy keeps the key's last readable holder and the watch keeps following the bucket.
+     */
+    private fun readable(change: KeyValueChange.Put): SessionEntry? =
+        try {
+            decodeSessionEntry(change.entry.value)
+        } catch (failure: IllegalArgumentException) {
+            log.warning("Skipped the unreadable value of session key ${change.entry.key}: ${failure.message}")
+            null
+        }
 
     /** The live session entries of [protagonist], or the first failed read. */
     private suspend fun KeyValueBucket.liveEntries(protagonist: Protagonist): LiveEntries {
@@ -339,4 +353,8 @@ class SessionKeeper(
         val entry: SessionEntry,
         val revision: Long,
     )
+
+    private companion object {
+        val log: Logger = Logger.getLogger(SessionKeeper::class.java.name)
+    }
 }

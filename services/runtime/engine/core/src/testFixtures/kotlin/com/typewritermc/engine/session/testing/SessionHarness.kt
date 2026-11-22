@@ -15,6 +15,7 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueBuckets
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
+import com.typewritermc.services.libs.communicator.kv.KeyValueWrite
 import com.typewritermc.services.libs.communicator.kv.NatsKeyValueBuckets
 import com.typewritermc.services.libs.communicator.nats.NatsAuthentication
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
@@ -92,6 +93,12 @@ class SessionHarness private constructor(
     ) {
         engine.keeper.connected(protagonist, id)
         eventually { entry(protagonist, id)?.holder == engine.id }
+    }
+
+    /** Writes an empty value no engine can read under [key] of the sessions bucket, as a damaged or foreign write would. */
+    suspend fun unreadable(key: String) {
+        val written = bucket().create(key, ByteArray(0), SHORT.ttl)
+        check(written is KeyValueWrite.Written) { "The unreadable value was not written: $written" }
     }
 
     /** Waits until [condition] holds, polling the broker, and fails after [within]. */

@@ -83,4 +83,16 @@ val SessionEventsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEna
         panel.keeper.disconnected(tab)
         harness().eventually { ProtagonistLeft(protagonist) in panel.events.all }
     }
+
+    test("SESSION-E5 a value in the sessions bucket that no engine can read does not stop a later leave") {
+        harness().createBucket()
+        val engine = harness().engine("engine-a")
+        val (protagonist, id) = harness().player()
+        harness().joined(engine, protagonist, id)
+
+        harness().unreadable("minecraft.damaged.entry")
+        engine.keeper.disconnected(id)
+
+        harness().eventually { ProtagonistLeft(protagonist) in engine.events.all }
+    }
 }
