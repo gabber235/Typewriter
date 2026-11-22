@@ -87,6 +87,8 @@ val paperModule = module {
 }
 ```
 
+Engine parts reach the same Koin without Koin in the extension (decided 2026-11-22). KSP generates one `EnginePartProvider` per concrete `EnginePart`, and the deployment turns each provider row into a Koin single bound to the supertypes it declares. A provider calls the constructor directly and asks for each parameter by type. An engine part is not offered to other parts by its own class: a part asks for the role it needs (`PaperEvents`, a `Source`, a `LiveResolver`), never for a sibling's class. A parameter the engine cannot provide fails the engine's start with "X needs Y, which this engine does not provide". Extensions never depend on Koin ([events-and-handlers.md](events-and-handlers.md#engine-parts)).
+
 On a join, the session listener starts the key write off the game thread, so the tick never waits on NATS; on a quit, it shortens the key to the grace. An engine reload without a Paper restart unregisters the listener and leaves the keys alone; the new engine lists the online players and takes their keys over, so sessions survive an engine upgrade.
 
 ## Engine communication

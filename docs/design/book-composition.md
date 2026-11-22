@@ -148,6 +148,8 @@ Nothing outside a book names an entry inside it: renaming `wait_for_item` never 
 
 ### 6. Conditions
 
+Node 4 builds conditions over one book (decided 2026-11-22): `Book.condition`, `BookContext`, and `appliesTo` over the element's one book, in `Candidate` and `fire`. A book is a compilation unit, publishes as its own shard, and is a publication root, so an engine reads a published entry's book condition from the publication. A condition that fails to evaluate, or a book missing from the publication, applies to nobody. A subject without a protagonist always applies. Instance paths below stay in 31a.
+
 An element applies to a protagonist when every book on its instance path applies: `ask_line@["fetch_iron"]` needs both Village's and Fetch quest's conditions. Each copy knows its books, set at publish.
 
 ```kotlin

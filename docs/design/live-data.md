@@ -442,7 +442,12 @@ Declared in `transport-routes.yaml`, realm scoped (decided 2026-11-03). Only `re
 | --- | --- | --- |
 | protagonist event | `protagonist.{principal_kind}.{principal_id}` | `EventDelivery` for every engine holding the protagonist |
 | session event | `session.{session}` | `EventResult`, and targets that are one connection |
-| stored changes | `changed.{engine}` | `Changed<T>` batches and heartbeats from the realm |
+| engine acks | `engine.{engine}.event_ack` | acks for delivered events (node 9) |
+| stored changes | `engine.{engine}.changed` | `Changed<T>` batches and heartbeats from the realm (node 6) |
+
+Messages for one engine form the route family `engine.{engine}.*`, one route per payload: `event_ack` (node 9, since cross engine delivery moves there) and `changed` (node 6, was `changed.{engine}`). Acks do not ride the protagonist route: with several holders every holder would hear every ack, and a holder that moved away would stop hearing its own (decided 2026-11-22).
+
+The local sessions copy of an engine comes through a KV watch (node 4). The watch filter is generated from the bucket's key shape, so it stays inside the engine's grant. In node 4 the copy only fires `ProtagonistLeft`; the join check and `holders` read the bucket directly. Node 9, the first user of `holders` for forwarding, adds a signal that the watch's replay has caught up and then makes the copy the one source (decided 2026-11-22).
 
 These addresses hold free values, so the generator gets free parameters next to its bound ones (`subject.ts:4`), granted through a wildcard token. Panel tab routes are `session.user.{user}.{session}`, granted per user, and arrive when the panel first emits events; they also need the subject family for panel to service events.
 

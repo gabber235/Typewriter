@@ -20,7 +20,7 @@ Lifecycle events are ordinary events with the same handler rules: `Added<T>`, `R
 
 Events without a source are emitted by handlers. `emit()` queues: the emitted event is decided after the current event finishes. There is no nesting.
 
-An emitted event runs locally when this engine holds a session of the subject, and is published to the protagonist subject only when another engine holds one too (decided 2026-11-03). Each engine keeps a local copy of the `sessions` bucket through a KV watch to know this. A normal chain therefore never touches NATS and keeps working while NATS is down. An engine that holds no session of the subject only publishes, and runs none of its own handlers for it. An offline subject drops the event. An engine skips its own published events. Source events follow the same rule: a source event decides inline, and when another engine also holds the subject it is forwarded as an ordinary delivery, which that engine decides for itself. Events without a subject are always local.
+An emitted event runs locally when this engine holds a session of the subject, and is published to the protagonist subject only when another engine holds one too (decided 2026-11-03). Whether this engine holds a session is its own session keeper's knowledge (sessions it reported and still has), so it works while NATS is down; events the keeper fires itself skip the check (decided 2026-11-22). Each engine keeps a local copy of the `sessions` bucket through a KV watch to know whether another engine holds one too (node 9). A normal chain therefore never touches NATS and keeps working while NATS is down. An engine that holds no session of the subject only publishes, and runs none of its own handlers for it. An offline subject drops the event. An engine skips its own published events. Source events follow the same rule: a source event decides inline, and when another engine also holds the subject it is forwarded as an ordinary delivery, which that engine decides for itself. Events without a subject are always local.
 
 ```kotlin
 @Handler
@@ -81,7 +81,7 @@ A verdict handler that throws counts as `pass` and is logged. Packet sources and
 
 1. KSP finds every concrete class implementing `EnginePart`, generates a provider, and adds a row to the provider index. This is the first processor searching by supertype instead of annotation.
 2. On start, the engine reads the index for the source parts it loaded, so a Paper part only reaches Paper, and adds each class to its deployment Koin ([engines.md](engines.md#wiring-inside-an-engine)).
-3. Koin builds the classes from their constructors, so an extension reaches `PaperEvents` by asking for it.
+3. The deployment turns each provider row into a Koin single (decided 2026-11-22). The generated provider calls the constructor and asks for each parameter by type, so an extension reaches `PaperEvents` by asking for it and never depends on Koin. A part is offered to others by its supertypes, not by its own class.
 4. The event runtime asks for every `Source` and opens them by demand. The Koin closes with the deployment.
 
 A missing constructor dependency fails at engine start, naming the class and the type, because KSP cannot see what Koin provides. `ConfiguredSource` extends `EnginePart` and others may follow. `RuntimeRegistrar` stays for imperative setup.
@@ -234,7 +234,7 @@ For `Tick` and world events, parameters become a query and the handler runs once
 
 Node 4 builds the identity query: a required identity parameter that no event field fills runs the handler once per identity its `LiveResolver.present()` names (each online player on Paper), with that identity as the run's subject for traits, candidates, and book conditions.
 
-The event runtime measures every handler run per event class (`HandlerCosts`, an engine-core Koin single), so the average tick handler time can be read on real Paper.
+The event runtime measures every handler run per event class (`HandlerCosts`, an engine-core Koin single) as the `typewriter.event.handler.duration` histogram, in seconds, with the attribute `typewriter.event` naming the event class. The game run report prints the average handler time per event, so the average tick handler time can be read on real Paper.
 
 ### Where a handler runs
 
@@ -366,7 +366,7 @@ Every chain gets the same limit: at most one owner visit to read live values, on
 
 Accepted costs: a chain starts up to one tick after its event, while the verdict stays instant. A player who leaves right after paying can lose the item, as in every option tested; what must arrive is stored as owed.
 
-Open for the plan: the real names and shapes of the worker and the effect queue (the design so far only sketched them, and they must not become magic types); and how a handler's live reads reach step 2: KSP knows its parameters, and `FormulaReads` knows its fields at publish, so writers can run before the chain ([formula-language.md](formula-language.md#what-a-formula-reads)).
+Named in node 4 (decided 2026-11-22): `ChainQueue` takes chain starts, `ChainPickup` is the one engine piece that drains it (Paper on `ServerTickEndEvent`, the panel engine at once), and `ChainWorker` is the coroutine per drain on a bounded dispatcher. There is no owner thread effect queue yet: node 4's only effect is chat, sent from the worker, and the first world change action adds the queue. Open: how a handler's live reads reach step 2: KSP knows its parameters, and `FormulaReads` knows its fields at publish, so writers can run before the chain ([formula-language.md](formula-language.md#what-a-formula-reads)).
 
 Folia (decided 2026-11-03): the first version targets Paper's server wide tick end. Picking up queued chain starts stays one small piece of the Paper engine, so the design does not block Folia. Folia later replaces only that piece, with a next tick task per active player, because no per region tick end hook was found. Expected cost there, not measured: one post per active player per tick, and chains start up to one tick later.
 
@@ -377,11 +377,12 @@ The game verification framework steps Paper's ticks itself and judges a requirem
 - The engine counts, per protagonist, the chains queued and running for it. A chain with a group subject counts for every member.
 - The realm side counts pending transactions the same way ([stored-data.md](stored-data.md#who-waits-for-a-commit)). A future `Due` is not busy; a requirement waiting on one advances the realm clock ([stored-data.md](stored-data.md#due)).
 - Typewriter never cancels a chain for the test. A chain that does not finish is reported by the framework's wall clock limit (1 s), and its player sits out until it ends.
-- On the test Paper the engine reports this through the framework's `PlayerWork` API, as any plugin does. Whether the test side also needs a hook of its own is open until layers 3 and 6 are built.
+- The engine counts from the moment a chain start is queued until the chain ends (decided 2026-11-22), through the engine-core port `SubjectWork`, which does nothing by default. A chain for an event without a subject counts for every protagonist present on the engine, since its handlers query them.
+- On the test Paper the playtest bridge, an Imprint extension, implements `SubjectWork` with the framework's `PlayerWork` API ([plugin-integrations.md](plugin-integrations.md#first-user)). The test side needs no hook of its own.
 
 Spikes I and D showed that work a server wide quiet check cannot see (a raw thread pool) gives wrong verdicts and wrong coverage, and that a per player count fixes both ([d-clients.md](game-verification/spikes/d-clients.md), [i-coverage.md](game-verification/spikes/i-coverage.md)).
 
-**Effects through the owner thread.** Spike N found that an effect sent from the owner thread lands on the same stepped tick every time, while one a worker thread sends races the tick boundary and lands one or two steps later ([n-stepped-ticks.md](game-verification/spikes/n-stepped-ticks.md)), so a requirement's tick counts would vary between runs. The search therefore asks that the Paper engine's effects reach the player through the owner thread, in the tick's effect queue. The framework later made Paper's own async chat steady another way: the work counts as the player's from the moment Paper reads the line, so the next tick waits for the send. Step 4 above still sends chat from the worker, which is steady only if the chain counts from the moment it is queued; which of the two holds is open (see [Open](#open-1)).
+**Effects through the owner thread.** Spike N found that an effect sent from the owner thread lands on the same stepped tick every time, while one a worker thread sends races the tick boundary and lands one or two steps later ([n-stepped-ticks.md](game-verification/spikes/n-stepped-ticks.md)), so a requirement's tick counts would vary between runs. The search therefore asks that the Paper engine's effects reach the player through the owner thread, in the tick's effect queue. The framework later made Paper's own async chat steady another way: the work counts as the player's from the moment Paper reads the line, so the next tick waits for the send. Step 4 above still sends chat from the worker, which is steady because the chain counts from the moment it is queued (decided 2026-11-22).
 
 ### Suspending handlers
 
@@ -615,11 +616,10 @@ event.to.distance(spot) < 5 and event.from.distance(spot) >= 5   // walked near 
 
 ### Event entries not proven
 
-- **Generic handlers.** A handler plan names one event class today. `fun <E> E.rule` needs demand per type argument. If that fails, KSP generates one handler per event instead.
-- **Generic context.** `EventContext<E>` inside a `Var` is new; `Definition<T>` only has `T` as the value.
 - **Palette.** "On block break" must appear as its own choice when creating an entry. `resource_creation.dart` does not mention type arguments.
 - **Cost.** Both hand items convert on every event while the source is open. Not measured; `Interact` is the frequent one.
-- **Nothing here ran.** It rests on layers 1, 4, and 8, none of which are built.
+- **Proven in node 4 (change set 1).** Generic handlers (`fun <E : CancelableEvent> E.rule`, instantiated per published event class within the bound) and `EventContext<E>` inside a `Var` work end to end.
+- **Not run yet.** Anything resting on layers 6 and 8.
 
 ### Open
 
