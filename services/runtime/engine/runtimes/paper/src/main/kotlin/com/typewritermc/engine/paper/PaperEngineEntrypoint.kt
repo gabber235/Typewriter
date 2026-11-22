@@ -1,6 +1,7 @@
 package com.typewritermc.engine.paper
 
 import com.typewritermc.discovery.RuntimeRegistrar
+import com.typewritermc.engine.events.ChainPickup
 import com.typewritermc.engine.runtime.EngineDeployment
 import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.imprint.ImprintRuntimeEntrypoint
@@ -9,6 +10,7 @@ import com.typewritermc.loader.paper.TypewriterLoaderPlugin
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
 import org.koin.dsl.bind
+import org.koin.dsl.binds
 import org.koin.dsl.module
 
 /**
@@ -21,7 +23,7 @@ val paperModule =
         single { SessionTimings.MINECRAFT }
         single { SessionListener(get(), get()) } bind RuntimeRegistrar::class
         single { PaperEvents(get()) }
-        single { PaperChainPickup(get(), get()) } bind RuntimeRegistrar::class
+        single { PaperChainPickup(get(), get()) } binds arrayOf(ChainPickup::class, RuntimeRegistrar::class)
     }
 
 /** Stages a Paper engine deployment. */

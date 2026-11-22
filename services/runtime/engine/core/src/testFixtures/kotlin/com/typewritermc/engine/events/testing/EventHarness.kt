@@ -6,6 +6,7 @@ import com.typewritermc.authoring.text
 import com.typewritermc.elements.Entry
 import com.typewritermc.engine.events.CancelableEventEntry
 import com.typewritermc.engine.events.CancelableEventEntryFields
+import com.typewritermc.engine.events.ChainPickup
 import com.typewritermc.engine.events.ChainQueue
 import com.typewritermc.engine.events.EventEntry
 import com.typewritermc.engine.events.EventEntryFields
@@ -69,6 +70,9 @@ class EventHarness(
             ),
             queue,
             costs,
+            TickedPickup,
+            // The harness engine holds every protagonist; the hold check is proven on a wired engine.
+            { true },
         )
 
     init {
@@ -85,6 +89,11 @@ class EventHarness(
 
     /** Wipes [protagonist] as the test host does between requirements. */
     fun wipe(protagonist: Protagonist) = queue.clear(protagonist)
+}
+
+/** The harness's pickup: queued chains wait for the test's [EventHarness.tick]. */
+private object TickedPickup : ChainPickup {
+    override fun queued() = Unit
 }
 
 /** Reads the fields of the test entries and the core event entries as written; the harness evaluates no formulas. */

@@ -34,6 +34,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -70,6 +71,9 @@ data class SessionTimings(
  * Reporter calls return at once; their writes run on [parent]'s dispatcher, per session in the order of the calls:
  * each call queues on its session's lock before it returns.
  *
+ * Every reported session counts in [holding] from its `connected` call until its `disconnected` call or until another
+ * engine takes it over, written in call order and without NATS, so this engine knows what it holds while NATS is down.
+ *
  * Every successful take emits [SessionArrived] to [events], after [ProtagonistJoined] when the protagonist had no
  * session key anywhere. The keeper follows the whole bucket, so when a key expires, the engine its last value names
  * as holder emits [ProtagonistLeft] once no other key of the protagonist lives. That is best effort: after a crash no
@@ -81,6 +85,7 @@ class SessionKeeper(
     private val buckets: StateFlow<KeyValueBuckets?>,
     private val bucketName: String,
     private val timings: SessionTimings,
+    private val holding: HeldSessions,
     private val events: ChainQueueing,
     parent: CoroutineScope,
     private val clock: Clock = Clock.systemUTC(),
@@ -99,18 +104,22 @@ class SessionKeeper(
         id: SessionId,
     ) {
         val slot = sessions.computeIfAbsent(id) { SessionSlot() }
+        val generation = slot.generation.incrementAndGet()
+        holding.hold(protagonist, id)
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
             slot.lock.withLock {
                 slot.refresher?.cancelAndJoin()
                 val held = take(protagonist, id)
                 slot.held = held
-                slot.refresher = scope.launch { refresh(slot, held) }
+                slot.refresher = scope.launch { refresh(id, slot, held, generation) }
             }
         }
     }
 
     override fun disconnected(id: SessionId) {
         val slot = sessions[id] ?: return
+        slot.generation.incrementAndGet()
+        holding.release(id)
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
             slot.lock.withLock {
                 slot.refresher?.cancelAndJoin()
@@ -224,8 +233,10 @@ class SessionKeeper(
      * expired while NATS was unreachable, the protagonist is still here, so the session starts again.
      */
     private suspend fun refresh(
+        id: SessionId,
         slot: SessionSlot,
         initial: HeldSession,
+        generation: Long,
     ) {
         var held = initial
         while (true) {
@@ -237,7 +248,7 @@ class SessionKeeper(
                 }
 
                 KeyValueWrite.Conflict -> {
-                    held = recover(bucket, held) ?: return slot.letGo()
+                    held = recover(bucket, held) ?: return slot.letGo(id, generation)
                 }
 
                 is KeyValueWrite.Failed -> {
@@ -294,9 +305,14 @@ class SessionKeeper(
         entry: SessionEntry,
     ): HeldSession? = (this as? KeyValueWrite.Written)?.let { HeldSession(key, entry, it.revision) }
 
-    private fun SessionSlot.letGo() {
+    /** Lets the session go after another engine took it, unless it was reported again since this refresher began. */
+    private fun SessionSlot.letGo(
+        id: SessionId,
+        since: Long,
+    ) {
         held = null
         refresher = null
+        if (generation.get() == since) holding.release(id)
     }
 
     private sealed interface LiveEntries {
@@ -311,6 +327,9 @@ class SessionKeeper(
 
     private class SessionSlot {
         val lock = Mutex()
+
+        /** Counts the session's reporter calls, so a refresher that began before the last one leaves holding alone. */
+        val generation = AtomicLong()
         var held: HeldSession? = null
         var refresher: Job? = null
     }

@@ -1,13 +1,16 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.discovery.RuntimeRegistrar
+import com.typewritermc.engine.events.ChainPickup
 import com.typewritermc.engine.events.ChainQueue
 import com.typewritermc.engine.events.ChainWorker
 import com.typewritermc.engine.events.EventParts
 import com.typewritermc.engine.events.EventRuntime
 import com.typewritermc.engine.events.HandlerCosts
 import com.typewritermc.engine.events.NoSubjectWork
+import com.typewritermc.engine.events.SubjectHolding
 import com.typewritermc.engine.events.SubjectWork
+import com.typewritermc.engine.session.HeldSessions
 import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.events.EnginePartDependencies
 import com.typewritermc.events.EnginePartProvider
@@ -24,6 +27,7 @@ import kotlinx.coroutines.flow.stateIn
 import org.koin.core.KoinApplication
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.binds
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
@@ -57,15 +61,12 @@ internal class EngineWiring(
     val events: EventRuntime get() = application.koin.get()
 
     /**
-     * Tells every [PublicationObserver] part that the engine applied [publication], and the roots its [graph] compiles.
+     * Tells every [PublicationObserver] part that the engine applied [publication].
      *
      * TODO(node 9): temporary test only signal; replace with the engine's reported active publication ("applied on N of M").
      */
-    fun applied(
-        publication: PublicationId,
-        graph: CompiledResourceGraph,
-    ) {
-        application.koin.getAll<PublicationObserver>().forEach { it.applied(publication, graph.roots) }
+    fun applied(publication: PublicationId) {
+        application.koin.getAll<PublicationObserver>().forEach { it.applied(publication) }
     }
 
     /** The activation work the engine kind declared, run with every activation of the deployment. */
@@ -93,11 +94,14 @@ private fun engineCoreModule(
                 ),
             bucketName = SessionsBucket.name(context.identity.realmId),
             timings = get(),
-            events = get<EventRuntime>(),
+            holding = get(),
+            // The keeper decides itself that this engine holds the subject of every event it fires.
+            events = get<EventRuntime>().asHolder,
             parent = scope,
         )
     } onClose { it?.close() } binds arrayOf(SessionReporter::class, Sessions::class)
-    single { ChainQueue(getAll<SubjectWork>().singleOrNull() ?: NoSubjectWork) }
+    single { HeldSessions() } bind SubjectHolding::class
+    single { ChainQueue(subjectWork(getAll())) }
     single { ChainWorker(get(), scope) }
     single { HandlerCosts(context.host.openTelemetry) }
     single(createdAtStart = true) {
@@ -105,8 +109,19 @@ private fun engineCoreModule(
             EventParts(handlers = getAll(), shapes = getAll(), sources = getAll(), configured = getAll(), live = getAll()),
             get(),
             get(),
+            getOrNull<ChainPickup>()
+                ?: error("This engine kind provides no ChainPickup, so the chains its events queue would never run."),
+            get(),
         )
     } onClose { it?.close() }
+}
+
+/** The one part that counts chain work, or the production default when none does; two would each miss half the work. */
+private fun subjectWork(parts: List<SubjectWork>): SubjectWork {
+    require(parts.size <= 1) {
+        "Only one SubjectWork may count chain work, but this engine has ${parts.joinToString { it::class.simpleName.toString() }}."
+    }
+    return parts.singleOrNull() ?: NoSubjectWork
 }
 
 /**

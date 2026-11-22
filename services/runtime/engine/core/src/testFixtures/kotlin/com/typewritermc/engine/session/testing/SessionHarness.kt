@@ -1,5 +1,6 @@
 package com.typewritermc.engine.session.testing
 
+import com.typewritermc.engine.session.HeldSessions
 import com.typewritermc.engine.session.SessionEntry
 import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.engine.session.SessionTimings
@@ -67,7 +68,7 @@ class SessionHarness private constructor(
         val connection = connect()
         val buckets = MutableStateFlow<KeyValueBuckets?>(NatsKeyValueBuckets(connection))
         val events = EmittedEvents()
-        val keeper = SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, events, scope)
+        val keeper = SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, HeldSessions(), events, scope)
         return HarnessEngine(EngineId(id), keeper, events, connection).also(engines::add)
     }
 

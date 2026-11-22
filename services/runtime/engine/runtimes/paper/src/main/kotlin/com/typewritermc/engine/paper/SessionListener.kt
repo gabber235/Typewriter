@@ -35,7 +35,9 @@ class SessionListener(
         scope.own { HandlerList.unregisterAll(this) }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    // A join is reported before any source decides it, and a quit after every source did, so the engine holds the
+    // player's session while a source decides either; an event about a protagonist it does not hold is dropped.
+    @EventHandler(priority = EventPriority.LOWEST)
     fun onJoin(event: PlayerJoinEvent) = connected(event.player)
 
     @EventHandler(priority = EventPriority.MONITOR)

@@ -3,6 +3,7 @@ package com.typewritermc.engine.paper
 import com.destroystokyo.paper.event.server.ServerTickEndEvent
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
+import com.typewritermc.engine.events.ChainPickup
 import com.typewritermc.engine.events.ChainWorker
 import com.typewritermc.events.HasChat
 import com.typewritermc.events.LiveResolver
@@ -86,12 +87,18 @@ val Player.session: SessionId get() = SessionId(uniqueId.toString())
 /** What a player caused: its session and its principal. */
 val Player.eventOrigin: Origin get() = protagonist.let { Origin(Session(it, session), it.principal) }
 
-/** Hands the chain queue to a worker at the end of every server tick, so chains a tick queued start right after it. */
+/**
+ * Hands the chain queue to a worker at the end of every server tick, so chains a tick queued start right after it; a
+ * chain queued during a tick waits for that tick's end.
+ */
 class PaperChainPickup(
     private val plugin: Plugin,
     private val worker: ChainWorker,
-) : Listener,
+) : ChainPickup,
+    Listener,
     RuntimeRegistrar {
+    override fun queued() = Unit
+
     context(scope: RuntimeScope)
     override suspend fun register() {
         plugin.server.scheduler.runTask(plugin, Runnable { plugin.server.pluginManager.registerEvents(this, plugin) })

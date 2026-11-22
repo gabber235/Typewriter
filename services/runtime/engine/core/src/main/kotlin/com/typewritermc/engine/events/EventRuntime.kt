@@ -16,6 +16,7 @@ import com.typewritermc.events.LiveResolver
 import com.typewritermc.events.Origin
 import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
+import com.typewritermc.events.ProtagonistLeft
 import com.typewritermc.events.Sink
 import com.typewritermc.events.Source
 import com.typewritermc.events.Triggered
@@ -42,7 +43,12 @@ class EventParts(
  * Runs handlers for every occurrence. A source's occurrence is decided inline: each verdict handler runs once per
  * combination of its resolved parameters, the verdicts merge into one outcome, and the source applies it before
  * [Sink.decide] returns. Follow ups and after handlers queue as one chain of the subject. Events emitted from a chain
- * queue as chains of their own; a chain start equal to a waiting one merges into it.
+ * queue as chains of their own; a chain start equal to a waiting one merges into it. Every queued chain is reported to
+ * the engine kind's [ChainPickup], which drains the queue.
+ *
+ * An occurrence about a protagonist this engine does not hold (see [holding]) runs no handler and is dropped, until
+ * cross engine delivery forwards it; occurrences about another subject, or none, always run here. The session keeper's
+ * own events skip that check through [asHolder].
  *
  * [publish] swaps the content handlers see and opens each source while a handler could run for its events, closing
  * it once none can. A configured source is opened with its demand instead: every configuration a runnable handler on
@@ -55,6 +61,8 @@ class EventRuntime(
     private val parts: EventParts,
     private val queue: ChainQueue,
     private val costs: HandlerCosts,
+    private val pickup: ChainPickup,
+    private val holding: SubjectHolding,
 ) : ChainQueueing,
     AutoCloseable {
     @Volatile
@@ -126,14 +134,41 @@ class EventRuntime(
         return OpenedConfigured(demand, open(demand as Demand<C>, sink()))
     }
 
-    /** Queues [event] as a chain: it is decided on the worker, then its follow ups and after handlers run there. */
+    /**
+     * Queues [event] as a chain: it is decided on the worker, then its follow ups and after handlers run there. An event
+     * about a protagonist this engine does not hold is dropped.
+     */
     override fun emit(event: Event) = start(event, repeat = 0)
 
     /**
-     * Queues [event] as [emit] does; a chain start merges into an equal waiting start, except that [repeat], the count
-     * of earlier equal starts in the same `fire` call, keeps each repeat a run of its own.
+     * Queues events without the hold check, for an emitter that already decided this engine holds their subject: the
+     * session keeper, whose [ProtagonistLeft] comes after the protagonist's last session ended.
+     */
+    val asHolder: ChainQueueing =
+        object : ChainQueueing {
+            override fun emit(event: Event) = enqueue(event, repeat = 0)
+        }
+
+    /** Whether an occurrence of [event] runs here: it is about no protagonist, or about one this engine holds. */
+    private fun held(event: Event): Boolean {
+        val subject = subjectOf(event)
+        return subject !is Protagonist || holding.holds(subject)
+    }
+
+    /**
+     * Queues [event] as [emit] does, dropping it when it is about a protagonist this engine does not hold; a chain start
+     * merges into an equal waiting start, except that [repeat], the count of earlier equal starts in the same `fire`
+     * call, keeps each repeat a run of its own.
      */
     private fun start(
+        event: Event,
+        repeat: Int,
+    ) {
+        if (held(event)) enqueue(event, repeat)
+    }
+
+    /** Queues [event] as [start] does, without the hold check. */
+    private fun enqueue(
         event: Event,
         repeat: Int,
     ) {
@@ -149,6 +184,7 @@ class EventRuntime(
             val decision = decideOn(event, null, content)
             after(event, null, decision, content)
         }
+        pickup.queued()
     }
 
     private fun <E : Event> Source<E>.openWith(): AutoCloseable = open(sink())
@@ -160,10 +196,12 @@ class EventRuntime(
                 origin: Origin?,
                 apply: (Outcome<E>) -> Unit,
             ) {
+                if (!held(event)) return
                 val content = published
                 val decision = decideOn(event, origin, content)
                 apply(decision.outcome)
                 queue.enqueue(workOf(subjectOf(event)), event::class.simpleName ?: "event") { after(event, origin, decision, content) }
+                pickup.queued()
             }
         }
 

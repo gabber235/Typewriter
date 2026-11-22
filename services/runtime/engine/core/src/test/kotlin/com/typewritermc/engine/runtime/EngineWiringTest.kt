@@ -1,24 +1,32 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.engine.events.PublishedEntries
+import com.typewritermc.engine.events.ChainPickup
+import com.typewritermc.engine.events.ImmediateChainPickup
+import com.typewritermc.engine.events.NoSubjectWork
+import com.typewritermc.engine.events.SubjectWork
+import com.typewritermc.engine.events.testing.CountingWork
 import com.typewritermc.engine.events.testing.Poke
 import com.typewritermc.engine.events.testing.TestSource
+import com.typewritermc.engine.events.testing.after
+import com.typewritermc.engine.events.testing.protagonist
 import com.typewritermc.engine.events.testing.provided
 import com.typewritermc.engine.events.testing.reason
+import com.typewritermc.engine.events.testing.testShapes
 import com.typewritermc.engine.events.testing.verdict
-import com.typewritermc.engine.runtime.testing.OTHER
-import com.typewritermc.engine.runtime.testing.PAGE
 import com.typewritermc.engine.runtime.testing.PublicationRecorder
-import com.typewritermc.engine.runtime.testing.assemble
-import com.typewritermc.engine.runtime.testing.facts
-import com.typewritermc.engine.runtime.testing.resource
-import com.typewritermc.engine.runtime.testing.wiredDeploymentContext
+import com.typewritermc.engine.runtime.testing.WiredEngine
+import com.typewritermc.engine.runtime.testing.messagesOf
+import com.typewritermc.engine.runtime.testing.testEngineKind
 import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.readSessionEntry
 import com.typewritermc.engine.session.testing.SessionHarness
+import com.typewritermc.events.AfterHandler
+import com.typewritermc.events.EventShape
 import com.typewritermc.events.HandlerPlan
 import com.typewritermc.events.HasChat
 import com.typewritermc.events.Outcome
+import com.typewritermc.events.ProtagonistLeft
+import com.typewritermc.events.ProtagonistLeftEventShape
 import com.typewritermc.events.Source
 import com.typewritermc.events.VerdictHandler
 import com.typewritermc.events.deny
@@ -26,27 +34,24 @@ import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.SessionId
-import com.typewritermc.identity.SessionReporter
 import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
 import com.typewritermc.services.libs.communicator.testing.NatsTestServer
 import com.typewritermc.services.libs.communicator.testing.onBroker
-import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import org.koin.dsl.module
 import skirout.editor.v1.type_catalog.PublicationId
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.seconds
 
 /** The Koin of one engine deployment: engine-core's session keeping, wired with the parts its engine kind brings. */
@@ -56,104 +61,120 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
             onBroker(server.url) {
                 val buckets = buckets()
                 check(buckets.ensure(SessionsBucket.declaration("realm")) is KeyValueOpen.Opened)
-                val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-                val wiring =
-                    EngineWiring(wiredDeploymentContext(buckets), scope, module { single<SessionTimings> { SessionHarness.SHORT } })
-                try {
+                WiredEngine(testEngineKind, buckets = buckets).use { engine ->
                     val uuid = UUID.randomUUID().toString()
                     val protagonist = Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid))
 
-                    wiring.application.koin
-                        .get<SessionReporter>()
-                        .connected(protagonist, SessionId(uuid))
+                    engine.reporter.connected(protagonist, SessionId(uuid))
 
                     val observer = (buckets.open(SessionsBucket.name("realm")) as KeyValueOpen.Opened).bucket
                     eventually(10.seconds) {
                         observer.readSessionEntry(protagonist, SessionId(uuid)).shouldNotBeNull().holder shouldBe EngineId("engine")
                     }
-                } finally {
-                    wiring.close()
-                    scope.cancel()
                 }
             }
         }
     }
 
     test("an engine kind that brings no session timings fails at start naming them") {
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        try {
-            val failure = shouldThrow<Exception> { EngineWiring(wiredDeploymentContext(), scope, module { }) }
+        val failure = shouldThrow<Exception> { WiredEngine(module { single<ChainPickup> { ImmediateChainPickup(get()) } }) }
 
-            generateSequence<Throwable>(failure) { it.cause }.joinToString(" | ") { it.message.orEmpty() } shouldContain "SessionTimings"
-        } finally {
-            scope.cancel()
-        }
+        messagesOf(failure) shouldContain "SessionTimings"
+    }
+
+    test("an engine kind that brings no chain pickup fails at start naming it, since its chains would never run") {
+        val failure = shouldThrow<Exception> { WiredEngine(module { single<SessionTimings> { SessionHarness.SHORT } }) }
+
+        messagesOf(failure) shouldContain "ChainPickup"
+    }
+
+    test("an engine with two subject works fails at start naming both, since only one may count chain work") {
+        val failure =
+            shouldThrow<Exception> {
+                WiredEngine(
+                    testEngineKind,
+                    listOf(provided(CountingWork(), listOf(SubjectWork::class)), provided(NoSubjectWork, listOf(SubjectWork::class))),
+                )
+            }
+
+        messagesOf(failure) shouldContain "SubjectWork"
+        messagesOf(failure) shouldContain "CountingWork"
+        messagesOf(failure) shouldContain "NoSubjectWork"
     }
 
     test("an engine part's handler runs for its source's occurrences once the engine starts") {
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         val pokes = TestSource(Poke::class)
         val guard = verdict(Poke::class) { _, _ -> deny(reason("guarded")) }
-        val wiring =
-            EngineWiring(
-                wiredDeploymentContext(),
-                scope,
-                module { single<SessionTimings> { SessionHarness.SHORT } },
-                listOf(provided(pokes, listOf(Source::class)), provided(guard, listOf(VerdictHandler::class, HandlerPlan::class))),
-            )
-        try {
-            wiring.events.publish(PublishedEntries.EMPTY)
-
+        WiredEngine(
+            testEngineKind,
+            listOf(provided(pokes, listOf(Source::class)), provided(guard, listOf(VerdictHandler::class, HandlerPlan::class))),
+        ).use {
             pokes.fire(Poke()) shouldBe Outcome.Denied(Poke(), reason("guarded"))
-        } finally {
-            wiring.close()
-            scope.cancel()
+        }
+    }
+
+    test("an event about a protagonist this engine holds no session of runs no handler, even while NATS is down") {
+        val pokes = TestSource(Poke::class)
+        val poked = CopyOnWriteArrayList<Poke>()
+        WiredEngine(
+            testEngineKind,
+            listOf(
+                provided(pokes, listOf(Source::class)),
+                provided(testShapes.single { it.event == Poke::class }, listOf(EventShape::class)),
+                provided(after(Poke::class) { poke, _ -> poked += poke }, listOf(AfterHandler::class, HandlerPlan::class)),
+            ),
+        ).use { engine ->
+            val here = protagonist("here")
+            val elsewhere = protagonist("elsewhere")
+            engine.reporter.connected(here, SessionId("here"))
+
+            pokes.fire(Poke(elsewhere)) shouldBe null
+            pokes.fire(Poke(here)) shouldBe Outcome.Allowed(Poke(here))
+            eventually(5.seconds) { poked.map { it.protagonist } shouldContain here }
+            poked.map { it.protagonist } shouldNotContain elsewhere
+        }
+    }
+
+    test("a protagonist whose last session expired still reaches its handler on the engine that held it") {
+        SessionHarness.start().use { harness ->
+            harness.createBucket()
+            val left = CopyOnWriteArrayList<ProtagonistLeft>()
+            WiredEngine(
+                testEngineKind,
+                listOf(
+                    provided(ProtagonistLeftEventShape(), listOf(EventShape::class)),
+                    provided(after(ProtagonistLeft::class) { event, _ -> left += event }, listOf(AfterHandler::class, HandlerPlan::class)),
+                ),
+                harness.messaging().buckets,
+            ).use { engine ->
+                val (protagonist, id) = harness.player()
+                engine.reporter.connected(protagonist, id)
+                harness.eventually { harness.entry(protagonist, id)?.holder == EngineId("engine") }
+
+                engine.reporter.disconnected(id)
+
+                harness.eventually { ProtagonistLeft(protagonist) in left }
+            }
         }
     }
 
     test("an engine part that needs what the engine does not provide fails at start naming both") {
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        try {
-            val needy = TestSource(Poke::class)
-            val failure =
-                shouldThrow<Exception> {
-                    EngineWiring(
-                        wiredDeploymentContext(),
-                        scope,
-                        module { single<SessionTimings> { SessionHarness.SHORT } },
-                        listOf(provided(needy, listOf(Source::class), needs = HasChat::class)),
-                    )
-                }
+        val needy = TestSource(Poke::class)
+        val failure =
+            shouldThrow<Exception> {
+                WiredEngine(testEngineKind, listOf(provided(needy, listOf(Source::class), needs = HasChat::class)))
+            }
 
-            val messages = generateSequence<Throwable>(failure) { it.cause }.joinToString(" | ") { it.message.orEmpty() }
-            messages shouldContain "TestSource needs HasChat"
-        } finally {
-            scope.cancel()
-        }
+        messagesOf(failure) shouldContain "TestSource needs HasChat"
     }
 
-    test("an engine part that observes publications hears each publication the engine applied, with its roots") {
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    test("an engine part that observes publications hears each publication the engine applied, in order") {
         val observer = PublicationRecorder()
-        val wiring =
-            EngineWiring(
-                wiredDeploymentContext(),
-                scope,
-                module { single<SessionTimings> { SessionHarness.SHORT } },
-                listOf(provided(observer, listOf(PublicationObserver::class))),
-            )
-        try {
-            wiring.applied(PublicationId(value = "first"), assemble(listOf(facts(resource(PAGE)), facts(resource(OTHER), root = OTHER))))
-            wiring.applied(PublicationId(value = "second"), assemble(listOf(facts(resource(OTHER), root = OTHER))))
+        WiredEngine(testEngineKind, listOf(provided(observer, listOf(PublicationObserver::class)))).use { engine ->
+            engine.applied(PublicationId(value = "first"))
+            engine.applied(PublicationId(value = "second"))
 
-            observer.applied shouldBe
-                listOf(
-                    PublicationId(value = "first") to setOf(ResourceId("page"), ResourceId("other")),
-                    PublicationId(value = "second") to setOf(ResourceId("other")),
-                )
-        } finally {
-            wiring.close()
-            scope.cancel()
+            observer.applied shouldBe listOf(PublicationId(value = "first"), PublicationId(value = "second"))
         }
     }
 }
