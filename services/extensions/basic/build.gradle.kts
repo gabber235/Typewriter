@@ -19,4 +19,8 @@ typewriter {
 dependencies {
     imprintExtensionApi(project(":typewriter-api"))
     imprintEngineCore(project(":engine-core"))
+
+    testImplementation(project(":typewriter-api"))
+    testImplementation(project(":engine-core"))
+    testImplementation(testFixtures(project(":engine-core")))
 }
