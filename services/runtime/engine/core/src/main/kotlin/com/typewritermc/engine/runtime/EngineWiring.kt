@@ -5,11 +5,12 @@ import com.typewritermc.engine.events.ChainQueue
 import com.typewritermc.engine.events.ChainWorker
 import com.typewritermc.engine.events.EventParts
 import com.typewritermc.engine.events.EventRuntime
+import com.typewritermc.engine.events.HandlerCosts
 import com.typewritermc.engine.events.NoSubjectWork
 import com.typewritermc.engine.events.SubjectWork
+import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.events.EnginePartDependencies
 import com.typewritermc.events.EnginePartProvider
-import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.identity.Engine
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.SessionReporter
@@ -27,6 +28,7 @@ import org.koin.dsl.binds
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.dsl.onClose
+import skirout.editor.v1.type_catalog.PublicationId
 import kotlin.reflect.KClass
 
 /**
@@ -48,8 +50,23 @@ internal class EngineWiring(
             createEagerInstances()
         }
 
+    /** The engine this deployment runs as, which each publication's book conditions are asked on. */
+    val identity: Engine get() = application.koin.get()
+
     /** The event runtime of this deployment, which each publication is handed to. */
     val events: EventRuntime get() = application.koin.get()
+
+    /**
+     * Tells every [PublicationObserver] part that the engine applied [publication], and the roots its [graph] compiles.
+     *
+     * TODO(node 9): temporary test only signal; replace with the engine's reported active publication ("applied on N of M").
+     */
+    fun applied(
+        publication: PublicationId,
+        graph: CompiledResourceGraph,
+    ) {
+        application.koin.getAll<PublicationObserver>().forEach { it.applied(publication, graph.roots) }
+    }
 
     /** The activation work the engine kind declared, run with every activation of the deployment. */
     val registrars: List<RuntimeRegistrar> get() = application.koin.getAll<RuntimeRegistrar>()
@@ -76,13 +93,19 @@ private fun engineCoreModule(
                 ),
             bucketName = SessionsBucket.name(context.identity.realmId),
             timings = get(),
+            events = get<EventRuntime>(),
             parent = scope,
         )
     } onClose { it?.close() } binds arrayOf(SessionReporter::class, Sessions::class)
     single { ChainQueue(getAll<SubjectWork>().singleOrNull() ?: NoSubjectWork) }
     single { ChainWorker(get(), scope) }
+    single { HandlerCosts(context.host.openTelemetry) }
     single(createdAtStart = true) {
-        EventRuntime(EventParts(handlers = getAll(), shapes = getAll(), sources = getAll(), live = getAll()), get())
+        EventRuntime(
+            EventParts(handlers = getAll(), shapes = getAll(), sources = getAll(), configured = getAll(), live = getAll()),
+            get(),
+            get(),
+        )
     } onClose { it?.close() }
 }
 
@@ -99,7 +122,8 @@ private fun enginePartModule(parts: List<EnginePartProvider>) =
                 part.create(
                     object : EnginePartDependencies {
                         override fun <T : Any> get(type: KClass<T>): T =
-                            scope.getOrNull(type) ?: error("${part.type.simpleName} needs ${type.simpleName}, which this engine does not provide.")
+                            scope.getOrNull(type)
+                                ?: error("${part.type.simpleName} needs ${type.simpleName}, which this engine does not provide.")
                     },
                 )
             } binds part.binds.toTypedArray()

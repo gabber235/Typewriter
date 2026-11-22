@@ -17,15 +17,15 @@ use crate::broker::{StackKeys, creds_file, user_jwt, write_private};
 use crate::observer::session;
 use crate::provision::Provisioned;
 
-/// The request addresses of the Realm routes the author calls: the authored state and catalog a
-/// setup edits over, the commit of that edit, the publish, and the reads of what was published.
+/// The request addresses of the Realm routes the author calls: the authored state a setup edits
+/// over, the commit of that edit, the publication review whose candidate it publishes, the publish,
+/// and the read of what the selected publication holds.
 const AUTHORED_ROUTES: &[&str] = &[
-    "editor.catalog.fetch",
     "editor.authoring.state.query",
     "editor.authoring.edit.commit",
+    "editor.authoring.publication.query",
     "editor.authoring.publish",
     "editor.authoring.compiled.query",
-    "editor.authoring.compiled.status.query",
 ];
 
 #[derive(clap::Args)]
@@ -158,13 +158,14 @@ mod tests {
         let stack = ObservedBroker::start().await;
         let commit = "service.to.r1.organization.acme.realm.editor.authoring.edit.commit";
         let publish = "service.to.r1.organization.acme.realm.editor.authoring.publish";
+        let review = "service.to.r1.organization.acme.realm.editor.authoring.publication.query";
         let published = "service.to.r1.organization.acme.realm.editor.authoring.compiled.query";
-        for subject in [commit, publish, published] {
+        for subject in [commit, review, publish, published] {
             stack.answer(subject).await;
         }
         let author = stack.author().await;
 
-        for subject in [commit, publish, published] {
+        for subject in [commit, review, publish, published] {
             let reply = author.request(subject, "".into()).await;
             assert_eq!(&reply.unwrap().payload[..], b"answer", "{subject}");
         }

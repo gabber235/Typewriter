@@ -55,7 +55,7 @@ internal class FixtureSetupEditor(
 }
 
 /** The setup's view of an edit: the Realm's edit context plus its catalog and section ids. */
-private class WorkingViewSetupEdit(
+internal class WorkingViewSetupEdit(
     private val context: WorkingViewEditContext,
     private val view: AuthoringView,
 ) : SetupEdit,

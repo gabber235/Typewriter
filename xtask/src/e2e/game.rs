@@ -14,7 +14,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result, anyhow, bail};
 
-use super::{E2eArgs, take_turn};
+use super::{E2eArgs, handler_costs, take_turn};
 use crate::lock;
 use crate::results::{self, Quarantine, TestRun};
 use crate::review::change::Change;
@@ -38,10 +38,12 @@ pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
     // Every game Paper runs Typewriter against this worktree's stack, which builds its own services
     // before the run takes the heavy lock; Gradle gets the stack's environment.
     let keep = ctx.root.join(super::STACK_EVIDENCE).join("game");
-    let (ran, _) =
+    let (ran, kept) =
         stack::run_keeping_evidence(ctx, &typewriter::game(), GAME_BUDGET, &keep, |stack| {
             suite(ctx, args, &evidence, &quarantine, stack)
         })?;
+    // The engines' handler times, which the collector kept once every Paper flushed on stopping.
+    handler_costs::report(&handler_costs::read(&kept.metrics)?, &mut std::io::stderr())?;
     let file = ran.file.clone();
     // The pool names the run's logs folder itself, so a run cut short points at its pool log too.
     let run = TestRun {

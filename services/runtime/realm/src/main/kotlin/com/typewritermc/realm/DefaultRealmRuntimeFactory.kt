@@ -15,6 +15,7 @@ import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.assemble
 import com.typewritermc.imprint.COMMON_SOURCE_PART
 import com.typewritermc.imprint.ExtensionManifest
+import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.loader.api.HostedArtifact
 import com.typewritermc.loader.api.HostedArtifactPackage
 import com.typewritermc.loader.api.HostedDeploymentContext
@@ -22,6 +23,7 @@ import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
+import com.typewritermc.realm.checking.EntryHandlers
 import com.typewritermc.realm.operation.PreparationEvaluator
 import com.typewritermc.realm.publication.StagedEngineImplementationSource
 import com.typewritermc.realm.storage.DatabaseEndpoint
@@ -136,6 +138,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                         StagedEngineImplementationSource(
                             EngineImplementationInputs(token = InputToken(value = context.publicationTarget.fingerprint())),
                         ),
+                    handlers = EntryHandlers(context.artifacts.extensions.map { it.manifest }),
                 )
             return DefaultManagedRealmRuntime(
                 telemetry = telemetry,
@@ -153,13 +156,21 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
     }
 }
 
-internal fun HostedArtifactPackage.realmProviderArtifacts(): List<GeneratedProviderArtifact> {
-    val physical =
+internal fun HostedArtifactPackage.realmProviderArtifacts(): List<GeneratedProviderArtifact> =
+    realmProviderArtifacts(
         buildList {
             add(runtimeArtifact)
             addAll(catalogArtifacts)
             extensions.forEach { extension -> add(HostedArtifact(extension.path, extension.manifest)) }
-        }.distinctBy { it.path }
+        },
+    )
+
+/**
+ * The generated provider artifacts a Realm loads from the physical [artifacts] of its deployment: each artifact once,
+ * an extension restricted to its common part.
+ */
+fun realmProviderArtifacts(artifacts: List<HostedArtifact<ImprintManifest>>): List<GeneratedProviderArtifact> {
+    val physical = artifacts.distinctBy { it.path }
     val duplicateIdentities = physical.groupBy { it.manifest.id }.filterValues { entries -> entries.map { it.path }.distinct().size > 1 }
     require(duplicateIdentities.isEmpty()) {
         "Generated provider artifact identities must resolve to one physical path: ${duplicateIdentities.keys.joinToString()}."

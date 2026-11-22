@@ -12,7 +12,8 @@ import org.bukkit.entity.Player;
  * player's attempt with its name; it is never cancelled, and it holds no tick from then on.
  *
  * <p>Count work that already runs with {@link #begin} and {@link #end}, or around a future with
- * {@link #around}, or around a task handed to Bukkit's async scheduler with {@link #task}. Any thread may count work. Every piece of
+ * {@link #around}, or around a task handed to Bukkit's async scheduler with {@link #task}, or work a later
+ * tick starts with {@link #scheduled}. Any thread may count work. Every piece of
  * work a plugin starts for a player must be counted, or a check may run before its effect.
  */
 public final class PlayerWork implements AutoCloseable {
@@ -27,6 +28,14 @@ public final class PlayerWork implements AutoCloseable {
     /** [player]'s work [name] begins now and counts until {@link #end}. */
     public static PlayerWork begin(Player player, String name) {
         return new PlayerWork(LEDGER.begin(player.getUniqueId(), player.getName(), name));
+    }
+
+    /**
+     * [player]'s work [name], which a later tick starts rather than running now (a chain the next tick's end
+     * picks up, for example), counts until {@link #end}: it lets the next tick start and holds the one after.
+     */
+    public static PlayerWork scheduled(Player player, String name) {
+        return new PlayerWork(LEDGER.schedule(player.getUniqueId(), player.getName(), name));
     }
 
     /** [player]'s work [name] counts until [work] completes, either way; returns [work]. */

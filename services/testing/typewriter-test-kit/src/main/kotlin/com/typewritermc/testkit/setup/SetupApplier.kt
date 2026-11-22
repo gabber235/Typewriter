@@ -2,6 +2,7 @@
 
 package com.typewritermc.testkit.setup
 
+import com.typewritermc.authoring.CheckedWriteResult
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.SubmissionKey
@@ -82,42 +83,91 @@ class SetupRejected(
 
 /**
  * Applies setups the way an author creates content: each part is created with its owner link unfilled, then a link to
- * it is inserted into its owner's list, which writes both sides. Every part goes into one edit and one commit.
+ * it is inserted into its owner's list, which writes both sides. Every part goes into one edit and one commit. A commit
+ * that meets a change saved meanwhile is planned again on the saved state and sent again, up to [COMMITS] commits.
  */
 class SetupApplier(
     private val editor: SetupEditor,
 ) {
-    suspend fun apply(setup: Setup<*>) {
-        val edit =
-            try {
-                editor.edit("setup:${setup.name.value}") {
-                    // Keeps the siblings of one owner list in builder order.
-                    val lastItem = mutableMapOf<Pair<ResourceId, ValuePath>, ItemId>()
-                    for (part in setup.parts) {
-                        val owner =
-                            when (val owner = part.owner) {
-                                is SetupOwner.Part -> {
-                                    owner.id
-                                }
+    suspend fun apply(setup: Setup<*>) =
+        commit(setup, "setup") {
+            // Keeps the siblings of one owner list in builder order.
+            val lastItem = mutableMapOf<Pair<ResourceId, ValuePath>, ItemId>()
+            for (part in setup.parts) {
+                val owner =
+                    when (val owner = part.owner) {
+                        is SetupOwner.Part -> {
+                            owner.id
+                        }
 
-                                is SetupOwner.Section -> {
-                                    sectionId(owner.definition)
-                                        ?: error("The realm has no ${owner.type.simpleName}; is its extension loaded?")
-                                }
-                            }
-                        create(part.id, record(part))
-                        val slot = owner to part.list
-                        lastItem[slot] = insert(boundCollectionPath(ValueLocation.of(owner, part.list)), lastItem[slot], ownerLink(part))
+                        is SetupOwner.Section -> {
+                            sectionId(owner.definition)
+                                ?: error("The realm has no ${owner.type.simpleName}; is its extension loaded?")
+                        }
                     }
-                    finish()
-                }
-            } catch (refused: EditRefused) {
-                throw SetupRejected(setup.name, setup.describe(refused.problems), refused)
+                create(part.id, record(part))
+                val slot = owner to part.list
+                lastItem[slot] = insert(boundCollectionPath(ValueLocation.of(owner, part.list)), lastItem[slot], ownerLink(part))
             }
-        val response = editor.commit(edit, SubmissionKey("setup:${UUID.randomUUID()}"))
-        if (response !is CommitPreparedEditResponse.CommittedWrapper) throw SetupRejected(setup.name, setup.describe(response))
+        }
+
+    /**
+     * Changes what [from] created into what [to] describes, the way an author edits fields: on each part, every field
+     * whose value differs is written, in one edit and one commit. Both setups must have the same parts.
+     */
+    suspend fun change(
+        from: Setup<*>,
+        to: Setup<*>,
+    ) {
+        require(from.parts.map { it.id } == to.parts.map { it.id }) { "${to.name.value} must have the parts of ${from.name.value}" }
+        commit(to, "change") {
+            from.parts.zip(to.parts).forEach { (before, after) ->
+                val was = record(before).fields.associateBy { it.name }
+                record(after).fields.filter { it != was[it.name] }.forEach { field ->
+                    val written = checkedSet(ValueLocation.of(after.id, ValuePath.root.field(field.name)), field.value)
+                    if (written is CheckedWriteResult.Rejected) throw EditRefused(written.problems)
+                }
+            }
+        }
+    }
+
+    /**
+     * Deletes what [setup] created, the way an author deletes content: each part a section owns is deleted, and the
+     * realm deletes the parts those own with them.
+     */
+    suspend fun remove(setup: Setup<*>) =
+        commit(setup, "remove") {
+            setup.parts.filter { it.owner is SetupOwner.Section }.forEach { delete(it.id) }
+        }
+
+    private suspend fun commit(
+        setup: Setup<*>,
+        kind: String,
+        write: suspend SetupEdit.() -> Unit,
+    ) {
+        var response: CommitPreparedEditResponse? = null
+        repeat(COMMITS) {
+            val edit =
+                try {
+                    editor.edit("$kind:${setup.name.value}") {
+                        write()
+                        finish()
+                    }
+                } catch (refused: EditRefused) {
+                    throw SetupRejected(setup.name, setup.describe(refused.problems), refused)
+                }
+            response = editor.commit(edit, SubmissionKey("$kind:${UUID.randomUUID()}"))
+            if (response !is CommitPreparedEditResponse.ConflictErrorWrapper) {
+                if (response !is CommitPreparedEditResponse.CommittedWrapper) throw SetupRejected(setup.name, setup.describe(response))
+                return
+            }
+        }
+        throw SetupRejected(setup.name, setup.describe(checkNotNull(response)))
     }
 }
+
+/** How often a setup commits while each commit meets a change saved meanwhile. */
+private const val COMMITS = 5
 
 /** The record an author's create would carry for [part], with its owner link left for the insert to fill. */
 private fun SetupEdit.record(part: SetupPart): AuthoringRecord {

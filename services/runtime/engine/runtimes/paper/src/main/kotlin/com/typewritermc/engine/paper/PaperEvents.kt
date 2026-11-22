@@ -73,6 +73,8 @@ class PaperProtagonists(
         val uuid = runCatching { UUID.fromString(identity.principal.id) }.getOrNull() ?: return null
         return plugin.server.getPlayer(uuid)?.let(::PaperProtagonist)
     }
+
+    override fun present(): Collection<Protagonist> = plugin.server.onlinePlayers.map { it.protagonist }
 }
 
 /** A player's protagonist: the Minecraft principal of its UUID. */

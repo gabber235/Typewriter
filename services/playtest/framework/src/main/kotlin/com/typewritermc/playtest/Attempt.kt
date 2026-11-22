@@ -7,10 +7,12 @@ import build.skir.reflection.StructField
 import build.skir.reflection.TypeDescriptor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.withContext
 import skirout.harness.v1.golden.Renderer
 import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.ArtifactKind
@@ -47,6 +49,13 @@ internal interface AttemptPool {
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<StateKind>
 
+    /**
+     * The publication the Typewriter engine on the Paper of [player]'s attempt applies now.
+     *
+     * TODO(node 9): temporary test only signal; replace with the engine's reported active publication ("applied on N of M").
+     */
+    suspend fun applied(player: GamePlayer): AppliedPublication
+
     /** Kills and boots again the own Paper of [attempt], which runs [submission]; returns the new Paper's tick after which every player is back. */
     suspend fun restart(
         attempt: Attempt,
@@ -62,7 +71,7 @@ internal interface AttemptPool {
     /** [player]'s client leaves its Paper as a person quits; returns, once Paper saw the player leave, the tick after which it left. */
     suspend fun quit(player: GamePlayer): Int
 
-    /** [player]'s client joins its Paper again; returns, once it holds what Paper sends it, the tick after which it is back. */
+    /** [player]'s client joins its Paper again; returns, once it holds what Paper sends it, the tick after which it joined. */
     suspend fun rejoin(player: GamePlayer): Int
 
     /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */
@@ -167,11 +176,62 @@ internal class Attempt(
      */
     fun observed(failure: AssertionError): AssertionError = failure.also { proved = true }
 
-    /** Runs [body] on the attempt; returns why it failed, or null. A body that made no positive check fails. */
-    suspend fun outcome(body: suspend RequirementScope.() -> Unit): Throwable? =
+    /**
+     * Runs [body] on the attempt; returns why it failed, or null. A body that made no positive check fails.
+     * Each of [content] is written for the players and live on Paper before the body runs, and removed with
+     * its removal live once the body ended, however it ended, so the players go back to the pool without it.
+     * The body's own failure comes first; a failed removal fails an attempt that passed.
+     */
+    suspend fun outcome(
+        content: List<AttemptContent> = emptyList(),
+        body: suspend RequirementScope.() -> Unit,
+    ): Throwable? {
+        val written = mutableListOf<Pair<AttemptContent, WrittenContent>>()
+        val failure =
+            caught {
+                for (each in content) {
+                    val wrote = each.write(players).also { written += each to it }
+                    each.liveness.awaitLive(contentPaper, wrote.live)
+                }
+                RequirementScope(this, written.map { (each, wrote) -> LiveChanges(wrote, each.liveness) }).body()
+                bodyEnded(proved)
+            }
+        val removals =
+            withContext(NonCancellable) {
+                written.asReversed().mapNotNull { (each, wrote) ->
+                    caught {
+                        each.liveness.awaitLive(contentPaper, wrote.remove())
+                        null
+                    }
+                }
+            }
+        val first = failure ?: removals.firstOrNull() ?: return null
+        (removals - first).forEach(first::addSuppressed)
+        return first
+    }
+
+    /** [written] content whose changes a body makes are live on Paper before the body goes on. */
+    private inner class LiveChanges(
+        private val written: WrittenContent,
+        private val liveness: ContentLiveness,
+    ) : WrittenContent by written {
+        override suspend fun change(): LiveContent = written.change().also { liveness.awaitLive(contentPaper, it) }
+
+        override suspend fun remove(): LiveContent = written.remove().also { liveness.awaitLive(contentPaper, it) }
+    }
+
+    /** The attempt's Paper as content liveness reads it. */
+    val contentPaper =
+        object : ContentPaper {
+            override val name = paper
+
+            override suspend fun applied(): AppliedPublication = unlessLost { session.applied(players.first()) }
+        }
+
+    /** What [block] returned as its failure, or what it threw. */
+    private suspend fun caught(block: suspend () -> Throwable?): Throwable? =
         try {
-            RequirementScope(this).body()
-            bodyEnded(proved)
+            block()
         } catch (cancelled: CancellationException) {
             cancelled
         } catch (
@@ -312,7 +372,7 @@ internal class Attempt(
         return step("quit ${player.name}") { Mark(unlessLost { session.quit(player) }) }.also { ran(it.tick) }
     }
 
-    /** [player], away since its [quit], joins its Paper again; the mark is the tick after which its client is back. */
+    /** [player], away since its [quit], joins its Paper again; the mark is the tick after which it joined. */
     suspend fun rejoin(player: GamePlayer): Mark {
         if (player !in away) {
             called()

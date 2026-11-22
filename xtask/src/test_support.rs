@@ -642,3 +642,40 @@ pub fn changed(path: &str, added: &[u32]) -> crate::review::change::FileChange {
         added: added.to_vec(),
     }
 }
+
+/// One OTLP JSON metrics export request from the engine instance `instance` holding one point
+/// of the handler duration histogram per `(event, count, sum in seconds)`, each cumulative from
+/// `start` to `time` (Unix nanoseconds), in the collector's shape.
+pub fn otlp_handler_durations(
+    instance: &str,
+    start: i64,
+    time: i64,
+    points: &[(&str, u64, f64)],
+) -> serde_json::Value {
+    let points: Vec<_> = points
+        .iter()
+        .map(|(event, count, sum)| {
+            serde_json::json!({
+                "attributes": [{ "key": "typewriter.event", "value": { "stringValue": event } }],
+                "startTimeUnixNano": start.to_string(),
+                "timeUnixNano": time.to_string(),
+                "count": count.to_string(),
+                "sum": sum,
+            })
+        })
+        .collect();
+    serde_json::json!({ "resourceMetrics": [{
+        "resource": { "attributes": [
+            { "key": "service.name", "value": { "stringValue": "loader" } },
+            { "key": "service.instance.id", "value": { "stringValue": instance } },
+        ] },
+        "scopeMetrics": [{
+            "scope": { "name": "com.typewritermc.engine.events" },
+            "metrics": [{
+                "name": "typewriter.event.handler.duration",
+                "unit": "s",
+                "histogram": { "dataPoints": points, "aggregationTemporality": 2 },
+            }],
+        }],
+    }] })
+}

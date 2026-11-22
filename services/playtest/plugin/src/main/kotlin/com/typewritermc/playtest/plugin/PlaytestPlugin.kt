@@ -19,7 +19,9 @@ import org.bukkit.World
 import org.bukkit.craftbukkit.entity.CraftPlayer
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.util.Vector
@@ -70,6 +72,9 @@ class PlaytestPlugin :
     private val ground = GroundAhead(this)
     private val chat = ChatWork()
     private val suggestions = SuggestionWork()
+
+    /** Each online player's join: the last tick that ended before Paper took it in. Main thread. */
+    private val joinedAfter = mutableMapOf<UUID, Int>()
     private val coverage =
         Coverage(
             { RT.getAgent().getExecutionData(true) },
@@ -186,12 +191,13 @@ class PlaytestPlugin :
         }
     }
 
-    /** Answers a session's request to Paper: a probe or a query. */
+    /** Answers a session's request to Paper: a probe, a query, or what the Typewriter engine applies. */
     private fun request(request: Request) {
         val id = request.id
         when (val ask = (request.ask as? Ask.PaperWrapper)?.value) {
             is PaperAsk.ProbeWrapper -> probe(id, ask.value)
             is PaperAsk.QueryWrapper -> pool.send(reply(id, marks(ask.value.player)))
+            is PaperAsk.AppliedWrapper -> pool.send(reply(id, applied()))
             else -> logger.severe("The game pool sent $request, which Paper never answers")
         }
     }
@@ -256,13 +262,14 @@ class PlaytestPlugin :
         val ids = uuids(resume.players)
         val players = online(ids)
         if (players.failure != null) {
-            pool.send(Message.createResumed(attempt = attempt, tick = ranAfter, failure = players.failure))
+            pool.send(Message.createResumed(attempt = attempt, tick = ranAfter, failure = players.failure, joinedAfter = ranAfter))
             return
         }
         coverage.started(attempt)
         attempts.claim(attempt, ids)
         policy.claim(ids)
-        policy.deliver(ids) { pool.send(Message.createResumed(attempt = attempt, tick = ranAfter, failure = null)) }
+        val joined = ids.maxOf { joinedAfter[it] ?: ranAfter }
+        policy.deliver(ids) { pool.send(Message.createResumed(attempt = attempt, tick = ranAfter, failure = null, joinedAfter = joined)) }
     }
 
     /** Leaves a mark of [kind] on the player: Paper keeps some kinds, this plugin the others. */
@@ -283,12 +290,35 @@ class PlaytestPlugin :
     }
 
     /**
+     * Answers which resource ids the Typewriter engine on this Paper applies, as its [AppliedContent] reports them.
+     *
+     * TODO(node 9): temporary test only signal; replace with the engine's reported active publication ("applied on N of M").
+     */
+    private fun applied(): Answer {
+        val reporter =
+            Bukkit.getServicesManager().load(AppliedContent::class.java)
+                ?: return Answer.createApplied(
+                    resources = listOf(),
+                    failure = "no Typewriter engine on this Paper reports what it applies: is the playtest bridge deployed to it?",
+                    publication = null,
+                )
+        return Answer.createApplied(resources = reporter.applied().sorted(), failure = null, publication = reporter.publication())
+    }
+
+    /** A player joined: what its join causes from now on shows from the tick after the last one that ended. */
+    @EventHandler(priority = EventPriority.LOWEST)
+    fun onJoin(event: PlayerJoinEvent) {
+        joinedAfter[event.player.uniqueId] = policy.lastEnded()
+    }
+
+    /**
      * A player left: its client crashed, froze until Paper timed it out, or its attempt sent it away as a
      * person quits. It holds back no tick from now on; the pool, which knows which, replaces a lost client.
      */
     @EventHandler
     fun onQuit(event: PlayerQuitEvent) {
         val player = event.player
+        joinedAfter.remove(player.uniqueId)
         policy.lose(player.uniqueId)
         if (::pool.isInitialized) {
             pool.send(Message.createPlayerLeft(player = player.name, reason = event.reason.name, tick = policy.lastEnded()))

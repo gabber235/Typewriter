@@ -57,11 +57,22 @@ dependencies {
     imprintPlatformApi(project(":typewriter-api"))
     loaderPlugin(project(":loader-distribution"))
     "gameTestImplementation"(project(":playtest"))
+    // The event requirements write content of the basic extension's entries and events: its JAR, since its classes live
+    // in its source parts rather than in main.
+    "gameTestImplementation"(project(":basic-extension")) {
+        attributes { attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR)) }
+    }
     // The stack observer the game requirements read the topology and the sessions bucket through.
     testFixturesImplementation(project(":messaging"))
     testFixturesImplementation(project(":protocol-transport"))
     testFixturesApi(project(":engine-core"))
     testFixturesApi(project(":typewriter-api"))
+    // The stack author plans setups with the Realm's own planner and declares the content a requirement owns.
+    testFixturesApi(testFixtures(project(":realm")))
+    // It reads the artifacts the stack's Realm host committed, so its planner loads exactly what that Realm loads.
+    testFixturesImplementation(project(":loader-core"))
+    testFixturesImplementation("com.typewritermc:imprint-archive")
+    testFixturesApi(project(":playtest"))
 }
 
 /** A value of the stack `cargo xtask e2e game` runs the game suite in, which it hands Gradle. */
@@ -87,6 +98,8 @@ gamePaper {
         }
     }
     keptPerSlot.add("plugins/Typewriter/state")
+    // Counts chain work as player work, drops a wiped player's chains, and reports what the engine applied.
+    typewriterExtensions.from(project(":playtest-bridge"))
 }
 
 runPaper {

@@ -654,6 +654,7 @@ internal class Pool(
                 when (val paper = ask.value) {
                     is PaperAsk.ProbeWrapper -> paper.value.players
                     is PaperAsk.QueryWrapper -> listOf(paper.value.player)
+                    is PaperAsk.AppliedWrapper -> listOf(paper.value.player)
                     else -> null
                 }
             }
@@ -865,7 +866,12 @@ internal class Pool(
             val client = attempt.players.mapNotNull { clientOf(it.uuid) }.firstOrNull { it.away is Away.Joining } ?: return@let
             val joining = client.away as Away.Joining
             client.away = null
-            val answer = Answer.createRejoined(tick = message.tick, failure = failure?.let { "${server.name} could not take it back: $it" })
+            // The rejoin's mark is its join, so what the join caused counts for the windows after it.
+            val answer =
+                Answer.createRejoined(
+                    tick = message.joinedAfter,
+                    failure = failure?.let { "${server.name} could not take it back: $it" },
+                )
             return attempt.session.send(Message.createReply(request = joining.request, answer = answer))
         }
         val rules = server.rules

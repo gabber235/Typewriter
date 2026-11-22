@@ -59,6 +59,24 @@ val artifactInboxRoot =
     )
 val manualArtifactTarget = artifactInboxRoot.map { it.resolve("manual") }
 
+/** Publishes [sources] into [target] whole: each is copied beside its place first and then moved there at once. */
+fun publishInto(
+    target: File,
+    sources: Iterable<File>,
+) {
+    target.mkdirs()
+    sources.forEach { source ->
+        val temporary = target.resolve(".${source.name}.partial")
+        source.copyTo(temporary, overwrite = true)
+        java.nio.file.Files.move(
+            temporary.toPath(),
+            target.resolve(source.name).toPath(),
+            java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+            java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+        )
+    }
+}
+
 tasks.register("assembleDevelopmentArtifacts") {
     val developmentArtifactTasks =
         listOf(
@@ -79,18 +97,29 @@ tasks.register("assembleDevelopmentArtifacts") {
     dependsOn(developmentArtifactTasks)
     inputs.files(developmentArtifactFiles)
     outputs.files(publishedArtifactFiles)
+    doLast { publishInto(manualArtifactTarget.get(), developmentArtifactFiles.map { it.get().asFile }) }
+}
+
+// The extensions every game module declares with `gamePaper { typewriterExtensions.from(...) }`, which only the
+// game stack's Realm host deploys: `cargo xtask e2e game` runs `installGameExtensions` into that host's
+// inbox before the host starts.
+val gameExtensionsScope = configurations.dependencyScope("gameExtensionsScope")
+val gameExtensions = configurations.resolvable("gameExtensions") { extendsFrom(gameExtensionsScope.get()) }
+subprojects.forEach { gameModule ->
+    gameModule.pluginManager.withPlugin("com.typewritermc.game-test") {
+        dependencies.add(
+            gameExtensionsScope.name,
+            dependencies.project(mapOf("path" to gameModule.path, "configuration" to "playtestGameExtensions")),
+        )
+    }
+}
+
+tasks.register("installGameExtensions") {
+    group = "typewriter"
+    description = "Publishes the extensions the game modules declare into an artifact inbox, for the game stack's Realm host."
+    val folders = files(gameExtensions)
+    inputs.files(folders)
     doLast {
-        val sources = developmentArtifactFiles.map { it.get().asFile }
-        val target = manualArtifactTarget.get().also(File::mkdirs)
-        sources.forEach { source ->
-            val temporary = target.resolve(".${source.name}.partial")
-            source.copyTo(temporary, overwrite = true)
-            java.nio.file.Files.move(
-                temporary.toPath(),
-                target.resolve(source.name).toPath(),
-                java.nio.file.StandardCopyOption.ATOMIC_MOVE,
-                java.nio.file.StandardCopyOption.REPLACE_EXISTING,
-            )
-        }
+        publishInto(manualArtifactTarget.get(), folders.flatMap { folder -> folder.listFiles().orEmpty().filter { it.extension == "jar" } })
     }
 }

@@ -26,6 +26,8 @@ enum class Button(
  */
 class RequirementScope internal constructor(
     internal val attempt: Attempt,
+    /** The content the requirement declared, as the attempt wrote it for its players; it is live on Paper. */
+    val content: List<WrittenContent> = emptyList(),
 ) {
     /** The players the attempt claimed, in a fixed order: `val (member, partner, outsider) = players`. */
     val players: List<GamePlayer> = attempt.players
@@ -127,8 +129,8 @@ class RequirementScope internal constructor(
     /**
      * The player, away since its [quit], joins the same Paper again and returns once its client steps
      * with Paper and holds what Paper sends it. Nothing wipes it: it is where Paper kept it, with what
-     * Paper kept for it, in the attempt's region. The mark is the tick after which it is back; windows
-     * count from it.
+     * Paper kept for it, in the attempt's region. The mark is the tick after which it joined, so what its
+     * join caused counts: windows count from it.
      */
     suspend fun GamePlayer.rejoin(): Mark = attempt.rejoin(this).also { anchor = it }
 

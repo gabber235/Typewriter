@@ -6,6 +6,12 @@ import com.typewritermc.engine.events.testing.TestSource
 import com.typewritermc.engine.events.testing.provided
 import com.typewritermc.engine.events.testing.reason
 import com.typewritermc.engine.events.testing.verdict
+import com.typewritermc.engine.runtime.testing.OTHER
+import com.typewritermc.engine.runtime.testing.PAGE
+import com.typewritermc.engine.runtime.testing.PublicationRecorder
+import com.typewritermc.engine.runtime.testing.assemble
+import com.typewritermc.engine.runtime.testing.facts
+import com.typewritermc.engine.runtime.testing.resource
 import com.typewritermc.engine.runtime.testing.wiredDeploymentContext
 import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.readSessionEntry
@@ -25,6 +31,7 @@ import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
 import com.typewritermc.services.libs.communicator.testing.NatsTestServer
 import com.typewritermc.services.libs.communicator.testing.onBroker
+import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
@@ -38,6 +45,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import org.koin.dsl.module
+import skirout.editor.v1.type_catalog.PublicationId
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
@@ -120,6 +128,31 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
             val messages = generateSequence<Throwable>(failure) { it.cause }.joinToString(" | ") { it.message.orEmpty() }
             messages shouldContain "TestSource needs HasChat"
         } finally {
+            scope.cancel()
+        }
+    }
+
+    test("an engine part that observes publications hears each publication the engine applied, with its roots") {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val observer = PublicationRecorder()
+        val wiring =
+            EngineWiring(
+                wiredDeploymentContext(),
+                scope,
+                module { single<SessionTimings> { SessionHarness.SHORT } },
+                listOf(provided(observer, listOf(PublicationObserver::class))),
+            )
+        try {
+            wiring.applied(PublicationId(value = "first"), assemble(listOf(facts(resource(PAGE)), facts(resource(OTHER), root = OTHER))))
+            wiring.applied(PublicationId(value = "second"), assemble(listOf(facts(resource(OTHER), root = OTHER))))
+
+            observer.applied shouldBe
+                listOf(
+                    PublicationId(value = "first") to setOf(ResourceId("page"), ResourceId("other")),
+                    PublicationId(value = "second") to setOf(ResourceId("other")),
+                )
+        } finally {
+            wiring.close()
             scope.cancel()
         }
     }

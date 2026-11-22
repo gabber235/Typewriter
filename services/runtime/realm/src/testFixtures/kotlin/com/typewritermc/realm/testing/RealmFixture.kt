@@ -232,6 +232,15 @@ class RealmFixture private constructor(
         return setup.handles
     }
 
+    /** Deletes what [setup] created as one author edit, as [SetupApplier.remove] does. */
+    suspend fun withoutSetup(setup: Setup<*>) = SetupApplier(FixtureSetupEditor(this)).remove(setup)
+
+    /** Changes what [from] created into [to] as one author edit, as [SetupApplier.change] does. */
+    suspend fun changeSetup(
+        from: Setup<*>,
+        to: Setup<*>,
+    ) = SetupApplier(FixtureSetupEditor(this)).change(from, to)
+
     /** Commits [edit] as the save attempt [submission] through the Realm's admission, as the commit route does. */
     suspend fun commit(
         edit: PreparedEdit,

@@ -15,6 +15,7 @@ import com.typewritermc.engine.pages.StaticPage
 import com.typewritermc.formula.DynamicProvider
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.COMMON_SOURCE_PART
+import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.library.Book
 import com.typewritermc.operations.OperationDeclaration
 import com.typewritermc.presentation.DefaultPresentationRuntime
@@ -26,17 +27,22 @@ import com.typewritermc.types.qualified
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import java.net.URI
+import java.net.URL
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.zip.ZipFile
 import kotlin.reflect.KClass
 
 /**
- * What a test Realm loads: the core typewriter artifact, the extension [artifacts], and test only [declarations],
- * [operations], [configurations] and [dynamics] added with the core artifact's origin before assembly, as an
- * extension's own registrations are.
+ * What a test Realm loads: the [realm] artifacts it loads itself, the extension [artifacts], and test only
+ * [declarations], [operations], [configurations] and [dynamics] added with the first loaded declaration's origin before
+ * assembly, as an extension's own registrations are.
  */
 data class RealmCatalog(
+    val realm: List<GeneratedProviderArtifact> = listOf(typewriterApi),
     val artifacts: List<GeneratedProviderArtifact> = emptyList(),
     val declarations: (CatalogContributions) -> List<OwnedTypeDeclaration> = { emptyList() },
     val operations: (ProviderOrigin) -> List<OperationDeclaration> = { emptyList() },
@@ -52,7 +58,7 @@ data class RealmCatalog(
     fun incarnation(generation: String): RealmCatalogIncarnation {
         val deployment =
             GeneratedProviderLoader().load(
-                listOf(GeneratedProviderArtifact(ArtifactId("typewriter"), Book::class.codeSource())) + artifacts,
+                realm + artifacts,
                 DeploymentFacts(),
                 DiscoveryDomains.Realm,
                 runtimeServices = mapOf(PresentationRuntime::class.java to DefaultPresentationRuntime()),
@@ -80,8 +86,11 @@ data class RealmCatalog(
     }
 
     companion object {
+        /** The typewriter API artifact, which declares the core types. */
+        val typewriterApi = GeneratedProviderArtifact(ArtifactId("typewriter"), Book::class.ownArtifact())
+
         /** The engine core artifact, which declares the core pages. */
-        val engineCore = GeneratedProviderArtifact(ArtifactId("engine-core"), StaticPage::class.codeSource())
+        val engineCore = GeneratedProviderArtifact(ArtifactId("engine-core"), StaticPage::class.ownArtifact())
 
         /** The extension artifact [id] whose classes include [type], loaded the way Realm loads extensions. */
         fun extension(
@@ -96,6 +105,36 @@ private fun KClass<*>.codeSource(): Path =
         java.protectionDomain.codeSource.location
             .toURI(),
     )
+
+/**
+ * The classpath entry of the project that declares this class. A hosted artifact on the classpath bundles the class too
+ * and may come first, so the entry is the one without an Imprint manifest, never whichever the class loader picked.
+ */
+private fun KClass<*>.ownArtifact(): Path {
+    val resource = java.name.replace('.', '/') + ".class"
+    val entries =
+        java.classLoader
+            .getResources(resource)
+            .toList()
+            .map { it.classpathEntry(resource) }
+            .distinct()
+    return entries.singleOrNull { !it.holds(IMPRINT_MANIFEST_PATH) }
+        ?: error("$resource must come from exactly one classpath entry without an Imprint manifest, not from $entries")
+}
+
+private fun URL.classpathEntry(resource: String): Path =
+    when (protocol) {
+        "jar" -> Path.of(URI(path.substringBefore("!/")))
+        "file" -> generateSequence(Path.of(toURI())) { it.parent }.elementAt(resource.split('/').size)
+        else -> error("$this is neither a JAR nor a directory entry")
+    }
+
+private fun Path.holds(entry: String): Boolean =
+    if (Files.isDirectory(this)) {
+        Files.exists(resolve(entry))
+    } else {
+        ZipFile(toFile()).use { it.getEntry(entry) != null }
+    }
 
 /** A lease on a Realm's catalog that counts how many of its retains are still open, so a test can see one leak. */
 internal class CountedCatalogLease(
