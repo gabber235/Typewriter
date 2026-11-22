@@ -614,7 +614,7 @@ One core handler implements return, so extensions write nothing for resume:
 fun SessionArrived.rejoin(steps: List<Running<*>>, starts: List<InteractionStart>) = ...
 ```
 
-It takes the strictest `entry.rules.onRejoin`; `RestartStep` fires `Triggered(row.entry, row.subject, row.context)` again, which makes a new `Step` id. While the protagonist is away, live handlers simply do not apply because their parameters cannot be resolved.
+It takes the strictest `entry.rules.onRejoin`; `RestartStep` fires `TriggeredEvent(row.entry, row.subject, row.context)` again, which makes a new `Step` id. While the protagonist is away, live handlers simply do not apply because their parameters cannot be resolved.
 
 A server move is a leave and a rejoin, and the step's `onRejoin` applies. There is no separate "continue" choice and no follow setting.
 
