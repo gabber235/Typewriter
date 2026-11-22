@@ -3,9 +3,9 @@ package com.typewritermc.extensions.basic.entries.sequence.events
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.engine.pages.SequencePage
+import com.typewritermc.engine.pages.SequenceTriggers
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
-import com.typewritermc.engine.pages.SequenceTriggers
 import com.typewritermc.library.PageElements
 import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
