@@ -111,7 +111,7 @@ fun Running<SpokenDialogueEntry>.view(who: Protagonist): SpokenView {
 
 Each read inside the derive is a tracked read, so a changed `maxLineLength` reruns it and a change to an unread field does not. A configuration that is not loaded yet fails the read, and the derive reruns when it loads.
 
-The configured cascade (the override order in section 5) resolves inside the one entry reader that every accessor goes through. A stored value, a `Var`, a nested record field and the cascade all resolve there, and node 12 builds the cascade into that reader as its single extension point (decided 2026-11-23). `Configured.value` is not a read path for handlers; the accessors are the only path.
+Handlers read configured values through the same accessors and entry reader as every other entry value (decided 2026-11-23). The configured cascade (the override order in section 5) adds nothing to the reader: it is the scope name `inherited` that a configuration record's `Var` fields can use, so a read stays plain formula evaluation. `Configured.value` is not a read path for handlers; the accessors are the only path.
 
 ## In the panel
 

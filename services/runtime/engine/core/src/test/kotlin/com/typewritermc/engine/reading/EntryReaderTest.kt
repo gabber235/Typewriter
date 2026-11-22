@@ -2,21 +2,17 @@ package com.typewritermc.engine.reading
 
 import com.typewritermc.engine.events.testing.protagonist
 import com.typewritermc.engine.formula.testing.DialogueEntry
-import com.typewritermc.engine.formula.testing.DialogueEntryFields
 import com.typewritermc.engine.formula.testing.Said
 import com.typewritermc.engine.formula.testing.Spoken
 import com.typewritermc.engine.formula.testing.aside
 import com.typewritermc.engine.formula.testing.choices
 import com.typewritermc.engine.formula.testing.dialoguePublication
 import com.typewritermc.engine.formula.testing.formula
-import com.typewritermc.engine.formula.testing.greeting
 import com.typewritermc.engine.formula.testing.maxLineLength
 import com.typewritermc.engine.formula.testing.minLines
 import com.typewritermc.engine.formula.testing.spoken
 import com.typewritermc.engine.formula.testing.text
-import com.typewritermc.engine.reading.testing.LayeredValues
 import com.typewritermc.engine.reading.testing.entry
-import com.typewritermc.engine.reading.testing.locationOf
 import com.typewritermc.events.Context
 import com.typewritermc.events.EventContext
 import com.typewritermc.formula.Var
@@ -51,26 +47,5 @@ val EntryReaderTest by testSuite {
 
         val withAside = dialoguePublication(aside = Spoken(minLines)).candidate<DialogueEntry>("dialogue", leave)
         withAside.aside?.minLines shouldBe 3
-    }
-
-    test("a stored value source at the seam answers for an accessor, with no change to the accessor or its caller") {
-        val publication = dialoguePublication(minLines, 12, choices)
-        val environment = publication.environment()
-        val greeting = environment.locationOf(publication.entry("dialogue"), DialogueEntryFields.greeting)
-        val configured =
-            LayeredValues(
-                environment.published,
-            ).with(greeting, PublishedValues(dialoguePublication(minLines, 12, choices, greeting = "welcome back").graph).at(greeting))
-
-        val candidate =
-            publication.candidate<DialogueEntry>(
-                "dialogue",
-                leave,
-                environment,
-                reader = PublishedEntryReader(environment, configured),
-            )
-
-        candidate.greeting shouldBe "welcome back"
-        candidate.spoken.minLines shouldBe 3
     }
 }

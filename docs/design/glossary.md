@@ -174,7 +174,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Configuration<T>`**: root resource holding a `Partial<T>`, one named version of an extension's record. See [configurations.md](configurations.md).
 
-**`Configured<T>`**: entry field that selects a `Configuration<T>` and overrides single values; handlers read its fields through accessors, and the entry reader resolves the override cascade (decided 2026-11-23). See [configurations.md](configurations.md).
+**`Configured<T>`**: entry field that selects a `Configuration<T>` and overrides single values; handlers read its fields through accessors, and a `Var` field reaches the overridden value through the scope name `inherited` (decided 2026-11-23). See [configurations.md](configurations.md).
 
 **`ConfigurationHolder`**: a resource in the owner chain that selects configurations: `Book`, `Page`, `RealmRoot`. The root's selection is the default. See [configurations.md](configurations.md).
 
@@ -276,7 +276,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Evaluation`**: result of evaluating a formula: a `Value`, or `Failed` with the location and a `FormulaFailure`. See [formula-language.md](formula-language.md#exceptions).
 
-**Entry reader** (`EntryReader`): the one reader every accessor resolves through (`read`, `has`, `items`): a plain stored value, a `Var`, a nested record field, and the configured cascade (node 12's single extension point). See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
+**Entry reader** (`EntryReader`): the one reader every accessor resolves through (`read`, `has`, `items`): a plain stored value, a `Var`, and a nested record field. See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
 
 **`EntryScope<E : Entry>`**: what a handler or derive reads through; it carries `entry`, `subject`, and `context`, and `Candidate<E>`, `Triggered<E>`, and `Running<E>` implement it. See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
 

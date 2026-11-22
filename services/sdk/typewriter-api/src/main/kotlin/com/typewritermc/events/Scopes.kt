@@ -47,8 +47,7 @@ interface EntryScope<out E : Entry> : RecordScope<E> {
 /**
  * The entry reader: the one way an accessor reaches a value of a scope's entry, at a path from the entry's root of any
  * depth. The engine resolves a plain stored value, a `Var` (written or a formula evaluated for the scope) and a nested
- * record field; where a value is stored is the reader's own concern, so a cascade of configured values plugs in there
- * without touching accessors or their callers.
+ * record field; where a value is stored is the reader's own concern, never the accessor's or its caller's.
  */
 interface EntryReader {
     /**

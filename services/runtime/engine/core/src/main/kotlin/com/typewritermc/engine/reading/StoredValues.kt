@@ -38,9 +38,9 @@ sealed interface Stored {
 }
 
 /**
- * The entry reader's one seam: where the value an entry holds at a location is resolved. The published values answer
- * by default; node 12's configured cascade answers here, so accessors and their callers never change. An instance is
- * one immutable snapshot: a change is a new instance, so a tracked read can tell what changed.
+ * What the entry reader finds at each location: the published values, or for tracked reads a snapshot that says which
+ * values are loaded yet. An instance is one immutable snapshot: a change is a new instance, so a tracked read can tell
+ * what changed.
  */
 fun interface StoredValues {
     fun at(location: EntryLocation): Stored
