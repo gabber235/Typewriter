@@ -135,7 +135,7 @@ This runs when an NPC is clicked, only if the clicking protagonist is in a spoke
 
 ### Parameters
 
-Parameters take plain types. A type as a parameter is the requirement; nullable means optional. There are no wrapper types such as `Present<P>` or `Held<H>`.
+Parameters take plain types. A type as a parameter is the requirement; nullable means optional. There are no wrapper types such as `Present<P>` or `Held<H>`. An entry value is never a parameter: it is read in the body through an accessor ([Reading entry values](#reading-entry-values), decided 2026-11-23).
 
 ```kotlin
 fun Tick<EveryTick>.animate(
@@ -155,7 +155,6 @@ Core resolution is a small fixed set. Extensions add value types, not resolution
 | `List<T>` | One run with the values that exist at these keys, filled like `T` from a list field or by `@From`; missing keys drop out. |
 | `All<T>` | Every value of type `T`; for a mirror, on every engine ([live-data.md](live-data.md#demand-across-engines)). |
 | `Candidate<E>` | One run per published entry of type `E` whose book applies to the subject ([book-composition.md](book-composition.md#6-conditions)). |
-| A plain value named like a `Var` field of the receiver's entry | That field's current value, context filled from the subject; reruns when its `Watched<T>` changes ([formula-language.md](formula-language.md#the-formula-primitive-in-kotlin)). |
 | `Outcome` | The final outcome; lets an after handler also see denied events. |
 | `Origin` | Who caused this occurrence: the session and its `PrincipalId`. Absent for events without a cause (`Tick`), which skips the handler; `Origin?` makes it optional. |
 | A hold's snapshot type (`LeashCenter`) | That hold's stored snapshot at the hold's keys ([interactions.md](interactions.md#snapshot-and-restore)). |
@@ -178,7 +177,7 @@ class BlockBreak_vault : VerdictHandler<BlockBreak>, EnginePart {
 }
 ```
 
-The plan is the one source for resolution, demand, and placement, and later for debug output. Later layers add a `Param` kind and its resolver. Layer 4 has `Identity`, `Trait`, `Candidate`, `Field`, `Origin`, and `Outcome`.
+The plan is the one source for resolution, demand, and placement, and later for debug output. Later layers add a `Param` kind and its resolver. Layer 4 has `Identity`, `Trait`, `Candidate`, `Origin`, and `Outcome`.
 
 Live objects come from the engine, which is what keeps handlers engine neutral:
 
@@ -190,15 +189,37 @@ interface LiveResolver<I : Identity> : EnginePart {
 
 The runtime checks the result against the requested trait; `null` or the wrong type means the handler does not apply.
 
-KSP also generates one accessor per `Var` field of an entry, so a handler reads a candidate's field as a plain value:
+### Reading entry values
+
+One way to read entry values (decided 2026-11-23): handlers and derives read them in the body, by name, at any depth. `EntryScope<E : Entry>` is what a body reads through. It carries `entry`, `subject`, and `context`; `Candidate<E>`, `Triggered<E>`, and `Running<E>` all implement it. `RecordScope<T>` is a scope positioned at a record value inside an entry; an entry is itself a record, so `EntryScope<E>` is a `RecordScope<E>` at the root.
+
+KSP generates one typed accessor per field of every record type, on `RecordScope<ThatRecord>`. A `Var<T, C>` field reads as a plain `T`, and context is filled from the scope (subject and chain context), so nobody passes it by hand:
 
 ```kotlin
 // generated
-val Candidate<VaultEntry>.locked: Boolean
-    get() = read(entry.locked)
+val RecordScope<VaultEntry>.locked: Boolean get() = readField(VaultEntryFields.locked)
+val RecordScope<WeightedRandomTriggerGateEntry>.links: List<RecordScope<WeightedLink>>
+    get() = recordList(WeightedRandomTriggerGateEntryFields.links)
 ```
 
-`read` evaluates with `runtime/formula`. A formula that fails counts as a failed handler and is logged; for a verdict that means `pass`. Check in the plan that KSP can generate this for entries from another extension.
+```kotlin
+@Handler suspend fun Triggered<SimpleMessageActionEntry>.send(chat: HasChat) {
+    chat.send(message)
+    complete()
+}
+
+@Derive fun Running<SpokenDialogueEntry>.view() =
+    SpokenView(step, text.wrap(spoken.maxLineLength, spoken.minLines))
+```
+
+On `Triggered<E>` and `Running<E>` the receiver is the scope, so accessors read bare (`message`, `spoken.minLines`). On a `Candidate<E>` parameter they are reached on the candidate (`entry.condition`). Nested records read the same way at any depth, with no segment limit. A record field gives the record's own scope one level deeper (an optional record gives `RecordScope<R>?`, and whether one is stored is its own read). Lists, sets and maps of records give `List<RecordScope<R>>`, `Set<RecordScope<R>>` and `Map<K, RecordScope<V>>` in stored order, so `options[i].text` reads the `text` field of the i-th option record; inside the engine a path addresses an item by its stable item id, not its index. There is no whole value read: a helper that needs a record is written on its scope (`fun RecordScope<Spoken>.wrapLines(text: RichText)`). A derive on an entry that is not a running step takes `EntryScope<ThatEntry>` as its receiver. A record field named like a scope member (`entry`, `subject`, `context`, `reader`, `entryScope`, `recordPath`) is a build error, since the member would hide its accessor.
+
+- **The entry reader.** Every accessor resolves through one reader (`EntryReader`: `read`, `has` and `items` at a path from the entry's root). A stored value, a `Var` (value or formula), a nested record field, and the configured cascade (entry overrides, entry selected, each owner nearest first, Kotlin default; node 12) all resolve through it, and node 12 builds the cascade into it as its single extension point: the engine reader asks `StoredValues.at(location)` for a loaded value or not loaded, and the cascade plugs in there. Check in the plan that KSP can generate accessors for entries from another extension.
+- **Tracked reads.** Inside a derive, every accessor read is a read of the tracked graph: each run records its own reads and verifies them in read order. A branch is correct because the condition's value is itself a read: a change on the branch not taken does not rerun the derive, a change to the condition does. A change at a location also covers the reads below it, and the graph compares values, so a derive reruns only when a value it read actually differs. Handlers (verdict and after) evaluate inline and never rerun. A formula's own references to other resources are not graph reads yet (`TODO(node 6)`). KSP does not list reads: declared reads would load both sides of every branch and rerun on changes that cannot matter.
+- **Not loaded.** A read whose value is not loaded yet fails as a recorded read, and the graph reruns the derive once that failure clears. On a rerun the engine first loads everything the previous run read, so a steady state needs one load round, not a chain of loads. A derive may therefore run once before its values are loaded. A handler that reads a value not loaded yet fails like any failing handler.
+- **Accessors only.** The accessors are the only path to entry values, and derives stay pure. A lambda that runs later (a callback) runs as a handler with its own scope.
+
+A formula that fails counts as a failed handler and is logged; for a verdict that means `pass`.
 
 ### Resolution
 
@@ -300,8 +321,8 @@ fun <E : CancelableEvent> E.rule(
     entry: Candidate<CancelableEventEntry<E>>,
 ): Verdict = when {
     !entry.condition -> pass()
-    entry.cancel -> deny { entry.complete(context) }
-    else -> pass { entry.complete(context) }
+    entry.cancel -> deny { entry.complete() }
+    else -> pass { entry.complete() }
 }
 ```
 
@@ -366,7 +387,7 @@ Every chain gets the same limit: at most one owner visit to read live values, on
 
 Accepted costs: a chain starts up to one tick after its event, while the verdict stays instant. A player who leaves right after paying can lose the item, as in every option tested; what must arrive is stored as owed.
 
-Named in node 4 (decided 2026-11-22): `ChainQueue` takes chain starts, `ChainPickup` is the one engine piece that drains it (Paper on `ServerTickEndEvent`, the panel engine at once), and `ChainWorker` is the coroutine per drain on a bounded dispatcher. There is no owner thread effect queue yet: node 4's only effect is chat, sent from the worker, and the first world change action adds the queue. Open: how a handler's live reads reach step 2: KSP knows its parameters, and `FormulaReads` knows its fields at publish, so writers can run before the chain ([formula-language.md](formula-language.md#what-a-formula-reads)).
+Named in node 4 (decided 2026-11-22): `ChainQueue` takes chain starts, `ChainPickup` is the one engine piece that drains it (Paper on `ServerTickEndEvent`, the panel engine at once), and `ChainWorker` is the coroutine per drain on a bounded dispatcher. There is no owner thread effect queue yet: node 4's only effect is chat, sent from the worker, and the first world change action adds the queue. Open: how a handler's live reads reach step 2: KSP knows its parameters but no longer lists body reads (decided 2026-11-23), and `FormulaReads` knows a formula's reads at publish, so writers can run before the chain ([formula-language.md](formula-language.md#what-a-formula-reads)).
 
 Folia (decided 2026-11-03): the first version targets Paper's server wide tick end. Picking up queued chain starts stays one small piece of the Paper engine, so the design does not block Folia. Folia later replaces only that piece, with a next tick task per active player, because no per region tick end hook was found. Expected cost there, not measured: one post per active player per tick, and chains start up to one tick later.
 
@@ -394,12 +415,12 @@ A chain is how entries lead to entries. Links fire, entries do not: nothing foll
 
 ### Firing and `Triggered`
 
-Firing a link emits an ordinary `Triggered<E>(entry, subject, context)` event per linked entry, queued like `emit`. The entry is a field of the event. The subject is the identity the chain is for: a protagonist, or a group after widening ([interactions.md](interactions.md#widening)).
+Firing a link emits an ordinary `TriggeredEvent<E>(entry, subject, context)` event per linked entry, queued like `emit`; chains merge on it. A handler's receiver is `Triggered<E>`, the scope the engine builds from that event and its own entry reader when it runs the handler, so a `Triggered<E>` can always read its entry and an engine that receives the event binds its own reader. An `outcome` parameter on such a handler is `Outcome<TriggeredEvent<E>>`. `Triggered<E>` is the scope its handler reads through ([Reading entry values](#reading-entry-values)), so `complete()` and `fire()` take the context from it. The subject is the identity the chain is for: a protagonist, or a group after widening ([interactions.md](interactions.md#widening)).
 
 ```kotlin
-entry.triggers.fire(context)
-entry.triggers.random(seed).fire(context)
-chosen.link.fire(context)
+entry.triggers.fire()
+entry.triggers.random(seed).fire()
+chosen.link.fire()
 ```
 
 Actions, steps, and triggers share this one flow:
@@ -411,11 +432,11 @@ Actions, steps, and triggers share this one flow:
 ```kotlin
 @Handler
 fun <E : Event> E.fire(entry: Candidate<EventEntry<E>>) {
-    if (entry.condition) entry.complete(context)
+    if (entry.condition) entry.complete()
 }
 ```
 
-That shared handler serves most events ([Event entries](#event-entries)); `event.message.contains("hello")` in the condition replaces the legacy chat entry. An extension can write its own trigger the same way. Extra needs are extra parameters (traits, stored values, formulas). Entries stay plain data; trigger code only says it fired, the core follows the links. Book narrowing happens inside `fire`: a link into an entry whose book does not apply to the subject is skipped ([book-composition.md](book-composition.md#6-conditions)). Firing for a group instead of the current subject (`fire(context, for = group)`) is described in [interactions.md](interactions.md).
+That shared handler serves most events ([Event entries](#event-entries)); `event.message.contains("hello")` in the condition replaces the legacy chat entry. An extension can write its own trigger the same way. Extra needs are extra parameters (traits, stored values, mirrors). Entries stay plain data; trigger code only says it fired, the core follows the links. Book narrowing happens inside `fire`: a link into an entry whose book does not apply to the subject is skipped ([book-composition.md](book-composition.md#6-conditions)). Firing for a group instead of the current subject (`fire(for = group)`) is described in [interactions.md](interactions.md).
 
 Forwarding is declared by the trigger type: the extension marks it forwardable.
 
@@ -448,14 +469,14 @@ interface Triggerable {
 
 ```kotlin
 // Shortcut: apply changes, then fire triggers (legacy order; the next entry sees the changes).
-entry.complete(context)
+entry.complete()
 
 // Manual, when an entry needs another order or timing.
-entry.changes(context).attempt()
-entry.triggers.fire(context)
+entry.changes.attempt()
+entry.triggers.fire()
 ```
 
-Extra update fields (dialogue options) are applied the same way: `option.changes(context).attempt()`, then `option.triggers.fire(context)` unless refused. What `attempt()` commits and how the realm handles conflicts is in [stored-data.md](stored-data.md).
+Extra update fields (dialogue options) are applied the same way: `option.changes.attempt()`, then `option.triggers.fire()` unless refused. What `attempt()` commits and how the realm handles conflicts is in [stored-data.md](stored-data.md).
 
 ## Event entries
 
@@ -521,13 +542,13 @@ fun <E : CancelableEvent> E.rule(
     entry: Candidate<CancelableEventEntry<E>>,
 ): Verdict = when {
     !entry.condition -> pass()
-    entry.cancel -> deny { entry.complete(context) }
-    else -> pass { entry.complete(context) }
+    entry.cancel -> deny { entry.complete() }
+    else -> pass { entry.complete() }
 }
 
 @Handler
 fun <E : Event> E.fire(entry: Candidate<EventEntry<E>>) {
-    if (entry.condition) entry.complete(context)
+    if (entry.condition) entry.complete()
 }
 ```
 
@@ -548,13 +569,13 @@ produces { use(E) }
 "You cannot break this at ${on_block_break.location}"
 ```
 
-**The action runs on the player.** Actions stay hand written: their fields are their parameters, so nothing can be derived.
+**The action runs on the player.** Actions stay hand written: the handler reads their fields in its body through accessors, so nothing can be derived.
 
 ```kotlin
 @Handler
-fun Triggered<SimpleMessageActionEntry>.send(chat: HasChat, message: RichText) {
+fun Triggered<SimpleMessageActionEntry>.send(chat: HasChat) {
     chat.send(message)
-    entry.complete(context)
+    complete()
 }
 ```
 
@@ -572,8 +593,8 @@ class PlayerKillPlayerEventEntry(
 @Handler
 fun PlayerKillPlayer.fire(entry: Candidate<PlayerKillPlayerEventEntry>) {
     if (!entry.condition) return
-    entry.complete(context)
-    entry.killedTriggers.fire(context, for = killed)
+    entry.complete()
+    entry.killedTriggers.fire(for = killed)
 }
 ```
 
@@ -583,6 +604,7 @@ fun PlayerKillPlayer.fire(entry: Candidate<PlayerKillPlayerEventEntry>) {
 | --- | --- |
 | Condition reads a mirror | `protagonist.heldItem` misses on the first read, so it counts as not met and posts a demand. This is why filter facts sit on the event. |
 | Condition fails at run time | Counts as not met: `pass`, no links fire, logged. |
+| Entry value not loaded yet | The handler fails like any failing handler; for a verdict that means `pass` (decided 2026-11-23). In a derive the read is recorded and the derive reruns once it loads. |
 | Event field renamed in code | The formula gets a check error at publish. |
 | Cancel on a non cancelable event | Refused by the bound on the type argument. |
 | One exact block | Capture into a `Definition`, then name it in the formula. |

@@ -99,16 +99,19 @@ fun holders(resource: ResourceId) =
 
 ### 6. The handler reads plain fields
 
-Handlers never see `Partial`.
+Handlers never see `Partial` or `Configured`. Generated accessors read every field by name, at any depth, with the context filled in from the scope (the reading model, decided 2026-11-23). `spoken.maxLineLength` is a plain `Int`, and a `Var` field such as `text` reads as a plain `RichText`.
 
 ```kotlin
 @Derive
-fun Running<SpokenDialogueEntry>.view(who: Protagonist, text: RichText, context: MemberContext): SpokenView {
-    val spoken = entry.spoken.value
-    val lines = text.wrap(spoken.maxLineLength(context), spoken.minLines(context))
-    return SpokenView(step, who, spoken.format(context)(speaker, lines), startedAt)
+fun Running<SpokenDialogueEntry>.view(who: Protagonist): SpokenView {
+    val lines = text.wrap(spoken.maxLineLength, spoken.minLines)
+    return SpokenView(step, who, spoken.format(speaker, lines), startedAt)
 }
 ```
+
+Each read inside the derive is a tracked read, so a changed `maxLineLength` reruns it and a change to an unread field does not. A configuration that is not loaded yet fails the read, and the derive reruns when it loads.
+
+The configured cascade (the override order in section 5) resolves inside the one entry reader that every accessor goes through. A stored value, a `Var`, a nested record field and the cascade all resolve there, and node 12 builds the cascade into that reader as its single extension point (decided 2026-11-23). `Configured.value` is not a read path for handlers; the accessors are the only path.
 
 ## In the panel
 

@@ -28,6 +28,10 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 ## A
 
+**Accessor (generated)**: the typed reader KSP generates for every field of every record type, on `RecordScope<ThatRecord>`; a `Var<T, C>` field reads as a plain `T`, at any depth, with context filled from the scope (decided 2026-11-23). See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
+
+**Accessors only**: the rule that generated accessors are the only path to entry values and that derives stay pure; a lambda that runs later runs as a handler with its own scope. See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
+
 **`ActionBarSent`**: event for an action bar packet the server sends to a player, with the player and the message. See [packets.md](packets.md#1-a-typed-event-with-no-paper-in-it).
 
 **`ActionBarSource`**: source that turns outgoing action bar packets into `ActionBarSent` through the wire. See [packets.md](packets.md#2-a-source-the-same-shape-as-a-paper-event-source).
@@ -120,7 +124,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`CancelableEventEntry<E>`**: the shared entry for a cancelable event: `condition` and `cancel` formulas plus links. See [events-and-handlers.md](events-and-handlers.md#event-entries).
 
-**`Candidate<E>`**: handler parameter that runs once per published entry of type `E` whose book applies to the subject. See [events-and-handlers.md](events-and-handlers.md#parameters).
+**`Candidate<E>`**: handler parameter that runs once per published entry of type `E` whose book applies to the subject; it is an `EntryScope<E>`, so its fields are read on it (`entry.condition`). See [events-and-handlers.md](events-and-handlers.md#parameters).
 
 **Capability**: an engine specific feature set (such as `Tick` or the Minecraft traits) kept out of the engine neutral core. See [live-data.md](live-data.md#engines-and-traits).
 
@@ -164,13 +168,13 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Command node**: a `literal`, `argument`, or `runs<Event>()` element of a command contribution; contributions merge into one tree per player. See [commands.md](commands.md).
 
-**`complete(context)`**: the `Triggerable` shortcut that applies the entry's changes and then fires its triggers. See [events-and-handlers.md](events-and-handlers.md#triggerable-and-complete).
+**`complete()`**: the `Triggerable` shortcut that applies the entry's changes and then fires its triggers. See [events-and-handlers.md](events-and-handlers.md#triggerable-and-complete).
 
 **`Confirm`**: intent event for advancing, naming the step whose key offer took the press. See [dialogue.md](dialogue.md#6-the-key).
 
 **`Configuration<T>`**: root resource holding a `Partial<T>`, one named version of an extension's record. See [configurations.md](configurations.md).
 
-**`Configured<T>`**: entry field that selects a `Configuration<T>` and overrides single values; its `value` is the full `T`, worked out at publish. See [configurations.md](configurations.md).
+**`Configured<T>`**: entry field that selects a `Configuration<T>` and overrides single values; handlers read its fields through accessors, and the entry reader resolves the override cascade (decided 2026-11-23). See [configurations.md](configurations.md).
 
 **`ConfigurationHolder`**: a resource in the owner chain that selects configurations: `Book`, `Page`, `RealmRoot`. The root's selection is the default. See [configurations.md](configurations.md).
 
@@ -272,6 +276,10 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Evaluation`**: result of evaluating a formula: a `Value`, or `Failed` with the location and a `FormulaFailure`. See [formula-language.md](formula-language.md#exceptions).
 
+**Entry reader** (`EntryReader`): the one reader every accessor resolves through (`read`, `has`, `items`): a plain stored value, a `Var`, a nested record field, and the configured cascade (node 12's single extension point). See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
+
+**`EntryScope<E : Entry>`**: what a handler or derive reads through; it carries `entry`, `subject`, and `context`, and `Candidate<E>`, `Triggered<E>`, and `Running<E>` implement it. See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
+
 **Event**: a plain Kotlin type saying one thing happened, one type per meaning; every event is a `@TypewriterType`, so it crosses engines as its catalog value. See [events-and-handlers.md](events-and-handlers.md#event).
 
 **`EventContext<E>`**: formula context of an event entry's fields, adding `event: E`. See [events-and-handlers.md](events-and-handlers.md#event-entries).
@@ -300,7 +308,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Finder**: a `Live` type plus producing handlers that finds a value for a handler, such as the nearest NPC. See [live-data.md](live-data.md#finders-are-mirrors).
 
-**`fire(context)`**: fires a link set, emitting one `Triggered<E>` per linked entry; `for = group` widens it. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
+**`fire()`**: fires a link set, emitting one `Triggered<E>` per linked entry; `for = group` widens it. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
 
 **`FixedCameraSegment`**: camera segment for a still shot at one position; with an aim of `At` it pans to follow a spot. See [scenes.md](scenes.md#3-camera-kinds).
 
@@ -514,6 +522,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`NoOptions`**: live value for an option dialogue where no one has an option shown; the step moves on. See [dialogue.md](dialogue.md#7-choosing).
 
+**Not loaded rule**: a read whose value is not loaded yet fails as a recorded read and the graph reruns the derive once it loads, after first loading everything the previous run read; in a handler it fails like any failing handler. See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
+
 **`NotReadyEntry`**: way out for a member whose scene preparation ended `Failed` or `TimedOut`; when leaving is blocked, the member plays on. See [scenes.md](scenes.md#7-preparation-waits).
 
 **`now`**: the time, fixed per evaluation; in a `Changes` field it is the realm commit time. See [formula-language.md](formula-language.md#time-and-randomness).
@@ -660,6 +670,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`RealmCheckProvider`**: the existing realm check interface through which core and extensions report findings. See [live-data.md](live-data.md#checks).
 
+**`RecordScope<T>`**: a scope positioned at a record value inside an entry; an entry is a record, so `EntryScope<E>` is a `RecordScope<E>` at the root. Accessors are generated on it. See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
+
 **`Ref<Endpoint, T>`**: an authored relation to resource `T` through endpoint `E` of a `@ReferenceContract`; runtime values name the entry type directly instead (`npc: NpcEntry`). See [stored-data.md](stored-data.md#identity).
 
 **`Removed<T>`**: lifecycle event fired when a value is removed; for mirrors it cancels suspended handlers that resolved it. See [stored-data.md](stored-data.md#lifecycle-events).
@@ -674,7 +686,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Routing**: an event goes where a handler can run; realm owned data goes through the realm; events and live effects about a protagonist go to its protagonist subject, and session subjects serve only targets that are one connection. See [live-data.md](live-data.md#routing).
 
-**`Running<E>`**: stored row of a running step: its entry, subject, context, and `startedAt`. Handlers and derives take it as a parameter. See [interactions.md](interactions.md#steps).
+**`Running<E>`**: stored row of a running step: its entry, subject, context, and `startedAt`. Handlers and derives take it as a parameter or receiver; it is an `EntryScope<E>`. See [interactions.md](interactions.md#steps).
 
 **`RunningAudienceEntry`**: audience a protagonist is in while one of its `during` steps runs. See [interactions.md](interactions.md#lifetime-running-audiences).
 
@@ -710,7 +722,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`ShownOptions`**: live value listing the option indices that are available to one protagonist. See [dialogue.md](dialogue.md#4-what-the-option-dialogue-asks-for).
 
-**`SidebarHold`**: example display hold derived from `InAudience`, with its text as a tracked parameter and a handler on `Changed<SidebarHold>`. See [live-data.md](live-data.md#audiences).
+**`SidebarHold`**: example display hold derived from `InAudience`, with its text read through a tracked accessor and a handler on `Changed<SidebarHold>`. See [live-data.md](live-data.md#audiences).
 
 **`Simulating(mode)`**: stored value marking a previewed step. See [interactions.md](interactions.md#preview-and-recording).
 
@@ -768,6 +780,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Tick<Config : TickConfig>`**: configured capability event for timed work; it accepts only after handlers. See [events-and-handlers.md](events-and-handlers.md#configured-events).
 
+**Tracked reads**: inside a derive every accessor read is a read of the `TrackedGraph`; each run records its own reads and verifies them in read order, and the condition of a branch is itself a read. Handlers evaluate inline and never rerun. See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
+
 **`TrackedGraph`**: the shared query graph of inputs and memoized queries that records reads, cuts off early, and drives observers. See [formula-language.md](formula-language.md#interpreter).
 
 **Trigger**: an ordinary handler on a world event that fires an entry's links. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
@@ -778,7 +792,9 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Triggerable`**: core trait for entries with `triggers` and a `changes: Var<Changes, InteractionContext>` field. See [events-and-handlers.md](events-and-handlers.md#triggerable-and-complete).
 
-**`Triggered<E>`**: event emitted per linked entry when a link fires, with the entry, the group subject, and the context. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
+**`Triggered<E>`**: the scope a handler on a fired step runs on: the engine builds it from a `TriggeredEvent<E>` and its own entry reader. It is an `EntryScope<E>`, so its handler reads the entry's fields bare. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
+
+**`TriggeredEvent<E>`**: event emitted per linked entry when a link fires, with the entry, the group subject, and the context; chains merge on it. See [events-and-handlers.md](events-and-handlers.md#firing-and-triggered).
 
 **`Type`**: the value type of a type field; a `TypeUse` stored as `DataValue.type_use`, whose declarations sit on the resource's `types` list. `Var<Type, TypeScope>` holds a type picked or written as text. See [formula-language.md](formula-language.md#type-fields).
 

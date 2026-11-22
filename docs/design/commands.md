@@ -76,15 +76,15 @@ CommandEntry "claim"
 ```
 
 - `LiteralEntry` is the third kind, as `LiteralCommandArgument` is in legacy.
-- `available` is a tracked formula. False hides the command, so it replaces permission checks in content and adds commands that depend on state.
+- `available` is a tracked read (decided 2026-11-23): the derive reads it through its accessor in the body. False hides the command, so it replaces permission checks in content and adds commands that depend on state.
 - `choices` is an optional formula, so suggestions can come from state.
 - `amount.value` is a chain record through `produces { field("value", T) }` ([formula-language.md](formula-language.md)), replacing `WordArgumentContextKeys` and its siblings.
 - A type works as `T` when a `CommandArgument<T>` object exists for it, found by supertype. An extension adds its own the same way. The bound on `T` refuses other types.
 
 ```kotlin
 @Derive
-fun CommandEntry.contribute(who: Protagonist, available: Boolean) =
-    if (available) ContentCommand(who, this) else null
+fun Running<CommandEntry>.contribute(who: Protagonist) =
+    if (available) ContentCommand(who, entry) else null
 ```
 
 A node with triggers runs `ContentCommandRan(node, args)`, whose handler fires the node's triggers with the arguments as context.

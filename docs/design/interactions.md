@@ -22,7 +22,7 @@ FormulaAudienceEntry "holding_spyglass"
            strength: if (protagonist.vip) 2 else 1
 ```
 
-The extension declares the Hold, and a derive returns it. The entry's fields arrive as [tracked parameters](#hold-values-are-tracked-parameters).
+The extension declares the Hold, and a derive returns it. The entry's fields are read in the body through accessors, [tracked by the graph](#hold-values-are-read-in-the-body-decided-2026-11-23).
 
 ```kotlin
 data class PotionHold(
@@ -32,12 +32,10 @@ data class PotionHold(
 ) : Hold
 
 @Derive
-fun PotionEffectEntry.hold(
+fun EntryScope<PotionEffectEntry>.hold(
     who: Protagonist,
     inside: InAudience,        // the receiver fills its node key
-    effect: PotionEffectType,
-    strength: Int,
-) = PotionHold(who, effect, strength)
+) = PotionHold(who, effect, strength)   // effect and strength are accessor reads, tracked
 ```
 
 Handlers change the game, and [snapshot handlers](#snapshot-and-restore) put back what was there.
@@ -60,7 +58,7 @@ fun RestoreSnapshot<PotionHold>.back(effects: HasPotionEffects, snapshot: Potion
 
 | Moment | What happens |
 | --- | --- |
-| Enters the audience | `InAudience` exists, so the derive can run and `strength` becomes demanded. Writers for what the formula reads run once. The body waits until formulas settle |
+| Enters the audience | `InAudience` exists, so the derive can run and `strength` becomes demanded. Writers for what the formula reads run once. The read of `strength` fails as not loaded until the formula settles, and the derive reruns when it clears |
 | First value | `TakeSnapshot`, the snapshot is saved, then `Added` |
 | `vip` changes | The formula reruns, the derive reruns, and `Changed` updates the game |
 | The result stays the same | The graph stops at the formula, and the derive does not run |
@@ -92,17 +90,18 @@ A Hold names its holder with an ordinary `@Key`, the same rule as a `Stored` val
 
 A Hold has exactly one holder key, of a type above or a `GroupIdentity`. KSP rejects zero or two. In a group step, a derive's `who: Protagonist` iterates the members, so each member gets a Hold with their own formula values.
 
-### Hold values are tracked parameters
+### Hold values are read in the body (decided 2026-11-23)
 
-The Hold stores its data, and `Changed<H>` syncs it to the game. Everything a derive reads is tracked in the `TrackedGraph` ([live-data.md](live-data.md#formula-changes)), written in one of two forms:
+The Hold stores its data, and `Changed<H>` syncs it to the game. A derive reads entry values in its body, by name, through the generated accessors, at any depth: `strength`, `spoken.minLines`, `spoken.maxLineLength`. A `Var<T, C>` field reads as a plain `T`, and the scope fills the context (subject and chain context), so nothing passes it by hand. Every accessor read is a read of the `TrackedGraph` ([live-data.md](live-data.md#formula-changes)); each run records what it actually read and verifies it in read order.
 
-| | Parameter: `strength: Int` | In the body: `spoken.minLines(context)` |
-| --- | --- | --- |
-| Use | The normal form | Only for nested values |
-| What it reads | Known before the body runs, because formula reads are known at publish | Found while the body runs |
-| Value not loaded yet | The body does not run, so there is no Hold | The derive gives nothing this run, and reruns when the value arrives |
-| Context | Filled in | Passed by hand |
-| Follows an `if` | No, it always loads | Yes |
+```kotlin
+@Derive fun Running<SpokenDialogueEntry>.view() =
+    SpokenView(step, text.wrap(spoken.maxLineLength, spoken.minLines))
+```
+
+- **Branches are correct.** The condition is itself a read. A change on the branch not taken does not rerun the derive; a change to the condition does.
+- **Not loaded.** A read whose value is not loaded yet fails as a recorded read. The graph reruns the derive once that failure clears, and a rerun first loads everything the previous run read, so a steady state needs one load round, not a chain of loads.
+- **Accessors are the only path.** A derive has no parameter named like a field, and no read list: parameters are identities, traits, candidates, and configurations. A lambda that runs later runs as a handler with its own scope.
 
 A field is demanded only where the derive could run, so `inside: InAudience` keeps `strength` from loading for players outside the audience ([demand](live-data.md#demand)). Narrowing a watched formula to one field through `Candidate` is not needed here, because the receiver is the entry.
 
@@ -565,8 +564,8 @@ fun replaceAndBeginQueued(ended: List<Interaction>, row: Queued<*>) {
 data class GaveUp(@Key val step: Step) : Live
 // A step whose book no longer applies leaves too (book-composition.md).
 @Derive
-fun Queued<*>.gaveUp(context: QueuedContext) =
-    if (entry.rules.giveUp(context) || !entry.appliesTo(subject)) GaveUp(step) else null
+fun Queued<*>.gaveUp() =
+    if (entry.rules.giveUp || !entry.appliesTo(subject)) GaveUp(step) else null
 
 @Handler
 fun Added<GaveUp>.leave(row: Queued<*>) {
@@ -683,12 +682,11 @@ data class RunningAudienceEntry(
 ) : AudienceEntry
 
 @Derive
-fun RunningAudienceEntry.inside(
+fun EntryScope<RunningAudienceEntry>.inside(
     protagonist: Protagonist,
     @From(Parent::class) inParents: List<InAudience>,
     steps: InSteps,
-    during: Set<Ref<RunningAudience.Steps, StepEntry>>,
-): InAudience? = ...   // in while one of the steps in `steps` is in `during`
+): InAudience? = ...   // in while one of the steps in `steps` is in `during`, read in the body
 ```
 
 `during` is a [link query](formula-language.md#link-fields-as-queries): picked by hand, or `page.elements.filter { it is StepEntry }`. Switching on and off is the audience membership and the steps' `leavable`.
@@ -724,9 +722,9 @@ class LeashEntry(
 data class Leash(@Key val who: Protagonist, val way: LeashEntry, val radius: Double) : Hold
 data class LeashCenter(val at: Position)
 
-// The same shape as PotionEffectEntry.hold.
+// The same shape as PotionEffectEntry.hold; radius is an accessor read.
 @Derive
-fun LeashEntry.hold(who: Protagonist, inside: InAudience, radius: Double) = Leash(who, this, radius)
+fun EntryScope<LeashEntry>.hold(who: Protagonist, inside: InAudience) = Leash(who, entry, radius)
 
 @Handler
 fun TakeSnapshot<Leash>.center(location: HasLocation) = LeashCenter(location.location)
@@ -780,7 +778,7 @@ class LeaveEntry(
 ) : ActionEntry, Triggerable
 
 @Handler
-fun Triggered<LeaveEntry>.leave(steps: InSteps, of: Set<Ref<LeaveSteps.Leave, StepEntry>>) {
+fun Triggered<LeaveEntry>.leave(steps: InSteps) {
     val chosen = steps.steps.values.filter { of.isEmpty() || of.points(it.entry) }
     if (chosen.isEmpty()) return
     if (chosen.all { it.leavable }) emit(LeaveAsked(subject, entry, chosen.map { it.interaction }.toSet()))
@@ -821,7 +819,7 @@ CommandEntry "leave" -> LeaveEntry(of = empty)    refused -> cannot_leave_line
 - **`of.points(entry)`**: matching a running entry against a hydrated link set (a `CompiledResourceKey`, [book-composition.md](book-composition.md#4-publish)) has no designed helper.
 - **Types of `PlayerMove.to` and `HasLocation.location`**: the docs name the fields, not the types; `Position` is assumed.
 - **Cost**: `InSteps` and `Exits` are rewritten at tick end for members of running steps, and `PlayerMove` runs both leash handlers on every move of a leashed player.
-- **`RunningAudienceEntry.inside`**: a derive reading a core written `Live` and a publish time link query together; both forms exist, not together.
+- **`RunningAudienceEntry.inside`**: a derive reading a core written `Live` (`InSteps`) and a publish time link query (`during`, an accessor read) together; the scope for a derive on an audience child is assumed to be `EntryScope`.
 - **Nothing ran.** It rests on layers 8, 12, 15, and 16, none of which are built.
 
 ## Contexts

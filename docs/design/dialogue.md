@@ -165,10 +165,11 @@ data class OptionView(
 @Derive fun Running<OptionDialogueEntry>.chat(who: Protagonist) = ChatHold(who)
 @Derive fun Running<OptionDialogueEntry>.wheel(who: Protagonist) = HotbarScrollHold(who)
 
-// Live values.
+// Live values. Entry values read through accessors, at any depth; each read is tracked
+// (the reading model, decided 2026-11-23).
 @Derive
-fun Running<OptionDialogueEntry>.shown(who: Protagonist, context: MemberContext) =
-    ShownOptions(step, who, entry.options.indices.filter { entry.options[it].available(context) })
+fun Running<OptionDialogueEntry>.shown(who: Protagonist) =
+    ShownOptions(step, who, options.indices.filter { options[it].available })
 
 @Derive
 fun Running<OptionDialogueEntry>.offer(who: Protagonist) =
@@ -181,27 +182,23 @@ fun Selected?.indexIn(shown: ShownOptions): Int =
 @Derive
 fun Running<OptionDialogueEntry>.view(
     who: Protagonist,
-    speaker: RichText,        // the next three are Var fields of the entry
-    text: RichText,
-    duration: Duration,
     shown: ShownOptions,
     selected: Selected?,
     key: OfferedKey?,
     skipped: TypingSkipped?,
-    context: MemberContext,
 ) = OptionView(
     step = step,
     who = who,
-    format = entry.config.value.format(context),
+    format = config.format,
     speaker = speaker,
     text = text,
-    options = shown.options.map { entry.options[it].text(context) },
+    options = shown.options.map { options[it].text },
     shown = shown.options,
     selected = selected.indexIn(shown),
     key = key?.key,
     typingFrom = startedAt,
     typedAt = skipped?.at ?: (startedAt + typingTime(text, duration)),
-    optionDelay = entry.config.value.optionDelay(context),
+    optionDelay = config.optionDelay,
 )
 ```
 
@@ -313,7 +310,7 @@ suspend fun Confirm.choose(running: Running<OptionDialogueEntry>, view: OptionVi
     if (now < view.doneAt || view.shown.isEmpty()) return
     val index = view.shown[view.selected]
     running.complete(
-        links = listOf(running.entry, running.entry.options[index]),   // both, as legacy
+        links = listOf(running.entry, running.options[index]),   // both, as legacy
         context = running.context.with(Chosen(index + 1)),             // 1 based, as legacy
     )
 }
@@ -372,7 +369,7 @@ fun Running<OptionDialogueEntry>.noOptions(shown: List<ShownOptions>) =
 ```kotlin
 // Timed: legacy holds a confirmation only while canSkip. An offer follows the same formula.
 @Derive
-fun Running<TimedDialogueEntry>.offer(who: Protagonist, canSkip: Boolean) =
+fun Running<TimedDialogueEntry>.offer(who: Protagonist) =
     KeyOffer(who, by = step, preferred = null, since = startedAt, press = Confirm(who, step)).takeIf { canSkip }
 
 // Input: one holder, so no routing is needed. Raw event, hold, and a handler on the raw event.

@@ -214,6 +214,8 @@ A parameter that exists only in code uses one wider mirror, and the handler filt
 
 Derive inputs are tracked; incrementality comes from read tracking and early cutoff (an unchanged result stops propagation).
 
+A derive reads entry values through accessors, by name at any depth, and each read is a tracked read (the reading model, decided 2026-11-23). A branch not taken reads nothing, so a change there does not rerun the derive. A read whose value is not loaded yet fails as a recorded read, and the graph reruns the derive once it clears; on a rerun the engine first loads everything the previous run read. A parameter is only an identity, a trait, a candidate, a configuration, an origin or an outcome, never an entry field.
+
 ### Stored derives over mirrors
 
 A stored derive that reads a mirror keeps its last result when the input vanished with `because = Tracking`. Group sync from a placeholder or world therefore keeps the protagonist's last group while they are offline. A stored derive that reads mirrors cannot run offline; the realm flags it (see checks).
@@ -294,11 +296,10 @@ interface AudienceEntry : Entry {
 }
 
 @Derive
-fun AudienceEntry.inside(
+fun EntryScope<AudienceEntry>.inside(
     protagonist: Protagonist,
     @From(Parent::class) inParents: List<InAudience>,
-    criterion: Boolean,
-): InAudience? = ...
+): InAudience? = ...   // criterion is an accessor read
 ```
 
 ```
@@ -322,7 +323,7 @@ spawn.contains(it.protagonist)                                                  
 
 Enter and exit triggers stay separate entries: `TriggerAudienceEntry(onEnter, onExit, fireOnJoin = true)`. Like legacy, enter fires on every join by default. Exit fires only on `because == Value`, so quitting or moving servers does not count as leaving.
 
-Displays derive from membership: a `SidebarHold` is derived from `InAudience` with its text as a tracked parameter, and a handler on `Changed<SidebarHold>` updates the game. Competing displays of the same hold type are settled by hold priority ([interactions.md](interactions.md#holds)).
+Displays derive from membership: a `SidebarHold` is derived from `InAudience` with its text as a tracked read (an accessor), and a handler on `Changed<SidebarHold>` updates the game. Competing displays of the same hold type are settled by hold priority ([interactions.md](interactions.md#holds)).
 
 ### Demand across engines
 
@@ -482,7 +483,7 @@ Content is a tracked input. Publishing new content reruns whatever read it; ther
 
 ```kotlin
 @Derive
-fun Running<OptionDialogueEntry>.view(who: Protagonist, text: RichText, /* ... */) = OptionView(/* ... */)
+fun Running<OptionDialogueEntry>.view(who: Protagonist, /* ... */) = OptionView(text = text, /* ... */)   // text is an accessor read
 ```
 
 Typing is a `Tick` handler over `Animating`, a `Live` value that exists only while animating ([dialogue.md](dialogue.md#3-the-dialogue-package)).

@@ -67,8 +67,11 @@ A derive is a pure function over tracked inputs. Its result type decides what th
 fun Running<SpokenDialogueEntry>.chat(who: Protagonist) = ChatHold(who)
 
 @Derive
-fun AudienceEntry.inside(protagonist: Protagonist, @From(Parent::class) inParents: List<InAudience>, criterion: Boolean): InAudience?
+fun EntryScope<AudienceEntry>.inside(protagonist: Protagonist, @From(Parent::class) inParents: List<InAudience>): InAudience? =
+    if (criterion) ... else null
 ```
+
+A derive reads entry values through generated accessors (`criterion` above), and each read is tracked. See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
 
 ## Runtime
 
@@ -97,7 +100,7 @@ quest.coins += 50
 if (quest.coins > 100) quest.rank = gold
 ```
 
-Handlers read a `Var` field of their receiver as a plain parameter with the field's name, always current. See [formula-language.md](formula-language.md).
+Handlers and derives read a `Var` field through its generated accessor, as a plain `T` with context filled from the scope (decided 2026-11-23); in a derive the read is tracked, so it stays current. See [events-and-handlers.md](events-and-handlers.md#reading-entry-values) and [formula-language.md](formula-language.md).
 
 ## Chain
 
@@ -105,11 +108,11 @@ Entries are linked by triggers. Links always fire explicitly; nothing follows li
 
 ```kotlin
 fun <E : Event> E.fire(entry: Candidate<EventEntry<E>>) {
-    if (entry.condition) entry.complete(context)
+    if (entry.condition) entry.complete()
 }
 ```
 
-Entries with the `Triggerable` trait use `entry.complete(context)`: apply changes, then fire triggers. See [events-and-handlers.md](events-and-handlers.md).
+Entries with the `Triggerable` trait use `entry.complete()`: apply changes, then fire triggers. See [events-and-handlers.md](events-and-handlers.md).
 
 ## How they fit together
 
@@ -118,8 +121,8 @@ A typical dialogue, end to end:
 1. A **source** delivers `NpcClicked`. A trigger **handler** with a `Candidate<E>` parameter matches the entry and fires its links.
 2. The **chain** fires into a `StepEntry`. Core starts it: a step inside an **interaction**, stored as a `Running<SpokenDialogueEntry>` row (a **stored** value keyed by the step).
 3. A **derive** over `Running` returns a `ChatHold`, which blocks other chat. Another returns a `Live` view, and handlers on `Added` and `Changed` of that view draw it.
-4. The dialogue text is a **formula** read as a tracked parameter of the view derive, so it stays live through value changes and hot publish.
-5. A `Confirm` event reaches `fun Confirm.advance(running: Running<SpokenDialogueEntry>)`, which calls `running.complete()`: it ends the step and then runs `entry.complete(context)`: the option's `Changes` commit in one transaction and the next links fire.
+4. The dialogue text is a **formula** read through an accessor in the view derive (a tracked read), so it stays live through value changes and hot publish.
+5. A `Confirm` event reaches `fun Confirm.advance(running: Running<SpokenDialogueEntry>)`, which calls `running.complete()`: it ends the step and then runs `entry.complete()`: the option's `Changes` commit in one transaction and the next links fire.
 6. The derive stops returning the hold; once the chain has settled and a short grace passed, `Removed<ChatHold>` restores the chat, unless the next step adopts the same hold.
 
 Interactions, steps, groups, and holds are covered in [interactions.md](interactions.md); chat and input in [dialogue.md](dialogue.md). Changing content that existing data depends on goes through [migrations.md](migrations.md). Every type and term is listed in [glossary.md](glossary.md).
