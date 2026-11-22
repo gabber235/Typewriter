@@ -54,7 +54,7 @@ internal interface AttemptPool {
      *
      * TODO(node 9): temporary test only signal; replace with the engine's reported active publication ("applied on N of M").
      */
-    suspend fun applied(player: GamePlayer): AppliedPublication
+    suspend fun applied(player: GamePlayer): String?
 
     /** Kills and boots again the own Paper of [attempt], which runs [submission]; returns the new Paper's tick after which every player is back. */
     suspend fun restart(
@@ -190,8 +190,8 @@ internal class Attempt(
         val failure =
             caught {
                 for (each in content) {
-                    val wrote = each.write(players).also { written += each to it }
-                    each.liveness.awaitLive(contentPaper, wrote.live)
+                    each.write(players).also { written += each to it }
+                    each.liveness.awaitLive(contentPaper)
                 }
                 RequirementScope(this, written.map { (each, wrote) -> LiveChanges(wrote, each.liveness) }).body()
                 bodyEnded(proved)
@@ -200,7 +200,8 @@ internal class Attempt(
             withContext(NonCancellable) {
                 written.asReversed().mapNotNull { (each, wrote) ->
                     caught {
-                        each.liveness.awaitLive(contentPaper, wrote.remove())
+                        wrote.remove()
+                        each.liveness.awaitLive(contentPaper)
                         null
                     }
                 }
@@ -215,9 +216,15 @@ internal class Attempt(
         private val written: WrittenContent,
         private val liveness: ContentLiveness,
     ) : WrittenContent by written {
-        override suspend fun change(): LiveContent = written.change().also { liveness.awaitLive(contentPaper, it) }
+        override suspend fun change() {
+            written.change()
+            liveness.awaitLive(contentPaper)
+        }
 
-        override suspend fun remove(): LiveContent = written.remove().also { liveness.awaitLive(contentPaper, it) }
+        override suspend fun remove() {
+            written.remove()
+            liveness.awaitLive(contentPaper)
+        }
     }
 
     /** The attempt's Paper as content liveness reads it. */
@@ -225,7 +232,7 @@ internal class Attempt(
         object : ContentPaper {
             override val name = paper
 
-            override suspend fun applied(): AppliedPublication = unlessLost { session.applied(players.first()) }
+            override suspend fun applied(): String? = unlessLost { session.applied(players.first()) }
         }
 
     /** What [block] returned as its failure, or what it threw. */

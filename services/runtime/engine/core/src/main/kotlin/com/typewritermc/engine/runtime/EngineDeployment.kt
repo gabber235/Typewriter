@@ -91,7 +91,7 @@ class EngineDeployment(
                             engine.events.publish(
                                 publishedEntries(graph, EngineEvaluationEnvironment(graph, catalog, bindings, formulas), engine.identity),
                             )
-                            engine.applied(publication, graph)
+                            engine.applied(publication)
                         },
                     contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, deploymentScope),
                 )

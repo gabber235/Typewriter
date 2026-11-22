@@ -13,7 +13,6 @@ import com.typewritermc.identity.Protagonist
 import com.typewritermc.playtest.plugin.AppliedContent
 import com.typewritermc.playtest.plugin.PlayerWipeEvent
 import com.typewritermc.playtest.plugin.PlayerWork
-import com.typewritermc.types.ResourceId
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.ServicePriority
 import skirout.editor.v1.type_catalog.PublicationId
@@ -47,30 +46,25 @@ class WipeDropsChains(
 }
 
 /**
- * Keeps the publication this engine applied last, with its roots, and offers it to the Playtest plugin as its
+ * Keeps the publication this engine applied last and offers it to the Playtest plugin as its
  * [AppliedContent] service while the engine runs, so a game requirement waits until its content is live here.
  *
  * TODO(node 9): temporary test only signal; replace with the engine's reported active publication ("applied on N of M").
  */
-class AppliedRoots(
+class AppliedPublication(
     private val plugin: Plugin,
 ) : PublicationObserver,
     AppliedContent,
     RuntimeRegistrar {
-    /** The last applied publication's id and roots, replaced together. */
+    /** The last applied publication's id, null before the first. */
     @Volatile
-    private var last: Pair<String?, Set<String>> = null to emptySet()
+    private var last: String? = null
 
-    override fun applied(
-        publication: PublicationId,
-        resources: Set<ResourceId>,
-    ) {
-        last = publication.value to resources.mapTo(linkedSetOf()) { it.value }
+    override fun applied(publication: PublicationId) {
+        last = publication.value
     }
 
-    override fun applied(): Set<String> = last.second
-
-    override fun publication(): String? = last.first
+    override fun publication(): String? = last
 
     context(scope: RuntimeScope)
     override suspend fun register() {

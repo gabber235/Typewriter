@@ -290,7 +290,7 @@ class PlaytestPlugin :
     }
 
     /**
-     * Answers which resource ids the Typewriter engine on this Paper applies, as its [AppliedContent] reports them.
+     * Answers which publication the Typewriter engine on this Paper applies, as its [AppliedContent] reports it.
      *
      * TODO(node 9): temporary test only signal; replace with the engine's reported active publication ("applied on N of M").
      */
@@ -298,11 +298,10 @@ class PlaytestPlugin :
         val reporter =
             Bukkit.getServicesManager().load(AppliedContent::class.java)
                 ?: return Answer.createApplied(
-                    resources = listOf(),
-                    failure = "no Typewriter engine on this Paper reports what it applies: is the playtest bridge deployed to it?",
                     publication = null,
+                    failure = "no Typewriter engine on this Paper reports what it applies: is the playtest bridge deployed to it?",
                 )
-        return Answer.createApplied(resources = reporter.applied().sorted(), failure = null, publication = reporter.publication())
+        return Answer.createApplied(publication = reporter.publication(), failure = null)
     }
 
     /** A player joined: what its join causes from now on shows from the tick after the last one that ended. */

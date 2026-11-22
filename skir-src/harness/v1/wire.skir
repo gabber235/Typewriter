@@ -299,9 +299,8 @@ enum PaperAsk(85030011) {
   query: struct {
     player: string;
   };
-  // Which publication the Typewriter engine on the Paper of `player`'s attempt currently applies, and
-  // the resource ids it compiles roots of. Paper answers with `applied`. Only content liveness asks,
-  // outside every window.
+  // Which publication the Typewriter engine on the Paper of `player`'s attempt currently applies.
+  // Paper answers with `applied`. Only content liveness asks, outside every window.
   // TODO(node 9): temporary test only signal; replace with the engine's reported active publication
   // ("applied on N of M").
   applied: struct {
@@ -397,15 +396,13 @@ enum Answer(85030015) {
     renderer: Renderer;
     failure: string?;
   };
-  // The publication the Typewriter engine on Paper currently applies, null before its first, and the
-  // resource ids it compiles roots of; `failure` is null when an engine there reports them, or says why
-  // none does.
+  // The publication the Typewriter engine on Paper currently applies, null before its first; `failure`
+  // is null when an engine there reports it, or says why none does.
   // TODO(node 9): temporary test only signal; replace with the engine's reported active publication
   // ("applied on N of M").
   applied: struct {
-    resources: [string];
-    failure: string?;
     publication: string?;
+    failure: string?;
   };
 }
 

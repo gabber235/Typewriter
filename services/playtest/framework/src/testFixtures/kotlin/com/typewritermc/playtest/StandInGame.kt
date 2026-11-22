@@ -18,7 +18,7 @@ import java.util.UUID
  * A game standing in for the pool behind one [attempt] of one [player], so a body runs as a pool
  * session runs it, without a pool. Every probe and input runs between ticks, after the last one that
  * ran; a window's ticks run at once, and at the end of each the player perceives [shows]. A query finds
- * the player carrying [marks], an ask finds the Paper's engine applying [applied] of [publications] or failing
+ * the player carrying [marks], an ask finds the Paper's engine applying one of [publications] or failing
  * with [appliedFailure], and a capture draws [frame] with [renderer]. A quit runs between ticks too; a
  * rejoin lets 5 ticks run first, as a client takes ticks to join, and is back after [rejoinedAfter]. Its goldens, exact for [PINNED], and the attempt's evidence live in a folder of their
  * own. With [restartsPaper] the attempt may ask for a restart, which a stand in game never runs.
@@ -38,9 +38,6 @@ internal class StandInGame(
     var shows: Perception = Perception.partial()
 
     var marks: List<StateKind> = listOf()
-
-    /** What the engine on the stand in Paper applies at each ask, in order; the last answers every later ask. */
-    var applied: List<Set<String>> = listOf(setOf())
 
     /** The publication the engine on the stand in Paper applies at each ask, in order; the last answers every later ask. */
     var publications: List<String?> = listOf(null)
@@ -94,10 +91,9 @@ internal class StandInGame(
 
     override suspend fun query(player: GamePlayer): List<StateKind> = marks
 
-    override suspend fun applied(player: GamePlayer): AppliedPublication {
+    override suspend fun applied(player: GamePlayer): String? {
         appliedFailure?.let { throw ProbeFailed(it) }
-        val ask = appliedAsks++
-        return AppliedPublication(publications[minOf(ask, publications.lastIndex)], applied[minOf(ask, applied.lastIndex)])
+        return publications[minOf(appliedAsks++, publications.lastIndex)]
     }
 
     override suspend fun restart(

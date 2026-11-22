@@ -13,7 +13,6 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.RelationContract
@@ -32,8 +31,6 @@ class CompiledResourceGraph private constructor(
     val typeArguments: Map<CompiledResourceKey, List<KClass<*>>>,
     /** Each resource as it was stored, with its checked type: what formulas read fields and lower Var types from. */
     val stored: Map<CompiledResourceKey, CompleteValue>,
-    /** The resources the publication compiles roots of, one per shard. */
-    val roots: Set<ResourceId>,
 ) {
     val elements: Map<CompiledResourceKey, Element> =
         resources
@@ -115,8 +112,7 @@ class CompiledResourceGraph private constructor(
                         (catalog.resolve(argument) as? Resolution.Ready)?.let { bindings.bind(it.value).nativeClass }
                     }
                 }
-            val roots = facts.mapTo(linkedSetOf()) { it.root.source.toResourceId() }
-            return CompiledResourceGraph(decoded, edges.toList(), typeArguments, stored, roots)
+            return CompiledResourceGraph(decoded, edges.toList(), typeArguments, stored)
         }
     }
 }

@@ -47,52 +47,34 @@ class StackAuthor private constructor(
     /** Edits run one at a time: the editor keeps one activated catalog, which a change of generation replaces. */
     private val editing = Mutex()
 
-    /** Saves [setup] in the stack's Realm as one author edit. */
-    suspend fun write(setup: Setup<*>) = editing.withLock { SetupApplier(editor).apply(setup) }
+    /** Saves [setup] in the stack's Realm as one author edit, and publishes it. */
+    suspend fun write(setup: Setup<*>) = published { SetupApplier(editor).apply(setup) }
 
-    /** Deletes what [setup] created from the stack's Realm as one author edit. */
-    suspend fun remove(setup: Setup<*>) = editing.withLock { SetupApplier(editor).remove(setup) }
+    /** Deletes what [setup] created from the stack's Realm as one author edit, without publishing. */
+    suspend fun discard(setup: Setup<*>) = editing.withLock { SetupApplier(editor).remove(setup) }
 
-    /**
-     * Changes what [from] created into [to] as one author edit, then publishes until the Realm's selected publication is
-     * a new one that carries every saved change: the review reads current, on a publication other than the one selected
-     * before the edit.
-     */
+    /** Deletes what [setup] created from the stack's Realm as one author edit, and publishes the removal. */
+    suspend fun remove(setup: Setup<*>) = published { SetupApplier(editor).remove(setup) }
+
+    /** Changes what [from] created into [to] as one author edit, and publishes the change. */
     suspend fun change(
         from: Setup<*>,
         to: Setup<*>,
-    ) {
-        val before = selectedPublication()
-        editing.withLock { SetupApplier(editor).change(from, to) }
-        publishUntil("is still $before or does not carry the change") {
-            val current = view().status as? PublicationStatus.CurrentWrapper
-            current
-                ?.value
-                ?.selected
-                ?.value
-                ?.takeIf { it != before }
-        }
-    }
+    ) = published { SetupApplier(editor).change(from, to) }
 
     /**
-     * Publishes until the Realm's selected publication compiles some of [resources]; returns those it compiles. Several
-     * authors share the Realm's one publication gate, so another author's publication may carry these resources first:
-     * the selected publication's own content decides, never this author's publish reply.
+     * Runs [edit], then publishes until the Realm's selected publication carries every saved change: the review reads
+     * current, on a publication other than the one selected before the edit. Several authors share the Realm's one
+     * publication gate, so another author's publication may carry this edit first: the Realm's review decides, never
+     * this author's publish reply.
      */
-    suspend fun publishPresent(resources: Set<String>): Set<String> =
-        publishUntil("compiles none of $resources") { (publishedRoots() intersect resources).takeIf { it.isNotEmpty() } }
-
-    /** Publishes until the Realm's selected publication compiles none of [resources]. */
-    suspend fun publishAbsent(resources: Set<String>) {
-        publishUntil("still compiles some of $resources") { Unit.takeIf { (publishedRoots() intersect resources).isEmpty() } }
+    private suspend fun published(edit: suspend () -> Unit) {
+        val before = selectedPublication()
+        editing.withLock { edit() }
+        publishUntil("is still $before or does not carry the edit") { status ->
+            status is PublicationStatus.CurrentWrapper && status.value.selected.value != before
+        }
     }
-
-    /** The resources the Realm's selected publication compiles roots of, or none before its first publication. */
-    suspend fun publishedRoots(): Set<String> =
-        publishedContent()
-            ?.outputs
-            .orEmpty()
-            .mapTo(mutableSetOf()) { it.reference.root.resource.value }
 
     /**
      * The id of the Realm's selected publication, or null before its first.
@@ -109,19 +91,29 @@ class StackAuthor private constructor(
         }
 
     /**
-     * Releases the Realm's ready candidate whenever there is one, until [done] answers; fails with the Realm's reason
-     * when its review is blocked or unavailable, and after [PUBLISH_LIMIT] naming what the selected publication [still]
-     * does and the last review.
+     * Releases the Realm's ready candidate whenever there is one, until [done] holds for the review; fails with the Realm's
+     * reason when its review is blocked or unavailable, and after [PUBLISH_LIMIT] naming what the selected publication
+     * [still] does and the last review it read. A review that is still moving counts as not settled yet: it asks again
+     * after [POLL].
      */
-    private suspend fun <T : Any> publishUntil(
+    private suspend fun publishUntil(
         still: String,
-        done: suspend () -> T?,
-    ): T {
+        done: (PublicationStatus) -> Boolean,
+    ) {
         val started = TimeSource.Monotonic.markNow()
         var last: PublicationView? = null
         while (started.elapsedNow() < PUBLISH_LIMIT) {
-            done()?.let { return it }
-            val view = view().also { last = it }
+            // TODO(node 9): while the Realm re-checks after an edit, its publication review gets a new id on every query,
+            // so the author follows a moving review and waits for it here. Remove this retry once the Realm can say its
+            // review is settled, or once the test author waits on the engine's reported active publication, whichever
+            // comes first.
+            val view = view()
+            if (view == null) {
+                delay(POLL)
+                continue
+            }
+            last = view
+            if (done(view.status)) return
             when (val status = view.status) {
                 is PublicationStatus.ReadyWrapper -> {
                     call(RealmRouteScope::authoringPublish, PublishAuthoringRequest(candidate = status.value.candidate))
@@ -143,8 +135,11 @@ class StackAuthor private constructor(
         error("after $PUBLISH_LIMIT the selected publication $still; the review reads ${last?.status}")
     }
 
-    /** The Realm's current publication review. A query names the view it expects; the Realm answers another with its id. */
-    private suspend fun view(): PublicationView {
+    /**
+     * The Realm's current publication review, or null while it moves: a query names the view it expects, the Realm answers
+     * another with its id, and a review that changed on each of [VIEW_QUERIES] queries is still moving.
+     */
+    private suspend fun view(): PublicationView? {
         var expected = PublicationViewId(value = "")
         repeat(VIEW_QUERIES) {
             when (val queried = call(RealmRouteScope::authoringPublicationQuery, QueryPublicationViewRequest(expected = expected))) {
@@ -153,7 +148,7 @@ class StackAuthor private constructor(
                 else -> error("the Realm answered its publication view query with $queried")
             }
         }
-        error("the Realm's publication review changed on each of $VIEW_QUERIES queries")
+        return null
     }
 
     override suspend fun <Request : Any, Response : Any> call(

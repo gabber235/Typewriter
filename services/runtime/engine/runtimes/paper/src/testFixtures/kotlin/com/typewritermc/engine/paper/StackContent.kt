@@ -12,9 +12,7 @@ import com.typewritermc.library.book
 import com.typewritermc.playtest.AttemptContent
 import com.typewritermc.playtest.ContentLiveness
 import com.typewritermc.playtest.GamePlayer
-import com.typewritermc.playtest.LiveContent
 import com.typewritermc.playtest.WrittenContent
-import com.typewritermc.playtest.awaitApplied
 import com.typewritermc.playtest.awaitPublication
 import com.typewritermc.realm.testing.boundFormula
 import com.typewritermc.setup.SetupList
@@ -78,15 +76,13 @@ fun SetupList<Book>.attemptBook(
 }
 
 /**
- * Says when the stack's content runs on Paper: once the Typewriter engine there applies every root the content
- * publishes and none it removed, and the publication the Realm selects now, which carries every change saved before it,
- * as the playtest bridge extension on that engine reports.
+ * Says when the stack's content runs on Paper: once the Typewriter engine there applies the publication the Realm
+ * selects now, which carries every change saved before it, as the playtest bridge extension on that engine reports.
  *
  * TODO(node 9): replace with the engine's reported active publication ("applied on N of M").
  */
 private val StackLiveness =
-    ContentLiveness { paper, content ->
-        paper.awaitApplied(content)
+    ContentLiveness { paper ->
         paper.awaitPublication { StackAuthor.shared().selectedPublication() }
     }
 
@@ -100,34 +96,28 @@ private class StackContent(
         val copy = AttemptCopy(players, "$key-${UUID.randomUUID().toString().take(COPY_SUFFIX)}")
         var content = setup(copy.book) { block(copy) }
         val author = StackAuthor.shared()
-        author.write(content)
-        val roots =
-            try {
-                author.publishPresent(content.resources.mapTo(mutableSetOf()) { it.value })
-            } catch (
-                @Suppress("TooGenericExceptionCaught") unpublished: Throwable,
-            ) {
-                withContext(NonCancellable) { runCatching { author.remove(content) }.exceptionOrNull()?.let(unpublished::addSuppressed) }
-                throw unpublished
-            }
+        try {
+            author.write(content)
+        } catch (
+            @Suppress("TooGenericExceptionCaught") unpublished: Throwable,
+        ) {
+            withContext(NonCancellable) { runCatching { author.discard(content) }.exceptionOrNull()?.let(unpublished::addSuppressed) }
+            throw unpublished
+        }
         return object : WrittenContent {
-            override val live = LiveContent(present = roots)
             private var removed = false
 
-            override suspend fun change(): LiveContent {
+            override suspend fun change() {
                 val changed = setup(copy.book) { block(AttemptCopy(copy.players, copy.book, changed = true)) }
                 author.change(content, changed)
                 content = changed
-                return LiveContent(present = roots)
             }
 
-            override suspend fun remove(): LiveContent {
+            override suspend fun remove() {
                 if (!removed) {
                     author.remove(content)
-                    author.publishAbsent(roots)
                     removed = true
                 }
-                return LiveContent(absent = roots)
             }
         }
     }
