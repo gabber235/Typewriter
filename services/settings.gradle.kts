@@ -16,6 +16,14 @@ plugins {
 
 rootProject.name = "services"
 
+// natskt is built from Typewriter's fork, pinned by the git tag the nats version names.
+sourceControl {
+    gitRepository(uri("https://github.com/gabber235/nats.kt.git")) {
+        producesModule("io.github.n-hass:natskt-core")
+        producesModule("io.github.n-hass:natskt-jetstream")
+    }
+}
+
 includeBuild("imprint")
 
 val allowedNestedBuilds =
