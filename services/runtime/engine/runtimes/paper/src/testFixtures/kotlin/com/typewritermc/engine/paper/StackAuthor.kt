@@ -1,6 +1,7 @@
 package com.typewritermc.engine.paper
 
 import com.typewritermc.discovery.GeneratedProviderArtifact
+import com.typewritermc.protocol.transport.RealmActorRouteScope
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
 import com.typewritermc.protocol.transport.generated.authoringPublicationQuery
@@ -11,9 +12,12 @@ import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.setup.Setup
 import com.typewritermc.testkit.setup.SetupApplier
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.QueryPublishedContentRequest
 import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
@@ -23,6 +27,8 @@ import skirout.editor.v1.publication.PublicationViewId
 import skirout.editor.v1.publication.PublishAuthoringRequest
 import skirout.editor.v1.publication.QueryPublicationViewRequest
 import skirout.editor.v1.publication.QueryPublicationViewResponse
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeUse
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -31,13 +37,15 @@ import kotlin.time.TimeSource
 /**
  * Writes content into the stack's Realm and publishes it, as the stack owner does from the panel, with the author
  * credentials `cargo xtask e2e game` hands the test JVM: `STACK_AUTHOR_CREDS`, `STACK_AUTHOR_INBOX` (the prefix its
- * replies arrive below), `STACK_ORGANIZATION` and `STACK_REALM`. Setups are planned in this JVM by the Realm's own
+ * replies arrive below), `STACK_AUTHOR_USER` (the owner's subject token), `STACK_ORGANIZATION` and `STACK_REALM`. It
+ * also opens panel tabs of the owner, which emit events as the panel does ([panelTab]). Setups are planned in this JVM by the Realm's own
  * planner over the state the Realm reports, with the artifacts the Realm loads (see [stackRealmArtifacts]), so [SetupApplier] works against the running stack:
  * `SetupApplier(author.editor).apply(setup(...) { ... })`.
  */
 class StackAuthor private constructor(
     private val stack: StackConnection,
     private val scope: RealmRouteScope,
+    private val user: String,
     artifacts: List<GeneratedProviderArtifact>,
 ) : AutoCloseable,
     RealmWire {
@@ -61,6 +69,25 @@ class StackAuthor private constructor(
         from: Setup<*>,
         to: Setup<*>,
     ) = published { SetupApplier(editor).change(from, to) }
+
+    /** Encodes [value] as the Realm's installed catalog types it as [type], as a panel encodes what it sends. */
+    suspend fun encode(
+        type: TypeUse,
+        value: Any?,
+    ): DataValue = editing.withLock { editor.encoder().encode(type, value) }
+
+    /** Runs [block] with a panel tab of the owner open on the stack's Realm; the tab leaves when [block] ends. */
+    suspend fun <T> panelTab(block: suspend StackPanelTab.() -> T): T =
+        coroutineScope {
+            val tab = StackPanelTab(stack, RealmActorRouteScope(scope.organizationId, scope.realmId, user))
+            val beating = tab.beat(this)
+            try {
+                tab.block()
+            } finally {
+                beating.cancel()
+                withContext(NonCancellable) { tab.leave() }
+            }
+        }
 
     /**
      * Runs [edit], then publishes until the Realm's selected publication carries every saved change: the review reads
@@ -179,6 +206,7 @@ class StackAuthor private constructor(
             StackAuthor(
                 StackConnection.open("author", "STACK_AUTHOR_CREDS", "STACK_AUTHOR_INBOX"),
                 RealmRouteScope(organizationId = stackValue("STACK_ORGANIZATION"), realmId = stackValue("STACK_REALM")),
+                stackValue("STACK_AUTHOR_USER"),
                 stackRealmArtifacts(),
             )
 

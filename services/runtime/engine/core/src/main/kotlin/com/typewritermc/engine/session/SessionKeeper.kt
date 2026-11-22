@@ -77,7 +77,7 @@ data class SessionTimings(
  * engine takes it over, written in call order and without NATS, so this engine knows what it holds while NATS is down.
  *
  * Every successful take emits [SessionArrived] to [events], after [ProtagonistJoined] when the protagonist had no
- * session key anywhere. The keeper follows the whole bucket, so when a key expires, the engine its last value names
+ * session key anywhere. The keeper follows the whole bucket into [copy], which answers [holders], so when a key expires, the engine its last value names
  * as holder emits [ProtagonistLeft] once no other key of the protagonist lives. That is best effort: after a crash no
  * engine names itself holder, and an expiry while this engine's watch was down longer than the bucket keeps its marker
  * goes unseen.
@@ -96,6 +96,9 @@ class SessionKeeper(
     AutoCloseable {
     private val scope = CoroutineScope(parent.coroutineContext + SupervisorJob(parent.coroutineContext[Job]))
     private val sessions = ConcurrentHashMap<SessionId, SessionSlot>()
+
+    /** This engine's copy of every live session in the bucket, which the keeper's watch keeps. */
+    val copy = SessionsCopy()
 
     init {
         scope.launch { follow() }
@@ -132,13 +135,7 @@ class SessionKeeper(
         }
     }
 
-    override suspend fun holders(protagonist: Protagonist): Set<EngineId> {
-        val bucket = bucket() ?: return emptySet()
-        return when (val read = bucket.liveEntries(protagonist)) {
-            is LiveEntries.Read -> read.entries.mapTo(linkedSetOf()) { it.holder }
-            is LiveEntries.Failed -> throw read.cause
-        }
-    }
+    override suspend fun holders(protagonist: Protagonist): Set<EngineId> = copy.holders(protagonist)
 
     /** Stops every write and leaves the keys as they are. */
     override fun close() {
@@ -186,30 +183,33 @@ class SessionKeeper(
     }
 
     /**
-     * Keeps a copy of every live session entry in the bucket, watching again whenever the watch breaks. The copy
+     * Keeps [copy] of every live session entry in the bucket, watching again whenever the watch breaks. The copy
      * survives a new watch, so an expiry whose marker the new watch replays still finds the key's last holder.
      */
     private suspend fun follow() {
-        val live = HashMap<String, SessionEntry>()
         while (true) {
             val watch = bucket()?.watch(SessionsBucket.EVERY_KEY)
-            if (watch is KeyValueWatch.Watching) watch.changes.collect { live.record(it) }
+            if (watch is KeyValueWatch.Watching) watch.changes.collect { record(it) }
             delay(timings.retry)
         }
     }
 
-    private fun MutableMap<String, SessionEntry>.record(change: KeyValueChange) {
+    private fun record(change: KeyValueChange) {
         when (change) {
             is KeyValueChange.Put -> {
                 val entry = readable(change.entry.key, change.entry.value) ?: return
-                this[change.entry.key] = entry
+                copy.put(change.entry.key, entry)
             }
 
             is KeyValueChange.Expired -> {
-                val last = remove(change.key) ?: return
-                if (last.holder == engine && values.none { it.protagonist == last.protagonist }) {
+                val last = copy.expire(change.key) ?: return
+                if (last.holder == engine && !copy.online(last.protagonist)) {
                     events.emit(ProtagonistLeft(last.protagonist))
                 }
+            }
+
+            KeyValueChange.CaughtUp -> {
+                copy.caughtUp()
             }
         }
     }

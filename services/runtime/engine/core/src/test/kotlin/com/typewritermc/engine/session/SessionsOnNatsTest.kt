@@ -10,6 +10,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -167,18 +168,35 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
     test("SESSION-10 the holders of a protagonist are every engine holding one of its sessions, and none once it left") {
         harness().createBucket()
         val minecraft = harness().engine("engine-a")
-        val panel = harness().engine("panel.realm")
+        val panel = harness().engine("panel-realm")
         val (protagonist, session) = harness().player()
         val (_, tab) = harness().player()
         minecraft.keeper.connected(protagonist, session)
         panel.keeper.connected(protagonist, tab)
         harness().eventually { harness().entry(protagonist, session) != null && harness().entry(protagonist, tab) != null }
 
-        minecraft.keeper.holders(protagonist) shouldContainExactlyInAnyOrder setOf(EngineId("engine-a"), EngineId("panel.realm"))
+        minecraft.keeper.holders(protagonist) shouldContainExactlyInAnyOrder setOf(EngineId("engine-a"), EngineId("panel-realm"))
 
         minecraft.keeper.disconnected(session)
         panel.keeper.disconnected(tab)
         harness().eventually(within = SessionHarness.SHORT.ttl) { minecraft.keeper.holders(protagonist).isEmpty() }
         harness().entry(protagonist, session).shouldBeNull()
+    }
+
+    test("SESSION-COPY-1 the holders of a protagonist come from the engine's own copy of the sessions, also while it cannot reach NATS") {
+        harness().createBucket()
+        val minecraft = harness().engine("engine-a")
+        val panel = harness().engine("panel-realm")
+        val sender = harness().engine("engine-b")
+        val (protagonist, session) = harness().player()
+        val (_, tab) = harness().player()
+        minecraft.keeper.connected(protagonist, session)
+        panel.keeper.connected(protagonist, tab)
+        val both = setOf(EngineId("engine-a"), EngineId("panel-realm"))
+        harness().eventually { sender.keeper.holders(protagonist) == both }
+
+        sender.cutOff()
+
+        withTimeout(SessionHarness.SHORT.refresh) { sender.keeper.holders(protagonist) } shouldContainExactlyInAnyOrder both
     }
 }

@@ -28,6 +28,7 @@ val KeyValueWatchTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
             val changes = Channel<KeyValueChange>(Channel.UNLIMITED)
             val watching = bucket.watch(">").shouldBeInstanceOf<KeyValueWatch.Watching>()
             val watcher = launch { watching.changes.collect(changes::send) }
+            withTimeout(5.seconds) { changes.receive() } shouldBe KeyValueChange.CaughtUp
 
             val first = (bucket.create("a.b", byteArrayOf(1), 10.seconds) as KeyValueWrite.Written).revision
             bucket.update("a.b", byteArrayOf(2), 10.seconds, first)
@@ -54,6 +55,7 @@ val KeyValueWatchTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
             val changes = Channel<KeyValueChange>(Channel.UNLIMITED)
             val watching = bucket.watch(">").shouldBeInstanceOf<KeyValueWatch.Watching>()
             val watcher = launch { watching.changes.collect(changes::send) }
+            withTimeout(5.seconds) { changes.receive() } shouldBe KeyValueChange.CaughtUp
 
             val revision = (bucket.create("short", byteArrayOf(1), 1.seconds) as KeyValueWrite.Written).revision
             bucket.update("short", byteArrayOf(2), 1.seconds, revision)
@@ -93,13 +95,13 @@ val KeyValueWatchTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
         }
     }
 
-    test("WATCH-5 a watch of an empty bucket reports nothing until the first write") {
+    test("WATCH-5 a watch of an empty bucket says at once that it caught up, then reports the first write") {
         onBroker(server().url) {
             val bucket = (buckets().ensure(KeyValueBucketDeclaration("empty", markerTtl = 5.seconds)) as KeyValueOpen.Opened).bucket
             val changes = Channel<KeyValueChange>(Channel.UNLIMITED)
             val watching = bucket.watch(">").shouldBeInstanceOf<KeyValueWatch.Watching>()
             val watcher = launch { watching.changes.collect(changes::send) }
-            delay(1.seconds)
+            withTimeout(5.seconds) { changes.receive() } shouldBe KeyValueChange.CaughtUp
 
             bucket.create("first", byteArrayOf(1), 30.seconds)
 
@@ -109,6 +111,26 @@ val KeyValueWatchTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
                     .shouldBeInstanceOf<KeyValueChange.Put>()
                     .entry.key shouldBe "first"
             }
+            watcher.cancel()
+        }
+    }
+
+    test("WATCH-6 a watch says it caught up once, right after the latest state of every key, before any later write") {
+        onBroker(server().url) {
+            val bucket = (buckets().ensure(KeyValueBucketDeclaration("replay", markerTtl = 5.seconds)) as KeyValueOpen.Opened).bucket
+            listOf("a", "b", "c").forEach { bucket.create(it, byteArrayOf(1), 30.seconds) }
+
+            val changes = Channel<KeyValueChange>(Channel.UNLIMITED)
+            val watching = bucket.watch(">").shouldBeInstanceOf<KeyValueWatch.Watching>()
+            val watcher = launch { watching.changes.collect(changes::send) }
+            val replayed = withTimeout(5.seconds) { List(4) { changes.receive() } }
+            bucket.create("d", byteArrayOf(1), 30.seconds)
+            val later = withTimeout(5.seconds) { changes.receive() }
+
+            replayed.dropLast(1).map { (it as KeyValueChange.Put).entry.key } shouldBe listOf("a", "b", "c")
+            replayed.last() shouldBe KeyValueChange.CaughtUp
+            (later as KeyValueChange.Put).entry.key shouldBe "d"
+            withTimeoutOrNull(1.seconds) { changes.receive() } shouldBe null
             watcher.cancel()
         }
     }

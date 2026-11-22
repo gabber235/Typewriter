@@ -61,7 +61,7 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
             onBroker(server.url) {
                 val buckets = buckets()
                 check(buckets.ensure(SessionsBucket.declaration("realm")) is KeyValueOpen.Opened)
-                WiredEngine(testEngineKind, buckets = buckets).use { engine ->
+                WiredEngine(testEngineKind(), buckets = buckets).use { engine ->
                     val uuid = UUID.randomUUID().toString()
                     val protagonist = Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid))
 
@@ -92,7 +92,7 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
         val failure =
             shouldThrow<Exception> {
                 WiredEngine(
-                    testEngineKind,
+                    testEngineKind(),
                     listOf(provided(CountingWork(), listOf(SubjectWork::class)), provided(NoSubjectWork, listOf(SubjectWork::class))),
                 )
             }
@@ -106,7 +106,7 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
         val pokes = TestSource(Poke::class)
         val guard = verdict(Poke::class) { _, _ -> deny(reason("guarded")) }
         WiredEngine(
-            testEngineKind,
+            testEngineKind(),
             listOf(provided(pokes, listOf(Source::class)), provided(guard, listOf(VerdictHandler::class, HandlerPlan::class))),
         ).use {
             pokes.fire(Poke()) shouldBe Outcome.Denied(Poke(), reason("guarded"))
@@ -117,7 +117,7 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
         val pokes = TestSource(Poke::class)
         val poked = CopyOnWriteArrayList<Poke>()
         WiredEngine(
-            testEngineKind,
+            testEngineKind(),
             listOf(
                 provided(pokes, listOf(Source::class)),
                 provided(testShapes.single { it.event == Poke::class }, listOf(EventShape::class)),
@@ -140,7 +140,7 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
             harness.createBucket()
             val left = CopyOnWriteArrayList<ProtagonistLeft>()
             WiredEngine(
-                testEngineKind,
+                testEngineKind(),
                 listOf(
                     provided(ProtagonistLeftEventShape(), listOf(EventShape::class)),
                     provided(after(ProtagonistLeft::class) { event, _ -> left += event }, listOf(AfterHandler::class, HandlerPlan::class)),
@@ -162,7 +162,7 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
         val needy = TestSource(Poke::class)
         val failure =
             shouldThrow<Exception> {
-                WiredEngine(testEngineKind, listOf(provided(needy, listOf(Source::class), needs = HasChat::class)))
+                WiredEngine(testEngineKind(), listOf(provided(needy, listOf(Source::class), needs = HasChat::class)))
             }
 
         messagesOf(failure) shouldContain "TestSource needs HasChat"
@@ -170,7 +170,7 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
 
     test("an engine part that observes publications hears each publication the engine applied, in order") {
         val observer = PublicationRecorder()
-        WiredEngine(testEngineKind, listOf(provided(observer, listOf(PublicationObserver::class)))).use { engine ->
+        WiredEngine(testEngineKind(), listOf(provided(observer, listOf(PublicationObserver::class)))).use { engine ->
             engine.applied(PublicationId(value = "first"))
             engine.applied(PublicationId(value = "second"))
 

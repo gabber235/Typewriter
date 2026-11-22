@@ -62,6 +62,10 @@ dependencies {
     "gameTestImplementation"(project(":basic-extension")) {
         attributes { attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR)) }
     }
+    // The event delivery requirements emit the playtest bridge's test event: its JAR, for the same reason.
+    "gameTestImplementation"(project(":playtest-bridge")) {
+        attributes { attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR)) }
+    }
     // The stack observer the game requirements read the topology and the sessions bucket through.
     testFixturesImplementation(project(":messaging"))
     testFixturesImplementation(project(":protocol-transport"))
@@ -98,7 +102,8 @@ gamePaper {
         }
     }
     keptPerSlot.add("plugins/Typewriter/state")
-    // Counts chain work as player work, drops a wiped player's chains, and reports what the engine applied.
+    // Counts chain work as player work, drops a wiped player's chains, reports what the engine applied, and shows the
+    // test event the event delivery requirements emit.
     typewriterExtensions.from(project(":playtest-bridge"))
 }
 

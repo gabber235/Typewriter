@@ -7,6 +7,7 @@ import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.assemble
+import com.typewritermc.engine.delivery.CatalogEventCodec
 import com.typewritermc.engine.events.publishedEntries
 import com.typewritermc.engine.formula.EngineEvaluationEnvironment
 import com.typewritermc.engine.formula.EngineFormulas
@@ -68,11 +69,12 @@ class EngineDeployment(
         val deploymentScope = CoroutineScope(Dispatchers.Default)
         var wiring: EngineWiring? = null
         return try {
-            val engine = EngineWiring(context, deploymentScope, kind, deployment.providers.engineParts).also { wiring = it }
             val assembly =
                 deployment.providers.contributions.assemble(
                     CatalogAssemblyContext(CatalogGeneration(value = executionCatalogIdentity(artifacts))),
                 )
+            val codec = CatalogEventCodec(assembly.checked, assembly.bindings, assembly.providers.nativeBindings())
+            val engine = EngineWiring(context, deploymentScope, kind, deployment.providers.engineParts, codec).also { wiring = it }
             val formulas = EngineFormulas.of(assembly)
             val runtime =
                 ReloadableEngineRuntime(

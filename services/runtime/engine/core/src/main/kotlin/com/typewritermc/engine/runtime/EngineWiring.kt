@@ -1,9 +1,18 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.discovery.RuntimeRegistrar
+import com.typewritermc.engine.delivery.Delivery
+import com.typewritermc.engine.delivery.DeliveryTimings
+import com.typewritermc.engine.delivery.EngineLink
+import com.typewritermc.engine.delivery.EventCodec
+import com.typewritermc.engine.delivery.Holders
+import com.typewritermc.engine.delivery.Inbox
+import com.typewritermc.engine.delivery.InboxRegistrar
+import com.typewritermc.engine.delivery.NatsEngineLink
 import com.typewritermc.engine.events.ChainPickup
 import com.typewritermc.engine.events.ChainQueue
 import com.typewritermc.engine.events.ChainWorker
+import com.typewritermc.engine.events.Elsewhere
 import com.typewritermc.engine.events.EventParts
 import com.typewritermc.engine.events.EventRuntime
 import com.typewritermc.engine.events.HandlerCosts
@@ -12,6 +21,7 @@ import com.typewritermc.engine.events.SubjectHolding
 import com.typewritermc.engine.events.SubjectWork
 import com.typewritermc.engine.session.HeldSessions
 import com.typewritermc.engine.session.SessionKeeper
+import com.typewritermc.events.Emitter
 import com.typewritermc.events.EnginePartDependencies
 import com.typewritermc.events.EnginePartProvider
 import com.typewritermc.identity.Engine
@@ -46,11 +56,12 @@ internal class EngineWiring(
     scope: CoroutineScope,
     kind: Module,
     parts: List<EnginePartProvider> = emptyList(),
+    codec: EventCodec,
 ) : AutoCloseable {
     val application: KoinApplication =
         koinApplication {
             allowOverride(false)
-            modules(engineCoreModule(context, scope), enginePartModule(parts), kind)
+            modules(engineCoreModule(context, scope, codec), enginePartModule(parts), kind)
             createEagerInstances()
         }
 
@@ -78,6 +89,7 @@ internal class EngineWiring(
 private fun engineCoreModule(
     context: HostedDeploymentContext,
     scope: CoroutineScope,
+    codec: EventCodec,
 ) = module {
     single { context.identity }
     single { context.host }
@@ -100,7 +112,16 @@ private fun engineCoreModule(
             parent = scope,
         )
     } onClose { it?.close() } binds arrayOf(SessionReporter::class, Sessions::class)
-    single { HeldSessions() } bind SubjectHolding::class
+    single { HeldSessions(get<Engine>().id) } bind SubjectHolding::class
+    single<EventCodec> { codec }
+    single<EngineLink> { NatsEngineLink(context.host.messaging, context.identity.realmId, get<Engine>().id) }
+    single { Holders(get<SessionKeeper>().copy) }
+    single {
+        Delivery(get<Engine>().id, get(), get(), get(), get(), get(), scope, getOrNull<DeliveryTimings>() ?: DeliveryTimings())
+    } binds arrayOf(Emitter::class, Elsewhere::class)
+    single { Inbox(get(), get(), get(), scope, getOrNull<DeliveryTimings>() ?: DeliveryTimings()) }
+    // Named, since an engine kind binds its own registrars to the same type.
+    single(named("inbox")) { InboxRegistrar(get(), get()) } bind RuntimeRegistrar::class
     single { ChainQueue(subjectWork(getAll())) }
     single { ChainWorker(get(), scope) }
     single { HandlerCosts(context.host.openTelemetry) }
@@ -112,6 +133,8 @@ private fun engineCoreModule(
             getOrNull<ChainPickup>()
                 ?: error("This engine kind provides no ChainPickup, so the chains its events queue would never run."),
             get(),
+            // Delivery runs occurrences through this runtime, so the runtime reaches it only once both exist.
+            lazy { get<Elsewhere>() },
         )
     } onClose { it?.close() }
 }

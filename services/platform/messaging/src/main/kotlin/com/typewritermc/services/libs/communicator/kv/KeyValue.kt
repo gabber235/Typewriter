@@ -66,8 +66,9 @@ interface KeyValueBucket {
 
     /**
      * Follows the keys matching [filter], a subject pattern such as `>`. The changes start with the latest state of
-     * every matching key, an expiry whose marker the bucket still keeps included, then follow every later write and
-     * expiry in the bucket's order.
+     * every matching key, an expiry whose marker the bucket still keeps included, then say [KeyValueChange.CaughtUp]
+     * once, then follow every later write and expiry in the bucket's order. A write that lands while the watch starts
+     * may come before or after the catch up.
      */
     suspend fun watch(filter: String): KeyValueWatch
 }
@@ -98,6 +99,9 @@ sealed interface KeyValueChange {
     data class Expired(
         val key: String,
     ) : KeyValueChange
+
+    /** The watch has reported the latest state of every key it matched when it started. */
+    data object CaughtUp : KeyValueChange
 }
 
 /** One live entry of a bucket. */

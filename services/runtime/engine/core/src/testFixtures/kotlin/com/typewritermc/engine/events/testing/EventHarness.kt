@@ -5,6 +5,7 @@ import com.typewritermc.elements.Entry
 import com.typewritermc.engine.events.CancelableEventEntry
 import com.typewritermc.engine.events.ChainPickup
 import com.typewritermc.engine.events.ChainQueue
+import com.typewritermc.engine.events.Elsewhere
 import com.typewritermc.engine.events.EventEntry
 import com.typewritermc.engine.events.EventParts
 import com.typewritermc.engine.events.EventRuntime
@@ -23,6 +24,7 @@ import com.typewritermc.events.EnginePart
 import com.typewritermc.events.EnginePartDependencies
 import com.typewritermc.events.EnginePartProvider
 import com.typewritermc.events.Event
+import com.typewritermc.events.EventResult
 import com.typewritermc.events.HandlerPlan
 import com.typewritermc.events.HandlerSubscription
 import com.typewritermc.events.HasChat
@@ -43,6 +45,9 @@ import com.typewritermc.identity.Protagonist
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlin.reflect.KClass
 
 /**
@@ -70,8 +75,9 @@ class EventHarness(
             queue,
             costs,
             TickedPickup,
-            // The harness engine holds every protagonist; the hold check is proven on a wired engine.
+            // The harness engine holds every identity and is the only engine; holding and delivery are proven on wired engines.
             { true },
+            lazy { Elsewhere { _, _, _ -> } },
         )
 
     init {
@@ -85,6 +91,23 @@ class EventHarness(
 
     /** One chain pickup: runs every waiting chain and the chains they queue. */
     suspend fun tick() = queue.runPending()
+
+    /** Queues a run of [event] caused by [origin] and returns its result once a pickup ran it. */
+    suspend fun run(
+        event: Event,
+        origin: Origin? = null,
+    ): EventResult = runtime.run(event, origin)
+
+    /** Runs [event] caused by [origin] through one pickup and returns its result. */
+    suspend fun ran(
+        event: Event,
+        origin: Origin? = null,
+    ): EventResult =
+        coroutineScope {
+            val result = async(start = CoroutineStart.UNDISPATCHED) { run(event, origin) }
+            tick()
+            result.await()
+        }
 
     /** Wipes [protagonist] as the test host does between requirements. */
     fun wipe(protagonist: Protagonist) = queue.clear(protagonist)
