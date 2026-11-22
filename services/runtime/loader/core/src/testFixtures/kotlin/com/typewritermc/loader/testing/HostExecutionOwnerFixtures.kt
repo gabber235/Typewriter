@@ -6,6 +6,7 @@ import com.typewritermc.loader.rollout.ArtifactHostAssignment
 import com.typewritermc.loader.rollout.DesiredHostExecution
 import com.typewritermc.loader.rollout.ExecutionRevision
 import com.typewritermc.loader.rollout.HostAssignmentRuntime
+import com.typewritermc.loader.rollout.PrimaryEngineInstance
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.services.libs.registrar.ServiceId
 import skirout.service.v1.rollout.ParticipantStatus
@@ -30,4 +31,4 @@ class TestRuntime(
     }
 }
 
-val assignment = ArtifactHostAssignment(RealmId("realm"), setOf(RuntimePlacement.PRIMARY_ENGINE), engineInstance = "engine")
+val assignment = ArtifactHostAssignment(RealmId("realm"), setOf(RuntimePlacement.PRIMARY_ENGINE), engineInstance = PrimaryEngineInstance.Topology("engine"))

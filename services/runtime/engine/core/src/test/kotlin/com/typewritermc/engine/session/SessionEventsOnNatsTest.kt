@@ -69,7 +69,7 @@ val SessionEventsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEna
     test("SESSION-E4 a protagonist does not leave while another of its sessions remains") {
         harness().createBucket()
         val minecraft = harness().engine("engine-a")
-        val panel = harness().engine("panel.realm")
+        val panel = harness().engine("panel-realm")
         val (protagonist, id) = harness().player()
         val (_, tab) = harness().player()
         harness().joined(minecraft, protagonist, id)

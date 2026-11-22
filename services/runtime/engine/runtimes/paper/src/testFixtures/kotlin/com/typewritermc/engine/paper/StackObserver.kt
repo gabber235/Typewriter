@@ -6,6 +6,7 @@ import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.SessionId
+import com.typewritermc.loader.api.EngineIds
 import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
@@ -72,7 +73,7 @@ class StackObserver private constructor(
 
     /** The id of [service]'s engine, as its sessions name their holder, or null while the topology has none. */
     suspend fun engineId(service: String): EngineId? =
-        (engine(service)?.engineId?.key as? RecordIdKey.StringWrapper)?.value?.let(::EngineId)
+        (engine(service)?.engineId?.key as? RecordIdKey.StringWrapper)?.value?.let { EngineId(EngineIds.primary(it)) }
 
     /**
      * The live entry of the Minecraft [player]'s session in the Realm's sessions bucket, or null when there is none.

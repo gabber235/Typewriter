@@ -31,6 +31,8 @@ import com.typewritermc.loader.deployment.DeploymentGeneration
 import com.typewritermc.loader.deployment.DeploymentSnapshot
 import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.projectFor
+import com.typewritermc.loader.rollout.ArtifactHostAssignment
+import com.typewritermc.loader.rollout.PrimaryEngineInstance
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.loader.rollout.deploymentSelectionOrNull
 import com.typewritermc.loader.rollout.testing.presence
@@ -64,6 +66,7 @@ import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -547,8 +550,8 @@ val ArtifactDistributionTest by testSuite {
         assignment?.roles shouldBe RuntimePlacement.entries.toSet()
         assignment?.primaryEngine?.id shouldBe ArtifactId("typewritermc:paper")
         assignment?.intent?.panelEngine shouldBe panel
-        assignment?.engineIdOf(RuntimePlacement.PRIMARY_ENGINE) shouldBe "engine"
-        assignment?.engineIdOf(RuntimePlacement.PANEL_ENGINE) shouldBe "panel.realm"
+        assignment?.engineIdOf(RuntimePlacement.PRIMARY_ENGINE) shouldBe "primary-engine"
+        assignment?.engineIdOf(RuntimePlacement.PANEL_ENGINE) shouldBe "panel-realm"
         assignment?.engineIdOf(RuntimePlacement.REALM) shouldBe null
         desired?.revision?.value shouldBe 1
         desired?.revision?.serviceId shouldBe ServiceId("service-id")
@@ -559,6 +562,32 @@ val ArtifactDistributionTest by testSuite {
         removal?.assignment shouldBe null
         removal?.revision?.value shouldBe 2
         removal?.revision?.serviceId shouldBe ServiceId("service-id")
+    }
+
+    test("every engine id is one subject token that starts with its kind, so no two kinds share an id") {
+        val local =
+            ArtifactHostAssignment(
+                RealmId("quests"),
+                setOf(RuntimePlacement.PRIMARY_ENGINE, RuntimePlacement.PANEL_ENGINE),
+                engineInstance = PrimaryEngineInstance.Local,
+            )
+        val topology =
+            ArtifactHostAssignment(
+                RealmId("quests"),
+                setOf(RuntimePlacement.PRIMARY_ENGINE),
+                engineInstance = PrimaryEngineInstance.Topology("quests"),
+            )
+
+        local.engineIdOf(RuntimePlacement.PRIMARY_ENGINE) shouldBe "local-quests"
+        local.engineIdOf(RuntimePlacement.PANEL_ENGINE) shouldBe "panel-quests"
+        topology.engineIdOf(RuntimePlacement.PRIMARY_ENGINE) shouldBe "primary-quests"
+        shouldThrow<IllegalArgumentException> {
+            ArtifactHostAssignment(
+                RealmId("quests"),
+                setOf(RuntimePlacement.PRIMARY_ENGINE),
+                engineInstance = PrimaryEngineInstance.Topology("engine.one"),
+            )
+        }
     }
 
     test("participant health maps to backend execution state") {
