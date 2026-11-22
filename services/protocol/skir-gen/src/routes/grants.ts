@@ -158,6 +158,14 @@ export function routeGrants(channels: readonly RouteChannel[], roles: RoleDeclar
 }
 
 /**
+ * The key filter that selects every key of [bucket]: one `*` per declared key token, the exact
+ * shape its writers' grants allow, so a watch or listing of the whole bucket stays inside them.
+ */
+export function everyKeyFilter(bucket: BucketDeclaration): string {
+  return bucket.key.map(() => "*").join(".");
+}
+
+/**
  * Derives the broker permissions of a realm key value bucket. Its writers open it, read and write
  * keys of exactly the declared tokens and list them through consumers on its stream; its owner also
  * creates it. Every subject but the owner's account info binds the realm, so a role reaches only its

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
-import { bucketGrants, grantSubject, grantText, routeGrants } from "../src/routes/grants.js";
+import { bucketGrants, everyKeyFilter, grantSubject, grantText, routeGrants } from "../src/routes/grants.js";
 import { parseManifest } from "../src/routes/manifest.js";
 import { routeChannels, SubjectTemplate } from "../src/routes/subject.js";
-import { manifestSource } from "./support.js";
+import { committedManifest, manifestSource, permits } from "./support.js";
 
 const manifest = (routes: string, components: readonly string[]) =>
   parseManifest(manifestSource(routes, components), "routes.yaml");
@@ -191,5 +191,15 @@ describe("grant rule", () => {
 `,
       ),
     ).toThrow("persistent consumers of role realm_participant need a personal identifier");
+  });
+
+  test("an engine may watch every key of its realm's sessions bucket with the bucket's every key filter", () => {
+    const { buckets, roles } = committedManifest();
+    const sessions = buckets.find((bucket) => bucket.name === "sessions")!;
+    const watch = `$JS.API.CONSUMER.CREATE.KV_sessions_{realm}.watcher.$KV.sessions_{realm}.${everyKeyFilter(sessions)}`;
+    const engine = bucketGrants(sessions, roles)
+      .filter((grant) => grant.role === "realm_participant" && grant.direction === "publish")
+      .map((grant) => grantText(grant.tokens));
+    expect(engine.filter((grant) => permits(grant, watch))).not.toEqual([]);
   });
 });

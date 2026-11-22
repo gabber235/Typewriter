@@ -1,15 +1,23 @@
 package com.typewritermc.engine.session
 
+import com.typewritermc.events.ChainQueueing
+import com.typewritermc.events.ProtagonistJoined
+import com.typewritermc.events.ProtagonistLeft
+import com.typewritermc.events.SessionArrived
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
 import com.typewritermc.identity.SessionReporter
 import com.typewritermc.identity.Sessions
+import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueBuckets
+import com.typewritermc.services.libs.communicator.kv.KeyValueChange
 import com.typewritermc.services.libs.communicator.kv.KeyValueKeys
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
 import com.typewritermc.services.libs.communicator.kv.KeyValueRead
+import com.typewritermc.services.libs.communicator.kv.KeyValueWatch
 import com.typewritermc.services.libs.communicator.kv.KeyValueWrite
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -61,12 +69,19 @@ data class SessionTimings(
  *
  * Reporter calls return at once; their writes run on [parent]'s dispatcher, per session in the order of the calls:
  * each call queues on its session's lock before it returns.
+ *
+ * Every successful take emits [SessionArrived] to [events], after [ProtagonistJoined] when the protagonist had no
+ * session key anywhere. The keeper follows the whole bucket, so when a key expires, the engine its last value names
+ * as holder emits [ProtagonistLeft] once no other key of the protagonist lives. That is best effort: after a crash no
+ * engine names itself holder, and an expiry while this engine's watch was down longer than the bucket keeps its marker
+ * goes unseen.
  */
 class SessionKeeper(
     private val engine: EngineId,
     private val buckets: StateFlow<KeyValueBuckets?>,
     private val bucketName: String,
     private val timings: SessionTimings,
+    private val events: ChainQueueing,
     parent: CoroutineScope,
     private val clock: Clock = Clock.systemUTC(),
 ) : SessionReporter,
@@ -74,6 +89,10 @@ class SessionKeeper(
     AutoCloseable {
     private val scope = CoroutineScope(parent.coroutineContext + SupervisorJob(parent.coroutineContext[Job]))
     private val sessions = ConcurrentHashMap<SessionId, SessionSlot>()
+
+    init {
+        scope.launch { follow() }
+    }
 
     override fun connected(
         protagonist: Protagonist,
@@ -104,17 +123,9 @@ class SessionKeeper(
 
     override suspend fun holders(protagonist: Protagonist): Set<EngineId> {
         val bucket = bucket() ?: return emptySet()
-        val keys =
-            when (val listed = bucket.keys(protagonistKeys(protagonist))) {
-                is KeyValueKeys.Listed -> listed.keys
-                is KeyValueKeys.Failed -> throw listed.cause
-            }
-        return keys.mapNotNullTo(linkedSetOf()) { key ->
-            when (val read = bucket.get(key)) {
-                is KeyValueRead.Found -> decodeSessionEntry(read.entry.value).holder
-                KeyValueRead.Absent -> null
-                is KeyValueRead.Failed -> throw read.cause
-            }
+        return when (val read = bucket.liveEntries(protagonist)) {
+            is LiveEntries.Read -> read.entries.mapTo(linkedSetOf()) { it.holder }
+            is LiveEntries.Failed -> throw read.cause
         }
     }
 
@@ -123,7 +134,10 @@ class SessionKeeper(
         scope.cancel()
     }
 
-    /** Writes the session's key as held by this engine, keeping when it began, and retries until it succeeds. */
+    /**
+     * Writes the session's key as held by this engine, keeping when it began, and retries until it succeeds; then
+     * emits the session's arrival, after the protagonist's join when no key of it lived before the write.
+     */
     private suspend fun take(
         protagonist: Protagonist,
         id: SessionId,
@@ -131,7 +145,8 @@ class SessionKeeper(
         val key = sessionKey(protagonist, id)
         while (true) {
             val bucket = bucket()
-            if (bucket != null) {
+            val online = (bucket?.liveEntries(protagonist) as? LiveEntries.Read)?.entries?.isNotEmpty()
+            if (bucket != null && online != null) {
                 val written =
                     when (val read = bucket.get(key)) {
                         is KeyValueRead.Found -> {
@@ -148,10 +163,60 @@ class SessionKeeper(
                             null
                         }
                     }
-                if (written != null) return written
+                if (written != null) {
+                    if (!online) events.emit(ProtagonistJoined(protagonist))
+                    events.emit(SessionArrived(Session(protagonist, id)))
+                    return written
+                }
             }
             delay(timings.retry)
         }
+    }
+
+    /**
+     * Keeps a copy of every live session entry in the bucket, watching again whenever the watch breaks. The copy
+     * survives a new watch, so an expiry whose marker the new watch replays still finds the key's last holder.
+     */
+    private suspend fun follow() {
+        val live = HashMap<String, SessionEntry>()
+        while (true) {
+            val watch = bucket()?.watch(SessionsBucket.EVERY_KEY)
+            if (watch is KeyValueWatch.Watching) watch.changes.collect { live.record(it) }
+            delay(timings.retry)
+        }
+    }
+
+    private fun MutableMap<String, SessionEntry>.record(change: KeyValueChange) {
+        when (change) {
+            is KeyValueChange.Put -> {
+                this[change.entry.key] = decodeSessionEntry(change.entry.value)
+            }
+
+            is KeyValueChange.Expired -> {
+                val last = remove(change.key) ?: return
+                if (last.holder == engine && values.none { it.protagonist == last.protagonist }) {
+                    events.emit(ProtagonistLeft(last.protagonist))
+                }
+            }
+        }
+    }
+
+    /** The live session entries of [protagonist], or the first failed read. */
+    private suspend fun KeyValueBucket.liveEntries(protagonist: Protagonist): LiveEntries {
+        val keys =
+            when (val listed = keys(protagonistKeys(protagonist))) {
+                is KeyValueKeys.Listed -> listed.keys
+                is KeyValueKeys.Failed -> return LiveEntries.Failed(listed.cause)
+            }
+        val entries =
+            keys.mapNotNull { key ->
+                when (val read = get(key)) {
+                    is KeyValueRead.Found -> decodeSessionEntry(read.entry.value)
+                    KeyValueRead.Absent -> null
+                    is KeyValueRead.Failed -> return LiveEntries.Failed(read.cause)
+                }
+            }
+        return LiveEntries.Read(entries)
     }
 
     /**
@@ -232,6 +297,16 @@ class SessionKeeper(
     private fun SessionSlot.letGo() {
         held = null
         refresher = null
+    }
+
+    private sealed interface LiveEntries {
+        data class Read(
+            val entries: List<SessionEntry>,
+        ) : LiveEntries
+
+        data class Failed(
+            val cause: Throwable,
+        ) : LiveEntries
     }
 
     private class SessionSlot {

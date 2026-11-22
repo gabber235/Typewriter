@@ -109,3 +109,18 @@ export function committedOperations() {
   const path = repository(OPERATIONS_CONFIG.manifest);
   return parseOperations(readFileSync(path, "utf8"), path);
 }
+
+/**
+ * Whether the broker grant [grant] lets a client publish to [subject], token by token as NATS
+ * matches permissions: `*` takes any one token, `>` the rest, any other token only itself.
+ */
+export function permits(grant: string, subject: string): boolean {
+  const allowed = grant.split(".");
+  const wanted = subject.split(".");
+  for (const [index, token] of allowed.entries()) {
+    if (token === ">") return wanted.length > index;
+    if (index >= wanted.length || (token !== "*" && token !== wanted[index])) return false;
+  }
+  return allowed.length === wanted.length;
+}
+

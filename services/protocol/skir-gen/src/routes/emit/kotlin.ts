@@ -3,7 +3,7 @@ import type { CodeGenerator } from "skir-internal";
 import { UNKNOWN_SLUG, type Outcome, type OutcomeResponse } from "../../outcomes.js";
 import { fillTemplate, importedKotlinSymbol } from "../../symbols.js";
 import { lowerCamel, quoted, upperCamel } from "../../text.js";
-import { bucketName, REPLY_INBOX } from "../grants.js";
+import { bucketName, everyKeyFilter, REPLY_INBOX } from "../grants.js";
 import {
   ENVELOPE_HEADROOM_BYTES,
   type Channel,
@@ -359,6 +359,9 @@ object ${name} {
         require(realm.matches(BUCKET_REALM)) { "A realm id in a bucket name holds only letters, digits, - and _: $realm" }
         return "${bucketName(declaration.name, "$realm")}"
     }
+
+    /** The key filter of every key, \`${everyKeyFilter(declaration)}\`, which a watch of the whole bucket uses within its grants. */
+    const val EVERY_KEY: String = "${everyKeyFilter(declaration)}"
 
     /** How the realm creates the bucket of [realm]. */
     fun declaration(realm: String): KeyValueBucketDeclaration =
