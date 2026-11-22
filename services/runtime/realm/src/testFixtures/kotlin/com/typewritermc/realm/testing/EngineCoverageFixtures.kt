@@ -60,7 +60,10 @@ suspend fun RealmFixture.engines(vararg parts: EnginePart) {
 /** The messages of the warnings on [resource] once the checks settled. */
 suspend fun RealmFixture.warningsOn(resource: ResourceId): List<String> {
     settle()
-    return checks.findings().flatMap { it.findings }.filter {
-        it.primary?.resource == resource && it.severity == DiagnosticSeverity.WARNING
-    }.map { it.message }
+    return checks
+        .findings()
+        .flatMap { it.findings }
+        .filter {
+            it.primary?.resource == resource && it.severity == DiagnosticSeverity.WARNING
+        }.map { it.message }
 }

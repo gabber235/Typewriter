@@ -17,5 +17,9 @@ class PaperHostPlugins(
             .map { EnabledPlugin(it.pluginMeta.name, it.pluginMeta.version) }
 
     override fun classLoader(name: String): ClassLoader? =
-        pluginManager.getPlugin(name)?.takeIf { it.isEnabled }?.javaClass?.classLoader
+        pluginManager
+            .getPlugin(name)
+            ?.takeIf { it.isEnabled }
+            ?.javaClass
+            ?.classLoader
 }

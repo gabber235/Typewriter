@@ -194,7 +194,11 @@ fun presence(
     hostApi = FIXTURE_VERSION.value,
     assignedRoles = roles.map { it.toSkir() },
     activeProjection = activeProjection,
-    plugins = plugins.map { skirout.service.v1.rollout.EnabledPlugin(name = it.name, version = it.version) },
+    plugins =
+        plugins.map {
+            skirout.service.v1.rollout
+                .EnabledPlugin(name = it.name, version = it.version)
+        },
 )
 
 fun ApplyRolloutCommandRequest.projectionFor(host: ServiceId): ProjectionReference = requireNotNull(command.projectionOf(host.value))

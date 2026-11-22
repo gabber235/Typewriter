@@ -64,9 +64,9 @@ import com.typewritermc.realm.routeFixtureCatalog
 import com.typewritermc.setup.SetupList
 import com.typewritermc.setup.SetupRoot
 import com.typewritermc.testing.routes.FixtureBoxDefinition
-import com.typewritermc.testing.routes.FixtureLoot
 import com.typewritermc.testing.routes.FixtureBreakDefinition
 import com.typewritermc.testing.routes.FixtureEvent
+import com.typewritermc.testing.routes.FixtureLoot
 import com.typewritermc.testing.routes.FixtureLootDefinition
 import com.typewritermc.testing.routes.FixturePrizeDefinition
 import com.typewritermc.testing.routes.FixtureSignalDefinition

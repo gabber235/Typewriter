@@ -303,9 +303,17 @@ val ArtifactDistributionTest by testSuite {
         val withVault = engineProjectionReporting(EnabledPlugin("Vault", "1.7.3"), EnabledPlugin("Essentials", "2.20.1"))
         val withoutVault = engineProjectionReporting(EnabledPlugin("Essentials", "2.20.1"))
 
-        withVault.extensions.single().sourceParts.single { it.name == "vault" }.disposition shouldBe
+        withVault.extensions
+            .single()
+            .sourceParts
+            .single { it.name == "vault" }
+            .disposition shouldBe
             SourcePartDisposition.Eligible(setOf(RuntimePlacement.PRIMARY_ENGINE))
-        withoutVault.extensions.single().sourceParts.single { it.name == "vault" }.disposition shouldBe
+        withoutVault.extensions
+            .single()
+            .sourceParts
+            .single { it.name == "vault" }
+            .disposition shouldBe
             SourcePartDisposition.Ineligible(listOf("needs the Vault plugin"))
         withoutVault.publicationTarget shouldBe withVault.publicationTarget
         engineProjectionReporting(EnabledPlugin("Vault", "1.7.4")) shouldBe withVault

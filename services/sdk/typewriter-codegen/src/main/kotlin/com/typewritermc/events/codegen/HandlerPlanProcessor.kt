@@ -80,37 +80,9 @@ internal class HandlerPlanProcessor(
 
     context(resolver: Resolver)
     private fun plan(function: KSFunctionDeclaration) {
-        val receiver = function.extensionReceiver?.resolve()
-        val event = receiver?.boundClass()
-        if (receiver == null || event == null || !event.isEvent()) {
-            logger.error("A handler's receiver must be an event.", function)
-            return
-        }
-        val verdict =
-            when (
-                function.returnType
-                    ?.resolve()
-                    ?.declaration
-                    ?.qualifiedName
-                    ?.asString()
-            ) {
-                Api.Verdict.canonicalName -> {
-                    true
-                }
-
-                "kotlin.Unit" -> {
-                    false
-                }
-
-                else -> {
-                    logger.error("A handler returns a Verdict to decide or Unit to run after the outcome.", function)
-                    return
-                }
-            }
-        if (verdict && Modifier.SUSPEND in function.modifiers) {
-            logger.error("A verdict handler decides inline and never suspends.", function)
-            return
-        }
+        val receiver = eventReceiver(function) ?: return
+        val event = checkNotNull(receiver.boundClass())
+        val verdict = returnsVerdict(function) ?: return
         val generic = receiver.declaration as? KSTypeParameter
         val config =
             if (generic == null && event.implements(Api.ConfiguredEvent)) {
@@ -122,21 +94,92 @@ internal class HandlerPlanProcessor(
                 null
             }
         val eventType = if (generic != null) event.starred() else receiver.bounded().copy(nullable = false)
-        val params =
-            function.parameters.map { parameter ->
-                classify(parameter, receiver, generic, config) ?: run {
-                    logger.error(
-                        "A handler parameter must be a Candidate, Origin, Outcome, identity, configuration, triggered entry field " +
-                            "or trait interface.",
-                        parameter,
-                    )
-                    null
-                }
-            }
-        if (null in params) return
+        val params = params(function, receiver, generic, config) ?: return
 
         val plan = ClassName(function.packageName.asString(), "${event.simpleName.asString()}_${function.simpleName.asString()}Handler")
         val kind = if (verdict) Api.VerdictHandler else Api.AfterHandler
+        val type = planType(plan, kind, function, receiver, eventType, verdict, params, config)
+        if (output.write(GeneratedFile.builder(plan.packageName, plan.simpleName).addType(type).build(), function)) {
+            engineParts.provideGenerated(plan, listOf(kind, Api.HandlerPlan, Api.EnginePart), function)
+            handledEntries += handledEntryIds(receiver, config, function)
+        }
+    }
+
+    /** [function]'s receiver type when it is an event; null, reported, otherwise. */
+    private fun eventReceiver(function: KSFunctionDeclaration): KSType? {
+        val receiver = function.extensionReceiver?.resolve()
+        if (receiver?.boundClass()?.isEvent() != true) {
+            logger.error("A handler's receiver must be an event.", function)
+            return null
+        }
+        return receiver
+    }
+
+    /**
+     * Whether [function] is a verdict handler (returns a `Verdict`, never suspends) rather than an after handler (returns
+     * `Unit`); null, reported, otherwise.
+     */
+    private fun returnsVerdict(function: KSFunctionDeclaration): Boolean? =
+        when (
+            function.returnType
+                ?.resolve()
+                ?.declaration
+                ?.qualifiedName
+                ?.asString()
+        ) {
+            Api.Verdict.canonicalName -> {
+                if (Modifier.SUSPEND in function.modifiers) {
+                    logger.error("A verdict handler decides inline and never suspends.", function)
+                    null
+                } else {
+                    true
+                }
+            }
+
+            "kotlin.Unit" -> {
+                false
+            }
+
+            else -> {
+                logger.error("A handler returns a Verdict to decide or Unit to run after the outcome.", function)
+                null
+            }
+        }
+
+    /** The `Param` of each of [function]'s parameters; null, each unmatched one reported, when any matches no kind. */
+    context(resolver: Resolver)
+    private fun params(
+        function: KSFunctionDeclaration,
+        receiver: KSType,
+        generic: KSTypeParameter?,
+        config: Configuration?,
+    ): List<CodeBlock>? {
+        val params =
+            function.parameters.map { parameter ->
+                classify(parameter, receiver, generic, config).also {
+                    if (it == null) {
+                        logger.error(
+                            "A handler parameter must be a Candidate, Origin, Outcome, identity, configuration, triggered entry " +
+                                "field or trait interface.",
+                            parameter,
+                        )
+                    }
+                }
+            }
+        return if (null in params) null else params.filterNotNull()
+    }
+
+    /** The generated plan class [plan] for [function]: its event, triggered entry, parameters, configuration and run. */
+    private fun planType(
+        plan: ClassName,
+        kind: ClassName,
+        function: KSFunctionDeclaration,
+        receiver: KSType,
+        eventType: TypeName,
+        verdict: Boolean,
+        params: List<CodeBlock>,
+        config: Configuration?,
+    ): TypeSpec {
         val kClass = KClass::class.asClassName()
         val eventKClass =
             if (eventType is ParameterizedTypeName) {
@@ -161,43 +204,38 @@ internal class HandlerPlanProcessor(
         } else {
             run.addModifiers(KModifier.SUSPEND).addStatement("%L", call)
         }
-        val type =
-            TypeSpec
-                .classBuilder(plan)
-                .addSuperinterface(kind.parameterizedBy(eventType))
-                .addProperty(
-                    PropertySpec
-                        .builder("event", kClass.parameterizedBy(eventType), KModifier.OVERRIDE)
-                        .initializer(eventKClass)
-                        .build(),
-                ).addProperty(
-                    PropertySpec
-                        .builder(
-                            "entry",
-                            kClass.parameterizedBy(WildcardTypeName.producerOf(Api.Entry)).copy(nullable = true),
-                            KModifier.OVERRIDE,
-                        ).initializer(entry)
-                        .build(),
-                ).addProperty(
-                    PropertySpec
-                        .builder("params", LIST.parameterizedBy(Api.Param), KModifier.OVERRIDE)
-                        .initializer("listOf(\n⇥%L\n⇤)", params.filterNotNull().joinToCode(",\n"))
-                        .build(),
-                ).apply {
-                    if (config != null) {
-                        addProperty(
-                            PropertySpec
-                                .builder("config", Api.HandlerConfig.copy(nullable = true), KModifier.OVERRIDE)
-                                .initializer(config.plan())
-                                .build(),
-                        )
-                    }
-                }.addFunction(run.build())
-                .build()
-        if (output.write(GeneratedFile.builder(plan.packageName, plan.simpleName).addType(type).build(), function)) {
-            engineParts.provideGenerated(plan, listOf(kind, Api.HandlerPlan, Api.EnginePart), function)
-            handledEntries += handledEntryIds(receiver, config, function)
-        }
+        return TypeSpec
+            .classBuilder(plan)
+            .addSuperinterface(kind.parameterizedBy(eventType))
+            .addProperty(
+                PropertySpec
+                    .builder("event", kClass.parameterizedBy(eventType), KModifier.OVERRIDE)
+                    .initializer(eventKClass)
+                    .build(),
+            ).addProperty(
+                PropertySpec
+                    .builder(
+                        "entry",
+                        kClass.parameterizedBy(WildcardTypeName.producerOf(Api.Entry)).copy(nullable = true),
+                        KModifier.OVERRIDE,
+                    ).initializer(entry)
+                    .build(),
+            ).addProperty(
+                PropertySpec
+                    .builder("params", LIST.parameterizedBy(Api.Param), KModifier.OVERRIDE)
+                    .initializer("listOf(\n⇥%L\n⇤)", params.joinToCode(",\n"))
+                    .build(),
+            ).apply {
+                if (config != null) {
+                    addProperty(
+                        PropertySpec
+                            .builder("config", Api.HandlerConfig.copy(nullable = true), KModifier.OVERRIDE)
+                            .initializer(config.plan())
+                            .build(),
+                    )
+                }
+            }.addFunction(run.build())
+            .build()
     }
 
     /** Writes the entries this source part's handlers give behaviour; a part without such handlers writes nothing. */
@@ -237,6 +275,40 @@ internal class HandlerPlanProcessor(
         ).mapNotNull { it.typeDefinitionIdentity()?.canonicalText }
     }
 
+    /** The `Param.Candidate` of a `Candidate<E>` parameter of [type]; null when its entry type is unresolved. */
+    private fun candidateParam(
+        type: KSType,
+        receiver: KSType,
+        generic: KSTypeParameter?,
+        config: Configuration?,
+        optional: Boolean,
+    ): CodeBlock? {
+        val entry =
+            type.arguments
+                .singleOrNull()
+                ?.type
+                ?.resolve() ?: return null
+        val entryClass = entry.boundClass() ?: return null
+        val ofEvent =
+            entry.arguments.any { argument ->
+                val argumentType = argument.type?.resolve() ?: return@any false
+                if (generic != null) {
+                    (argumentType.declaration as? KSTypeParameter)?.name?.asString() == generic.name.asString()
+                } else {
+                    argumentType.bounded().copy(nullable = false) == receiver.bounded().copy(nullable = false)
+                }
+            }
+        val ofConfig = (config as? Configuration.Entries)?.entry?.qualifiedName == entryClass.qualifiedName
+        return CodeBlock.of(
+            "%T.Candidate(%T::class, ofEvent = %L, ofConfig = %L, optional = %L)",
+            Api.Param,
+            entryClass.toClassName(),
+            ofEvent,
+            ofConfig,
+            optional,
+        )
+    }
+
     /** The `Param` of [parameter], or null when it matches no kind. The order of the checks is the classification order. */
     context(resolver: Resolver)
     private fun classify(
@@ -252,30 +324,7 @@ internal class HandlerPlanProcessor(
         val classDeclaration = declaration as? KSClassDeclaration
         return when {
             name == Api.Candidate.canonicalName -> {
-                val entry =
-                    type.arguments
-                        .singleOrNull()
-                        ?.type
-                        ?.resolve() ?: return null
-                val entryClass = entry.boundClass() ?: return null
-                val ofEvent =
-                    entry.arguments.any { argument ->
-                        val argumentType = argument.type?.resolve() ?: return@any false
-                        if (generic != null) {
-                            (argumentType.declaration as? KSTypeParameter)?.name?.asString() == generic.name.asString()
-                        } else {
-                            argumentType.bounded().copy(nullable = false) == receiver.bounded().copy(nullable = false)
-                        }
-                    }
-                val ofConfig = (config as? Configuration.Entries)?.entry?.qualifiedName == entryClass.qualifiedName
-                CodeBlock.of(
-                    "%T.Candidate(%T::class, ofEvent = %L, ofConfig = %L, optional = %L)",
-                    Api.Param,
-                    entryClass.toClassName(),
-                    ofEvent,
-                    ofConfig,
-                    optional,
-                )
+                candidateParam(type, receiver, generic, config, optional)
             }
 
             name == Api.EventOrigin.canonicalName -> {

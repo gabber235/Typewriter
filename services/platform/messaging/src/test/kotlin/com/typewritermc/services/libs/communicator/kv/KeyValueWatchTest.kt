@@ -33,8 +33,16 @@ val KeyValueWatchTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
             bucket.update("a.b", byteArrayOf(2), 10.seconds, first)
 
             withTimeout(5.seconds) {
-                changes.receive().shouldBeInstanceOf<KeyValueChange.Put>().entry.value.toList() shouldBe listOf<Byte>(1)
-                changes.receive().shouldBeInstanceOf<KeyValueChange.Put>().entry.value.toList() shouldBe listOf<Byte>(2)
+                changes
+                    .receive()
+                    .shouldBeInstanceOf<KeyValueChange.Put>()
+                    .entry.value
+                    .toList() shouldBe listOf<Byte>(1)
+                changes
+                    .receive()
+                    .shouldBeInstanceOf<KeyValueChange.Put>()
+                    .entry.value
+                    .toList() shouldBe listOf<Byte>(2)
             }
             watcher.cancel()
         }
@@ -51,8 +59,14 @@ val KeyValueWatchTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
             bucket.update("short", byteArrayOf(2), 1.seconds, revision)
 
             withTimeout(5.seconds) {
-                changes.receive().shouldBeInstanceOf<KeyValueChange.Put>().entry.key shouldBe "short"
-                changes.receive().shouldBeInstanceOf<KeyValueChange.Put>().entry.key shouldBe "short"
+                changes
+                    .receive()
+                    .shouldBeInstanceOf<KeyValueChange.Put>()
+                    .entry.key shouldBe "short"
+                changes
+                    .receive()
+                    .shouldBeInstanceOf<KeyValueChange.Put>()
+                    .entry.key shouldBe "short"
                 changes.receive() shouldBe KeyValueChange.Expired("short")
             }
             withTimeoutOrNull(2.seconds) { changes.receive() } shouldBe null
@@ -72,7 +86,8 @@ val KeyValueWatchTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
             val watcher = launch { watching.changes.collect(changes::send) }
 
             val seen = withTimeout(5.seconds) { listOf(changes.receive(), changes.receive()) }
-            seen.filterIsInstance<KeyValueChange.Put>().map { it.entry.key to it.entry.value.toList() } shouldBe listOf("live" to listOf<Byte>(7))
+            seen.filterIsInstance<KeyValueChange.Put>().map { it.entry.key to it.entry.value.toList() } shouldBe
+                listOf("live" to listOf<Byte>(7))
             seen.filterIsInstance<KeyValueChange.Expired>() shouldBe listOf(KeyValueChange.Expired("gone"))
             watcher.cancel()
         }
@@ -88,7 +103,12 @@ val KeyValueWatchTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
 
             bucket.create("first", byteArrayOf(1), 30.seconds)
 
-            withTimeout(5.seconds) { changes.receive().shouldBeInstanceOf<KeyValueChange.Put>().entry.key shouldBe "first" }
+            withTimeout(5.seconds) {
+                changes
+                    .receive()
+                    .shouldBeInstanceOf<KeyValueChange.Put>()
+                    .entry.key shouldBe "first"
+            }
             watcher.cancel()
         }
     }

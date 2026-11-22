@@ -301,10 +301,16 @@ fun DeploymentSnapshot.engineCoverage(
         selection
             .selectedServices()
             .flatMap { service ->
-                eligibilityByPlacement(projectedRuntimes(selection, service), manifests, EnginePlugins.Reported(selection.pluginsOf(service)))
-                    .flatMap { (placement, entries) -> entries.values.map { placement to it } }
+                eligibilityByPlacement(
+                    projectedRuntimes(selection, service),
+                    manifests,
+                    EnginePlugins.Reported(selection.pluginsOf(service)),
+                ).flatMap { (placement, entries) -> entries.values.map { placement to it } }
             }.filter { (_, entry) -> entry.artifact in selected }
-            .groupBy({ (_, entry) -> SourcePartKey(entry.artifact, entry.sourcePart) }, { (placement, entry) -> placement to entry.eligibility })
+            .groupBy({ (_, entry) -> SourcePartKey(entry.artifact, entry.sourcePart) }, { (placement, entry) ->
+                placement to
+                    entry.eligibility
+            })
     return EngineCoverage(onEngines.mapValues { (_, engines) -> engines.coverage() })
 }
 
