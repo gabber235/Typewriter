@@ -1,36 +1,47 @@
 package com.typewritermc.engine.events.testing
 
+import com.typewritermc.authoring.FieldPath
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.text
 import com.typewritermc.elements.Entry
 import com.typewritermc.engine.events.CancelableEventEntry
-import com.typewritermc.engine.events.EventEntry
-import com.typewritermc.engine.pages.SequenceEntry
-import com.typewritermc.engine.pages.SequenceTriggers
-import com.typewritermc.events.CancelableEvent
-import com.typewritermc.formula.Var
-import com.typewritermc.types.Ref
+import com.typewritermc.engine.events.CancelableEventEntryFields
 import com.typewritermc.engine.events.ChainQueue
+import com.typewritermc.engine.events.EventEntry
+import com.typewritermc.engine.events.EventEntryFields
 import com.typewritermc.engine.events.EventParts
 import com.typewritermc.engine.events.EventRuntime
+import com.typewritermc.engine.events.HandlerCosts
 import com.typewritermc.engine.events.PublishedEntries
 import com.typewritermc.engine.events.PublishedEntry
 import com.typewritermc.engine.events.SubjectWork
-import com.typewritermc.engine.events.WrittenValues
+import com.typewritermc.engine.pages.SequenceEntry
+import com.typewritermc.engine.pages.SequenceTriggers
 import com.typewritermc.events.AfterHandler
+import com.typewritermc.events.CancelableEvent
+import com.typewritermc.events.Candidate
+import com.typewritermc.events.ConfiguredSource
+import com.typewritermc.events.Demand
 import com.typewritermc.events.EnginePart
 import com.typewritermc.events.EnginePartDependencies
 import com.typewritermc.events.EnginePartProvider
 import com.typewritermc.events.Event
+import com.typewritermc.events.HandlerConfig
 import com.typewritermc.events.HandlerPlan
+import com.typewritermc.events.HasChat
 import com.typewritermc.events.LiveResolver
 import com.typewritermc.events.Origin
 import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
 import com.typewritermc.events.Sink
 import com.typewritermc.events.Source
+import com.typewritermc.events.VarReader
 import com.typewritermc.events.Verdict
 import com.typewritermc.events.VerdictHandler
+import com.typewritermc.formula.Var
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
+import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
 import kotlin.reflect.KClass
 
@@ -42,6 +53,10 @@ class EventHarness(
     vararg parts: EnginePart,
 ) {
     val work = CountingWork()
+
+    /** The telemetry the runtime records handler times into, as the engine's host exports them. */
+    val telemetry = TelemetryTestHarness.create()
+    private val costs = HandlerCosts(telemetry.openTelemetry)
     private val queue = ChainQueue(work)
     private val runtime =
         EventRuntime(
@@ -49,22 +64,49 @@ class EventHarness(
                 handlers = parts.filterIsInstance<HandlerPlan<*>>(),
                 shapes = testShapes,
                 sources = parts.filterIsInstance<Source<*>>(),
+                configured = parts.filterIsInstance<ConfiguredSource<*, *>>(),
                 live = parts.filterIsInstance<LiveResolver<*>>(),
             ),
             queue,
+            costs,
         )
 
     init {
         runtime.publish(PublishedEntries.EMPTY)
     }
 
-    fun publish(vararg entries: PublishedEntry<*>) = runtime.publish(PublishedEntries(entries.toList(), WrittenValues))
+    fun publish(vararg entries: PublishedEntry<*>) = runtime.publish(PublishedEntries(entries.toList(), WrittenTestFields))
+
+    /** Publishes [entries] as an engine publishes a compiled publication, with the reader it came with. */
+    fun publish(entries: PublishedEntries) = runtime.publish(entries)
 
     /** One chain pickup: runs every waiting chain and the chains they queue. */
     suspend fun tick() = queue.runPending()
 
     /** Wipes [protagonist] as the test host does between requirements. */
     fun wipe(protagonist: Protagonist) = queue.clear(protagonist)
+}
+
+/** Reads the fields of the test entries and the core event entries as written; the harness evaluates no formulas. */
+private object WrittenTestFields : VarReader {
+    override fun read(
+        field: FieldPath,
+        candidate: Candidate<*>,
+    ): Any? {
+        val held =
+            when (field) {
+                TestFields.cancel -> (candidate.entry as GuardEntry<*>).cancel
+                TestFields.message -> (candidate.entry as StepEntry).message
+                EventEntryFields.condition -> (candidate.entry as EventEntry<*>).condition
+                CancelableEventEntryFields.condition -> (candidate.entry as CancelableEventEntry<*>).condition
+                CancelableEventEntryFields.cancel -> (candidate.entry as CancelableEventEntry<*>).cancel
+                else -> error("${field.path.text} is no test entry field.")
+            }
+        return when (held) {
+            is Var.Value -> held.value
+            is Var.Computed -> error("${candidate.entry.name} holds a formula, which the event harness does not evaluate.")
+        }
+    }
 }
 
 /** [entry] as published on a page of [priority], about [about], in a book that applies where [appliesTo] holds. */
@@ -81,17 +123,22 @@ fun step(
     next: List<String> = emptyList(),
 ): PublishedEntry<StepEntry> = published(StepEntry(name, next))
 
-/** A verdict handler on [event] with [params]; for a `Triggered` handler, [entry] is the entry class it runs for. */
+/**
+ * A verdict handler on [event] with [params]; for a `Triggered` handler, [entry] is the entry class it runs for, and for
+ * a configured event, [config] is the configuration type of its receiver.
+ */
 fun <E : Event> verdict(
     event: KClass<E>,
     vararg params: Param,
     entry: KClass<out Entry>? = null,
+    config: HandlerConfig? = null,
     run: (E, List<Any?>) -> Verdict,
 ): VerdictHandler<E> =
     object : VerdictHandler<E> {
         override val event = event
         override val entry = entry
         override val params = params.toList()
+        override val config = config
 
         override fun run(
             event: E,
@@ -99,17 +146,22 @@ fun <E : Event> verdict(
         ): Verdict = run(event, values)
     }
 
-/** An after handler on [event] with [params]; for a `Triggered` handler, [entry] is the entry class it runs for. */
+/**
+ * An after handler on [event] with [params]; for a `Triggered` handler, [entry] is the entry class it runs for, and for
+ * a configured event, [config] is the configuration type of its receiver.
+ */
 fun <E : Event> after(
     event: KClass<E>,
     vararg params: Param,
     entry: KClass<out Entry>? = null,
+    config: HandlerConfig? = null,
     run: suspend (E, List<Any?>) -> Unit,
 ): AfterHandler<E> =
     object : AfterHandler<E> {
         override val event = event
         override val entry = entry
         override val params = params.toList()
+        override val config = config
 
         override suspend fun run(
             event: E,
@@ -139,6 +191,69 @@ class TestSource<E : Event>(
         var applied: Outcome<E>? = null
         sink?.decide(event, origin) { applied = it }
         return applied
+    }
+}
+
+/**
+ * A configured source the test fires by hand: [demand] is the configuration set it was last told, or null while the
+ * runtime keeps it closed; [fire] emits [make] of a configuration and returns the applied outcome, or null while closed.
+ */
+class TestConfiguredSource<E : Event, C : Any>(
+    override val event: KClass<E>,
+    override val config: KClass<C>,
+    private val make: (C) -> E,
+) : ConfiguredSource<E, C> {
+    private var sink: Sink<E>? = null
+    var demand: Set<C>? = null
+        private set
+    var opens: Int = 0
+        private set
+
+    override fun open(
+        demand: Demand<C>,
+        sink: Sink<E>,
+    ): AutoCloseable {
+        opens++
+        this.sink = sink
+        val watching = demand.watch { this.demand = it }
+        return AutoCloseable {
+            watching.close()
+            this.sink = null
+            this.demand = null
+        }
+    }
+
+    fun fire(config: C): Outcome<E>? {
+        var applied: Outcome<E>? = null
+        sink?.decide(make(config), null) { applied = it }
+        return applied
+    }
+}
+
+/** The beat source of the test events: it emits a [Beat] for any configuration. */
+fun beats(): TestConfiguredSource<Beat<*>, Any> = TestConfiguredSource(Beat::class, Any::class) { Beat(it) }
+
+/** The protagonists live on this test engine, each with a chat that keeps what it was sent. */
+class LivePlayers(
+    vararg protagonists: Protagonist,
+) : LiveResolver<Protagonist> {
+    override val identity = Protagonist::class
+    private val chats = protagonists.associateWith { TestChat() }
+
+    override fun live(identity: Protagonist): TestChat? = chats[identity]
+
+    override fun present(): Collection<Protagonist> = chats.keys
+
+    /** Every line [protagonist] was sent, in order. */
+    fun seen(protagonist: Protagonist): List<String> = chats.getValue(protagonist).lines.toList()
+}
+
+/** A chat that keeps every line it was sent. */
+class TestChat : HasChat {
+    val lines: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
+
+    override fun send(message: String) {
+        lines += message
     }
 }
 

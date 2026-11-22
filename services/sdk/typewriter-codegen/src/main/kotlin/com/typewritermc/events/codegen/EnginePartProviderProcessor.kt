@@ -80,7 +80,12 @@ internal class EnginePartProviderProcessor(
             logger.error("An engine part must be visible, so the engine can build it.", declaration)
             return
         }
-        val constructor = declaration.getConstructors().filter { it.isPublic() }.toList().singleOrNull()
+        val constructor =
+            declaration
+                .getConstructors()
+                .filter { it.isPublic() }
+                .toList()
+                .singleOrNull()
         if (constructor == null) {
             logger.error("An engine part needs exactly one public constructor, so the engine knows how to build it.", declaration)
             return

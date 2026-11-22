@@ -5,9 +5,12 @@ import com.typewritermc.events.Candidate
 import com.typewritermc.events.ChainQueueing
 import com.typewritermc.events.Chains
 import com.typewritermc.events.ConfiguredEvent
+import com.typewritermc.events.ConfiguredSource
 import com.typewritermc.events.Context
+import com.typewritermc.events.Demand
 import com.typewritermc.events.Event
 import com.typewritermc.events.EventShape
+import com.typewritermc.events.HandlerConfig
 import com.typewritermc.events.HandlerPlan
 import com.typewritermc.events.LiveResolver
 import com.typewritermc.events.Origin
@@ -31,6 +34,7 @@ class EventParts(
     val handlers: List<HandlerPlan<*>>,
     val shapes: List<EventShape<*>>,
     val sources: List<Source<*>>,
+    val configured: List<ConfiguredSource<*, *>>,
     val live: List<LiveResolver<*>>,
 )
 
@@ -41,16 +45,22 @@ class EventParts(
  * queue as chains of their own; a chain start equal to a waiting one merges into it.
  *
  * [publish] swaps the content handlers see and opens each source while a handler could run for its events, closing
- * it once none can.
+ * it once none can. A configured source is opened with its demand instead: every configuration a runnable handler on
+ * its event uses, recomputed on each publish, and closed once that demand is empty.
+ *
+ * An event without a subject, such as a tick, turns a handler's required identity parameter into a query: the handler
+ * runs once per identity live on this engine, each as the run's subject.
  */
 class EventRuntime(
     private val parts: EventParts,
     private val queue: ChainQueue,
+    private val costs: HandlerCosts,
 ) : ChainQueueing,
     AutoCloseable {
     @Volatile
     private var published: PublishedEntries = PublishedEntries.EMPTY
     private val opened = mutableMapOf<Source<*>, AutoCloseable>()
+    private val openedConfigured = mutableMapOf<ConfiguredSource<*, *>, OpenedConfigured>()
     private val shapes = parts.shapes.associateBy { it.event }
     private val verdicts = parts.handlers.filterIsInstance<VerdictHandler<*>>()
     private val afters = parts.handlers.filterIsInstance<AfterHandler<*>>()
@@ -65,40 +75,97 @@ class EventRuntime(
             if (wanted && handle == null) opened[source] = source.openWith()
             if (!wanted && handle != null) opened.remove(source)?.close()
         }
+        parts.configured.forEach { source ->
+            val demand = demandOf(source, content)
+            val open = openedConfigured[source]
+            when {
+                demand.isEmpty() -> openedConfigured.remove(source)?.handle?.close()
+                open == null -> openedConfigured[source] = source.openWith(demand)
+                else -> open.demand.update(demand)
+            }
+        }
     }
 
     @Synchronized
     override fun close() {
         opened.values.forEach { it.close() }
         opened.clear()
+        openedConfigured.values.forEach { it.handle.close() }
+        openedConfigured.clear()
+    }
+
+    private class OpenedConfigured(
+        val demand: PublishedDemand<Any>,
+        val handle: AutoCloseable,
+    )
+
+    /**
+     * The configurations of [source] a runnable handler uses under [content]: a handler's object configuration, or
+     * every published entry of its entry configuration type, for each handler on the source's event whose configuration
+     * type the source is opened with.
+     */
+    private fun demandOf(
+        source: ConfiguredSource<*, *>,
+        content: PublishedEntries,
+    ): Set<Any> =
+        parts.handlers
+            .filter { plan ->
+                val config = plan.config ?: return@filter false
+                source.config.java.isAssignableFrom(config.type.java) && plan.couldRun(source.event, content)
+            }.flatMapTo(linkedSetOf()) { plan ->
+                when (val config = checkNotNull(plan.config)) {
+                    is HandlerConfig.Object -> listOf(config.instance)
+                    is HandlerConfig.Entries -> content.entries(config.type).map { it.entry }
+                }
+            }
+
+    /** Opens this source with [configurations] as its demand; the runtime updates the demand on each publish. */
+    private fun <E : Event, C : Any> ConfiguredSource<E, C>.openWith(configurations: Set<Any>): OpenedConfigured {
+        val demand = PublishedDemand(configurations)
+        @Suppress("UNCHECKED_CAST")
+        return OpenedConfigured(demand, open(demand as Demand<C>, sink()))
     }
 
     /** Queues [event] as a chain: it is decided on the worker, then its follow ups and after handlers run there. */
-    override fun emit(event: Event) {
+    override fun emit(event: Event) = start(event, repeat = 0)
+
+    /**
+     * Queues [event] as [emit] does; a chain start merges into an equal waiting start, except that [repeat], the count
+     * of earlier equal starts in the same `fire` call, keeps each repeat a run of its own.
+     */
+    private fun start(
+        event: Event,
+        repeat: Int,
+    ) {
         val subject = subjectOf(event)
-        queue.enqueue(subject as? Protagonist, event::class.simpleName ?: "event", key = event.takeIf { it is Triggered<*> }) {
+        val key =
+            when {
+                event !is Triggered<*> -> null
+                repeat == 0 -> event
+                else -> event to repeat
+            }
+        queue.enqueue(workOf(subject), event::class.simpleName ?: "event", key = key) {
             val content = published
             val decision = decideOn(event, null, content)
             after(event, null, decision, content)
         }
     }
 
-    private fun <E : Event> Source<E>.openWith(): AutoCloseable =
-        open(
-            object : Sink<E> {
-                override fun decide(
-                    event: E,
-                    origin: Origin?,
-                    apply: (Outcome<E>) -> Unit,
-                ) {
-                    val content = published
-                    val decision = decideOn(event, origin, content)
-                    apply(decision.outcome)
-                    val subject = subjectOf(event) as? Protagonist
-                    queue.enqueue(subject, event::class.simpleName ?: "event") { after(event, origin, decision, content) }
-                }
-            },
-        )
+    private fun <E : Event> Source<E>.openWith(): AutoCloseable = open(sink())
+
+    private fun <E : Event> sink(): Sink<E> =
+        object : Sink<E> {
+            override fun decide(
+                event: E,
+                origin: Origin?,
+                apply: (Outcome<E>) -> Unit,
+            ) {
+                val content = published
+                val decision = decideOn(event, origin, content)
+                apply(decision.outcome)
+                queue.enqueue(workOf(subjectOf(event)), event::class.simpleName ?: "event") { after(event, origin, decision, content) }
+            }
+        }
 
     private fun <E : Event> decideOn(
         event: E,
@@ -111,11 +178,15 @@ class EventRuntime(
                 plan as VerdictHandler<Event>
                 runs(plan, event, origin, null, content).map { run ->
                     val verdict =
-                        try {
-                            plan.run(event, run.values)
-                        } catch (failure: Exception) {
-                            log.log(Level.WARNING, "A verdict handler failed and counts as a pass.", failure)
-                            pass()
+                        measured(event) {
+                            try {
+                                plan.run(event, run.values)
+                            } catch (
+                                @Suppress("TooGenericExceptionCaught") failure: Exception,
+                            ) {
+                                log.log(Level.WARNING, "A verdict handler failed and counts as a pass.", failure)
+                                pass()
+                            }
                         }
                     Ranked(verdict, run.priority)
                 }
@@ -128,7 +199,7 @@ class EventRuntime(
         origin: Origin?,
         decision: Decision<E>,
         content: PublishedEntries,
-    ) = withContext(Chains(this) + ChainContent(content)) {
+    ) = withContext(Chains(this) + ChainContent(content, ::start)) {
         decision.followUps.forEach { it() }
         val event = decision.outcome.event
         afters
@@ -137,15 +208,32 @@ class EventRuntime(
                 @Suppress("UNCHECKED_CAST")
                 plan as AfterHandler<Event>
                 runs(plan, event, origin, decision.outcome, content).forEach { run ->
-                    try {
-                        plan.run(event, run.values)
-                    } catch (cancelled: CancellationException) {
-                        throw cancelled
-                    } catch (failure: Exception) {
-                        log.log(Level.WARNING, "An after handler on ${source::class.simpleName} failed.", failure)
+                    measured(event) {
+                        try {
+                            plan.run(event, run.values)
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
+                        } catch (
+                            @Suppress("TooGenericExceptionCaught") failure: Exception,
+                        ) {
+                            log.log(Level.WARNING, "An after handler on ${source::class.simpleName} failed.", failure)
+                        }
                     }
                 }
             }
+    }
+
+    /** Runs [block] and records its time as one handler run on [event]. */
+    private inline fun <T> measured(
+        event: Event,
+        block: () -> T,
+    ): T {
+        val started = System.nanoTime()
+        try {
+            return block()
+        } finally {
+            costs.record(event::class, System.nanoTime() - started)
+        }
     }
 
     private class Run(
@@ -153,7 +241,10 @@ class EventRuntime(
         val priority: Int,
     )
 
-    /** Every combination of resolved parameters: one run per candidate, none when a required one is missing. */
+    /**
+     * Every run of [plan] for [event]: one per subject (the event's own, or each queried identity for an event without
+     * one), and per subject one per combination of resolved parameters.
+     */
     private fun runs(
         plan: HandlerPlan<*>,
         event: Event,
@@ -161,18 +252,57 @@ class EventRuntime(
         outcome: Outcome<*>?,
         content: PublishedEntries,
     ): List<Run> {
-        val subject = subjectOf(event)
+        val subjects = subjectOf(event)?.let(::listOf) ?: queried(plan, event) ?: listOf(null)
+        return subjects.flatMap { runs(plan, event, it, origin, outcome, content) }
+    }
+
+    /**
+     * The identities a handler on an event without a subject runs for: the live identities of its first required
+     * identity parameter that no event field fills; null when it asks for none.
+     */
+    private fun queried(
+        plan: HandlerPlan<*>,
+        event: Event,
+    ): List<Identity>? {
+        val fields = identitiesOf(event)
+        val param =
+            plan.params.filterIsInstance<Param.Identity>().firstOrNull { param ->
+                !param.optional && fields.none { param.type.isInstance(it) }
+            } ?: return null
+        return parts.live.flatMap { it.present() }.filter { param.type.isInstance(it) }
+    }
+
+    /** The published entries [param] offers for [subject]: of the event's class or configuration when it asks for one. */
+    private fun candidates(
+        param: Param.Candidate,
+        event: Event,
+        subject: Identity?,
+        context: Context,
+        content: PublishedEntries,
+    ): List<Candidate<*>> {
+        val about = if (param.ofEvent) event::class else null
+        val config = if (param.ofConfig) (event as? ConfiguredEvent<*>)?.config else null
+        return content
+            .entries(param.entry, about)
+            .filter { (!param.ofConfig || it.entry == config) && it.appliesTo(subject) }
+            .map { Candidate(it.entry, it.priority, subject, context, content.reader) }
+    }
+
+    /** Every combination of resolved parameters for [subject]: one run per candidate, none when a required one is missing. */
+    private fun runs(
+        plan: HandlerPlan<*>,
+        event: Event,
+        subject: Identity?,
+        origin: Origin?,
+        outcome: Outcome<*>?,
+        content: PublishedEntries,
+    ): List<Run> {
         val context = if (event is Triggered<*>) event.context else Context.EMPTY.with(event)
         val options =
             plan.params.map { param ->
                 when (param) {
                     is Param.Candidate -> {
-                        val about = if (param.ofEvent) event::class else null
-                        val found =
-                            content
-                                .entries(param.entry, about)
-                                .filter { it.appliesTo(subject) }
-                                .map { Candidate(it.entry, it.priority, subject, context, content.reader) }
+                        val found = candidates(param, event, subject, context, content)
                         if (found.isEmpty() && param.optional) listOf(null) else found
                     }
 
@@ -198,21 +328,41 @@ class EventRuntime(
         content: PublishedEntries,
     ): Any? =
         when (param) {
-            is Param.Identity -> subject?.takeIf { param.type.isInstance(it) } ?: identitiesOf(event).firstOrNull { param.type.isInstance(it) }
-            is Param.Trait -> subject?.let { liveOf(it) }?.takeIf { param.type.isInstance(it) }
+            is Param.Identity -> {
+                subject?.takeIf { param.type.isInstance(it) }
+                    ?: identitiesOf(event).firstOrNull { param.type.isInstance(it) }
+            }
+
+            is Param.Trait -> {
+                subject?.let { liveOf(it) }?.takeIf { param.type.isInstance(it) }
+            }
+
             is Param.Field -> {
                 val triggered = event as? Triggered<*> ?: return null
-                val receiver = Candidate(triggered.entry, EXTENSION_PRIORITY, subject, context, content.reader)
-                receiver.read(param.read(triggered.entry))
+                content.reader.read(param.field, Candidate(triggered.entry, EXTENSION_PRIORITY, subject, context, content.reader))
             }
-            is Param.Origin -> origin
-            is Param.Outcome -> outcome
-            is Param.Config -> (event as? ConfiguredEvent<*>)?.config?.takeIf { param.type.isInstance(it) }
-            is Param.Candidate -> error("Candidates resolve as runs.")
+
+            is Param.Origin -> {
+                origin
+            }
+
+            is Param.Outcome -> {
+                outcome
+            }
+
+            is Param.Config -> {
+                (event as? ConfiguredEvent<*>)?.config?.takeIf { param.type.isInstance(it) }
+            }
+
+            is Param.Candidate -> {
+                error("Candidates resolve as runs.")
+            }
         }
 
     private fun HandlerPlan<*>.accepts(event: Event): Boolean {
         if (!this.event.isInstance(event)) return false
+        val config = config
+        if (config != null && !config.type.isInstance((event as? ConfiguredEvent<*>)?.config)) return false
         val entry = entry ?: return true
         return event is Triggered<*> && entry.isInstance(event.entry)
     }
@@ -227,6 +377,17 @@ class EventRuntime(
             content.entries(param.entry, if (param.ofEvent) event else null).isNotEmpty()
         }
     }
+
+    /**
+     * Whose work a chain of an occurrence with [subject] is: its protagonist; for an occurrence without a subject, every
+     * protagonist live on this engine, since its handlers query them; nobody for any other subject.
+     */
+    private fun workOf(subject: Identity?): Set<Protagonist> =
+        when (subject) {
+            is Protagonist -> setOf(subject)
+            null -> parts.live.flatMap { it.present() }.filterIsInstanceTo(linkedSetOf())
+            else -> emptySet()
+        }
 
     @Suppress("UNCHECKED_CAST")
     private fun subjectOf(event: Event): Identity? =

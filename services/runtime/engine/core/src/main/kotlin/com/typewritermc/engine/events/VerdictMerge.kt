@@ -52,13 +52,20 @@ fun <E : Event> merge(
 private fun Verdict.matches(outcome: Outcome<*>): Boolean {
     val denied = outcome is Outcome.Denied
     return when (this) {
-        is Verdict.Deny -> denied
-        is Verdict.Allow, is Verdict.Change -> !denied
-        is Verdict.Pass ->
+        is Verdict.Deny -> {
+            denied
+        }
+
+        is Verdict.Allow, is Verdict.Change -> {
+            !denied
+        }
+
+        is Verdict.Pass -> {
             when (on) {
                 PassOn.Allowed -> !denied
                 PassOn.Denied -> denied
                 PassOn.Any -> true
             }
+        }
     }
 }

@@ -21,14 +21,14 @@ val ChainWorkerTest by testSuite {
         val stuck = CompletableDeferred<Unit>()
         try {
             val worker = ChainWorker(queue, scope)
-            queue.enqueue(protagonist("alex"), "slow") {
+            queue.enqueue(setOf(protagonist("alex")), "slow") {
                 ran += "slow started"
                 stuck.await()
             }
             worker.pickup()
             eventually(5.seconds) { ran shouldContainExactly listOf("slow started") }
 
-            queue.enqueue(protagonist("sam"), "quick") { ran += "quick" }
+            queue.enqueue(setOf(protagonist("sam")), "quick") { ran += "quick" }
             worker.pickup()
             eventually(5.seconds) { ran shouldContainExactly listOf("slow started", "quick") }
         } finally {

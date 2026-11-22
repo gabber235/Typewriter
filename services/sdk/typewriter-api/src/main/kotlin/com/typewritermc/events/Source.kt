@@ -29,7 +29,8 @@ interface Sink<E : Event> {
 
 /**
  * A source of configured events: it is opened with the configurations that currently have a runnable handler, and
- * indexes them its own way (a timing wheel, a map by region). The demand changes as content is published.
+ * indexes them its own way (a timing wheel, a map by region). The demand changes as content is published; the runtime
+ * opens the source while the demand holds a configuration and closes it once the demand is empty.
  */
 interface ConfiguredSource<E : Event, C : Any> : EnginePart {
     /** The event class it produces. */
@@ -44,11 +45,17 @@ interface ConfiguredSource<E : Event, C : Any> : EnginePart {
     ): AutoCloseable
 }
 
-/** The configurations of a configured event that currently have a runnable handler, watched as they change. */
+/**
+ * The configurations of a configured event that currently have a runnable handler, watched as they change: a Kotlin
+ * object configuration while its handler can run, and each published entry of an entry configuration type.
+ */
 interface Demand<C : Any> {
     val current: Set<C>
 
-    /** Calls [changed] with every new set of configurations until the returned handle is closed. */
+    /**
+     * Calls [changed] with the current set at once and with every new set after it, until the returned handle is
+     * closed, so a source adds and removes its own indexes as content is published.
+     */
     fun watch(changed: (Set<C>) -> Unit): AutoCloseable
 }
 
@@ -65,6 +72,12 @@ interface LiveResolver<I : Identity> : EnginePart {
     val identity: kotlin.reflect.KClass<I>
 
     fun live(identity: I): Any?
+
+    /**
+     * Every identity of this kind that has a live object on this engine now. An event without a subject runs a handler
+     * asking for this identity once per value, so a tick handler reaches each online player.
+     */
+    fun present(): Collection<I>
 }
 
 /** A live object that can show a chat line to its protagonist. */

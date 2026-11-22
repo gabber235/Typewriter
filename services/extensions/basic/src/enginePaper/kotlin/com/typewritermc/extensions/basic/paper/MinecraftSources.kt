@@ -1,8 +1,11 @@
 package com.typewritermc.extensions.basic.paper
 
+import com.destroystokyo.paper.event.server.ServerTickStartEvent
 import com.typewritermc.engine.paper.PaperEvents
 import com.typewritermc.engine.paper.eventOrigin
 import com.typewritermc.engine.paper.protagonist
+import com.typewritermc.events.ConfiguredSource
+import com.typewritermc.events.Demand
 import com.typewritermc.events.Outcome
 import com.typewritermc.events.Sink
 import com.typewritermc.events.Source
@@ -10,11 +13,14 @@ import com.typewritermc.extensions.basic.events.BlockBreak
 import com.typewritermc.extensions.basic.events.PlayerChat
 import com.typewritermc.extensions.basic.events.PlayerJoin
 import com.typewritermc.extensions.basic.events.PlayerQuit
+import com.typewritermc.extensions.basic.events.Tick
+import com.typewritermc.extensions.basic.events.TickConfig
 import io.papermc.paper.event.player.AsyncChatEvent
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import java.util.concurrent.atomic.AtomicReference
 
 /** Reports every join on this Paper. */
 class PlayerJoinSource(
@@ -57,8 +63,41 @@ class BlockBreakSource(
 
     override fun open(sink: Sink<BlockBreak>): AutoCloseable =
         events.listen(BlockBreakEvent::class) { broken ->
-            sink.decide(BlockBreak(broken.player.protagonist, broken.block.type.key.toString()), broken.player.eventOrigin) {
+            val block =
+                broken.block.type.key
+                    .asString()
+            sink.decide(BlockBreak(broken.player.protagonist, block), broken.player.eventOrigin) {
                 broken.isCancelled = it is Outcome.Denied
             }
         }
+}
+
+/**
+ * Emits a [Tick] for each demanded configuration at the start of every server tick whose number is a multiple of its
+ * interval. Configurations are indexed by interval as the demand changes, so a tick costs one check per distinct
+ * interval and the chains it starts are picked up at the end of the same tick.
+ */
+class TickSource(
+    private val events: PaperEvents,
+) : ConfiguredSource<Tick<*>, TickConfig> {
+    override val event = Tick::class
+    override val config = TickConfig::class
+
+    override fun open(
+        demand: Demand<TickConfig>,
+        sink: Sink<Tick<*>>,
+    ): AutoCloseable {
+        val byInterval = AtomicReference<Map<Int, List<TickConfig>>>(emptyMap())
+        val watching = demand.watch { configs -> byInterval.set(configs.groupBy { it.interval.coerceAtLeast(1) }) }
+        val listening =
+            events.listen(ServerTickStartEvent::class) { tick ->
+                byInterval.get().forEach { (interval, configs) ->
+                    if (tick.tickNumber % interval == 0) configs.forEach { sink.decide(Tick(it), null) }
+                }
+            }
+        return AutoCloseable {
+            listening.close()
+            watching.close()
+        }
+    }
 }

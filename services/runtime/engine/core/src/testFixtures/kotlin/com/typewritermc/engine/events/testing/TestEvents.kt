@@ -1,12 +1,21 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.engine.events.testing
 
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.TypedPath
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.typedPath
 import com.typewritermc.elements.Entry
 import com.typewritermc.engine.events.Triggerable
+import com.typewritermc.engine.formula.testing.Said
 import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.engine.pages.SequencePage
 import com.typewritermc.engine.pages.SequenceTriggers
 import com.typewritermc.events.CancelableEvent
+import com.typewritermc.events.ConfiguredEvent
 import com.typewritermc.events.Event
 import com.typewritermc.events.EventReason
 import com.typewritermc.events.EventShape
@@ -14,10 +23,17 @@ import com.typewritermc.formula.Var
 import com.typewritermc.identity.Identity
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
+import com.typewritermc.identity.SessionId
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.declared
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValuePath
 
 /** A protagonist for event runtime tests. */
 fun protagonist(name: String = "alex"): Protagonist = Protagonist(PrincipalId(PrincipalId.MINECRAFT, name))
@@ -33,11 +49,36 @@ data class Shove(
     val protagonist: Protagonist = protagonist(),
 ) : CancelableEvent
 
+/** A test event about one connection, so a subject that is no protagonist can be told apart. */
+data class Knock(
+    val session: Session = Session(protagonist(), SessionId("tab")),
+) : Event
+
+/** A configured test event without a subject: a beat a [TestConfiguredSource] emits for one configuration. */
+data class Beat<C : Any>(
+    override val config: C,
+) : ConfiguredEvent<C>
+
+/** A beat configuration written in code: present while a handler on it can run. */
+data object EveryBeat
+
+/** A second code configuration, so a handler on one object configuration can be told apart from another. */
+data object Downbeat
+
+/** A beat configuration written as content: one configuration per published entry. */
+data class BeatEntry(
+    override val name: String,
+    val every: Int = 1,
+    override val page: Ref<PageElements.Element, Page> = Ref(ResourceId("page")),
+    override val placement: GraphPlacement = GraphPlacement(),
+) : Entry
+
 /** A deny reason named [code]. */
 fun reason(code: String): EventReason = EventReason(code = code, message = code)
 
 /** The shapes of the test events, as KSP generates them for real events. */
-val testShapes: List<EventShape<*>> = listOf(shape<Poke> { it.protagonist }, shape<Shove> { it.protagonist })
+val testShapes: List<EventShape<*>> =
+    listOf(shape<Poke> { it.protagonist }, shape<Shove> { it.protagonist }, shape<Knock> { it.session }, shape<Said> { it.protagonist })
 
 private inline fun <reified E : Event> shape(crossinline subject: (E) -> Identity): EventShape<E> =
     object : EventShape<E> {
@@ -57,6 +98,18 @@ class GuardEntry<E : CancelableEvent>(
     override val page: Ref<PageElements.Element, Page> = testPage,
     override val placement: GraphPlacement = GraphPlacement(),
 ) : Entry
+
+/**
+ * The paths of the test entries' `Var` fields, as codegen emits them for a real entry. The test entries have no catalog
+ * type, so both name one stand in owner.
+ */
+object TestFields {
+    private val owner = TypeDefinitionId.declared("e1f0000000000000000000000000b001")
+
+    val cancel: TypedPath<GuardEntry<*>, Var<Boolean, Any>> = typedPath(owner, ValuePath.root.field("cancel"), ScalarKind.BOOLEAN.use)
+
+    val message: TypedPath<StepEntry, Var<String, Any>> = typedPath(owner, ValuePath.root.field("message"), ScalarKind.TEXT.use)
+}
 
 /** A sequence entry a chain passes through; it links to the entries named in [next]. */
 class StepEntry(

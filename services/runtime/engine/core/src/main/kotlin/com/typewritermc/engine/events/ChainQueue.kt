@@ -28,39 +28,51 @@ object NoSubjectWork : SubjectWork {
 /**
  * The chains of one engine, waiting for the next pickup. Sources and handlers queue inline; one pickup per tick drains
  * the queue on a worker. A start equal to one already waiting (same subject, entry, and context) merges into it, so
- * identical starts within one tick run once. Each chain counts as work of its protagonist until it ends, and a chain
- * it queues begins counting before it ends, so the count only reaches zero when the whole reaction is done.
+ * identical starts within one tick run once. Each chain counts as work of its protagonists until it ends (its subject,
+ * or every live protagonist for an event without a subject, whose handlers run for them), and a chain it queues begins
+ * counting before it ends, so the count only reaches zero when the whole reaction is done.
  */
 class ChainQueue(
     private val work: SubjectWork = NoSubjectWork,
 ) {
     private class Chain(
-        val subject: Protagonist?,
         val key: Any?,
-        val handle: AutoCloseable,
+        /** The open work count of each protagonist this chain is work of; a wipe closes and removes its entry. */
+        val work: MutableMap<Protagonist, AutoCloseable>,
         val run: suspend () -> Unit,
     )
 
     private val lock = Any()
     private val waiting = ArrayDeque<Chain>()
 
-    /** Queues [run] for [subject]; with a [key] equal to a waiting chain's, it merges into that chain instead. */
+    /**
+     * Queues [run] as work of [protagonists]; with a [key] equal to a waiting chain's, it merges into that chain
+     * instead.
+     */
     fun enqueue(
-        subject: Protagonist?,
+        protagonists: Set<Protagonist>,
         name: String,
         key: Any? = null,
         run: suspend () -> Unit,
     ) {
         synchronized(lock) {
             if (key != null && waiting.any { it.key == key }) return
-            waiting += Chain(subject, key, subject?.let { work.begin(it, name) } ?: AutoCloseable {}, run)
+            waiting += Chain(key, protagonists.associateWithTo(mutableMapOf()) { work.begin(it, name) }, run)
         }
     }
 
-    /** Drops every waiting chain of [protagonist], as when its player is wiped between tests. */
+    /**
+     * Wipes [protagonist], as between tests: a waiting chain that is only its work is dropped, and a chain that is also
+     * work of others stops counting as its work but still runs for them.
+     */
     fun clear(protagonist: Protagonist) {
-        val dropped = synchronized(lock) { waiting.filter { it.subject == protagonist }.also { waiting.removeAll(it) } }
-        dropped.forEach { it.handle.close() }
+        val released =
+            synchronized(lock) {
+                val mine = waiting.filter { protagonist in it.work }
+                waiting.removeAll(mine.filter { it.work.keys == setOf(protagonist) })
+                mine.mapNotNull { it.work.remove(protagonist) }
+            }
+        released.forEach { it.close() }
     }
 
     /** Runs waiting chains until none is left, including the chains they queue. A failing chain is logged and ends. */
@@ -71,10 +83,16 @@ class ChainQueue(
                 chain.run()
             } catch (cancelled: CancellationException) {
                 throw cancelled
-            } catch (failure: Exception) {
+            } catch (
+                @Suppress("TooGenericExceptionCaught") failure: Exception,
+            ) {
                 log.log(Level.WARNING, "A chain failed and ended.", failure)
             } finally {
-                chain.handle.close()
+                synchronized(lock) {
+                    chain.work.values
+                        .toList()
+                        .also { chain.work.clear() }
+                }.forEach { it.close() }
             }
         }
     }

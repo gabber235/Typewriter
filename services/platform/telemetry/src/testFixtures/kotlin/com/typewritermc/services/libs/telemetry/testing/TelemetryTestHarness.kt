@@ -96,6 +96,18 @@ class TelemetryTestHarness private constructor(
             .groupingBy { it.attributes.get(AttributeKey.stringKey(attribute)) }
             .fold(0L) { sum, point -> sum + point.value }
 
+    /** The current count and sum of histogram [metric] per value of [attribute]; empty while nothing was recorded. */
+    fun histograms(
+        metric: String,
+        attribute: String,
+    ): Map<String?, RecordedHistogram> =
+        metrics
+            .collectAllMetrics()
+            .filter { it.name == metric }
+            .flatMap { it.histogramData.points }
+            .groupingBy { it.attributes.get(AttributeKey.stringKey(attribute)) }
+            .fold(RecordedHistogram(0, 0.0)) { total, point -> RecordedHistogram(total.count + point.count, total.sum + point.sum) }
+
     fun finishedSpans(): List<SpanData> = exporter.finishedSpanItems
 
     fun finishedLogs(): List<LogRecordData> = logExporter.finishedLogRecordItems
@@ -160,3 +172,9 @@ private class TrackingSpanProcessor : SpanProcessor {
 
     fun activeCount(): Int = active.size
 }
+
+/** What a histogram recorded: how many values and their sum. */
+data class RecordedHistogram(
+    val count: Long,
+    val sum: Double,
+)
