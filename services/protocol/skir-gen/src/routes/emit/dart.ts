@@ -4,6 +4,7 @@ import {
   BLANK,
   indent,
   lines,
+  lowerCamel,
   quoted,
   render,
   separated,
@@ -81,9 +82,12 @@ function scopeParameters(scope: ScopeKind): readonly ScopeParameter[] {
   };
   const user: ScopeParameter = { parameter: "user", name: "userId", type: "String" };
   const service: ScopeParameter = { parameter: "service", name: "serviceId", type: "String" };
+  const realm: ScopeParameter = { parameter: "realm", name: "realmId", type: "_skir.RecordId" };
   switch (scope) {
     case "realm":
-      return [organization, { parameter: "realm", name: "realmId", type: "_skir.RecordId" }];
+      return [organization, realm];
+    case "realm_actor":
+      return [user, organization, realm];
     case "organization_actor":
       return [user, organization];
     case "organization":
@@ -102,32 +106,59 @@ function spaced(items: readonly string[]): Lines {
   return items.flatMap((item) => [item, BLANK]);
 }
 
-function scopeSignature(scope: ScopeKind): Lines {
-  return spaced(scopeParameters(scope).map(({ name, type }) => `required ${type} ${name},`));
+/** The Dart parameter of a free value, such as `engine` for `{engine}`. */
+const freeParameter = (name: string) => lowerCamel(name);
+
+/** The Dart variable holding a validated free value inside a subject. */
+const freeVariable = (name: string) => `${lowerCamel(name)}Token`;
+
+/** The free values the route's subjects carry, in first appearance order. */
+function routeFreeValues(route: ResolvedRoute): string[] {
+  return [...new Set(route.channels.flatMap((channel) => channel.address.freeValues()))];
 }
 
-/** Binds validated scope identities; with a subject, only the identities it captures. */
-function scopeValues(scope: ScopeKind, subject?: SubjectTemplate): Lines {
-  return spaced(
-    scopeParameters(scope)
+/** The parameters of a route operation: its scope identities, then the free values its subjects carry. */
+function scopeSignature(route: ResolvedRoute): Lines {
+  return spaced([
+    ...scopeParameters(route.scope).map(({ name, type }) => `required ${type} ${name},`),
+    ...routeFreeValues(route).map((name) => `required String ${freeParameter(name)},`),
+  ]);
+}
+
+/** Binds validated scope identities and free values; with a subject, only what it captures. */
+function scopeValues(route: ResolvedRoute, subject?: SubjectTemplate): Lines {
+  return spaced([
+    ...scopeParameters(route.scope)
       .filter(({ parameter }) => !subject || subject.has(parameter))
       .map(({ parameter, name, type }) =>
         type === "_skir.RecordId"
           ? `final ${parameter} = ${name}.id.transportIdentity;`
           : `final ${parameter} = ${name}.transportIdentity;`,
       ),
-  );
+    ...routeFreeValues(route)
+      .filter((name) => !subject || subject.freeValues().includes(name))
+      .map((name) => `final ${freeVariable(name)} = ${freeParameter(name)}.transportIdentity;`),
+  ]);
 }
 
-function scopeArguments(scope: ScopeKind): Lines {
-  return spaced(scopeParameters(scope).map(({ name }) => `${name}: ${name},`));
+function scopeArguments(route: ResolvedRoute): Lines {
+  return spaced([
+    ...scopeParameters(route.scope).map(({ name }) => `${name}: ${name},`),
+    ...routeFreeValues(route).map((name) => `${freeParameter(name)}: ${freeParameter(name)},`),
+  ]);
 }
 
 function subjectExpression(template: SubjectTemplate): string {
-  const parts = template.tokens.map(
-    (token): StringPart =>
-      token.kind === "literal" ? { text: token.value } : { variable: token.parameter },
-  );
+  const parts = template.tokens.map((token): StringPart => {
+    switch (token.kind) {
+      case "literal":
+        return { text: token.value };
+      case "parameter":
+        return { variable: token.parameter };
+      case "free":
+        return { variable: freeVariable(token.name) };
+    }
+  });
   return interpolated(dotted(parts));
 }
 
@@ -141,6 +172,8 @@ function grantExpression(tokens: readonly GrantToken[]): string {
         return { text: "*" };
       case "parameter":
         return { variable: token.parameter };
+      case "free":
+        throw new Error("grants leave every free value open");
       case "consumer":
         throw new Error("panel subscriptions never name a consumer");
       case "bucket":
@@ -302,9 +335,9 @@ function emitUnary(
   return [
     `extension ${dartName(route)}Nats on ${requestType} {`,
     `    SkirRouteOperation<${responseType}> ${operationName}({`,
-    ...indent(scopeSignature(route.scope), 2),
+    ...indent(scopeSignature(route), 2),
     "    }) {",
-    ...indent(scopeValues(route.scope), 2),
+    ...indent(scopeValues(route), 2),
     ...lines(`        final method = ${method};
         return SkirRouteOperation(
             subject: ${subjectExpression(requestAddress)},
@@ -377,9 +410,9 @@ function emitWatch(
     ...projection,
     `extension ${name}Nats on ${requestType} {`,
     `    SkirRouteOperation<${responseType}> operation({`,
-    ...indent(scopeSignature(route.scope), 2),
+    ...indent(scopeSignature(route), 2),
     "    }) {",
-    ...indent(scopeValues(route.scope), 2),
+    ...indent(scopeValues(route), 2),
     ...lines(`        final method = ${method};
         return SkirRouteOperation(
             subject: ${subjectExpression(requestAddress)},
@@ -391,7 +424,7 @@ function emitWatch(
     }
 
     Stream<TData> watch<TData>(Ref ref, {`),
-    ...indent(scopeSignature(route.scope), 2),
+    ...indent(scopeSignature(route), 2),
     ...lines(`        required TData Function(${responseType}) snapshot,
         required TData Function(TData, ${eventType}) reduce,
         required ProjectionReconciliation<TData, ${responseType}, ${eventType}> reconciliation,
@@ -401,9 +434,9 @@ function emitWatch(
         TData? initialValue,
     }) {`),
     // The operation validates the complete scope. Only bind identities the update subject uses.
-    ...indent(scopeValues(route.scope, updateAddress), 2),
+    ...indent(scopeValues(route, updateAddress), 2),
     "        final operation = this.operation(",
-    ...indent(scopeArguments(route.scope), 3),
+    ...indent(scopeArguments(route), 3),
     ...lines(`        );
         return ref.watchProjection<TData, ${responseType}, ${eventType}>(
             subject: operation.subject,
@@ -450,6 +483,9 @@ function emitEvent(
       if (token.kind === "literal") {
         return `|| parts[${index}] != ${dartString(token.value)}`;
       }
+      if (token.kind === "free") {
+        throw new Error(`unsupported Dart event projection in ${route.name}: free value {${token.name}}`);
+      }
       if (token.parameter === "organization") {
         return `|| parts[${index}] != organization`;
       }
@@ -489,9 +525,9 @@ static String? userIdFromSubject(
     static final serializer = ${payloadType}.serializer;
 
     static String subject({`),
-    ...indent(scopeSignature(route.scope), 2),
+    ...indent(scopeSignature(route), 2),
     "    }) {",
-    ...indent(scopeValues(route.scope), 2),
+    ...indent(scopeValues(route), 2),
     ...lines(`        return ${subjectExpression(address)};
     }
 `),

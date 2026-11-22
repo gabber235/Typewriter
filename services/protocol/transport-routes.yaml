@@ -15,6 +15,10 @@
 # generator derives each service role's NATS response limit from the largest framed reply it serves.
 limits: { chunk_bytes: 524288, window_frames: 8, request_max_bytes: 524288, reply_max_bytes: 33554432, frame_inactivity_ms: 30000, reply_ttl_ms: 300000 }
 
+# Values an address carries that no role binds: the caller supplies them and every grant leaves
+# them open. An engine id addresses one engine's inbox.
+parameters: [engine]
+
 roles:
   authenticated_user: { side: panel, personal: user }
   organization_member: { side: panel, tenant: [organization], personal: user }
@@ -689,6 +693,30 @@ routes:
       operation: organization.presence
       address: presence.organization.{organization}.user.{user}
       delivery: { kind: transient }
+
+  # Every engine's event inbox. A sender asks each engine that holds an event's subject, and asks
+  # again with the same occurrence until the answer is final; the holder only answers.
+  - name: engine_event
+    scope: realm
+    callers: [{ role: realm_participant }]
+    server: { role: realm_participant }
+    flow:
+      kind: unary
+      method: "editor/v1/event.skir:DeliverEvent"
+      operation: engine.event
+      request: engine.{engine}.event
+
+  # A member's client emits an event caused by one of its sessions. Client gateways (the panel
+  # engine) serve it; the broker binds the caller, so the origin is never taken from the payload.
+  - name: event_emit
+    scope: realm_actor
+    callers: [{ role: organization_member }]
+    server: { role: realm_participant }
+    flow:
+      kind: unary
+      method: "editor/v1/event.skir:EmitEvent"
+      operation: event.emit
+      request: event.emit.user.{user}
 
   - name: panel_permission_resolve
     scope: internal_component

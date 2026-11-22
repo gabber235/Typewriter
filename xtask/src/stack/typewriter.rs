@@ -603,7 +603,7 @@ impl Service for Observer {
 
 /// NATS credentials in the TYPEWRITER account for the game requirements to author with: the stack
 /// owner's calls of the Realm routes that edit, commit and publish content and read what was
-/// published.
+/// published, and the presence and event emits of a panel tab of the owner.
 pub struct Author;
 
 impl Service for Author {
@@ -624,6 +624,7 @@ impl Service for Author {
         out.values.extend([
             ("STACK_AUTHOR_CREDS".into(), field(&author, "creds")?),
             ("STACK_AUTHOR_INBOX".into(), field(&author, "inbox")?),
+            ("STACK_AUTHOR_USER".into(), field(&author, "user")?),
         ]);
         Ok(())
     }

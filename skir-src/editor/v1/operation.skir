@@ -17,32 +17,32 @@ import {
 
 /// Stable identity owned by the declaring object, independent of display labels and catalog generation.
 /// declaration is the fully qualified name of the operation object.
-struct ResourceOperationId(84130001) {
+struct ResourceOperationId(84140001) {
   artifact: string = 0;
   source_part: string = 1;
   declaration: string = 2;
 }
 
 /// The resources an operation applies to and how many it accepts at once.
-struct OperationTargets(84130002) {
+struct OperationTargets(84140002) {
   subject: ResourceMatch = 0;
   cardinality: OperationCardinality = 1;
 }
 
 /// Menu sections, in display order.
-enum OperationGroup(84130003) {
+enum OperationGroup(84140003) {
   edit = 1;
   organize = 2;
   destructive = 3;
 }
 
-struct OperationConfirmation(84130004) {
+struct OperationConfirmation(84140004) {
   title: string = 0;
   message: string = 1;
   confirmation_label: string = 2;
 }
 
-struct OperationPresentation(84130005) {
+struct OperationPresentation(84140005) {
   label: string = 0;
   description: string = 1;
   icon: string = 2;
@@ -57,12 +57,12 @@ struct OperationPresentation(84130005) {
   shortcut: OperationShortcut? = 8;
 }
 
-struct OperationInputDefinition(84130006) {
+struct OperationInputDefinition(84140006) {
   type: TypeUse = 0;
   presentation: PresentationId? = 1;
 }
 
-struct ResourceOperationDefinition(84130007) {
+struct ResourceOperationDefinition(84140007) {
   id: ResourceOperationId = 0;
   presentation: OperationPresentation = 1;
   targets: OperationTargets = 2;
@@ -74,40 +74,40 @@ struct ResourceOperationDefinition(84130007) {
 
 /// hidden omits an affordance, disabled retains its explanation, and enabled permits attempting
 /// dispatch. Availability is evaluated against current working facts and must be rechecked at preparation.
-enum OperationAvailability(84130008) {
+enum OperationAvailability(84140008) {
   hidden = 1;
   disabled: string = 2;
   enabled = 3;
 }
 
-struct ResolvedResourceOperation(84130009) {
+struct ResolvedResourceOperation(84140009) {
   definition: ResourceOperationDefinition = 0;
   availability: OperationAvailability = 1;
 }
 
 /// Applicable operations ordered by group, then order, then identity.
-struct ResolvedResourceOperations(84130010) {
+struct ResolvedResourceOperations(84140010) {
   operations: [ResolvedResourceOperation] = 0;
 }
 
-enum OperationCardinality(84130011) {
+enum OperationCardinality(84140011) {
   single = 1;
   selection = 2;
 }
 
 /// Inspector presence of an operation.
-enum OperationInspector(84130012) {
+enum OperationInspector(84140012) {
   hidden = 1;
   button: ButtonVariant = 2;
 }
 
 /// The input field a drop fills with the resource dropped onto, and the hover hint.
-struct OperationDrop(84130013) {
+struct OperationDrop(84140013) {
   input: ValuePath = 0;
   hint: string = 1;
 }
 
 /// Keyboard gestures an operation can claim.
-enum OperationShortcut(84130014) {
+enum OperationShortcut(84140014) {
   delete = 1;
 }

@@ -1,0 +1,25 @@
+// The actors and places a realm's runtime refers to: who acts, which connection, which engine. The
+// service context keeps sessions with them and the editor context addresses events by them.
+
+// Who an identity acts for: a Minecraft player (`minecraft`, its UUID) or a panel user (`user`, its id).
+struct PrincipalId(80050001) {
+  kind: string;
+  id: string;
+}
+
+// The one actor a protagonist is, across every engine and connection it has.
+struct Protagonist(80050002) {
+  principal: PrincipalId;
+}
+
+// One engine of a realm: the topology engine instance id, `panel.<realm id>` for the realm's panel
+// engine, or `local.<realm id>` for an engine of a host running without topology.
+struct EngineId(80050003) {
+  value: string;
+}
+
+// One connection of a protagonist, chosen by its engine kind: the player UUID for Minecraft, which
+// survives server moves, or a per tab id for the panel, which survives reloads.
+struct SessionId(80050004) {
+  value: string;
+}

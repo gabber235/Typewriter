@@ -23,6 +23,26 @@ fun String.realmTemplate(): AddressTemplate<RealmRouteScope> =
     )
 
 /**
+ * The identities of a realm actor route subject: the realm's organization, the realm, and the member who calls it.
+ *
+ * The broker binds the member to the caller's own user, so a server reads who called from the subject and never
+ * trusts the payload for it. Callers use the contracts on this scope; a server registers the contract of the same
+ * name on [RealmRouteScope], which hears every member of its realm.
+ */
+data class RealmActorRouteScope(
+    val organizationId: String,
+    val realmId: String,
+    val userId: String,
+)
+
+/** Reads this subject as a typed address whose `{organization}`, `{realm}` and `{user}` tokens render a [RealmActorRouteScope]. */
+fun String.realmActorTemplate(): AddressTemplate<RealmActorRouteScope> =
+    addressTemplate(
+        render = { addressValuesOf("organization" to it.organizationId, "realm" to it.realmId, "user" to it.userId) },
+        parse = { RealmActorRouteScope(it.require("organization"), it.require("realm"), it.require("user")) },
+    )
+
+/**
  * The identity of a service route subject: the registered service the route belongs to.
  *
  * Every generated service registration contract is an extension on this scope.

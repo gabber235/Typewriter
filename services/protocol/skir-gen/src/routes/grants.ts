@@ -61,6 +61,8 @@ export function grantText(tokens: readonly GrantToken[]): string {
           return token.value;
         case "parameter":
           return `{${token.parameter}}`;
+        case "free":
+          return `{${token.name}}`;
         case "wildcard":
           return "*";
         case "consumer":
@@ -73,8 +75,8 @@ export function grantText(tokens: readonly GrantToken[]): string {
 }
 
 /**
- * Binds the identifiers a role is admitted for; every other placeholder becomes a single token
- * wildcard. A personal identifier in an event names its publisher, so a role subscribing to other
+ * Binds the identifiers a role is admitted for; every other placeholder, free values included,
+ * becomes a single token wildcard. A personal identifier in an event names its publisher, so a role subscribing to other
  * publishers' events receives every publisher in its tenant. Route path tokens always stay
  * literal, so a grant never covers an undeclared route and never ends in `>`.
  */
@@ -88,7 +90,7 @@ export function grantSubject(
     bound.add(role.personal);
   }
   return subject.tokens.map((token) =>
-    token.kind === "parameter" && !bound.has(token.parameter) ? { kind: "wildcard" } : token,
+    token.kind === "free" || (token.kind === "parameter" && !bound.has(token.parameter)) ? { kind: "wildcard" } : token,
   );
 }
 

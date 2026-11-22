@@ -107,6 +107,54 @@ describe("grant rule", () => {
     ]);
   });
 
+  test("a free parameter stays open for every party, so any engine of a realm reaches every engine's inbox", () => {
+    const parsed = parseManifest(
+      manifestSource(
+        `  - name: engine_event
+    scope: realm
+    callers: [{ role: realm_participant }]
+    server: { role: realm_participant }
+    flow:
+      kind: unary
+      method: "editor/v1/catalog.skir:FetchEditorCatalog"
+      operation: engine.event
+      request: engine.{engine}.event
+`,
+        [],
+        "",
+        ["engine"],
+      ),
+      "routes.yaml",
+    );
+    const granted = parsed.routes.flatMap((route) =>
+      routeGrants(routeChannels(route, parsed.roles), parsed.roles).map(
+        (grant) => `${grant.role} ${grant.direction} ${grantText(grant.tokens)}`,
+      ),
+    );
+    expect(granted).toEqual([
+      "realm_participant publish service.to.{realm}.organization.{organization}.realm.engine.*.event",
+      "realm_participant subscribe service.to.{realm}.organization.{organization}.realm.engine.*.event",
+    ]);
+  });
+
+  test("a realm actor route names its caller, and its server hears every member's requests", () => {
+    expect(
+      grants(`  - name: event_emit
+    scope: realm_actor
+    callers: [{ role: organization_member }]
+    server: { role: realm_participant }
+    flow:
+      kind: unary
+      method: "editor/v1/catalog.skir:FetchEditorCatalog"
+      operation: event.emit
+      request: event.emit.user.{user}
+`),
+    ).toEqual([
+      "organization_member publish service.to.*.organization.{organization}.realm.event.emit.user.{user}",
+      "realm_participant subscribe service.to.{realm}.organization.{organization}.realm.event.emit.user.*",
+    ]);
+  });
+
   test("a realm bucket's writers reach their own realm's keys and only its owner creates it", () => {
     const parsed = parseManifest(
       manifestSource(

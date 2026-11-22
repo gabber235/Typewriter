@@ -4,6 +4,7 @@ import { upperCamel } from "../../text.js";
 import { servedSubjects, subscriptionSubject, type ServedSubject } from "../dispatch.js";
 import type { ResolvedRoute, ResolvedRoutes } from "../resolve.js";
 import {
+  componentCapture,
   literal,
   requestMethod,
   routeTypeName,
@@ -85,7 +86,7 @@ function handledRoute(
 function dispatchArm(served: ServedSubject, handled: HandledRoute, uses: RustUses): string[] {
   const { route } = handled;
   const pattern = served.subject.tokens.map((token) =>
-    token.kind === "literal" ? literal(token.value) : token.parameter,
+    token.kind === "literal" ? literal(token.value) : componentCapture(token, served.subject),
   );
   const fields = SCOPE_FIELDS[route.scope];
   const missing = fields.find((field) => !served.subject.has(field));

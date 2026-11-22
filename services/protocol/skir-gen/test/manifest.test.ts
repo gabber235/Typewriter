@@ -100,6 +100,34 @@ describe("manifest admission", () => {
     ).toThrow("routes[0].flow.request: placeholder {organization} is not bound by user scope");
   });
 
+  test("admits a declared free parameter in any scope", () => {
+    const parsed = parseManifest(
+      manifestSource(
+        `  - name: free_value
+    scope: user
+    callers: [{ role: authenticated_user }]
+    server: { component: user-organization }
+    flow:
+      kind: unary
+      method: "editor/v1/catalog.skir:FetchEditorCatalog"
+      operation: free.value
+      request: user.{user}.engine.{engine}
+`,
+        ["user-organization"],
+        "",
+        ["engine"],
+      ),
+      "routes.yaml",
+    );
+    expect(parsed.routes[0]!.flow.kind).toBe("unary");
+  });
+
+  test("rejects a free parameter named like an identity", () => {
+    expect(() => parseManifest(manifestSource("", [], "", ["user"]), "routes.yaml")).toThrow(
+      "free parameter {user} is an identity",
+    );
+  });
+
   test("rejects a role that binds neither a scope identifier nor its tenant", () => {
     expect(() =>
       parse(
@@ -161,9 +189,9 @@ describe("manifest admission", () => {
     );
   });
 
-  test("rejects a capture the identities do not provide", () => {
+  test("rejects a capture that is neither an identity nor a declared free parameter", () => {
     expect(() => parse(unary("transfer_capture", "{ role: authenticated_user }", "user.{user}.fetch.{transfer_id}"))).toThrow(
-      'invalid subject token "{transfer_id}"',
+      "placeholder {transfer_id} is neither an identity nor a declared free parameter",
     );
   });
 

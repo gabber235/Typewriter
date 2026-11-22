@@ -21,7 +21,7 @@ import {
   type ResolvedRoute,
   type ResolvedRoutes,
 } from "../resolve.js";
-import type { Parameter } from "../subject.js";
+import { scopeParameters, type Parameter } from "../subject.js";
 
 const COMMUNICATOR = "com.typewritermc.services.libs.communicator";
 
@@ -143,11 +143,11 @@ const scopeProperty = (parameter: Parameter) => `${parameter}Id`;
  * The `replyAddresses` argument of a request route: the server answers only reply inboxes of its
  * callers, each bound to the caller the route scope names. See {@link replyInboxes}.
  */
-function replyAddresses(route: ResolvedRoute, roles: RoleDeclarations): string {
+function replyAddresses(route: ResolvedRoute, roles: RoleDeclarations, scopeOf = "scope"): string {
   const callers = routeChannel(route, "request")?.publishers ?? [];
   const shapes = replyInboxes(callers, route.scope, roles);
   const checks = shapes.map((shape) => {
-    const bindings = shape.bound.map((parameter) => `, ${parameter} = scope.${scopeProperty(parameter)}`);
+    const bindings = shape.bound.map((parameter) => `, ${parameter} = ${scopeOf}.${scopeProperty(parameter)}`);
     return `${REPLY_INBOX_MATCHERS[shape.side]}(reply${bindings.join("")})`;
   });
   const scope = shapes.some((shape) => shape.bound.length > 0) ? "scope" : "_";
@@ -159,12 +159,76 @@ function replyAddresses(route: ResolvedRoute, roles: RoleDeclarations): string {
 const KOTLIN_SCOPES: Partial<Record<ScopeKind, { scope: string; template: string; path: string }>> = {
   realm: { scope: "RealmRouteScope", template: "realmTemplate", path: "RealmRoutes.kt" },
   service: { scope: "ServiceRouteScope", template: "serviceTemplate", path: "ServiceRegistrationRoutes.kt" },
+  realm_actor: { scope: "RealmActorRouteScope", template: "realmActorTemplate", path: "RealmActorRoutes.kt" },
   organization_actor: {
     scope: "OrganizationActorRouteScope",
     template: "organizationActorTemplate",
     path: "OrganizationRoutes.kt",
   },
 };
+
+/**
+ * The scope a realm actor route's server registers on: it hears every member's requests in its realm, so its
+ * contract leaves the caller open.
+ */
+const REALM_ACTOR_SERVER_SCOPE = "RealmRouteScope";
+
+/**
+ * How the contracts of one route are addressed. A route whose subjects carry free values gets its own address
+ * class, the scope and one string per free value, and its contracts become functions of the free values; every
+ * other route is addressed by its scope.
+ */
+interface Addressing {
+  /** The address type of the route's contracts. */
+  readonly type: string;
+  /** Declarations the route needs before its contracts: the address class, if any. */
+  readonly declarations: readonly string[];
+  /** The typed template expression of a subject. */
+  template(subject: string): string;
+  /** The contract accessor head, such as `val RealmRouteScope.name get()` or `fun RealmRouteScope.name(engine: String)`. */
+  accessor(name: string): string;
+  /** The address the accessor's contract is bound to, inside the accessor. */
+  readonly bound: string;
+  /** The expression reaching the scope from an address, for reply inbox bindings. */
+  readonly scopeOf: string;
+}
+
+function addressing(route: ResolvedRoute, scope: string, reader: string): Addressing {
+  const free = [...new Set(route.channels.flatMap((channel) => channel.address.freeValues()))];
+  if (free.length === 0) {
+    return {
+      type: scope,
+      declarations: [],
+      template: (subject) => `${kotlinString(subject)}.${reader}()`,
+      accessor: (name) => `val ${scope}.${name} get()`,
+      bound: "this",
+      scopeOf: "scope",
+    };
+  }
+  const type = `${upperCamel(route.name)}Address`;
+  const identities = scopeParameters(route.scope);
+  const values = [
+    ...identities.map((parameter) => `${kotlinString(parameter)} to it.scope.${scopeProperty(parameter)}`),
+    ...free.map((name) => `${kotlinString(name)} to it.${lowerCamel(name)}`),
+  ];
+  const scopeValue = `${scope}(${identities.map((parameter) => `${scopeProperty(parameter)} = it.require(${kotlinString(parameter)})`).join(", ")})`;
+  const parsed = [`scope = ${scopeValue}`, ...free.map((name) => `${lowerCamel(name)} = it.require(${kotlinString(name)})`)];
+  const fields = free.map((name) => `val ${lowerCamel(name)}: String`);
+  return {
+    type,
+    declarations: [
+      `/** The address of the ${route.name} route: its scope and the free values ${free.map((name) => `{${name}}`).join(", ")} of its subjects. */
+data class ${type}(val scope: ${scope}, ${fields.join(", ")})`,
+    ],
+    template: (subject) => `${kotlinString(subject)}.addressTemplate<${type}>(
+    render = { addressValuesOf(${values.join(", ")}) },
+    parse = { ${type}(${parsed.join(", ")}) },
+)`,
+    accessor: (name) => `fun ${scope}.${name}(${fields.map((field) => field.replace("val ", "")).join(", ")})`,
+    bound: `${type}(this, ${free.map((name) => lowerCamel(name)).join(", ")})`,
+    scopeOf: "scope.scope",
+  };
+}
 
 function routeFile(
   routes: readonly ResolvedRoute[],
@@ -174,7 +238,6 @@ function routeFile(
   roles: RoleDeclarations,
 ): CodeGenerator.OutputFile {
   const { scope, template: reader, path } = KOTLIN_SCOPES[kind]!;
-  const template = `${reader}()`;
   const imports = [...ROUTE_IMPORTS, `${SCOPES}.${scope}`, `${SCOPES}.${reader}`].map((name) => `import ${name}`);
   const policies = new Map<string, string>();
   const policyOf = (method: ResolvedMethod): string => {
@@ -190,6 +253,11 @@ function routeFile(
     const requestAddress = `${name}RequestAddress`;
     const updateAddress = `${name}UpdateAddress`;
     const operation = kotlinString(route.operation);
+    const address = addressing(route, scope, reader);
+    if (address.declarations.length > 0) {
+      imports.push(`import ${COMMUNICATOR}.address.addressTemplate`, `import ${COMMUNICATOR}.address.addressValuesOf`);
+      blocks.push(...address.declarations);
+    }
     const { flow } = route;
     const contract = CONTRACT_BUILDERS[flow.kind];
     imports.push(`import ${COMMUNICATOR}.skir.${contract}`);
@@ -198,30 +266,36 @@ function routeFile(
       case "scatter": {
         const method = importedKotlinSymbol(symbols.method(flow.method.module, flow.method.method));
         imports.push(...method.imports);
-        blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
-val ${scope}.${name} get() = ${contract}(
+        const build = (bound: string) => `${contract}(
     method = ${method.name}, name = OperationName.of(${operation}),
-    address = ${requestAddress}.subscribedAt(this), responsePolicy = ${policyOf(flow.method)},${replyAddresses(route, roles)}${routeLimits(route, defaults)}
-)`);
+    address = ${bound}, responsePolicy = ${policyOf(flow.method)},${replyAddresses(route, roles, address.scopeOf)}${routeLimits(route, defaults)}
+)`;
+        blocks.push(`private val ${requestAddress} = ${address.template(serviceSubject(route, "request"))}
+${address.accessor(name)} = ${build(`${requestAddress}.subscribedAt(${address.bound})`)}`);
+        if (kind === "realm_actor") {
+          imports.push(`import ${SCOPES}.${REALM_ACTOR_SERVER_SCOPE}`);
+          blocks.push(`/** The ${route.name} contract its server registers: every member's requests in this realm. */
+val ${REALM_ACTOR_SERVER_SCOPE}.${name} get() = ${build(`${requestAddress}.subscribedWhere("organization" to organizationId, "realm" to realmId)`)}`);
+        }
         break;
       }
       case "watch": {
         const method = importedKotlinSymbol(symbols.method(flow.method.module, flow.method.method));
         const update = symbols.record(flow.updates.payload).reference;
         imports.push(...method.imports);
-        blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
-private val ${updateAddress} = ${kotlinString(serviceSubject(route, "updates"))}.${template}
-val ${scope}.${name} get() = ${contract}(
+        blocks.push(`private val ${requestAddress} = ${address.template(serviceSubject(route, "request"))}
+private val ${updateAddress} = ${address.template(serviceSubject(route, "updates"))}
+${address.accessor(name)} = ${contract}(
     method = ${method.name}, updateSerializer = ${update}.serializer,
-    name = OperationName.of(${operation}), requestAddress = ${requestAddress}.subscribedAt(this),
-    updateAddress = ${updateAddress}, initialPolicy = ${policyOf(flow.method)},${replyAddresses(route, roles)}${routeLimits(route, defaults)}
+    name = OperationName.of(${operation}), requestAddress = ${requestAddress}.subscribedAt(${address.bound}),
+    updateAddress = ${updateAddress}, initialPolicy = ${policyOf(flow.method)},${replyAddresses(route, roles, address.scopeOf)}${routeLimits(route, defaults)}
 )`);
         break;
       }
       case "event": {
         const payload = symbols.record(flow.payload).reference;
-        blocks.push(`private val ${name}Address = ${kotlinString(serviceSubject(route, "event"))}.${template}
-val ${scope}.${name} get() = ${contract}(
+        blocks.push(`private val ${name}Address = ${address.template(serviceSubject(route, "event"))}
+${address.accessor(name)} = ${contract}(
     serializer = ${payload}.serializer, name = OperationName.of(${operation}), address = ${name}Address,
 )`);
         break;
