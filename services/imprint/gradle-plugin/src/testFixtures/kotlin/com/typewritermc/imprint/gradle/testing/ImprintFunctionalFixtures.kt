@@ -201,3 +201,7 @@ fun File.entries(): List<String> =
             .map { it.name }
             .toList()
     }
+
+/** The text of [entry] in this archive, or null when it holds no such entry. */
+fun File.text(entry: String): String? =
+    ZipFile(this).use { archive -> archive.getEntry(entry)?.let { archive.getInputStream(it).readBytes().decodeToString() } }

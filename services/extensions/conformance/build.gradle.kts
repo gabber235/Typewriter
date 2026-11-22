@@ -1,6 +1,7 @@
 plugins {
     id("com.typewritermc.basic-conventions")
     id("com.typewritermc.imprint")
+    id("com.typewritermc.paper-api")
 }
 
 typewriter {

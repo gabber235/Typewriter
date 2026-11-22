@@ -19,10 +19,12 @@ import com.typewritermc.imprint.gradle.testing.fixture
 import com.typewritermc.imprint.gradle.testing.javaLibraryBuild
 import com.typewritermc.imprint.gradle.testing.javaType
 import com.typewritermc.imprint.gradle.testing.readManifest
+import com.typewritermc.imprint.gradle.testing.text
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -369,6 +371,22 @@ val ImprintPluginTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
         manifest.buildProvenance.single().kind shouldBe ArtifactKind.CAPABILITY
         jar.entries().contains("fixture/ItemsExtension.class") shouldBe true
         jar.entries().contains("fixture/items/ItemType.class") shouldBe false
+    }
+
+    test("an extension JAR carries one provider index holding every source part's rows") {
+        val fixture = fixture("capability", "extension")
+        fixture.writeBuild("capability", capabilityBuild("typewritermc:items"))
+        fixture.write("capability/src/main/java/fixture/items/ItemType.java", javaType("fixture.items", "ItemType"))
+        fixture.writeBuild("extension", extensionWithCapability("project(\":capability\")"))
+        fixture.write("extension/src/common/resources/META-INF/typewriter/generated-providers", "type\tfixture.CommonProvider\tcommon\n")
+        fixture.write("extension/src/target/resources/META-INF/typewriter/generated-providers", "enginePart\tfixture.TargetProvider\ttarget\n")
+
+        fixture.run(":extension:jar")
+        val jar = fixture.singleJar("extension/build/libs")
+
+        jar.entries().count { it == "META-INF/typewriter/generated-providers" } shouldBe 1
+        jar.text("META-INF/typewriter/generated-providers").orEmpty().lines().filter(String::isNotBlank) shouldContainExactlyInAnyOrder
+            listOf("type\tfixture.CommonProvider\tcommon", "enginePart\tfixture.TargetProvider\ttarget")
     }
 
     test("external Maven artifacts use the same descriptor and constraint path") {

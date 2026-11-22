@@ -4,6 +4,8 @@ import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.COMMON_SOURCE_PART
 import org.gradle.api.Project
 import org.gradle.api.file.DuplicatesStrategy
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
@@ -101,11 +103,55 @@ internal fun Project.configureExtensionProject(declaration: DeclaredArtifact) {
 
     val manifest = registerManifestTask(declaration, relationships, files(), files())
     configureThinJar(manifest, created.values)
+    val providerIndex = registerMergedProviderIndex(created.values)
     tasks.named("jar") { task ->
         task.outputs.cacheIf { true }
-        (task as org.gradle.api.tasks.bundling.Jar).duplicatesStrategy = DuplicatesStrategy.FAIL
+        val jar = task as org.gradle.api.tasks.bundling.Jar
+        jar.duplicatesStrategy = DuplicatesStrategy.FAIL
+        // Each source part's processor writes its own provider index; the JAR carries one index with every part's rows.
+        jar.filesMatching(GENERATED_PROVIDER_INDEX_PATH) { copy ->
+            if (copy.sourceName == GENERATED_PROVIDER_INDEX_FILE) copy.exclude()
+        }
+        jar.from(providerIndex) { copy ->
+            copy.into(GENERATED_PROVIDER_INDEX_PATH.substringBeforeLast('/'))
+            copy.rename { GENERATED_PROVIDER_INDEX_PATH.substringAfterLast('/') }
+        }
     }
 }
+
+/**
+ * Concatenates the provider index of every source part. Each row names the part it belongs to, so the loader keeps
+ * only the rows of the parts an engine accepts from the one merged index.
+ */
+private fun Project.registerMergedProviderIndex(sourceSets: Collection<SourceSet>): Provider<RegularFile> {
+    val output = layout.buildDirectory.file("imprint/$MERGED_PROVIDER_INDEX_FILE")
+    val parts = files(sourceSets.map { it.output })
+    val task =
+        tasks.register("mergeGeneratedProviderIndexes") { task ->
+            task.inputs.files(parts).withPropertyName("sourcePartOutputs")
+            task.outputs.file(output)
+            task.doLast {
+                val rows =
+                    parts.files
+                        .map { it.resolve(GENERATED_PROVIDER_INDEX_PATH) }
+                        .filter { it.isFile }
+                        .flatMap { it.readLines() }
+                        .filter(String::isNotBlank)
+                output.get().asFile.apply {
+                    parentFile.mkdirs()
+                    writeText(rows.joinToString(separator = "") { "$it\n" })
+                }
+            }
+        }
+    return task.map { output.get() }
+}
+
+/** Where every generated provider index lives in an artifact; the loader in typewriter-contracts reads this path. */
+private const val GENERATED_PROVIDER_INDEX_PATH = "META-INF/typewriter/generated-providers"
+private const val GENERATED_PROVIDER_INDEX_FILE = "generated-providers"
+
+/** The merged index's own name until the JAR renames it, so the per part indexes can be left out by name. */
+private const val MERGED_PROVIDER_INDEX_FILE = "merged-generated-providers"
 
 private fun includedSourcePartClosure(
     sourcePart: DeclaredSourcePart,
