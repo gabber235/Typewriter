@@ -301,6 +301,12 @@ interface AuthoringViewStore : AutoCloseable {
     fun install(view: AuthoringView)
 
     fun invalidate(reload: () -> AuthoringSeed)
+
+    /**
+     * Makes [coverage] what queries read of the Realm's engines from the next revision on: only queries that read an
+     * entry type whose coverage changed rerun, and the saved view stays as it is.
+     */
+    fun cover(coverage: EntryCoverage)
 }
 
 /**
@@ -319,6 +325,7 @@ class InMemoryAuthoringViewStore(
     private val roots = IdentityHashMap<ReadContext, RootRetention>()
     private var closed = false
     private var reload: (() -> AuthoringSeed)? = null
+    private var coverage = EntryCoverage.NONE
 
     /** Names in the current view come from the live graph, and in any other view from one fork made for it. */
     private val scopes =
@@ -331,7 +338,7 @@ class InMemoryAuthoringViewStore(
                     .read(query)
         }
     private var current = createRoot(catalog, seed.resources).also { roots[it.root.readContext] = it }
-    override val graph: AuthoringGraph = TrackedGraph(RealmEnvironment(current.root, services), listener = listener)
+    override val graph: AuthoringGraph = TrackedGraph(RealmEnvironment(current.root, services, coverage), listener = listener)
 
     override fun <T> read(block: (AuthoringView) -> T): T =
         synchronized(lock) {
@@ -362,7 +369,7 @@ class InMemoryAuthoringViewStore(
 
     override fun forkAt(view: AuthoringView): AuthoringGraph =
         synchronized(lock) {
-            val environment = RealmEnvironment(view, services)
+            val environment = RealmEnvironment(view, services, coverage)
             if (view.catalog.generation != current.root.catalog.generation) {
                 // Another generation shares nothing with the live graph.
                 TrackedGraph(environment)
@@ -395,7 +402,7 @@ class InMemoryAuthoringViewStore(
             roots[view.readContext] = current
             before.current = false
             prune(before)
-            val environment = RealmEnvironment(view, services)
+            val environment = RealmEnvironment(view, services, coverage)
             if (view.catalog.generation != before.root.catalog.generation) {
                 graph.reset(environment)
             } else {
@@ -421,6 +428,17 @@ class InMemoryAuthoringViewStore(
             this.reload = reload
             changed.value += 1
         }
+
+    override fun cover(coverage: EntryCoverage) {
+        synchronized(lock) {
+            ensureOpen()
+            val before = this.coverage
+            if (coverage == before) return
+            this.coverage = coverage
+            graph.advance(RealmEnvironment(current.root, services, coverage), coverage.changesFrom(before))
+            changed.value += 1
+        }
+    }
 
     private fun ensureCurrent() {
         val loader = reload ?: return

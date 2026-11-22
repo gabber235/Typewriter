@@ -1,9 +1,14 @@
 package com.typewritermc.realm.formula
 
+import com.typewritermc.authoring.of
 import com.typewritermc.formula.FormulaFailure
 import com.typewritermc.formula.eval.Evaluation
 import com.typewritermc.realm.authoring.RealmQuery
 import com.typewritermc.realm.authoring.RealmReads
+import com.typewritermc.realm.authoring.publishedName
+import com.typewritermc.realm.authoring.tracked
+import com.typewritermc.realm.authoring.unrunReasons
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -13,6 +18,7 @@ data class ContentFinding(
     val message: String,
     val at: ValueLocation,
     val related: List<ValueLocation> = emptyList(),
+    val severity: DiagnosticSeverity = DiagnosticSeverity.ERROR,
 )
 
 /**
@@ -20,7 +26,8 @@ data class ContentFinding(
  * loops, each value that does not fit its schema, each emptied reference once per distinct name at a formula, and
  * each problem the checker found, and each formula whose evaluation failed by itself. The checker stays silent on an
  * emptied reference, so it is reported once, here; a value that needed something missing or broken elsewhere is silent,
- * since that source has its own finding.
+ * since that source has its own finding. An entry whose behaviour no engine runs gets a warning, which does not block
+ * publication.
  */
 internal data class ContentFindings(
     val resource: ResourceId,
@@ -40,6 +47,7 @@ internal data class ContentFindings(
                 add(ContentFinding("scope_loop", "This resource is inside its own owner chain.", root))
             }
             addAll(reads.read(FitOf(resource)))
+            reads.read(NoEngineRuns(resource))?.let(::add)
             reads.read(FormulasOf(resource)).forEach { site ->
                 if (site.computedAtFunction) {
                     add(ContentFinding("formula_computed_function", "A function's body is stored as its value, not computed.", site.at))
@@ -68,3 +76,25 @@ private fun failureOf(evaluation: Evaluation<Any?>): String? =
         FormulaFailure.StepLimit -> "This formula failed: it takes too many steps."
         is FormulaFailure.Cycle -> "These values read each other: ${reason.through.joinToString { it.value }}."
     }
+
+/**
+ * The warning on an entry whose behaviour no engine of the realm runs, naming why, or null when one runs it or no part
+ * handles its type. It reads the entry's configuration and that type's coverage alone, so only a retyped entry or a
+ * change in what the engines run reruns it.
+ */
+internal data class NoEngineRuns(
+    val resource: ResourceId,
+) : RealmQuery<ContentFinding?> {
+    context(reads: RealmReads)
+    override fun compute(): ContentFinding? {
+        val type = tracked().definition(resource) ?: return null
+        val reasons = unrunReasons(type) ?: return null
+        val name = publishedName(type) ?: "this entry"
+        return ContentFinding(
+            code = "no_engine_runs",
+            message = "No engine runs $name: it ${reasons.joinToString("; ")}.",
+            at = ValueLocation.of(resource),
+            severity = DiagnosticSeverity.WARNING,
+        )
+    }
+}

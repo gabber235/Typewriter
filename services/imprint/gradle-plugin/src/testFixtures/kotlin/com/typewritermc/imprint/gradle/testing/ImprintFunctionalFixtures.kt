@@ -3,8 +3,12 @@ package com.typewritermc.imprint.gradle.testing
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.CapabilityManifest
+import com.typewritermc.imprint.EntryTypeId
+import com.typewritermc.imprint.HandledEntriesMetadata
+import com.typewritermc.imprint.HandledEntriesMetadataCodec
 import com.typewritermc.imprint.HostedRuntimeEntrypointMetadata
 import com.typewritermc.imprint.HostedRuntimeEntrypointMetadataCodec
+import com.typewritermc.imprint.IMPRINT_HANDLED_ENTRIES_PATH
 import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.IMPRINT_RUNTIME_ENTRYPOINTS_PATH
 import com.typewritermc.imprint.ImprintManifest
@@ -58,6 +62,18 @@ class FunctionalFixture(
         writeBytes(
             "$project/build/generated/ksp/main/resources/$IMPRINT_RUNTIME_ENTRYPOINTS_PATH",
             HostedRuntimeEntrypointMetadataCodec.encode(HostedRuntimeEntrypointMetadata(classes.toList())),
+        )
+    }
+
+    /** Writes what code generation records for one source part: the entry types its handlers run. */
+    fun writeHandledEntries(
+        project: String,
+        sourcePart: String,
+        vararg entries: String,
+    ) {
+        writeBytes(
+            "$project/build/generated/ksp/$sourcePart/resources/$IMPRINT_HANDLED_ENTRIES_PATH",
+            HandledEntriesMetadataCodec.encode(HandledEntriesMetadata(entries.map(::EntryTypeId))),
         )
     }
 
@@ -182,6 +198,25 @@ fun extensionWithCapability(dependency: String): String =
         }
     }
     """.trimIndent()
+
+/** An extension build `typewritermc:quests` 1.0.0 whose extension block holds [declarations], with Kotlin when [kotlin]. */
+fun extensionBuild(
+    declarations: String,
+    kotlin: Boolean = false,
+): String =
+    """
+    |plugins {
+    |    ${if (kotlin) "kotlin(\"jvm\") version \"2.4.21\"" else ""}
+    |    id("com.typewritermc.imprint")
+    |}
+    |typewriter {
+    |    extension {
+    |        id = "typewritermc:quests"
+    |        version = "1.0.0"
+    |${declarations.trimIndent().prependIndent("        ")}
+    |    }
+    |}
+    """.trimMargin()
 
 fun javaType(
     packageName: String,

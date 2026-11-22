@@ -15,8 +15,10 @@ import org.bukkit.plugin.java.JavaPlugin
 /**
  * Hosts the stable loader inside Paper while keeping downloaded engines outside Paper plugin loading.
  *
- * Enable creates an isolated loader application rooted at the plugin data directory. Disable stops every child runtime,
- * cancels loader work, and closes dependency injection ownership before Paper unloads the plugin.
+ * The loader starts on the first server tick, once Paper has enabled every plugin, so the host's first presence
+ * already reports them all. It creates an isolated loader application rooted at the plugin data directory. Disable
+ * stops every child runtime, cancels loader work, and closes dependency injection ownership before Paper unloads the
+ * plugin.
  */
 class TypewriterLoaderPlugin : JavaPlugin() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -24,10 +26,20 @@ class TypewriterLoaderPlugin : JavaPlugin() {
     private var application: LoaderApplication? = null
 
     override fun onEnable() {
+        server.scheduler.runTask(this, Runnable { startLoader() })
+    }
+
+    private fun startLoader() {
         scope.launch {
             val createdApplication = loaderApplication(PaperLogOutput(logger))
             application = createdApplication
-            host = createdApplication.bootstrap.start(HostEntrypoint.PAPER, dataFolder.toPath(), scope)
+            host =
+                createdApplication.bootstrap.start(
+                    HostEntrypoint.PAPER,
+                    dataFolder.toPath(),
+                    scope,
+                    PaperHostPlugins(server.pluginManager),
+                )
         }
     }
 

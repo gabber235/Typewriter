@@ -2,8 +2,11 @@ package com.typewritermc.loader.rollout
 
 import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.imprint.ArtifactVersion
+import com.typewritermc.imprint.EnabledPlugin
 import com.typewritermc.loader.LoaderService
+import com.typewritermc.loader.api.EngineCoverage
 import com.typewritermc.loader.api.HOST_API_VERSION
+import com.typewritermc.loader.api.HostPlugins
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.loader.api.RuntimePlacement
@@ -24,6 +27,7 @@ import com.typewritermc.loader.deployment.PrimaryEngineTarget
 import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.RealmLoaderIntent
 import com.typewritermc.loader.deployment.ResolutionResult
+import com.typewritermc.loader.deployment.engineCoverage
 import com.typewritermc.loader.deployment.resolveDeployment
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
@@ -49,6 +53,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import skirout.service.v1.rollout.ParticipantStatus
 import skirout.service.v1.rollout.RealmHostPresence
+import skirout.service.v1.rollout.EnabledPlugin as SkirEnabledPlugin
 import java.nio.file.Path
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
@@ -100,7 +105,7 @@ fun interface ArtifactHostAssignmentSource {
  *
  * Assignment and session replacement share a lifecycle mutex. Assignment changes rotate authorization; selected
  * transient registrar states retain a valid hosted session. Background jobs and assignment resources are released
- * through [stop].
+ * through [stop]. Each presence answer reports the host's enabled [plugins], and every hosted runtime borrows them.
  */
 class ArtifactHost(
     private val serviceId: ServiceId,
@@ -108,6 +113,7 @@ class ArtifactHost(
     private val service: LoaderService,
     private val assignments: ArtifactHostAssignmentSource,
     private val scope: CoroutineScope,
+    private val plugins: HostPlugins,
 ) {
     private val artifactsRoot = workDirectory.resolve("artifacts")
     private val localBlobs = service.artifactBlobs
@@ -128,6 +134,7 @@ class ArtifactHost(
                 candidates,
                 if (RuntimePlacement.REALM in assignment.roles) service.sharedArtifacts(assignment.realmId.value) else null,
                 scope,
+                plugins,
             )
         }
     private val desiredExecution = MutableStateFlow<DesiredHostExecution?>(null)
@@ -282,6 +289,7 @@ internal class AssignmentRuntime(
     private val candidates: FileCandidateRepository,
     private val localShared: SharedArtifactAccess?,
     private val scope: CoroutineScope,
+    private val plugins: HostPlugins,
 ) : HostAssignmentRuntime {
     @Volatile
     override var status: ParticipantStatus? = null
@@ -294,6 +302,9 @@ internal class AssignmentRuntime(
             null
         }
     private val mutableMessaging = MutableStateFlow<HostedMessagingSession?>(null)
+
+    /** What the Realm's engines run, as this host last resolved it; only a Realm host resolves deployments. */
+    private val engineCoverage = MutableStateFlow(EngineCoverage.UNKNOWN)
     private val sharedArtifacts = localShared ?: ReconnectingSharedArtifactAccess(assignment.realmId.value, mutableMessaging)
     private val projections = BlobProjectionRepository(sharedArtifacts)
     private val participant =
@@ -307,6 +318,8 @@ internal class AssignmentRuntime(
                 override val messaging: StateFlow<HostedMessagingSession?> = mutableMessaging.asStateFlow()
                 override val openTelemetry: OpenTelemetry = openTelemetry
                 override val sharedArtifacts: SharedArtifactAccess = this@AssignmentRuntime.sharedArtifacts
+                override val plugins: HostPlugins = this@AssignmentRuntime.plugins
+                override val engineCoverage: StateFlow<EngineCoverage> = this@AssignmentRuntime.engineCoverage.asStateFlow()
             },
             projections,
             VerifiedArtifactCache(sharedArtifacts, localBlobs),
@@ -355,6 +368,7 @@ internal class AssignmentRuntime(
                             hostApi = HOST_API_VERSION,
                             assignedRoles = assignment.roles.map { it.toSkir() },
                             activeProjection = participant.activeProjection,
+                            plugins = plugins.enabled().map { SkirEnabledPlugin(name = it.name, version = it.version) },
                         )
                     },
                     participant = participant,
@@ -414,6 +428,9 @@ internal class AssignmentRuntime(
                 } else {
                     runRollout { rollout.reconcileCommitted(current) }
                 }
+                state.committed()?.snapshot?.takeIf { it.contentDigest == digest }?.let { committed ->
+                    engineCoverage.value = committed.engineCoverage(selection, resolution.manifests)
+                }
             }
             delay(1.seconds)
         }
@@ -471,7 +488,7 @@ internal class AssignmentRuntime(
     }
 }
 
-/** Derives artifact selection from unambiguous responding hosts without inferring absent assignments. */
+/** Derives artifact selection, with each host's enabled plugins, from unambiguous responding hosts without inferring absent assignments. */
 internal fun List<RealmHostPresence>.deploymentSelectionOrNull(): RealmDeploymentSelection? {
     val responsesByService = groupBy { ServiceId(it.serviceId) }
     if (responsesByService.values.any { it.size != 1 }) return null
@@ -482,6 +499,10 @@ internal fun List<RealmHostPresence>.deploymentSelectionOrNull(): RealmDeploymen
         realmService = realmHosts.single(),
         primaryEngineServices = observations.filterValues { it.hosts(RuntimePlacement.PRIMARY_ENGINE) }.keys.toCollection(linkedSetOf()),
         serviceApis = observations.mapValues { ArtifactVersion(it.value.hostApi) },
+        pluginsByService =
+            observations
+                .mapValues { (_, presence) -> presence.plugins.map { EnabledPlugin(it.name, it.version) } }
+                .filterValues(List<EnabledPlugin>::isNotEmpty),
     )
 }
 

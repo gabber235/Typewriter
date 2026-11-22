@@ -1,5 +1,7 @@
 package com.typewritermc.imprint
 
+import com.typewritermc.imprint.testing.enginePart
+import com.typewritermc.imprint.testing.extensionManifest
 import com.typewritermc.imprint.testing.sampleManifests
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -78,6 +80,44 @@ val ArtifactModelTest by testSuite {
             shouldThrow<IllegalArgumentException> { ContributionName(name) }
         }
         shouldThrow<IllegalArgumentException> { ProducerId("core/types") }
+    }
+
+    test("a plugin requirement names a plugin the way Paper reports it") {
+        PluginRequirement("Vault", VersionConstraint("^1.7")).name shouldBe "Vault"
+        listOf("", " ", "Vault/API", "Vault\n").forEach { name ->
+            shouldThrow<IllegalArgumentException> { PluginRequirement(name) }
+        }
+    }
+
+    test("an extension manifest rejects a part that lacks a plugin of a part it includes") {
+        val failure =
+            shouldThrow<IllegalArgumentException> {
+                extensionManifest(
+                    enginePart("vault", plugins = listOf(PluginRequirement("Vault"))),
+                    enginePart("quests", includes = listOf("vault")),
+                )
+            }
+        failure.message shouldBe "Extension source part quests includes vault but does not need its plugin Vault."
+    }
+
+    test("an extension manifest gives each plugin one version range") {
+        val failure =
+            shouldThrow<IllegalArgumentException> {
+                extensionManifest(
+                    enginePart("first", plugins = listOf(PluginRequirement("Vault", VersionConstraint("^1.7")))),
+                    enginePart("second", plugins = listOf(PluginRequirement("Vault", VersionConstraint("^2")))),
+                )
+            }
+        failure.message shouldBe "Plugin Vault is required with different version ranges."
+    }
+
+    test("a source part lists each plugin and handled entry once") {
+        shouldThrow<IllegalArgumentException> {
+            enginePart("vault", plugins = listOf(PluginRequirement("Vault"), PluginRequirement("Vault")))
+        }.message shouldBe "Extension source part vault lists plugin Vault more than once."
+        shouldThrow<IllegalArgumentException> {
+            CommonExtensionSourcePart(handledEntries = listOf(EntryTypeId("{}"), EntryTypeId("{}")))
+        }.message shouldBe "Extension source part common lists a handled entry more than once."
     }
 
     test("hosted manifests require a runtime entrypoint") {

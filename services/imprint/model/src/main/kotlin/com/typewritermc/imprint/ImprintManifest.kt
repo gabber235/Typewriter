@@ -131,13 +131,37 @@ data class ExtensionManifest(
     override val contributions: List<GeneratedContribution>,
 ) : ImprintManifest {
     init {
-        require(sourceParts.firstOrNull() == CommonExtensionSourcePart) {
+        require(sourceParts.firstOrNull() is CommonExtensionSourcePart) {
             "An extension manifest must begin with its common source part."
         }
         require(sourceParts.map(ExtensionSourcePart::name).distinct().size == sourceParts.size) {
             "Extension source part names must be unique."
         }
         validateSourcePartIncludes(sourceParts)
+        validateSourcePartPlugins(sourceParts)
+    }
+}
+
+/** Each plugin keeps the one version range it was declared with, and an including part needs every included plugin. */
+private fun validateSourcePartPlugins(sourceParts: List<ExtensionSourcePart>) {
+    sourceParts
+        .flatMap(ExtensionSourcePart::plugins)
+        .groupBy(PluginRequirement::name)
+        .forEach { (name, requirements) ->
+            require(requirements.map(PluginRequirement::version).distinct().size == 1) {
+                "Plugin $name is required with different version ranges."
+            }
+        }
+    val partsByName = sourceParts.associateBy(ExtensionSourcePart::name)
+    sourceParts.forEach { sourcePart ->
+        val needed = sourcePart.plugins.map(PluginRequirement::name).toSet()
+        sourcePart.includes.forEach { includedName ->
+            partsByName.getValue(includedName).plugins.firstOrNull { it.name !in needed }?.let { missing ->
+                throw IllegalArgumentException(
+                    "Extension source part ${sourcePart.name} includes $includedName but does not need its plugin ${missing.name}.",
+                )
+            }
+        }
     }
 }
 

@@ -4,6 +4,7 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.COMMON_SOURCE_PART
+import com.typewritermc.imprint.PluginRequirement
 import com.typewritermc.imprint.VersionConstraint
 import org.gradle.api.Action
 import org.gradle.api.GradleException
@@ -164,10 +165,12 @@ sealed class ArtifactDeclaration(
 
     internal open fun hostApi(): VersionConstraint? = null
 
+    internal open fun plugins(): List<DeclaredPlugin> = emptyList()
+
     internal fun toModel(): DeclaredArtifact {
         val artifactId = validated("Typewriter artifact id") { ArtifactId(id) }
         val artifactVersion = validated("Typewriter artifact version") { ArtifactVersion(version) }
-        return DeclaredArtifact(kind, artifactId, artifactVersion, hostApi(), relationships(), sourceParts())
+        return DeclaredArtifact(kind, artifactId, artifactVersion, hostApi(), relationships(), sourceParts(), plugins())
     }
 }
 
@@ -210,6 +213,24 @@ open class EngineCapabilityDeclaration : ArtifactDeclaration(ArtifactKind.CAPABI
 
 open class ExtensionDeclaration : ArtifactDeclaration(ArtifactKind.EXTENSION) {
     private val configuredSourceParts = mutableListOf<DeclaredSourcePart>()
+    private val configuredPlugins = mutableListOf<DeclaredPlugin>()
+
+    /**
+     * Declares the Paper plugin named [name], as Paper reports it, once for this extension. Source sets opt in with
+     * [ExtensionSourceSetDeclaration.uses] on the returned handle.
+     */
+    fun plugin(
+        name: String,
+        action: Action<ExtensionPluginDeclaration>,
+    ): ExtensionPlugin {
+        if (configuredPlugins.any { it.requirement.name == name }) {
+            throw GradleException("Plugin $name is declared more than once.")
+        }
+        val declaration = ExtensionPluginDeclaration(name)
+        action.execute(declaration)
+        configuredPlugins += declaration.toModel()
+        return ExtensionPlugin(name)
+    }
 
     /** Declares a source part and the engine or capabilities against which it is compiled. */
     fun sourceSet(
@@ -226,6 +247,41 @@ open class ExtensionDeclaration : ArtifactDeclaration(ArtifactKind.EXTENSION) {
     }
 
     internal override fun sourceParts(): List<DeclaredSourcePart> = configuredSourceParts.toList().also(::validateDeclaredIncludes)
+
+    internal override fun plugins(): List<DeclaredPlugin> = configuredPlugins.toList()
+}
+
+/** Handle to a plugin declared by [ExtensionDeclaration.plugin], passed to [ExtensionSourceSetDeclaration.uses]. */
+class ExtensionPlugin internal constructor(
+    val name: String,
+)
+
+open class ExtensionPluginDeclaration internal constructor(
+    private val name: String,
+) {
+    private val apis = mutableListOf<Any>()
+    private var version: String? = null
+
+    /**
+     * Adds the plugin API the parts that use this plugin compile against, in any Gradle dependency notation. It is
+     * compile only and never bundled; Paper supplies the classes at runtime.
+     */
+    fun api(dependency: Any) {
+        apis += dependency
+    }
+
+    /** Restricts the plugin versions an engine may report; without it any version satisfies the part. */
+    fun version(range: String) {
+        version = range
+    }
+
+    internal fun toModel(): DeclaredPlugin {
+        val requirement =
+            validated("Plugin") {
+                PluginRequirement(name, version?.let { range -> validatedConstraint(range, "Plugin $name") })
+            }
+        return DeclaredPlugin(requirement, apis.toList())
+    }
 }
 
 open class ExtensionSourceSetDeclaration internal constructor(
@@ -234,6 +290,15 @@ open class ExtensionSourceSetDeclaration internal constructor(
     private var engine: DeclaredRelationship? = null
     private val capabilities = mutableListOf<DeclaredRelationship>()
     private val includedSourceParts = mutableListOf<String>()
+    private val usedPlugins = mutableListOf<String>()
+
+    /** Makes this source part need [plugin]: it compiles against the plugin's API and runs only where Paper has it. */
+    fun uses(plugin: ExtensionPlugin) {
+        if (plugin.name in usedPlugins) {
+            throw GradleException("Extension source set $name uses plugin ${plugin.name} more than once.")
+        }
+        usedPlugins += plugin.name
+    }
 
     /** Makes code from the named source parts available when this source part is selected. */
     fun includes(vararg sourceSets: String) {
@@ -269,9 +334,11 @@ open class ExtensionSourceSetDeclaration internal constructor(
 
     internal fun toModel(): DeclaredSourcePart {
         val selectedEngine = engine
-        if (selectedEngine != null) return DeclaredEngineSourcePart(name, selectedEngine, includedSourceParts.toList())
+        if (selectedEngine != null) {
+            return DeclaredEngineSourcePart(name, selectedEngine, includedSourceParts.toList(), usedPlugins.toList())
+        }
         if (capabilities.isNotEmpty()) {
-            return DeclaredCapabilitySourcePart(name, capabilities.toList(), includedSourceParts.toList())
+            return DeclaredCapabilitySourcePart(name, capabilities.toList(), includedSourceParts.toList(), usedPlugins.toList())
         }
         throw GradleException("Extension source set $name must target one engine or at least one capability.")
     }
@@ -300,6 +367,13 @@ internal data class DeclaredArtifact(
     val hostApi: VersionConstraint?,
     val relationships: List<DeclaredRelationship>,
     val sourceParts: List<DeclaredSourcePart>,
+    val plugins: List<DeclaredPlugin>,
+)
+
+/** One plugin an extension declares: what source parts need at runtime and the API they compile against. */
+internal data class DeclaredPlugin(
+    val requirement: PluginRequirement,
+    val api: List<Any>,
 )
 
 internal data class DeclaredRelationship(
@@ -311,12 +385,16 @@ internal sealed interface DeclaredSourcePart {
     val name: String
     val relationships: List<DeclaredRelationship>
     val includes: List<String>
+
+    /** Names of the plugins this part uses itself; included parts add theirs in the manifest. */
+    val plugins: List<String>
 }
 
 internal data class DeclaredEngineSourcePart(
     override val name: String,
     val engine: DeclaredRelationship,
     override val includes: List<String>,
+    override val plugins: List<String>,
 ) : DeclaredSourcePart {
     override val relationships: List<DeclaredRelationship> = listOf(engine)
 }
@@ -325,6 +403,7 @@ internal data class DeclaredCapabilitySourcePart(
     override val name: String,
     override val relationships: List<DeclaredRelationship>,
     override val includes: List<String>,
+    override val plugins: List<String>,
 ) : DeclaredSourcePart
 
 private fun validateSourcePartName(name: String) {

@@ -4,6 +4,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.google.devtools.ksp.gradle.KspAATask
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.IMPRINT_CONTRIBUTIONS_PATH
+import com.typewritermc.imprint.IMPRINT_HANDLED_ENTRIES_PATH
 import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.IMPRINT_RUNTIME_ENTRYPOINTS_PATH
 import org.gradle.api.GradleException
@@ -13,6 +14,7 @@ import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
@@ -220,6 +222,7 @@ internal fun Project.configureThinJar(
         }
         jar.exclude("$IMPRINT_CONTRIBUTIONS_PATH/**")
         jar.exclude(IMPRINT_RUNTIME_ENTRYPOINTS_PATH)
+        jar.exclude(IMPRINT_HANDLED_ENTRIES_PATH)
         jar.dependsOn(manifest)
     }
 }
@@ -230,9 +233,15 @@ private fun Project.configureHostedJar(manifest: org.gradle.api.tasks.TaskProvid
         tasks.named("shadowJar", ShadowJar::class.java) { jar ->
             jar.archiveClassifier.set("")
             jar.mergeServiceFiles()
+            // The hosted JAR bundles engine core and the platform API, each with its own provider index; the runtime
+            // reads only this JAR's index, so it holds the rows of every bundled project. Shadow drops duplicate
+            // paths before its transformers run unless the path lets them through.
+            jar.filesMatching(GENERATED_PROVIDER_INDEX_PATH) { it.duplicatesStrategy = DuplicatesStrategy.INCLUDE }
+            jar.append(GENERATED_PROVIDER_INDEX_PATH)
             jar.exclude(IMPRINT_MANIFEST_PATH)
             jar.exclude("$IMPRINT_CONTRIBUTIONS_PATH/**")
             jar.exclude(IMPRINT_RUNTIME_ENTRYPOINTS_PATH)
+            jar.exclude(IMPRINT_HANDLED_ENTRIES_PATH)
             jar.from(manifest.flatMap(GenerateImprintManifestTask::outputFile)) { copy ->
                 copy.into(IMPRINT_MANIFEST_PATH.substringBeforeLast('/'))
                 copy.rename { IMPRINT_MANIFEST_PATH.substringAfterLast('/') }

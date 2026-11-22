@@ -899,6 +899,13 @@ class CapturedAuthoringReads internal constructor(
         return view.resources[id]
     }
 
+    /** The type definition [resource]'s configuration names, read with that configuration alone; null when it is gone. */
+    internal fun definition(resource: ResourceId): TypeDefinitionId? {
+        observeResource(resource)
+        observe(InputIdentity.Form(ValueLocation.of(resource)))
+        return view.resources[resource]?.configuration?.definition
+    }
+
     /**
      * [resource]'s root bound to the type its creator's choices give, with every computed parameter left open, so a
      * bind reads its resource without the type it computes. Null when that type does not resolve.

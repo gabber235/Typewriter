@@ -7,6 +7,7 @@ import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.CommonExtensionSourcePart
+import com.typewritermc.imprint.EnabledPlugin
 import com.typewritermc.imprint.EngineExtensionSourcePart
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.RealmManifest
@@ -14,6 +15,8 @@ import com.typewritermc.imprint.ResolvedArtifact
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.loader.api.EngineImplementationArtifact
 import com.typewritermc.loader.api.RuntimePlacement
+import com.typewritermc.loader.api.SourcePartDisposition
+import com.typewritermc.loader.api.SourcePartKey
 import com.typewritermc.loader.api.artifact.PublishResult
 import com.typewritermc.loader.artifact.ArtifactInboxReconciler
 import com.typewritermc.loader.artifact.CommunicatorBlobEndpoint
@@ -40,6 +43,8 @@ import com.typewritermc.loader.testing.FetchForbiddenSharedArtifactAccess
 import com.typewritermc.loader.testing.active
 import com.typewritermc.loader.testing.deploymentArtifact
 import com.typewritermc.loader.testing.engineManifest
+import com.typewritermc.loader.testing.engineProjectionReporting
+import com.typewritermc.loader.testing.realmCoverageReporting
 import com.typewritermc.loader.testing.realmManifest
 import com.typewritermc.loader.testing.record
 import com.typewritermc.loader.testing.sharedPublication
@@ -256,7 +261,7 @@ val ArtifactDistributionTest by testSuite {
                         version = extension.coordinate.version,
                         sourceParts =
                             listOf(
-                                CommonExtensionSourcePart,
+                                CommonExtensionSourcePart(),
                                 EngineExtensionSourcePart(
                                     name = "paper",
                                     requirement = ArtifactRequirement(primary.coordinate.id, VersionConstraint("^1")),
@@ -292,6 +297,34 @@ val ArtifactDistributionTest by testSuite {
         val panelImplementation =
             requireNotNull(projection.runtimes.single { it.placement == RuntimePlacement.PANEL_ENGINE }.implementation)
         panelImplementation.extensions.single().sourceParts shouldContainExactly listOf("common")
+    }
+
+    test("an engine host runs a part that needs a plugin only while it reports that plugin, and nothing else changes") {
+        val withVault = engineProjectionReporting(EnabledPlugin("Vault", "1.7.3"), EnabledPlugin("Essentials", "2.20.1"))
+        val withoutVault = engineProjectionReporting(EnabledPlugin("Essentials", "2.20.1"))
+
+        withVault.extensions.single().sourceParts.single { it.name == "vault" }.disposition shouldBe
+            SourcePartDisposition.Eligible(setOf(RuntimePlacement.PRIMARY_ENGINE))
+        withoutVault.extensions.single().sourceParts.single { it.name == "vault" }.disposition shouldBe
+            SourcePartDisposition.Ineligible(listOf("needs the Vault plugin"))
+        withoutVault.publicationTarget shouldBe withVault.publicationTarget
+        engineProjectionReporting(EnabledPlugin("Vault", "1.7.4")) shouldBe withVault
+    }
+
+    test("the Realm learns that no engine runs a plugin part until one engine host reports that plugin") {
+        val vault = SourcePartKey(ArtifactId("typewritermc:extension"), "vault")
+        val essentials = listOf(EnabledPlugin("Essentials", "2.20.1"))
+        val withVault = listOf(EnabledPlugin("Vault", "1.7.3"))
+
+        realmCoverageReporting(emptyList(), essentials, essentials).parts[vault] shouldBe
+            SourcePartDisposition.Ineligible(listOf("needs the Vault plugin"))
+        realmCoverageReporting(emptyList(), essentials, withVault).parts[vault] shouldBe
+            SourcePartDisposition.Eligible(setOf(RuntimePlacement.PRIMARY_ENGINE))
+    }
+
+    test("the Realm learns once that no engine runs a Paper part while no Paper engine is connected") {
+        realmCoverageReporting(emptyList()).parts[SourcePartKey(ArtifactId("typewritermc:extension"), "vault")] shouldBe
+            SourcePartDisposition.Ineligible(listOf("needs a typewritermc:paper engine"))
     }
 
     test("a stored blob becomes visible only when its size and digest match") {

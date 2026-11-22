@@ -269,7 +269,7 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
                                     ExtensionManifest(
                                         id = ArtifactId("typewritermc:extension"),
                                         version = ArtifactVersion("1.0.0"),
-                                        sourceParts = listOf(CommonExtensionSourcePart),
+                                        sourceParts = listOf(CommonExtensionSourcePart()),
                                         buildProvenance = emptyList(),
                                         contributions = emptyList(),
                                     )

@@ -180,8 +180,8 @@ internal data class FormulasOf(
 }
 
 /**
- * Whether [resource] gets a content subject: it stores a formula, a hook failed on it, its owner chain loops, or it
- * does not fit its schema. Its own query, so discovery reruns per resource and stops on an equal answer.
+ * Whether [resource] gets a content subject: it stores a formula, a hook failed on it, its owner chain loops, it does
+ * not fit its schema, or no engine runs its behaviour. Its own query, so discovery reruns per resource and stops on an equal answer.
  */
 internal data class HoldsContent(
     val resource: ResourceId,
@@ -191,7 +191,8 @@ internal data class HoldsContent(
         reads.read(FormulasOf(resource)).isNotEmpty() ||
             reads.read(FitOf(resource)).isNotEmpty() ||
             reads.read(DynamicOf(resource)).failures.isNotEmpty() ||
-            reads.read(OwnerChain(resource)).loops
+            reads.read(OwnerChain(resource)).loops ||
+            reads.read(NoEngineRuns(resource)) != null
 }
 
 /**

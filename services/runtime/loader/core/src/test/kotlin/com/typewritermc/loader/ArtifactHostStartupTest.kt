@@ -71,6 +71,7 @@ val ArtifactHostStartupTest by testSuite {
                             }
                         },
                         backgroundScope,
+                        com.typewritermc.loader.api.HostPlugins.None,
                     )
 
                 host.start()

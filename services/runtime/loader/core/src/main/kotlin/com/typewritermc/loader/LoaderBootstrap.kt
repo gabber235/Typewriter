@@ -1,5 +1,6 @@
 package com.typewritermc.loader
 
+import com.typewritermc.loader.api.HostPlugins
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.Serializable
 import java.nio.file.Path
@@ -15,13 +16,15 @@ enum class HostEntrypoint {
  * Bridges a process entrypoint into the shared loader host lifecycle.
  *
  * Implementations assemble entrypoint specific dependencies, register or restore the host, and return ownership through
- * [RunningHost]. The supplied [CoroutineScope] belongs to the process entrypoint and bounds background loader work.
+ * [RunningHost]. The supplied [CoroutineScope] belongs to the process entrypoint and bounds background loader work;
+ * [HostPlugins] are the Paper plugins of the process, which the host reports and its runtimes load through.
  */
 interface LoaderBootstrap {
     suspend fun start(
         entrypoint: HostEntrypoint,
         workDirectory: Path,
         scope: CoroutineScope,
+        plugins: HostPlugins,
     ): RunningHost
 }
 

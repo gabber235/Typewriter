@@ -3,6 +3,7 @@ package com.typewritermc.loader
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.VersionConstraint
+import com.typewritermc.loader.api.HostPlugins
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.deployment.PrimaryEngineTarget
 import com.typewritermc.loader.deployment.RealmLoaderIntent
@@ -39,6 +40,7 @@ internal class ArtifactLoaderBootstrap(
         entrypoint: HostEntrypoint,
         workDirectory: Path,
         scope: CoroutineScope,
+        plugins: HostPlugins,
     ): RunningHost {
         val service = serviceFactory.create(workDirectory, scope)
         val ready =
@@ -53,6 +55,7 @@ internal class ArtifactLoaderBootstrap(
                 service,
                 assignments(entrypoint, service),
                 scope,
+                plugins,
             )
         try {
             host.start()

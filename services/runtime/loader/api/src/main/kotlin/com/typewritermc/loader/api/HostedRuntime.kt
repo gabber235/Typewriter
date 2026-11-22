@@ -232,11 +232,22 @@ data class HostedMessagingSession(
  * Exposes loader owned capabilities across the runtime class loader boundary.
  *
  * A null [messaging] value means no usable session is available. Runtime code must observe replacement sessions
- * rather than retaining a communicator indefinitely. Telemetry and shared artifact access remain host owned.
+ * rather than retaining a communicator indefinitely. Telemetry, shared artifact access, [plugins] and
+ * [engineCoverage] remain host owned.
  */
 interface HostedRuntimeHost {
     val publicationRetention: com.typewritermc.loader.api.artifact.PublicationBlobRetention?
         get() = null
+
+    val plugins: HostPlugins
+        get() = HostPlugins.None
+
+    /**
+     * What the engines of this host's Realm run, current with each deployment resolution. Only the Realm's host
+     * resolves it; on every other host it stays unknown.
+     */
+    val engineCoverage: StateFlow<EngineCoverage>
+        get() = EngineCoverage.unknown
 
     val messaging: StateFlow<HostedMessagingSession?>
     val openTelemetry: OpenTelemetry
