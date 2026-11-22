@@ -16,7 +16,7 @@ import com.typewritermc.engine.paper.utils.stripped
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
 import java.time.Duration
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 private val timedTextDisplayTitle: String by snippet(
     "dialogue.textDisplay.timed.bedrock.title",
@@ -36,10 +36,13 @@ class BedrockTimedTextDisplayDialogueDialogueMessenger(
     context: InteractionContext,
     entry: TimedTextDisplayDialogueEntry,
 ) : DialogueMessenger<TimedTextDisplayDialogueEntry>(player, context, entry) {
+    @Volatile
     private var playTime = Duration.ZERO
     private var totalDuration = Duration.ZERO
     private var typingDuration = Duration.ZERO
-    private val confirmed = AtomicBoolean()
+    private val confirmation = AtomicReference<Confirmation>()
+
+    private enum class Confirmation { COMPLETE_TYPING, SKIP_WAIT }
 
     override fun init() {
         super.init()
@@ -54,15 +57,16 @@ class BedrockTimedTextDisplayDialogueDialogueMessenger(
     override fun tick(context: TickContext) {
         if (state != MessengerState.RUNNING) return
         playTime += context.deltaTime
-        if (confirmed.getAndSet(false)) {
+        val pressed = confirmation.getAndSet(null)
+        if (pressed != null) {
             if (entry.allowSkip.get(player, this.context)) {
-                if (playTime >= typingDuration) {
+                if (pressed == Confirmation.SKIP_WAIT) {
                     state = MessengerState.FINISHED
                     return
                 }
                 playTime = typingDuration
             }
-            sendForm()
+            if (playTime < totalDuration) sendForm()
         }
         if (playTime < totalDuration) return
 
@@ -93,8 +97,13 @@ class BedrockTimedTextDisplayDialogueDialogueMessenger(
             },
             onConfirm = onConfirm@{
                 if (state != MessengerState.RUNNING) return@onConfirm
-                confirmed.set(true)
+                recordConfirmation()
             },
         )
+    }
+
+    private fun recordConfirmation() {
+        val pressed = if (playTime < typingDuration) Confirmation.COMPLETE_TYPING else Confirmation.SKIP_WAIT
+        confirmation.compareAndSet(null, pressed)
     }
 }

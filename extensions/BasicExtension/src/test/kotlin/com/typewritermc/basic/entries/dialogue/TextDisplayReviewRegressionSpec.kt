@@ -20,7 +20,6 @@ import io.mockk.spyk
 import io.mockk.verify
 import org.bukkit.entity.Player
 import java.time.Duration
-import java.util.concurrent.atomic.AtomicBoolean
 
 class TextDisplayReviewRegressionSpec : FunSpec({
     test("a criteria change cannot confirm a replacement option") {
@@ -63,15 +62,20 @@ class TextDisplayReviewRegressionSpec : FunSpec({
             recordPrivateCalls = true,
         )
         every { messenger["sendForm"]() } returns Unit
-        messenger.setField("playTime", Duration.ofSeconds(2))
+        messenger.setField("playTime", Duration.ofMillis(9990))
         messenger.setField("typingDuration", Duration.ofSeconds(10))
         messenger.setField("totalDuration", Duration.ofSeconds(15))
-        (messenger.getField("confirmed") as AtomicBoolean).set(true)
-        messenger.tick(TickContext(Duration.ZERO, Duration.ZERO))
+        val recordConfirmation = messenger.javaClass.getDeclaredMethod("recordConfirmation")
+        recordConfirmation.isAccessible = true
+        recordConfirmation.invoke(messenger)
+        messenger.tick(TickContext(Duration.ZERO, Duration.ofMillis(50)))
         messenger.getField("playTime") shouldBe Duration.ofSeconds(10)
         messenger.state shouldBe MessengerState.RUNNING
         messenger.tick(TickContext(Duration.ZERO, Duration.ofSeconds(4)))
         messenger.state shouldBe MessengerState.RUNNING
+        recordConfirmation.invoke(messenger)
+        messenger.tick(TickContext(Duration.ZERO, Duration.ofMillis(50)))
+        messenger.state shouldBe MessengerState.FINISHED
     }
 })
 
