@@ -107,9 +107,12 @@ A configuration is either a Kotlin object (code), an entry type (content: one co
 
 How it works:
 
-1. KSP indexes every (event, configuration type) pair used by a handler.
+1. KSP indexes every (event, configuration type) pair used by a handler: the plan's `config` is `HandlerConfig.Object(EveryTick)` or `HandlerConfig.Entries(IntervalEventEntry::class)`. Any other configuration type (a plain class, a type parameter) is rejected at build time. Item types inside an entry are not built yet.
 2. Publication turns each pair into configuration instances: one for an object, one per published entry or item for a content type. These stay live across hot publish.
-3. The source receives only the configurations that currently have a runnable handler, through `ConfiguredSource<E, Config>.open(demand: Demand<Config>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region).
+3. The source receives only the configurations that currently have a runnable handler, through `ConfiguredSource<E, Config>.open(demand: Demand<Config>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region). `Demand.watch` hands the current set at once and every changed set after it; the source closes once the demand is empty.
+4. An occurrence reaches only the handlers of its configuration. A `Candidate<C>` of the configuration's own entry type is that entry only (`Param.Candidate.ofConfig`), with its book condition.
+
+`Tick<C : TickConfig>` is the first configured event (basic extension, node 4). Its Paper source fires at the start of every server tick whose number is a multiple of a configuration's interval, indexed by interval, so the chains it starts run at the end of the same tick. `IntervalEventEntry` (content, `interval` in ticks) starts its links for every online player its book applies to.
 
 Configurations a source cannot index are not configured events. Use `Candidate<E>` plus an `if` in the handler instead; entries stay pure data.
 
@@ -228,6 +231,10 @@ Variants (Java chat versus a Bedrock form) are chosen by the step when it starts
 ### Events without a subject
 
 For `Tick` and world events, parameters become a query and the handler runs once per match. `fun Tick<EveryTick>.animate(animating: Animating)` runs once per `Animating` value. Stored types are indexed per type, so a query costs about the values it finds.
+
+Node 4 builds the identity query: a required identity parameter that no event field fills runs the handler once per identity its `LiveResolver.present()` names (each online player on Paper), with that identity as the run's subject for traits, candidates, and book conditions.
+
+The event runtime measures every handler run per event class (`HandlerCosts`, an engine-core Koin single), so the average tick handler time can be read on real Paper.
 
 ### Where a handler runs
 
@@ -350,7 +357,7 @@ Verdict handlers never suspend: they run inline (for example inside a Paper even
 
 Chosen 2026-11-03, after a prototype compared it with waiting per write, chain transactions, and starting each chain at once. Priorities: few context switches, little work on owner threads, and Typewriter out of the way. The prototype simulated the game thread and the realm distance, so the plan checks these numbers on real Paper.
 
-1. **In the event, on the owner thread.** The verdict decides at once. Each chain start joins a queue, without waking a thread. Starts with the same subject, entry, and context in one tick merge into one, so an autoclick does not run a chain three times.
+1. **In the event, on the owner thread.** The verdict decides at once. Each chain start joins a queue, without waking a thread. Starts with the same subject, entry, and context in one tick merge into one, so an autoclick does not run a chain three times. Repeats of a link within one `fire` call are not merged: a gate that draws the same link three times starts it three times.
 2. **At tick end, on the owner thread.** Mirror writers run for demanded keys (decided 2026-11-04). This is the live copy, so it includes the event's own result, and it is the only handler code on an owner thread. One worker wakes for the whole engine.
 3. **On the worker.** The worker first rechecks the formula graph once for everything that changed (decided 2026-11-04, [live-data.md](live-data.md#formula-changes)), then takes chains until the queue is empty and runs each chain's handlers in one go. A worker stuck in a slow handler holds up only that chain: the next tick's worker takes the rest.
 4. **Effects.** Apart from writers in step 2, handlers never run on an owner thread. An engine's trait implementation chooses where each effect runs, not the shared trait, because this differs between engines. Paper sends chat from the worker and queues a world change for the owner thread; all queued changes of a tick share one visit. An effect sent after a queued change joins that queue, so effects keep their order.
