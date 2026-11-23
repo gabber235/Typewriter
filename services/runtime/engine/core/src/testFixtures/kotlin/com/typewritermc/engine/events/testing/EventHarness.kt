@@ -5,12 +5,14 @@ import com.typewritermc.elements.Entry
 import com.typewritermc.engine.events.CancelableEventEntry
 import com.typewritermc.engine.events.ChainPickup
 import com.typewritermc.engine.events.ChainQueue
+import com.typewritermc.engine.events.DroppedEvents
 import com.typewritermc.engine.events.EventEntry
 import com.typewritermc.engine.events.EventParts
 import com.typewritermc.engine.events.EventRuntime
 import com.typewritermc.engine.events.HandlerCosts
 import com.typewritermc.engine.events.PublishedEntries
 import com.typewritermc.engine.events.PublishedEntry
+import com.typewritermc.engine.events.SubjectHolding
 import com.typewritermc.engine.events.SubjectWork
 import com.typewritermc.engine.events.complete
 import com.typewritermc.engine.pages.SequenceEntry
@@ -47,10 +49,11 @@ import kotlin.reflect.KClass
 
 /**
  * An event runtime over hand written [parts] and the test event shapes, with a [work] counter. Content is published
- * with [publish]; [tick] is one chain pickup.
+ * with [publish]; [tick] is one chain pickup. The engine holds the protagonists [holding] holds: every one by default.
  */
 class EventHarness(
     vararg parts: EnginePart,
+    holding: SubjectHolding = SubjectHolding { true },
 ) {
     val work = CountingWork()
 
@@ -70,8 +73,8 @@ class EventHarness(
             queue,
             costs,
             TickedPickup,
-            // The harness engine holds every protagonist; the hold check is proven on a wired engine.
-            { true },
+            holding,
+            DroppedEvents(telemetry.openTelemetry),
         )
 
     init {

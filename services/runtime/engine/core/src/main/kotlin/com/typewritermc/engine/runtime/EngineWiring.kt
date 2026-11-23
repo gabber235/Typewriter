@@ -4,6 +4,7 @@ import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.engine.events.ChainPickup
 import com.typewritermc.engine.events.ChainQueue
 import com.typewritermc.engine.events.ChainWorker
+import com.typewritermc.engine.events.DroppedEvents
 import com.typewritermc.engine.events.EventParts
 import com.typewritermc.engine.events.EventRuntime
 import com.typewritermc.engine.events.HandlerCosts
@@ -104,6 +105,7 @@ private fun engineCoreModule(
     single { ChainQueue(subjectWork(getAll())) }
     single { ChainWorker(get(), scope) }
     single { HandlerCosts(context.host.openTelemetry) }
+    single { DroppedEvents(context.host.openTelemetry) }
     single(createdAtStart = true) {
         EventRuntime(
             EventParts(handlers = getAll(), shapes = getAll(), sources = getAll(), subscribed = getAll(), live = getAll()),
@@ -111,6 +113,7 @@ private fun engineCoreModule(
             get(),
             getOrNull<ChainPickup>()
                 ?: error("This engine kind provides no ChainPickup, so the chains its events queue would never run."),
+            get(),
             get(),
         )
     } onClose { it?.close() }

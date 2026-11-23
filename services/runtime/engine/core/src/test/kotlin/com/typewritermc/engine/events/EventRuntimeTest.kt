@@ -4,6 +4,7 @@ import com.typewritermc.engine.events.testing.EventHarness
 import com.typewritermc.engine.events.testing.GuardEntry
 import com.typewritermc.engine.events.testing.Poke
 import com.typewritermc.engine.events.testing.Shove
+import com.typewritermc.engine.events.testing.StepEntry
 import com.typewritermc.engine.events.testing.TestSource
 import com.typewritermc.engine.events.testing.after
 import com.typewritermc.engine.events.testing.cancel
@@ -16,10 +17,14 @@ import com.typewritermc.engine.events.testing.step
 import com.typewritermc.engine.events.testing.verdict
 import com.typewritermc.events.CancelableEvent
 import com.typewritermc.events.Candidate
+import com.typewritermc.events.Context
+import com.typewritermc.events.Event
 import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
+import com.typewritermc.events.TriggeredEvent
 import com.typewritermc.events.allow
 import com.typewritermc.events.deny
+import com.typewritermc.events.emit
 import com.typewritermc.events.pass
 import com.typewritermc.identity.Protagonist
 import de.infix.testBalloon.framework.core.testSuite
@@ -164,5 +169,29 @@ val EventRuntimeTest by testSuite {
         val recorded = events.telemetry.histograms("typewriter.event.handler.duration", "typewriter.event").getValue("Poke")
         recorded.count shouldBe 6
         recorded.sum shouldBeGreaterThanOrEqualTo 0.006
+    }
+
+    test("an occurrence about a protagonist this engine does not hold runs no handler and counts as dropped, per event") {
+        val pokes = TestSource(Poke::class)
+        val here = protagonist("here")
+        val elsewhere = protagonist("elsewhere")
+        val ran = mutableListOf<Event>()
+        val events =
+            EventHarness(
+                pokes,
+                after(Poke::class) { poke, _ ->
+                    ran += poke
+                    emit(TriggeredEvent(StepEntry("next"), elsewhere, Context.EMPTY))
+                },
+                after(TriggeredEvent::class) { triggered, _ -> ran += triggered },
+                holding = { it == here },
+            )
+
+        pokes.fire(Poke(elsewhere)) shouldBe null
+        pokes.fire(Poke(here)) shouldBe Outcome.Allowed(Poke(here))
+        events.tick()
+
+        ran shouldContainExactly listOf(Poke(here))
+        events.telemetry.counts(DroppedEvents.DROPPED, HandlerCosts.EVENT_ATTRIBUTE) shouldBe mapOf("Poke" to 1L, "TriggeredEvent" to 1L)
     }
 }

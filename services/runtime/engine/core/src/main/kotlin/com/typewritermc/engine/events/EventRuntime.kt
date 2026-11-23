@@ -48,7 +48,8 @@ class EventParts(
  * the engine kind's [ChainPickup], which drains the queue.
  *
  * An occurrence about a protagonist this engine does not hold (see [holding]) runs no handler and is dropped, until
- * cross engine delivery forwards it; occurrences about another subject, or none, always run here. The session keeper's
+ * cross engine delivery forwards it; [dropped] logs and counts each. Occurrences about another subject, or none, always
+ * run here. The session keeper's
  * own events skip that check through [asHolder].
  *
  * [publish] swaps the content handlers see and opens each source while a handler could run for its events, closing
@@ -64,6 +65,7 @@ class EventRuntime(
     private val costs: HandlerCosts,
     private val pickup: ChainPickup,
     private val holding: SubjectHolding,
+    private val dropped: DroppedEvents,
 ) : ChainQueueing,
     AutoCloseable {
     @Volatile
@@ -150,10 +152,15 @@ class EventRuntime(
             override fun emit(event: Event) = enqueue(event, repeat = 0)
         }
 
-    /** Whether an occurrence of [event] runs here: it is about no protagonist, or about one this engine holds. */
+    /**
+     * Whether an occurrence of [event] runs here: it is about no protagonist, or about one this engine holds. One that
+     * does not run is recorded as dropped.
+     */
     private fun held(event: Event): Boolean {
         val subject = subjectOf(event)
-        return subject !is Protagonist || holding.holds(subject)
+        if (subject !is Protagonist || holding.holds(subject)) return true
+        dropped.unheld(event, subject)
+        return false
     }
 
     /**
