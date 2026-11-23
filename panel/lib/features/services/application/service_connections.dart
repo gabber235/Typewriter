@@ -1,10 +1,28 @@
 part of "services.dart";
 
-/// Shares one deadline projection for a service list across its consumers.
+/// Shares one deadline projection for the services of the organization
+/// selected by the current route; empty without one.
 @riverpod
 Map<skir.RecordId, bool> serviceConnections(Ref ref) {
+  final organization = ref.watch(organizationIdProvider);
+  if (organization == null) return const {};
+  return ref.watch(organizationServiceConnectionsProvider(organization));
+}
+
+/// Shares one deadline projection for the services of [organizationId]
+/// across its consumers.
+///
+/// Each service counts as connected until its heartbeat deadline passes;
+/// the projection checks again at the nearest deadline and when the panel
+/// resumes.
+@riverpod
+Map<skir.RecordId, bool> organizationServiceConnections(
+  Ref ref,
+  skir.RecordId organizationId,
+) {
   final services =
-      ref.watch(canonicalServicesProvider).value ?? const <skir.Service>[];
+      ref.watch(canonicalOrganizationServicesProvider(organizationId)).value ??
+      const <skir.Service>[];
 
   final now = clock.now();
   final deadline = services
@@ -27,15 +45,33 @@ Map<skir.RecordId, bool> serviceConnections(Ref ref) {
   };
 }
 
+/// Resolves host connectivity in the organization selected by the current
+/// route; false without one. See [organizationHostConnected].
+@riverpod
+bool hostConnected(Ref ref, skir.RecordId hostId) {
+  final organization = ref.watch(organizationIdProvider);
+  if (organization == null) return false;
+  return ref.watch(organizationHostConnectedProvider(organization, hostId));
+}
+
 /// Resolves host connectivity through its linked service heartbeat.
 ///
 /// Host runtime status describes reconciliation, not transport reachability.
 /// This provider therefore follows [skir.ServiceHost.serviceId] into the shared
-/// service deadline projection and returns false when either record is absent.
+/// service deadline projection of [organizationId] and returns false when
+/// either record is absent.
 @riverpod
-bool hostConnected(Ref ref, skir.RecordId hostId) {
-  final topology = ref.watch(organizationTopologyProvider).value;
-  final connections = ref.watch(serviceConnectionsProvider);
+bool organizationHostConnected(
+  Ref ref,
+  skir.RecordId organizationId,
+  skir.RecordId hostId,
+) {
+  final topology = ref
+      .watch(organizationTopologyControllerProvider(organizationId))
+      .value;
+  final connections = ref.watch(
+    organizationServiceConnectionsProvider(organizationId),
+  );
   final host = topology?.hosts.firstWhereOrNull(
     (host) => host.hostId == hostId,
   );

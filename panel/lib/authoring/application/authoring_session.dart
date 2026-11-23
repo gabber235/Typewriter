@@ -7,10 +7,29 @@ part "authoring_session.g.dart";
 part "authoring_resource_repository.dart";
 part "authoring_session_state.dart";
 
+/// Whether the Realm [realmId] of [organizationId] can answer authoring
+/// requests: its runtime is active and its owner host keeps reporting.
+///
+/// The app overrides it through appOverrides, which bootstrap, the test kit's
+/// worlds and the end to end scenarios install, with the topology and service
+/// heartbeats only a feature can read. The default, never online, applies only
+/// to containers built without appOverrides; their sessions still ask again
+/// after a read that reached no receiver.
+@riverpod
+bool authoringRealmOnline(
+  Ref ref,
+  skir.RecordId organizationId,
+  skir.RecordId realmId,
+) => false;
+
 /// Owns confirmed authoring observations and the catalog that interprets them for one Realm.
 ///
 /// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
 /// prevent late responses from a replaced session from publishing into current state.
+/// A read that reaches no receiver, as while the Realm is away or still coming
+/// back, is asked again after [natsRetryDelay]; the Realm
+/// coming back online is read at once. Any other failure stays the state's
+/// failure until something else asks again.
 /// Saved observations flow into the shared editing workspace, which separately owns
 /// local intent and replay. This session owns its transport repository, rebinds it
 /// when the connection is replaced, and disposes it with the provider.
@@ -24,6 +43,7 @@ class AuthoringSession extends _$AuthoringSession {
   var _refreshRequested = false;
   var _catalogRefreshRequested = false;
   skir.CatalogGeneration? _latestInvalidatedGeneration;
+  Timer? _retry;
   @override
   AuthoringSessionState build(
     skir.RecordId organizationId,
@@ -34,6 +54,8 @@ class AuthoringSession extends _$AuthoringSession {
     _refreshRequested = false;
     _catalogRefreshRequested = false;
     _latestInvalidatedGeneration = null;
+    _retry?.cancel();
+    _retry = null;
     _organizationId = organizationId;
     _realmId = realmId;
     final repository = AuthoringResourceRepository(
@@ -66,13 +88,21 @@ class AuthoringSession extends _$AuthoringSession {
         }
       },
     );
+    final online = ref.listen(
+      authoringRealmOnlineProvider(organizationId, realmId),
+      (previous, next) {
+        if (previous == false && next) _scheduleRefresh(lifecycleRevision);
+      },
+    );
     ref
       ..onDispose(() {
         if (_lifecycleRevision == lifecycleRevision) {
           _lifecycleRevision++;
         }
+        _retry?.cancel();
       })
       ..onDispose(changes.cancel)
+      ..onDispose(online.close)
       ..onDispose(invalidations.cancel)
       ..onDispose(catalogInvalidations.close)
       ..onDispose(repository.dispose)
@@ -219,8 +249,20 @@ class AuthoringSession extends _$AuthoringSession {
       if (error is TransferCancelled && repository._isDisposed) return;
       if (!_isActive(lifecycleRevision)) return;
       state = state.copyWith(failure: error);
+      // A catalog that was not read is still wanted by the next refresh.
+      _catalogRefreshRequested = _catalogRefreshRequested || refreshCatalog;
+      if (natsReachedNoReceiver(error)) {
+        _retryLater(lifecycleRevision);
+      }
       rethrow;
     }
+  }
+
+  /// Asks again after [natsRetryDelay]; a retry already
+  /// waiting covers this one.
+  void _retryLater(int lifecycleRevision) {
+    if (_retry?.isActive ?? false) return;
+    _retry = Timer(natsRetryDelay, () => _scheduleRefresh(lifecycleRevision));
   }
 
   Future<skir.EditorCatalog> _fetchCatalog(

@@ -71,6 +71,31 @@ final class NatsClientException implements Exception {
   String toString() => "NatsClientException($kind): $safeDescription";
 }
 
+/// How long a reader that owns a lasting view, such as a projection watch or
+/// an authoring session, waits before it asks again after a failure that may
+/// pass by itself: one that [natsFailedInTransit] or [natsReachedNoReceiver]
+/// matches. A permission, protocol or domain refusal never matches, so asking
+/// again cannot hide it.
+const natsRetryDelay = Duration(milliseconds: 250);
+
+/// Whether [error] failed in transit: the broker was unreachable or the reply
+/// did not arrive in time.
+bool natsFailedInTransit(Object error) => switch (error) {
+  NatsClientException(
+    kind: NatsFailureKind.timeout || NatsFailureKind.unavailable,
+  ) =>
+    true,
+  _ => false,
+};
+
+/// Whether [error] reached no receiver: it [natsFailedInTransit], or the
+/// broker found nobody listening, as while the Realm that owns a request is
+/// away and the panel stays connected.
+bool natsReachedNoReceiver(Object error) => switch (error) {
+  NatsClientException(kind: NatsFailureKind.noResponders) => true,
+  _ => natsFailedInTransit(error),
+};
+
 /// Credentials and protocol settings needed to create one NATS transport owner.
 ///
 /// Authentication material is kept at this boundary because it configures the
