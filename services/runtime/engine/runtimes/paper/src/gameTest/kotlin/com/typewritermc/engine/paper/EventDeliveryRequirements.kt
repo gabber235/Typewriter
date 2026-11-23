@@ -1,5 +1,6 @@
 package com.typewritermc.engine.paper
 
+import com.typewritermc.identity.SessionId
 import com.typewritermc.playtest.GameCompartment
 import com.typewritermc.playtest.bridge.PlaytestSignal
 import com.typewritermc.playtest.bridge.PlaytestSignalDefinition
@@ -10,13 +11,15 @@ import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.aroundAll
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import skirout.editor.v1.event.EventResult
 import skirout.editor.v1.event.EventSubject
 import skirout.kernel.v1.identity.PrincipalId
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import com.typewritermc.identity.PrincipalId as Principal
 import com.typewritermc.identity.Protagonist as Player
 
@@ -39,15 +42,18 @@ val EventDeliveryRequirements by testSuite(
                 PlaytestSignalDefinition.id.use(),
                 PlaytestSignal(Player(Principal(Principal.MINECRAFT, id)), "Signal from the panel"),
             )
-        coroutineScope {
-            val result =
-                async {
-                    author.panelTab {
+        author.panelTab {
+            StackObserver.fromEnvironment().use { observer ->
+                eventually(10.seconds) { observer.session(protagonist, SessionId(session)).shouldNotBeNull() }
+            }
+            coroutineScope {
+                val result =
+                    outside("the panel tab emits the signal at the player") {
                         emit(EventSubject.createProtagonist(principal = PrincipalId(kind = Principal.MINECRAFT, id = id)), signal)
                     }
-                }
-            within(40.ticks) { player sees chat("Signal from the panel") }
-            result.await() shouldBe EventResult.DONE
+                within(40.ticks) { player sees chat("Signal from the panel") }
+                result.await() shouldBe EventResult.DONE
+            }
         }
     }
 }

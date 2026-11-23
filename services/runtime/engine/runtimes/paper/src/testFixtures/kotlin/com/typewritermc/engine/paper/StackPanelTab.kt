@@ -1,5 +1,7 @@
 package com.typewritermc.engine.paper
 
+import com.typewritermc.identity.PrincipalId
+import com.typewritermc.identity.Protagonist
 import com.typewritermc.protocol.transport.OrganizationActorRouteScope
 import com.typewritermc.protocol.transport.RealmActorRouteScope
 import com.typewritermc.protocol.transport.generated.eventEmit
@@ -38,6 +40,9 @@ class StackPanelTab internal constructor(
 ) {
     /** The tab's session id, which its heartbeat and its emits name. */
     val session: String = UUID.randomUUID().toString().replace("-", "")
+
+    /** The owner as the panel engine reports the tab's session: a panel user. */
+    val protagonist: Protagonist = Protagonist(PrincipalId(PrincipalId.USER, actor.userId))
 
     /** Sends the heartbeat every [HEARTBEAT] in [scope] until [scope] ends, as an open tab of the panel does. */
     internal fun beat(scope: CoroutineScope) =
@@ -100,7 +105,7 @@ class StackPanelTab internal constructor(
                     check(!confirmed && started.elapsedNow() < SESSION_LIMIT) {
                         "the panel engine reports no session for tab $session"
                     }
-                    delay(HEARTBEAT / 4)
+                    delay(SESSION_RETRY)
                 }
 
                 else -> {
@@ -117,6 +122,9 @@ class StackPanelTab internal constructor(
 
         /** How long the panel engine may answer later than at once, while the event runs. */
         val WAIT: Duration = 200.milliseconds
+
+        /** How long the tab waits before asking again while the panel engine reports no session for it yet. */
+        val SESSION_RETRY: Duration = 200.milliseconds
 
         /** How long the panel engine may take to report the tab's first heartbeat. */
         val SESSION_LIMIT: Duration = 10.seconds
