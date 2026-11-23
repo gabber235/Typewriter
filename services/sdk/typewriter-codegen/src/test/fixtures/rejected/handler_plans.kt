@@ -65,7 +65,7 @@ fun Poked.check(
 class Reply(
     val text: String,
     val context: String,
-    val recordPath: Int, // error: A record field cannot be named `recordPath`: the record scope's own `recordPath` hides its accessor; rename the field.
+    val recordPath: Int, // error: A record field cannot be named `recordPath`: `RecordScope.recordPath` hides its accessor; rename the field.
 )
 
 @TypewriterType(id = "a0000000000000000000000000000953")
@@ -73,8 +73,8 @@ class ClashEntry(
     override val page: Ref<PageElements.Element, Page>,
     override val name: String,
     override val placement: GraphPlacement,
-    val context: String, // error: A record field cannot be named `context`: the record scope's own `context` hides its accessor; rename the field.
-    val reader: Int, // error: A record field cannot be named `reader`: the record scope's own `reader` hides its accessor; rename the field.
-    val priority: Int, // error: A record field cannot be named `priority`: the record scope's own `priority` hides its accessor; rename the field.
-    val event: String, // error: A record field cannot be named `event`: the record scope's own `event` hides its accessor; rename the field.
+    val context: String, // error: A record field cannot be named `context`: `EntryScope.context` hides its accessor; rename the field.
+    val reader: Int, // error: A record field cannot be named `reader`: `EntryScope.reader` hides its accessor; rename the field.
+    val priority: Int, // error: A record field cannot be named `priority`: `Candidate.priority` hides its accessor; rename the field.
+    val event: String, // error: A record field cannot be named `event`: `Triggered.event` hides its accessor; rename the field.
 ) : Entry

@@ -455,21 +455,25 @@ private class TypewriterTypeProcessor(
         val properties = source.getAllProperties().associateBy { it.simpleName.asString() }
         hidden.forEach { field ->
             logger.error(
-                "A record field cannot be named `${field.property}`: the record scope's own `${field.property}` hides its " +
-                    "accessor; rename the field.",
+                "A record field cannot be named `${field.property}`: `${members.getValue(field.property)}.${field.property}` " +
+                    "hides its accessor; rename the field.",
                 properties[field.property] ?: source,
             )
         }
         return hidden.isEmpty()
     }
 
-    /** Every property name of [scopes], read from their declarations so a new scope member is covered at once. */
+    /**
+     * Every property name of [scopes] with the first scope that declares it, read from their declarations so a new scope
+     * member is covered at once. A scope missing from the classpath has no accessors to hide, so it adds no names.
+     */
     context(resolver: Resolver)
-    private fun scopeMembers(scopes: List<ClassName>): Set<String> =
+    private fun scopeMembers(scopes: List<ClassName>): Map<String, String> =
         scopes
             .mapNotNull { scope -> resolver.getClassDeclarationByName(scope.canonicalName) }
-            .flatMap { scope -> scope.getAllProperties().map { it.simpleName.asString() } }
-            .toSet()
+            .flatMap { scope -> scope.getAllProperties().map { it.simpleName.asString() to scope.simpleName.asString() } }
+            .distinctBy { it.first }
+            .toMap()
 
     /** The case definitions of [owner] that no Kotlin declaration emits, such as the unit cases of an enum. */
     private fun KspTypeConversionResult.Success.casesWithoutDeclaration(owner: TypeDefinition): List<TypeDefinition> =
