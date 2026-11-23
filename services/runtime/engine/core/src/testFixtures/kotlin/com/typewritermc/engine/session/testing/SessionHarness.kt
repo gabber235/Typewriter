@@ -63,16 +63,18 @@ class SessionHarness private constructor(
         return Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid)) to SessionId(uuid)
     }
 
-    /** Starts engine [id] of the Realm on a connection of its own. */
+    /** Starts engine [id] of the Realm on a connection of its own, reaching the broker's buckets through [buckets]. */
     suspend fun engine(
         id: String,
         timings: SessionTimings = SHORT,
+        buckets: (KeyValueBuckets) -> KeyValueBuckets = { it },
     ): HarnessEngine {
         val connection = connect()
-        val buckets = MutableStateFlow<KeyValueBuckets?>(NatsKeyValueBuckets(connection))
+        val reached = MutableStateFlow<KeyValueBuckets?>(buckets(NatsKeyValueBuckets(connection)))
         val events = EmittedEvents()
-        val keeper = SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, HeldSessions(), events, scope)
-        return HarnessEngine(EngineId(id), keeper, events, connection).also(engines::add)
+        val holding = HeldSessions()
+        val keeper = SessionKeeper(EngineId(id), reached, SessionsBucket.name(realm), timings, holding, events, scope)
+        return HarnessEngine(EngineId(id), keeper, holding, events, connection).also(engines::add)
     }
 
     /** Creates the Realm's sessions bucket, as the Realm does when it starts. */
@@ -95,6 +97,23 @@ class SessionHarness private constructor(
     ) {
         engine.keeper.connected(protagonist, id)
         eventually { entry(protagonist, id)?.holder == engine.id }
+    }
+
+    /**
+     * Checks for two times to live that [engine] holds [protagonist]'s session [id] without a gap: the key stays [taken],
+     * held by [engine] since the same instant, and the engine runs the protagonist's events all along.
+     */
+    suspend fun keeps(
+        engine: HarnessEngine,
+        protagonist: Protagonist,
+        id: SessionId,
+        taken: SessionEntry,
+    ) {
+        repeat((SHORT.ttl * 2 / SHORT.retry).toInt()) {
+            delay(SHORT.retry)
+            check(entry(protagonist, id) == taken) { "The session key changed from $taken to ${entry(protagonist, id)}" }
+            check(engine.holding.holds(protagonist)) { "${engine.id} stopped holding $protagonist" }
+        }
     }
 
     /** Writes an empty value no engine can read under [protagonist]'s session [id], as a damaged write would. */
@@ -186,10 +205,11 @@ class SessionHarness private constructor(
     }
 }
 
-/** One engine of the harness; [events] holds what its keeper emitted. */
+/** One engine of the harness; [holding] is what its event runtime would run events for, [events] what its keeper emitted. */
 class HarnessEngine(
     val id: EngineId,
     val keeper: SessionKeeper,
+    val holding: HeldSessions,
     val events: EmittedEvents,
     private val connection: NatsConnection,
 ) {

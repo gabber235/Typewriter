@@ -111,7 +111,9 @@ class SessionKeeper(
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
             slot.lock.withLock {
                 slot.refresher?.cancelAndJoin()
-                val held = take(protagonist, id)
+                slot.refresher = null
+                // A stale take leaves the last held key to the call that came after it, so a quit still shortens it.
+                val held = take(protagonist, id, slot, generation) ?: return@withLock slot.takenElsewhere(id, generation)
                 slot.held = held
                 slot.refresher = scope.launch { refresh(id, slot, held, generation) }
             }
@@ -148,33 +150,28 @@ class SessionKeeper(
     /**
      * Writes the session's key as held by this engine, keeping when it began, and retries until it succeeds; then
      * emits the session's arrival, after the protagonist's join when no key of it lived before the write.
+     *
+     * Null, having written nothing, once the take is stale: the session was reported again since [generation], as a
+     * quit is, or another engine took the key after this take first read it (see [Seen.takenSince]). A late take never
+     * writes over the engine its protagonist moved to.
      */
     private suspend fun take(
         protagonist: Protagonist,
         id: SessionId,
-    ): HeldSession {
+        slot: SessionSlot,
+        generation: Long,
+    ): HeldSession? {
         val key = sessionKey(protagonist, id)
-        while (true) {
+        var first: Seen? = null
+        while (slot.generation.get() == generation) {
             val bucket = bucket()
             val online = (bucket?.liveEntries(protagonist) as? LiveEntries.Read)?.entries?.isNotEmpty()
-            if (bucket != null && online != null) {
-                val written =
-                    when (val read = bucket.get(key)) {
-                        is KeyValueRead.Found -> {
-                            val stored = readable(key, read.entry.value) ?: SessionEntry(protagonist, engine, clock.instant())
-                            val entry = stored.copy(holder = engine)
-                            bucket.update(key, entry.encode(), timings.ttl, read.entry.revision).heldAs(key, entry)
-                        }
-
-                        KeyValueRead.Absent -> {
-                            val entry = SessionEntry(protagonist, engine, clock.instant())
-                            bucket.create(key, entry.encode(), timings.ttl).heldAs(key, entry)
-                        }
-
-                        is KeyValueRead.Failed -> {
-                            null
-                        }
-                    }
+            val read = bucket?.get(key)
+            if (bucket != null && online != null && read != null && read !is KeyValueRead.Failed) {
+                val seen = seen(key, read)
+                val began = first ?: seen.also { first = it }
+                if (seen.takenSince(began) || slot.generation.get() != generation) return null
+                val written = bucket.writeHeld(key, protagonist, read, seen.stored)
                 if (written != null) {
                     if (!online) events.emit(ProtagonistJoined(protagonist))
                     events.emit(SessionArrived(Session(protagonist, id)))
@@ -183,6 +180,46 @@ class SessionKeeper(
             }
             delay(timings.retry)
         }
+        return null
+    }
+
+    /** Writes [key] as held by this engine over [read], keeping when [stored] began; null when the write lost. */
+    private suspend fun KeyValueBucket.writeHeld(
+        key: String,
+        protagonist: Protagonist,
+        read: KeyValueRead,
+        stored: SessionEntry?,
+    ): HeldSession? {
+        val entry = (stored ?: SessionEntry(protagonist, engine, clock.instant())).copy(holder = engine)
+        return when (read) {
+            is KeyValueRead.Found -> update(key, entry.encode(), timings.ttl, read.entry.revision).heldAs(key, entry)
+            KeyValueRead.Absent -> create(key, entry.encode(), timings.ttl).heldAs(key, entry)
+            is KeyValueRead.Failed -> null
+        }
+    }
+
+    /** What a take [read] of [key]. */
+    private fun seen(
+        key: String,
+        read: KeyValueRead,
+    ): Seen {
+        val found = read as? KeyValueRead.Found ?: return Seen(null, null)
+        return Seen(found.entry.revision, readable(key, found.entry.value))
+    }
+
+    /** A take's read of the session key: its [revision] and [stored] entry, each null while no readable entry lives. */
+    private inner class Seen(
+        val revision: Long?,
+        val stored: SessionEntry?,
+    ) {
+        val holder: EngineId? get() = stored?.holder
+
+        /**
+         * Whether another engine took the key since [began], the take's first read: it was written since, and names a
+         * holder that is neither this engine nor the one [began] named. A write by the engine named then, such as its
+         * quit shortening the key during a server move, is no takeover.
+         */
+        fun takenSince(began: Seen): Boolean = revision != began.revision && holder != null && holder != engine && holder != began.holder
     }
 
     /**
@@ -334,6 +371,14 @@ class SessionKeeper(
         key: String,
         entry: SessionEntry,
     ): HeldSession? = (this as? KeyValueWrite.Written)?.let { HeldSession(key, entry, it.revision) }
+
+    /** Lets the session go when its take ended because another engine took it, not because it was reported again. */
+    private fun SessionSlot.takenElsewhere(
+        id: SessionId,
+        since: Long,
+    ) {
+        if (generation.get() == since) letGo(id, since)
+    }
 
     /** Lets the session go after another engine took it, unless it was reported again since this refresher began. */
     private fun SessionSlot.letGo(

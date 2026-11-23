@@ -1,5 +1,6 @@
 package com.typewritermc.engine.session
 
+import com.typewritermc.engine.session.testing.LateFirstWrite
 import com.typewritermc.engine.session.testing.SessionHarness
 import com.typewritermc.identity.EngineId
 import de.infix.testBalloon.framework.core.TestConfig
@@ -162,6 +163,40 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         delay(SessionHarness.SHORT.ttl * 2)
 
         harness().entry(protagonist, session).shouldBeNull()
+    }
+
+    test("SESSION-13 an engine whose protagonist left before its take reached the broker leaves the session to the engine it moved to") {
+        harness().createBucket()
+        lateinit var late: LateFirstWrite
+        val old = harness().engine("engine-a") { buckets -> LateFirstWrite(buckets).also { late = it } }
+        val new = harness().engine("engine-b")
+        val (protagonist, session) = harness().player()
+
+        old.keeper.connected(protagonist, session)
+        late.reached.await()
+        old.keeper.disconnected(session)
+        harness().joined(new, protagonist, session)
+        val taken = harness().entry(protagonist, session).shouldNotBeNull()
+        late.release()
+
+        harness().keeps(new, protagonist, session, taken)
+    }
+
+    test("SESSION-14 an engine whose take is still under way when another engine takes the session lets it go instead of writing over it") {
+        harness().createBucket()
+        lateinit var late: LateFirstWrite
+        val old = harness().engine("engine-a") { buckets -> LateFirstWrite(buckets).also { late = it } }
+        val new = harness().engine("engine-b")
+        val (protagonist, session) = harness().player()
+
+        old.keeper.connected(protagonist, session)
+        late.reached.await()
+        harness().joined(new, protagonist, session)
+        val taken = harness().entry(protagonist, session).shouldNotBeNull()
+        late.release()
+
+        harness().keeps(new, protagonist, session, taken)
+        old.holding.holds(protagonist) shouldBe false
     }
 
     test("SESSION-10 the holders of a protagonist are every engine holding one of its sessions, and none once it left") {
