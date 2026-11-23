@@ -31,6 +31,7 @@ graph LR
   L1b --> L13[13 book variables]
   L4 --> L13
   L6 --> L13
+  L12 --> L13
   L3 --> L9a[9a delivery between engines]
   L4 --> L9a
   L9a --> L9b[9b engine communication]
@@ -111,8 +112,8 @@ Dotted arrows are demo needs. `G` is drawn only into 3, since every Paper node r
 | --- | --- | --- | --- | --- |
 | 1b | `bind`: a generic parameter derived from content (#566) | 1 | realm, codegen, engine admission | built (2026-11-16) |
 | 3 | Paper runtime, sessions, `Engine` identity (#576) | 0, G | engine, realm | built (2026-11-21) |
-| 4 | Event core: sources, verdicts, handlers, chains, local delivery, book conditions one book deep, configured events (`ConfiguredSource`, `Demand<Config>`, `Tick<Config>`), one way to read entry values (accessors at any depth, reads tracked; decided 2026-11-23) | 1, 3, G | engine, realm, codegen | building (PR #580 open; adding the reading model before merge) |
-| 6 | Stored data: transactions, `Changes`, stored derives, the `engine.{engine}.changed` route, shared game test books through a per player fact (from node 4's plan: one read only book per key per run, the attempt sets only the fact) | 4, G | realm, engine, codegen | waiting for a need's code (stacked on 4, until its reading model is pushed) |
+| 4 | Event core: sources, verdicts, handlers, chains, local delivery, book conditions one book deep, subscribed events (renamed from configured events on 2026-11-23 so "configuration" means node 12's feature; `SubscribedSource`, `Demand<S>`, `Tick<S>`, exact names set by node 4), one way to read entry values (accessors at any depth, reads tracked; decided 2026-11-23) | 1, 3, G | engine, realm, codegen | building (PR #580 open, final testing; reading model in) |
+| 6 | Stored data: transactions, `Changes`, stored derives, the `engine.{engine}.changed` route, shared game test books through a per player fact (from node 4's plan: one read only book per key per run, the attempt sets only the fact) | 4, G | realm, engine, codegen | building (stacked on 4) |
 | 7 | Time and reactions: `Due`, `Schedule`, `now`, `random`, `BoundPath` identity | 6, G | realm, engine, contract | roughly designed |
 | 8 | Mirrors and audiences: `Live`, demand, `Health`, `Position`, `Watched<T>` and formula starts | 6, G | engine, realm | roughly designed |
 | 9a | Delivery between engines (from 4): the `event.skir` contracts, one inbox per engine (`engine.{engine}.event`, the sender asks and the holder answers with the result), holders resolved from the one sessions copy per identity kind, one outstanding delivery per subject and holder, general free route parameters, client emits through the `realm_actor` scope and the `event_emit` route served by the panel engine, the two engine emit test | 3, 4, G | engine, realm, contract | building (plan approved 2026-11-23, stacked on 4) |
@@ -121,8 +122,8 @@ Dotted arrows are demo needs. `G` is drawn only into 3, since every Paper node r
 | 10B | Items and generation: both generators, the shape lock, item components, `CustomData`, version layers | 10A, G | codegen, engine | roughly designed |
 | 10C | Known ids and capture: `KnownIds` reports, search, the domain check with stored reads in the query graph, capture | 7, 9b, 10A, G | realm, engine | roughly designed |
 | 11 | Groups, variables keyed by a group, `ContinueFor*`, the `GroupTrigger` action (from 4) | 1b, 6, 8, G; demo 10A (world group) | engine, realm, codegen | roughly designed |
-| 12 | Configurations: `Configuration<T>`, `Configured<T>`, `Partial<T>`, the merge at publish | 1, 4, G | realm, contract, codegen | waiting for a need's code (stacked on 4, until its reading model is pushed) |
-| 13 | Book variables, instances, thin copies, imports | 1b, 4, 6, G | realm, engine, codegen | roughly designed |
+| 12 | Configurations: unset fields as a stored state for every record (an unset field reads `inherited`), `inherited` as a scope name resolved through a dynamic and never stored, configuration records as ordinary records with Var fields, `ConfigurationSet`s in a `Configurations` section with `appliesTo` and precedence up the owner chain, thin copies (from 13; a set applying to a place is a thin copy there), general pieces `Dynamics.eachValue`, `AuthoredReads.owner` and `ScopeBuilder.value`, formula defaults declared in Kotlin, creator functions callable from Kotlin, field rules renamed to rules | 1, 4, G | realm, contract, codegen | building (plan approved 2026-11-23, stacked on 4) |
+| 13 | Book variables, instances on 12's thin copies, `book` through 12's `ScopeBuilder.value`, imports | 1b, 4, 6, 12, G | realm, engine, codegen | roughly designed |
 | 14 | Packets: `PaperWire`, wire sources and verdicts, version layers against Paper internals | 3, 4, 10A, G | engine, codegen | roughly designed |
 | 14b | Base of per viewer entities: `FakeEntity` with spawn, move, remove, `lookThrough` | 14, G | engine | roughly designed |
 | 15 | Holds: lifecycle, grace, adoption, priority, snapshots, input holds, and the displays without the wire (potion, boss bar, title, tab list) | 6, 8, 10A, G; demo 10B (spyglass) | engine, realm, codegen | roughly designed |
@@ -149,7 +150,7 @@ Each waits on `P`, and none blocks a non panel node.
 | 7p | Reaction and schedule editors | 2, 7 | roughly designed |
 | 9p | Target picker, emit buttons with results, "applied on N of M", disabled reasons, the `WatchValues` client | 9b, P, G | roughly designed |
 | 10p | Domain value picker, per type editors, the Capture button | 2, 9p, 10C, G | roughly designed |
-| 12p | The three level entry editor, `group` on a presentation, `NullableControl`, the `item` role summary | 2, 12 | roughly designed |
+| 12p | The three level entry editor, a feature adding a section to another type's editor, showing set versus unset, `group` on a presentation, `NullableControl`, the `item` role summary | 2, 12 | roughly designed |
 | 13p | Book variable type picker and instance editor | 2, 13 | open |
 | 31p | The embed node with inlet and outlet slots | 2, 31a | open |
 
