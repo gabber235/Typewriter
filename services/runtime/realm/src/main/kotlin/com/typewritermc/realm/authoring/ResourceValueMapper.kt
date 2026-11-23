@@ -210,7 +210,7 @@ internal object ResourceValueMapper {
         val byLocation = occurrences.associateBy { it.id.location }
         val projected = linkedSetOf<LinkProjection>()
 
-        occurrences.sortedBy { occurrenceKey(it) }.forEach { occurrence ->
+        occurrences.sortedByKeyOnce(::occurrenceKey).forEach { occurrence ->
             val candidates = byEndpoint[occurrence.id.endpoint].orEmpty()
             if (candidates.size != 1) {
                 problems +=
@@ -294,7 +294,7 @@ internal object ResourceValueMapper {
                 }
             projected += projection
         }
-        return ProjectionResult(projected.sortedBy(::projectionKey), problems.distinct(), fit.distinct())
+        return ProjectionResult(projected.sortedByKeyOnce(::projectionKey), problems.distinct(), fit.distinct())
     }
 
     fun declaredLocations(
@@ -627,6 +627,10 @@ private fun occurrenceKey(value: LinkOccurrence): String =
     "${value.id.endpoint.value}:${value.source.value}:${ValuePath.serializer.toJsonCode(
         value.id.location.path,
     )}:${value.target.resource.value}"
+
+/** Sorts by [key] built once per element; the keys serialize paths, which costs too much to repeat on every comparison. */
+internal fun <T> Iterable<T>.sortedByKeyOnce(key: (T) -> String): List<T> =
+    map { key(it) to it }.sortedBy { it.first }.map { it.second }
 
 internal fun projectionKey(value: LinkProjection): String =
     "${value.contract.value}:${value.first.value}:${value.second.value}:" +
