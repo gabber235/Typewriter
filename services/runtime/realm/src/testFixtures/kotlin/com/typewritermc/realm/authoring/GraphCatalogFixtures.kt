@@ -326,14 +326,22 @@ internal suspend fun RealmFixture.apply(edit: GraphEdit) {
     )
 }
 
+/** Every fact [this] read at this revision, also through a memo below it that reran with an equal result. */
+context(reads: RealmReads)
+private fun RealmQuery<*>.factsRead(): Set<EditExpectation> =
+    reads
+        .readsOf(this)
+        .filterIsInstance<Fact>()
+        .flatMapTo(linkedSetOf()) { reads.read(it) }
+
 /** [query]'s answer and evidence from the realm's live graph at its current revision. */
 internal fun <T> RealmFixture.liveNow(query: RealmQuery<T>): Pair<T, Set<EditExpectation>> =
-    views.pin().use { pinned -> with(pinned.reads) { read(query) to query.factsRead { false }.toSet() } }
+    views.pin().use { pinned -> with(pinned.reads) { read(query) to query.factsRead() } }
 
 /** [query]'s answer and evidence from a new graph over the current view, which remembers nothing. */
 internal fun <T> RealmFixture.freshNow(query: RealmQuery<T>): Pair<T, Set<EditExpectation>> =
     views.pin().use { pinned ->
-        with(TrackedGraph(RealmEnvironment(pinned.view, checkingServices())).pin()) { read(query) to query.factsRead { false }.toSet() }
+        with(TrackedGraph(RealmEnvironment(pinned.view, checkingServices())).pin()) { read(query) to query.factsRead() }
     }
 
 /** [query]'s answer from the live graph and from a new graph over the view pinned with it, both under one pin. */
