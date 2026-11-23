@@ -2,6 +2,7 @@ package com.typewritermc.engine.delivery
 
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
+import com.typewritermc.engine.delivery.Occurrences.First
 import com.typewritermc.engine.events.EventRuntime
 import com.typewritermc.engine.events.SubjectHolding
 import com.typewritermc.events.Event
@@ -25,36 +26,16 @@ class Inbox(
     private val codec: EventCodec,
     private val occurrences: Occurrences,
 ) {
-    suspend fun answer(request: DeliverEventRequest): DeliverEventResponse {
-        val id = request.delivery.occurrence.value
-        val run =
-            if (occurrences.knows(id)) {
-                ALREADY_TAKEN
-            } else {
-                when (val first = first(request)) {
-                    is First.Refused -> return first.response
-                    is First.Accepted -> first.run
-                }
-            }
-        val result = occurrences.answer(id, request.waitMs.coerceAtLeast(0).milliseconds, run)
-        return DeliverEventResponse.SuccessWrapper(result?.let { EventStatus.FinalWrapper(it.toWire(codec)) } ?: EventStatus.RUNNING)
-    }
-
-    private sealed interface First {
-        class Accepted(
-            val run: suspend () -> EventResult,
-        ) : First
-
-        class Refused(
-            val response: DeliverEventResponse,
-        ) : First
-    }
+    suspend fun answer(request: DeliverEventRequest): DeliverEventResponse =
+        occurrences.answer(request.delivery.occurrence.value, request.waitMs.coerceAtLeast(0).milliseconds, { first(request) }) { result ->
+            DeliverEventResponse.SuccessWrapper(result?.let { EventStatus.FinalWrapper(it.toWire(codec)) } ?: EventStatus.RUNNING)
+        }
 
     /**
      * What the first ask about an occurrence leads to: refused when the sender had an answer before or this engine does
      * not hold the subject; a final failure when this engine cannot run it; else its run on this engine.
      */
-    private fun first(request: DeliverEventRequest): First {
+    private fun first(request: DeliverEventRequest): First<DeliverEventResponse> {
         val delivery = request.delivery
         if (request.confirmed) return First.Refused(DeliverEventResponse.createForgottenError(occurrence = delivery.occurrence))
         val subject = delivery.subject.toIdentity() ?: return failed(UNKNOWN_SUBJECT)
@@ -66,15 +47,12 @@ class Inbox(
             }
         if (runtime.subjectOf(event) != subject) return failed(SUBJECT_MISMATCH)
         val origin = delivery.origin?.toOrigin()
-        return First.Accepted { runtime.run(event, origin) }
+        return First.Run { runtime.run(event, origin) }
     }
 
-    private fun failed(reason: EventResult.Failed) = First.Accepted { reason }
+    private fun failed(reason: EventResult.Failed) = First.Run { reason }
 
     private companion object {
-        /** The run of an occurrence already taken, which [Occurrences] never starts again. */
-        val ALREADY_TAKEN: suspend () -> EventResult = { error("An occurrence already taken never runs again.") }
-
         val UNKNOWN_SUBJECT = deliveryFailure("unknown_subject", "This engine does not know the kind of identity the event is about.")
         val SUBJECT_MISMATCH = deliveryFailure("subject_mismatch", "The event is about another identity than the subject it was sent with.")
 

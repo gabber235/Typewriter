@@ -5,7 +5,6 @@ import com.typewritermc.engine.delivery.Delivery
 import com.typewritermc.engine.delivery.DeliveryTimings
 import com.typewritermc.engine.delivery.EngineLink
 import com.typewritermc.engine.delivery.EventCodec
-import com.typewritermc.engine.delivery.Holders
 import com.typewritermc.engine.delivery.Inbox
 import com.typewritermc.engine.delivery.InboxRegistrar
 import com.typewritermc.engine.delivery.NatsEngineLink
@@ -116,9 +115,8 @@ private fun engineCoreModule(
     single { HeldSessions(get<Engine>().id) } bind SubjectHolding::class
     single<EventCodec> { codec }
     single<EngineLink> { NatsEngineLink(context.host.messaging, context.identity.realmId, get<Engine>().id) }
-    single { Holders(get<SessionKeeper>().copy) }
     single {
-        Delivery(get<Engine>().id, get(), get(), get(), get(), get(), scope, getOrNull<DeliveryTimings>() ?: DeliveryTimings())
+        Delivery(get<Engine>().id, get(), get<SessionKeeper>().copy, get(), get(), get(), scope, getOrNull<DeliveryTimings>() ?: DeliveryTimings())
     } binds arrayOf(Emitter::class, Elsewhere::class)
     single { Inbox(get(), get(), get(), Occurrences(scope, getOrNull<DeliveryTimings>() ?: DeliveryTimings())) }
     // Named, since an engine kind binds its own registrars to the same type.

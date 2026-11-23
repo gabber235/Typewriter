@@ -2,9 +2,9 @@ package com.typewritermc.engine.delivery
 
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
+import com.typewritermc.engine.delivery.Occurrences.First
 import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.engine.session.SessionsCopy
-import com.typewritermc.events.EventResult
 import com.typewritermc.events.Origin
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
@@ -44,30 +44,10 @@ class EmitGateway(
     suspend fun answer(
         user: String,
         request: EmitEventRequest,
-    ): EmitEventResponse {
-        val id = request.occurrence.value
-        val run =
-            if (occurrences.knows(id)) {
-                ALREADY_TAKEN
-            } else {
-                when (val first = first(user, request)) {
-                    is First.Refused -> return first.response
-                    is First.Accepted -> first.run
-                }
-            }
-        val result = occurrences.answer(id, request.waitMs.coerceAtLeast(0).milliseconds, run)
-        return EmitEventResponse.SuccessWrapper(result?.let { EventStatus.FinalWrapper(it.toWire(codec)) } ?: EventStatus.RUNNING)
-    }
-
-    private sealed interface First {
-        class Accepted(
-            val run: suspend () -> EventResult,
-        ) : First
-
-        class Refused(
-            val response: EmitEventResponse,
-        ) : First
-    }
+    ): EmitEventResponse =
+        occurrences.answer(request.occurrence.value, request.waitMs.coerceAtLeast(0).milliseconds, { first(user, request) }) { result ->
+            EmitEventResponse.SuccessWrapper(result?.let { EventStatus.FinalWrapper(it.toWire(codec)) } ?: EventStatus.RUNNING)
+        }
 
     /**
      * What a client's first ask about an occurrence leads to: refused when the client had an answer before, or when
@@ -76,7 +56,7 @@ class EmitGateway(
     private suspend fun first(
         user: String,
         request: EmitEventRequest,
-    ): First {
+    ): First<EmitEventResponse> {
         if (request.confirmed) return First.Refused(EmitEventResponse.createForgottenError(occurrence = request.occurrence))
         val principal = PrincipalId(PrincipalId.USER, user)
         val caller = Protagonist(principal)
@@ -84,15 +64,12 @@ class EmitGateway(
         if (sessions.entry(session)?.protagonist != caller) {
             return First.Refused(EmitEventResponse.createSessionNotHeldError(session = request.session))
         }
-        val subject = request.subject.toIdentity() ?: return First.Accepted { UNKNOWN_SUBJECT }
+        val subject = request.subject.toIdentity() ?: return First.Run { UNKNOWN_SUBJECT }
         val origin = Origin(Session(caller, session), principal)
-        return First.Accepted { delivery.relay(request.occurrence, subject, request.event, origin) }
+        return First.Run { delivery.relay(request.occurrence, subject, request.event, origin) }
     }
 
     private companion object {
-        /** The run of an occurrence already taken, which [Occurrences] never starts again. */
-        val ALREADY_TAKEN: suspend () -> EventResult = { error("An occurrence already taken never runs again.") }
-
         val UNKNOWN_SUBJECT = deliveryFailure("unknown_subject", "This gateway does not know the kind of identity the event is about.")
     }
 }

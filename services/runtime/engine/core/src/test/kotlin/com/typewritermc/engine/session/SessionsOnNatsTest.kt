@@ -1,10 +1,13 @@
 package com.typewritermc.engine.session
 
 import com.typewritermc.engine.session.testing.SessionHarness
+import com.typewritermc.identity.Engine
 import com.typewritermc.identity.EngineId
+import com.typewritermc.identity.Session
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -181,6 +184,20 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         panel.keeper.disconnected(tab)
         harness().eventually(within = SessionHarness.SHORT.ttl) { minecraft.keeper.holders(protagonist).isEmpty() }
         harness().entry(protagonist, session).shouldBeNull()
+    }
+
+    test("SESSION-13 the holder of a session is the engine holding it, of another protagonist's session none, and an engine holds itself") {
+        harness().createBucket()
+        val minecraft = harness().engine("engine-a")
+        val sender = harness().engine("engine-b")
+        val (protagonist, session) = harness().player()
+        val (stranger, _) = harness().player()
+        minecraft.keeper.connected(protagonist, session)
+        harness().eventually { sender.keeper.holders(protagonist).isNotEmpty() }
+
+        sender.keeper.holders(Session(protagonist, session)) shouldContainExactlyInAnyOrder setOf(EngineId("engine-a"))
+        sender.keeper.holders(Session(stranger, session)).shouldBeEmpty()
+        sender.keeper.holders(Engine(EngineId("engine-a"))) shouldContainExactlyInAnyOrder setOf(EngineId("engine-a"))
     }
 
     test("SESSION-COPY-1 the holders of a protagonist come from the engine's own copy of the sessions, also while it cannot reach NATS") {

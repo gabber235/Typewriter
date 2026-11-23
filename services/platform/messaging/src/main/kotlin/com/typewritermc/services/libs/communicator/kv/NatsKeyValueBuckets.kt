@@ -130,10 +130,10 @@ class NatsKeyValueBuckets(
          * natskt reports the broker's expiry marker (`Nats-Marker-Reason: MaxAge`) as a purge; a delete or purge only
          * comes from outside this interface, so each removal reads as an expiry. A broken connection ends the changes.
          *
-         * natskt 0.9.1 drops the broker's end of replay marker, so the catch up follows the first entry no message is
-         * pending behind (its `delta`, the consumer's pending count, is 0), as the NATS clients mark the end of initial
-         * values; a filter with no live key catches up at once, since its replay may hold only expiry markers or nothing.
-         * Remove the key listing once natskt reports the end of replay itself.
+         * natskt's watch does not say when its replay ended, so the watch marks it as the NATS Go client marks the end of
+         * initial values: the catch up follows the first entry no message is pending behind (its `delta`, the consumer's
+         * pending count, is 0), and a filter with no live key catches up at once, since its replay may hold only expiry
+         * markers or nothing.
          */
         override suspend fun watch(filter: String): KeyValueWatch =
             try {

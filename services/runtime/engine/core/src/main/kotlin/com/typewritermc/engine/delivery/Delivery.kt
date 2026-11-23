@@ -3,6 +3,7 @@ package com.typewritermc.engine.delivery
 import com.typewritermc.engine.events.Elsewhere
 import com.typewritermc.engine.events.EventRuntime
 import com.typewritermc.engine.events.SubjectHolding
+import com.typewritermc.engine.session.SessionsCopy
 import com.typewritermc.events.Emitter
 import com.typewritermc.events.Event
 import com.typewritermc.events.EventResult
@@ -70,7 +71,7 @@ data class DeliveryTimings(
 class Delivery(
     private val self: EngineId,
     private val holding: SubjectHolding,
-    private val holders: Holders,
+    private val sessions: SessionsCopy,
     private val link: EngineLink,
     private val runtime: EventRuntime,
     private val codec: EventCodec,
@@ -150,13 +151,13 @@ class Delivery(
             val local = if (here) async(start = CoroutineStart.UNDISPATCHED) { runtime.run(checkNotNull(occurrence.event), occurrence.origin) } else null
             var notHeld = emptySet<EngineId>()
             while (true) {
-                val seen = holders.version
-                val listed = holders.of(occurrence.subject) - answered
+                val seen = sessions.version
+                val listed = sessions.holders(occurrence.subject) - answered
                 val engines = listed - notHeld
                 if (engines.isEmpty()) {
                     if (listed.isEmpty()) break
                     // An engine said it no longer holds the subject while this copy still lists it: wait for the copy.
-                    holders.changedSince(seen)
+                    sessions.changedSince(seen)
                     notHeld = emptySet()
                     continue
                 }
@@ -286,3 +287,17 @@ class Delivery(
             deliveryFailure("unknown_type", "The event ${event?.let { it::class.simpleName }} has no catalog type, so it cannot leave this engine.")
     }
 }
+
+/**
+ * The strongest of [results]: [EventResult.Denied], then [EventResult.Failed], then [EventResult.Done], then
+ * [EventResult.NotHandled]; the first of equal strength wins, and no result at all is [EventResult.NotHandled].
+ */
+fun merged(results: Collection<EventResult>): EventResult =
+    results.minByOrNull { result ->
+        when (result) {
+            is EventResult.Denied -> 0
+            is EventResult.Failed -> 1
+            EventResult.Done -> 2
+            EventResult.NotHandled -> 3
+        }
+    } ?: EventResult.NotHandled

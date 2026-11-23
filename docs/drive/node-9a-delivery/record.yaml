@@ -66,6 +66,9 @@ decided:
     what: one rule for every delivery
   - id: plan-approved
     what: node 9a plan approved, my calls included (order, named subject, many holders, results per holder, one sessions copy, EngineLink port)
+  - id: holders-in-sessions
+    what: Sessions.holders(subject: Identity) is the one way to ask which engines hold an identity; the delivery's own Holders is gone
+    why: chosen by the maintainer 2026-11-23 in the review, over keeping a protagonist only SDK read beside it
   - id: outside-stimulus
     what: Playtest marks a stimulus from outside Paper with outside(says) { }, counting windows from the tick that last ended on Paper
     why: chosen by the maintainer 2026-11-23 over anchoring on an unrelated probe step
@@ -88,7 +91,7 @@ slices:
   - id: sessions-copy
     tests: [SESSION-COPY-1, WATCH-5, WATCH-6]
     status: done
-    note: natskt 0.9.1 drops the end of replay marker; the watch says caught up after the first entry with delta 0, or at once for a filter with no live key, as the NATS clients do
+    note: natskt's watch does not say when its replay ended; the watch says caught up after the first entry with delta 0, or at once for a filter with no live key, as the NATS Go client marks the end of initial values
   - id: delivery
     tests: [RESULT-1 to RESULT-3, DELIVER-1 to DELIVER-14, DeliveryRulesTest, engine core's generated parts start]
     status: done

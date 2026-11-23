@@ -1,8 +1,12 @@
 package com.typewritermc.engine.session
 
+import com.typewritermc.identity.Engine
 import com.typewritermc.identity.EngineId
+import com.typewritermc.identity.Identity
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
+import com.typewritermc.identity.Sessions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -14,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap
  * bucket, so an engine that just started never answers from half a copy. The copy outlives a broken watch: the next
  * watch replays over it, and an expiry it replays still finds the key's last entry.
  */
-class SessionsCopy {
+class SessionsCopy : Sessions {
     private val live = ConcurrentHashMap<SessionId, SessionEntry>()
     private val caughtUp = MutableStateFlow(false)
     private val changes = MutableStateFlow(0L)
@@ -27,10 +31,14 @@ class SessionsCopy {
         changes.first { it > version }
     }
 
-    /** The engines holding a session of [protagonist]. */
-    suspend fun holders(protagonist: Protagonist): Set<EngineId> {
+    /** The engines holding [subject], one rule per kind of identity. */
+    override suspend fun holders(subject: Identity): Set<EngineId> {
         caughtUp.first { it }
-        return live.values.filter { it.protagonist == protagonist }.mapTo(linkedSetOf()) { it.holder }
+        return when (subject) {
+            is Protagonist -> live.values.filter { it.protagonist == subject }.mapTo(linkedSetOf()) { it.holder }
+            is Session -> setOfNotNull(live[subject.id]?.takeIf { it.protagonist == subject.protagonist }?.holder)
+            is Engine -> setOf(subject.id)
+        }
     }
 
     /** The live entry of session [id], or null when there is none. */

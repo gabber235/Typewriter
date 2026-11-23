@@ -5,6 +5,7 @@ import com.typewritermc.events.ProtagonistJoined
 import com.typewritermc.events.ProtagonistLeft
 import com.typewritermc.events.SessionArrived
 import com.typewritermc.identity.EngineId
+import com.typewritermc.identity.Identity
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
@@ -135,7 +136,7 @@ class SessionKeeper(
         }
     }
 
-    override suspend fun holders(protagonist: Protagonist): Set<EngineId> = copy.holders(protagonist)
+    override suspend fun holders(subject: Identity): Set<EngineId> = copy.holders(subject)
 
     /** Stops every write and leaves the keys as they are. */
     override fun close() {

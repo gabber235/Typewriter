@@ -16,9 +16,10 @@ import kotlin.time.TimeSource
 
 /**
  * The occurrences someone asks this engine about, each with the one run that gives its result, so asking again with
- * the same occurrence waits on that run instead of starting another. A final occurrence is forgotten once the
- * [timings]' window passed after its last ask, after which [knows] no longer finds it. The inbox keeps the occurrences it
- * holds, a client gateway the occurrences its clients emit.
+ * the same occurrence waits on that run instead of starting another. Only the first ask decides: it either starts the
+ * run or is refused, and a refused occurrence is not taken, so its next ask decides again. A final occurrence is
+ * forgotten once the [timings]' window passed after its last ask. The inbox keeps the occurrences it holds, a client
+ * gateway the occurrences its clients emit.
  */
 class Occurrences(
     private val scope: CoroutineScope,
@@ -41,22 +42,35 @@ class Occurrences(
         }
     }
 
-    /** Whether occurrence [id] was taken and is not yet forgotten. */
-    fun knows(id: String): Boolean = taken.containsKey(id)
+    /** What the first ask about an occurrence leads to: a [Run] that gives its result, or an answer of type [A] that refuses it. */
+    sealed interface First<out A> {
+        class Run(
+            val run: suspend () -> EventResult,
+        ) : First<Nothing>
+
+        class Refused<out A>(
+            val answer: A,
+        ) : First<A>
+    }
 
     /**
-     * The result of occurrence [id] once it is final within [wait], or null while it still runs. An occurrence not taken
-     * yet starts [run]; when two first asks race, one run is kept and the other never starts.
+     * The answer to an ask about occurrence [id]: [status] of its result once it is final within [wait], or of null while it
+     * still runs. An occurrence not taken yet asks [first], which starts its run or refuses it with its own answer; when
+     * two first asks race, one run is kept and the other never starts.
      */
-    suspend fun answer(
+    suspend fun <A> answer(
         id: String,
         wait: Duration,
-        run: suspend () -> EventResult,
-    ): EventResult? {
+        first: suspend () -> First<A>,
+        status: (EventResult?) -> A,
+    ): A {
         val occurrence =
-            taken[id] ?: Taken(scope.async(start = CoroutineStart.LAZY) { run() }, time.markNow()).let { taken.putIfAbsent(id, it) ?: it }
+            taken[id] ?: when (val decided = first()) {
+                is First.Refused -> return decided.answer
+                is First.Run -> Taken(scope.async(start = CoroutineStart.LAZY) { decided.run() }, time.markNow()).let { taken.putIfAbsent(id, it) ?: it }
+            }
         occurrence.result.start()
         occurrence.asked = time.markNow()
-        return withTimeoutOrNull(wait) { occurrence.result.await() }.also { occurrence.asked = time.markNow() }
+        return status(withTimeoutOrNull(wait) { occurrence.result.await() }.also { occurrence.asked = time.markNow() })
     }
 }
