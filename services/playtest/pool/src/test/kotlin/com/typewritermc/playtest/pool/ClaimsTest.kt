@@ -12,7 +12,7 @@ val ClaimsTest by testSuite {
     val pool = listOf("gv-1", "gv-2", "gv-3", "gv-4")
 
     test("four single claims run at once and a fifth waits until a player is released") {
-        val claims = Claims<String, String>(pool)
+        val claims = Claims<String, String>(pool, ownPapers = 2)
         (1L..5L).forEach { claims.submit("module", Claim(it, 1)) }
 
         claims.grants().map { it.submission } shouldContainExactly listOf(1L, 2L, 3L, 4L)
@@ -23,7 +23,7 @@ val ClaimsTest by testSuite {
     }
 
     test("a group gets all its players together and never two attempts share a player") {
-        val claims = Claims<String, String>(pool)
+        val claims = Claims<String, String>(pool, ownPapers = 2)
         claims.submit("module", Claim(1L, 3))
         claims.submit("module", Claim(2L, 1))
         claims.submit("module", Claim(3L, 1))
@@ -36,7 +36,7 @@ val ClaimsTest by testSuite {
     }
 
     test("a group waiting at the head keeps freed players from the singles behind it") {
-        val claims = Claims<String, String>(pool)
+        val claims = Claims<String, String>(pool, ownPapers = 2)
         (1L..4L).forEach { claims.submit("module", Claim(it, 1)) }
         claims.grants()
         claims.submit("module", Claim(5L, 3))
@@ -54,7 +54,7 @@ val ClaimsTest by testSuite {
     }
 
     test("a session that submits later gets the next free player before the earlier session's queue") {
-        val claims = Claims<String, String>(pool)
+        val claims = Claims<String, String>(pool, ownPapers = 2)
         (1L..6L).forEach { claims.submit("module", Claim(it, 1)) }
         claims.grants()
         claims.submit("ide", Claim(100L, 1))
@@ -65,7 +65,7 @@ val ClaimsTest by testSuite {
     }
 
     test("sessions take turns while both have claims waiting") {
-        val claims = Claims<String, String>(listOf("gv-1"))
+        val claims = Claims<String, String>(listOf("gv-1"), ownPapers = 2)
         (1L..3L).forEach { claims.submit("first", Claim(it, 1)) }
         (11L..13L).forEach { claims.submit("second", Claim(it, 1)) }
 
@@ -80,7 +80,7 @@ val ClaimsTest by testSuite {
     }
 
     test("a session that leaves takes its waiting claims with it") {
-        val claims = Claims<String, String>(listOf("gv-1"))
+        val claims = Claims<String, String>(listOf("gv-1"), ownPapers = 2)
         claims.submit("first", Claim(1L, 1))
         claims.submit("first", Claim(2L, 1))
         claims.submit("second", Claim(11L, 1))
@@ -93,7 +93,7 @@ val ClaimsTest by testSuite {
     }
 
     test("a claim for more players than the pool holds is refused with both numbers") {
-        val claims = Claims<String, String>(listOf("gv-1"))
+        val claims = Claims<String, String>(listOf("gv-1"), ownPapers = 2)
 
         val refused = shouldThrow<IllegalArgumentException> { claims.submit("module", Claim(1L, 3)) }
 
@@ -103,13 +103,13 @@ val ClaimsTest by testSuite {
     }
 
     test("a claim for no players is refused") {
-        val claims = Claims<String, String>(pool)
+        val claims = Claims<String, String>(pool, ownPapers = 2)
 
         shouldThrow<IllegalArgumentException> { claims.submit("module", Claim(1L, 0)) }.message shouldContain "at least 1"
     }
 
     test("released players are free again in the pool's order") {
-        val claims = Claims<String, String>(pool)
+        val claims = Claims<String, String>(pool, ownPapers = 2)
         claims.submit("module", Claim(1L, 4))
         claims.grants()
 
@@ -120,7 +120,7 @@ val ClaimsTest by testSuite {
     }
 
     test("a player whose client is lost goes to no claim, not even once its attempt ends, until its new client is ready") {
-        val claims = Claims<String, String>(listOf("gv-1", "gv-2"))
+        val claims = Claims<String, String>(listOf("gv-1", "gv-2"), ownPapers = 2)
         claims.submit("module", Claim(1L, 1))
         claims.grants()
 
@@ -135,7 +135,7 @@ val ClaimsTest by testSuite {
     }
 
     test("a group that needs a lost player's place waits for its new client") {
-        val claims = Claims<String, String>(pool)
+        val claims = Claims<String, String>(pool, ownPapers = 2)
         claims.holdOut("gv-3", Out.LOST_CLIENT)
         claims.submit("module", Claim(1L, 4))
 
@@ -146,7 +146,7 @@ val ClaimsTest by testSuite {
     }
 
     test("side by side attempts get their players at the same moment, never one before the other") {
-        val claims = Claims<String, String>(pool)
+        val claims = Claims<String, String>(pool, ownPapers = 2)
         (1L..3L).forEach { claims.submit("module", Claim(it, 1)) }
         claims.grants()
         claims.submit("module", Claim(4L, 1), Claim(5L, 1))
@@ -158,7 +158,7 @@ val ClaimsTest by testSuite {
     }
 
     test("a player held out for two reasons goes to no claim until both let it back") {
-        val claims = Claims<String, String>(listOf("gv-1"))
+        val claims = Claims<String, String>(listOf("gv-1"), ownPapers = 2)
         claims.holdOut("gv-1", Out.LOST_CLIENT)
         claims.holdOut("gv-1", Out.HUNG_WORK)
         claims.submit("module", Claim(1L, 1))
@@ -171,7 +171,7 @@ val ClaimsTest by testSuite {
     }
 
     test("a player let back while its attempt still runs goes to no other claim until that attempt ends") {
-        val claims = Claims<String, String>(listOf("gv-1"))
+        val claims = Claims<String, String>(listOf("gv-1"), ownPapers = 2)
         claims.submit("module", Claim(1L, 1))
         claims.grants()
 
@@ -185,7 +185,7 @@ val ClaimsTest by testSuite {
     }
 
     test("a third restart attempt waits while two own Papers have not fully exited, and is claimed once one is gone") {
-        val claims = Claims<String, String>(pool)
+        val claims = Claims<String, String>(pool, ownPapers = 2)
         (1L..3L).forEach { claims.submit("module", Claim(it, 1, restarts = true)) }
 
         claims.grants().map { it.submission } shouldContainExactly listOf(1L, 2L)
@@ -196,7 +196,7 @@ val ClaimsTest by testSuite {
     }
 
     test("attempts side by side that need more own Papers than may run at once are refused with both numbers") {
-        val claims = Claims<String, String>(pool)
+        val claims = Claims<String, String>(pool, ownPapers = 2)
 
         val refused =
             shouldThrow<IllegalArgumentException> {

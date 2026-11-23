@@ -42,9 +42,10 @@ public final class PoolProcess implements AutoCloseable {
         this.exitWithin = exitWithin;
     }
 
-    /** The pool's command line: its heap capped at the pool's share, with every {@code playtest.*} property of its build. */
+    /** The pool's command line: its memory capped as {@link PartMemory#POOL} says, with every {@code playtest.*} property of its build. */
     public static List<String> command(String java, Map<String, String> properties, String classpath) {
-        List<String> command = new ArrayList<>(List.of(java, HeapShare.POOL.flag()));
+        List<String> command = new ArrayList<>(List.of(java));
+        command.addAll(PartMemory.POOL.flags());
         properties.forEach((key, value) -> command.add("-D" + key + "=" + value));
         command.addAll(List.of("-cp", classpath, MAIN));
         return command;

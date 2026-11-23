@@ -1,7 +1,5 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.launch.HeapShare
-
 /**
  * The Papers the pool runs, each under a name and in a folder of its own: the shared Paper, and the own
  * Paper of each restart attempt, named after its attempt. Nothing that ends an older Paper, its exit or
@@ -13,7 +11,7 @@ import com.typewritermc.playtest.launch.HeapShare
 internal class Papers(
     private val folderOf: (String, Int) -> PaperFolder,
     private val remove: (PaperFolder) -> Unit,
-    private val ownSlots: Int = HeapShare.OWN_PAPERS,
+    private val ownSlots: Int,
 ) {
     private val byName = linkedMapOf<String, Server>()
 

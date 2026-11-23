@@ -45,7 +45,7 @@ clients hold none.
   elsewhere) and drops every input event it did not send itself.
 - The **wire** is Skir: every message the parts exchange is declared in
   `skir-src/harness/v1/wire.skir`. The wire module only frames those messages on a socket. The
-  launch module holds what the processes share about launching each other: the heap shares, the pool
+  launch module holds what the processes share about launching each other: the memory budget, the pool
   and part files, and the pool's command and process (`PoolProcess`). It uses the standard library
   alone, as build-logic compiles it too.
 - Test JVMs share the pool, so every module and extension shares the warm clients, and a warm single
@@ -280,19 +280,31 @@ own Papers run at once.
 
 ## Memory
 
-Every game JVM takes a share of the machine (`HeapShare`, `-XX:MaxRAMPercentage`), so the caps scale
-with the machine:
+The pool counts every part at its expected resident size, its heap cap and what it keeps beside its
+heap (`PartMemory`), and admits only what fits in the machine's memory less a reserve
+(`MemoryBudget`). On the 16 GB runner (MemTotal 16,053 MiB):
 
-| Part | Share | On a 16 GB runner |
-|---|---|---|
-| Shared Paper | 16 % | 2.6 GB |
-| Own Paper | 7 % | 1.1 GB |
-| Client | 4.5 % | 740 MB |
-| Pool | 2 % | 330 MB |
+| Part | Heap cap | Beside heap | Resident |
+|---|---|---|---|
+| Shared Paper | 16 % (2569 MiB) | 640 MiB | 3209 MiB |
+| Own Paper | 7 % (1124 MiB) | 288 MiB | 1412 MiB |
+| Client | 4.5 % (723 MiB) | 960 MiB | 1683 MiB |
+| Pool | 2 % (322 MiB) | 128 MiB | 450 MiB |
+| Reserve | | | 3840 MiB |
 
-The parts that can run at once (the shared Paper, 2 own Papers, 4 clients, the pool) hold at most half
-the machine in heap, which a unit test pins. Memory outside the heap (about 1 GB per client, mostly
-the software renderer) is not capped yet; that stays open.
+- The pool runs as many restart attempts' own Papers at once as fit beside the shared Paper, its
+  clients and itself, up to the 4 slots the build sets up: 1 on the 16 GB runner with 4 clients, 4 on
+  a 32 GB machine. It refuses to run when not even one fits, and names how many clients would.
+- The reserve is what the machine holds beside the pool's parts: the Realm host, Gradle, the test
+  JVM, the rest of the stack, Xvfb, the runner and the kernel, with room for the page cache.
+- Every Paper bounds direct memory (256 MB), class metadata (512 MB) and compiled code (256 MB); the
+  pool 64, 256 and 128 MB. Each bound sits well over what it measured, so reaching one fails the part
+  loudly instead of letting it outgrow the budget.
+- A client's memory beside its heap is mostly the software renderer's, which no JVM flag bounds, so
+  its allowance is measured alone.
+- Every number comes from the kernel's process table when the runner ran out of memory with 2 own
+  Papers (run 45115703169): shared Paper 3203 MiB, clients 1482 to 1674 MiB, pool 448 MiB, everything
+  outside the pool's parts 3161 MiB and the kernel 513 MiB.
 
 ## CI
 
@@ -402,6 +414,15 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   folder at every boot (`part.running`), and tests find a client or Paper by it. Linux shows Java only
   the first page of a command line, so arguments cannot name a part; a file a crash left behind names
   no process.
+- **The pool budgets real memory** (2026-11-23): the heap only budget below let the runner run out
+  of memory with 2 own Papers (run 45115703169: the kernel killed the shared Paper at 3203 MiB
+  resident on a 2568 MiB heap cap, while the clients held 1482 to 1674 MiB on a 722 MiB cap). Each
+  part kind is now counted at its heap cap plus a measured allowance beside it (`PartMemory`), every
+  Paper and the pool bound direct memory, class metadata and compiled code, and `MemoryBudget` admits
+  as many own Papers as fit in the machine less a 3840 MiB reserve, up to 4 slots: 1 on the 16 GB
+  runner. The pool refuses to run when not even one fits. Chosen over 3 clients with 2 own Papers and
+  over a 32 GB runner, as only 4 requirements restart Paper. Supersedes the 50 % heap limit and the
+  fixed 2 own Papers of the next decision.
 - **Every game JVM takes a share of the machine** (2026-11-17): `HeapShare` in the wire module holds
   each part kind's `-XX:MaxRAMPercentage` (shared Paper 16, own Paper 7, client 4.5, pool 2), so the caps
   scale with the machine; the pool starts each part with its share, and the test JVM starts the pool

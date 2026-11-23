@@ -1,5 +1,5 @@
 import com.typewritermc.buildlogic.realmDatabaseCredentials
-import com.typewritermc.playtest.launch.HeapShare
+import com.typewritermc.playtest.launch.MemoryBudget
 import xyz.jpenilla.runpaper.task.RunServer
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -89,7 +89,7 @@ fun stackValue(name: String): Provider<String> =
 gamePaper {
     pluginJars.from(loaderPlugin)
     environment.put("TYPEWRITER_CONFIG_FILE", stackValue("TYPEWRITER_CONFIG_FILE"))
-    (0..HeapShare.OWN_PAPERS).forEach { slot ->
+    (0..MemoryBudget.OWN_PAPER_SLOTS).forEach { slot ->
         slot(slot) {
             environment.put(
                 "TYPEWRITER_REGISTRATION_TOKEN_FILE",
