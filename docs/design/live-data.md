@@ -377,7 +377,7 @@ interface SessionReporter {
 - Values keyed by a session are removed when it ends.
 - Sessions hold no write lease: every stored write is a realm transaction ([stored-data.md](stored-data.md#where-values-live-at-runtime)). Mirrors live on the engine that produces them.
 
-`Engine(id: EngineId) : Identity` is one engine, a core identity like `Session`. `EngineId` is the stable topology `engine_instance` record id, so the identity survives restarts and ends only when the engine leaves the topology. The panel engine has no record: one runs per realm, so its id is `panel.<realm id>` and it ends with the realm. A local engine run with no topology is named after its realm alone, `local.<realm id>`. The engine kind is the engine artifact id from the topology, open to third party engines ([panel-engine-communication.md](panel-engine-communication.md) question 10).
+`Engine(id: EngineId) : Identity` is one engine, a core identity like `Session`. `EngineId` is the stable topology `engine_instance` record id behind `primary-`, so the identity survives restarts and ends only when the engine leaves the topology. The panel engine has no record: one runs per realm, so its id is `panel-<realm id>` and it ends with the realm. A local engine run with no topology is named after its realm alone, `local-<realm id>`. Every engine id is one subject token that starts with its kind (`primary-`, `panel-`, `local-`). The engine kind is the engine artifact id from the topology, open to third party engines ([panel-engine-communication.md](panel-engine-communication.md) question 10).
 
 ### Wiping a protagonist
 
@@ -428,29 +428,33 @@ What the realm owns goes through the realm:
 
 Engines write the `sessions`, `demand`, and `mirrors` KV buckets themselves (see NATS JetStream).
 
-Events and live effects for a protagonist go to its protagonist subject (a realm scoped route, see [Routes](#routes); written here as `typewriter.protagonist.<id>`). Every engine holding a session of that protagonist subscribes to it and runs the handlers it can; the sender needs only the protagonist id, so there is no routing table and a server move keeps the address. A target that is one connection (the tab that started a capture) uses the session subject `typewriter.session.<id>`, which the engine holding that session subscribes to.
+Events and live effects for an identity go to the inbox of every engine that holds it (decided 2026-11-22, node 9a). The sender resolves the holders from its local sessions copy per identity kind: a protagonist's holders are the engines holding one of its sessions, a session's holder is the engine holding that session, and an engine holds only itself. Every new identity kind adds one case there and no subject family; a server move changes the holder in the copy, and a sender that hears `not_held` waits for its copy to change and resolves again.
 
-- Order is per identity, in commit order.
-- Core NATS is at most once (decided 2026-11-04): events use acks, not JetStream. An event with an origin is sent again with the same `OccurrenceId` until a holder sends `received`, and a holder runs one occurrence once. A final result is sent again until the origin engine acks it. An event without an origin stays best effort; what matters is stored as owed. JetStream would remove only the retry loop and add a consumer per holder, because the reader changes with every server move.
-- No events are queued for offline protagonists, and none are replayed after a server move: cross engine events use plain NATS (decided 2026-11-03).
+- **The sender asks, the holder only answers** (decided 2026-11-22). An ask carries the occurrence and a wait. The holder queues the occurrence at once and answers within the wait, either with the final `EventResult` or with `running`; the sender asks again with the same `OccurrenceId` until the answer is final. One exchange covers the usual case, and a crashed holder shows within seconds instead of at a resend deadline.
+- **One rule for every delivery** (decided 2026-11-23). Every delivery is asked until a holder answers, and runs once per holder: the holder keeps each occurrence it took in an occurrence table until a window after its last ask passed (`DeliveryTimings.kept`). Waiting for the merged result is the sender's only choice; forwarded source events and handler emits do not wait. The origin only names the cause.
+- **Timings** (`DeliveryTimings`, one value an engine kind may bind): the wait is 200 ms normally, 0 when nobody waits for the result or more is queued for that holder, and 3 s when asking again after `running`. A lost exchange is asked again after a gap that doubles from 50 ms to 1 s, and each ask allows 1 s for the answer beyond its wait. No answer within 5 s gives `no_response` for that holder, and a whole delivery ends with `timeout` after 60 s.
+- **Holder failures are results.** `not_held` resolves again; `forgotten`, the answer to an ask that says it had an answer before about an occurrence the holder no longer knows, means the holder restarted and gives `holder_restarted`. A holder that cannot decode the event or finds it about another identity than its subject answers `Failed` (`unknown_type`, `subject_mismatch`).
+- **Results merge** in the order Denied, Failed, Done, NotHandled: the strongest result of all holders is the sender's result.
+- **Order per identity** (decided 2026-11-23): one outstanding delivery per subject and holder until its first answer. An ask's wait of 0 lets the holder answer at once when more is queued behind it.
+- **Clients emit through a gateway** (decided 2026-11-23). The `event_emit` route has the `realm_actor` scope: the broker binds the calling user into the subject, so the origin is never taken from the payload. A gateway (the panel engine today; any engine can be one, since it needs only the sessions copy) checks that the caller holds the session it names, makes that session the origin, and relays the event still encoded to every holder, itself included through its own inbox. The client asks again with the same occurrence like any sender.
+- No events are queued for offline identities, and none are replayed after a server move: cross engine events use plain NATS (decided 2026-11-03). JetStream would add a consumer per holder, because the reader changes with every server move.
 - Cross server live effects keep working while the realm is down.
 
 ### Routes
 
-Declared in `transport-routes.yaml`, realm scoped (decided 2026-11-03). Only `realm_participant` publishes and subscribes, so "only engines publish" follows from the grants, and the realm is in the subject prefix.
+Declared in `transport-routes.yaml`, realm scoped (decided 2026-11-03).
 
-| Route | Address | Carries |
-| --- | --- | --- |
-| protagonist event | `protagonist.{principal_kind}.{principal_id}` | `EventDelivery` for every engine holding the protagonist |
-| session event | `session.{session}` | `EventResult`, and targets that are one connection |
-| engine acks | `engine.{engine}.event_ack` | acks for delivered events (node 9) |
-| stored changes | `engine.{engine}.changed` | `Changed<T>` batches and heartbeats from the realm (node 6) |
+| Route | Scope | Address | Carries |
+| --- | --- | --- | --- |
+| engine event | `realm`, `realm_participant` only | `engine.{engine}.event` | `DeliverEvent`: the asks of every sender to this engine's inbox |
+| event emit | `realm_actor`, callers `organization_member` | `event.emit.user.{user}` | `EmitEvent`: a client's emit through a gateway |
+| stored changes | `realm` | `engine.{engine}.changed` | `Changed<T>` batches and heartbeats from the realm (node 6) |
 
-Messages for one engine form the route family `engine.{engine}.*`, one route per payload: `event_ack` (node 9, since cross engine delivery moves there) and `changed` (node 6, was `changed.{engine}`). Acks do not ride the protagonist route: with several holders every holder would hear every ack, and a holder that moved away would stop hearing its own (decided 2026-11-22).
+Messages for one engine form the route family `engine.{engine}.*`, one route per payload. Every engine id is one subject token that starts with its kind (`primary-`, `panel-`, `local-`), named in one place (`EngineIds` in loader-api), so `{engine}` is always one token (decided 2026-11-23). Answers ride the request reply inbox, so no separate ack route exists.
 
-The local sessions copy of an engine comes through a KV watch (node 4). The watch filter is generated from the bucket's key shape, so it stays inside the engine's grant. In node 4 the copy only fires `ProtagonistLeft`; the join check and `holders` read the bucket directly. Node 9, the first user of `holders` for forwarding, adds a signal that the watch's replay has caught up and then makes the copy the one source (decided 2026-11-22).
+The local sessions copy of an engine comes through a KV watch (node 4). The watch filter is generated from the bucket's key shape, so it stays inside the engine's grant. The watch says when its replay has caught up; node 9a makes the copy the one source for holders, and keeps a version that changes with every put and expiry so a sender can wait for its copy to change.
 
-These addresses hold free values, so the generator gets free parameters next to its bound ones (`subject.ts:4`), granted through a wildcard token. Panel tab routes are `session.user.{user}.{session}`, granted per user, and arrive when the panel first emits events; they also need the subject family for panel to service events.
+These addresses hold free values, so the generator has free parameters next to its bound ones, granted through a wildcard token (node 9a).
 
 ### Lost pushes
 
