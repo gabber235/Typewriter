@@ -59,6 +59,49 @@ void main() {
     );
   }
 
+  for (final scenario in [
+    (name: "an unset", unset: true),
+    (name: "a stored", unset: false),
+  ]) {
+    testWidgets(
+      "a toggle over ${scenario.name} field says whether it uses the default",
+      (tester) async {
+        final reference = skir.BindingRef(
+          bindingId: _rootBinding,
+          path: editorRootPath.field("enabled"),
+        );
+        final host = FakePresentationHost(
+          expected: skir.TypeUse.wrapScalar(skir.ScalarKind.boolean),
+          unset: {
+            if (scenario.unset) reference: skir.DataValue.wrapBoolean(true),
+          },
+        );
+        addTearDown(host.dispose);
+
+        await tester.showComponent(
+          Scaffold(
+            body: PortablePresentationNodeRenderer(
+              node: skir.PresentationNode(
+                nodeId: "enabled",
+                properties: skir.PresentationProperties.defaultInstance,
+                element: toggleInputElement(reference),
+                header: null,
+              ),
+              scope: recordPresentationScope(host, _rootBinding, {
+                "enabled": skir.DataValue.wrapBoolean(true),
+              }),
+            ),
+          ),
+        );
+
+        expect(
+          find.text("Uses the default"),
+          scenario.unset ? findsOneWidget : findsNothing,
+        );
+      },
+    );
+  }
+
   testWidgets("record controls preserve the named record identity", (
     tester,
   ) async {
@@ -113,36 +156,26 @@ void main() {
               ),
               header: null,
             ),
-            scope: PortablePresentationScope(
-              operations: testPortableOperations(),
-              bindings: {
-                _rootBinding: PortableExpressionBinding(
-                  value: skir.DataValue.createRecord(
+            scope: recordPresentationScope(
+              host,
+              _rootBinding,
+              {
+                "placement": skir.DataValue.createNamed(
+                  actualType: _placementType,
+                  payload: skir.DataValue.createRecord(
                     fields: [
                       skir.FieldValue(
-                        name: "placement",
-                        value: skir.DataValue.createNamed(
-                          actualType: _placementType,
-                          payload: skir.DataValue.createRecord(
-                            fields: [
-                              skir.FieldValue(
-                                name: "x",
-                                value: skir.DataValue.wrapInteger("2"),
-                              ),
-                            ],
-                          ),
-                        ),
+                        name: "x",
+                        value: skir.DataValue.wrapInteger("2"),
                       ),
                     ],
                   ),
-                  location: skir.ValueLocation(
-                    resource: skir.ResourceId(value: "element:one"),
-                    path: skir.ValuePath(segments: const []),
-                  ),
                 ),
               },
-              budget: _budget,
-              host: host,
+              location: skir.ValueLocation(
+                resource: skir.ResourceId(value: "element:one"),
+                path: skir.ValuePath(segments: const []),
+              ),
             ),
           ),
         ),
@@ -272,6 +305,7 @@ void main() {
         generation: generation,
         resources: [
           skir.AuthoringResource(
+            unset: const [],
             id: location.resource,
             content: skir.AuthoringRecord(
               types: const [],

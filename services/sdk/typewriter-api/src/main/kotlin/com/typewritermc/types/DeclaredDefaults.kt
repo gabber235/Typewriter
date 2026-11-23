@@ -26,7 +26,13 @@ fun NativeBindingRegistry.declaredDefaults(catalog: CheckedCatalog): UnsetFields
             }
         val declared = owner.schema.fields.single { it.key == field }
         when (val captured = bindings.sampleDefaults(owner, inputs.toMap())) {
-            is CaptureResult.Captured -> captured.values[FieldOwner(definition = declared.declarationOwner, name = field)] ?: DataValue.UNFILLED
-            is CaptureResult.Unavailable -> DataValue.UNFILLED
+            is CaptureResult.Captured -> {
+                captured.values[FieldOwner(definition = declared.declarationOwner, name = field)]
+                    ?: DataValue.UNFILLED
+            }
+
+            is CaptureResult.Unavailable -> {
+                DataValue.UNFILLED
+            }
         }
     }

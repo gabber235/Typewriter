@@ -291,9 +291,14 @@ final class RelationEditFixture {
       confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
       generation: saved.generation,
       resources: [
-        skir.AuthoringResource(id: originalResource.id, content: linkedRecord),
+        skir.AuthoringResource(
+          unset: const [],
+          id: originalResource.id,
+          content: linkedRecord,
+        ),
         for (final target in [originalTarget, newTarget])
           skir.AuthoringResource(
+            unset: const [],
             id: target,
             content: skir.AuthoringRecord(
               types: const [],

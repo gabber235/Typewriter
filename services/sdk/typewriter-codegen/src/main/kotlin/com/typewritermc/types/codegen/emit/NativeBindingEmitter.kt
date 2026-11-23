@@ -236,7 +236,7 @@ internal object NativeBindingEmitter : SdkEmitter {
         )
     }
 
-    /** Constructor defaults of concrete classes, which the authoring runtime samples to prefill new values. */
+    /** Constructor defaults of concrete classes, which readers sample for the fields a record leaves unset. */
     context(_: DefinitionReferences)
     private fun SdkDeclaration.constructionPlan(): CodeBlock? {
         if (source.classKind != ClassKind.CLASS || source.annotation<TypewriterString>() != null) return null

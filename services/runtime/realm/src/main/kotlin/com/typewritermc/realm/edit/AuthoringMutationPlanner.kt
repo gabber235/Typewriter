@@ -1,9 +1,8 @@
 package com.typewritermc.realm.edit
 
-import com.typewritermc.authoring.materialized
-import com.typewritermc.types.declaredDefaults
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
+import com.typewritermc.authoring.materialized
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
@@ -17,6 +16,7 @@ import com.typewritermc.realm.formula.withRealmReferences
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.misfiledDeclarations
 import com.typewritermc.types.catalog.withoutUnreachableTypes
+import com.typewritermc.types.declaredDefaults
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.items
 import com.typewritermc.types.named

@@ -154,6 +154,7 @@ skir.PublishedType declaredRecord(
           owner: owner(field),
           type: typeTemplateOf(type),
           rules: rules[field] ?? const [],
+          hasConstructorDefault: defaulted.contains(field),
         ),
     ],
     status: status,
@@ -218,6 +219,7 @@ skir.PublishedType declaredDefinition(
           owner: field.owner,
           type: field.type,
           rules: const [],
+          hasConstructorDefault: field.hasConstructorDefault,
         ),
   ],
   display: display,
@@ -431,6 +433,7 @@ skir.AuthoringResource authoredRecord(
   Map<String, skir.DataValue> fields, {
   skir.NamedTypeUse? type,
 }) => skir.AuthoringResource(
+  unset: const [],
   id: switch (id) {
     final skir.ResourceId id => id,
     _ => skir.ResourceId(value: "$id"),

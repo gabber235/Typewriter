@@ -103,6 +103,9 @@ struct EffectiveFieldTemplate(84060008) {
   owner: FieldOwner = 1;
   type: TypeTemplate = 2;
   rules: [RuleId] = 3;
+  /// The declaring constructor gives this field a default. A record may then leave the field
+  /// unset, unless its applied type holds links, which are always stored.
+  has_constructor_default: bool = 4;
 }
 
 struct PublishedType(84060009) {

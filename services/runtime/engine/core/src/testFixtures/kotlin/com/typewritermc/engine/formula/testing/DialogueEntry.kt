@@ -4,11 +4,11 @@ package com.typewritermc.engine.formula.testing
 
 import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.GeneratedConstructorField
-import com.typewritermc.authoring.constructorDefaults
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.TypedPath
+import com.typewritermc.authoring.constructorDefaults
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.typedPath
@@ -118,8 +118,20 @@ object SpokenNativeBindingFactory : NativeBindingFactory {
     override val constructionPlan: NativeConstructionPlan =
         Spoken::class.constructorDefaults(
             listOf(
-                GeneratedConstructorField(FieldOwner(definition = SpokenDefinition.id, name = "minLines"), "minLines", false, { formulaOf(int) }, { it.minLines }),
-                GeneratedConstructorField(FieldOwner(definition = SpokenDefinition.id, name = "maxLineLength"), "maxLineLength", true, { int }, { it.maxLineLength }),
+                GeneratedConstructorField(
+                    owner = FieldOwner(definition = SpokenDefinition.id, name = "minLines"),
+                    sourceName = "minLines",
+                    hasDefault = false,
+                    type = { formulaOf(int) },
+                    read = { it.minLines },
+                ),
+                GeneratedConstructorField(
+                    owner = FieldOwner(definition = SpokenDefinition.id, name = "maxLineLength"),
+                    sourceName = "maxLineLength",
+                    hasDefault = true,
+                    type = { int },
+                    read = { it.maxLineLength },
+                ),
             ),
         )
 

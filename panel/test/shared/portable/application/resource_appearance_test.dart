@@ -16,12 +16,12 @@ void main() {
 
   test("a Book with a blank title is named Book", () {
     final blank = withField(
-      compiledSdkBookRecord,
+      compiledSdkBookResource.content,
       "title",
       skir.DataValue.wrapStringValue(""),
     );
     final titled = withField(
-      compiledSdkBookRecord,
+      compiledSdkBookResource.content,
       "title",
       skir.DataValue.wrapStringValue("Main story"),
     );
@@ -65,7 +65,7 @@ void main() {
 
   test("a missing resource has no appearance", () {
     final document = AuthoredRecords(catalog.snapshot.generation, {
-      skir.ResourceId(value: "book"): compiledSdkBookRecord,
+      skir.ResourceId(value: "book"): compiledSdkBookResource.content,
     });
 
     expect(

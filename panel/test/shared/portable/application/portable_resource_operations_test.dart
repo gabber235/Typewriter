@@ -224,6 +224,7 @@ void main() {
       entries: {
         ...original.entries,
         other: skir.AuthoringResource(
+          unset: const [],
           id: other,
           content: skir.AuthoringRecord(
             types: const [],
@@ -481,6 +482,7 @@ void main() {
           final unrelated = skir.ResourceId(value: "unrelated");
           skir.AuthoringResource entry(skir.ResourceId id, String name) =>
               skir.AuthoringResource(
+                unset: const [],
                 id: id,
                 content: skir.AuthoringRecord(
                   types: const [],

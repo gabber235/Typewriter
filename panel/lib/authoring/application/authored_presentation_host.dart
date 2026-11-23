@@ -23,7 +23,8 @@ final class AuthoredPresentationHost extends ChangeNotifier
         PortableCollectionMutationHost,
         PortableCollectionProjectionHost,
         PortableLinkHost,
-        PortableResourcesHost {
+        PortableResourcesHost,
+        PortableUnsetValueHost {
   AuthoredPresentationHost({
     required this.resource,
     required this._source,
@@ -102,15 +103,8 @@ final class AuthoredPresentationHost extends ChangeNotifier
     if (checked.snapshot.generation != observation.generation) {
       throw StateError("The authoring catalog is unavailable");
     }
-    final payload = skir.DataValue.createRecord(fields: record.fields);
     final complete = checked.completeUse(record.configuration);
-    final value = switch (complete) {
-      final value? => skir.DataValue.createNamed(
-        actualType: value,
-        payload: payload,
-      ),
-      null => payload,
-    };
+    final value = _recordValue(record);
     final schema = switch (complete) {
       final value? => CompletePortablePresentationBinding(
         skir.TypeUse.wrapNamed(value),
@@ -170,6 +164,15 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) {
     return context.read(reference, authored.generation);
+  }
+
+  @override
+  skir.DataValue? unsetValue(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) {
+    final at = location(reference, context: context);
+    return at == null ? null : authored.unsetValue(at);
   }
 
   @override

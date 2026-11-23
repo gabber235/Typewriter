@@ -60,6 +60,55 @@ void main() {
     },
   );
 
+  test(
+    "a field with a constructor default may be left out, unless it holds links",
+    () {
+      final page = typeDefinition("Page");
+      final named = skir.NamedTypeUse(definition: page, arguments: const []);
+      final checked = testCheckedCatalog(
+        generation: _admissionGeneration,
+        types: [
+          declaredLink("PageRef", endpoint: "page.refs", target: page),
+          declaredCollection("PageRefs", "PageRef"),
+          declaredRecord(
+            page,
+            fields: {
+              "name": skir.ScalarKind.text,
+              "title": skir.ScalarKind.text,
+              "refs": "PageRefs",
+            },
+            defaulted: {"title", "refs"},
+          ),
+        ],
+      );
+      final onlyName = skir.DataValue.createNamed(
+        actualType: named,
+        payload: skir.DataValue.createRecord(
+          fields: [
+            skir.FieldValue(
+              name: "name",
+              value: skir.DataValue.wrapStringValue("Intro"),
+            ),
+          ],
+        ),
+      );
+
+      final result = checked.inspectPortableValue(
+        skir.TypeUse.wrapNamed(named),
+        onlyName,
+      );
+
+      expect(result.structuralProblems, [
+        PortableValueProblem(
+          path: skir.ValuePath(
+            segments: [skir.PathSegment.createField(name: "refs")],
+          ),
+          code: "missing_field",
+        ),
+      ]);
+    },
+  );
+
   test("named scalar payload keeps its checked identity", () {
     final chapter = typeDefinition("ChapterPath");
     final page = typeDefinition("Page");

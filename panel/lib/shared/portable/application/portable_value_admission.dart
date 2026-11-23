@@ -180,7 +180,7 @@ final class _PortableValueInspector {
         }
         final fields = catalog.fields(selection);
         final expected = {
-          for (final field in fields) field.template.key: field.type,
+          for (final field in fields) field.template.key: field,
         };
         final actual = <String, skir.DataValue>{};
         for (final field in value.value.fields) {
@@ -193,11 +193,11 @@ final class _PortableValueInspector {
           final at = [...path, skir.PathSegment.createField(name: field.key)];
           final present = actual[field.key];
           if (present == null) {
-            problem(at, "missing_field");
-          } else if (field.value == null) {
+            if (!catalog.mayBeUnset(field.value)) problem(at, "missing_field");
+          } else if (field.value.type == null) {
             problem(at, "unavailable_type");
           } else {
-            visit(field.value!, present, at, depth + 2);
+            visit(field.value.type!, present, at, depth + 2);
           }
         }
       case skir.RepresentationTemplate_sequenceWrapper(value: final sequence):

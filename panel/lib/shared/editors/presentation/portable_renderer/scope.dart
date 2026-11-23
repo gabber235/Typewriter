@@ -246,6 +246,16 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     return host?.read(reference, context: invocation);
   }
 
+  /// What the field [reference] binds reads as while its record leaves it
+  /// unset, when the host knows; null for a stored field.
+  skir.DataValue? unsetValue(skir.BindingRef reference) => switch (host) {
+    final PortableUnsetValueHost unset => unset.unsetValue(
+      reference,
+      context: invocation,
+    ),
+    _ => null,
+  };
+
   skir.ValueLocation? location(skir.BindingRef reference) {
     return host?.location(reference, context: invocation);
   }

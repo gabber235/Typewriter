@@ -1,7 +1,7 @@
 package com.typewritermc.realm.edit
 
-import com.typewritermc.authoring.UnsetFields
 import com.typewritermc.authoring.TypedPosition
+import com.typewritermc.authoring.UnsetFields
 import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.chosenUse
 import com.typewritermc.authoring.id

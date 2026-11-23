@@ -1,5 +1,7 @@
 package com.typewritermc.engine.reading
 
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.root
 import com.typewritermc.engine.events.testing.protagonist
 import com.typewritermc.engine.formula.testing.DialogueEntry
 import com.typewritermc.engine.formula.testing.FormulaPublication
@@ -16,8 +18,6 @@ import com.typewritermc.engine.formula.testing.spoken
 import com.typewritermc.engine.formula.testing.text
 import com.typewritermc.engine.formula.testing.unset
 import com.typewritermc.engine.reading.testing.entry
-import com.typewritermc.authoring.field
-import com.typewritermc.authoring.root
 import com.typewritermc.events.Context
 import com.typewritermc.events.EventContext
 import com.typewritermc.formula.Var

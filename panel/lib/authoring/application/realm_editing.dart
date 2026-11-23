@@ -49,7 +49,7 @@ final class RealmEditing implements Listenable {
         overlay: skir.OperationWorkingOverlay(
           upserts: [
             for (final entry in working.entries.entries)
-              if (confirmed.resource(entry.key) != entry.value.content)
+              if (confirmed.storedResource(entry.key) != entry.value.content)
                 skir.OperationResourceUpsert(
                   resource: entry.key,
                   content: entry.value.content,

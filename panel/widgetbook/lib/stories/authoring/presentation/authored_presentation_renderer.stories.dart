@@ -502,6 +502,7 @@ AuthoringEdit _interactionDraft() {
     catalog: catalog,
     resources: [
       skir.AuthoringResource(
+        unset: const [],
         id: _interactionResource,
         content: skir.AuthoringRecord(
           types: const [],
@@ -611,6 +612,7 @@ CheckedEditorCatalog _interactionCatalog() {
                 owner: skir.FieldOwner(definition: root, name: field.key),
                 type: field.value,
                 rules: const [],
+                hasConstructorDefault: false,
               ),
           ],
         ),

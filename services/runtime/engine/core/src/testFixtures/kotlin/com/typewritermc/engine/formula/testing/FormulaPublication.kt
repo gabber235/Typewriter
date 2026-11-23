@@ -60,8 +60,8 @@ import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.Ref
 import com.typewritermc.types.Resource
-import com.typewritermc.types.actualType
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.declared
@@ -353,7 +353,10 @@ private fun PublishedResource.compiled(): CompiledResource {
     val binding = fixtureAssembly.bindings.bind(checked)
 
     @Suppress("UNCHECKED_CAST")
-    val encoded = unset.fold((binding as NativeBinding<Any>).encode(value)) { stored, path -> stored.without(path.segments) } as DataValue.NamedWrapper
+    val encoded =
+        unset.fold(
+            (binding as NativeBinding<Any>).encode(value),
+        ) { stored, path -> stored.without(path.segments) } as DataValue.NamedWrapper
     val named = checkNotNull((type as? TypeUse.NamedWrapper)?.value) { "$id needs a named type." }
     return CompiledResource(
         key = CompiledResourceKey(source = ResourceId(id).toSkir(), context = CompilationContext.Root),

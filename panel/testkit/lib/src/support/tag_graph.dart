@@ -375,6 +375,7 @@ skir.AuthoringResource _resource(
   String name,
   List<skir.ResourceId> next,
 ) => skir.AuthoringResource(
+  unset: const [],
   id: id,
   content: skir.AuthoringRecord(
     types: const [],
@@ -427,4 +428,5 @@ skir.EffectiveFieldTemplate _effective(
   owner: skir.FieldOwner(definition: type, name: name),
   type: fieldType,
   rules: const [],
+  hasConstructorDefault: false,
 );

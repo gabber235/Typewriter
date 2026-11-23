@@ -63,8 +63,10 @@ AuthoringDocument compiledEntryNodeDocument({
     links: const [],
   );
   final elementSelection = selectionOfUse(elementType);
-  final bookType = catalog.completeUse(compiledSdkBookRecord.configuration)!;
-  final bookSelection = compiledSdkBookRecord.configuration;
+  final bookType = catalog.completeUse(
+    compiledSdkBookResource.content.configuration,
+  )!;
+  final bookSelection = compiledSdkBookResource.content.configuration;
   final bookPath = editorRootPath.field("book");
   skir.ValuePath bookMembershipPath(skir.ResourceId id) => skir.ValuePath(
     segments: [
@@ -134,6 +136,7 @@ AuthoringDocument compiledEntryNodeDocument({
     skir.NamedTypeUse type,
     Map<String, skir.DataValue> fields,
   ) => skir.AuthoringResource(
+    unset: const [],
     id: id,
     content: skir.AuthoringRecord(
       types: const [],
@@ -156,7 +159,7 @@ AuthoringDocument compiledEntryNodeDocument({
     catalog: catalog,
     entries: {
       compiledEntryBookId: resource(compiledEntryBookId, bookType, {
-        for (final field in compiledSdkBookRecord.fields)
+        for (final field in compiledSdkBookValue.authoredRecord!.fields)
           field.name: field.value,
         "title": skir.DataValue.wrapStringValue("Village quests"),
         "pages": typedCollection(bookSelection, "pages", [

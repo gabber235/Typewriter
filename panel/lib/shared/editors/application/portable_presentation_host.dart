@@ -52,6 +52,17 @@ abstract interface class PortablePresentationHost implements Listenable {
   void dispose();
 }
 
+/// A host whose records may leave fields unset: it knows what each unset
+/// field reads as, such as its declared default, so an editor can show it.
+abstract interface class PortableUnsetValueHost {
+  /// What the field [reference] binds reads as while its record leaves it
+  /// unset; null for a stored field or one the host knows nothing about.
+  skir.DataValue? unsetValue(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  });
+}
+
 abstract interface class PortableCollectionMutationHost {
   Future<PortablePresentationWriteResult> addCollectionItem(
     skir.BindingRef reference, {

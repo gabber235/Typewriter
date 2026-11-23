@@ -26,7 +26,11 @@ void main() {
         types: [declaredRecord(_book)],
       ),
       entries: {
-        resource: skir.AuthoringResource(id: resource, content: content),
+        resource: skir.AuthoringResource(
+          unset: const [],
+          id: resource,
+          content: content,
+        ),
       },
       links: const [],
     );

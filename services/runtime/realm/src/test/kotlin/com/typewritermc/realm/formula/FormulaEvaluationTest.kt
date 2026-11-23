@@ -1,5 +1,6 @@
 package com.typewritermc.realm.formula
 
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.field
 import com.typewritermc.formula.Formula
 import com.typewritermc.formula.FormulaFailure
@@ -15,6 +16,7 @@ import com.typewritermc.realm.testing.changingCodeCatalog
 import com.typewritermc.realm.testing.changingCodeUse
 import com.typewritermc.realm.testing.commit
 import com.typewritermc.realm.testing.commitDefinition
+import com.typewritermc.realm.testing.commitElement
 import com.typewritermc.realm.testing.commitSilverPurseUser
 import com.typewritermc.realm.testing.commitTypeDefinition
 import com.typewritermc.realm.testing.computed
@@ -27,8 +29,6 @@ import com.typewritermc.realm.testing.definitionValueUse
 import com.typewritermc.realm.testing.delete
 import com.typewritermc.realm.testing.demoOneDefinitions
 import com.typewritermc.realm.testing.demoTwoDefinitions
-import com.typewritermc.authoring.GraphPlacement
-import com.typewritermc.realm.testing.commitElement
 import com.typewritermc.realm.testing.entryRef
 import com.typewritermc.realm.testing.errorCodesOn
 import com.typewritermc.realm.testing.errorSet
@@ -67,19 +67,19 @@ import com.typewritermc.realm.testing.textUse
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.setup
 import com.typewritermc.testing.routes.FixtureBox
-import com.typewritermc.testing.routes.FixtureStockEntry
-import com.typewritermc.testing.routes.FixtureStockEntryDefinition
-import com.typewritermc.types.Ref
-import com.typewritermc.types.toResourceId
 import com.typewritermc.testing.routes.FixtureCoinPrize
 import com.typewritermc.testing.routes.FixtureLoot
 import com.typewritermc.testing.routes.FixtureSignal
+import com.typewritermc.testing.routes.FixtureStockEntry
+import com.typewritermc.testing.routes.FixtureStockEntryDefinition
 import com.typewritermc.types.FORMULA_USE
+import com.typewritermc.types.Ref
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.functionUse
 import com.typewritermc.types.integer
 import com.typewritermc.types.nullable
 import com.typewritermc.types.record
+import com.typewritermc.types.toResourceId
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty

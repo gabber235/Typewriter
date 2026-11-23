@@ -23,6 +23,7 @@ import com.typewritermc.types.with
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.authoring.UnsetValue
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -199,7 +200,14 @@ val TypedPositionTest by testSuite {
                     "holders" to
                         DataValue.named(
                             holders,
-                            DataValue.listValue(listOf(ListItem(id = ItemId(value = "h"), value = DataValue.named(holder.namedUse(), DataValue.RecordWrapper(payload))))),
+                            DataValue.listValue(
+                                listOf(
+                                    ListItem(
+                                        id = ItemId(value = "h"),
+                                        value = DataValue.named(holder.namedUse(), DataValue.RecordWrapper(payload)),
+                                    ),
+                                ),
+                            ),
                         ),
                 ),
             )
@@ -209,6 +217,41 @@ val TypedPositionTest by testSuite {
 
         val filled = complete.withUnsetFields(catalog, unset)
 
-        filled.value shouldBe shelved(record.payload.with("bonus", DataValue.named(coin.namedUse(), DataValue.record("worth" to DataValue.integer(9)))))
+        filled.value shouldBe
+            shelved(record.payload.with("bonus", DataValue.named(coin.namedUse(), DataValue.record("worth" to DataValue.integer(9)))))
+    }
+
+    test("listing unset fields gives each at its path from the record root, inside items too, with the value it reads as") {
+        val nine = DataValue.named(coin.namedUse(), DataValue.record("worth" to DataValue.integer(9)))
+        val shelved =
+            AuthoringRecord.of(
+                TypeSelection.of(shelf.namedUse()),
+                mapOf(
+                    "holders" to
+                        DataValue.named(
+                            StandardTypes.list.namedUse(listOf(holder.use())),
+                            DataValue.listValue(
+                                listOf(
+                                    ListItem(
+                                        id = ItemId(value = "h"),
+                                        value = DataValue.named(holder.namedUse(), DataValue.RecordWrapper(record.payload)),
+                                    ),
+                                ),
+                            ),
+                        ),
+                ),
+            )
+
+        shelved.unsetValues(ResourceId(value = "shelf"), catalog, unset) shouldBe
+            listOf(
+                UnsetValue(
+                    path =
+                        ValuePath.root
+                            .field("holders")
+                            .item(ItemId(value = "h"))
+                            .field("bonus"),
+                    value = nine,
+                ),
+            )
     }
 }

@@ -25,6 +25,7 @@ final class RendererWorkspace {
       entries: {
         for (final entry in resources.entries)
           entry.key: skir.AuthoringResource(
+            unset: const [],
             id: entry.key,
             content: entry.value,
           ),
@@ -447,12 +448,14 @@ authoredLinkCollection({
               owner: linksOwner,
               type: setTemplate,
               rules: const [],
+              hasConstructorDefault: false,
             ),
             skir.EffectiveFieldTemplate(
               key: "name",
               owner: nameOwner,
               type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
               rules: const [],
+              hasConstructorDefault: false,
             ),
           ],
         ),

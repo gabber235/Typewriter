@@ -300,6 +300,25 @@
               ]
             }
           }
+        },
+        {
+          "owner": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "skir",
+                  "name": "editor/v1/catalog.skir:EffectiveFieldTemplate"
+                }
+              },
+              "revision": 1
+            },
+            "name": "has_constructor_default"
+          },
+          "type": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
         }
       ],
       "form": "concrete"

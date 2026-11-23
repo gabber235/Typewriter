@@ -355,6 +355,7 @@ skir.PublishedType _published(
                 owner: field.owner,
                 type: field.type,
                 rules: const [],
+                hasConstructorDefault: false,
               ),
           ]
           ..ancestorTemplates = ancestors.map(_named).toList())

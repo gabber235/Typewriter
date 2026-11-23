@@ -163,6 +163,7 @@ void main() {
           generation: catalog.snapshot.generation,
           resources: [
             skir.AuthoringResource(
+              unset: const [],
               id: location.resource,
               content: skir.AuthoringRecord(
                 types: const [],

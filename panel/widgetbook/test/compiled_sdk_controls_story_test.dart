@@ -90,6 +90,9 @@ void main() {
     await panel.field("Y").enter("13");
 
     expect(panel.field("Y").value, "13");
-    expect(panel.field("X").value, "0");
+    // X stays unset: it shows no text, only its default as the hint.
+    expect(panel.field("X").value, isEmpty);
+    expect(panel.field("X").hint, "Default: 0");
+    expect(find.text("Uses the default"), findsWidgets);
   });
 }

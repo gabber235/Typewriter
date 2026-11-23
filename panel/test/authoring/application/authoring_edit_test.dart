@@ -1285,4 +1285,55 @@ void main() {
       skir.DataValue.unfilled,
     );
   });
+
+  test(
+    "a write below an unset field first stores what that field reads as",
+    () {
+      final tag = skir.ResourceId(value: "tag:unset");
+      final stored = storing(compiledSdkTagResource, tag, const {});
+      final record = skir.AuthoringRecord(
+        types: const [],
+        configuration: stored.content.configuration,
+        fields: [
+          for (final field in stored.content.fields)
+            if (field.name != "placement") field,
+        ],
+      );
+      final draft = AuthoringEdit(
+        generation: compiledSdkControlCatalog.generation,
+        catalog: CheckedEditorCatalog(compiledSdkControlCatalog),
+        resources: [
+          skir.AuthoringResource(
+            id: tag,
+            content: record,
+            unset: [
+              skir.UnsetValue(
+                path: editorRootPath.field("placement"),
+                value: compiledSdkPlacementValue,
+              ),
+            ],
+          ),
+        ],
+        links: const [],
+      );
+      final x = skir.ValueLocation(
+        resource: tag,
+        path: editorRootPath.field("placement").field("x"),
+      );
+
+      final result = draft.set(x, skir.DataValue.wrapInteger("41"));
+
+      expect(result, isA<PortablePathValue<skir.AuthoringRecord>>());
+      final placement = draft.resource(tag)!.authoredField("placement")!;
+      expect(
+        placement.authoredActualType,
+        compiledSdkPlacementValue.authoredActualType,
+      );
+      expect(placement.authoredField("x"), skir.DataValue.wrapInteger("41"));
+      expect(
+        placement.authoredField("y"),
+        compiledSdkPlacementValue.authoredField("y"),
+      );
+    },
+  );
 }

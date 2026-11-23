@@ -504,6 +504,7 @@ void main() {
               owner: field.owner,
               type: field.type,
               rules: const [],
+              hasConstructorDefault: false,
             ),
         ],
       );

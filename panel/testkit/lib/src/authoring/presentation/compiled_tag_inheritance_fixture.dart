@@ -20,40 +20,22 @@ AuthoringDocument compiledTagInheritanceDocument({
   required List<skir.ResourceId> roots,
 }) {
   final catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
-  skir.AuthoringResource resource(
-    skir.ResourceId id,
-    skir.AuthoringRecord template,
-    Map<String, skir.DataValue> fields,
-  ) => skir.AuthoringResource(
-    id: id,
-    content: skir.AuthoringRecord(
-      types: const [],
-      configuration: template.configuration,
-      fields: [
-        for (final field in template.fields)
-          skir.FieldValue(
-            name: field.name,
-            value: fields[field.name] ?? field.value,
-          ),
-      ],
-    ),
-  );
 
   final edit = AuthoringEdit(
     generation: catalog.snapshot.generation,
     catalog: catalog,
     resources: [
-      resource(compiledInheritanceBookId, compiledSdkBookRecord, {
+      storing(compiledSdkBookResource, compiledInheritanceBookId, {
         "title": skir.DataValue.wrapStringValue("Inheritance example"),
       }),
-      resource(compiledInheritanceTagId, compiledSdkTagRecord, {
+      storing(compiledSdkTagResource, compiledInheritanceTagId, {
         "name": skir.DataValue.wrapStringValue("Inheritance subject"),
       }),
       for (final tag in tags)
-        resource(tag.tagId, compiledSdkTagRecord, {
+        storing(compiledSdkTagResource, tag.tagId, {
           "name": skir.DataValue.wrapStringValue(tag.name),
           "color": skir.DataValue.createNamed(
-            actualType: compiledSdkTagRecord
+            actualType: compiledSdkTagValue
                 .authoredField("color")!
                 .authoredActualType!,
             payload: tag.color.asValue,

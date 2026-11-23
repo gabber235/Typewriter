@@ -137,6 +137,7 @@ final _document = AuthoringDocument(
   catalog: _catalog,
   entries: {
     _resource: skir.AuthoringResource(
+      unset: const [],
       id: _resource,
       content: skir.AuthoringRecord(
         types: const [],

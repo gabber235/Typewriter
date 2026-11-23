@@ -18,3 +18,28 @@ PortablePresentationScope unboundPresentationScope() =>
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
     );
+
+/// A scope whose binding [binding] holds a record of [fields] at [location],
+/// rendered through [host] with the test operations, evaluating within a
+/// budget of 100 steps and 100 collection items.
+PortablePresentationScope recordPresentationScope(
+  PortablePresentationHost host,
+  skir.ExpressionBindingId binding,
+  Map<String, skir.DataValue> fields, {
+  skir.ValueLocation? location,
+}) => PortablePresentationScope(
+  operations: testPortableOperations(),
+  bindings: {
+    binding: PortableExpressionBinding(
+      value: skir.DataValue.createRecord(
+        fields: [
+          for (final field in fields.entries)
+            skir.FieldValue(name: field.key, value: field.value),
+        ],
+      ),
+      location: location,
+    ),
+  },
+  budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+  host: host,
+);

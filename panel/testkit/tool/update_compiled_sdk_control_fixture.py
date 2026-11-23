@@ -17,9 +17,9 @@ lines = [
 ]
 for name, wire_type, file_name in [
     ("compiledSdkControlCatalog", "EditorCatalog", "catalog.bin"),
-    ("compiledSdkTagRecord", "AuthoringRecord", "tag.bin"),
+    ("compiledSdkTagResource", "AuthoringResource", "tag.bin"),
     ("compiledSdkTagValue", "DataValue", "tag-value.bin"),
-    ("compiledSdkBookRecord", "AuthoringRecord", "book.bin"),
+    ("compiledSdkBookResource", "AuthoringResource", "book.bin"),
     ("compiledSdkBookValue", "DataValue", "book-value.bin"),
     ("compiledSdkPlacementValue", "DataValue", "placement.bin"),
     ("compiledSdkElementValue", "DataValue", "element-value.bin"),

@@ -3,8 +3,11 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.GeneratedSdkApi
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.requireValid
+import com.typewritermc.authoring.root
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.library.book
 import com.typewritermc.library.library
@@ -15,18 +18,28 @@ import com.typewritermc.protocol.transport.generated.authoringTypeCommit
 import com.typewritermc.protocol.transport.generated.authoringTypePreview
 import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.record
+import com.typewritermc.realm.routeFixtureCatalog
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.commitElement
+import com.typewritermc.realm.testing.formulaPage
+import com.typewritermc.realm.testing.intUse
 import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.realm.testing.shouldBeInvalid
 import com.typewritermc.realm.testing.text
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.setup.setup
+import com.typewritermc.testing.routes.FixtureStockEntry
+import com.typewritermc.testing.routes.FixtureStockEntryDefinition
+import com.typewritermc.types.Ref
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
 import com.typewritermc.types.requireValid
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -38,6 +51,7 @@ import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
+import skirout.editor.v1.authoring.UnsetValue
 import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
@@ -46,6 +60,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
 val AuthoringRoutesTest by testSuite {
@@ -166,6 +181,40 @@ val AuthoringRoutesTest by testSuite {
                         resources shouldBe before
                         wire.call(RealmRouteScope::authoringEditCommit, rename(book, "Renamed").submitted()).shouldBeCommitted()
                     }
+                }
+            }
+        }
+    }
+
+    test("the state query sends each field a resource leaves unset with the value it reads as") {
+        runTest {
+            val page = setup("unset-state") { formulaPage { definition("seed", intUse, 1) } }
+            withSetup(page, catalog = routeFixtureCatalog) {
+                val defaults = { id: ResourceId ->
+                    encoder.record(
+                        FixtureStockEntryDefinition.id.use(),
+                        FixtureStockEntry(page = Ref(id.toResourceId()), placement = GraphPlacement(), name = "depot"),
+                    )
+                }
+                val (depot, committed) =
+                    commitElement { id ->
+                        val stored = defaults(id)
+                        stored.copy(fields = stored.fields.filter { it.name != "stock" && it.name != "loot" })
+                    }
+                committed.shouldBeCommitted()
+
+                authoringRoutes().use { wire ->
+                    val unset =
+                        wire
+                            .state(generation)
+                            .resources
+                            .single { it.id == depot }
+                            .unset
+
+                    unset shouldContainExactlyInAnyOrder
+                        listOf("loot", "stock").map { name ->
+                            UnsetValue(path = ValuePath.root.field(name), value = defaults(depot).field(name)!!)
+                        }
                 }
             }
         }

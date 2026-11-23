@@ -51,6 +51,7 @@ skir.EffectiveFieldTemplate _draftField(
   owner: skir.FieldOwner(definition: definition, name: name),
   type: type,
   rules: const [],
+  hasConstructorDefault: false,
 );
 
 skir.PublishedType _draftPublished(

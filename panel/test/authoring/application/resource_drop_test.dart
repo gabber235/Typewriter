@@ -324,6 +324,7 @@ final _document = realmDocument(
                     owner: owner,
                     type: type,
                     rules: const [],
+                    hasConstructorDefault: false,
                   ),
               ],
             ),

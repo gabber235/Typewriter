@@ -78,13 +78,7 @@ private fun TypedPosition.Value.stepValue(
     val stored = (child as? LocatedPortableValue.Value)?.value ?: DataValue.UNFILLED
     return when (segment) {
         is PathSegment.FieldWrapper -> {
-            val field = schema.fields.singleOrNull { it.key == segment.name } ?: return null
-            val record = ((value as? DataValue.NamedWrapper)?.payload ?: value) as? DataValue.RecordWrapper
-            if (record != null && record.field(segment.name) == null && field.mayBeUnset(catalog)) {
-                TypedPosition.Value(field.type, unset?.valueOf(checked, record, segment.name) ?: DataValue.UNFILLED, unset = true)
-            } else {
-                TypedPosition.Value(field.type, stored)
-            }
+            stepField(segment.name, checked, stored, catalog, unset)
         }
 
         is PathSegment.ItemWrapper -> {
@@ -113,6 +107,26 @@ private fun TypedPosition.Value.stepValue(
         else -> {
             unknownVariant(segment)
         }
+    }
+}
+
+/**
+ * The position of field [name] of this value, whose type is [checked] and whose field value is [stored]. A field the
+ * record leaves unset reads through [unset].
+ */
+private fun TypedPosition.Value.stepField(
+    name: String,
+    checked: CheckedType,
+    stored: DataValue,
+    catalog: CheckedCatalog,
+    unset: UnsetFields?,
+): TypedPosition? {
+    val field = checked.schema.fields.singleOrNull { it.key == name } ?: return null
+    val record = ((value as? DataValue.NamedWrapper)?.payload ?: value) as? DataValue.RecordWrapper
+    return if (record != null && record.field(name) == null && field.mayBeUnset(catalog)) {
+        TypedPosition.Value(field.type, unset?.valueOf(checked, record, name) ?: DataValue.UNFILLED, unset = true)
+    } else {
+        TypedPosition.Value(field.type, stored)
     }
 }
 
@@ -163,7 +177,8 @@ fun AuthoringRecord.materialized(
         val prefix = ValuePath(segments = path.segments.take(depth))
         val position = record.typedAt(owner, prefix, catalog, unset) as? TypedPosition.Value ?: return record
         if (!position.unset || position.value == DataValue.UNFILLED) continue
-        val written = DataValue.RecordWrapper(record.payload).writeField(prefix, position.value) as? ValueReplacement.Replaced ?: return record
+        val written =
+            DataValue.RecordWrapper(record.payload).writeField(prefix, position.value) as? ValueReplacement.Replaced ?: return record
         record = record.copy(fields = (written.value as DataValue.RecordWrapper).value.fields)
     }
     return record

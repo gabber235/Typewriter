@@ -142,6 +142,7 @@ void main() {
       catalog: fixture.catalog,
       entries: {
         fixture.resource: skir.AuthoringResource(
+          unset: const [],
           id: fixture.resource,
           content: skir.AuthoringRecord(
             types: const [],
@@ -188,6 +189,7 @@ void main() {
       catalog: fixture.catalog,
       entries: {
         fixture.resource: skir.AuthoringResource(
+          unset: const [],
           id: fixture.resource,
           content: fixture.draft.resource(fixture.resource)!,
         ),

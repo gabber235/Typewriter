@@ -1,9 +1,5 @@
 package com.typewritermc.realm.authoring
 
-import skirout.editor.v1.type_catalog.ValuePath
-import com.typewritermc.types.declaredDefaults
-import com.typewritermc.authoring.typedAt
-import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
@@ -14,6 +10,7 @@ import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.StructuralStep
+import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.append
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.field
@@ -26,6 +23,7 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.resourceIds
 import com.typewritermc.authoring.root
+import com.typewritermc.authoring.typedAt
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
@@ -48,6 +46,7 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.catalog.contentTypesOf
 import com.typewritermc.types.catalog.fits
+import com.typewritermc.types.declaredDefaults
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
@@ -79,6 +78,7 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
 fun interface SelectionPredicateEvaluator {

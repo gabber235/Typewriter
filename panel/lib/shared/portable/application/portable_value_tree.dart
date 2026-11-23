@@ -121,8 +121,8 @@ extension PortableValueTree on skir.DataValue {
   ) => _replaceValue(this, path.segments.toList(), 0, replacement);
 }
 
-/// Adapts record fields to value paths. A direct field replacement may add a
-/// missing root field; nested replacements require existing parents.
+/// Adapts record fields to value paths. Replacing a missing field adds it, at
+/// any depth; a replacement below a missing field is unavailable.
 extension PortableRecordTree on skir.AuthoringRecord {
   skir.DataValue? authoredField(String name) =>
       fields.where((field) => field.name == name).firstOrNull?.value;
@@ -442,7 +442,19 @@ PortablePathResult<skir.DataValue> _replaceField(
     final fields = value.fields.toList();
     final index = fields.indexWhere((field) => field.name == name);
     if (index < 0) {
-      return PortablePathUnavailable("The record field $name is absent");
+      // A record may leave a field unset, so writing that field stores it;
+      // a write further below needs the field first.
+      if (offset != segments.length - 1) {
+        return PortablePathUnavailable("The record field $name is absent");
+      }
+      return PortablePathValue(
+        skir.DataValue.createRecord(
+          fields: [
+            ...fields,
+            skir.FieldValue(name: name, value: replacement),
+          ],
+        ),
+      );
     }
     final nested = _replaceValue(
       fields[index].value,

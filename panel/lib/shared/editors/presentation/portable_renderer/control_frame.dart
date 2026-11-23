@@ -47,6 +47,7 @@ Widget _controlFrame(
             appearance: appearance,
             target: childScope.diagnosticTarget(control.binding),
             value: childScope.read(control.binding),
+            unset: childScope.unsetValue(control.binding),
             label: label,
             description: description,
             child: MouseRegion(
@@ -165,18 +166,28 @@ String? _inputSemanticLabel(
 
 /// Labels one native editor whose decoration contains only display content.
 /// Authored actions and other editable controls remain siblings of this child.
+/// [child] announced with the control's label and description. An input
+/// that shows no text while its field is unset passes the [unset] text it
+/// reads as, which its hint names; the visible hint is not announced.
 Widget _semanticInput(
   skir.BoundControl control,
   PortablePresentationScope scope,
-  Widget child,
-) => Builder(
-  builder: (context) => MergeSemantics(
-    child: Semantics(
-      label: _inputSemanticLabel(context, control, scope) ?? "",
-      hint: scope.associationFor(control).description,
-      child: child,
-    ),
-  ),
+  Widget child, {
+  String? unset,
+}) => Builder(
+  builder: (context) {
+    final hint = [
+      ?scope.associationFor(control).description,
+      if (unset != null) "Default: $unset",
+    ];
+    return MergeSemantics(
+      child: Semantics(
+        label: _inputSemanticLabel(context, control, scope) ?? "",
+        hint: hint.isEmpty ? null : hint.join("\n"),
+        child: child,
+      ),
+    );
+  },
 );
 
 Widget? _fieldLabel(

@@ -171,7 +171,9 @@ val InitializationRuntimeConformanceTest by testSuite {
     val pendingSelection = TypeSelection.of(pendingId)
     val pendingRuntime = DefaultInitializationRuntime(pendingCatalog, FactoryNativeBindingRegistry(pendingCatalog, emptyList()))
 
-    test("pending generic creation fills every field it knows without its type argument, leaves defaulted fields unset and the rest unfilled") {
+    test(
+        "pending generic creation fills every field it knows without its type argument, leaves defaulted fields unset and the rest unfilled",
+    ) {
         val prepared = pendingRuntime.prepareNow(recordRequest(pendingGeneration, pendingSelection, emptyMap()))
 
         prepared.record shouldBe
@@ -216,7 +218,10 @@ val InitializationRuntimeConformanceTest by testSuite {
 
     test("a preparation request for another catalog generation is unavailable") {
         val prepared =
-            DefaultInitializationRuntime(pendingCatalog, FactoryNativeBindingRegistry(pendingCatalog, emptyList())).prepareNow(recordRequest(CatalogGeneration(value = "other"), pendingSelection, emptyMap()))
+            DefaultInitializationRuntime(
+                pendingCatalog,
+                FactoryNativeBindingRegistry(pendingCatalog, emptyList()),
+            ).prepareNow(recordRequest(CatalogGeneration(value = "other"), pendingSelection, emptyMap()))
 
         prepared.findings.map { it.code to it.message } shouldBe
             listOf("catalog_generation_mismatch" to "The initialization request uses a different catalog generation.")

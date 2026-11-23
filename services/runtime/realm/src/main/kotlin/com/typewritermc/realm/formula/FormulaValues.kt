@@ -1,8 +1,8 @@
 package com.typewritermc.realm.formula
 
-import com.typewritermc.authoring.UnsetFields
 import com.typewritermc.authoring.MisfitCause
 import com.typewritermc.authoring.TypedPosition
+import com.typewritermc.authoring.UnsetFields
 import com.typewritermc.authoring.ValueVisitor
 import com.typewritermc.authoring.ValueWalk
 import com.typewritermc.authoring.typedAt

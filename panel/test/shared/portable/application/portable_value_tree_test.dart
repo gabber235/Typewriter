@@ -165,6 +165,48 @@ void main() {
     expect(updated.fields.map((field) => field.name), ["title", "count"]);
   });
 
+  test("sets an absent nested field inside a stored parent", () {
+    final record = skir.AuthoringRecord(
+      types: const [],
+      configuration: skir.TypeSelection.defaultInstance,
+      fields: [
+        skir.FieldValue(
+          name: "placement",
+          value: skir.DataValue.createRecord(
+            fields: [
+              skir.FieldValue(
+                name: "x",
+                value: skir.DataValue.wrapInteger("1"),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+    final path = skir.ValuePath(
+      segments: [
+        skir.PathSegment.createField(name: "placement"),
+        skir.PathSegment.createField(name: "y"),
+      ],
+    );
+
+    final result = record.replaceAt(path, skir.DataValue.wrapInteger("2"));
+
+    expect(result, isA<PortablePathValue<skir.AuthoringRecord>>());
+    final updated = (result as PortablePathValue<skir.AuthoringRecord>).value;
+    expect(
+      updated
+          .authoredField("placement")!
+          .authoredRecord!
+          .fields
+          .map((field) => (field.name, field.value)),
+      [
+        ("x", skir.DataValue.wrapInteger("1")),
+        ("y", skir.DataValue.wrapInteger("2")),
+      ],
+    );
+  });
+
   test("nested writes require explicit parent initialization", () {
     final record = skir.AuthoringRecord(
       types: const [],

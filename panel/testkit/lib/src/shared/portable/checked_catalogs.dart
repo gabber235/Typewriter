@@ -215,12 +215,14 @@ inheritedPresentationCatalog() {
         owner: skir.FieldOwner(definition: root, name: "title"),
         type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
         rules: const [],
+        hasConstructorDefault: false,
       ),
       skir.EffectiveFieldTemplate(
         key: "payload",
         owner: skir.FieldOwner(definition: base, name: "payload"),
         type: skir.TypeTemplate.wrapParameter(baseParameter),
         rules: const [],
+        hasConstructorDefault: false,
       ),
     ],
   );

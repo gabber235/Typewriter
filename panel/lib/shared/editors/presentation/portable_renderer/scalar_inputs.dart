@@ -25,6 +25,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
   }) {
     final current = scope.read(control.binding)?.authoredPayload;
     if (current == null) return _diagnostic("The $name binding is unavailable");
+    final unset = scope.unsetValue(control.binding)?.authoredPayload;
     return _controlFrame(
       control,
       appearance == null ? scope : scope.withAppearance(appearance),
@@ -76,10 +77,11 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                   child: _semanticInput(
                     control,
                     scope,
+                    unset: unset == null ? null : encode(unset),
                     ValidatedTextField<skir.DataValue>(
                       showDefaultIcon: false,
                       key: ValueKey("${node.nodeId}.input"),
-                      value: current == skir.DataValue.unfilled
+                      value: current == skir.DataValue.unfilled || unset != null
                           ? null
                           : current,
                       name: name,
@@ -93,9 +95,10 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                       style: style.valueStyle,
                       textAlign: style.alignment,
                       decoration: style.decoration.copyWith(
-                        hintText:
-                            _entryPlaceholder(content, scope) ??
-                            "Enter a $name",
+                        hintText: unset != null
+                            ? encode(unset)
+                            : _entryPlaceholder(content, scope) ??
+                                  "Enter a $name",
                         helperText: current == skir.DataValue.unfilled
                             ? "This value is Unfilled"
                             : null,
@@ -140,6 +143,10 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
         current is! skir.DataValue_stringValueWrapper) {
       return _diagnostic("The text control binding is unavailable");
     }
+    final unset = scope
+        .unsetValue(input.control.binding)
+        ?.authoredPayload
+        .authoredString;
     return _controlFrame(
       input.control,
       input.appearance == null
@@ -189,12 +196,15 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                   child: _semanticInput(
                     input.control,
                     scope,
+                    unset: unset,
                     EditorTextField(
                       key: ValueKey("${node.nodeId}.input"),
-                      text: current is skir.DataValue_stringValueWrapper
+                      text:
+                          unset == null &&
+                              current is skir.DataValue_stringValueWrapper
                           ? current.value
                           : "",
-                      displayText: current == null
+                      displayText: current == null || unset != null
                           ? null
                           : _mappedDisplay(
                               scope,
@@ -251,6 +261,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                       textAlign: style.alignment,
                       decoration: style.decoration.copyWith(
                         hintText:
+                            unset ??
                             _entryPlaceholder(input.content, scope) ??
                             "Enter text",
                         suffixIcon: outsideSuffix ? null : suffix,

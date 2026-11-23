@@ -61,20 +61,7 @@ final class CompiledSearchFixture {
       skir.AuthoringRecord source,
       String name,
       String label,
-    ) => skir.AuthoringRecord(
-      types: const [],
-      configuration: source.configuration,
-      fields: [
-        for (final field in source.fields)
-          if (field.name == name)
-            skir.FieldValue(
-              name: name,
-              value: skir.DataValue.wrapStringValue(label),
-            )
-          else
-            field,
-      ],
-    );
+    ) => withField(source, name, skir.DataValue.wrapStringValue(label));
     final pageSelection = skir.TypeSelection(
       definition: pageType.definition.id,
       arguments: const [],
@@ -86,8 +73,8 @@ final class CompiledSearchFixture {
                 .type!
             as skir.TypeUse_namedWrapper;
     final records = {
-      "book": rename(compiledSdkBookRecord, "title", labels["book"]!),
-      "tag": rename(compiledSdkTagRecord, "name", "Quest tag"),
+      "book": rename(compiledSdkBookResource.content, "title", labels["book"]!),
+      "tag": rename(compiledSdkTagResource.content, "name", "Quest tag"),
       "page": record(pageType.definition.id, {
         "name": skir.DataValue.wrapStringValue(labels["page"]!),
         "chapter": skir.DataValue.createNamed(
@@ -105,7 +92,11 @@ final class CompiledSearchFixture {
       catalog: catalog,
       resources: [
         for (final entry in records.entries)
-          skir.AuthoringResource(id: ids[entry.key]!, content: entry.value),
+          skir.AuthoringResource(
+            unset: const [],
+            id: ids[entry.key]!,
+            content: entry.value,
+          ),
       ],
       links: const [],
     );

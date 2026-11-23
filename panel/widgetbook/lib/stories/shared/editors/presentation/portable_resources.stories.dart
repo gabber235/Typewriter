@@ -479,6 +479,7 @@ skir.PublishedType _published(skir.TypeDefinitionId id, List<_Field> fields) =>
             owner: skir.FieldOwner(definition: id, name: field.name),
             type: field.type,
             rules: const [],
+            hasConstructorDefault: false,
           ),
       ],
       ancestorTemplates: const [],
@@ -558,6 +559,7 @@ skir.AuthoringResource _resource(
   skir.TypeDefinitionId type,
   Map<String, skir.DataValue> fields,
 ) => skir.AuthoringResource(
+  unset: const [],
   id: id,
   content: skir.AuthoringRecord(
     types: const [],

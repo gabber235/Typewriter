@@ -59,6 +59,7 @@ void main() {
             resources: [
               for (final id in [existing, created])
                 skir.AuthoringResource(
+                  unset: const [],
                   id: id,
                   content: skir.AuthoringRecord(
                     types: const [],

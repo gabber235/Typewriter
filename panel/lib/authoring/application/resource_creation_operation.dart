@@ -974,11 +974,11 @@ final class _ResourceCreationOperation {
       ],
     };
     for (final location in locations) {
-      final original = base.resource(location.resource);
+      final original = base.storedResource(location.resource);
       if (original == null) continue;
       if (edit.resource(location.resource)?.configuration !=
               original.configuration ||
-          edit.expect(location) != base.read(location)) {
+          edit.expect(location) != original.readAt(location.path)) {
         throw const EditPreparationFailure(
           "The selected reference destination changed during creation",
         );

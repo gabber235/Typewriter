@@ -5,14 +5,14 @@ package com.typewritermc.library
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
-import com.typewritermc.authoring.TypedPosition
-import com.typewritermc.authoring.field
-import com.typewritermc.authoring.root
 import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.PlacementSdkProvider
+import com.typewritermc.authoring.TypedPosition
+import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.name
 import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.root
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider

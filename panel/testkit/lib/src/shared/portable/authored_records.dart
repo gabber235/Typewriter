@@ -27,19 +27,38 @@ final class AuthoredRecords implements PortableAuthoringView {
   skir.DataValue defaultValue(skir.TypeUse? type) => skir.DataValue.unfilled;
 }
 
-/// [record] with its field [name] holding [value] instead.
+/// [record] storing [value] in its field [name], whether it stored that field
+/// or left it unset.
 skir.AuthoringRecord withField(
   skir.AuthoringRecord record,
   String name,
   skir.DataValue value,
+) => withFields(record, {name: value});
+
+/// [record] storing each of [fields], whether it stored that field or left it
+/// unset.
+skir.AuthoringRecord withFields(
+  skir.AuthoringRecord record,
+  Map<String, skir.DataValue> fields,
 ) => skir.AuthoringRecord(
   types: const [],
   configuration: record.configuration,
   fields: [
     for (final field in record.fields)
-      if (field.name == name)
-        skir.FieldValue(name: name, value: value)
-      else
-        field,
+      if (!fields.containsKey(field.name)) field,
+    for (final field in fields.entries)
+      skir.FieldValue(name: field.key, value: field.value),
   ],
+);
+
+/// [resource] as [id] storing each of [fields]. Its unset values stay: a
+/// document reads an unset value only while the field is not stored.
+skir.AuthoringResource storing(
+  skir.AuthoringResource resource,
+  skir.ResourceId id,
+  Map<String, skir.DataValue> fields,
+) => skir.AuthoringResource(
+  id: id,
+  content: withFields(resource.content, fields),
+  unset: resource.unset,
 );

@@ -1542,6 +1542,7 @@ void main() {
       final reordered = document.copyWith(
         entries: {
           _resource: skir.AuthoringResource(
+            unset: const [],
             id: _resource,
             content: skir.AuthoringRecord(
               types: const [],

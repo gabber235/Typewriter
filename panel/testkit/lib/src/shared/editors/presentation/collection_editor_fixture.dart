@@ -35,6 +35,7 @@ final class CollectionEditorScenario extends ChangeNotifier {
             catalog: initialCatalog!,
             entries: {
               resource: skir.AuthoringResource(
+                unset: const [],
                 id: resource,
                 content: skir.AuthoringRecord(
                   types: const [],

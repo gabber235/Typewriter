@@ -260,6 +260,44 @@ final class CheckedEditorCatalog {
     ];
   }
 
+  /// Whether a record may leave [field] out, which makes it unset: its
+  /// constructor gives it a default and its applied type holds no links, since
+  /// links are relation facts the realm always stores. The realm applies the
+  /// same rule (`ResolvedField.mayBeUnset`); the catalog cannot send it,
+  /// because a type parameter holds links only once it is applied.
+  bool mayBeUnset(AppliedEditorField field) =>
+      field.template.hasConstructorDefault &&
+      !(field.type != null && _holdsLinks(field.type!, 0));
+
+  bool _holdsLinks(skir.TypeUse use, int depth) {
+    if (depth > 8) return false;
+    final named = switch (use) {
+      skir.TypeUse_namedWrapper(:final value) => value,
+      skir.TypeUse_nullableWrapper(:final value) => switch (value.value) {
+        skir.TypeUse_namedWrapper(:final value) => value,
+        _ => null,
+      },
+      _ => null,
+    };
+    if (named == null) return false;
+    final selection = selectionOfUse(named);
+    bool below(skir.TypeTemplate template) =>
+        switch (applyTemplate(template, selection)) {
+          final applied? => _holdsLinks(applied, depth + 1),
+          null => false,
+        };
+    return switch (published(named.definition)?.definition.representation) {
+      skir.RepresentationTemplate_linkWrapper() => true,
+      skir.RepresentationTemplate_sequenceWrapper(:final value) => below(
+        value.item,
+      ),
+      skir.RepresentationTemplate_mappingWrapper(:final value) => below(
+        value.value,
+      ),
+      _ => false,
+    };
+  }
+
   /// Resolves a nested value path, using concrete named values when available.
   /// Map rows require an item segment followed by a key or value branch.
   /// Invalid paths or unresolved type applications return null.

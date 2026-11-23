@@ -148,6 +148,7 @@ messageFixture({bool unfilled = false}) {
               owner: skir.FieldOwner(definition: definition, name: "title"),
               type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
               rules: const [],
+              hasConstructorDefault: false,
             ),
           ],
           ancestorTemplates: const [],
@@ -276,7 +277,9 @@ messageFixture({bool unfilled = false}) {
     catalog: checked,
     draft: AuthoringEdit(
       generation: generation,
-      resources: [skir.AuthoringResource(id: resource, content: record)],
+      resources: [
+        skir.AuthoringResource(unset: const [], id: resource, content: record),
+      ],
       links: const [],
       catalog: checked,
     ),

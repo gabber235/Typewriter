@@ -42,6 +42,7 @@ internal fun TypeDefinition.effectiveFields(
             owner = field.owner,
             type = field.type,
             rules = matching.flatMap(ConfigurationRecipe::rules).map { it.id },
+            hasConstructorDefault = field.hasConstructorDefault,
         )
     }
 }

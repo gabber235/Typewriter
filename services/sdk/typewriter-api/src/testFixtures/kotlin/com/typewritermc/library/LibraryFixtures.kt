@@ -2,6 +2,7 @@
 
 package com.typewritermc.library
 
+import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
@@ -9,15 +10,14 @@ import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.HierarchyGroupDefinition
 import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.TypedPosition
+import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.name
 import com.typewritermc.authoring.of
-import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.complete
-import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.typedAt
-import com.typewritermc.types.declaredDefaults
+import com.typewritermc.authoring.unsetValues
+import com.typewritermc.authoring.withUnsetFields
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.GeneratedProviderIndex
@@ -70,6 +70,7 @@ import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.declaredDefaults
 import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
@@ -93,6 +94,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.action.EditorAction
+import skirout.editor.v1.authoring.AuthoringResource
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.EditorCatalog
 import skirout.editor.v1.catalog.PreparationTarget
@@ -120,8 +122,6 @@ import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeUse
-import skirout.editor.v1.type_catalog.ValuePath
-import skirout.kernel.v1.resource_id.ResourceId as SkirResourceId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.RecordForm
@@ -130,6 +130,7 @@ import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValuePath
 import java.lang.reflect.Modifier
 import java.math.BigInteger
 import java.util.Collections
@@ -137,6 +138,7 @@ import kotlin.reflect.KClass
 import skirout.editor.v1.catalog.PresentationTarget as WirePresentationTarget
 import skirout.editor.v1.expression.ExpressionNode as WireExpressionNode
 import skirout.editor.v1.type_catalog.PathSegment as WirePathSegment
+import skirout.kernel.v1.resource_id.ResourceId as SkirResourceId
 
 /** Builds a Book workspace, with the ownership links of this assembly, whose content [content] declares. */
 internal fun CatalogAssembly.buildBook(content: BookPresentationScope.() -> Unit) {
@@ -234,6 +236,25 @@ internal class FrameworkFixture {
             }
         return bindings.bind(checked).decode(complete)
     }
+
+    /** [record] stored on [owner] as the realm sends it: with each field it leaves unset and what that field reads as. */
+    fun sent(
+        owner: String,
+        record: AuthoringRecord,
+    ): AuthoringResource =
+        SkirResourceId(value = owner).let { id ->
+            AuthoringResource(id = id, content = record, unset = record.unsetValues(id, catalog, bindings.declaredDefaults(catalog)))
+        }
+
+    /** The value a reader sees in [record], a stored value of [use]: each field it leaves unset holds its declared default. */
+    fun readValue(
+        use: NamedTypeUse,
+        record: AuthoringRecord,
+    ): DataValue =
+        when (val result = catalog.resolve(use.use).ready().complete(DataValue.named(use, DataValue.RecordWrapper(record.payload)))) {
+            is CompletenessResult.Complete -> result.value.withUnsetFields(catalog, bindings.declaredDefaults(catalog)).value
+            else -> error("The stored value is not complete: $result")
+        }
 
     /** The position at [path] of [record], stored on [owner], with each unset field read as its declared default. */
     fun positionAt(
@@ -340,7 +361,14 @@ internal fun WireExpressionNode.appearanceField(): String? {
 internal fun frameworkControlFixtures(): Map<String, ByteArray> {
     val tag = framework.prepareTag().record
     val book = framework.prepareBook().record
-    val placement = tag.fieldMap.getValue("placement")
+    val tagRead = framework.readValue(TagDefinition.use, tag)
+    val placement =
+        ((tagRead as DataValue.NamedWrapper).value.payload as DataValue.RecordWrapper)
+            .value.fields
+            .findByKey(
+                "placement",
+            )!!
+            .value
     val wire = controlCatalogAssembly(DefaultPresentationRuntime()).editorCatalog
     return mapOf(
         "element-value.bin" to
@@ -363,11 +391,11 @@ internal fun frameworkControlFixtures(): Map<String, ByteArray> {
                         ),
                     ),
                 ).bytes(),
-        "book.bin" to AuthoringRecord.serializer.toBytes(book).toByteArray(),
-        "book-value.bin" to DataValue.named(BookDefinition.use, DataValue.RecordWrapper(book.payload)).bytes(),
+        "book.bin" to AuthoringResource.serializer.toBytes(framework.sent("book", book)).toByteArray(),
+        "book-value.bin" to framework.readValue(BookDefinition.use, book).bytes(),
         "catalog.bin" to EditorCatalog.serializer.toBytes(wire).toByteArray(),
-        "tag.bin" to AuthoringRecord.serializer.toBytes(tag).toByteArray(),
-        "tag-value.bin" to DataValue.named(TagDefinition.use, DataValue.RecordWrapper(tag.payload)).bytes(),
+        "tag.bin" to AuthoringResource.serializer.toBytes(framework.sent("tag", tag)).toByteArray(),
+        "tag-value.bin" to tagRead.bytes(),
         "placement.bin" to placement.bytes(),
     )
 }

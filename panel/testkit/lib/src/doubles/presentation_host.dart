@@ -9,12 +9,13 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Reads give [value] when set; otherwise the binding the invocation carries,
 /// or the one [document] declares, at the reference's path.
 final class FakePresentationHost extends ChangeNotifier
-    implements PortablePresentationHost {
+    implements PortablePresentationHost, PortableUnsetValueHost {
   FakePresentationHost({
     PortablePresentationDocument? document,
     this.value,
     this.expected,
     this.types = const {},
+    this.unset = const {},
     this.rejectWrites = false,
     this.updatesDocument = false,
     this.locates = false,
@@ -54,6 +55,10 @@ final class FakePresentationHost extends ChangeNotifier
 
   /// The type expected at each reference that differs from [expected].
   final Map<skir.BindingRef, skir.TypeUse> types;
+
+  /// What each reference reads as while its record leaves it unset; every
+  /// other reference is stored.
+  final Map<skir.BindingRef, skir.DataValue> unset;
 
   /// Whether every write is refused with a `rejected_write` diagnostic.
   final bool rejectWrites;
@@ -104,6 +109,12 @@ final class FakePresentationHost extends ChangeNotifier
     _document = next;
     notifyListeners();
   }
+
+  @override
+  skir.DataValue? unsetValue(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => unset[reference];
 
   @override
   bool get enabled => true;

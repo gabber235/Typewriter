@@ -79,6 +79,9 @@ final class FieldDriver extends ComponentDriver {
   /// The text the field shows.
   String get value => _node.getSemanticsData().value;
 
+  /// The hint the field reads while it shows no text.
+  String get hint => _node.getSemanticsData().hint;
+
   /// Where the field is on screen.
   Rect get rect => _node.screenRect;
 

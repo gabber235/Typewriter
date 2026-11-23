@@ -7,20 +7,10 @@ import "package:typewriter_testkit/testing.dart";
 void main() {
   final catalog = CheckedEditorCatalog(compiledSdkControlCatalog);
   final book = skir.ResourceId(value: "book:compiled");
-  final record = skir.AuthoringRecord(
-    types: const [],
-    configuration: compiledSdkBookRecord.configuration,
-    fields: [
-      for (final field in compiledSdkBookRecord.fields)
-        if (field.name == "title")
-          skir.FieldValue(
-            name: "title",
-            value: skir.DataValue.wrapStringValue("Main story"),
-          )
-        else
-          field,
-    ],
-  );
+  final stored = storing(compiledSdkBookResource, book, {
+    "title": skir.DataValue.wrapStringValue("Main story"),
+  });
+  final record = stored.content;
   final selected = catalog.selectPresentation(
     record.configuration,
     skir.PresentationRole.item,
@@ -50,7 +40,7 @@ void main() {
         catalog: catalog,
         authored: AuthoringDocument(
           catalog: catalog,
-          entries: {book: skir.AuthoringResource(id: book, content: record)},
+          entries: {book: stored},
           links: const [],
         ),
       ),

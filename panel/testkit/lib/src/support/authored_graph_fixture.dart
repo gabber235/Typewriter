@@ -267,6 +267,7 @@ final class AuthoredGraphFixture {
       String type,
       List<skir.FieldValue> fields,
     ) => skir.AuthoringResource(
+      unset: const [],
       id: id,
       content: skir.AuthoringRecord(
         types: const [],

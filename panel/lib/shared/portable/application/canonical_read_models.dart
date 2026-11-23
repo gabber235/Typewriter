@@ -75,6 +75,7 @@ final class CanonicalReadModels {
               owner: field.owner,
               type: field.type,
               rules: const [],
+              hasConstructorDefault: field.hasConstructorDefault,
             ),
         ],
         ancestorTemplates: definition.parents,

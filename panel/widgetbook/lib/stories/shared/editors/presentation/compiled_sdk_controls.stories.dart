@@ -43,8 +43,11 @@ Widget compiledTagUseCase(BuildContext context) => Story(
       ),
       height: 700,
       child: _CompiledInspector(
-        resource: compiledTagResource,
-        record: compiledSdkTagRecord,
+        resource: storing(
+          compiledSdkTagResource,
+          compiledTagResource,
+          const {},
+        ),
       ),
     ),
   ),
@@ -65,8 +68,11 @@ Widget compiledBookUseCase(BuildContext context) => Story(
       ),
       height: 760,
       child: _CompiledInspector(
-        resource: compiledBookResource,
-        record: compiledSdkBookRecord,
+        resource: storing(
+          compiledSdkBookResource,
+          compiledBookResource,
+          const {},
+        ),
       ),
     ),
   ),
@@ -135,10 +141,9 @@ final compiledBookResource = skir.ResourceId(value: "book:compiled.controls");
 /// Inspects [resource] of a Realm holding only it, saving through the same
 /// [RealmEditing] path a Realm surface uses.
 class _CompiledInspector extends HookWidget {
-  const _CompiledInspector({required this.resource, required this.record});
+  const _CompiledInspector({required this.resource});
 
-  final skir.ResourceId resource;
-  final skir.AuthoringRecord record;
+  final skir.AuthoringResource resource;
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +156,7 @@ class _CompiledInspector extends HookWidget {
         name: "Story",
         document: AuthoringEdit(
           generation: compiledSdkControlCatalog.generation,
-          resources: [skir.AuthoringResource(id: resource, content: record)],
+          resources: [resource],
           links: const [],
           catalog: CheckedEditorCatalog(compiledSdkControlCatalog),
         ).toDocument(),
@@ -176,7 +181,7 @@ class _CompiledInspector extends HookWidget {
     return SingleChildScrollView(
       padding: EdgeInsets.all(context.spacing.space3),
       child: AuthoredResourceInspection(
-        resource: resource,
+        resource: resource.id,
         workspace: workspace,
         commands: realm.commands,
         commitPolicy: EditorCommitPolicy.applyResource,

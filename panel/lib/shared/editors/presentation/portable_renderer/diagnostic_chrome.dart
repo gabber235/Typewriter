@@ -18,6 +18,7 @@ class PortableDiagnosticFrame extends HookWidget {
     this.description,
     this.scope,
     this.appearance,
+    this.unset,
     super.key,
   });
   final PortablePresentationScope? scope;
@@ -26,6 +27,10 @@ class PortableDiagnosticFrame extends HookWidget {
   final String? description;
   final PortableDiagnosticTarget target;
   final skir.DataValue? value;
+
+  /// What the value reads as while its record leaves it unset; null once the
+  /// record stores it. The frame then says the value is the default.
+  final skir.DataValue? unset;
   final Widget child;
 
   @override
@@ -145,6 +150,7 @@ class PortableDiagnosticFrame extends HookWidget {
                     onValidationChanged: reportParseMessage,
                     child: child,
                   ),
+                  _UnsetNote(unset: unset != null),
                   PortableDiagnosticMessages(diagnostics: direct),
                 ],
               ),
@@ -355,4 +361,32 @@ class PortablePresentationChrome extends HookWidget {
       ],
     );
   }
+}
+
+/// Says a value is its default while the record leaves it unset, and leaves
+/// with motion once a creator sets it.
+class _UnsetNote extends StatelessWidget {
+  const _UnsetNote({required this.unset});
+
+  final bool unset;
+
+  @override
+  Widget build(BuildContext context) => ElasticMessageSwitcher(
+    child: unset
+        ? Padding(
+            key: const ValueKey("unset"),
+            padding: EdgeInsets.only(
+              top: context.spacing.space1,
+              left: context.spacing.space2,
+              right: context.spacing.space2,
+            ),
+            child: Text(
+              "Uses the default",
+              style: context.theme.textTheme.bodySmall?.copyWith(
+                color: context.theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        : const SizedBox.shrink(),
+  );
 }

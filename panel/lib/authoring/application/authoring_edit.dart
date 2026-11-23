@@ -21,6 +21,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
       generation: generation,
       catalog: catalog,
       records: records,
+      unset: {for (final entry in entries) entry.id: entry.unset.toList()},
       links: projections,
       baseline: AuthoringFacts.capture(resources: records, links: projections),
     );
@@ -30,6 +31,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     required this.generation,
     required this.catalog,
     required Map<skir.ResourceId, skir.AuthoringRecord> records,
+    required this._unset,
     required Iterable<skir.LinkProjection> links,
     required AuthoringFacts baseline,
   }) : _resources = Map.of(records),
@@ -58,6 +60,10 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   final skir.CatalogGeneration generation;
   final CheckedEditorCatalog? catalog;
   final Map<skir.ResourceId, skir.AuthoringRecord> _resources;
+
+  /// What the realm last said each saved resource's unset fields read as; a
+  /// resource created here has none until the realm confirms it.
+  final Map<skir.ResourceId, List<skir.UnsetValue>> _unset;
   final List<skir.LinkProjection> _links;
   final AuthoringFacts _baselineFacts;
   final Map<Object, skir.EditExpectation> _observed = {};
@@ -105,6 +111,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
           generation: generation,
           catalog: catalog,
           records: _resources,
+          unset: _unset,
           links: _links,
           baseline: _baselineFacts,
         )
@@ -142,7 +149,11 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     catalog: catalog ?? (throw StateError("The editor catalog is unavailable")),
     entries: {
       for (final entry in _resources.entries)
-        entry.key: skir.AuthoringResource(id: entry.key, content: entry.value),
+        entry.key: skir.AuthoringResource(
+          unset: _unset[entry.key] ?? const [],
+          id: entry.key,
+          content: entry.value,
+        ),
     },
     links: List.unmodifiable(_links),
     revision: revision,
@@ -885,6 +896,14 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     );
   }
 
+  /// What the field at [location] reads as while its resource leaves it
+  /// unset, as the realm last said; null for any other position.
+  skir.DataValue? _unsetAt(skir.ValueLocation location) =>
+      _unset[location.resource]
+          ?.where((unset) => unset.path == location.path)
+          .firstOrNull
+          ?.value;
+
   PortablePathResult<skir.AuthoringRecord> _materializeParents(
     skir.ValueLocation target,
   ) {
@@ -892,7 +911,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     if (checked == null || target.path.segments.length < 2) {
       return PortablePathValue(_resources[target.resource]!);
     }
-    final record = _resources[target.resource]!;
+    var record = _resources[target.resource]!;
     var selection = record.configuration;
     var currentPath = <skir.PathSegment>[];
     for (final segment in target.path.segments.take(
@@ -913,7 +932,22 @@ final class AuthoringEdit implements PortableAuthoringEdit {
           resource: target.resource,
           path: skir.ValuePath(segments: currentPath),
         );
-        final child = record.readAt(location.path);
+        var child = record.readAt(location.path);
+        if (child case PortablePathUnavailable()) {
+          // A field the record leaves unset is stored as what it reads as
+          // before a write below it, so the write keeps its other values.
+          if (_unsetAt(location) case final unset?) {
+            final stored = record.replaceAt(location.path, unset);
+            if (stored case PortablePathValue(value: final staged)) {
+              record = staged;
+              _resources[target.resource] = staged;
+              _intents.add(
+                skir.EditIntent.createSetValue(at: location, value: unset),
+              );
+              child = PortablePathValue(unset);
+            }
+          }
+        }
         final childValue = switch (child) {
           PortablePathValue(:final value) => value,
           PortablePathUnavailable() => skir.DataValue.unfilled,

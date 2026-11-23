@@ -13,6 +13,7 @@ void main() {
       generation: generation,
       resources: [
         skir.AuthoringResource(
+          unset: const [],
           id: resource,
           content: skir.AuthoringRecord(
             types: const [],

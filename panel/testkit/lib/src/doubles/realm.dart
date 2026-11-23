@@ -779,7 +779,6 @@ extension RealmPreparation on AuthoringDocument {
         catalog: document.generation,
         target: target,
         content: content,
-        pendingDefaults: const [],
         requiredInputs: required,
         findings: const [],
       ),

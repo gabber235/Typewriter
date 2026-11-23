@@ -249,6 +249,36 @@ void main() {
     });
   }
 
+  testWidgets("an unset field shows what it reads as and typing sets it", (
+    tester,
+  ) async {
+    final fixture = AuthoredDraft.titled(unsetDefault: "Untitled");
+    final panel = await tester.pumpPanel(fixture.servedHeld);
+    await panel.inspectDraft(fixture);
+    final seeded = panel.world.requireRealm;
+
+    final title = FieldDriver.at(tester, 0);
+    expect(title.value, isEmpty);
+    expect(title.hint, "Default: Untitled");
+    expect(find.text("Uses the default"), findsOneWidget);
+    // Readers of the resource, such as its header, see the value it reads as.
+    expect(find.text("Untitled"), findsNWidgets(2));
+    expect(find.text("This value is Unfilled"), findsNothing);
+
+    await title.type("Chapter one");
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.pump();
+    seeded.saves.single.confirm();
+    await tester.pump();
+
+    expect(
+      seeded.document.resource(fixture.resource)!.authoredField("title"),
+      skir.DataValue.wrapStringValue("Chapter one"),
+    );
+    expect(find.text("Uses the default"), findsNothing);
+    await tester.pumpAndSettle();
+  });
+
   testWidgets("two inspectors share values and manual discard", (tester) async {
     final fixture = AuthoredDraft.titled();
     final panel = await tester.pumpPanel(fixture.servedHeld);

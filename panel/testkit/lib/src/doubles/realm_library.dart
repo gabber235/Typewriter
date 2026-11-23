@@ -35,6 +35,7 @@ AuthoringDocument realmDocument({
     String kind,
     Map<String, skir.DataValue> fields,
   ) => entries[id] = skir.AuthoringResource(
+    unset: const [],
     id: id,
     content: skir.AuthoringRecord(
       types: const [],
@@ -906,6 +907,7 @@ skir.PublishedType _published(
         owner: skir.FieldOwner(definition: _definition(name), name: field.key),
         type: field.value,
         rules: const [],
+        hasConstructorDefault: false,
       ),
   ],
   searchKey: searchKey,
@@ -951,6 +953,7 @@ AuthoringDocument ownerChainDocument(Book book, {required String id}) {
       ),
     );
     entries[item] = skir.AuthoringResource(
+      unset: const [],
       id: item,
       content: itemEntry.content,
     );

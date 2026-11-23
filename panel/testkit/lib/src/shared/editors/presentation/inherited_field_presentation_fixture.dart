@@ -356,6 +356,7 @@ skir.PublishedType _published(
               owner: field.owner,
               type: field.type,
               rules: const [],
+              hasConstructorDefault: false,
             ),
         ]
         ..ancestorTemplates = open ? const [] : [base])
@@ -396,6 +397,7 @@ skir.PublishedType _envelopePublished() {
               owner: field.owner,
               type: field.type,
               rules: const [],
+              hasConstructorDefault: false,
             ),
         ])
       .toFrozen();

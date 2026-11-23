@@ -119,6 +119,12 @@ abstract class AuthoringFacts with _$AuthoringFacts {
 }
 
 extension AuthoringDocumentFacts on AuthoringDocument {
-  AuthoringFacts get facts =>
-      AuthoringFacts.capture(resources: resources, links: links);
+  /// Facts over what the realm stores, which save expectations compare: an
+  /// unset field is absent, not the value it reads as.
+  AuthoringFacts get facts => AuthoringFacts.capture(
+    resources: {
+      for (final entry in entries.entries) entry.key: entry.value.content,
+    },
+    links: links,
+  );
 }

@@ -146,6 +146,7 @@ final class BoundPage {
     catalog: catalog,
     entries: {
       resource: skir.AuthoringResource(
+        unset: const [],
         id: resource,
         content: skir.AuthoringRecord(
           types: const [],

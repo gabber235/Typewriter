@@ -150,9 +150,12 @@ final class AuthoredDraft {
   /// A draft of one resource whose text field [fieldName] holds [title], or
   /// [initial] when given, typed as [namedText] when given; [requireTitle]
   /// adds a rule that the title is not blank and [inspectorLayout] replaces
-  /// the inspector presentation.
+  /// the inspector presentation. With [unsetDefault], the field has a
+  /// constructor default the record leaves unset, and the realm says it reads
+  /// as that text.
   factory AuthoredDraft.titled({
     String title = "Original",
+    String? unsetDefault,
     bool requireTitle = false,
     String fieldName = "title",
     skir.DataValue? initial,
@@ -297,6 +300,7 @@ final class AuthoredDraft {
           declaredRecord(
             definition,
             fields: {fieldName: fieldType},
+            defaulted: {if (unsetDefault != null) fieldName},
             rules: {
               fieldName: requireTitle ? [titleRule] : const [],
             },
@@ -401,15 +405,30 @@ final class AuthoredDraft {
         skir.NamedTypeUse(definition: definition, arguments: const []),
       ),
       fields: [
-        skir.FieldValue(
-          name: fieldName,
-          value: initial ?? skir.DataValue.wrapStringValue(title),
-        ),
+        if (unsetDefault == null)
+          skir.FieldValue(
+            name: fieldName,
+            value: initial ?? skir.DataValue.wrapStringValue(title),
+          ),
       ],
     );
     final draft = AuthoringEdit(
       generation: generation,
-      resources: [skir.AuthoringResource(id: resource, content: record)],
+      resources: [
+        skir.AuthoringResource(
+          unset: [
+            if (unsetDefault != null)
+              skir.UnsetValue(
+                path: skir.ValuePath(
+                  segments: [skir.PathSegment.createField(name: fieldName)],
+                ),
+                value: skir.DataValue.wrapStringValue(unsetDefault),
+              ),
+          ],
+          id: resource,
+          content: record,
+        ),
+      ],
       links: const [],
       catalog: checked,
     );
@@ -549,7 +568,13 @@ final class AuthoredDraft {
       catalog: checked,
       draft: AuthoringEdit(
         generation: catalogGeneration,
-        resources: [skir.AuthoringResource(id: resource, content: record)],
+        resources: [
+          skir.AuthoringResource(
+            unset: const [],
+            id: resource,
+            content: record,
+          ),
+        ],
         links: const [],
         catalog: checked,
       ),
@@ -635,7 +660,9 @@ final class AuthoredDraft {
     );
     final draft = AuthoringEdit(
       generation: generation,
-      resources: [skir.AuthoringResource(id: resource, content: record)],
+      resources: [
+        skir.AuthoringResource(unset: const [], id: resource, content: record),
+      ],
       links: const [],
       catalog: checked,
     );
@@ -706,6 +733,7 @@ final class AuthoredDraft {
                 owner: placementOwner,
                 type: collection ? placementListTemplate : placementTemplate,
                 rules: const [],
+                hasConstructorDefault: false,
               ),
             ],
           ),
@@ -725,6 +753,7 @@ final class AuthoredDraft {
                 owner: widthOwner,
                 type: integer,
                 rules: [ruleId],
+                hasConstructorDefault: false,
               ),
             ],
           ),
@@ -786,6 +815,7 @@ final class AuthoredDraft {
       generation: generation,
       resources: [
         skir.AuthoringResource(
+          unset: const [],
           id: resource,
           content: skir.AuthoringRecord(
             types: const [],

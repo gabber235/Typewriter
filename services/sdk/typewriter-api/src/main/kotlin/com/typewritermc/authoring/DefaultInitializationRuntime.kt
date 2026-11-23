@@ -486,6 +486,7 @@ class DefaultInitializationRuntime(
         val fields = suppliedFields.toMutableMap()
         val findings = mutableListOf<InitializationDiagnostic>()
         val linkDefaults = checked.schema.fields.filter { it.key !in suppliedFields && it.hasConstructorDefault && !it.mayBeUnset(catalog) }
+
         fun ordinary(field: ResolvedField): DataValue {
             val fieldFindings = mutableListOf<InitializationDiagnostic>()
             return ordinaryDefault(field.type, context, fieldFindings, path.field(field.key)).also {
