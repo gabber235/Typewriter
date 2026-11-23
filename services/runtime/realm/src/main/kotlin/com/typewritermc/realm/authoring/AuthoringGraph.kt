@@ -242,18 +242,6 @@ internal fun publishedName(type: TypeDefinitionId): String? =
 context(reads: RealmReads)
 internal val generation get() = reads.environment.view.catalog.generation
 
-/**
- * Everything this query read at this revision, current even when a query below reran with an equal result. Which
- * checks exist is not what a check read, so it does not enter [stopAt]'s queries.
- */
-context(reads: RealmReads)
-internal fun RealmQuery<*>.factsRead(stopAt: (GraphKey<*>) -> Boolean): List<EditExpectation> =
-    reads
-        .readsOf(this, stopAt)
-        .filterIsInstance<Fact>()
-        .flatMap { reads.read(it) }
-        .distinct()
-
 /** A query a check's evidence holds as one entry of its own, without the facts it read to answer. */
 internal interface EvidenceEntry {
     context(reads: RealmReads)
