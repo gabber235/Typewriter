@@ -86,8 +86,11 @@ data class AuthoringView internal constructor(
     internal fun values(work: GraphWork): CapturedAuthoringValues =
         CapturedAuthoringValues(resources, { at, name -> scopes.nameAt(this, at, name, work) }) { id -> judged(id).projections }
 
-    /** Reads of a graph forked at this view, made on the first name judged here once it is no longer current. */
-    internal val forkedReads = AtomicReference<RealmReads?>()
+    /**
+     * The one graph forked at this view while it was not current, made on first need: names judged here, binding over
+     * it and capture evaluation share it, and install merges it into the live graph so that work is not done again.
+     */
+    internal val fork = AtomicReference<AuthoringGraph?>()
 }
 
 /** What a name means where a formula looks it up in a view, as the realm's graph answers it, counting the work on a [GraphWork]. */
@@ -300,7 +303,10 @@ interface AuthoringViewStore : AutoCloseable {
      */
     fun pin(work: GraphWork = GraphWork()): PinnedReads
 
-    /** A graph that reads exactly [view], starting from the live graph's results where it can; what that copies counts on [work]. */
+    /**
+     * The graph that reads exactly [view], starting from the live graph's results where it can: one per view, made on
+     * first call, and merged into the live graph when [view] is installed. What forking copies counts on [work].
+     */
     fun forkAt(
         view: AuthoringView,
         work: GraphWork = GraphWork(),
@@ -343,9 +349,7 @@ class InMemoryAuthoringViewStore(
             val query = services.names.at(at, name)
             val live = synchronized(lock) { graph.pin(work).takeIf { current.root === view } }
             live?.let { reads -> runCatching { reads.read(query) }.getOrElse { if (it is StaleRevision) null else throw it } }
-                ?: view.forkedReads
-                    .updateAndGet { it ?: forkAt(view, work).pin(work) }!!
-                    .read(query)
+                ?: forkAt(view, work).pin(work).read(query)
         }
     private var current = createRoot(catalog, seed.resources).also { roots[it.root.readContext] = it }
     override val graph: AuthoringGraph = TrackedGraph(RealmEnvironment(current.root, services, coverage), listener = listener)
@@ -382,13 +386,14 @@ class InMemoryAuthoringViewStore(
         work: GraphWork,
     ): AuthoringGraph =
         synchronized(lock) {
+            view.fork.get()?.let { return@synchronized it }
             val environment = RealmEnvironment(view, services, coverage)
             if (view.catalog.generation != current.root.catalog.generation) {
                 // Another generation shares nothing with the live graph.
                 TrackedGraph(environment)
             } else {
                 graph.fork(environment, view.changesFrom(current.root), work)
-            }
+            }.also(view.fork::set)
         }
 
     override fun prepare(delta: AuthoringViewDelta): AuthoringView =
@@ -418,7 +423,7 @@ class InMemoryAuthoringViewStore(
             val environment = RealmEnvironment(view, services, coverage)
             if (view.catalog.generation != before.root.catalog.generation) {
                 graph.reset(environment)
-            } else {
+            } else if (view.fork.get()?.let(graph::merge) != true) {
                 graph.advance(environment, view.changesFrom(before.root))
             }
             changed.value += 1
