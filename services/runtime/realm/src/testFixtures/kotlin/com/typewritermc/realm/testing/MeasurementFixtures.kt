@@ -1,5 +1,6 @@
 package com.typewritermc.realm.testing
 
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.setup.Setup
 import com.typewritermc.setup.setup
 import com.typewritermc.types.integer
@@ -13,9 +14,64 @@ import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
 /*
- * The seeded realm measurement: a realm of the size the layer's gates are written for, and what one commit on it
+ * The seeded realm measurement: realms of the sizes the layer's gates are written for, and what one commit on them
  * costs. It measures and prints; SeededRealmMeasurement asserts the gates on what it measures.
  */
+
+/** How many plain names, formula holders and content holders a seeded realm holds. */
+data class SeededSize(
+    val names: Int,
+    val holders: Int,
+    val contentHolders: Int,
+)
+
+/** What one value edit cost on one seeded realm with no, one and twenty unrelated broken formulas, [RUNS] edits each. */
+data class BrokenFormulaCosts(
+    val size: SeededSize,
+    val none: List<CommitCost>,
+    val one: List<CommitCost>,
+    val twenty: List<CommitCost>,
+) {
+    /** The graph work one broken formula adds to a value edit, from the medians of the runs. */
+    val extraForOne: Long get() = one.medianWork() - none.medianWork()
+
+    /** The graph work twenty broken formulas add to a value edit, from the medians of the runs. */
+    val extraForTwenty: Long get() = twenty.medianWork() - none.medianWork()
+
+    override fun toString(): String =
+        "$size: graph work per value edit, none ${none.medianWork()}, one ${one.medianWork()}, twenty ${twenty.medianWork()}; " +
+            "extra for one $extraForOne, for twenty $extraForTwenty"
+}
+
+/**
+ * Seeds a realm of [size] with hooks, then measures value edits of its last name with no broken formula, after one
+ * formula breaks, and after nineteen more break; the broken formulas read none of the edited name. Prints each commit.
+ */
+suspend fun measureBrokenFormulas(size: SeededSize): BrokenFormulaCosts {
+    lateinit var costs: BrokenFormulaCosts
+    withSetup(seededWorkload(size.names, size.holders, size.contentHolders), catalog = hookCatalog()) { seeded ->
+        val edited = seeded.named("n${size.names - 1}")
+
+        suspend fun edits(
+            label: String,
+            from: Int,
+        ) = (from until from + RUNS).map { value -> measuredCommit("$size $label", setVar(edited, intUse, plain(value))).also(::println) }
+
+        println("$size seeded: ${startMeasuring()}")
+        edits("warm up", 0)
+        val none = edits("no broken formula", 100)
+        println(measuredCommit("$size break one", setFormula(seeded.named("f0"), "missing_0 + 1")))
+        val one = edits("one broken formula", 200)
+        val nineteen = (1..19).map { setFormula(seeded.named("f$it"), "missing_$it + 1") }
+        println(measuredCommit("$size break nineteen more", *nineteen.toTypedArray()))
+        val twenty = edits("twenty broken formulas", 300)
+        costs = BrokenFormulaCosts(size, none, one, twenty).also(::println)
+    }
+    return costs
+}
+
+/** How many value edits each stage measures; the gates read their median. */
+private const val RUNS = 5
 
 /**
  * [names] plain Definitions `n<i>`; [holders] formulas `f<i>` that each name three of them through provider
@@ -64,11 +120,19 @@ data class CommitCost(
     val evicted: Long,
     val evidence: Int,
     val hints: Int,
+    /** The graph work of the commit's binding and reply, as the realm's telemetry counts it. */
+    val commitWork: GraphWork.Counts,
+    /** The graph work of the check pass the commit started, as the realm's telemetry counts it. */
+    val passWork: GraphWork.Counts,
 ) {
+    /** All the graph work the commit caused. */
+    val work: GraphWork.Counts get() = commitWork + passWork
+
     override fun toString(): String =
         "$label: commit $commit, pass $pass, graph reads during commit $graphReads, reply $replyBytes bytes " +
             "(findings $findingBytes, saved state ${replyBytes - findingBytes}), " +
-            "computed $computed, evicted $evicted, evidence held $evidence, hints $hints"
+            "computed $computed, evicted $evicted, evidence held $evidence, hints $hints, " +
+            "graph work ${work.total} (commit $commitWork, pass $passWork)"
 }
 
 /**
@@ -93,6 +157,8 @@ internal suspend fun RealmFixture.measuredCommit(
     val evictedBefore = graphRuns.evicted()
     val bindingBefore = bindingNanos.get()
     val hintsBefore = hints
+    val commitBefore = workCounted(COMMIT_WORK)
+    val passBefore = workCounted(PASS_WORK)
     val (reply, commit) = measureTimedValue { commit(edit) }
     val saved = reply.shouldBeCommitted()
     val pass = measureTime { checks.drain() }
@@ -118,8 +184,24 @@ internal suspend fun RealmFixture.measuredCommit(
         evicted = graphRuns.evicted() - evictedBefore,
         evidence = sets.sumOf { it.evidence.size },
         hints = hints - hintsBefore,
+        commitWork = workCounted(COMMIT_WORK) - commitBefore,
+        passWork = workCounted(PASS_WORK) - passBefore,
     )
 }
+
+private const val COMMIT_WORK = "typewriter.realm.commit.graph_work"
+private const val PASS_WORK = "typewriter.realm.checks.graph_work"
+
+/** What the realm did on the graph so far for [counter], as its telemetry counts it. */
+private fun RealmFixture.workCounted(counter: String): GraphWork.Counts {
+    val sums = telemetry.counter(counter)
+
+    fun kind(name: String) = sums.filterKeys { it["graph.work"] == name }.values.sum()
+
+    return GraphWork.Counts(kind("computed"), kind("verified"), kind("walked"), kind("copied"))
+}
+
+private fun List<CommitCost>.medianWork(): Long = map { it.work.total }.sorted()[size / 2]
 
 /** The middle of these timings, so one run slowed by the machine does not move a gate. */
 fun List<Duration>.median(): Duration = sorted()[size / 2]

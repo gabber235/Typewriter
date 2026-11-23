@@ -5,10 +5,12 @@ import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.text
 import com.typewritermc.failures.findExceptional
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.GraphWorkTelemetry
 import com.typewritermc.realm.authoring.conflicts
 import com.typewritermc.realm.authoring.savedState
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
@@ -34,6 +36,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import skirout.editor.v1.authoring.AuthoringState
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring_facts.EditExpectation
@@ -60,6 +63,7 @@ internal class RealmAuthoringOwner(
     private val repairs: CommitRepairs = views.commitRepairs(),
 ) : AuthoringRepository {
     private val admission = Mutex()
+    private val commitWork = GraphWorkTelemetry(telemetry, "typewriter.realm.commit.graph_work")
 
     suspend fun activateCatalog(
         next: AuthoringCatalogLease,
@@ -96,7 +100,7 @@ internal class RealmAuthoringOwner(
                 null -> {}
 
                 request -> {
-                    return@withLock views.capture().use { CommitPreparedEditResponse.CommittedWrapper(it.root.savedState(findings())) }
+                    return@withLock views.capture().use { CommitPreparedEditResponse.CommittedWrapper(reply(it.root)) }
                 }
 
                 else -> {
@@ -109,9 +113,19 @@ internal class RealmAuthoringOwner(
             val admitted = views.capture().use { lease -> admit(lease.root, edit, submission, request) }
             when (admitted) {
                 is Admission.Refused -> admitted.response
-                is Admission.Installed -> admitted.saved.use { CommitPreparedEditResponse.CommittedWrapper(it.root.savedState(findings())) }
+                is Admission.Installed -> admitted.saved.use { CommitPreparedEditResponse.CommittedWrapper(reply(it.root)) }
             }
         }
+
+    /** The saved state a commit replies with, recording the graph work of judging its findings. */
+    private fun reply(saved: AuthoringView): AuthoringState {
+        val work = GraphWork()
+        try {
+            return saved.savedState(findings(), work)
+        } finally {
+            commitWork.record(work, "realm.commit.stage" to "reply")
+        }
+    }
 
     /**
      * Checks [edit] on [current], binds the names it makes resolve, then persists and installs the result under the
@@ -190,13 +204,18 @@ internal class RealmAuthoringOwner(
         telemetry.mainSpan("realm.commit.bind", BINDING_FAILED) { scope ->
             val changed = plan.resources.keys + plan.removedResources
             try {
+                val work = GraphWork()
                 val intents =
-                    logWhenSlow(
-                        scope,
-                        1.seconds,
-                        { "Binding names for commit ${submission.value}, editing ${changed.joinToString { it.value }}" },
-                    ) {
-                        repairs.intents(current, candidate, plan.resources.keys)
+                    try {
+                        logWhenSlow(
+                            scope,
+                            1.seconds,
+                            { "Binding names for commit ${submission.value}, editing ${changed.joinToString { it.value }}" },
+                        ) {
+                            repairs.intents(current, candidate, plan.resources.keys, work)
+                        }
+                    } finally {
+                        commitWork.record(work, "realm.commit.stage" to "bind")
                     }
                 when (val repaired = if (intents.isEmpty()) null else planner.plan(edit, intents)) {
                     null -> {

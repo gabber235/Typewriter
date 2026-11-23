@@ -3,6 +3,7 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.formula.graph.GraphListener
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.formula.graph.StaleRevision
 import com.typewritermc.formula.graph.TrackedGraph
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
@@ -79,24 +80,27 @@ data class AuthoringView internal constructor(
     /** Every judged slice folded together; the planner, publication and relation reads read it, a check pass never does. */
     internal val projection by lazy { linkSlices.keys.map(::judged).fold() }
 
-    internal val values by lazy {
-        CapturedAuthoringValues(resources, { at, name -> scopes.nameAt(this, at, name) }) { id -> judged(id).projections }
-    }
+    internal val values by lazy { values(GraphWork()) }
+
+    /** This view's values, whose name answers count their graph work on [work]. */
+    internal fun values(work: GraphWork): CapturedAuthoringValues =
+        CapturedAuthoringValues(resources, { at, name -> scopes.nameAt(this, at, name, work) }) { id -> judged(id).projections }
 
     /** Reads of a graph forked at this view, made on the first name judged here once it is no longer current. */
     internal val forkedReads = AtomicReference<RealmReads?>()
 }
 
-/** What a name means where a formula looks it up in a view, as the realm's graph answers it. */
+/** What a name means where a formula looks it up in a view, as the realm's graph answers it, counting the work on a [GraphWork]. */
 internal fun interface ViewScopes {
     fun nameAt(
         view: AuthoringView,
         at: ValueLocation,
         name: String,
+        work: GraphWork,
     ): List<ResourceId>
 
     companion object {
-        val NONE = ViewScopes { _, _, _ -> throw IllegalStateException("Only a view of the realm's store can judge what a name means.") }
+        val NONE = ViewScopes { _, _, _, _ -> throw IllegalStateException("Only a view of the realm's store can judge what a name means.") }
     }
 }
 
@@ -290,11 +294,17 @@ interface AuthoringViewStore : AutoCloseable {
 
     fun retain(context: ReadContext): AuthoringLease
 
-    /** A lease on the current view and graph reads pinned to it, taken together. The view's catalog stays open with the lease. */
-    fun pin(): PinnedReads
+    /**
+     * A lease on the current view and graph reads pinned to it, taken together, counting their work on [work]. The
+     * view's catalog stays open with the lease.
+     */
+    fun pin(work: GraphWork = GraphWork()): PinnedReads
 
-    /** A graph that reads exactly [view], starting from the live graph's results where it can. */
-    fun forkAt(view: AuthoringView): AuthoringGraph
+    /** A graph that reads exactly [view], starting from the live graph's results where it can; what that copies counts on [work]. */
+    fun forkAt(
+        view: AuthoringView,
+        work: GraphWork = GraphWork(),
+    ): AuthoringGraph
 
     fun prepare(delta: AuthoringViewDelta): AuthoringView
 
@@ -329,12 +339,12 @@ class InMemoryAuthoringViewStore(
 
     /** Names in the current view come from the live graph, and in any other view from one fork made for it. */
     private val scopes =
-        ViewScopes { view, at, name ->
+        ViewScopes { view, at, name, work ->
             val query = services.names.at(at, name)
-            val live = synchronized(lock) { graph.pin().takeIf { current.root === view } }
+            val live = synchronized(lock) { graph.pin(work).takeIf { current.root === view } }
             live?.let { reads -> runCatching { reads.read(query) }.getOrElse { if (it is StaleRevision) null else throw it } }
                 ?: view.forkedReads
-                    .updateAndGet { it ?: forkAt(view).pin() }!!
+                    .updateAndGet { it ?: forkAt(view, work).pin(work) }!!
                     .read(query)
         }
     private var current = createRoot(catalog, seed.resources).also { roots[it.root.readContext] = it }
@@ -360,21 +370,24 @@ class InMemoryAuthoringViewStore(
             retain(requireNotNull(roots[context]) { "The original read view is no longer retained." })
         }
 
-    override fun pin(): PinnedReads =
+    override fun pin(work: GraphWork): PinnedReads =
         synchronized(lock) {
             ensureOpen()
             ensureCurrent()
-            PinnedReads(retain(current), graph.pin())
+            PinnedReads(retain(current), graph.pin(work))
         }
 
-    override fun forkAt(view: AuthoringView): AuthoringGraph =
+    override fun forkAt(
+        view: AuthoringView,
+        work: GraphWork,
+    ): AuthoringGraph =
         synchronized(lock) {
             val environment = RealmEnvironment(view, services, coverage)
             if (view.catalog.generation != current.root.catalog.generation) {
                 // Another generation shares nothing with the live graph.
                 TrackedGraph(environment)
             } else {
-                graph.fork(environment, view.changesFrom(current.root))
+                graph.fork(environment, view.changesFrom(current.root), work)
             }
         }
 

@@ -2,9 +2,11 @@ package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.failures.rethrowExceptional
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.formula.graph.StaleRevision
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.GraphWorkTelemetry
 import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
@@ -83,6 +85,7 @@ class RealmCheckRuntime(
     private val closing: CompletableJob = Job()
     private val instances = linkedMapOf<CheckInstanceId, InstanceState>()
     private var closed = false
+    private val passWork = GraphWorkTelemetry(telemetry, "typewriter.realm.checks.graph_work")
 
     /** Runs every check now, and again on every change of the view store. Returns while the checks run; a second call does nothing. */
     fun start() {
@@ -158,7 +161,16 @@ class RealmCheckRuntime(
     }
 
     private suspend fun settle() {
-        views.pin().use { pinned ->
+        val work = GraphWork()
+        try {
+            settle(work)
+        } finally {
+            passWork.record(work)
+        }
+    }
+
+    private suspend fun settle(work: GraphWork) {
+        views.pin(work).use { pinned ->
             val reads = pinned.reads
             val discovery =
                 try {

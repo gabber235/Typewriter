@@ -433,4 +433,38 @@ val TrackedGraphTest by testSuite {
         graph.read(onA) shouldBe 1
         bench.runs(onA) shouldBe 2
     }
+
+    test("a pin counts the queries it computed and the memos it found unchanged") {
+        val bench = QueryBench()
+        val onA = bench.query("onA") { read(Cell("a")) ?: 0 }
+        val top = bench.query("top") { read(onA) + 1 }
+        val graph = TrackedGraph(cells("a" to 1, "b" to 1))
+        val first = GraphWork()
+        graph.pin(first).read(top)
+        graph.change("b" to 2)
+        val second = GraphWork()
+        graph.pin(second).read(top)
+        first.counts() shouldBe GraphWork.Counts(computed = 2, verified = 0, walked = 0, copied = 0)
+        second.counts() shouldBe GraphWork.Counts(computed = 0, verified = 2, walked = 0, copied = 0)
+    }
+
+    test("a pin counts every key a walk of reads visits") {
+        val bench = QueryBench()
+        val onA = bench.query("onA") { read(Cell("a")) ?: 0 }
+        val top = bench.query("top") { read(onA) + (read(Cell("b")) ?: 0) }
+        val graph = TrackedGraph(cells("a" to 1, "b" to 1))
+        graph.read(top)
+        val work = GraphWork()
+        graph.pin(work).readsOf(top)
+        work.counts().walked shouldBe 3
+    }
+
+    test("a fork counts the memos it copied on the work it is given") {
+        val bench = QueryBench()
+        val graph = TrackedGraph(cells("a" to 1))
+        List(3) { index -> bench.query("q$index") { read(Cell("a")) } }.forEach { graph.read(it) }
+        val work = GraphWork()
+        graph.fork(cells("a" to 2), setOf(Cell("a")), work)
+        work.counts().copied shouldBe 3
+    }
 }
