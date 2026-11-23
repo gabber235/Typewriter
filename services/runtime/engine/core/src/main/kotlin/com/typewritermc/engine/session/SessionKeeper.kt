@@ -347,19 +347,36 @@ class SessionKeeper(
             }
         }
 
-    /** Shortens the key to the grace, unless another engine holds the session by now. */
+    /**
+     * Shortens the key to the grace, unless another engine holds the session by now or the key is gone. A conflict
+     * whose key this engine still holds came from its own write, such as a refresh the quit cut off before its answer
+     * arrived, so the shortening goes on at the key's current revision.
+     */
     private suspend fun release(held: HeldSession) {
+        var revision = held.revision
         while (true) {
             val bucket = bucket()
             if (bucket != null) {
-                when (bucket.update(held.key, held.entry.encode(), timings.grace, held.revision)) {
-                    is KeyValueWrite.Written, KeyValueWrite.Conflict -> return
+                when (bucket.update(held.key, held.entry.encode(), timings.grace, revision)) {
+                    is KeyValueWrite.Written -> return
+                    KeyValueWrite.Conflict -> revision = bucket.ownRevision(held.key, revision) ?: return
                     is KeyValueWrite.Failed -> Unit
                 }
             }
             delay(timings.retry)
         }
     }
+
+    /** The revision of [key] while this engine holds it, null once another engine does or it is gone; [known] when unread. */
+    private suspend fun KeyValueBucket.ownRevision(
+        key: String,
+        known: Long,
+    ): Long? =
+        when (val read = get(key)) {
+            is KeyValueRead.Found -> read.entry.revision.takeIf { readable(key, read.entry.value)?.holder == engine }
+            KeyValueRead.Absent -> null
+            is KeyValueRead.Failed -> known
+        }
 
     private suspend fun bucket(): KeyValueBucket? =
         when (val opened = buckets.filterNotNull().first().open(bucketName)) {

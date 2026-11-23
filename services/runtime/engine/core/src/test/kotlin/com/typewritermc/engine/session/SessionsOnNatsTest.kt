@@ -1,6 +1,7 @@
 package com.typewritermc.engine.session
 
 import com.typewritermc.engine.session.testing.LateFirstWrite
+import com.typewritermc.engine.session.testing.LostAnswer
 import com.typewritermc.engine.session.testing.SessionHarness
 import com.typewritermc.identity.EngineId
 import de.infix.testBalloon.framework.core.TestConfig
@@ -197,6 +198,22 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
 
         harness().keeps(new, protagonist, session, taken)
         old.holding.holds(protagonist) shouldBe false
+    }
+
+    test("SESSION-15 a quit that cuts off a refresh's answer still ends the session after the grace") {
+        harness().createBucket()
+        // A time to live far above the grace, so a key the quit left alone outlives the window by seconds.
+        val timings = SessionHarness.SHORT.copy(ttl = 6.seconds)
+        lateinit var lost: LostAnswer
+        val engine = harness().engine("engine-a", timings) { buckets -> LostAnswer(buckets).also { lost = it } }
+        val (protagonist, session) = harness().player()
+        harness().joined(engine, protagonist, session)
+
+        lost.arm()
+        lost.landed.await()
+        engine.keeper.disconnected(session)
+
+        harness().eventually(within = timings.grace + (timings.ttl - timings.grace) / 2) { harness().entry(protagonist, session) == null }
     }
 
     test("SESSION-10 the holders of a protagonist are every engine holding one of its sessions, and none once it left") {
