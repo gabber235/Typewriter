@@ -105,4 +105,4 @@ slices:
     status: done
     note: Playtest got outside(says) { } for stimuli from outside Paper, with a now ask for the tick that last ended (chosen by the maintainer 2026-11-23); GAME-D1 waits until the tab's session is in the sessions bucket before its stimulus
 
-next: checks, typewriter-review, PR with the design record changes
+next: PR #582 waits for the maintainer to merge it into features/node-4-event-core; rebase and retarget to features/v1 once node 4 merges
