@@ -197,15 +197,45 @@ class Delivery(
             occurrence.encoded ?: occurrence.event?.let { codec.encode(it) }?.also { occurrence.encoded = it }
                 ?: return Asked.Answered(notEncodable(occurrence.event))
         val delivery = EventDelivery(occurrence = occurrence.id, subject = occurrence.subject.toWire(), event = event, origin = occurrence.origin?.toWire())
-        val started = time.markNow()
-        var answered = time.markNow()
-        var confirmed = false
-        var lost = 0
-        val gate = gate(occurrence.subject to engine)
-        var holdsGate = false
-        try {
+        val key = occurrence.subject to engine
+        val gate = gate(key)
+        return try {
+            Asking(engine, delivery, waits, gate).outcome()
+        } finally {
+            release(key)
+        }
+    }
+
+    /** The asks of one [delivery] to one [engine], holding [gate] until the first answer. */
+    private inner class Asking(
+        private val engine: EngineId,
+        private val delivery: EventDelivery,
+        private val waits: Boolean,
+        private val gate: Gate,
+    ) {
+        private val started = time.markNow()
+        private var answered = time.markNow()
+        private var confirmed = false
+        private var lost = 0
+
+        /** What [engine] answered in the end. */
+        suspend fun outcome(): Asked {
             gate.lock()
-            holdsGate = true
+            var outcome =
+                try {
+                    nextAnswer()
+                } finally {
+                    gate.unlock()
+                }
+            while (outcome == null) outcome = nextAnswer()
+            return outcome
+        }
+
+        /**
+         * Asks until [engine] answers, asking again after a gap whenever an exchange is lost; the answer's outcome, or null
+         * when the holder still runs the event and someone waits for its result.
+         */
+        private suspend fun nextAnswer(): Asked? {
             while (true) {
                 if (started.elapsedNow() >= timings.limit) return Asked.Answered(TIMEOUT)
                 val wait =
@@ -214,35 +244,33 @@ class Delivery(
                         !waits || gate.queued() -> Duration.ZERO
                         else -> timings.wait
                     }
-                val response = link.ask(engine, DeliverEventRequest(delivery = delivery, waitMs = wait.inWholeMilliseconds.toInt(), confirmed = confirmed), wait + timings.answer)
-                if (response == null) {
-                    if (answered.elapsedNow() >= timings.noResponse) return Asked.Answered(NO_RESPONSE)
-                    lost++
-                    delay(timings.gap(lost))
-                    continue
+                val request = DeliverEventRequest(delivery = delivery, waitMs = wait.inWholeMilliseconds.toInt(), confirmed = confirmed)
+                val response = link.ask(engine, request, wait + timings.answer)
+                if (response != null) {
+                    answered = time.markNow()
+                    lost = 0
+                    return outcomeOf(response)
                 }
-                answered = time.markNow()
-                lost = 0
-                if (holdsGate) gate.unlock().also { holdsGate = false }
-                when (response) {
-                    is DeliverEventResponse.SuccessWrapper -> {
-                        val status = response.value
-                        if (status is EventStatus.FinalWrapper) return Asked.Answered(status.value.toResult(codec))
-                        if (!waits) return Asked.Answered(EventResult.NotHandled)
-                        confirmed = true
-                    }
-
-                    is DeliverEventResponse.NotHeldErrorWrapper -> return Asked.NotHeld
-
-                    is DeliverEventResponse.ForgottenErrorWrapper -> return Asked.Answered(HOLDER_RESTARTED)
-
-                    else -> return Asked.Answered(HOLDER_ERROR)
-                }
+                if (answered.elapsedNow() >= timings.noResponse) return Asked.Answered(NO_RESPONSE)
+                delay(timings.gap(++lost))
             }
-        } finally {
-            if (holdsGate) gate.unlock()
-            release(occurrence.subject to engine)
         }
+
+        private fun outcomeOf(response: DeliverEventResponse): Asked? =
+            when (response) {
+                is DeliverEventResponse.SuccessWrapper -> {
+                    when (val status = response.value) {
+                        is EventStatus.FinalWrapper -> Asked.Answered(status.value.toResult(codec))
+                        else -> if (waits) null.also { confirmed = true } else Asked.Answered(EventResult.NotHandled)
+                    }
+                }
+
+                is DeliverEventResponse.NotHeldErrorWrapper -> Asked.NotHeld
+
+                is DeliverEventResponse.ForgottenErrorWrapper -> Asked.Answered(HOLDER_RESTARTED)
+
+                else -> Asked.Answered(HOLDER_ERROR)
+            }
     }
 
     /**
