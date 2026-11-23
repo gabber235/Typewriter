@@ -356,7 +356,14 @@ internal class Attempt(
                 ?: throw RequirementRefused("a stimulus from outside Paper needs a player on Paper to mark its tick, and every player quit")
         val mark = Mark(unlessLost { session.now(asked) }).also { ran(it.tick) }
         val at = System.currentTimeMillis()
-        return mark to scope.async { try { action() } finally { took(at, "outside: $says") } }
+        return mark to
+            scope.async {
+                try {
+                    action()
+                } finally {
+                    took(at, "outside: $says")
+                }
+            }
     }
 
     /**

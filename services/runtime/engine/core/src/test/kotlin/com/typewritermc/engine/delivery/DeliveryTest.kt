@@ -89,7 +89,10 @@ val DeliveryTest by testSuite(testConfig = TestConfig.testScope(isEnabled = fals
             sees(a, alex, "b")
 
             a.emitter.send(Poke(alex, strength = 1)) shouldBe EventResult.Failed(reason("broken"))
-            a.emitter.send(Poke(alex, strength = 2)).shouldBeInstanceOf<EventResult.Failed>().reason.code shouldBe "handler_error"
+            a.emitter
+                .send(Poke(alex, strength = 2))
+                .shouldBeInstanceOf<EventResult.Failed>()
+                .reason.code shouldBe "handler_error"
         }
     }
 
@@ -159,7 +162,10 @@ val DeliveryTest by testSuite(testConfig = TestConfig.testScope(isEnabled = fals
             sees(a, alex, "b")
 
             val started = TimeSource.Monotonic.markNow()
-            a.emitter.send(Poke(alex)).shouldBeInstanceOf<EventResult.Failed>().reason.code shouldBe "no_response"
+            a.emitter
+                .send(Poke(alex))
+                .shouldBeInstanceOf<EventResult.Failed>()
+                .reason.code shouldBe "no_response"
             (started.elapsedNow() < 8.seconds) shouldBe true
         }
     }
@@ -173,7 +179,18 @@ val DeliveryTest by testSuite(testConfig = TestConfig.testScope(isEnabled = fals
                 engine(
                     "b",
                     shapeParts() + afterPoke { onB += it } +
-                        provided(verdict(Poke::class) { poke, _ -> if (poke.strength == 2) deny(reason("guarded")) else pass() }, VERDICT_PLAN),
+                        provided(
+                            verdict(Poke::class) { poke, _ ->
+                                if (poke.strength ==
+                                    2
+                                ) {
+                                    deny(reason("guarded"))
+                                } else {
+                                    pass()
+                                }
+                            },
+                            VERDICT_PLAN,
+                        ),
                 )
             val alex = randomPlayer()
             a.reporter.connected(alex, SessionId("alex-a"))
@@ -259,6 +276,7 @@ val DeliveryTest by testSuite(testConfig = TestConfig.testScope(isEnabled = fals
     test("DELIVER-14: a session subject reaches only the engine holding that session") {
         DeliveryHarness.run {
             val knocks = CopyOnWriteArrayList<String>()
+
             fun knocking(engine: String) = shapeParts() + provided(after(Knock::class) { _, _ -> knocks += engine }, AFTER_PLAN)
             val a = engine("a", knocking("a"))
             val b = engine("b", knocking("b"))
@@ -299,7 +317,10 @@ val DeliveryTest by testSuite(testConfig = TestConfig.testScope(isEnabled = fals
                 b.close()
                 engine("b", shapeParts()).reporter.connected(alex, SessionId("alex"))
 
-                result.await().shouldBeInstanceOf<EventResult.Failed>().reason.code shouldBe "holder_restarted"
+                result
+                    .await()
+                    .shouldBeInstanceOf<EventResult.Failed>()
+                    .reason.code shouldBe "holder_restarted"
             }
         }
     }
@@ -321,7 +342,10 @@ val DeliveryTest by testSuite(testConfig = TestConfig.testScope(isEnabled = fals
             b.reporter.connected(alex, SessionId("alex"))
             sees(a, alex, "b")
 
-            a.emitter.send(Poke(alex)).shouldBeInstanceOf<EventResult.Failed>().reason.code shouldBe "timeout"
+            a.emitter
+                .send(Poke(alex))
+                .shouldBeInstanceOf<EventResult.Failed>()
+                .reason.code shouldBe "timeout"
             withTimeout(5.seconds) { finished.await() }
         }
     }
@@ -337,13 +361,17 @@ val DeliveryTest by testSuite(testConfig = TestConfig.testScope(isEnabled = fals
 
             val answer = a.link.ask(EngineId("b"), firstAsk(subject = sam, event = Poke(alex)), 5.seconds)
 
-            answer.finalResult().shouldBeInstanceOf<EventResult.Failed>().reason.code shouldBe "subject_mismatch"
+            answer
+                .finalResult()
+                .shouldBeInstanceOf<EventResult.Failed>()
+                .reason.code shouldBe "subject_mismatch"
         }
     }
 
     test("DELIVER-14: an engine subject reaches only that engine") {
         DeliveryHarness.run {
             val rings = CopyOnWriteArrayList<String>()
+
             fun ringing(engine: String) = shapeParts() + provided(after(Ring::class) { _, _ -> rings += engine }, AFTER_PLAN)
             val a = engine("a", ringing("a"))
             engine("b", ringing("b"))

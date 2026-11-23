@@ -86,7 +86,15 @@ fun reason(code: String): EventReason = EventReason(code = code, message = code)
 
 /** The shapes of the test events, as KSP generates them for real events. */
 val testShapes: List<EventShape<*>> =
-    listOf(shape<Poke> { it.protagonist }, shape<Shove> { it.protagonist }, shape<Knock> { it.session }, shape<Said> { it.protagonist }, shape<Ring> { it.engine })
+    listOf(
+        shape<Poke> {
+            it.protagonist
+        },
+        shape<Shove> { it.protagonist },
+        shape<Knock> { it.session },
+        shape<Said> { it.protagonist },
+        shape<Ring> { it.engine },
+    )
 
 private inline fun <reified E : Event> shape(crossinline subject: (E) -> Identity): EventShape<E> =
     object : EventShape<E> {

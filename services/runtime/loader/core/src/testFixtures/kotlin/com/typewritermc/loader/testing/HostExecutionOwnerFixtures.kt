@@ -31,4 +31,9 @@ class TestRuntime(
     }
 }
 
-val assignment = ArtifactHostAssignment(RealmId("realm"), setOf(RuntimePlacement.PRIMARY_ENGINE), engineInstance = PrimaryEngineInstance.Topology("engine"))
+val assignment =
+    ArtifactHostAssignment(
+        RealmId("realm"),
+        setOf(RuntimePlacement.PRIMARY_ENGINE),
+        engineInstance = PrimaryEngineInstance.Topology("engine"),
+    )

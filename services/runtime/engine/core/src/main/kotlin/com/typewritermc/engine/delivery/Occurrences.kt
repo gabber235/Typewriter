@@ -66,8 +66,16 @@ class Occurrences(
     ): A {
         val occurrence =
             taken[id] ?: when (val decided = first()) {
-                is First.Refused -> return decided.answer
-                is First.Run -> Taken(scope.async(start = CoroutineStart.LAZY) { decided.run() }, time.markNow()).let { taken.putIfAbsent(id, it) ?: it }
+                is First.Refused -> {
+                    return decided.answer
+                }
+
+                is First.Run -> {
+                    Taken(scope.async(start = CoroutineStart.LAZY) { decided.run() }, time.markNow()).let {
+                        taken.putIfAbsent(id, it)
+                            ?: it
+                    }
+                }
             }
         occurrence.result.start()
         occurrence.asked = time.markNow()

@@ -66,23 +66,24 @@ class NatsEngineLink(
     private suspend fun serve(
         session: HostedMessagingSession,
         answer: suspend (DeliverEventRequest) -> DeliverEventResponse,
-    ): Nothing = coroutineScope {
-        val scope = RealmRouteScope(session.organizationId, realm)
-        val router =
-            session.communicator.createRouter(
-                communicatorRoutes {
-                    unary(scope.engineEvent(self.value), parallelism = INBOX_PARALLELISM) { call -> answer(call.request) }
-                },
-                this,
-            )
-        val started = router.start()
-        check(started == RouterResult.Success) { "The event inbox of ${self.value} could not start: $started" }
-        try {
-            awaitCancellation()
-        } finally {
-            withContext(NonCancellable) { router.stop() }
+    ): Nothing =
+        coroutineScope {
+            val scope = RealmRouteScope(session.organizationId, realm)
+            val router =
+                session.communicator.createRouter(
+                    communicatorRoutes {
+                        unary(scope.engineEvent(self.value), parallelism = INBOX_PARALLELISM) { call -> answer(call.request) }
+                    },
+                    this,
+                )
+            val started = router.start()
+            check(started == RouterResult.Success) { "The event inbox of ${self.value} could not start: $started" }
+            try {
+                awaitCancellation()
+            } finally {
+                withContext(NonCancellable) { router.stop() }
+            }
         }
-    }
 
     private companion object {
         /** How many asks the inbox answers at once; an answer that waits for its occurrence is a suspended coroutine. */

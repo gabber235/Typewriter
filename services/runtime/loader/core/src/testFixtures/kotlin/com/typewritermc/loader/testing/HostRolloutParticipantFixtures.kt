@@ -32,8 +32,8 @@ import com.typewritermc.loader.deployment.ProjectedRuntime
 import com.typewritermc.loader.deployment.ProjectedSourcePart
 import com.typewritermc.loader.rollout.ArtifactHostAssignment
 import com.typewritermc.loader.rollout.HostRolloutParticipant
-import com.typewritermc.loader.rollout.ProjectionSource
 import com.typewritermc.loader.rollout.PrimaryEngineInstance
+import com.typewritermc.loader.rollout.ProjectionSource
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.loader.rollout.VerifiedArtifactSource
 import com.typewritermc.loader.rollout.toSkir
@@ -254,7 +254,11 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
     val participant =
         HostRolloutParticipant(
             realmId,
-            ArtifactHostAssignment(realmId, setOf(RuntimePlacement.PRIMARY_ENGINE), engineInstance = PrimaryEngineInstance.Topology("engine"))::engineIdOf,
+            ArtifactHostAssignment(
+                realmId,
+                setOf(RuntimePlacement.PRIMARY_ENGINE),
+                engineInstance = PrimaryEngineInstance.Topology("engine"),
+            )::engineIdOf,
             serviceId,
             root,
             host,

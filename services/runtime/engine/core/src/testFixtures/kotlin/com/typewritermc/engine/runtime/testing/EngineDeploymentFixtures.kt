@@ -66,7 +66,8 @@ fun wiredDeploymentContext(
         com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets,
     engine: String = "engine",
     transport: com.typewritermc.services.libs.communicator.transport.MessageTransport =
-        com.typewritermc.services.libs.communicator.testing.FakeMessageTransport(),
+        com.typewritermc.services.libs.communicator.testing
+            .FakeMessageTransport(),
 ): HostedDeploymentContext {
     val context = deploymentContext(RuntimePlacement.PRIMARY_ENGINE, RuntimePlacement.PRIMARY_ENGINE)
     return context.copy(identity = context.identity.copy(engineId = engine), host = MessagingHost(buckets, transport))

@@ -20,7 +20,8 @@ val DeliveryRulesTest by testSuite {
     }
 
     test("of equally strong results the first wins, and no result at all is not handled") {
-        merged(listOf(EventResult.Failed(reason("first")), EventResult.Failed(reason("second")))) shouldBe EventResult.Failed(reason("first"))
+        merged(listOf(EventResult.Failed(reason("first")), EventResult.Failed(reason("second")))) shouldBe
+            EventResult.Failed(reason("first"))
         merged(emptyList()) shouldBe EventResult.NotHandled
     }
 

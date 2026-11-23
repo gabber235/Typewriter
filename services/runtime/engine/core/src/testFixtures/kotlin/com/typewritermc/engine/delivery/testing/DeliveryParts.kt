@@ -49,7 +49,10 @@ fun firstAsk(
     delivery =
         EventDelivery(
             occurrence = OccurrenceId(value = UUID.randomUUID().toString()),
-            subject = WireSubject.ProtagonistWrapper(WireProtagonist(principal = WirePrincipalId(kind = subject.principal.kind, id = subject.principal.id))),
+            subject =
+                WireSubject.ProtagonistWrapper(
+                    WireProtagonist(principal = WirePrincipalId(kind = subject.principal.kind, id = subject.principal.id)),
+                ),
             event = TestEventCodec().encode(event),
             origin = null,
         ),

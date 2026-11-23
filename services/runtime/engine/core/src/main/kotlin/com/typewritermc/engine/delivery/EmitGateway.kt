@@ -103,7 +103,10 @@ class EmitGatewayRegistrar(
             val router =
                 messaging.communicator.createRouter(
                     communicatorRoutes {
-                        unary(realm.eventEmit, parallelism = GATEWAY_PARALLELISM) { call -> gateway.answer(call.address.userId, call.request) }
+                        unary(
+                            realm.eventEmit,
+                            parallelism = GATEWAY_PARALLELISM,
+                        ) { call -> gateway.answer(call.address.userId, call.request) }
                     },
                     this,
                 )

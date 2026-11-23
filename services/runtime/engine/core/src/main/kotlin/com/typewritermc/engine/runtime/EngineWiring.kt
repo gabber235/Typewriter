@@ -116,7 +116,16 @@ private fun engineCoreModule(
     single<EventCodec> { codec }
     single<EngineLink> { NatsEngineLink(context.host.messaging, context.identity.realmId, get<Engine>().id) }
     single {
-        Delivery(get<Engine>().id, get(), get<SessionKeeper>().copy, get(), get(), get(), scope, getOrNull<DeliveryTimings>() ?: DeliveryTimings())
+        Delivery(
+            get<Engine>().id,
+            get(),
+            get<SessionKeeper>().copy,
+            get(),
+            get(),
+            get(),
+            scope,
+            getOrNull<DeliveryTimings>() ?: DeliveryTimings(),
+        )
     } binds arrayOf(Emitter::class, Elsewhere::class)
     single { Inbox(get(), get(), get(), Occurrences(scope, getOrNull<DeliveryTimings>() ?: DeliveryTimings())) }
     // Named, since an engine kind binds its own registrars to the same type.

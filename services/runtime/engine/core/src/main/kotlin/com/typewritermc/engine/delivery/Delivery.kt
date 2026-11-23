@@ -111,7 +111,8 @@ class Delivery(
         subject: Identity,
         event: DataValue,
         origin: Origin,
-    ): EventResult = deliver(Occurrence(id, null, subject, origin).also { it.encoded = event }, waits = true, here = false, tried = emptySet())
+    ): EventResult =
+        deliver(Occurrence(id, null, subject, origin).also { it.encoded = event }, waits = true, here = false, tried = emptySet())
 
     /** One occurrence on its way: [event] when this engine has it decoded, and its encoding once a holder needs it. */
     private class Occurrence(
@@ -136,8 +137,7 @@ class Delivery(
         waits: Boolean,
         here: Boolean,
         tried: Set<EngineId> = setOf(self),
-    ): EventResult =
-        withTimeoutOrNull(timings.limit) { deliverInTime(occurrence, waits, here, tried) } ?: TIMEOUT
+    ): EventResult = withTimeoutOrNull(timings.limit) { deliverInTime(occurrence, waits, here, tried) } ?: TIMEOUT
 
     private suspend fun deliverInTime(
         occurrence: Occurrence,
@@ -148,7 +148,14 @@ class Delivery(
         coroutineScope {
             val answered = tried.toMutableSet()
             val results = mutableListOf<EventResult>()
-            val local = if (here) async(start = CoroutineStart.UNDISPATCHED) { runtime.run(checkNotNull(occurrence.event), occurrence.origin) } else null
+            val local =
+                if (here) {
+                    async(start = CoroutineStart.UNDISPATCHED) {
+                        runtime.run(checkNotNull(occurrence.event), occurrence.origin)
+                    }
+                } else {
+                    null
+                }
             var notHeld = emptySet<EngineId>()
             while (true) {
                 val seen = sessions.version
@@ -161,7 +168,11 @@ class Delivery(
                     notHeld = emptySet()
                     continue
                 }
-                val answers = engines.map { engine -> async(start = CoroutineStart.UNDISPATCHED) { engine to ask(engine, occurrence, waits) } }.awaitAll()
+                val answers =
+                    engines
+                        .map { engine ->
+                            async(start = CoroutineStart.UNDISPATCHED) { engine to ask(engine, occurrence, waits) }
+                        }.awaitAll()
                 answers.forEach { (engine, asked) ->
                     when (asked) {
                         is Asked.Answered -> {
@@ -169,7 +180,9 @@ class Delivery(
                             results += asked.result
                         }
 
-                        Asked.NotHeld -> notHeld = notHeld + engine
+                        Asked.NotHeld -> {
+                            notHeld = notHeld + engine
+                        }
                     }
                 }
             }
@@ -196,7 +209,13 @@ class Delivery(
         val event =
             occurrence.encoded ?: occurrence.event?.let { codec.encode(it) }?.also { occurrence.encoded = it }
                 ?: return Asked.Answered(notEncodable(occurrence.event))
-        val delivery = EventDelivery(occurrence = occurrence.id, subject = occurrence.subject.toWire(), event = event, origin = occurrence.origin?.toWire())
+        val delivery =
+            EventDelivery(
+                occurrence = occurrence.id,
+                subject = occurrence.subject.toWire(),
+                event = event,
+                origin = occurrence.origin?.toWire(),
+            )
         val key = occurrence.subject to engine
         val gate = gate(key)
         return try {
@@ -265,11 +284,17 @@ class Delivery(
                     }
                 }
 
-                is DeliverEventResponse.NotHeldErrorWrapper -> Asked.NotHeld
+                is DeliverEventResponse.NotHeldErrorWrapper -> {
+                    Asked.NotHeld
+                }
 
-                is DeliverEventResponse.ForgottenErrorWrapper -> Asked.Answered(HOLDER_RESTARTED)
+                is DeliverEventResponse.ForgottenErrorWrapper -> {
+                    Asked.Answered(HOLDER_RESTARTED)
+                }
 
-                else -> Asked.Answered(HOLDER_ERROR)
+                else -> {
+                    Asked.Answered(HOLDER_ERROR)
+                }
             }
     }
 
@@ -312,7 +337,10 @@ class Delivery(
         val HOLDER_ERROR = deliveryFailure("holder_error", "The engine holding the subject failed to take the event.")
 
         fun notEncodable(event: Event?) =
-            deliveryFailure("unknown_type", "The event ${event?.let { it::class.simpleName }} has no catalog type, so it cannot leave this engine.")
+            deliveryFailure(
+                "unknown_type",
+                "The event ${event?.let { it::class.simpleName }} has no catalog type, so it cannot leave this engine.",
+            )
     }
 }
 
