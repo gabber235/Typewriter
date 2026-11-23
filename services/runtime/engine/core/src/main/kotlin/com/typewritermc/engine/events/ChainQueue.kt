@@ -39,6 +39,7 @@ class ChainQueue(
         val key: Any?,
         /** The open work count of each protagonist this chain is work of; a wipe closes and removes its entry. */
         val work: MutableMap<Protagonist, AutoCloseable>,
+        val dropped: () -> Unit,
         val run: suspend () -> Unit,
     )
 
@@ -47,17 +48,18 @@ class ChainQueue(
 
     /**
      * Queues [run] as work of [protagonists]; with a [key] equal to a waiting chain's, it merges into that chain
-     * instead.
+     * instead. [dropped] runs when a wipe drops the chain before it ran.
      */
     fun enqueue(
         protagonists: Set<Protagonist>,
         name: String,
         key: Any? = null,
+        dropped: () -> Unit = {},
         run: suspend () -> Unit,
     ) {
         synchronized(lock) {
             if (key != null && waiting.any { it.key == key }) return
-            waiting += Chain(key, protagonists.associateWithTo(mutableMapOf()) { work.begin(it, name) }, run)
+            waiting += Chain(key, protagonists.associateWithTo(mutableMapOf()) { work.begin(it, name) }, dropped, run)
         }
     }
 
@@ -66,13 +68,15 @@ class ChainQueue(
      * work of others stops counting as its work but still runs for them.
      */
     fun clear(protagonist: Protagonist) {
-        val released =
+        val (released, dropped) =
             synchronized(lock) {
                 val mine = waiting.filter { protagonist in it.work }
-                waiting.removeAll(mine.filter { it.work.keys == setOf(protagonist) })
-                mine.mapNotNull { it.work.remove(protagonist) }
+                val only = mine.filter { it.work.keys == setOf(protagonist) }
+                waiting.removeAll(only)
+                mine.mapNotNull { it.work.remove(protagonist) } to only
             }
         released.forEach { it.close() }
+        dropped.forEach { it.dropped() }
     }
 
     /** Runs waiting chains until none is left, including the chains they queue. A failing chain is logged and ends. */

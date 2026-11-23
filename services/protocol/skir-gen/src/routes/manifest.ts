@@ -7,6 +7,7 @@ import { SubjectTemplate, scopeParameters, type Parameter } from "./subject.js";
 /** Scope kinds in the order generated code groups them. */
 export const SCOPE_KINDS = [
   "realm",
+  "realm_actor",
   "service",
   "organization_actor",
   "organization",
@@ -82,7 +83,8 @@ const FAMILY_PREFIXES = ["cloud", "typewriter", "service.to", "service.from"];
  */
 const Address = z.string().transform(
   checked((value) => {
-    const address = SubjectTemplate.parse(value);
+    // Every placeholder name parses here; admission then checks each free value is declared.
+    const address = SubjectTemplate.parse(value, () => true);
     const prefix = FAMILY_PREFIXES.find(
       (family) => value === family || value.startsWith(`${family}.`),
     );
@@ -286,6 +288,8 @@ export interface BucketDeclaration {
 /** The admitted route manifest. */
 export interface Manifest {
   readonly limits: TransportLimits;
+  /** The declared free values an address may carry; see {@link SubjectTemplate.parse}. */
+  readonly parameters: readonly string[];
   readonly roles: RoleDeclarations;
   /** Backend component name to its deploy/base directory, relative to the repository root. */
   readonly components: ReadonlyMap<string, string>;
@@ -318,6 +322,7 @@ const BucketShape = z.strictObject({
 const RawManifest = z
   .strictObject({
     limits: Limits,
+    parameters: z.array(KeyToken).default([]),
     roles: z.record(RoleName, RoleDeclaration),
     components: z.record(ComponentName, z.string().min(1)),
     routes: z.array(RouteShape),
@@ -327,6 +332,11 @@ const RawManifest = z
     const issue = (path: Array<string | number>, message: string) =>
       context.addIssue({ code: "custom", path, message });
     const used = new Set<string>();
+    manifest.parameters.forEach((parameter, index) => {
+      if ((IDENTITIES as readonly string[]).includes(parameter)) {
+        issue(["parameters", index], `free parameter {${parameter}} is an identity`);
+      }
+    });
     const chunk = manifest.limits.chunk_bytes;
     for (const field of ["request_max_bytes", "reply_max_bytes"] as const) {
       if (manifest.limits[field] < chunk) {
@@ -379,9 +389,9 @@ const RawManifest = z
         if (role.personal) {
           bound.add(role.personal);
         }
-        // An event subscriber receives every publisher of its tenant, so the publisher's own identifier
-        // stays unbound in its grant.
-        const receivesOthers = event && path[0] === "subscribers";
+        // An event subscriber receives every publisher of its tenant, and a request server every caller,
+        // so the sender's own identifier stays unbound in its grant.
+        const receivesOthers = (event && path[0] === "subscribers") || path[0] === "server";
         for (const parameter of scopeParameters(route.scope) as readonly Identity[]) {
           const outer = NESTED_IN[parameter];
           if (receivesOthers && PERSONAL_IDENTITIES.includes(parameter)) {
@@ -395,7 +405,7 @@ const RawManifest = z
           }
         }
       }
-      admitAddresses(route.scope, route.flow, (path, message) =>
+      admitAddresses(route.scope, route.flow, manifest.parameters, (path, message) =>
         issue([...at, "flow", ...path], message),
       );
     });
@@ -421,10 +431,14 @@ const RawManifest = z
     }
   });
 
-/** Admits the placeholders of each flow address: every one is bound by the route scope. */
+/**
+ * Admits the placeholders of each flow address: every identity is bound by the route scope, and
+ * every other placeholder is a declared free value.
+ */
 function admitAddresses(
   scope: ScopeKind,
   flow: Flow,
+  parameters: readonly string[],
   issue: (path: string[], message: string) => void,
 ): void {
   const allowed = scopeParameters(scope);
@@ -432,6 +446,9 @@ function admitAddresses(
     for (const token of address.tokens) {
       if (token.kind === "parameter" && !allowed.includes(token.parameter)) {
         issue(path, `placeholder {${token.parameter}} is not bound by ${scope} scope`);
+      }
+      if (token.kind === "free" && !parameters.includes(token.name)) {
+        issue(path, `placeholder {${token.name}} is neither an identity nor a declared free parameter`);
       }
     }
   };
@@ -457,8 +474,9 @@ function admitAddresses(
  * `routes[3].flow.request` and the line.
  */
 export function parseManifest(source: string, file: string): Manifest {
-  const { limits, roles, components, routes, buckets } = parseYamlManifest(source, file, RawManifest).data;
+  const { limits, parameters, roles, components, routes, buckets } = parseYamlManifest(source, file, RawManifest).data;
   return {
+    parameters,
     limits: {
       chunkBytes: limits.chunk_bytes,
       windowFrames: limits.window_frames,

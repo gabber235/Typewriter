@@ -33,7 +33,7 @@ val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnable
             .sessions
             .entry(panel().user, SessionId(id))
             .shouldNotBeNull()
-            .holder shouldBe EngineId("panel.realm")
+            .holder shouldBe EngineId("panel-realm")
     }
 
     test("PANEL-S2 a tab that leaves, or whose heartbeat stops, ends its session after the grace") {

@@ -22,6 +22,7 @@ import com.typewritermc.events.RecordScope
 import com.typewritermc.events.SubscribedEvent
 import com.typewritermc.events.readField
 import com.typewritermc.formula.Var
+import com.typewritermc.identity.Engine
 import com.typewritermc.identity.Identity
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
@@ -75,12 +76,25 @@ data class BeatEntry(
     override val placement: GraphPlacement = GraphPlacement(),
 ) : Entry
 
+/** A test event about one engine, so a subject that is an engine can be told apart. */
+data class Ring(
+    val engine: Engine,
+) : Event
+
 /** A deny reason named [code]. */
 fun reason(code: String): EventReason = EventReason(code = code, message = code)
 
 /** The shapes of the test events, as KSP generates them for real events. */
 val testShapes: List<EventShape<*>> =
-    listOf(shape<Poke> { it.protagonist }, shape<Shove> { it.protagonist }, shape<Knock> { it.session }, shape<Said> { it.protagonist })
+    listOf(
+        shape<Poke> {
+            it.protagonist
+        },
+        shape<Shove> { it.protagonist },
+        shape<Knock> { it.session },
+        shape<Said> { it.protagonist },
+        shape<Ring> { it.engine },
+    )
 
 private inline fun <reified E : Event> shape(crossinline subject: (E) -> Identity): EventShape<E> =
     object : EventShape<E> {

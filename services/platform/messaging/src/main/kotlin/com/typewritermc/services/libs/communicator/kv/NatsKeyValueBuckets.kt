@@ -5,11 +5,16 @@ import io.natskt.api.NatsClientException
 import io.natskt.jetstream.api.JetStreamApiException
 import io.natskt.jetstream.api.kv.KeyValueOperation
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.launch
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
 import io.natskt.jetstream.api.kv.KeyValueBucket as NatsBucket
 
@@ -124,18 +129,35 @@ class NatsKeyValueBuckets(
         /**
          * natskt reports the broker's expiry marker (`Nats-Marker-Reason: MaxAge`) as a purge; a delete or purge only
          * comes from outside this interface, so each removal reads as an expiry. A broken connection ends the changes.
+         *
+         * natskt's watch does not say when its replay ended, so the watch marks it as the NATS Go client marks the end of
+         * initial values: the catch up follows the first entry no message is pending behind (its `delta`, the consumer's
+         * pending count, is 0), and a filter with no live key catches up at once, since its replay may hold only expiry
+         * markers or nothing.
          */
         override suspend fun watch(filter: String): KeyValueWatch =
             try {
+                val empty = (keys(filter) as? KeyValueKeys.Listed)?.keys?.isEmpty() == true
                 val entries = bucket.watch(filter)
                 KeyValueWatch.Watching(
-                    entries
-                        .map { entry ->
-                            when (entry.operation) {
-                                KeyValueOperation.Delete, KeyValueOperation.Purge -> KeyValueChange.Expired(entry.key)
-                                else -> KeyValueChange.Put(KeyValueEntry(entry.key, entry.value, entry.revision.toLong()))
+                    channelFlow {
+                        val caughtUp = AtomicBoolean(false)
+                        // Undispatched, so the entries are collected before the catch up of an empty filter is sent: a
+                        // write that arrived before natskt's flow was collected went missing in WATCH-1.
+                        launch(start = CoroutineStart.UNDISPATCHED) {
+                            entries.collect { entry ->
+                                send(
+                                    when (entry.operation) {
+                                        KeyValueOperation.Delete, KeyValueOperation.Purge -> KeyValueChange.Expired(entry.key)
+                                        else -> KeyValueChange.Put(KeyValueEntry(entry.key, entry.value, entry.revision.toLong()))
+                                    },
+                                )
+                                if (entry.delta == 0uL && caughtUp.compareAndSet(false, true)) send(KeyValueChange.CaughtUp)
                             }
-                        }.catch { failure -> if (failure !is NatsClientException && failure !is IOException) throw failure },
+                        }
+                        if (empty && caughtUp.compareAndSet(false, true)) send(KeyValueChange.CaughtUp)
+                    }.buffer(Channel.UNLIMITED)
+                        .catch { failure -> if (failure !is NatsClientException && failure !is IOException) throw failure },
                 )
             } catch (failure: CancellationException) {
                 currentCoroutineContext().ensureActive()

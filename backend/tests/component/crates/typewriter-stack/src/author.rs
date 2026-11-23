@@ -17,15 +17,20 @@ use crate::broker::{StackKeys, creds_file, user_jwt, write_private};
 use crate::observer::session;
 use crate::provision::Provisioned;
 
-/// The request addresses of the Realm routes the author calls: the authored state a setup edits
-/// over, the commit of that edit, the publication review whose candidate it publishes, the publish,
-/// and the read of what the selected publication holds.
-const AUTHORED_ROUTES: &[&str] = &[
-    "editor.authoring.state.query",
-    "editor.authoring.edit.commit",
-    "editor.authoring.publication.query",
-    "editor.authoring.publish",
-    "editor.authoring.compiled.query",
+/// The subjects the author publishes, as the endings of the owner's organization member grants:
+/// the authored state a setup edits over, the commit of that edit, the publication review whose
+/// candidate it publishes, the publish, and the read of what the selected publication holds; then,
+/// as a panel tab of the owner, its presence heartbeat, which makes the tab a session at the
+/// Realm's panel engine, and the events that tab emits. `{organization}` and `{user}` are the
+/// owner's.
+const AUTHORED_SUBJECTS: &[&str] = &[
+    ".realm.editor.authoring.state.query",
+    ".realm.editor.authoring.edit.commit",
+    ".realm.editor.authoring.publication.query",
+    ".realm.editor.authoring.publish",
+    ".realm.editor.authoring.compiled.query",
+    ".presence.organization.{organization}.user.{user}",
+    ".realm.event.emit.user.{user}",
 ];
 
 #[derive(clap::Args)]
@@ -42,6 +47,8 @@ struct Minted {
     creds: String,
     /// The prefix of the author's reply inboxes; a client creates its inboxes below it.
     inbox: String,
+    /// The owner's subject token, the user its panel tab's presence and emits name.
+    user: String,
 }
 
 /// The owner and the connection session an author of the stack acts as.
@@ -68,9 +75,10 @@ impl Author {
         ))
     }
 
-    /// The owner's organization member publish grants of [`AUTHORED_ROUTES`], and its replies
-    /// below its own inbox. Fails when the generated grants hold no request subject for one of
-    /// them, which means a route was renamed or no longer admits organization members.
+    /// The owner's organization member publish grants that end in one of [`AUTHORED_SUBJECTS`],
+    /// and its replies below its own inbox. Fails when the generated grants hold no subject or
+    /// several for one of them, which means a route was renamed or no longer admits organization
+    /// members.
     pub fn permissions(&self) -> Result<Permissions> {
         let mut member = GrantSet::default();
         OrganizationActorScope::from_tokens(&self.owner, &self.organization)
@@ -80,23 +88,23 @@ impl Author {
                 &self.connection_session()?,
                 &mut member,
             );
-        let publish = AUTHORED_ROUTES
+        let publish = AUTHORED_SUBJECTS
             .iter()
-            .map(|address| {
-                let suffix = format!(".realm.{address}");
+            .map(|ending| {
+                let suffix = ending
+                    .replace("{organization}", &self.organization)
+                    .replace("{user}", &self.owner);
                 let granted: Vec<&String> = member
                     .publish
                     .iter()
-                    .filter(|subject| {
-                        subject.starts_with("service.to.") && subject.ends_with(&suffix)
-                    })
+                    .filter(|subject| subject.ends_with(&suffix))
                     .collect();
                 match granted.as_slice() {
                     [subject] => Ok((*subject).clone()),
-                    [] => bail!("organization members are granted no Realm request `{address}`"),
-                    _ => {
-                        bail!("organization members are granted several Realm requests `{address}`")
-                    }
+                    [] => bail!("organization members are granted no subject ending in `{suffix}`"),
+                    _ => bail!(
+                        "organization members are granted several subjects ending in `{suffix}`"
+                    ),
                 }
             })
             .collect::<Result<Vec<_>>>()?;
@@ -136,6 +144,7 @@ pub async fn run(args: AuthorArgs) -> Result<()> {
         &Minted {
             creds: creds.display().to_string(),
             inbox: author.inbox()?,
+            user: author.owner.clone(),
         },
     )
 }
@@ -172,12 +181,31 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn the_author_acts_as_a_panel_tab_of_its_owner() {
+        let stack = ObservedBroker::start().await;
+        let presence = "typewriter.presence.organization.acme.user.user_ada";
+        let emit = "service.to.r1.organization.acme.realm.event.emit.user.user_ada";
+        for subject in [presence, emit] {
+            stack.answer(subject).await;
+        }
+        let author = stack.author().await;
+
+        for subject in [presence, emit] {
+            let reply = author.request(subject, "".into()).await;
+            assert_eq!(&reply.unwrap().payload[..], b"answer", "{subject}");
+        }
+    }
+
+    #[tokio::test]
     async fn the_author_calls_no_other_route_and_no_other_organizations_realm() {
         let stack = ObservedBroker::start().await;
         let forbidden = [
             "service.to.r1.organization.acme.realm.editor.authoring.type.commit",
             "service.to.r1.organization.globex.realm.editor.authoring.edit.commit",
             "cloud.to.user.user_ada.organization.acme.topology.configure",
+            "typewriter.presence.organization.acme.user.user_bob",
+            "service.to.r1.organization.acme.realm.event.emit.user.user_bob",
+            "service.to.r1.organization.acme.realm.engine.panel-r1.event",
         ];
         for subject in forbidden {
             stack.answer(subject).await;

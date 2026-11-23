@@ -8,9 +8,9 @@ import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueRead
 import okio.ByteString.Companion.toByteString
 import java.time.Instant
-import skirout.service.v1.session.EngineId as WireEngineId
-import skirout.service.v1.session.PrincipalId as WirePrincipalId
-import skirout.service.v1.session.Protagonist as WireProtagonist
+import skirout.kernel.v1.identity.EngineId as WireEngineId
+import skirout.kernel.v1.identity.PrincipalId as WirePrincipalId
+import skirout.kernel.v1.identity.Protagonist as WireProtagonist
 import skirout.service.v1.session.SessionEntry as WireSessionEntry
 
 /** One session's entry in the Realm's sessions bucket: who it belongs to, which engine holds it, and since when. */
@@ -28,6 +28,9 @@ internal fun sessionKey(
     protagonist: Protagonist,
     id: SessionId,
 ): String = "${protagonist.principal.kind}.${protagonist.principal.id}.${id.value}"
+
+/** The session a bucket key names: the key's last segment. */
+internal fun sessionOf(key: String): SessionId = SessionId(key.substringAfterLast('.'))
 
 /** The key filter matching every session of [protagonist]. */
 internal fun protagonistKeys(protagonist: Protagonist): String = "${protagonist.principal.kind}.${protagonist.principal.id}.*"

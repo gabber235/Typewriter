@@ -1,0 +1,108 @@
+# Working state of node 9a: event delivery between engines.
+goal: an event emitted at an identity runs on every engine that holds it, and a sender can get its result; built to last, flexible for more engine kinds, many holders, groups and new identity kinds
+
+pieces:
+  - id: addressing
+    status: done
+    tries:
+      - id: protagonist-subject
+        what: the record's protagonist.{principal_kind}.{principal_id} and session.{session} subjects with event_ack
+        taught: every holder subscribes per protagonist; each new identity kind needs a subject family; a group of 100 is 100 messages; results land on the wrong engine after the origin moves
+        state: dropped
+        why: the sender needs the holders anyway (local or remote, merge), so per protagonist subjects add churn without removing the sessions copy
+      - id: engine-inbox
+        what: one inbox per engine, engine.{engine}.event; holders resolved per identity kind from the local sessions copy
+        state: picked
+        why: chosen by the maintainer 2026-11-22
+  - id: result-exchange
+    status: done
+    tries:
+      - id: holder-pushes
+        what: holder sends the result to the sender's inbox and resends until acked
+        taught: 4 messages on every event; a crashed holder is noticed only at 60 s
+        state: dropped
+        why: pays on the usual case, cheap only on slow handlers
+      - id: sender-asks
+        what: holder only answers; it queues at once, answers within about 200 ms or says running; sender asks again with growing gaps
+        state: picked
+        why: chosen by the maintainer 2026-11-22; one exchange in the usual case, fast failure on a holder crash
+  - id: forwarder-caller
+    status: done
+    tries:
+      - id: realm-actor
+        what: scope realm_actor (organization, realm, user bound by the broker); route event_emit served by any client gateway, checked against the sessions copy
+        state: picked
+        why: chosen by the maintainer 2026-11-23; 9b reuses the scope for caller bound authoring writes
+  - id: delivery-guarantees
+    status: done
+    tries:
+      - id: one-rule
+        what: every delivery asked until answered, runs once per holder; waiting for the result is the only choice; origin only names the cause
+        state: picked
+        why: chosen by the maintainer 2026-11-23; removes the best effort path and the silent loss
+  - id: order-per-identity
+    status: done
+    tries:
+      - id: sequence-numbers
+        what: holder reorders by sequence number
+        state: dropped
+        why: gap buffers and sender restart handling for the same guarantee
+      - id: one-outstanding
+        what: one outstanding delivery per subject and holder; the request's wait lets the holder answer at once when more is queued
+        state: picked
+        why: plan approved 2026-11-23
+
+decided:
+  - id: long-term-scope
+    what: never scope to alpha; build for 30 years, simple and flexible; source forwarding, a public emitter and many holders are in
+    why: maintainer, 2026-11-22
+  - id: engine-inbox
+    what: inbox per engine
+  - id: sender-asks
+    what: sender asks for the result
+  - id: realm-actor
+    what: realm_actor scope and event_emit route
+  - id: one-rule
+    what: one rule for every delivery
+  - id: plan-approved
+    what: node 9a plan approved, my calls included (order, named subject, many holders, results per holder, one sessions copy, EngineLink port)
+  - id: holders-in-sessions
+    what: Sessions.holders(subject: Identity) is the one way to ask which engines hold an identity; the delivery's own Holders is gone
+    why: chosen by the maintainer 2026-11-23 in the review, over keeping a protagonist only SDK read beside it
+  - id: outside-stimulus
+    what: Playtest marks a stimulus from outside Paper with outside(says) { }, counting windows from the tick that last ended on Paper
+    why: chosen by the maintainer 2026-11-23 over anchoring on an unrelated probe step
+  - id: engine-ids-one-token
+    what: every engine id is one subject token that starts with its kind (primary-, panel-, local-), named in one place (loader-api EngineIds)
+    why: chosen by the maintainer 2026-11-23; the permission rows showed panel.<realm> spans two tokens, so the panel engine could never hear its inbox
+
+open: []
+
+slices:
+  - id: game-d1-red
+    tests: [GAME-D1]
+    status: done
+  - id: generator
+    tests: [subject.test.ts free parameters, grants.test.ts realm_actor]
+    status: done
+  - id: contracts-routes
+    tests: [permission suite rows, ArtifactDistributionTest engine ids, typewriter-stack author tab]
+    status: done
+  - id: sessions-copy
+    tests: [SESSION-COPY-1, WATCH-5, WATCH-6]
+    status: done
+    note: natskt's watch does not say when its replay ended; the watch says caught up after the first entry with delta 0, or at once for a filter with no live key, as the NATS Go client marks the end of initial values
+  - id: delivery
+    tests: [RESULT-1 to RESULT-3, DELIVER-1 to DELIVER-14, DeliveryRulesTest, engine core's generated parts start]
+    status: done
+    note: testEngineKind is a function, since a shared Koin module shared its singles between two wired engines. Emitter is an engine service, not an EnginePart, since KSP generated a part for Delivery that failed every deployed engine. Open point for the PR, recorded in events-and-handlers.md: a source opens only while a handler of its own engine could run, so a source event whose handlers live only on another kind of engine never fires.
+  - id: panel-gateway
+    tests: [PANEL-EMIT-1, PANEL-EMIT-2, PANEL-HOLD-1]
+    status: done
+    note: the inbox and the gateway share one Occurrences table; the gateway relays without decoding, asking itself through its own inbox
+  - id: stack-proof
+    tests: [GAME-D1, OutsideTest]
+    status: done
+    note: Playtest got outside(says) { } for stimuli from outside Paper, with a now ask for the tick that last ended (chosen by the maintainer 2026-11-23); GAME-D1 waits until the tab's session is in the sessions bucket before its stimulus
+
+next: PR #582 waits for the maintainer to merge it into features/node-4-event-core; rebase and retarget to features/v1 once node 4 merges

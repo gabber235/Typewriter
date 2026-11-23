@@ -16,16 +16,24 @@ import com.typewritermc.engine.events.testing.step
 import com.typewritermc.engine.events.testing.verdict
 import com.typewritermc.events.CancelableEvent
 import com.typewritermc.events.Candidate
+import com.typewritermc.events.EventFailure
+import com.typewritermc.events.EventResult
+import com.typewritermc.events.Origin
 import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
 import com.typewritermc.events.allow
 import com.typewritermc.events.deny
 import com.typewritermc.events.pass
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
+import com.typewritermc.identity.SessionId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 /** How the engine runs handlers for each occurrence a source reports, and how chains queue and end. */
 val EventRuntimeTest by testSuite {
@@ -164,5 +172,41 @@ val EventRuntimeTest by testSuite {
         val recorded = events.telemetry.histograms("typewriter.event.handler.duration", "typewriter.event").getValue("Poke")
         recorded.count shouldBe 6
         recorded.sum shouldBeGreaterThanOrEqualTo 0.006
+    }
+
+    test("RESULT-1 a run ends Done when a handler ran, Denied with the winning reason, NotHandled when none ran") {
+        val events =
+            EventHarness(
+                verdict(Poke::class) { poke, _ -> if (poke.strength > 1) deny(reason("too hard")) else pass() },
+                after(Shove::class) { _, _ -> },
+            )
+
+        events.ran(Poke(strength = 1)) shouldBe EventResult.Done
+        events.ran(Poke(strength = 2)) shouldBe EventResult.Denied(reason("too hard"))
+        events.ran(Shove()) shouldBe EventResult.Done
+        EventHarness().ran(Poke()) shouldBe EventResult.NotHandled
+    }
+
+    test("RESULT-2 an after handler that throws EventFailure ends the run Failed with its reason, any other throw Failed handler_error") {
+        val failing =
+            EventHarness(after(Poke::class) { _, _ -> throw EventFailure(reason("no quest")) }, after(Poke::class) { _, _ -> })
+        val broken = EventHarness(after(Poke::class) { _, _ -> error("broken") })
+
+        failing.ran(Poke()) shouldBe EventResult.Failed(reason("no quest"))
+        (broken.ran(Poke()) as EventResult.Failed).reason.code shouldBe "handler_error"
+    }
+
+    test("RESULT-3 a run's handlers see its origin, and a run whose chain a wipe drops ends NotHandled") {
+        val seen = mutableListOf<Any?>()
+        val origin = Origin(Session(protagonist("tab"), SessionId("tab")), protagonist("tab").principal)
+        val events = EventHarness(after(Poke::class, Param.Origin()) { _, values -> seen += values.single() })
+
+        events.ran(Poke(), origin) shouldBe EventResult.Done
+        seen shouldContainExactly listOf(origin)
+        coroutineScope {
+            val dropped = async(start = CoroutineStart.UNDISPATCHED) { events.run(Poke(protagonist("sam"))) }
+            events.wipe(protagonist("sam"))
+            dropped.await() shouldBe EventResult.NotHandled
+        }
     }
 }

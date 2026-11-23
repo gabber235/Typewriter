@@ -176,6 +176,61 @@ async fn an_attached_engine_keeps_sessions_in_its_own_realms_bucket_only(
 }
 
 #[component_test(AuthTypewriterPermissions)]
+async fn an_attached_engine_asks_every_engine_inbox_of_its_realm_and_no_other_realm(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let permissions = service_grants(context, "engine_one", Realm::Attached("quests")).await?;
+
+    for engine in ["engine_one", "engine_two", "panel-quests"] {
+        let inbox = realm_route("quests", "acme", &format!("engine.{engine}.event"));
+        assert!(
+            permits(&permissions.publish, &inbox),
+            "the engine cannot ask {inbox}"
+        );
+    }
+    assert!(permits(
+        &permissions.subscribe,
+        &realm_route("quests", "acme", "engine.engine_one.event")
+    ));
+    for (realm, organization) in FOREIGN {
+        let inbox = realm_route(realm, organization, "engine.engine_two.event");
+        assert!(
+            !permits(&permissions.publish, &inbox),
+            "the engine asks {inbox}"
+        );
+        assert!(
+            !permits(&permissions.subscribe, &inbox),
+            "the engine hears {inbox}"
+        );
+    }
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
+async fn an_attached_engine_hears_every_members_emits_in_its_realm_only(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let permissions = service_grants(context, "engine_one", Realm::Attached("quests")).await?;
+
+    assert!(permits(
+        &permissions.subscribe,
+        &realm_route("quests", "acme", "event.emit.user.*")
+    ));
+    for (realm, organization) in FOREIGN {
+        assert!(!permits(
+            &permissions.subscribe,
+            &realm_route(realm, organization, "event.emit.user.*")
+        ));
+    }
+    // Only a member emits: an engine never speaks for a user.
+    assert!(!permits(
+        &permissions.publish,
+        &realm_route("quests", "acme", "event.emit.user.user_ada")
+    ));
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
 async fn an_attached_engine_receives_the_panel_presence_of_its_organization_only(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {

@@ -40,9 +40,9 @@ data class Protagonist(
 ) : Identity
 
 /**
- * One engine of a Realm: the topology engine instance id, `panel.<realm id>` for the Realm's panel engine, or
- * `local.<realm id>` for an engine of a host running without topology. It survives restarts and ends when the engine
- * leaves the topology.
+ * One engine of a Realm, named by one subject token that starts with its kind: `primary-<topology engine instance id>`,
+ * `panel-<realm id>` for the Realm's panel engine, or `local-<realm id>` for the engine of a host running without
+ * topology. It names the engine's event inbox, survives restarts and ends when the engine leaves the topology.
  */
 @TypewriterType(id = ENGINE_ID_TYPE_ID)
 @JvmInline

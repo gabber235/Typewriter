@@ -207,7 +207,7 @@ val HostRolloutParticipantTest by testSuite {
 
             fixture.stagedContexts
                 .single()
-                .identity.engineId shouldBe "engine"
+                .identity.engineId shouldBe "primary-engine"
             fixture.participant.close()
         }
     }

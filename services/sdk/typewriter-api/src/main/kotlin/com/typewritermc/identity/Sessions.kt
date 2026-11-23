@@ -15,8 +15,11 @@ interface SessionReporter {
     fun disconnected(id: SessionId)
 }
 
-/** Reads which engines hold a protagonist's sessions now, across the Realm. */
+/** Reads which engines hold an identity now, across the Realm. */
 interface Sessions {
-    /** The engines that hold at least one live session of [protagonist]; empty while it is offline. */
-    suspend fun holders(protagonist: Protagonist): Set<EngineId>
+    /**
+     * The engines that hold [subject]: every engine holding a live session of a protagonist, the engine holding a
+     * session, and an engine itself. Empty while the subject is offline.
+     */
+    suspend fun holders(subject: Identity): Set<EngineId>
 }

@@ -5,6 +5,7 @@ import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.EnabledPlugin
 import com.typewritermc.loader.LoaderService
 import com.typewritermc.loader.api.EngineCoverage
+import com.typewritermc.loader.api.EngineIds
 import com.typewritermc.loader.api.HOST_API_VERSION
 import com.typewritermc.loader.api.HostPlugins
 import com.typewritermc.loader.api.HostedMessagingSession
@@ -30,6 +31,7 @@ import com.typewritermc.loader.deployment.ResolutionResult
 import com.typewritermc.loader.deployment.engineCoverage
 import com.typewritermc.loader.deployment.resolveDeployment
 import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.services.libs.communicator.address.requireSubjectToken
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
@@ -62,15 +64,14 @@ import skirout.service.v1.rollout.EnabledPlugin as SkirEnabledPlugin
  * Describes the Realm and roles assigned to a loader host.
  *
  * A Realm role requires a primary engine target and panel engine intent for deployment coordination. A primary engine
- * role requires the [engineInstance] it runs as: the topology engine instance id, or `local.<realm id>` for a host
- * running without topology.
+ * role requires the [engineInstance] it runs as.
  */
 data class ArtifactHostAssignment(
     val realmId: RealmId,
     val roles: Set<RuntimePlacement>,
     val primaryEngine: PrimaryEngineTarget? = null,
     val intent: RealmLoaderIntent? = null,
-    val engineInstance: String? = null,
+    val engineInstance: PrimaryEngineInstance? = null,
 ) {
     init {
         if (RuntimePlacement.REALM in roles) {
@@ -80,15 +81,41 @@ data class ArtifactHostAssignment(
         if (RuntimePlacement.PRIMARY_ENGINE in roles) {
             requireNotNull(engineInstance) { "A primary engine assignment requires the engine instance it runs as." }
         }
+        RuntimePlacement.entries.filter { it in roles }.forEach { placement ->
+            engineIdOf(placement)?.let { requireSubjectToken(it, "The engine id of the $placement runtime") }
+        }
     }
 
-    /** The engine identity a runtime of [placement] runs as in this Realm, or null for the Realm itself. */
+    /** The engine identity a runtime of [placement] runs as in this Realm, as [EngineIds] names it, or null for the Realm itself. */
     fun engineIdOf(placement: RuntimePlacement): String? =
         when (placement) {
-            RuntimePlacement.REALM -> null
-            RuntimePlacement.PANEL_ENGINE -> "panel.${realmId.value}"
-            RuntimePlacement.PRIMARY_ENGINE -> engineInstance
+            RuntimePlacement.REALM -> {
+                null
+            }
+
+            RuntimePlacement.PANEL_ENGINE -> {
+                EngineIds.panel(realmId.value)
+            }
+
+            RuntimePlacement.PRIMARY_ENGINE -> {
+                when (val instance = engineInstance) {
+                    is PrimaryEngineInstance.Topology -> EngineIds.primary(instance.id)
+                    PrimaryEngineInstance.Local -> EngineIds.local(realmId.value)
+                    null -> null
+                }
+            }
         }
+}
+
+/** What a host's primary engine runs as. */
+sealed interface PrimaryEngineInstance {
+    /** The topology engine instance [id] the backend assigned. */
+    data class Topology(
+        val id: String,
+    ) : PrimaryEngineInstance
+
+    /** The one primary engine of a host running without topology, named after its Realm. */
+    data object Local : PrimaryEngineInstance
 }
 
 /**

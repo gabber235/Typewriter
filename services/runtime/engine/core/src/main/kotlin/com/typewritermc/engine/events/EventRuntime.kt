@@ -7,6 +7,9 @@ import com.typewritermc.events.Chains
 import com.typewritermc.events.Context
 import com.typewritermc.events.Demand
 import com.typewritermc.events.Event
+import com.typewritermc.events.EventFailure
+import com.typewritermc.events.EventReason
+import com.typewritermc.events.EventResult
 import com.typewritermc.events.EventShape
 import com.typewritermc.events.HandlerPlan
 import com.typewritermc.events.HandlerSubscription
@@ -26,6 +29,7 @@ import com.typewritermc.events.pass
 import com.typewritermc.identity.Identity
 import com.typewritermc.identity.Protagonist
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withContext
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -64,6 +68,7 @@ class EventRuntime(
     private val costs: HandlerCosts,
     private val pickup: ChainPickup,
     private val holding: SubjectHolding,
+    elsewhere: Lazy<Elsewhere>,
 ) : ChainQueueing,
     AutoCloseable {
     @Volatile
@@ -73,6 +78,7 @@ class EventRuntime(
     private val shapes = parts.shapes.associateBy { it.event }
     private val verdicts = parts.handlers.filterIsInstance<VerdictHandler<*>>()
     private val afters = parts.handlers.filterIsInstance<AfterHandler<*>>()
+    private val elsewhere by elsewhere
 
     /** Makes [content] the content every following occurrence sees, and opens or closes sources to match. */
     @Synchronized
@@ -136,8 +142,8 @@ class EventRuntime(
     }
 
     /**
-     * Queues [event] as a chain: it is decided on the worker, then its follow ups and after handlers run there. An event
-     * about a protagonist this engine does not hold is dropped.
+     * Queues [event] as a chain: it is decided on the worker, then its follow ups and after handlers run there, when this
+     * engine holds its subject; every other engine holding the subject gets it through delivery.
      */
     override fun emit(event: Event) = start(event, repeat = 0)
 
@@ -150,14 +156,14 @@ class EventRuntime(
             override fun emit(event: Event) = enqueue(event, repeat = 0)
         }
 
-    /** Whether an occurrence of [event] runs here: it is about no protagonist, or about one this engine holds. */
+    /** Whether an occurrence of [event] runs here: it is about no identity, or about one this engine holds. */
     private fun held(event: Event): Boolean {
         val subject = subjectOf(event)
-        return subject !is Protagonist || holding.holds(subject)
+        return subject == null || holding.holds(subject)
     }
 
     /**
-     * Queues [event] as [emit] does, dropping it when it is about a protagonist this engine does not hold; a chain start
+     * Queues [event] as [emit] does, here when this engine holds its subject and elsewhere for every other holder; a chain start
      * merges into an equal waiting start, except that [repeat], the count of earlier equal starts in the same `fire`
      * call, keeps each repeat a run of its own.
      */
@@ -166,6 +172,15 @@ class EventRuntime(
         repeat: Int,
     ) {
         if (held(event)) enqueue(event, repeat)
+        forward(event, origin = null)
+    }
+
+    /** Hands [event] to the other engines holding its subject; an event about no identity stays on this engine. */
+    private fun forward(
+        event: Event,
+        origin: Origin?,
+    ) {
+        subjectOf(event)?.let { elsewhere.forward(event, it, origin) }
     }
 
     /** Queues [event] as [start] does, without the hold check. */
@@ -173,19 +188,57 @@ class EventRuntime(
         event: Event,
         repeat: Int,
     ) {
-        val subject = subjectOf(event)
         val key =
             when {
                 event !is TriggeredEvent<*> -> null
                 repeat == 0 -> event
                 else -> event to repeat
             }
-        queue.enqueue(workOf(subject), event::class.simpleName ?: "event", key = key) {
-            val content = published
-            val decision = decideOn(event, null, content)
-            after(event, null, decision, content)
+        queue.enqueue(workOf(subjectOf(event)), event::class.simpleName ?: "event", key = key) { decideAndRun(event, null) }
+        pickup.queued()
+    }
+
+    /**
+     * Queues a run of [event], caused by [origin], without the hold check and without merging into an equal waiting
+     * chain, and returns how it ended once a pickup ran it: [EventResult.NotHandled] when no handler ran, also when a
+     * wipe dropped the chain; [EventResult.Denied] with the winning reason; [EventResult.Failed] when an after handler
+     * threw, with the reason of an [EventFailure] or `handler_error` for any other throw; else [EventResult.Done].
+     */
+    suspend fun run(
+        event: Event,
+        origin: Origin?,
+    ): EventResult {
+        val result = CompletableDeferred<EventResult>()
+        queue.enqueue(
+            workOf(subjectOf(event)),
+            event::class.simpleName ?: "event",
+            dropped = { result.complete(EventResult.NotHandled) },
+        ) {
+            try {
+                result.complete(decideAndRun(event, origin))
+            } finally {
+                result.complete(EventResult.Failed(INTERRUPTED))
+            }
         }
         pickup.queued()
+        return result.await()
+    }
+
+    /** Decides on [event] and runs its follow ups and after handlers, as one chain does; returns how it ended. */
+    private suspend fun decideAndRun(
+        event: Event,
+        origin: Origin?,
+    ): EventResult {
+        val content = published
+        val decided = decideOn(event, origin, content)
+        val ran = after(event, origin, decided.decision, content)
+        val outcome = decided.decision.outcome
+        return when {
+            outcome is Outcome.Denied -> EventResult.Denied(outcome.reason)
+            ran.failure != null -> EventResult.Failed(ran.failure)
+            decided.ran || ran.ran -> EventResult.Done
+            else -> EventResult.NotHandled
+        }
     }
 
     private fun <E : Event> Source<E>.openWith(): AutoCloseable = open(sink())
@@ -197,20 +250,27 @@ class EventRuntime(
                 origin: Origin?,
                 apply: (Outcome<E>) -> Unit,
             ) {
+                forward(event, origin)
                 if (!held(event)) return
                 val content = published
-                val decision = decideOn(event, origin, content)
+                val decision = decideOn(event, origin, content).decision
                 apply(decision.outcome)
                 queue.enqueue(workOf(subjectOf(event)), event::class.simpleName ?: "event") { after(event, origin, decision, content) }
                 pickup.queued()
             }
         }
 
+    /** The merged decision on [event], and whether any verdict handler ran. */
+    private class Decided<out E : Event>(
+        val decision: Decision<E>,
+        val ran: Boolean,
+    )
+
     private fun <E : Event> decideOn(
         event: E,
         origin: Origin?,
         content: PublishedEntries,
-    ): Decision<E> {
+    ): Decided<E> {
         val ranked =
             verdicts.filter { it.accepts(event) }.flatMap { plan ->
                 @Suppress("UNCHECKED_CAST")
@@ -230,37 +290,51 @@ class EventRuntime(
                     Ranked(verdict, run.priority)
                 }
             }
-        return merge(event, ranked)
+        return Decided(merge(event, ranked), ran = ranked.isNotEmpty())
     }
+
+    /** Whether any after handler ran on an occurrence, and the reason the first that failed gave. */
+    private class AfterRan(
+        val ran: Boolean,
+        val failure: EventReason?,
+    )
 
     private suspend fun <E : Event> after(
         source: E,
         origin: Origin?,
         decision: Decision<E>,
         content: PublishedEntries,
-    ) = withContext(Chains(this) + ChainContent(content, ::start)) {
-        decision.followUps.forEach { it() }
-        val event = decision.outcome.event
-        afters
-            .filter { it.accepts(event) && (decision.outcome is Outcome.Allowed || Param.Outcome in it.params) }
-            .forEach { plan ->
-                @Suppress("UNCHECKED_CAST")
-                plan as AfterHandler<Event>
-                runs(plan, event, origin, decision.outcome, content).forEach { run ->
-                    measured(event) {
-                        try {
-                            plan.run(event, run.values)
-                        } catch (cancelled: CancellationException) {
-                            throw cancelled
-                        } catch (
-                            @Suppress("TooGenericExceptionCaught") failure: Exception,
-                        ) {
-                            log.log(Level.WARNING, "An after handler on ${source::class.simpleName} failed.", failure)
+    ): AfterRan =
+        withContext(Chains(this) + ChainContent(content, ::start)) {
+            decision.followUps.forEach { it() }
+            val event = decision.outcome.event
+            var ran = false
+            var failed: EventReason? = null
+            afters
+                .filter { it.accepts(event) && (decision.outcome is Outcome.Allowed || Param.Outcome in it.params) }
+                .forEach { plan ->
+                    @Suppress("UNCHECKED_CAST")
+                    plan as AfterHandler<Event>
+                    runs(plan, event, origin, decision.outcome, content).forEach { run ->
+                        ran = true
+                        measured(event) {
+                            try {
+                                plan.run(event, run.values)
+                            } catch (cancelled: CancellationException) {
+                                throw cancelled
+                            } catch (failure: EventFailure) {
+                                failed = failed ?: failure.reason
+                            } catch (
+                                @Suppress("TooGenericExceptionCaught") failure: Exception,
+                            ) {
+                                log.log(Level.WARNING, "An after handler on ${source::class.simpleName} failed.", failure)
+                                failed = failed ?: HANDLER_ERROR
+                            }
                         }
                     }
                 }
-            }
-    }
+            AfterRan(ran, failed)
+        }
 
     /** Runs [block] and records its time as one handler run on [event]. */
     private inline fun <T> measured(
@@ -427,8 +501,9 @@ class EventRuntime(
             else -> emptySet()
         }
 
+    /** The identity [event] is about, which decides the engines it runs on; null for an event without one, such as a tick. */
     @Suppress("UNCHECKED_CAST")
-    private fun subjectOf(event: Event): Identity? =
+    fun subjectOf(event: Event): Identity? =
         when (event) {
             is TriggeredEvent<*> -> event.subject
             else -> (shapes[event::class] as EventShape<Event>?)?.subject(event)
@@ -444,6 +519,12 @@ class EventRuntime(
     private companion object {
         /** The priority of a handler's verdict when no entry gave it: below every page. */
         const val EXTENSION_PRIORITY = Int.MIN_VALUE
+
+        /** Why a run failed when an after handler threw something other than an [EventFailure]. */
+        val HANDLER_ERROR = EventReason(code = "handler_error", message = "A handler failed.")
+
+        /** Why a run failed when its chain stopped before it ended, such as when the engine closed. */
+        val INTERRUPTED = EventReason(code = "interrupted", message = "The engine stopped before the event ended.")
 
         val log: Logger = Logger.getLogger(EventRuntime::class.java.name)
     }

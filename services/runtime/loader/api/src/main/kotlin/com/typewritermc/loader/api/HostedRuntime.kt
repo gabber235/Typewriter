@@ -122,11 +122,25 @@ private fun MessageDigest.updateFramed(value: String) {
 }
 
 /**
+ * Names engines. Every engine id is one subject token, since it names the engine's inbox, and starts with its kind, so
+ * no two kinds share an id.
+ */
+object EngineIds {
+    /** The primary engine that runs as topology engine instance [instance]. */
+    fun primary(instance: String): String = "primary-$instance"
+
+    /** The primary engine of a host running Realm [realmId] without topology. */
+    fun local(realmId: String): String = "local-$realmId"
+
+    /** The panel engine of Realm [realmId]. */
+    fun panel(realmId: String): String = "panel-$realmId"
+}
+
+/**
  * Separates the physical host, logical Realm, placement, and engine identity of one runtime.
  *
  * Use the Realm id for Realm routing and the service id for participant coordination. [engineId] is the identity an
- * engine runs as in its Realm, and null for the Realm itself: the topology engine instance id for a primary engine,
- * `panel.<realm id>` for the Realm's panel engine, and `local.<realm id>` for a host running without topology.
+ * engine runs as in its Realm, as [EngineIds] names it, and null for the Realm itself.
  */
 data class HostedRuntimeIdentity(
     val serviceId: String,

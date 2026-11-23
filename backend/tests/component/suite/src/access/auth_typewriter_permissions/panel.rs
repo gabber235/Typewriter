@@ -287,6 +287,31 @@ async fn member_reaches_every_realm_of_its_organization_only(
 }
 
 #[component_test(AuthTypewriterPermissions)]
+async fn member_emits_events_as_itself_only_and_never_reaches_an_engine_inbox(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    seed_organization(context, &acme(), ada(), &[]).await?;
+
+    let permissions = member_grants(context, ada(), &acme()).await?;
+
+    assert!(permits(
+        &permissions.publish,
+        "service.to.quests.organization.acme.realm.event.emit.user.user_ada"
+    ));
+    for foreign in [
+        "service.to.quests.organization.acme.realm.event.emit.user.user_grace",
+        "service.to.quests.organization.globex.realm.event.emit.user.user_ada",
+        "service.to.quests.organization.acme.realm.engine.engine_one.event",
+    ] {
+        assert!(
+            !permits(&permissions.publish, foreign),
+            "{foreign} is granted"
+        );
+    }
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
 async fn punctuation_in_record_keys_remains_raw_in_generated_grants(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {

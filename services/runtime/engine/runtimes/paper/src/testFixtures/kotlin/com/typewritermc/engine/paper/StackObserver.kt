@@ -6,6 +6,7 @@ import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.SessionId
+import com.typewritermc.loader.api.EngineIds
 import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
@@ -72,31 +73,42 @@ class StackObserver private constructor(
 
     /** The id of [service]'s engine, as its sessions name their holder, or null while the topology has none. */
     suspend fun engineId(service: String): EngineId? =
-        (engine(service)?.engineId?.key as? RecordIdKey.StringWrapper)?.value?.let(::EngineId)
+        (engine(service)?.engineId?.key as? RecordIdKey.StringWrapper)?.value?.let { EngineId(EngineIds.primary(it)) }
 
     /**
      * The live entry of the Minecraft [player]'s session in the Realm's sessions bucket, or null when there is none.
+     */
+    suspend fun session(player: UUID): SessionEntry? =
+        session(Protagonist(PrincipalId(PrincipalId.MINECRAFT, player.toString())), SessionId(player.toString()))
+
+    /**
+     * The live entry of [protagonist]'s [session] in the Realm's sessions bucket, or null when there is none.
      *
      * natskt 0.9.1 can drop a JetStream reply, so now and then a read ends in natskt's 5 s request timeout although
      * the broker answered; a read that timed out is tried again, up to [READ_ATTEMPTS] reads in all. Remove the retry
      * once natskt delivers every reply.
      */
-    suspend fun session(player: UUID): SessionEntry? {
+    suspend fun session(
+        protagonist: Protagonist,
+        session: SessionId,
+    ): SessionEntry? {
         repeat(READ_ATTEMPTS - 1) {
             try {
-                return readSession(player)
+                return readSession(protagonist, session)
             } catch (_: TimeoutCancellationException) {
                 currentCoroutineContext().ensureActive()
             }
         }
-        return readSession(player)
+        return readSession(protagonist, session)
     }
 
-    private suspend fun readSession(player: UUID): SessionEntry? {
+    private suspend fun readSession(
+        protagonist: Protagonist,
+        session: SessionId,
+    ): SessionEntry? {
         val opened = NatsKeyValueBuckets(stack.connection).open(SessionsBucket.name(realm))
         check(opened is KeyValueOpen.Opened) { "the observer could not open the sessions bucket of $realm: $opened" }
-        val id = player.toString()
-        return opened.bucket.readSessionEntry(Protagonist(PrincipalId(PrincipalId.MINECRAFT, id)), SessionId(id))
+        return opened.bucket.readSessionEntry(protagonist, session)
     }
 
     /** Whether the engine of [service] reports active. */

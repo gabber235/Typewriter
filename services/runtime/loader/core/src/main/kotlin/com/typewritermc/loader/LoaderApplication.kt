@@ -12,6 +12,7 @@ import com.typewritermc.loader.rollout.ArtifactHostAssignment
 import com.typewritermc.loader.rollout.ArtifactHostAssignmentSource
 import com.typewritermc.loader.rollout.BackendArtifactHostAssignmentSource
 import com.typewritermc.loader.rollout.DesiredHostExecution
+import com.typewritermc.loader.rollout.PrimaryEngineInstance
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
@@ -99,8 +100,7 @@ internal class ArtifactLoaderBootstrap(
                                     VersionConstraint(settings.get("TYPEWRITER_PRIMARY_ENGINE_VERSION", "^1")),
                                 ),
                             intent = RealmLoaderIntent(panelEngine),
-                            // No topology runs this host, so its engine is named after the Realm alone.
-                            engineInstance = "local.$localRealmId",
+                            engineInstance = PrimaryEngineInstance.Local,
                         ),
                 ),
             )

@@ -1,0 +1,132 @@
+// Events between the engines of a realm. A sender resolves an event's subject to the engines that
+// hold it and asks each one's inbox; a holder only ever answers. The sender asks again with the
+// same occurrence until the answer is final, so a lost request or answer costs one more ask and a
+// holder runs each occurrence once.
+
+import { DataValue } from "editor/v1/type_catalog.skir";
+import { InternalError } from "kernel/v1/errors.skir";
+import {
+  EngineId,
+  PrincipalId,
+  Protagonist,
+  SessionId,
+} from "kernel/v1/identity.skir";
+
+// One occurrence of an event, a UUIDv7 chosen by whoever starts it. Every ask about the occurrence
+// repeats it, and a holder runs it once.
+struct OccurrenceId(84120001) {
+  value: string;
+}
+
+// Who caused an occurrence: the session it came from and the principal acting in it. A gateway or a
+// source fills it, never the event, so deny handlers and history can trust it.
+struct EventOrigin(84120002) {
+  session: SessionId;
+  principal: PrincipalId;
+}
+
+// Why an occurrence was denied or failed. Code and message match a diagnostic's, so any client can
+// show a reason it does not know; detail is the reason's typed value when it has one.
+struct EventReason(84120003) {
+  code: string;
+  message: string;
+  detail: DataValue?;
+}
+
+// One session of a protagonist, as the subject of an event that targets one connection.
+struct SessionSubject(84120004) {
+  protagonist: Protagonist;
+  session: SessionId;
+}
+
+// The identity an event is about, which decides the engines it reaches: every engine holding a
+// session of a protagonist, the engine holding one session, or one engine.
+enum EventSubject(84120005) {
+  protagonist: Protagonist = 1;
+  session: SessionSubject = 2;
+  engine: EngineId = 3;
+}
+
+// The final result of an occurrence on one holder, or merged over every holder, the strongest
+// winning: denied, then failed, then done, then not_handled.
+enum EventResult(84120006) {
+  // Its handlers ran and none denied or failed.
+  done = 1;
+  // A deny verdict won.
+  denied: EventReason = 2;
+  // An after handler failed, or the holder cannot decode the event's exact type.
+  failed: EventReason = 3;
+  // No handler ran for it.
+  not_handled = 4;
+}
+
+// What a holder answers when asked about an occurrence.
+enum EventStatus(84120007) {
+  // Queued or running; ask again for the final result.
+  running = 1;
+  final: EventResult = 2;
+}
+
+// One occurrence on its way to a holder. The subject travels beside the event, so an engine without
+// the event's extension routes it; the holder checks it against the decoded event.
+struct EventDelivery(84120008) {
+  occurrence: OccurrenceId;
+  subject: EventSubject;
+  event: DataValue;
+  origin: EventOrigin?;
+}
+
+// Asks a holder about an occurrence, delivering it on the first ask. The holder answers once the
+// occurrence is final or once wait_ms passed, whichever comes first. confirmed says the sender
+// already had an answer about this occurrence, so a holder that does not know it lost it instead of
+// receiving it for the first time.
+method DeliverEvent(
+  struct {
+    delivery: EventDelivery;
+    wait_ms: int32;
+    confirmed: bool;
+  }
+): enum {
+  success: EventStatus;
+
+  /// This engine holds no session of the subject; the sender resolves the holders again.
+  not_held_error: struct {
+    subject: EventSubject;
+  };
+
+  /// The holder confirmed this occurrence before and no longer knows it: it restarted.
+  forgotten_error: struct {
+    occurrence: OccurrenceId;
+  };
+
+  internal_error: InternalError;
+} = 941201;
+
+// A client asks its gateway to emit an event caused by one of its own sessions. The gateway takes
+// the caller from the subject, checks that it holds that session, sends the event to every holder
+// of its subject, and answers with their merged result, once final or once wait_ms passed. The
+// client asks again with the same occurrence until the answer is final.
+method EmitEvent(
+  struct {
+    occurrence: OccurrenceId;
+    session: SessionId;
+    subject: EventSubject;
+    event: DataValue;
+    wait_ms: int32;
+    confirmed: bool;
+  }
+): enum {
+  success: EventStatus;
+
+  /// The caller holds no such session, so the event has no trusted origin and was not sent.
+  session_not_held_error: struct {
+    session: SessionId;
+  };
+
+  /// The gateway confirmed this occurrence before and no longer knows it: it restarted.
+  forgotten_error: struct {
+    occurrence: OccurrenceId;
+  };
+
+  internal_error: InternalError;
+} = 941202;

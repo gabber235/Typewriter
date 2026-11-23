@@ -10,6 +10,7 @@ import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.edit.AuthoringPlanRejected
 import com.typewritermc.realm.edit.WorkingViewEditContext
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
+import com.typewritermc.testkit.CatalogEncoder
 import com.typewritermc.testkit.setup.EditRefused
 import com.typewritermc.testkit.setup.SetupEdit
 import com.typewritermc.testkit.setup.SetupEditor
@@ -75,6 +76,12 @@ class RemoteSetupEditor(
             RealmRouteScope::authoringEditCommit,
             CommitPreparedEditRequest(edit = edit, submission = submission.value),
         )
+
+    /**
+     * Encodes native values as the Realm's installed catalog types them, as a panel encodes what it sends: the catalog of
+     * the generation the Realm reports now.
+     */
+    suspend fun encoder(): CatalogEncoder = activated(currentState().generation).lease.let { CatalogEncoder(it.checked, it.nativeBindings) }
 
     override fun close() {
         active?.close()

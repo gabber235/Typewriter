@@ -4,9 +4,17 @@ import type { Channel, Delivery, Party, RoleDeclarations, Route, ScopeKind } fro
 export const PARAMETERS = ["organization", "realm", "service", "user"] as const;
 export type Parameter = (typeof PARAMETERS)[number];
 
+/**
+ * A literal, an identity capture, or a free value: a declared value no role binds, which the caller
+ * supplies and every grant leaves open (an engine id in `engine.{engine}.event`).
+ */
 export type SubjectToken =
   | { readonly kind: "literal"; readonly value: string }
-  | { readonly kind: "parameter"; readonly parameter: Parameter };
+  | { readonly kind: "parameter"; readonly parameter: Parameter }
+  | { readonly kind: "free"; readonly name: string };
+
+/** The spelling of a free value name: lower snake case, like a route identifier. */
+const FREE_NAME = /^[a-z][a-z0-9_]*$/u;
 
 /** Sorts parameters into their canonical order and removes duplicates. */
 export function sortedParameters(parameters: Iterable<Parameter>): Parameter[] {
@@ -23,6 +31,8 @@ export function scopeParameters(scope: ScopeKind): readonly Parameter[] {
       return ["service"];
     case "organization_actor":
       return ["organization", "user"];
+    case "realm_actor":
+      return ["organization", "realm", "user"];
     case "organization":
       return ["organization"];
     case "user":
@@ -39,17 +49,22 @@ export function scopeParameters(scope: ScopeKind): readonly Parameter[] {
 export class SubjectTemplate {
   private constructor(readonly tokens: readonly SubjectToken[]) {}
 
-  /** Parses a dotted subject such as `user.{user}.organization.create`; throws if invalid. */
-  static parse(value: string): SubjectTemplate {
-    const seen = new Set<Parameter>();
+  /**
+   * Parses a dotted subject such as `user.{user}.organization.create`; throws if invalid. A
+   * placeholder that names no identity is a free value when [free] admits its name, and invalid
+   * otherwise.
+   */
+  static parse(value: string, free: (name: string) => boolean = () => false): SubjectTemplate {
+    const seen = new Set<string>();
     const tokens = value.split(".").map((part): SubjectToken => {
       const parameter = PARAMETERS.find((candidate) => part === `{${candidate}}`);
-      if (parameter) {
-        if (seen.has(parameter)) {
+      const name = part.startsWith("{") && part.endsWith("}") ? part.slice(1, -1) : undefined;
+      if (parameter || (name !== undefined && FREE_NAME.test(name) && free(name))) {
+        if (seen.has(part)) {
           throw new Error(`repeated subject parameter ${part}`);
         }
-        seen.add(parameter);
-        return { kind: "parameter", parameter };
+        seen.add(part);
+        return parameter ? { kind: "parameter", parameter } : { kind: "free", name: name! };
       }
       if (part.length === 0 || /[\s*>{}]/u.test(part)) {
         throw new Error(`invalid subject token ${JSON.stringify(part)}`);
@@ -61,7 +76,12 @@ export class SubjectTemplate {
 
   /** Prepends the tokens of a subject family prefix such as `cloud.to`. */
   prefixed(prefix: string): SubjectTemplate {
-    return SubjectTemplate.parse(`${prefix}.${this}`);
+    return new SubjectTemplate([...SubjectTemplate.parse(prefix).tokens, ...this.tokens]);
+  }
+
+  /** The free values in subject order. */
+  freeValues(): string[] {
+    return this.tokens.flatMap((token) => (token.kind === "free" ? [token.name] : []));
   }
 
   /** Whether the subject captures the given identity. */
@@ -78,9 +98,14 @@ export class SubjectTemplate {
 
   toString(): string {
     return this.tokens
-      .map((token) => (token.kind === "literal" ? token.value : `{${token.parameter}}`))
+      .map((token) => (token.kind === "literal" ? token.value : `{${placeholderName(token)}}`))
       .join(".");
   }
+}
+
+/** The name between the braces of a capture or a free value. */
+export function placeholderName(token: Exclude<SubjectToken, { kind: "literal" }>): string {
+  return token.kind === "parameter" ? token.parameter : token.name;
 }
 
 /**
@@ -115,8 +140,9 @@ const isComponent = (party: Party): party is { readonly component: string } => "
  * Derives the subjects of one channel from the route scope and its publishing and receiving
  * parties. This is the only place subject family prefixes exist:
  *
- * - realm scope uses the realm mesh, `service.to` toward the realm coordinator and `service.from`
- *   when the coordinator publishes;
+ * - realm and realm actor scopes use the realm mesh, `service.to` toward the realm coordinator and
+ *   `service.from` when the coordinator publishes; a realm actor address names its caller with
+ *   `{user}`;
  * - a role talking to a component crosses the bridge, where `cloud.to` and `typewriter.from` are
  *   one flow seen from each side (`cloud.from` and `typewriter.to` back); component callers of a
  *   bridged request also get the bare address;
@@ -137,7 +163,7 @@ export function channelSubjects(
   const parties = [...publishers, ...receivers];
   const external = parties.some(isRole);
   const internal = parties.some(isComponent);
-  if (scope === "realm") {
+  if (scope === "realm" || scope === "realm_actor") {
     if (internal) {
       throw new Error("realm routes connect roles only");
     }

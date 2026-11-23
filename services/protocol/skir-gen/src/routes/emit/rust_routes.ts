@@ -3,7 +3,7 @@ import type { CodeGenerator } from "skir-internal";
 import { upperCamel } from "../../text.js";
 import type { ScopeKind } from "../manifest.js";
 import { routeChannel, type ResolvedMethod, type ResolvedRoute } from "../resolve.js";
-import type { Parameter, SubjectTemplate } from "../subject.js";
+import type { Parameter, SubjectTemplate, SubjectToken } from "../subject.js";
 
 /** The hand written runtime module the generated routes implement and call. */
 export const TRANSPORT = "crate::transport";
@@ -11,6 +11,8 @@ export const TRANSPORT = "crate::transport";
 /** Scope struct fields in the order the runtime declares them and `from_tokens` takes them. */
 export const SCOPE_FIELDS: Record<ScopeKind, readonly Parameter[]> = {
   realm: ["organization", "realm"],
+  // Realm actor routes connect roles only, so no component serves one and no runtime type exists.
+  realm_actor: ["organization", "realm", "user"],
   service: ["service"],
   organization_actor: ["user", "organization"],
   organization: ["organization"],
@@ -45,6 +47,17 @@ function endpointScope(template: SubjectTemplate): ScopeKind {
   return scope;
 }
 
+/**
+ * The identity a component subject token captures. Components serve subjects of identities only: a
+ * free value needs a runtime scope type that carries it, which no component route has asked for.
+ */
+export function componentCapture(token: Exclude<SubjectToken, { kind: "literal" }>, subject: SubjectTemplate): Parameter {
+  if (token.kind === "free") {
+    throw new Error(`component subject ${subject} carries the free value {${token.name}}, which component routes do not support`);
+  }
+  return token.parameter;
+}
+
 /** A Rust string literal; subjects never contain quotes or backslashes, so none need escaping. */
 export function literal(value: string): string {
   return JSON.stringify(value);
@@ -56,7 +69,7 @@ export function literal(value: string): string {
  */
 function renderSubject(template: SubjectTemplate): string {
   const value = template.tokens
-    .map((token) => (token.kind === "literal" ? token.value : `{${token.parameter}}`))
+    .map((token) => (token.kind === "literal" ? token.value : `{${componentCapture(token, template)}}`))
     .join(".");
   return template.parameters().length === 0
     ? `String::from(${literal(value)})`

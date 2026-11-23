@@ -84,14 +84,20 @@ const LIMITS = (() => {
 
 /**
  * A manifest with the committed role declarations and limits, the given components (each served or
- * called by the given routes) and the given route list items.
+ * called by the given routes), the given route list items, buckets, and declared free parameters.
  */
-export function manifestSource(routes: string, components: readonly string[] = [], buckets = ""): string {
+export function manifestSource(
+  routes: string,
+  components: readonly string[] = [],
+  buckets = "",
+  parameters: readonly string[] = [],
+): string {
   const declared = components.map((component) => `  ${component}: backend/${component}/deploy/base\n`);
   const componentLines = declared.length === 0 ? " {}\n" : `\n${declared.join("")}`;
   const routeLines = routes === "" ? " []\n" : `\n${routes}`;
   const bucketLines = buckets === "" ? "" : `buckets:\n${buckets}`;
-  return `${ROLES}components:${componentLines}routes:${routeLines}${LIMITS}${bucketLines}`;
+  const parameterLines = parameters.length === 0 ? "" : `parameters: [${parameters.join(", ")}]\n`;
+  return `${ROLES}${parameterLines}components:${componentLines}routes:${routeLines}${LIMITS}${bucketLines}`;
 }
 
 /** A Skir input without modules, for admission checks that fail before any Skir lookup. */

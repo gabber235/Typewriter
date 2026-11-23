@@ -71,7 +71,7 @@ class SessionHarness private constructor(
         val connection = connect()
         val buckets = MutableStateFlow<KeyValueBuckets?>(NatsKeyValueBuckets(connection))
         val events = EmittedEvents()
-        val keeper = SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, HeldSessions(), events, scope)
+        val keeper = SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, HeldSessions(EngineId(id)), events, scope)
         return HarnessEngine(EngineId(id), keeper, events, connection).also(engines::add)
     }
 
@@ -193,6 +193,11 @@ class HarnessEngine(
     val events: EmittedEvents,
     private val connection: NatsConnection,
 ) {
+    /** The engine loses NATS and keeps running: its connection is gone, its keeper still answers. */
+    suspend fun cutOff() {
+        connection.shutdown()
+    }
+
     /** The engine stops as a crash would: no further write, its connection gone. */
     suspend fun crash() {
         keeper.close()

@@ -33,7 +33,7 @@ value class AddressPattern private constructor(
         fun of(value: String): AddressPattern {
             require(value.isNotBlank()) { "Address pattern must not be blank" }
             value.split('.').forEach { segment ->
-                require(segment == "*" || validateToken(segment, "Pattern segment") == segment) {
+                require(segment == "*" || requireSubjectToken(segment, "Pattern segment") == segment) {
                     "Invalid pattern segment '$segment'"
                 }
             }
@@ -97,7 +97,7 @@ class AddressTemplate<Address : Any> internal constructor(
         require(values.keys == placeholders) { "Renderer keys must exactly match placeholders $placeholders" }
         return MessageAddress.of(
             segments.joinToString(".") { segment ->
-                segment.placeholder?.let { validateToken(values.require(it), "Rendered value '$it'") } ?: segment.source
+                segment.placeholder?.let { requireSubjectToken(values.require(it), "Rendered value '$it'") } ?: segment.source
             },
         )
     }
@@ -137,7 +137,7 @@ class AddressTemplate<Address : Any> internal constructor(
             AddressPattern.of(
                 segments.joinToString(".") { segment ->
                     val placeholder = segment.placeholder ?: return@joinToString segment.source
-                    values[placeholder]?.let { validateToken(it, "Bound value '$placeholder'") } ?: "*"
+                    values[placeholder]?.let { requireSubjectToken(it, "Bound value '$placeholder'") } ?: "*"
                 },
             ),
         )
@@ -191,13 +191,18 @@ private fun parseTemplate(pattern: String): List<PatternSegment> {
 
 private fun validateConcreteAddress(value: String): String {
     require(value.isNotBlank()) { "Address must not be blank" }
-    value.split('.').forEach { validateToken(it, "Address segment") }
+    value.split('.').forEach { requireSubjectToken(it, "Address segment") }
     return value
 }
 
-private fun validateLiteral(value: String): String = validateToken(value, "Literal segment")
+private fun validateLiteral(value: String): String = requireSubjectToken(value, "Literal segment")
 
-private fun validateToken(
+/**
+ * Returns [value] when it can stand as one segment of a transport subject: not blank, no whitespace, no `.` and no
+ * wildcard or placeholder syntax; fails naming it as [label] otherwise. Identities that address a subject, such as an
+ * engine id, check themselves with it when they are made, so a bad one fails where it is named.
+ */
+fun requireSubjectToken(
     value: String,
     label: String,
 ): String {

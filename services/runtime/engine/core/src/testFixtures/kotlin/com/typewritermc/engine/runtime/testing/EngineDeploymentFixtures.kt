@@ -57,15 +57,26 @@ private object UnusedHost : HostedRuntimeHost {
     override val sharedArtifacts get() = error("A refused deployment never reaches shared artifacts.")
 }
 
-/** A primary engine deployment of engine `engine` in Realm `realm` whose host messaging reaches [buckets]. */
+/**
+ * A primary engine deployment of engine [engine] in Realm `realm` of organization `organization`, whose host messaging
+ * reaches [buckets] and sends through [transport].
+ */
 fun wiredDeploymentContext(
     buckets: com.typewritermc.services.libs.communicator.kv.KeyValueBuckets =
         com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets,
-) = deploymentContext(RuntimePlacement.PRIMARY_ENGINE, RuntimePlacement.PRIMARY_ENGINE).copy(host = MessagingHost(buckets))
+    engine: String = "engine",
+    transport: com.typewritermc.services.libs.communicator.transport.MessageTransport =
+        com.typewritermc.services.libs.communicator.testing
+            .FakeMessageTransport(),
+): HostedDeploymentContext {
+    val context = deploymentContext(RuntimePlacement.PRIMARY_ENGINE, RuntimePlacement.PRIMARY_ENGINE)
+    return context.copy(identity = context.identity.copy(engineId = engine), host = MessagingHost(buckets, transport))
+}
 
-/** A host whose messaging session reaches [buckets] and whose communicator is never used. */
+/** A host whose messaging session reaches [buckets] and sends through [transport]. */
 private class MessagingHost(
     buckets: com.typewritermc.services.libs.communicator.kv.KeyValueBuckets,
+    transport: com.typewritermc.services.libs.communicator.transport.MessageTransport,
 ) : HostedRuntimeHost {
     private val telemetry =
         io.opentelemetry.api.OpenTelemetry
@@ -77,8 +88,7 @@ private class MessagingHost(
                 organizationId = "organization",
                 communicator =
                     com.typewritermc.services.libs.communicator.client.Communicator(
-                        com.typewritermc.services.libs.communicator.testing
-                            .FakeMessageTransport(),
+                        transport,
                         telemetry.serviceTelemetry("engine test"),
                         io.opentelemetry.context.propagation.ContextPropagators
                             .noop(),

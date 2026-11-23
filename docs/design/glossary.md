@@ -680,7 +680,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`RichText`**: text type whose `template` provider (MiniMessage) comes from the Minecraft capability. See [formula-language.md](formula-language.md#text-templates).
 
-**Routing**: an event goes where a handler can run; realm owned data goes through the realm; events and live effects about a protagonist go to its protagonist subject, and session subjects serve only targets that are one connection. See [live-data.md](live-data.md#routing).
+**Routing**: an event goes where a handler can run; realm owned data goes through the realm; events and live effects about an identity go to the inbox of every engine that holds it, and the sender asks each one for its result. See [live-data.md](live-data.md#routing).
 
 **`Running<E>`**: stored row of a running step: its entry, subject, context, and `startedAt`. Handlers and derives take it as a parameter or receiver; it is an `EntryScope<E>`. See [interactions.md](interactions.md#steps).
 

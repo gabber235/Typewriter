@@ -1,6 +1,8 @@
 package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.variantName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import skirout.harness.v1.wire.InputStep
 import skirout.harness.v1.wire.KeyboardKey
 import skirout.harness.v1.wire.Message
@@ -133,6 +135,29 @@ class RequirementScope internal constructor(
      * join caused counts: windows count from it.
      */
     suspend fun GamePlayer.rejoin(): Mark = attempt.rejoin(this).also { anchor = it }
+
+    /**
+     * Starts [action], a stimulus from outside Paper such as a panel tab's emit or a write to the Realm, which
+     * [says] describes, and returns at once with the result to come; the attempt fails with it when the action
+     * fails. Windows count from the tick that last ended on Paper before it started, since Paper runs no tick
+     * until a window waits, so what it causes shows from the next:
+     *
+     * ```kotlin
+     * coroutineScope {
+     *     val result = outside("a panel tab emits the signal") { tab.emit(subject, signal) }
+     *     within(40.ticks) { player sees chat("Signal from the panel") }
+     *     result.await() shouldBe EventResult.DONE
+     * }
+     * ```
+     */
+    suspend fun <T> CoroutineScope.outside(
+        says: String,
+        action: suspend () -> T,
+    ): Deferred<T> {
+        val (mark, result) = attempt.outside(this, says, action)
+        anchor = mark
+        return result
+    }
 
     /**
      * The frame the player's client holds now is the golden [name], to the pixel. It is compared only

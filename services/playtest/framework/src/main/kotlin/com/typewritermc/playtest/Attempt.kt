@@ -7,6 +7,8 @@ import build.skir.reflection.StructField
 import build.skir.reflection.TypeDescriptor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -48,6 +50,9 @@ internal interface AttemptPool {
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<StateKind>
+
+    /** The tick that last ended on the Paper of [player]'s attempt. */
+    suspend fun now(player: GamePlayer): Int
 
     /**
      * The publication the Typewriter engine on the Paper of [player]'s attempt applies now.
@@ -335,6 +340,31 @@ internal class Attempt(
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<StateKind> = step("query ${player.name}") { unlessLost { session.query(player) } }
+
+    /**
+     * Starts [action], a stimulus from outside Paper that [says] describes, in [scope] as one step; the mark is
+     * the tick that last ended on Paper before it started, since Paper runs no tick until a window waits.
+     */
+    suspend fun <T> outside(
+        scope: CoroutineScope,
+        says: String,
+        action: suspend () -> T,
+    ): Pair<Mark, Deferred<T>> {
+        called()
+        val asked =
+            present.firstOrNull()
+                ?: throw RequirementRefused("a stimulus from outside Paper needs a player on Paper to mark its tick, and every player quit")
+        val mark = Mark(unlessLost { session.now(asked) }).also { ran(it.tick) }
+        val at = System.currentTimeMillis()
+        return mark to
+            scope.async {
+                try {
+                    action()
+                } finally {
+                    took(at, "outside: $says")
+                }
+            }
+    }
 
     /**
      * Kills the attempt's own Paper and boots it again; the mark is the new Paper's tick after which every

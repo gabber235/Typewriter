@@ -1,5 +1,5 @@
 // Identity of one authored resource of a realm, such as a page, a section or a tag.
 // Opaque and stable: renaming or moving the resource keeps it.
-struct ResourceId(80060001) {
+struct ResourceId(80070001) {
   value: string = 0;
 }
