@@ -629,8 +629,7 @@ private fun occurrenceKey(value: LinkOccurrence): String =
     )}:${value.target.resource.value}"
 
 /** Sorts by [key] built once per element; the keys serialize paths, which costs too much to repeat on every comparison. */
-internal fun <T> Iterable<T>.sortedByKeyOnce(key: (T) -> String): List<T> =
-    map { key(it) to it }.sortedBy { it.first }.map { it.second }
+internal fun <T> Iterable<T>.sortedByKeyOnce(key: (T) -> String): List<T> = map { key(it) to it }.sortedBy { it.first }.map { it.second }
 
 internal fun projectionKey(value: LinkProjection): String =
     "${value.contract.value}:${value.first.value}:${value.second.value}:" +
