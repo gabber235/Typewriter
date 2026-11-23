@@ -59,12 +59,14 @@ import java.math.BigInteger
  * Prepares editable values from catalog schemas and supplied content.
  *
  * A field with a Kotlin constructor default that nobody supplied stays unset: it is not stored, and reading it gives
- * what its constructor gives. Ordinary defaults fill every other field. Fields that need an answer are required inputs
- * of a caller owned continuation, which resumption validates against this catalog before accepting answers. The runtime
- * keeps no preparation session between calls and runs no constructor.
+ * what its constructor gives. A field of links is stored instead, with its constructor default when it has one, so
+ * creation runs the constructor for those alone. Ordinary defaults fill every other field. Fields that need an answer
+ * are required inputs of a caller owned continuation, which resumption validates against this catalog before accepting
+ * answers. The runtime keeps no preparation session between calls.
  */
 class DefaultInitializationRuntime(
     private val catalog: CheckedCatalog,
+    private val bindings: NativeBindingRegistry,
 ) : InitializationRuntime {
     override suspend fun prepare(request: ValuePreparationRequest): PreparedValue = prepareNow(request)
 
@@ -257,7 +259,7 @@ class DefaultInitializationRuntime(
                     val record = payload as? DataValue.RecordWrapper ?: return
                     representation.value.fields.forEach { field ->
                         val stored = record.field(field.key)
-                        if (stored == null && field.hasConstructorDefault) return@forEach
+                        if (stored == null && field.mayBeUnset(catalog)) return@forEach
                         walk(field.type, stored ?: DataValue.UNFILLED, path.field(field.key))
                     }
                 }
@@ -470,9 +472,10 @@ class DefaultInitializationRuntime(
     }
 
     /**
-     * The stored fields of a new record of [checked]: each supplied field, and an ordinary default for each other field
-     * without a constructor default. A field with a constructor default that nobody supplied stays absent: it is unset,
-     * and reading it gives what its constructor gives.
+     * The stored fields of a new record of [checked]: each supplied field, and an ordinary default for each other field.
+     * A field that [may be unset][mayBeUnset] and that nobody supplied stays absent, and reading it gives what its
+     * constructor gives. A field of links with a constructor default is a relation fact and always stored: the default
+     * its constructor gives for the other fields, or an ordinary default while the constructor cannot run yet.
      */
     private fun prepareRecordFields(
         checked: CheckedType,
@@ -482,15 +485,39 @@ class DefaultInitializationRuntime(
     ): RecordPreparation {
         val fields = suppliedFields.toMutableMap()
         val findings = mutableListOf<InitializationDiagnostic>()
+        val linkDefaults = checked.schema.fields.filter { it.key !in suppliedFields && it.hasConstructorDefault && !it.mayBeUnset(catalog) }
+        fun ordinary(field: ResolvedField): DataValue {
+            val fieldFindings = mutableListOf<InitializationDiagnostic>()
+            return ordinaryDefault(field.type, context, fieldFindings, path.field(field.key)).also {
+                findings += fieldFindings.map { finding -> finding.prepend(PathSegment.createField(name = field.key)) }
+            }
+        }
         checked.schema.fields.forEach { field ->
             val supplied = suppliedFields[field.key]
-            if (supplied == null && field.hasConstructorDefault) return@forEach
-            val fieldFindings = mutableListOf<InitializationDiagnostic>()
+            if (supplied == null && (field.mayBeUnset(catalog) || field in linkDefaults)) return@forEach
             fields[field.key] =
-                supplied?.let {
-                    if (context.resuming) resumeValue(field.type, it, context, fieldFindings, path.field(field.key)) else it
-                } ?: ordinaryDefault(field.type, context, fieldFindings, path.field(field.key))
-            findings += fieldFindings.map { it.prepend(PathSegment.createField(name = field.key)) }
+                if (supplied == null) {
+                    ordinary(field)
+                } else if (context.resuming) {
+                    val fieldFindings = mutableListOf<InitializationDiagnostic>()
+                    resumeValue(field.type, supplied, context, fieldFindings, path.field(field.key)).also {
+                        findings += fieldFindings.map { finding -> finding.prepend(PathSegment.createField(name = field.key)) }
+                    }
+                } else {
+                    supplied
+                }
+        }
+        if (linkDefaults.isNotEmpty()) {
+            val inputs =
+                checked.schema.fields.mapNotNull { field ->
+                    val value = fields[field.key] ?: return@mapNotNull null
+                    val complete = completeSample(field.type, value) as? CompletenessResult.Complete ?: return@mapNotNull null
+                    FieldOwner(definition = field.declarationOwner, name = field.key) to complete.value
+                }
+            val captured = (bindings.sampleDefaults(checked, inputs.toMap()) as? CaptureResult.Captured)?.values.orEmpty()
+            linkDefaults.forEach { field ->
+                fields[field.key] = captured[FieldOwner(definition = field.declarationOwner, name = field.key)] ?: ordinary(field)
+            }
         }
         return RecordPreparation(fields, findings.distinct())
     }
@@ -520,7 +547,7 @@ class DefaultInitializationRuntime(
         val findings = mutableListOf<InitializationDiagnostic>()
         val fields = linkedMapOf<String, DataValue>()
         partial.knownFields.forEach { field ->
-            if (field.key !in supplied && field.hasConstructorDefault) return@forEach
+            if (field.key !in supplied && field.mayBeUnset(catalog)) return@forEach
             val fieldFindings = mutableListOf<InitializationDiagnostic>()
             fields[field.key] =
                 supplied[field.key]

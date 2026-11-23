@@ -3,6 +3,7 @@ package com.typewritermc.engine.runtime
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.withUnsetFields
 import com.typewritermc.elements.Cue
 import com.typewritermc.elements.Element
 import com.typewritermc.engine.Root
@@ -13,6 +14,7 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.declaredDefaults
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.RelationContract
@@ -29,7 +31,10 @@ class CompiledResourceGraph private constructor(
     val edges: List<CompiledEdge>,
     /** The Kotlin classes of each resource's type arguments, such as `BlockBreak` for `CancelableEventEntry<BlockBreak>`. */
     val typeArguments: Map<CompiledResourceKey, List<KClass<*>>>,
-    /** Each resource as it was stored, with its checked type: what formulas read fields and lower Var types from. */
+    /**
+     * Each resource as it was stored, each field no creator set filled with what it reads as, with its checked type: what
+     * formulas read fields and lower Var types from.
+     */
     val stored: Map<CompiledResourceKey, CompleteValue>,
 ) {
     val elements: Map<CompiledResourceKey, Element> =
@@ -74,6 +79,7 @@ class CompiledResourceGraph private constructor(
                 }
             }
             val stored = linkedMapOf<CompiledResourceKey, CompleteValue>()
+            val unset = bindings.declaredDefaults(catalog)
             val decoded =
                 records.mapValues { (key, record) ->
                     require(record.value.actualType == record.actualType) {
@@ -93,7 +99,7 @@ class CompiledResourceGraph private constructor(
                         }
                     val complete =
                         when (val result = checked.complete(record.dataValue)) {
-                            is CompletenessResult.Complete -> result.value
+                            is CompletenessResult.Complete -> result.value.withUnsetFields(catalog, unset)
                             is CompletenessResult.Unfinished -> error("Compiled resource $key is unfinished at ${result.locations}.")
                             is CompletenessResult.Invalid -> error("Compiled resource $key is invalid: ${result.problems}.")
                         }

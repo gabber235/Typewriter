@@ -70,7 +70,7 @@ import com.typewritermc.testing.routes.FixtureBox
 import com.typewritermc.testing.routes.FixtureStockEntry
 import com.typewritermc.testing.routes.FixtureStockEntryDefinition
 import com.typewritermc.types.Ref
-import com.typewritermc.types.toSkir
+import com.typewritermc.types.toResourceId
 import com.typewritermc.testing.routes.FixtureCoinPrize
 import com.typewritermc.testing.routes.FixtureLoot
 import com.typewritermc.testing.routes.FixtureSignal
@@ -682,13 +682,14 @@ val FormulaEvaluationTest by testSuite {
                     val stored =
                         encoder.record(
                             FixtureStockEntryDefinition.id.use(),
-                            FixtureStockEntry(page = Ref(id), placement = GraphPlacement(), name = "depot"),
+                            FixtureStockEntry(page = Ref(id.toResourceId()), placement = GraphPlacement(), name = "depot"),
                         )
                     stored.copy(fields = stored.fields.filter { it.name != "stock" && it.name != "loot" })
                 }
             committed.shouldBeCommitted()
+            record(depot).fields.mapView.keys shouldBe setOf("page", "placement", "name")
 
-            formulas.value(depot.toSkir()) shouldBe 0
+            formulas.value(depot) shouldBe 0
         }
     }
 

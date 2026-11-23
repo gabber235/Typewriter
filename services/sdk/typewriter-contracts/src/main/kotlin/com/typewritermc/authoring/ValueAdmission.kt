@@ -145,7 +145,7 @@ private fun AuthoringRecord.inspectStructure(
         is Resolution.Ready -> {
             when (val resolved = type.value) {
                 is ResourceType.Complete -> walk.walkPayload(DataValue.RecordWrapper(payload), resolved.checked, root)
-                is ResourceType.Partial -> inspectPartial(resolved.schema, walk, inspection, root)
+                is ResourceType.Partial -> inspectPartial(resolved.schema, catalog, walk, inspection, root)
             }
         }
     }
@@ -166,6 +166,7 @@ fun CheckedType.complete(value: DataValue): CompletenessResult {
 
 private fun AuthoringRecord.inspectPartial(
     partial: PartialSchema,
+    catalog: CheckedCatalog,
     walk: ValueWalk<Unit>,
     inspection: ValueInspection,
     root: ValueLocation,
@@ -178,7 +179,7 @@ private fun AuthoringRecord.inspectPartial(
     (present - expectedKeys).forEach { key ->
         problems += Misfit(ValueProblem(location = root.field(key), code = UNDECLARED_FIELD), MisfitCause.Undeclared)
     }
-    (expectedKeys - present).filterNot { known[it]?.hasConstructorDefault == true }.forEach { key ->
+    (expectedKeys - present).filterNot { key -> known[key]?.mayBeUnset(catalog) == true }.forEach { key ->
         problems += Misfit(ValueProblem(location = root.field(key), code = "missing_field"))
     }
     known.forEach { (name, field) ->
@@ -462,7 +463,7 @@ class ValueWalk<R>(
         val present = record.fields.mapView
         (present.keys - fields.keys).forEach { name -> visitor.problem(at.field(name), UNDECLARED_FIELD, MisfitCause.Undeclared) }
         (fields.keys - present.keys).forEach { name ->
-            if (fields.getValue(name).hasConstructorDefault) return@forEach
+            if (catalog != null && fields.getValue(name).mayBeUnset(catalog)) return@forEach
             visitor.problem(at.field(name), "missing_field")
         }
         val answers =

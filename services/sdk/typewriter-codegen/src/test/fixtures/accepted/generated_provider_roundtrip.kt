@@ -393,7 +393,7 @@ fun main(args: Array<String>) {
                     .factory.nativeClass!!.java.classLoader
             fun counts(): Pair<*, *> =
                 probeLoader.loadClass("fixture.GeneratedProviderRoundtrip").getMethod("evaluationCounts").invoke(null) as Pair<*, *>
-            val initializer = DefaultInitializationRuntime(assembly.checked)
+            val initializer = DefaultInitializationRuntime(assembly.checked, assembly.bindings)
             fun prepare(type: NamedTypeUse, fields: Map<String, DataValue>) =
                 initializer.prepareNow(
                     ValuePreparationRequest(

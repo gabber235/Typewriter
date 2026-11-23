@@ -174,7 +174,7 @@ val ResumableInitializationTest by testSuite {
                         ),
                 ),
             )
-        val runtime = DefaultInitializationRuntime(catalog)
+        val runtime = DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList()))
         val first =
             runtime.stepNow(
                 PreparationOperation.StartWrapper(request(root).copy(suppliedValue = supplied)),
@@ -299,7 +299,7 @@ val ResumableInitializationTest by testSuite {
                     ),
                 ),
             )
-        val runtime = DefaultInitializationRuntime(catalog)
+        val runtime = DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList()))
         val start = runtime.stepNow(PreparationOperation.StartWrapper(request(ownerId))) as PrepareValueResult.NeedsInputWrapper
         start.value.requiredInputs
             .single()
@@ -326,9 +326,10 @@ val ResumableInitializationTest by testSuite {
             mapOf("choice" to DataValue.named(concreteUse, DataValue.record(mapOf("target" to reference()))))
         ready.value.findings shouldBe emptyList()
     }
-    test("a defaulted reference stays unset without an input prompt") {
+    test("a defaulted reference is a link, so it is stored with its constructor default and asks for no input") {
         val referenceId = id("DefaultReference")
         val field = FieldOwner(definition = referenceId, name = "target")
+        val plan = SamplingPlan(field, value = reference())
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
@@ -348,9 +349,9 @@ val ResumableInitializationTest by testSuite {
                     ),
                 ),
             )
-        val ready =
-            DefaultInitializationRuntime(catalog).stepNow(PreparationOperation.StartWrapper(request(referenceId)))
-                as PrepareValueResult.ReadyWrapper
-        (ready.value.content as PreparedContent.RecordWrapper).value.fieldMap shouldBe emptyMap()
+        val runtime =
+            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, referenceId))))
+        val ready = runtime.stepNow(PreparationOperation.StartWrapper(request(referenceId))) as PrepareValueResult.ReadyWrapper
+        (ready.value.content as PreparedContent.RecordWrapper).value.fieldMap shouldBe mapOf("target" to reference())
     }
 }

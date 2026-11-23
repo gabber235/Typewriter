@@ -105,7 +105,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val catalog = DefaultCheckedCatalog(generation, emptyList())
         val supplied = DataValue.StringValueWrapper("authored")
         val prepared =
-            DefaultInitializationRuntime(catalog).prepareNow(
+            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 ValuePreparationRequest(
                     catalog = generation,
                     target = PreparationTarget.ValueWrapper(ScalarKind.TEXT.use),
@@ -122,7 +122,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val catalog = DefaultCheckedCatalog(generation, listOf(initializedDefinition))
 
         val prepared =
-            DefaultInitializationRuntime(catalog).prepareNow(
+            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 recordRequest(
                     generation,
                     TypeSelection.of(initializedUse),
@@ -169,7 +169,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             ),
         )
     val pendingSelection = TypeSelection.of(pendingId)
-    val pendingRuntime = DefaultInitializationRuntime(pendingCatalog)
+    val pendingRuntime = DefaultInitializationRuntime(pendingCatalog, FactoryNativeBindingRegistry(pendingCatalog, emptyList()))
 
     test("pending generic creation fills every field it knows without its type argument, leaves defaulted fields unset and the rest unfilled") {
         val prepared = pendingRuntime.prepareNow(recordRequest(pendingGeneration, pendingSelection, emptyMap()))
@@ -216,7 +216,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
     test("a preparation request for another catalog generation is unavailable") {
         val prepared =
-            DefaultInitializationRuntime(pendingCatalog).prepareNow(recordRequest(CatalogGeneration(value = "other"), pendingSelection, emptyMap()))
+            DefaultInitializationRuntime(pendingCatalog, FactoryNativeBindingRegistry(pendingCatalog, emptyList())).prepareNow(recordRequest(CatalogGeneration(value = "other"), pendingSelection, emptyMap()))
 
         prepared.findings.map { it.code to it.message } shouldBe
             listOf("catalog_generation_mismatch" to "The initialization request uses a different catalog generation.")
@@ -224,7 +224,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
     test("record preparation refuses a supplied value that is not a record") {
         val prepared =
-            DefaultInitializationRuntime(pendingCatalog).prepareNow(
+            DefaultInitializationRuntime(pendingCatalog, FactoryNativeBindingRegistry(pendingCatalog, emptyList())).prepareNow(
                 recordRequest(
                     pendingGeneration,
                     pendingSelection,
@@ -238,7 +238,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
     test("record preparation refuses a selection of an undeclared type") {
         val prepared =
-            DefaultInitializationRuntime(pendingCatalog).prepareNow(
+            DefaultInitializationRuntime(pendingCatalog, FactoryNativeBindingRegistry(pendingCatalog, emptyList())).prepareNow(
                 recordRequest(
                     pendingGeneration,
                     TypeSelection.of(TypeDefinitionId.qualified("test", "Undeclared").namedUse()),
@@ -269,7 +269,7 @@ val InitializationRuntimeConformanceTest by testSuite {
             )
 
         val prepared =
-            DefaultInitializationRuntime(catalog)
+            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList()))
                 .prepareNow(recordRequest(generation, TypeSelection.of(levels.first().namedUse()), emptyMap()))
 
         prepared.findings.map { it.code to it.message } shouldBe
@@ -282,7 +282,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val prepared =
             runBlocking {
-                DefaultInitializationRuntime(catalog).prepare(
+                DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepare(
                     recordRequest(
                         generation,
                         TypeSelection.of(initializedUse),
@@ -336,7 +336,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val prepared =
             runBlocking {
-                DefaultInitializationRuntime(catalog).prepare(
+                DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepare(
                     recordRequest(
                         generation,
                         TypeSelection.of(abstractOwnerId.namedUse()),
@@ -384,7 +384,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val prepared =
             runBlocking {
-                DefaultInitializationRuntime(catalog).prepare(
+                DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepare(
                     recordRequest(
                         generation,
                         TypeSelection.of(parentId.namedUse()),
@@ -425,7 +425,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val catalog = DefaultCheckedCatalog(generation, listOf(direct))
 
         val prepared =
-            DefaultInitializationRuntime(catalog).prepareNow(
+            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 recordRequest(
                     generation,
                     TypeSelection.of(directId.namedUse()),
@@ -469,7 +469,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val catalog = DefaultCheckedCatalog(generation, StandardTypes.definitions + grow)
 
         val prepared =
-            DefaultInitializationRuntime(catalog).prepareNow(
+            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 recordRequest(
                     generation,
                     TypeSelection.of(growId.namedUse(listOf(ScalarKind.TEXT.use))),
@@ -526,7 +526,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val catalog = DefaultCheckedCatalog(generation, listOf(node, branch, owner))
 
         val prepared =
-            DefaultInitializationRuntime(catalog).prepareNow(
+            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
                 recordRequest(
                     generation,
                     TypeSelection.of(ownerId.namedUse()),
@@ -581,7 +581,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, StandardTypes.definitions + listOf(box, tree))
-        val runtime = DefaultInitializationRuntime(catalog)
+        val runtime = DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList()))
         val text = ScalarKind.TEXT.use
         val innerBox = boxId.namedUse(listOf(text))
 

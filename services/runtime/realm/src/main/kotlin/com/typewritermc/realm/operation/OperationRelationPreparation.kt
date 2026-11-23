@@ -216,7 +216,7 @@ internal class OperationRelationPreparation(
                 val itemSchema = catalog.checked.resolve(itemType) as? Resolution.Ready ?: return@forEach
                 if (itemSchema.value.schema.representation !is ResolvedRepresentation.RecordWrapper) return@forEach
                 val prepared =
-                    DefaultInitializationRuntime(catalog.checked).prepareNow(
+                    DefaultInitializationRuntime(catalog.checked, catalog.nativeBindings).prepareNow(
                         ValuePreparationRequest(
                             catalog = catalog.generation,
                             target = PreparationTarget.RecordWrapper(TypeSelection.of(itemType.value)),

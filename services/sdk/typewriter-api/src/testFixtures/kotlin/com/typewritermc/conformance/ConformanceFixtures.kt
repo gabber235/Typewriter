@@ -392,7 +392,7 @@ internal fun resumeFixture(defaultedSettings: Boolean = false): ResumeFixture {
                 ),
             ),
         )
-    return ResumeFixture(DefaultInitializationRuntime(catalog), request(root))
+    return ResumeFixture(DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())), request(root))
 }
 
 internal val GENERATION = CatalogGeneration(value = "resume")

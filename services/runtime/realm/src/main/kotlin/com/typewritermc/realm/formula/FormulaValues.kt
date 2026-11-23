@@ -1,5 +1,6 @@
 package com.typewritermc.realm.formula
 
+import com.typewritermc.authoring.UnsetFields
 import com.typewritermc.authoring.MisfitCause
 import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.ValueVisitor
@@ -141,8 +142,9 @@ internal fun AuthoringRecord.storedAt(
     owner: ResourceId,
     path: ValuePath,
     catalog: CheckedCatalog,
+    unset: UnsetFields? = null,
 ): Pair<TypeUse, DataValue>? {
     catalog.completeTypeOf(owner, configuration) ?: return null
-    val position = typedAt(owner, path, catalog) as? TypedPosition.Value ?: return null
+    val position = typedAt(owner, path, catalog, unset) as? TypedPosition.Value ?: return null
     return position.declared to position.value
 }

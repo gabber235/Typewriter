@@ -60,12 +60,17 @@ import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.Ref
 import com.typewritermc.types.Resource
+import com.typewritermc.types.actualType
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.declared
+import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fromValueAny
 import com.typewritermc.types.integerScalar
+import com.typewritermc.types.named
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.toValueAny
@@ -81,6 +86,7 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
 import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RecordForm
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
@@ -88,6 +94,7 @@ import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 import java.nio.file.Path
 import kotlin.reflect.KClass
 
@@ -119,6 +126,7 @@ fun recordDefinition(
     id: TypeDefinitionId,
     vararg fields: Pair<String, TypeTemplate>,
     parents: List<NamedTypeTemplate> = emptyList(),
+    defaulted: Set<String> = emptySet(),
 ): TypeDefinition =
     TypeDefinition(
         id = id,
@@ -131,7 +139,7 @@ fun recordDefinition(
                             owner = FieldOwner(definition = id, name = name),
                             type = type,
                             overrides = emptyList(),
-                            hasConstructorDefault = false,
+                            hasConstructorDefault = name in defaulted,
                         )
                     },
                 form = RecordForm.CONCRETE,
@@ -189,12 +197,19 @@ object SaidNativeBindingFactory : NativeBindingFactory {
 val int: TypeUse = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
 val text: TypeUse = ScalarKind.TEXT.use
 
-/** One resource of a publication: its id, its actual type, and its Kotlin value. */
+/**
+ * One resource of a publication: its id, its actual type, and its Kotlin value, stored without the fields at [unset], as
+ * fields no creator set are stored.
+ */
 data class PublishedResource(
     val id: String,
     val type: TypeUse,
     val value: Any,
+    val unset: Set<ValuePath> = emptySet(),
 )
+
+/** This resource stored without the fields at [paths], each a path of fields from its root. */
+fun PublishedResource.unset(vararg paths: ValuePath): PublishedResource = copy(unset = unset + paths)
 
 /**
  * A formula whose [names] each reference the resource of that id, at its first occurrence in [source], as the realm
@@ -338,7 +353,7 @@ private fun PublishedResource.compiled(): CompiledResource {
     val binding = fixtureAssembly.bindings.bind(checked)
 
     @Suppress("UNCHECKED_CAST")
-    val encoded = (binding as NativeBinding<Any>).encode(value) as DataValue.NamedWrapper
+    val encoded = unset.fold((binding as NativeBinding<Any>).encode(value)) { stored, path -> stored.without(path.segments) } as DataValue.NamedWrapper
     val named = checkNotNull((type as? TypeUse.NamedWrapper)?.value) { "$id needs a named type." }
     return CompiledResource(
         key = CompiledResourceKey(source = ResourceId(id).toSkir(), context = CompilationContext.Root),
@@ -347,6 +362,26 @@ private fun PublishedResource.compiled(): CompiledResource {
         bindingSignature = binding.signature,
         value = encoded.value,
     )
+}
+
+/** This value without the field at the end of [path], a path of fields through named records. */
+private fun DataValue.without(path: List<PathSegment>): DataValue {
+    val name = (path.first() as PathSegment.FieldWrapper).value.name
+    return when (this) {
+        is DataValue.NamedWrapper -> {
+            DataValue.named(actualType, payload.without(path))
+        }
+
+        is DataValue.RecordWrapper -> {
+            val fields = value.fieldMap.toMutableMap()
+            if (path.size == 1) fields.remove(name) else fields[name] = fields.getValue(name).without(path.drop(1))
+            DataValue.record(fields)
+        }
+
+        else -> {
+            error("$this has no field $name.")
+        }
+    }
 }
 
 /** The core artifact and engine core as a deployment loads them, plus the fixture event, entries and records. */

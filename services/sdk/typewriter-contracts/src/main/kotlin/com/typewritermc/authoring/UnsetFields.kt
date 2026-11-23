@@ -1,0 +1,136 @@
+package com.typewritermc.authoring
+
+import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.CheckedType
+import com.typewritermc.types.actualType
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.field
+import com.typewritermc.types.items
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
+import com.typewritermc.types.setValue
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ResolvedField
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeUse
+
+/**
+ * What an unset field reads as: the value of [field] in a record of [owner] whose stored fields are [stored]. The
+ * contracts know no constructor, so whoever holds the native bindings answers, the declared default at first.
+ */
+fun interface UnsetFields {
+    fun valueOf(
+        owner: CheckedType,
+        stored: DataValue.RecordWrapper,
+        field: String,
+    ): DataValue
+}
+
+/**
+ * Whether a record may leave this field out, which makes it unset: it has a constructor default and holds no links. A
+ * link is a relation fact the realm keeps on both sides, not a value a creator chooses or a layer above could give, so a
+ * field of links is always stored, empty when nothing links.
+ */
+fun ResolvedField.mayBeUnset(catalog: CheckedCatalog): Boolean = hasConstructorDefault && !type.holdsLinks(catalog)
+
+/** Whether a value of this type is a link or a collection of them, read through nullable and named wrappers. */
+private fun TypeUse.holdsLinks(
+    catalog: CheckedCatalog,
+    depth: Int = 0,
+): Boolean {
+    if (depth > MAX_LINK_DEPTH) return false
+    val inner = if (this is TypeUse.NullableWrapper) value.value else this
+    val representation = (catalog.resolve(inner) as? Resolution.Ready)?.value?.schema?.representation ?: return false
+    return when (representation) {
+        is ResolvedRepresentation.LinkWrapper -> true
+        is ResolvedRepresentation.SequenceWrapper -> representation.value.item.holdsLinks(catalog, depth + 1)
+        is ResolvedRepresentation.MappingWrapper -> representation.value.value.holdsLinks(catalog, depth + 1)
+        else -> false
+    }
+}
+
+private const val MAX_LINK_DEPTH = 8
+
+/**
+ * This value with every unset field at any depth stored as it reads through [unset], for a reader that cannot ask, such
+ * as an engine decoding a publication. Every stored value stays as it is, item and row identities included.
+ */
+fun CompleteValue.withUnsetFields(
+    catalog: CheckedCatalog,
+    unset: UnsetFields,
+): CompleteValue = CompleteValue(schema, UnsetFill(catalog, unset).payload(value, schema, 0))
+
+/** Fills unset fields while descending a value by the schema each stored named value names. */
+private class UnsetFill(
+    private val catalog: CheckedCatalog,
+    private val unset: UnsetFields,
+) {
+    /** [value] at a position of any type: only a named value has fields below it. */
+    fun fill(
+        value: DataValue,
+        depth: Int,
+    ): DataValue {
+        if (value !is DataValue.NamedWrapper || depth > MAX_FILL_DEPTH) return value
+        val checked = (catalog.resolve(value.actualType.use) as? Resolution.Ready)?.value ?: return value
+        return DataValue.named(value.actualType, payload(value.payload, checked, depth + 1))
+    }
+
+    /** [value], the payload of [checked], or a named value of it at the root of a complete value. */
+    fun payload(
+        value: DataValue,
+        checked: CheckedType,
+        depth: Int,
+    ): DataValue {
+        if (value is DataValue.NamedWrapper) return fill(value, depth)
+        return when (val representation = checked.schema.representation) {
+            is ResolvedRepresentation.RecordWrapper -> record(value, checked, representation.value.fields, depth)
+            is ResolvedRepresentation.SequenceWrapper -> items(value, depth)
+            is ResolvedRepresentation.MappingWrapper -> rows(value, depth)
+            else -> value
+        }
+    }
+
+    private fun record(
+        value: DataValue,
+        checked: CheckedType,
+        fields: List<ResolvedField>,
+        depth: Int,
+    ): DataValue {
+        val record = value as? DataValue.RecordWrapper ?: return value
+        val filled =
+            fields.mapNotNull { field ->
+                val stored = record.field(field.key)
+                when {
+                    stored != null -> field.key to fill(stored, depth)
+                    field.mayBeUnset(catalog) -> field.key to unset.valueOf(checked, record, field.key)
+                    else -> null
+                }
+            }
+        return DataValue.record(filled.toMap())
+    }
+
+    private fun items(
+        value: DataValue,
+        depth: Int,
+    ): DataValue =
+        when (value) {
+            is DataValue.ListValueWrapper -> DataValue.listValue(value.items.map { it.copy(value = fill(it.value, depth)) })
+            is DataValue.SetValueWrapper -> DataValue.setValue(value.items.map { it.copy(value = fill(it.value, depth)) })
+            else -> value
+        }
+
+    private fun rows(
+        value: DataValue,
+        depth: Int,
+    ): DataValue =
+        (value as? DataValue.MapValueWrapper)
+            ?.let { map -> DataValue.mapValue(map.rows.map { it.copy(key = fill(it.key, depth), value = fill(it.value, depth)) }) }
+            ?: value
+}
+
+private const val MAX_FILL_DEPTH = 64

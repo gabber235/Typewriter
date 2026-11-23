@@ -47,18 +47,6 @@ sealed interface TypedPosition {
     ) : TypedPosition
 }
 
-/**
- * What an unset field reads as: the value of [field] in a record of [owner] whose stored fields are [stored]. The
- * contracts know no constructor, so whoever holds the native bindings answers, the declared default at first.
- */
-fun interface UnsetFields {
-    fun valueOf(
-        owner: CheckedType,
-        stored: DataValue.RecordWrapper,
-        field: String,
-    ): DataValue
-}
-
 /** The position [segment] leads to from here, or null when the schema here has no such part. */
 fun TypedPosition.step(
     segment: PathSegment,
@@ -92,7 +80,7 @@ private fun TypedPosition.Value.stepValue(
         is PathSegment.FieldWrapper -> {
             val field = schema.fields.singleOrNull { it.key == segment.name } ?: return null
             val record = ((value as? DataValue.NamedWrapper)?.payload ?: value) as? DataValue.RecordWrapper
-            if (record != null && record.field(segment.name) == null && field.hasConstructorDefault) {
+            if (record != null && record.field(segment.name) == null && field.mayBeUnset(catalog)) {
                 TypedPosition.Value(field.type, unset?.valueOf(checked, record, segment.name) ?: DataValue.UNFILLED, unset = true)
             } else {
                 TypedPosition.Value(field.type, stored)
@@ -152,7 +140,7 @@ fun AuthoringRecord.typedAt(
                 val known = resolved.knownFields.singleOrNull { it.key == first.name } ?: return null
                 remaining = remaining.drop(1)
                 val stored = field(first.name)
-                TypedPosition.Value(known.type, stored ?: DataValue.UNFILLED, unset = stored == null && known.hasConstructorDefault)
+                TypedPosition.Value(known.type, stored ?: DataValue.UNFILLED, unset = stored == null && known.mayBeUnset(catalog))
             }
         }
     for (segment in remaining) position = position.step(segment, catalog, unset) ?: return null

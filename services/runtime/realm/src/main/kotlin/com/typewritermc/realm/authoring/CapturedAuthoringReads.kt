@@ -1,5 +1,9 @@
 package com.typewritermc.realm.authoring
 
+import skirout.editor.v1.type_catalog.ValuePath
+import com.typewritermc.types.declaredDefaults
+import com.typewritermc.authoring.typedAt
+import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
@@ -721,7 +725,7 @@ class CapturedAuthoringReads internal constructor(
             }
 
             is LocatedPortableValue.Missing -> {
-                LocatedValue.Missing(location.copy(path = result.traversed))
+                unsetValue(record, location) ?: LocatedValue.Missing(location.copy(path = result.traversed))
             }
 
             is LocatedPortableValue.Invalid -> {
@@ -735,6 +739,28 @@ class CapturedAuthoringReads internal constructor(
                 LocatedValue.Invalid(location.copy(path = result.traversed), failure, message)
             }
         }
+    }
+
+    /**
+     * The value an unset field at or above [location] reads as: its declared default, which the constructor gives from
+     * the other stored fields, so the read observes the whole record and the catalog. Null for a location that is not
+     * below an unset field.
+     */
+    private fun unsetValue(
+        record: AuthoringRecord,
+        location: ValueLocation,
+    ): LocatedValue? {
+        val unset = viewCatalog.nativeBindings.declaredDefaults(typeCatalog)
+        val position = record.typedAt(location.resource, location.path, typeCatalog, unset) as? TypedPosition.Value ?: return null
+        val throughUnset =
+            (1..location.path.segments.size).any { depth ->
+                val prefix = ValuePath(segments = location.path.segments.take(depth))
+                (record.typedAt(location.resource, prefix, typeCatalog) as? TypedPosition.Value)?.unset == true
+            }
+        if (!throughUnset || position.value == DataValue.UNFILLED) return null
+        observe(InputIdentity.Resource(location.resource))
+        observe(InputIdentity.Catalog(catalog))
+        return LocatedValue.Available(position.value)
     }
 
     private fun collectionLocations(

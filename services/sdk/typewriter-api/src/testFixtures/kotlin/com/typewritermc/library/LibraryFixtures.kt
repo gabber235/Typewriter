@@ -177,7 +177,7 @@ internal class FrameworkFixture {
     private val factories =
         generatedProviders<NativeBindingFactory>(GeneratedProviderKind.NativeBinding).distinctBy(NativeBindingFactory::provider)
     private val bindings = FactoryNativeBindingRegistry(catalog, factories)
-    private val initializer = DefaultInitializationRuntime(catalog)
+    private val initializer = DefaultInitializationRuntime(catalog, bindings)
     val runtime = DefaultPresentationRuntime()
 
     /** Describing every generated presentation registers the references other presentations invoke. */

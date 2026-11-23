@@ -1,5 +1,6 @@
 package com.typewritermc.realm.formula
 
+import com.typewritermc.types.declaredDefaults
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.FieldPath
 import com.typewritermc.authoring.append
@@ -315,7 +316,8 @@ internal data class Evaluate(
         val authored = tracked()
         val catalog = authored.viewCatalog.checked
         val record = authored.record(at.resource) ?: throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
-        val (type, value) = record.storedAt(at.resource, at.path, catalog) ?: throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
+        val unset = authored.viewCatalog.nativeBindings.declaredDefaults(catalog)
+        val (type, value) = record.storedAt(at.resource, at.path, catalog, unset) ?: throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
         if (value == DataValue.UNFILLED) throw FailedEvaluation(FormulaFailure.Unfilled(at))
         val plain = (value as? DataValue.NamedWrapper)?.value?.takeIf { it.actualType.definition == VarValueDefinition.id }
         if (plain == null) {

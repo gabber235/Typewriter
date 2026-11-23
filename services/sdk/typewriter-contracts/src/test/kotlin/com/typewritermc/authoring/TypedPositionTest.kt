@@ -19,6 +19,7 @@ import com.typewritermc.types.nullable
 import com.typewritermc.types.record
 import com.typewritermc.types.template
 import com.typewritermc.types.use
+import com.typewritermc.types.with
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
@@ -30,6 +31,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.RecordForm
+import skirout.editor.v1.type_catalog.RecordPayload
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeSelection
@@ -45,6 +47,7 @@ val TypedPositionTest by testSuite {
     val coin = id("coin")
     val gem = id("gem")
     val holder = id("holder")
+    val shelf = id("shelf")
     val catalog =
         DefaultCheckedCatalog(
             CatalogGeneration(value = "typed"),
@@ -75,6 +78,14 @@ val TypedPositionTest by testSuite {
                                         field("holder", "spare", coin.template().nullable()),
                                         field("holder", "bonus", coin.template()).copy(hasConstructorDefault = true),
                                     ),
+                                form = RecordForm.CONCRETE,
+                            ),
+                    ),
+                    TypeDefinition.partial(
+                        id = shelf,
+                        representation =
+                            RepresentationTemplate.createRecord(
+                                fields = listOf(field("shelf", "holders", StandardTypes.list.template(listOf(holder.template())))),
                                 form = RecordForm.CONCRETE,
                             ),
                     ),
@@ -177,5 +188,27 @@ val TypedPositionTest by testSuite {
 
         materialized.field("bonus") shouldBe DataValue.named(coin.namedUse(), DataValue.record("worth" to DataValue.integer(9)))
         record.materialized(holderResource, ValuePath.root.field("spare").field("worth"), catalog, unset) shouldBe record
+    }
+
+    test("filling unset fields stores every unset field at any depth as it reads, and keeps every stored value") {
+        val holders = StandardTypes.list.namedUse(listOf(holder.use()))
+        val shelved = { payload: RecordPayload ->
+            DataValue.named(
+                shelf.namedUse(),
+                DataValue.record(
+                    "holders" to
+                        DataValue.named(
+                            holders,
+                            DataValue.listValue(listOf(ListItem(id = ItemId(value = "h"), value = DataValue.named(holder.namedUse(), DataValue.RecordWrapper(payload))))),
+                        ),
+                ),
+            )
+        }
+        val shelfType = (catalog.resolve(shelf.use()) as Resolution.Ready).value
+        val complete = (shelfType.complete(shelved(record.payload)) as CompletenessResult.Complete).value
+
+        val filled = complete.withUnsetFields(catalog, unset)
+
+        filled.value shouldBe shelved(record.payload.with("bonus", DataValue.named(coin.namedUse(), DataValue.record("worth" to DataValue.integer(9)))))
     }
 }

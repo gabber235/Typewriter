@@ -3,8 +3,11 @@
 package com.typewritermc.engine.formula.testing
 
 import com.typewritermc.authoring.AppliedNativeArguments
+import com.typewritermc.authoring.GeneratedConstructorField
+import com.typewritermc.authoring.constructorDefaults
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.TypedPath
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.root
@@ -31,6 +34,7 @@ import com.typewritermc.types.declared
 import com.typewritermc.types.nullable
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
@@ -73,7 +77,12 @@ object SpokenDefinition {
     val id: TypeDefinitionId = TypeDefinitionId.declared("e1f0000000000000000000000000a003")
 
     val definition: TypeDefinition =
-        recordDefinition(id, "minLines" to formulaOf(int).toTemplate(), "maxLineLength" to int.toTemplate())
+        recordDefinition(
+            id,
+            "minLines" to formulaOf(int).toTemplate(),
+            "maxLineLength" to int.toTemplate(),
+            defaulted = setOf("maxLineLength"),
+        )
 }
 
 object ChoiceDefinition {
@@ -106,6 +115,13 @@ object SpokenNativeBindingFactory : NativeBindingFactory {
     override val definition: TypeDefinitionId = SpokenDefinition.id
     override val provider: NativeBindingId = NativeBindingId(value = "test.spoken")
     override val nativeClass: KClass<*> = Spoken::class
+    override val constructionPlan: NativeConstructionPlan =
+        Spoken::class.constructorDefaults(
+            listOf(
+                GeneratedConstructorField(FieldOwner(definition = SpokenDefinition.id, name = "minLines"), "minLines", false, { formulaOf(int) }, { it.minLines }),
+                GeneratedConstructorField(FieldOwner(definition = SpokenDefinition.id, name = "maxLineLength"), "maxLineLength", true, { int }, { it.maxLineLength }),
+            ),
+        )
 
     @Suppress("UNCHECKED_CAST")
     override fun bind(
@@ -122,6 +138,7 @@ object SpokenNativeBindingFactory : NativeBindingFactory {
                     GeneratedNativeField("minLines", { arguments.resolver.bind(formulaOf(int)) }, { it.minLines }),
                     GeneratedNativeField("maxLineLength", { arguments.resolver.bind(int) }, { it.maxLineLength }),
                 ),
+            defaults = constructionPlan,
             construct = { values ->
                 Spoken(values.getValue("minLines") as Var<Int, EventContext<Said>>, values.getValue("maxLineLength") as Int)
             },

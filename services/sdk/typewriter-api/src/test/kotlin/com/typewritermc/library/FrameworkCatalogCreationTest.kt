@@ -129,11 +129,11 @@ val FrameworkCatalogCreationTest by testSuite {
         DefaultPresentationRegistry(catalog, listOf(inherited, concrete)).selected(PresentationRole.ITEM, checked) shouldBe concrete.id
     }
 
-    test("a new book stores none of its defaulted fields, and reading it gives the code defaults") {
+    test("a new book stores its links and none of its other defaulted fields, and reading it gives the code defaults") {
         val book = framework.prepareBook()
 
         book.findings shouldBe emptyList()
-        book.record.fieldMap.keys shouldBe setOf("library")
+        book.record.fieldMap.keys shouldBe setOf("library", "tags", "pages")
         framework.read(BookDefinition.use, book.record) shouldBe
             Book(library = com.typewritermc.types.Ref(com.typewritermc.types.ResourceId("library")))
     }
@@ -152,11 +152,12 @@ val FrameworkCatalogCreationTest by testSuite {
             DataValue.StringValueWrapper("material-symbols:book")
     }
 
-    test("a new tag stores its owner and an unset placement, and reads as unnamed, without parents, at the origin") {
+    test("a new tag stores its links and an unset placement, and reads as unnamed, without parents, at the origin") {
         val tag = framework.prepareTag()
 
         tag.findings shouldBe emptyList()
-        tag.record.fieldMap.keys shouldBe setOf("taxonomy", "placement")
+        tag.record.fieldMap.keys shouldBe setOf("taxonomy", "parents", "placement")
+        (tag.record.fieldMap.getValue("parents") as DataValue.NamedWrapper).payload shouldBe DataValue.setValue(emptyList())
         tag.record.fieldMap.getValue("placement") shouldBe DataValue.named(GraphPlacementDefinition.use, DataValue.record(emptyMap()))
         framework.read(TagDefinition.use, tag.record) shouldBe
             Tag(
