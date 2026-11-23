@@ -1,0 +1,102 @@
+# Working state of node 6, stored data. Plan: docs/design/plans/node-6-stored-data.md (local only).
+goal: >-
+  Build node 6 of the closed beta build graph, stored data: transactions, Changes, stored derives, and the
+  engine.{engine}.changed route, with the best design for the next 30 years, not necessarily the record's.
+
+pieces:
+  - id: write-shape
+    status: done
+    tries:
+      - id: write-records
+        what: Kotlin writes as hand written Write records, operators as Transaction members
+        taught: the blocker (KSP not reading context parameters) is fixed in KSP 2.3.14
+        state: dropped
+        why: maintainer pointed at KSP 2.3.14 (google/ksp#2472); the record's form is buildable and more extensible
+      - id: record-form
+        what: "@Transaction context(tx) functions, generated call is a Write record, operators are context providers"
+        state: picked
+        evidence: [docs/design/plans/node-6-stored-data.md decisions 1 and 2]
+
+  - id: transaction-model
+    status: done
+    tries:
+      - id: writer-evaluates
+        what: writer evaluates, realm checks read values, every write waits
+        state: dropped
+        why: breaks correctness under two engines writing one key and sends hot keys back to engines
+      - id: realm-decides
+        what: engine predicts, realm evaluates again next to the store (the record's model)
+        state: picked
+
+  - id: realm-runtime
+    status: done
+    tries:
+      - id: shared-execution-module
+        what: engine runtime lifted into runtime/execution, hosted in the realm process; parallel evaluation, one writer, re-evaluation inside the writer
+        state: picked
+
+  - id: publication-lag
+    status: done
+    tries:
+      - id: writer-version
+        what: realm decides on the writer's publication and deployment
+        state: dropped
+        why: engines refuse content for another implementation (ReloadableEngineRuntime.kt:57), so deployments never differ; the scenario was invented
+      - id: realm-current
+        what: realm decides on its current publication; a write whose entry is gone is refused
+        state: picked
+
+  - id: outage-outbox
+    status: done
+    tries:
+      - id: durable-outbox
+        what: unguarded writes in a bounded fsynced file on the engine, resent with the same ids; guarded ones dropped; full outbox pauses chains
+        state: picked
+
+  - id: demand-and-places
+    status: done
+    tries:
+      - id: places-with-resource-scopes
+        parent: places
+        what: >-
+          reading typed on Resource, not Entry (ResourceScope, ResourceReader; books read through it); every place has
+          keys, published values keyed by the resource identity; publish is a change of places
+        taught: >-
+          node 4's Entry typing made a second read path for book conditions (Published.kt:132) and a third for formula
+          references (EntryReaders.kt:89)
+        state: picked
+        why: maintainer approved both on 2026-11-23
+      - id: follow-patterns
+        what: engines follow patterns (held identities, world rows)
+        state: dropped
+        why: a second mechanism beside the tracked graph; node 4 built TrackedGraph and TrackedEntryReads, so per key demand is graph necessity now
+      - id: places
+        what: >-
+          one place concept for entry values and stored rows (declaration, keys, path), read, loaded, changed and demanded
+          through StoredValues, ValueLoader and TrackedGraph; partial key places for All<T> and queries
+        state: picked
+        evidence: [services/runtime/engine/core/src/main/kotlin/com/typewritermc/engine/reading/EntryReaders.kt:126]
+
+decided:
+  - id: realm-decides
+    what: the realm's re-evaluation of writes stays; two engines may write one key at once and hot keys are re-evaluated on the realm without round trips
+  - id: ksp-bump
+    what: bump KSP 2.3.12 to 2.3.14 in this branch
+  - id: shared-runtime
+    what: shared runtime in process for the realm's decisions
+  - id: publication-lag
+    what: during publication lag the realm decides on its own current publication
+  - id: durable-outbox
+    what: durable outbox for unguarded writes; a full outbox pauses chains
+  - id: resource-scopes
+    what: node 6 refactors reading to resource scopes; books and every resource read through it
+  - id: place-keys
+    what: every place carries keys; published values are keyed by the resource identity
+  - id: no-scope-cuts
+    what: never cut, defer or split scope because the milestone or the next nodes need less
+
+open: []
+
+slices: []
+
+next: Clarify lifecycle events (Added, Changed, Removed) and how handlers narrow on an event's type argument, then placement and the remaining plan topics.
