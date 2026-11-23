@@ -39,17 +39,7 @@ final class Attempts implements Listener {
         for (UUID id : claimed) attemptOf.put(id, attempt);
         for (UUID id : claimed) {
             Player player = Bukkit.getPlayer(id);
-            if (player == null) continue;
-            for (Player other : Bukkit.getOnlinePlayers()) {
-                if (other.equals(player)) continue;
-                if (together(player, other)) {
-                    player.showPlayer(plugin, other);
-                    other.showPlayer(plugin, player);
-                } else {
-                    player.hidePlayer(plugin, other);
-                    other.hidePlayer(plugin, player);
-                }
-            }
+            if (player != null) seeOnlyItsAttempt(player);
         }
     }
 
@@ -65,21 +55,35 @@ final class Attempts implements Listener {
         return released;
     }
 
+    /** [player] and the players of its attempt see one another; nobody else sees it, nor it them. */
+    private void seeOnlyItsAttempt(Player player) {
+        for (Player other : Bukkit.getOnlinePlayers()) {
+            if (other.equals(player)) continue;
+            if (together(player, other)) {
+                player.showPlayer(plugin, other);
+                other.showPlayer(plugin, player);
+            } else {
+                player.hidePlayer(plugin, other);
+                other.hidePlayer(plugin, player);
+            }
+        }
+    }
+
     private boolean together(Player a, Player b) {
         Long attempt = attemptOf.get(a.getUniqueId());
         return attempt != null && attempt.equals(attemptOf.get(b.getUniqueId()));
     }
 
-    /** A player who joins belongs to no attempt yet, so nobody sees it and it sees nobody. */
+    /**
+     * A player who joins sees, and is seen by, only the players of the attempt it still belongs to: one
+     * that quit and rejoins is listed to them in the tick it joins, as Paper lists any player who joins,
+     * not only once the pool hands it back. A player of no attempt sees nobody and nobody sees it. Paper
+     * calls this before it sends the joined player to the others.
+     */
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         event.joinMessage(null);
-        Player joined = event.getPlayer();
-        for (Player other : Bukkit.getOnlinePlayers()) {
-            if (other.equals(joined)) continue;
-            joined.hidePlayer(plugin, other);
-            other.hidePlayer(plugin, joined);
-        }
+        seeOnlyItsAttempt(event.getPlayer());
     }
 
     @EventHandler

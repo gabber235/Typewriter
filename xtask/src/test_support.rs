@@ -381,6 +381,25 @@ pub fn raw_failed_run(root: &TempRoot, at: &str) {
     crate::results::write(&run, &root.path(&format!("{at}/test_run.json"))).unwrap();
 }
 
+/// Writes game `run`'s raw results under `<root>/<at>/`, as the game suite leaves them: the run
+/// file pointing at its logs folder `logs/1`, which holds every log the game pool can leave there
+/// (its own, the shared Paper's, a restart attempt's own Paper's, a client's, a lost client's and a
+/// display's).
+pub fn raw_game_run(root: &TempRoot, at: &str, mut run: TestRun) {
+    for file in [
+        "pool.log",
+        "paper.log",
+        "paper-a2.log",
+        "client-gv-1.log",
+        "client-gv-1-lost-1.log",
+        "display-gv-1.log",
+    ] {
+        root.write(&format!("{at}/logs/1/{file}"), "log");
+    }
+    run.logs = "logs/1".to_owned();
+    crate::results::write(&run, &root.path(&format!("{at}/test_run.json"))).unwrap();
+}
+
 /// Every file below `dir`, relative to it and sorted; empty when `dir` is absent.
 pub fn files_below(dir: &Path) -> Vec<String> {
     let mut files: Vec<String> = crate::review::files_in(dir)
@@ -641,4 +660,41 @@ pub fn changed(path: &str, added: &[u32]) -> crate::review::change::FileChange {
         status: crate::review::change::Status::Modified,
         added: added.to_vec(),
     }
+}
+
+/// One OTLP JSON metrics export request from the engine instance `instance` holding one point
+/// of the handler duration histogram per `(event, count, sum in seconds)`, each cumulative from
+/// `start` to `time` (Unix nanoseconds), in the collector's shape.
+pub fn otlp_handler_durations(
+    instance: &str,
+    start: i64,
+    time: i64,
+    points: &[(&str, u64, f64)],
+) -> serde_json::Value {
+    let points: Vec<_> = points
+        .iter()
+        .map(|(event, count, sum)| {
+            serde_json::json!({
+                "attributes": [{ "key": "typewriter.event", "value": { "stringValue": event } }],
+                "startTimeUnixNano": start.to_string(),
+                "timeUnixNano": time.to_string(),
+                "count": count.to_string(),
+                "sum": sum,
+            })
+        })
+        .collect();
+    serde_json::json!({ "resourceMetrics": [{
+        "resource": { "attributes": [
+            { "key": "service.name", "value": { "stringValue": "loader" } },
+            { "key": "service.instance.id", "value": { "stringValue": instance } },
+        ] },
+        "scopeMetrics": [{
+            "scope": { "name": "com.typewritermc.engine.events" },
+            "metrics": [{
+                "name": "typewriter.event.handler.duration",
+                "unit": "s",
+                "histogram": { "dataPoints": points, "aggregationTemporality": 2 },
+            }],
+        }],
+    }] })
 }

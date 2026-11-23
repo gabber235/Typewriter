@@ -101,7 +101,7 @@ fn run_then<T, U>(
 }
 
 impl StackEvidence {
-    /// Copies the service logs and the spans file of the stack `state` into `keep`.
+    /// Copies the service logs and the spans and metrics files of the stack `state` into `keep`.
     fn copy(state: &Path, keep: &Path) -> Result<Self> {
         if keep.exists() {
             fs::remove_dir_all(keep).with_context(|| format!("cannot clear {}", keep.display()))?;
@@ -121,12 +121,22 @@ impl StackEvidence {
         }
         logs.sort();
         let traces = keep.join(typewriter::TRACES);
-        let collected = state.join("telemetry").join(typewriter::TRACES);
-        if collected.exists() {
-            fs::copy(&collected, &traces)
-                .with_context(|| format!("cannot copy {}", collected.display()))?;
+        let metrics = keep.join(typewriter::METRICS);
+        for (file, copy) in [
+            (typewriter::TRACES, &traces),
+            (typewriter::METRICS, &metrics),
+        ] {
+            let collected = state.join("telemetry").join(file);
+            if collected.exists() {
+                fs::copy(&collected, copy)
+                    .with_context(|| format!("cannot copy {}", collected.display()))?;
+            }
         }
-        Ok(Self { logs, traces })
+        Ok(Self {
+            logs,
+            traces,
+            metrics,
+        })
     }
 }
 
@@ -441,7 +451,7 @@ pub enum Spec {
     Backend,
     /// The backend plus the provisioned organization and its bound Realm host.
     Panel,
-    /// The panel stack plus the game suite's engine binder and observer credentials.
+    /// The panel stack plus the game suite's engine binder, observer and author credentials.
     Game,
 }
 

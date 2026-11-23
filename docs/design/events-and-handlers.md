@@ -20,7 +20,7 @@ Lifecycle events are ordinary events with the same handler rules: `Added<T>`, `R
 
 Events without a source are emitted by handlers. `emit()` queues: the emitted event is decided after the current event finishes. There is no nesting.
 
-An emitted event runs locally when this engine holds a session of the subject, and is published to the protagonist subject only when another engine holds one too (decided 2026-11-03). Each engine keeps a local copy of the `sessions` bucket through a KV watch to know this. A normal chain therefore never touches NATS and keeps working while NATS is down. An engine that holds no session of the subject only publishes, and runs none of its own handlers for it. An offline subject drops the event. An engine skips its own published events. Source events follow the same rule: a source event decides inline, and when another engine also holds the subject it is forwarded as an ordinary delivery, which that engine decides for itself. Events without a subject are always local.
+An emitted event runs locally when this engine holds a session of the subject, and is published to the protagonist subject only when another engine holds one too (decided 2026-11-03). Whether this engine holds a session is its own session keeper's knowledge (sessions it reported and still has), so it works while NATS is down; events the keeper fires itself skip the check (decided 2026-11-22). Each engine keeps a local copy of the `sessions` bucket through a KV watch to know whether another engine holds one too (node 9). A normal chain therefore never touches NATS and keeps working while NATS is down. An engine that holds no session of the subject only publishes, and runs none of its own handlers for it. An offline subject drops the event. An engine skips its own published events. Source events follow the same rule: a source event decides inline, and when another engine also holds the subject it is forwarded as an ordinary delivery, which that engine decides for itself. Events without a subject are always local.
 
 ```kotlin
 @Handler
@@ -29,7 +29,7 @@ fun PlayerChat.detectGreeting() {
 }
 ```
 
-A handler that emits a narrower event is a filter. Together with configured events this covers filtering without a separate filter concept.
+A handler that emits a narrower event is a filter. Together with subscribed events this covers filtering without a separate filter concept.
 
 ### Order
 
@@ -81,10 +81,10 @@ A verdict handler that throws counts as `pass` and is logged. Packet sources and
 
 1. KSP finds every concrete class implementing `EnginePart`, generates a provider, and adds a row to the provider index. This is the first processor searching by supertype instead of annotation.
 2. On start, the engine reads the index for the source parts it loaded, so a Paper part only reaches Paper, and adds each class to its deployment Koin ([engines.md](engines.md#wiring-inside-an-engine)).
-3. Koin builds the classes from their constructors, so an extension reaches `PaperEvents` by asking for it.
+3. The deployment turns each provider row into a Koin single (decided 2026-11-22). The generated provider calls the constructor and asks for each parameter by type, so an extension reaches `PaperEvents` by asking for it and never depends on Koin. A part is offered to others by its supertypes, not by its own class.
 4. The event runtime asks for every `Source` and opens them by demand. The Koin closes with the deployment.
 
-A missing constructor dependency fails at engine start, naming the class and the type, because KSP cannot see what Koin provides. `ConfiguredSource` extends `EnginePart` and others may follow. `RuntimeRegistrar` stays for imperative setup.
+A missing constructor dependency fails at engine start, naming the class and the type, because KSP cannot see what Koin provides. `SubscribedSource` extends `EnginePart` and others may follow. `RuntimeRegistrar` stays for imperative setup.
 
 ### Occurrences and dedupe
 
@@ -92,32 +92,35 @@ One occurrence can reach several sources (packet and Paper event can both decide
 
 The occurrence dedupe key is (connection, kind, client sequence number) when the packet has one, otherwise per connection order. Never timing or same tick guesses.
 
-### Configured events
+### Subscribed events
 
-An event type may take a configuration type parameter: `Tick<Config : TickConfig>`. The source only emits for matching configurations and passes the configuration to the handler as `config`.
+An event type may take a subscription type parameter: `Tick<S : TickSubscription>`. The source only emits for matching subscriptions and passes the subscription to the handler as `subscription`.
 
 ```kotlin
-object EveryTick : TickConfig
+object EveryTick : TickSubscription
 
 @Handler
 fun Tick<EveryTick>.animate(animating: Animating, chat: HasChat, history: ChatHistory) = ...
 ```
 
-A configuration is either a Kotlin object (code), an entry type (content: one configuration per published entry), or a list item type inside an entry (content: one configuration per published item, such as `Every`).
+A subscription is either a Kotlin object (code), an entry type (content: one subscription per published entry), or a list item type inside an entry (content: one subscription per published item, such as `Every`).
 
 How it works:
 
-1. KSP indexes every (event, configuration type) pair used by a handler.
-2. Publication turns each pair into configuration instances: one for an object, one per published entry or item for a content type. These stay live across hot publish.
-3. The source receives only the configurations that currently have a runnable handler, through `ConfiguredSource<E, Config>.open(demand: Demand<Config>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region).
+1. KSP indexes every (event, subscription type) pair used by a handler: the plan's `subscription` is `HandlerSubscription.Object(EveryTick)` or `HandlerSubscription.Entries(IntervalEventEntry::class)`. Any other subscription type (a plain class, a type parameter) is rejected at build time. Item types inside an entry are not built yet.
+2. Publication turns each pair into subscription instances: one for an object, one per published entry or item for a content type. These stay live across hot publish.
+3. The source receives only the subscriptions that currently have a runnable handler, through `SubscribedSource<E, S>.open(demand: Demand<S>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region). `Demand.watch` hands the current set at once and every changed set after it; the source closes once the demand is empty.
+4. An occurrence reaches only the handlers of its subscription. A `Candidate<C>` of the subscription's own entry type is that entry only (`Param.Candidate.ofSubscription`), with its book condition.
 
-Configurations a source cannot index are not configured events. Use `Candidate<E>` plus an `if` in the handler instead; entries stay pure data.
+`Tick<S : TickSubscription>` is the first subscribed event (basic extension, node 4). Its Paper source fires at the start of every server tick whose number is a multiple of a subscription's interval, indexed by interval, so the chains it starts run at the end of the same tick. `IntervalEventEntry` (content, `interval` in ticks) starts its links for every online player its book applies to.
+
+Subscriptions a source cannot index are not subscribed events. Use `Candidate<E>` plus an `if` in the handler instead; entries stay pure data.
 
 Appearing and disappearing state (being in a region, being near an NPC) is not an event. It is `Added` and `Removed` of a `Live` value; see [live-data.md](live-data.md).
 
 ## Demand
 
-`Demand<Config>` is the source input for configured events: the configurations that currently have a handler whose other parameters are satisfiable. Demand is computed from handler parameters, so a source never runs work no handler could use. Demand for mirrors (`Demanded<T>`) follows the same rule and is described in [live-data.md](live-data.md).
+`Demand<S>` is the source input for subscribed events: the subscriptions that currently have a handler whose other parameters are satisfiable. Demand is computed from handler parameters, so a source never runs work no handler could use. Demand for mirrors (`Demanded<T>`) follows the same rule and is described in [live-data.md](live-data.md).
 
 ## Handler
 
@@ -132,7 +135,7 @@ This runs when an NPC is clicked, only if the clicking protagonist is in a spoke
 
 ### Parameters
 
-Parameters take plain types. A type as a parameter is the requirement; nullable means optional. There are no wrapper types such as `Present<P>` or `Held<H>`.
+Parameters take plain types. A type as a parameter is the requirement; nullable means optional. There are no wrapper types such as `Present<P>` or `Held<H>`. An entry value is never a parameter: it is read in the body through an accessor ([Reading entry values](#reading-entry-values), decided 2026-11-23).
 
 ```kotlin
 fun Tick<EveryTick>.animate(
@@ -152,7 +155,6 @@ Core resolution is a small fixed set. Extensions add value types, not resolution
 | `List<T>` | One run with the values that exist at these keys, filled like `T` from a list field or by `@From`; missing keys drop out. |
 | `All<T>` | Every value of type `T`; for a mirror, on every engine ([live-data.md](live-data.md#demand-across-engines)). |
 | `Candidate<E>` | One run per published entry of type `E` whose book applies to the subject ([book-composition.md](book-composition.md#6-conditions)). |
-| A plain value named like a `Var` field of the receiver's entry | That field's current value, context filled from the subject; reruns when its `Watched<T>` changes ([formula-language.md](formula-language.md#the-formula-primitive-in-kotlin)). |
 | `Outcome` | The final outcome; lets an after handler also see denied events. |
 | `Origin` | Who caused this occurrence: the session and its `PrincipalId`. Absent for events without a cause (`Tick`), which skips the handler; `Origin?` makes it optional. |
 | A hold's snapshot type (`LeashCenter`) | That hold's stored snapshot at the hold's keys ([interactions.md](interactions.md#snapshot-and-restore)). |
@@ -175,7 +177,7 @@ class BlockBreak_vault : VerdictHandler<BlockBreak>, EnginePart {
 }
 ```
 
-The plan is the one source for resolution, demand, and placement, and later for debug output. Later layers add a `Param` kind and its resolver. Layer 4 has `Identity`, `Trait`, `Candidate`, `Field`, `Origin`, and `Outcome`.
+The plan is the one source for resolution, demand, and placement, and later for debug output. Later layers add a `Param` kind and its resolver. Layer 4 has `Identity`, `Trait`, `Candidate`, `Origin`, and `Outcome`.
 
 Live objects come from the engine, which is what keeps handlers engine neutral:
 
@@ -187,15 +189,37 @@ interface LiveResolver<I : Identity> : EnginePart {
 
 The runtime checks the result against the requested trait; `null` or the wrong type means the handler does not apply.
 
-KSP also generates one accessor per `Var` field of an entry, so a handler reads a candidate's field as a plain value:
+### Reading entry values
+
+One way to read entry values (decided 2026-11-23): handlers and derives read them in the body, by name, at any depth. `EntryScope<E : Entry>` is what a body reads through. It carries `entry`, `subject`, and `context`; `Candidate<E>`, `Triggered<E>`, and `Running<E>` all implement it. `RecordScope<T>` is a scope positioned at a record value inside an entry; an entry is itself a record, so `EntryScope<E>` is a `RecordScope<E>` at the root.
+
+KSP generates one typed accessor per field of every record type, on `RecordScope<ThatRecord>`. A `Var<T, C>` field reads as a plain `T`, and context is filled from the scope (subject and chain context), so nobody passes it by hand:
 
 ```kotlin
 // generated
-val Candidate<VaultEntry>.locked: Boolean
-    get() = read(entry.locked)
+val RecordScope<VaultEntry>.locked: Boolean get() = readField(VaultEntryFields.locked)
+val RecordScope<WeightedRandomTriggerGateEntry>.links: List<RecordScope<WeightedLink>>
+    get() = recordList(WeightedRandomTriggerGateEntryFields.links)
 ```
 
-`read` evaluates with `runtime/formula`. A formula that fails counts as a failed handler and is logged; for a verdict that means `pass`. Check in the plan that KSP can generate this for entries from another extension.
+```kotlin
+@Handler suspend fun Triggered<SimpleMessageActionEntry>.send(chat: HasChat) {
+    chat.send(message)
+    complete()
+}
+
+@Derive fun Running<SpokenDialogueEntry>.view() =
+    SpokenView(step, text.wrap(spoken.maxLineLength, spoken.minLines))
+```
+
+On `Triggered<E>` and `Running<E>` the receiver is the scope, so accessors read bare (`message`, `spoken.minLines`). On a `Candidate<E>` parameter they are reached on the candidate (`entry.condition`). Nested records read the same way at any depth, with no segment limit. A record field gives the record's own scope one level deeper (an optional record gives `RecordScope<R>?`, and whether one is stored is its own read). Lists, sets and maps of records give `List<RecordScope<R>>`, `Set<RecordScope<R>>` and `Map<K, RecordScope<V>>` in stored order, so `options[i].text` reads the `text` field of the i-th option record; inside the engine a path addresses an item by its stable item id, not its index. There is no whole value read: a helper that needs a record is written on its scope (`fun RecordScope<Spoken>.wrapLines(text: RichText)`). A derive on an entry that is not a running step takes `EntryScope<ThatEntry>` as its receiver. A record field named like a scope member (`entry`, `subject`, `context`, `reader`, `entryScope`, `recordPath`) is a build error, since the member would hide its accessor.
+
+- **The entry reader.** Every accessor resolves through one reader (`EntryReader`: `read`, `has` and `items` at a path from the entry's root). A stored value, a `Var` (value or formula) and a nested record field all resolve through it; the engine reader asks `StoredValues.at(location)` for a loaded value or not loaded. A configured value needs nothing extra: a configuration record's `Var` field reads the inherited value through the ordinary scope name `inherited` in its formula ([configurations.md](configurations.md)). Check in the plan that KSP can generate accessors for entries from another extension.
+- **Tracked reads.** Inside a derive, every accessor read is a read of the tracked graph: each run records its own reads and verifies them in read order. A branch is correct because the condition's value is itself a read: a change on the branch not taken does not rerun the derive, a change to the condition does. A change at a location also covers the reads below it, and the graph compares values, so a derive reruns only when a value it read actually differs. Handlers (verdict and after) evaluate inline and never rerun. A formula's own references to other resources are not graph reads yet (`TODO(node 6)`). KSP does not list reads: declared reads would load both sides of every branch and rerun on changes that cannot matter.
+- **Not loaded.** A read whose value is not loaded yet fails as a recorded read, and the graph reruns the derive once that failure clears. On a rerun the engine first loads everything the previous run read, so a steady state needs one load round, not a chain of loads. A derive may therefore run once before its values are loaded. A handler that reads a value not loaded yet fails like any failing handler.
+- **Accessors only.** The accessors are the only path to entry values, and derives stay pure. A lambda that runs later (a callback) runs as a handler with its own scope.
+
+A formula that fails counts as a failed handler and is logged; for a verdict that means `pass`.
 
 ### Resolution
 
@@ -228,6 +252,10 @@ Variants (Java chat versus a Bedrock form) are chosen by the step when it starts
 ### Events without a subject
 
 For `Tick` and world events, parameters become a query and the handler runs once per match. `fun Tick<EveryTick>.animate(animating: Animating)` runs once per `Animating` value. Stored types are indexed per type, so a query costs about the values it finds.
+
+Node 4 builds the identity query: a required identity parameter that no event field fills runs the handler once per identity its `LiveResolver.present()` names (each online player on Paper), with that identity as the run's subject for traits, candidates, and book conditions.
+
+The event runtime measures every handler run per event class (`HandlerCosts`, an engine-core Koin single) as the `typewriter.event.handler.duration` histogram, in seconds, with the attribute `typewriter.event` naming the event class. The game run report prints the average handler time per event, so the average tick handler time can be read on real Paper.
 
 ### Where a handler runs
 
@@ -293,8 +321,8 @@ fun <E : CancelableEvent> E.rule(
     entry: Candidate<CancelableEventEntry<E>>,
 ): Verdict = when {
     !entry.condition -> pass()
-    entry.cancel -> deny { entry.complete(context) }
-    else -> pass { entry.complete(context) }
+    entry.cancel -> deny { entry.complete() }
+    else -> pass { entry.complete() }
 }
 ```
 
@@ -350,7 +378,7 @@ Verdict handlers never suspend: they run inline (for example inside a Paper even
 
 Chosen 2026-11-03, after a prototype compared it with waiting per write, chain transactions, and starting each chain at once. Priorities: few context switches, little work on owner threads, and Typewriter out of the way. The prototype simulated the game thread and the realm distance, so the plan checks these numbers on real Paper.
 
-1. **In the event, on the owner thread.** The verdict decides at once. Each chain start joins a queue, without waking a thread. Starts with the same subject, entry, and context in one tick merge into one, so an autoclick does not run a chain three times.
+1. **In the event, on the owner thread.** The verdict decides at once. Each chain start joins a queue, without waking a thread. Starts with the same subject, entry, and context in one tick merge into one, so an autoclick does not run a chain three times. Repeats of a link within one `fire` call are not merged: a gate that draws the same link three times starts it three times.
 2. **At tick end, on the owner thread.** Mirror writers run for demanded keys (decided 2026-11-04). This is the live copy, so it includes the event's own result, and it is the only handler code on an owner thread. One worker wakes for the whole engine.
 3. **On the worker.** The worker first rechecks the formula graph once for everything that changed (decided 2026-11-04, [live-data.md](live-data.md#formula-changes)), then takes chains until the queue is empty and runs each chain's handlers in one go. A worker stuck in a slow handler holds up only that chain: the next tick's worker takes the rest.
 4. **Effects.** Apart from writers in step 2, handlers never run on an owner thread. An engine's trait implementation chooses where each effect runs, not the shared trait, because this differs between engines. Paper sends chat from the worker and queues a world change for the owner thread; all queued changes of a tick share one visit. An effect sent after a queued change joins that queue, so effects keep their order.
@@ -359,7 +387,7 @@ Every chain gets the same limit: at most one owner visit to read live values, on
 
 Accepted costs: a chain starts up to one tick after its event, while the verdict stays instant. A player who leaves right after paying can lose the item, as in every option tested; what must arrive is stored as owed.
 
-Open for the plan: the real names and shapes of the worker and the effect queue (the design so far only sketched them, and they must not become magic types); and how a handler's live reads reach step 2: KSP knows its parameters, and `FormulaReads` knows its fields at publish, so writers can run before the chain ([formula-language.md](formula-language.md#what-a-formula-reads)).
+Named in node 4 (decided 2026-11-22): `ChainQueue` takes chain starts, `ChainPickup` is the one engine piece that drains it (Paper on `ServerTickEndEvent`, the panel engine at once), and `ChainWorker` is the coroutine per drain on a bounded dispatcher. There is no owner thread effect queue yet: node 4's only effect is chat, sent from the worker, and the first world change action adds the queue. Open: how a handler's live reads reach step 2: KSP knows its parameters but no longer lists body reads (decided 2026-11-23), and `FormulaReads` knows a formula's reads at publish, so writers can run before the chain ([formula-language.md](formula-language.md#what-a-formula-reads)).
 
 Folia (decided 2026-11-03): the first version targets Paper's server wide tick end. Picking up queued chain starts stays one small piece of the Paper engine, so the design does not block Folia. Folia later replaces only that piece, with a next tick task per active player, because no per region tick end hook was found. Expected cost there, not measured: one post per active player per tick, and chains start up to one tick later.
 
@@ -370,11 +398,12 @@ The game verification framework steps Paper's ticks itself and judges a requirem
 - The engine counts, per protagonist, the chains queued and running for it. A chain with a group subject counts for every member.
 - The realm side counts pending transactions the same way ([stored-data.md](stored-data.md#who-waits-for-a-commit)). A future `Due` is not busy; a requirement waiting on one advances the realm clock ([stored-data.md](stored-data.md#due)).
 - Typewriter never cancels a chain for the test. A chain that does not finish is reported by the framework's wall clock limit (1 s), and its player sits out until it ends.
-- On the test Paper the engine reports this through the framework's `PlayerWork` API, as any plugin does. Whether the test side also needs a hook of its own is open until layers 3 and 6 are built.
+- The engine counts from the moment a chain start is queued until the chain ends (decided 2026-11-22), through the engine-core port `SubjectWork`, which does nothing by default. A chain for an event without a subject counts for every protagonist present on the engine, since its handlers query them.
+- On the test Paper the playtest bridge, an Imprint extension, implements `SubjectWork` with the framework's `PlayerWork` API ([plugin-integrations.md](plugin-integrations.md#first-user)). The test side needs no hook of its own.
 
 Spikes I and D showed that work a server wide quiet check cannot see (a raw thread pool) gives wrong verdicts and wrong coverage, and that a per player count fixes both ([d-clients.md](game-verification/spikes/d-clients.md), [i-coverage.md](game-verification/spikes/i-coverage.md)).
 
-**Effects through the owner thread.** Spike N found that an effect sent from the owner thread lands on the same stepped tick every time, while one a worker thread sends races the tick boundary and lands one or two steps later ([n-stepped-ticks.md](game-verification/spikes/n-stepped-ticks.md)), so a requirement's tick counts would vary between runs. The search therefore asks that the Paper engine's effects reach the player through the owner thread, in the tick's effect queue. The framework later made Paper's own async chat steady another way: the work counts as the player's from the moment Paper reads the line, so the next tick waits for the send. Step 4 above still sends chat from the worker, which is steady only if the chain counts from the moment it is queued; which of the two holds is open (see [Open](#open-1)).
+**Effects through the owner thread.** Spike N found that an effect sent from the owner thread lands on the same stepped tick every time, while one a worker thread sends races the tick boundary and lands one or two steps later ([n-stepped-ticks.md](game-verification/spikes/n-stepped-ticks.md)), so a requirement's tick counts would vary between runs. The search therefore asks that the Paper engine's effects reach the player through the owner thread, in the tick's effect queue. The framework later made Paper's own async chat steady another way: the work counts as the player's from the moment Paper reads the line, so the next tick waits for the send. Step 4 above still sends chat from the worker, which is steady because the chain counts from the moment it is queued (decided 2026-11-22).
 
 ### Suspending handlers
 
@@ -386,12 +415,12 @@ A chain is how entries lead to entries. Links fire, entries do not: nothing foll
 
 ### Firing and `Triggered`
 
-Firing a link emits an ordinary `Triggered<E>(entry, subject, context)` event per linked entry, queued like `emit`. The entry is a field of the event. The subject is the identity the chain is for: a protagonist, or a group after widening ([interactions.md](interactions.md#widening)).
+Firing a link emits an ordinary `TriggeredEvent<E>(entry, subject, context)` event per linked entry, queued like `emit`; chains merge on it. A handler's receiver is `Triggered<E>`, the scope the engine builds from that event and its own entry reader when it runs the handler, so a `Triggered<E>` can always read its entry and an engine that receives the event binds its own reader. An `outcome` parameter on such a handler is `Outcome<TriggeredEvent<E>>`. `Triggered<E>` is the scope its handler reads through ([Reading entry values](#reading-entry-values)), so `complete()` and `fire()` take the context from it. The subject is the identity the chain is for: a protagonist, or a group after widening ([interactions.md](interactions.md#widening)).
 
 ```kotlin
-entry.triggers.fire(context)
-entry.triggers.random(seed).fire(context)
-chosen.link.fire(context)
+entry.triggers.fire()
+entry.triggers.random(seed).fire()
+chosen.link.fire()
 ```
 
 Actions, steps, and triggers share this one flow:
@@ -403,11 +432,11 @@ Actions, steps, and triggers share this one flow:
 ```kotlin
 @Handler
 fun <E : Event> E.fire(entry: Candidate<EventEntry<E>>) {
-    if (entry.condition) entry.complete(context)
+    if (entry.condition) entry.complete()
 }
 ```
 
-That shared handler serves most events ([Event entries](#event-entries)); `event.message.contains("hello")` in the condition replaces the legacy chat entry. An extension can write its own trigger the same way. Extra needs are extra parameters (traits, stored values, formulas). Entries stay plain data; trigger code only says it fired, the core follows the links. Book narrowing happens inside `fire`: a link into an entry whose book does not apply to the subject is skipped ([book-composition.md](book-composition.md#6-conditions)). Firing for a group instead of the current subject (`fire(context, for = group)`) is described in [interactions.md](interactions.md).
+That shared handler serves most events ([Event entries](#event-entries)); `event.message.contains("hello")` in the condition replaces the legacy chat entry. An extension can write its own trigger the same way. Extra needs are extra parameters (traits, stored values, mirrors). Entries stay plain data; trigger code only says it fired, the core follows the links. Book narrowing happens inside `fire`: a link into an entry whose book does not apply to the subject is skipped ([book-composition.md](book-composition.md#6-conditions)). Firing for a group instead of the current subject (`fire(for = group)`) is described in [interactions.md](interactions.md).
 
 Forwarding is declared by the trigger type: the extension marks it forwardable.
 
@@ -440,14 +469,14 @@ interface Triggerable {
 
 ```kotlin
 // Shortcut: apply changes, then fire triggers (legacy order; the next entry sees the changes).
-entry.complete(context)
+entry.complete()
 
 // Manual, when an entry needs another order or timing.
-entry.changes(context).attempt()
-entry.triggers.fire(context)
+entry.changes.attempt()
+entry.triggers.fire()
 ```
 
-Extra update fields (dialogue options) are applied the same way: `option.changes(context).attempt()`, then `option.triggers.fire(context)` unless refused. What `attempt()` commits and how the realm handles conflicts is in [stored-data.md](stored-data.md).
+Extra update fields (dialogue options) are applied the same way: `option.changes.attempt()`, then `option.triggers.fire()` unless refused. What `attempt()` commits and how the realm handles conflicts is in [stored-data.md](stored-data.md).
 
 ## Event entries
 
@@ -513,13 +542,13 @@ fun <E : CancelableEvent> E.rule(
     entry: Candidate<CancelableEventEntry<E>>,
 ): Verdict = when {
     !entry.condition -> pass()
-    entry.cancel -> deny { entry.complete(context) }
-    else -> pass { entry.complete(context) }
+    entry.cancel -> deny { entry.complete() }
+    else -> pass { entry.complete() }
 }
 
 @Handler
 fun <E : Event> E.fire(entry: Candidate<EventEntry<E>>) {
-    if (entry.condition) entry.complete(context)
+    if (entry.condition) entry.complete()
 }
 ```
 
@@ -540,13 +569,13 @@ produces { use(E) }
 "You cannot break this at ${on_block_break.location}"
 ```
 
-**The action runs on the player.** Actions stay hand written: their fields are their parameters, so nothing can be derived.
+**The action runs on the player.** Actions stay hand written: the handler reads their fields in its body through accessors, so nothing can be derived.
 
 ```kotlin
 @Handler
-fun Triggered<SimpleMessageActionEntry>.send(chat: HasChat, message: RichText) {
+fun Triggered<SimpleMessageActionEntry>.send(chat: HasChat) {
     chat.send(message)
-    entry.complete(context)
+    complete()
 }
 ```
 
@@ -564,8 +593,8 @@ class PlayerKillPlayerEventEntry(
 @Handler
 fun PlayerKillPlayer.fire(entry: Candidate<PlayerKillPlayerEventEntry>) {
     if (!entry.condition) return
-    entry.complete(context)
-    entry.killedTriggers.fire(context, for = killed)
+    entry.complete()
+    entry.killedTriggers.fire(for = killed)
 }
 ```
 
@@ -575,6 +604,7 @@ fun PlayerKillPlayer.fire(entry: Candidate<PlayerKillPlayerEventEntry>) {
 | --- | --- |
 | Condition reads a mirror | `protagonist.heldItem` misses on the first read, so it counts as not met and posts a demand. This is why filter facts sit on the event. |
 | Condition fails at run time | Counts as not met: `pass`, no links fire, logged. |
+| Entry value not loaded yet | The handler fails like any failing handler; for a verdict that means `pass` (decided 2026-11-23). In a derive the read is recorded and the derive reruns once it loads. |
 | Event field renamed in code | The formula gets a check error at publish. |
 | Cancel on a non cancelable event | Refused by the bound on the type argument. |
 | One exact block | Capture into a `Definition`, then name it in the formula. |
@@ -608,11 +638,10 @@ event.to.distance(spot) < 5 and event.from.distance(spot) >= 5   // walked near 
 
 ### Event entries not proven
 
-- **Generic handlers.** A handler plan names one event class today. `fun <E> E.rule` needs demand per type argument. If that fails, KSP generates one handler per event instead.
-- **Generic context.** `EventContext<E>` inside a `Var` is new; `Definition<T>` only has `T` as the value.
 - **Palette.** "On block break" must appear as its own choice when creating an entry. `resource_creation.dart` does not mention type arguments.
 - **Cost.** Both hand items convert on every event while the source is open. Not measured; `Interact` is the frequent one.
-- **Nothing here ran.** It rests on layers 1, 4, and 8, none of which are built.
+- **Proven in node 4 (change set 1).** Generic handlers (`fun <E : CancelableEvent> E.rule`, instantiated per published event class within the bound) and `EventContext<E>` inside a `Var` work end to end.
+- **Not run yet.** Anything resting on layers 6 and 8.
 
 ### Open
 

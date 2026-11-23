@@ -42,53 +42,61 @@ struct ActiveProjection(83060005) {
   health: ProjectionHealth = 1;
 }
 
-// One host's answer to a presence probe, used to select participants and their recovery baselines.
-struct RealmHostPresence(83060006) {
+// A Paper plugin a host reports enabled, by the name and version Paper reports for it.
+struct EnabledPlugin(83060006) {
+  name: string = 0;
+  version: string = 1;
+}
+
+// One host's answer to a presence probe, used to select participants and their recovery baselines and to decide which
+// source parts its engines can run. A Paper host reports its enabled plugins; any other host reports none.
+struct RealmHostPresence(83060007) {
   service_id: string = 0;
   host_api: string = 1;
   assigned_roles: [RuntimePlacement] = 2;
   active_projection: ActiveProjection? = 3;
+  plugins: [EnabledPlugin|name] = 4;
 }
 
 // Distinguishes coordinator attempts, including retries of the same generation. The positive ordinal fences stale commands;
 // the generation alone is not an attempt identity.
-struct RolloutAttempt(83060007) {
+struct RolloutAttempt(83060008) {
   ordinal: int64 = 0;
   generation: int64 = 1;
 }
 
 // Whether a participant restores an empty state or an exact retained projection. Recovery never selects whichever artifact
 // version happens to be newest.
-enum RollbackTarget(83060008) {
+enum RollbackTarget(83060009) {
   empty = 1;
   projection: ProjectionReference = 2;
 }
 
 // The exact projection one participant applies a command to.
-struct ParticipantProjection(83060009) {
+struct ParticipantProjection(83060010) {
   service_id: string = 0;
   projection: ProjectionReference = 1;
 }
 
 // Every participant of a command with its exact projection.
-struct ParticipantProjections(83060010) {
+struct ParticipantProjections(83060011) {
   participants: [ParticipantProjection|service_id] = 0;
 }
 
 // The failed projection of one participant next to the exact target it restores.
-struct ParticipantRollback(83060011) {
+struct ParticipantRollback(83060012) {
   service_id: string = 0;
   projection: ProjectionReference = 1;
   target: RollbackTarget = 2;
 }
 
 // Every participant of a rollback with its failed projection and restore target.
-struct ParticipantRollbacks(83060012) {
+struct ParticipantRollbacks(83060013) {
   participants: [ParticipantRollback|service_id] = 0;
 }
 
 // A lifecycle command for one attempt. Each listed participant applies only its own entry.
-enum RolloutCommand(83060013) {
+enum RolloutCommand(83060014) {
   stage: ParticipantProjections = 1;
   commit: ParticipantProjections = 2;
   abort: ParticipantProjections = 3;
@@ -96,7 +104,7 @@ enum RolloutCommand(83060013) {
 }
 
 // The lifecycle command a failed participant was applying.
-enum RolloutCommandKind(83060014) {
+enum RolloutCommandKind(83060015) {
   stage = 1;
   commit = 2;
   abort = 3;
@@ -104,27 +112,27 @@ enum RolloutCommandKind(83060014) {
 }
 
 // A candidate projection next to the projection that was active before it was staged.
-struct StagedCandidate(83060015) {
+struct StagedCandidate(83060016) {
   candidate: ProjectionReference = 0;
   baseline: ActiveProjection? = 1;
 }
 
 // The active projection of a participant and the one prior projection it retains for rollback.
-struct ActiveParticipant(83060016) {
+struct ActiveParticipant(83060017) {
   current: ActiveProjection = 0;
   retained: ProjectionReference? = 1;
 }
 
 // The resources a participant retains after a failed command. Recovery distinguishes empty, active and staged states
 // instead of assuming that every failure leaves the same baseline.
-enum RecoverableParticipantState(83060017) {
+enum RecoverableParticipantState(83060018) {
   empty = 1;
   active: ActiveParticipant = 2;
   staged: StagedCandidate = 3;
 }
 
 // Lifecycle progress of one participant. Active does not necessarily mean healthy.
-enum ParticipantPhase(83060018) {
+enum ParticipantPhase(83060019) {
   idle = 1;
   staging: StagedCandidate = 2;
   staged: StagedCandidate = 3;
@@ -144,7 +152,7 @@ enum ParticipantPhase(83060018) {
 
 // The lifecycle phase of one participant for one attempt. Consumers compare the attempt and the exact projection before
 // treating an observation as confirmation.
-struct ParticipantStatus(83060019) {
+struct ParticipantStatus(83060020) {
   service_id: string = 0;
   attempt: RolloutAttempt = 1;
   phase: ParticipantPhase = 2;

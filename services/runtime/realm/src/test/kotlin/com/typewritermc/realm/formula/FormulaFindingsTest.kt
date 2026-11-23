@@ -17,6 +17,7 @@ import com.typewritermc.realm.edit.path
 import com.typewritermc.realm.routeFixtureCatalog
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.booleanUse
+import com.typewritermc.realm.testing.breakUse
 import com.typewritermc.realm.testing.commitDefinition
 import com.typewritermc.realm.testing.commitPreparedTypeChange
 import com.typewritermc.realm.testing.commitRecordUser
@@ -67,6 +68,7 @@ import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -101,6 +103,21 @@ val FormulaFindingsTest by testSuite {
         withSetup(page, catalog = routeFixtureCatalog) { demo ->
             errorCodesOn(demo.named("chained")).shouldBeEmpty()
             formulas.evaluation(demo.named("chained")) shouldBe Evaluation.NotEvaluated
+        }
+    }
+
+    test("an event entry's condition reads the fields of the event the entry is about") {
+        val page =
+            setup("findings-event") {
+                formulaPage {
+                    eventEntry("known", breakUse, "event.player == event.player")
+                    eventEntry("unknown", breakUse, "event.block == event.block")
+                }
+            }
+        withSetup(page, catalog = routeFixtureCatalog) { demo ->
+            settle()
+            errorCodesOn(demo.named("known")).shouldBeEmpty()
+            errorCodesOn(demo.named("unknown")).shouldNotBeEmpty()
         }
     }
 

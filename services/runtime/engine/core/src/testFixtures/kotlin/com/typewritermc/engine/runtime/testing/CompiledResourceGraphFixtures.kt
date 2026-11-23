@@ -61,13 +61,14 @@ fun assemble(facts: List<RuntimeCompilationFacts>) =
 /** A resource key for [resource] in the root compilation context. */
 fun key(resource: String) = CompiledResourceKey(source = ResourceId(resource).toSkir(), context = CompilationContext.Root)
 
-/** Publication facts rooted at [PAGE] with the given [resources] and [edges]. */
+/** Publication facts rooted at [root], [PAGE] unless given, with the given [resources] and [edges]. */
 fun facts(
     vararg resources: CompiledResource,
     edges: List<CompiledEdge> = emptyList(),
+    root: CompiledResourceKey = PAGE,
 ) = RuntimeCompilationFacts(
     formatRevision = RESOURCE_GRAPH_FORMAT_REVISION,
-    root = PAGE,
+    root = root,
     resources = resources.toList(),
     edges = edges,
     types = emptyList(),

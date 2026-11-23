@@ -166,13 +166,13 @@ fun PlayerPosition.inRegion(region: RegionEntry): InRegion? =
 
 The check runs on the worker and reruns only when the position changes. Entering and leaving a region is `Added<InRegion>` and `Removed<InRegion>`; there are no separate enter and exit events.
 
-### Demand for configured sources
+### Demand for subscribed sources
 
-Configured events (`Tick<Config>` and other real events with a configuration, see [events-and-handlers.md](events-and-handlers.md)) use the same demand. A source receives `Demand<Config>`, the configurations that currently have a runnable handler, so only those are active:
+Subscribed events (`Tick<S>` and other real events with a subscription, see [events-and-handlers.md](events-and-handlers.md)) use the same demand. A source receives `Demand<S>`, the subscriptions that currently have a runnable handler, so only those are active:
 
 ```kotlin
-interface ConfiguredSource<E, Config> : EnginePart {
-    fun open(demand: Demand<Config>, sink: Sink<E>): AutoCloseable
+interface SubscribedSource<E, S> : EnginePart {
+    fun open(demand: Demand<S>, sink: Sink<E>): AutoCloseable
 }
 ```
 
@@ -213,6 +213,8 @@ A parameter that exists only in code uses one wider mirror, and the handler filt
 `@Derive` picks its behaviour from the result type: `Stored` is saved, `Hold` is live with priority and grace, and `Live` is a computed mirror (demand driven, never saved). The `Stored` and `Hold` forms are in [stored-data.md](stored-data.md) and [interactions.md](interactions.md).
 
 Derive inputs are tracked; incrementality comes from read tracking and early cutoff (an unchanged result stops propagation).
+
+A derive reads entry values through accessors, by name at any depth, and each read is a tracked read (the reading model, decided 2026-11-23). A branch not taken reads nothing, so a change there does not rerun the derive. A read whose value is not loaded yet fails as a recorded read, and the graph reruns the derive once it clears; on a rerun the engine first loads everything the previous run read. A parameter is only an identity, a trait, a candidate, a configuration, an origin or an outcome, never an entry field.
 
 ### Stored derives over mirrors
 
@@ -294,11 +296,10 @@ interface AudienceEntry : Entry {
 }
 
 @Derive
-fun AudienceEntry.inside(
+fun EntryScope<AudienceEntry>.inside(
     protagonist: Protagonist,
     @From(Parent::class) inParents: List<InAudience>,
-    criterion: Boolean,
-): InAudience? = ...
+): InAudience? = ...   // criterion is an accessor read
 ```
 
 ```
@@ -322,7 +323,7 @@ spawn.contains(it.protagonist)                                                  
 
 Enter and exit triggers stay separate entries: `TriggerAudienceEntry(onEnter, onExit, fireOnJoin = true)`. Like legacy, enter fires on every join by default. Exit fires only on `because == Value`, so quitting or moving servers does not count as leaving.
 
-Displays derive from membership: a `SidebarHold` is derived from `InAudience` with its text as a tracked parameter, and a handler on `Changed<SidebarHold>` updates the game. Competing displays of the same hold type are settled by hold priority ([interactions.md](interactions.md#holds)).
+Displays derive from membership: a `SidebarHold` is derived from `InAudience` with its text as a tracked read (an accessor), and a handler on `Changed<SidebarHold>` updates the game. Competing displays of the same hold type are settled by hold priority ([interactions.md](interactions.md#holds)).
 
 ### Demand across engines
 
@@ -442,7 +443,12 @@ Declared in `transport-routes.yaml`, realm scoped (decided 2026-11-03). Only `re
 | --- | --- | --- |
 | protagonist event | `protagonist.{principal_kind}.{principal_id}` | `EventDelivery` for every engine holding the protagonist |
 | session event | `session.{session}` | `EventResult`, and targets that are one connection |
-| stored changes | `changed.{engine}` | `Changed<T>` batches and heartbeats from the realm |
+| engine acks | `engine.{engine}.event_ack` | acks for delivered events (node 9) |
+| stored changes | `engine.{engine}.changed` | `Changed<T>` batches and heartbeats from the realm (node 6) |
+
+Messages for one engine form the route family `engine.{engine}.*`, one route per payload: `event_ack` (node 9, since cross engine delivery moves there) and `changed` (node 6, was `changed.{engine}`). Acks do not ride the protagonist route: with several holders every holder would hear every ack, and a holder that moved away would stop hearing its own (decided 2026-11-22).
+
+The local sessions copy of an engine comes through a KV watch (node 4). The watch filter is generated from the bucket's key shape, so it stays inside the engine's grant. In node 4 the copy only fires `ProtagonistLeft`; the join check and `holders` read the bucket directly. Node 9, the first user of `holders` for forwarding, adds a signal that the watch's replay has caught up and then makes the copy the one source (decided 2026-11-22).
 
 These addresses hold free values, so the generator gets free parameters next to its bound ones (`subject.ts:4`), granted through a wildcard token. Panel tab routes are `session.user.{user}.{session}`, granted per user, and arrive when the panel first emits events; they also need the subject family for panel to service events.
 
@@ -472,12 +478,12 @@ Not on streams: stored data and `Due` (transactions, exactly once, realm owned) 
 Content is a tracked input. Publishing new content reruns whatever read it; there is no `Republished` event.
 
 - Step data the protagonist sees is a derive over the `Running` row plus the entry. The row stores only moments (`startedAt`), so text is live and a publish updates it in place.
-- Configured event configurations and `Candidate<E>` entries are live across hot publish.
+- Subscribed event subscriptions and `Candidate<E>` entries are live across hot publish.
 - An identity defined by an entry ends when that entry is removed, and with it every value keyed by it.
 
 ```kotlin
 @Derive
-fun Running<OptionDialogueEntry>.view(who: Protagonist, text: RichText, /* ... */) = OptionView(/* ... */)
+fun Running<OptionDialogueEntry>.view(who: Protagonist, /* ... */) = OptionView(text = text, /* ... */)   // text is an accessor read
 ```
 
 Typing is a `Tick` handler over `Animating`, a `Live` value that exists only while animating ([dialogue.md](dialogue.md#3-the-dialogue-package)).

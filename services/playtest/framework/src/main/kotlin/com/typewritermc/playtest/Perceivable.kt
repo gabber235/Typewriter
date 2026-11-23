@@ -39,12 +39,20 @@ class Stimulus(
     val perceived: Perception?,
 )
 
-/** A chat line holding [text] that arrived after the window's stimulus and is drawn legibly in the chat. */
-fun chat(text: String): Perceivable =
-    fact("chat \"$text\"") { perception, stimulus ->
-        perception.chat.any { it.tick > stimulus.tick && text in it.text } &&
+/**
+ * A chat line holding [text] that arrived after the window's stimulus [times] times and is drawn legibly in the chat:
+ * `player sees chat("Beat", times = 2)`, or `player.never sees chat("Beat", times = 5)` for an upper bound.
+ */
+fun chat(
+    text: String,
+    times: Int = 1,
+): Perceivable {
+    require(times >= 1) { "A chat line is expected at least once, not $times times" }
+    return fact(if (times == 1) "chat \"$text\"" else "chat \"$text\" $times times") { perception, stimulus ->
+        perception.chat.count { it.tick > stimulus.tick && text in it.text } >= times &&
             perception.texts.any { it.element == "chat" && text in it.text }
     }
+}
 
 /** Any chat line that arrived after the window's stimulus, drawn or not: `outsider.never sees anyChat()`. */
 fun anyChat(): Perceivable =

@@ -46,7 +46,9 @@ val coverageAgentPart = gamePart("playtestCoverageAgent", ":playtest-plugin", "p
 
 /**
  * What this module adds to every Paper the pool boots: [pluginJars] go into `plugins/`, [files] into
- * Paper's folder at the paths it names, and [environment] is set for Paper's process. Every module's
+ * Paper's folder at the paths it names, and [environment] is set for Paper's process.
+ * [typewriterExtensions] go to the game stack's Realm, which deploys them to the Typewriter engine of
+ * every game Paper. Every module's
  * gameTest shares the build's pool and its Papers, so the pool takes the union of every module's
  * additions; two modules that disagree on a file or a variable fail before Paper starts.
  *
@@ -82,6 +84,15 @@ abstract class GamePaper
         /** What only the Paper of each slot adds, by slot. */
         val slots: MutableMap<Int, GamePaperSlot> = mutableMapOf()
 
+        /**
+         * The Typewriter extensions the game stack's Realm deploys to every game Paper's engine, by
+         * project: `typewriterExtensions.from(project(":playtest-bridge"))`. Not `extensions`, which every
+         * Gradle extension object already has for its own extensions. `cargo xtask e2e game` installs the
+         * extensions of every game module into the Realm host's inbox before the stack starts; panel
+         * stacks and development Papers never get them.
+         */
+        val typewriterExtensions = GameExtensions(project)
+
         fun files(action: Action<CopySpec>) = action.execute(files)
 
         /** Adds to the Paper of slot [slot] only. */
@@ -91,12 +102,47 @@ abstract class GamePaper
         ) = action.execute(slots.getOrPut(slot) { project.objects.newInstance(GamePaperSlot::class.java) })
     }
 
+/** The extension projects a game module adds to the game stack's Realm, as [GamePaper.typewriterExtensions]. */
+class GameExtensions(
+    private val project: Project,
+) {
+    /** Adds the Imprint extension [extension] builds. */
+    fun from(extension: Project) {
+        project.dependencies.add(SCOPE, project.dependencies.project(mapOf("path" to extension.path, "configuration" to "runtimeElements")))
+    }
+
+    companion object {
+        /** The dependency scope that holds the extension projects. */
+        const val SCOPE = "playtestGameExtensionsScope"
+    }
+}
+
 /** What one slot's Paper adds to the environment every Paper of the build starts with. */
 abstract class GamePaperSlot {
     abstract val environment: MapProperty<String, String>
 }
 
+val gameExtensionsScope = configurations.dependencyScope(GameExtensions.SCOPE)
 val gamePaper = extensions.create<GamePaper>("gamePaper", project)
+
+// This module's game extensions as one folder of extension jars, which the root project's
+// `installGameExtensions` gathers from every game module. Only each extension's own jar, never what
+// it depends on: the engine provides those.
+val gameExtensionJars =
+    configurations.resolvable("playtestGameExtensionJars") {
+        extendsFrom(gameExtensionsScope.get())
+        isTransitive = false
+    }
+val gameExtensionsDir = layout.buildDirectory.dir("playtest/game-extensions")
+val collectGameExtensions =
+    tasks.register<Sync>("playtestGameExtensions") {
+        description = "Collects the extension jars this module adds to the game stack's Realm."
+        from(gameExtensionJars)
+        into(gameExtensionsDir)
+    }
+configurations.consumable("playtestGameExtensions") {
+    outgoing.artifact(gameExtensionsDir) { builtBy(collectGameExtensions) }
+}
 
 val paperAdditionsDir = layout.buildDirectory.dir("playtest/paper-additions")
 

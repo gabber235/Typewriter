@@ -85,15 +85,14 @@ data class ScenePlaying(
 
 @Derive
 fun Running<PlaySceneEntry>.playing(who: Protagonist, playhead: Playhead) =
-    ScenePlaying(who, entry.scene, step, context, startedAt, playhead, entry.waitAtMost)
+    ScenePlaying(who, scene, step, context, startedAt, playhead, waitAtMost)   // scene and waitAtMost are accessor reads
 
 fun ScenePlaying.frame(now: Instant): Int = playhead.frame(now)
-fun ScenePlaying.member(): MemberContext = ...   // this member, in the step's chain
 
 // The end. A paused playhead does not move, so it does not end.
 @Handler
 suspend fun Tick<EveryTick>.end(running: Running<PlaySceneEntry>, playhead: Playhead) {
-    if (playhead.frame(now) > running.entry.scene.lastFrame()) running.complete()
+    if (playhead.frame(now) > running.scene.lastFrame()) running.complete()
 }
 
 fun ScenePage.lastFrame(): Int = ...   // the last frame of any cue its tracks own
@@ -129,13 +128,13 @@ fun <S : Segment> List<S>.activeAt(frame: Int): List<S> =
 
 // PotionHold is keyed by (who, effect), so each effect is its own Hold.
 @Derive
-fun PotionTrackEntry.holds(who: Protagonist, playing: ScenePlaying): List<PotionHold> {
-    val member = playing.member()
-    return segments.activeAt(playing.frame(now))
-        .map { PotionHold(who, it.effect, it.level(member)) }
+fun EntryScope<PotionTrackEntry>.holds(who: Protagonist, playing: ScenePlaying): List<PotionHold> =
+    segments.activeAt(playing.frame(now))
+        .map { PotionHold(who, it.effect, it.level) }   // level is an accessor read, context implicit
         .groupBy { it.effect }.map { (_, same) -> same.maxBy { it.level } }   // same effect twice: the strongest, as Minecraft
-}
 ```
+
+The reads follow the reading model (decided 2026-11-23): `segments`, `it.effect`, and `it.level` are accessors, and the graph records which segments the frame reached, so a change to a segment on another frame does not rerun the derive. A read not loaded yet fails and reruns the derive when it clears.
 
 ### 3. Camera kinds
 
@@ -149,7 +148,7 @@ data class CameraTrackEntry(
 
 interface CameraSegment : Segment {
     val aim: Var<CameraAim, MemberContext>
-    fun path(member: MemberContext): CameraPath   // formulas resolved for one member
+    fun RecordScope<out CameraSegment>.path(): CameraPath   // reads its fields through accessors, context implicit
 }
 
 // Resolved, so a Hold can carry and compare it. The points of one segment share a world (a check).
@@ -219,10 +218,9 @@ data class CameraHold(
 ) : Hold
 
 @Derive
-fun CameraTrackEntry.camera(who: Protagonist, playing: ScenePlaying): CameraHold? {
+fun EntryScope<CameraTrackEntry>.camera(who: Protagonist, playing: ScenePlaying): CameraHold? {
     val segment = segments.current(playing.frame(now)) ?: return null
-    val member = playing.member()
-    return CameraHold(who, playing.step, segment, segment.path(member), segment.aim(member),
+    return CameraHold(who, playing.step, segment, segment.path(), segment.aim,
         playing.playhead, playing.waitAtMost)
 }
 
@@ -467,7 +465,7 @@ data class SkipTrackEntry(
 data class SkipSegment(override val placement: TimelineSegmentPlacement) : Segment
 
 @Derive
-fun SkipTrackEntry.offer(who: Protagonist, playing: ScenePlaying): KeyOffer? {
+fun EntryScope<SkipTrackEntry>.offer(who: Protagonist, playing: ScenePlaying): KeyOffer? {
     if (segments.activeAt(playing.frame(now)).isEmpty()) return null
     return KeyOffer(who, by = playing.step, preferred = key, since = playing.startedAt,
         press = Confirm(who, playing.step))
@@ -476,7 +474,7 @@ fun SkipTrackEntry.offer(who: Protagonist, playing: ScenePlaying): KeyOffer? {
 @Handler
 fun Confirm.skip(running: Running<PlaySceneEntry>, playhead: Playhead) {
     val frame = playhead.frame(now)
-    val end = running.entry.scene.elements.filterIsInstance<SkipTrackEntry>()
+    val end = running.scene.elements.filterIsInstance<SkipTrackEntry>()
         .flatMap { it.segments.activeAt(frame) }.maxOfOrNull { it.placement.endFrame } ?: return
     val _ = Skip(step, end + 1).attempt()
 }
@@ -506,7 +504,7 @@ data class CueReached(@Key val step: Step, @Key val cue: CueKeyframe, val contex
 data class CueFired(@Key val step: Step, @Key val cue: CueKeyframe) : Stored   // removed with the step
 
 @Derive
-fun CueTrackEntry.reached(playing: ScenePlaying): List<CueReached> =
+fun EntryScope<CueTrackEntry>.reached(playing: ScenePlaying): List<CueReached> =
     cues.filter { playing.frame(now) >= it.placement.frame }
         .map { CueReached(playing.step, it, playing.context) }
 
@@ -544,10 +542,10 @@ class KeyWayOutEntry(
 
 // Offered only while leaving is allowed, so no hint shows when it would refuse.
 @Derive
-fun KeyWayOutEntry.offer(who: Protagonist, inside: InAudience, exit: Exits): KeyOffer? {
-    if (exit.way != this || !exit.allowed) return null
-    return KeyOffer(who, by = this, preferred = key, since = inside.since,
-        press = LeaveAsked(who, this, exit.interactions))
+fun EntryScope<KeyWayOutEntry>.offer(who: Protagonist, inside: InAudience, exit: Exits): KeyOffer? {
+    if (exit.way != entry || !exit.allowed) return null
+    return KeyOffer(who, by = entry, preferred = key, since = inside.since,
+        press = LeaveAsked(who, entry, exit.interactions))
 }
 ```
 
@@ -622,7 +620,8 @@ A track's derive is on the track entry, not on `Running<E>`, so the clash rule n
 - **The PlayerTeleportEvent inside the ordinary teleport.** `CraftEntity.teleport0` calls the NMS teleport; that the event fires inside that call, so `own` covers it, is not read. The first test of this layer checks it on a real Paper server: an own move gives no `Teleport` event, another plugin's teleport still does.
 - **The loaded packet after a world change**: read from client bytecode (26.3), not run.
 - **A derive returning a list** (`holds`, `reached`), and **a parameter keyed through another** (`end`'s `playhead`).
-- **Refs read as resources at runtime** (`segments`, `scene`, `scene.elements`, `points`), the same helper as layer 17's `of.points`.
+- **Refs read as resources at runtime** (`segments`, `scene`, `scene.elements`, `points`): the model names accessors on records inside an entry, so an accessor read through a `Ref` to another resource (`it.level` on a segment) is assumed, with the graph recording the referenced resource, the same helper as layer 17's `of.points`.
+- **The scope of a track derive.** A derive on a track entry has no `Running` or `Triggered`, so `EntryScope<E>` is assumed as its receiver.
 - **A key from the receiver's page link**: `playing`'s `page` filled from the track's `page`.
 - **The `change` verdict syntax** and the wire events `PositionSent`, `ClientPosition`, `ClientInteractEntity`, `PlayerKicked`, `EntityTargets`: named, not shaped. The snapshot writer `snapshot<CameraHold>(who)` and `wire.incoming` are assumed names.
 - **`FOLLOW_DISTANCE` of 8 blocks** is a guess; holograms and chunk loading decide it.

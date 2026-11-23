@@ -1,6 +1,7 @@
 plugins {
     id("com.typewritermc.basic-conventions")
     id("com.typewritermc.imprint")
+    id("com.typewritermc.paper-api")
     alias(libs.plugins.kotlin.serialize)
 }
 
@@ -18,4 +19,8 @@ typewriter {
 dependencies {
     imprintExtensionApi(project(":typewriter-api"))
     imprintEngineCore(project(":engine-core"))
+
+    testImplementation(project(":typewriter-api"))
+    testImplementation(project(":engine-core"))
+    testImplementation(testFixtures(project(":engine-core")))
 }

@@ -24,17 +24,14 @@ Formulas are side effect free. Conditions, text, verdicts and derives are pure. 
 
 ## The Formula primitive in Kotlin
 
-Kotlin formulas are provider functions ([Standard library](#standard-library)); there is no separate derived value concept. A handler or derive reads a `Var` field of its receiver's entry as a plain parameter with the field's name and value type: it receives the field's current value, with the formula context filled from the handler's subject and parameters, and reruns when its `Watched<T>` mirror changes. The receiver's entry is the receiver itself, the `E` of `Triggered<E>`, or the receiver's only entry field, as in `Running<E>`. KSP rejects such a parameter when no field matches its name and type, so a rename is a build error.
+Kotlin formulas are provider functions ([Standard library](#standard-library)); there is no separate derived value concept. A handler or derive reads entry values through generated accessors in its body (decided 2026-11-23): `message` and `spoken.minLines` read a `Var` field and a nested record field the same way, at any depth, and a `Var<T, C>` field reads as a plain `T`. The formula context is filled implicitly from the scope's subject and chain context; nobody passes it by hand. The accessors are the only path to entry values, and a handler or derive parameter is never an entry field (parameters are identities, traits, candidates, configurations, origin and outcome).
 
-This is the normal form. A nested value has no parameter, so a derive reads it in the body: `spoken.minLines(context)`. That read is tracked too. When it finds no value, the derive gives nothing this run and reruns when the value arrives, as a [watched formula](live-data.md#formula-changes) does. The same call in a chain handler is one inline read and is not tracked ([live-data.md](live-data.md#formula-changes)).
+Inside a derive every accessor read is a tracked read: each run records what it actually read and reruns when one of those values changes, so the branch not taken does not rerun the derive. A read whose value is not loaded yet fails as a recorded read; the derive reruns once the value arrives, as a [watched formula](live-data.md#formula-changes) does, and on a rerun the engine first loads everything the previous run read. A handler (verdict or after) evaluates the same accessor inline and never reruns ([live-data.md](live-data.md#formula-changes)). The whole model is in [events-and-handlers.md](events-and-handlers.md).
 
 ```kotlin
 @Derive
-fun AudienceEntry.inside(
-    protagonist: Protagonist,
-    @From(Parent::class) inParents: List<InAudience>,
-    criterion: Boolean,
-): InAudience? = ...
+fun Running<SpokenDialogueEntry>.view() =
+    SpokenView(step, text.wrap(spoken.maxLineLength, spoken.minLines))
 ```
 
 Formulas stop propagating when their value is unchanged, and derives run only after all formulas have settled. Derives and their result kinds are in [stored-data.md](stored-data.md), [live-data.md](live-data.md) and [interactions.md](interactions.md).

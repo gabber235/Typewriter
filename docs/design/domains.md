@@ -157,8 +157,8 @@ private fun CheckContext.unknown(use: DomainUse) =
 
 ```kotlin
 @Handler
-fun Triggered<GiveItemActionEntry>.give(player: PaperPlayer, item: Item) {
-    player.inventory.addItem(item.toPlatform())
+fun Triggered<GiveItemActionEntry>.give(player: PaperPlayer) {
+    player.inventory.addItem(item.toPlatform())   // `item` reads the entry's field through its accessor
 }
 
 fun ItemType.toPlatform(): org.bukkit.inventory.ItemType =

@@ -10,6 +10,7 @@ import com.typewritermc.realm.authoring.LinkSlice
 import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.after
+import com.typewritermc.realm.authoring.sortedByKeyOnce
 import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.formula.withRealmReferences
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -106,8 +107,8 @@ internal class AuthoringMutationPlanner(
         val afterSet = links.touching.projections.toSet()
         val relations =
             RelationProjectionDelta(
-                removals = (beforeSet - afterSet).sortedBy(::projectionKey),
-                created = (afterSet - beforeSet).sortedBy(::projectionKey),
+                removals = (beforeSet - afterSet).sortedByKeyOnce(::projectionKey),
+                created = (afterSet - beforeSet).sortedByKeyOnce(::projectionKey),
             )
         return MutationPlanningResult.Accepted(
             AuthoringMutationPlan(

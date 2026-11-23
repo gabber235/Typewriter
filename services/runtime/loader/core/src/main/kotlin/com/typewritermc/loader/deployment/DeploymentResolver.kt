@@ -214,7 +214,7 @@ private fun ImprintManifest.validateIntegrity(): Unit =
                         }
                     }
 
-                    CommonExtensionSourcePart -> {
+                    is CommonExtensionSourcePart -> {
                         Unit
                     }
                 }

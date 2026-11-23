@@ -31,12 +31,14 @@ fun interface EngineContentGateway {
  *
  * Every artifact must be a resource graph shard whose payload matches its manifest and passes admission against the
  * execution catalog. [graph] changes only after the whole publication is admitted, so any decoding or admission
- * failure retains the previous graph. The delivery owner serializes [apply].
+ * failure retains the previous graph, and [applied] hears each new graph with the catalog and bindings it was
+ * admitted against, which carry the publication's own content types. The delivery owner serializes [apply].
  */
 class ResourceGraphContentGateway(
     private val catalog: CheckedCatalog,
     private val bindings: NativeBindingRegistry,
     private val relations: Collection<RelationContract>,
+    private val applied: (PublicationId, CompiledResourceGraph, CheckedCatalog, NativeBindingRegistry) -> Unit = { _, _, _, _ -> },
 ) : EngineContentGateway {
     @Volatile
     var graph: CompiledResourceGraph? = null
@@ -53,7 +55,9 @@ class ResourceGraphContentGateway(
         require(declared.all { published.definition(it.id) == DeclarationStatus.READY }) { "Compiled content declarations are invalid." }
         val publishedBindings = if (declared.isEmpty()) bindings else bindings.over(published)
         decoded.forEach { it.requireAccepted(published, relations) }
-        graph = CompiledResourceGraph.assemble(decoded, relations, published, publishedBindings)
+        val assembled = CompiledResourceGraph.assemble(decoded, relations, published, publishedBindings)
+        graph = assembled
+        applied(content.descriptor.publication, assembled, published, publishedBindings)
     }
 
     private fun LoadedCompiledArtifact.decodedFacts(): RuntimeCompilationFacts {

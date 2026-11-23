@@ -24,6 +24,7 @@ import com.typewritermc.formula.Dynamics
 import com.typewritermc.formula.TypewriterDynamicProvider
 import com.typewritermc.formula.TypewriterFormulaProvider
 import com.typewritermc.formula.Var
+import com.typewritermc.identity.Protagonist
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.Page
@@ -33,6 +34,7 @@ import com.typewritermc.types.One
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.TypewriterDisplay
+import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.TypewriterTypeImports
 import com.typewritermc.types.integerScalar
@@ -105,6 +107,30 @@ data class FixtureContextEntry(
     override val placement: GraphPlacement,
     override val name: String = "",
     val chained: Var<Int, FixtureChainContext> = Var.Value(0),
+) : StaticEntry
+
+/** What every fixture event is. */
+@TypewriterRecordContract
+interface FixtureEvent
+
+/** A fixture event about one protagonist, as an extension's own event would be. */
+@TypewriterType(id = "5d0c3f7e2b8a4e61a9f4c7d2e1b03a58")
+data class FixtureBreak(
+    val player: Protagonist,
+) : FixtureEvent
+
+/** What a formula of a [FixtureEventEntry] reads: the event the entry is about. */
+interface FixtureEventContext<E : FixtureEvent> {
+    val event: E
+}
+
+/** One entry for every fixture event: the event is its type argument, and its condition reads that event's fields. */
+@TypewriterType(id = "c27a9e4b1f6d4b0e8a35d9f1b7e2c460")
+data class FixtureEventEntry<E : FixtureEvent>(
+    override val page: Ref<PageElements.Element, StaticPage>,
+    override val placement: GraphPlacement,
+    override val name: String = "",
+    val condition: Var<Boolean, FixtureEventContext<E>> = Var.Value(true),
 ) : StaticEntry
 
 /**

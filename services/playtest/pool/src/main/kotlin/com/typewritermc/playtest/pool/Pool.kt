@@ -1,6 +1,7 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.launch.HeapShare
+import com.typewritermc.playtest.launch.MemoryBudget
+import com.typewritermc.playtest.launch.PartMemory
 import com.typewritermc.playtest.launch.PoolFile
 import com.typewritermc.playtest.launch.PoolProcess
 import com.typewritermc.playtest.pool.PaperRules.Do
@@ -56,10 +57,11 @@ fun main() {
         // The build appends the pool's output to its log, which the pool that holds the lock empties, so
         // the log holds this run alone.
         FileChannel.open(settings.poolLog, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
-        val pool = Pool(settings, server)
+        val budget = MemoryBudget.ofThisMachine(settings.clients)
+        val pool = Pool(settings, server, budget.ownPapers())
         onEndOf(System.`in`) { pool.stop() }
         // The build's test JVMs find no pool of their run, and point at this log.
-        HeapShare.overLimit(settings.clients)?.let { reason ->
+        budget.refusal()?.let { reason ->
             pool.couldNotRun(reason)
             exitProcess(1)
         }
@@ -82,10 +84,12 @@ private const val BACKLOG = 16
  * they are free, wiped and in a region of its own, routes each attempt's messages, and stops once the
  * build ends its run. A lease that runs
  * out before its session sends the result ends the attempt, so a stuck session cannot keep players.
+ * At most [ownPapers] restart attempts' own Papers run at once, as many as the machine's memory holds.
  */
 internal class Pool(
     private val settings: PoolSettings,
     private val server: ServerSocket,
+    private val ownPapers: Int,
 ) {
     private sealed interface Event {
         data class Joined(
@@ -292,7 +296,7 @@ internal class Pool(
         (1..settings.clients).map {
             Client(Player(name = "gv-$it", uuid = UUID.nameUUIDFromBytes("OfflinePlayer:gv-$it".toByteArray()).toString()))
         }
-    private val claims = Claims<Peer, Player>(clients.map { it.player })
+    private val claims = Claims<Peer, Player>(clients.map { it.player }, ownPapers)
 
     /** Sessions the pool refused as they joined: what they still send is dropped until they leave. */
     private val refused = mutableSetOf<Peer>()
@@ -316,10 +320,15 @@ internal class Pool(
     private lateinit var shared: Server
 
     // Every Paper the pool runs, the shared one included, each under a name and in a folder of its own.
-    private val papers = Papers(folderOf = { name, slot -> game.ownFolder(name, slot) }, remove = { game.removeOwn(it) })
+    private val papers =
+        Papers(
+            folderOf = { name, slot -> game.ownFolder(name, slot) },
+            remove = { game.removeOwn(it) },
+            ownSlots = ownPapers,
+        )
     private val aot = AotCache(settings.aotDir)
 
-    // Every restart Paper of the pool boots the same JDK, class path, plugins and flags, its heap share included.
+    // Every restart Paper of the pool boots the same JDK, class path, plugins and flags, its memory caps included.
     private val aotKey by lazy {
         val java = settings.java.toRealPath()
         val release = java.parent.parent.resolve("release")
@@ -327,7 +336,7 @@ internal class Pool(
         AotCache.key(
             jdk,
             PaperServer.of(settings.paperDir).classPath + listOf(settings.agentJar, settings.coverageAgentJar, settings.pluginJar),
-            listOf(HeapShare.OWN_PAPER.flag()) + RESTART_FLAGS,
+            PartMemory.OWN_PAPER.flags() + RESTART_FLAGS,
         )
     }
     private var failure: String? = null
@@ -654,6 +663,7 @@ internal class Pool(
                 when (val paper = ask.value) {
                     is PaperAsk.ProbeWrapper -> paper.value.players
                     is PaperAsk.QueryWrapper -> listOf(paper.value.player)
+                    is PaperAsk.AppliedWrapper -> listOf(paper.value.player)
                     else -> null
                 }
             }
@@ -865,7 +875,12 @@ internal class Pool(
             val client = attempt.players.mapNotNull { clientOf(it.uuid) }.firstOrNull { it.away is Away.Joining } ?: return@let
             val joining = client.away as Away.Joining
             client.away = null
-            val answer = Answer.createRejoined(tick = message.tick, failure = failure?.let { "${server.name} could not take it back: $it" })
+            // The rejoin's mark is its join, so what the join caused counts for the windows after it.
+            val answer =
+                Answer.createRejoined(
+                    tick = message.joinedAfter,
+                    failure = failure?.let { "${server.name} could not take it back: $it" },
+                )
             return attempt.session.send(Message.createReply(request = joining.request, answer = answer))
         }
         val rules = server.rules

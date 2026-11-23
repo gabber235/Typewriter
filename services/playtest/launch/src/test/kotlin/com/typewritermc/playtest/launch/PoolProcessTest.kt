@@ -1,7 +1,6 @@
 package com.typewritermc.playtest.launch
 
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.optional.shouldBePresent
@@ -12,8 +11,9 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 val PoolProcessTest by testSuite {
-    test("the pool's JVM caps its heap at the pool's share of the machine") {
-        PoolProcess.command("java", mapOf("playtest.run" to "run-1"), "pool.jar") shouldContain HeapShare.POOL.flag()
+    test("the pool's JVM caps its heap and the memory it keeps beside its heap: direct buffers, class metadata and compiled code") {
+        PoolProcess.command("java", mapOf("playtest.run" to "run-1"), "pool.jar").map { it.substringBefore('=') } shouldContainAll
+            listOf("-XX:MaxRAMPercentage", "-XX:MaxDirectMemorySize", "-XX:MaxMetaspaceSize", "-XX:ReservedCodeCacheSize")
     }
 
     test("the pool runs with every playtest property of its build, on the pool's classpath") {

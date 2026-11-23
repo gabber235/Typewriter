@@ -132,7 +132,7 @@ class RealmFixture private constructor(
      */
     internal val checks: RealmCheckRuntime
         get() =
-            runtime ?: RealmCheckRuntime(views).also { runtime = it }.apply {
+            runtime ?: RealmCheckRuntime(views, telemetry = telemetry.telemetry).also { runtime = it }.apply {
                 hearHints(this)
                 start()
             }
@@ -208,11 +208,11 @@ class RealmFixture private constructor(
         views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent(), services, graphRuns + listener)
         val binding = views.commitRepairs()
         owner =
-            RealmAuthoringOwner(storage, views, findings = { findings() }, telemetry.telemetry) { saved, candidate, changed ->
+            RealmAuthoringOwner(storage, views, findings = { findings() }, telemetry.telemetry) { saved, candidate, changed, work ->
                 val fault = repairFault.getAndSet(null)
                 if (fault?.afterBinding == false) throw fault.failure
                 val started = System.nanoTime()
-                binding.intents(saved, candidate, changed).also {
+                binding.intents(saved, candidate, changed, work).also {
                     bindingNanos.addAndGet(System.nanoTime() - started)
                     if (fault != null) throw fault.failure
                 }
@@ -231,6 +231,15 @@ class RealmFixture private constructor(
         SetupApplier(FixtureSetupEditor(this)).apply(setup)
         return setup.handles
     }
+
+    /** Deletes what [setup] created as one author edit, as [SetupApplier.remove] does. */
+    suspend fun withoutSetup(setup: Setup<*>) = SetupApplier(FixtureSetupEditor(this)).remove(setup)
+
+    /** Changes what [from] created into [to] as one author edit, as [SetupApplier.change] does. */
+    suspend fun changeSetup(
+        from: Setup<*>,
+        to: Setup<*>,
+    ) = SetupApplier(FixtureSetupEditor(this)).change(from, to)
 
     /** Commits [edit] as the save attempt [submission] through the Realm's admission, as the commit route does. */
     suspend fun commit(

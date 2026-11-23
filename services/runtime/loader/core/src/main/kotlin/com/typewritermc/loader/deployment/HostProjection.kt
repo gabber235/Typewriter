@@ -2,15 +2,21 @@ package com.typewritermc.loader.deployment
 
 import com.typewritermc.discovery.DeploymentSelection
 import com.typewritermc.discovery.Eligibility
+import com.typewritermc.discovery.EnginePlugins
+import com.typewritermc.discovery.IneligibleReason
+import com.typewritermc.discovery.SourcePartCatalogEntry
 import com.typewritermc.discovery.SourcePartEligibilityResolver
 import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.imprint.EnabledPlugin
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.ImprintManifest
+import com.typewritermc.loader.api.EngineCoverage
 import com.typewritermc.loader.api.EngineImplementationArtifact
 import com.typewritermc.loader.api.EngineImplementationTarget
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
+import com.typewritermc.loader.api.SourcePartKey
 import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.services.libs.registrar.ServiceId
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -20,10 +26,11 @@ import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 
 /**
- * Pins the responding host roles, API versions, and facts used to select deployment artifacts.
+ * Pins the responding host roles, API versions, enabled plugins and facts used to select deployment artifacts.
  *
  * This selection comes from presence observations, not a complete backend assignment snapshot. Every selected
  * host must have an API version. The Realm host also receives the panel engine; primary engines use their own set.
+ * A host's plugins decide which source parts its engines run; a host absent from [pluginsByService] reports none.
  */
 @Serializable
 data class RealmDeploymentSelection(
@@ -31,6 +38,7 @@ data class RealmDeploymentSelection(
     val primaryEngineServices: Set<ServiceId>,
     val serviceApis: Map<ServiceId, com.typewritermc.imprint.ArtifactVersion>,
     val factsByService: Map<ServiceId, Map<String, String>> = emptyMap(),
+    val pluginsByService: Map<ServiceId, List<EnabledPlugin>> = emptyMap(),
 ) {
     init {
         require(serviceApis.keys.containsAll(selectedServices())) {
@@ -41,6 +49,8 @@ data class RealmDeploymentSelection(
     fun selectedServices(): Set<ServiceId> = primaryEngineServices + realmService
 
     fun factsFor(serviceId: ServiceId): Map<String, String> = factsByService[serviceId].orEmpty()
+
+    fun pluginsOf(serviceId: ServiceId): List<EnabledPlugin> = pluginsByService[serviceId].orEmpty()
 }
 
 /** Assigns one selected artifact to the role it performs on a host. */
@@ -121,7 +131,9 @@ object HostDeploymentProjectionCodec {
  * Derives runtime roles and source part eligibility for a selected host.
  *
  * Unselected hosts and missing required manifests are rejected. Extension parts retain eligible placements or
- * concrete reasons when none of the projected engines can load them.
+ * concrete reasons when none of the projected engines can load them; the plugins [serviceId] reports take part in
+ * that decision, so a change in them changes this host's projection alone. The publication target ignores plugins:
+ * it stands for every primary engine, whatever each one has enabled.
  */
 fun DeploymentSnapshot.projectFor(
     realmId: String,
@@ -131,7 +143,7 @@ fun DeploymentSnapshot.projectFor(
 ): HostDeploymentProjection {
     require(serviceId in selection.selectedServices()) { "Cannot project a deployment for an unselected service." }
     val projected = projectedRuntimes(selection, serviceId)
-    val extensions = projectedExtensions(projected, manifests)
+    val extensions = projectedExtensions(projected, manifests, EnginePlugins.Reported(selection.pluginsOf(serviceId)))
     val publicationTarget = primaryEngineImplementation(manifests)
     val runtimes =
         projected.map { runtime ->
@@ -178,7 +190,7 @@ private fun DeploymentSnapshot.primaryEngineImplementation(manifests: Map<Artifa
     val selectedExtensions = content.extensions.mapTo(linkedSetOf()) { it.coordinate.id }
     val eligibleParts =
         SourcePartEligibilityResolver
-            .resolve(DeploymentSelection(engineManifest, selectedExtensions), extensionManifests)
+            .resolve(DeploymentSelection(engineManifest, selectedExtensions, EnginePlugins.Unchecked), extensionManifests)
             .filter { it.eligibility is Eligibility.Eligible }
             .groupBy({ it.artifact }, { it.sourcePart })
     return EngineImplementationTarget(
@@ -220,21 +232,9 @@ private fun DeploymentSnapshot.projectedRuntimes(
 private fun DeploymentSnapshot.projectedExtensions(
     runtimes: List<ProjectedRuntime>,
     manifests: Map<ArtifactId, ImprintManifest>,
+    plugins: EnginePlugins,
 ): List<ProjectedExtension> {
-    val extensionManifests = manifests.values.filterIsInstance<ExtensionManifest>()
-    val selectedExtensions = content.extensions.mapTo(linkedSetOf()) { it.coordinate.id }
-    val eligibilityByPlacement =
-        runtimes
-            .filter { it.placement != RuntimePlacement.REALM }
-            .associate { runtime ->
-                val engine = manifests[runtime.artifact.coordinate.id] as? EngineManifest
-                requireNotNull(engine) { "Runtime ${runtime.artifact.coordinate.id} is missing its engine manifest." }
-                val entries =
-                    SourcePartEligibilityResolver
-                        .resolve(DeploymentSelection(engine, selectedExtensions), extensionManifests)
-                        .associateBy { it.artifact to it.sourcePart }
-                runtime.placement to entries
-            }
+    val eligibilityByPlacement = eligibilityByPlacement(runtimes, manifests, plugins)
     return content.extensions.map { artifact ->
         val manifest = manifests[artifact.coordinate.id] as? ExtensionManifest
         requireNotNull(manifest) { "Extension ${artifact.coordinate.id} is missing its manifest." }
@@ -255,7 +255,7 @@ private fun DeploymentSnapshot.projectedExtensions(
                                 eligibilityByPlacement.values
                                     .map { it.getValue(manifest.id to sourcePart.name).eligibility }
                                     .filterIsInstance<Eligibility.Ineligible>()
-                                    .flatMap(Eligibility.Ineligible::reasons)
+                                    .flatMap { ineligible -> ineligible.reasons.map(IneligibleReason::message) }
                                     .distinct()
                                     .ifEmpty { listOf("No projected engine can load this source part.") }
                             SourcePartDisposition.Ineligible(reasons)
@@ -264,4 +264,62 @@ private fun DeploymentSnapshot.projectedExtensions(
                 },
         )
     }
+}
+
+/** Each engine runtime of [runtimes] with every source part's eligibility on it, judged with [plugins]. */
+private fun DeploymentSnapshot.eligibilityByPlacement(
+    runtimes: List<ProjectedRuntime>,
+    manifests: Map<ArtifactId, ImprintManifest>,
+    plugins: EnginePlugins,
+): Map<RuntimePlacement, Map<Pair<ArtifactId, String>, SourcePartCatalogEntry>> {
+    val extensionManifests = manifests.values.filterIsInstance<ExtensionManifest>()
+    val selectedExtensions = content.extensions.mapTo(linkedSetOf()) { it.coordinate.id }
+    return runtimes
+        .filter { it.placement != RuntimePlacement.REALM }
+        .associate { runtime ->
+            val engine = manifests[runtime.artifact.coordinate.id] as? EngineManifest
+            requireNotNull(engine) { "Runtime ${runtime.artifact.coordinate.id} is missing its engine manifest." }
+            val entries =
+                SourcePartEligibilityResolver
+                    .resolve(DeploymentSelection(engine, selectedExtensions, plugins), extensionManifests)
+                    .associateBy { it.artifact to it.sourcePart }
+            runtime.placement to entries
+        }
+}
+
+/**
+ * What the engines of the Realm run in this deployment: the panel engine on the Realm's host and every primary engine
+ * host of [selection], each judged with the plugins it reports. A part no engine runs says what it needs: an engine of
+ * the wrong kind is no reason while one of the part's kind exists, and without one the part needs that kind once.
+ */
+fun DeploymentSnapshot.engineCoverage(
+    selection: RealmDeploymentSelection,
+    manifests: Map<ArtifactId, ImprintManifest>,
+): EngineCoverage {
+    val selected = content.extensions.mapTo(hashSetOf()) { it.coordinate.id }
+    val onEngines =
+        selection
+            .selectedServices()
+            .flatMap { service ->
+                eligibilityByPlacement(
+                    projectedRuntimes(selection, service),
+                    manifests,
+                    EnginePlugins.Reported(selection.pluginsOf(service)),
+                ).flatMap { (placement, entries) -> entries.values.map { placement to it } }
+            }.filter { (_, entry) -> entry.artifact in selected }
+            .groupBy({ (_, entry) -> SourcePartKey(entry.artifact, entry.sourcePart) }, { (placement, entry) ->
+                placement to
+                    entry.eligibility
+            })
+    return EngineCoverage(onEngines.mapValues { (_, engines) -> engines.coverage() })
+}
+
+/** One part's coverage from its eligibility on each engine of the Realm. */
+private fun List<Pair<RuntimePlacement, Eligibility>>.coverage(): SourcePartDisposition {
+    val placements = filter { (_, eligibility) -> eligibility is Eligibility.Eligible }.mapTo(linkedSetOf()) { it.first }
+    if (placements.isNotEmpty()) return SourcePartDisposition.Eligible(placements)
+    val perEngine = map { (_, eligibility) -> (eligibility as Eligibility.Ineligible).reasons }
+    val ofItsKind = perEngine.any { reasons -> reasons.none { it is IneligibleReason.EngineMismatch } }
+    val reasons = perEngine.flatten().filterNot { ofItsKind && it is IneligibleReason.EngineMismatch }
+    return SourcePartDisposition.Ineligible(reasons.map(IneligibleReason::need).distinct())
 }

@@ -18,6 +18,7 @@ enum class GeneratedProviderKind(
     ResourceDisplay("resourceDisplay"),
     Formula("formula"),
     Dynamic("dynamic"),
+    EnginePart("enginePart"),
 }
 
 /** Classpath resource that lists the generated providers of one compiled source part. */

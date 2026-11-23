@@ -3,14 +3,17 @@ package com.typewritermc.imprint.gradle
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactRequirement
+import com.typewritermc.imprint.COMMON_SOURCE_PART
 import com.typewritermc.imprint.CapabilityExtensionSourcePart
 import com.typewritermc.imprint.CapabilityManifest
 import com.typewritermc.imprint.CommonExtensionSourcePart
 import com.typewritermc.imprint.EngineExtensionSourcePart
 import com.typewritermc.imprint.EngineManifest
+import com.typewritermc.imprint.EntryTypeId
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.ExtensionSourcePart
 import com.typewritermc.imprint.ImprintManifest
+import com.typewritermc.imprint.PluginRequirement
 import com.typewritermc.imprint.RealmManifest
 import com.typewritermc.imprint.ResolvedArtifact
 import com.typewritermc.imprint.VersionConstraint
@@ -29,6 +32,7 @@ internal data class ManifestSourcePart(
     val name: String,
     val kind: ArtifactKind,
     val includes: List<String>,
+    val plugins: List<PluginRequirement>,
 )
 
 internal data class ManifestDependencies(
@@ -63,6 +67,7 @@ internal fun createManifest(
     sourceParts: List<ManifestSourcePart>,
     dependencies: ManifestDependencies,
     content: ManifestContent,
+    handledEntries: Map<String, List<EntryTypeId>>,
 ): ImprintManifest =
     when (context.artifactKind) {
         ArtifactKind.REALM -> {
@@ -112,6 +117,7 @@ internal fun createManifest(
                 sourceParts = sourceParts,
                 dependencies = dependencies,
                 content = content,
+                handledEntries = handledEntries,
             )
         }
     }
@@ -134,8 +140,15 @@ private fun extensionManifest(
     sourceParts: List<ManifestSourcePart>,
     dependencies: ManifestDependencies,
     content: ManifestContent,
+    handledEntries: Map<String, List<EntryTypeId>>,
 ): ExtensionManifest {
-    val parts = mutableListOf<ExtensionSourcePart>(CommonExtensionSourcePart)
+    val known = sourceParts.map(ManifestSourcePart::name).toSet() + COMMON_SOURCE_PART
+    (handledEntries.keys - known).firstOrNull()?.let { unknown ->
+        throw IllegalArgumentException("Handled entries name unknown source part $unknown.")
+    }
+
+    fun handled(part: String): List<EntryTypeId> = handledEntries[part].orEmpty().distinct().sortedBy(EntryTypeId::canonicalText)
+    val parts = mutableListOf<ExtensionSourcePart>(CommonExtensionSourcePart(handled(COMMON_SOURCE_PART)))
     val provenance = linkedMapOf<ArtifactId, ResolvedArtifact>()
     val guarantees = linkedMapOf<String, SourcePartGuarantee>()
     sourceParts.sortedBy(ManifestSourcePart::name).forEach { sourcePart ->
@@ -151,6 +164,8 @@ private fun extensionManifest(
                         relationship.requirement,
                         descriptor,
                         sourcePart.includes.sorted(),
+                        neededPlugins(sourcePart, sourceParts),
+                        handled(sourcePart.name),
                     )
                 guarantees[sourcePart.name] =
                     EngineSourcePartGuarantee(
@@ -173,6 +188,8 @@ private fun extensionManifest(
                         ),
                         graph,
                         sourcePart.includes.sorted(),
+                        neededPlugins(sourcePart, sourceParts),
+                        handled(sourcePart.name),
                     )
                 guarantees[sourcePart.name] = CapabilitySourcePartGuarantee(graph.associateBy(ResolvedArtifact::id))
                 graph.forEach { provenance[it.id] = it }
@@ -197,6 +214,22 @@ private fun extensionManifest(
     )
 }
 
+/** The plugins [sourcePart] uses itself and those of every part it includes, directly or through another include. */
+private fun neededPlugins(
+    sourcePart: ManifestSourcePart,
+    sourceParts: List<ManifestSourcePart>,
+): List<PluginRequirement> {
+    val partsByName = sourceParts.associateBy(ManifestSourcePart::name)
+    val reached = linkedSetOf<String>()
+
+    fun reach(name: String) {
+        if (!reached.add(name)) return
+        partsByName.getValue(name).includes.forEach(::reach)
+    }
+    reach(sourcePart.name)
+    return reached.flatMap { partsByName.getValue(it).plugins }.distinct().sortedBy(PluginRequirement::name)
+}
+
 private fun VersionConstraint?.requireHosted(context: ManifestAssemblyContext): VersionConstraint =
     this ?: throw IllegalArgumentException(
         "Hosted Imprint artifact ${context.artifactId} must declare a host API constraint.",
@@ -206,7 +239,7 @@ private fun validateIncludedTargets(
     sourceParts: List<ExtensionSourcePart>,
     guarantees: Map<String, SourcePartGuarantee>,
 ) {
-    sourceParts.filter { it != CommonExtensionSourcePart }.forEach { sourcePart ->
+    sourceParts.filter { it !is CommonExtensionSourcePart }.forEach { sourcePart ->
         val includingGuarantee = guarantees.getValue(sourcePart.name)
         sourcePart.includes.forEach { includedName ->
             val includedGuarantee = guarantees.getValue(includedName)

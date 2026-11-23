@@ -1,5 +1,7 @@
 package com.typewritermc.engine.session
 
+import com.typewritermc.engine.session.testing.LateFirstWrite
+import com.typewritermc.engine.session.testing.LostAnswer
 import com.typewritermc.engine.session.testing.SessionHarness
 import com.typewritermc.identity.EngineId
 import de.infix.testBalloon.framework.core.TestConfig
@@ -162,6 +164,56 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         delay(SessionHarness.SHORT.ttl * 2)
 
         harness().entry(protagonist, session).shouldBeNull()
+    }
+
+    test("SESSION-13 an engine whose protagonist left before its take reached the broker leaves the session to the engine it moved to") {
+        harness().createBucket()
+        lateinit var late: LateFirstWrite
+        val old = harness().engine("engine-a") { buckets -> LateFirstWrite(buckets).also { late = it } }
+        val new = harness().engine("engine-b")
+        val (protagonist, session) = harness().player()
+
+        old.keeper.connected(protagonist, session)
+        late.reached.await()
+        old.keeper.disconnected(session)
+        harness().joined(new, protagonist, session)
+        val taken = harness().entry(protagonist, session).shouldNotBeNull()
+        late.release()
+
+        harness().keeps(new, protagonist, session, taken)
+    }
+
+    test("SESSION-14 an engine whose take is still under way when another engine takes the session lets it go instead of writing over it") {
+        harness().createBucket()
+        lateinit var late: LateFirstWrite
+        val old = harness().engine("engine-a") { buckets -> LateFirstWrite(buckets).also { late = it } }
+        val new = harness().engine("engine-b")
+        val (protagonist, session) = harness().player()
+
+        old.keeper.connected(protagonist, session)
+        late.reached.await()
+        harness().joined(new, protagonist, session)
+        val taken = harness().entry(protagonist, session).shouldNotBeNull()
+        late.release()
+
+        harness().keeps(new, protagonist, session, taken)
+        old.holding.holds(protagonist) shouldBe false
+    }
+
+    test("SESSION-15 a quit that cuts off a refresh's answer still ends the session after the grace") {
+        harness().createBucket()
+        // A time to live far above the grace, so a key the quit left alone outlives the window by seconds.
+        val timings = SessionHarness.SHORT.copy(ttl = 6.seconds)
+        lateinit var lost: LostAnswer
+        val engine = harness().engine("engine-a", timings) { buckets -> LostAnswer(buckets).also { lost = it } }
+        val (protagonist, session) = harness().player()
+        harness().joined(engine, protagonist, session)
+
+        lost.arm()
+        lost.landed.await()
+        engine.keeper.disconnected(session)
+
+        harness().eventually(within = timings.grace + (timings.ttl - timings.grace) / 2) { harness().entry(protagonist, session) == null }
     }
 
     test("SESSION-10 the holders of a protagonist are every engine holding one of its sessions, and none once it left") {

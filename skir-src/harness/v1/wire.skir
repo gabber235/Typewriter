@@ -66,7 +66,7 @@ enum Message(85030001) {
   };
   // Session to pool: the player `player`, away since its `quit`, joins its attempt's Paper again, unwiped
   // and where Paper kept it. The pool answers request `request` with `rejoined` once its client steps with
-  // that Paper and holds what Paper sends it.
+  // that Paper and holds what Paper sends it, naming the tick after which it joined.
   rejoin: struct {
     request: int64;
     player: string;
@@ -163,11 +163,13 @@ enum Message(85030001) {
     players: [string];
   };
   // Paper to pool: the resumed attempt's players' clients hold all Paper sends them, from after `tick` on.
-  // `failure` is null when it worked, or says why it could not.
+  // The latest of them joined Paper after `joined_after` ended, so what their joins caused shows from the
+  // tick after it. `failure` is null when it worked, or says why it could not.
   resumed: struct {
     attempt: int64;
     tick: int32;
     failure: string?;
+    joined_after: int32;
   };
   // Paper to pool: the work `work` of the player of this name, reported hung earlier, ended.
   hung_ended: struct {
@@ -297,6 +299,13 @@ enum PaperAsk(85030011) {
   query: struct {
     player: string;
   };
+  // Which publication the Typewriter engine on the Paper of `player`'s attempt currently applies.
+  // Paper answers with `applied`. Only content liveness asks, outside every window.
+  // TODO(node 9): temporary test only signal; replace with the engine's reported active publication
+  // ("applied on N of M").
+  applied: struct {
+    player: string;
+  };
 }
 
 // Run `action` between ticks. An action on a player runs for each of `players`; an action on the world
@@ -347,8 +356,9 @@ enum Answer(85030015) {
   quit_done: struct {
     tick: int32;
   };
-  // The player's client is back on its Paper and holds what Paper sends it, from after `tick` on. `failure`
-  // is null when it is, or says why Paper could not take the player back.
+  // The player's client is back on its Paper and holds what Paper sends it. It joined Paper after `tick`
+  // ended, so what its join caused shows from the next tick. `failure` is null when it is, or says why Paper
+  // could not take the player back.
   rejoined: struct {
     tick: int32;
     failure: string?;
@@ -384,6 +394,14 @@ enum Answer(85030015) {
   // The frame is written, drawn by `renderer`; `failure` is null when it was.
   captured: struct {
     renderer: Renderer;
+    failure: string?;
+  };
+  // The publication the Typewriter engine on Paper currently applies, null before its first; `failure`
+  // is null when an engine there reports it, or says why none does.
+  // TODO(node 9): temporary test only signal; replace with the engine's reported active publication
+  // ("applied on N of M").
+  applied: struct {
+    publication: string?;
     failure: string?;
   };
 }

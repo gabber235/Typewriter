@@ -16,6 +16,7 @@ internal object TypewriterApi {
     private const val CHECKING = "com.typewritermc.checking"
     private const val CONFIGURATION = "com.typewritermc.configuration"
     private const val DISCOVERY = "com.typewritermc.discovery"
+    private const val EVENTS = "com.typewritermc.events"
     private const val EXPRESSION = "com.typewritermc.expression"
     private const val FORMULA = "com.typewritermc.formula"
     private const val OPERATIONS = "com.typewritermc.operations"
@@ -153,6 +154,36 @@ internal object TypewriterApi {
     val ProviderOrigin = ClassName(DISCOVERY, "ProviderOrigin")
     val RuntimeRegistrar = ClassName(DISCOVERY, "RuntimeRegistrar")
     val RuntimeRegistrarDescriptor = ClassName(DISCOVERY, "RuntimeRegistrarDescriptor")
+
+    // Events
+    val EnginePart = ClassName(EVENTS, "EnginePart")
+    val EnginePartDependencies = ClassName(EVENTS, "EnginePartDependencies")
+    val EnginePartProvider = ClassName(EVENTS, "EnginePartProvider")
+    val AfterHandler = ClassName(EVENTS, "AfterHandler")
+    val Candidate = ClassName(EVENTS, "Candidate")
+    val SubscribedEvent = ClassName(EVENTS, "SubscribedEvent")
+    val Event = ClassName(EVENTS, "Event")
+    val EventOrigin = ClassName(EVENTS, "Origin")
+    val EventShape = ClassName(EVENTS, "EventShape")
+    val Handler = ClassName(EVENTS, "Handler")
+    val HandlerPlan = ClassName(EVENTS, "HandlerPlan")
+    val HandlerSubscription = ClassName(EVENTS, "HandlerSubscription")
+    val Outcome = ClassName(EVENTS, "Outcome")
+    val Param = ClassName(EVENTS, "Param")
+    val Triggered = ClassName(EVENTS, "Triggered")
+    val TriggeredEvent = ClassName(EVENTS, "TriggeredEvent")
+    val RecordScope = ClassName(EVENTS, "RecordScope")
+    val EntryScope = ClassName(EVENTS, "EntryScope")
+    val readField = MemberName(EVENTS, "readField", isExtension = true)
+    val recordField = MemberName(EVENTS, "recordField", isExtension = true)
+    val optionalRecordField = MemberName(EVENTS, "optionalRecordField", isExtension = true)
+    val recordList = MemberName(EVENTS, "recordList", isExtension = true)
+    val recordSet = MemberName(EVENTS, "recordSet", isExtension = true)
+    val recordMap = MemberName(EVENTS, "recordMap", isExtension = true)
+    val Verdict = ClassName(EVENTS, "Verdict")
+    val VerdictHandler = ClassName(EVENTS, "VerdictHandler")
+    val Entry = ClassName("com.typewritermc.elements", "Entry")
+    val Identity = ClassName("com.typewritermc.identity", "Identity")
 
     // Expression
     val Expr = ClassName(EXPRESSION, "Expr")

@@ -7,6 +7,8 @@ import io.natskt.jetstream.api.kv.KeyValueOperation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import java.io.IOException
 import kotlin.time.Duration
 import io.natskt.jetstream.api.kv.KeyValueBucket as NatsBucket
@@ -117,6 +119,31 @@ class NatsKeyValueBuckets(
                 KeyValueKeys.Failed(failure)
             } catch (failure: IOException) {
                 KeyValueKeys.Failed(failure)
+            }
+
+        /**
+         * natskt reports the broker's expiry marker (`Nats-Marker-Reason: MaxAge`) as a purge; a delete or purge only
+         * comes from outside this interface, so each removal reads as an expiry. A broken connection ends the changes.
+         */
+        override suspend fun watch(filter: String): KeyValueWatch =
+            try {
+                val entries = bucket.watch(filter)
+                KeyValueWatch.Watching(
+                    entries
+                        .map { entry ->
+                            when (entry.operation) {
+                                KeyValueOperation.Delete, KeyValueOperation.Purge -> KeyValueChange.Expired(entry.key)
+                                else -> KeyValueChange.Put(KeyValueEntry(entry.key, entry.value, entry.revision.toLong()))
+                            }
+                        }.catch { failure -> if (failure !is NatsClientException && failure !is IOException) throw failure },
+                )
+            } catch (failure: CancellationException) {
+                currentCoroutineContext().ensureActive()
+                KeyValueWatch.Failed(failure)
+            } catch (failure: NatsClientException) {
+                KeyValueWatch.Failed(failure)
+            } catch (failure: IOException) {
+                KeyValueWatch.Failed(failure)
             }
 
         private suspend inline fun write(block: () -> ULong): KeyValueWrite =

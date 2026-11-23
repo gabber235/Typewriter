@@ -50,6 +50,9 @@ import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.codegen.RegistrarProviderProcessor
+import com.typewritermc.events.codegen.EnginePartProviderProcessor
+import com.typewritermc.events.codegen.EventTypeEmitter
+import com.typewritermc.events.codegen.HandlerPlanProcessor
 import com.typewritermc.formula.codegen.DynamicProviderProcessor
 import com.typewritermc.formula.codegen.FormulaProviderProcessor
 import com.typewritermc.presentation.codegen.CollectionProjectionProviderProcessor
@@ -82,6 +85,7 @@ import com.typewritermc.types.codegen.emit.FieldsEmitter
 import com.typewritermc.types.codegen.emit.NativeBindingEmitter
 import com.typewritermc.types.codegen.emit.OperationEmitter
 import com.typewritermc.types.codegen.emit.PresentationEmitter
+import com.typewritermc.types.codegen.emit.ScopeEmitter
 import com.typewritermc.types.codegen.emit.SdkEndpoint
 import com.typewritermc.types.codegen.emit.SdkRelation
 import com.typewritermc.types.codegen.emit.SetupEmitter
@@ -129,6 +133,7 @@ class TypewriterTypeProcessorProvider : SymbolProcessorProvider {
 internal val SDK_EMITTERS: List<SdkEmitter> =
     listOf(
         FieldsEmitter,
+        ScopeEmitter,
         BindEmitter,
         ExpressionsEmitter,
         ConfigurationEmitter,
@@ -172,6 +177,9 @@ private class TypewriterTypeProcessor(
                 explicitlyImportedTypes
         }
     private val dynamicProviders = DynamicProviderProcessor(output, logger)
+    private val engineParts = EnginePartProviderProcessor(output, logger)
+    private val handlerPlans = HandlerPlanProcessor(output, engineParts, logger)
+    private val eventTypes = EventTypeEmitter(output, engineParts, logger)
     private val claimDependencyClosure = options[CLAIM_DEPENDENCY_CLOSURE_OPTION]?.toBooleanStrictOrNull() == true
     private var optionsValidated = false
 
@@ -237,10 +245,13 @@ private class TypewriterTypeProcessor(
         }
         deferred += formulaProviders.process(resolver)
         deferred += dynamicProviders.process(resolver)
+        deferred += handlerPlans.process(resolver)
+        engineParts.process(resolver)
         return deferred.distinct()
     }
 
     override fun finish() {
+        handlerPlans.finish()
         output.finish()
     }
 
@@ -374,6 +385,7 @@ private class TypewriterTypeProcessor(
             .forEach { resource -> emitEndpointBindings(resource, definitions, references) }
     }
 
+    context(resolver: Resolver)
     private fun emitSdk(
         declaration: KSClassDeclaration,
         typeDefinition: TypeDefinition,
@@ -382,6 +394,7 @@ private class TypewriterTypeProcessor(
     ) {
         val qualified = declaration.qualifiedName?.asString() ?: return
         if (!generatedTypes.add(qualified)) return
+        eventTypes.emit(declaration)
         val accessors = declaration.effectiveAccessorFields(typeDefinition, conversion) ?: return
         val display = declaration.validatedDisplay() ?: return
         val searchKey = declaration.validatedSearchKey() ?: return
@@ -422,12 +435,45 @@ private class TypewriterTypeProcessor(
                     cases = conversion.casesWithoutDeclaration(typeDefinition),
                 )
             }
+        if (model.record && !model.accessorsReachable()) return
         val file = GeneratedFile.builder(model.names.definition.packageName, model.names.file)
         SDK_EMITTERS.forEach { emitter -> with(emitter) { file.emit(model) } }
         if (!output.write(file.build(), declaration)) return
         output.index(model.names.definition, GeneratedProviderKind.Type)
         if (model.hasNativeBinding) output.index(model.names.nativeBindingFactory, GeneratedProviderKind.NativeBinding)
     }
+
+    /**
+     * Reports every field whose accessor a scope member would hide; true when there is none. Every record is read on
+     * `RecordScope`; an entry is also read at its root through `EntryScope`, `Candidate` and `Triggered`.
+     */
+    context(resolver: Resolver)
+    private fun SdkDeclaration.accessorsReachable(): Boolean {
+        val entry = source.getAllSuperTypes().any { it.declaration.qualifiedName?.asString() == TypewriterApi.Entry.canonicalName }
+        val members = scopeMembers(if (entry) ScopeEmitter.ENTRY_SCOPES else ScopeEmitter.RECORD_SCOPES)
+        val hidden = fields.filter { it.property in members }
+        val properties = source.getAllProperties().associateBy { it.simpleName.asString() }
+        hidden.forEach { field ->
+            logger.error(
+                "A record field cannot be named `${field.property}`: `${members.getValue(field.property)}.${field.property}` " +
+                    "hides its accessor; rename the field.",
+                properties[field.property] ?: source,
+            )
+        }
+        return hidden.isEmpty()
+    }
+
+    /**
+     * Every property name of [scopes] with the first scope that declares it, read from their declarations so a new scope
+     * member is covered at once. A scope missing from the classpath has no accessors to hide, so it adds no names.
+     */
+    context(resolver: Resolver)
+    private fun scopeMembers(scopes: List<ClassName>): Map<String, String> =
+        scopes
+            .mapNotNull { scope -> resolver.getClassDeclarationByName(scope.canonicalName) }
+            .flatMap { scope -> scope.getAllProperties().map { it.simpleName.asString() to scope.simpleName.asString() } }
+            .distinctBy { it.first }
+            .toMap()
 
     /** The case definitions of [owner] that no Kotlin declaration emits, such as the unit cases of an enum. */
     private fun KspTypeConversionResult.Success.casesWithoutDeclaration(owner: TypeDefinition): List<TypeDefinition> =

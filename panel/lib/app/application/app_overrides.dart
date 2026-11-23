@@ -10,6 +10,9 @@ List<Override> appOverrides() => [
   interactionSuspendedProvider.overrideWith(
     (ref) => ref.watch(realmInteractionProvider).suspended,
   ),
+  authoringRealmOnlineProvider.overrideWith(
+    (ref, scope) => ref.watch(realmOnlineProvider(scope.$1, scope.$2)),
+  ),
   dialogShortcutsProvider.overrideWith(
     (ref) => ref.watch(selectionClearingShortcutsProvider),
   ),

@@ -1,9 +1,12 @@
 package com.typewritermc.engine.session.testing
 
+import com.typewritermc.engine.session.HeldSessions
 import com.typewritermc.engine.session.SessionEntry
 import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.engine.session.SessionTimings
+import com.typewritermc.engine.session.encode
 import com.typewritermc.engine.session.readSessionEntry
+import com.typewritermc.engine.session.sessionKey
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
@@ -14,6 +17,7 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueBuckets
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
+import com.typewritermc.services.libs.communicator.kv.KeyValueWrite
 import com.typewritermc.services.libs.communicator.kv.NatsKeyValueBuckets
 import com.typewritermc.services.libs.communicator.nats.NatsAuthentication
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
@@ -59,15 +63,18 @@ class SessionHarness private constructor(
         return Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid)) to SessionId(uuid)
     }
 
-    /** Starts engine [id] of the Realm on a connection of its own. */
+    /** Starts engine [id] of the Realm on a connection of its own, reaching the broker's buckets through [buckets]. */
     suspend fun engine(
         id: String,
         timings: SessionTimings = SHORT,
+        buckets: (KeyValueBuckets) -> KeyValueBuckets = { it },
     ): HarnessEngine {
         val connection = connect()
-        val buckets = MutableStateFlow<KeyValueBuckets?>(NatsKeyValueBuckets(connection))
-        val keeper = SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, scope)
-        return HarnessEngine(EngineId(id), keeper, connection).also(engines::add)
+        val reached = MutableStateFlow<KeyValueBuckets?>(buckets(NatsKeyValueBuckets(connection)))
+        val events = EmittedEvents()
+        val holding = HeldSessions()
+        val keeper = SessionKeeper(EngineId(id), reached, SessionsBucket.name(realm), timings, holding, events, scope)
+        return HarnessEngine(EngineId(id), keeper, holding, events, connection).also(engines::add)
     }
 
     /** Creates the Realm's sessions bucket, as the Realm does when it starts. */
@@ -90,6 +97,45 @@ class SessionHarness private constructor(
     ) {
         engine.keeper.connected(protagonist, id)
         eventually { entry(protagonist, id)?.holder == engine.id }
+    }
+
+    /**
+     * Checks for two times to live that [engine] holds [protagonist]'s session [id] without a gap: the key stays [taken],
+     * held by [engine] since the same instant, and the engine runs the protagonist's events all along.
+     */
+    suspend fun keeps(
+        engine: HarnessEngine,
+        protagonist: Protagonist,
+        id: SessionId,
+        taken: SessionEntry,
+    ) {
+        repeat((SHORT.ttl * 2 / SHORT.retry).toInt()) {
+            delay(SHORT.retry)
+            check(entry(protagonist, id) == taken) { "The session key changed from $taken to ${entry(protagonist, id)}" }
+            check(engine.holding.holds(protagonist)) { "${engine.id} stopped holding $protagonist" }
+        }
+    }
+
+    /** Writes an empty value no engine can read under [protagonist]'s session [id], as a damaged write would. */
+    suspend fun unreadable(
+        protagonist: Protagonist,
+        id: SessionId,
+    ) = unreadable(sessionKey(protagonist, id))
+
+    /** Writes the first half of a real session entry under [protagonist]'s session [id], as a cut off write would. */
+    suspend fun truncated(
+        protagonist: Protagonist,
+        id: SessionId,
+    ) {
+        val whole = SessionEntry(protagonist, EngineId("engine-gone"), java.time.Instant.EPOCH).encode()
+        val written = bucket().create(sessionKey(protagonist, id), whole.copyOf(whole.size / 2), SHORT.ttl)
+        check(written is KeyValueWrite.Written) { "The truncated value was not written: $written" }
+    }
+
+    /** Writes an empty value no engine can read under [key] of the sessions bucket, as a damaged or foreign write would. */
+    suspend fun unreadable(key: String) {
+        val written = bucket().create(key, ByteArray(0), SHORT.ttl)
+        check(written is KeyValueWrite.Written) { "The unreadable value was not written: $written" }
     }
 
     /** Waits until [condition] holds, polling the broker, and fails after [within]. */
@@ -159,10 +205,12 @@ class SessionHarness private constructor(
     }
 }
 
-/** One engine of the harness. */
+/** One engine of the harness; [holding] is what its event runtime would run events for, [events] what its keeper emitted. */
 class HarnessEngine(
     val id: EngineId,
     val keeper: SessionKeeper,
+    val holding: HeldSessions,
+    val events: EmittedEvents,
     private val connection: NatsConnection,
 ) {
     /** The engine stops as a crash would: no further write, its connection gone. */

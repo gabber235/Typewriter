@@ -133,17 +133,37 @@ FutureOr<RealmConnectionState> realmConnection(Ref ref) {
     return RealmConnectionState.unavailable;
   }
   final realm = selected.requireValue;
+  final organization = ref.watch(organizationIdProvider);
 
-  if (realm == null) {
+  if (realm == null || organization == null) {
     return RealmConnectionState.unavailable;
   }
 
-  if (realm.state.status != skir.ChildRuntimeStatus.active ||
-      !ref.watch(hostConnectedProvider(realm.ownerHost.id))) {
+  if (!ref.watch(realmOnlineProvider(organization, id))) {
     return RealmConnectionState.offline;
   }
 
   return RealmConnectionState.online;
+}
+
+/// Whether the Realm [realmId] of [organizationId] can answer requests: its
+/// runtime is active and its owner host keeps reporting.
+///
+/// Unlike [realmConnection], this follows any Realm of any organization,
+/// selected by the route or not, so an owner of one Realm's work can react
+/// when that Realm returns. A Realm missing from the topology is not online.
+@riverpod
+bool realmOnline(Ref ref, skir.RecordId organizationId, skir.RecordId realmId) {
+  final realm = ref
+      .watch(organizationTopologyControllerProvider(organizationId))
+      .value
+      ?.realms
+      .firstWhereOrNull((realm) => realm.realmId == realmId);
+  return realm != null &&
+      realm.state.status == skir.ChildRuntimeStatus.active &&
+      ref.watch(
+        organizationHostConnectedProvider(organizationId, realm.ownerHost.id),
+      );
 }
 
 /// Provides a synchronous interaction policy for widgets during async checks.

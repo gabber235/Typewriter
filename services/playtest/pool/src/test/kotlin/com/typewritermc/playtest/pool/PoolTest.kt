@@ -33,7 +33,7 @@ val PoolTest by testSuite {
             )
 
         ServerSocket(0, 1, InetAddress.getLoopbackAddress()).use { server ->
-            shouldThrowAny { Pool(settings, server).run() }
+            shouldThrowAny { Pool(settings, server, ownPapers = 1).run() }
         }
 
         val run = TestRun.serializer.fromJsonCode(Files.readString(settings.testRun))

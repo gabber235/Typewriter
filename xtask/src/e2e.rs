@@ -16,6 +16,7 @@
 
 pub(crate) mod failures;
 mod game;
+mod handler_costs;
 
 use std::io::Write;
 use std::net::{Ipv4Addr, TcpListener};

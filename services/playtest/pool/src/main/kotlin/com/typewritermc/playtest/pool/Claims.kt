@@ -1,7 +1,5 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.launch.HeapShare
-
 /** Why a player sits out of every claim. */
 internal enum class Out {
     /** Its client is lost and the new one is not ready yet. */
@@ -35,11 +33,12 @@ internal data class Grant<S, P>(
  * queued before it. The claim whose turn it is holds back every later claim until enough players are
  * free for it, so a group is never starved by smaller claims. A player is free once no attempt holds it
  * and nothing holds it [out][holdOut]. A claim that restarts Paper also waits until fewer than
- * [ownPapers] own Papers have not fully exited, as more would outgrow the memory their shares assume.
+ * [ownPapers] own Papers have not fully exited, as more would outgrow the machine's memory
+ * ([com.typewritermc.playtest.launch.MemoryBudget]).
  */
 internal class Claims<S, P>(
     private val players: List<P>,
-    private val ownPapers: Int = HeapShare.OWN_PAPERS,
+    private val ownPapers: Int,
 ) {
     /** Submissions that wait together, each for its count of players. */
     private class Waiting(

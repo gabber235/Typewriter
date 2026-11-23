@@ -239,22 +239,85 @@ data class GeneratedContribution(
 }
 
 /**
+ * Paper plugin a source part needs, by the name Paper reports for it. A null [version] accepts any version of the
+ * plugin. Construction checks the name only; the deployment resolver decides whether an engine satisfies it.
+ */
+@Serializable
+data class PluginRequirement(
+    val name: String,
+    val version: VersionConstraint? = null,
+) {
+    init {
+        require(name.matches(PLUGIN_NAME_PATTERN)) { "Plugin name $name is not a name Paper reports." }
+    }
+}
+
+/**
+ * Paper plugin an engine host reports enabled, by the name and version Paper reports for it. Plugin versions follow no
+ * standard, so [version] keeps the reported text and [leadingVersion] reads the version a range is checked against.
+ */
+@Serializable
+data class EnabledPlugin(
+    val name: String,
+    val version: String,
+) {
+    /**
+     * The leading numeric version of [version], with missing minor and patch numbers as zero: `1.7.3` for `1.7.3-b131`,
+     * `2.11.6` for `2.11.6-SNAPSHOT`, `1.7.0` for `v1.7`. Null when [version] starts with no number.
+     */
+    val leadingVersion: ArtifactVersion?
+        get() =
+            LEADING_VERSION_PATTERN.find(version)?.let { match ->
+                val (major, minor, patch) = match.destructured
+                ArtifactVersion("${major.toBigInteger()}.${minor.ifEmpty { "0" }.toBigInteger()}.${patch.ifEmpty { "0" }.toBigInteger()}")
+            }
+}
+
+/**
+ * Entry type whose behaviour a source part's handlers run: the canonical text (dense Skir JSON) of the entry's
+ * `TypeDefinitionId`, so a reader compares it with `TypeDefinitionId.canonicalText` without Imprint knowing the
+ * type catalog.
+ */
+@JvmInline
+@Serializable
+value class EntryTypeId(
+    val canonicalText: String,
+) {
+    init {
+        require(canonicalText.isNotBlank()) { "An entry type id must not be blank." }
+    }
+
+    override fun toString(): String = canonicalText
+}
+
+/**
  * Named compilation unit inside an extension artifact. Every targeted part inherits common code implicitly;
- * [includes] names additional targeted parts whose output is visible to it. The enclosing [ExtensionManifest]
- * validates names and inclusion cycles, while build tooling validates compatibility between included targets.
+ * [includes] names additional targeted parts whose output is visible to it. [plugins] lists every Paper plugin the
+ * part needs, its own and those of the parts it includes, and [handledEntries] the entry types whose behaviour the
+ * part's own handlers run. The enclosing [ExtensionManifest] validates names, inclusion cycles and plugin
+ * inheritance, while build tooling validates compatibility between included targets.
  */
 @Serializable
 sealed interface ExtensionSourcePart {
     val name: String
     val includes: List<String>
+    val plugins: List<PluginRequirement>
+    val handledEntries: List<EntryTypeId>
 }
 
-/** Describes the source part inherited by every targeted extension source part. */
+/** Describes the source part inherited by every targeted extension source part. It never needs a plugin. */
 @Serializable
 @SerialName("common")
-data object CommonExtensionSourcePart : ExtensionSourcePart {
-    override val name: String = COMMON_SOURCE_PART
-    override val includes: List<String> = emptyList()
+data class CommonExtensionSourcePart(
+    override val handledEntries: List<EntryTypeId> = emptyList(),
+) : ExtensionSourcePart {
+    override val name: String get() = COMMON_SOURCE_PART
+    override val includes: List<String> get() = emptyList()
+    override val plugins: List<PluginRequirement> get() = emptyList()
+
+    init {
+        requireDistinctContents(this)
+    }
 }
 
 /**
@@ -269,12 +332,15 @@ data class EngineExtensionSourcePart(
     val requirement: ArtifactRequirement,
     val resolved: ResolvedArtifact,
     override val includes: List<String> = emptyList(),
+    override val plugins: List<PluginRequirement> = emptyList(),
+    override val handledEntries: List<EntryTypeId> = emptyList(),
 ) : ExtensionSourcePart {
     init {
         requireValidSourcePart(name)
         require(name != COMMON_SOURCE_PART) { "A targeted source part cannot use the reserved common name." }
         require(resolved.kind == ArtifactKind.ENGINE) { "An engine source part must resolve an engine artifact." }
         require(requirement.id == resolved.id) { "An engine source part requirement must match its resolved artifact." }
+        requireDistinctContents(this)
     }
 }
 
@@ -290,6 +356,8 @@ data class CapabilityExtensionSourcePart(
     val requirements: List<ArtifactRequirement>,
     val resolved: List<ResolvedArtifact>,
     override val includes: List<String> = emptyList(),
+    override val plugins: List<PluginRequirement> = emptyList(),
+    override val handledEntries: List<EntryTypeId> = emptyList(),
 ) : ExtensionSourcePart {
     init {
         requireValidSourcePart(name)
@@ -301,6 +369,7 @@ data class CapabilityExtensionSourcePart(
         require(requirements.all { requirement -> resolved.any { it.id == requirement.id } }) {
             "Every capability source part requirement must have a resolved artifact."
         }
+        requireDistinctContents(this)
     }
 }
 
@@ -310,6 +379,20 @@ const val COMMON_SOURCE_PART = "common"
 private val SOURCE_PART_PATTERN = Regex("[A-Za-z][A-Za-z0-9_]*")
 private val PATH_SEGMENT_PATTERN = Regex("[A-Za-z0-9][A-Za-z0-9_.-]*")
 
+/** The characters Paper allows in a plugin name; a space is legal there but never leads or trails. */
+private val PLUGIN_NAME_PATTERN = Regex("[A-Za-z0-9_.-](?:[A-Za-z0-9 _.-]*[A-Za-z0-9_.-])?")
+
+private fun requireDistinctContents(part: ExtensionSourcePart) {
+    part.plugins.groupBy(PluginRequirement::name).filterValues { it.size > 1 }.keys.firstOrNull()?.let { name ->
+        throw IllegalArgumentException("Extension source part ${part.name} lists plugin $name more than once.")
+    }
+    require(part.handledEntries.distinct().size == part.handledEntries.size) {
+        "Extension source part ${part.name} lists a handled entry more than once."
+    }
+}
+
 private fun requireValidSourcePart(name: String) {
     require(name.matches(SOURCE_PART_PATTERN)) { "Extension source part name is invalid." }
 }
+
+private val LEADING_VERSION_PATTERN = Regex("^[vV]?(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?")

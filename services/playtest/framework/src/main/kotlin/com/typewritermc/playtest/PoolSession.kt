@@ -129,8 +129,8 @@ internal class PoolSession private constructor(
 
     /**
      * One attempt of a requirement to run: [bodies] in order on [players] players, on a Paper of its own
-     * with [restartsPaper]. A [demo] runs after the requirement's last attempt with its clients recording
-     * clips, and lands in the case's demo.
+     * with [restartsPaper], each body with [content] live around it. A [demo] runs after the requirement's
+     * last attempt with its clients recording clips, and lands in the case's demo.
      */
     class Planned(
         val testId: String,
@@ -140,6 +140,7 @@ internal class PoolSession private constructor(
         val bodies: List<suspend RequirementScope.() -> Unit>,
         val restartsPaper: Boolean = false,
         val demo: Boolean = false,
+        val content: List<AttemptContent> = emptyList(),
     )
 
     /** How one attempt ended: why it failed, or null, and the plugin code it covered by its last settle. */
@@ -225,7 +226,7 @@ internal class PoolSession private constructor(
                 attempt = lease(submission, leasing) { send(Message.createReclaim(submission = submission.value)) }
             }
             attempt.evidence = evidence
-            val ended = runBody(submission, attempt, body, if (planned.demo) clipSuffix(planned, index) else null)
+            val ended = runBody(submission, attempt, planned.content, body, if (planned.demo) clipSuffix(planned, index) else null)
             failure = ended.failure
             covered = ended.covered
             steps += attempt.steps
@@ -256,17 +257,18 @@ internal class PoolSession private constructor(
         )
 
     /**
-     * Runs [body] on [attempt] and settles it; with a [clip] suffix, every player's client records the
-     * body as a clip named with it. Returns how the body ended.
+     * Runs [body] on [attempt] with [content] live around it and settles it; with a [clip] suffix, every
+     * player's client records the body as a clip named with it. Returns how the body ended.
      */
     private suspend fun runBody(
         submission: SubmissionId,
         attempt: Attempt,
+        content: List<AttemptContent>,
         body: suspend RequirementScope.() -> Unit,
         clip: String?,
     ): AttemptEnd {
         val notStarted = clip?.let { attempt.startClips(it) }
-        val settled = settle(submission, attempt, notStarted ?: attempt.outcome(body))
+        val settled = settle(submission, attempt, notStarted ?: attempt.outcome(content, body))
         val notWritten = clip?.let { attempt.stopClips() }
         return AttemptEnd(settled.failure?.let(attempt::located) ?: notWritten, settled.covered)
     }
@@ -342,7 +344,7 @@ internal class PoolSession private constructor(
             Message.createQuit(request = request, player = player.uuid.toString())
         }.value.tick
 
-    /** [player]'s client joins its Paper again; returns, once it holds what Paper sends it, the tick after which it is back. */
+    /** [player]'s client joins its Paper again; returns, once it holds what Paper sends it, the tick after which it joined. */
     override suspend fun rejoin(player: GamePlayer): Int {
         val rejoined =
             answer<Answer.RejoinedWrapper>(requests.incrementAndGet()) { request ->
@@ -357,6 +359,17 @@ internal class PoolSession private constructor(
         val marks = request<Answer.MarksWrapper>(Ask.PaperWrapper(PaperAsk.createQuery(player = player.uuid.toString()))).value
         marks.failure?.let { throw ProbeFailed(it) }
         return marks.marked
+    }
+
+    /**
+     * The publication the Typewriter engine on the Paper of [player]'s attempt applies now.
+     *
+     * TODO(node 9): temporary test only signal; replace with the engine's reported active publication ("applied on N of M").
+     */
+    override suspend fun applied(player: GamePlayer): String? {
+        val applied = request<Answer.AppliedWrapper>(Ask.PaperWrapper(PaperAsk.createApplied(player = player.uuid.toString()))).value
+        applied.failure?.let { throw ProbeFailed(it) }
+        return applied.publication
     }
 
     /** Paper runs [action] for [players]; returns, once each of their clients holds its effect, the tick after which it ran. */

@@ -2,6 +2,7 @@ package com.typewritermc.loader.standalone
 
 import com.typewritermc.loader.HostEntrypoint
 import com.typewritermc.loader.LoaderBootstrap
+import com.typewritermc.loader.api.HostPlugins
 import com.typewritermc.loader.loaderApplication
 import com.typewritermc.loader.standalone.shell.LoaderConsoleLogOutput
 import com.typewritermc.loader.standalone.shell.LoaderShell
@@ -38,7 +39,7 @@ object StandaloneLoader {
         telemetry: ServiceTelemetry,
         console: LoaderConsoleLogOutput,
     ) = coroutineScope {
-        val host = bootstrap.start(HostEntrypoint.STANDALONE, workDirectory, this)
+        val host = bootstrap.start(HostEntrypoint.STANDALONE, workDirectory, this, HostPlugins.None)
         val stopped = AtomicBoolean()
 
         suspend fun stop() {

@@ -566,13 +566,11 @@ final class ProjectionWatcher<TData, TResponse, TEvent> {
 
             recoverDelivery = (error, stackTrace, failedGeneration) {
               if (!active || generation != failedGeneration) return;
-              if (error case NatsClientException(
-                kind: NatsFailureKind.timeout || NatsFailureKind.unavailable,
-              )) {
+              if (natsFailedInTransit(error)) {
                 final recoveryGeneration = ++generation;
                 admissions?.beginGeneration(recoveryGeneration);
                 unawaited(
-                  Future<void>.delayed(const Duration(milliseconds: 250))
+                  Future<void>.delayed(natsRetryDelay)
                       .then((_) => replaceSubscription(recoveryGeneration))
                       .catchError((Object next, StackTrace nextStackTrace) {
                         admissions?.snapshotFailed(

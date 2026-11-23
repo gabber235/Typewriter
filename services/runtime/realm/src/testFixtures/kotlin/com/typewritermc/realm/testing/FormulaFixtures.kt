@@ -64,12 +64,15 @@ import com.typewritermc.realm.routeFixtureCatalog
 import com.typewritermc.setup.SetupList
 import com.typewritermc.setup.SetupRoot
 import com.typewritermc.testing.routes.FixtureBoxDefinition
+import com.typewritermc.testing.routes.FixtureBreakDefinition
+import com.typewritermc.testing.routes.FixtureEvent
 import com.typewritermc.testing.routes.FixtureLoot
 import com.typewritermc.testing.routes.FixtureLootDefinition
 import com.typewritermc.testing.routes.FixturePrizeDefinition
 import com.typewritermc.testing.routes.FixtureSignalDefinition
 import com.typewritermc.testing.routes.FixtureStockEntry
 import com.typewritermc.testing.routes.fixtureContextEntry
+import com.typewritermc.testing.routes.fixtureEventEntry
 import com.typewritermc.testing.routes.fixtureStaticEntry
 import com.typewritermc.testing.routes.fixtureStockEntry
 import com.typewritermc.testkit.complete
@@ -359,6 +362,20 @@ class FormulaPageBuilder internal constructor(
             .fixtureContextEntry(name) {
                 this.name = name
                 chained = Var.Computed(Formula(source))
+            }.id
+            .toSkir()
+            .also { named[name] = it }
+
+    /** A FixtureEventEntry named [name] about the fixture event [event], whose condition is the formula [condition]. */
+    fun eventEntry(
+        name: String,
+        event: TypeUse,
+        condition: String,
+    ): ResourceId =
+        elements
+            .fixtureEventEntry<FixtureEvent>(name, event) {
+                this.name = name
+                this.condition = Var.Computed(Formula(condition))
             }.id
             .toSkir()
             .also { named[name] = it }
@@ -727,6 +744,9 @@ fun RealmFixture.addField(
 
 /** The code record the route fixtures declare, holding Vars and references. */
 val lootUse: TypeUse = FixtureLootDefinition.id.use()
+
+/** The fixture event about one protagonist. */
+val breakUse: TypeUse = FixtureBreakDefinition.id.use()
 
 /** The code union the route fixtures declare, whose other case holds a Var. */
 val signalUse: TypeUse = FixtureSignalDefinition.id.use()

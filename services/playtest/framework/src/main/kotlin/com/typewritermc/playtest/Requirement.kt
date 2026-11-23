@@ -40,7 +40,9 @@ private var currentSession: Result<PoolSession>? = null
  * clients, up to 4 attempts in total; a pass after a failure is flaky and fails the test like a
  * failure. [demonstrates] says what the case shows, in the run file. With [restartsPaper] the attempt
  * runs on a Paper of its own, which the body may kill and boot again with
- * [RequirementScope.restartPaper]; the shared Paper and every other attempt never notice.
+ * [RequirementScope.restartPaper]; the shared Paper and every other attempt never notice. Each of
+ * [content] is written for the claimed players and live on Paper before the body, and removed, with its
+ * removal live, before the players go back to the pool.
  */
 @TestRegistering
 fun TestSuiteScope.requirement(
@@ -49,8 +51,9 @@ fun TestSuiteScope.requirement(
     players: Int = 1,
     demonstrates: Demonstrates = Demonstrates.HAPPY_PATH,
     restartsPaper: Boolean = false,
+    content: List<AttemptContent> = emptyList(),
     body: suspend RequirementScope.() -> Unit,
-) = attempts(id, sentence, players, demonstrates, listOf(body), restartsPaper)
+) = attempts(id, sentence, players, demonstrates, listOf(body), restartsPaper, content)
 
 /**
  * Registers one requirement whose attempt runs [bodies] in order; before each body after the first the
@@ -65,10 +68,11 @@ internal fun TestSuiteScope.attempts(
     demonstrates: Demonstrates,
     bodies: List<suspend RequirementScope.() -> Unit>,
     restartsPaper: Boolean = false,
+    content: List<AttemptContent> = emptyList(),
 ) {
     require(players >= 1) { "$id claims $players players; a requirement claims at least 1" }
     register(id, sentence, RequirementCode.of(bodies.first())) { session, demo ->
-        session.attempt(PoolSession.Planned("$id $sentence", id, players, demonstrates, bodies, restartsPaper, demo))
+        session.attempt(PoolSession.Planned("$id $sentence", id, players, demonstrates, bodies, restartsPaper, demo, content))
     }
 }
 

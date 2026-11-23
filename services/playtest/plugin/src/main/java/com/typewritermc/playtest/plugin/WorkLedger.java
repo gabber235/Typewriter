@@ -121,8 +121,8 @@ final class WorkLedger {
     }
 
     /**
-     * [player]'s plugin handed work [name] to Bukkit's async scheduler; it lets the next tick start, whose
-     * heartbeat starts it, and holds the one after. Any thread.
+     * [player]'s plugin handed work [name] to something a later tick starts, such as Bukkit's async
+     * scheduler; it lets the next tick start, whose heartbeat starts it, and holds the one after. Any thread.
      */
     synchronized Entry schedule(UUID player, String playerName, String name) {
         return count(player, playerName, name, nextToStart() + 1);

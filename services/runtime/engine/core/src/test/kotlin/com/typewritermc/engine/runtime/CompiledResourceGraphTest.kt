@@ -30,7 +30,7 @@ val CompiledResourceGraphTest by testSuite {
         GraphRejection(
             "its root is missing from its shard",
             listOf(facts(resource(OTHER))),
-            "Compiled Page root is absent from its shard.",
+            "A compiled root is absent from its shard.",
         ),
         GraphRejection(
             "a resource key appears in two shards",

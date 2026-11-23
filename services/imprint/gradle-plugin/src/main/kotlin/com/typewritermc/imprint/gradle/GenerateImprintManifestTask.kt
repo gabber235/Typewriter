@@ -3,11 +3,15 @@ package com.typewritermc.imprint.gradle
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactVersion
+import com.typewritermc.imprint.EntryTypeId
+import com.typewritermc.imprint.HandledEntriesMetadataCodec
 import com.typewritermc.imprint.IMPRINT_CONTRIBUTIONS_PATH
+import com.typewritermc.imprint.IMPRINT_HANDLED_ENTRIES_PATH
 import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.IMPRINT_RUNTIME_ENTRYPOINTS_PATH
 import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.imprint.ImprintManifestCodec
+import com.typewritermc.imprint.PluginRequirement
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.imprint.archive.ImprintArchive
 import com.typewritermc.imprint.archive.ImprintArchiveInspection
@@ -46,6 +50,15 @@ internal fun Project.registerManifestTask(
         fileTree(layout.buildDirectory.dir("generated/ksp")) {
             it.include("*/resources/$IMPRINT_CONTRIBUTIONS_PATH/**")
         }
+    val handledEntryFiles =
+        fileTree(layout.buildDirectory.dir("generated/ksp")) { tree ->
+            // Only extension parts record handled entries in their manifest; other artifacts have no source parts.
+            if (declaration.kind == ArtifactKind.EXTENSION) {
+                productionParts.forEach { part -> tree.include("$part/resources/$IMPRINT_HANDLED_ENTRIES_PATH") }
+            } else {
+                tree.exclude("**")
+            }
+        }
     val runtimeEntrypointFiles =
         files(
             fileTree(layout.buildDirectory.dir("generated/ksp")) {
@@ -58,20 +71,7 @@ internal fun Project.registerManifestTask(
         task.artifactId.set(declaration.id.value)
         task.artifactVersion.set(declaration.version.value)
         task.hostApiConstraint.set(declaration.hostApi?.expression.orEmpty())
-        task.sourceParts.set(
-            declaration.sourceParts.map { sourcePart ->
-                objects.newInstance(ManifestSourcePartInput::class.java).apply {
-                    name.set(sourcePart.name)
-                    kind.set(
-                        when (sourcePart) {
-                            is DeclaredEngineSourcePart -> ArtifactKind.ENGINE
-                            is DeclaredCapabilitySourcePart -> ArtifactKind.CAPABILITY
-                        },
-                    )
-                    includes.set(sourcePart.includes)
-                }
-            },
-        )
+        task.sourceParts.set(manifestSourcePartInputs(declaration))
         task.relationships.set(
             relationships.map { relationship ->
                 val description = "${relationship.sourcePart} ${relationship.index}"
@@ -118,9 +118,35 @@ internal fun Project.registerManifestTask(
         task.graphArtifacts.from(relationships.map(ConfiguredRelationship::configuration))
         task.contributionFiles.from(contributionFiles)
         task.runtimeEntrypointFiles.from(runtimeEntrypointFiles)
+        task.handledEntryFiles.from(handledEntryFiles)
         task.outputFile.set(layout.buildDirectory.file("generated/imprint/artifact.cbor"))
         val kspTasks = productionParts.map { part -> if (part == "main") "kspKotlin" else "ksp${part.capitalized()}Kotlin" }
         task.dependsOn(tasks.matching { it.name in kspTasks })
+    }
+}
+
+private fun Project.manifestSourcePartInputs(declaration: DeclaredArtifact): List<ManifestSourcePartInput> {
+    val pluginsByName = declaration.plugins.associate { it.requirement.name to it.requirement }
+    return declaration.sourceParts.map { sourcePart ->
+        objects.newInstance(ManifestSourcePartInput::class.java).apply {
+            name.set(sourcePart.name)
+            kind.set(
+                when (sourcePart) {
+                    is DeclaredEngineSourcePart -> ArtifactKind.ENGINE
+                    is DeclaredCapabilitySourcePart -> ArtifactKind.CAPABILITY
+                },
+            )
+            includes.set(sourcePart.includes)
+            plugins.set(
+                sourcePart.plugins.map { pluginName ->
+                    val requirement = pluginsByName.getValue(pluginName)
+                    objects.newInstance(ManifestPluginInput::class.java).apply {
+                        name.set(requirement.name)
+                        version.set(requirement.version?.expression.orEmpty())
+                    }
+                },
+            )
+        }
     }
 }
 
@@ -160,6 +186,11 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val runtimeEntrypointFiles: ConfigurableFileCollection
 
+    /** Each source part's code generation record of the entry types its handlers run. */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val handledEntryFiles: ConfigurableFileCollection
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -175,6 +206,7 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
                 sourceParts = sourcePartModels(),
                 dependencies = dependencies,
                 content = content,
+                handledEntries = readHandledEntries(),
             )
 
         outputFile.get().asFile.apply {
@@ -238,7 +270,35 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
                 name = input.name.get(),
                 kind = input.kind.get(),
                 includes = input.includes.get(),
+                plugins =
+                    input.plugins.get().map { plugin ->
+                        PluginRequirement(
+                            plugin.name.get(),
+                            plugin.version
+                                .get()
+                                .takeIf(String::isNotBlank)
+                                ?.let(::VersionConstraint),
+                        )
+                    },
             )
+        }
+
+    /** The entry types each source part's handlers run, keyed by the part whose KSP output holds the record. */
+    private fun readHandledEntries(): Map<String, List<EntryTypeId>> =
+        handledEntryFiles.files.associate { file ->
+            val sourcePart =
+                file.invariantSeparatorsPath
+                    .substringBefore(
+                        "/resources/$IMPRINT_HANDLED_ENTRIES_PATH",
+                    ).substringAfterLast('/')
+            val entries =
+                try {
+                    HandledEntriesMetadataCodec.decode(file.readBytes()).entries
+                } catch (failure: IllegalArgumentException) {
+                    // A malformed record fails decoding with a SerializationException, which is an IllegalArgumentException.
+                    throw GradleException("Cannot read the handled entries of source part $sourcePart.", failure)
+                }
+            sourcePart to entries
         }
 
     private fun readGraphManifests(): Map<ArtifactId, ImprintManifest> {

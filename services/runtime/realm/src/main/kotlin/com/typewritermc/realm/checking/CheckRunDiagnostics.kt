@@ -27,13 +27,23 @@ internal class CheckRunDiagnostics private constructor(
         message: String,
         at: ValueLocation?,
         related: List<ValueLocation> = emptyList(),
+    ): Diagnostic = diagnostic(DiagnosticSeverity.ERROR, origin, code, message, at, related)
+
+    /** A diagnostic of [severity] with the next id. */
+    fun diagnostic(
+        severity: DiagnosticSeverity,
+        origin: RuleOrigin,
+        code: String,
+        message: String,
+        at: ValueLocation?,
+        related: List<ValueLocation> = emptyList(),
     ): Diagnostic =
         Diagnostic(
             id = next(),
             origin = origin,
             code = code,
             message = message,
-            severity = DiagnosticSeverity.ERROR,
+            severity = severity,
             primary = at,
             related = related,
         )

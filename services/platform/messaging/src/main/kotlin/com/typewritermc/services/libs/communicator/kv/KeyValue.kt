@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.communicator.kv
 
+import kotlinx.coroutines.flow.Flow
 import kotlin.time.Duration
 
 /**
@@ -62,6 +63,41 @@ interface KeyValueBucket {
 
     /** The keys with a live entry matching [filter], a subject pattern such as `minecraft.<uuid>.*`. */
     suspend fun keys(filter: String): KeyValueKeys
+
+    /**
+     * Follows the keys matching [filter], a subject pattern such as `>`. The changes start with the latest state of
+     * every matching key, an expiry whose marker the bucket still keeps included, then follow every later write and
+     * expiry in the bucket's order.
+     */
+    suspend fun watch(filter: String): KeyValueWatch
+}
+
+/** The outcome of starting a watch. */
+sealed interface KeyValueWatch {
+    /** The watch runs; [changes] ends when the connection breaks, and the watcher watches again. */
+    data class Watching(
+        val changes: Flow<KeyValueChange>,
+    ) : KeyValueWatch
+
+    data class Failed(
+        val cause: Throwable,
+    ) : KeyValueWatch
+}
+
+/** One change a watch sees. */
+sealed interface KeyValueChange {
+    /** [entry] was written. */
+    data class Put(
+        val entry: KeyValueEntry,
+    ) : KeyValueChange
+
+    /**
+     * [key]'s time to live ran out, and its live entry is gone. This interface neither deletes nor purges, so the
+     * bucket's expiry marker is the only removal a watch reports.
+     */
+    data class Expired(
+        val key: String,
+    ) : KeyValueChange
 }
 
 /** One live entry of a bucket. */

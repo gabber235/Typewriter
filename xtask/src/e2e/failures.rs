@@ -34,6 +34,8 @@ pub struct StackEvidence {
     pub logs: Vec<PathBuf>,
     /// The collector's `traces.jsonl`, complete once the stack stopped.
     pub traces: PathBuf,
+    /// The collector's `metrics.jsonl`, complete once the stack stopped.
+    pub metrics: PathBuf,
 }
 
 /// For each failed attempt in `run`, whose evidence lies under `evidence` (the suite folder),
@@ -474,6 +476,7 @@ WARNING: before any time
         let stack = StackEvidence {
             logs: vec![root.path("stack/logs/backend.log")],
             traces: root.path("stack/traces.jsonl"),
+            metrics: root.path("stack/metrics.jsonl"),
         };
         let mut failed = failed_attempt(
             ATTEMPT,
@@ -549,6 +552,7 @@ WARNING: before any time
         let stack = StackEvidence {
             logs: Vec::new(),
             traces: root.path("stack/traces.jsonl"),
+            metrics: root.path("stack/metrics.jsonl"),
         };
         let mut failed = failed_attempt(ATTEMPT, &[]);
         failed.folder = "attempts/1/sign-in".to_owned();
@@ -573,6 +577,7 @@ WARNING: before any time
         let stack = StackEvidence {
             logs: Vec::new(),
             traces: root.path("stack/traces.jsonl"),
+            metrics: root.path("stack/metrics.jsonl"),
         };
         let mut attempts = vec![failed_attempt(ATTEMPT, &[]), passed_attempt(ATTEMPT)];
         for (n, attempt) in attempts.iter_mut().enumerate() {

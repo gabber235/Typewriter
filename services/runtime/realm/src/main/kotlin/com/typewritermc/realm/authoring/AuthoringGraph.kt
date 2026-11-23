@@ -13,6 +13,7 @@ import com.typewritermc.formula.graph.TrackedGraph
 import com.typewritermc.formula.graph.UntrackedEnvironment
 import com.typewritermc.realm.catalog.ExtensionCatalog
 import com.typewritermc.realm.catalog.code
+import com.typewritermc.types.canonicalText
 import com.typewritermc.types.catalog.DerivedOrigin
 import com.typewritermc.types.ownsResources
 import skirout.editor.v1.authoring.LinkOccurrence
@@ -21,15 +22,49 @@ import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
-/** What realm queries read: one immutable view, and services that stay the same for the realm's lifetime. */
+/**
+ * What realm queries read: one immutable view, services that stay the same for the realm's lifetime, and what the
+ * realm's engines run now.
+ */
 class RealmEnvironment internal constructor(
     val view: AuthoringView,
     val services: RealmServices,
+    internal val coverage: EntryCoverage = EntryCoverage.NONE,
 )
+
+/**
+ * The entry types whose behaviour no engine of the Realm runs, each with every distinct thing its handling parts need
+ * (phrased to follow "it"), keyed by the type's canonical text. A type it does not name runs on some engine, is not known yet, or is pure data
+ * that no part handles.
+ */
+data class EntryCoverage(
+    val unrun: Map<String, List<String>>,
+) {
+    companion object {
+        /** No entry known to run nowhere: what the Realm holds until its host first resolves the deployment. */
+        val NONE = EntryCoverage(emptyMap())
+    }
+}
+
+/** The entry types whose coverage differs between [before] and this coverage. */
+internal fun EntryCoverage.changesFrom(before: EntryCoverage): Set<InputKey<RealmEnvironment, *>> =
+    (unrun.keys + before.unrun.keys).filterTo(linkedSetOf()) { unrun[it] != before.unrun[it] }.mapTo(linkedSetOf(), ::UnrunInput)
+
+/** Why no engine runs the entry type whose canonical text is [type], or null when one does or nothing is known. */
+private data class UnrunInput(
+    val type: String,
+) : InputKey<RealmEnvironment, List<String>?> {
+    override fun read(environment: RealmEnvironment) = environment.coverage.unrun[type]
+}
+
+/** Why no engine of the realm runs entries of [type], read as a tracked input; null when one does, or for pure data. */
+context(reads: RealmReads)
+internal fun unrunReasons(type: TypeDefinitionId): List<String>? = reads.read(UnrunInput(type.canonicalText))
 
 /**
  * Built once with the view store. A check in a pass and a reader in a commit's fork read through the same ones. The
@@ -193,22 +228,19 @@ internal val ownershipRelations: List<RelationContract>
         reads.environment.view.catalog.relations
             .filter { it.ownsResources }
 
+/** The name creators see for the code type [type], or null when the catalog publishes none for it. */
+@OptIn(UntrackedEnvironment::class)
+context(reads: RealmReads)
+internal fun publishedName(type: TypeDefinitionId): String? =
+    reads.environment.view.catalog.displays
+        .publishedType(type)
+        ?.display
+        ?.name
+
 /** The generation of the view's catalog. */
 @OptIn(UntrackedEnvironment::class)
 context(reads: RealmReads)
 internal val generation get() = reads.environment.view.catalog.generation
-
-/**
- * Everything this query read at this revision, current even when a query below reran with an equal result. Which
- * checks exist is not what a check read, so it does not enter [stopAt]'s queries.
- */
-context(reads: RealmReads)
-internal fun RealmQuery<*>.factsRead(stopAt: (GraphKey<*>) -> Boolean): List<EditExpectation> =
-    reads
-        .readsOf(this, stopAt)
-        .filterIsInstance<Fact>()
-        .flatMap { reads.read(it) }
-        .distinct()
 
 /** A query a check's evidence holds as one entry of its own, without the facts it read to answer. */
 internal interface EvidenceEntry {

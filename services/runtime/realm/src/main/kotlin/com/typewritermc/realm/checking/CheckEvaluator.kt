@@ -90,7 +90,16 @@ internal class CheckEvaluator(
 
             is CheckPlan.Content -> {
                 contentFindings(subject.location.resource).forEach { finding ->
-                    report(diagnostics.error(plan.rule.origin, finding.code, finding.message, finding.at, finding.related))
+                    report(
+                        diagnostics.diagnostic(
+                            finding.severity,
+                            plan.rule.origin,
+                            finding.code,
+                            finding.message,
+                            finding.at,
+                            finding.related,
+                        ),
+                    )
                 }
                 null
             }

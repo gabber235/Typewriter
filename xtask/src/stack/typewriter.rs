@@ -40,24 +40,31 @@ pub fn backend() -> StackSpec {
 /// The backend plus the provisioned organization and a standalone Realm host bound to it, for
 /// the panel suites.
 pub fn panel() -> StackSpec {
-    with_realm(backend())
+    with_realm(backend(), RealmHost::PANEL)
 }
 
 /// The panel stack plus what the game suite needs: an engine binder that binds each game Paper's
-/// loader as the Realm's Paper engine, and observer credentials the game requirements read the
-/// topology and the Realm's session keys with.
+/// loader as the Realm's Paper engine, observer credentials the game requirements read the
+/// topology and the Realm's session keys with, and author credentials they write and publish the
+/// Realm's content with.
 pub fn game() -> StackSpec {
-    panel().with(Observer).with(BindEngines)
+    with_realm(backend(), RealmHost::GAME)
+        .with(Observer)
+        .with(Author)
+        .with(BindEngines)
 }
 
 /// `ci`'s backend, which `cargo xtask deploy ci` released, plus the same organization and Realm
 /// host [`panel`] adds, for the full suite.
 pub fn ci_cluster_panel(ci: &CiCluster) -> StackSpec {
-    with_realm(StackSpec::default().with(CiClusterBackend(ci.clone())))
+    with_realm(
+        StackSpec::default().with(CiClusterBackend(ci.clone())),
+        RealmHost::PANEL,
+    )
 }
 
-fn with_realm(backend: StackSpec) -> StackSpec {
-    backend.with(Provision).with(RealmHost).with(BindRealmHost)
+fn with_realm(backend: StackSpec, host: RealmHost) -> StackSpec {
+    backend.with(Provision).with(host).with(BindRealmHost)
 }
 
 /// The toxiproxy server the desktop panel's, the web panel's and the Realm host's NATS links go
@@ -97,11 +104,14 @@ impl Service for Faults {
 
 /// The collector's spans file in `<state>/telemetry`.
 pub const TRACES: &str = "traces.jsonl";
+/// The collector's metrics file in `<state>/telemetry`.
+pub const METRICS: &str = "metrics.jsonl";
 
 /// An OpenTelemetry collector that writes every span of this stack run to
 /// `<state>/telemetry/traces.jsonl` (OTLP JSON, one export request per line), so the panel's,
 /// the backend's and the Realm's spans of one run sit in one file, joined by the trace context
-/// the panel propagates.
+/// the panel propagates. Every metric goes to `<state>/telemetry/metrics.jsonl` the same way, so
+/// a game run reads the engines' handler times from it.
 pub struct Collector;
 
 impl Service for Collector {
@@ -111,7 +121,7 @@ impl Service for Collector {
         fs::create_dir_all(&telemetry)
             .with_context(|| format!("cannot create {}", telemetry.display()))?;
         let config = ctx.state().join("collector.yaml");
-        fs::write(&config, collector_config(ctx, &telemetry.join(TRACES)))
+        fs::write(&config, collector_config(ctx, &telemetry))
             .with_context(|| format!("cannot write {}", config.display()))?;
         let mut command = Command::new("otelcol-contrib");
         command.arg("--config").arg(config);
@@ -123,13 +133,15 @@ impl Service for Collector {
 }
 
 /// The collector's configuration: OTLP over gRPC for the backend and the Realm, OTLP over HTTP
-/// for the panel (with CORS, so the web panel can export too), traces to `traces`, logs and
-/// metrics dropped. The collector's own metrics are off; their default port collides across
-/// worktree stacks.
-fn collector_config(ctx: &StackContext, traces: &Path) -> String {
+/// for the panel (with CORS, so the web panel can export too), traces and metrics to their files
+/// in `telemetry`, logs dropped. The collector's own metrics are off; their default port collides
+/// across worktree stacks.
+fn collector_config(ctx: &StackContext, telemetry: &Path) -> String {
+    let traces = &telemetry.join(TRACES);
     let address = |port: &str| format!("127.0.0.1:{}", ctx.port(port));
     // A JSON string is a YAML string, quoted however the path looks.
     let traces = Value::String(traces.display().to_string());
+    let metrics = Value::String(telemetry.join(METRICS).display().to_string());
     format!(
         r#"receivers:
   otlp:
@@ -143,6 +155,8 @@ fn collector_config(ctx: &StackContext, traces: &Path) -> String {
 exporters:
   file/traces:
     path: {traces}
+  file/metrics:
+    path: {metrics}
   nop: {{}}
 extensions:
   health_check:
@@ -161,7 +175,7 @@ service:
       exporters: [nop]
     metrics:
       receivers: [otlp]
-      exporters: [nop]
+      exporters: [file/metrics]
 "#,
         grpc = address("collector-grpc"),
         http = address("collector-http"),
@@ -388,8 +402,41 @@ impl Service for Provision {
     }
 }
 
-/// The standalone loader, the host the provisioned organization's Realm runs on.
-pub struct RealmHost;
+/// The standalone loader, the host the provisioned organization's Realm runs on. The game
+/// stack's host also deploys the extensions the game test modules declare (`gamePaper {
+/// typewriterExtensions.from(...) }`), so the Realm deploys them to its game Papers; no other
+/// host does.
+pub struct RealmHost {
+    game_extensions: bool,
+}
+
+impl RealmHost {
+    /// The host of the panel stacks: the development artifacts only.
+    pub const PANEL: Self = Self {
+        game_extensions: false,
+    };
+    /// The host of the game stack: the development artifacts and the game modules' extensions.
+    pub const GAME: Self = Self {
+        game_extensions: true,
+    };
+
+    /// The Gradle arguments that build the host and publish its artifacts into `inbox`.
+    fn build_args(&self, inbox: &Path) -> Vec<String> {
+        let mut args = vec![
+            "--quiet".to_owned(),
+            format!("{REALM_HOST_PROJECT}:installDist"),
+            // The Realm and engine artifacts, published into the host's inbox.
+            "assembleDevelopmentArtifacts".to_owned(),
+        ];
+        if self.game_extensions {
+            // Before the host starts, so its first deployment already holds them and no rollout
+            // runs during the suite.
+            args.push("installGameExtensions".to_owned());
+        }
+        args.push(format!("-PtypewriterArtifactInbox={}", inbox.display()));
+        args
+    }
+}
 
 /// The Gradle project of the standalone loader and where `installDist` puts it.
 const REALM_HOST_PROJECT: &str = ":loader-standalone";
@@ -403,24 +450,10 @@ impl Service for RealmHost {
     }
     fn command(&self, ctx: &StackContext) -> Result<Command> {
         let work_dir = realm_host_dir(ctx);
-        let inbox = format!(
-            "-PtypewriterArtifactInbox={}",
-            work_dir.join("artifacts/inbox").display()
-        );
+        let args = self.build_args(&work_dir.join("artifacts/inbox"));
+        let args: Vec<&str> = args.iter().map(String::as_str).collect();
         ctx.build_once("the standalone Realm host", || {
-            ctx.ctx
-                .tool(
-                    "services",
-                    "./gradlew",
-                    &[
-                        "--quiet",
-                        &format!("{REALM_HOST_PROJECT}:installDist"),
-                        // The Realm and engine artifacts, published into the host's inbox.
-                        "assembleDevelopmentArtifacts",
-                        &inbox,
-                    ],
-                )
-                .run()
+            ctx.ctx.tool("services", "./gradlew", &args).run()
         })?;
         fs::create_dir_all(&work_dir)
             .with_context(|| format!("cannot create {}", work_dir.display()))?;
@@ -445,6 +478,15 @@ impl Service for RealmHost {
     }
     fn startup(&self) -> Duration {
         Duration::from_secs(180)
+    }
+    /// Where the host keeps the artifacts of its Realm's committed deployment, so the game
+    /// requirements author with the catalog the Realm loads from them.
+    fn publish(&self, ctx: &StackContext, out: &mut Published) -> Result<()> {
+        out.values.insert(
+            "STACK_REALM_HOST_ARTIFACTS".into(),
+            realm_host_dir(ctx).join("artifacts").display().to_string(),
+        );
+        Ok(())
     }
 }
 
@@ -559,6 +601,34 @@ impl Service for Observer {
     }
 }
 
+/// NATS credentials in the TYPEWRITER account for the game requirements to author with: the stack
+/// owner's calls of the Realm routes that edit, commit and publish content and read what was
+/// published.
+pub struct Author;
+
+impl Service for Author {
+    const ID: ServiceId = ServiceId("author");
+    fn needs(&self) -> &'static [ServiceId] {
+        &[BindRealmHost::ID]
+    }
+    fn command(&self, ctx: &StackContext) -> Result<Command> {
+        let mut command = stack_binary(ctx, "author")?;
+        command.arg("--state").arg(ctx.state());
+        Ok(command)
+    }
+    fn ready(&self, _: &StackContext) -> Probe {
+        Probe::ExitSuccess
+    }
+    fn publish(&self, ctx: &StackContext, out: &mut Published) -> Result<()> {
+        let author = read_json(&ctx.state().join("author.json"))?;
+        out.values.extend([
+            ("STACK_AUTHOR_CREDS".into(), field(&author, "creds")?),
+            ("STACK_AUTHOR_INBOX".into(), field(&author, "inbox")?),
+        ]);
+        Ok(())
+    }
+}
+
 /// The work directory of the standalone Realm host, cleared with the rest of the run's state.
 fn realm_host_dir(ctx: &StackContext) -> PathBuf {
     ctx.state().join("realm-host")
@@ -658,7 +728,24 @@ fn deployable_components(ctx: &StackContext) -> Result<Vec<(String, PathBuf)>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{ci_cluster, ids};
+    use crate::test_support::{TempRoot, ci_cluster, ids, stack_context};
+
+    #[test]
+    fn the_collector_keeps_every_metric_of_the_run_in_the_metrics_file() {
+        let root = TempRoot::new();
+        let ctx = stack_context(&root);
+        let telemetry = ctx.state().join("telemetry");
+
+        let config = collector_config(&ctx, &telemetry);
+
+        let metrics = Value::String(telemetry.join(METRICS).display().to_string());
+        assert!(config.contains(&format!("  file/metrics:\n    path: {metrics}\n")));
+        assert!(
+            config.contains(
+                "    metrics:\n      receivers: [otlp]\n      exporters: [file/metrics]\n"
+            )
+        );
+    }
 
     #[test]
     fn the_organization_is_provisioned_after_the_worktree_backend_routes() {
@@ -668,11 +755,57 @@ mod tests {
     }
 
     #[test]
-    fn the_game_stack_attaches_its_engines_and_observer_to_the_bound_realm() {
+    fn the_game_stack_attaches_its_engines_observer_and_author_to_the_bound_realm() {
         let order = ids(&game().ordered().unwrap());
         let position = |id: &str| order.iter().position(|ordered| *ordered == id).unwrap();
         assert!(position("bind-realm-host") < position("observer"));
+        assert!(position("bind-realm-host") < position("author"));
         assert!(position("bind-realm-host") < position("bind-engines"));
+    }
+
+    #[test]
+    fn only_the_game_stack_s_realm_host_installs_the_game_modules_extensions_before_it_starts() {
+        let inbox = Path::new("/stack/realm-host/artifacts/inbox");
+        let tasks = |host: RealmHost| host.build_args(inbox);
+
+        assert_eq!(
+            tasks(RealmHost::GAME),
+            [
+                "--quiet",
+                ":loader-standalone:installDist",
+                "assembleDevelopmentArtifacts",
+                "installGameExtensions",
+                "-PtypewriterArtifactInbox=/stack/realm-host/artifacts/inbox",
+            ]
+        );
+        assert_eq!(
+            tasks(RealmHost::PANEL),
+            [
+                "--quiet",
+                ":loader-standalone:installDist",
+                "assembleDevelopmentArtifacts",
+                "-PtypewriterArtifactInbox=/stack/realm-host/artifacts/inbox",
+            ]
+        );
+    }
+
+    #[test]
+    fn the_realm_host_hands_on_where_it_keeps_the_artifacts_it_deployed() {
+        let root = TempRoot::new();
+        let ctx = stack_context(&root);
+        let mut published = Published::default();
+
+        RealmHost::GAME.publish(&ctx, &mut published).unwrap();
+
+        assert_eq!(
+            published.values.get("STACK_REALM_HOST_ARTIFACTS"),
+            Some(
+                &ctx.state()
+                    .join("realm-host/artifacts")
+                    .display()
+                    .to_string()
+            )
+        );
     }
 
     #[test]

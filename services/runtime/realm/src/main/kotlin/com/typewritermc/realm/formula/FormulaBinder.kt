@@ -5,23 +5,28 @@ import com.typewritermc.formula.check.NameMeaning
 import com.typewritermc.formula.check.StoredFormula
 import com.typewritermc.formula.check.StoredReference
 import com.typewritermc.formula.check.check
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.CapturedAuthoringValues
 import com.typewritermc.realm.authoring.RealmQuery
 import com.typewritermc.realm.authoring.RealmReads
-import com.typewritermc.realm.authoring.conflicts
-import com.typewritermc.realm.authoring.factsRead
+import com.typewritermc.realm.authoring.holds
 import com.typewritermc.types.toSkir
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
-/** The realm owned writes that follow an accepted edit: [candidate] is the view the edit leaves, [changed] what it changed. */
+/**
+ * The realm owned writes that follow an accepted edit: [candidate] is the view the edit leaves, [changed] what it
+ * changed. What finding them did on the graph is counted on [work].
+ */
 internal fun interface CommitRepairs {
     fun intents(
         saved: AuthoringView,
         candidate: AuthoringView,
         changed: Set<ResourceId>,
+        work: GraphWork,
     ): List<EditIntent>
 }
 
@@ -31,12 +36,17 @@ internal fun AuthoringViewStore.commitRepairs(): CommitRepairs =
         saved,
         candidate,
         changed,
+        work,
         ->
-        repairIntents(saved, candidate, changed)
+        repairIntents(saved, candidate, changed, work)
     }
 
-/** Whether a formula saved at [resource] left a name without a target, and whether one of those names has exactly one candidate. */
+/**
+ * The names a formula saved at [resource] left without a target, as written, and whether one of them has exactly one
+ * candidate.
+ */
 internal data class Unbound(
+    val names: Set<String>,
     val bindable: Boolean,
 )
 
@@ -58,7 +68,9 @@ internal data class UnboundIn(
                         ?.names
                         .orEmpty()
                         .filter { it.meaning.isUnbound() }
-                if (names.isEmpty()) null else site.at to Unbound(bindable = names.any { it.candidates.size == 1 })
+                if (names.isEmpty()) return@mapNotNull null
+                val written = names.mapTo(linkedSetOf()) { site.formula.source.substring(it.span.start, it.span.end) }
+                site.at to Unbound(names = written, bindable = names.any { it.candidates.size == 1 })
             }.toMap()
 }
 
@@ -80,23 +92,29 @@ private sealed interface BindingReason {
 
 /**
  * Realm owned writes that follow a creator's edit; they never decide whether it is accepted. Candidates come from
- * what is already known: formulas the edit changed or emptied, and saved broken formulas whose check read something
- * the edit changed. So a commit that touches no formula and nothing a broken formula read forks nothing, parses
- * nothing and runs no hook on a warm memo. Binding is a plain function over a fork that is thrown away.
+ * what is already known: formulas the edit changed or emptied, and saved broken formulas for which one of their
+ * unbound names means something else in [proposed]. A commit that touches no formula in a realm without broken
+ * formulas forks nothing, parses nothing and runs no hook on a warm memo. Answers in [proposed] and binding read one
+ * fork at it, made on first need and thrown away; every read is counted on [work].
  */
 internal fun AuthoringViewStore.repairIntents(
     saved: AuthoringView,
     proposed: AuthoringView,
     changed: Set<ResourceId>,
+    work: GraphWork,
 ): List<EditIntent> {
     val (edited, emptied) = touchedFormulas(saved, proposed, changed)
+    val fork = lazy { forkAt(proposed, work).pin(work) }
     val (broken, lastSeen) =
-        pin().use { pinned ->
-            with(pinned.reads) { brokenFormulas(saved, proposed) to emptied.mapValues { (at, formula) -> formula.displayed(at) } }
+        pin(work).use { pinned ->
+            with(pinned.reads) {
+                brokenFormulas(saved, proposed) { fork.value } to
+                    emptied.mapValues { (at, formula) -> formula.displayed(at) }
+            }
         }
     val candidates = edited + emptied.keys + broken
     if (candidates.isEmpty()) return emptyList()
-    val after = forkAt(proposed).pin()
+    val after = fork.value
     return candidates.mapNotNull { at ->
         val site = after.read(FormulasOf(at.resource)).firstOrNull { it.at == at }?.takeUnless { it.computedAtFunction }
         val reason =
@@ -144,16 +162,25 @@ private fun touchedFormulas(
 private fun StoredFormula.emptiedFrom(old: StoredFormula): Boolean =
     old.references.any { saved -> saved.target != null && references.any { it.at == saved.at && it.target == null } }
 
-/** Saved formulas with an unbound name that this commit may bind: a bindable one, or one whose check read what [proposed] changed. */
+/**
+ * Saved formulas with an unbound name that this commit may bind: a bindable one, or one for which an unbound name
+ * means something else in [proposed]. Only those names' answers are compared, as check evidence holds them, so the
+ * comparison stops at each name's answer and never reads the scope around it; [proposed] answers names through
+ * [after], read only when a broken formula exists.
+ */
 context(reads: RealmReads)
 private fun brokenFormulas(
     saved: AuthoringView,
     proposed: AuthoringView,
-): List<ValueLocation> =
-    saved.resources.keys
+    after: () -> RealmReads,
+): List<ValueLocation> {
+    val answers =
+        CapturedAuthoringValues(proposed.resources, { at, name -> after().read(NameAt(at, name)) }) { proposed.judged(it).projections }
+    return saved.resources.keys
         .flatMap { reads.read(UnboundIn(it)).entries }
-        .filter { (at, unbound) -> unbound.bindable || proposed.values.conflicts(CheckFormula(at).factsRead { false }).isNotEmpty() }
+        .filter { (at, unbound) -> unbound.bindable || !answers.holds(unbound.names.map { NameAt(at, it).entry() }) }
         .map { it.key }
+}
 
 /** The formula [site] should hold in [proposed], read through [reads] over that view. */
 private fun ValueLocation.bound(

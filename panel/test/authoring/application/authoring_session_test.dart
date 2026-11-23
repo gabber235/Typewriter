@@ -26,6 +26,8 @@ const realmAway = NatsClientException(
 );
 
 void main() {
+  // The Realm's online signal follows the app lifecycle.
+  TestWidgetsFlutterBinding.ensureInitialized();
   late World world;
   setUp(() {
     world = testWorld([signedIn(ada, organization: acme)]);
@@ -61,6 +63,108 @@ void main() {
       expect(state.confirmedDocument, isNull);
     },
   );
+
+  test("a first read that meets a Realm still coming back ends loaded once "
+      "the Realm answers", () async {
+    world
+      ..serveTitledBook(
+        _catalogSubject,
+        _snapshotSubject,
+        generation: _generation,
+        book: _book,
+        title: () => "Back",
+      )
+      ..nats.registerHandler(_snapshotSubject, (_) => throw realmAway);
+    await world.whenSignedIn();
+    world.keepOpen(session);
+    await world.container.eventually(
+      session,
+      (state) => state.failure != null,
+      description: "the first read meeting nobody",
+    );
+    await pumpEventQueue();
+
+    // The Realm answers again without announcing anything.
+    world.serveTitledBook(
+      _catalogSubject,
+      _snapshotSubject,
+      generation: _generation,
+      book: _book,
+      title: () => "Back",
+    );
+
+    await world.untilBookTitled(
+      session,
+      _book.bookId,
+      "Back",
+      description: "state read once the Realm answered",
+    );
+  });
+
+  test("a first read the Realm refuses stays an error and is not asked "
+      "again", () async {
+    const refused = NatsClientException(
+      kind: NatsFailureKind.permission,
+      message: "The Realm refused the read",
+    );
+    var queries = 0;
+    world
+      ..serveTitledBook(
+        _catalogSubject,
+        _snapshotSubject,
+        generation: _generation,
+        book: _book,
+        title: () => "Never read",
+      )
+      ..nats.registerHandler(_snapshotSubject, (_) {
+        queries++;
+        throw refused;
+      });
+    await world.whenSignedIn();
+    world.keepOpen(session);
+    await world.container.eventually(
+      session,
+      (state) => state.failure != null,
+      description: "the refusal",
+    );
+    await pumpEventQueue();
+    final asked = queries;
+
+    await Future<void>.delayed(natsRetryDelay * 4);
+
+    expect(queries, asked);
+    expect(world.container.read(session).failure, refused);
+    expect(world.container.read(session).confirmedDocument, isNull);
+  });
+
+  test("a Realm whose host comes back is read again at once", () async {
+    world.organizations.addRealm(
+      acme.organizationId,
+      id: _realm,
+      name: "Realm1",
+    );
+    var title = "Before the outage";
+    await world.openBookSession(
+      session,
+      _book,
+      () => title,
+      generation: _generation,
+      subjects: _subjects,
+    );
+
+    world.organizations.stopHost(_realm);
+    await pumpEventQueue();
+    // Saved by someone else while this panel could not hear the Realm.
+    title = "Saved while away";
+    world.organizations.resumeHost(_realm);
+
+    await world.untilBookTitled(
+      session,
+      _book.bookId,
+      "Saved while away",
+      description: "state read once the Realm returned",
+    );
+  });
 
   test(
     "hints fetch current state and missed hints recover after reconnect",

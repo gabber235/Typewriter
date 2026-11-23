@@ -354,11 +354,16 @@ class KspTypeGraphConverter(
                     if (scope.classKind != ClassKind.INTERFACE) {
                         return failure(path + "context", "The context of a Var must be an interface.", property)
                     }
+                    // Read each slot as a member of the applied scope, so `EventContext<E>` gives the owner's `E`,
+                    // not the scope's own parameter.
                     val context =
                         scope.getAllProperties().toList().map { slot ->
                             val name = slot.simpleName.asString()
                             name to
-                                (template(slot.type.resolve(), owner, path + "context" + name, slot.type.explicitNullable) ?: return null)
+                                (
+                                    template(slot.asMemberOf(scopeType), owner, path + "context" + name, slot.type.explicitNullable)
+                                        ?: return null
+                                )
                         }
                     functionTemplate(context = context, result = value)
                 }

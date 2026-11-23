@@ -8,6 +8,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 
@@ -39,6 +40,19 @@ abstract class ManifestSourcePartInput {
 
     @get:Input
     abstract val includes: ListProperty<String>
+
+    /** The plugins this part uses itself; the manifest adds those of the parts it includes. */
+    @get:Nested
+    abstract val plugins: ListProperty<ManifestPluginInput>
+}
+
+/** One plugin requirement of a source part, with an empty version for any version. */
+abstract class ManifestPluginInput {
+    @get:Input
+    abstract val name: Property<String>
+
+    @get:Input
+    abstract val version: Property<String>
 }
 
 /** Keeps each dependency constraint bound to its artifact, including the artifact's producer task dependency. */

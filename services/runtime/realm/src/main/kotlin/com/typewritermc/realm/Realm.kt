@@ -15,8 +15,10 @@ import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RealmGraphTelemetry
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogStore
+import com.typewritermc.realm.checking.EntryHandlers
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.checking.checkingServices
+import com.typewritermc.realm.checking.follow
 import com.typewritermc.realm.edit.AuthoringRepository
 import com.typewritermc.realm.edit.RealmAuthoringOwner
 import com.typewritermc.realm.edit.RealmStructureProvisioning
@@ -90,6 +92,7 @@ internal class Realm(
     private val facts: DeploymentFacts,
     private val preparationEvaluator: PreparationEvaluator,
     private val engine: EngineImplementationSource,
+    private val handlers: EntryHandlers,
     private val catalogActivator: RealmCatalogActivator = DefaultRealmCatalogActivator,
 ) {
     private val lifecycle = Mutex()
@@ -105,6 +108,7 @@ internal class Realm(
     private var routerSession: Long? = null
     private var serviceMonitor: Job? = null
     private var sessionsBucket: Job? = null
+    private var engineCoverage: Job? = null
 
     context(main: MainSpanScope)
     suspend fun start(realmId: String) {
@@ -121,6 +125,7 @@ internal class Realm(
             catalogs.captureCurrent().use { next ->
                 catalogActivator.activate(authoring, next)
             }
+            engineCoverage = scope.launch { viewStore.follow(host.engineCoverage, handlers) }
             val checkRuntime = RealmCheckRuntime(viewStore, telemetry = telemetry)
             checks = checkRuntime
             val compiledContent = SurrealRegisteredCompiledContentRepository(connected)
@@ -192,7 +197,7 @@ internal class Realm(
     }
 
     suspend fun shutdown() {
-        if (database == null && router == null && serviceMonitor == null && sessionsBucket == null) return
+        if (database == null && router == null && serviceMonitor == null && sessionsBucket == null && engineCoverage == null) return
         telemetry.mainSpan(
             name = "realm.routes.shutdown",
             unhandledFailureSlug = ErrorSlug.of("realm-routes-shutdown-failed"),
@@ -209,6 +214,8 @@ internal class Realm(
             serviceMonitor = null
             attempt { sessionsBucket?.cancelAndJoin() }
             sessionsBucket = null
+            attempt { engineCoverage?.cancelAndJoin() }
+            engineCoverage = null
             attempt { catalogInvalidations.stop() }
             attempt {
                 lifecycle.withLock {

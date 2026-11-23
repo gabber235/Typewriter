@@ -7,11 +7,13 @@ import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.assemble
+import com.typewritermc.engine.events.publishedEntries
+import com.typewritermc.engine.formula.EngineEvaluationEnvironment
+import com.typewritermc.engine.formula.EngineFormulas
 import com.typewritermc.imprint.COMMON_SOURCE_PART
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.HostedRuntimeEntrypoint
 import com.typewritermc.loader.api.RuntimePlacement
-import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.loader.api.StagedHostedRuntime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,12 +49,7 @@ class EngineDeployment(
                 ),
             ) +
                 context.artifacts.extensions.mapNotNull { extension ->
-                    val acceptedParts =
-                        extension.sourceParts.mapNotNullTo(linkedSetOf()) { sourcePart ->
-                            val eligible = sourcePart.disposition as? SourcePartDisposition.Eligible
-                            sourcePart.name.takeIf { eligible != null && context.identity.placement in eligible.placements }
-                        }
-                    acceptedParts.takeIf(Set<String>::isNotEmpty)?.let {
+                    extension.eligibleParts(context.identity.placement).takeIf(Set<String>::isNotEmpty)?.let {
                         GeneratedProviderArtifact(
                             artifact = extension.id,
                             path = extension.path,
@@ -66,16 +63,17 @@ class EngineDeployment(
                 facts = DeploymentFacts(context.facts),
                 domain = DiscoveryDomains.Execution,
                 acceptedKinds = EXECUTION_PROVIDER_KINDS,
-                parentClassLoader = requireNotNull(javaClass.classLoader),
+                parentClassLoader = context.extensionClassLoader(requireNotNull(javaClass.classLoader)),
             )
         val deploymentScope = CoroutineScope(Dispatchers.Default)
         var wiring: EngineWiring? = null
         return try {
-            val engine = EngineWiring(context, deploymentScope, kind).also { wiring = it }
+            val engine = EngineWiring(context, deploymentScope, kind, deployment.providers.engineParts).also { wiring = it }
             val assembly =
                 deployment.providers.contributions.assemble(
                     CatalogAssemblyContext(CatalogGeneration(value = executionCatalogIdentity(artifacts))),
                 )
+            val formulas = EngineFormulas.of(assembly)
             val runtime =
                 ReloadableEngineRuntime(
                     deployment = deployment,
@@ -84,7 +82,17 @@ class EngineDeployment(
                     implementationToken = implementation.fingerprint(),
                     enforceImplementationCompatibility =
                         context.identity.placement == RuntimePlacement.PRIMARY_ENGINE,
-                    contentGateway = ResourceGraphContentGateway(assembly.checked, assembly.bindings, assembly.relations),
+                    contentGateway =
+                        ResourceGraphContentGateway(
+                            assembly.checked,
+                            assembly.bindings,
+                            assembly.relations,
+                        ) { publication, graph, catalog, bindings ->
+                            engine.events.publish(
+                                publishedEntries(graph, EngineEvaluationEnvironment(graph, catalog, bindings, formulas), engine.identity),
+                            )
+                            engine.applied(publication)
+                        },
                     contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, deploymentScope),
                 )
             ScopedEngineRuntime(runtime, engine, deploymentScope)
@@ -126,4 +134,6 @@ private val EXECUTION_PROVIDER_KINDS =
         GeneratedProviderKind.Relation,
         GeneratedProviderKind.EndpointBindings,
         GeneratedProviderKind.Registrar,
+        GeneratedProviderKind.EnginePart,
+        GeneratedProviderKind.Formula,
     )

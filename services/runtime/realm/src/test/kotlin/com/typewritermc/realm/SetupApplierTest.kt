@@ -85,6 +85,41 @@ val SetupApplierTest by testSuite {
         }
     }
 
+    test("a removed setup leaves none of its resources, and the realm as it was before") {
+        RealmFixture.core(catalog = routeFixtureCatalog).use { realm ->
+            val before = realm.resources
+            realm.withSetup(greeting)
+
+            realm.withoutSetup(greeting)
+
+            realm.resources shouldBe before
+        }
+    }
+
+    test("a changed setup writes the fields that differ on the parts it created, and keeps every part") {
+        val titled = { title: String ->
+            setup("titled") {
+                library {
+                    books.book("titled") {
+                        this.title = title
+                        pages.fixtureTimelinePage("start") { name = "Start" }
+                        handle
+                    }
+                }
+            }
+        }
+        RealmFixture.core(catalog = routeFixtureCatalog).use { realm ->
+            val book = realm.withSetup(titled("Before"))
+            val before = realm.resources
+
+            realm.changeSetup(titled("Before"), titled("After"))
+
+            realm.resources.keys shouldBe before.keys
+            realm.resources.getValue(book.id.toSkir()).text("title") shouldBe "After"
+            realm.resources.filterKeys { it != book.id.toSkir() } shouldBe before.filterKeys { it != book.id.toSkir() }
+        }
+    }
+
     test("two setups that share a part create it once") {
         withSetup(greeting + greeting, catalog = routeFixtureCatalog) { _ ->
             resources.values.count { it.configuration.definition == BookDefinition.id } shouldBe 1

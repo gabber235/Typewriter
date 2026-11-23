@@ -87,6 +87,7 @@ import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
+import com.typewritermc.realm.checking.EntryHandlers
 import com.typewritermc.realm.edit.SurrealAuthoringStorage
 import com.typewritermc.realm.operation.PreparationEvaluator
 import com.typewritermc.realm.publication.StagedEngineImplementationSource
@@ -783,6 +784,7 @@ internal class RealmLifecycleFixture(
                                 .InputToken(value = "engine"),
                     ),
                 ),
+            handlers = EntryHandlers(emptyList()),
             catalogActivator =
                 catalogActivator ?: RealmCatalogActivator { repository, catalog ->
                     repository.activateCatalog(catalog, install = {}, publish = {})
@@ -1082,7 +1084,7 @@ internal fun extensionPackage(
             version = ArtifactVersion("1.0.0"),
             sourceParts =
                 listOf(
-                    CommonExtensionSourcePart,
+                    CommonExtensionSourcePart(),
                     EngineExtensionSourcePart(
                         "paper",
                         ArtifactRequirement(ArtifactId("fixture:paper"), VersionConstraint("^1")),

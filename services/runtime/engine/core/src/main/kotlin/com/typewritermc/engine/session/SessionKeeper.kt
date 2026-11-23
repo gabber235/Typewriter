@@ -1,15 +1,23 @@
 package com.typewritermc.engine.session
 
+import com.typewritermc.events.ChainQueueing
+import com.typewritermc.events.ProtagonistJoined
+import com.typewritermc.events.ProtagonistLeft
+import com.typewritermc.events.SessionArrived
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
 import com.typewritermc.identity.SessionReporter
 import com.typewritermc.identity.Sessions
+import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueBuckets
+import com.typewritermc.services.libs.communicator.kv.KeyValueChange
 import com.typewritermc.services.libs.communicator.kv.KeyValueKeys
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
 import com.typewritermc.services.libs.communicator.kv.KeyValueRead
+import com.typewritermc.services.libs.communicator.kv.KeyValueWatch
 import com.typewritermc.services.libs.communicator.kv.KeyValueWrite
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -24,8 +32,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.IOException
 import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
+import java.util.logging.Logger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -61,12 +72,23 @@ data class SessionTimings(
  *
  * Reporter calls return at once; their writes run on [parent]'s dispatcher, per session in the order of the calls:
  * each call queues on its session's lock before it returns.
+ *
+ * Every reported session counts in [holding] from its `connected` call until its `disconnected` call or until another
+ * engine takes it over, written in call order and without NATS, so this engine knows what it holds while NATS is down.
+ *
+ * Every successful take emits [SessionArrived] to [events], after [ProtagonistJoined] when the protagonist had no
+ * session key anywhere. The keeper follows the whole bucket, so when a key expires, the engine its last value names
+ * as holder emits [ProtagonistLeft] once no other key of the protagonist lives. That is best effort: after a crash no
+ * engine names itself holder, and an expiry while this engine's watch was down longer than the bucket keeps its marker
+ * goes unseen.
  */
 class SessionKeeper(
     private val engine: EngineId,
     private val buckets: StateFlow<KeyValueBuckets?>,
     private val bucketName: String,
     private val timings: SessionTimings,
+    private val holding: HeldSessions,
+    private val events: ChainQueueing,
     parent: CoroutineScope,
     private val clock: Clock = Clock.systemUTC(),
 ) : SessionReporter,
@@ -75,23 +97,33 @@ class SessionKeeper(
     private val scope = CoroutineScope(parent.coroutineContext + SupervisorJob(parent.coroutineContext[Job]))
     private val sessions = ConcurrentHashMap<SessionId, SessionSlot>()
 
+    init {
+        scope.launch { follow() }
+    }
+
     override fun connected(
         protagonist: Protagonist,
         id: SessionId,
     ) {
         val slot = sessions.computeIfAbsent(id) { SessionSlot() }
+        val generation = slot.generation.incrementAndGet()
+        holding.hold(protagonist, id)
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
             slot.lock.withLock {
                 slot.refresher?.cancelAndJoin()
-                val held = take(protagonist, id)
+                slot.refresher = null
+                // A stale take leaves the last held key to the call that came after it, so a quit still shortens it.
+                val held = take(protagonist, id, slot, generation) ?: return@withLock slot.takenElsewhere(id, generation)
                 slot.held = held
-                slot.refresher = scope.launch { refresh(slot, held) }
+                slot.refresher = scope.launch { refresh(id, slot, held, generation) }
             }
         }
     }
 
     override fun disconnected(id: SessionId) {
         val slot = sessions[id] ?: return
+        slot.generation.incrementAndGet()
+        holding.release(id)
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
             slot.lock.withLock {
                 slot.refresher?.cancelAndJoin()
@@ -104,17 +136,9 @@ class SessionKeeper(
 
     override suspend fun holders(protagonist: Protagonist): Set<EngineId> {
         val bucket = bucket() ?: return emptySet()
-        val keys =
-            when (val listed = bucket.keys(protagonistKeys(protagonist))) {
-                is KeyValueKeys.Listed -> listed.keys
-                is KeyValueKeys.Failed -> throw listed.cause
-            }
-        return keys.mapNotNullTo(linkedSetOf()) { key ->
-            when (val read = bucket.get(key)) {
-                is KeyValueRead.Found -> decodeSessionEntry(read.entry.value).holder
-                KeyValueRead.Absent -> null
-                is KeyValueRead.Failed -> throw read.cause
-            }
+        return when (val read = bucket.liveEntries(protagonist)) {
+            is LiveEntries.Read -> read.entries.mapTo(linkedSetOf()) { it.holder }
+            is LiveEntries.Failed -> throw read.cause
         }
     }
 
@@ -123,35 +147,152 @@ class SessionKeeper(
         scope.cancel()
     }
 
-    /** Writes the session's key as held by this engine, keeping when it began, and retries until it succeeds. */
+    /**
+     * Writes the session's key as held by this engine, keeping when it began, and retries until it succeeds; then
+     * emits the session's arrival, after the protagonist's join when no key of it lived before the write.
+     *
+     * Null, having written nothing, once the take is stale: the session was reported again since [generation], as a
+     * quit is, or another engine took the key after this take first read it (see [Seen.takenSince]). A late take never
+     * writes over the engine its protagonist moved to.
+     */
     private suspend fun take(
         protagonist: Protagonist,
         id: SessionId,
-    ): HeldSession {
+        slot: SessionSlot,
+        generation: Long,
+    ): HeldSession? {
         val key = sessionKey(protagonist, id)
-        while (true) {
+        var first: Seen? = null
+        while (slot.generation.get() == generation) {
             val bucket = bucket()
-            if (bucket != null) {
-                val written =
-                    when (val read = bucket.get(key)) {
-                        is KeyValueRead.Found -> {
-                            val entry = decodeSessionEntry(read.entry.value).copy(holder = engine)
-                            bucket.update(key, entry.encode(), timings.ttl, read.entry.revision).heldAs(key, entry)
-                        }
-
-                        KeyValueRead.Absent -> {
-                            val entry = SessionEntry(protagonist, engine, clock.instant())
-                            bucket.create(key, entry.encode(), timings.ttl).heldAs(key, entry)
-                        }
-
-                        is KeyValueRead.Failed -> {
-                            null
-                        }
-                    }
-                if (written != null) return written
+            val online = (bucket?.liveEntries(protagonist) as? LiveEntries.Read)?.entries?.isNotEmpty()
+            val read = bucket?.get(key)
+            if (bucket != null && online != null && read != null && read !is KeyValueRead.Failed) {
+                val seen = seen(key, read)
+                val began = first ?: seen.also { first = it }
+                if (seen.takenSince(began) || slot.generation.get() != generation) return null
+                val written = bucket.writeHeld(key, protagonist, read, seen.stored)
+                if (written != null) {
+                    if (!online) events.emit(ProtagonistJoined(protagonist))
+                    events.emit(SessionArrived(Session(protagonist, id)))
+                    return written
+                }
             }
             delay(timings.retry)
         }
+        return null
+    }
+
+    /** Writes [key] as held by this engine over [read], keeping when [stored] began; null when the write lost. */
+    private suspend fun KeyValueBucket.writeHeld(
+        key: String,
+        protagonist: Protagonist,
+        read: KeyValueRead,
+        stored: SessionEntry?,
+    ): HeldSession? {
+        val entry = (stored ?: SessionEntry(protagonist, engine, clock.instant())).copy(holder = engine)
+        return when (read) {
+            is KeyValueRead.Found -> update(key, entry.encode(), timings.ttl, read.entry.revision).heldAs(key, entry)
+            KeyValueRead.Absent -> create(key, entry.encode(), timings.ttl).heldAs(key, entry)
+            is KeyValueRead.Failed -> null
+        }
+    }
+
+    /** What a take [read] of [key]. */
+    private fun seen(
+        key: String,
+        read: KeyValueRead,
+    ): Seen {
+        val found = read as? KeyValueRead.Found ?: return Seen(null, null)
+        return Seen(found.entry.revision, readable(key, found.entry.value))
+    }
+
+    /** A take's read of the session key: its [revision] and [stored] entry, each null while no readable entry lives. */
+    private inner class Seen(
+        val revision: Long?,
+        val stored: SessionEntry?,
+    ) {
+        val holder: EngineId? get() = stored?.holder
+
+        /**
+         * Whether another engine took the key since [began], the take's first read: it was written since, and names a
+         * holder that is neither this engine nor the one [began] named. A write by the engine named then, such as its
+         * quit shortening the key during a server move, is no takeover.
+         */
+        fun takenSince(began: Seen): Boolean = revision != began.revision && holder != null && holder != engine && holder != began.holder
+    }
+
+    /**
+     * Keeps a copy of every live session entry in the bucket, watching again whenever the watch breaks. The copy
+     * survives a new watch, so an expiry whose marker the new watch replays still finds the key's last holder.
+     */
+    private suspend fun follow() {
+        val live = HashMap<String, SessionEntry>()
+        while (true) {
+            val watch = bucket()?.watch(SessionsBucket.EVERY_KEY)
+            if (watch is KeyValueWatch.Watching) watch.changes.collect { live.record(it) }
+            delay(timings.retry)
+        }
+    }
+
+    private fun MutableMap<String, SessionEntry>.record(change: KeyValueChange) {
+        when (change) {
+            is KeyValueChange.Put -> {
+                val entry = readable(change.entry.key, change.entry.value) ?: return
+                this[change.entry.key] = entry
+            }
+
+            is KeyValueChange.Expired -> {
+                val last = remove(change.key) ?: return
+                if (last.holder == engine && values.none { it.protagonist == last.protagonist }) {
+                    events.emit(ProtagonistLeft(last.protagonist))
+                }
+            }
+        }
+    }
+
+    /**
+     * The session entry stored under [key], or null when no engine can read [value]. Every read of the bucket goes
+     * through here: a damaged or foreign value is logged and read as no entry, so a join writes over it, a leave check
+     * ignores it, and the watch keeps the key's last readable holder.
+     */
+    private fun readable(
+        key: String,
+        value: ByteArray,
+    ): SessionEntry? =
+        try {
+            decodeSessionEntry(value)
+        } catch (failure: IllegalArgumentException) {
+            skipped(key, failure)
+        } catch (failure: IOException) {
+            // A cut off value ends the decoder's input early.
+            skipped(key, failure)
+        }
+
+    private fun skipped(
+        key: String,
+        failure: Exception,
+    ): SessionEntry? {
+        log.warning("Skipped the unreadable value of session key $key: $failure")
+        return null
+    }
+
+    /** The live session entries of [protagonist], or the first failed read. */
+    private suspend fun KeyValueBucket.liveEntries(protagonist: Protagonist): LiveEntries {
+        val keys =
+            when (val listed = keys(protagonistKeys(protagonist))) {
+                is KeyValueKeys.Listed -> listed.keys
+                is KeyValueKeys.Failed -> return LiveEntries.Failed(listed.cause)
+            }
+        val entries =
+            keys.mapNotNull { key ->
+                when (val read = get(key)) {
+                    is KeyValueRead.Found -> readable(key, read.entry.value)
+                    KeyValueRead.Absent -> null
+                    is KeyValueRead.Failed -> return LiveEntries.Failed(read.cause)
+                }
+            }
+        return LiveEntries.Read(entries)
     }
 
     /**
@@ -159,8 +300,10 @@ class SessionKeeper(
      * expired while NATS was unreachable, the protagonist is still here, so the session starts again.
      */
     private suspend fun refresh(
+        id: SessionId,
         slot: SessionSlot,
         initial: HeldSession,
+        generation: Long,
     ) {
         var held = initial
         while (true) {
@@ -172,7 +315,7 @@ class SessionKeeper(
                 }
 
                 KeyValueWrite.Conflict -> {
-                    held = recover(bucket, held) ?: return slot.letGo()
+                    held = recover(bucket, held) ?: return slot.letGo(id, generation)
                 }
 
                 is KeyValueWrite.Failed -> {
@@ -190,7 +333,7 @@ class SessionKeeper(
     ): HeldSession? =
         when (val read = bucket.get(held.key)) {
             is KeyValueRead.Found -> {
-                val current = decodeSessionEntry(read.entry.value)
+                val current = readable(held.key, read.entry.value) ?: held.entry
                 if (current.holder != engine) null else held.copy(entry = current, revision = read.entry.revision)
             }
 
@@ -204,19 +347,36 @@ class SessionKeeper(
             }
         }
 
-    /** Shortens the key to the grace, unless another engine holds the session by now. */
+    /**
+     * Shortens the key to the grace, unless another engine holds the session by now or the key is gone. A conflict
+     * whose key this engine still holds came from its own write, such as a refresh the quit cut off before its answer
+     * arrived, so the shortening goes on at the key's current revision.
+     */
     private suspend fun release(held: HeldSession) {
+        var revision = held.revision
         while (true) {
             val bucket = bucket()
             if (bucket != null) {
-                when (bucket.update(held.key, held.entry.encode(), timings.grace, held.revision)) {
-                    is KeyValueWrite.Written, KeyValueWrite.Conflict -> return
+                when (bucket.update(held.key, held.entry.encode(), timings.grace, revision)) {
+                    is KeyValueWrite.Written -> return
+                    KeyValueWrite.Conflict -> revision = bucket.ownRevision(held.key, revision) ?: return
                     is KeyValueWrite.Failed -> Unit
                 }
             }
             delay(timings.retry)
         }
     }
+
+    /** The revision of [key] while this engine holds it, null once another engine does or it is gone; [known] when unread. */
+    private suspend fun KeyValueBucket.ownRevision(
+        key: String,
+        known: Long,
+    ): Long? =
+        when (val read = get(key)) {
+            is KeyValueRead.Found -> read.entry.revision.takeIf { readable(key, read.entry.value)?.holder == engine }
+            KeyValueRead.Absent -> null
+            is KeyValueRead.Failed -> known
+        }
 
     private suspend fun bucket(): KeyValueBucket? =
         when (val opened = buckets.filterNotNull().first().open(bucketName)) {
@@ -229,13 +389,39 @@ class SessionKeeper(
         entry: SessionEntry,
     ): HeldSession? = (this as? KeyValueWrite.Written)?.let { HeldSession(key, entry, it.revision) }
 
-    private fun SessionSlot.letGo() {
+    /** Lets the session go when its take ended because another engine took it, not because it was reported again. */
+    private fun SessionSlot.takenElsewhere(
+        id: SessionId,
+        since: Long,
+    ) {
+        if (generation.get() == since) letGo(id, since)
+    }
+
+    /** Lets the session go after another engine took it, unless it was reported again since this refresher began. */
+    private fun SessionSlot.letGo(
+        id: SessionId,
+        since: Long,
+    ) {
         held = null
         refresher = null
+        if (generation.get() == since) holding.release(id)
+    }
+
+    private sealed interface LiveEntries {
+        data class Read(
+            val entries: List<SessionEntry>,
+        ) : LiveEntries
+
+        data class Failed(
+            val cause: Throwable,
+        ) : LiveEntries
     }
 
     private class SessionSlot {
         val lock = Mutex()
+
+        /** Counts the session's reporter calls, so a refresher that began before the last one leaves holding alone. */
+        val generation = AtomicLong()
         var held: HeldSession? = null
         var refresher: Job? = null
     }
@@ -245,4 +431,8 @@ class SessionKeeper(
         val entry: SessionEntry,
         val revision: Long,
     )
+
+    private companion object {
+        val log: Logger = Logger.getLogger(SessionKeeper::class.java.name)
+    }
 }

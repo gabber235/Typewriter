@@ -4,25 +4,32 @@ import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.CapabilityManifest
 import com.typewritermc.imprint.EngineManifest
+import com.typewritermc.imprint.EntryTypeId
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.HostedRuntimeEntrypointMetadata
 import com.typewritermc.imprint.HostedRuntimeEntrypointMetadataCodec
 import com.typewritermc.imprint.IMPRINT_CONTRIBUTIONS_PATH
+import com.typewritermc.imprint.IMPRINT_HANDLED_ENTRIES_PATH
 import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.IMPRINT_RUNTIME_ENTRYPOINTS_PATH
 import com.typewritermc.imprint.ImprintManifestCodec
+import com.typewritermc.imprint.PluginRequirement
 import com.typewritermc.imprint.RealmManifest
+import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.imprint.gradle.testing.capabilityBuild
 import com.typewritermc.imprint.gradle.testing.entries
+import com.typewritermc.imprint.gradle.testing.extensionBuild
 import com.typewritermc.imprint.gradle.testing.extensionWithCapability
 import com.typewritermc.imprint.gradle.testing.fixture
 import com.typewritermc.imprint.gradle.testing.javaLibraryBuild
 import com.typewritermc.imprint.gradle.testing.javaType
 import com.typewritermc.imprint.gradle.testing.readManifest
+import com.typewritermc.imprint.gradle.testing.text
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -244,13 +251,14 @@ val ImprintPluginTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
             "must declare exactly one runtime entrypoint, but found 2"
     }
 
-    test("engine Shadow JAR bundles core capabilities and one merged manifest") {
+    test("engine Shadow JAR bundles core capabilities, one merged manifest, and one provider index of every bundled project") {
         val fixture = fixture("platform", "engineCore", "base", "capability", "engine")
         fixture.writeBuild("platform", javaLibraryBuild())
         fixture.write(
             "platform/src/main/resources/$IMPRINT_CONTRIBUTIONS_PATH/types/book.cbor",
             "platform book",
         )
+        fixture.write("platform/src/main/resources/META-INF/typewriter/generated-providers", "type\tfixture.PlatformProvider\tmain\n")
         fixture.writeBuild(
             "engineCore",
             """
@@ -259,6 +267,7 @@ val ImprintPluginTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
             """.trimIndent(),
         )
         fixture.write("engineCore/src/main/java/fixture/core/CoreType.java", javaType("fixture.core", "CoreType"))
+        fixture.write("engineCore/src/main/resources/META-INF/typewriter/generated-providers", "enginePart\tfixture.CoreProvider\tmain\n")
         fixture.write(
             "engineCore/src/main/resources/$IMPRINT_CONTRIBUTIONS_PATH/types/pages.cbor",
             "core pages",
@@ -298,6 +307,7 @@ val ImprintPluginTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
             """.trimIndent(),
         )
         fixture.write("engine/src/main/java/fixture/paper/PaperEngine.java", javaType("fixture.paper", "PaperEngine"))
+        fixture.write("engine/src/main/resources/META-INF/typewriter/generated-providers", "enginePart\tfixture.PaperProvider\tmain\n")
         fixture.writeBytes(
             "engineCore/src/main/resources/$IMPRINT_RUNTIME_ENTRYPOINTS_PATH",
             HostedRuntimeEntrypointMetadataCodec.encode(
@@ -315,6 +325,17 @@ val ImprintPluginTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
         jar.entries().contains("fixture/paper/PaperEngine.class") shouldBe true
         jar.entries().count { it == IMPRINT_MANIFEST_PATH } shouldBe 1
         jar.entries().contains(IMPRINT_RUNTIME_ENTRYPOINTS_PATH) shouldBe false
+        jar.entries().count { it == "META-INF/typewriter/generated-providers" } shouldBe 1
+        jar
+            .text("META-INF/typewriter/generated-providers")
+            .orEmpty()
+            .lines()
+            .filter(String::isNotBlank) shouldContainExactlyInAnyOrder
+            listOf(
+                "type\tfixture.PlatformProvider\tmain",
+                "enginePart\tfixture.CoreProvider\tmain",
+                "enginePart\tfixture.PaperProvider\tmain",
+            )
         manifest.resolvedCapabilities.map { it.id.value } shouldContainExactly
             listOf("typewritermc:base", "typewritermc:items")
         val coreContribution = manifest.contributions.single { it.name.value == "core/pages.cbor" }
@@ -369,6 +390,29 @@ val ImprintPluginTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
         manifest.buildProvenance.single().kind shouldBe ArtifactKind.CAPABILITY
         jar.entries().contains("fixture/ItemsExtension.class") shouldBe true
         jar.entries().contains("fixture/items/ItemType.class") shouldBe false
+    }
+
+    test("an extension JAR carries one provider index holding every source part's rows") {
+        val fixture = fixture("capability", "extension")
+        fixture.writeBuild("capability", capabilityBuild("typewritermc:items"))
+        fixture.write("capability/src/main/java/fixture/items/ItemType.java", javaType("fixture.items", "ItemType"))
+        fixture.writeBuild("extension", extensionWithCapability("project(\":capability\")"))
+        fixture.write("extension/src/common/resources/META-INF/typewriter/generated-providers", "type\tfixture.CommonProvider\tcommon\n")
+        fixture.write(
+            "extension/src/target/resources/META-INF/typewriter/generated-providers",
+            "enginePart\tfixture.TargetProvider\ttarget\n",
+        )
+
+        fixture.run(":extension:jar")
+        val jar = fixture.singleJar("extension/build/libs")
+
+        jar.entries().count { it == "META-INF/typewriter/generated-providers" } shouldBe 1
+        jar
+            .text("META-INF/typewriter/generated-providers")
+            .orEmpty()
+            .lines()
+            .filter(String::isNotBlank) shouldContainExactlyInAnyOrder
+            listOf("type\tfixture.CommonProvider\tcommon", "enginePart\tfixture.TargetProvider\ttarget")
     }
 
     test("external Maven artifacts use the same descriptor and constraint path") {
@@ -747,6 +791,119 @@ val ImprintPluginTest by testSuite(testConfig = TestConfig.testScope(isEnabled =
         fixture.run("generateImprintManifest").task(":generateImprintManifest")?.outcome shouldBe TaskOutcome.SUCCESS
         val manifest = ImprintManifestCodec.decode(fixture.manifestBytes()) as ExtensionManifest
         manifest.sourceParts.single { it.name == "items" }.includes shouldContainExactly listOf("base")
+    }
+
+    test("a plugin's API reaches only the parts that use it and the parts that include them") {
+        val fixture = fixture("items", "vaultApi", "extension")
+        fixture.writeBuild("items", capabilityBuild("typewritermc:items"))
+        fixture.writeBuild("vaultApi", javaLibraryBuild())
+        fixture.write("vaultApi/src/main/java/fixture/vault/Economy.java", javaType("fixture.vault", "Economy"))
+        fixture.writeBuild(
+            "extension",
+            extensionBuild(
+                """
+                val vault = plugin("Vault") {
+                    api(project(":vaultApi"))
+                    version("^1.7")
+                }
+                sourceSet("vault") {
+                    capabilities { capability(project(":items"), version = "^1") }
+                    uses(vault)
+                }
+                sourceSet("vaultQuests") {
+                    capabilities { capability(project(":items"), version = "^1") }
+                    includes("vault")
+                }
+                sourceSet("other") {
+                    capabilities { capability(project(":items"), version = "^1") }
+                }
+                """,
+                kotlin = true,
+            ),
+        )
+        fixture.write(
+            "extension/src/vault/kotlin/fixture/VaultHook.kt",
+            "package fixture\nclass VaultHook(val economy: fixture.vault.Economy)",
+        )
+        fixture.write(
+            "extension/src/vaultQuests/kotlin/fixture/VaultQuests.kt",
+            "package fixture\nclass VaultQuests(val hook: VaultHook, val economy: fixture.vault.Economy)",
+        )
+        fixture.write(
+            "extension/src/other/kotlin/fixture/Other.kt",
+            "package fixture\nclass Other(val economy: fixture.vault.Economy)",
+        )
+
+        fixture.run(":extension:compileVaultQuestsKotlin").task(":extension:compileVaultKotlin")?.outcome shouldBe TaskOutcome.SUCCESS
+        fixture.run(":extension:compileOtherKotlin", expectFailure = true).output shouldContain "Unresolved reference 'vault'"
+
+        fixture.write("extension/src/other/kotlin/fixture/Other.kt", "package fixture\nclass Other")
+        fixture.run(":extension:jar")
+        fixture.singleJar("extension/build/libs").entries().contains("fixture/vault/Economy.class") shouldBe false
+
+        fixture.write(
+            "extension/src/common/kotlin/fixture/Common.kt",
+            "package fixture\nclass Common(val economy: fixture.vault.Economy)",
+        )
+        fixture.run(":extension:compileCommonKotlin", expectFailure = true).output shouldContain "Unresolved reference 'vault'"
+    }
+
+    test("the manifest records each part's plugins, inherited ones included, and the entries its handlers run") {
+        val fixture = fixture("items", "extension")
+        fixture.writeBuild("items", capabilityBuild("typewritermc:items"))
+        fixture.writeBuild(
+            "extension",
+            extensionBuild(
+                """
+                val vault = plugin("Vault") { version("^1.7") }
+                val placeholders = plugin("PlaceholderAPI") {}
+                sourceSet("vault") {
+                    capabilities { capability(project(":items"), version = "^1") }
+                    uses(vault)
+                }
+                sourceSet("vaultQuests") {
+                    capabilities { capability(project(":items"), version = "^1") }
+                    uses(placeholders)
+                    includes("vault")
+                }
+                sourceSet("plain") {
+                    capabilities { capability(project(":items"), version = "^1") }
+                }
+                """,
+            ),
+        )
+        fixture.writeHandledEntries("extension", "common", "{\"give\"}")
+        fixture.writeHandledEntries("extension", "vault", "{\"pay\"}", "{\"charge\"}")
+
+        fixture.run(":extension:jar")
+        val jar = fixture.singleJar("extension/build/libs")
+        val parts = (jar.readManifest() as ExtensionManifest).sourceParts.associateBy { it.name }
+
+        parts.getValue("vault").plugins shouldContainExactly listOf(PluginRequirement("Vault", VersionConstraint("^1.7")))
+        parts.getValue("vaultQuests").plugins shouldContainExactly
+            listOf(PluginRequirement("PlaceholderAPI"), PluginRequirement("Vault", VersionConstraint("^1.7")))
+        parts.getValue("plain").plugins shouldBe emptyList()
+        parts.getValue("common").handledEntries shouldContainExactly listOf(EntryTypeId("{\"give\"}"))
+        parts.getValue("vault").handledEntries shouldContainExactly listOf(EntryTypeId("{\"charge\"}"), EntryTypeId("{\"pay\"}"))
+        parts.getValue("vaultQuests").handledEntries shouldBe emptyList()
+        jar.entries().contains(IMPRINT_HANDLED_ENTRIES_PATH) shouldBe false
+    }
+
+    test("invalid plugin declarations fail with a message naming the plugin") {
+        listOf(
+            """plugin("Vault") {}; plugin("Vault") {}""" to "Plugin Vault is declared more than once.",
+            """plugin("Vault") { version("one") }""" to "Plugin Vault version is invalid",
+            """plugin("Vault/API") {}""" to "Plugin name Vault/API is not a name Paper reports.",
+            """
+            val vault = plugin("Vault") {}
+            sourceSet("paper") { engine("com.example:paper", version = "^1"); uses(vault); uses(vault) }
+            """
+                to "Extension source set paper uses plugin Vault more than once.",
+        ).forEach { (declaration, message) ->
+            val fixture = fixture()
+            fixture.writeBuild(extensionBuild(declaration))
+            fixture.run("typewriterInfo", expectFailure = true).output shouldContain message
+        }
     }
 
     test("DSL version rejects a conflicting project version") {

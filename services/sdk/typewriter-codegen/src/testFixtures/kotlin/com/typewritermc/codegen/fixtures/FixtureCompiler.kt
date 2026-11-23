@@ -5,7 +5,6 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.configureKsp
 import com.tschuchort.compiletesting.kspSourcesDir
-import com.typewritermc.discovery.GENERATED_PROVIDER_INDEX_PATH
 import com.typewritermc.imprint.codegen.ImprintRuntimeEntrypointProcessorProvider
 import com.typewritermc.types.codegen.TypewriterTypeProcessorProvider
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
@@ -15,10 +14,12 @@ import java.nio.file.Path
 import kotlin.io.path.copyTo
 import kotlin.io.path.createParentDirectories
 import kotlin.io.path.exists
+import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.readText
+import kotlin.io.path.walk
 
 /**
  * Compiles a fixture in process with the module's own processors, on the test classpath (which includes
@@ -79,7 +80,7 @@ class CompiledFixture(
         }
 
     /**
-     * Runs the fixture's `main(args)` with the artifact (the compiled classes plus the KSP provider index) as its only
+     * Runs the fixture's `main(args)` with the artifact (the compiled classes plus every KSP resource) as its only
      * argument. Fails when [fixture] declares `main` but no compiled file facade exposes it.
      */
     fun runMain(fixture: Fixture) {
@@ -98,8 +99,12 @@ class CompiledFixture(
             check(!declaresMain) { "Fixture ${fixture.name} declares main, but no compiled file facade exposes main(Array<String>)." }
             return
         }
-        val index = kspSources.resolve("resources").resolve(GENERATED_PROVIDER_INDEX_PATH)
-        if (index.exists()) index.copyTo(artifact.resolve(GENERATED_PROVIDER_INDEX_PATH).createParentDirectories(), overwrite = true)
+        val resources = kspSources.resolve("resources")
+        if (resources.exists()) {
+            resources.walk().filter { it.isRegularFile() }.forEach { resource ->
+                resource.copyTo(artifact.resolve(resources.relativize(resource).toString()).createParentDirectories(), overwrite = true)
+            }
+        }
         try {
             entry.invoke(null, arrayOf(artifact.toString()))
         } catch (failure: InvocationTargetException) {

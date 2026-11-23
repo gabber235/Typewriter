@@ -109,7 +109,7 @@ Every stored value, whether written by a derive, by a step, or by code, emits:
 
 ### Reading
 
-Handlers take a stored type as a parameter; the keys are filled from the event (see [events-and-handlers.md](events-and-handlers.md)). A nullable parameter is optional.
+Handlers take a stored type as a parameter; the keys are filled from the event (see [events-and-handlers.md](events-and-handlers.md)). A nullable parameter is optional. Entry values are not parameters: a handler reads them in its body through accessors, with the context filled from its scope (decided 2026-11-23).
 
 ```kotlin
 @Handler
@@ -177,11 +177,11 @@ An update field has the type `Var<Changes, C>`. Its syntax (change lines, their 
 `Changes` are committed with `attempt()`. One call is one transaction: all of its operations commit, or none do.
 
 ```kotlin
-entry.changes(context).attempt()
+entry.changes.attempt()
 entry.triggers.fire(context)
 ```
 
-Most entries use the `Triggerable` shortcut `entry.complete(context)`, which applies the changes and then fires the triggers, so the next entry sees the changes (see [events-and-handlers.md](events-and-handlers.md)). Extra update fields, such as a dialogue option's changes, are applied the same way: `option.changes(context).attempt()`.
+Most entries use the `Triggerable` shortcut `complete()`, which applies the changes and then fires the triggers, so the next entry sees the changes (see [events-and-handlers.md](events-and-handlers.md)). Extra update fields, such as a dialogue option's changes, are applied the same way: `option.changes.attempt()`.
 
 The engine predicts and the realm decides (decided 2026-11-04):
 
@@ -231,7 +231,7 @@ Kotlin has two calls and no `apply()` (decided 2026-11-04). `attempt()` waits on
 Kotlin reaches a creator variable only as an argument, never by looking one up (decided 2026-11-04), and stored types declared in Kotlin have no reactions. So the guard is known from the signature and the arguments, without running the function or depending on which branch it takes.
 
 ```kotlin
-AddCoins(entry.coins(context), 5).attempt()
+AddCoins(entry.coins, 5).attempt()
 ```
 
 ### Which fields are guarded
@@ -380,10 +380,10 @@ Kotlin entries see plain lists without item ids; the runtime gets the ids from `
 
 A timer is a stored value, so a formula can read when it elapses, through the exports of `stored()` ([formula-language.md](formula-language.md#scope-and-exports)). Time left and next reset read the same way, which keeps what legacy offers as `time.expires` (`TimedFactEntry`, `CronFactEntry`, `CountdownFact`). How a formula names a reaction's timer is for the layer 7 plan.
 
-`Every` is a configured source, like `Tick<Config>` (decided 2026-11-04). Nothing writes to the value when a creator publishes an `Every`, so the source arms its timer. It compares every published `Every` with its timer at startup and after each publish, and writes only differences, so a lost row heals and a schedule edit applies. The core event runtime already recomputes `Demand<Config>` on publish ([events-and-handlers.md](events-and-handlers.md#configured-events)). An extension's own timed reaction can reuse `ReactionTimer` and the handler: a type, a way to arm, and nothing else.
+`Every` is a subscribed source, like `Tick<S>` (decided 2026-11-04). Nothing writes to the value when a creator publishes an `Every`, so the source arms its timer. It compares every published `Every` with its timer at startup and after each publish, and writes only differences, so a lost row heals and a schedule edit applies. The core event runtime already recomputes `Demand<S>` on publish ([events-and-handlers.md](events-and-handlers.md#subscribed-events)). An extension's own timed reaction can reuse `ReactionTimer` and the handler: a type, a way to arm, and nothing else.
 
 ```kotlin
-class EverySource : ConfiguredSource<Elapsed<ReactionTimer<*, *>>, Every<*, *>> {
+class EverySource : SubscribedSource<Elapsed<ReactionTimer<*, *>>, Every<*, *>> {
     override fun open(demand: Demand<Every<*, *>>, sink: Sink<Elapsed<ReactionTimer<*, *>>>) =
         demand.watch { reactions -> // at startup, and after each publish
             reactions.forEach { (place, every) ->
@@ -402,7 +402,7 @@ fun armEvery(place: BoundPath<Every<*, *>>, schedule: Schedule) {
 }
 ```
 
-The `Demand<Config>` API (`watch`, `(place, every)`) and how the event names its configuration are for the layer 7 plan. A midnight between the content switch and the arming is skipped once. `AfterWrite` needs no source: it arms on the next write, and a schedule edit leaves armed timers at their old time.
+The `Demand<S>` API (`watch`, `(place, every)`) and how the event names its subscription are for the layer 7 plan. A midnight between the content switch and the arming is skipped once. `AfterWrite` needs no source: it arms on the next write, and a schedule edit leaves armed timers at their old time.
 
 Each key is its own transaction, so a refusal or conflict affects only that key. The run is not one moment: at many keys, values change a little apart.
 
@@ -521,7 +521,7 @@ Rules:
 
 - The result is saved, so it survives server moves, rejoins, and multiple servers.
 - An equal result writes nothing; a different one is one stored write, emitting `Added`, `Changed`, or `Removed` as usual.
-- Stored derives are pure over their tracked inputs and rerun only when an input changes.
+- Stored derives are pure over their tracked inputs and rerun only when an input changes. Entry values are read in the body through accessors, and each accessor read is a tracked input. A read not loaded yet fails as a recorded read, and the derive reruns when it clears (decided 2026-11-23).
 - A cycle between derives is a realm check error.
 - A stored derive that reads a mirror keeps its last result when that input vanished by `Tracking` (a quit or server move). The realm warns that such a derive cannot run offline.
 

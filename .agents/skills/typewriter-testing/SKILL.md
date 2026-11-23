@@ -99,6 +99,8 @@ expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
 - When a player must leave and come back to the same Paper, call `player.quit()` and
   `player.rejoin()`; while it is away, check only the players still on Paper (`stayer sees
   unlisted(leaver)`), since a window, input or frame of the away player is refused.
+- When a requirement is not about joining, act on a player who is already online; quit and rejoin
+  only when joining is what it proves, since a join costs far more ticks than any other input.
 - When something must not happen, add a broad `player.never sees anyChat()` beside a positive check
   in the same window; a window of only `never` checks is refused.
 - When a still scene must look exact, use `looksLike`. A new or changed golden fails on the pinned

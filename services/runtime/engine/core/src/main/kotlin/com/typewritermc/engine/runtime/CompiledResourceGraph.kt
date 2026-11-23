@@ -1,30 +1,36 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.complete
 import com.typewritermc.elements.Cue
 import com.typewritermc.elements.Element
+import com.typewritermc.engine.Root
 import com.typewritermc.engine.dataValue
 import com.typewritermc.engine.relation
-import com.typewritermc.library.Page
 import com.typewritermc.types.NativeBindingRegistry
+import com.typewritermc.types.ResourceId
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.ownsResources
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.compiled_content.CompilationContext
 import skirout.editor.v1.compiled_content.CompiledEdge
 import skirout.editor.v1.compiled_content.CompiledResource
 import skirout.editor.v1.compiled_content.CompiledResourceKey
 import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
-import skirout.editor.v1.type_catalog.RelationId
+import kotlin.reflect.KClass
 
 /** Hydrated resource roles and the compiled links between them. */
 class CompiledResourceGraph private constructor(
     val resources: Map<CompiledResourceKey, Any>,
     val edges: List<CompiledEdge>,
-    private val ownershipRelations: Set<RelationId>,
+    /** The Kotlin classes of each resource's type arguments, such as `BlockBreak` for `CancelableEventEntry<BlockBreak>`. */
+    val typeArguments: Map<CompiledResourceKey, List<KClass<*>>>,
+    /** Each resource as it was stored, with its checked type: what formulas read fields and lower Var types from. */
+    val stored: Map<CompiledResourceKey, CompleteValue>,
 ) {
     val elements: Map<CompiledResourceKey, Element> =
         resources
@@ -38,22 +44,8 @@ class CompiledResourceGraph private constructor(
                 (value as? Cue)?.let { key to it }
             }.toMap()
 
-    fun immediateOwner(key: CompiledResourceKey): CompiledResourceKey? =
-        edges
-            .singleOrNull { edge ->
-                edge.target == key &&
-                    edge.relation in ownershipRelations
-            }?.source
-
-    fun pageOf(key: CompiledResourceKey): CompiledResourceKey? {
-        val visited = hashSetOf<CompiledResourceKey>()
-        var current: CompiledResourceKey? = key
-        while (current != null && visited.add(current)) {
-            if (resources[current] is Page) return current
-            current = immediateOwner(current)
-        }
-        return null
-    }
+    /** The resource [id] at its root compilation, or null when the publication does not hold it. */
+    fun resource(id: ResourceId): Any? = resources[CompiledResourceKey(source = id.toSkir(), context = CompilationContext.Root)]
 
     companion object {
         fun assemble(
@@ -66,7 +58,7 @@ class CompiledResourceGraph private constructor(
             val edges = linkedSetOf<CompiledEdge>()
             facts.forEach { compilation ->
                 require(compilation.resources.any { it.key == compilation.root }) {
-                    "Compiled Page root is absent from its shard."
+                    "A compiled root is absent from its shard."
                 }
                 compilation.resources.forEach { record ->
                     require(records.putIfAbsent(record.key, record) == null) {
@@ -81,6 +73,7 @@ class CompiledResourceGraph private constructor(
                     "Compiled edge uses unknown relation ${edge.relation.value}."
                 }
             }
+            val stored = linkedMapOf<CompiledResourceKey, CompleteValue>()
             val decoded =
                 records.mapValues { (key, record) ->
                     require(record.value.actualType == record.actualType) {
@@ -104,6 +97,7 @@ class CompiledResourceGraph private constructor(
                             is CompletenessResult.Unfinished -> error("Compiled resource $key is unfinished at ${result.locations}.")
                             is CompletenessResult.Invalid -> error("Compiled resource $key is invalid: ${result.problems}.")
                         }
+                    stored[key] = complete
                     val binding = bindings.bind(checked)
                     require(binding.provider == record.bindingProvider && binding.signature == record.bindingSignature) {
                         "Compiled resource $key uses a different native binding implementation."
@@ -112,11 +106,13 @@ class CompiledResourceGraph private constructor(
                         "Compiled resource $key decoded to null."
                     }
                 }
-            val ownership =
-                knownRelations.values
-                    .filter { it.ownsResources }
-                    .mapTo(linkedSetOf(), RelationContract::id)
-            return CompiledResourceGraph(decoded, edges.toList(), ownership)
+            val typeArguments =
+                records.mapValues { (_, record) ->
+                    record.actualType.arguments.mapNotNull { argument ->
+                        (catalog.resolve(argument) as? Resolution.Ready)?.let { bindings.bind(it.value).nativeClass }
+                    }
+                }
+            return CompiledResourceGraph(decoded, edges.toList(), typeArguments, stored)
         }
     }
 }

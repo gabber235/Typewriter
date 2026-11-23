@@ -2,9 +2,6 @@ package com.typewritermc.engine.paper
 
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
-import com.typewritermc.identity.PrincipalId
-import com.typewritermc.identity.Protagonist
-import com.typewritermc.identity.SessionId
 import com.typewritermc.identity.SessionReporter
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.bukkit.entity.Player
@@ -38,7 +35,9 @@ class SessionListener(
         scope.own { HandlerList.unregisterAll(this) }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    // A join is reported before any source decides it, and a quit after every source did, so the engine holds the
+    // player's session while a source decides either; an event about a protagonist it does not hold is dropped.
+    @EventHandler(priority = EventPriority.LOWEST)
     fun onJoin(event: PlayerJoinEvent) = connected(event.player)
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -46,12 +45,6 @@ class SessionListener(
 
     private fun connected(player: Player) = sessions.connected(player.protagonist, player.session)
 }
-
-/** A player's protagonist: the Minecraft principal of its UUID. */
-private val Player.protagonist: Protagonist get() = Protagonist(PrincipalId(PrincipalId.MINECRAFT, uniqueId.toString()))
-
-/** A Minecraft player has one session at a time, named by its UUID, so a rejoin continues it. */
-private val Player.session: SessionId get() = SessionId(uniqueId.toString())
 
 /** Runs [block] on the server's main thread and returns its result. */
 private suspend fun <T> Plugin.onMainThread(block: () -> T): T {
