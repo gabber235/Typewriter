@@ -385,6 +385,7 @@ private class TypewriterTypeProcessor(
             .forEach { resource -> emitEndpointBindings(resource, definitions, references) }
     }
 
+    context(resolver: Resolver)
     private fun emitSdk(
         declaration: KSClassDeclaration,
         typeDefinition: TypeDefinition,
@@ -442,9 +443,15 @@ private class TypewriterTypeProcessor(
         if (model.hasNativeBinding) output.index(model.names.nativeBindingFactory, GeneratedProviderKind.NativeBinding)
     }
 
-    /** Reports every field whose accessor a member of the record scope would hide; true when there is none. */
+    /**
+     * Reports every field whose accessor a scope member would hide; true when there is none. Every record is read on
+     * `RecordScope`; an entry is also read at its root through `EntryScope`, `Candidate` and `Triggered`.
+     */
+    context(resolver: Resolver)
     private fun SdkDeclaration.accessorsReachable(): Boolean {
-        val hidden = fields.filter { it.property in ScopeEmitter.SCOPE_MEMBERS }
+        val entry = source.getAllSuperTypes().any { it.declaration.qualifiedName?.asString() == TypewriterApi.Entry.canonicalName }
+        val members = scopeMembers(if (entry) ScopeEmitter.ENTRY_SCOPES else ScopeEmitter.RECORD_SCOPES)
+        val hidden = fields.filter { it.property in members }
         val properties = source.getAllProperties().associateBy { it.simpleName.asString() }
         hidden.forEach { field ->
             logger.error(
@@ -455,6 +462,14 @@ private class TypewriterTypeProcessor(
         }
         return hidden.isEmpty()
     }
+
+    /** Every property name of [scopes], read from their declarations so a new scope member is covered at once. */
+    context(resolver: Resolver)
+    private fun scopeMembers(scopes: List<ClassName>): Set<String> =
+        scopes
+            .mapNotNull { scope -> resolver.getClassDeclarationByName(scope.canonicalName) }
+            .flatMap { scope -> scope.getAllProperties().map { it.simpleName.asString() } }
+            .toSet()
 
     /** The case definitions of [owner] that no Kotlin declaration emits, such as the unit cases of an enum. */
     private fun KspTypeConversionResult.Success.casesWithoutDeclaration(owner: TypeDefinition): List<TypeDefinition> =

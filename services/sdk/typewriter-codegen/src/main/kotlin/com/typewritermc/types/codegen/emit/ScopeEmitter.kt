@@ -24,8 +24,11 @@ import com.typewritermc.codegen.TypewriterApi as Api
  * stored. So `spoken.minLines` and `options[0].text` read at any depth.
  */
 internal object ScopeEmitter : SdkEmitter {
-    /** The members of `RecordScope` and `EntryScope`; a field of one of these names would never reach its accessor. */
-    val SCOPE_MEMBERS: Set<String> = setOf("entryScope", "recordPath", "entry", "subject", "context", "reader")
+    /** The scope every record's accessors are read on; a field named like one of its members never reaches its accessor. */
+    val RECORD_SCOPES = listOf(Api.RecordScope)
+
+    /** The scopes an entry is read through at its root, which add their own members to [RECORD_SCOPES]. */
+    val ENTRY_SCOPES = RECORD_SCOPES + listOf(Api.EntryScope, Api.Candidate, Api.Triggered)
 
     override fun FileSpec.Builder.emit(declaration: SdkDeclaration) {
         if (!declaration.record) return

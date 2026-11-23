@@ -173,6 +173,7 @@ internal object TypewriterApi {
     val Triggered = ClassName(EVENTS, "Triggered")
     val TriggeredEvent = ClassName(EVENTS, "TriggeredEvent")
     val RecordScope = ClassName(EVENTS, "RecordScope")
+    val EntryScope = ClassName(EVENTS, "EntryScope")
     val readField = MemberName(EVENTS, "readField", isExtension = true)
     val recordField = MemberName(EVENTS, "recordField", isExtension = true)
     val optionalRecordField = MemberName(EVENTS, "optionalRecordField", isExtension = true)
