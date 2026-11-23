@@ -16,9 +16,9 @@ import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
 import com.typewritermc.events.ProtagonistLeft
 import com.typewritermc.events.Sink
+import com.typewritermc.events.Source
 import com.typewritermc.events.SubscribedEvent
 import com.typewritermc.events.SubscribedSource
-import com.typewritermc.events.Source
 import com.typewritermc.events.Triggered
 import com.typewritermc.events.TriggeredEvent
 import com.typewritermc.events.VerdictHandler
