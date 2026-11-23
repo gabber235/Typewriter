@@ -191,13 +191,14 @@ class PlaytestPlugin :
         }
     }
 
-    /** Answers a session's request to Paper: a probe, a query, or what the Typewriter engine applies. */
+    /** Answers a session's request to Paper: a probe, a query, what the Typewriter engine applies, or the tick that last ended. */
     private fun request(request: Request) {
         val id = request.id
         when (val ask = (request.ask as? Ask.PaperWrapper)?.value) {
             is PaperAsk.ProbeWrapper -> probe(id, ask.value)
             is PaperAsk.QueryWrapper -> pool.send(reply(id, marks(ask.value.player)))
             is PaperAsk.AppliedWrapper -> pool.send(reply(id, applied()))
+            is PaperAsk.NowWrapper -> pool.send(reply(id, Answer.createNow(tick = policy.lastEnded())))
             else -> logger.severe("The game pool sent $request, which Paper never answers")
         }
     }

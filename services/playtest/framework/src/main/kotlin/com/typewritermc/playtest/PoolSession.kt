@@ -366,6 +366,9 @@ internal class PoolSession private constructor(
      *
      * TODO(node 9): temporary test only signal; replace with the engine's reported active publication ("applied on N of M").
      */
+    override suspend fun now(player: GamePlayer): Int =
+        request<Answer.NowWrapper>(Ask.PaperWrapper(PaperAsk.createNow(player = player.uuid.toString()))).value.tick
+
     override suspend fun applied(player: GamePlayer): String? {
         val applied = request<Answer.AppliedWrapper>(Ask.PaperWrapper(PaperAsk.createApplied(player = player.uuid.toString()))).value
         applied.failure?.let { throw ProbeFailed(it) }

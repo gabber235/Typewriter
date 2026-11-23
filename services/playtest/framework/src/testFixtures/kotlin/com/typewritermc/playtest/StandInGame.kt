@@ -91,6 +91,8 @@ internal class StandInGame(
 
     override suspend fun query(player: GamePlayer): List<StateKind> = marks
 
+    override suspend fun now(player: GamePlayer): Int = tick
+
     override suspend fun applied(player: GamePlayer): String? {
         appliedFailure?.let { throw ProbeFailed(it) }
         return publications[minOf(appliedAsks++, publications.lastIndex)]

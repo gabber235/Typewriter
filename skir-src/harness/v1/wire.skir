@@ -306,6 +306,11 @@ enum PaperAsk(85030011) {
   applied: struct {
     player: string;
   };
+  // Which tick last ended on the Paper of `player`'s attempt, for a stimulus from outside Paper (a panel
+  // tab, the realm) whose effects show from the next tick. Paper answers with `now`.
+  now: struct {
+    player: string;
+  };
 }
 
 // Run `action` between ticks. An action on a player runs for each of `players`; an action on the world
@@ -403,6 +408,10 @@ enum Answer(85030015) {
   applied: struct {
     publication: string?;
     failure: string?;
+  };
+  // The tick that last ended on Paper; a stimulus from outside Paper that starts now shows from the next.
+  now: struct {
+    tick: int32;
   };
 }
 

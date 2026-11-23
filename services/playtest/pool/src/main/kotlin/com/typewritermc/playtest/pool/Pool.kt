@@ -655,6 +655,7 @@ internal class Pool(
                     is PaperAsk.ProbeWrapper -> paper.value.players
                     is PaperAsk.QueryWrapper -> listOf(paper.value.player)
                     is PaperAsk.AppliedWrapper -> listOf(paper.value.player)
+                    is PaperAsk.NowWrapper -> listOf(paper.value.player)
                     else -> null
                 }
             }
