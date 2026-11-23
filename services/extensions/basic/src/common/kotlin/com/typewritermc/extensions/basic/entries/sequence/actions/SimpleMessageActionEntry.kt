@@ -32,7 +32,7 @@ class SimpleMessageActionEntry(
     override val name: String,
     override val placement: GraphPlacement,
     override val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>>,
-    val message: Var<String, InteractionContext>,
+    val message: Var<String, InteractionContext> = Var.Value(""),
 ) : Triggerable
 
 /** Sends the entry's message to the protagonist the chain runs for, then continues the chain. */
