@@ -178,10 +178,6 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`ConfigurationHolder`**: a resource in the owner chain that selects configurations: `Book`, `Page`, `RealmRoot`. The root's selection is the default. See [configurations.md](configurations.md).
 
-**Configured event**: an event with a configuration type parameter (`Tick<Config : TickConfig>`) whose source only emits for configurations some handler can run for. See [events-and-handlers.md](events-and-handlers.md#configured-events).
-
-**`ConfiguredSource<E, Config>`**: source interface whose `open(demand: Demand<Config>, sink: Sink<E>)` receives the configurations that currently have a runnable handler. See [events-and-handlers.md](events-and-handlers.md#configured-events).
-
 **`ConfirmationKey`**: the key a protagonist presses to confirm: jump, sneak, swap hands, left click, or right click. See [dialogue.md](dialogue.md#6-the-key).
 
 **`ContentCommandRan`**: event a content command node runs; its handler fires the node's triggers with the arguments as context. See [commands.md](commands.md#end-to-end-in-content).
@@ -228,7 +224,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`demand` and `mirrors` KV buckets**: per realm NATS KV buckets through which a reader on one engine demands a mirror and producers on other engines publish its values. See [live-data.md](live-data.md#demand-across-engines).
 
-**`Demand<Config>`**: source input for configured events: the configurations that currently have a handler whose other parameters are satisfiable. See [events-and-handlers.md](events-and-handlers.md#demand).
+**`Demand<S>`**: source input for subscribed events: the subscriptions that currently have a handler whose other parameters are satisfiable. See [events-and-handlers.md](events-and-handlers.md#demand).
 
 **Derive**: a pure function over tracked inputs whose result type decides what it maintains. See [overview.md](overview.md#derive).
 
@@ -292,9 +288,9 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`Every<K, T>`**: variable reaction that runs for every stored key on a `Schedule`. See [stored-data.md](stored-data.md#reactions).
 
-**`EverySource`**: core configured source that arms the `ReactionTimer` of every published `Every`, at startup and after each publish. See [stored-data.md](stored-data.md#how-timed-reactions-fire).
+**`EverySource`**: core subscribed source that arms the `ReactionTimer` of every published `Every`, at startup and after each publish. See [stored-data.md](stored-data.md#how-timed-reactions-fire).
 
-**`EveryTick`**: core `TickConfig` object for a handler that runs every tick. See [events-and-handlers.md](events-and-handlers.md#configured-events).
+**`EveryTick`**: core `TickSubscription` object for a handler that runs every tick. See [events-and-handlers.md](events-and-handlers.md#subscribed-events).
 
 **`Exits`**: core `Live` per member and way out: which interactions it may end and whether leaving is allowed now. See [interactions.md](interactions.md#gesture-ways-out).
 
@@ -760,6 +756,10 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Subject**: the identity an event is about, usually a protagonist; chain events have a group. See [events-and-handlers.md](events-and-handlers.md#event).
 
+**Subscribed event**: an event with a subscription type parameter (`Tick<S : TickSubscription>`) whose source only emits for subscriptions some handler can run for. See [events-and-handlers.md](events-and-handlers.md#subscribed-events).
+
+**`SubscribedSource<E, S>`**: source interface whose `open(demand: Demand<S>, sink: Sink<E>)` receives the subscriptions that currently have a runnable handler. See [events-and-handlers.md](events-and-handlers.md#subscribed-events).
+
 **Suspending handler**: an after handler that suspends; it is cancelled when any value it resolved is removed, never on `Changed`. See [events-and-handlers.md](events-and-handlers.md#suspending-handlers).
 
 ## T
@@ -778,7 +778,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Tick pipeline**: how chains run: starts queue and merge during a tick, one worker runs them at tick end, world changes share one owner visit, and only `require` guards wait for the realm. See [events-and-handlers.md](events-and-handlers.md#tick-pipeline).
 
-**`Tick<Config : TickConfig>`**: configured capability event for timed work; it accepts only after handlers. See [events-and-handlers.md](events-and-handlers.md#configured-events).
+**`Tick<S : TickSubscription>`**: subscribed capability event for timed work; it accepts only after handlers. See [events-and-handlers.md](events-and-handlers.md#subscribed-events).
 
 **Tracked reads**: inside a derive every accessor read is a read of the `TrackedGraph`; each run records its own reads and verifies them in read order, and the condition of a branch is itself a read. Handlers evaluate inline and never rerun. See [events-and-handlers.md](events-and-handlers.md#reading-entry-values).
 

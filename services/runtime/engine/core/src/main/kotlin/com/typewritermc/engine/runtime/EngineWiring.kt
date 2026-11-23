@@ -106,7 +106,7 @@ private fun engineCoreModule(
     single { HandlerCosts(context.host.openTelemetry) }
     single(createdAtStart = true) {
         EventRuntime(
-            EventParts(handlers = getAll(), shapes = getAll(), sources = getAll(), configured = getAll(), live = getAll()),
+            EventParts(handlers = getAll(), shapes = getAll(), sources = getAll(), subscribed = getAll(), live = getAll()),
             get(),
             get(),
             getOrNull<ChainPickup>()

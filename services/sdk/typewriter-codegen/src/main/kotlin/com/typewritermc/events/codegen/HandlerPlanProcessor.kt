@@ -46,9 +46,9 @@ import com.typewritermc.codegen.TypewriterApi as Api
 /**
  * Emits a handler plan for each top level `@Handler` function: an engine part that names the event it takes, describes
  * each parameter as a `Param`, and calls the function with the values the runtime resolved. A `Verdict` return makes a
- * `VerdictHandler`, a `Unit` return an `AfterHandler`. A handler on a configured event (`Tick<EveryTick>`) records its
- * configuration type as the plan's `HandlerConfig`, the (event, configuration type) pair the runtime builds demand from:
- * a Kotlin object is one configuration, an entry type one per published entry; any other configuration type is rejected.
+ * `VerdictHandler`, a `Unit` return an `AfterHandler`. A handler on a subscribed event (`Tick<EveryTick>`) records its
+ * subscription type as the plan's `HandlerSubscription`, the (event, subscription type) pair the runtime builds demand from:
+ * a Kotlin object is one subscription, an entry type one per published entry; any other subscription type is rejected.
  * A handler on a `Triggered<X>` step takes `TriggeredEvent<X>`, and its plan's first `Param.Triggered` asks the runtime
  * for the step to call it on. A parameter named like a field of the entries it reads is rejected: entry values are read
  * through the generated accessors.
@@ -86,10 +86,10 @@ internal class HandlerPlanProcessor(
         val event = checkNotNull(receiver.boundClass())
         val verdict = returnsVerdict(function) ?: return
         val generic = receiver.declaration as? KSTypeParameter
-        val config =
-            if (generic == null && event.implements(Api.ConfiguredEvent)) {
-                receiver.configuration() ?: run {
-                    logger.error("A configured event's configuration must be a Kotlin object or an entry type.", function)
+        val subscription =
+            if (generic == null && event.implements(Api.SubscribedEvent)) {
+                receiver.subscription() ?: run {
+                    logger.error("A subscribed event's subscription must be a Kotlin object or an entry type.", function)
                     return
                 }
             } else {
@@ -97,15 +97,15 @@ internal class HandlerPlanProcessor(
             }
         val eventType = eventType(receiver, event, generic)
         val triggered = receiver.triggeredEntry()
-        val declared = params(function, receiver, generic, config) ?: return
+        val declared = params(function, receiver, generic, subscription) ?: return
         val params = listOfNotNull(triggered?.let { CodeBlock.of("%T.Triggered(%T::class)", Api.Param, it.toClassName()) }) + declared
 
         val plan = ClassName(function.packageName.asString(), "${event.simpleName.asString()}_${function.simpleName.asString()}Handler")
         val kind = if (verdict) Api.VerdictHandler else Api.AfterHandler
-        val type = planType(plan, kind, function, receiver, eventType, verdict, params, config)
+        val type = planType(plan, kind, function, receiver, eventType, verdict, params, subscription)
         if (output.write(GeneratedFile.builder(plan.packageName, plan.simpleName).addType(type).build(), function)) {
             engineParts.provideGenerated(plan, listOf(kind, Api.HandlerPlan, Api.EnginePart), function)
-            handledEntries += handledEntryIds(receiver, config, function)
+            handledEntries += handledEntryIds(receiver, subscription, function)
         }
     }
 
@@ -176,7 +176,7 @@ internal class HandlerPlanProcessor(
         function: KSFunctionDeclaration,
         receiver: KSType,
         generic: KSTypeParameter?,
-        config: Configuration?,
+        subscription: Subscription?,
     ): List<CodeBlock>? {
         val accessors = accessorsOf(function, receiver)
         val params =
@@ -189,10 +189,10 @@ internal class HandlerPlanProcessor(
                     )
                     return@map null
                 }
-                classify(parameter, receiver, generic, config).also {
+                classify(parameter, receiver, generic, subscription).also {
                     if (it == null) {
                         logger.error(
-                            "A handler parameter must be a Candidate, Origin, Outcome, identity, configuration or trait interface.",
+                            "A handler parameter must be a Candidate, Origin, Outcome, identity, subscription or trait interface.",
                             parameter,
                         )
                     }
@@ -228,7 +228,7 @@ internal class HandlerPlanProcessor(
             .toMap()
     }
 
-    /** The generated plan class [plan] for [function]: its event, parameters, configuration and run. */
+    /** The generated plan class [plan] for [function]: its event, parameters, subscription and run. */
     private fun planType(
         plan: ClassName,
         kind: ClassName,
@@ -237,7 +237,7 @@ internal class HandlerPlanProcessor(
         eventType: TypeName,
         verdict: Boolean,
         params: List<CodeBlock>,
-        config: Configuration?,
+        subscription: Subscription?,
     ): TypeSpec {
         val kClass = KClass::class.asClassName()
         val eventKClass =
@@ -280,11 +280,11 @@ internal class HandlerPlanProcessor(
                     .initializer("listOf(\n⇥%L\n⇤)", params.joinToCode(",\n"))
                     .build(),
             ).apply {
-                if (config != null) {
+                if (subscription != null) {
                     addProperty(
                         PropertySpec
-                            .builder("config", Api.HandlerConfig.copy(nullable = true), KModifier.OVERRIDE)
-                            .initializer(config.plan())
+                            .builder("subscription", Api.HandlerSubscription.copy(nullable = true), KModifier.OVERRIDE)
+                            .initializer(subscription.plan())
                             .build(),
                     )
                 }
@@ -303,11 +303,11 @@ internal class HandlerPlanProcessor(
 
     /**
      * The canonical type ids of the entries [function] gives behaviour: the triggered entry of its receiver, its entry
-     * configuration type, and each candidate's entry. An entry whose declared id is invalid is skipped; the type processor reports it.
+     * subscription type, and each candidate's entry. An entry whose declared id is invalid is skipped; the type processor reports it.
      */
     private fun handledEntryIds(
         receiver: KSType,
-        config: Configuration?,
+        subscription: Subscription?,
         function: KSFunctionDeclaration,
     ): List<String> {
         val candidates =
@@ -320,11 +320,11 @@ internal class HandlerPlanProcessor(
                     ?.resolve()
                     ?.boundClass()
             }
-        val configEntry = (config as? Configuration.Entries)?.entry
+        val subscriptionEntry = (subscription as? Subscription.Entries)?.entry
         return (
             listOfNotNull(
                 receiver.triggeredEntry(),
-                configEntry,
+                subscriptionEntry,
             ) + candidates
         ).mapNotNull { it.typeDefinitionIdentity()?.canonicalText }
     }
@@ -334,7 +334,7 @@ internal class HandlerPlanProcessor(
         type: KSType,
         receiver: KSType,
         generic: KSTypeParameter?,
-        config: Configuration?,
+        subscription: Subscription?,
         optional: Boolean,
     ): CodeBlock? {
         val entry =
@@ -352,13 +352,13 @@ internal class HandlerPlanProcessor(
                     argumentType.bounded().copy(nullable = false) == receiver.bounded().copy(nullable = false)
                 }
             }
-        val ofConfig = (config as? Configuration.Entries)?.entry?.qualifiedName == entryClass.qualifiedName
+        val ofSubscription = (subscription as? Subscription.Entries)?.entry?.qualifiedName == entryClass.qualifiedName
         return CodeBlock.of(
-            "%T.Candidate(%T::class, ofEvent = %L, ofConfig = %L, optional = %L)",
+            "%T.Candidate(%T::class, ofEvent = %L, ofSubscription = %L, optional = %L)",
             Api.Param,
             entryClass.toClassName(),
             ofEvent,
-            ofConfig,
+            ofSubscription,
             optional,
         )
     }
@@ -369,7 +369,7 @@ internal class HandlerPlanProcessor(
         parameter: KSValueParameter,
         receiver: KSType,
         generic: KSTypeParameter?,
-        config: Configuration?,
+        subscription: Subscription?,
     ): CodeBlock? {
         val type = parameter.type.resolve()
         val optional = type.isMarkedNullable
@@ -378,7 +378,7 @@ internal class HandlerPlanProcessor(
         val classDeclaration = declaration as? KSClassDeclaration
         return when {
             name == Api.Candidate.canonicalName -> {
-                candidateParam(type, receiver, generic, config, optional)
+                candidateParam(type, receiver, generic, subscription, optional)
             }
 
             name == Api.EventOrigin.canonicalName -> {
@@ -393,8 +393,8 @@ internal class HandlerPlanProcessor(
                 CodeBlock.of("%T.Identity(%T::class, optional = %L)", Api.Param, classDeclaration.toClassName(), optional)
             }
 
-            classDeclaration != null && receiver.isConfiguredBy(type) -> {
-                CodeBlock.of("%T.Config(%T::class, optional = %L)", Api.Param, classDeclaration.toClassName(), optional)
+            classDeclaration != null && receiver.isSubscribedBy(type) -> {
+                CodeBlock.of("%T.Subscription(%T::class, optional = %L)", Api.Param, classDeclaration.toClassName(), optional)
             }
 
             classDeclaration?.classKind == ClassKind.INTERFACE -> {
@@ -408,49 +408,49 @@ internal class HandlerPlanProcessor(
     }
 
     /**
-     * The configuration type of this configured event receiver: its type argument that the event is configured by,
+     * The subscription type of this subscribed event receiver: its type argument that the event is subscribed by,
      * when that argument is a Kotlin object or an entry class. Null for a type parameter or any other class, which
-     * publication could not turn into configurations.
+     * publication could not turn into subscriptions.
      */
     context(resolver: Resolver)
-    private fun KSType.configuration(): Configuration? {
+    private fun KSType.subscription(): Subscription? {
         val argument =
             arguments
                 .mapNotNull { it.type?.resolve() }
-                .firstOrNull { isConfiguredBy(it) } ?: return null
+                .firstOrNull { isSubscribedBy(it) } ?: return null
         val declaration = argument.declaration as? KSClassDeclaration ?: return null
         return when {
-            declaration.classKind == ClassKind.OBJECT -> Configuration.Object(declaration)
-            declaration.classKind == ClassKind.CLASS && declaration.implements(Api.Entry) -> Configuration.Entries(declaration)
+            declaration.classKind == ClassKind.OBJECT -> Subscription.Object(declaration)
+            declaration.classKind == ClassKind.CLASS && declaration.implements(Api.Entry) -> Subscription.Entries(declaration)
             else -> null
         }
     }
 
-    /** The configuration type of a configured event handler, as KSP found it. */
-    private sealed interface Configuration {
-        /** The `HandlerConfig` the plan carries. */
+    /** The subscription type of a subscribed event handler, as KSP found it. */
+    private sealed interface Subscription {
+        /** The `HandlerSubscription` the plan carries. */
         fun plan(): CodeBlock
 
         data class Object(
             val instance: KSClassDeclaration,
-        ) : Configuration {
-            override fun plan(): CodeBlock = CodeBlock.of("%T.Object(%T)", Api.HandlerConfig, instance.toClassName())
+        ) : Subscription {
+            override fun plan(): CodeBlock = CodeBlock.of("%T.Object(%T)", Api.HandlerSubscription, instance.toClassName())
         }
 
         data class Entries(
             val entry: KSClassDeclaration,
-        ) : Configuration {
-            override fun plan(): CodeBlock = CodeBlock.of("%T.Entries(%T::class)", Api.HandlerConfig, entry.toClassName())
+        ) : Subscription {
+            override fun plan(): CodeBlock = CodeBlock.of("%T.Entries(%T::class)", Api.HandlerSubscription, entry.toClassName())
         }
     }
 
-    /** Whether this receiver is a `ConfiguredEvent` whose configuration is [type]. */
+    /** Whether this receiver is a `SubscribedEvent` whose subscription is [type]. */
     context(resolver: Resolver)
-    private fun KSType.isConfiguredBy(type: KSType): Boolean {
-        val configured = resolver.getClassDeclarationByName(resolver.getKSNameFromString(Api.ConfiguredEvent.canonicalName)) ?: return false
+    private fun KSType.isSubscribedBy(type: KSType): Boolean {
+        val subscribed = resolver.getClassDeclarationByName(resolver.getKSNameFromString(Api.SubscribedEvent.canonicalName)) ?: return false
         if (declaration !is KSClassDeclaration) return false
         val argument = resolver.getTypeArgument(resolver.createKSTypeReferenceFromKSType(type.makeNotNullable()), Variance.INVARIANT)
-        return configured.asType(listOf(argument)).isAssignableFrom(this)
+        return subscribed.asType(listOf(argument)).isAssignableFrom(this)
     }
 
     /** The entry class of a `Triggered<X>` receiver: X, or X's bound when X is a type parameter. */

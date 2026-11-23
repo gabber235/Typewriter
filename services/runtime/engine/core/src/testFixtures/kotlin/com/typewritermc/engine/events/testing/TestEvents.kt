@@ -15,11 +15,11 @@ import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.engine.pages.SequencePage
 import com.typewritermc.engine.pages.SequenceTriggers
 import com.typewritermc.events.CancelableEvent
-import com.typewritermc.events.ConfiguredEvent
 import com.typewritermc.events.Event
 import com.typewritermc.events.EventReason
 import com.typewritermc.events.EventShape
 import com.typewritermc.events.RecordScope
+import com.typewritermc.events.SubscribedEvent
 import com.typewritermc.events.readField
 import com.typewritermc.formula.Var
 import com.typewritermc.identity.Identity
@@ -56,18 +56,18 @@ data class Knock(
     val session: Session = Session(protagonist(), SessionId("tab")),
 ) : Event
 
-/** A configured test event without a subject: a beat a [TestConfiguredSource] emits for one configuration. */
-data class Beat<C : Any>(
-    override val config: C,
-) : ConfiguredEvent<C>
+/** A subscribed test event without a subject: a beat a [TestSubscribedSource] emits for one subscription. */
+data class Beat<S : Any>(
+    override val subscription: S,
+) : SubscribedEvent<S>
 
-/** A beat configuration written in code: present while a handler on it can run. */
+/** A beat subscription written in code: present while a handler on it can run. */
 data object EveryBeat
 
-/** A second code configuration, so a handler on one object configuration can be told apart from another. */
+/** A second code subscription, so a handler on one object subscription can be told apart from another. */
 data object Downbeat
 
-/** A beat configuration written as content: one configuration per published entry. */
+/** A beat subscription written as content: one subscription per published entry. */
 data class BeatEntry(
     override val name: String,
     val every: Int = 1,

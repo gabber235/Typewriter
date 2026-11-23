@@ -380,10 +380,10 @@ Kotlin entries see plain lists without item ids; the runtime gets the ids from `
 
 A timer is a stored value, so a formula can read when it elapses, through the exports of `stored()` ([formula-language.md](formula-language.md#scope-and-exports)). Time left and next reset read the same way, which keeps what legacy offers as `time.expires` (`TimedFactEntry`, `CronFactEntry`, `CountdownFact`). How a formula names a reaction's timer is for the layer 7 plan.
 
-`Every` is a configured source, like `Tick<Config>` (decided 2026-11-04). Nothing writes to the value when a creator publishes an `Every`, so the source arms its timer. It compares every published `Every` with its timer at startup and after each publish, and writes only differences, so a lost row heals and a schedule edit applies. The core event runtime already recomputes `Demand<Config>` on publish ([events-and-handlers.md](events-and-handlers.md#configured-events)). An extension's own timed reaction can reuse `ReactionTimer` and the handler: a type, a way to arm, and nothing else.
+`Every` is a subscribed source, like `Tick<S>` (decided 2026-11-04). Nothing writes to the value when a creator publishes an `Every`, so the source arms its timer. It compares every published `Every` with its timer at startup and after each publish, and writes only differences, so a lost row heals and a schedule edit applies. The core event runtime already recomputes `Demand<S>` on publish ([events-and-handlers.md](events-and-handlers.md#subscribed-events)). An extension's own timed reaction can reuse `ReactionTimer` and the handler: a type, a way to arm, and nothing else.
 
 ```kotlin
-class EverySource : ConfiguredSource<Elapsed<ReactionTimer<*, *>>, Every<*, *>> {
+class EverySource : SubscribedSource<Elapsed<ReactionTimer<*, *>>, Every<*, *>> {
     override fun open(demand: Demand<Every<*, *>>, sink: Sink<Elapsed<ReactionTimer<*, *>>>) =
         demand.watch { reactions -> // at startup, and after each publish
             reactions.forEach { (place, every) ->
@@ -402,7 +402,7 @@ fun armEvery(place: BoundPath<Every<*, *>>, schedule: Schedule) {
 }
 ```
 
-The `Demand<Config>` API (`watch`, `(place, every)`) and how the event names its configuration are for the layer 7 plan. A midnight between the content switch and the arming is skipped once. `AfterWrite` needs no source: it arms on the next write, and a schedule edit leaves armed timers at their old time.
+The `Demand<S>` API (`watch`, `(place, every)`) and how the event names its subscription are for the layer 7 plan. A midnight between the content switch and the arming is skipped once. `AfterWrite` needs no source: it arms on the next write, and a schedule edit leaves armed timers at their old time.
 
 Each key is its own transaction, so a refusal or conflict affects only that key. The run is not one moment: at many keys, values change a little apart.
 

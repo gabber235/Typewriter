@@ -12,7 +12,7 @@ import com.typewritermc.engine.events.testing.beats
 import com.typewritermc.engine.events.testing.protagonist
 import com.typewritermc.engine.events.testing.published
 import com.typewritermc.events.Candidate
-import com.typewritermc.events.HandlerConfig
+import com.typewritermc.events.HandlerSubscription
 import com.typewritermc.events.HasChat
 import com.typewritermc.events.Param
 import com.typewritermc.identity.Protagonist
@@ -20,21 +20,21 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 
-/** DEMAND-U: which configurations a configured source is opened with, and which handlers an occurrence reaches. */
+/** DEMAND-U: which subscriptions a subscribed source is opened with, and which handlers an occurrence reaches. */
 val DemandTest by testSuite {
-    test("a configured source receives only the configurations whose handler can run") {
+    test("a subscribed source receives only the subscriptions whose handler can run") {
         val beats = beats()
         EventHarness(
             beats,
-            after(Beat::class, config = HandlerConfig.Object(EveryBeat)) { _, _ -> },
-            after(Beat::class, Param.Candidate(GuardEntry::class), config = HandlerConfig.Object(Downbeat)) { _, _ -> },
+            after(Beat::class, subscription = HandlerSubscription.Object(EveryBeat)) { _, _ -> },
+            after(Beat::class, Param.Candidate(GuardEntry::class), subscription = HandlerSubscription.Object(Downbeat)) { _, _ -> },
         )
         beats.demand shouldBe setOf(EveryBeat)
     }
 
-    test("publishing adds and removes entry configurations, and the source closes once none is left") {
+    test("publishing adds and removes entry subscriptions, and the source closes once none is left") {
         val beats = beats()
-        val events = EventHarness(beats, after(Beat::class, config = HandlerConfig.Entries(BeatEntry::class)) { _, _ -> })
+        val events = EventHarness(beats, after(Beat::class, subscription = HandlerSubscription.Entries(BeatEntry::class)) { _, _ -> })
         val slow = BeatEntry("slow", every = 20)
         val fast = BeatEntry("fast", every = 2)
         beats.demand shouldBe null
@@ -50,9 +50,9 @@ val DemandTest by testSuite {
         beats.demand shouldBe null
     }
 
-    test("an object configuration is present while its handler is loaded, whatever is published") {
+    test("an object subscription is present while its handler is loaded, whatever is published") {
         val beats = beats()
-        val events = EventHarness(beats, after(Beat::class, config = HandlerConfig.Object(EveryBeat)) { _, _ -> })
+        val events = EventHarness(beats, after(Beat::class, subscription = HandlerSubscription.Object(EveryBeat)) { _, _ -> })
         beats.demand shouldBe setOf(EveryBeat)
 
         events.publish(published(BeatEntry("unrelated")))
@@ -61,7 +61,7 @@ val DemandTest by testSuite {
         beats.opens shouldBe 1
     }
 
-    test("an occurrence runs only the handlers of its configuration, which receive it and its own entry") {
+    test("an occurrence runs only the handlers of its subscription, which receive it and its own entry") {
         val beats = beats()
         val seen = mutableListOf<String>()
         val slow = BeatEntry("slow", every = 20)
@@ -69,12 +69,12 @@ val DemandTest by testSuite {
         val events =
             EventHarness(
                 beats,
-                after(Beat::class, config = HandlerConfig.Object(EveryBeat)) { _, _ -> seen += "every beat" },
+                after(Beat::class, subscription = HandlerSubscription.Object(EveryBeat)) { _, _ -> seen += "every beat" },
                 after(
                     Beat::class,
-                    Param.Config(BeatEntry::class),
-                    Param.Candidate(BeatEntry::class, ofConfig = true),
-                    config = HandlerConfig.Entries(BeatEntry::class),
+                    Param.Subscription(BeatEntry::class),
+                    Param.Candidate(BeatEntry::class, ofSubscription = true),
+                    subscription = HandlerSubscription.Entries(BeatEntry::class),
                 ) { _, values ->
                     val entry = values[1] as Candidate<*>
                     seen += "${(values[0] as BeatEntry).name} as ${entry.entry.name}"
@@ -98,7 +98,7 @@ val DemandTest by testSuite {
                     Beat::class,
                     Param.Identity(Protagonist::class),
                     Param.Trait(HasChat::class),
-                    config = HandlerConfig.Object(EveryBeat),
+                    subscription = HandlerSubscription.Object(EveryBeat),
                 ) {
                     _,
                     values,
@@ -120,7 +120,7 @@ val DemandTest by testSuite {
             EventHarness(
                 beats,
                 LivePlayers(protagonist("sam"), protagonist("kim")),
-                after(Beat::class, config = HandlerConfig.Object(EveryBeat)) { _, _ -> ran += "beat" },
+                after(Beat::class, subscription = HandlerSubscription.Object(EveryBeat)) { _, _ -> ran += "beat" },
             )
 
         beats.fire(EveryBeat)

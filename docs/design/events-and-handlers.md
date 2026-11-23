@@ -29,7 +29,7 @@ fun PlayerChat.detectGreeting() {
 }
 ```
 
-A handler that emits a narrower event is a filter. Together with configured events this covers filtering without a separate filter concept.
+A handler that emits a narrower event is a filter. Together with subscribed events this covers filtering without a separate filter concept.
 
 ### Order
 
@@ -84,7 +84,7 @@ A verdict handler that throws counts as `pass` and is logged. Packet sources and
 3. The deployment turns each provider row into a Koin single (decided 2026-11-22). The generated provider calls the constructor and asks for each parameter by type, so an extension reaches `PaperEvents` by asking for it and never depends on Koin. A part is offered to others by its supertypes, not by its own class.
 4. The event runtime asks for every `Source` and opens them by demand. The Koin closes with the deployment.
 
-A missing constructor dependency fails at engine start, naming the class and the type, because KSP cannot see what Koin provides. `ConfiguredSource` extends `EnginePart` and others may follow. `RuntimeRegistrar` stays for imperative setup.
+A missing constructor dependency fails at engine start, naming the class and the type, because KSP cannot see what Koin provides. `SubscribedSource` extends `EnginePart` and others may follow. `RuntimeRegistrar` stays for imperative setup.
 
 ### Occurrences and dedupe
 
@@ -92,35 +92,35 @@ One occurrence can reach several sources (packet and Paper event can both decide
 
 The occurrence dedupe key is (connection, kind, client sequence number) when the packet has one, otherwise per connection order. Never timing or same tick guesses.
 
-### Configured events
+### Subscribed events
 
-An event type may take a configuration type parameter: `Tick<Config : TickConfig>`. The source only emits for matching configurations and passes the configuration to the handler as `config`.
+An event type may take a subscription type parameter: `Tick<S : TickSubscription>`. The source only emits for matching subscriptions and passes the subscription to the handler as `subscription`.
 
 ```kotlin
-object EveryTick : TickConfig
+object EveryTick : TickSubscription
 
 @Handler
 fun Tick<EveryTick>.animate(animating: Animating, chat: HasChat, history: ChatHistory) = ...
 ```
 
-A configuration is either a Kotlin object (code), an entry type (content: one configuration per published entry), or a list item type inside an entry (content: one configuration per published item, such as `Every`).
+A subscription is either a Kotlin object (code), an entry type (content: one subscription per published entry), or a list item type inside an entry (content: one subscription per published item, such as `Every`).
 
 How it works:
 
-1. KSP indexes every (event, configuration type) pair used by a handler: the plan's `config` is `HandlerConfig.Object(EveryTick)` or `HandlerConfig.Entries(IntervalEventEntry::class)`. Any other configuration type (a plain class, a type parameter) is rejected at build time. Item types inside an entry are not built yet.
-2. Publication turns each pair into configuration instances: one for an object, one per published entry or item for a content type. These stay live across hot publish.
-3. The source receives only the configurations that currently have a runnable handler, through `ConfiguredSource<E, Config>.open(demand: Demand<Config>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region). `Demand.watch` hands the current set at once and every changed set after it; the source closes once the demand is empty.
-4. An occurrence reaches only the handlers of its configuration. A `Candidate<C>` of the configuration's own entry type is that entry only (`Param.Candidate.ofConfig`), with its book condition.
+1. KSP indexes every (event, subscription type) pair used by a handler: the plan's `subscription` is `HandlerSubscription.Object(EveryTick)` or `HandlerSubscription.Entries(IntervalEventEntry::class)`. Any other subscription type (a plain class, a type parameter) is rejected at build time. Item types inside an entry are not built yet.
+2. Publication turns each pair into subscription instances: one for an object, one per published entry or item for a content type. These stay live across hot publish.
+3. The source receives only the subscriptions that currently have a runnable handler, through `SubscribedSource<E, S>.open(demand: Demand<S>, sink: Sink<E>)`, and indexes them its own way (a timing wheel, a map by region). `Demand.watch` hands the current set at once and every changed set after it; the source closes once the demand is empty.
+4. An occurrence reaches only the handlers of its subscription. A `Candidate<C>` of the subscription's own entry type is that entry only (`Param.Candidate.ofSubscription`), with its book condition.
 
-`Tick<C : TickConfig>` is the first configured event (basic extension, node 4). Its Paper source fires at the start of every server tick whose number is a multiple of a configuration's interval, indexed by interval, so the chains it starts run at the end of the same tick. `IntervalEventEntry` (content, `interval` in ticks) starts its links for every online player its book applies to.
+`Tick<S : TickSubscription>` is the first subscribed event (basic extension, node 4). Its Paper source fires at the start of every server tick whose number is a multiple of a subscription's interval, indexed by interval, so the chains it starts run at the end of the same tick. `IntervalEventEntry` (content, `interval` in ticks) starts its links for every online player its book applies to.
 
-Configurations a source cannot index are not configured events. Use `Candidate<E>` plus an `if` in the handler instead; entries stay pure data.
+Subscriptions a source cannot index are not subscribed events. Use `Candidate<E>` plus an `if` in the handler instead; entries stay pure data.
 
 Appearing and disappearing state (being in a region, being near an NPC) is not an event. It is `Added` and `Removed` of a `Live` value; see [live-data.md](live-data.md).
 
 ## Demand
 
-`Demand<Config>` is the source input for configured events: the configurations that currently have a handler whose other parameters are satisfiable. Demand is computed from handler parameters, so a source never runs work no handler could use. Demand for mirrors (`Demanded<T>`) follows the same rule and is described in [live-data.md](live-data.md).
+`Demand<S>` is the source input for subscribed events: the subscriptions that currently have a handler whose other parameters are satisfiable. Demand is computed from handler parameters, so a source never runs work no handler could use. Demand for mirrors (`Demanded<T>`) follows the same rule and is described in [live-data.md](live-data.md).
 
 ## Handler
 

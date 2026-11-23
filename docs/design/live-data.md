@@ -166,13 +166,13 @@ fun PlayerPosition.inRegion(region: RegionEntry): InRegion? =
 
 The check runs on the worker and reruns only when the position changes. Entering and leaving a region is `Added<InRegion>` and `Removed<InRegion>`; there are no separate enter and exit events.
 
-### Demand for configured sources
+### Demand for subscribed sources
 
-Configured events (`Tick<Config>` and other real events with a configuration, see [events-and-handlers.md](events-and-handlers.md)) use the same demand. A source receives `Demand<Config>`, the configurations that currently have a runnable handler, so only those are active:
+Subscribed events (`Tick<S>` and other real events with a subscription, see [events-and-handlers.md](events-and-handlers.md)) use the same demand. A source receives `Demand<S>`, the subscriptions that currently have a runnable handler, so only those are active:
 
 ```kotlin
-interface ConfiguredSource<E, Config> : EnginePart {
-    fun open(demand: Demand<Config>, sink: Sink<E>): AutoCloseable
+interface SubscribedSource<E, S> : EnginePart {
+    fun open(demand: Demand<S>, sink: Sink<E>): AutoCloseable
 }
 ```
 
@@ -478,7 +478,7 @@ Not on streams: stored data and `Due` (transactions, exactly once, realm owned) 
 Content is a tracked input. Publishing new content reruns whatever read it; there is no `Republished` event.
 
 - Step data the protagonist sees is a derive over the `Running` row plus the entry. The row stores only moments (`startedAt`), so text is live and a publish updates it in place.
-- Configured event configurations and `Candidate<E>` entries are live across hot publish.
+- Subscribed event subscriptions and `Candidate<E>` entries are live across hot publish.
 - An identity defined by an entry ends when that entry is removed, and with it every value keyed by it.
 
 ```kotlin

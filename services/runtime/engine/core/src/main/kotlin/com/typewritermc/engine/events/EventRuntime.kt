@@ -4,20 +4,20 @@ import com.typewritermc.events.AfterHandler
 import com.typewritermc.events.Candidate
 import com.typewritermc.events.ChainQueueing
 import com.typewritermc.events.Chains
-import com.typewritermc.events.ConfiguredEvent
-import com.typewritermc.events.ConfiguredSource
 import com.typewritermc.events.Context
 import com.typewritermc.events.Demand
 import com.typewritermc.events.Event
 import com.typewritermc.events.EventShape
-import com.typewritermc.events.HandlerConfig
 import com.typewritermc.events.HandlerPlan
+import com.typewritermc.events.HandlerSubscription
 import com.typewritermc.events.LiveResolver
 import com.typewritermc.events.Origin
 import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
 import com.typewritermc.events.ProtagonistLeft
 import com.typewritermc.events.Sink
+import com.typewritermc.events.SubscribedEvent
+import com.typewritermc.events.SubscribedSource
 import com.typewritermc.events.Source
 import com.typewritermc.events.Triggered
 import com.typewritermc.events.TriggeredEvent
@@ -36,7 +36,7 @@ class EventParts(
     val handlers: List<HandlerPlan<*>>,
     val shapes: List<EventShape<*>>,
     val sources: List<Source<*>>,
-    val configured: List<ConfiguredSource<*, *>>,
+    val subscribed: List<SubscribedSource<*, *>>,
     val live: List<LiveResolver<*>>,
 )
 
@@ -52,7 +52,7 @@ class EventParts(
  * own events skip that check through [asHolder].
  *
  * [publish] swaps the content handlers see and opens each source while a handler could run for its events, closing
- * it once none can. A configured source is opened with its demand instead: every configuration a runnable handler on
+ * it once none can. A subscribed source is opened with its demand instead: every subscription a runnable handler on
  * its event uses, recomputed on each publish, and closed once that demand is empty.
  *
  * An event without a subject, such as a tick, turns a handler's required identity parameter into a query: the handler
@@ -69,7 +69,7 @@ class EventRuntime(
     @Volatile
     private var published: PublishedEntries = PublishedEntries.EMPTY
     private val opened = mutableMapOf<Source<*>, AutoCloseable>()
-    private val openedConfigured = mutableMapOf<ConfiguredSource<*, *>, OpenedConfigured>()
+    private val openedSubscribed = mutableMapOf<SubscribedSource<*, *>, OpenedSubscription>()
     private val shapes = parts.shapes.associateBy { it.event }
     private val verdicts = parts.handlers.filterIsInstance<VerdictHandler<*>>()
     private val afters = parts.handlers.filterIsInstance<AfterHandler<*>>()
@@ -84,12 +84,12 @@ class EventRuntime(
             if (wanted && handle == null) opened[source] = source.openWith()
             if (!wanted && handle != null) opened.remove(source)?.close()
         }
-        parts.configured.forEach { source ->
+        parts.subscribed.forEach { source ->
             val demand = demandOf(source, content)
-            val open = openedConfigured[source]
+            val open = openedSubscribed[source]
             when {
-                demand.isEmpty() -> openedConfigured.remove(source)?.handle?.close()
-                open == null -> openedConfigured[source] = source.openWith(demand)
+                demand.isEmpty() -> openedSubscribed.remove(source)?.handle?.close()
+                open == null -> openedSubscribed[source] = source.openWith(demand)
                 else -> open.demand.update(demand)
             }
         }
@@ -99,40 +99,40 @@ class EventRuntime(
     override fun close() {
         opened.values.forEach { it.close() }
         opened.clear()
-        openedConfigured.values.forEach { it.handle.close() }
-        openedConfigured.clear()
+        openedSubscribed.values.forEach { it.handle.close() }
+        openedSubscribed.clear()
     }
 
-    private class OpenedConfigured(
+    private class OpenedSubscription(
         val demand: PublishedDemand<Any>,
         val handle: AutoCloseable,
     )
 
     /**
-     * The configurations of [source] a runnable handler uses under [content]: a handler's object configuration, or
-     * every published entry of its entry configuration type, for each handler on the source's event whose configuration
+     * The subscriptions of [source] a runnable handler uses under [content]: a handler's object subscription, or
+     * every published entry of its entry subscription type, for each handler on the source's event whose subscription
      * type the source is opened with.
      */
     private fun demandOf(
-        source: ConfiguredSource<*, *>,
+        source: SubscribedSource<*, *>,
         content: PublishedEntries,
     ): Set<Any> =
         parts.handlers
             .filter { plan ->
-                val config = plan.config ?: return@filter false
-                source.config.java.isAssignableFrom(config.type.java) && plan.couldRun(source.event, content)
+                val subscription = plan.subscription ?: return@filter false
+                source.subscription.java.isAssignableFrom(subscription.type.java) && plan.couldRun(source.event, content)
             }.flatMapTo(linkedSetOf()) { plan ->
-                when (val config = checkNotNull(plan.config)) {
-                    is HandlerConfig.Object -> listOf(config.instance)
-                    is HandlerConfig.Entries -> content.entries(config.type).map { it.entry }
+                when (val subscription = checkNotNull(plan.subscription)) {
+                    is HandlerSubscription.Object -> listOf(subscription.instance)
+                    is HandlerSubscription.Entries -> content.entries(subscription.type).map { it.entry }
                 }
             }
 
-    /** Opens this source with [configurations] as its demand; the runtime updates the demand on each publish. */
-    private fun <E : Event, C : Any> ConfiguredSource<E, C>.openWith(configurations: Set<Any>): OpenedConfigured {
-        val demand = PublishedDemand(configurations)
+    /** Opens this source with [subscriptions] as its demand; the runtime updates the demand on each publish. */
+    private fun <E : Event, S : Any> SubscribedSource<E, S>.openWith(subscriptions: Set<Any>): OpenedSubscription {
+        val demand = PublishedDemand(subscriptions)
         @Suppress("UNCHECKED_CAST")
-        return OpenedConfigured(demand, open(demand as Demand<C>, sink()))
+        return OpenedSubscription(demand, open(demand as Demand<S>, sink()))
     }
 
     /**
@@ -311,7 +311,7 @@ class EventRuntime(
         return parts.live.flatMap { it.present() }.filter { param.type.isInstance(it) }
     }
 
-    /** The published entries [param] offers for [subject]: of the event's class or configuration when it asks for one. */
+    /** The published entries [param] offers for [subject]: of the event's class or subscription when it asks for one. */
     private fun candidates(
         param: Param.Candidate,
         event: Event,
@@ -320,10 +320,10 @@ class EventRuntime(
         content: PublishedEntries,
     ): List<Candidate<*>> {
         val about = if (param.ofEvent) event::class else null
-        val config = if (param.ofConfig) (event as? ConfiguredEvent<*>)?.config else null
+        val subscription = if (param.ofSubscription) (event as? SubscribedEvent<*>)?.subscription else null
         return content
             .entries(param.entry, about)
-            .filter { (!param.ofConfig || it.entry == config) && it.appliesTo(subject) }
+            .filter { (!param.ofSubscription || it.entry == subscription) && it.appliesTo(subject) }
             .map { Candidate(it.entry, it.priority, subject, context, content.reader) }
     }
 
@@ -388,8 +388,8 @@ class EventRuntime(
                 outcome
             }
 
-            is Param.Config -> {
-                (event as? ConfiguredEvent<*>)?.config?.takeIf { param.type.isInstance(it) }
+            is Param.Subscription -> {
+                (event as? SubscribedEvent<*>)?.subscription?.takeIf { param.type.isInstance(it) }
             }
 
             is Param.Candidate -> {
@@ -399,8 +399,8 @@ class EventRuntime(
 
     private fun HandlerPlan<*>.accepts(event: Event): Boolean {
         if (!this.event.isInstance(event)) return false
-        val config = config
-        if (config != null && !config.type.isInstance((event as? ConfiguredEvent<*>)?.config)) return false
+        val subscription = subscription
+        if (subscription != null && !subscription.type.isInstance((event as? SubscribedEvent<*>)?.subscription)) return false
         val entry = entry ?: return true
         return event is TriggeredEvent<*> && entry.isInstance(event.entry)
     }

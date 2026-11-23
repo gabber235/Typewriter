@@ -1,8 +1,8 @@
 package com.typewritermc.extensions.basic.events
 
 import com.typewritermc.events.CancelableEvent
-import com.typewritermc.events.ConfiguredEvent
 import com.typewritermc.events.Event
+import com.typewritermc.events.SubscribedEvent
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.types.TypewriterType
 
@@ -33,7 +33,7 @@ data class BlockBreak(
 ) : CancelableEvent
 
 /**
- * One server tick, emitted for [config] each time its interval comes round. A tick has no subject, so a handler asking
+ * One server tick, emitted for [subscription] each time its interval comes round. A tick has no subject, so a handler asking
  * for a protagonist runs once per player online on this server; it takes only after handlers.
  *
  * ```kotlin
@@ -41,21 +41,21 @@ data class BlockBreak(
  * fun Tick<EveryTick>.animate(protagonist: Protagonist, chat: HasChat) = ...
  * ```
  */
-data class Tick<C : TickConfig>(
-    override val config: C,
-) : ConfiguredEvent<C>
+data class Tick<S : TickSubscription>(
+    override val subscription: S,
+) : SubscribedEvent<S>
 
 /**
- * A configuration of [Tick]: a Kotlin object for a handler written in code, or an entry type for content (one
- * configuration per published entry). The Paper source indexes configurations by [interval].
+ * A subscription of [Tick]: a Kotlin object for a handler written in code, or an entry type for content (one
+ * subscription per published entry). The Paper source indexes subscriptions by [interval].
  */
-interface TickConfig {
-    /** How many server ticks lie between two ticks of this configuration; below 1 counts as 1. */
+interface TickSubscription {
+    /** How many server ticks lie between two ticks of this subscription; below 1 counts as 1. */
     val interval: Int
 }
 
 /** Every server tick. */
-data object EveryTick : TickConfig {
+data object EveryTick : TickSubscription {
     override val interval: Int = 1
 }
 

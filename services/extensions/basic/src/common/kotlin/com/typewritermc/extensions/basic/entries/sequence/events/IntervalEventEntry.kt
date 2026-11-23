@@ -9,7 +9,7 @@ import com.typewritermc.engine.pages.SequenceTriggers
 import com.typewritermc.events.Candidate
 import com.typewritermc.events.Handler
 import com.typewritermc.extensions.basic.events.Tick
-import com.typewritermc.extensions.basic.events.TickConfig
+import com.typewritermc.extensions.basic.events.TickSubscription
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.library.PageElements
 import com.typewritermc.types.Color
@@ -19,7 +19,7 @@ import com.typewritermc.types.TypewriterType
 
 /**
  * Starts its links for every online player its book applies to, once every [interval] server ticks. Each published
- * entry is one [Tick] configuration, so the Paper source only counts the intervals that content uses.
+ * entry is one [Tick] subscription, so the Paper source only counts the intervals that content uses.
  */
 @TypewriterType(id = INTERVAL_EVENT_ENTRY_TYPE_ID)
 @TypewriterDisplay(
@@ -35,7 +35,7 @@ data class IntervalEventEntry(
     override val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>> = emptySet(),
     override val interval: Int = 20,
 ) : Triggerable,
-    TickConfig
+    TickSubscription
 
 /**
  * Starts the entry's chain for each online player once its interval comes round. A tick has no subject, so the

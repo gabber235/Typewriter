@@ -3,9 +3,9 @@ package fixture
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.elements.Entry
 import com.typewritermc.events.Candidate
-import com.typewritermc.events.ConfiguredEvent
 import com.typewritermc.events.Event
 import com.typewritermc.events.Handler
+import com.typewritermc.events.SubscribedEvent
 import com.typewritermc.events.Triggered
 import com.typewritermc.events.Verdict
 import com.typewritermc.events.pass
@@ -26,19 +26,19 @@ class Poked : Event
 
 @Handler
 fun Poked.count(
-    times: Int, // error: A handler parameter must be a Candidate, Origin, Outcome, identity, configuration or trait interface.
+    times: Int, // error: A handler parameter must be a Candidate, Origin, Outcome, identity, subscription or trait interface.
 ) {
 }
 
-data class Ticked<C : Any>(
-    override val config: C,
-) : ConfiguredEvent<C>
+data class Ticked<S : Any>(
+    override val subscription: S,
+) : SubscribedEvent<S>
 
 class Loose
 
-@Handler fun Ticked<Loose>.loose() {} // error: A configured event's configuration must be a Kotlin object or an entry type.
+@Handler fun Ticked<Loose>.loose() {} // error: A subscribed event's subscription must be a Kotlin object or an entry type.
 
-@Handler fun <C : Any> Ticked<C>.anyConfig() {} // error: A configured event's configuration must be a Kotlin object or an entry type.
+@Handler fun <S : Any> Ticked<S>.anySubscription() {} // error: A subscribed event's subscription must be a Kotlin object or an entry type.
 
 @TypewriterType(id = "a0000000000000000000000000000951")
 class NoteEntry(

@@ -48,14 +48,14 @@ sealed interface Param {
 
     /**
      * One run per published entry of [entry] that applies to the subject. With [ofEvent], the entry's type argument is
-     * the event, so `Candidate<CancelableEventEntry<E>>` only finds entries about the occurring event. With [ofConfig],
-     * the entry is the configured event's configuration type, so `Candidate<IntervalEventEntry>` on
+     * the event, so `Candidate<CancelableEventEntry<E>>` only finds entries about the occurring event. With [ofSubscription],
+     * the entry is the subscribed event's subscription type, so `Candidate<IntervalEventEntry>` on
      * `Tick<IntervalEventEntry>` only finds the entry the occurrence was emitted for.
      */
     data class Candidate(
         val entry: KClass<out Entry>,
         val ofEvent: Boolean = false,
-        val ofConfig: Boolean = false,
+        val ofSubscription: Boolean = false,
         override val optional: Boolean = false,
     ) : Param
 
@@ -79,8 +79,8 @@ sealed interface Param {
         override val optional: Boolean = false
     }
 
-    /** The configuration a configured event was opened for, such as a tick's interval. */
-    data class Config(
+    /** The subscription a subscribed event was opened for, such as a tick's interval. */
+    data class Subscription(
         val type: KClass<*>,
         override val optional: Boolean = false,
     ) : Param
@@ -100,31 +100,31 @@ sealed interface HandlerPlan<E : Event> : EnginePart {
     val params: List<Param>
 
     /**
-     * The configuration type of a configured event receiver (`Tick<EveryTick>` names [HandlerConfig.Object] of
-     * `EveryTick`), or null for any other event. KSP writes it, so the runtime knows every (event, configuration type)
-     * pair a handler uses without reflection; the handler only runs for occurrences of that configuration.
+     * The subscription type of a subscribed event receiver (`Tick<EveryTick>` names [HandlerSubscription.Object] of
+     * `EveryTick`), or null for any other event. KSP writes it, so the runtime knows every (event, subscription type)
+     * pair a handler uses without reflection; the handler only runs for occurrences of that subscription.
      */
-    val config: HandlerConfig? get() = null
+    val subscription: HandlerSubscription? get() = null
 }
 
 /**
- * The configuration type a handler on a configured event uses, and how publication turns it into configurations: one
+ * The subscription type a handler on a subscribed event uses, and how publication turns it into subscriptions: one
  * for a Kotlin object, one per published entry for an entry type.
  */
-sealed interface HandlerConfig {
+sealed interface HandlerSubscription {
     val type: KClass<*>
 
-    /** A Kotlin object configuration: [instance] is its only configuration, present while its handler can run. */
+    /** A Kotlin object subscription: [instance] is its only subscription, present while its handler can run. */
     data class Object(
         val instance: Any,
-    ) : HandlerConfig {
+    ) : HandlerSubscription {
         override val type: KClass<*> get() = instance::class
     }
 
-    /** An entry configuration type: every published entry of [type] is one configuration. */
+    /** An entry subscription type: every published entry of [type] is one subscription. */
     data class Entries(
         override val type: KClass<out Entry>,
-    ) : HandlerConfig
+    ) : HandlerSubscription
 }
 
 /** A decision handler: pure, inline, never suspends. A handler that throws counts as [pass] and is logged. */

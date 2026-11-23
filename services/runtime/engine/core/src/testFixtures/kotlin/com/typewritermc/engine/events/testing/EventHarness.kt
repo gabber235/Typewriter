@@ -17,15 +17,14 @@ import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.engine.pages.SequenceTriggers
 import com.typewritermc.events.AfterHandler
 import com.typewritermc.events.CancelableEvent
-import com.typewritermc.events.ConfiguredSource
 import com.typewritermc.events.Context
 import com.typewritermc.events.Demand
 import com.typewritermc.events.EnginePart
 import com.typewritermc.events.EnginePartDependencies
 import com.typewritermc.events.EnginePartProvider
 import com.typewritermc.events.Event
-import com.typewritermc.events.HandlerConfig
 import com.typewritermc.events.HandlerPlan
+import com.typewritermc.events.HandlerSubscription
 import com.typewritermc.events.HasChat
 import com.typewritermc.events.LiveResolver
 import com.typewritermc.events.Origin
@@ -33,6 +32,7 @@ import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
 import com.typewritermc.events.Sink
 import com.typewritermc.events.Source
+import com.typewritermc.events.SubscribedSource
 import com.typewritermc.events.Triggered
 import com.typewritermc.events.TriggeredEvent
 import com.typewritermc.events.Verdict
@@ -64,7 +64,7 @@ class EventHarness(
                 handlers = parts.filterIsInstance<HandlerPlan<*>>(),
                 shapes = testShapes,
                 sources = parts.filterIsInstance<Source<*>>(),
-                configured = parts.filterIsInstance<ConfiguredSource<*, *>>(),
+                subscribed = parts.filterIsInstance<SubscribedSource<*, *>>(),
                 live = parts.filterIsInstance<LiveResolver<*>>(),
             ),
             queue,
@@ -111,18 +111,18 @@ fun step(
 
 /**
  * A verdict handler on [event] with [params]; a handler on a triggered step takes `TriggeredEvent` and asks for the step
- * with a first `Param.Triggered`, and for a configured event, [config] is the configuration type of its receiver.
+ * with a first `Param.Triggered`, and for a subscribed event, [subscription] is the subscription type of its receiver.
  */
 fun <E : Event> verdict(
     event: KClass<E>,
     vararg params: Param,
-    config: HandlerConfig? = null,
+    subscription: HandlerSubscription? = null,
     run: (E, List<Any?>) -> Verdict,
 ): VerdictHandler<E> =
     object : VerdictHandler<E> {
         override val event = event
         override val params = params.toList()
-        override val config = config
+        override val subscription = subscription
 
         override fun run(
             event: E,
@@ -132,18 +132,18 @@ fun <E : Event> verdict(
 
 /**
  * An after handler on [event] with [params]; a handler on a triggered step takes `TriggeredEvent` and asks for the step
- * with a first `Param.Triggered`, and for a configured event, [config] is the configuration type of its receiver.
+ * with a first `Param.Triggered`, and for a subscribed event, [subscription] is the subscription type of its receiver.
  */
 fun <E : Event> after(
     event: KClass<E>,
     vararg params: Param,
-    config: HandlerConfig? = null,
+    subscription: HandlerSubscription? = null,
     run: suspend (E, List<Any?>) -> Unit,
 ): AfterHandler<E> =
     object : AfterHandler<E> {
         override val event = event
         override val params = params.toList()
-        override val config = config
+        override val subscription = subscription
 
         override suspend fun run(
             event: E,
@@ -195,22 +195,22 @@ class TestSource<E : Event>(
 }
 
 /**
- * A configured source the test fires by hand: [demand] is the configuration set it was last told, or null while the
- * runtime keeps it closed; [fire] emits [make] of a configuration and returns the applied outcome, or null while closed.
+ * A subscribed source the test fires by hand: [demand] is the subscription set it was last told, or null while the
+ * runtime keeps it closed; [fire] emits [make] of a subscription and returns the applied outcome, or null while closed.
  */
-class TestConfiguredSource<E : Event, C : Any>(
+class TestSubscribedSource<E : Event, S : Any>(
     override val event: KClass<E>,
-    override val config: KClass<C>,
-    private val make: (C) -> E,
-) : ConfiguredSource<E, C> {
+    override val subscription: KClass<S>,
+    private val make: (S) -> E,
+) : SubscribedSource<E, S> {
     private var sink: Sink<E>? = null
-    var demand: Set<C>? = null
+    var demand: Set<S>? = null
         private set
     var opens: Int = 0
         private set
 
     override fun open(
-        demand: Demand<C>,
+        demand: Demand<S>,
         sink: Sink<E>,
     ): AutoCloseable {
         opens++
@@ -223,15 +223,15 @@ class TestConfiguredSource<E : Event, C : Any>(
         }
     }
 
-    fun fire(config: C): Outcome<E>? {
+    fun fire(subscription: S): Outcome<E>? {
         var applied: Outcome<E>? = null
-        sink?.decide(make(config), null) { applied = it }
+        sink?.decide(make(subscription), null) { applied = it }
         return applied
     }
 }
 
-/** The beat source of the test events: it emits a [Beat] for any configuration. */
-fun beats(): TestConfiguredSource<Beat<*>, Any> = TestConfiguredSource(Beat::class, Any::class) { Beat(it) }
+/** The beat source of the test events: it emits a [Beat] for any subscription. */
+fun beats(): TestSubscribedSource<Beat<*>, Any> = TestSubscribedSource(Beat::class, Any::class) { Beat(it) }
 
 /** The protagonists live on this test engine, each with a chat that keeps what it was sent. */
 class LivePlayers(

@@ -12,17 +12,17 @@ import com.typewritermc.elements.Entry
 import com.typewritermc.events.AfterHandler
 import com.typewritermc.events.CancelableEvent
 import com.typewritermc.events.Candidate
-import com.typewritermc.events.ConfiguredEvent
 import com.typewritermc.events.Context
 import com.typewritermc.events.EntryReader
 import com.typewritermc.events.EntryScope
 import com.typewritermc.events.EnginePartDependencies
 import com.typewritermc.events.Event
 import com.typewritermc.events.Handler
-import com.typewritermc.events.HandlerConfig
+import com.typewritermc.events.HandlerSubscription
 import com.typewritermc.events.Origin
 import com.typewritermc.events.Outcome
 import com.typewritermc.events.Param
+import com.typewritermc.events.SubscribedEvent
 import com.typewritermc.events.Triggered
 import com.typewritermc.events.TriggeredEvent
 import com.typewritermc.events.Verdict
@@ -99,9 +99,9 @@ data class Choice(
 
 object EveryTick
 
-data class Tick<C : Any>(
-    override val config: C,
-) : ConfiguredEvent<C>
+data class Tick<S : Any>(
+    override val subscription: S,
+) : SubscribedEvent<S>
 
 /** A live capability a handler may ask for. */
 interface Shouts {
@@ -125,12 +125,12 @@ fun Triggered<VaultEntry>.greet(
 
 @Handler
 suspend fun Tick<EveryTick>.animate(
-    config: EveryTick,
+    subscription: EveryTick,
     guard: Candidate<GuardEntry<Smashed>>?,
 ) {
 }
 
-// An entry configuration: one configuration per published vault, and the candidate is the vault the tick is for.
+// An entry subscription: one subscription per published vault, and the candidate is the vault the tick is for.
 @Handler
 suspend fun Tick<VaultEntry>.ring(vault: Candidate<VaultEntry>) {
 }
@@ -273,20 +273,21 @@ fun main(args: Array<String>) {
         runSuspending { greet.run(event, listOf(triggered, shouts, steve, null, Outcome.Allowed(event))) }
         check(shouted == listOf("welcome welcome steve warm stay/leave ten")) { shouted.toString() }
 
-        // A configured event hands its configuration to the handler.
+        // A subscribed event hands its subscription to the handler.
         val animate = parts.getValue("Tick_animateHandler").create(noDependencies) as AfterHandler<*>
         check(animate.event == Tick::class) { animate.event.toString() }
         check(
-            animate.params == listOf(Param.Config(EveryTick::class), Param.Candidate(GuardEntry::class, ofEvent = false, optional = true)),
+            animate.params ==
+                listOf(Param.Subscription(EveryTick::class), Param.Candidate(GuardEntry::class, ofEvent = false, optional = true)),
         ) { animate.params.toString() }
-        check(animate.config == HandlerConfig.Object(EveryTick)) { animate.config.toString() }
+        check(animate.subscription == HandlerSubscription.Object(EveryTick)) { animate.subscription.toString() }
 
-        // An entry configuration names its entry type, and a candidate of that type is the configuration's own entry.
+        // An entry subscription names its entry type, and a candidate of that type is the subscription's own entry.
         val ring = parts.getValue("Tick_ringHandler").create(noDependencies) as AfterHandler<*>
-        check(ring.config == HandlerConfig.Entries(VaultEntry::class)) { ring.config.toString() }
-        check(ring.params == listOf(Param.Candidate(VaultEntry::class, ofConfig = true))) { ring.params.toString() }
+        check(ring.subscription == HandlerSubscription.Entries(VaultEntry::class)) { ring.subscription.toString() }
+        check(ring.params == listOf(Param.Candidate(VaultEntry::class, ofSubscription = true))) { ring.params.toString() }
 
-        // A handler on an event that is not configured has no configuration.
-        check(greet.config == null) { greet.config.toString() }
+        // A handler on an event that is not subscribed has no subscription.
+        check(greet.subscription == null) { greet.subscription.toString() }
     }
 }

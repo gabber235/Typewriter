@@ -28,40 +28,40 @@ interface Sink<E : Event> {
 }
 
 /**
- * A source of configured events: it is opened with the configurations that currently have a runnable handler, and
+ * A source of subscribed events: it is opened with the subscriptions that currently have a runnable handler, and
  * indexes them its own way (a timing wheel, a map by region). The demand changes as content is published; the runtime
- * opens the source while the demand holds a configuration and closes it once the demand is empty.
+ * opens the source while the demand holds a subscription and closes it once the demand is empty.
  */
-interface ConfiguredSource<E : Event, C : Any> : EnginePart {
+interface SubscribedSource<E : Event, S : Any> : EnginePart {
     /** The event class it produces. */
     val event: kotlin.reflect.KClass<E>
 
-    /** The configuration class it is opened with. */
-    val config: kotlin.reflect.KClass<C>
+    /** The subscription class it is opened with. */
+    val subscription: kotlin.reflect.KClass<S>
 
     fun open(
-        demand: Demand<C>,
+        demand: Demand<S>,
         sink: Sink<E>,
     ): AutoCloseable
 }
 
 /**
- * The configurations of a configured event that currently have a runnable handler, watched as they change: a Kotlin
- * object configuration while its handler can run, and each published entry of an entry configuration type.
+ * The subscriptions of a subscribed event that currently have a runnable handler, watched as they change: a Kotlin
+ * object subscription while its handler can run, and each published entry of an entry subscription type.
  */
-interface Demand<C : Any> {
-    val current: Set<C>
+interface Demand<S : Any> {
+    val current: Set<S>
 
     /**
      * Calls [changed] with the current set at once and with every new set after it, until the returned handle is
      * closed, so a source adds and removes its own indexes as content is published.
      */
-    fun watch(changed: (Set<C>) -> Unit): AutoCloseable
+    fun watch(changed: (Set<S>) -> Unit): AutoCloseable
 }
 
-/** An event of a configured source: [config] is the configuration it was emitted for. */
-interface ConfiguredEvent<C : Any> : Event {
-    val config: C
+/** An event of a subscribed source: [subscription] is the subscription it was emitted for. */
+interface SubscribedEvent<S : Any> : Event {
+    val subscription: S
 }
 
 /**
