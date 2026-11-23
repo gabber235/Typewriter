@@ -61,7 +61,9 @@ void main() {
       await panel.press("New Element");
       await panel.press("Simple Message Action Entry");
       await panel.submit("name", "Greeting $run");
-      await panel.submit("message", "Welcome");
+      // The message is a formula field shown as its plain value until the
+      // formula field editor exists.
+      await panel.submit("value", "Welcome");
       await panel.submit("X coordinate", "2");
       await panel.restart();
       await panel.open("Acme", "Realm");
