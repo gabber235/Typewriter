@@ -296,10 +296,21 @@ pub const RUN_EVIDENCE: [&str; 4] = [ATTEMPTS, "failures", "screenshots", LOGS];
 /// per run.
 pub const LOGS: &str = "logs";
 
-/// The log the game pool writes in a run's logs folder. Only the framework's own code writes it
-/// (attempts, boots, lost clients, never Paper's or a client's output), so it is the one log
-/// `cargo xtask evidence stage` makes public, for a run that did not pass.
+/// The log the game pool writes in a run's logs folder: the framework's own lines (attempts, boots,
+/// lost clients), never Paper's or a client's output.
 pub const POOL_LOG: &str = "pool.log";
+
+/// Whether `name`, a file in a run's logs folder, is a log `cargo xtask evidence stage` makes public
+/// for a run that did not pass: the pool's own ([`POOL_LOG`]) and each Paper's, with the engine's
+/// lines in it (`paper.log` for the shared Paper, `paper-a<n>.log` for a restart attempt's own, as
+/// services/playtest/pool Game.kt names them). The clients' and displays' logs stay on the machine.
+pub fn public_log(name: &str) -> bool {
+    name == POOL_LOG
+        || name
+            .strip_prefix("paper")
+            .and_then(|rest| rest.strip_suffix(".log"))
+            .is_some_and(|attempt| attempt.is_empty() || attempt.starts_with("-a"))
+}
 
 /// Every `TestRun` under `dir`, at any depth, with the path it was read from, skipping run
 /// evidence folders.

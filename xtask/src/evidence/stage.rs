@@ -3,9 +3,10 @@
 //! and every publish reads only what this writes to [`PUBLIC`]: each `TestRun` with only its
 //! published artifacts ([`ArtifactKind::published`]: clips, and screenshots and golden candidates
 //! of failed attempts, since a clip shows a passing one better and a passing golden needs no
-//! approval), their files with a clip's preview, the pool log of a game run that did not pass
-//! ([`results::POOL_LOG`]), the coverage files, and the widgetbook story images below [`STORIES`]. Nothing
-//! is written while any public text holds a known secret or any run lists a file missing on disk.
+//! approval), their files with a clip's preview, the pool and Paper logs of a game run that did not
+//! pass, its demos included ([`results::public_log`]), the coverage files, and the widgetbook story
+//! images below [`STORIES`]. Nothing is written while any public text holds a known secret or any
+//! run lists a file missing on disk.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -86,13 +87,16 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
         for file in published_files(folder, &run) {
             files.push((folder.join(&file), below.join(&file).display().to_string()));
         }
-        // A run that did not pass shows where it stopped through its pool log.
-        let pool_log = Path::new(&run.logs).join(results::POOL_LOG);
-        if !run.logs.is_empty() && !passed(&run) && folder.join(&pool_log).exists() {
-            files.push((
-                folder.join(&pool_log),
-                below.join(&pool_log).display().to_string(),
-            ));
+        // A run that did not pass shows where it stopped through its pool and Paper logs.
+        if !run.logs.is_empty() && !passed(&run) {
+            let logs = Path::new(&run.logs);
+            for entry in fs::read_dir(folder.join(logs)).into_iter().flatten() {
+                let name = entry?.file_name();
+                if name.to_str().is_some_and(results::public_log) {
+                    let log = logs.join(&name);
+                    files.push((folder.join(&log), below.join(&log).display().to_string()));
+                }
+            }
         }
         runs.push((at, run));
     }
@@ -141,13 +145,13 @@ pub(super) fn published_files(folder: &Path, run: &TestRun) -> Vec<PathBuf> {
     files
 }
 
-/// Whether `run` ran to its end and every attempt of every case passed.
+/// Whether `run` ran to its end and every attempt and every demo of every case passed.
 fn passed(run: &TestRun) -> bool {
     results::run_trouble(run).is_none()
         && run
             .cases
             .iter()
-            .flat_map(|case| &case.attempts)
+            .flat_map(|case| case.attempts.iter().chain(&case.demo))
             .all(|attempt| attempt.outcome == Outcome::Passed)
 }
 
@@ -323,12 +327,25 @@ mod tests {
         assert_eq!(files_below(&root.path(PUBLIC)), ["game/test_run.json"]);
     }
 
-    #[test]
-    fn a_game_run_that_could_not_run_publishes_its_pool_log_but_no_paper_or_client_log() {
-        let root = TempRoot::new();
-        for file in ["pool.log", "paper.log", "client-gv-1.log"] {
+    /// Writes every log the game pool can leave in `results/game/logs/1`: its own, the shared
+    /// Paper's, a restart attempt's own Paper's, a client's, a lost client's and a display's.
+    fn write_game_logs(root: &TempRoot) {
+        for file in [
+            "pool.log",
+            "paper.log",
+            "paper-a2.log",
+            "client-gv-1.log",
+            "client-gv-1-lost-1.log",
+            "display-gv-1.log",
+        ] {
             root.write(&format!("results/game/logs/1/{file}"), "log");
         }
+    }
+
+    #[test]
+    fn a_game_run_that_could_not_run_publishes_its_pool_and_paper_logs_but_no_client_log() {
+        let root = TempRoot::new();
+        write_game_logs(&root);
         let mut run = run_of("PROBE-1", vec![]);
         run.logs = "logs/1".to_owned();
         run.end = results::RunEnd::CouldNotRun("the game was not ready within 300 s".to_owned());
@@ -338,14 +355,62 @@ mod tests {
 
         assert_eq!(
             files_below(&root.path(PUBLIC)),
-            ["game/logs/1/pool.log", "game/test_run.json"]
+            [
+                "game/logs/1/paper-a2.log",
+                "game/logs/1/paper.log",
+                "game/logs/1/pool.log",
+                "game/test_run.json",
+            ]
         );
     }
 
     #[test]
-    fn a_game_run_whose_cases_all_passed_keeps_its_pool_log_on_the_machine() {
+    fn a_game_run_whose_attempts_passed_but_whose_demo_failed_publishes_its_pool_and_paper_logs() {
+        let root = TempRoot::new();
+        write_game_logs(&root);
+        let mut run = run_of("PROBE-1", vec![crate::test_support::passed_attempt((0, 1))]);
+        run.cases[0].demo = Some(failed_attempt((2, 3), &[]));
+        run.logs = "logs/1".to_owned();
+        results::write(&run, &root.path("results/game/test_run.json")).unwrap();
+
+        staged(&root.path(""), Path::new("results"), &[]).unwrap();
+
+        assert_eq!(
+            files_below(&root.path(PUBLIC)),
+            [
+                "game/logs/1/paper-a2.log",
+                "game/logs/1/paper.log",
+                "game/logs/1/pool.log",
+                "game/test_run.json",
+            ]
+        );
+    }
+
+    #[test]
+    fn a_game_run_whose_paper_log_holds_a_known_secret_is_not_staged() {
         let root = TempRoot::new();
         root.write("results/game/logs/1/pool.log", "log");
+        root.write(
+            "results/game/logs/1/paper.log",
+            &format!("[Server thread/INFO]: token {SECRET}"),
+        );
+        let mut run = run_of("PROBE-1", vec![failed_attempt((0, 1), &[])]);
+        run.logs = "logs/1".to_owned();
+        results::write(&run, &root.path("results/game/test_run.json")).unwrap();
+
+        let error = staged(&root.path(""), Path::new("results"), &[SECRET.to_owned()]).unwrap_err();
+
+        assert!(
+            error.to_string().contains("paper.log contains a secret"),
+            "{error}"
+        );
+        assert!(!root.path(PUBLIC).exists());
+    }
+
+    #[test]
+    fn a_game_run_whose_cases_all_passed_keeps_its_logs_on_the_machine() {
+        let root = TempRoot::new();
+        write_game_logs(&root);
         let mut run = run_of("PROBE-1", vec![crate::test_support::passed_attempt((0, 1))]);
         run.logs = "logs/1".to_owned();
         results::write(&run, &root.path("results/game/test_run.json")).unwrap();
