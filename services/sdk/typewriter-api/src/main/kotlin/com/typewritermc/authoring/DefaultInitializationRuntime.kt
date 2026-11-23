@@ -56,16 +56,15 @@ import skirout.editor.v1.type_catalog.ValuePath
 import java.math.BigInteger
 
 /**
- * Prepares editable values from catalog schemas, supplied content, and generated Kotlin constructor defaults.
+ * Prepares editable values from catalog schemas and supplied content.
  *
- * Ordinary defaults fill values that have no omitted constructor default. Omitted defaults are sampled only when
- * their constructor inputs are complete; otherwise their paths remain deferred in a caller owned continuation.
- * Resumption validates that continuation against this catalog before accepting answers and retrying deferred work.
- * Constructor sampling can execute user code. The runtime keeps no preparation session between calls.
+ * A field with a Kotlin constructor default that nobody supplied stays unset: it is not stored, and reading it gives
+ * what its constructor gives. Ordinary defaults fill every other field. Fields that need an answer are required inputs
+ * of a caller owned continuation, which resumption validates against this catalog before accepting answers. The runtime
+ * keeps no preparation session between calls and runs no constructor.
  */
 class DefaultInitializationRuntime(
     private val catalog: CheckedCatalog,
-    private val bindings: NativeBindingRegistry,
 ) : InitializationRuntime {
     override suspend fun prepare(request: ValuePreparationRequest): PreparedValue = prepareNow(request)
 
@@ -90,7 +89,7 @@ class DefaultInitializationRuntime(
                     value = (value.writeField(answer.path, answer.value) as ValueReplacement.Replaced).value
                 }
                 request = ValuePreparationRequest(catalog = draft.catalog, target = draft.target, suppliedValue = value)
-                context = DefaultInitializationContext(draft.pendingDefaults.toSet(), resuming = true)
+                context = DefaultInitializationContext(resuming = true)
             }
 
             else -> {
@@ -98,13 +97,12 @@ class DefaultInitializationRuntime(
             }
         }
         val prepared = evaluate(request, context)
-        val requirements = requiredInputs(request.target, prepared.content, context.deferred)
+        val requirements = requiredInputs(request.target, prepared.content)
         val draft =
             PreparationDraft(
                 catalog = request.catalog,
                 target = request.target,
                 content = prepared.content,
-                pendingDefaults = context.deferred.toList(),
                 requiredInputs = requirements,
                 findings = prepared.findings,
             )
@@ -120,7 +118,6 @@ class DefaultInitializationRuntime(
         return when {
             failed -> PrepareValueResult.UnavailableErrorWrapper(draft)
             requirements.isNotEmpty() -> PrepareValueResult.NeedsInputWrapper(draft)
-            context.deferred.isNotEmpty() -> PrepareValueResult.UnavailableErrorWrapper(draft)
             else -> PrepareValueResult.ReadyWrapper(PreparedValue(content = draft.content, findings = draft.findings))
         }
     }
@@ -149,14 +146,7 @@ class DefaultInitializationRuntime(
                 unknownVariant(target)
             }
         }
-        val validDefaults = linkedSetOf<ValuePath>()
-        walkPrepared(draft.target, draft.content) { path, _, value, owner ->
-            if (owner != null && value == DataValue.UNFILLED && owner.second in bindings.defaultedFields(owner.first)) {
-                validDefaults += path
-            }
-        }
-        if (!validDefaults.containsAll(draft.pendingDefaults)) return invalid("A pending default is not an omitted constructor field.")
-        val required = requiredInputs(draft.target, draft.content, draft.pendingDefaults.toSet())
+        val required = requiredInputs(draft.target, draft.content)
         if ((required.toSet() != draft.requiredInputs.toSet()) ||
             (required.size != draft.requiredInputs.size)
         ) {
@@ -237,13 +227,10 @@ class DefaultInitializationRuntime(
     private fun requiredInputs(
         target: PreparationTarget,
         content: PreparedContent,
-        pending: Set<ValuePath>,
     ): List<RequiredInput> {
         val inputs = linkedMapOf<ValuePath, RequiredInput>()
-        walkPrepared(target, content) { path, type, value, _ ->
-            if ((value == DataValue.UNFILLED || (value is DataValue.NamedWrapper && value.payload == DataValue.UNFILLED)) &&
-                path !in pending
-            ) {
+        walkPrepared(target, content) { path, type, value ->
+            if (value == DataValue.UNFILLED || (value is DataValue.NamedWrapper && value.payload == DataValue.UNFILLED)) {
                 inputs[path] = RequiredInput(path = path, expected = type)
             }
         }
@@ -253,15 +240,14 @@ class DefaultInitializationRuntime(
     private fun walkPrepared(
         target: PreparationTarget,
         content: PreparedContent,
-        visit: (ValuePath, TypeUse, DataValue, Pair<TypeDefinitionId, FieldOwner>?) -> Unit,
+        visit: (ValuePath, TypeUse, DataValue) -> Unit,
     ) {
         fun walk(
             type: TypeUse,
             value: DataValue,
             path: ValuePath,
-            owner: Pair<TypeDefinitionId, FieldOwner>? = null,
         ) {
-            visit(path, type, value, owner)
+            visit(path, type, value)
             if (value == DataValue.UNFILLED || value == DataValue.NULL) return
             val actual = (value as? DataValue.NamedWrapper)?.actualType?.use ?: type
             val checked = (catalog.resolve(actual) as? Resolution.Ready)?.value ?: return
@@ -269,14 +255,10 @@ class DefaultInitializationRuntime(
             when (val representation = checked.schema.representation) {
                 is ResolvedRepresentation.RecordWrapper -> {
                     val record = payload as? DataValue.RecordWrapper ?: return
-                    val definition = (actual as? TypeUse.NamedWrapper)?.value?.definition ?: return
                     representation.value.fields.forEach { field ->
-                        walk(
-                            field.type,
-                            record.field(field.key) ?: DataValue.UNFILLED,
-                            path.field(field.key),
-                            definition to FieldOwner(definition = field.declarationOwner, name = field.key),
-                        )
+                        val stored = record.field(field.key)
+                        if (stored == null && field.hasConstructorDefault) return@forEach
+                        walk(field.type, stored ?: DataValue.UNFILLED, path.field(field.key))
                     }
                 }
 
@@ -487,6 +469,11 @@ class DefaultInitializationRuntime(
         )
     }
 
+    /**
+     * The stored fields of a new record of [checked]: each supplied field, and an ordinary default for each other field
+     * without a constructor default. A field with a constructor default that nobody supplied stays absent: it is unset,
+     * and reading it gives what its constructor gives.
+     */
     private fun prepareRecordFields(
         checked: CheckedType,
         suppliedFields: Map<String, DataValue>,
@@ -494,102 +481,16 @@ class DefaultInitializationRuntime(
         path: ValuePath,
     ): RecordPreparation {
         val fields = suppliedFields.toMutableMap()
-        val inputs = linkedMapOf<FieldOwner, CompleteValue>()
         val findings = mutableListOf<InitializationDiagnostic>()
-        val blockers = mutableListOf<InitializationDiagnostic>()
-        val defaulted = bindings.defaultedFields(checked)
-        val omitted =
-            checked.schema.fields.filter { field ->
-                (field.key !in suppliedFields || path.field(field.key) in context.pending) &&
-                    FieldOwner(definition = field.declarationOwner, name = field.key) in defaulted
-            }
         checked.schema.fields.forEach { field ->
-            val owner = FieldOwner(definition = field.declarationOwner, name = field.key)
-            if (field in omitted) return@forEach
+            val supplied = suppliedFields[field.key]
+            if (supplied == null && field.hasConstructorDefault) return@forEach
             val fieldFindings = mutableListOf<InitializationDiagnostic>()
-            val value =
-                (
-                    suppliedFields[field.key]?.let { supplied ->
-                        if (context.resuming) resumeValue(field.type, supplied, context, fieldFindings, path.field(field.key)) else supplied
-                    } ?: ordinaryDefault(field.type, context, fieldFindings, path.field(field.key))
-                ).also {
-                    fields[field.key] = it
-                }
+            fields[field.key] =
+                supplied?.let {
+                    if (context.resuming) resumeValue(field.type, it, context, fieldFindings, path.field(field.key)) else it
+                } ?: ordinaryDefault(field.type, context, fieldFindings, path.field(field.key))
             findings += fieldFindings.map { it.prepend(PathSegment.createField(name = field.key)) }
-            if (omitted.isEmpty()) return@forEach
-            val admittedValue = value
-            when (val result = completeSample(field.type, admittedValue)) {
-                is CompletenessResult.Complete -> {
-                    inputs[owner] = result.value
-                }
-
-                is CompletenessResult.Unfinished -> {
-                    blockers +=
-                        result.locations.map { location ->
-                            InitializationDiagnostic(
-                                field = owner,
-                                code = "unfinished_constructor_input",
-                                message = "A constructor input is unfinished, so omitted defaults cannot be evaluated.",
-                                relativePath =
-                                    ValuePath(
-                                        segments =
-                                            listOf(PathSegment.createField(name = field.key)) + location.path.segments,
-                                    ),
-                            )
-                        }
-                }
-
-                is CompletenessResult.Invalid -> {
-                    context.unavailable = true
-                    blockers +=
-                        result.problems.map { problem ->
-                            InitializationDiagnostic(
-                                field = owner,
-                                code = problem.code,
-                                message = "A constructor input is invalid, so omitted defaults cannot be evaluated.",
-                                relativePath =
-                                    ValuePath(
-                                        segments =
-                                            listOf(PathSegment.createField(name = field.key)) + problem.location.path.segments,
-                                    ),
-                            )
-                        }
-                }
-
-                null -> {
-                    context.unavailable = true
-                    blockers +=
-                        InitializationDiagnostic(
-                            field = owner,
-                            code = "constructor_input_type_mismatch",
-                            message = "A constructor input does not match its declared type.",
-                            relativePath = ValuePath.root.field(field.key),
-                        )
-                }
-            }
-        }
-        val capture =
-            when {
-                omitted.isEmpty() -> {
-                    CaptureResult.Captured(emptyMap())
-                }
-
-                blockers.isNotEmpty() -> {
-                    CaptureResult.Unavailable(blockers)
-                }
-
-                else -> {
-                    bindings.sampleDefaults(checked, inputs).also {
-                        if (it is CaptureResult.Unavailable) context.unavailable = true
-                    }
-                }
-            }
-        findings += (capture as? CaptureResult.Unavailable)?.reasons.orEmpty().map { it.atOwnField() }
-        val captured = (capture as? CaptureResult.Captured)?.values.orEmpty()
-        omitted.forEach { field ->
-            val owner = FieldOwner(definition = field.declarationOwner, name = field.key)
-            fields[field.key] = captured[owner] ?: DataValue.UNFILLED
-            if (owner !in captured) context.deferred += path.field(field.key)
         }
         return RecordPreparation(fields, findings.distinct())
     }
@@ -616,19 +517,14 @@ class DefaultInitializationRuntime(
                 ),
             )
         }
-        val defaulted = bindings.defaultedFields(selection.definition)
         val findings = mutableListOf<InitializationDiagnostic>()
         val fields = linkedMapOf<String, DataValue>()
         partial.knownFields.forEach { field ->
-            val owner = FieldOwner(definition = field.declarationOwner, name = field.key)
+            if (field.key !in supplied && field.hasConstructorDefault) return@forEach
             val fieldFindings = mutableListOf<InitializationDiagnostic>()
             fields[field.key] =
                 supplied[field.key]
-                    ?: if (owner in defaulted) {
-                        DataValue.UNFILLED
-                    } else {
-                        ordinaryDefault(field.type, DefaultInitializationContext(), fieldFindings, ValuePath.root.field(field.key))
-                    }
+                    ?: ordinaryDefault(field.type, DefaultInitializationContext(), fieldFindings, ValuePath.root.field(field.key))
             findings += fieldFindings.map { it.prepend(PathSegment.createField(name = field.key)) }
         }
         partial.dependentFields.forEach { field -> fields[field.owner.name] = DataValue.UNFILLED }
@@ -855,10 +751,8 @@ private enum class DefaultEntry {
 }
 
 private class DefaultInitializationContext(
-    val pending: Set<ValuePath> = emptySet(),
     val resuming: Boolean = false,
 ) {
-    val deferred = linkedSetOf<ValuePath>()
     var unavailable = false
     private val stack = mutableListOf<TypeUse>()
 

@@ -8,6 +8,7 @@ import com.typewritermc.formula.NamedValue
 import com.typewritermc.formula.RecordValue
 import com.typewritermc.types.catalog.CheckedType
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -47,6 +48,8 @@ class GeneratedRecordNativeBinding<T>(
     override val signature: String,
     override val nativeClass: kotlin.reflect.KClass<*>? = null,
     private val fields: List<GeneratedNativeField<T>>,
+    /** The constructor with its Kotlin defaults, which gives each unset field when a stored value leaves it out. */
+    private val defaults: NativeConstructionPlan? = null,
     private val construct: (Map<String, Any?>) -> T,
 ) : NativeBinding<T>,
     GeneratedCheckedNativeBinding {
@@ -72,14 +75,16 @@ class GeneratedRecordNativeBinding<T>(
         val record =
             payload as? DataValue.RecordWrapper
                 ?: throw NativeBindingException("wrong_native_representation", "Expected a named record value.")
-        return construct(
-            fields.associate { field ->
-                val fieldValue =
-                    record.field(field.name)
-                        ?: throw NativeBindingException("missing_native_field", "Missing native field ${field.name}.")
-                field.name to field.binding.decodeGenerated(fieldValue)
-            },
-        )
+        val stored = fields.mapNotNull { field -> record.field(field.name)?.let { field to field.binding.decodeGenerated(it) } }
+        if (stored.size == fields.size) return construct(stored.associate { (field, value) -> field.name to value })
+        val unset = fields.filter { field -> record.field(field.name) == null }.map { it.name }
+        val plan = defaults ?: throw NativeBindingException("missing_native_field", "Missing native field ${unset.first()}.")
+        val owners = checked.schema.fields.associate { it.key to FieldOwner(definition = it.declarationOwner, name = it.key) }
+        unset.firstOrNull { owners[it] !in plan.defaultedFields }?.let { name ->
+            throw NativeBindingException("missing_native_field", "Missing native field $name.")
+        }
+        @Suppress("UNCHECKED_CAST")
+        return plan.construct(stored.associate { (field, value) -> owners.getValue(field.name) to value }) as T
     }
 
     /** Builds the instance from a RecordValue, converting each field through its own binding; a fieldless object case needs none. */

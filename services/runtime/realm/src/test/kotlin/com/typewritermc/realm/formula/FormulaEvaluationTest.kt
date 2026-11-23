@@ -27,6 +27,8 @@ import com.typewritermc.realm.testing.definitionValueUse
 import com.typewritermc.realm.testing.delete
 import com.typewritermc.realm.testing.demoOneDefinitions
 import com.typewritermc.realm.testing.demoTwoDefinitions
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.realm.testing.commitElement
 import com.typewritermc.realm.testing.entryRef
 import com.typewritermc.realm.testing.errorCodesOn
 import com.typewritermc.realm.testing.errorSet
@@ -65,6 +67,10 @@ import com.typewritermc.realm.testing.textUse
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.setup
 import com.typewritermc.testing.routes.FixtureBox
+import com.typewritermc.testing.routes.FixtureStockEntry
+import com.typewritermc.testing.routes.FixtureStockEntryDefinition
+import com.typewritermc.types.Ref
+import com.typewritermc.types.toSkir
 import com.typewritermc.testing.routes.FixtureCoinPrize
 import com.typewritermc.testing.routes.FixtureLoot
 import com.typewritermc.testing.routes.FixtureSignal
@@ -666,6 +672,24 @@ val FormulaEvaluationTest by testSuite {
                 }
             }
         withSetup(page, catalog = routeFixtureCatalog) { demo -> formulas.value(demo.named("stocked")) shouldBe 6 }
+    }
+
+    test("an unset Var field reads as its declared default") {
+        val page = setup("evaluate-unset") { formulaPage { definition("seed", intUse, 1) } }
+        withSetup(page, catalog = routeFixtureCatalog) {
+            val (depot, committed) =
+                commitElement { id ->
+                    val stored =
+                        encoder.record(
+                            FixtureStockEntryDefinition.id.use(),
+                            FixtureStockEntry(page = Ref(id), placement = GraphPlacement(), name = "depot"),
+                        )
+                    stored.copy(fields = stored.fields.filter { it.name != "stock" && it.name != "loot" })
+                }
+            committed.shouldBeCommitted()
+
+            formulas.value(depot.toSkir()) shouldBe 0
+        }
     }
 
     test("a two hop reference chain reads through both") {

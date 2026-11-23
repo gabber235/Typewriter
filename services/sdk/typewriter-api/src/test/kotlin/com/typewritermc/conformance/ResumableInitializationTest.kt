@@ -74,7 +74,7 @@ val ResumableInitializationTest by testSuite {
             ) as PrepareValueResult.ReadyWrapper
         ready.value.findings shouldBe emptyList()
     }
-    test("a nested default waits for its required input and is captured on resume while the earlier capture is kept") {
+    test("a defaulted field beside a required input stays unset and is never a pending input") {
         val fixture = resumeFixture(defaultedSettings = true)
         val first = fixture.runtime.stepNow(PreparationOperation.StartWrapper(fixture.request)) as PrepareValueResult.NeedsInputWrapper
         val unchanged = fixture.runtime.stepNow(PreparationOperation.createResume(draft = first.value, answers = emptyList()))
@@ -87,12 +87,12 @@ val ResumableInitializationTest by testSuite {
             ) as PrepareValueResult.ReadyWrapper
         val fields = (resumed.value.content as PreparedContent.RecordWrapper).value.fieldMap
 
-        first.value.pendingDefaults shouldBe setOf(path("settings", "label"))
+        first.value.requiredInputs.map { it.path } shouldBe listOf(path("settings", "target"))
         unchanged shouldBe first
-        ((fields.getValue("marker") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).field("id") shouldBe
-            DataValue.StringValueWrapper("capture:1")
-        ((fields.getValue("settings") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).field("label") shouldBe
-            DataValue.StringValueWrapper("capture:1")
+        ((fields.getValue("marker") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).field("id") shouldBe null
+        val settings = (fields.getValue("settings") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper
+        settings.field("target") shouldBe reference()
+        settings.field("label") shouldBe null
         resumed.value.findings shouldBe emptyList()
     }
 
@@ -174,7 +174,7 @@ val ResumableInitializationTest by testSuite {
                         ),
                 ),
             )
-        val runtime = DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList()))
+        val runtime = DefaultInitializationRuntime(catalog)
         val first =
             runtime.stepNow(
                 PreparationOperation.StartWrapper(request(root).copy(suppliedValue = supplied)),
@@ -232,8 +232,6 @@ val ResumableInitializationTest by testSuite {
                         draft = first,
                         answers = listOf(InputAnswer(path = answer.path, value = DataValue.StringValueWrapper("wrong"))),
                     ),
-                "a forged pending default" to
-                    PreparationOperation.createResume(draft = first.copy(pendingDefaults = setOf(answer.path)), answers = listOf(answer)),
                 "a draft from another catalog generation" to
                     PreparationOperation.createResume(
                         draft = first.copy(catalog = CatalogGeneration(value = "old")),
@@ -246,7 +244,6 @@ val ResumableInitializationTest by testSuite {
         "a duplicate answer" to "invalid_preparation_continuation: An input was answered more than once.",
         "an answer for an absent path" to "invalid_preparation_continuation: The answer does not belong to a pending input.",
         "an answer of the wrong type" to "invalid_preparation_continuation: The answer does not match its applied type.",
-        "a forged pending default" to "invalid_preparation_continuation: A pending default is not an omitted constructor field.",
         "a draft from another catalog generation" to "invalid_preparation_continuation: The preparation catalog changed.",
     ).forEach { (case, expected) ->
         test("resuming with $case is refused") {
@@ -302,7 +299,7 @@ val ResumableInitializationTest by testSuite {
                     ),
                 ),
             )
-        val runtime = DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList()))
+        val runtime = DefaultInitializationRuntime(catalog)
         val start = runtime.stepNow(PreparationOperation.StartWrapper(request(ownerId))) as PrepareValueResult.NeedsInputWrapper
         start.value.requiredInputs
             .single()
@@ -329,33 +326,9 @@ val ResumableInitializationTest by testSuite {
             mapOf("choice" to DataValue.named(concreteUse, DataValue.record(mapOf("target" to reference()))))
         ready.value.findings shouldBe emptyList()
     }
-    test("ordinary preparation keeps a default that waits for a required input unfinished") {
-        val fixture = resumeFixture(defaultedSettings = true)
-
-        fixture.runtime
-            .prepareNow(fixture.request)
-            .findings
-            .map { it.code } shouldBe listOf("unfinished_constructor_input")
-    }
-
-    test("a failed capture still materializes the fields it could prepare and reports the failure") {
-        val failing = resumeFixture(failMarker = true)
-        val unavailable =
-            failing.runtime.stepNow(
-                PreparationOperation.StartWrapper(failing.request),
-            ) as PrepareValueResult.UnavailableErrorWrapper
-
-        val fields = (unavailable.materialize().content as PreparedContent.RecordWrapper).value.fieldMap
-
-        fields.keys shouldBe setOf("settings", "marker")
-        ((fields.getValue("marker") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).field("id") shouldBe DataValue.UNFILLED
-        unavailable.value.findings.map { it.code } shouldBe listOf("test_capture_failed")
-    }
-
-    test("a valid default reference is retained without an input prompt") {
+    test("a defaulted reference stays unset without an input prompt") {
         val referenceId = id("DefaultReference")
         val field = FieldOwner(definition = referenceId, name = "target")
-        val plan = SamplingPlan(field, value = reference())
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
@@ -375,9 +348,9 @@ val ResumableInitializationTest by testSuite {
                     ),
                 ),
             )
-        val runtime =
-            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, referenceId))))
-        val ready = runtime.stepNow(PreparationOperation.StartWrapper(request(referenceId))) as PrepareValueResult.ReadyWrapper
-        ((ready.value.content as PreparedContent.RecordWrapper).value.fieldMap.getValue("target")) shouldBe reference()
+        val ready =
+            DefaultInitializationRuntime(catalog).stepNow(PreparationOperation.StartWrapper(request(referenceId)))
+                as PrepareValueResult.ReadyWrapper
+        (ready.value.content as PreparedContent.RecordWrapper).value.fieldMap shouldBe emptyMap()
     }
 }

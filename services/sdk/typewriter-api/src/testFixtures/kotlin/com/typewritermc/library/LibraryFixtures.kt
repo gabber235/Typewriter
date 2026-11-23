@@ -12,7 +12,12 @@ import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.name
 import com.typewritermc.authoring.of
+import com.typewritermc.authoring.CompletenessResult
+import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.typedAt
+import com.typewritermc.types.declaredDefaults
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.GeneratedProviderIndex
@@ -115,6 +120,8 @@ import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId as SkirResourceId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.PresentationId
 import skirout.editor.v1.type_catalog.RecordForm
@@ -170,7 +177,7 @@ internal class FrameworkFixture {
     private val factories =
         generatedProviders<NativeBindingFactory>(GeneratedProviderKind.NativeBinding).distinctBy(NativeBindingFactory::provider)
     private val bindings = FactoryNativeBindingRegistry(catalog, factories)
-    private val initializer = DefaultInitializationRuntime(catalog, bindings)
+    private val initializer = DefaultInitializationRuntime(catalog)
     val runtime = DefaultPresentationRuntime()
 
     /** Describing every generated presentation registers the references other presentations invoke. */
@@ -213,6 +220,27 @@ internal class FrameworkFixture {
                 ),
             ),
         )
+
+    /** The Kotlin value an engine reads from [record], a stored value of [use], through the generated bindings. */
+    fun read(
+        use: NamedTypeUse,
+        record: AuthoringRecord,
+    ): Any? {
+        val checked = catalog.resolve(use.use).ready()
+        val complete =
+            when (val result = checked.complete(DataValue.named(use, DataValue.RecordWrapper(record.payload)))) {
+                is CompletenessResult.Complete -> result.value
+                else -> error("The stored value is not complete: $result")
+            }
+        return bindings.bind(checked).decode(complete)
+    }
+
+    /** The position at [path] of [record], stored on [owner], with each unset field read as its declared default. */
+    fun positionAt(
+        owner: String,
+        record: AuthoringRecord,
+        path: ValuePath,
+    ): TypedPosition? = record.typedAt(SkirResourceId(value = owner), path, catalog, bindings.declaredDefaults(catalog))
 
     /** The generated presentation whose provider class is [name], as discovery describes it. */
     fun presentation(name: String): OwnedPresentation = presentations.single { it.provider.javaClass.simpleName == name }

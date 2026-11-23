@@ -120,7 +120,7 @@ internal class RealmStructureProvisioning(
     ): AuthoringRecord {
         val catalog = view.catalog
         val prepared =
-            DefaultInitializationRuntime(catalog.checked, catalog.nativeBindings).prepare(
+            DefaultInitializationRuntime(catalog.checked).prepare(
                 ValuePreparationRequest(
                     catalog = catalog.generation,
                     target = PreparationTarget.RecordWrapper(TypeSelection.of(type)),

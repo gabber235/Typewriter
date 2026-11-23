@@ -326,27 +326,12 @@ internal fun recordRequest(
 internal data class ResumeFixture(
     val runtime: DefaultInitializationRuntime,
     val request: ValuePreparationRequest,
-    val marker: SamplingPlan,
-    val settings: SamplingPlan,
 )
 
-internal fun resumeFixture(
-    defaultedSettings: Boolean = false,
-    failMarker: Boolean = false,
-): ResumeFixture {
+internal fun resumeFixture(defaultedSettings: Boolean = false): ResumeFixture {
     val root = id("Root")
     val settings = id("Settings")
     val marker = id("Marker")
-    val markerPlan =
-        FieldOwner(definition = marker, name = "id").let { field ->
-            SamplingPlan(
-                field,
-                failure =
-                    InitializationDiagnostic(field = field, code = "test_capture_failed", message = "Capture failed.", relativePath = null)
-                        .takeIf { failMarker },
-            )
-        }
-    val settingsPlan = SamplingPlan(FieldOwner(definition = settings, name = "label"))
     val settingsFields =
         buildList {
             add(
@@ -407,17 +392,7 @@ internal fun resumeFixture(
                 ),
             ),
         )
-    val factories =
-        buildList {
-            add(PlanFactory(markerPlan, marker))
-            if (defaultedSettings) add(PlanFactory(settingsPlan, settings))
-        }
-    return ResumeFixture(
-        DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, factories)),
-        request(root),
-        markerPlan,
-        settingsPlan,
-    )
+    return ResumeFixture(DefaultInitializationRuntime(catalog), request(root))
 }
 
 internal val GENERATION = CatalogGeneration(value = "resume")

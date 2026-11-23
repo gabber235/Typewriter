@@ -5,6 +5,9 @@ package com.typewritermc.library
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.TypedPosition
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.root
 import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.authoring.fieldMap
@@ -89,6 +92,7 @@ import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValuePath
 import java.lang.reflect.Modifier
 import java.math.BigInteger
 import java.util.Collections
@@ -125,34 +129,39 @@ val FrameworkCatalogCreationTest by testSuite {
         DefaultPresentationRegistry(catalog, listOf(inherited, concrete)).selected(PresentationRole.ITEM, checked) shouldBe concrete.id
     }
 
-    test("a new book starts with the book icon and no findings") {
+    test("a new book stores none of its defaulted fields, and reading it gives the code defaults") {
         val book = framework.prepareBook()
 
         book.findings shouldBe emptyList()
-        book.record.fieldMap.getValue("icon") shouldBe
+        book.record.fieldMap.keys shouldBe setOf("library")
+        framework.read(BookDefinition.use, book.record) shouldBe
+            Book(library = com.typewritermc.types.Ref(com.typewritermc.types.ResourceId("library")))
+    }
+
+    test("an unset field reads as what its constructor gives for the stored fields, and the walk steps into it") {
+        val book = framework.prepareBook().record
+        val icon = framework.positionAt("book", book, ValuePath.root.field("icon")) as TypedPosition.Value
+
+        icon.unset shouldBe true
+        icon.value shouldBe
             DataValue.named(
                 IconIconifyDefinition.use,
                 DataValue.record(mapOf("value" to DataValue.StringValueWrapper("material-symbols:book"))),
             )
+        (framework.positionAt("book", book, ValuePath.root.field("icon").field("value")) as TypedPosition.Value).value shouldBe
+            DataValue.StringValueWrapper("material-symbols:book")
     }
 
-    test("a new tag starts unnamed, without parents, at the origin of the graph") {
+    test("a new tag stores its owner and an unset placement, and reads as unnamed, without parents, at the origin") {
         val tag = framework.prepareTag()
 
         tag.findings shouldBe emptyList()
-        tag.record.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("")
-        (tag.record.fieldMap.getValue("parents") as DataValue.NamedWrapper).payload shouldBe DataValue.setValue(emptyList())
-        tag.record.fieldMap.getValue("placement") shouldBe
-            DataValue.named(
-                GraphPlacementDefinition.use,
-                DataValue.record(
-                    mapOf(
-                        "x" to DataValue.integer(BigInteger.ZERO),
-                        "y" to DataValue.integer(BigInteger.ZERO),
-                        "width" to DataValue.integer(BigInteger.ONE),
-                        "height" to DataValue.integer(BigInteger.ONE),
-                    ),
-                ),
+        tag.record.fieldMap.keys shouldBe setOf("taxonomy", "placement")
+        tag.record.fieldMap.getValue("placement") shouldBe DataValue.named(GraphPlacementDefinition.use, DataValue.record(emptyMap()))
+        framework.read(TagDefinition.use, tag.record) shouldBe
+            Tag(
+                taxonomy = com.typewritermc.types.Ref(com.typewritermc.types.ResourceId("taxonomy")),
+                placement = GraphPlacement(x = 0, y = 0, width = 1, height = 1),
             )
     }
 

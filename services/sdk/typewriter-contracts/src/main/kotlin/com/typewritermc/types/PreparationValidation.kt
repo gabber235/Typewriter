@@ -59,12 +59,9 @@ fun InputAnswer.requireValid(): InputAnswer {
     return if (checked === value) this else copy(value = checked)
 }
 
-/** Also rejects a pending default path that appears twice. */
 fun PreparationDraft.requireValid(): PreparationDraft {
     catalog.requireValid()
     target.requireValid()
-    pendingDefaults.forEach { it.requireValid() }
-    require(pendingDefaults.toSet().size == pendingDefaults.size) { "A pending default path is duplicated." }
     requiredInputs.forEach { it.requireValid() }
     findings.forEach { it.requireValid() }
     val checked = content.requireValid()

@@ -393,7 +393,7 @@ fun main(args: Array<String>) {
                     .factory.nativeClass!!.java.classLoader
             fun counts(): Pair<*, *> =
                 probeLoader.loadClass("fixture.GeneratedProviderRoundtrip").getMethod("evaluationCounts").invoke(null) as Pair<*, *>
-            val initializer = DefaultInitializationRuntime(assembly.checked, assembly.bindings)
+            val initializer = DefaultInitializationRuntime(assembly.checked)
             fun prepare(type: NamedTypeUse, fields: Map<String, DataValue>) =
                 initializer.prepareNow(
                     ValuePreparationRequest(
@@ -404,42 +404,40 @@ fun main(args: Array<String>) {
                 )
             fun fieldsOf(content: PreparedContent) = content.shouldBeInstanceOf<PreparedContent.RecordWrapper>().value.fieldMap
             val supplied = mapOf("seed" to integer(7), "nullable" to DataValue.NULL, "guarded" to integer(20))
-            requirement("dependent defaults compute from supplied fields once and never for complete or blocked input") {
-                val preparedDefaults = prepare(DependentDefaultsDefinition.use, supplied)
-                preparedDefaults.findings.shouldBeEmpty()
-                val defaults = fieldsOf(preparedDefaults.content)
-                defaults["derived"] shouldBe integer(21)
-                defaults["nullable"] shouldBe DataValue.NULL
-                counts() shouldBe (1 to 1)
-
-                val completeInputs = defaults + ("derived" to DataValue.UNFILLED)
-                val explicitUnfinished = prepare(DependentDefaultsDefinition.use, completeInputs)
-                explicitUnfinished.findings.shouldBeEmpty()
-                fieldsOf(explicitUnfinished.content) shouldBe completeInputs
-                counts() shouldBe (1 to 1)
-
-                val blocked = prepare(DependentDefaultsDefinition.use, supplied + ("seed" to DataValue.UNFILLED))
-                blocked.findings.single().relativePath?.segments shouldBe listOf(PathSegment.createField(name = "seed"))
-                counts() shouldBe (1 to 1)
-
-                prepare(DependentDefaultsDefinition.use, mapOf("derived" to integer(99))).findings.single().message shouldBe
-                    "guarded must be supplied"
-                counts() shouldBe (1 to 1)
+            fun read(checked: com.typewritermc.types.catalog.CheckedCatalog, bindings: com.typewritermc.types.NativeBindingRegistry, type: NamedTypeUse, fields: Map<String, DataValue>): Any? {
+                val resolved = (checked.resolve(type.use) as Resolution.Ready).value
+                val complete = resolved.complete(DataValue.named(type, DataValue.record(fields))).shouldBeInstanceOf<CompletenessResult.Complete>()
+                return bindings.bind(resolved).decode(complete.value)
             }
-            requirement("transient, generic and value class defaults prepare their computed fields") {
-                val transient = prepare(TransientDefaultsDefinition.use, emptyMap())
-                transient.findings.shouldBeEmpty()
-                fieldsOf(transient.content) shouldBe mapOf("derived" to integer(10))
+            fun read(type: NamedTypeUse, fields: Map<String, DataValue>): Any? = read(assembly.checked, assembly.bindings, type, fields)
+            requirement("creation stores only the supplied fields and runs no constructor") {
+                val prepared = prepare(DependentDefaultsDefinition.use, supplied)
+                prepared.findings.shouldBeEmpty()
+                fieldsOf(prepared.content) shouldBe supplied
+                counts() shouldBe (0 to 0)
+            }
+            requirement("reading a value computes each unset default from its stored fields once") {
+                read(DependentDefaultsDefinition.use, supplied).toString() shouldBe
+                    "DependentDefaults(base=7, derived=21, nullable=null, guarded=20)"
+                counts() shouldBe (1 to 1)
+                read(DependentDefaultsDefinition.use, supplied + ("derived" to integer(99))).toString() shouldBe
+                    "DependentDefaults(base=7, derived=99, nullable=null, guarded=20)"
+                counts() shouldBe (1 to 2)
+            }
+            requirement("reading a value whose unset default fails reports the constructor's failure") {
+                shouldThrow<IllegalStateException> { read(DependentDefaultsDefinition.use, mapOf("derived" to integer(99))) }
+                    .message shouldBe "guarded must be supplied"
+            }
+            requirement("transient, generic and value class defaults read as their computed fields") {
+                read(TransientDefaultsDefinition.use, emptyMap()).toString() shouldBe "TransientDefaults(hidden=5, derived=10)"
                 val intType = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
-                val generic = prepare(GenericDefaultsDefinition.applied(listOf(intType)), mapOf("value" to integer(9)))
-                generic.findings.shouldBeEmpty()
-                fieldsOf(generic.content)["duplicate"] shouldBe integer(9)
-                val wrapped = prepare(WrappedDefaultsDefinition.use, mapOf("count" to DataValue.named(DefaultCountDefinition.use, integer(8))))
-                wrapped.findings.shouldBeEmpty()
-                fieldsOf(wrapped.content)["doubled"] shouldBe integer(16)
+                read(GenericDefaultsDefinition.applied(listOf(intType)), mapOf("value" to integer(9))).toString() shouldBe
+                    "GenericDefaults(value=9, duplicate=9)"
+                read(WrappedDefaultsDefinition.use, mapOf("count" to DataValue.named(DefaultCountDefinition.use, integer(8)))).toString() shouldBe
+                    "WrappedDefaults(count=DefaultCount(value=8), doubled=16)"
             }
-            requirement("a cancelled default cancels preparation") {
-                shouldThrow<kotlinx.coroutines.CancellationException> { prepare(CancelledDefaultsDefinition.use, emptyMap()) }
+            requirement("a cancelled default cancels the read") {
+                shouldThrow<kotlinx.coroutines.CancellationException> { read(CancelledDefaultsDefinition.use, emptyMap()) }
             }
             requirement("generated providers operate under a freshly assembled catalog and resolver") {
                 var replacementCountBindings = 0
@@ -466,25 +464,16 @@ fun main(args: Array<String>) {
                             },
                     )
                 val replacement = replacementContributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture replacement")))
-                val replacementInitializer = DefaultInitializationRuntime(replacement.checked, replacement.bindings)
-                fun prepareReplacement(type: NamedTypeUse, fields: Map<String, DataValue>) =
-                    replacementInitializer.prepareNow(
-                        ValuePreparationRequest(
-                            catalog = replacement.checked.generation,
-                            target = PreparationTarget.RecordWrapper(TypeSelection.of(type)),
-                            suppliedValue = DataValue.record(fields),
-                        ),
-                    )
                 replacementCountBindings = 0
-                val replacementWrapped =
-                    prepareReplacement(WrappedDefaultsDefinition.use, mapOf("count" to DataValue.named(DefaultCountDefinition.use, integer(8))))
-                replacementWrapped.findings.shouldBeEmpty()
-                fieldsOf(replacementWrapped.content)["doubled"] shouldBe integer(16)
+                read(
+                    replacement.checked,
+                    replacement.bindings,
+                    WrappedDefaultsDefinition.use,
+                    mapOf("count" to DataValue.named(DefaultCountDefinition.use, integer(8))),
+                ).toString() shouldBe "WrappedDefaults(count=DefaultCount(value=8), doubled=16)"
                 replacementCountBindings shouldBe 1
-                val replacementDefaults = prepareReplacement(DependentDefaultsDefinition.use, supplied)
-                replacementDefaults.findings.shouldBeEmpty()
-                fieldsOf(replacementDefaults.content)["derived"] shouldBe integer(21)
-                counts() shouldBe (2 to 2)
+                read(replacement.checked, replacement.bindings, DependentDefaultsDefinition.use, supplied).toString() shouldBe
+                    "DependentDefaults(base=7, derived=21, nullable=null, guarded=20)"
             }
             requirement("the inspector draws one collection graph per declared root field") {
                 contributions.presentations shouldHaveSize 1

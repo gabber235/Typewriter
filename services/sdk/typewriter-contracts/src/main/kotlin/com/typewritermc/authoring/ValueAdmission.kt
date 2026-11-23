@@ -178,7 +178,9 @@ private fun AuthoringRecord.inspectPartial(
     (present - expectedKeys).forEach { key ->
         problems += Misfit(ValueProblem(location = root.field(key), code = UNDECLARED_FIELD), MisfitCause.Undeclared)
     }
-    (expectedKeys - present).forEach { key -> problems += Misfit(ValueProblem(location = root.field(key), code = "missing_field")) }
+    (expectedKeys - present).filterNot { known[it]?.hasConstructorDefault == true }.forEach { key ->
+        problems += Misfit(ValueProblem(location = root.field(key), code = "missing_field"))
+    }
     known.forEach { (name, field) ->
         val value = field(name) ?: return@forEach
         walk.walk(value, field.type, root.field(name))
@@ -459,7 +461,10 @@ class ValueWalk<R>(
         val fields = representation.fields.associateBy { it.key }
         val present = record.fields.mapView
         (present.keys - fields.keys).forEach { name -> visitor.problem(at.field(name), UNDECLARED_FIELD, MisfitCause.Undeclared) }
-        (fields.keys - present.keys).forEach { name -> visitor.problem(at.field(name), "missing_field") }
+        (fields.keys - present.keys).forEach { name ->
+            if (fields.getValue(name).hasConstructorDefault) return@forEach
+            visitor.problem(at.field(name), "missing_field")
+        }
         val answers =
             fields.entries.mapNotNull { (name, field) ->
                 present[name]?.let { name to validateUse(it.value, field.type, at.field(name), depth + 1) }

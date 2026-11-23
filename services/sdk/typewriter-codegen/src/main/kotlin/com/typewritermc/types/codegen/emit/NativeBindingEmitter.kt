@@ -224,13 +224,15 @@ internal object NativeBindingEmitter : SdkEmitter {
                 .map { (field, property) ->
                     CodeBlock.of("%N = values.getValue(%S) as %T", field.sourceName, field.name, property.type.resolve().erasedTypeName())
                 }.joinToCode(",\n")
+        val defaults = if (constructionPlan() != null) CodeBlock.of("defaults = constructionPlan,\n") else CodeBlock.of("")
         return CodeBlock.of(
-            "%T(\n⇥%Lfields = %L,\nconstruct = { values ->\n⇥%T(\n⇥%L,\n⇤)\n⇤},\n⇤)",
+            "%T(\n⇥%Lfields = %L,\nconstruct = { values ->\n⇥%T(\n⇥%L,\n⇤)\n⇤},\n%L⇤)",
             Api.GeneratedRecordNativeBinding.parameterizedBy(nativeApplied),
             common,
             bindings,
             names.source,
             constructor,
+            defaults,
         )
     }
 

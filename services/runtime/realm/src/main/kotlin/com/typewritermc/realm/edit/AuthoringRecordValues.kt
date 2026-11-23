@@ -1,6 +1,9 @@
 package com.typewritermc.realm.edit
 
+import com.typewritermc.authoring.TypedPosition
+import com.typewritermc.authoring.UnsetFields
 import com.typewritermc.authoring.ValueReplacement
+import com.typewritermc.authoring.typedAt
 import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
@@ -66,6 +69,7 @@ internal fun insert(
     resources: MutableMap<ResourceId, AuthoringRecord>,
     intent: EditIntent.InsertWrapper,
     catalog: CheckedCatalog,
+    unset: UnsetFields,
     problems: MutableList<ValueProblem>,
 ) {
     val record = resources[intent.value.at.resource]
@@ -73,7 +77,7 @@ internal fun insert(
         problems += ValueProblem(location = intent.value.at, code = "expected_collection")
         return
     }
-    val current = record.collectionValue(intent.value.at, catalog, problems) ?: return
+    val current = record.collectionValue(intent.value.at, catalog, unset, problems) ?: return
     val items = current.itemsOrNull() ?: return
     if (items.any { it.id == intent.value.item.id }) {
         problems += ValueProblem(location = intent.value.at, code = "duplicate_item_id")
@@ -110,12 +114,18 @@ internal fun remove(
     update(resources, intent.value.at, current.withItems(items.filterNot { it.id == intent.value.item }), problems)
 }
 
+/**
+ * The collection at [location] an insert adds to: the stored one, an unset one as it reads through [unset] so its
+ * default items stay, or a new empty one where the value is still unfilled.
+ */
 internal fun AuthoringRecord.collectionValue(
     location: ValueLocation,
     catalog: CheckedCatalog,
+    unset: UnsetFields,
     problems: MutableList<ValueProblem>,
 ): DataValue? {
-    val current = valueAt(location.path)
+    val position = typedAt(location.resource, location.path, catalog, unset) as? TypedPosition.Value
+    val current = if (position?.unset == true) position.value else valueAt(location.path)
     if (current == null) {
         problems += ValueProblem(location = location, code = "expected_collection")
         return null

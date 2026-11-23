@@ -1,5 +1,6 @@
 package com.typewritermc.realm.edit
 
+import com.typewritermc.authoring.UnsetFields
 import com.typewritermc.authoring.TypedPosition
 import com.typewritermc.authoring.authoredTypeAt
 import com.typewritermc.authoring.chosenUse
@@ -51,6 +52,7 @@ import skirout.kernel.v1.resource_id.ResourceId
 internal class RelationValueSynchronizer(
     private val catalog: CheckedCatalog,
     private val contracts: List<RelationContract>,
+    private val unset: UnsetFields,
 ) {
     fun connect(
         resources: MutableMap<ResourceId, AuthoringRecord>,
@@ -175,7 +177,7 @@ internal class RelationValueSynchronizer(
                     val targetRecord = resources[intent.value.target]
                     val embedded =
                         if (targetRecord?.declaresCollection(counterpart.value.containing, catalog) == true) {
-                            val current = targetRecord.collectionValue(counterpart.value.containing, catalog, problems) ?: return
+                            val current = targetRecord.collectionValue(counterpart.value.containing, catalog, unset, problems) ?: return
                             val item = deterministicItem(batch, ordinal, counterpart.value.containing)
                             insert(
                                 resources,
@@ -185,6 +187,7 @@ internal class RelationValueSynchronizer(
                                     item = ListItem(id = item, value = materialized),
                                 ),
                                 catalog,
+                                unset,
                                 problems,
                             )
                             counterpart.value.containing.item(item)
@@ -334,7 +337,7 @@ internal class RelationValueSynchronizer(
                 )
             if (item != null && binding is CounterpartBinding.Collection && binding.location == collection) {
                 val named = record.authoredTypeAt(location.resource, location.path, catalog).namedType()
-                val values = record.collectionValue(collection, catalog, problems)?.itemsOrNull()
+                val values = record.collectionValue(collection, catalog, unset, problems)?.itemsOrNull()
                 if (named == null) {
                     problems += unnamedLinkProblems(location, record)
                     return
@@ -352,6 +355,7 @@ internal class RelationValueSynchronizer(
                             ),
                     ),
                     catalog,
+                    unset,
                     problems,
                 )
                 return
@@ -393,7 +397,7 @@ internal class RelationValueSynchronizer(
             problems += ValueProblem(location = collection, code = "expected_collection")
             return null
         }
-        val current = record.collectionValue(collection, catalog, problems) ?: return null
+        val current = record.collectionValue(collection, catalog, unset, problems) ?: return null
         val items = current.itemsOrNull() ?: return null
         val item = deterministicItem(batch, ordinal, collection)
         val location = collection.item(item)
@@ -410,6 +414,7 @@ internal class RelationValueSynchronizer(
                 item = ListItem(id = item, value = DataValue.named(named, DataValue.createLink(endpoint = endpoint, target = target))),
             ),
             catalog,
+            unset,
             problems,
         )
         return location.takeIf { problems.isEmpty() }

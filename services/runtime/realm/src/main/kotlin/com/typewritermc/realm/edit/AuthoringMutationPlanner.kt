@@ -1,5 +1,7 @@
 package com.typewritermc.realm.edit
 
+import com.typewritermc.authoring.materialized
+import com.typewritermc.types.declaredDefaults
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.of
@@ -148,7 +150,11 @@ internal class AuthoringMutationPlanner(
             if (index < deletionRunEnd) return@forEachIndexed
             // An overlay caches what it reaches, and any intent can change what a content type means, so each intent reads a fresh one.
             val catalog = this.catalog.withContent(saved.staged(resources).content)
-            val relations = RelationValueSynchronizer(catalog, contracts)
+            val unset = saved.catalog.nativeBindings.declaredDefaults(catalog)
+            val relations = RelationValueSynchronizer(catalog, contracts, unset)
+            intent.writtenLocation()?.let { at ->
+                resources[at.resource]?.let { record -> resources[at.resource] = record.materialized(at.resource, at.path, catalog, unset) }
+            }
             when (intent) {
                 is EditIntent.CreateResourceWrapper -> {
                     create(resources, removed, intent, problems)
@@ -175,7 +181,7 @@ internal class AuthoringMutationPlanner(
                 is EditIntent.InsertWrapper -> {
                     val item = intent.value.at.item(intent.value.item.id)
                     val before = resourceLinks(resources, item)
-                    insert(resources, intent, catalog, problems)
+                    insert(resources, intent, catalog, unset, problems)
                     relations.synchronizeValueMutation(before, resources, item, batchIdentity, index, problems)
                 }
 
@@ -466,3 +472,13 @@ private class TouchedLinks(
         return ResourceValueMapper.project(distinct, ends.mapNotNull { id -> resources[id]?.let { id to it } }.toMap(), contracts, catalog)
     }
 }
+
+/** Where [this] writes inside a stored value, so the unset fields on the way are stored as they read before it applies. */
+private fun EditIntent.writtenLocation(): ValueLocation? =
+    when (this) {
+        is EditIntent.SetValueWrapper -> value.at
+        is EditIntent.InsertWrapper -> value.at
+        is EditIntent.RemoveWrapper -> value.at
+        is EditIntent.MoveWrapper -> value.at
+        else -> null
+    }

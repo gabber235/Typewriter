@@ -287,16 +287,15 @@ struct RequiredInput(84060028) {
   expected: TypeUse = 1;
 }
 
-/// Caller retained continuation for deferred constructor defaults and required input.
-/// Resume validates catalog, target, pending default paths, and supplied answers. The runtime
-/// retains no preparation session behind this value, and constructor sampling may execute provider code.
+/// Caller retained continuation for required input. A field with a constructor default is never
+/// pending: preparation leaves it unset. Resume validates catalog, target, and supplied answers. The
+/// runtime retains no preparation session behind this value.
 struct PreparationDraft(84060029) {
   catalog: CatalogGeneration = 0;
   target: PreparationTarget = 1;
   content: PreparedContent = 2;
-  pending_defaults: [ValuePath] = 3;
-  required_inputs: [RequiredInput] = 4;
-  findings: [InitializationDiagnostic] = 5;
+  required_inputs: [RequiredInput] = 3;
+  findings: [InitializationDiagnostic] = 4;
 }
 
 struct InputAnswer(84060030) {

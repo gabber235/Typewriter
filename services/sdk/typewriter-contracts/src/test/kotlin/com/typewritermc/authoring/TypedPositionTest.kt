@@ -73,6 +73,7 @@ val TypedPositionTest by testSuite {
                                         field("holder", "table", StandardTypes.map.template(listOf(TEXT_TEMPLATE, int.template))),
                                         field("holder", "maybe", coin.template().nullable()),
                                         field("holder", "spare", coin.template().nullable()),
+                                        field("holder", "bonus", coin.template()).copy(hasConstructorDefault = true),
                                     ),
                                 form = RecordForm.CONCRETE,
                             ),
@@ -143,5 +144,38 @@ val TypedPositionTest by testSuite {
 
         record.authoredTypeAt(holderResource, row, catalog) shouldBe null
         (record.typedAt(holderResource, row.mapValue(), catalog) as TypedPosition.Value).value shouldBe DataValue.integer(2)
+    }
+
+    val bonus = ValuePath.root.field("bonus")
+    val asked = mutableListOf<Triple<TypeUse, Set<String>, String>>()
+    val unset =
+        UnsetFields { owner, stored, field ->
+            asked += Triple(owner.use, stored.value.fields.mapView.keys, field)
+            DataValue.named(coin.namedUse(), DataValue.record("worth" to DataValue.integer(9)))
+        }
+
+    test("an unset field reads as what the unset fields give for its owner and stored fields, marked unset, and the walk steps into it") {
+        val position = record.typedAt(holderResource, bonus, catalog, unset) as TypedPosition.Value
+
+        position.unset shouldBe true
+        position.declared shouldBe coin.use()
+        position.value shouldBe DataValue.named(coin.namedUse(), DataValue.record("worth" to DataValue.integer(9)))
+        (record.typedAt(holderResource, bonus.field("worth"), catalog, unset) as TypedPosition.Value).value shouldBe DataValue.integer(9)
+        asked.first() shouldBe Triple(holder.use(), setOf("prize", "items", "table", "maybe", "spare"), "bonus")
+        (record.typedAt(holderResource, ValuePath.root.field("spare"), catalog, unset) as TypedPosition.Value).unset shouldBe false
+    }
+
+    test("without unset fields to ask, an unset field reads as unfilled and is still marked unset") {
+        val position = record.typedAt(holderResource, bonus, catalog) as TypedPosition.Value
+
+        position.unset shouldBe true
+        position.value shouldBe DataValue.UNFILLED
+    }
+
+    test("materializing a path below an unset field stores that field as it reads, and leaves a stored path alone") {
+        val materialized = record.materialized(holderResource, bonus.field("worth"), catalog, unset)
+
+        materialized.field("bonus") shouldBe DataValue.named(coin.namedUse(), DataValue.record("worth" to DataValue.integer(9)))
+        record.materialized(holderResource, ValuePath.root.field("spare").field("worth"), catalog, unset) shouldBe record
     }
 }

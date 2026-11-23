@@ -129,10 +129,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     facts = loaded.facts,
                     preparationEvaluator =
                         PreparationEvaluator { request, catalog ->
-                            DefaultInitializationRuntime(
-                                catalog.checked,
-                                catalog.nativeBindings,
-                            ).step(request)
+                            DefaultInitializationRuntime(catalog.checked).step(request)
                         },
                     engine =
                         StagedEngineImplementationSource(
