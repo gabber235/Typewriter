@@ -5,6 +5,7 @@ import com.typewritermc.events.ProtagonistJoined
 import com.typewritermc.events.ProtagonistLeft
 import com.typewritermc.events.SessionArrived
 import com.typewritermc.identity.Session
+import com.typewritermc.identity.SessionId
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
@@ -94,5 +95,18 @@ val SessionEventsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEna
         engine.keeper.disconnected(id)
 
         harness().eventually { ProtagonistLeft(protagonist) in engine.events.all }
+    }
+
+    test("SESSION-E6 a damaged value under any session key of a joining player does not stop its session from starting") {
+        harness().createBucket()
+        val engine = harness().engine("engine-a")
+        val (protagonist, id) = harness().player()
+        harness().unreadable(protagonist, id)
+        harness().unreadable(protagonist, SessionId("other-tab"))
+
+        engine.keeper.connected(protagonist, id)
+
+        harness().eventually { SessionArrived(Session(protagonist, id)) in engine.events.all }
+        harness().entry(protagonist, id)?.holder shouldBe engine.id
     }
 }

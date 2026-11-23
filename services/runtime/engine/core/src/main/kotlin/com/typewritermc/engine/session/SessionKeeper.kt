@@ -160,7 +160,8 @@ class SessionKeeper(
                 val written =
                     when (val read = bucket.get(key)) {
                         is KeyValueRead.Found -> {
-                            val entry = decodeSessionEntry(read.entry.value).copy(holder = engine)
+                            val stored = readable(key, read.entry.value) ?: SessionEntry(protagonist, engine, clock.instant())
+                            val entry = stored.copy(holder = engine)
                             bucket.update(key, entry.encode(), timings.ttl, read.entry.revision).heldAs(key, entry)
                         }
 
@@ -199,7 +200,7 @@ class SessionKeeper(
     private fun MutableMap<String, SessionEntry>.record(change: KeyValueChange) {
         when (change) {
             is KeyValueChange.Put -> {
-                val entry = readable(change) ?: return
+                val entry = readable(change.entry.key, change.entry.value) ?: return
                 this[change.entry.key] = entry
             }
 
@@ -213,14 +214,18 @@ class SessionKeeper(
     }
 
     /**
-     * The session entry [change] wrote, or null when no engine can read it: a damaged or foreign value is logged and
-     * skipped, so the copy keeps the key's last readable holder and the watch keeps following the bucket.
+     * The session entry stored under [key], or null when no engine can read [value]. Every read of the bucket goes
+     * through here: a damaged or foreign value is logged and read as no entry, so a join writes over it, a leave check
+     * ignores it, and the watch keeps the key's last readable holder.
      */
-    private fun readable(change: KeyValueChange.Put): SessionEntry? =
+    private fun readable(
+        key: String,
+        value: ByteArray,
+    ): SessionEntry? =
         try {
-            decodeSessionEntry(change.entry.value)
+            decodeSessionEntry(value)
         } catch (failure: IllegalArgumentException) {
-            log.warning("Skipped the unreadable value of session key ${change.entry.key}: ${failure.message}")
+            log.warning("Skipped the unreadable value of session key $key: ${failure.message}")
             null
         }
 
@@ -234,7 +239,7 @@ class SessionKeeper(
         val entries =
             keys.mapNotNull { key ->
                 when (val read = get(key)) {
-                    is KeyValueRead.Found -> decodeSessionEntry(read.entry.value)
+                    is KeyValueRead.Found -> readable(key, read.entry.value)
                     KeyValueRead.Absent -> null
                     is KeyValueRead.Failed -> return LiveEntries.Failed(read.cause)
                 }
@@ -280,7 +285,7 @@ class SessionKeeper(
     ): HeldSession? =
         when (val read = bucket.get(held.key)) {
             is KeyValueRead.Found -> {
-                val current = decodeSessionEntry(read.entry.value)
+                val current = readable(held.key, read.entry.value) ?: held.entry
                 if (current.holder != engine) null else held.copy(entry = current, revision = read.entry.revision)
             }
 

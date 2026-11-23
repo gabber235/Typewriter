@@ -5,6 +5,7 @@ import com.typewritermc.engine.session.SessionEntry
 import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.readSessionEntry
+import com.typewritermc.engine.session.sessionKey
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
@@ -94,6 +95,12 @@ class SessionHarness private constructor(
         engine.keeper.connected(protagonist, id)
         eventually { entry(protagonist, id)?.holder == engine.id }
     }
+
+    /** Writes an empty value no engine can read under [protagonist]'s session [id], as a damaged write would. */
+    suspend fun unreadable(
+        protagonist: Protagonist,
+        id: SessionId,
+    ) = unreadable(sessionKey(protagonist, id))
 
     /** Writes an empty value no engine can read under [key] of the sessions bucket, as a damaged or foreign write would. */
     suspend fun unreadable(key: String) {

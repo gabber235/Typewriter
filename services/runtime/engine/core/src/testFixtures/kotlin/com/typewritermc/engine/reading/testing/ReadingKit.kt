@@ -30,8 +30,8 @@ import kotlinx.coroutines.CompletableDeferred
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Stored values where [overrides] answer before [base]: a value, nothing, or not loaded. It stands in for whatever
- * answers at the entry reader's seam, a cascade or an engine's loaded values. A change gives a new instance.
+ * Stored values where [overrides] answer before [base]: a value, nothing, or not loaded. It stands in for an
+ * engine's loaded values, or for links stored apart from the entry's Kotlin object. A change gives a new instance.
  */
 class LayeredValues(
     private val base: StoredValues,

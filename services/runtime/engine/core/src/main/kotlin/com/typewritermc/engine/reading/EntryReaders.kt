@@ -15,8 +15,8 @@ import skirout.editor.v1.type_catalog.ValuePath
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * The entry reader of a handler: it reads inline from [values], the stored values of [publication] unless a cascade
- * answers in their place, and evaluates each value for the scope through [publication]. A value that is not loaded
+ * The entry reader of a handler: it reads inline from [values], the stored values of [publication] unless a snapshot
+ * of loaded values is given, and evaluates each value for the scope through [publication]. A value that is not loaded
  * fails the read with [ValueNotLoaded], which fails the handler.
  */
 class PublishedEntryReader(
