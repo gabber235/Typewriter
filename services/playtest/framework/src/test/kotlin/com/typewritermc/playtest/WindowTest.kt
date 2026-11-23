@@ -53,6 +53,16 @@ val WindowTest by testSuite {
         window.barrierSeen(steve, 1) shouldBe Passed(105)
     }
 
+    test("a chat line expected several times passes only once that many arrived after the stimulus") {
+        val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(Check(steve, chat("Beat", times = 2))))
+        val drawn = listOf(text("chat", "Beat"))
+
+        window.perceived(steve, perception(103).copy(texts = drawn, chat = listOf(chatLine(99, "Beat"), chatLine(103, "Beat")))) shouldBe
+            Open
+        window.perceived(steve, perception(106).copy(texts = drawn, chat = listOf(chatLine(103, "Beat"), chatLine(106, "Beat")))) shouldBe
+            Passed(106)
+    }
+
     test("a chat line on the last tick of the window passes") {
         val window = Window(anchor = 100, length = 10.ticks, barrier = 1, checks = listOf(Check(steve, chat("Hello"))))
 
