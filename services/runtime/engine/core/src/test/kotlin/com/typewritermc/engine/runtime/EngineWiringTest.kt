@@ -1,5 +1,8 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.discovery.GENERATED_PROVIDER_INDEX_PATH
+import com.typewritermc.discovery.GeneratedProviderIndex
+import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.engine.events.ChainPickup
 import com.typewritermc.engine.events.ImmediateChainPickup
 import com.typewritermc.engine.events.NoSubjectWork
@@ -21,6 +24,7 @@ import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.readSessionEntry
 import com.typewritermc.engine.session.testing.SessionHarness
 import com.typewritermc.events.AfterHandler
+import com.typewritermc.events.EnginePartProvider
 import com.typewritermc.events.EventShape
 import com.typewritermc.events.HandlerPlan
 import com.typewritermc.events.HasChat
@@ -102,6 +106,10 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
         messagesOf(failure) shouldContain "NoSubjectWork"
     }
 
+    test("an engine that loads engine core's own generated parts starts, as every deployed engine does") {
+        WiredEngine(testEngineKind(), engineCoreParts()).use { it.events.shouldNotBeNull() }
+    }
+
     test("an engine part's handler runs for its source's occurrences once the engine starts") {
         val pokes = TestSource(Poke::class)
         val guard = verdict(Poke::class) { _, _ -> deny(reason("guarded")) }
@@ -177,4 +185,15 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
             observer.applied shouldBe listOf(PublicationId(value = "first"), PublicationId(value = "second"))
         }
     }
+}
+
+/** The engine parts engine core's own source part generated, loaded from its provider index as a deployment loads them. */
+private fun engineCoreParts(): List<EnginePartProvider> {
+    val loader = EngineWiring::class.java.classLoader
+    return loader
+        .getResources(GENERATED_PROVIDER_INDEX_PATH)
+        .toList()
+        .flatMap { GeneratedProviderIndex.parse(it.readText()) }
+        .filter { it.kind == GeneratedProviderKind.EnginePart && it.sourcePart == "main" }
+        .map { loader.loadClass(it.providerClass).getDeclaredConstructor().newInstance() as EnginePartProvider }
 }

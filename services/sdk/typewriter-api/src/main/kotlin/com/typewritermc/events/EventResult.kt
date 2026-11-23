@@ -39,7 +39,7 @@ class EventFailure(
  *
  * A handler's `emit(event)` delivers under the same rule without waiting.
  */
-interface Emitter : EnginePart {
+interface Emitter {
     /** Delivers [event], caused by [origin] when one is given, and returns its merged result. */
     suspend fun send(
         event: Event,
