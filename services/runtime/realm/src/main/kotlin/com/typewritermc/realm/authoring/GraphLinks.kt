@@ -78,7 +78,7 @@ internal data class ResourceProjection(
 /** Every judged slice folded together, as one realm wide projection. */
 internal fun Collection<ResourceProjection>.fold(): ProjectionResult =
     ProjectionResult(
-        projections = flatMapTo(linkedSetOf()) { it.projections }.sortedBy(::projectionKey),
+        projections = flatMapTo(linkedSetOf()) { it.projections }.sortedByKeyOnce(::projectionKey),
         problems = flatMapTo(linkedSetOf()) { it.problems }.toList(),
         fit = flatMapTo(linkedSetOf()) { it.fit }.toList(),
     )
