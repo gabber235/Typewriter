@@ -381,6 +381,25 @@ pub fn raw_failed_run(root: &TempRoot, at: &str) {
     crate::results::write(&run, &root.path(&format!("{at}/test_run.json"))).unwrap();
 }
 
+/// Writes game `run`'s raw results under `<root>/<at>/`, as the game suite leaves them: the run
+/// file pointing at its logs folder `logs/1`, which holds every log the game pool can leave there
+/// (its own, the shared Paper's, a restart attempt's own Paper's, a client's, a lost client's and a
+/// display's).
+pub fn raw_game_run(root: &TempRoot, at: &str, mut run: TestRun) {
+    for file in [
+        "pool.log",
+        "paper.log",
+        "paper-a2.log",
+        "client-gv-1.log",
+        "client-gv-1-lost-1.log",
+        "display-gv-1.log",
+    ] {
+        root.write(&format!("{at}/logs/1/{file}"), "log");
+    }
+    run.logs = "logs/1".to_owned();
+    crate::results::write(&run, &root.path(&format!("{at}/test_run.json"))).unwrap();
+}
+
 /// Every file below `dir`, relative to it and sorted; empty when `dir` is absent.
 pub fn files_below(dir: &Path) -> Vec<String> {
     let mut files: Vec<String> = crate::review::files_in(dir)
