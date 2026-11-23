@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.IOException
 import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -225,9 +226,19 @@ class SessionKeeper(
         try {
             decodeSessionEntry(value)
         } catch (failure: IllegalArgumentException) {
-            log.warning("Skipped the unreadable value of session key $key: ${failure.message}")
-            null
+            skipped(key, failure)
+        } catch (failure: IOException) {
+            // A cut off value ends the decoder's input early.
+            skipped(key, failure)
         }
+
+    private fun skipped(
+        key: String,
+        failure: Exception,
+    ): SessionEntry? {
+        log.warning("Skipped the unreadable value of session key $key: $failure")
+        return null
+    }
 
     /** The live session entries of [protagonist], or the first failed read. */
     private suspend fun KeyValueBucket.liveEntries(protagonist: Protagonist): LiveEntries {

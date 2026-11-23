@@ -101,7 +101,7 @@ val SessionEventsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEna
         harness().createBucket()
         val engine = harness().engine("engine-a")
         val (protagonist, id) = harness().player()
-        harness().unreadable(protagonist, id)
+        harness().truncated(protagonist, id)
         harness().unreadable(protagonist, SessionId("other-tab"))
 
         engine.keeper.connected(protagonist, id)

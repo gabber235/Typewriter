@@ -4,6 +4,7 @@ import com.typewritermc.engine.session.HeldSessions
 import com.typewritermc.engine.session.SessionEntry
 import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.engine.session.SessionTimings
+import com.typewritermc.engine.session.encode
 import com.typewritermc.engine.session.readSessionEntry
 import com.typewritermc.engine.session.sessionKey
 import com.typewritermc.identity.EngineId
@@ -101,6 +102,16 @@ class SessionHarness private constructor(
         protagonist: Protagonist,
         id: SessionId,
     ) = unreadable(sessionKey(protagonist, id))
+
+    /** Writes the first half of a real session entry under [protagonist]'s session [id], as a cut off write would. */
+    suspend fun truncated(
+        protagonist: Protagonist,
+        id: SessionId,
+    ) {
+        val whole = SessionEntry(protagonist, EngineId("engine-gone"), java.time.Instant.EPOCH).encode()
+        val written = bucket().create(sessionKey(protagonist, id), whole.copyOf(whole.size / 2), SHORT.ttl)
+        check(written is KeyValueWrite.Written) { "The truncated value was not written: $written" }
+    }
 
     /** Writes an empty value no engine can read under [key] of the sessions bucket, as a damaged or foreign write would. */
     suspend fun unreadable(key: String) {
