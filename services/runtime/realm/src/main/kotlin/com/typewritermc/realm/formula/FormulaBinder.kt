@@ -5,6 +5,7 @@ import com.typewritermc.formula.check.NameMeaning
 import com.typewritermc.formula.check.StoredFormula
 import com.typewritermc.formula.check.StoredReference
 import com.typewritermc.formula.check.check
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.RealmQuery
@@ -16,12 +17,16 @@ import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
-/** The realm owned writes that follow an accepted edit: [candidate] is the view the edit leaves, [changed] what it changed. */
+/**
+ * The realm owned writes that follow an accepted edit: [candidate] is the view the edit leaves, [changed] what it
+ * changed. What finding them did on the graph is counted on [work].
+ */
 internal fun interface CommitRepairs {
     fun intents(
         saved: AuthoringView,
         candidate: AuthoringView,
         changed: Set<ResourceId>,
+        work: GraphWork,
     ): List<EditIntent>
 }
 
@@ -31,8 +36,9 @@ internal fun AuthoringViewStore.commitRepairs(): CommitRepairs =
         saved,
         candidate,
         changed,
+        work,
         ->
-        repairIntents(saved, candidate, changed)
+        repairIntents(saved, candidate, changed, work)
     }
 
 /** Whether a formula saved at [resource] left a name without a target, and whether one of those names has exactly one candidate. */
@@ -82,21 +88,23 @@ private sealed interface BindingReason {
  * Realm owned writes that follow a creator's edit; they never decide whether it is accepted. Candidates come from
  * what is already known: formulas the edit changed or emptied, and saved broken formulas whose check read something
  * the edit changed. So a commit that touches no formula and nothing a broken formula read forks nothing, parses
- * nothing and runs no hook on a warm memo. Binding is a plain function over a fork that is thrown away.
+ * nothing and runs no hook on a warm memo. Binding is a plain function over a fork that is thrown away. Every read
+ * is counted on [work].
  */
 internal fun AuthoringViewStore.repairIntents(
     saved: AuthoringView,
     proposed: AuthoringView,
     changed: Set<ResourceId>,
+    work: GraphWork,
 ): List<EditIntent> {
     val (edited, emptied) = touchedFormulas(saved, proposed, changed)
     val (broken, lastSeen) =
-        pin().use { pinned ->
+        pin(work).use { pinned ->
             with(pinned.reads) { brokenFormulas(saved, proposed) to emptied.mapValues { (at, formula) -> formula.displayed(at) } }
         }
     val candidates = edited + emptied.keys + broken
     if (candidates.isEmpty()) return emptyList()
-    val after = forkAt(proposed).pin()
+    val after = forkAt(proposed, work).pin(work)
     return candidates.mapNotNull { at ->
         val site = after.read(FormulasOf(at.resource)).firstOrNull { it.at == at }?.takeUnless { it.computedAtFunction }
         val reason =

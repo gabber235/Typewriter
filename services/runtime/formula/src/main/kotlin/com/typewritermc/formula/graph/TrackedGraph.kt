@@ -160,20 +160,25 @@ class TrackedGraph<E> private constructor(
         }
     }
 
-    /** Reads pinned to the current revision. They throw [StaleRevision] once a newer revision exists. */
-    fun pin(): QueryReads<E> = Pinned(state)
+    /**
+     * Reads pinned to the current revision. They throw [StaleRevision] once a newer revision exists. What they compute,
+     * verify and walk is counted on [work].
+     */
+    fun pin(work: GraphWork = GraphWork()): QueryReads<E> = Pinned(state, work)
 
     /**
      * A separate graph: a copy of this one's memos and change times, advanced to [environment]. It never looks back,
      * so the base moving on does not change its answers, and nothing it computes reaches the base. It does not report
-     * to the listener.
+     * to the listener. The memos it copies are counted on [work].
      */
     fun fork(
         environment: E,
         candidates: Set<InputKey<E, *>>,
+        work: GraphWork = GraphWork(),
     ): TrackedGraph<E> {
         val copy =
             synchronized(maps) {
+                work.copied(memos.size)
                 TrackedGraph(state, accessOrdered(memos), HashMap(inputChangedAt), limits, GraphListener.NONE)
             }
         copy.advance(environment, candidates)
@@ -227,11 +232,13 @@ class TrackedGraph<E> private constructor(
         running: Frame,
     ): T {
         if (memo != null && !memo.inCycle && verify(memo, running)) {
-            store(query, memo.copy(verifiedAt = running.revision), running)
+            // Two reads may verify one memo at once; only the one that marks it verified counts, so counts are repeatable.
+            if (store(query, memo.copy(verifiedAt = running.revision), running)) running.work.verified()
             @Suppress("UNCHECKED_CAST")
             return memo.value as T
         }
         listener.computed(query)
+        running.work.computed()
         val value = failing(query, running) { context(running) { query.compute() } }
         val changedAt = if (memo != null && memo.value == value) memo.changedAt else running.revision
         store(query, Memo(value, running.dependencies(), false, running.revision, changedAt), running)
@@ -273,9 +280,9 @@ class TrackedGraph<E> private constructor(
         while (pending.isNotEmpty()) {
             for (dependency in currentDependencies(pending.removeLast(), frame)) {
                 @Suppress("UNCHECKED_CAST")
-                if (found.add(dependency) && dependency is Query<*, *> && !stopAt(dependency)) {
-                    pending += dependency as Query<E, *>
-                }
+                if (!found.add(dependency)) continue
+                frame.work.walked()
+                if (dependency is Query<*, *> && !stopAt(dependency)) pending += dependency as Query<E, *>
             }
         }
         return found
@@ -296,19 +303,23 @@ class TrackedGraph<E> private constructor(
         return memoOf(query)?.takeIf { it.verifiedAt == frame.revision }?.dependencies.orEmpty()
     }
 
-    /** The only write of a memo. advance and reset swap the revision under the same lock, so a stale run never stores. */
+    /**
+     * The only write of a memo. advance and reset swap the revision under the same lock, so a stale run never stores.
+     * Returns whether the key had no memo of this revision before.
+     */
     private fun store(
         key: GraphKey<*>,
         memo: Memo,
         frame: Frame,
-    ) {
-        val evicted =
+    ): Boolean {
+        val (first, evicted) =
             synchronized(maps) {
                 if (state.revision != frame.revision) throw StaleRevision()
-                memos[key] = memo
-                evictOverLimit()
+                val before = memos.put(key, memo)
+                (before?.verifiedAt != frame.revision) to evictOverLimit()
             }
         evicted.forEach(listener::evicted)
+        return first
     }
 
     /**
@@ -356,20 +367,21 @@ class TrackedGraph<E> private constructor(
     /** What a pinned [QueryReads] hands out: each read starts with an empty stack of running queries. */
     private inner class Pinned(
         private val snapshot: Snapshot<E>,
+        private val work: GraphWork,
     ) : QueryReads<E> {
         @UntrackedEnvironment
         override val environment: E get() = snapshot.environment
 
         override val revision: Long get() = snapshot.revision
 
-        override fun <T> read(key: GraphKey<T>): T = fetch(key, Frame(snapshot, RunningQueries(), null))
+        override fun <T> read(key: GraphKey<T>): T = fetch(key, Frame(snapshot, RunningQueries(), null, work))
 
         override fun ensureCurrent() = ensureCurrent(snapshot.revision)
 
         override fun readsOf(
             key: Query<E, *>,
             stopAt: (GraphKey<*>) -> Boolean,
-        ): Set<GraphKey<*>> = readsOf(key, stopAt, Frame(snapshot, RunningQueries(), null))
+        ): Set<GraphKey<*>> = readsOf(key, stopAt, Frame(snapshot, RunningQueries(), null, work))
     }
 
     /** One step of a read: the queries running above it, and where the running query records its reads, if it does. */
@@ -377,6 +389,7 @@ class TrackedGraph<E> private constructor(
         val snapshot: Snapshot<E>,
         val stack: RunningQueries,
         private val recorded: LinkedHashSet<GraphKey<*>>?,
+        val work: GraphWork,
     ) : QueryReads<E> {
         @UntrackedEnvironment
         override val environment: E get() = snapshot.environment
@@ -403,12 +416,12 @@ class TrackedGraph<E> private constructor(
         /** The frame of [query] running on top of this one. */
         fun push(query: Query<E, *>): Frame {
             stack.push(query)
-            return Frame(snapshot, stack, LinkedHashSet())
+            return Frame(snapshot, stack, LinkedHashSet(), work)
         }
 
         fun pop() = stack.pop()
 
-        fun withoutRecording(): Frame = Frame(snapshot, stack, null)
+        fun withoutRecording(): Frame = Frame(snapshot, stack, null, work)
     }
 
     private companion object {
