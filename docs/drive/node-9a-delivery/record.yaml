@@ -66,6 +66,9 @@ decided:
     what: one rule for every delivery
   - id: plan-approved
     what: node 9a plan approved, my calls included (order, named subject, many holders, results per holder, one sessions copy, EngineLink port)
+  - id: outside-stimulus
+    what: Playtest marks a stimulus from outside Paper with outside(says) { }, counting windows from the tick that last ended on Paper
+    why: chosen by the maintainer 2026-11-23 over anchoring on an unrelated probe step
   - id: engine-ids-one-token
     what: every engine id is one subject token that starts with its kind (primary-, panel-, local-), named in one place (loader-api EngineIds)
     why: chosen by the maintainer 2026-11-23; the permission rows showed panel.<realm> spans two tokens, so the panel engine could never hear its inbox
@@ -75,7 +78,7 @@ open: []
 slices:
   - id: game-d1-red
     tests: [GAME-D1]
-    status: building
+    status: done
   - id: generator
     tests: [subject.test.ts free parameters, grants.test.ts realm_actor]
     status: done
@@ -84,18 +87,19 @@ slices:
     status: done
   - id: sessions-copy
     tests: [SESSION-COPY-1, WATCH-5, WATCH-6]
-    status: building
+    status: done
     note: natskt 0.9.1 drops the end of replay marker; the watch says caught up after the first entry with delta 0, or at once for a filter with no live key, as the NATS clients do
   - id: delivery
-    tests: [RESULT-1 to RESULT-3, DELIVER-1 to DELIVER-14]
-    status: building
-    note: DELIVER-1 to 14 pass; still missing holder_restarted, timeout, subject_mismatch, an engine subject, and the unit tests (merge order, ask gaps, occurrence window). testEngineKind is a function now, since a shared Koin module shared its singles between two wired engines. Open point for the PR: a source opens only while a handler of its own engine could run, so a source event whose handlers live only on another kind of engine never fires.
+    tests: [RESULT-1 to RESULT-3, DELIVER-1 to DELIVER-14, DeliveryRulesTest, engine core's generated parts start]
+    status: done
+    note: testEngineKind is a function, since a shared Koin module shared its singles between two wired engines. Emitter is an engine service, not an EnginePart, since KSP generated a part for Delivery that failed every deployed engine. Open point for the PR, recorded in events-and-handlers.md: a source opens only while a handler of its own engine could run, so a source event whose handlers live only on another kind of engine never fires.
   - id: panel-gateway
     tests: [PANEL-EMIT-1, PANEL-EMIT-2, PANEL-HOLD-1]
     status: done
     note: the inbox and the gateway share one Occurrences table; the gateway relays without decoding, asking itself through its own inbox
   - id: stack-proof
-    tests: [GAME-D1]
-    status: todo
+    tests: [GAME-D1, OutsideTest]
+    status: done
+    note: Playtest got outside(says) { } for stimuli from outside Paper, with a now ask for the tick that last ended (chosen by the maintainer 2026-11-23); GAME-D1 waits until the tab's session is in the sessions bucket before its stimulus
 
-next: GAME-D1 on the stack, design record changes, checks, typewriter-review, PR
+next: checks, typewriter-review, PR with the design record changes
