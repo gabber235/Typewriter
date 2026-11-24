@@ -6,8 +6,6 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.formula.Formula
 import com.typewritermc.formula.TextSpan
-import com.typewritermc.formula.graph.GraphWork
-import com.typewritermc.realm.checking.CheckSubjects
 import com.typewritermc.realm.testing.CountedHook
 import com.typewritermc.realm.testing.HookGate
 import com.typewritermc.realm.testing.commit
@@ -64,6 +62,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.longs.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.CancellationException
@@ -551,15 +551,16 @@ val FormulaReferencesTest by testSuite {
         }
     }
 
-    test("checking a view a commit installed after answering a broken formula's names reuses what the live graph checked") {
+    test("evaluating a view a commit installed after answering a broken formula's names reuses what the live graph checked") {
         withSetup(page, catalog = catalog) { demo ->
             commit(rename(demo.pageId, "renamed")).shouldBeCommitted()
             settle()
-            val work = GraphWork()
 
-            views.capture().use { installed -> views.forkAt(installed.root).pin(work).read(CheckSubjects) }
+            views.capture().use { installed -> checks.evaluateCapture(installed.root) }
 
-            work.counts().computed shouldBe 0
+            val work = telemetry.counts("typewriter.realm.graph_work", listOf("realm.operation", "graph.work"))
+            work[listOf("capture.evaluation", "verified")].shouldNotBeNull() shouldBeGreaterThan 0
+            work[listOf("capture.evaluation", "computed")] shouldBe 0L
         }
     }
 
