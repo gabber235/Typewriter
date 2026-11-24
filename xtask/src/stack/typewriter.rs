@@ -749,7 +749,7 @@ mod tests {
     }
 
     #[test]
-    fn the_game_stack_builds_the_realm_host_beside_the_cargo_builds() {
+    fn the_game_stack_builds_the_stack_binary_components_and_realm_host_before_it_starts() {
         assert_eq!(
             build_names(&game()),
             [
