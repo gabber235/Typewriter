@@ -27,16 +27,5 @@ class GraphWork {
         val verified: Long,
         /** Keys a walk of what a query read visited. */
         val walked: Long,
-    ) {
-        operator fun minus(other: Counts) = Counts(computed - other.computed, verified - other.verified, walked - other.walked)
-
-        operator fun plus(other: Counts) = Counts(computed + other.computed, verified + other.verified, walked + other.walked)
-
-        /** Every step together. */
-        val total: Long get() = computed + verified + walked
-
-        companion object {
-            val NONE = Counts(0, 0, 0)
-        }
-    }
+    )
 }

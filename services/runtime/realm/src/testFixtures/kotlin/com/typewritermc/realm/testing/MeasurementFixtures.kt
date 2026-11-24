@@ -205,3 +205,12 @@ private fun RealmFixture.workCounted(operations: Set<String>): GraphWork.Counts 
 }
 
 private fun List<CommitCost>.medianWork(): Long = map { it.work.total }.sorted()[size / 2]
+
+private operator fun GraphWork.Counts.minus(other: GraphWork.Counts) =
+    GraphWork.Counts(computed - other.computed, verified - other.verified, walked - other.walked)
+
+private operator fun GraphWork.Counts.plus(other: GraphWork.Counts) =
+    GraphWork.Counts(computed + other.computed, verified + other.verified, walked + other.walked)
+
+/** Every step together. */
+private val GraphWork.Counts.total: Long get() = computed + verified + walked
