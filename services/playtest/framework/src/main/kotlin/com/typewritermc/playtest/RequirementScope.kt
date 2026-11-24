@@ -106,6 +106,14 @@ class RequirementScope internal constructor(
         )
 
     /**
+     * The attempt is about to cause a change outside Paper, such as content it writes, whose effect
+     * reaches Paper as [fact]: from now on its players' ticks wait until a plugin on Paper reports that
+     * fact, so the change takes no ticks from any window. Call it before causing the change. A fact no
+     * plugin reports within 1 s of wall clock fails the attempt with [WorkHung] naming it.
+     */
+    suspend fun expectFact(fact: String) = attempt.expect(fact)
+
+    /**
      * Kills the attempt's Paper as a crash would, so it saves nothing, boots it again on the same world,
      * and returns once every player's client is back and holds what Paper sends it. Each player is where
      * Paper put it on its join, with what Paper loaded for it: what was saved survives, the rest is gone.

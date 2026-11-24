@@ -81,6 +81,11 @@ internal class StandInGame(
 
     override suspend fun query(player: GamePlayer): List<StateKind> = marks
 
+    override suspend fun expect(
+        players: List<GamePlayer>,
+        fact: String,
+    ) = Unit
+
     override suspend fun restart(
         attempt: Attempt,
         submission: SubmissionId,

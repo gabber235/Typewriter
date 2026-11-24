@@ -23,6 +23,17 @@ suspend fun RequirementScope.work(
 ): Mark = probe.work(player, name, millis, then, countedFor)
 
 /**
+ * Off Paper's main thread and uncounted, [millis] of wall clock from now, Paper sends [then] to [player]
+ * as a chat line and then reports [fact], as a plugin reports a fact a change outside Paper caused.
+ */
+suspend fun RequirementScope.factLater(
+    player: GamePlayer,
+    fact: String,
+    millis: Int,
+    then: String,
+): Mark = probe.factLater(player, fact, millis, then)
+
+/**
  * Registers a requirement of the framework's own test kit that runs [busy] and [other] side by side, each
  * as an attempt of its own on a player of its own, leased at the same moment; once both ended,
  * [afterward] runs as one more attempt on [afterwardPlayers]. [other] completes the deferred it gets

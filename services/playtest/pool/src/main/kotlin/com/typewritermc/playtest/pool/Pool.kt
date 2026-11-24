@@ -654,6 +654,7 @@ internal class Pool(
                 when (val paper = ask.value) {
                     is PaperAsk.ProbeWrapper -> paper.value.players
                     is PaperAsk.QueryWrapper -> listOf(paper.value.player)
+                    is PaperAsk.ExpectWrapper -> paper.value.players
                     else -> null
                 }
             }

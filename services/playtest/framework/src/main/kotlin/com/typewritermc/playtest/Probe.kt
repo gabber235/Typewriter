@@ -226,6 +226,18 @@ class Probe internal constructor(
             ),
         )
 
+    /**
+     * Off Paper's main thread and uncounted, [millis] of wall clock from now, Paper sends [chat] to
+     * [player] as a chat line and then reports [fact], as a plugin reports a fact a change outside Paper
+     * caused; for the framework's own test kit.
+     */
+    internal suspend fun factLater(
+        player: GamePlayer,
+        fact: String,
+        millis: Int,
+        chat: String,
+    ): Mark = run(listOf(player), PlayerAction.createFactLater(fact = fact, millis = millis, chat = chat))
+
     private suspend fun run(
         players: List<GamePlayer>,
         action: PlayerAction,

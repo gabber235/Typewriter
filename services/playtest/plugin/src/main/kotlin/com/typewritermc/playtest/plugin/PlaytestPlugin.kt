@@ -191,13 +191,26 @@ class PlaytestPlugin :
         }
     }
 
-    /** Answers a session's request to Paper: a probe or a query. */
+    /** Answers a session's request to Paper: a probe, a query or an expected fact. */
     private fun request(request: Request) {
         val id = request.id
         when (val ask = (request.ask as? Ask.PaperWrapper)?.value) {
-            is PaperAsk.ProbeWrapper -> probe(id, ask.value)
-            is PaperAsk.QueryWrapper -> pool.send(reply(id, marks(ask.value.player)))
-            else -> logger.severe("The game pool sent $request, which Paper never answers")
+            is PaperAsk.ProbeWrapper -> {
+                probe(id, ask.value)
+            }
+
+            is PaperAsk.QueryWrapper -> {
+                pool.send(reply(id, marks(ask.value.player)))
+            }
+
+            is PaperAsk.ExpectWrapper -> {
+                PlayerWork.expect(uuids(ask.value.players), ask.value.fact)
+                pool.send(reply(id, Answer.EXPECTING))
+            }
+
+            else -> {
+                logger.severe("The game pool sent $request, which Paper never answers")
+            }
         }
     }
 

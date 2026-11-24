@@ -359,6 +359,15 @@ internal class PoolSession private constructor(
         return marks.marked
     }
 
+    /** The ticks of [players] wait from now until a plugin on Paper reports [fact]; returns at once. */
+    override suspend fun expect(
+        players: List<GamePlayer>,
+        fact: String,
+    ) {
+        val answer = request<Answer>(Ask.PaperWrapper(PaperAsk.createExpect(players = players.map { it.uuid.toString() }, fact = fact)))
+        if (answer != Answer.EXPECTING) throw GameUnavailable("the game answered an expected fact with ${answer.kind}")
+    }
+
     /** Paper runs [action] for [players]; returns, once each of their clients holds its effect, the tick after which it ran. */
     override suspend fun probe(
         players: List<GamePlayer>,

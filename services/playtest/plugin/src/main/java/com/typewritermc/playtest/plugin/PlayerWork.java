@@ -1,9 +1,13 @@
 package com.typewritermc.playtest.plugin;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.entity.Player;
 
 /**
@@ -24,6 +28,9 @@ import org.bukkit.entity.Player;
  */
 public final class PlayerWork implements AutoCloseable {
     static final WorkLedger LEDGER = new WorkLedger(WorkLedger.deadlineThread());
+
+    // The holds of the facts attempts expect, by fact, until a plugin reports it.
+    private static final Map<String, List<PlayerWork>> EXPECTED = new ConcurrentHashMap<>();
 
     private final WorkLedger.Entry entry;
 
@@ -81,6 +88,29 @@ public final class PlayerWork implements AutoCloseable {
                 counted.end();
             }
         };
+    }
+
+    /**
+     * The attempt of [players] is about to cause a change outside Paper whose effect reaches Paper as
+     * [fact]: their ticks wait from now until a plugin reports it with {@link #factHappened}. A fact no
+     * plugin reports 1 s later is hung work named "expected fact" and the fact.
+     */
+    static void expect(Collection<UUID> players, String fact) {
+        PlayerWork hold = begin(players, "expected fact " + fact);
+        EXPECTED.compute(fact, (key, holds) -> {
+            List<PlayerWork> waiting = holds != null ? holds : new ArrayList<>();
+            waiting.add(hold);
+            return waiting;
+        });
+    }
+
+    /**
+     * A change from outside Paper took effect here as [fact], such as content a plugin applied: every
+     * attempt that expects it stops waiting for it. A fact no attempt expects changes nothing. Any thread.
+     */
+    public static void factHappened(String fact) {
+        List<PlayerWork> waiting = EXPECTED.remove(fact);
+        if (waiting != null) waiting.forEach(PlayerWork::end);
     }
 
     /** The work is done; ending it again does nothing. */

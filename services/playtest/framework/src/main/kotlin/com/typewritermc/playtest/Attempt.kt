@@ -47,6 +47,12 @@ internal interface AttemptPool {
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<StateKind>
 
+    /** The ticks of [players] wait from now until a plugin on Paper reports [fact]; returns at once. */
+    suspend fun expect(
+        players: List<GamePlayer>,
+        fact: String,
+    )
+
     /** Kills and boots again the own Paper of [attempt], which runs [submission]; returns the new Paper's tick after which every player is back. */
     suspend fun restart(
         attempt: Attempt,
@@ -268,6 +274,9 @@ internal class Attempt(
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<StateKind> = step("query ${player.name}") { unlessLost { session.query(player) } }
+
+    /** The ticks of every player of the attempt wait from now until a plugin on Paper reports [fact]. */
+    suspend fun expect(fact: String) = step("expect $fact") { unlessLost { session.expect(players, fact) } }
 
     /**
      * Kills the attempt's own Paper and boots it again; the mark is the new Paper's tick after which every
