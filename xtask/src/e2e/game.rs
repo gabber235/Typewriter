@@ -522,18 +522,9 @@ mod tests {
     use crate::results::TestCase;
     use crate::results::{AttemptPolicy, Outcome, RunEnd};
     use crate::test_support::{
-        TempRoot, changed, e2e_args as parsed, exited, failed, files_below, game_run, interrupted,
-        quarantining, refusal,
+        TempRoot, changed, e2e_args as parsed, exited, failed, files_below, game_run,
+        gradle_selection as selection, interrupted, quarantining, refusal,
     };
-
-    /// The testBalloon patterns `gradle` selects tests with.
-    fn selection(gradle: &[String]) -> Vec<&str> {
-        gradle
-            .windows(2)
-            .filter(|pair| pair[0] == "--tests")
-            .map(|pair| pair[1].as_str())
-            .collect()
-    }
 
     #[test]
     fn a_game_run_gets_a_folder_of_its_own_and_only_the_last_three_runs_keep_theirs() {

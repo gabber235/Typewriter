@@ -262,6 +262,15 @@ pub fn report_text(run: &TestRun, quarantine: &Quarantine) -> (Result<()>, Strin
     (result, String::from_utf8(out).unwrap())
 }
 
+/// The testBalloon patterns the Gradle arguments `gradle` select tests with (`--tests <pattern>`).
+pub fn gradle_selection(gradle: &[String]) -> Vec<&str> {
+    gradle
+        .windows(2)
+        .filter(|pair| pair[0] == "--tests")
+        .map(|pair| pair[1].as_str())
+        .collect()
+}
+
 /// `cargo xtask e2e args` as the command line parses it.
 pub fn e2e_args(args: &[&str]) -> Result<E2eArgs, clap::Error> {
     #[derive(clap::Parser)]

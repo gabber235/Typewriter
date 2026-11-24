@@ -600,8 +600,10 @@ pub fn report(
                 }
             }
             Verdict::Unsteady => {
-                let runs = unsteady(case).unwrap_or_default();
-                writeln!(out, "{}: unsteady, {UNSTEADY}: {runs}", case.id)?;
+                match unsteady(case) {
+                    Some(runs) => writeln!(out, "{}: unsteady, {UNSTEADY}: {runs}", case.id)?,
+                    None => writeln!(out, "{}: unsteady, {UNSTEADY}", case.id)?,
+                }
                 unsteady_cases.push(case.id.as_str());
             }
             Verdict::Failed => {
