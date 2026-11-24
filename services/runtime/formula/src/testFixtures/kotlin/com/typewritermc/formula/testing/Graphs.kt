@@ -226,9 +226,14 @@ class GeneratedGraph(
     fun changes(random: Random): List<Pair<String, Int?>> =
         List(random.nextInt(1, 4)) { names.random(random) to random.nextInt(-1, 4).takeIf { it >= 0 } }
 
-    /** What each query gives at the graph's revision, a failure as its class. */
-    fun outcomes(graph: TrackedGraph<Cells>): List<Any?> =
-        queries.map { query -> runCatching { graph.read(query) }.fold({ it }, { it::class }) }
+    /** What each query gives at the graph's revision, a failure as its class, read in [order] and listed by query. */
+    fun outcomes(
+        graph: TrackedGraph<Cells>,
+        order: List<Int> = queries.indices.toList(),
+    ): List<Any?> {
+        val read = order.associateWith { index -> runCatching { graph.read(queries[index]) }.fold({ it }, { it::class }) }
+        return queries.indices.map(read::getValue)
+    }
 
     private fun step(
         random: Random,

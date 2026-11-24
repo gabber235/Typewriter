@@ -549,7 +549,7 @@ class FormulaReads internal constructor(
     ): Any? =
         realm.views.pin(GraphWork()).use { pinned ->
             with(pinned.reads) {
-                val environment = RealmEvaluationEnvironment(this, null)
+                val environment = RealmEvaluationEnvironment(this)
                 val evaluated = read(Evaluate(siteOf(resource)))
                 val value = (evaluated as? Evaluation.Value)?.value
                 if (evaluated !is Evaluation.Value) throw AssertionError("${resource.value} gave $evaluated, not a value.")

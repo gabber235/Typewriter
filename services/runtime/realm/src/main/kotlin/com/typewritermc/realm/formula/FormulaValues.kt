@@ -101,27 +101,22 @@ internal fun DataValue.toFormulaValue(
     checked: CheckedCatalog,
 ): Any? = ValueWalk(checked, FormulaValueVisitor).walk(this, type, at)
 
-/** A deferred value on first use, read by the evaluation at [reader]: Evaluate gives its problems, context and purity gate, for a Var and a function alike. */
+/** A deferred value on first use: Evaluate gives its problems, context and purity gate, for a Var and a function alike. */
 context(reads: RealmReads)
-internal fun Deferred.value(reader: ValueLocation?): Any? = reads.read(Evaluate(at)).orThrowDependency(at, reader)
+internal fun Deferred.value(): Any? = reads.read(Evaluate(at)).orThrowDependency(at)
 
 /**
- * The value of an evaluation the formula at [reader] reads. A failure or a value that was not evaluated has its own
- * finding at its source, so the reader fails with Dependency, which reports nothing. A cycle the reader is a member of
- * stays that cycle, so each member reports it, whichever member the graph entered first.
+ * The value of an evaluation a formula reads. A failure or a value that was not evaluated has its own finding at its
+ * source, so the reader fails with Dependency, which reports nothing. A reader that is a member of a cycle never sees
+ * the cycle's value: the graph gives it its own recovery value.
  */
-internal fun Evaluation<Any?>.orThrowDependency(
-    at: ValueLocation,
-    reader: ValueLocation?,
-): Any? =
+internal fun Evaluation<Any?>.orThrowDependency(at: ValueLocation): Any? =
     when (this) {
         is Evaluation.Value -> {
             value
         }
 
         is Evaluation.Failed -> {
-            val cycle = reason as? FormulaFailure.Cycle
-            if (cycle != null && reader != null && reader.resource in cycle.through) throw FailedEvaluation(cycle)
             throw FailedEvaluation(FormulaFailure.Dependency(at.resource))
         }
 

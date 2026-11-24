@@ -305,7 +305,7 @@ internal data class Evaluate(
             val parameters = site.expected.parameters.map { CheckedBinding.Named(it.name, it.type) }
             return Evaluation.Value(FunctionValue(checked.tree, parameters, emptyMap(), at))
         }
-        return with(RealmEvaluationEnvironment(reads, at)) { checked.tree.evaluate(emptyMap(), at) }
+        return with(RealmEvaluationEnvironment(reads)) { checked.tree.evaluate(emptyMap(), at) }
     }
 
     /** The plain value stored at [at], through the walk. A plain Var gives its value, which keeps T in its value field. */

@@ -28,15 +28,13 @@ import skirout.editor.v1.type_catalog.ValueLocation
  */
 internal class RealmEvaluationEnvironment private constructor(
     private val reads: RealmReads,
-    private val evaluating: ValueLocation?,
     private val reader: CapturedAuthoringReads,
 ) : CatalogEvaluationEnvironment(reader.viewCatalog.checked, reader.viewCatalog.nativeBindings) {
-    /** The environment of the evaluation at [evaluating], or of a read outside any evaluation when it is null. */
-    constructor(reads: RealmReads, evaluating: ValueLocation?) : this(reads, evaluating, with(reads) { tracked() })
+    constructor(reads: RealmReads) : this(reads, with(reads) { tracked() })
 
     private val typeNames: Map<String, List<CatalogType>> by lazy { with(reads) { formulaTypeNames } }
 
-    override fun evaluateDeferred(value: Deferred): Any? = with(reads) { value.value(evaluating) }
+    override fun evaluateDeferred(value: Deferred): Any? = with(reads) { value.value() }
 
     /** The stored value of [field] on [resource] as the walk builds it: a Var or function typed field stays deferred. */
     override fun fieldOf(
@@ -62,7 +60,7 @@ internal class RealmEvaluationEnvironment private constructor(
 
     override fun exported(resource: ResourceId): Any? {
         val at = reads.read(DynamicOf(resource.toSkir())).exports ?: return refTo(resource)
-        return reads.read(Evaluate(at)).orThrowDependency(at, evaluating)
+        return reads.read(Evaluate(at)).orThrowDependency(at)
     }
 
     override fun typeName(id: TypeDefinitionId): String? =

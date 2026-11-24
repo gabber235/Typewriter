@@ -40,6 +40,29 @@ val TrackedGraphPropertyTest by testSuite {
         }
     }
 
+    test("on a fresh graph, reading the queries in any order gives the same outcomes") {
+        checkAll(config, Arb.long()) { seed ->
+            val random = Random(seed)
+            val generated = GeneratedGraph(random)
+            val cells = generated.cells(random)
+            val order = generated.queries.indices.shuffled(random)
+            generated.outcomes(TrackedGraph(cells), order) shouldBe generated.outcomes(TrackedGraph(cells))
+        }
+    }
+
+    test("under a memo limit that forgets results, every query still equals a fresh computation after any changes") {
+        checkAll(config, Arb.long()) { seed ->
+            val random = Random(seed)
+            val generated = GeneratedGraph(random)
+            val graph = TrackedGraph(generated.cells(random), GraphLimits(maxMemos = random.nextInt(1, 6)))
+            repeat(12) {
+                generated.outcomes(graph) shouldBe generated.outcomes(TrackedGraph(graph.cells))
+                graph.change(*generated.changes(random).toTypedArray())
+            }
+            generated.outcomes(graph) shouldBe generated.outcomes(TrackedGraph(graph.cells))
+        }
+    }
+
     test("after any changes and any overlay, every fork query equals a fresh computation over the fork's environment") {
         checkAll(config, Arb.long()) { seed ->
             val random = Random(seed)

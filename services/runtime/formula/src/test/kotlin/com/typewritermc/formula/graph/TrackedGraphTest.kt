@@ -189,6 +189,17 @@ val TrackedGraphTest by testSuite {
         graph.read(other) shouldBe 7
     }
 
+    test("a member of a cycle read after its memo was forgotten takes its own recovery value, not a value of the cycle") {
+        val bench = QueryBench()
+        lateinit var second: Query<Cells, Int>
+        val first = bench.query("first", recovery = { -1 }) { read(second) + 1 }
+        second = bench.query("second", recovery = { -2 }) { read(first) + 1 }
+        // One memo: reading first keeps first and forgets second, so second enters the cycle through first's memo.
+        val graph = TrackedGraph(cells(), GraphLimits(maxMemos = 1))
+        graph.read(first) shouldBe -1
+        graph.read(second) shouldBe -2
+    }
+
     test("breaking a cycle clears the recovery values of every member") {
         val bench = QueryBench()
         lateinit var second: Query<Cells, Int>

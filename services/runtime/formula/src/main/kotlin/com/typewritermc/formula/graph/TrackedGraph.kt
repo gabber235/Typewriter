@@ -70,6 +70,14 @@ internal class CycleSignal(
     val members: List<GraphKey<*>>,
 ) : QueryControl()
 
+/**
+ * A read of a key whose current result is a cycle the reader is a member of: the reader takes its own recovery value
+ * too, whichever member the graph entered first.
+ */
+internal class CycleMember(
+    val members: List<GraphKey<*>>,
+) : QueryControl()
+
 /** A cycle whose members give no recovery value. */
 class QueryCycle(
     val members: List<GraphKey<*>>,
@@ -241,8 +249,11 @@ class TrackedGraph<E> private constructor(
         frame.stack.indexOf(query)?.let { index -> throw CycleSignal(query, frame.stack.keysFrom(index)) }
 
         val memo = memoOf(query)
-        @Suppress("UNCHECKED_CAST")
-        if (memo != null && memo.verifiedAt == frame.revision) return memo.value as T
+        if (memo != null && memo.verifiedAt == frame.revision) {
+            frame.joinCycle(memo.cycle)
+            @Suppress("UNCHECKED_CAST")
+            return memo.value as T
+        }
 
         // Pushed before verifying too, so a dependency that reads back during verification is a cycle, never an
         // unbounded recursion.
@@ -252,13 +263,29 @@ class TrackedGraph<E> private constructor(
             return onSufficientStack(running.depth) { verifyOrCompute(query, memo, running) }
         } catch (cycle: CycleSignal) {
             if (query !in cycle.members) throw cycle
-            val recovered = failing(query, frame) { query.onCycle(cycle.members) }
-            store(query, Memo(recovered, running.dependencies(), true, frame.revision, frame.revision, frame.revision), frame)
+            val recovered = recover(query, cycle.members, running, frame)
             if (cycle.head != query) throw cycle
+            return recovered
+        } catch (member: CycleMember) {
+            if (query !in member.members) throw member
+            val recovered = recover(query, member.members, running, frame)
+            frame.joinCycle(member.members)
             return recovered
         } finally {
             frame.pop()
         }
+    }
+
+    /** Stores the recovery value of [query] as a member of the cycle of [members], with the reads it made so far. */
+    private fun <T> recover(
+        query: Query<E, T>,
+        members: List<GraphKey<*>>,
+        running: Frame,
+        frame: Frame,
+    ): T {
+        val recovered = failing(query, frame) { query.onCycle(members) }
+        store(query, Memo(recovered, running.dependencies(), members, frame.revision, frame.revision, frame.revision), frame)
+        return recovered
     }
 
     private fun <T> verifyOrCompute(
@@ -266,7 +293,7 @@ class TrackedGraph<E> private constructor(
         memo: Memo?,
         running: Frame,
     ): T {
-        if (memo != null && !memo.inCycle && verify(memo, running)) {
+        if (memo != null && memo.cycle == null && verify(memo, running)) {
             // Two reads may verify one memo at once; only the one that marks it verified counts, so counts are repeatable.
             if (store(query, memo.copy(verifiedAt = running.revision), running)) running.work.verified()
             @Suppress("UNCHECKED_CAST")
@@ -276,7 +303,7 @@ class TrackedGraph<E> private constructor(
         running.work.computed()
         val value = failing(query, running) { context(running) { query.compute() } }
         val changedAt = if (memo != null && memo.value == value) memo.changedAt else running.revision
-        store(query, Memo(value, running.dependencies(), false, running.revision, changedAt, running.revision), running)
+        store(query, Memo(value, running.dependencies(), null, running.revision, changedAt, running.revision), running)
         return value
     }
 
@@ -334,7 +361,7 @@ class TrackedGraph<E> private constructor(
         frame.ensureCurrent()
         val memo = memoOf(query)?.takeIf { it.verifiedAt == frame.revision }
         if (memo != null) return memo.dependencies
-        attempt { fetch(query, frame.withoutRecording()) }
+        attempt { fetch(query, frame.walking()) }
         return memoOf(query)?.takeIf { it.verifiedAt == frame.revision }?.dependencies.orEmpty()
     }
 
@@ -435,7 +462,7 @@ class TrackedGraph<E> private constructor(
 
         override fun <T> read(key: GraphKey<T>): T {
             work.read()
-            return fetch(key, Frame(snapshot, RunningQueries(), null, work))
+            return fetch(key, Frame(snapshot, RunningQueries(), null, work, null))
         }
 
         override fun ensureCurrent() = ensureCurrent(snapshot.revision)
@@ -443,15 +470,19 @@ class TrackedGraph<E> private constructor(
         override fun readsOf(
             key: Query<E, *>,
             stopAt: (GraphKey<*>) -> Boolean,
-        ): Set<GraphKey<*>> = readsOf(key, stopAt, Frame(snapshot, RunningQueries(), null, work))
+        ): Set<GraphKey<*>> = readsOf(key, stopAt, Frame(snapshot, RunningQueries(), null, work, null))
     }
 
-    /** One step of a read: the queries running above it, and where the running query records its reads, if it does. */
+    /**
+     * One step of a read: the queries running above it, where the running query records its reads, if it does, and the
+     * query whose direct read this is, if any.
+     */
     private inner class Frame(
         val snapshot: Snapshot<E>,
         val stack: RunningQueries,
         private val recorded: LinkedHashSet<GraphKey<*>>?,
         val work: GraphWork,
+        private val reader: Query<E, *>?,
     ) : QueryReads<E> {
         @UntrackedEnvironment
         override val environment: E get() = snapshot.environment
@@ -481,12 +512,22 @@ class TrackedGraph<E> private constructor(
         /** The frame of [query] running on top of this one. */
         fun push(query: Query<E, *>): Frame {
             stack.push(query)
-            return Frame(snapshot, stack, LinkedHashSet(), work)
+            return Frame(snapshot, stack, LinkedHashSet(), work, query)
         }
 
         fun pop() = stack.pop()
 
-        fun withoutRecording(): Frame = Frame(snapshot, stack, null, work)
+        /** The same reader, recording nothing: verifying a dependency is not reading it. */
+        fun withoutRecording(): Frame = Frame(snapshot, stack, null, work, reader)
+
+        /** No reader: a walk of what a query read visits keys that query did not read directly. */
+        fun walking(): Frame = Frame(snapshot, stack, null, work, null)
+
+        /** A reader that is a member of [cycle] takes its own recovery value too. */
+        fun joinCycle(cycle: List<GraphKey<*>>?) {
+            val reader = reader ?: return
+            if (cycle != null && reader in cycle) throw CycleMember(cycle)
+        }
     }
 
     private companion object {
@@ -510,7 +551,8 @@ private data class Memo(
     val value: Any?,
     /** Direct, in read order. */
     val dependencies: List<GraphKey<*>>,
-    val inCycle: Boolean,
+    /** The members of the cycle this result recovered from, in the order the graph met them; null when it is no cycle's. */
+    val cycle: List<GraphKey<*>>?,
     val verifiedAt: Long,
     val changedAt: Long,
     /** The revision its value and dependencies were last computed at; verifying keeps it. */
