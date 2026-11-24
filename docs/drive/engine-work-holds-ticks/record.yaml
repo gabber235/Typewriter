@@ -1,0 +1,105 @@
+# docs/drive/engine-work-holds-ticks/record.yaml: the working state of the holding pull request, split
+# from node 4's pull request. The design it changes is docs/design/game-verification/README.md (Ticks,
+# Obligations on Typewriter) and docs/design/events-and-handlers.md (Busy per subject).
+goal: A tick window is exact because all in flight engine work holds ticks by construction, not by opt in per call site.
+
+pieces:
+  - id: holding-model
+    status: done
+    open: none
+    tries:
+      - id: per-call-site
+        what: Count each async path by hand (SubjectWork in ChainQueue, as on node 4's pull request)
+        taught: Session writes, publication applies and the join path were missed; spikes I and D already showed invisible work gives wrong verdicts
+        state: dropped
+        why: Forgetting is silent; every new async path repeats the bug
+      - id: virtual-time
+        what: The engine dispatcher on a virtual clock the stepper advances
+        taught: NATS TTLs and refresh timers live on the server's wall clock; an idle Paper ticks once a second, so sessions would expire
+        state: dropped
+        why: Breaks real stack semantics in game tests; virtual time belongs in engine tests
+      - id: count-timers
+        what: Choke points plus counting every delay, with an idle marker for periodic loops
+        taught: Needs a marker on every ambient loop; a retry backoff then reports as hung without its cause
+        state: dropped
+        why: One more concept than choke points plus lapsed work, and a worse diagnosis
+      - id: choke-points
+        what: Count at the engine's one dispatcher and its host's one transport; the subject from the coroutine context; a failed outbound operation fails its item with the cause
+        taught: Covers every path traced on features/v1 and node 4's branch
+        state: picked
+        why: Exact by construction; attribution only affects blame and settle speed; a detekt rule makes every escape visible
+        evidence: [8021ce2b50, HostWorkTest.kt, EngineWorkTest.kt, SESSION-13]
+  - id: count-owner
+    status: done
+    open: none
+    tries:
+      - id: engine-part-meter
+        what: A WorkMeter engine part supplied only by a test only bridge extension, so production pays nothing
+        taught: The engine parts, plugin integrations and extension shipping it needs exist only on node 4's branch
+        state: dropped
+        why: Cannot be built against features/v1
+      - id: host-in-flight-work
+        what: The host owns InFlightWork in loader-api, always counting; observers attach any time; a Bukkit service; a test only Paper plugin maps items to PlayerWork
+        taught: Paper puts every plugin class loader in its global group, so a Bukkit plugin loads the Typewriter Paper plugin's classes (PaperPluginClassLoaderStorage, SpigotPluginClassLoaderGroup); the loader jar does not relocate loader-api
+        state: picked
+        why: Production jobs of its own (drain before shutdown or rollout, in flight work metric) for one atomic increment and decrement per task and per outbound call
+        evidence: [db4a64964e, WorkPlayersTest.kt]
+  - id: proof
+    status: done
+    open: the game suite has not run on this branch; it runs only inside the stack cargo xtask e2e game starts
+    tries:
+      - id: strengthened-game-s2
+        what: GAME-S2 checks the session key's revision after the quit and the rejoin; GAME-S1 folds into it; ASYNC-2 and FACT-1 and FACT-2 prove the framework holds
+        taught: GAME-S1 and GAME-S2 as written could not fail, since their state held before the rejoin
+        state: picked
+        evidence: [4f3007c562, b6906ec295, c27704b937]
+
+decided:
+  - id: q-meter-source
+    what: "A. Named by its general job"
+    why: Later replaced by option C, the host's InFlightWork
+  - id: option-c
+    what: "C. engine-core always counts in flight work, the loader registers it as a Bukkit service, a thin test only Paper plugin turns items into PlayerWork"
+    why: The engine part route needs node 4's branch; the count has production jobs of its own
+  - id: q-lapsed
+    what: "A. Failed outbound work fails the attempt as WorkFailed naming operation and cause; a requirement that expects a fault declares it"
+    why: A failed operation never reaches its effect, so a window after it is meaningless
+  - id: q-publication-fact
+    what: "This pull request builds the general expected fact hold; the event core pull request pushes the applied publication over the pool wire"
+    why: Backend topology stays untouched; node 9b replaces the push later
+  - id: q-proof
+    what: "A. Strengthened GAME-S2 on the key's revision plus a framework requirement for away work"
+    why: The only falsifiable proof without waiting out the grace
+  - id: detekt-concurrency
+    what: "Approved: a detekt config beside observability.yml for engine main sources"
+    why: Makes every escape from the count visible
+
+open:
+  - id: wiring-only-rule-dropped
+    what: The planned rule forbidding HostedRuntimeHost.messaging and sharedArtifacts outside EngineWiring has no job under option C, since the host hands out counted objects; not built
+    tied_to: maintainer review
+  - id: pacing-gate
+    what: Flip runtimes/paper to the pacing gate once the harness pull request (fix/game-harness-structure) lands; the commit goes last so it rebases onto that branch
+    tied_to: fix/game-harness-structure
+  - id: hung-threshold
+    what: One deadline per counted item; with every engine task counted, a watchdog may replace them if the per item cost shows
+    tied_to: game suite timings on CI
+
+slices:
+  - id: count
+    what: InFlightWork, counted host views, counting dispatcher, session subjects
+    evidence: [8021ce2b50]
+  - id: framework
+    what: Away players stay claimed, work by UUID or for no player, WorkFailed
+    evidence: [c27704b937]
+  - id: bridge
+    what: PlaytestTypewriter plugin shipped in the runtimes/paper game suite
+    evidence: [db4a64964e]
+  - id: expected-fact
+    what: expectFact and PlayerWork.factHappened
+    evidence: [b6906ec295]
+  - id: game-s2
+    what: GAME-S2 on the key's revision
+    evidence: [4f3007c562]
+
+next: Run the checks, the typewriter-review skill, and hand back to the coordinating thread; the pacing gate flip waits for the harness branch

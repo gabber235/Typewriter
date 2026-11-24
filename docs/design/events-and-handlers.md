@@ -370,7 +370,8 @@ The game verification framework steps Paper's ticks itself and judges a requirem
 - The engine counts, per protagonist, the chains queued and running for it. A chain with a group subject counts for every member.
 - The realm side counts pending transactions the same way ([stored-data.md](stored-data.md#who-waits-for-a-commit)). A future `Due` is not busy; a requirement waiting on one advances the realm clock ([stored-data.md](stored-data.md#due)).
 - Typewriter never cancels a chain for the test. A chain that does not finish is reported by the framework's wall clock limit (1 s), and its player sits out until it ends.
-- On the test Paper the engine reports this through the framework's `PlayerWork` API, as any plugin does. Whether the test side also needs a hook of its own is open until layers 3 and 6 are built.
+- The engine counts by construction, not per call site (decided 2026-11-24): its one dispatcher counts every task from its dispatch until it ran, and its host counts every outbound operation until the result is back with its caller. The subject comes from the coroutine context (`WorkSubjects`); work without one counts for every claimed player. A chain parked until the tick ends waits on the tick and is not busy.
+- The count is the host's `InFlightWork`, which production uses to drain before shutdown or rollout and as the in flight work metric. On the test Paper a test only plugin counts its items through the framework's `PlayerWork` API. The test side hook is the expected fact: a test about to change content opens a hold that the engine's report of the applied change closes.
 
 Spikes I and D showed that work a server wide quiet check cannot see (a raw thread pool) gives wrong verdicts and wrong coverage, and that a per player count fixes both ([d-clients.md](game-verification/spikes/d-clients.md), [i-coverage.md](game-verification/spikes/i-coverage.md)).
 

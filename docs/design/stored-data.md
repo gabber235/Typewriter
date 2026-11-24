@@ -267,6 +267,7 @@ Chosen 2026-11-03 with the [tick pipeline](events-and-handlers.md#tick-pipeline)
 - **Batching.** An engine keeps one commit in flight; what arrives meanwhile shares the next commit. Each write has a per engine id, so a retry applies once.
 - **The answer.** The committed value replaces the local one. What a player saw can briefly differ when another engine wrote the same key. The stored result stays correct.
 - **Busy per subject.** An engine can tell, per protagonist, whether a transaction of that protagonist or of a group it belongs to is still pending at the realm. Game verification waits on it before it judges a requirement ([events-and-handlers.md](events-and-handlers.md#busy-per-subject)); a future `Due` is not pending.
+- **Count before ack (decided 2026-11-24).** Across processes the receiver counts a transaction as in flight before it acknowledges it, and the sender counts it until the acknowledgement arrives, so no moment exists where neither side counts it. It is the cross process form of the engine's rule that a task counts from its dispatch.
 
 Accepted costs for writes without a guard: when an engine crashes, a player may have seen the result of a write that never reached the realm. The window is about one realm round trip. While the realm is down, these chains keep running and their writes wait; guarded chains wait too. A limit on waiting writes during a long outage is open for the plan.
 
