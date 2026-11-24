@@ -202,6 +202,3 @@ private fun RealmFixture.workCounted(counter: String): GraphWork.Counts {
 }
 
 private fun List<CommitCost>.medianWork(): Long = map { it.work.total }.sorted()[size / 2]
-
-/** The middle of these timings, so one run slowed by the machine does not move a gate. */
-fun List<Duration>.median(): Duration = sorted()[size / 2]
