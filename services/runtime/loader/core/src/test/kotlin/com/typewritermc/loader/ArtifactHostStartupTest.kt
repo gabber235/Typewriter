@@ -4,6 +4,7 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.RealmManifest
 import com.typewritermc.imprint.VersionConstraint
+import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.artifact.ArtifactInboxReconciler
 import com.typewritermc.loader.artifact.FileCandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
@@ -70,6 +71,7 @@ val ArtifactHostStartupTest by testSuite {
                                 )
                             }
                         },
+                        InFlightWork(),
                         backgroundScope,
                     )
 

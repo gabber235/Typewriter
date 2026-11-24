@@ -14,7 +14,6 @@ import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.loader.api.StagedHostedRuntime
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import org.koin.core.module.Module
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -68,7 +67,7 @@ class EngineDeployment(
                 acceptedKinds = EXECUTION_PROVIDER_KINDS,
                 parentClassLoader = requireNotNull(javaClass.classLoader),
             )
-        val deploymentScope = CoroutineScope(Dispatchers.Default)
+        val deploymentScope = engineScope(context.host.work)
         var wiring: EngineWiring? = null
         return try {
             val engine = EngineWiring(context, deploymentScope, kind).also { wiring = it }

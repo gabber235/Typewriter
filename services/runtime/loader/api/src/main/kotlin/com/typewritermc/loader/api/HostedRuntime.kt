@@ -8,6 +8,7 @@ import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.HostedArtifactManifest
 import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
+import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import io.opentelemetry.api.OpenTelemetry
@@ -233,6 +234,9 @@ data class HostedMessagingSession(
  *
  * A null [messaging] value means no usable session is available. Runtime code must observe replacement sessions
  * rather than retaining a communicator indefinitely. Telemetry and shared artifact access remain host owned.
+ *
+ * Every outbound operation through [messaging] and [sharedArtifacts] counts in [work] until its result is back with
+ * its caller; a runtime runs its own tasks on a dispatcher that counts them there as well.
  */
 interface HostedRuntimeHost {
     val publicationRetention: com.typewritermc.loader.api.artifact.PublicationBlobRetention?
@@ -241,6 +245,9 @@ interface HostedRuntimeHost {
     val messaging: StateFlow<HostedMessagingSession?>
     val openTelemetry: OpenTelemetry
     val sharedArtifacts: SharedArtifactAccess
+
+    /** The host's work in flight, which this runtime's tasks and outbound operations count in. */
+    val work: InFlightWork
 }
 
 /**

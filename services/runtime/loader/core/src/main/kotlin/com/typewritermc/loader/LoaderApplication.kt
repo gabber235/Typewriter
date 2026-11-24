@@ -4,6 +4,7 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.loader.api.RuntimePlacement
+import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.deployment.PrimaryEngineTarget
 import com.typewritermc.loader.deployment.RealmLoaderIntent
 import com.typewritermc.loader.rollout.ArtifactHost
@@ -38,6 +39,7 @@ internal class ArtifactLoaderBootstrap(
     override suspend fun start(
         entrypoint: HostEntrypoint,
         workDirectory: Path,
+        work: InFlightWork,
         scope: CoroutineScope,
     ): RunningHost {
         val service = serviceFactory.create(workDirectory, scope)
@@ -52,6 +54,7 @@ internal class ArtifactLoaderBootstrap(
                 workDirectory,
                 service,
                 assignments(entrypoint, service),
+                work,
                 scope,
             )
         try {

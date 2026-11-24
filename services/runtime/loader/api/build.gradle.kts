@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.serialize)
     alias(libs.plugins.gradle.buildconfig)
     `java-library`
+    `java-test-fixtures`
 }
 
 buildConfig {

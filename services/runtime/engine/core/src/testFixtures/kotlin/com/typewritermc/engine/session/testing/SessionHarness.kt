@@ -65,9 +65,10 @@ class SessionHarness private constructor(
         timings: SessionTimings = SHORT,
     ): HarnessEngine {
         val connection = connect()
-        val buckets = MutableStateFlow<KeyValueBuckets?>(NatsKeyValueBuckets(connection))
+        val recording = SubjectRecordingBuckets(NatsKeyValueBuckets(connection))
+        val buckets = MutableStateFlow<KeyValueBuckets?>(recording)
         val keeper = SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, scope)
-        return HarnessEngine(EngineId(id), keeper, connection).also(engines::add)
+        return HarnessEngine(EngineId(id), keeper, connection, recording).also(engines::add)
     }
 
     /** Creates the Realm's sessions bucket, as the Realm does when it starts. */
@@ -164,7 +165,11 @@ class HarnessEngine(
     val id: EngineId,
     val keeper: SessionKeeper,
     private val connection: NatsConnection,
+    private val recording: SubjectRecordingBuckets,
 ) {
+    /** Every session write of this engine so far, with the work subjects it ran for. */
+    val writes: List<SubjectWrite> get() = recording.writes
+
     /** The engine stops as a crash would: no further write, its connection gone. */
     suspend fun crash() {
         keeper.close()

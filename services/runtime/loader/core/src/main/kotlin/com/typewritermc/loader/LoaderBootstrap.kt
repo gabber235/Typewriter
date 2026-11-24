@@ -1,5 +1,6 @@
 package com.typewritermc.loader
 
+import com.typewritermc.loader.api.work.InFlightWork
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.Serializable
 import java.nio.file.Path
@@ -16,11 +17,14 @@ enum class HostEntrypoint {
  *
  * Implementations assemble entrypoint specific dependencies, register or restore the host, and return ownership through
  * [RunningHost]. The supplied [CoroutineScope] belongs to the process entrypoint and bounds background loader work.
+ * The entrypoint owns [InFlightWork] too, so it can hand it to observers before the host is up: every hosted runtime
+ * counts its work there.
  */
 interface LoaderBootstrap {
     suspend fun start(
         entrypoint: HostEntrypoint,
         workDirectory: Path,
+        work: InFlightWork,
         scope: CoroutineScope,
     ): RunningHost
 }

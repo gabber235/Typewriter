@@ -241,6 +241,9 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
         object : HostedRuntimeHost {
             override val messaging: StateFlow<HostedMessagingSession?> = MutableStateFlow(null)
             override val openTelemetry: OpenTelemetry = OpenTelemetry.noop()
+            override val work =
+                com.typewritermc.loader.api.work
+                    .InFlightWork()
             override val sharedArtifacts = shared
         }
     val stager =

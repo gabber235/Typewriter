@@ -17,6 +17,7 @@ dependencies {
     api(project(":protocol-transport"))
     implementation(libs.kotlin.serialize.json)
     testFixturesApi(project(":loader-api"))
+    testFixturesApi(testFixtures(project(":loader-api")))
     testFixturesApi(project(":messaging"))
     testFixturesImplementation(project(":protocol-transport"))
     testFixturesApi(testFixtures(project(":messaging")))

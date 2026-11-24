@@ -199,6 +199,12 @@ class Communicator(
             }
         }
 
+    /**
+     * A communicator with this one's telemetry and propagation whose messages go through the transport [wrap] makes
+     * from this one's, such as a transport that also counts each operation it carries.
+     */
+    fun over(wrap: (MessageTransport) -> MessageTransport): Communicator = Communicator(wrap(transport), telemetry, propagators)
+
     /** Creates a router that shares this communicator's transport and telemetry infrastructure. */
     fun createRouter(
         routes: CommunicatorRoutes,

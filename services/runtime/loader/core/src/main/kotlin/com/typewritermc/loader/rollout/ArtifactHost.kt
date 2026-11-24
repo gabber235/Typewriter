@@ -8,6 +8,7 @@ import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
+import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.artifact.ArtifactInboxReconciler
 import com.typewritermc.loader.artifact.DigestProtectionState
 import com.typewritermc.loader.artifact.FileCandidateRepository
@@ -25,6 +26,7 @@ import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.RealmLoaderIntent
 import com.typewritermc.loader.deployment.ResolutionResult
 import com.typewritermc.loader.deployment.resolveDeployment
+import com.typewritermc.loader.work.counted
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
@@ -107,6 +109,7 @@ class ArtifactHost(
     private val workDirectory: Path,
     private val service: LoaderService,
     private val assignments: ArtifactHostAssignmentSource,
+    private val work: InFlightWork,
     private val scope: CoroutineScope,
 ) {
     private val artifactsRoot = workDirectory.resolve("artifacts")
@@ -127,6 +130,7 @@ class ArtifactHost(
                 localBlobs,
                 candidates,
                 if (RuntimePlacement.REALM in assignment.roles) service.sharedArtifacts(assignment.realmId.value) else null,
+                work,
                 scope,
             )
         }
@@ -281,6 +285,7 @@ internal class AssignmentRuntime(
     private val localBlobs: FileDigestBlobStore,
     private val candidates: FileCandidateRepository,
     private val localShared: SharedArtifactAccess?,
+    private val work: InFlightWork,
     private val scope: CoroutineScope,
 ) : HostAssignmentRuntime {
     @Volatile
@@ -294,6 +299,9 @@ internal class AssignmentRuntime(
             null
         }
     private val mutableMessaging = MutableStateFlow<HostedMessagingSession?>(null)
+
+    /** The session the runtimes borrow: the host's, with every outbound operation counted in [work]. */
+    private val runtimeMessaging = MutableStateFlow<HostedMessagingSession?>(null)
     private val sharedArtifacts = localShared ?: ReconnectingSharedArtifactAccess(assignment.realmId.value, mutableMessaging)
     private val projections = BlobProjectionRepository(sharedArtifacts)
     private val participant =
@@ -304,9 +312,13 @@ internal class AssignmentRuntime(
             workDirectory,
             object : HostedRuntimeHost {
                 override val publicationRetention = this@AssignmentRuntime.publicationRetention
-                override val messaging: StateFlow<HostedMessagingSession?> = mutableMessaging.asStateFlow()
+                override val messaging: StateFlow<HostedMessagingSession?> = runtimeMessaging.asStateFlow()
                 override val openTelemetry: OpenTelemetry = openTelemetry
-                override val sharedArtifacts: SharedArtifactAccess = this@AssignmentRuntime.sharedArtifacts
+                override val sharedArtifacts: SharedArtifactAccess =
+                    this@AssignmentRuntime.sharedArtifacts.counted(
+                        this@AssignmentRuntime.work,
+                    )
+                override val work: InFlightWork = this@AssignmentRuntime.work
             },
             projections,
             VerifiedArtifactCache(sharedArtifacts, localBlobs),
@@ -335,9 +347,11 @@ internal class AssignmentRuntime(
         router?.stop()?.requireSuccess("replace")
         router = null
         mutableMessaging.value = null
+        runtimeMessaging.value = null
         router = session?.let { createRouter(it) }
         router?.start()?.requireSuccess("start")
         mutableMessaging.value = session
+        runtimeMessaging.value = session?.counted(work)
         coordinator =
             session?.takeIf { rolloutState != null }?.let { current ->
                 scope.launch { coordinateDeployments(current, requireNotNull(rolloutState)) }
@@ -436,6 +450,7 @@ internal class AssignmentRuntime(
         router?.stop()?.requireSuccess("stop")
         router = null
         mutableMessaging.value = null
+        runtimeMessaging.value = null
         participant.close()
     }
 

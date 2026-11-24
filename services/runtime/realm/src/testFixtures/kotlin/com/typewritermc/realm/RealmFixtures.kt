@@ -756,6 +756,9 @@ internal class RealmLifecycleFixture(
                     .TestPublicationRetention()
             override val messaging = this@RealmLifecycleFixture.messaging
             override val openTelemetry = telemetry.openTelemetry
+            override val work =
+                com.typewritermc.loader.api.work
+                    .InFlightWork()
             override val sharedArtifacts = this@RealmLifecycleFixture.sharedArtifacts
         }
     private val realm =

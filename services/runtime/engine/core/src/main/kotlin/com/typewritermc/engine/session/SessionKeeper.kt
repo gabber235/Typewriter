@@ -5,6 +5,8 @@ import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.SessionId
 import com.typewritermc.identity.SessionReporter
 import com.typewritermc.identity.Sessions
+import com.typewritermc.loader.api.work.WorkSubject
+import com.typewritermc.loader.api.work.WorkSubjects
 import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueBuckets
 import com.typewritermc.services.libs.communicator.kv.KeyValueKeys
@@ -60,7 +62,8 @@ data class SessionTimings(
  * reloaded engine takes them over and a crashed one lets them expire.
  *
  * Reporter calls return at once; their writes run on [parent]'s dispatcher, per session in the order of the calls:
- * each call queues on its session's lock before it returns.
+ * each call queues on its session's lock before it returns. Every write runs as work for the session's protagonist,
+ * so a write still in flight holds that player's ticks in a stepped game test and a failed one is reported to it.
  */
 class SessionKeeper(
     private val engine: EngineId,
@@ -79,20 +82,20 @@ class SessionKeeper(
         protagonist: Protagonist,
         id: SessionId,
     ) {
-        val slot = sessions.computeIfAbsent(id) { SessionSlot() }
-        scope.launch(start = CoroutineStart.UNDISPATCHED) {
+        val slot = sessions.computeIfAbsent(id) { SessionSlot(protagonist.work) }
+        scope.launch(slot.subjects, start = CoroutineStart.UNDISPATCHED) {
             slot.lock.withLock {
                 slot.refresher?.cancelAndJoin()
                 val held = take(protagonist, id)
                 slot.held = held
-                slot.refresher = scope.launch { refresh(slot, held) }
+                slot.refresher = scope.launch(slot.subjects) { refresh(slot, held) }
             }
         }
     }
 
     override fun disconnected(id: SessionId) {
         val slot = sessions[id] ?: return
-        scope.launch(start = CoroutineStart.UNDISPATCHED) {
+        scope.launch(slot.subjects, start = CoroutineStart.UNDISPATCHED) {
             slot.lock.withLock {
                 slot.refresher?.cancelAndJoin()
                 slot.refresher = null
@@ -234,7 +237,10 @@ class SessionKeeper(
         refresher = null
     }
 
-    private class SessionSlot {
+    /** One session's writes, which all run for [subjects]: its protagonist. */
+    private class SessionSlot(
+        val subjects: WorkSubjects,
+    ) {
         val lock = Mutex()
         var held: HeldSession? = null
         var refresher: Job? = null
@@ -246,3 +252,6 @@ class SessionKeeper(
         val revision: Long,
     )
 }
+
+/** Work for [this] protagonist, whose stall or failure is reported to it. */
+private val Protagonist.work: WorkSubjects get() = WorkSubjects(setOf(WorkSubject(principal.kind, principal.id)))

@@ -65,6 +65,9 @@ fun deliveryHost(
 ) = object : HostedRuntimeHost {
     override val messaging = MutableStateFlow<HostedMessagingSession?>(session)
     override val openTelemetry = telemetry.openTelemetry
+    override val work =
+        com.typewritermc.loader.api.work
+            .InFlightWork()
     override val sharedArtifacts =
         object : SharedArtifactAccess {
             override suspend fun publish(command: PublishSharedArtifact): Nothing = error("No content was returned")

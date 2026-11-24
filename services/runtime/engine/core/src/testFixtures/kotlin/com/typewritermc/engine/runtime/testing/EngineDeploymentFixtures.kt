@@ -54,6 +54,7 @@ fun deploymentContext(
 private object UnusedHost : HostedRuntimeHost {
     override val messaging get() = error("A refused deployment never reaches messaging.")
     override val openTelemetry get() = error("A refused deployment never reaches telemetry.")
+    override val work get() = error("A refused deployment never runs work.")
     override val sharedArtifacts get() = error("A refused deployment never reaches shared artifacts.")
 }
 
@@ -87,5 +88,8 @@ private class MessagingHost(
             ),
         )
     override val openTelemetry get() = telemetry
+    override val work =
+        com.typewritermc.loader.api.work
+            .InFlightWork()
     override val sharedArtifacts get() = error("Wiring never reaches shared artifacts.")
 }
