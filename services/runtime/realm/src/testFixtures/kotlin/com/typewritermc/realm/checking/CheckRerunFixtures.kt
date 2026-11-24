@@ -14,6 +14,7 @@ import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.INT_USE
@@ -330,7 +331,7 @@ internal fun RealmFixture.findingGenerations(): Set<String> = checks.findings().
  * query read is its evidence, as the check runtime builds it.
  */
 internal fun RealmFixture.findingOver(query: RealmQuery<*>): FindingSet =
-    views.pin().use { pinned ->
+    views.pin(GraphWork()).use { pinned ->
         with(pinned.reads) {
             read(query)
             val instance =
@@ -360,7 +361,8 @@ internal fun RealmFixture.findingOver(query: RealmQuery<*>): FindingSet =
     }
 
 /** The finding sets a state reply of the saved view lists when the check runtime holds [findings]. */
-internal fun RealmFixture.stateReply(findings: List<FindingSet>): List<FindingSet> = views.read { it.savedState(findings) }.findings
+internal fun RealmFixture.stateReply(findings: List<FindingSet>): List<FindingSet> =
+    views.read { it.savedState(findings, GraphWork()) }.findings
 
 /** The declarations a drawn declaration edit touches: the record type Gift, the alias Amount, and the entry Gift's user names. */
 internal data class DeclarationWorld(

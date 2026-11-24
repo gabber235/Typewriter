@@ -141,7 +141,7 @@ internal class RealmAuthoringOwner(
         if (edit.catalog != current.catalog.generation) {
             return Admission.Refused(CommitPreparedEditResponse.CatalogChangedErrorWrapper(current.catalog.generation))
         }
-        val values = current.values
+        val values = current.facts
         val conflicts = values.conflicts(edit.expectations)
         if (conflicts.isNotEmpty()) return Admission.Refused(CommitPreparedEditResponse.ConflictErrorWrapper(conflicts))
         val planner = AuthoringMutationPlanner(current)

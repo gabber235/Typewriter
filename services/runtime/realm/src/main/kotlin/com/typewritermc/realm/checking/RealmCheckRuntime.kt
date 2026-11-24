@@ -119,7 +119,7 @@ class RealmCheckRuntime(
     /** Evaluates [view] exactly, whatever has been committed since it was captured. */
     suspend fun evaluateCapture(view: AuthoringView): CapturedCheckReport =
         views.retain(view.readContext).use {
-            val reads = views.forkAt(view).pin()
+            val reads = views.forkAt(view).pin(GraphWork())
             val subjects = reads.read(CheckSubjects).subjects
             val results =
                 subjects.map { subject ->

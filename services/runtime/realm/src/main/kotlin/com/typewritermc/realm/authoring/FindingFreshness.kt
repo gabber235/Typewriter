@@ -18,10 +18,12 @@ internal fun FindingSet.judgedAgainst(
 /**
  * This set marked current only while the check runtime still holds it current and [view] supports it. Publication
  * gates a release on the set, so one the runtime already marked outdated (discovery incomplete, a failed pass) stays
- * outdated even when its evidence still matches [view].
+ * outdated even when its evidence still matches [view]. Answering names counts its graph work on [work].
  */
-internal fun FindingSet.judgedForRelease(view: AuthoringView): FindingSet =
-    withStatus(status == FindingStatus.CURRENT && view.supports(this, view.values))
+internal fun FindingSet.judgedForRelease(
+    view: AuthoringView,
+    work: GraphWork,
+): FindingSet = withStatus(status == FindingStatus.CURRENT && view.supports(this, view.values(work)))
 
 /**
  * The sets a reply lists, each judged by [judge] first: those with findings, an outcome other than finished, or an

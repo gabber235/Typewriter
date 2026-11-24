@@ -103,7 +103,7 @@ internal fun AuthoringViewStore.repairIntents(
     work: GraphWork,
 ): List<EditIntent> {
     val (edited, emptied) = touchedFormulas(saved, proposed, changed)
-    val fork = lazy { forkAt(proposed, work).pin(work) }
+    val fork = lazy { forkAt(proposed).pin(work) }
     val (broken, lastSeen) =
         pin(work).use { pinned ->
             with(pinned.reads) {

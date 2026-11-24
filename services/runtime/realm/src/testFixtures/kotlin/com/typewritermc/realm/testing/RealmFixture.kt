@@ -284,7 +284,7 @@ class RealmFixture private constructor(
 
                 is MutationPlanningResult.Accepted -> {
                     val relations = view.catalog.relations.mapTo(linkedSetOf()) { it.id }
-                    edit.copy(expectations = view.values.requiredExpectations(edit, view.resources, relations, planned.plan))
+                    edit.copy(expectations = view.facts.requiredExpectations(edit, view.resources, relations, planned.plan))
                 }
             }
         }

@@ -153,7 +153,7 @@ internal class WorkingViewEditContext(
         check(health.failures.isEmpty() && health.incomplete.isEmpty()) { "Operation reads did not produce complete evidence: $health" }
         val (edit, plan) = session.finish()
         val required =
-            baseline.values.requiredExpectations(
+            baseline.facts.requiredExpectations(
                 edit,
                 baseline.resources,
                 baseline.catalog.relations.mapTo(linkedSetOf()) { it.id },

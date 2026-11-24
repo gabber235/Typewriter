@@ -10,18 +10,15 @@ class GraphWork {
     private val computed = AtomicLong()
     private val verified = AtomicLong()
     private val walked = AtomicLong()
-    private val copied = AtomicLong()
 
     /** What the reads did so far. */
-    fun counts(): Counts = Counts(computed.get(), verified.get(), walked.get(), copied.get())
+    fun counts(): Counts = Counts(computed.get(), verified.get(), walked.get())
 
     internal fun computed() = computed.incrementAndGet()
 
     internal fun verified() = verified.incrementAndGet()
 
     internal fun walked() = walked.incrementAndGet()
-
-    internal fun copied(memos: Int) = copied.addAndGet(memos.toLong())
 
     data class Counts(
         /** Queries that ran their compute, also when the result turned out equal. */
@@ -30,20 +27,16 @@ class GraphWork {
         val verified: Long,
         /** Keys a walk of what a query read visited. */
         val walked: Long,
-        /** Memos a fork copied from the graph it forked. */
-        val copied: Long,
     ) {
-        operator fun minus(other: Counts) =
-            Counts(computed - other.computed, verified - other.verified, walked - other.walked, copied - other.copied)
+        operator fun minus(other: Counts) = Counts(computed - other.computed, verified - other.verified, walked - other.walked)
 
-        operator fun plus(other: Counts) =
-            Counts(computed + other.computed, verified + other.verified, walked + other.walked, copied + other.copied)
+        operator fun plus(other: Counts) = Counts(computed + other.computed, verified + other.verified, walked + other.walked)
 
         /** Every step together. */
-        val total: Long get() = computed + verified + walked + copied
+        val total: Long get() = computed + verified + walked
 
         companion object {
-            val NONE = Counts(0, 0, 0, 0)
+            val NONE = Counts(0, 0, 0)
         }
     }
 }

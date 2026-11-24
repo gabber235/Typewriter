@@ -73,7 +73,7 @@ val TrackedGraphPropertyTest by testSuite {
                 thread {
                     while (advancing.get()) {
                         // A read overtaken by an advance gives no answer at all.
-                        val outcome = runCatching { graph.pin().read(difference) }
+                        val outcome = runCatching { graph.pin(GraphWork()).read(difference) }
                         if (outcome.getOrNull() != 0 && outcome.exceptionOrNull() !is StaleRevision) wrong += outcome
                     }
                 }

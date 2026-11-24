@@ -2,6 +2,7 @@ package com.typewritermc.formula.testing
 
 import com.typewritermc.formula.graph.GraphKey
 import com.typewritermc.formula.graph.GraphListener
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.formula.graph.InputKey
 import com.typewritermc.formula.graph.Query
 import com.typewritermc.formula.graph.QueryReads
@@ -100,11 +101,11 @@ fun <T> QueryReads<Cells>.readOr(
 fun cells(vararg values: Pair<String, Int>): Cells = mapOf(*values)
 
 /** Reads [key] at the graph's current revision. */
-fun <E, T> TrackedGraph<E>.read(key: GraphKey<T>): T = pin().read(key)
+fun <E, T> TrackedGraph<E>.read(key: GraphKey<T>): T = pin(GraphWork()).read(key)
 
 /** The cells the graph is at now. */
 @OptIn(UntrackedEnvironment::class)
-val TrackedGraph<Cells>.cells: Cells get() = pin().environment
+val TrackedGraph<Cells>.cells: Cells get() = pin(GraphWork()).environment
 
 /** Advances to the current cells with [values] applied; a null value removes the cell. */
 fun TrackedGraph<Cells>.change(vararg values: Pair<String, Int?>) {

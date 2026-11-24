@@ -700,9 +700,9 @@ val RealmCheckRuntimeTest by testSuite {
                     assessment.evidence
                         .getValue(blocker.id)
                         .evidence.facts
-                realm.views.read { it.values.conflicts(evidence) }.isEmpty() shouldBe true
+                realm.views.read { it.facts.conflicts(evidence) }.isEmpty() shouldBe true
                 realm.commit(rename(firstResource, "renamed")).shouldBeCommitted()
-                realm.views.read { it.values.conflicts(evidence) }.isNotEmpty() shouldBe true
+                realm.views.read { it.facts.conflicts(evidence) }.isNotEmpty() shouldBe true
             }
         }
     }

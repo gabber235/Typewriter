@@ -98,7 +98,7 @@ val TrackedGraphTest by testSuite {
         val bench = QueryBench()
         val onA = bench.query("onA") { read(Cell("a")) }
         val graph = TrackedGraph(cells("a" to 1))
-        val pinned = graph.pin()
+        val pinned = graph.pin(GraphWork())
         graph.change("a" to 2)
         shouldThrow<StaleRevision> { pinned.read(onA) }
         shouldThrow<StaleRevision> { pinned.read(Cell("a")) }
@@ -247,7 +247,7 @@ val TrackedGraphTest by testSuite {
         val outer = bench.query("outer") { (read(inner) ?: 0) + (read(Cell("b")) ?: 0) }
         val graph = TrackedGraph(cells("a" to 1, "b" to 2))
         graph.read(inner)
-        graph.pin().readsOf(outer) shouldBe setOf(inner, Cell("a"), Cell("b"))
+        graph.pin(GraphWork()).readsOf(outer) shouldBe setOf(inner, Cell("a"), Cell("b"))
     }
 
     test("readsOf does not enter a key its stop rule names") {
@@ -255,7 +255,7 @@ val TrackedGraphTest by testSuite {
         val inner = bench.query("inner") { read(Cell("a")) }
         val outer = bench.query("outer") { (read(inner) ?: 0) + (read(Cell("b")) ?: 0) }
         val graph = TrackedGraph(cells("a" to 1, "b" to 2))
-        graph.pin().readsOf(outer, stopAt = { it == inner }) shouldBe setOf(inner, Cell("b"))
+        graph.pin(GraphWork()).readsOf(outer, stopAt = { it == inner }) shouldBe setOf(inner, Cell("b"))
     }
 
     test("readsOf reports the current reads of a query below a parent that did not rerun") {
@@ -265,7 +265,7 @@ val TrackedGraphTest by testSuite {
         val graph = TrackedGraph(cells("useA" to 1, "a" to 5, "b" to 5))
         graph.read(parent)
         graph.change("useA" to 0)
-        graph.pin().readsOf(parent) shouldBe setOf(child, Cell("useA"), Cell("b"))
+        graph.pin(GraphWork()).readsOf(parent) shouldBe setOf(child, Cell("useA"), Cell("b"))
         bench.runs(parent) shouldBe 1
     }
 
@@ -444,8 +444,8 @@ val TrackedGraphTest by testSuite {
         graph.change("b" to 2)
         val second = GraphWork()
         graph.pin(second).read(top)
-        first.counts() shouldBe GraphWork.Counts(computed = 2, verified = 0, walked = 0, copied = 0)
-        second.counts() shouldBe GraphWork.Counts(computed = 0, verified = 2, walked = 0, copied = 0)
+        first.counts() shouldBe GraphWork.Counts(computed = 2, verified = 0, walked = 0)
+        second.counts() shouldBe GraphWork.Counts(computed = 0, verified = 2, walked = 0)
     }
 
     test("a pin counts every key a walk of reads visits") {
@@ -459,13 +459,14 @@ val TrackedGraphTest by testSuite {
         work.counts().walked shouldBe 3
     }
 
-    test("forking copies no memos") {
+    test("a fork reuses a result the base computes at the fork's revision after the fork was made") {
         val bench = QueryBench()
-        val graph = TrackedGraph(cells("a" to 1))
-        List(3) { index -> bench.query("q$index") { read(Cell("a")) } }.forEach { graph.read(it) }
-        val work = GraphWork()
-        graph.fork(cells("a" to 2), setOf(Cell("a")), work)
-        work.counts().copied shouldBe 0
+        val onA = bench.query("onA") { read(Cell("a")) }
+        val base = TrackedGraph(cells("a" to 1, "b" to 1))
+        val forked = base.forkWith("b" to 2)
+        base.read(onA)
+        forked.read(onA) shouldBe 1
+        bench.runs(onA) shouldBe 1
     }
 
     test("a fork does not trust a result the base computed again after the fork, even when it came out equal") {

@@ -40,7 +40,6 @@ internal class GraphWorkTelemetry(
         counter.add(counts.computed, KIND to "computed", *attributes)
         counter.add(counts.verified, KIND to "verified", *attributes)
         counter.add(counts.walked, KIND to "walked", *attributes)
-        counter.add(counts.copied, KIND to "copied", *attributes)
     }
 
     private companion object {

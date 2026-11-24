@@ -173,23 +173,21 @@ class TrackedGraph<E> private constructor(
      * Reads pinned to the current revision. They throw [StaleRevision] once a newer revision exists. What they compute,
      * verify and walk is counted on [work].
      */
-    fun pin(work: GraphWork = GraphWork()): QueryReads<E> = Pinned(state, work)
+    fun pin(work: GraphWork): QueryReads<E> = Pinned(state, work)
 
     /**
      * A separate graph at [environment], one revision past this one's current. It copies nothing: it keeps what it
      * computes itself and reads through to this graph's memos and change times as they were at the revision it started
      * from, so forking is free and the base moving on, evicting or resetting never changes its answers; at worst it
      * computes again. Nothing it computes reaches the base unless the base [merge]s it. It does not report to the
-     * listener. [work] counts what forking copied, which is nothing.
+     * listener.
      */
     fun fork(
         environment: E,
         candidates: Set<InputKey<E, *>>,
-        work: GraphWork = GraphWork(),
     ): TrackedGraph<E> {
         val forked =
             synchronized(maps) {
-                work.copied(0)
                 TrackedGraph(state, limits, GraphListener.NONE, ForkBase(this, state.revision, resets))
             }
         forked.advance(environment, candidates)

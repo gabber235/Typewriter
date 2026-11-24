@@ -39,6 +39,7 @@ import com.typewritermc.formula.Var
 import com.typewritermc.formula.VarDefinition
 import com.typewritermc.formula.eval.Evaluation
 import com.typewritermc.formula.eval.EvaluationEnvironment
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.library.book
 import com.typewritermc.library.library
@@ -546,7 +547,7 @@ class FormulaReads internal constructor(
         resource: ResourceId,
         vararg path: String,
     ): Any? =
-        realm.views.pin().use { pinned ->
+        realm.views.pin(GraphWork()).use { pinned ->
             with(pinned.reads) {
                 val environment = RealmEvaluationEnvironment(this, null)
                 val evaluated = read(Evaluate(siteOf(resource)))

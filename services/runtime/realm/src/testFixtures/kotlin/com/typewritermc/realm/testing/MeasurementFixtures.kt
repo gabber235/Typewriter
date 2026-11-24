@@ -198,7 +198,7 @@ private fun RealmFixture.workCounted(counter: String): GraphWork.Counts {
 
     fun kind(name: String) = sums.filterKeys { it["graph.work"] == name }.values.sum()
 
-    return GraphWork.Counts(kind("computed"), kind("verified"), kind("walked"), kind("copied"))
+    return GraphWork.Counts(kind("computed"), kind("verified"), kind("walked"))
 }
 
 private fun List<CommitCost>.medianWork(): Long = map { it.work.total }.sorted()[size / 2]

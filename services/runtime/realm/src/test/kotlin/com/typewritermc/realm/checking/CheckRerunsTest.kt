@@ -1,5 +1,6 @@
 package com.typewritermc.realm.checking
 
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.formula.graph.StaleRevision
 import com.typewritermc.library.BookDefinition
 import com.typewritermc.realm.authoring.AuthoringSeed
@@ -569,7 +570,7 @@ val CheckRerunsTest by testSuite {
     test("a commit between capture and pin never mixes two views") {
         RealmFixture.of(GRAPH_CATALOG, chain).use { realm ->
             realm.readNow(Reach(x)) shouldBe setOf(x, y, z)
-            realm.views.pin().use { pinned ->
+            realm.views.pin(GraphWork()).use { pinned ->
                 realm.commit(relink(y, listOf(w))).shouldBeCommitted()
 
                 // Read under the older pin: the answer of the pinned view, or a refusal as stale, never the newer links.

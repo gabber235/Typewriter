@@ -12,7 +12,7 @@ import skirout.editor.v1.checking.FindingSet
  */
 internal fun AuthoringView.savedState(
     findings: List<FindingSet>,
-    work: GraphWork = GraphWork(),
+    work: GraphWork,
 ): AuthoringState =
     AuthoringState(
         generation = catalog.generation,
