@@ -39,7 +39,10 @@ private class CountingDispatcher(
                     }
                 },
             )
-        } catch (refused: Throwable) {
+        } catch (
+            // Whatever refuses the task ends its item with that cause, and the caller still sees it.
+            @Suppress("TooGenericExceptionCaught") refused: Throwable,
+        ) {
             item.failed(refused)
             throw refused
         }

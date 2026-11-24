@@ -22,6 +22,7 @@ detekt {
     config.setFrom(
         File(servicesDirectory, "config/detekt/observability.yml"),
         File(servicesDirectory, "config/detekt/structure.yml"),
+        File(servicesDirectory, "config/detekt/concurrency.yml"),
     )
     // One baseline per project: each project's baseline task rewrites its whole file.
     baseline = File(servicesDirectory, "config/detekt/baselines/${project.name}.xml")

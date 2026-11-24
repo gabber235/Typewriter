@@ -68,7 +68,10 @@ private suspend inline fun <T> InFlightWork.awaiting(
     } catch (cancelled: CancellationException) {
         item.end()
         throw cancelled
-    } catch (thrown: Throwable) {
+    } catch (
+        // Any failure of the operation ends its item with that cause, and the caller still sees it.
+        @Suppress("TooGenericExceptionCaught") thrown: Throwable,
+    ) {
         item.failed(thrown)
         throw thrown
     }
@@ -89,7 +92,10 @@ private class CountedTransport(
         val opened =
             try {
                 transport.openReplyChannel()
-            } catch (thrown: Throwable) {
+            } catch (
+                // Any failure to open ends the item with that cause, and the caller still sees it.
+                @Suppress("TooGenericExceptionCaught") thrown: Throwable,
+            ) {
                 if (thrown is CancellationException) item.end() else item.failed(thrown)
                 throw thrown
             }

@@ -1,0 +1,59 @@
+# Engine code runs every task on its deployment's one dispatcher, which counts the task as in flight
+# work of its host, and reaches the outside through its host, which counts every outbound operation.
+# A stepped game test holds its ticks with that count, so work that escapes it makes windows race.
+# These rule instances check engine main sources only.
+style:
+  ForbiddenImport/engineThreads:
+    active: true
+    includes: ['**/runtime/engine/**/src/main/**']
+    # The one place that builds the counted dispatcher over Dispatchers.Default.
+    excludes: ['**/runtime/engine/core/src/main/kotlin/com/typewritermc/engine/runtime/EngineWork.kt']
+    forbiddenImports:
+      - value: 'kotlinx.coroutines.Dispatchers'
+        reason: 'Engine work runs on the deployment scope, whose dispatcher counts it; another dispatcher runs it uncounted.'
+      - value: 'kotlinx.coroutines.newSingleThreadContext'
+        reason: 'A thread of its own runs engine work uncounted; launch it in the deployment scope.'
+      - value: 'kotlinx.coroutines.newFixedThreadPoolContext'
+        reason: 'A pool of its own runs engine work uncounted; launch it in the deployment scope.'
+      - value: 'kotlinx.coroutines.asCoroutineDispatcher'
+        reason: 'An executor runs engine work uncounted; launch it in the deployment scope.'
+      - value: 'kotlinx.coroutines.GlobalScope'
+        reason: 'GlobalScope runs engine work uncounted and outlives the deployment; launch it in the deployment scope.'
+      - value: 'kotlinx.coroutines.runBlocking'
+        reason: 'Blocking a thread hides the work it waits for; suspend instead.'
+      - value: 'java.util.concurrent.Executors'
+        reason: 'An executor runs engine work uncounted; launch it in the deployment scope.'
+      - value: 'java.util.concurrent.CompletableFuture'
+        reason: 'A future runs its stages uncounted on its own pool; suspend instead.'
+      - value: 'java.util.Timer'
+        reason: 'A timer thread runs engine work uncounted; delay in the deployment scope.'
+      - value: 'kotlin.concurrent.thread'
+        reason: 'A thread of its own runs engine work uncounted; launch it in the deployment scope.'
+      - value: 'kotlin.concurrent.timer'
+        reason: 'A timer thread runs engine work uncounted; delay in the deployment scope.'
+  ForbiddenMethodCall/engineThreads:
+    active: true
+    includes: ['**/runtime/engine/**/src/main/**']
+    methods:
+      - value: 'java.lang.Thread.<init>'
+        reason: 'A thread of its own runs engine work uncounted; launch it in the deployment scope.'
+  # A wait on the wall clock or on a callback holds no tick, so each one says why that is right where it
+  # stands: a periodic refresh or a retry after a reported failure, or the main thread that delivers it.
+  ForbiddenMethodCall/engineWaits:
+    active: true
+    includes: ['**/runtime/engine/**/src/main/**']
+    methods:
+      - value: 'kotlinx.coroutines.delay'
+        reason: 'A wall clock wait holds no tick; suppress it with a comment naming why the wait is not work.'
+      - value: 'kotlinx.coroutines.withTimeout'
+        reason: 'A wall clock wait holds no tick; suppress it with a comment naming why the wait is not work.'
+      - value: 'kotlinx.coroutines.withTimeoutOrNull'
+        reason: 'A wall clock wait holds no tick; suppress it with a comment naming why the wait is not work.'
+      - value: 'java.lang.Thread.sleep'
+        reason: 'A wall clock wait holds no tick; suppress it with a comment naming why the wait is not work.'
+      - value: 'kotlinx.coroutines.suspendCancellableCoroutine'
+        reason: 'A callback resumes the coroutine uncounted; suppress it with a comment naming what delivers it.'
+      - value: 'kotlin.coroutines.suspendCoroutine'
+        reason: 'A callback resumes the coroutine uncounted; suppress it with a comment naming what delivers it.'
+      - value: 'kotlinx.coroutines.future.await'
+        reason: 'A future completes uncounted; suppress it with a comment naming what delivers it.'

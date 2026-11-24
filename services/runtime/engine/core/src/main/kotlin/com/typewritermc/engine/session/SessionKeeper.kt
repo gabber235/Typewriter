@@ -153,6 +153,8 @@ class SessionKeeper(
                     }
                 if (written != null) return written
             }
+            // A retry after a reported failure: the failed write already failed its work, so the wait is not work.
+            @Suppress("ForbiddenMethodCall/engineWaits")
             delay(timings.retry)
         }
     }
@@ -167,6 +169,8 @@ class SessionKeeper(
     ) {
         var held = initial
         while (true) {
+            // A periodic refresh: no tick caused it.
+            @Suppress("ForbiddenMethodCall/engineWaits")
             delay(timings.refresh)
             val bucket = bucket() ?: continue
             when (val written = bucket.update(held.key, held.entry.encode(), timings.ttl, held.revision)) {
@@ -217,6 +221,8 @@ class SessionKeeper(
                     is KeyValueWrite.Failed -> Unit
                 }
             }
+            // A retry after a reported failure: the failed write already failed its work, so the wait is not work.
+            @Suppress("ForbiddenMethodCall/engineWaits")
             delay(timings.retry)
         }
     }

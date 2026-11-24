@@ -100,6 +100,8 @@ class PresenceSessions(
     ) {
         val silence =
             scope.launch {
+                // A heartbeat timeout on the wall clock: a silent tab, not a tick, ends the session.
+                @Suppress("ForbiddenMethodCall/engineWaits")
                 delay(timings.ttl)
                 if (tabs.remove(tab, coroutineContext[Job])) sessions.disconnected(tab)
             }
