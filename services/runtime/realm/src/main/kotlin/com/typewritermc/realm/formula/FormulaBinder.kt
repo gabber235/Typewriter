@@ -104,7 +104,6 @@ internal fun AuthoringViewStore.repairIntents(
     work: GraphWork,
 ): List<EditIntent> {
     val (edited, emptied) = touchedFormulas(saved, proposed, changed)
-    val fork = lazy { forkAt(proposed).pin(work) }
     val (broken, lastSeen) =
         pin(work).use { pinned ->
             with(pinned.reads) {
@@ -114,7 +113,7 @@ internal fun AuthoringViewStore.repairIntents(
         }
     val candidates = edited + emptied.keys + broken
     if (candidates.isEmpty()) return emptyList()
-    val after = fork.value
+    val after = forkAt(proposed).pin(work)
     return candidates.mapNotNull { at ->
         val site = after.read(FormulasOf(at.resource)).firstOrNull { it.at == at }?.takeUnless { it.computedAtFunction }
         val reason =
