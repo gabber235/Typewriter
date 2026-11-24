@@ -8,7 +8,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -22,20 +21,14 @@ val KeyValueBucketContractTest by testSuite(testConfig = TestConfig.testScope(is
         val probe = start().also { it.close() }
         testSuite(probe.name) {
             val store = testFixture { start() }
-            val buckets = AtomicInteger()
             val long = 5.minutes
-
-            suspend fun bucket(): KeyValueBucket {
-                val opened = store().buckets.ensure(KeyValueBucketDeclaration("contract-${buckets.incrementAndGet()}", markerTtl = 1.seconds))
-                return opened.shouldBeInstanceOf<KeyValueOpen.Opened>().bucket
-            }
 
             test("a bucket is missing until its owner creates it") {
                 store().buckets.open("never-created") shouldBe KeyValueOpen.Missing
             }
 
             test("a created key reads back with the revision its write returned") {
-                val bucket = bucket()
+                val bucket = store().freshBucket()
 
                 val written = bucket.create("a.b", byteArrayOf(1, 2), long).shouldBeInstanceOf<KeyValueWrite.Written>()
 
@@ -45,11 +38,11 @@ val KeyValueBucketContractTest by testSuite(testConfig = TestConfig.testScope(is
             }
 
             test("a key that was never written reads as absent") {
-                bucket().get("a.b") shouldBe KeyValueRead.Absent
+                store().freshBucket().get("a.b") shouldBe KeyValueRead.Absent
             }
 
             test("a create over a live key conflicts and leaves it unchanged") {
-                val bucket = bucket()
+                val bucket = store().freshBucket()
                 bucket.create("a.b", byteArrayOf(1), long)
 
                 bucket.create("a.b", byteArrayOf(2), long) shouldBe KeyValueWrite.Conflict
@@ -58,7 +51,7 @@ val KeyValueBucketContractTest by testSuite(testConfig = TestConfig.testScope(is
             }
 
             test("an update at the key's revision writes a later revision, and one at an older revision conflicts") {
-                val bucket = bucket()
+                val bucket = store().freshBucket()
                 val first = bucket.create("a.b", byteArrayOf(1), long).shouldBeInstanceOf<KeyValueWrite.Written>()
 
                 val second = bucket.update("a.b", byteArrayOf(2), long, first.revision).shouldBeInstanceOf<KeyValueWrite.Written>()
@@ -70,11 +63,11 @@ val KeyValueBucketContractTest by testSuite(testConfig = TestConfig.testScope(is
             }
 
             test("an update of a key that was never written conflicts") {
-                bucket().update("a.b", byteArrayOf(1), long, revision = 1) shouldBe KeyValueWrite.Conflict
+                store().freshBucket().update("a.b", byteArrayOf(1), long, revision = 1) shouldBe KeyValueWrite.Conflict
             }
 
             test("a key listing names the live keys its filter matches") {
-                val bucket = bucket()
+                val bucket = store().freshBucket()
                 listOf("minecraft.alex.one", "minecraft.alex.two", "minecraft.sam.one", "user.alex.one").forEach {
                     bucket.create(it, byteArrayOf(1), long)
                 }
@@ -86,7 +79,7 @@ val KeyValueBucketContractTest by testSuite(testConfig = TestConfig.testScope(is
             }
 
             test("a key expires once its time to live passed, and then a create writes it again") {
-                val bucket = bucket()
+                val bucket = store().freshBucket()
                 val old = bucket.create("a.b", byteArrayOf(1), 1.seconds).shouldBeInstanceOf<KeyValueWrite.Written>()
 
                 store().outlive(1.seconds) { bucket.get("a.b") == KeyValueRead.Absent }
@@ -97,7 +90,7 @@ val KeyValueBucketContractTest by testSuite(testConfig = TestConfig.testScope(is
             }
 
             test("an update with a shorter time to live makes the key expire sooner") {
-                val bucket = bucket()
+                val bucket = store().freshBucket()
                 val first = bucket.create("a.b", byteArrayOf(1), long).shouldBeInstanceOf<KeyValueWrite.Written>()
 
                 bucket.update("a.b", byteArrayOf(1), 1.seconds, first.revision).shouldBeInstanceOf<KeyValueWrite.Written>()

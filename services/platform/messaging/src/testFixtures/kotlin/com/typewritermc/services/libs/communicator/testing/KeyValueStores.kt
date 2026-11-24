@@ -1,6 +1,9 @@
 package com.typewritermc.services.libs.communicator.testing
 
+import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
+import com.typewritermc.services.libs.communicator.kv.KeyValueBucketDeclaration
 import com.typewritermc.services.libs.communicator.kv.KeyValueBuckets
+import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
 import com.typewritermc.services.libs.communicator.kv.NatsKeyValueBuckets
 import com.typewritermc.services.libs.communicator.nats.NatsAuthentication
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
@@ -16,9 +19,12 @@ import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+
+private val bucketNumbers = AtomicInteger()
 
 /**
  * A key value store the bucket contract runs against, so the memory buckets that keeper tests use behave as a real
@@ -28,6 +34,13 @@ import kotlin.time.Duration.Companion.seconds
 sealed interface KeyValueStore : AutoCloseable {
     val name: String
     val buckets: KeyValueBuckets
+
+    /** Creates a bucket no other case of this store touches. */
+    suspend fun freshBucket(): KeyValueBucket {
+        val name = "contract-${bucketNumbers.incrementAndGet()}"
+        val opened = buckets.ensure(KeyValueBucketDeclaration(name, markerTtl = 1.seconds))
+        return checkNotNull(opened as? KeyValueOpen.Opened) { "Bucket $name did not open: $opened" }.bucket
+    }
 
     /** Lets [ttl] pass and returns once [condition] holds; fails when it never does. */
     suspend fun outlive(
