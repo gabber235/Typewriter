@@ -3,7 +3,7 @@ package com.typewritermc.engine.session.testing
 import com.typewritermc.engine.session.SessionEntry
 import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.engine.session.SessionTimings
-import com.typewritermc.engine.session.readSessionEntry
+import com.typewritermc.engine.session.readSession
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
@@ -81,7 +81,7 @@ class SessionHarness private constructor(
     suspend fun entry(
         protagonist: Protagonist,
         id: SessionId,
-    ): SessionEntry? = bucket().readSessionEntry(protagonist, id)
+    ): SessionEntry? = bucket().readSession(protagonist, id)?.entry
 
     /** [engine] reports that [protagonist] connected with session [id]; returns once the bucket names it the holder. */
     suspend fun joined(

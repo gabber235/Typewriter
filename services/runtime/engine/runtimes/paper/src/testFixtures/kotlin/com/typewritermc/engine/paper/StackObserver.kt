@@ -1,7 +1,7 @@
 package com.typewritermc.engine.paper
 
-import com.typewritermc.engine.session.SessionEntry
-import com.typewritermc.engine.session.readSessionEntry
+import com.typewritermc.engine.session.StoredSession
+import com.typewritermc.engine.session.readSession
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
@@ -88,13 +88,14 @@ class StackObserver private constructor(
         (engine(service)?.engineId?.key as? RecordIdKey.StringWrapper)?.value?.let(::EngineId)
 
     /**
-     * The live entry of the Minecraft [player]'s session in the Realm's sessions bucket, or null when there is none.
+     * The live key of the Minecraft [player]'s session in the Realm's sessions bucket, its entry and revision, or null
+     * when there is none.
      *
      * natskt 0.9.1 can drop a JetStream reply, so now and then a read ends in natskt's 5 s request timeout although
      * the broker answered; a read that timed out is tried again, up to [READ_ATTEMPTS] reads in all. Remove the retry
      * once natskt delivers every reply.
      */
-    suspend fun session(player: UUID): SessionEntry? {
+    suspend fun session(player: UUID): StoredSession? {
         repeat(READ_ATTEMPTS - 1) {
             try {
                 return readSession(player)
@@ -105,11 +106,11 @@ class StackObserver private constructor(
         return readSession(player)
     }
 
-    private suspend fun readSession(player: UUID): SessionEntry? {
+    private suspend fun readSession(player: UUID): StoredSession? {
         val opened = NatsKeyValueBuckets(connection).open(SessionsBucket.name(realm))
         check(opened is KeyValueOpen.Opened) { "the observer could not open the sessions bucket of $realm: $opened" }
         val id = player.toString()
-        return opened.bucket.readSessionEntry(Protagonist(PrincipalId(PrincipalId.MINECRAFT, id)), SessionId(id))
+        return opened.bucket.readSession(Protagonist(PrincipalId(PrincipalId.MINECRAFT, id)), SessionId(id))
     }
 
     /** Whether the engine of [service] reports active. */
