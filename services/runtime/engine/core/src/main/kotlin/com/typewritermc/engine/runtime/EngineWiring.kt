@@ -63,6 +63,7 @@ private fun engineCoreModule(
             bucketName = SessionsBucket.name(context.identity.realmId),
             timings = get(),
             parent = scope,
+            openTelemetry = context.host.openTelemetry,
         )
     } onClose { it?.close() } binds arrayOf(SessionReporter::class, Sessions::class)
 }

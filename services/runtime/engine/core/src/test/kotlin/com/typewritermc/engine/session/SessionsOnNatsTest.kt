@@ -2,183 +2,41 @@ package com.typewritermc.engine.session
 
 import com.typewritermc.engine.session.testing.SessionHarness
 import com.typewritermc.identity.EngineId
+import com.typewritermc.services.libs.communicator.kv.LeaseTimings
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Sessions of engines of one Realm on a real nats-server: the broker alone decides which write wins and when a key
- * expires. Timings are the harness's short ones (refresh 300 ms, live 2 s, grace 1 s).
+ * Sessions through a real nats-server and the client production uses, end to end. Keys live minutes, so whatever must
+ * still be there is; what must end is waited for with a bound far above the grace. Every ordering and timing rule is
+ * proven on virtual time in LeasesTest and SessionKeeperTest.
  */
 val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled = false)) {
     val harness = testFixture { SessionHarness.start() }
+    val timings = LeaseTimings(refresh = 1.seconds, ttl = 5.minutes, grace = 1.seconds, retry = 100.milliseconds)
 
-    test("SESSION-1 a protagonist connecting on an engine writes a sessions key naming it and that engine as holder") {
+    test("SESSION-NATS a session is taken, moved to another engine and ended after the grace through the broker") {
         harness().createBucket()
-        val engine = harness().engine("engine-a")
+        val old = harness().engine("engine-a", timings)
+        val new = harness().engine("engine-b", timings)
         val (protagonist, session) = harness().player()
 
-        engine.keeper.connected(protagonist, session)
-
-        harness().eventually { harness().entry(protagonist, session) != null }
-        val entry = harness().entry(protagonist, session).shouldNotBeNull()
-        entry.protagonist shouldBe protagonist
-        entry.holder shouldBe EngineId("engine-a")
-    }
-
-    test("SESSION-2 a held session outlives its key's time to live") {
-        harness().createBucket()
-        val engine = harness().engine("engine-a")
-        val (protagonist, session) = harness().player()
-        harness().joined(engine, protagonist, session)
-
-        delay(SessionHarness.SHORT.ttl * 2)
-
-        harness().entry(protagonist, session).shouldNotBeNull().holder shouldBe EngineId("engine-a")
-    }
-
-    test("SESSION-3 a session ends after the grace once its protagonist quits") {
-        harness().createBucket()
-        val engine = harness().engine("engine-a")
-        val (protagonist, session) = harness().player()
-        harness().joined(engine, protagonist, session)
-
-        engine.keeper.disconnected(session)
-
-        harness().eventually(within = SessionHarness.SHORT.ttl) { harness().entry(protagonist, session) == null }
-    }
-
-    test("SESSION-4 a rejoin within the grace keeps the session and when it began") {
-        harness().createBucket()
-        val engine = harness().engine("engine-a")
-        val (protagonist, session) = harness().player()
-        harness().joined(engine, protagonist, session)
-        val since = harness().entry(protagonist, session).shouldNotBeNull().since
-
-        engine.keeper.disconnected(session)
-        engine.keeper.connected(protagonist, session)
-        delay(SessionHarness.SHORT.ttl * 2)
-
-        harness().entry(protagonist, session).shouldNotBeNull().since shouldBe since
-    }
-
-    test("SESSION-5 a server move keeps the session when the new engine's join comes before the old one's quit") {
-        harness().createBucket()
-        val old = harness().engine("engine-a")
-        val new = harness().engine("engine-b")
-        val (protagonist, session) = harness().player()
         harness().joined(old, protagonist, session)
-
+        val began = harness().entry(protagonist, session).shouldNotBeNull().since
         harness().joined(new, protagonist, session)
+        harness().eventually { !old.keeper.holds(protagonist) }
         old.keeper.disconnected(session)
-        delay(SessionHarness.SHORT.ttl * 2)
 
-        harness().entry(protagonist, session).shouldNotBeNull().holder shouldBe EngineId("engine-b")
-    }
+        harness().entry(protagonist, session).shouldNotBeNull().since shouldBe began
+        new.keeper.holders(protagonist) shouldBe setOf(EngineId("engine-b"))
 
-    test("SESSION-6 a server move keeps the session when the old engine's quit comes before the new one's join") {
-        harness().createBucket()
-        val old = harness().engine("engine-a")
-        val new = harness().engine("engine-b")
-        val (protagonist, session) = harness().player()
-        harness().joined(old, protagonist, session)
-
-        old.keeper.disconnected(session)
-        new.keeper.connected(protagonist, session)
-        delay(SessionHarness.SHORT.ttl * 2)
-
-        harness().entry(protagonist, session).shouldNotBeNull().holder shouldBe EngineId("engine-b")
-    }
-
-    test("SESSION-7 a crashed engine's sessions end on their own within the time to live") {
-        harness().createBucket()
-        val engine = harness().engine("engine-a")
-        val (protagonist, session) = harness().player()
-        harness().joined(engine, protagonist, session)
-
-        engine.crash()
-
-        harness().eventually(within = SessionHarness.SHORT.ttl + 2.seconds) { harness().entry(protagonist, session) == null }
-    }
-
-    test("SESSION-8 a reloaded engine takes its online protagonists' sessions over without a gap") {
-        harness().createBucket()
-        val before = harness().engine("engine-a")
-        val (protagonist, session) = harness().player()
-        harness().joined(before, protagonist, session)
-        val since = harness().entry(protagonist, session).shouldNotBeNull().since
-
-        before.keeper.close()
-        val after = harness().engine("engine-a")
-        after.keeper.connected(protagonist, session)
-        delay(SessionHarness.SHORT.ttl * 2)
-
-        val entry = harness().entry(protagonist, session).shouldNotBeNull()
-        entry.holder shouldBe EngineId("engine-a")
-        entry.since shouldBe since
-    }
-
-    test("SESSION-9 an engine that starts before the Realm created the bucket writes its sessions once it exists") {
-        val engine = harness().engine("engine-a")
-        val (protagonist, session) = harness().player()
-        engine.keeper.connected(protagonist, session)
-        delay(SessionHarness.SHORT.refresh)
-
-        harness().createBucket()
-
-        harness().eventually { harness().entry(protagonist, session)?.holder == EngineId("engine-a") }
-    }
-
-    test("SESSION-11 a quit reported right after its join ends the session, in the order the engine reported them") {
-        harness().createBucket()
-        val engine = harness().engine("engine-a")
-        val players = List(20) { harness().player() }
-
-        players.forEach { (protagonist, session) ->
-            engine.keeper.connected(protagonist, session)
-            engine.keeper.disconnected(session)
-        }
-        delay(SessionHarness.SHORT.ttl * 2)
-
-        players.forEach { (protagonist, session) -> harness().entry(protagonist, session).shouldBeNull() }
-    }
-
-    test("SESSION-12 an engine that missed its protagonist's quit lets the session go once another engine took it") {
-        harness().createBucket()
-        val old = harness().engine("engine-a")
-        val new = harness().engine("engine-b")
-        val (protagonist, session) = harness().player()
-        harness().joined(old, protagonist, session)
-
-        harness().joined(new, protagonist, session)
-        delay(SessionHarness.SHORT.refresh * 2)
         new.keeper.disconnected(session)
-        delay(SessionHarness.SHORT.ttl * 2)
-
-        harness().entry(protagonist, session).shouldBeNull()
-    }
-
-    test("SESSION-10 the holders of a protagonist are every engine holding one of its sessions, and none once it left") {
-        harness().createBucket()
-        val minecraft = harness().engine("engine-a")
-        val panel = harness().engine("panel.realm")
-        val (protagonist, session) = harness().player()
-        val (_, tab) = harness().player()
-        minecraft.keeper.connected(protagonist, session)
-        panel.keeper.connected(protagonist, tab)
-        harness().eventually { harness().entry(protagonist, session) != null && harness().entry(protagonist, tab) != null }
-
-        minecraft.keeper.holders(protagonist) shouldContainExactlyInAnyOrder setOf(EngineId("engine-a"), EngineId("panel.realm"))
-
-        minecraft.keeper.disconnected(session)
-        panel.keeper.disconnected(tab)
-        harness().eventually(within = SessionHarness.SHORT.ttl) { minecraft.keeper.holders(protagonist).isEmpty() }
-        harness().entry(protagonist, session).shouldBeNull()
+        harness().eventually(within = timings.grace + 30.seconds) { harness().entry(protagonist, session) == null }
     }
 }

@@ -1,12 +1,12 @@
 package com.typewritermc.engine.panel.testing
 
 import com.typewritermc.engine.panel.PresenceSessions
-import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.testing.SessionHarness
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.protocol.transport.OrganizationActorRouteScope
 import com.typewritermc.protocol.transport.generated.organizationPresence
+import com.typewritermc.services.libs.communicator.kv.LeaseTimings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -73,8 +73,8 @@ class PanelEngineHarness private constructor(
 
     companion object {
         /** The panel engine's timings in the harness. */
-        val TIMINGS: SessionTimings =
-            SessionTimings(refresh = 300.milliseconds, ttl = 2.seconds, grace = 1.seconds, retry = 100.milliseconds)
+        val TIMINGS: LeaseTimings =
+            LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, grace = 1.seconds, retry = 100.milliseconds)
 
         /** The location of a tab in Realm [id]. */
         fun realm(id: String): PresenceLocation =

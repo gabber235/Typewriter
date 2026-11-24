@@ -31,4 +31,7 @@ struct SessionEntry(83080005) {
   holder: EngineId;
   // When the session began; a rejoin within the grace and a server move keep it.
   since: timestamp;
+  // When the holder's connection began, on the holder's clock. Of two engines claiming the session,
+  // the later connection holds it; at the same instant, the greater engine id does.
+  connected: timestamp;
 }

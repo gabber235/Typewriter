@@ -333,7 +333,7 @@ demand_<realm id>     <type>.<keys>.<reader engine>    one entry per reader; `_`
 mirrors_<realm id>    <type>.<keys>                    MirrorEntry { holder: EngineId; value }
 ```
 
-- **Same pattern as sessions.** Both are rewritten every 20 seconds with a 60 second TTL and checked by revision, so a dead reader stops demand and a dead producer ends its values. A server move rewrites the same key, so a reader sees no removal within the grace; the old holder's late write fails and it stops.
+- **Same pattern as sessions.** Both are [leases](#leases), rewritten every 20 seconds with a 60 second TTL and checked by revision, so a dead reader stops demand and a dead producer ends its values. A server move rewrites the same key, so a reader sees no removal within the grace; the newer claim holds the key, and the old holder's late write fails and it stops.
 - **Reader.** A watch on the key pattern delivers current values, then updates, and sets them as `TrackedGraph` inputs. A put sets the value, a delete is `Removed` with `because = Value`, and an expiry (`MaxAge` marker, a purge in the watch) is `Removed` with `because = Tracking`.
 - **Producer.** Every engine watches `demand`. A demanded key this engine can produce becomes necessary here, exactly as if a local reader had asked.
 - **Rate.** A key is published at most 4 times a second across engines, keeping the latest value; local readers stay on every tick.
@@ -462,10 +462,22 @@ Short lived data lives on NATS JetStream. This needs NATS 2.11 or newer with Jet
 
 | Resource | Content | Behaviour |
 | --- | --- | --- |
-| `sessions_<realm id>` KV bucket, one per realm | one key per session, `<protagonist kind>.<protagonist id>.<session id>`, value `SessionEntry { protagonist; holder: EngineId; since: Instant }` | while the protagonist is connected, the holding engine rewrites the key every 20 seconds with a 60 second TTL, so an engine that loses NATS for a while ends nothing; on a quit it rewrites once with a TTL equal to the grace and stops. Every write checks the revision, so a server move works in either join and quit order (the old engine's write fails and it stops). An expired key ends the session, so a crashed engine's sessions end on their own within 60 seconds, and a protagonist who reconnects in that time recovers the session. The realm keeps no grace timers; after connecting to NATS it waits 60 seconds before treating a missing key as ended, so engines can write their keys back after an outage |
+| `sessions_<realm id>` KV bucket, one per realm | one key per session, `<protagonist kind>.<protagonist id>.<session id>`, value `SessionEntry { protagonist; holder: EngineId; since: Instant; connected: Instant }` | each session is a lease ([Leases](#leases)): while the protagonist is connected, the holding engine rewrites the key every 20 seconds with a 60 second TTL, so an engine that loses NATS for a while ends nothing; on a quit it rewrites once with a TTL equal to the grace and stops. `connected` is when the holder's connection began, on the holder's clock, and the later connection holds the session (decided 2026-11-24): a server move works in either join and quit order, and a late write of an engine the protagonist already left never displaces the engine it moved to. `since` is when the session began; a rejoin within the grace and a server move keep it. An expired key ends the session, so a crashed engine's sessions end on their own within 60 seconds, and a protagonist who reconnects in that time recovers the session. The realm keeps no grace timers; after connecting to NATS it waits 60 seconds before treating a missing key as ended, so engines can write their keys back after an outage |
 | `demand_<realm id>` and `mirrors_<realm id>` KV buckets, one each per realm | what readers demand and the published values ([Demand across engines](#demand-across-engines)) | rewritten every 20 seconds with a 60 second TTL, as for sessions; watched by engines, so they survive realm restarts and outages |
 
 Not on streams: stored data and `Due` (transactions, exactly once, realm owned) and mirrors no reader on another engine demands.
+
+### Leases
+
+A lease is one key of a KV bucket that one holder keeps alive (decided 2026-11-24). Sessions are the first leases; mirrors and demand entries are leases too. One primitive, `Leases<V>` in the messaging platform, keeps every guarantee for all of them:
+
+- **Claim.** A claim counts as held at once, without NATS, and writes the key naming its holder, the instant it was claimed on the holder's clock, and its value. Every write checks the revision.
+- **Newest claim wins.** Whenever a claim reads the key, also after a conflict, it writes over an absent or unreadable entry, its own, or an older claim; a newer claim of another holder means the key is lost for good. A refresh that conflicts follows the same rule. Claims at the same instant go to the greater holder id. Engines share a machine or run NTP, and two real connections of one protagonist are at least a server transfer apart, so a wrong order needs clock skew larger than a transfer; a claim read more than the skew bound ahead of the reader's clock is logged and counted (`typewriter.lease.claim.ahead`).
+- **Refresh.** A held key is rewritten every refresh with the TTL; one that expired during an outage is written again while the holder still claims it.
+- **Release.** A release writes the key once more with a TTL equal to the grace, at its own revision; a conflict whose key this holder still holds came from its own write whose answer was lost, so it goes on at the key's current revision, without waiting.
+- **Order.** Calls apply per key in the order they were made; a newer call stops an older claim before its next write, and a claim released before it wrote anything writes nothing.
+- **Close** stops every write and leaves the keys, so a reloaded holder takes them over and a crashed one lets them expire within the TTL.
+- **A conflict costs one read and one write.** Only a failed request waits before it tries again; the NATS client sends a publish again only when no stream answered (natskt fork `v0.9.2-typewriter.3`).
 
 ## Hot publish
 

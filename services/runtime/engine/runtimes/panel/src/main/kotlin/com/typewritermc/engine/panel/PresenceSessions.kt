@@ -2,12 +2,12 @@ package com.typewritermc.engine.panel
 
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
-import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.SessionId
 import com.typewritermc.identity.SessionReporter
 import com.typewritermc.loader.api.HostedMessagingSession
+import com.typewritermc.services.libs.communicator.kv.LeaseTimings
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.protocol.transport.OrganizationActorRouteScope
 import com.typewritermc.protocol.transport.everyMemberOf
@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap
 class PresenceSessions(
     private val realmId: String,
     private val sessions: SessionReporter,
-    private val timings: SessionTimings,
+    private val timings: LeaseTimings,
 ) {
     private val tabs = ConcurrentHashMap<SessionId, Job>()
 
