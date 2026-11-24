@@ -633,6 +633,20 @@ impl FakeCargo<'_> {
         command
     }
 
+    /// The build named `stack` of [`Self::artifact`] from `inputs` without `excluded`.
+    pub fn build<'b>(
+        &self,
+        inputs: &'b [&'b str],
+        excluded: &'b [&'b str],
+    ) -> crate::cargo_build::CargoBuild<'b> {
+        crate::cargo_build::CargoBuild {
+            name: "stack",
+            inputs,
+            excluded,
+            artifacts: vec![self.artifact()],
+        }
+    }
+
     /// How often it ran.
     pub fn runs(&self) -> usize {
         fs::read_to_string(self.root.path("runs")).map_or(0, |runs| runs.lines().count())

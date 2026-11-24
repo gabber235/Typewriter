@@ -248,12 +248,7 @@ mod tests {
         root.write("backend/src/lib.rs", "fn main() {}");
         root.write("Cargo.lock", "version = 4");
         let cargo = FakeCargo { root: &root };
-        let build = CargoBuild {
-            name: "stack",
-            inputs: INPUTS,
-            excluded: EXCLUDED,
-            artifacts: vec![cargo.artifact()],
-        };
+        let build = cargo.build(INPUTS, EXCLUDED);
 
         let first = build.run(&root.ctx, &mut cargo.command("one", READS));
         let second = build.run(&root.ctx, &mut cargo.command("one", READS));
@@ -270,12 +265,7 @@ mod tests {
         root.write("backend/src/lib.rs", "fn main() {}");
         root.write("Cargo.lock", "version = 4");
         let cargo = FakeCargo { root: &root };
-        let build = CargoBuild {
-            name: "stack",
-            inputs: INPUTS,
-            excluded: EXCLUDED,
-            artifacts: vec![cargo.artifact()],
-        };
+        let build = cargo.build(INPUTS, EXCLUDED);
         build
             .run(&root.ctx, &mut cargo.command("one", READS))
             .unwrap();
@@ -297,12 +287,7 @@ mod tests {
         let root = TempRoot::new();
         root.write("backend/src/lib.rs", "fn main() {}");
         let cargo = FakeCargo { root: &root };
-        let build = CargoBuild {
-            name: "stack",
-            inputs: INPUTS,
-            excluded: EXCLUDED,
-            artifacts: vec![cargo.artifact()],
-        };
+        let build = cargo.build(INPUTS, EXCLUDED);
         build
             .run(&root.ctx, &mut cargo.command("one", READS))
             .unwrap();
@@ -326,12 +311,7 @@ mod tests {
         let root = TempRoot::new();
         root.write("backend/src/lib.rs", "fn main() {}");
         let cargo = FakeCargo { root: &root };
-        let build = CargoBuild {
-            name: "stack",
-            inputs: INPUTS,
-            excluded: EXCLUDED,
-            artifacts: vec![cargo.artifact()],
-        };
+        let build = cargo.build(INPUTS, EXCLUDED);
         build
             .run(&root.ctx, &mut cargo.command("one", READS))
             .unwrap();
@@ -351,12 +331,7 @@ mod tests {
         root.write("backend/src/lib.rs", "fn main() {}");
         root.write("backend/tests/case.rs", "#[test] fn case() {}");
         let cargo = FakeCargo { root: &root };
-        let build = CargoBuild {
-            name: "stack",
-            inputs: INPUTS,
-            excluded: EXCLUDED,
-            artifacts: vec![cargo.artifact()],
-        };
+        let build = cargo.build(INPUTS, EXCLUDED);
         build
             .run(&root.ctx, &mut cargo.command("one", READS))
             .unwrap();
@@ -374,12 +349,7 @@ mod tests {
         root.write("backend/tests/case.rs", "#[test] fn case() {}");
         root.write("skir-src/fixture.json", "{}");
         let cargo = FakeCargo { root: &root };
-        let build = CargoBuild {
-            name: "stack",
-            inputs: INPUTS,
-            excluded: EXCLUDED,
-            artifacts: vec![cargo.artifact()],
-        };
+        let build = cargo.build(INPUTS, EXCLUDED);
         let reads = [
             "backend/src/lib.rs",
             "skir-src/fixture.json",
@@ -404,12 +374,7 @@ mod tests {
         let root = TempRoot::new();
         root.write("backend/src/lib.rs", "fn main() {}");
         let cargo = FakeCargo { root: &root };
-        let build = CargoBuild {
-            name: "stack",
-            inputs: INPUTS,
-            excluded: EXCLUDED,
-            artifacts: vec![cargo.artifact()],
-        };
+        let build = cargo.build(INPUTS, EXCLUDED);
         let reads = [
             "backend/src/../src/lib.rs",
             "backend/target/debug/build/schema/out/files.rs",
