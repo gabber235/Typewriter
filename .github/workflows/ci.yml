@@ -118,8 +118,8 @@ jobs:
   # The display, Mesa, Vulkan, GTK and Chromium come from the devenv e2e profile, not apt. The
   # game suite runs four Minecraft clients, each on a virtual display of its own, against Paper on
   # this runner; it also keeps Gradle's outputs (the patched Paper among them) and its downloads.
-  # Every suite runs inside the agent stack, whose backend build generates the panel's sources and
-  # frame vectors, so every suite keeps those caches.
+  # The panel suites generate every source, frame vectors included, before their stack starts,
+  # and restore the services check's Gradle outputs for the SDK fixtures and the Realm host.
   e2e:
     name: e2e (${{ matrix.suite }})
     needs: plan
@@ -134,22 +134,23 @@ jobs:
       matrix:
         include:
           - suite: panel
-            caches: gradle flutter frame-vectors
+            caches: gradle flutter frame-vectors gradle-outputs
+            gradle-outputs-from: check-services
           - suite: panel-web
-            caches: gradle flutter frame-vectors
+            caches: gradle flutter frame-vectors gradle-outputs
+            gradle-outputs-from: check-services
           - suite: game
             caches: gradle flutter frame-vectors gradle-outputs game
     steps:
+      # One commit: the game suite reruns as demos the requirements that covered a line the change
+      # added since its merge base with BASE_SHA, and fetches the history down to it itself.
       - uses: actions/checkout@v6
-        # The game suite reruns as demos the requirements that covered a line the change added
-        # since the merge base with the default branch.
-        with:
-          fetch-depth: ${{ matrix.suite == 'game' && '0' || '1' }}
       - uses: ./.github/actions/devenv
         with:
           caches: ${{ matrix.caches }}
           profile: e2e
           cache-scope: e2e-${{ matrix.suite }}
+          gradle-outputs-from: ${{ matrix.gradle-outputs-from }}
       # The game suite's demo reruns follow the lines the change added since the same base the
       # checks compare with.
       - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }} --base "$BASE_SHA"
