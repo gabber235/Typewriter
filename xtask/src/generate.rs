@@ -5,12 +5,11 @@
 //! Generators run in dependency order and each digest includes the one before it: the panel
 //! compiles against the Skir output, and the testkit and the widgetbook build on the panel.
 
-use std::fs::{self, File};
-use std::path::{Path, PathBuf};
+use std::fs::File;
 
-use anyhow::{Context as _, Result};
+use anyhow::Result;
 
-use crate::digest::{Digest, expand, walk};
+use crate::digest::{Digest, Stamp, expand, walk};
 use crate::lock::HeavyLock;
 use crate::{CommandExt, Context};
 
@@ -247,7 +246,7 @@ fn bring_up_to_date(
     let mut held = None;
     for generator in generators {
         let before = generator.digest(ctx, &upstream)?;
-        if is_current(ctx, &stamp_path(ctx, generator), &before) {
+        if stamp(ctx, generator).is_current(&ctx.root, &before) {
             upstream = before;
             continue;
         }
@@ -269,7 +268,7 @@ fn is_up_to_date_over(ctx: &Context, generators: &[Generator]) -> Result<bool> {
     let mut upstream = Digest::new();
     for generator in generators {
         let digest = generator.digest(ctx, &upstream)?;
-        if !is_current(ctx, &stamp_path(ctx, generator), &digest) {
+        if !stamp(ctx, generator).is_current(&ctx.root, &digest) {
             return Ok(false);
         }
         upstream = digest;
@@ -279,22 +278,14 @@ fn is_up_to_date_over(ctx: &Context, generators: &[Generator]) -> Result<bool> {
 
 /// Writes `generator`'s stamp: the `digest` it ran on and the outputs it left.
 fn record(ctx: &Context, generator: &Generator, digest: &Digest) -> Result<()> {
-    let stamp = stamp_path(ctx, generator);
-    let state = stamp.parent().unwrap_or(&ctx.root);
-    fs::create_dir_all(state).with_context(|| format!("cannot create {}", state.display()))?;
-    let mut record = format!("{}\n", digest.hex());
-    for output in generator.output_files(ctx)? {
-        record.push_str(&output);
-        record.push('\n');
-    }
-    fs::write(&stamp, record).with_context(|| format!("cannot write {}", stamp.display()))
+    stamp(ctx, generator).record(&ctx.root, digest, &generator.output_files(ctx)?)
 }
 
-fn stamp_path(ctx: &Context, generator: &Generator) -> PathBuf {
-    ctx.root.join(format!(
+fn stamp(ctx: &Context, generator: &Generator) -> Stamp {
+    Stamp::at(ctx.root.join(format!(
         ".xtask/generate/{}.stamp",
         generator.name.replace('/', "-")
-    ))
+    )))
 }
 
 impl Generator {
@@ -416,16 +407,6 @@ impl Generator {
     }
 }
 
-/// Whether `stamp` records `digest` and every output it lists still exists.
-fn is_current(ctx: &Context, stamp: &Path, digest: &Digest) -> bool {
-    let Ok(record) = fs::read_to_string(stamp) else {
-        return false;
-    };
-    let mut lines = record.lines();
-    lines.next() == Some(digest.hex().as_str())
-        && lines.all(|output| ctx.root.join(output).is_file())
-}
-
 /// Generator output by convention: Skir writes into `skirout` directories, build_runner writes
 /// `.g.dart`, `.freezed.dart` and `.gr.dart` parts.
 fn is_generated(relative: &str) -> bool {
@@ -455,6 +436,8 @@ fn say(log: Option<&File>, line: &str) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     use super::*;
 
     use crate::test_support::TempRoot;
@@ -466,65 +449,6 @@ mod tests {
 
         assert_eq!(names(through("protocol")), ["protocol"]);
         assert_eq!(names(through("frame-vectors")), names(GENERATORS));
-    }
-
-    #[test]
-    fn unchanged_inputs_with_every_output_present_are_current() {
-        let mut inputs = Digest::new();
-        inputs.update(b"inputs");
-        let root = TempRoot::new();
-        root.write("panel/lib/model.g.dart", "");
-        root.write(
-            "panel.stamp",
-            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
-        );
-        assert!(is_current(&root.ctx, &root.path("panel.stamp"), &inputs));
-    }
-
-    #[test]
-    fn changed_inputs_are_stale() {
-        let mut inputs = Digest::new();
-        inputs.update(b"inputs");
-        let root = TempRoot::new();
-        root.write("panel/lib/model.g.dart", "");
-        root.write(
-            "panel.stamp",
-            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
-        );
-        let mut edited = Digest::new();
-        edited.update(b"edited inputs");
-        assert!(!is_current(&root.ctx, &root.path("panel.stamp"), &edited));
-    }
-
-    #[test]
-    fn a_deleted_output_is_stale() {
-        let mut inputs = Digest::new();
-        inputs.update(b"inputs");
-        let root = TempRoot::new();
-        root.write("panel/lib/model.g.dart", "");
-        root.write(
-            "panel.stamp",
-            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
-        );
-        fs::remove_file(root.path("panel/lib/model.g.dart")).unwrap();
-        assert!(!is_current(&root.ctx, &root.path("panel.stamp"), &inputs));
-    }
-
-    #[test]
-    fn a_generator_that_never_ran_is_stale() {
-        let mut inputs = Digest::new();
-        inputs.update(b"inputs");
-        let root = TempRoot::new();
-        root.write("panel/lib/model.g.dart", "");
-        root.write(
-            "panel.stamp",
-            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
-        );
-        assert!(!is_current(
-            &root.ctx,
-            &root.path("protocol.stamp"),
-            &inputs
-        ));
     }
 
     #[test]

@@ -5,6 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context as _, Result};
+use sha2::{Digest as _, Sha256};
 
 /// FNV-1a over 64 bits: stable across Rust releases and machines, and enough to notice an edit.
 #[derive(Clone)]
@@ -94,4 +95,124 @@ pub fn walk(root: &Path, path: &Path, visit: &mut dyn FnMut(&str)) -> Result<()>
 /// Build output, dependencies and tool state, never input.
 pub fn skipped(name: &str) -> bool {
     name.starts_with('.') || matches!(name, "node_modules" | "build" | "target")
+}
+
+/// What a generator or a build left last time: the digest of the inputs it ran on and the sha256
+/// of each output it wrote. Output paths are relative to the root, or absolute.
+pub struct Stamp {
+    pub path: PathBuf,
+}
+
+impl Stamp {
+    pub fn at(path: PathBuf) -> Self {
+        Self { path }
+    }
+
+    /// Whether the stamp records `digest` and every output it lists still has the recorded
+    /// contents, so an output that was deleted or edited by hand is stale.
+    pub fn is_current(&self, root: &Path, digest: &Digest) -> bool {
+        self.outputs(root, digest).is_some()
+    }
+
+    /// The outputs the stamp lists when it is current for `digest`.
+    pub fn outputs(&self, root: &Path, digest: &Digest) -> Option<Vec<String>> {
+        let record = fs::read_to_string(&self.path).ok()?;
+        let mut lines = record.lines();
+        if lines.next()? != digest.hex() {
+            return None;
+        }
+        lines
+            .map(|line| {
+                let (sum, output) = line.split_once(' ')?;
+                (sha256(&root.join(output)).ok()? == sum).then(|| output.to_owned())
+            })
+            .collect()
+    }
+
+    /// Removes the stamp, so a run that fails leaves nothing to reuse.
+    pub fn clear(&self) -> Result<()> {
+        match fs::remove_file(&self.path) {
+            Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
+                Err(error).with_context(|| format!("cannot remove {}", self.path.display()))
+            }
+            _ => Ok(()),
+        }
+    }
+
+    /// Records `digest` and the current contents of each of `outputs`.
+    pub fn record(&self, root: &Path, digest: &Digest, outputs: &[String]) -> Result<()> {
+        let dir = self.path.parent().unwrap_or(root);
+        fs::create_dir_all(dir).with_context(|| format!("cannot create {}", dir.display()))?;
+        let mut record = format!("{}\n", digest.hex());
+        for output in outputs {
+            record.push_str(&format!("{} {output}\n", sha256(&root.join(output))?));
+        }
+        fs::write(&self.path, record)
+            .with_context(|| format!("cannot write {}", self.path.display()))
+    }
+}
+
+pub fn sha256(path: &Path) -> Result<String> {
+    let bytes = fs::read(path).with_context(|| format!("cannot read {}", path.display()))?;
+    Ok(Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::TempRoot;
+
+    /// A root with one output recorded in `panel.stamp` for the digest of `inputs`.
+    fn recorded() -> (TempRoot, Stamp, Digest) {
+        let mut inputs = Digest::new();
+        inputs.update(b"inputs");
+        let root = TempRoot::new();
+        root.write("panel/lib/model.g.dart", "generated");
+        let stamp = Stamp::at(root.path("panel.stamp"));
+        stamp
+            .record(
+                &root.ctx.root,
+                &inputs,
+                &["panel/lib/model.g.dart".to_owned()],
+            )
+            .unwrap();
+        (root, stamp, inputs)
+    }
+
+    #[test]
+    fn unchanged_inputs_with_every_output_unchanged_are_current() {
+        let (root, stamp, inputs) = recorded();
+        assert!(stamp.is_current(&root.ctx.root, &inputs));
+    }
+
+    #[test]
+    fn changed_inputs_are_stale() {
+        let (root, stamp, _) = recorded();
+        let mut edited = Digest::new();
+        edited.update(b"edited inputs");
+        assert!(!stamp.is_current(&root.ctx.root, &edited));
+    }
+
+    #[test]
+    fn a_deleted_output_is_stale() {
+        let (root, stamp, inputs) = recorded();
+        fs::remove_file(root.path("panel/lib/model.g.dart")).unwrap();
+        assert!(!stamp.is_current(&root.ctx.root, &inputs));
+    }
+
+    #[test]
+    fn an_output_edited_by_hand_is_stale() {
+        let (root, stamp, inputs) = recorded();
+        root.write("panel/lib/model.g.dart", "edited by hand");
+        assert!(!stamp.is_current(&root.ctx.root, &inputs));
+    }
+
+    #[test]
+    fn a_step_that_never_ran_is_stale() {
+        let (root, _, inputs) = recorded();
+        assert!(!Stamp::at(root.path("protocol.stamp")).is_current(&root.ctx.root, &inputs));
+    }
 }

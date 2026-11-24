@@ -13,9 +13,8 @@ use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{Context as _, Result, bail};
-use sha2::{Digest as _, Sha256};
 
-use crate::digest::{Digest, walk};
+use crate::digest::{Digest, Stamp, walk};
 use crate::{CommandExt as _, Context};
 
 /// One Cargo invocation and what it produces.
@@ -73,31 +72,32 @@ impl CargoBuild<'_> {
     pub fn run(&self, ctx: &Context, cargo: &mut Command) -> Result<Outcome> {
         let digest = self.digest(ctx, cargo)?;
         let stamp = self.stamp()?;
-        if self.is_current(&stamp, &digest) {
+        let artifacts = self.artifact_names();
+        if stamp.outputs(&ctx.root, &digest).as_ref() == Some(&artifacts) {
             return Ok(Outcome::Reused);
         }
         // A build that fails, or reads outside its inputs, leaves nothing to reuse.
-        if stamp.exists() {
-            fs::remove_file(&stamp)
-                .with_context(|| format!("cannot remove {}", stamp.display()))?;
-        }
+        stamp.clear()?;
         cargo.run()?;
         self.check_inputs(ctx)?;
-        let mut record = format!("{}\n", digest.hex());
-        for artifact in &self.artifacts {
-            record.push_str(&format!("{} {}\n", sha256(artifact)?, artifact.display()));
-        }
-        fs::write(&stamp, record).with_context(|| format!("cannot write {}", stamp.display()))?;
+        stamp.record(&ctx.root, &digest, &artifacts)?;
         Ok(Outcome::Compiled)
     }
 
-    fn stamp(&self) -> Result<PathBuf> {
+    fn artifact_names(&self) -> Vec<String> {
+        self.artifacts
+            .iter()
+            .map(|artifact| artifact.display().to_string())
+            .collect()
+    }
+
+    fn stamp(&self) -> Result<Stamp> {
         let first = self
             .artifacts
             .first()
             .with_context(|| format!("the build {} names no artifact", self.name))?;
         let dir = first.parent().unwrap_or(Path::new("."));
-        Ok(dir.join(format!("{}.xtask-stamp", self.name)))
+        Ok(Stamp::at(dir.join(format!("{}.xtask-stamp", self.name))))
     }
 
     /// The digest of every input file, the command line with the variables it sets, the flags
@@ -145,22 +145,6 @@ impl CargoBuild<'_> {
         let toolchain = ctx.tool(".", "rustc", &["-vV"]).output_text()?;
         digest.update(toolchain.as_bytes());
         Ok(digest)
-    }
-
-    /// Whether `stamp` records `digest` and each artifact with the contents it has now.
-    fn is_current(&self, stamp: &Path, digest: &Digest) -> bool {
-        let Ok(record) = fs::read_to_string(stamp) else {
-            return false;
-        };
-        let mut lines = record.lines();
-        if lines.next() != Some(digest.hex().as_str()) {
-            return false;
-        }
-        let recorded: Vec<&str> = lines.collect();
-        recorded.len() == self.artifacts.len()
-            && self.artifacts.iter().zip(recorded).all(|(artifact, line)| {
-                sha256(artifact).is_ok_and(|sum| line == format!("{sum} {}", artifact.display()))
-            })
     }
 
     fn is_excluded(&self, relative: &Path) -> bool {
@@ -250,14 +234,6 @@ fn normalize(path: &Path) -> PathBuf {
         }
     }
     normal
-}
-
-fn sha256(path: &Path) -> Result<String> {
-    let bytes = fs::read(path).with_context(|| format!("cannot read {}", path.display()))?;
-    Ok(Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect())
 }
 
 #[cfg(test)]

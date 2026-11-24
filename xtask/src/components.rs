@@ -15,9 +15,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use anyhow::{Context as _, Result, bail, ensure};
 use serde::Deserialize;
 use serde_json::{Value, json};
-use sha2::{Digest, Sha256};
 
 use crate::cargo_build::Outcome as Built;
+use crate::digest::sha256;
 use crate::results::{
     self, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase, TestRun,
 };
@@ -400,14 +400,6 @@ fn write_manifest(
     fs::write(&path, serde_json::to_string_pretty(&manifest)?)
         .with_context(|| format!("cannot write {}", path.display()))?;
     Ok(path)
-}
-
-fn sha256(path: &Path) -> Result<String> {
-    let bytes = fs::read(path).with_context(|| format!("cannot read {}", path.display()))?;
-    Ok(Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect())
 }
 
 /// Runs cases of the suite against one manifest.
