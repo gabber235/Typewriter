@@ -201,8 +201,9 @@ pub fn generate(ctx: &Context, log: Option<&File>) -> Result<()> {
     bring_up_to_date(ctx, log, GENERATORS, Lock::BeforeFirstRun)
 }
 
-/// Brings only the protocol's generated sources up to date: the Skir types the services compile
-/// against, all the game suite needs. Takes the heavy lock as [`generate`] does.
+/// Brings only the protocol's generated sources up to date: the Skir types the services and the
+/// backend compile against, all the game suite and a stack's builds need. Takes the heavy lock as
+/// [`generate`] does.
 pub fn protocol(ctx: &Context) -> Result<()> {
     bring_up_to_date(ctx, None, through("protocol"), Lock::BeforeFirstRun)
 }

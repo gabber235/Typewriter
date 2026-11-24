@@ -4,7 +4,7 @@
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::Stdio;
+use std::process::{Command, Stdio};
 
 use anyhow::{Context as _, Result, bail, ensure};
 use clap::ValueEnum;
@@ -141,7 +141,7 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
     let components = deployable(ctx)?;
     {
         let _lock = HeavyLock::acquire("deploy")?;
-        build_components(ctx, &components)?;
+        components_build(ctx, &components).run()?;
     }
     for component in &components {
         let reference = format!(
@@ -187,9 +187,9 @@ fn ensure_main_checkout(ctx: &Context) -> Result<()> {
     Ok(())
 }
 
-/// Builds the release wasm artifact of every component in `components`. The caller holds the
-/// heavy lock.
-pub(crate) fn build_components(ctx: &Context, components: &[Component]) -> Result<()> {
+/// The Cargo build of the release wasm artifact of every component in `components`. The caller
+/// holds the heavy lock while it runs.
+pub(crate) fn components_build(ctx: &Context, components: &[Component]) -> Command {
     let mut build = ctx.tool(
         "backend",
         "cargo",
@@ -204,7 +204,7 @@ pub(crate) fn build_components(ctx: &Context, components: &[Component]) -> Resul
     for component in components {
         build.args(["-p", &component.package]);
     }
-    build.run()
+    build
 }
 
 pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {

@@ -14,6 +14,7 @@ use sha2::{Digest, Sha256};
 
 use super::client_configuration::ClientConfiguration;
 use super::{StackRecord, process_alive};
+use crate::CommandExt as _;
 
 /// Identifies a service in a composition. Dependencies name handles, not strings, so a typo does
 /// not compile.
@@ -44,7 +45,11 @@ pub trait Service {
     fn needs_roles(&self) -> &'static [Role] {
         &[]
     }
-    /// The process. Building what it runs happens here, under the heavy build lock.
+    /// What the process runs, built before the stack's first service starts.
+    fn builds(&self) -> &'static [&'static Build] {
+        &[]
+    }
+    /// The process, from what [`Self::builds`] built.
     fn command(&self, ctx: &StackContext) -> Result<Command>;
     fn ready(&self, ctx: &StackContext) -> Probe;
     /// How long the service may take to become ready.
@@ -64,6 +69,7 @@ pub trait DynService {
     fn needs(&self) -> &'static [ServiceId];
     fn provides(&self) -> &'static [Role];
     fn needs_roles(&self) -> &'static [Role];
+    fn builds(&self) -> &'static [&'static Build];
     fn command(&self, ctx: &StackContext) -> Result<Command>;
     fn ready(&self, ctx: &StackContext) -> Probe;
     fn startup(&self) -> Duration;
@@ -83,6 +89,9 @@ impl<S: Service> DynService for S {
     fn needs_roles(&self) -> &'static [Role] {
         Service::needs_roles(self)
     }
+    fn builds(&self) -> &'static [&'static Build] {
+        Service::builds(self)
+    }
     fn command(&self, ctx: &StackContext) -> Result<Command> {
         Service::command(self, ctx)
     }
@@ -95,6 +104,38 @@ impl<S: Service> DynService for S {
     fn publish(&self, ctx: &StackContext, out: &mut Published) -> Result<()> {
         Service::publish(self, ctx, out)
     }
+}
+
+/// Something a stack builds before its first service starts. Every build of a stack runs at
+/// once, so a service waits for the slowest build instead of for the sum of them.
+pub struct Build {
+    pub name: &'static str,
+    pub how: How,
+}
+
+/// How a [`Build`] runs.
+pub enum How {
+    /// Arguments of the stack's one Gradle run in `services`, which takes those of every Gradle
+    /// build at once, so two never compete for the same projects.
+    Gradle(fn(&crate::Context) -> Vec<String>),
+    /// A build of its own, on a thread beside the others.
+    Own(fn(&crate::Context) -> Result<()>),
+}
+
+/// The arguments of the one Gradle run that does every Gradle build of `builds`, in order and each
+/// once; none when no build uses Gradle.
+pub fn gradle_args(ctx: &crate::Context, builds: &[&Build]) -> Option<Vec<String>> {
+    let mut args: Vec<String> = Vec::new();
+    for build in builds {
+        if let How::Gradle(build_args) = build.how {
+            for arg in build_args(ctx) {
+                if !args.contains(&arg) {
+                    args.push(arg);
+                }
+            }
+        }
+    }
+    (!args.is_empty()).then_some(args)
 }
 
 /// When a started service counts as ready.
@@ -113,14 +154,33 @@ impl Probe {
     }
 }
 
-/// A composition of services; start order is derived from `needs`.
+/// A composition of services, and what the command run against it needs built; start order is
+/// derived from `needs`.
 #[derive(Default)]
-pub struct StackSpec(Vec<Box<dyn DynService>>);
+pub struct StackSpec(Vec<Box<dyn DynService>>, Vec<&'static Build>);
 
 impl StackSpec {
     pub fn with<S: Service + 'static>(mut self, service: S) -> Self {
         self.0.push(Box::new(service));
         self
+    }
+
+    /// Builds `build` with the services' own builds, for the command run against the stack.
+    pub fn building(mut self, build: &'static Build) -> Self {
+        self.1.push(build);
+        self
+    }
+
+    /// The services' builds, then the stack's own, each once.
+    pub fn builds(&self) -> Vec<&'static Build> {
+        let mut builds: Vec<&'static Build> = Vec::new();
+        let all = self.0.iter().flat_map(|service| service.builds()).copied();
+        for build in all.chain(self.1.iter().copied()) {
+            if !builds.iter().any(|known| known.name == build.name) {
+                builds.push(build);
+            }
+        }
+        builds
     }
 
     /// Dependencies and role providers before their dependents, otherwise in declaration order.
@@ -334,6 +394,11 @@ fn block_free(base: u16) -> bool {
         .all(|offset| TcpListener::bind((Ipv4Addr::LOCALHOST, base + offset)).is_ok())
 }
 
+/// The stack's state directory, `.xtask/state/stack`, which every stack start clears.
+pub fn state_dir(ctx: &crate::Context) -> PathBuf {
+    ctx.root.join(".xtask/state/stack")
+}
+
 /// What services see while the stack starts.
 pub struct StackContext<'a> {
     pub ctx: &'a crate::Context,
@@ -361,7 +426,7 @@ impl<'a> StackContext<'a> {
 
     /// The stack's state directory, `.xtask/state/stack`.
     pub fn state(&self) -> PathBuf {
-        self.ctx.root.join(".xtask/state/stack")
+        state_dir(self.ctx)
     }
 
     pub fn port(&self, name: &str) -> u16 {
@@ -431,14 +496,66 @@ impl<'a> StackContext<'a> {
         self.values.borrow().clone()
     }
 
-    /// Runs `build` once per stack start, under the heavy build lock.
-    pub fn build_once(&self, what: &'static str, build: impl FnOnce() -> Result<()>) -> Result<()> {
-        if self.built.borrow().contains(what) {
-            return Ok(());
+    /// Runs every one of `builds` at once and waits for all of them: each [`How::Own`] build on a
+    /// thread of its own and every Gradle build in one Gradle run. The caller holds the heavy
+    /// lock. Fails naming each build that failed.
+    pub fn build(&self, builds: &[&'static Build]) -> Result<()> {
+        let ctx = self.ctx;
+        let failures: Vec<(&str, anyhow::Error)> = std::thread::scope(|scope| {
+            let mut running = Vec::new();
+            for build in builds {
+                if let How::Own(run) = build.how {
+                    running.push((build.name, scope.spawn(move || run(ctx))));
+                }
+            }
+            if let Some(args) = gradle_args(ctx, builds) {
+                let names: Vec<&str> = builds
+                    .iter()
+                    .filter(|build| matches!(build.how, How::Gradle(_)))
+                    .map(|build| build.name)
+                    .collect();
+                running.push((
+                    "Gradle",
+                    scope.spawn(move || {
+                        let args: Vec<&str> = args.iter().map(String::as_str).collect();
+                        ctx.tool("services", "./gradlew", &args)
+                            .run()
+                            .with_context(|| format!("cannot build {}", names.join(", ")))
+                    }),
+                ));
+            }
+            running
+                .into_iter()
+                .filter_map(|(name, thread)| {
+                    let result = thread
+                        .join()
+                        .unwrap_or_else(|_| Err(anyhow::anyhow!("the build panicked")));
+                    result.err().map(|error| (name, error))
+                })
+                .collect()
+        });
+        if !failures.is_empty() {
+            let reasons: Vec<String> = failures
+                .iter()
+                .map(|(name, error)| format!("{name}: {error:#}"))
+                .collect();
+            bail!("the stack's builds failed; {}", reasons.join("; "));
         }
-        let _lock = crate::lock::HeavyLock::acquire(&format!("stack: building {what}"))?;
-        build()?;
-        self.built.borrow_mut().insert(what);
+        self.built
+            .borrow_mut()
+            .extend(builds.iter().map(|build| build.name));
+        Ok(())
+    }
+
+    /// Fails unless the stack built `build`, so a service whose command runs what a build makes
+    /// but leaves the build out of its [`Service::builds`] is refused.
+    pub fn require(&self, build: &Build) -> Result<()> {
+        if !self.built.borrow().contains(build.name) {
+            bail!(
+                "the stack did not build {}: the service that runs it must list it in its builds",
+                build.name
+            );
+        }
         Ok(())
     }
 }
@@ -522,6 +639,162 @@ mod tests {
         );
         assert!(ctx.clients().is_err());
         assert!(!ctx.state().join("panel.json").exists());
+    }
+
+    fn nothing(_: &crate::Context) -> Result<()> {
+        Ok(())
+    }
+
+    const STACK_BINARY: Build = Build {
+        name: "stack binary",
+        how: How::Own(nothing),
+    };
+    const REALM_HOST: Build = Build {
+        name: "realm host",
+        how: How::Gradle(|ctx| {
+            vec![
+                "--quiet".to_owned(),
+                ":loader:installDist".to_owned(),
+                format!("-Pinbox={}", ctx.root.join("inbox").display()),
+            ]
+        }),
+    };
+    const GAME_SUITE: Build = Build {
+        name: "game suite",
+        how: How::Gradle(|_| vec!["--quiet".to_owned(), "gameTestBuild".to_owned()]),
+    };
+
+    struct Binder;
+
+    impl Service for Binder {
+        const ID: ServiceId = ServiceId("binder");
+        fn builds(&self) -> &'static [&'static Build] {
+            &[&STACK_BINARY]
+        }
+        fn command(&self, _: &StackContext) -> Result<Command> {
+            unreachable!()
+        }
+        fn ready(&self, _: &StackContext) -> Probe {
+            Probe::ExitSuccess
+        }
+    }
+
+    struct Host;
+
+    impl Service for Host {
+        const ID: ServiceId = ServiceId("host");
+        fn builds(&self) -> &'static [&'static Build] {
+            &[&STACK_BINARY, &REALM_HOST]
+        }
+        fn command(&self, _: &StackContext) -> Result<Command> {
+            unreachable!()
+        }
+        fn ready(&self, _: &StackContext) -> Probe {
+            Probe::ExitSuccess
+        }
+    }
+
+    #[test]
+    fn a_stack_builds_what_its_services_and_its_command_need_once_each() {
+        let spec = StackSpec::default()
+            .with(Binder)
+            .with(roles::Owner)
+            .with(Host)
+            .building(&GAME_SUITE);
+        let names: Vec<&str> = spec.builds().iter().map(|build| build.name).collect();
+        assert_eq!(names, ["stack binary", "realm host", "game suite"]);
+    }
+
+    #[test]
+    fn every_gradle_build_of_a_stack_runs_in_one_gradle_with_each_argument_once() {
+        let root = TempRoot::new();
+        assert_eq!(
+            gradle_args(&root.ctx, &[&STACK_BINARY, &REALM_HOST, &GAME_SUITE]).unwrap(),
+            [
+                "--quiet".to_owned(),
+                ":loader:installDist".to_owned(),
+                format!("-Pinbox={}", root.path("inbox").display()),
+                "gameTestBuild".to_owned(),
+            ]
+        );
+        assert_eq!(gradle_args(&root.ctx, &[&STACK_BINARY]), None);
+    }
+
+    /// How many of [`MEETING`]'s builds have started.
+    static MET: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+    /// Starts, then waits up to ten seconds for the other build of [`MEETING`] to start too.
+    fn meet(_: &crate::Context) -> Result<()> {
+        use std::sync::atomic::Ordering;
+        MET.fetch_add(1, Ordering::SeqCst);
+        let deadline = std::time::Instant::now() + Duration::from_secs(10);
+        while MET.load(Ordering::SeqCst) < 2 {
+            if std::time::Instant::now() > deadline {
+                bail!("the other build never started while this one ran");
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        Ok(())
+    }
+
+    const MEETING: [Build; 2] = [
+        Build {
+            name: "components",
+            how: How::Own(meet),
+        },
+        Build {
+            name: "stack binary",
+            how: How::Own(meet),
+        },
+    ];
+
+    #[test]
+    fn builds_of_their_own_run_at_the_same_time() {
+        let root = TempRoot::new();
+        let ctx = stack_context(&root);
+        ctx.build(&[&MEETING[0], &MEETING[1]]).unwrap();
+    }
+
+    static FINISHED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+    const FAILING: [Build; 2] = [
+        Build {
+            name: "components",
+            how: How::Own(|_| bail!("wasm32 failed")),
+        },
+        Build {
+            name: "stack binary",
+            how: How::Own(|_| {
+                std::thread::sleep(Duration::from_millis(200));
+                FINISHED.store(true, std::sync::atomic::Ordering::SeqCst);
+                Ok(())
+            }),
+        },
+    ];
+
+    #[test]
+    fn a_failed_build_is_named_once_the_other_builds_have_finished() {
+        let root = TempRoot::new();
+        let ctx = stack_context(&root);
+        assert_eq!(
+            refusal(ctx.build(&[&FAILING[0], &FAILING[1]])),
+            "the stack's builds failed; components: wasm32 failed"
+        );
+        assert!(FINISHED.load(std::sync::atomic::Ordering::SeqCst));
+        assert!(ctx.require(&FAILING[1]).is_err());
+    }
+
+    #[test]
+    fn a_service_runs_only_what_the_stack_built() {
+        let root = TempRoot::new();
+        let ctx = stack_context(&root);
+        assert_eq!(
+            refusal(ctx.require(&STACK_BINARY)),
+            "the stack did not build stack binary: the service that runs it must list it in its \
+             builds"
+        );
+        ctx.build(&[&STACK_BINARY]).unwrap();
+        ctx.require(&STACK_BINARY).unwrap();
     }
 
     mod chain {

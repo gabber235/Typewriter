@@ -25,10 +25,10 @@ use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
 
 use self::spec::{DynService, PortLease, Probe, Published, Registry, StackContext, StackSpec};
-use crate::Context;
 use crate::e2e::failures::StackEvidence;
-use crate::lock::E2eSlot;
+use crate::lock::{E2eSlot, HeavyLock};
 use crate::process::{self, Group, POLL, STOP_GRACE, Supervisor, interrupted, kill_group};
+use crate::{Context, generate};
 
 /// Per run state a new run keeps; everything else in the state directory is cleared.
 pub enum Keep {
@@ -85,6 +85,13 @@ fn run_then<T, U>(
     let stack_ctx = StackContext::new(ctx, PortLease::acquire(&Registry::machine(), &ctx.root)?);
     reset_state(&stack_ctx.state(), &[Keep::BrokerKeys])?;
     let mut stack = Stack::register(&stack_ctx)?;
+    let builds = spec.builds();
+    if !builds.is_empty() {
+        // Every build compiles against the protocol's generated sources.
+        generate::protocol(ctx)?;
+        let _lock = HeavyLock::acquire("stack: building")?;
+        stack_ctx.build(&builds)?;
+    }
     for service in order {
         stack.start(service, &stack_ctx)?;
         let mut published = Published::default();
