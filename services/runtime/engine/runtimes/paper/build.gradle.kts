@@ -16,6 +16,12 @@ val loaderPlugin =
     configurations.create("loaderPlugin") {
         isTransitive = false
     }
+
+// The test only plugin that holds a game Paper's ticks with the work in flight in Typewriter's engines.
+val playtestTypewriterPlugin =
+    configurations.create("playtestTypewriterPlugin") {
+        isTransitive = false
+    }
 val paperRunDirectory = rootProject.layout.projectDirectory.dir("./build/development/paper")
 val paperManualInbox = paperRunDirectory.dir("plugins/Typewriter/artifacts/inbox/manual")
 val assembleDevelopmentArtifacts = rootProject.tasks.named("assembleDevelopmentArtifacts")
@@ -66,6 +72,7 @@ dependencies {
     imprintHostApi(project(":loader-api"))
     imprintPlatformApi(project(":typewriter-api"))
     loaderPlugin(project(":loader-distribution"))
+    playtestTypewriterPlugin(project(":playtest-typewriter", "playtestTypewriterPlugin"))
     "gameTestImplementation"(project(":playtest"))
     // The stack observer the game requirements read the topology and the sessions bucket through.
     testFixturesImplementation(project(":messaging"))
@@ -86,7 +93,7 @@ fun stackValue(name: String): Provider<String> =
 // registration token where the stack's engine binder waits for that slot, and keeps the identity it
 // was bound with, so every own Paper of a slot is the same engine host.
 gamePaper {
-    pluginJars.from(loaderPlugin)
+    pluginJars.from(loaderPlugin, playtestTypewriterPlugin)
     environment.put("TYPEWRITER_CONFIG_FILE", stackValue("TYPEWRITER_CONFIG_FILE"))
     (0..HeapShare.OWN_PAPERS).forEach { slot ->
         slot(slot) {

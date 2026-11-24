@@ -1,0 +1,6 @@
+name: PlaytestTypewriter
+version: '0'
+main: com.typewritermc.playtest.typewriter.PlaytestTypewriterPlugin
+api-version: '26.3'
+depend: [Playtest, Typewriter]
+description: Holds the stepped game Paper's ticks with the work in flight in Typewriter's engines. Runs only on game Papers of Typewriter's own suite.
