@@ -5,6 +5,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import skirout.harness.v1.test_run.LossCause
 import skirout.harness.v1.wire.PaperLossKind
 
 val OwnPaperTest by testSuite {
@@ -85,7 +86,15 @@ val OwnPaperTest by testSuite {
         paper.exited(137)
 
         paper.exited(137) shouldContainExactly
-            listOf(Do.Lost(1, PaperLossKind.EXITED_WHILE_BOOTING, "paper-gv-1 exited with code 137 while it booted"), Do.Gone)
+            listOf(
+                Do.Lost(
+                    1,
+                    PaperLossKind.EXITED_WHILE_BOOTING,
+                    "paper-gv-1 exited with code 137 while it booted",
+                    LossCause.ExitedWrapper(137),
+                ),
+                Do.Gone,
+            )
         paper.ended(1, "its session sent its result").shouldBeEmpty()
     }
 
@@ -99,9 +108,20 @@ val OwnPaperTest by testSuite {
         booting.claim(2)
 
         running.exited(1) shouldContainExactly
-            listOf(Do.Lost(1, PaperLossKind.EXITED_WHILE_RUNNING, "paper-gv-1 exited with code 1 while its attempt ran"), Do.Gone)
+            listOf(
+                Do.Lost(
+                    1,
+                    PaperLossKind.EXITED_WHILE_RUNNING,
+                    "paper-gv-1 exited with code 1 while its attempt ran",
+                    LossCause.ExitedWrapper(1),
+                ),
+                Do.Gone,
+            )
         booting.exited(1) shouldContainExactly
-            listOf(Do.Lost(2, PaperLossKind.EXITED_WHILE_BOOTING, "paper-gv-2 exited with code 1 while it booted"), Do.Gone)
+            listOf(
+                Do.Lost(2, PaperLossKind.EXITED_WHILE_BOOTING, "paper-gv-2 exited with code 1 while it booted", LossCause.ExitedWrapper(1)),
+                Do.Gone,
+            )
     }
 
     test("a Paper that cannot resume its attempt after a restart is lost") {
@@ -120,7 +140,14 @@ val OwnPaperTest by testSuite {
             PaperLossKind.RESUME_FAILED,
             "paper-gv-1 could not resume its attempt: the player gv-1 is not online",
         ) shouldContainExactly
-            listOf(Do.Lost(1, PaperLossKind.RESUME_FAILED, "paper-gv-1 could not resume its attempt: the player gv-1 is not online"))
+            listOf(
+                Do.Lost(
+                    1,
+                    PaperLossKind.RESUME_FAILED,
+                    "paper-gv-1 could not resume its attempt: the player gv-1 is not online",
+                    LossCause.BrokeWrapper("paper-gv-1 could not resume its attempt: the player gv-1 is not online"),
+                ),
+            )
         paper.resumed(41).shouldBeEmpty()
     }
 
@@ -135,7 +162,14 @@ val OwnPaperTest by testSuite {
 
         paper.bootTimedOut(1).shouldBeEmpty()
         paper.bootTimedOut(2) shouldContainExactly
-            listOf(Do.Lost(1, PaperLossKind.BOOT_TIMED_OUT, "paper-gv-1 did not boot within ${OwnPaper.BOOT_SECONDS} s"))
+            listOf(
+                Do.Lost(
+                    1,
+                    PaperLossKind.BOOT_TIMED_OUT,
+                    "paper-gv-1 did not boot within ${OwnPaper.BOOT_SECONDS} s",
+                    LossCause.NEVER_READY,
+                ),
+            )
     }
 
     test("once its attempt ended, the Paper says why, the players go back, a drop is no loss and the Paper's exit is its end") {

@@ -1,5 +1,6 @@
 package com.typewritermc.playtest.pool
 
+import skirout.harness.v1.test_run.LossCause
 import skirout.harness.v1.wire.PaperLossKind
 import skirout.harness.v1.wire.Region
 
@@ -145,16 +146,24 @@ internal interface PaperRules {
             val tick: Int,
         ) : Life
 
-        /** The Paper is lost, as [kind] says, for [cause]: [attempt] fails, the process ends, the players go back to the shared Paper. */
+        /**
+         * The Paper is lost, as [kind] says, for [cause], which the run file lists as [loss]: [attempt]
+         * fails, the process ends, the players go back to the shared Paper.
+         */
         data class Lost(
             val attempt: Long,
             val kind: PaperLossKind,
             val cause: String,
+            val loss: LossCause,
         ) : Life
 
-        /** The game cannot run for [cause]: every session hears why and the game stops. */
+        /**
+         * The game cannot go on for [cause], which the run file lists as the Paper's [loss]: every session
+         * hears why and the game stops. Before the game booted it could not run; after, the loss stopped it.
+         */
         data class Fail(
             val cause: String,
+            val loss: LossCause,
         ) : ToGame
 
         /** [attempt] ended: its players go back to the shared Paper and this Paper stops. */

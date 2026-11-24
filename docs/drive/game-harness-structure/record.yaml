@@ -1,0 +1,152 @@
+# docs/drive/game-harness-structure/record.yaml: the working state of the game harness split out of PR 580.
+goal: >-
+  Split PR 580 into topic PRs onto features/v1; this one is the harness PR: framework fault tests in
+  their own job without the stack, demos as evidence after the verdict, one infrastructure verdict when
+  a shared part dies, hard kernel enforced memory limits per part including the Realm host and Gradle,
+  and the pacing invariance check (report only first, then gating).
+
+pieces:
+  - id: suite-split
+    status: building
+    open: >-
+      the ci.yml layout change was blocked by the agent's permission classifier; the intended diff is
+      in the handback for the maintainer to apply or allow
+    tries:
+      - id: split-by-module
+        what: >-
+          two game suites: playtest (services/playtest modules, no stack, runs only when the framework
+          changes) and game (product modules, inside the stack); each suite's Papers carry only the
+          additions of the modules it runs
+        taught: >-
+          framework requirements need the stack only because the union of Paper additions reaches every
+          Paper (game-test.gradle.kts:165); only GAME-S1 and GAME-S2 read the observer
+        state: working
+        evidence: [services/build-logic/src/main/kotlin/com.typewritermc.game-test.gradle.kts:165]
+  - id: demos-as-evidence
+    status: building
+    tries:
+      - id: demo-step-after-verdict
+        what: >-
+          delete DemoDiffers; `cargo xtask e2e <suite> --demos` reruns failed, flaky, quarantined and
+          touched cases from the verdict run file as a separate run that never gates
+        state: working
+  - id: part-model
+    status: figuring-out
+    open: >-
+      how to get a writable cgroup2 on the Namespace runner: the job's container mounts it read only;
+      candidates are remount or a fresh cgroup2 mount with sudo, and the documented
+      `namespace-features:container.privileged=true` label
+    tries:
+      - id: cgroup-probe-1
+        what: temporary workflow on the game job's runner labels (CI run 45289618353, deleted with its branch)
+        taught: >-
+          the job runs in a container inside the microVM: PID 1 is the runner's entry.sh, the job sits at
+          its cgroup namespace root (0::/), /sys/fs/cgroup is cgroup2 mounted read only (memory, pids,
+          cpu, io, cpuset, hugetlb available), kernel 7.1.4, passwordless sudo, systemd 255 installed
+          but offline, no swap, 16053 MB; `sudo mkdir /sys/fs/cgroup/tw-probe` fails with a read only
+          file system, so the later probe steps never ran
+        state: dropped
+        why: cgroups cannot be written as the runner is set up today
+        evidence: [scratchpad probe/probe.log (token redacted)]
+      - id: budget-tree
+        what: >-
+          every process of a run is a named part in a cgroup v2 tree (run, stack, gradle, game, and the
+          pool's parts) with an absolute hard memory.max; a JVM's heap is a percent of its own part's
+          limit; the pool admits parts while the sum of limits fits its own budget; memory.events names
+          the part the kernel killed
+        state: trying
+  - id: one-infrastructure-verdict
+    status: building
+    tries:
+      - id: typed-part-loss
+        what: >-
+          run file lists parts with their end (ran to the end, or lost with a cause); attempts a lost
+          shared part held are interrupted, not failed; xtask prints one verdict per lost part
+        state: working
+  - id: pacing-invariance
+    status: building
+    tries:
+      - id: demo-vs-attempt-evidence
+        what: compare the held tick of every window between passing attempts and demos in existing CI run files
+        taught: >-
+          a demo is already a slower paced rerun: 7 of 106 cases varied on PR 580 (GAME-E1, E2, E3, E5,
+          RESTART-2, HUNG-1, QUIT-2), 2 of 42 on features/v1 (TOAST-1 by one tick, HUNG-1 by design)
+        state: working
+        evidence:
+          - CI run 44908900974 (features/v1) results-e2e-game
+          - PR 580 artifacts art-48 and art-64 in the review's scratchpad
+      - id: pace-as-attempt-condition
+        what: >-
+          an attempt carries a pace (minimum wall clock between granted ticks); the pool runs one pace at
+          a time on the shared Paper; every window of a requirement must hold at the same tick in every
+          passing attempt, retries included
+        state: working
+      - id: toast-1-cause
+        what: read the client's toast path for a wall clock dependence
+        taught: >-
+          a toast slides in over 600 ms of Util.getMillis, and a stepped client's time source moves 50 ms
+          per granted tick, so pace never moves it: every attempt and pace of one run holds at one tick.
+          Two local runs still held at 11 and at 10, so something that differs between runs moves it by a
+          tick; the demo explanation for CI's 11 against 10 is unproven
+        state: trying
+        evidence:
+          - services/playtest/client/src/main/java/com/typewritermc/playtest/client/Stepper.java:81
+          - local playtest runs, 2026-11-24 (held at 11 in every attempt of one, at 10 in every attempt of the next)
+      - id: restart-2-cause
+        what: run RESTART-2 at 0, 5 and 50 ms, then with a 1 tick window after the restart
+        taught: >-
+          the plugin answered a resume with the tick before its delivery, and the delivery runs a wall
+          clock dependent number of ticks whose records the pool drops while the Paper restarts, so the
+          window held at tick 1, 4 or 3; at 0 ms tick 1 showed nothing in 4 of 4 attempts. A resume now
+          answers with the tick the delivery ended, as restartPaper and rejoin document
+        state: working
+        evidence:
+          - services/playtest/plugin/src/main/kotlin/com/typewritermc/playtest/plugin/PlaytestPlugin.kt
+          - services/playtest/pool/src/main/kotlin/com/typewritermc/playtest/pool/Pool.kt (perceived, restarted)
+
+decided:
+  - id: carry-rejoin-listing
+    what: >-
+      68dae17a5c's plugin change is a framework fix and the bug exists on features/v1 (Attempts.java is
+      identical); carry it with QUIT-2's 1 tick bound, test first through the pacing check
+  - id: carry-log-staging
+    what: >-
+      carry the Paper log staging of bc0a7ec1ad and edfef27410 through the secret scrub, without its
+      rule that a failed demo fails the run
+  - id: drop-e5-loosening
+    what: ffd7766c57 is not carried
+
+  - id: no-sharding
+    what: >-
+      the maintainer declined sharding for now (2026-11-24): one runner per suite, the product suite
+      with the stack and the framework suite without it; sharing the stack build is a follow up
+
+  - id: second-probe
+    what: >-
+      the maintainer approved a second probe (2026-11-24): a read write remount, a fresh cgroup2 mount,
+      then the privileged container label; the push was blocked by the agent's permission classifier
+
+  - id: plan-approved
+    what: >-
+      the maintainer approved the plan with every recommendation (2026-11-24): probe the runner; a
+      fixed limit per part kind, the pool starts only what fits; a lost shared Paper or pool stops the
+      run with one verdict, attempts interrupted, the rest not run; pacing at 5 and 50 ms for new or
+      touched cases, one pace at a time on the shared Paper, the framework suite gating and
+      runtimes/paper reporting until the holding PR; demos as a separate run after the verdict
+
+  - id: build-unaffected-first
+    what: >-
+      build the parts that do not touch memory now (suite split, demos as a separate run, one verdict
+      per part loss, pacing check); hold change 4 until the second probe question is answered
+      (2026-11-24); then hold the CI job layout and pool admission too while the maintainer weighs
+      sharding across runners
+
+open:
+  - id: blocked-pushes
+    ask: >-
+      the probe push and the ci.yml edit were denied by the permission classifier; allow them, or
+      apply the ci.yml diff and run the probe by hand?
+
+slices: []
+
+next: checks, commits and the handback; TOAST-1's tick from run to run stays open

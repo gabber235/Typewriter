@@ -41,8 +41,8 @@ const APPROVED_AT: &str = "approved-at";
 /// any of them names stays on the evidence branch however old it is.
 pub(crate) const LONG_LIVED: [&str; 2] = ["develop", "features/v1"];
 
-/// The artifact CI's game job uploads its staged results as.
-const GAME_ARTIFACT: &str = "results-e2e-game";
+/// The artifacts CI's game suites upload their staged results as: the product's and the framework's.
+const GAME_ARTIFACTS: [&str; 2] = ["results-e2e-game", "results-e2e-playtest"];
 
 /// Where `approve --pr` downloads a pull request's game frames, relative to the repository root.
 const PULL_REQUEST_FRAMES: &str = ".xtask/state/goldens";
@@ -52,7 +52,8 @@ pub enum GoldensCommand {
     /// Records each golden a game run captured: its golden file takes the frame's hash, size and
     /// renderer, and the frame joins the local golden images.
     Approve {
-        /// The run's folder; the last `cargo xtask e2e game` run's by default.
+        /// The folder of the runs to approve from; by default every local run, so the last
+        /// `cargo xtask e2e game` and `cargo xtask e2e playtest` runs.
         from: Option<PathBuf>,
         /// Approves the frames the latest CI run of this pull request's head captured, which ran
         /// on the pinned runner, instead of a local run.
@@ -71,7 +72,7 @@ pub fn run(ctx: &Context, command: &GoldensCommand) -> Result<()> {
                     &ctx.root.join(PULL_REQUEST_FRAMES).join(format!("pr-{pr}")),
                     |args| ctx.tool(".", "gh", args).output_text(),
                 )?,
-                (None, None) => ctx.root.join(evidence::RESULTS).join("game"),
+                (None, None) => ctx.root.join(evidence::RESULTS),
             };
             let approved = approve(&ctx.root, &from, &ctx.root.join(IMAGES))?;
             for golden in &approved {
@@ -89,9 +90,10 @@ pub fn run(ctx: &Context, command: &GoldensCommand) -> Result<()> {
     }
 }
 
-/// Downloads into `into` the game results the latest CI run of pull request `pr`'s head staged,
-/// through `gh`, and returns the folder of the game run in it, which approve reads as it reads a
-/// local run.
+/// Downloads into `into` the results each game suite of the latest CI run of pull request `pr`'s
+/// head staged, through `gh`, one folder per suite, and returns `into`, which approve reads as it
+/// reads the local runs. A suite the run did not plan uploaded nothing; only a run of no game suite
+/// fails.
 fn pull_request_frames(
     pr: u64,
     into: &Path,
@@ -133,20 +135,23 @@ fn pull_request_frames(
     if into.exists() {
         fs::remove_dir_all(into).with_context(|| format!("cannot clear {}", into.display()))?;
     }
-    let dir = into.to_string_lossy();
-    gh(&[
-        "run",
-        "download",
-        run,
-        "--repo",
-        REPOSITORY,
-        "--name",
-        GAME_ARTIFACT,
-        "--dir",
-        &dir,
-    ])
-    .with_context(|| format!("cannot download the game results of CI run {run}"))?;
-    Ok(into.join("game"))
+    let mut missing = Vec::new();
+    for artifact in GAME_ARTIFACTS {
+        let dir = into.join(artifact);
+        let dir = dir.to_string_lossy();
+        if let Err(error) = gh(&[
+            "run", "download", run, "--repo", REPOSITORY, "--name", artifact, "--dir", &dir,
+        ]) {
+            missing.push(format!("{artifact}: {error:#}"));
+        }
+    }
+    if missing.len() == GAME_ARTIFACTS.len() {
+        bail!(
+            "CI run {run} has no game results to approve from: {}",
+            missing.join("; ")
+        );
+    }
+    Ok(into.to_path_buf())
 }
 
 /// A golden [`approve`] wrote: its golden file, relative to the repository root, and the local image
@@ -763,12 +768,40 @@ mod tests {
         assert!(asked[0].starts_with("pr view 546 "), "{asked:?}");
         assert!(asked[1].contains("--workflow ci.yml"), "{asked:?}");
         assert!(asked[1].contains("--commit 4e61bf0971"), "{asked:?}");
-        assert!(
-            asked[2].starts_with("run download 44063821447 ")
-                && asked[2].contains("--name results-e2e-game"),
-            "{asked:?}"
-        );
-        assert_eq!(frames, root.path("pr-546/game"));
+        for (download, artifact) in asked[2..]
+            .iter()
+            .zip(["results-e2e-game", "results-e2e-playtest"])
+        {
+            assert!(
+                download.starts_with("run download 44063821447 ")
+                    && download.contains(&format!("--name {artifact}"))
+                    && download.contains(&format!("pr-546/{artifact}")),
+                "{asked:?}"
+            );
+        }
+        assert_eq!(asked.len(), 4, "{asked:?}");
+        assert_eq!(frames, root.path("pr-546"));
+    }
+
+    #[test]
+    fn approve_of_a_pull_request_takes_the_suites_that_ran_and_fails_only_when_none_did() {
+        let root = TempRoot::new();
+        let ran = |artifact: &'static str| {
+            move |args: &[&str]| -> anyhow::Result<String> {
+                match args[0] {
+                    "pr" => Ok("4e61bf0971\n".to_owned()),
+                    "run" if args[1] == "list" => Ok("44063821447\n".to_owned()),
+                    _ if args.contains(&artifact) => Ok(String::new()),
+                    _ => anyhow::bail!("no artifact matches"),
+                }
+            }
+        };
+
+        assert!(pull_request_frames(546, &root.path("pr-546"), ran("results-e2e-game")).is_ok());
+        let error = pull_request_frames(546, &root.path("pr-546"), ran("results-e2e-panel"))
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("no game results"), "{error}");
     }
 
     #[test]

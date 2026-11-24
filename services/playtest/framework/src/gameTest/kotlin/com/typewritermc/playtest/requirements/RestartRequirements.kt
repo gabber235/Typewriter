@@ -45,7 +45,8 @@ val RestartRequirements by testSuite(compartment = { GameCompartment }) {
 
         restartPaper()
 
-        within(20.ticks) {
+        // A client back from a restart holds what the new Paper sent it, so the first tick shows it.
+        within(1.ticks) {
             player sees held("stick")
             player.never sees offhand("diamond")
         }

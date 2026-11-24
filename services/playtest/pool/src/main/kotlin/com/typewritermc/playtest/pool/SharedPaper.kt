@@ -2,6 +2,7 @@ package com.typewritermc.playtest.pool
 
 import com.typewritermc.playtest.pool.PaperRules.Claiming
 import com.typewritermc.playtest.pool.PaperRules.Do
+import skirout.harness.v1.test_run.LossCause
 import skirout.harness.v1.wire.PaperLossKind
 
 /**
@@ -31,7 +32,8 @@ internal class SharedPaper(
         return listOf(Do.RegionsAhead(regions.ahead()), Do.Connect)
     }
 
-    override fun closed(): List<Do> = listOf(Do.Fail("$name closed its pool connection"))
+    override fun closed(): List<Do> =
+        listOf(Do.Fail("$name closed its pool connection", LossCause.LeftWrapper("it closed its pool connection")))
 
     override fun joined(player: String): List<Do> {
         joinedPlayers += player
@@ -72,17 +74,17 @@ internal class SharedPaper(
     override fun failed(
         kind: PaperLossKind,
         cause: String,
-    ): List<Do> = listOf(Do.Fail(cause))
+    ): List<Do> = listOf(Do.Fail(cause, LossCause.BrokeWrapper(cause)))
 
     override fun ended(
         attempt: Long,
         why: String,
     ): List<Do> = listOf()
 
-    override fun exited(code: Int): List<Do> = listOf(Do.Fail("$name exited with code $code"))
+    override fun exited(code: Int): List<Do> = listOf(Do.Fail("$name exited with code $code", LossCause.ExitedWrapper(code)))
 
     override fun bootTimedOut(boot: Int): List<Do> =
-        if (booted) listOf() else listOf(Do.Fail("the game was not ready within $BOOT_SECONDS s"))
+        if (booted) listOf() else listOf(Do.Fail("the game was not ready within $BOOT_SECONDS s", LossCause.NEVER_READY))
 
     companion object {
         /** How long the game may take from its start until every client stepped with the shared Paper once. */

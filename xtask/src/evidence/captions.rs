@@ -140,6 +140,10 @@ fn result(outcome: &Outcome) -> (String, &'static str) {
                 .map_or(failure.message.as_str(), |(first, _)| first);
             (clamp(&format!("BROKEN   {message}")), BROKEN_COLOR)
         }
+        Outcome::Interrupted(interruption) => (
+            clamp(&format!("INTERRUPTED   {} was lost", interruption.part)),
+            BROKEN_COLOR,
+        ),
         Outcome::Unknown(_) => ("NO RESULT".to_owned(), BROKEN_COLOR),
     }
 }

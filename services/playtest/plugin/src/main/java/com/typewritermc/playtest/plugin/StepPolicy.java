@@ -12,6 +12,8 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
+import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 
 /**
@@ -33,6 +35,9 @@ import java.util.function.Predicate;
  * deadline by the ledger and holds no tick from then on. An attempt is settled once its players' work is quiet, stepping on
  * meanwhile so work handed to Bukkit's async scheduler can start.
  *
+ * <p>At a pace, such a tick is granted no sooner than the pace after the tick before it, as a server
+ * that runs slower would run it; the ticks a window holds at must not change with the pace.
+ *
  * <p>A client that {@link Acks} finds stalled holds back no tick from then on, and counts as lost. Nor
  * does a client whose connection closed: Paper notices its player leave only in the next tick.
  */
@@ -49,10 +54,10 @@ final class StepPolicy {
     private static final class Delivery {
         final Set<UUID> waiting;
         final int ranAfter;
-        final Runnable done;
+        final IntConsumer done;
         final Map<UUID, Integer> confirmedBy = new HashMap<>();
 
-        Delivery(Collection<UUID> players, int ranAfter, Runnable done) {
+        Delivery(Collection<UUID> players, int ranAfter, IntConsumer done) {
             this.waiting = new HashSet<>(players);
             this.ranAfter = ranAfter;
             this.done = done;
@@ -77,8 +82,12 @@ final class StepPolicy {
     private final Acks acks;
     private final Consumer<Acks.Stalled> reportStalled;
     private final Predicate<UUID> connected;
+    private final LongSupplier nanoTime;
     private int lastEnded = -1;
     private long lastIdleTick;
+    private long paceNanos;
+    private boolean grantedStepped;
+    private long lastGranted;
 
     /**
      * @param tickPending whether a granted tick has not started yet
@@ -91,6 +100,7 @@ final class StepPolicy {
      * @param acks the tick each client acked last
      * @param reportStalled tells the pool that a client stalled
      * @param connected whether the player's client is still connected to Paper
+     * @param nanoTime the wall clock, in nanoseconds
      */
     StepPolicy(
             BooleanSupplier tickPending,
@@ -102,7 +112,8 @@ final class StepPolicy {
             Consumer<WorkLedger.Hung> reportEnded,
             Acks acks,
             Consumer<Acks.Stalled> reportStalled,
-            Predicate<UUID> connected) {
+            Predicate<UUID> connected,
+            LongSupplier nanoTime) {
         this.tickPending = tickPending;
         this.grantTick = grantTick;
         this.sendBarrier = sendBarrier;
@@ -113,6 +124,7 @@ final class StepPolicy {
         this.acks = acks;
         this.reportStalled = reportStalled;
         this.connected = connected;
+        this.nanoTime = nanoTime;
     }
 
     /** The tick that ended last; a stimulus between ticks takes effect from the next one. */
@@ -161,6 +173,15 @@ final class StepPolicy {
         for (Delivery delivery : deliveries) delivery.waiting.remove(player);
     }
 
+    /**
+     * From now on a tick a window, input, delivery or settle waits for is granted no sooner than [millis]
+     * of wall clock after the tick before it was granted; 0 grants it as soon as nothing holds it back. The
+     * pool paces a Paper only while no attempt runs on it, so a pace never changes inside an attempt.
+     */
+    void pace(int millis) {
+        paceNanos = millis * 1_000_000L;
+    }
+
     void stepUntil(UUID player, int tick, int barrier) {
         windows.put(player, new Window(tick, barrier));
     }
@@ -169,8 +190,12 @@ final class StepPolicy {
         windows.remove(player);
     }
 
-    /** Work for [players] just ran; [done] runs once its effect reached each of their clients. */
-    void deliver(Collection<UUID> players, Runnable done) {
+    /**
+     * Work for [players] just ran; [done] runs once its effect reached each of their clients, with the
+     * tick after which every one of them holds it. How many ticks that takes follows the wall clock, so
+     * whatever counts ticks from the moment they hold it counts from that tick.
+     */
+    void deliver(Collection<UUID> players, IntConsumer done) {
         deliveries.add(new Delivery(players, lastEnded, done));
     }
 
@@ -199,7 +224,7 @@ final class StepPolicy {
             delivery.waiting.removeIf(player -> acks.lastAcked(player) >= delivery.confirmedBy.getOrDefault(player, UNCONFIRMED));
             if (!delivery.waiting.isEmpty()) continue;
             open.remove();
-            delivery.done.run();
+            delivery.done.accept(lastEnded);
         }
         for (Iterator<Settling> open = settling.iterator(); open.hasNext(); ) {
             Settling settled = open.next();
@@ -209,7 +234,7 @@ final class StepPolicy {
         }
         if (work.holds(claimed, lastEnded + 1)) return;
         if (windows.isEmpty() && busy.isEmpty() && deliveries.isEmpty() && settling.isEmpty()) {
-            long now = System.nanoTime();
+            long now = nanoTime.getAsLong();
             if (now - lastIdleTick >= IDLE_TICK_NANOS) {
                 lastIdleTick = now;
                 grantTick.run();
@@ -224,6 +249,11 @@ final class StepPolicy {
                 open.remove();
             }
         }
-        if (!windows.isEmpty() || !busy.isEmpty() || !deliveries.isEmpty() || !settling.isEmpty()) grantTick.run();
+        if (windows.isEmpty() && busy.isEmpty() && deliveries.isEmpty() && settling.isEmpty()) return;
+        long now = nanoTime.getAsLong();
+        if (grantedStepped && now - lastGranted < paceNanos) return;
+        grantedStepped = true;
+        lastGranted = now;
+        grantTick.run();
     }
 }

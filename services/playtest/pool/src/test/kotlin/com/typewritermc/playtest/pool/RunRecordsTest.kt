@@ -6,11 +6,17 @@ import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.test_run.LossCause
 import skirout.harness.v1.test_run.Outcome
+import skirout.harness.v1.test_run.Pacing
+import skirout.harness.v1.test_run.Part
+import skirout.harness.v1.test_run.PartEnd
+import skirout.harness.v1.test_run.PartKind
 import skirout.harness.v1.test_run.RunEnd
 import skirout.harness.v1.test_run.Runner
 import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.test_run.TestRun
+import skirout.harness.v1.test_run.WindowEnd
 import skirout.harness.v1.wire.Result
 import java.nio.file.Files
 
@@ -84,22 +90,15 @@ val RunRecordsTest by testSuite {
             )
     }
 
-    test("a demo lands in its case's demo with its clips, and never counts as an attempt") {
+    test("a paced attempt lands among its case's paced attempts with its pace and windows, and never counts as an attempt") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         val probe = "PROBE-1 a chat line reaches the player"
+        val held = WindowEnd(at = "ProbeRequirements.kt:20", length = 10, heldAt = 1, afterWallClock = false)
+        records.record(submitted(1, probe), Result.partial(submission = 1, durationMillis = 420, windows = listOf(held)))
         records.record(
-            submitted(1, probe),
-            Result.partial(submission = 1, durationMillis = 420),
-        )
-        records.record(
-            submitted(2, probe, demo = true),
-            Result.partial(
-                submission = 2,
-                durationMillis = 640,
-                folder = "PROBE-1-a-chat-line-reaches-the-player/demo",
-                artifacts = listOf(Artifact(kind = ArtifactKind.CLIP, path = "clips/gv-1.mp4")),
-            ),
+            submitted(2, probe, paceMillis = 50, paced = true),
+            Result.partial(submission = 2, durationMillis = 640, windows = listOf(held.copy(heldAt = 3))),
         )
 
         records.finished()
@@ -109,11 +108,80 @@ val RunRecordsTest by testSuite {
                 .fromJsonCode(Files.readString(file))
                 .cases
                 .single()
-        case.attempts.map { it.durationMillis } shouldBe listOf(420L)
-        case.demo?.durationMillis shouldBe 640L
-        case.demo?.outcome shouldBe Outcome.PASSED
-        case.demo?.folder shouldBe "PROBE-1-a-chat-line-reaches-the-player/demo"
-        case.demo?.artifacts shouldBe listOf(Artifact(kind = ArtifactKind.CLIP, path = "clips/gv-1.mp4"))
+        case.attempts.map { Triple(it.durationMillis, it.paceMillis, it.windows) } shouldBe listOf(Triple(420L, 0, listOf(held)))
+        case.paced.map { Triple(it.durationMillis, it.paceMillis, it.windows) } shouldBe
+            listOf(Triple(640L, 50, listOf(held.copy(heldAt = 3))))
+    }
+
+    test("a concluded case says whether the change touched it and what its pacing does to the verdict") {
+        val file = Files.createTempDirectory("run-records").resolve("test_run.json")
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
+        val probe = "PROBE-1 a chat line reaches the player"
+        val session = "GAME-S1 a joined player's session is listed"
+        records.record(submitted(1, probe), Result.partial(submission = 1, durationMillis = 420))
+        records.record(submitted(2, session), Result.partial(submission = 2, durationMillis = 420))
+
+        records.concluded(probe, touched = true, pacing = Pacing.GATES)
+        records.concluded(session, touched = false, pacing = Pacing.REPORTS)
+        records.finished()
+
+        TestRun.serializer
+            .fromJsonCode(Files.readString(file))
+            .cases
+            .map { Triple(it.id, it.touched, it.pacing) } shouldBe
+            listOf(Triple(probe, true, Pacing.GATES), Triple(session, false, Pacing.REPORTS))
+    }
+
+    test("every part the run started is listed with its log and how it ended; a lost client keeps its kept log's name") {
+        val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
+        val logs = file.resolveSibling("logs/1")
+        val records = RunRecords("run-1", file, logs, retries, clock = { 7_000 })
+        records.started("paper", PartKind.SHARED_PAPER, logs.resolve("paper.log"))
+        records.started("client-gv-1", PartKind.CLIENT, logs.resolve("client-gv-1.log"))
+        records.started("display-gv-1", PartKind.DISPLAY, logs.resolve("display-gv-1.log"))
+
+        records.lost("client-gv-1", LossCause.ExitedWrapper(137), kept = logs.resolve("client-gv-1-lost-1.log"))
+        records.started("client-gv-1", PartKind.CLIENT, logs.resolve("client-gv-1.log"))
+        records.finished()
+
+        TestRun.serializer.fromJsonCode(Files.readString(file)).parts shouldBe
+            listOf(
+                Part(name = "paper", kind = PartKind.SHARED_PAPER, log = "paper.log", end = PartEnd.RAN_TO_END),
+                Part(
+                    name = "client-gv-1-lost-1",
+                    kind = PartKind.CLIENT,
+                    log = "client-gv-1-lost-1.log",
+                    end = PartEnd.createLost(cause = LossCause.ExitedWrapper(137), atMillis = 7_000),
+                ),
+                Part(name = "display-gv-1", kind = PartKind.DISPLAY, log = "display-gv-1.log", end = PartEnd.RAN_TO_END),
+                Part(name = "client-gv-1", kind = PartKind.CLIENT, log = "client-gv-1.log", end = PartEnd.RAN_TO_END),
+            )
+    }
+
+    test(
+        "a run a lost part stopped interrupts the attempts that ran, lists the cases still waiting as never run, and ignores their later results",
+    ) {
+        val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
+        val logs = file.resolveSibling("logs/1")
+        val records = RunRecords("run-1", file, logs, retries, clock = { 9_000 })
+        val read = { TestRun.serializer.fromJsonCode(Files.readString(file)) }
+        val ran = submitted(1, "PROBE-1 a chat line reaches the player")
+        val running = submitted(2, "MOVE-1 a player walks to a block")
+        val waiting = submitted(3, "GROUP-1 a line sent to a group reaches each member")
+        records.started("paper", PartKind.SHARED_PAPER, logs.resolve("paper.log"))
+        records.record(ran, Result.partial(submission = 1, durationMillis = 420))
+
+        records.lost("paper", LossCause.ExitedWrapper(137))
+        records.stopped("paper", interrupted = listOf(running), notRun = listOf(waiting))
+        records.record(running, Result.partial(submission = 2, durationMillis = 30, failure = "the game cannot run: paper exited"))
+        records.finished()
+
+        read().end shouldBe RunEnd.createLost(part = "paper", notRun = listOf("GROUP-1 a line sent to a group reaches each member"))
+        read().cases.map { case -> case.id to case.attempts.map { it.outcome } } shouldBe
+            listOf(
+                "PROBE-1 a chat line reaches the player" to listOf(Outcome.PASSED),
+                "MOVE-1 a player walks to a block" to listOf(Outcome.createInterrupted(part = "paper")),
+            )
     }
 
     test("every attempt of one case lands in that case, in the order the attempts ended") {

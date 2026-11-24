@@ -17,6 +17,12 @@ struct TestRun(85020001) {
   logs: string;
   // How the run ended.
   end: RunEnd;
+  // Every process the run started that its cases depended on (for the game runner the pool's Papers and
+  // clients), in the order they started, each with how it ended. Empty for runners that start none.
+  parts: [Part];
+  // Whether the run only records evidence of another run's cases, as a game suite's demo run records
+  // clips of the cases of its verdict run: its cases are never verdicts.
+  evidence_only: bool;
 }
 
 // How a run ended. A run that could not run, or was cut short, proves less than its cases say: the
@@ -29,16 +35,26 @@ enum RunEnd(85020002) {
   cut_short;
   // It could not run at all, as when the game never booted: why, for a person to read.
   could_not_run: string;
+  // A part every case depended on was lost, so the run stopped: the attempts it held were interrupted
+  // and the cases still waiting never ran. `parts` says how the part was lost.
+  lost: RunLost;
 }
 
-enum AttemptPolicy(85020003) {
+// The run stopped because the part named `part` was lost.
+struct RunLost(85020003) {
+  part: string;
+  // The cases that were waiting and never ran, by id.
+  not_run: [string];
+}
+
+enum AttemptPolicy(85020004) {
   // Failed cases run again until they pass, up to this many attempts in total.
   rerun_failures: int32;
   // Every case ran exactly this many times.
   exactly: int32;
 }
 
-struct TestCase(85020004) {
+struct TestCase(85020005) {
   // The test path or step name, unique within its run.
   id: string;
   // The requirement the test declares it demonstrates, for example "QUEST-1.E1".
@@ -46,14 +62,27 @@ struct TestCase(85020004) {
   demonstrates: Demonstrates;
   // In order; never empty.
   attempts: [Attempt];
-  // The case run once more after its last attempt, in demo mode: the game runner records what each
-  // player saw as a clip when the case failed or the change touched code it covered. Its outcome
-  // must be the last attempt's; it never counts as an attempt.
-  demo: Attempt?;
+  // Whether the change under test is new to this case or touched it: an added line lies in the case's
+  // own code, or its last attempt ran an added line of the code under test.
+  touched: bool;
+  // The case run again at other paces after its attempts passed, one attempt per pace: a touched game
+  // requirement runs at 5 and 50 ms between ticks. Each must hold every window at the tick the attempts
+  // held it at; they never count as attempts.
+  paced: [Attempt];
+  // Whether holding a window at another tick at another pace blocks, or is only reported.
+  pacing: Pacing;
+}
+
+// What a case whose windows hold at different ticks at different paces does to the verdict.
+enum Pacing(85020006) {
+  // It fails the case: the window depends on wall clock.
+  gates;
+  // It is reported and blocks nothing, while the code under test still waits on work no tick waits for.
+  reports;
 }
 
 // One run of one case.
-struct Attempt(85020005) {
+struct Attempt(85020007) {
   // What this attempt observed. Quarantine and flakiness are the attempt policy's verdict.
   outcome: Outcome;
   // Where the attempt sits in the run's recording, when there is one.
@@ -72,10 +101,29 @@ struct Attempt(85020005) {
   taps: [Tap];
   // The plugin classes the attempt ran and their lines, for runners that measure coverage per case.
   covered: [CoveredClass];
+  // The shortest wall clock time between two ticks the attempt's Paper ran, in milliseconds; 0 when a
+  // tick ran as soon as nothing held it back. Only stepped runners pace.
+  pace_millis: int32;
+  // Every window the attempt's body waited in, in order, for runners that step ticks.
+  windows: [WindowEnd];
+}
+
+// How one window of an attempt ended.
+struct WindowEnd(85020008) {
+  // The requirement line that opened it, as `File.kt:42`.
+  at: string;
+  // How many ticks it lasted at most.
+  length: int32;
+  // The tick of the window, counted from 1 after its stimulus, at which every check held; null when it
+  // missed or a failure ended it.
+  held_at: int32?;
+  // Whether it was decided after the attempt met work reported hung or a lost part: neither holds back
+  // a tick, so the tick it held at measures wall clock and may differ between paces.
+  after_wall_clock: bool;
 }
 
 // One class an attempt ran code of, with the lines of its source file that ran.
-struct CoveredClass(85020006) {
+struct CoveredClass(85020009) {
   // The JVM name, with slashes: "com/typewritermc/playtest/plugin/Probes".
   name: string;
   // The source file by its package path: "com/typewritermc/playtest/plugin/Probes.java".
@@ -85,7 +133,7 @@ struct CoveredClass(85020006) {
 }
 
 // One thing a scenario did or checked, in the words a reader would use.
-struct Step(85020007) {
+struct Step(85020010) {
   // Unix milliseconds, the clock of the attempt's span.
   at_millis: int64;
   // The user signed in when the step started.
@@ -96,14 +144,14 @@ struct Step(85020007) {
 }
 
 // One tap, in pixels of the recorded screen.
-struct Tap(85020008) {
+struct Tap(85020011) {
   // Unix milliseconds, the clock of the attempt's span.
   at_millis: int64;
   x: int32;
   y: int32;
 }
 
-enum Runner(85020009) {
+enum Runner(85020012) {
   components;
   schema;
   panel;
@@ -115,29 +163,85 @@ enum Runner(85020009) {
   game;
 }
 
-enum Demonstrates(85020010) {
+enum Demonstrates(85020013) {
   happy_path;
   failure;
   edge_case;
 }
 
-enum Outcome(85020011) {
+enum Outcome(85020014) {
   passed;
   failed: Failure;
+  // A part the attempt depended on was lost while it ran: the attempt proves nothing either way.
+  interrupted: Interruption;
 }
 
-struct Failure(85020012) {
+struct Interruption(85020015) {
+  // The lost part, by its name in the run's `parts`.
+  part: string;
+}
+
+// One process a run started, such as a Paper or a Minecraft client.
+struct Part(85020016) {
+  // Unique within its run: "paper" for the shared Paper, "paper-<attempt>" for an attempt's own,
+  // "client-<player>" for a client (with "-<n>" for the n-th replacement).
+  name: string;
+  kind: PartKind;
+  // Its log, relative to the run's `logs` folder; empty when it keeps none.
+  log: string;
+  end: PartEnd;
+}
+
+enum PartKind(85020017) {
+  // The Paper every attempt that does not restart Paper shares.
+  shared_paper;
+  // The Paper of an attempt that restarts Paper, its own.
+  own_paper;
+  // A Minecraft client that serves one player.
+  client;
+  // The virtual display a client draws on (Linux).
+  display;
+}
+
+enum PartEnd(85020018) {
+  // It ran until the run stopped it.
+  ran_to_end;
+  // It ended before the run stopped it, other than when an attempt asked for it.
+  lost: PartLoss;
+}
+
+struct PartLoss(85020019) {
+  cause: LossCause;
+  // Unix milliseconds, when the run noticed.
+  at_millis: int64;
+}
+
+// Why a part was lost, as far as the run could tell.
+enum LossCause(85020020) {
+  // Its process exited with this status; a status over 128 means the signal `status - 128` ended it.
+  exited: int32;
+  // It closed its connection to the pool, or left Paper, for this reason.
+  left: string;
+  // It answered nothing for longer than the run waits for it.
+  stalled;
+  // It never became ready within the run's limit.
+  never_ready;
+  // It still ran but could no longer do what attempts need of it, for this reason.
+  broke: string;
+}
+
+struct Failure(85020021) {
   message: string;
   // The first failing step or frame, when the runner knows it.
   first_broken: string?;
 }
 
-struct Span(85020013) {
+struct Span(85020022) {
   start_millis: int64;
   end_millis: int64;
 }
 
-enum ArtifactKind(85020014) {
+enum ArtifactKind(85020023) {
   clip;
   screenshot;
   log_excerpt;
@@ -148,7 +252,7 @@ enum ArtifactKind(85020014) {
   golden;
 }
 
-struct Artifact(85020015) {
+struct Artifact(85020024) {
   kind: ArtifactKind;
   path: string;
 }

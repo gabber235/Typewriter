@@ -99,6 +99,12 @@ gamePaper {
     keptPerSlot.add("plugins/Typewriter/state")
 }
 
+// The engine still waits on session writes no tick waits for, so a window that holds at another
+// tick at another pace is reported, not blocking, until the engine holds ticks for that work.
+gameRequirements {
+    pacing.set("reports")
+}
+
 runPaper {
     disablePluginJarDetection()
 }

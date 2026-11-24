@@ -20,10 +20,12 @@ use crate::e2e::E2eArgs;
 use crate::graph::{Area, Run, Step};
 use crate::hooks::commit_msg::Scopes;
 use crate::results::{
-    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase,
-    TestRun,
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, LossCause, Outcome, PartEnd, PartKind,
+    Quarantine, RunEnd, TestCase, TestRun,
 };
-use crate::skirout::base::harness::v1::test_run::{Runner, Span, Step as ScenarioStep};
+use crate::skirout::base::harness::v1::test_run::{
+    Interruption, Part, PartLoss, Runner, Span, Step as ScenarioStep, WindowEnd,
+};
 use crate::stack::StackRecord;
 use crate::stack::spec::{PortLease, StackContext};
 use crate::{CommandExt as _, Context};
@@ -314,6 +316,54 @@ pub fn failed(message: &str) -> Outcome {
         message: message.to_owned(),
         ..Failure::default()
     }))
+}
+
+/// An attempt a lost `part` interrupted.
+pub fn interrupted(part: &str) -> Outcome {
+    Outcome::Interrupted(Box::new(Interruption {
+        part: part.to_owned(),
+        ..Interruption::default()
+    }))
+}
+
+/// The part `name` of `kind`, whose log is `log` in the run's logs folder, that ended with `end`.
+pub fn part(name: &str, kind: PartKind, log: &str, end: PartEnd) -> Part {
+    Part {
+        name: name.to_owned(),
+        kind,
+        log: log.to_owned(),
+        end,
+        ..Part::default()
+    }
+}
+
+/// A part's end: lost for `cause`.
+pub fn lost(cause: LossCause) -> PartEnd {
+    PartEnd::Lost(Box::new(PartLoss {
+        cause,
+        ..PartLoss::default()
+    }))
+}
+
+/// A window opened at the requirement line `at`, `length` ticks long, that held at tick `held_at`
+/// or, when `None`, missed.
+pub fn window(at: &str, length: i32, held_at: Option<i32>) -> WindowEnd {
+    WindowEnd {
+        at: at.to_owned(),
+        length,
+        held_at,
+        ..WindowEnd::default()
+    }
+}
+
+/// An attempt that ended with `outcome` at a pace of `pace_millis` between ticks, after `windows`.
+pub fn ran(outcome: Outcome, pace_millis: i32, windows: &[WindowEnd]) -> Attempt {
+    Attempt {
+        outcome,
+        pace_millis,
+        windows: windows.to_vec(),
+        ..Attempt::default()
+    }
 }
 
 /// The message of a failed `outcome`. Panics on any other outcome.

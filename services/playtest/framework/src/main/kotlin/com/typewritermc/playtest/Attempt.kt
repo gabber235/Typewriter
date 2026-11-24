@@ -15,6 +15,7 @@ import skirout.harness.v1.golden.Renderer
 import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.Step
+import skirout.harness.v1.test_run.WindowEnd
 import skirout.harness.v1.wire.Answer
 import skirout.harness.v1.wire.InputStep
 import skirout.harness.v1.wire.Message
@@ -136,6 +137,23 @@ internal class Attempt(
 
     /** What the body did so far, in order, each with its wall clock start and duration. */
     val steps: List<Step> get() = taken
+
+    private val ended = mutableListOf<WindowEnd>()
+
+    /** Every window the body waited in so far, in order, each with the tick it held at. */
+    val windows: List<WindowEnd> get() = ended
+
+    /** A window of the body ended as [end] says. */
+    fun windowEnded(end: WindowEnd) {
+        ended += end
+    }
+
+    /**
+     * Whether the body met work reported hung or a lost client or Paper: neither holds back a tick, so
+     * from then on the tick a window holds at measures wall clock.
+     */
+    val metWallClock: Boolean
+        get() = received.any { it is Event.Failed && (it.failure is WorkHung || it.failure is ClientLost || it.failure is PaperLost) }
 
     /** The requirement's own frame that last called into the attempt, while it was still on the stack. */
     private var calledFrom: StackTraceElement? = null

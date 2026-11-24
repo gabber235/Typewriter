@@ -1,6 +1,7 @@
 package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.variantName
+import skirout.harness.v1.test_run.WindowEnd
 import skirout.harness.v1.wire.InputStep
 import skirout.harness.v1.wire.KeyboardKey
 import skirout.harness.v1.wire.Message
@@ -203,6 +204,14 @@ class RequirementScope internal constructor(
             if (verdict == Window.Verdict.Open) verdict = rules.stepUntilDecided(stepping)
         } finally {
             attempt.took(opened, says(window, verdict, mark, ranBefore, declared))
+            attempt.windowEnded(
+                WindowEnd(
+                    at = at.orEmpty(),
+                    length = window.count,
+                    heldAt = (verdict as? Window.Verdict.Passed)?.let { it.tick - mark.tick },
+                    afterWallClock = attempt.metWallClock,
+                ),
+            )
         }
         val missed = verdict as? Window.Verdict.Missed ?: return run { attempt.proved = true }
         throw attempt.observed(WindowMissed(missed.report, at))

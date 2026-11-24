@@ -73,15 +73,21 @@ pub struct E2eArgs {
     /// Attempts per selected scenario, instead of one attempt plus a rerun of failures.
     #[arg(long, default_value_t = NonZeroU32::MIN)]
     repeat: NonZeroU32,
-    /// The commit the change starts from, whose added lines pick the game suite's demo reruns;
-    /// by default the pull request's base or the nearest branch the head descends from. CI names
-    /// it, as its checkout of a pull request is a detached merge commit `gh` cannot place.
+    /// The commit the change starts from, whose added lines pick the game requirements that run
+    /// again at other paces and in the demo run; by default the pull request's base or the nearest
+    /// branch the head descends from. CI names it, as its checkout of a pull request is a detached
+    /// merge commit `gh` cannot place.
     #[arg(long)]
     pub(crate) base: Option<String>,
     /// How many Minecraft clients the game suite's pool runs (4 by default); fewer fit a busy
     /// machine.
     #[arg(long)]
     pub(crate) clients: Option<NonZeroU32>,
+    /// A game suite's demo run, after its verdict run: reruns once, with clips, each requirement
+    /// the verdict run's file shows failed, flaky, quarantined or touched by the change. It writes
+    /// a run file of its own and never gates.
+    #[arg(long)]
+    pub(crate) demos: bool,
 }
 
 impl E2eArgs {
@@ -104,9 +110,13 @@ pub enum Suite {
     /// A fresh CI cluster with this commit's backend deployed, and the panel web scenarios
     /// against its real Authentik, operator mode NATS and runtime operator.
     Full,
-    /// The game requirements (`gameTest` source sets) against real Minecraft clients on a
-    /// stepped Paper, which the game pool boots on this machine.
+    /// The product's game requirements (`gameTest` source sets outside `services/playtest`)
+    /// against real Minecraft clients on a stepped Paper, which the game pool boots on this
+    /// machine inside the stack.
     Game,
+    /// The framework's own game requirements (`gameTest` source sets in `services/playtest`), on
+    /// the same pool without the stack.
+    Playtest,
 }
 
 impl Suite {
@@ -143,11 +153,17 @@ impl Device {
 
 /// Runs the selected cases of the suite and reports them.
 pub fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
+    if args.demos && !matches!(args.suite, Suite::Game | Suite::Playtest) {
+        bail!(
+            "--demos reruns a game suite's requirements; a panel suite records every scenario already"
+        );
+    }
     match args.suite {
         Suite::Panel => scenarios::<WorktreeStack>(ctx, args, Device::Desktop),
         Suite::PanelWeb => scenarios::<WorktreeStack>(ctx, args, Device::Chrome),
         Suite::Full => scenarios::<CiCluster>(ctx, args, Device::Chrome),
-        Suite::Game => game::run(ctx, args),
+        Suite::Game => game::run(ctx, args, game::GameSuite::Game),
+        Suite::Playtest => game::run(ctx, args, game::GameSuite::Playtest),
     }
 }
 

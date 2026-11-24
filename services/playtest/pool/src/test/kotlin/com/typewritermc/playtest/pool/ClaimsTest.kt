@@ -206,4 +206,27 @@ val ClaimsTest by testSuite {
         refused.message shouldContain "3 Papers of their own"
         refused.message shouldContain "at most 2"
     }
+
+    test("the shared Paper runs one pace at a time: a claim at another pace waits until none at the current pace runs or waits") {
+        val claims = Claims<String, String>(pool)
+        claims.submit("module", Claim(1L, 1))
+        claims.submit("module", Claim(2L, 1, pace = 50))
+        claims.submit("module", Claim(3L, 1))
+
+        claims.grants().map { it.submission } shouldContainExactly listOf(1L, 3L)
+
+        claims.release(listOf("gv-1"))
+        claims.grants().shouldBeEmpty()
+
+        claims.release(listOf("gv-2"))
+        claims.grants() shouldContainExactly listOf(Grant("module", 2L, listOf("gv-1")))
+    }
+
+    test("a restart attempt runs at its own pace on its own Paper, beside the shared Paper's attempts at theirs") {
+        val claims = Claims<String, String>(pool)
+        claims.submit("module", Claim(1L, 1))
+        claims.submit("module", Claim(2L, 1, restarts = true, pace = 50))
+
+        claims.grants().map { it.submission } shouldContainExactly listOf(1L, 2L)
+    }
 }

@@ -2,6 +2,7 @@ package com.typewritermc.playtest.pool
 
 import com.typewritermc.playtest.pool.PaperRules.Claiming
 import com.typewritermc.playtest.pool.PaperRules.Do
+import skirout.harness.v1.test_run.LossCause
 import skirout.harness.v1.wire.PaperLossKind
 import skirout.harness.v1.wire.Region
 
@@ -104,21 +105,44 @@ internal class OwnPaper(
     /** A killed Paper boots again; one that exits on its own is lost and gone; once over, its exit is the end. */
     override fun exited(code: Int): List<Do> =
         when (phase) {
-            Phase.OVER -> listOf(Do.Gone)
-            Phase.KILLED -> boot()
-            Phase.RUNNING -> lost(PaperLossKind.EXITED_WHILE_RUNNING, "$name exited with code $code while its attempt ran") + Do.Gone
-            else -> lost(PaperLossKind.EXITED_WHILE_BOOTING, "$name exited with code $code while it booted") + Do.Gone
+            Phase.OVER -> {
+                listOf(Do.Gone)
+            }
+
+            Phase.KILLED -> {
+                boot()
+            }
+
+            Phase.RUNNING -> {
+                lost(
+                    PaperLossKind.EXITED_WHILE_RUNNING,
+                    "$name exited with code $code while its attempt ran",
+                    LossCause.ExitedWrapper(code),
+                ) +
+                    Do.Gone
+            }
+
+            else -> {
+                lost(PaperLossKind.EXITED_WHILE_BOOTING, "$name exited with code $code while it booted", LossCause.ExitedWrapper(code)) +
+                    Do.Gone
+            }
         }
 
     override fun bootTimedOut(boot: Int): List<Do> {
         val booting = phase in setOf(Phase.BOOTING, Phase.JOINING, Phase.READYING, Phase.RESUMING)
-        return if (boot == boots && booting) lost(PaperLossKind.BOOT_TIMED_OUT, "$name did not boot within $BOOT_SECONDS s") else listOf()
+        return if (boot == boots &&
+            booting
+        ) {
+            lost(PaperLossKind.BOOT_TIMED_OUT, "$name did not boot within $BOOT_SECONDS s", LossCause.NEVER_READY)
+        } else {
+            listOf()
+        }
     }
 
     override fun failed(
         kind: PaperLossKind,
         cause: String,
-    ): List<Do> = if (phase == Phase.OVER) listOf() else lost(kind, cause)
+    ): List<Do> = if (phase == Phase.OVER) listOf() else lost(kind, cause, LossCause.BrokeWrapper(cause))
 
     override fun ended(
         attempt: Long,
@@ -140,9 +164,10 @@ internal class OwnPaper(
     private fun lost(
         kind: PaperLossKind,
         cause: String,
+        loss: LossCause,
     ): List<Do> {
         phase = Phase.OVER
-        return listOf(Do.Lost(attempt, kind, cause))
+        return listOf(Do.Lost(attempt, kind, cause, loss))
     }
 
     companion object {

@@ -62,6 +62,7 @@ class PlaytestPlugin :
             Acks(System::nanoTime),
             ::reportStalled,
             ::connected,
+            System::nanoTime,
         )
     private val wipe = Wipe()
     private val owned = Owned(this)
@@ -141,6 +142,10 @@ class PlaytestPlugin :
                 Step.on = true
             }
 
+            is Message.PaceWrapper -> {
+                policy.pace(message.value.millis)
+            }
+
             is Message.ClaimWrapper -> {
                 claim(message.value)
             }
@@ -206,6 +211,7 @@ class PlaytestPlugin :
         val players = online(ids)
         val failure = players.failure ?: probes.run(players.online, probe.action)
         if (failure == null) {
+            // Its effect shows from the tick after it ran, however many ticks the delivery took.
             policy.deliver(ids) { pool.send(reply(request, Answer.createProbeDone(tick = ranAfter, failure = null))) }
         } else {
             pool.send(reply(request, Answer.createProbeDone(tick = ranAfter, failure = failure)))
@@ -251,18 +257,18 @@ class PlaytestPlugin :
      * Paper loaded for them. Resumed once each of their clients holds all Paper sends them.
      */
     private fun resume(resume: Message.Resume) {
-        val ranAfter = policy.lastEnded()
         val attempt = resume.attempt
         val ids = uuids(resume.players)
         val players = online(ids)
         if (players.failure != null) {
-            pool.send(Message.createResumed(attempt = attempt, tick = ranAfter, failure = players.failure))
+            pool.send(Message.createResumed(attempt = attempt, tick = policy.lastEnded(), failure = players.failure))
             return
         }
         coverage.started(attempt)
         attempts.claim(attempt, ids)
         policy.claim(ids)
-        policy.deliver(ids) { pool.send(Message.createResumed(attempt = attempt, tick = ranAfter, failure = null)) }
+        // Back means holding all Paper sent, so their windows count from the tick the delivery ended.
+        policy.deliver(ids) { back -> pool.send(Message.createResumed(attempt = attempt, tick = back, failure = null)) }
     }
 
     /** Leaves a mark of [kind] on the player: Paper keeps some kinds, this plugin the others. */

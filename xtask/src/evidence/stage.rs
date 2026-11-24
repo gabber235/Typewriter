@@ -4,7 +4,7 @@
 //! published artifacts ([`ArtifactKind::published`]: clips, and screenshots and golden candidates
 //! of failed attempts, since a clip shows a passing one better and a passing golden needs no
 //! approval), their files with a clip's preview, the pool and Paper logs of a game run that did not
-//! pass ([`results::public_log`]), the coverage files, and the widgetbook story
+//! pass, a demo run's included ([`results::public_log`]), the coverage files, and the widgetbook story
 //! images below [`STORIES`]. Nothing is written while any public text holds a known secret or any
 //! run lists a file missing on disk.
 
@@ -62,7 +62,7 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
         for attempt in run
             .cases
             .iter_mut()
-            .flat_map(|case| case.attempts.iter_mut().chain(&mut case.demo))
+            .flat_map(|case| case.attempts.iter_mut())
         {
             let passed = attempt.outcome == Outcome::Passed;
             attempt.artifacts.retain(|artifact| {
@@ -240,25 +240,36 @@ mod tests {
     }
 
     #[test]
-    fn a_demo_publishes_its_clip_beside_the_attempts_of_its_case() {
+    fn a_demo_run_publishes_its_clips_beside_the_run_it_demonstrates() {
         let root = TempRoot::new();
-        root.write("results/game/PROBE-1/demo/clips/gv-1.mp4", "clip");
+        root.write(
+            "results/game-demos/PROBE-1/attempt-1/clips/gv-1.mp4",
+            "clip",
+        );
         let mut demo = crate::test_support::passed_attempt((0, 1));
-        demo.folder = "PROBE-1/demo".to_owned();
+        demo.folder = "PROBE-1/attempt-1".to_owned();
         demo.artifacts = vec![results::Artifact {
             kind: ArtifactKind::Clip,
             path: "clips/gv-1.mp4".to_owned(),
             _unrecognized: None,
         }];
-        let mut run = run_of("PROBE-1", vec![crate::test_support::passed_attempt((0, 1))]);
-        run.cases[0].demo = Some(demo);
-        results::write(&run, &root.path("results/game/test_run.json")).unwrap();
+        let verdict = run_of("PROBE-1", vec![crate::test_support::passed_attempt((0, 1))]);
+        results::write(&verdict, &root.path("results/game/test_run.json")).unwrap();
+        results::write(
+            &run_of("PROBE-1", vec![demo]),
+            &root.path("results/game-demos/test_run.json"),
+        )
+        .unwrap();
 
         staged(&root.path(""), Path::new("results"), &[]).unwrap();
 
         assert_eq!(
             files_below(&root.path(PUBLIC)),
-            ["game/PROBE-1/demo/clips/gv-1.mp4", "game/test_run.json"]
+            [
+                "game-demos/PROBE-1/attempt-1/clips/gv-1.mp4",
+                "game-demos/test_run.json",
+                "game/test_run.json"
+            ]
         );
     }
 
@@ -358,6 +369,22 @@ mod tests {
         staged(&root.path(""), Path::new("results"), &[]).unwrap();
 
         assert_eq!(files_below(&root.path(PUBLIC)), PUBLIC_GAME_LOGS);
+    }
+
+    #[test]
+    fn a_demo_run_whose_demo_failed_publishes_its_pool_and_paper_logs_though_it_never_gates() {
+        let mut run = run_of("PROBE-1", vec![failed_attempt((2, 3), &[])]);
+        run.evidence_only = true;
+
+        let root = TempRoot::new();
+        raw_game_run(&root, "results/game-demos", run);
+
+        staged(&root.path(""), Path::new("results"), &[]).unwrap();
+
+        assert_eq!(
+            files_below(&root.path(PUBLIC)),
+            PUBLIC_GAME_LOGS.map(|file| file.replacen("game/", "game-demos/", 1))
+        );
     }
 
     #[test]

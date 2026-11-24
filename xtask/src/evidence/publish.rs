@@ -286,10 +286,8 @@ fn troubled<'a>(section: &'a Section) -> Vec<(&'a TestRun, &'a TestCase, CaseVer
 /// Each run that could not run or was cut short, with why, so cases it never reached do not pass
 /// for proven.
 fn stopped_runs(section: &Section) -> Vec<(&'static str, String)> {
-    section
-        .runs
-        .iter()
-        .filter_map(|(_, run)| {
+    verdict_runs(section.runs)
+        .filter_map(|run| {
             results::run_trouble(run).map(|trouble| (runner_name(&run.runner), trouble))
         })
         .collect()
@@ -426,7 +424,7 @@ fn render_recordings(out: &mut String, section: &Section) {
         .collect();
     // A step's own run, one test each, counts under one name with its siblings.
     let mut per_runner: Vec<(String, usize, usize)> = Vec::new();
-    for (_, run) in section.runs {
+    for run in verdict_runs(section.runs) {
         let name = runner_name(&run.runner);
         let passed = run
             .cases
@@ -554,9 +552,30 @@ fn render_coverage(out: &mut String, coverage: &Coverage) {
     let _ = writeln!(out, "\n</details>");
 }
 
+/// The cases of every run of `runs` that judges them; a demo run's only record evidence.
 fn cases(runs: &[(PathBuf, TestRun)]) -> impl Iterator<Item = (&TestRun, &TestCase)> {
+    verdict_runs(runs).flat_map(|run| run.cases.iter().map(move |case| (run, case)))
+}
+
+/// The runs of `runs` whose cases are verdicts: every run but those that only record evidence.
+fn verdict_runs(runs: &[(PathBuf, TestRun)]) -> impl Iterator<Item = &TestRun> {
     runs.iter()
-        .flat_map(|(_, run)| run.cases.iter().map(move |case| (run, case)))
+        .map(|(_, run)| run)
+        .filter(|run| !run.evidence_only)
+}
+
+/// The cases evidence only runs of `runs` recorded of `case` of `run`, such as its demo.
+fn evidence_of<'a>(
+    runs: &'a [(PathBuf, TestRun)],
+    run: &TestRun,
+    case: &TestCase,
+) -> impl Iterator<Item = &'a TestCase> {
+    let (runner, id) = (run.runner.clone(), case.id.clone());
+    runs.iter()
+        .map(|(_, run)| run)
+        .filter(move |evidence| evidence.evidence_only && evidence.runner == runner)
+        .flat_map(|evidence| evidence.cases.iter())
+        .filter(move |recorded| recorded.id == id)
 }
 
 fn kind(demonstrates: &Demonstrates) -> &'static str {
@@ -579,6 +598,8 @@ fn result(verdict: CaseVerdict) -> &'static str {
         CaseVerdict::Failed => "**broken**",
         CaseVerdict::Flaky => "**unreliable**",
         CaseVerdict::Quarantined => "**quarantined**",
+        CaseVerdict::Interrupted => "**interrupted**",
+        CaseVerdict::Unsteady => "**unsteady**",
     }
 }
 
@@ -587,7 +608,9 @@ fn result(verdict: CaseVerdict) -> &'static str {
 fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
     let runner = runner_name(&run.runner);
     let mut parts = Vec::new();
-    for (path, artifact) in results::artifacts(case) {
+    // A demo records with its own runner, so its files lie beside the verdict's.
+    let recorded = std::iter::once(case).chain(evidence_of(section.runs, run, case));
+    for (path, artifact) in recorded.flat_map(results::artifacts) {
         let Some(pr) = section.pr else {
             parts.push(format!(
                 "`{runner}/{}` in the run artifacts",
@@ -1031,6 +1054,45 @@ mod tests {
         let first_fold = section.find("<details>").unwrap();
         let message = section.find("the realm never appeared").unwrap();
         assert!(attention < message && message < first_fold);
+    }
+
+    #[test]
+    fn a_demo_run_is_never_a_verdict_and_its_clips_show_beside_the_case_it_demonstrates() {
+        let verdict = requirement_run("a toast shows", "TOAST-1", Outcome::Passed);
+        let mut demo = requirement_run(
+            "a toast shows",
+            "TOAST-1",
+            failed("the demo missed the toast"),
+        );
+        demo.evidence_only = true;
+        demo.end = RunEnd::CutShort;
+        demo.cases[0].attempts[0].folder = "TOAST-1/demo".to_owned();
+        demo.cases[0].attempts[0].artifacts = vec![results::Artifact {
+            kind: ArtifactKind::Clip,
+            path: "clips/gv-1.mp4".to_owned(),
+            _unrecognized: None,
+        }];
+        let runs = [
+            (PathBuf::from("game/test_run.json"), verdict),
+            (PathBuf::from("game-demos/test_run.json"), demo),
+        ];
+
+        let section = render_section(&Section {
+            sha: "1111111",
+            provenance: "Evidence from a run with a demo.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: None,
+            covered: false,
+            jobs_failed: false,
+        });
+
+        assert!(section.contains("1 of 1 tests proven"), "{section}");
+        assert!(!section.contains("the demo missed the toast"), "{section}");
+        assert!(!section.contains("cut short"), "{section}");
+        assert!(section.contains("TOAST-1/demo/clips/gv-1.mp4"), "{section}");
     }
 
     #[test]

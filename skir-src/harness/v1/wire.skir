@@ -9,7 +9,9 @@ import {
   Artifact,
   CoveredClass,
   Demonstrates,
+  Pacing,
   Step,
+  WindowEnd,
 } from "harness/v1/test_run.skir";
 
 enum Message(85030001) {
@@ -73,6 +75,13 @@ enum Message(85030001) {
   };
   // Session to pool: the attempt ended and its players are free again.
   result: Result;
+  // Session to pool: the case `test_id` made its last attempt, for its entry in the run file: whether the
+  // change under test touched it, and what a window that holds at another tick at another pace does.
+  concluded: struct {
+    test_id: string;
+    touched: bool;
+    pacing: Pacing;
+  };
   // Session to pool: the session is done; once every session of its run is, the run file no longer reads
   // as cut short.
   end;
@@ -162,7 +171,8 @@ enum Message(85030001) {
     attempt: int64;
     players: [string];
   };
-  // Paper to pool: the resumed attempt's players' clients hold all Paper sends them, from after `tick` on.
+  // Paper to pool: the resumed attempt's players' clients hold all Paper sent them once `tick` ended, so they
+  // are back from the tick after it on.
   // `failure` is null when it worked, or says why it could not.
   resumed: struct {
     attempt: int64;
@@ -176,6 +186,12 @@ enum Message(85030001) {
   };
   // Pool to Paper: from now on a tick runs only when the step policy grants it.
   stepping;
+  // Pool to Paper: from now on the step policy grants a tick a window, input or delivery waits for no
+  // sooner than `millis` of wall clock after the tick before it started; 0 grants it as soon as nothing
+  // holds it back. Sent only while no attempt runs on that Paper.
+  pace: struct {
+    millis: int32;
+  };
   // Pool to client: join the Paper at this address, first leaving the one the client is on, the way the
   // pause menu leaves.
   connect: struct {
@@ -222,8 +238,10 @@ enum Role(85030003) {
 // One attempt of a requirement to run once `players` players are free. Every attempt of one requirement
 // case carries the same `test_id`, so they land in one case of the run file. With `restarts_paper` the
 // attempt runs on a Paper of its own, which its body may kill and boot again: a kill drops every client
-// on a Paper. A `demo` attempt runs once more after the requirement's last attempt, its clients recording
-// clips; it lands in the case's demo, never among its attempts.
+// on a Paper. A `demo` attempt's clients record clips. `pace_millis` is the shortest wall clock time
+// between two ticks of its Paper: the shared Paper runs the attempts of one pace at a time. A `paced`
+// attempt runs after the case's attempts passed, to prove its windows hold at the same ticks at another
+// pace; it lands among the case's paced attempts.
 struct Submit(85030004) {
   submission: int64;
   test_id: string;
@@ -232,6 +250,8 @@ struct Submit(85030004) {
   demonstrates: Demonstrates;
   restarts_paper: bool;
   demo: bool;
+  pace_millis: int32;
+  paced: bool;
 }
 
 // The players of the submission's attempt, each wiped and standing in the attempt's `region` on the Paper
@@ -270,6 +290,7 @@ struct Result(85030008) {
   steps: [Step];
   folder: string;
   artifacts: [Artifact];
+  windows: [WindowEnd];
 }
 
 // A session's request to the game, which a `Reply` answers under the same id. The pool hands it on under

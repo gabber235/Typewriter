@@ -52,6 +52,10 @@ enum Cli {
         /// Prints the areas with their time budgets as JSON (the CI matrix).
         #[arg(long, conflicts_with = "print")]
         list: bool,
+        /// With `--list`, prints the end to end suites instead of the areas, as JSON (the CI
+        /// matrix of the end to end jobs).
+        #[arg(long, requires = "list")]
+        suites: bool,
         /// Prints each step's command instead of running it.
         #[arg(long)]
         print: bool,
@@ -110,11 +114,21 @@ fn main() -> ExitCode {
         Cli::Check {
             area,
             list,
+            suites,
             print,
             base,
         } => {
             let steps = graph::select(area);
-            if list {
+            if suites {
+                match base {
+                    Some(base) => review::changed_paths(&context, &base)
+                        .map(|paths| graph::list_suites(&graph::affected_suites(&paths))),
+                    None => {
+                        graph::list_suites(&graph::suites());
+                        Ok(())
+                    }
+                }
+            } else if list {
                 match base {
                     Some(base) => review::changed_paths(&context, &base)
                         .map(|paths| graph::list(&graph::affected(steps, &paths))),

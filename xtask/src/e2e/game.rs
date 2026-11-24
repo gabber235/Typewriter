@@ -1,119 +1,309 @@
-//! `cargo xtask e2e game`: the game requirements against real Minecraft clients on a stepped
-//! Paper, which the game pool boots on this machine. Paper, the clients and the Gradle build that
-//! starts them all run here, so the whole run is one heavy build. A Gradle of its own builds the
-//! suite first and exits, so no compiler is alive while the suite runs. Every project's `gameTest` task
-//! runs at once, so their test JVMs share the one pool, which retries failed requirements on its
-//! warm clients and writes the run file. That file is the gate: Gradle's exit only adds a failure
-//! the file cannot show.
+//! `cargo xtask e2e game` and `cargo xtask e2e playtest`: the game requirements against real
+//! Minecraft clients on a stepped Paper, which the game pool boots on this machine. The `game` suite
+//! runs the product's requirements inside the stack, whose services their Papers' Typewriter talks
+//! to; the `playtest` suite runs the framework's own, whose Papers need no stack. Paper, the clients
+//! and the Gradle build that starts them all run here, so the whole run is one heavy build. A Gradle
+//! of its own builds the suite first and exits, so no compiler is alive while the suite runs. Every
+//! `gameTest` task of the suite runs at once, so their test JVMs share the one pool, which retries
+//! failed requirements on its warm clients, runs each touched requirement again at other paces, and
+//! writes the run file. That file is the gate: Gradle's exit only adds a failure the file cannot show.
+//!
+//! `--demos` is the suite's demo run, after its verdict: each requirement the verdict run's file
+//! shows failed, flaky, quarantined or touched runs once more with clips, into a run file of its own
+//! that never gates.
 
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::ExitStatus;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::process::{Command, ExitStatus};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result, anyhow, bail};
 
 use super::{E2eArgs, take_turn};
-use crate::lock;
-use crate::results::{self, Quarantine, TestRun};
+use crate::lock::{self, HeavyLock};
+use crate::process::{self, Group};
+use crate::results::{self, Quarantine, TestRun, Verdict};
 use crate::review::change::Change;
 use crate::skirout::base::harness::v1::test_run::Runner;
-use crate::stack::{self, Stack, typewriter};
+use crate::stack::{self, typewriter};
 use crate::{CommandExt as _, Context, evidence, generate, goldens};
 
-/// Runs the selected game requirements and reports the run the game pool wrote.
-pub(super) fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
+/// A game suite: whose requirements it runs, and whether their Papers need the stack.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) enum GameSuite {
+    /// The product's requirements, inside the stack.
+    Game,
+    /// The framework's own requirements, without the stack.
+    Playtest,
+}
+
+impl GameSuite {
+    /// Its name: the `gameTest` tasks' `playtest.suite` and its results folder.
+    pub(crate) fn name(self) -> &'static str {
+        match self {
+            Self::Game => "game",
+            Self::Playtest => "playtest",
+        }
+    }
+}
+
+/// The paces, in milliseconds between ticks, a touched requirement whose attempts passed runs at
+/// once more each: 5 ms runs ticks as fast as clients follow, 50 ms is a real server's pace. Every
+/// window must hold at the same tick at each.
+const PACES: &str = "5,50";
+
+/// Runs the selected requirements of `suite`, or its demo run with `--demos`, and reports the run
+/// the game pool wrote.
+pub(super) fn run(ctx: &Context, args: &E2eArgs, suite: GameSuite) -> Result<()> {
     // The suite compiles against the generated Skir types, and the pool writes its run with them.
     generate::protocol(ctx)?;
     goldens::fetch_missing(ctx)?;
-    let shown = Path::new(evidence::RESULTS).join("game");
-    let evidence = ctx.root.join(&shown);
-    let commit = ctx
-        .tool(".", "git", &["rev-parse", "HEAD"])
-        .output_text()?
-        .trim()
-        .to_owned();
+    let verdict_shown = Path::new(evidence::RESULTS).join(suite.name());
     let quarantine = Quarantine::load(ctx)?;
-    // Every game Paper runs Typewriter against this worktree's stack, which builds its own services
-    // before the run takes the heavy lock; Gradle gets the stack's environment.
-    let keep = ctx.root.join(super::STACK_EVIDENCE).join("game");
-    let (ran, _) =
-        stack::run_keeping_evidence(ctx, &typewriter::game(), GAME_BUDGET, &keep, |stack| {
-            suite(ctx, args, &evidence, &quarantine, stack)
-        })?;
-    let file = ran.file.clone();
-    // The pool names the run's logs folder itself, so a run cut short points at its pool log too.
-    let run = TestRun {
-        commit,
-        ..own_run(&ran)?
+    if args.demos {
+        return demos(ctx, args, suite, &verdict_shown, &quarantine);
+    }
+    let evidence = ctx.root.join(&verdict_shown);
+    // A requirement the change touched runs again at other paces, and in the demo run.
+    let touched = touched_lines(&Change::load(ctx, args.base.as_deref())?);
+    let asked = Asked {
+        args,
+        suite,
+        touched: Some(&touched),
+        demos: None,
+        quarantine: &quarantine,
     };
-    results::write(&run, &file)?;
+    let ran = gradle_run(ctx, &asked, &evidence)?;
+    let run = report_run(ctx, &ran, false)?;
     judge(
         &run,
         ran.gradle,
         &args.only,
         &quarantine,
-        &shown,
+        &verdict_shown,
         &mut std::io::stderr(),
     )?;
     println!(
-        "game: {} requirements passed ({})",
+        "{}: {} requirements passed ({})",
+        suite.name(),
         run.cases.len(),
-        file.display()
+        ran.file.display()
     );
     Ok(())
 }
 
-/// How long the stack lets the suite run, its build included.
-const GAME_BUDGET: Duration = Duration::from_secs(50 * 60);
-
-/// Builds and runs the suite in Gradle with the stack's environment, under the heavy lock, and
-/// returns how it ran.
-fn suite(
+/// The demo run of `suite`: reruns once, with clips, each requirement the verdict run in
+/// `verdict_shown` failed, flaky, quarantined or touched, into `<suite>-demos`. It never gates: a
+/// demo that fails or a run that breaks is reported, and the run passes.
+fn demos(
     ctx: &Context,
     args: &E2eArgs,
-    evidence: &Path,
+    suite: GameSuite,
+    verdict_shown: &Path,
     quarantine: &Quarantine,
-    stack: &mut Stack,
+) -> Result<()> {
+    let verdict_file = ctx.root.join(verdict_shown).join("test_run.json");
+    if !verdict_file.exists() {
+        println!(
+            "{}: no demos, since the verdict run wrote no run file at {}",
+            suite.name(),
+            verdict_file.display()
+        );
+        return Ok(());
+    }
+    let selected = demo_selection(&results::read(&verdict_file)?, quarantine)?;
+    if selected.is_empty() {
+        println!(
+            "{}: no demos, since every requirement passed untouched",
+            suite.name()
+        );
+        return Ok(());
+    }
+    let shown = PathBuf::from(format!("{}-demos", verdict_shown.display()));
+    let evidence = ctx.root.join(&shown);
+    let asked = Asked {
+        args,
+        suite,
+        touched: None,
+        demos: Some(&selected),
+        quarantine,
+    };
+    let demoed = gradle_run(ctx, &asked, &evidence).and_then(|ran| report_run(ctx, &ran, true));
+    match demoed {
+        Ok(run) => {
+            results::report(&run, quarantine, Some(&shown), &mut std::io::stderr())
+                .unwrap_or_else(|failed| eprintln!("{}: the demos show: {failed:#}", suite.name()));
+            println!(
+                "{}: demo run of {} ({})",
+                suite.name(),
+                selected.join(", "),
+                shown.display()
+            );
+        }
+        Err(broken) => eprintln!("{}: the demo run proved nothing: {broken:#}", suite.name()),
+    }
+    Ok(())
+}
+
+/// The requirements a demo run reruns, once each: those whose case in the verdict `run` failed, was
+/// flaky, is quarantined, or the change touched. An interrupted case has no verdict to show.
+pub(crate) fn demo_selection(run: &TestRun, quarantine: &Quarantine) -> Result<Vec<String>> {
+    let mut selected: Vec<String> = Vec::new();
+    for case in &run.cases {
+        let shown = match results::verdict(run, case, quarantine)? {
+            Verdict::Failed | Verdict::Flaky | Verdict::Quarantined | Verdict::Unsteady => true,
+            Verdict::Passed => case.touched,
+            Verdict::Interrupted => false,
+        };
+        let requirement = case.requirement.clone().unwrap_or_else(|| case.id.clone());
+        if shown && !selected.contains(&requirement) {
+            selected.push(requirement);
+        }
+    }
+    Ok(selected)
+}
+
+/// The run file `ran` wrote, with its commit, written back; a demo run's says it is `evidence_only`.
+fn report_run(ctx: &Context, ran: &Ran, evidence_only: bool) -> Result<TestRun> {
+    let commit = ctx
+        .tool(".", "git", &["rev-parse", "HEAD"])
+        .output_text()?
+        .trim()
+        .to_owned();
+    // The pool names the run's logs folder itself, so a run cut short points at its pool log too.
+    let run = TestRun {
+        commit,
+        evidence_only,
+        ..own_run(ran)?
+    };
+    results::write(&run, &ran.file)?;
+    Ok(run)
+}
+
+/// How long the stack lets the suite run, its build included; a suite without the stack gets as long.
+const GAME_BUDGET: Duration = Duration::from_secs(50 * 60);
+
+/// What a run of a game suite was asked for: the command line, the suite, the file of lines the
+/// change touched (none for a demo run, which reruns each requirement once whatever it touched), the
+/// requirements a demo run reruns (none for the verdict run) and the quarantine.
+struct Asked<'a> {
+    args: &'a E2eArgs,
+    suite: GameSuite,
+    touched: Option<&'a str>,
+    demos: Option<&'a [String]>,
+    quarantine: &'a Quarantine,
+}
+
+/// Runs what was `asked` in Gradle, writing into `evidence`: the product's suite inside the stack,
+/// with the stack's environment, the framework's without one.
+fn gradle_run(ctx: &Context, asked: &Asked, evidence: &Path) -> Result<Ran> {
+    match asked.suite {
+        GameSuite::Game => {
+            let keep = ctx
+                .root
+                .join(super::STACK_EVIDENCE)
+                .join(asked.suite.name());
+            let (ran, _) = stack::run_keeping_evidence(
+                ctx,
+                &typewriter::game(),
+                GAME_BUDGET,
+                &keep,
+                |stack| {
+                    in_turn(ctx, asked, evidence, |command| {
+                        stack
+                            .run_command(command)
+                            .context("cannot run Gradle for the game suite")
+                    })
+                },
+            )?;
+            Ok(ran)
+        }
+        GameSuite::Playtest => {
+            process::install_interrupt_handler();
+            let deadline = Instant::now() + GAME_BUDGET;
+            in_turn(ctx, asked, evidence, |command| {
+                Group::spawn(command)
+                    .context("cannot run Gradle for the playtest suite")?
+                    .wait(Some(deadline))
+            })
+        }
+    }
+}
+
+/// Builds and runs what was `asked` under the heavy lock, writing into `evidence`, each Gradle
+/// through `gradle`, and returns how it ran.
+fn in_turn(
+    ctx: &Context,
+    asked: &Asked,
+    evidence: &Path,
+    mut gradle: impl FnMut(&mut Command) -> Result<ExitStatus>,
 ) -> Result<Ran> {
-    // The folders of the last runs' logs outlive the clear; `next_run_folder` keeps the newest.
-    let _lock = take_turn(
+    let turn = begin_turn(
         Path::new(lock::HEAVY_LOCK),
-        "e2e game",
+        &format!("e2e {}", asked.suite.name()),
         evidence,
-        &[results::LOGS],
+        asked.touched,
     )?;
-    let file = evidence.join("test_run.json");
-    // A requirement that covered a line the change added reruns in demo mode.
-    let touched = evidence.join("touched.txt");
-    fs::create_dir_all(evidence)?;
-    fs::write(
-        &touched,
-        touched_lines(&Change::load(ctx, args.base.as_deref())?),
-    )
-    .with_context(|| format!("cannot write {}", touched.display()))?;
-    // The pool, Paper and every client log into a folder of this run's own.
-    let logs = next_run_folder(&evidence.join(results::LOGS))?;
     // The run's pool writes this id into the run file, and its test JVMs connect only to a pool of
     // it, so a file or pool an earlier run left never passes for this one.
     let run_id = format!("{}-{}", now_millis(), std::process::id());
+    let planned = Planned {
+        suite: asked.suite,
+        demos: asked.demos,
+        run_id: &run_id,
+        file: &turn.file,
+        touched: turn.touched.as_deref(),
+        logs: &turn.logs,
+    };
     Ok(Ran {
-        file: file.clone(),
+        file: turn.file.clone(),
         run_id: run_id.clone(),
         gradle: build_then_run(
-            |gradle| {
-                stack
-                    .run_command(&mut ctx.tool(
-                        "services",
-                        "./gradlew",
-                        &gradle.iter().map(String::as_str).collect::<Vec<_>>(),
-                    ))
-                    .context("cannot run Gradle for the game suite")
+            |arguments| {
+                gradle(&mut ctx.tool(
+                    "services",
+                    "./gradlew",
+                    &arguments.iter().map(String::as_str).collect::<Vec<_>>(),
+                ))
             },
-            &gradle_args(args, quarantine, &run_id, &file, &touched, &logs),
+            asked.suite,
+            &gradle_args(asked.args, asked.quarantine, &planned),
         )?,
-        pool_log: logs.join(results::POOL_LOG),
+        pool_log: turn.logs.join(results::POOL_LOG),
+    })
+}
+
+/// A game run's turn under the heavy lock, its results folder cleared of the last run's: where its
+/// run file goes, the folder of its logs and the file of lines the change touched, if it reads any.
+struct Turn {
+    _lock: HeavyLock,
+    file: PathBuf,
+    logs: PathBuf,
+    touched: Option<PathBuf>,
+}
+
+/// Takes the heavy lock at `lock` for `holder`, clears the last run's results in `evidence` and
+/// lays out this run's: a new folder for its logs and, when it reads them, the `touched` lines.
+/// Whatever the run reads is written after the clear, so it never reads what the last run left.
+fn begin_turn(lock: &Path, holder: &str, evidence: &Path, touched: Option<&str>) -> Result<Turn> {
+    // The folders of the last runs' logs outlive the clear; `next_run_folder` keeps the newest.
+    let held = take_turn(lock, holder, evidence, &[results::LOGS])?;
+    fs::create_dir_all(evidence)?;
+    let touched = touched
+        .map(|lines| {
+            let file = evidence.join("touched.txt");
+            fs::write(&file, lines)
+                .with_context(|| format!("cannot write {}", file.display()))
+                .map(|()| file)
+        })
+        .transpose()?;
+    Ok(Turn {
+        _lock: held,
+        file: evidence.join("test_run.json"),
+        // The pool, Paper and every client log into a folder of this run's own.
+        logs: next_run_folder(&evidence.join(results::LOGS))?,
+        touched,
     })
 }
 
@@ -126,60 +316,80 @@ pub(crate) struct Ran {
     pub pool_log: PathBuf,
 }
 
-/// Builds the suite in a Gradle of its own, then runs `suite` with `gradle`. The build's Gradle
-/// exits before the suite starts, and the Kotlin compile daemons it started end with it, so no
-/// compiler holds memory while the clients and Paper run. It never stops other daemons
+/// Builds the modules of `suite` in a Gradle of its own, then runs `run` with `gradle`. The build's
+/// Gradle exits before the suite starts, and the Kotlin compile daemons it started end with it, so
+/// no compiler holds memory while the clients and Paper run. It never stops other daemons
 /// (`--stop`): another worktree's build may share them.
 pub(crate) fn build_then_run(
     mut gradle: impl FnMut(&[String]) -> Result<ExitStatus>,
-    suite: &[String],
+    suite: GameSuite,
+    run: &[String],
 ) -> Result<ExitStatus> {
     let build = [
-        "--console=plain",
-        "--parallel",
-        "--no-daemon",
-        "gameTestBuild",
-    ]
-    .map(str::to_owned);
+        "--console=plain".to_owned(),
+        "--parallel".to_owned(),
+        "--no-daemon".to_owned(),
+        "gameTestBuild".to_owned(),
+        format!("-Pplaytest.suite={}", suite.name()),
+    ];
     let built = gradle(&build)?;
     if !built.success() {
         bail!(
             "game: building the game suite failed with {built}, so no requirement ran; Gradle's output above says why"
         );
     }
-    gradle(suite)
+    gradle(run)
 }
 
-/// What Gradle runs: every `gameTest` task, writing the run file to `file` and its logs into
-/// `logs`, with the selection, the repeat count and the quarantined requirements, which the test
-/// JVMs need since they retry inside the run, and the file of lines the change touched, which
-/// picks the demo reruns.
+/// One Gradle run of a game suite as xtask plans it: the suite, the requirements a demo run reruns
+/// (none for the verdict run), its run id, where its run file and logs go, and the file of lines the
+/// change touched (none for a demo run).
+pub(crate) struct Planned<'a> {
+    pub suite: GameSuite,
+    pub demos: Option<&'a [String]>,
+    pub run_id: &'a str,
+    pub file: &'a Path,
+    pub touched: Option<&'a Path>,
+    pub logs: &'a Path,
+}
+
+/// What Gradle runs: every `gameTest` task of the planned suite, writing the run file and its logs
+/// where `planned` says, with the file of lines the change touched. The verdict run takes the
+/// selection, the repeat count and the quarantined requirements, which the test JVMs need since they
+/// retry inside the run, and the paces a touched requirement runs at again; a demo run takes the
+/// requirements it reruns, once each with clips.
 pub(crate) fn gradle_args(
     args: &E2eArgs,
     quarantine: &Quarantine,
-    run_id: &str,
-    file: &Path,
-    touched: &Path,
-    logs: &Path,
+    planned: &Planned,
 ) -> Vec<String> {
     let mut gradle = vec![
         "--console=plain".to_owned(),
         "--parallel".to_owned(),
         "gameTest".to_owned(),
-        format!("-Pplaytest.runId={run_id}"),
-        format!("-Pplaytest.testRun={}", file.display()),
-        format!("-Pplaytest.touched={}", touched.display()),
-        format!("-Pplaytest.logs={}", logs.display()),
+        format!("-Pplaytest.suite={}", planned.suite.name()),
+        format!("-Pplaytest.runId={}", planned.run_id),
+        format!("-Pplaytest.testRun={}", planned.file.display()),
+        format!("-Pplaytest.logs={}", planned.logs.display()),
     ];
-    for selected in &args.only {
+    if let Some(touched) = planned.touched {
+        gradle.push(format!("-Pplaytest.touched={}", touched.display()));
+    }
+    let selection = planned.demos.unwrap_or(&args.only);
+    for selected in selection {
         gradle.push("--tests".to_owned());
         gradle.push(test_pattern(selected));
     }
-    if args.repeat.get() > 1 {
-        gradle.push(format!("-Pplaytest.repeat={}", args.repeat));
-    }
     if let Some(clients) = args.clients {
         gradle.push(format!("-Pplaytest.clients={clients}"));
+    }
+    if planned.demos.is_some() {
+        gradle.push("-Pplaytest.demo=true".to_owned());
+        return gradle;
+    }
+    gradle.push(format!("-Pplaytest.paces={PACES}"));
+    if args.repeat.get() > 1 {
+        gradle.push(format!("-Pplaytest.repeat={}", args.repeat));
     }
     let held = quarantine.held(&Runner::Game);
     if !held.is_empty() {
@@ -309,11 +519,21 @@ fn now_millis() -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::results::TestCase;
     use crate::results::{AttemptPolicy, Outcome, RunEnd};
     use crate::test_support::{
-        TempRoot, changed, e2e_args as parsed, exited, failed, files_below, game_run, quarantining,
-        refusal,
+        TempRoot, changed, e2e_args as parsed, exited, failed, files_below, game_run, interrupted,
+        quarantining, refusal,
     };
+
+    /// The testBalloon patterns `gradle` selects tests with.
+    fn selection(gradle: &[String]) -> Vec<&str> {
+        gradle
+            .windows(2)
+            .filter(|pair| pair[0] == "--tests")
+            .map(|pair| pair[1].as_str())
+            .collect()
+    }
 
     #[test]
     fn a_game_run_gets_a_folder_of_its_own_and_only_the_last_three_runs_keep_theirs() {
@@ -562,7 +782,7 @@ mod tests {
     }
 
     #[test]
-    fn gradle_gets_the_run_id_the_run_file_the_logs_folder_the_selection_the_repeat_the_quarantine_and_the_clients()
+    fn gradle_gets_the_suite_the_run_id_the_run_file_the_logs_folder_the_selection_the_repeat_the_quarantine_the_paces_and_the_clients()
      {
         let file = Path::new("/repo/.xtask/results/game/test_run.json");
         let args = parsed(&[
@@ -577,22 +797,31 @@ mod tests {
         .unwrap();
         let touched = Path::new("/repo/.xtask/results/game/touched.txt");
         let logs = Path::new("/repo/.xtask/results/game/logs/4");
-        let gradle = gradle_args(
-            &args,
-            &quarantining("game/LEAK-1"),
-            "run-7",
-            file,
-            touched,
-            logs,
-        );
+        let verdict = |args: &E2eArgs, quarantine: &Quarantine| {
+            gradle_args(
+                args,
+                quarantine,
+                &Planned {
+                    suite: GameSuite::Game,
+                    demos: None,
+                    run_id: "run-7",
+                    file,
+                    touched: Some(touched),
+                    logs,
+                },
+            )
+        };
+        let gradle = verdict(&args, &quarantining("game/LEAK-1"));
         for expected in [
             "gameTest",
+            "-Pplaytest.suite=game",
             "-Pplaytest.runId=run-7",
             "-Pplaytest.testRun=/repo/.xtask/results/game/test_run.json",
             "-Pplaytest.touched=/repo/.xtask/results/game/touched.txt",
             "-Pplaytest.logs=/repo/.xtask/results/game/logs/4",
             "-Pplaytest.repeat=3",
             "-Pplaytest.quarantine=LEAK-1",
+            "-Pplaytest.paces=5,50",
             "-Pplaytest.clients=1",
         ] {
             assert!(
@@ -600,24 +829,16 @@ mod tests {
                 "{expected} in {gradle:?}"
             );
         }
+        assert!(
+            !gradle.iter().any(|arg| arg.starts_with("-Pplaytest.demo")),
+            "{gradle:?}"
+        );
         // testBalloon selects a test whose name is the id and its sentence, or the whole test id.
-        let selection: Vec<_> = gradle
-            .windows(2)
-            .filter(|pair| pair[0] == "--tests")
-            .map(|pair| pair[1].as_str())
-            .collect();
         assert_eq!(
-            selection,
+            selection(&gradle),
             ["/*/WINDOW-1 *", "/*/HUNG-1 work still running fails"]
         );
-        let plain = gradle_args(
-            &parsed(&["game"]).unwrap(),
-            &Quarantine::default(),
-            "run-7",
-            file,
-            touched,
-            logs,
-        );
+        let plain = verdict(&parsed(&["game"]).unwrap(), &Quarantine::default());
         assert!(
             !plain.iter().any(|arg| arg == "--tests"
                 || ["repeat", "quarantine", "clients"]
@@ -625,6 +846,76 @@ mod tests {
                     .any(|name| arg.starts_with(&format!("-Pplaytest.{name}=")))),
             "{plain:?}"
         );
+    }
+
+    #[test]
+    fn a_demo_run_reruns_only_the_requirements_it_names_once_with_clips_at_no_pace() {
+        let args = parsed(&["playtest", "--demos", "--only", "WINDOW-1", "--repeat", "3"]).unwrap();
+        let demos = ["TOAST-1".to_owned(), "QUIT-2".to_owned()];
+
+        let gradle = gradle_args(
+            &args,
+            &quarantining("game/LEAK-1"),
+            &Planned {
+                suite: GameSuite::Playtest,
+                demos: Some(&demos),
+                run_id: "run-8",
+                file: Path::new("/repo/.xtask/results/playtest-demos/test_run.json"),
+                touched: None,
+                logs: Path::new("/repo/.xtask/results/playtest-demos/logs/1"),
+            },
+        );
+
+        assert!(
+            gradle.contains(&"-Pplaytest.suite=playtest".to_owned()),
+            "{gradle:?}"
+        );
+        assert!(
+            gradle.contains(&"-Pplaytest.demo=true".to_owned()),
+            "{gradle:?}"
+        );
+        assert_eq!(selection(&gradle), ["/*/TOAST-1 *", "/*/QUIT-2 *"]);
+        assert!(
+            !gradle
+                .iter()
+                .any(|arg| ["repeat", "quarantine", "paces", "touched"]
+                    .iter()
+                    .any(|name| arg.starts_with(&format!("-Pplaytest.{name}=")))),
+            "{gradle:?}"
+        );
+    }
+
+    #[test]
+    fn a_demo_run_reruns_each_requirement_that_failed_was_flaky_quarantined_or_touched_once() {
+        let mut run = game_run(
+            AttemptPolicy::RerunFailures(4),
+            &[
+                ("PASS-1", &[Outcome::Passed]),
+                ("FAIL-1", &[failed("missed"), failed("missed")]),
+                ("FLAKY-1", &[failed("missed"), Outcome::Passed]),
+                ("HELD-1", &[failed("missed")]),
+                ("TOUCHED-1", &[Outcome::Passed]),
+                ("LOST-1", &[interrupted("paper")]),
+            ],
+        );
+        run.cases[4].touched = true;
+        let side_by_side = TestCase {
+            id: "FAIL-1 the requirement (attempt 2 of 2)".to_owned(),
+            ..run.cases[1].clone()
+        };
+        run.cases.push(side_by_side);
+
+        assert_eq!(
+            demo_selection(&run, &quarantining("game/HELD-1")).unwrap(),
+            ["FAIL-1", "FLAKY-1", "HELD-1", "TOUCHED-1"]
+        );
+    }
+
+    #[test]
+    fn the_framework_suite_and_a_demo_run_parse_beside_the_product_suite() {
+        assert!(parsed(&["playtest"]).is_ok());
+        assert!(parsed(&["playtest", "--demos"]).unwrap().demos);
+        assert!(!parsed(&["game"]).unwrap().demos);
     }
 
     #[test]
@@ -664,6 +955,32 @@ mod tests {
     }
 
     #[test]
+    fn a_verdict_run_reads_the_lines_this_change_touched_not_the_last_runs_and_a_demo_run_reads_none()
+     {
+        let root = TempRoot::new();
+        let (lock, evidence) = (root.path("heavy.lock"), root.path("results/playtest"));
+        fs::create_dir_all(&evidence).unwrap();
+        fs::write(evidence.join("touched.txt"), "Old.kt 1\n").unwrap();
+
+        let verdict = begin_turn(&lock, "e2e playtest", &evidence, Some("New.kt 7\n")).unwrap();
+        let touched = verdict
+            .touched
+            .clone()
+            .expect("a verdict run reads touched lines");
+        drop(verdict);
+        let demo = begin_turn(
+            &lock,
+            "e2e playtest",
+            &root.path("results/playtest-demos"),
+            None,
+        )
+        .unwrap();
+
+        assert_eq!(fs::read_to_string(touched).unwrap(), "New.kt 7\n");
+        assert_eq!(demo.touched, None);
+    }
+
+    #[test]
     fn the_suite_is_built_in_a_gradle_of_its_own_that_ends_before_the_suite_starts() {
         let suite = vec!["gameTest".to_owned()];
         let mut calls = Vec::new();
@@ -673,6 +990,7 @@ mod tests {
                 calls.push(gradle.to_vec());
                 Ok(exited(0))
             },
+            GameSuite::Playtest,
             &suite,
         )
         .unwrap();
@@ -681,6 +999,11 @@ mod tests {
         assert_eq!(calls.len(), 2, "{calls:?}");
         let (build, run) = (&calls[0], &calls[1]);
         assert!(build.contains(&"gameTestBuild".to_owned()), "{build:?}");
+        // The build builds only the suite's modules: the product's need the stack to configure.
+        assert!(
+            build.contains(&"-Pplaytest.suite=playtest".to_owned()),
+            "{build:?}"
+        );
         assert!(build.contains(&"--no-daemon".to_owned()), "{build:?}");
         // Another worktree's Gradle may share the daemons, so the build never stops them.
         assert!(!build.contains(&"--stop".to_owned()), "{build:?}");
@@ -696,6 +1019,7 @@ mod tests {
                 calls += 1;
                 Ok(exited(1))
             },
+            GameSuite::Game,
             &["gameTest".to_owned()],
         )
         .unwrap_err()

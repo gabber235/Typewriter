@@ -9,7 +9,7 @@ import javax.inject.Inject
 
 // Game requirements: tests in the `gameTest` source set run against real Minecraft clients on a
 // stepped Paper, which the game pool boots. They are slow and need a desktop, so `check` leaves them
-// out; `cargo xtask e2e game` runs them.
+// out; `cargo xtask e2e playtest` runs the framework's own, and `cargo xtask e2e game` the product's.
 plugins {
     id("com.typewritermc.basic-conventions")
 }
@@ -45,10 +45,44 @@ val clientLaunchPart = gamePart("playtestClientLaunch", ":playtest-client", "pla
 val coverageAgentPart = gamePart("playtestCoverageAgent", ":playtest-plugin", "playtestCoverageAgent")
 
 /**
+ * The game suite a module's requirements belong to: `playtest` for the framework's own modules (under
+ * `services/playtest`), whose Papers need no stack, and `game` for the product's, which run inside it.
+ */
+fun Project.gameSuite(): String = if (projectDir.startsWith(servicesDirectory.resolve("playtest"))) "playtest" else "game"
+
+/**
+ * The suite this build runs (`-Pplaytest.suite`, which `cargo xtask e2e <suite>` passes): only that
+ * suite's modules run their requirements, and its Papers carry only their additions. A build that names
+ * none runs every module's requirements on one pool.
+ */
+val runSuite: String? = providers.gradleProperty("playtest.suite").orNull
+
+/** Whether this module's requirements run in this build: it belongs to the suite the build runs. */
+val inRun = runSuite == null || project.gameSuite() == runSuite
+
+/**
+ * How this module's requirements are judged. [pacing] says what a requirement whose windows hold at
+ * another tick at another pace does: `gates` (the default) fails it, `reports` lists it without
+ * blocking, for a module whose code still waits on work no tick waits for.
+ *
+ * ```
+ * gameRequirements {
+ *     pacing.set("reports")
+ * }
+ * ```
+ */
+abstract class GameRequirements {
+    abstract val pacing: Property<String>
+}
+
+val gameRequirements = extensions.create<GameRequirements>("gameRequirements").apply { pacing.convention("gates") }
+
+/**
  * What this module adds to every Paper the pool boots: [pluginJars] go into `plugins/`, [files] into
  * Paper's folder at the paths it names, and [environment] is set for Paper's process. Every module's
- * gameTest shares the build's pool and its Papers, so the pool takes the union of every module's
- * additions; two modules that disagree on a file or a variable fail before Paper starts.
+ * gameTest shares the build's pool and its Papers, so the pool takes the union of the additions of every
+ * module of the suite the build runs; two modules that disagree on a file or a variable fail before
+ * Paper starts.
  *
  * Each Paper runs in a slot, which it finds in `PLAYTEST_PAPER_SLOT`: the shared Paper in 0, the own
  * Papers of restart requirements in 1 and 2, each taking a free slot and freeing it when it ends.
@@ -162,9 +196,10 @@ configurations.consumable("playtestPaperAdditions") {
     outgoing.artifact(paperAdditionsDir) { builtBy(paperAdditionFiles, paperAdditionEnvironment) }
 }
 
-// Every module's additions reach the pool, whichever gameTest task starts it.
+// The additions of every module of the run's suite reach the pool, whichever of their gameTest tasks starts it.
 val allPaperAdditionsScope = configurations.dependencyScope("playtestAllPaperAdditionsScope")
 rootProject.subprojects.forEach { gameModule ->
+    if (runSuite != null && gameModule.gameSuite() != runSuite) return@forEach
     gameModule.pluginManager.withPlugin("com.typewritermc.game-test") {
         dependencies.add(
             allPaperAdditionsScope.name,
@@ -261,8 +296,17 @@ abstract class GameParts : CommandLineArgumentProvider {
     /** The requirements the quarantine holds: they run once and never block. */
     @get:Internal abstract val quarantine: Property<String>
 
-    /** The file of lines the change added; a requirement that covered one reruns in demo mode. */
+    /** The file of lines the change added; a requirement it touched runs again at each of [paces]. */
     @get:Internal abstract val touched: Property<String>
+
+    /** The paces, in milliseconds between ticks, a touched requirement whose attempts passed runs at once more each. */
+    @get:Internal abstract val paces: Property<String>
+
+    /** Whether a window held at another tick at another pace gates or reports, as the module's [GameRequirements] say. */
+    @get:Internal abstract val pacing: Property<String>
+
+    /** Whether the run is a demo: each requirement runs once, its clients recording clips. */
+    @get:Internal abstract val demo: Property<String>
 
     /** The repository root, which golden paths start from. */
     @get:Internal abstract val root: Property<String>
@@ -304,7 +348,14 @@ abstract class GameParts : CommandLineArgumentProvider {
                 "mesa" to mesa.get(),
                 "pinnedRunner" to pinnedRunner.get().toString(),
             ) +
-                listOf("repeat" to repeat, "quarantine" to quarantine, "touched" to touched)
+                listOf(
+                    "repeat" to repeat,
+                    "quarantine" to quarantine,
+                    "touched" to touched,
+                    "paces" to paces,
+                    "pacing" to pacing,
+                    "demo" to demo,
+                )
                     .mapNotNull { (name, value) -> value.orNull?.let { name to it } }
         ).mapKeys { (name, _) -> "playtest.$name" }
 }
@@ -321,6 +372,8 @@ tasks.register<Test>("gameTest") {
     // and xtask's selection check (`results::selection_matches`) answers it from the run file.
     filter.isFailOnNoMatchingTests = false
     usesService(gameRun)
+    val runs = inRun
+    onlyIf("its module is in the suite the build runs") { runs }
     val parts =
         objects.newInstance<GameParts>().apply {
             pool.from(poolPart)
@@ -345,6 +398,10 @@ tasks.register<Test>("gameTest") {
             quarantine.set(providers.gradleProperty("playtest.quarantine"))
             // `cargo xtask e2e game` writes it against the merge base with the default branch.
             touched.set(providers.gradleProperty("playtest.touched"))
+            // `cargo xtask e2e` names the paces a touched requirement runs at again, and a demo run.
+            paces.set(providers.gradleProperty("playtest.paces"))
+            pacing.set(gameRequirements.pacing)
+            demo.set(providers.gradleProperty("playtest.demo"))
             root.set(repositoryRoot.path)
             goldens.set(projectDir.resolve("src/gameTest/goldens").relativeTo(repositoryRoot).invariantSeparatorsPath)
             // `cargo xtask goldens approve` keeps each approved frame here; a run diffs against it.
@@ -364,5 +421,8 @@ tasks.register<Test>("gameTest") {
 tasks.register("gameTestBuild") {
     description = "Builds everything gameTest runs, and runs nothing."
     group = "build"
-    dependsOn(gameTest.output, gameTest.runtimeClasspath, poolPart, paperPart, agentPart, pluginPart, coverageAgentPart, clientLaunchPart, allPaperAdditions)
+    // A module outside the suite the build runs builds nothing: the product's additions need the stack.
+    if (inRun) {
+        dependsOn(gameTest.output, gameTest.runtimeClasspath, poolPart, paperPart, agentPart, pluginPart, coverageAgentPart, clientLaunchPart, allPaperAdditions)
+    }
 }

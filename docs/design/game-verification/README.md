@@ -53,9 +53,15 @@ clients hold none.
   between test JVMs.
 - A module adds what its requirements need to every Paper with `gamePaper { pluginJars; files { };
   environment }` in its build file: plugin jars, files at a path in Paper's folder, and Paper's
-  environment. As every module shares the pool's Papers, the pool takes the union of every module's
-  additions, for the shared Paper and each own Paper, and fails before Paper starts when two modules
-  disagree on a file or a variable. The framework itself still holds no Typewriter code.
+  environment. As every module of a suite shares the pool's Papers, the pool takes the union of the
+  additions of the modules of the suite the build runs, for the shared Paper and each own Paper, and
+  fails before Paper starts when two modules disagree on a file or a variable. The framework itself
+  still holds no Typewriter code.
+- **Two suites.** A module's suite follows its path: the framework's own modules
+  (`services/playtest`) are the `playtest` suite, every other module the `game` suite. A build runs
+  one suite (`-Pplaytest.suite`, which `cargo xtask e2e <suite>` passes): only that suite's `gameTest`
+  tasks run and its Papers carry only its modules' additions, so the framework's requirements run
+  without the stack. A build that names no suite runs every module on one pool.
 - Every Paper has a slot: 0 for the shared Paper, 1 and 2 for own Papers, which take the lowest free
   slot and give it back when they end. Paper learns its slot from `PLAYTEST_PAPER_SLOT`. A module adds
   environment to one slot's Papers with `gamePaper { slot(n) { environment } }`, and keeps paths
@@ -155,6 +161,11 @@ never waits for wall clock timers ([n-stepped-ticks.md](spikes/n-stepped-ticks.m
   replacement under the same name. A client that crashes or drops while its player is away is lost
   the same way; the intended leave of a quit is not.
 - **Away players.** Paper holds back no tick for a player that quit, as for any player that left.
+- **Pace.** An attempt runs at a pace: the shortest wall clock between two ticks a window, input,
+  delivery or settle waits for. The verdict's attempts run at 0, a tick as soon as nothing holds it
+  back; the idle tick stays once a second. The shared Paper runs the attempts of one pace at a time:
+  claims at its current pace go first, and the pace switches once no attempt runs on it and none
+  waits at its pace. An own Paper takes its attempt's pace.
 
 All requirements share one stepped Paper ([p1-topology.md](spikes/p1-topology.md)): a Paper per
 attempt was 41 to 777 percent slower once groups or restarts appear. The cost is that one attempt's
@@ -196,7 +207,9 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
 |---|---|---|
 | Passed | first attempt passed | no |
 | Flaky | an attempt failed and a later one passed | yes, like a failure |
-| Failed | every attempt failed, or a demo ended otherwise than the last attempt | yes |
+| Failed | every attempt failed | yes |
+| Unsteady | every attempt passed, but a window held at another tick in another passing run | yes, unless the module reports |
+| Interrupted | a part the attempt depended on was lost while it ran | the run fails once for the part |
 | Quarantined | listed in `harness/quarantine.toml`; runs once | no |
 
 - A requirement refused as written (a window without a positive check, `restartPaper()` without the
@@ -204,6 +217,21 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
 - Kotlin decides retries and fails the mirrored testBalloon test; xtask judges every runner's run file
   with the same rule for the gate ([p2-testballoon-runner.md](spikes/p2-testballoon-runner.md)).
 - `--repeat N` runs exactly N attempts of each selected requirement.
+- **Steady ticks.** Every attempt records each window's end: its line, its length, and the tick
+  after its stimulus it held at. Every passing run of a requirement, retries and paced attempts
+  alike, must hold every window at the same tick; a paced attempt that misses breaks it too. A
+  window decided after the attempt met hung work or a lost part is left out, since neither holds back
+  a tick. A module sets what breaking it does with `gameRequirements { pacing }`: `gates` by default,
+  `reports` lists the requirement without blocking (Typewriter's module, until the engine holds ticks
+  for its session writes).
+- **Paced attempts.** A requirement whose attempts passed and that the change touched runs once more
+  at 5 ms and once at 50 ms between ticks (`cargo xtask e2e` passes the paces). They never count as
+  attempts; the run file keeps them as the case's `paced` attempts.
+- **Lost parts.** The run file lists every part (the shared Paper, own Papers, clients, displays)
+  with how it ended: ran to the end, or lost with a cause (exited with a status, left, stalled, never
+  ready, broke). A lost client fails its attempt, which retries. A lost shared Paper or pool stops the
+  run: the attempts it held are interrupted, which counts neither way, the cases still waiting never
+  run, and xtask fails the run once, naming the part, its cause, its log and the cases it took.
 
 ## Goldens
 
@@ -234,12 +262,13 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
   before ([i-coverage.md](spikes/i-coverage.md)). On the shared Paper overlapping attempts get each
   other's lines, so it over attributes and never loses a line.
 - **Touched requirements.** xtask writes the lines the change added since the merge base with the
-  default branch; a requirement that covered one is touched.
-- **Demo reruns.** A failed, flaky, quarantined or touched requirement runs once more as a demo with
-  clips: the stepped client draws 30 frames per second of game time between steps and pipes them to
-  ffmpeg ([p9-frames-between-steps.md](spikes/p9-frames-between-steps.md)). Windows read only the
-  records at the end of each tick, so a demo is judged as the gated run was, and it must pass or fail
-  as the last attempt did.
+  default branch. A requirement is touched when one lies in its own code (from the line that
+  registers it to the line before the next requirement of its file) or its last attempt covered one.
+- **Demo run.** After a suite's verdict run, `cargo xtask e2e <suite> --demos` reruns once with clips
+  each requirement the verdict run's file shows failed, flaky, quarantined, unsteady or touched: the
+  stepped client draws 30 frames per second of game time between steps and pipes them to ffmpeg
+  ([p9-frames-between-steps.md](spikes/p9-frames-between-steps.md)). It writes a run file of its own
+  (`results/<suite>-demos`) and never gates: a clip is evidence of the verdict, not part of it.
 - Evidence (frames, golden candidates, clips) is staged per attempt; CI publishes it to the `evidence`
   branch for the pull request.
 
@@ -247,7 +276,8 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
 
 `requirement(restartsPaper = true)` runs on a fresh Paper of its own, since a kill drops every client
 on it. `restartPaper()` kills it (nothing saved) and boots it again on the same folder; its players
-come back without a wipe, and windows count from the new Paper's ticks. The boot uses Java 25's AOT
+come back without a wipe, and windows count from the new Paper's tick after which every client holds
+what it sent, however many ticks that delivery took. The boot uses Java 25's AOT
 cache trained on a restart boot in the same job, C1 only and SerialGC, with the clients quiet while
 Paper boots: about 5 s from kill to state ([p7-faster-boot.md](spikes/p7-faster-boot.md)). At most 2
 own Papers run at once.
@@ -296,15 +326,23 @@ the software renderer) is not capped yet; that stays open.
 
 ## CI
 
-The game suite is the `game` entry of CI's `e2e` matrix on a Namespace runner of 4 vCPU and 16 GB,
-in devenv's `e2e` profile (Xvfb, Mesa, lavapipe), about 11 minutes warm. The free GitHub runner it
-was proven on ([h-ci-runner.md](spikes/h-ci-runner.md)) took 13 to 14.
+The game suites are the `game` and `playtest` entries of CI's `e2e` matrix, each on a Namespace
+runner of 4 vCPU and 16 GB, in devenv's `e2e` profile (Xvfb, Mesa, lavapipe), about 11 minutes warm.
+The free GitHub runner it was proven on ([h-ci-runner.md](spikes/h-ci-runner.md)) took 13 to 14.
+
+- The plan job lists the suites a change affects (`cargo xtask check --list --suites`): `game` and
+  the panel suites whenever any area is affected, `playtest` only when the framework, the build that
+  starts its game, or a path every area reads changed.
+- Each game suite runs its verdict, then its demo run whatever the verdict ended with, then stages.
+- Sharding a suite across runners was weighed and declined (2026-11-24): the requirements take about
+  4 of 20 to 22 minutes, and every runner pays the 14 minute stack setup again. Shared stack
+  artifacts come first.
 
 - `cargo xtask e2e game` first runs `gameTestBuild` in a Gradle of its own without a daemon, so no
   compile daemon sits beside the suite, then the suite.
-- The suite runs inside the stack's `game` spec, which builds and starts the services first. That
-  spec generates only the protocol, so the job restores neither the panel's generated sources nor
-  the frame vectors, which the panel suites keep.
+- The `game` suite runs inside the stack's `game` spec, which builds and starts the services first.
+  That spec generates only the protocol, so the job restores neither the panel's generated sources
+  nor the frame vectors, which the panel suites keep. The `playtest` suite starts no stack.
 - Caches: Gradle's build cache (which holds the patched Paper), Loom's caches, and the AOT cache of
   the restart Paper. The build cache and the AOT cache are kept per job kind (`cache-scope`), so the
   game job and the services check each save their own.
@@ -563,9 +601,23 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   credential, and its JetStream reads of `sessions_<realm>` have no transport route to derive
   grants from; an observer role in `transport-routes.yaml` would put a test role into production
   routes.
-- **Every game Paper loads Typewriter** (2026-11-20): the union of module additions reaches every
-  Paper, so the framework's own requirements also run beside the stack and the loader, and run only
-  through `cargo xtask e2e game`. Accepted as the cost of one shared pool.
+- Superseded 2026-11-24: **Every game Paper loads Typewriter** (2026-11-20): the union of module
+  additions reaches every Paper, so the framework's own requirements also run beside the stack and
+  the loader, and run only through `cargo xtask e2e game`. Accepted as the cost of one shared pool.
+- **Two game suites, demos off the verdict** (2026-11-24): the framework's own requirements are the
+  `playtest` suite, run without the stack and only when the framework changes; the product's are the
+  `game` suite inside it. Demos left the verdict: `DemoDiffers` is gone, and a demo run after the
+  verdict reruns failed, flaky, quarantined, unsteady and touched requirements with clips, never
+  gating. Why: a demo was the only run at another pace, so it failed requirements for wall clock
+  dependence under the name of a demo mismatch, and a broken demo could fail a passing run.
+- **One verdict per lost part** (2026-11-24): the run file lists its parts with typed ends; a lost
+  shared Paper or pool stops the run with one verdict, its attempts interrupted and the rest not run,
+  instead of every running attempt failing with the same text and the queued cases missing.
+- **Steady ticks are checked** (2026-11-24): every window holds at the same tick in every passing
+  run, retries included, and touched requirements run again at 5 and 50 ms between ticks. The
+  framework suite gates; Typewriter's module reports until the engine holds ticks for its session
+  writes. Evidence: in existing run files 7 of 106 cases on PR 580 and 2 of 42 on features/v1 held a
+  window at another tick in their demo.
 
 ## The prototype search
 

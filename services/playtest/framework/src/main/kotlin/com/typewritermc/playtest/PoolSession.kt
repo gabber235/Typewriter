@@ -10,7 +10,9 @@ import kotlinx.coroutines.withContext
 import skirout.harness.v1.golden.Renderer
 import skirout.harness.v1.test_run.CoveredClass
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.test_run.Pacing
 import skirout.harness.v1.test_run.Step
+import skirout.harness.v1.test_run.WindowEnd
 import skirout.harness.v1.wire.Answer
 import skirout.harness.v1.wire.Ask
 import skirout.harness.v1.wire.ClientTask
@@ -129,8 +131,9 @@ internal class PoolSession private constructor(
 
     /**
      * One attempt of a requirement to run: [bodies] in order on [players] players, on a Paper of its own
-     * with [restartsPaper]. A [demo] runs after the requirement's last attempt with its clients recording
-     * clips, and lands in the case's demo.
+     * with [restartsPaper]. A [demo]'s clients record clips. Its Paper grants ticks no sooner than
+     * [paceMillis] apart; a [paced] attempt runs after the requirement's attempts passed and lands among
+     * the case's paced attempts.
      */
     class Planned(
         val testId: String,
@@ -140,13 +143,30 @@ internal class PoolSession private constructor(
         val bodies: List<suspend RequirementScope.() -> Unit>,
         val restartsPaper: Boolean = false,
         val demo: Boolean = false,
+        val paceMillis: Int = 0,
+        val paced: Boolean = false,
     )
 
-    /** How one attempt ended: why it failed, or null, and the plugin code it covered by its last settle. */
+    /**
+     * How one attempt ended: why it failed, or null, the plugin code it covered by its last settle, every
+     * window its bodies waited in, and the pace its Paper granted ticks at.
+     */
     class AttemptEnd(
         val failure: Throwable?,
         val covered: List<CoveredClass> = listOf(),
+        val windows: List<WindowEnd> = listOf(),
+        val paceMillis: Int = 0,
     )
+
+    /**
+     * The case [testId] made its last attempt: the pool notes in its entry whether the change [touched]
+     * it, and what a window held at another tick at another pace does, its [pacing].
+     */
+    fun concluded(
+        testId: String,
+        touched: Boolean,
+        pacing: Pacing,
+    ) = send(Message.createConcluded(testId = testId, touched = touched, pacing = pacing))
 
     /**
      * Runs one attempt of a requirement: waits for its lease and runs its bodies in order, then reports
@@ -179,6 +199,8 @@ internal class PoolSession private constructor(
                                 demonstrates = it.demonstrates,
                                 restartsPaper = it.restartsPaper,
                                 demo = it.demo,
+                                paceMillis = it.paceMillis,
+                                paced = it.paced,
                             )
                         },
                 ),
@@ -213,11 +235,16 @@ internal class PoolSession private constructor(
         var failure: Throwable? = null
         var covered = listOf<CoveredClass>()
         val steps = mutableListOf<Step>()
+        val windows = mutableListOf<WindowEnd>()
         val evidence =
             Evidence(
                 settings.testRun.toAbsolutePath().parent,
                 planned.testId,
-                if (planned.demo) "demo" else "attempt-${attemptsOf.merge(planned.testId, 1, Int::plus)}",
+                when {
+                    planned.demo -> "demo"
+                    planned.paced -> "paced-${planned.paceMillis}ms"
+                    else -> "attempt-${attemptsOf.merge(planned.testId, 1, Int::plus)}"
+                },
             )
         for ((index, body) in planned.bodies.withIndex()) {
             if (index > 0) {
@@ -229,11 +256,16 @@ internal class PoolSession private constructor(
             failure = ended.failure
             covered = ended.covered
             steps += attempt.steps
+            windows += attempt.windows
             if (failure != null) break
         }
         attempt.players.forEach { attempts.remove(it.name) }
-        send(Message.ResultWrapper(result(submission, attempt, failure, (System.nanoTime() - started) / 1_000_000, steps, evidence)))
-        return AttemptEnd(failure, covered)
+        send(
+            Message.ResultWrapper(
+                result(submission, attempt, failure, (System.nanoTime() - started) / 1_000_000, steps, windows, evidence),
+            ),
+        )
+        return AttemptEnd(failure, covered, windows, planned.paceMillis)
     }
 
     /** What [submission]'s attempt reports to the pool once it ended with [failure] after [millis]. */
@@ -243,6 +275,7 @@ internal class PoolSession private constructor(
         failure: Throwable?,
         millis: Long,
         steps: List<Step>,
+        windows: List<WindowEnd>,
         evidence: Evidence,
     ): Result =
         Result(
@@ -253,6 +286,7 @@ internal class PoolSession private constructor(
             steps = steps,
             folder = if (evidence.artifacts.isEmpty()) "" else evidence.folder,
             artifacts = evidence.artifacts,
+            windows = windows,
         )
 
     /**

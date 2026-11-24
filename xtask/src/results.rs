@@ -17,7 +17,8 @@ use serde::Deserialize;
 use crate::Context;
 use crate::skirout::base::harness::v1::test_run::Runner;
 pub use crate::skirout::base::harness::v1::test_run::{
-    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, RunEnd, TestCase, TestRun,
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, LossCause, Outcome, Pacing, PartEnd,
+    PartKind, RunEnd, RunLost, TestCase, TestRun,
 };
 
 /// The quarantine file, relative to the repository root.
@@ -81,36 +82,124 @@ pub enum Verdict {
     Failed,
     /// Listed in the quarantine: reported, not gating.
     Quarantined,
+    /// Its last attempt was interrupted: a lost part stopped the run while it ran.
+    Interrupted,
+    /// A window held at another tick in another passing run of the case.
+    Unsteady,
 }
 
 /// The one policy every reader applies to a case of `run`. An attempt whose outcome this build
-/// does not know proves nothing, so it counts as a failure, and so does a demo that ended otherwise
-/// than the case's last attempt.
+/// does not know proves nothing, so it counts as a failure. An interrupted attempt counts neither
+/// way, and a case whose last attempt was interrupted has no verdict of its own: the run's trouble
+/// names the part whose loss interrupted it. A case that otherwise passed is unsteady when a window
+/// held at another tick in another of its passing runs ([`unsteady`]), and that blocks unless its
+/// pacing only reports.
 pub fn verdict(run: &TestRun, case: &TestCase, quarantine: &Quarantine) -> Result<Verdict> {
     let Some(last) = case.attempts.last() else {
         bail!("{} has no attempts", case.id);
     };
+    if matches!(last.outcome, Outcome::Interrupted(_)) {
+        return Ok(Verdict::Interrupted);
+    }
     let failed = failed_attempts(case).count();
     let passed_last = matches!(last.outcome, Outcome::Passed);
-    let demo_differs = differing_demo(case).is_some();
     Ok(
         match (
             failed,
-            demo_differs,
             quarantine.entry(&run.runner, case),
             &run.attempt_policy,
         ) {
-            (0, false, _, _) => Verdict::Passed,
-            (_, _, Some(_), _) => Verdict::Quarantined,
-            (_, false, None, AttemptPolicy::RerunFailures(_)) if passed_last => Verdict::Flaky,
+            (0, None, _) if pacing_gates(case) && unsteady(case).is_some() => Verdict::Unsteady,
+            (0, _, _) => Verdict::Passed,
+            (_, Some(_), _) => Verdict::Quarantined,
+            (_, None, AttemptPolicy::RerunFailures(_)) if passed_last => Verdict::Flaky,
             _ => Verdict::Failed,
         },
     )
 }
 
+/// Whether a window of `case` that holds at another tick at another pace blocks: it does unless
+/// the case says it only reports, so a pacing this build does not know blocks too.
+fn pacing_gates(case: &TestCase) -> bool {
+    !matches!(case.pacing, Pacing::Reports)
+}
+
+/// How `case`'s windows held in each of its passing runs, its attempts and its paced attempts,
+/// when they did not all hold at the same ticks or a paced attempt failed; `None` when they are
+/// steady or fewer than two runs can be compared. A window decided after its attempt met hung work
+/// or a lost part measures wall clock, so its tick is left out of the comparison.
+pub fn unsteady(case: &TestCase) -> Option<String> {
+    let runs: Vec<(String, &Attempt)> = case
+        .attempts
+        .iter()
+        .enumerate()
+        .filter(|(_, attempt)| matches!(attempt.outcome, Outcome::Passed))
+        .map(|(index, attempt)| {
+            (
+                format!("attempt {} at {} ms", index + 1, attempt.pace_millis),
+                attempt,
+            )
+        })
+        .chain(
+            case.paced
+                .iter()
+                .map(|attempt| (format!("at {} ms", attempt.pace_millis), attempt)),
+        )
+        .collect();
+    let first = runs.first()?.1;
+    let steady = runs.iter().all(|(_, attempt)| {
+        matches!(attempt.outcome, Outcome::Passed) && same_ticks(first, attempt)
+    });
+    if steady || runs.len() < 2 {
+        return None;
+    }
+    let described = runs
+        .iter()
+        .map(|(label, attempt)| {
+            let windows = attempt
+                .windows
+                .iter()
+                .map(|window| match window.held_at {
+                    Some(tick) => format!("held {} at tick {tick}", window.at),
+                    None => format!("missed {}", window.at),
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            let failure = match &attempt.outcome {
+                Outcome::Failed(failure) => {
+                    format!(
+                        "failed: {}",
+                        failure.message.lines().next().unwrap_or_default()
+                    )
+                }
+                _ => String::new(),
+            };
+            match (windows.is_empty(), failure.is_empty()) {
+                (_, true) => format!("{label} {windows}"),
+                (true, false) => format!("{label} {failure}"),
+                (false, false) => format!("{label} {windows} ({failure})"),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("; ");
+    Some(described)
+}
+
+/// Whether `a` and `b` waited in the same windows and held each at the same tick, leaving out a
+/// window either decided after it met hung work or a lost part.
+fn same_ticks(a: &Attempt, b: &Attempt) -> bool {
+    a.windows.len() == b.windows.len()
+        && a.windows.iter().zip(&b.windows).all(|(a, b)| {
+            a.at == b.at
+                && a.length == b.length
+                && (a.after_wall_clock || b.after_wall_clock || a.held_at == b.held_at)
+        })
+}
+
 /// Why `run` as a whole proves less than its cases say, judged once for every suite and the pull
-/// request's evidence: it could not run at all, or it stopped before it was over, so cases it
-/// never reached are missing from it. An end this xtask does not know proves nothing either.
+/// request's evidence: it could not run at all, it stopped before it was over, or a part every case
+/// depended on was lost, so cases it never reached are missing from it. An end this xtask does not
+/// know proves nothing either.
 pub fn run_trouble(run: &TestRun) -> Option<String> {
     match &run.end {
         RunEnd::Completed => None,
@@ -119,17 +208,111 @@ pub fn run_trouble(run: &TestRun) -> Option<String> {
             "was cut short after {} cases, so the cases after them never ran",
             run.cases.len()
         )),
+        RunEnd::Lost(stopped) => Some(lost_part(run, stopped)),
         RunEnd::Unknown(_) => Some("ended in a way this xtask does not know".to_owned()),
     }
 }
 
-/// `case`'s demo when it ended otherwise than the last attempt: its clip shows another outcome,
-/// so it proves nothing.
-fn differing_demo(case: &TestCase) -> Option<&Attempt> {
-    let passed_last = matches!(case.attempts.last()?.outcome, Outcome::Passed);
-    case.demo
-        .as_ref()
-        .filter(|demo| matches!(demo.outcome, Outcome::Passed) != passed_last)
+/// The one verdict of a run that `stopped` when a part was lost: the part, why it was lost, the
+/// attempts its loss interrupted and the cases that never ran.
+fn lost_part(run: &TestRun, stopped: &RunLost) -> String {
+    let part = run.parts.iter().find(|part| part.name == stopped.part);
+    let kind = match part.map(|part| &part.kind) {
+        Some(PartKind::SharedPaper) => "the shared Paper",
+        Some(PartKind::OwnPaper) => "the own Paper",
+        Some(PartKind::Client) => "the client",
+        Some(PartKind::Display) => "the display",
+        _ => "the part",
+    };
+    let cause = match part.map(|part| &part.end) {
+        Some(PartEnd::Lost(loss)) => format!(", {}", loss_cause(&loss.cause)),
+        _ => String::new(),
+    };
+    let interrupted: Vec<&str> = run
+        .cases
+        .iter()
+        .filter(|case| {
+            case.attempts.iter().any(|attempt| {
+                matches!(&attempt.outcome, Outcome::Interrupted(by) if by.part == stopped.part)
+            })
+        })
+        .map(|case| case.id.as_str())
+        .collect();
+    let attempts = run
+        .cases
+        .iter()
+        .flat_map(|case| &case.attempts)
+        .filter(|attempt| {
+            matches!(&attempt.outcome, Outcome::Interrupted(by) if by.part == stopped.part)
+        })
+        .count();
+    let mut text = format!("stopped: {kind} {} was lost{cause}", stopped.part);
+    let interrupted = match attempts {
+        0 => None,
+        1 => Some(format!(
+            "1 attempt was interrupted ({})",
+            interrupted.join(", ")
+        )),
+        n => Some(format!(
+            "{n} attempts were interrupted ({})",
+            interrupted.join(", ")
+        )),
+    };
+    let never_ran = match stopped.not_run.len() {
+        0 => None,
+        1 => Some(format!("1 case never ran ({})", stopped.not_run.join(", "))),
+        n => Some(format!(
+            "{n} cases never ran ({})",
+            stopped.not_run.join(", ")
+        )),
+    };
+    match (interrupted, never_ran) {
+        (Some(interrupted), Some(never_ran)) => {
+            text.push_str(&format!("; {interrupted} and {never_ran}"));
+        }
+        (Some(one), None) | (None, Some(one)) => text.push_str(&format!("; {one}")),
+        (None, None) => {}
+    }
+    text
+}
+
+/// What happened to a part lost for `cause`, as a clause.
+pub fn loss_cause(cause: &LossCause) -> String {
+    match cause {
+        LossCause::Exited(status) if *status > 128 => {
+            format!("it exited with status {status} (signal {})", status - 128)
+        }
+        LossCause::Exited(status) => format!("it exited with status {status}"),
+        LossCause::Left(reason) => format!("it left: {reason}"),
+        LossCause::Stalled => "it stopped answering".to_owned(),
+        LossCause::NeverReady => "it never became ready".to_owned(),
+        LossCause::Broke(reason) => format!("it could no longer serve attempts: {reason}"),
+        LossCause::Unknown(_) => "for a reason this xtask does not know".to_owned(),
+    }
+}
+
+/// Where the logs that explain `run`'s trouble lie below `evidence`: the lost part's own log when
+/// the run stopped for a lost part that keeps one, else the run's logs folder.
+fn trouble_logs(run: &TestRun, evidence: Option<&Path>) -> String {
+    let Some(evidence) = evidence else {
+        return String::new();
+    };
+    if run.logs.is_empty() {
+        return String::new();
+    }
+    let logs = evidence.join(&run.logs);
+    let lost_log = match &run.end {
+        RunEnd::Lost(stopped) => run
+            .parts
+            .iter()
+            .find(|part| part.name == stopped.part && !part.log.is_empty())
+            .map(|part| logs.join(&part.log)),
+        _ => None,
+    };
+    match lost_log {
+        Some(log) => format!("; its log is {}", log.display()),
+        None => format!("; logs in {}/", logs.display()),
+    }
 }
 
 /// The failure of `case`'s last failed attempt, when that attempt says how it failed.
@@ -143,10 +326,10 @@ pub fn last_failure(case: &TestCase) -> Option<&Failure> {
         })
 }
 
-/// Every artifact of every attempt of `case`, in attempt order and its demo last, with its path relative to the
+/// Every artifact of every attempt of `case`, in attempt order, with its path relative to the
 /// run file's folder (the attempt's folder joined with the artifact's path).
 pub fn artifacts(case: &TestCase) -> impl Iterator<Item = (PathBuf, &Artifact)> {
-    case.attempts.iter().chain(&case.demo).flat_map(|attempt| {
+    case.attempts.iter().flat_map(|attempt| {
         attempt.artifacts.iter().map(move |artifact| {
             let path = match attempt_folder(attempt) {
                 Some(folder) => folder.join(&artifact.path),
@@ -173,12 +356,15 @@ impl ArtifactKind {
     }
 }
 
-/// The 1 based numbers of `case`'s attempts that did not pass.
+/// The 1 based numbers of `case`'s attempts that failed; an interrupted attempt neither passed nor
+/// failed.
 fn failed_attempts(case: &TestCase) -> impl Iterator<Item = usize> + '_ {
     case.attempts
         .iter()
         .enumerate()
-        .filter(|(_, attempt)| !matches!(attempt.outcome, Outcome::Passed))
+        .filter(|(_, attempt)| {
+            !matches!(attempt.outcome, Outcome::Passed | Outcome::Interrupted(_))
+        })
         .map(|(index, _)| index + 1)
 }
 
@@ -350,9 +536,10 @@ pub fn write(run: &TestRun, path: &Path) -> Result<()> {
     fs::write(path, json).with_context(|| format!("cannot write {}", path.display()))
 }
 
-/// Lists every case whose verdict is not a plain pass, and every case when the run repeated
-/// each case, then fails when the run could not run or was cut short ([`run_trouble`]), or any
-/// case failed. `evidence`, the run's folder,
+/// Lists every case whose verdict is not a plain pass, every unsteady case, and every case when the
+/// run repeated each case, then fails when the run proves less than its cases ([`run_trouble`]),
+/// or any case failed, is flaky or is unsteady where its pacing gates. A case a lost part
+/// interrupted prints nothing of its own: the run's trouble names it. `evidence`, the run's folder,
 /// points each failing case at the evidence of its first failed attempt and at the run's logs.
 pub fn report(
     run: &TestRun,
@@ -363,6 +550,7 @@ pub fn report(
     let repeated = matches!(run.attempt_policy, AttemptPolicy::Exactly(n) if n > 1);
     let mut failed = Vec::new();
     let mut flaky = Vec::new();
+    let mut unsteady_cases = Vec::new();
     for case in &run.cases {
         let Ok(verdict) = verdict(run, case, quarantine) else {
             writeln!(out, "{}: failed, no attempts recorded", case.id)?;
@@ -402,33 +590,29 @@ pub fn report(
                 case.attempts.len(),
                 case.attempts.len()
             )?,
-            Verdict::Passed => {}
-            Verdict::Failed => {
-                match differing_demo(case) {
-                    Some(demo) => {
-                        let ended = match &demo.outcome {
-                            Outcome::Failed(failure) => format!(
-                                "failed: {}",
-                                failure.message.lines().next().unwrap_or_default()
-                            ),
-                            _ => "passed".to_owned(),
-                        };
-                        let attempts = if failures.is_empty() {
-                            format!("passed {0} of {0} attempts", case.attempts.len())
-                        } else {
-                            format!("failed {attempts}{see}")
-                        };
-                        let see = see_of(Some(demo)) + &logs;
-                        writeln!(out, "{}: {attempts}, but its demo {ended}{see}", case.id)?;
-                    }
-                    None => writeln!(out, "{}: failed {attempts}{see}", case.id)?,
+            Verdict::Passed => {
+                if let Some(runs) = unsteady(case) {
+                    writeln!(
+                        out,
+                        "{}: unsteady, {UNSTEADY}: {runs} (reported, not blocking)",
+                        case.id
+                    )?;
                 }
+            }
+            Verdict::Unsteady => {
+                let runs = unsteady(case).unwrap_or_default();
+                writeln!(out, "{}: unsteady, {UNSTEADY}: {runs}", case.id)?;
+                unsteady_cases.push(case.id.as_str());
+            }
+            Verdict::Failed => {
+                writeln!(out, "{}: failed {attempts}{see}", case.id)?;
                 failed.push(case.id.as_str());
             }
             Verdict::Flaky => {
                 writeln!(out, "{}: flaky, failed {attempts}{see}", case.id)?;
                 flaky.push(case.id.as_str());
             }
+            Verdict::Interrupted => {}
             Verdict::Quarantined => match quarantine.entry(&run.runner, case) {
                 Some(entry) => writeln!(
                     out,
@@ -440,13 +624,7 @@ pub fn report(
         }
     }
     if let Some(trouble) = run_trouble(run) {
-        let logs = match evidence {
-            Some(evidence) if !run.logs.is_empty() => {
-                format!("; logs in {}/", evidence.join(&run.logs).display())
-            }
-            _ => String::new(),
-        };
-        bail!("the run {trouble}{logs}");
+        bail!("the run {trouble}{}", trouble_logs(run, evidence));
     }
     if !failed.is_empty() {
         bail!(
@@ -464,8 +642,19 @@ pub fn report(
             flaky.join(", ")
         );
     }
+    if !unsteady_cases.is_empty() {
+        bail!(
+            "{} of {} cases are unsteady: {}",
+            unsteady_cases.len(),
+            run.cases.len(),
+            unsteady_cases.join(", ")
+        );
+    }
     Ok(())
 }
+
+/// What an unsteady case's report line says before it lists how each run held its windows.
+const UNSTEADY: &str = "a window holds at another tick at another pace";
 
 /// The name a quarantine entry and the evidence section use for `runner`.
 pub fn runner_name(runner: &Runner) -> &'static str {
@@ -485,8 +674,8 @@ pub fn runner_name(runner: &Runner) -> &'static str {
 mod tests {
     use super::*;
     use crate::test_support::{
-        attempted, case, failed, once, outcomes, quarantining, report_text, requirement_run, run,
-        unknown,
+        attempted, case, failed, game_run, interrupted, lost, once, outcomes, part, quarantining,
+        ran, report_text, requirement_run, run, unknown, window,
     };
 
     #[test]
@@ -750,32 +939,29 @@ mod tests {
     }
 
     #[test]
-    fn a_demo_that_ends_otherwise_than_the_last_attempt_fails_the_case() {
-        // The case's attempts, its demo's outcome and the verdict.
+    fn an_interrupted_attempt_counts_neither_way_and_a_case_left_interrupted_has_no_verdict() {
+        use AttemptPolicy::RerunFailures;
+        use Outcome::Passed;
         let table = [
-            (vec![Outcome::Passed], Outcome::Passed, Verdict::Passed),
-            (vec![Outcome::Passed], failed("demo"), Verdict::Failed),
-            (vec![failed("x")], failed("demo"), Verdict::Failed),
-            (vec![failed("x")], Outcome::Passed, Verdict::Failed),
+            (vec![interrupted("paper")], Verdict::Interrupted),
             (
-                vec![failed("x"), Outcome::Passed],
-                Outcome::Passed,
+                vec![failed("x"), interrupted("paper")],
+                Verdict::Interrupted,
+            ),
+            (vec![interrupted("client-gv-1"), Passed], Verdict::Passed),
+            (
+                vec![interrupted("client-gv-1"), failed("x"), Passed],
                 Verdict::Flaky,
             ),
             (
-                vec![failed("x"), Outcome::Passed],
-                failed("demo"),
+                vec![interrupted("client-gv-1"), failed("x")],
                 Verdict::Failed,
             ),
         ];
-        for (attempts, demo, expected) in table {
-            let mut run = attempted(AttemptPolicy::RerunFailures(4), &attempts);
-            run.cases[0].demo = Some(Attempt {
-                outcome: demo.clone(),
-                ..Attempt::default()
-            });
+        for (attempts, expected) in table {
+            let run = attempted(RerunFailures(4), &attempts);
             let verdict = verdict(&run, &run.cases[0], &Quarantine::default()).unwrap();
-            assert_eq!(verdict, expected, "{attempts:?} with a demo that {demo:?}");
+            assert_eq!(verdict, expected, "{attempts:?}");
         }
     }
 
@@ -834,21 +1020,184 @@ mod tests {
     }
 
     #[test]
-    fn a_case_its_demo_fails_says_how_the_demo_ended_and_points_at_its_evidence() {
-        let mut run = attempted(AttemptPolicy::RerunFailures(4), &[Outcome::Passed]);
-        run.cases[0].demo = Some(Attempt {
-            outcome: failed("saw the diamond"),
-            folder: "a/demo".to_owned(),
-            ..Attempt::default()
-        });
+    fn a_run_a_lost_part_stopped_fails_once_naming_the_part_its_cause_and_the_cases_it_took() {
+        let mut run = game_run(
+            AttemptPolicy::RerunFailures(4),
+            &[
+                ("A-1", &[interrupted("paper")]),
+                ("B-1", &[Outcome::Passed]),
+                ("C-1", &[failed("x"), interrupted("paper")]),
+            ],
+        );
+        run.logs = "logs/7".to_owned();
+        run.parts = vec![
+            part(
+                "paper",
+                PartKind::SharedPaper,
+                "paper.log",
+                lost(LossCause::Exited(137)),
+            ),
+            part(
+                "client-gv-1",
+                PartKind::Client,
+                "client-gv-1.log",
+                PartEnd::RanToEnd,
+            ),
+        ];
+        run.end = RunEnd::Lost(Box::new(RunLost {
+            part: "paper".to_owned(),
+            not_run: vec![
+                "D-1 the requirement".to_owned(),
+                "E-1 the requirement".to_owned(),
+            ],
+            ..RunLost::default()
+        }));
 
         let (result, out) = report_text(&run, &Quarantine::default());
 
-        assert_eq!(result.unwrap_err().to_string(), "1 of 1 cases failed: a");
         assert_eq!(
-            out,
-            "a: passed 1 of 1 attempts, but its demo failed: saw the diamond; see results/panel/a/demo/\n"
+            result.unwrap_err().to_string(),
+            "the run stopped: the shared Paper paper was lost, it exited with status 137 (signal 9); \
+             2 attempts were interrupted (A-1 the requirement, C-1 the requirement) and 2 cases never ran \
+             (D-1 the requirement, E-1 the requirement); its log is results/panel/logs/7/paper.log"
         );
+        assert_eq!(out, "", "an interrupted case prints no failure of its own");
+    }
+
+    #[test]
+    fn each_cause_of_a_lost_part_reads_as_what_happened() {
+        let table = [
+            (LossCause::Exited(1), "it exited with status 1"),
+            (
+                LossCause::Exited(143),
+                "it exited with status 143 (signal 15)",
+            ),
+            (
+                LossCause::Left("paper closed its pool connection".to_owned()),
+                "it left: paper closed its pool connection",
+            ),
+            (LossCause::Stalled, "it stopped answering"),
+            (LossCause::NeverReady, "it never became ready"),
+            (
+                LossCause::Broke("it could not claim gv-1".to_owned()),
+                "it could no longer serve attempts: it could not claim gv-1",
+            ),
+            (
+                LossCause::default(),
+                "for a reason this xtask does not know",
+            ),
+        ];
+        for (cause, expected) in table {
+            assert_eq!(loss_cause(&cause), expected);
+        }
+    }
+
+    #[test]
+    fn every_window_holds_at_the_same_tick_in_every_passing_run_of_a_case_or_the_case_is_unsteady()
+    {
+        use AttemptPolicy::{Exactly, RerunFailures};
+        let steady = [
+            window("A.kt:10", 20, Some(5)),
+            window("A.kt:12", 10, Some(1)),
+        ];
+        let later = [
+            window("A.kt:10", 20, Some(3)),
+            window("A.kt:12", 10, Some(1)),
+        ];
+        let mut wall_clock = later.clone();
+        wall_clock[0].after_wall_clock = true;
+        let table = [
+            (
+                "steady at every pace",
+                RerunFailures(4),
+                vec![ran(Outcome::Passed, 0, &steady)],
+                vec![
+                    ran(Outcome::Passed, 5, &steady),
+                    ran(Outcome::Passed, 50, &steady),
+                ],
+                Verdict::Passed,
+            ),
+            (
+                "held earlier at 50 ms",
+                RerunFailures(4),
+                vec![ran(Outcome::Passed, 0, &steady)],
+                vec![
+                    ran(Outcome::Passed, 5, &steady),
+                    ran(Outcome::Passed, 50, &later),
+                ],
+                Verdict::Unsteady,
+            ),
+            (
+                "missed at 50 ms",
+                RerunFailures(4),
+                vec![ran(Outcome::Passed, 0, &steady)],
+                vec![ran(failed("missed"), 50, &[window("A.kt:10", 20, None)])],
+                Verdict::Unsteady,
+            ),
+            (
+                "a window after hung work measures wall clock",
+                RerunFailures(4),
+                vec![ran(Outcome::Passed, 0, &steady)],
+                vec![ran(Outcome::Passed, 50, &wall_clock)],
+                Verdict::Passed,
+            ),
+            (
+                "two passing attempts at one pace disagree",
+                Exactly(2),
+                vec![
+                    ran(Outcome::Passed, 0, &steady),
+                    ran(Outcome::Passed, 0, &later),
+                ],
+                vec![],
+                Verdict::Unsteady,
+            ),
+            (
+                "a failed attempt holds no ticks to compare",
+                RerunFailures(4),
+                vec![
+                    ran(failed("x"), 0, &later),
+                    ran(Outcome::Passed, 0, &steady),
+                ],
+                vec![ran(Outcome::Passed, 50, &steady)],
+                Verdict::Flaky,
+            ),
+        ];
+        for (row, policy, attempts, paced, expected) in table {
+            let mut run = attempted(policy, &[]);
+            run.cases[0].attempts = attempts;
+            run.cases[0].paced = paced;
+            run.cases[0].pacing = Pacing::Gates;
+            let verdict = verdict(&run, &run.cases[0], &Quarantine::default()).unwrap();
+            assert_eq!(verdict, expected, "{row}");
+        }
+    }
+
+    #[test]
+    fn an_unsteady_case_names_the_tick_of_each_window_in_each_run_and_blocks_only_when_its_pacing_gates()
+     {
+        let mut run = attempted(AttemptPolicy::RerunFailures(4), &[]);
+        run.cases[0].attempts = vec![ran(Outcome::Passed, 0, &[window("A.kt:10", 20, Some(13))])];
+        run.cases[0].paced = vec![
+            ran(Outcome::Passed, 5, &[window("A.kt:10", 20, Some(13))]),
+            ran(failed("missed"), 50, &[window("A.kt:10", 20, None)]),
+        ];
+        let unsteady = "a: unsteady, a window holds at another tick at another pace: \
+                        attempt 1 at 0 ms held A.kt:10 at tick 13; \
+                        at 5 ms held A.kt:10 at tick 13; \
+                        at 50 ms missed A.kt:10 (failed: missed)";
+
+        run.cases[0].pacing = Pacing::Gates;
+        let (result, out) = report_text(&run, &Quarantine::default());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "1 of 1 cases are unsteady: a"
+        );
+        assert_eq!(out, format!("{unsteady}\n"));
+
+        run.cases[0].pacing = Pacing::Reports;
+        let (result, out) = report_text(&run, &Quarantine::default());
+        assert!(result.is_ok(), "{result:?}");
+        assert_eq!(out, format!("{unsteady} (reported, not blocking)\n"));
     }
 
     #[test]

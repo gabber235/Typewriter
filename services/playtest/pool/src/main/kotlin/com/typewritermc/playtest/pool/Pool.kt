@@ -5,6 +5,8 @@ import com.typewritermc.playtest.launch.PoolFile
 import com.typewritermc.playtest.launch.PoolProcess
 import com.typewritermc.playtest.pool.PaperRules.Do
 import com.typewritermc.playtest.wire.Wire
+import skirout.harness.v1.test_run.LossCause
+import skirout.harness.v1.test_run.PartKind
 import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.wire.Answer
 import skirout.harness.v1.wire.Ask
@@ -184,7 +186,7 @@ internal class Pool(
             private set
 
         /** The players it waits for in line. */
-        val claim: Claim get() = Claim(submit.submission, submit.players, submit.restartsPaper)
+        val claim: Claim get() = Claim(submit.submission, submit.players, submit.restartsPaper, submit.paceMillis)
 
         val running: Attempt? get() = (state as? State.Running)?.attempt
 
@@ -499,29 +501,35 @@ internal class Pool(
                 reclaim(session, message.value)
             }
 
-            is Message.SettleWrapper -> {
-                settle(session, message.value.id)
-            }
-
-            is Message.RestartWrapper -> {
-                restart(session, message.value)
+            is Message.SettleWrapper, is Message.RestartWrapper, is Message.QuitWrapper, is Message.RejoinWrapper -> {
+                ofPaper(session, message)
             }
 
             is Message.ResultWrapper -> {
                 result(session, message.value)
             }
 
-            is Message.QuitWrapper -> {
-                quit(session, message.value)
-            }
-
-            is Message.RejoinWrapper -> {
-                rejoin(session, message.value)
+            is Message.ConcludedWrapper -> {
+                message.value.let { runs.concluded(it.testId, it.touched, it.pacing) }
             }
 
             else -> {
                 toGame(session, message)
             }
+        }
+    }
+
+    /** What [session]'s attempt asks of its Paper: settle it, restart it, or send a player away and back. */
+    private fun ofPaper(
+        session: Peer,
+        message: Message,
+    ) {
+        when (message) {
+            is Message.SettleWrapper -> settle(session, message.value.id)
+            is Message.RestartWrapper -> restart(session, message.value)
+            is Message.QuitWrapper -> quit(session, message.value)
+            is Message.RejoinWrapper -> rejoin(session, message.value)
+            else -> error("$message asks nothing of an attempt's Paper")
         }
     }
 
@@ -1043,7 +1051,14 @@ internal class Pool(
             }
 
             Role.CLIENT -> {
-                clients.firstOrNull { it.peer == peer }?.let { lost(it, ClientLossKind.LEFT_POOL, "its connection to the pool closed") }
+                clients.firstOrNull { it.peer == peer }?.let {
+                    lost(
+                        it,
+                        ClientLossKind.LEFT_POOL,
+                        "its connection to the pool closed",
+                        LossCause.LeftWrapper("its connection to the pool closed"),
+                    )
+                }
             }
 
             Role.PAPER -> {
@@ -1136,12 +1151,14 @@ internal class Pool(
 
                 is Do.Claim -> {
                     attempts[next.attempt]?.let {
+                        paceFor(server, it)
                         Message.createClaim(attempt = it.id.value, players = it.players.map { player -> player.uuid }, region = it.region)
                     }
                 }
 
                 is Do.Resume -> {
                     attempts[next.attempt]?.let {
+                        paceFor(server, it)
                         Message.createResume(
                             attempt = it.id.value,
                             players =
@@ -1153,6 +1170,17 @@ internal class Pool(
                 }
             }
         message?.let { server.peer?.send(it) }
+    }
+
+    /**
+     * [server] grants ticks at [attempt]'s pace from now on. The claims let attempts of one pace at a time
+     * run on the shared Paper, and an own Paper runs one attempt, so no attempt that runs there changes pace.
+     */
+    private fun paceFor(
+        server: Server,
+        attempt: Attempt,
+    ) {
+        server.peer?.send(Message.createPace(millis = attempt.submit.paceMillis))
     }
 
     private fun toPlayers(
@@ -1181,7 +1209,7 @@ internal class Pool(
             is Do.Boot -> boot(server, next.number)
             is Do.Kill -> kill(server, next.attempt)
             is Do.Restarted -> restarted(server, next)
-            is Do.Lost -> lostPaper(server, next.attempt, next.kind, next.cause)
+            is Do.Lost -> lostPaper(server, next.attempt, next.kind, next.cause, next.loss)
             is Do.Return -> returnFrom(server, next.attempt)
             Do.Gone -> gone(server)
         }
@@ -1200,7 +1228,7 @@ internal class Pool(
             // The Paper's own log leads, also once its process ended and left the game's parts.
             is Do.Fail -> {
                 val logs = (listOfNotNull(server.part) + game.parts).distinct().joinToString { it.log.toString() }
-                fail("${next.cause}; see $logs")
+                fail("${next.cause}; see $logs", server.part, next.loss)
             }
 
             is Do.Note -> {
@@ -1304,7 +1332,9 @@ internal class Pool(
         id: Long,
         kind: PaperLossKind,
         cause: String,
+        lossCause: LossCause,
     ) {
+        server.part?.let { runs.lost(partName(it), lossCause) }
         server.part?.process?.let {
             it.destroyForcibly()
             it.waitFor(STOP_SECONDS, TimeUnit.SECONDS)
@@ -1447,6 +1477,7 @@ internal class Pool(
         steps = listOf(),
         folder = "",
         artifacts = listOf(),
+        windows = listOf(),
     )
 
     /** [attempt] ended for [why], and its players serve the next claims. */
@@ -1479,10 +1510,11 @@ internal class Pool(
     /** A game part ended: a Paper's rules say what follows, a client's is lost and replaced, a display's ends the game. A replaced client's old part ends unheard. */
     private fun exited(part: Part) {
         papers.all.firstOrNull { it.part === part }?.let { return paperExited(it, part) }
-        val reason = "${part.name} exited with code ${part.process.exitValue()}; see ${part.log}"
-        if (part.player == null) return fail(reason)
+        val code = part.process.exitValue()
+        val reason = "${part.name} exited with code $code; see ${part.log}"
+        if (part.player == null) return fail(reason, part, LossCause.ExitedWrapper(code))
         clientNamed(part.player)?.takeIf { it.part === part }?.let {
-            lost(it, ClientLossKind.EXITED, "its process exited with code ${part.process.exitValue()}")
+            lost(it, ClientLossKind.EXITED, "its process exited with code $code", LossCause.ExitedWrapper(code))
         }
     }
 
@@ -1498,6 +1530,7 @@ internal class Pool(
         client: Client,
         kind: ClientLossKind,
         cause: String,
+        lossCause: LossCause,
     ) {
         if ((client.lost && !kind.losesNewClient) || failure != null) return
         val name = client.player.name
@@ -1509,6 +1542,7 @@ internal class Pool(
         moveTo(client, shared)
         claims.holdOut(client.player, Out.LOST_CLIENT)
         val replaced = game.replaceClient(name)
+        client.part?.let { runs.lost(partName(it), lossCause, kept = replaced.lostLog) }
         client.part = replaced.replacement.also(::watch)
         val loss = ClientLoss(kind = kind, detail = cause, log = replaced.lostLog.toString())
         System.err.println("The client of $name is lost: $cause; see ${loss.log}. A new one starts.")
@@ -1531,7 +1565,8 @@ internal class Pool(
         kind: ClientLossKind,
         cause: String,
     ) {
-        clientNamed(player)?.let { lost(it, kind, cause) }
+        val loss = if (kind == ClientLossKind.STALLED) LossCause.STALLED else LossCause.LeftWrapper(cause)
+        clientNamed(player)?.let { lost(it, kind, cause, loss) }
     }
 
     /** [client] steps with the Paper it is on; one that rejoined its attempt's Paper belongs to that attempt again there. */
@@ -1552,8 +1587,9 @@ internal class Pool(
         }
     }
 
-    /** Reports into the loop once [part]'s process ends. */
+    /** Lists [part] in the run's file and reports into the loop once its process ends. */
     private fun watch(part: Part) {
+        runs.started(partName(part), partKind(part), part.log)
         thread(name = "playtest-pool-${part.name}", isDaemon = true) { part.process.waitFor().also { events.put(Event.Exited(part)) } }
     }
 
@@ -1576,12 +1612,50 @@ internal class Pool(
         happened: PlayerEvent.Happened,
     ): Message = Message.PlayerEventWrapper(PlayerEvent(player = player, happened = happened))
 
-    /** The game cannot run: every session hears why, and the game stops. */
-    private fun fail(reason: String) {
+    /** [part] as the run's file names it: after its log, so a replaced client's kept log names the lost one. */
+    private fun partName(part: Part): String =
+        part.log.fileName
+            .toString()
+            .removeSuffix(".log")
+
+    private fun partKind(part: Part): PartKind =
+        when {
+            part === game.paperPart -> PartKind.SHARED_PAPER
+            part.player != null -> PartKind.CLIENT
+            part.name.startsWith("Paper") -> PartKind.OWN_PAPER
+            else -> PartKind.DISPLAY
+        }
+
+    /**
+     * The game cannot go on, for [reason]: every session hears why, and the game stops. When the loss of
+     * [part], for [loss], ended a game that had booted, that loss stopped the run: the attempts that ran
+     * are interrupted and the cases still waiting never ran. Before the boot, the game could not run.
+     */
+    private fun fail(
+        reason: String,
+        part: Part? = null,
+        loss: LossCause? = null,
+    ) {
         if (failure != null) return
-        couldNotRun(reason)
+        if (part != null && loss != null) runs.lost(partName(part), loss)
+        if (booted && part != null) stop(partName(part), reason) else couldNotRun(reason)
         sessions.forEach { it.send(Message.createRefused(reason = reason)) }
         game.stop()
+    }
+
+    /** The loss of the part [part] stopped the booted game, for [reason]. */
+    private fun stop(
+        part: String,
+        reason: String,
+    ) {
+        failure = reason
+        System.err.println("The game stopped: $reason")
+        val all = submissions.values.toList()
+        runs.stopped(
+            part,
+            interrupted = all.filter { it.state is State.Running || it.state is State.Parked }.map { it.submit },
+            notRun = all.filter { it.state is State.Queued }.map { it.submit },
+        )
     }
 
     /** The game cannot serve the run, for [reason]: the pool's log and the run's file say why, also before the game started. */

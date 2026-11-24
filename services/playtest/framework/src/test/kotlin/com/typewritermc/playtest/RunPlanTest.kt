@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.test_run.CoveredClass
+import skirout.harness.v1.test_run.Pacing
 
 val RunPlanTest by testSuite {
     test("a run reruns failed attempts up to 4 in total, unless it repeats every requirement an exact number of times") {
@@ -23,9 +24,13 @@ val RunPlanTest by testSuite {
         RunPlan.of(mapOf()).quarantines("LEAK-1", "LEAK-1 hung work") shouldBe false
     }
 
-    test("a requirement runs once more in demo mode when it failed or the change touched code it covered, and only then") {
-        val changed = mapOf("playtest.touched" to "/repo/build/touched.txt")
-        val plan = RunPlan.of(changed) { "com/typewritermc/playtest/plugin/Probes.java 12\n" }
+    test("a requirement is touched when the change added a line in its own code or its last attempt ran an added line") {
+        val plan =
+            RunPlan.of(mapOf("playtest.touched" to "/repo/build/touched.txt")) {
+                "com/typewritermc/playtest/plugin/Probes.java 12\ncom/typewritermc/playtest/ToastRequirements.kt 44\n"
+            }
+        val toast = RequirementLines("com/typewritermc/playtest/ToastRequirements.kt", 40..52)
+        val chat = RequirementLines("com/typewritermc/playtest/ToastRequirements.kt", 53..70)
         val probes =
             listOf(
                 CoveredClass(
@@ -34,28 +39,24 @@ val RunPlanTest by testSuite {
                     lines = listOf(12),
                 ),
             )
-        val wipe =
-            listOf(
-                CoveredClass(
-                    name = "com/typewritermc/playtest/plugin/Wipe",
-                    source = "com/typewritermc/playtest/plugin/Wipe.java",
-                    lines = listOf(12),
-                ),
-            )
-        val failed = AssertionError("the toast never showed")
 
-        plan.demos(Verdict.Passed, probes) shouldBe true
-        plan.demos(Verdict.Passed, wipe) shouldBe false
-        plan.demos(Verdict.Failed(listOf(failed), 4), wipe) shouldBe true
-        plan.demos(Verdict.Flaky(listOf(failed), 2), wipe) shouldBe true
-        plan.demos(Verdict.Quarantined(listOf(failed), 1), wipe) shouldBe true
-        RunPlan.of(mapOf()).demos(Verdict.Passed, probes) shouldBe false
+        plan.touches(toast, listOf()) shouldBe true
+        plan.touches(chat, listOf()) shouldBe false
+        plan.touches(chat, probes) shouldBe true
+        RunPlan.of(mapOf()).touches(toast, probes) shouldBe false
     }
 
-    test("a requirement the pool refused, or whose game broke, runs no demo: it would end the same way") {
-        val plan = RunPlan.of(mapOf())
+    test("a run paces attempts only at the paces it names, and a window held at another tick gates unless it asks to report") {
+        RunPlan.of(mapOf()).paces shouldBe listOf()
+        RunPlan.of(mapOf("playtest.paces" to "5, 50")).paces shouldBe listOf(5, 50)
+        RunPlan.of(mapOf()).pacing shouldBe Pacing.GATES
+        RunPlan.of(mapOf("playtest.pacing" to "reports")).pacing shouldBe Pacing.REPORTS
+        shouldThrow<IllegalArgumentException> { RunPlan.of(mapOf("playtest.pacing" to "warns")) }
+        shouldThrow<IllegalArgumentException> { RunPlan.of(mapOf("playtest.paces" to "0")) }
+    }
 
-        plan.demos(Verdict.Failed(listOf(RequirementRefused("a window without a positive check")), 1), listOf()) shouldBe false
-        plan.demos(Verdict.Failed(listOf(GameUnavailable("Paper stopped while starting")), 1), listOf()) shouldBe false
+    test("a demo run runs each requirement once, its clients recording clips; any other run records none") {
+        RunPlan.of(mapOf("playtest.demo" to "true")).demo shouldBe true
+        RunPlan.of(mapOf()).demo shouldBe false
     }
 }

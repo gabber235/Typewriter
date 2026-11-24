@@ -5,7 +5,7 @@ import java.nio.file.Path
 
 /**
  * Where one attempt of a case keeps the frames and clips it writes: the folder `<case>/<attempt>`
- * beside the run file, named after the case's test id and the attempt (`attempt-2`, or `demo`), so the
+ * beside the run file, named after the case's test id and the attempt (`attempt-2`, `paced-50ms`, or `demo`), so the
  * run file and its evidence travel together.
  */
 internal class Evidence(

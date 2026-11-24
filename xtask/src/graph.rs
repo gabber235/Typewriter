@@ -565,6 +565,60 @@ pub fn affected<'a>(steps: Vec<&'a Step>, paths: &[std::path::PathBuf]) -> Vec<&
         .collect()
 }
 
+/// The end to end suites CI runs, one job each (`cargo xtask e2e <suite>`), with the path prefixes
+/// beyond [`EVERY_AREA`] whose changes it proves; a suite without its own runs whenever a change
+/// affects any area.
+const SUITES: &[(&str, Option<&[&str]>)] = &[
+    ("panel", None),
+    ("panel-web", None),
+    ("game", None),
+    // The framework's own requirements run without the stack, so only the framework and the build
+    // that starts its game reach them.
+    (
+        "playtest",
+        Some(&[
+            "services/playtest/",
+            "services/build-logic/",
+            "services/gradle/",
+            "services/gradlew",
+            "services/build.gradle.kts",
+            "services/settings.gradle.kts",
+            "services/gradle.properties",
+            "services/libs.versions.toml",
+        ]),
+    ),
+];
+
+/// The end to end suites a change to `paths` affects, in [`SUITES`] order: every suite without
+/// paths of its own once any area is affected, and every other one whose paths, or [`EVERY_AREA`],
+/// the change touches.
+pub fn affected_suites(paths: &[std::path::PathBuf]) -> Vec<&'static str> {
+    let any_area = !affected(select(None), paths).is_empty();
+    SUITES
+        .iter()
+        .filter(|(_, own)| match own {
+            None => any_area,
+            Some(own) => paths.iter().any(|path| {
+                EVERY_AREA
+                    .iter()
+                    .chain(own.iter())
+                    .any(|prefix| path.starts_with(prefix))
+            }),
+        })
+        .map(|(name, _)| *name)
+        .collect()
+}
+
+/// Every end to end suite, in [`SUITES`] order.
+pub fn suites() -> Vec<&'static str> {
+    SUITES.iter().map(|(name, _)| *name).collect()
+}
+
+/// Prints `suites` as JSON (the CI matrix of the end to end jobs).
+pub fn list_suites(suites: &[&str]) {
+    println!("{}", serde_json::json!(suites));
+}
+
 /// Whether any of `steps` reads generated sources.
 fn needs_generate(steps: &[&Step]) -> bool {
     steps.iter().any(|step| step.needs_generate)
@@ -801,6 +855,34 @@ mod tests {
 
     use super::*;
     use crate::test_support::{TempRoot, area_names, failure_message, shell};
+
+    #[test]
+    fn the_framework_suite_runs_only_when_the_framework_or_what_every_area_reads_changed() {
+        let suites =
+            |paths: &[&str]| affected_suites(&paths.iter().map(PathBuf::from).collect::<Vec<_>>());
+
+        assert_eq!(
+            suites(&["services/runtime/engine/core/src/main/kotlin/Engine.kt"]),
+            ["panel", "panel-web", "game"]
+        );
+        assert_eq!(
+            suites(&["services/playtest/plugin/src/main/java/StepPolicy.java"]),
+            ["panel", "panel-web", "game", "playtest"]
+        );
+        assert_eq!(
+            suites(&["services/build-logic/src/main/kotlin/game-test.gradle.kts"]),
+            ["panel", "panel-web", "game", "playtest"]
+        );
+        assert_eq!(
+            suites(&["xtask/src/main.rs"]),
+            ["panel", "panel-web", "game", "playtest"]
+        );
+        assert_eq!(
+            suites(&["panel/lib/main.dart"]),
+            ["panel", "panel-web", "game"]
+        );
+        assert!(suites(&["docs/design/game-verification/README.md"]).is_empty());
+    }
 
     #[test]
     fn a_panel_change_runs_the_panel_and_the_project_rules_only() {
