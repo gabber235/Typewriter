@@ -698,18 +698,8 @@ fn build_stack_binary(ctx: &Context) -> Result<()> {
 
 fn build_components(ctx: &Context) -> Result<()> {
     let components = deploy::deployable(ctx)?;
-    let built = CargoBuild {
-        name: "components",
-        inputs: RUST_INPUTS,
-        // The component test workspace, which no component depends on.
-        excluded: &["backend/tests"],
-        target: target_directory(ctx, "backend/Cargo.toml")?,
-        artifacts: components
-            .iter()
-            .map(|component| component.artifact.clone())
-            .collect(),
-    }
-    .run(ctx, &mut deploy::components_build(ctx, &components))?;
+    let built = deploy::reusable_components_build(ctx, "components", &components)?
+        .run(ctx, &mut deploy::components_build(ctx, &components))?;
     say_reused(COMPONENTS.name, &built);
     Ok(())
 }

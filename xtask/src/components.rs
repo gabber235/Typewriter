@@ -7,7 +7,6 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
-use std::io::{BufRead, BufReader};
 use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -18,6 +17,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
+use crate::cargo_build::Outcome as Built;
 use crate::results::{
     self, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase, TestRun,
 };
@@ -261,7 +261,9 @@ struct Artifact {
     fresh: bool,
 }
 
-/// Builds every component the fixtures name in one Cargo invocation, keyed by package and target.
+/// Builds every component the fixtures name in one Cargo invocation, keyed by package and target,
+/// through the same reusable release build the stack uses; an artifact is fresh when the build was
+/// reused.
 fn build_components(
     ctx: &Context,
     fixtures: &[&Fixture],
@@ -273,86 +275,47 @@ fn build_components(
         .flat_map(|fixture| fixture.components())
         .map(|component| (component.package.as_str(), component.target.as_str()))
         .collect();
-    let names = package_names(ctx)?;
-    let mut command = cargo(
-        ctx,
-        &[
-            "build",
-            "--locked",
-            "--manifest-path",
-            "backend/Cargo.toml",
-            "--target",
-            COMPONENT_TARGET,
-            "--release",
-            "--message-format=json-render-diagnostics",
-        ],
-    );
-    jobs(&mut command, args);
-    let packages: BTreeSet<&str> = wanted.iter().map(|(package, _)| *package).collect();
-    for package in &packages {
-        command.args(["-p", package]);
-    }
-    let mut child = command
-        .log_stderr(log)?
-        .stdout(Stdio::piped())
-        .spawn()
-        .context("cannot start the component build")?;
-    let stdout = child
-        .stdout
-        .take()
-        .context("cargo printed no build output")?;
-    let mut artifacts = BTreeMap::new();
-    let mut finished = false;
-    for line in BufReader::new(stdout).lines() {
-        let message: Value = serde_json::from_str(&line?)?;
-        match message["reason"].as_str() {
-            Some("compiler-artifact") => {
-                let (Some(package_id), Some(target)) = (
-                    message["package_id"].as_str(),
-                    message["target"]["name"].as_str(),
-                ) else {
-                    continue;
-                };
-                let Some(package) = names.get(package_id).map(String::as_str) else {
-                    continue;
-                };
-                if !wanted.contains(&(package, target)) {
-                    continue;
-                }
-                let wasm: Vec<&str> = message["filenames"]
-                    .as_array()
-                    .into_iter()
-                    .flatten()
-                    .filter_map(Value::as_str)
-                    .filter(|file| file.ends_with(".wasm"))
-                    .collect();
-                ensure!(
-                    wasm.len() == 1,
-                    "package `{package}` target `{target}` built {} .wasm files, expected one",
-                    wasm.len()
-                );
-                artifacts.insert(
-                    (package.to_owned(), target.to_owned()),
-                    Artifact {
-                        package_id: package_id.to_owned(),
-                        path: PathBuf::from(wasm[0]),
-                        fresh: message["fresh"].as_bool().unwrap_or(false),
-                    },
-                );
-            }
-            Some("build-finished") => finished = message["success"].as_bool() == Some(true),
-            _ => {}
+    let ids: BTreeMap<String, String> = package_names(ctx)?
+        .into_iter()
+        .map(|(id, name)| (name, id))
+        .collect();
+    let release = deploy::release_dir(ctx)?;
+    let wasm = |target: &str| release.join(format!("{}.wasm", target.replace('-', "_")));
+    let mut components: Vec<deploy::Component> = Vec::new();
+    for (package, target) in &wanted {
+        if !components
+            .iter()
+            .any(|component| component.package == *package)
+        {
+            components.push(deploy::Component {
+                package: (*package).to_owned(),
+                artifact: wasm(target),
+            });
         }
     }
-    let status = child.wait()?;
-    ensure!(
-        status.success() && finished,
-        "the component build failed with {status}"
-    );
-    for (package, target) in &wanted {
+    let mut cargo = deploy::components_build(ctx, &components);
+    jobs(&mut cargo, args);
+    cargo.log_stderr(log)?;
+    let outcome = deploy::reusable_components_build(ctx, "component-tests", &components)?
+        .run(ctx, &mut cargo)
+        .context("the component build failed")?;
+    let mut artifacts = BTreeMap::new();
+    for (package, target) in wanted {
+        let path = wasm(target);
         ensure!(
-            artifacts.contains_key(&((*package).to_owned(), (*target).to_owned())),
+            path.is_file(),
             "the build produced no artifact for package `{package}` target `{target}`"
+        );
+        let package_id = ids
+            .get(package)
+            .with_context(|| format!("cargo metadata lists no package `{package}`"))?;
+        artifacts.insert(
+            (package.to_owned(), target.to_owned()),
+            Artifact {
+                package_id: package_id.clone(),
+                path,
+                fresh: outcome == Built::Reused,
+            },
         );
     }
     Ok(artifacts)

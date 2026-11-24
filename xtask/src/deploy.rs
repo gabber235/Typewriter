@@ -10,6 +10,7 @@ use anyhow::{Context as _, Result, bail, ensure};
 use clap::ValueEnum;
 use serde_json::Value;
 
+use crate::cargo_build::{CargoBuild, target_directory};
 use crate::cluster::CiCluster;
 use crate::lock::HeavyLock;
 use crate::{CommandExt, Context, Scratch, secrets};
@@ -205,6 +206,32 @@ pub(crate) fn components_build(ctx: &Context, components: &[Component]) -> Comma
         build.args(["-p", &component.package]);
     }
     build
+}
+
+/// The release components build of `components` as a [`CargoBuild`] named `name`: reused while
+/// nothing below `backend` outside the component test workspace, the Cargo profiles, the command
+/// and the toolchain changed. The stack and the components check both build through it.
+pub(crate) fn reusable_components_build<'a>(
+    ctx: &Context,
+    name: &'a str,
+    components: &[Component],
+) -> Result<CargoBuild<'a>> {
+    Ok(CargoBuild {
+        name,
+        inputs: &["backend", ".cargo/config.toml"],
+        // The component test workspace, which no component depends on.
+        excluded: &["backend/tests"],
+        target: target_directory(ctx, "backend/Cargo.toml")?,
+        artifacts: components
+            .iter()
+            .map(|component| component.artifact.clone())
+            .collect(),
+    })
+}
+
+/// Where the release build puts each component's `.wasm`.
+pub(crate) fn release_dir(ctx: &Context) -> Result<PathBuf> {
+    Ok(target_directory(ctx, "backend/Cargo.toml")?.join("wasm32-wasip2/release"))
 }
 
 pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
