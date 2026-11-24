@@ -253,12 +253,62 @@ fn nearest_base(ctx: &Context) -> Result<String> {
 
 /// The full hash of the merge base of `HEAD` and `reference`.
 fn merge_base(ctx: &Context, reference: &str) -> Result<String> {
+    let shallow = git(ctx, &["rev-parse", "--is-shallow-repository"]).output_text()?;
+    if shallow.trim() == "true" {
+        reach_merge_base(ctx, reference)?;
+    }
     let base = git(ctx, &["merge-base", "HEAD", reference])
         .output_text()
         .with_context(|| {
             format!("cannot find the merge base of HEAD and {reference}; pass --base")
         })?;
     Ok(base.trim().to_string())
+}
+
+/// Fetches history into a shallow checkout, such as CI's, until it holds the merge base of `HEAD`
+/// and `reference`: first `reference` itself when the checkout lacks it, then both histories
+/// deeper, doubling the depth each time, and the whole history last.
+fn reach_merge_base(ctx: &Context, reference: &str) -> Result<()> {
+    let found = || {
+        git(ctx, &["merge-base", "HEAD", reference])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .is_ok_and(|status| status.success())
+    };
+    let known = git(ctx, &["cat-file", "-e", &format!("{reference}^{{commit}}")])
+        .stderr(Stdio::null())
+        .status()
+        .is_ok_and(|status| status.success());
+    if !known {
+        // A checkout of one branch has no other remote branches.
+        let wanted = match reference.strip_prefix("origin/") {
+            Some(branch) => format!("+refs/heads/{branch}:refs/remotes/origin/{branch}"),
+            None => reference.to_owned(),
+        };
+        fetch(ctx, &["--depth=1", "origin", &wanted])?;
+    }
+    let tips = [commit(ctx, "HEAD")?, commit(ctx, reference)?];
+    for depth in [32, 64, 128, 256, 512, 1024] {
+        if found() {
+            return Ok(());
+        }
+        fetch(
+            ctx,
+            &[&format!("--deepen={depth}"), "origin", &tips[0], &tips[1]],
+        )?;
+    }
+    if found() {
+        return Ok(());
+    }
+    fetch(ctx, &["--unshallow", "origin", &tips[0], &tips[1]])
+}
+
+fn fetch(ctx: &Context, args: &[&str]) -> Result<()> {
+    git(ctx, &["fetch", "--quiet", "--no-tags"])
+        .args(args)
+        .run()
+        .context("fetching the history the merge base needs")
 }
 
 /// The full hash of `reference`.
@@ -581,6 +631,52 @@ mod tests {
         // A branch stacked on this one, which already contains HEAD.
         root.git(&["update-ref", "refs/remotes/origin/features/y", "HEAD"]);
         assert_eq!(nearest_base(&root.ctx).unwrap(), "origin/features/v1");
+    }
+
+    /// A remote whose `develop` moved three commits past `A`, where `feature` grew forty commits,
+    /// and a checkout of `feature` with only its last commit, as CI's shallow checkout has; returns
+    /// the remote, the checkout and `A`.
+    fn shallow_checkout() -> (TempRoot, TempRoot, String) {
+        let origin = TempRoot::new();
+        origin.git(&["init", "--quiet", "--initial-branch=develop"]);
+        // GitHub serves any commit a branch reaches, as the checkout asks for its base by hash.
+        origin.git(&["config", "uploadpack.allowReachableSHA1InWant", "true"]);
+        origin.commit("before A");
+        origin.commit("A");
+        let a = origin.git(&["rev-parse", "HEAD"]).trim().to_owned();
+        origin.git(&["checkout", "--quiet", "-b", "feature"]);
+        for n in 0..40 {
+            origin.commit(&format!("feature {n}"));
+        }
+        origin.git(&["checkout", "--quiet", "develop"]);
+        for n in 0..3 {
+            origin.commit(&format!("develop {n}"));
+        }
+        let checkout = TempRoot::new();
+        let url = format!("file://{}", origin.path("").display());
+        checkout.git(&[
+            "clone",
+            "--quiet",
+            "--depth=1",
+            "--branch",
+            "feature",
+            &url,
+            ".",
+        ]);
+        (origin, checkout, a)
+    }
+
+    #[test]
+    fn a_shallow_checkout_fetches_history_until_it_holds_the_merge_base() {
+        let (origin, checkout, a) = shallow_checkout();
+        let develop = origin.git(&["rev-parse", "develop"]).trim().to_owned();
+        assert_eq!(base(&checkout.ctx, Some(&develop)).unwrap(), a);
+    }
+
+    #[test]
+    fn a_shallow_checkout_fetches_a_remote_branch_it_lacks() {
+        let (_origin, checkout, a) = shallow_checkout();
+        assert_eq!(base(&checkout.ctx, Some("origin/develop")).unwrap(), a);
     }
 
     #[test]
