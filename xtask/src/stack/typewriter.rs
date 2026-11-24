@@ -21,9 +21,9 @@ use super::spec::{
     BACKEND, Build, How, Probe, Published, Role, Service, ServiceId, StackContext, StackSpec,
     state_dir,
 };
-use crate::cargo_build::{CargoBuild, Outcome};
+use crate::cargo_build::{CargoBuild, Outcome, target_directory};
 use crate::cluster::CiCluster;
-use crate::{CommandExt, Context, deploy};
+use crate::{Context, deploy};
 
 /// The component test workspace the `typewriter-stack` binary lives in.
 const STACK_WORKSPACE: &str = "backend/tests/component/Cargo.toml";
@@ -658,26 +658,7 @@ fn stack_binary(ctx: &StackContext, subcommand: &str) -> Result<Command> {
 /// Where Cargo puts the `typewriter-stack` binary: the component test workspace's target, whose
 /// dependencies its suite shares.
 fn stack_binary_path(ctx: &Context) -> Result<PathBuf> {
-    let metadata: Value = serde_json::from_str(
-        &ctx.tool(
-            ".",
-            "cargo",
-            &[
-                "metadata",
-                "--format-version",
-                "1",
-                "--no-deps",
-                "--locked",
-                "--manifest-path",
-                STACK_WORKSPACE,
-            ],
-        )
-        .output_text()?,
-    )?;
-    let target = metadata["target_directory"]
-        .as_str()
-        .context("cargo metadata printed no target_directory")?;
-    Ok(PathBuf::from(target).join("debug/typewriter-stack"))
+    Ok(target_directory(ctx, STACK_WORKSPACE)?.join("debug/typewriter-stack"))
 }
 
 /// What the stack's Cargo builds are built from: every file below `backend` (the component test
@@ -690,6 +671,7 @@ fn build_stack_binary(ctx: &Context) -> Result<()> {
         name: "typewriter-stack",
         inputs: RUST_INPUTS,
         excluded: &[],
+        target: target_directory(ctx, STACK_WORKSPACE)?,
         artifacts: vec![stack_binary_path(ctx)?],
     }
     .run(
@@ -719,6 +701,7 @@ fn build_components(ctx: &Context) -> Result<()> {
         inputs: RUST_INPUTS,
         // The component test workspace, which no component depends on.
         excluded: &["backend/tests"],
+        target: target_directory(ctx, "backend/Cargo.toml")?,
         artifacts: components
             .iter()
             .map(|component| component.artifact.clone())

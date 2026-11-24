@@ -643,6 +643,7 @@ impl FakeCargo<'_> {
             name: "stack",
             inputs,
             excluded,
+            target: self.root.path("target"),
             artifacts: vec![self.artifact()],
         }
     }

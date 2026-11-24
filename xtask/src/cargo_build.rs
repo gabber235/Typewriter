@@ -15,7 +15,7 @@ use std::process::Command;
 use anyhow::{Context as _, Result, bail};
 use sha2::{Digest as _, Sha256};
 
-use crate::digest::{Digest, skipped, walk};
+use crate::digest::{Digest, walk};
 use crate::{CommandExt as _, Context};
 
 /// One Cargo invocation and what it produces.
@@ -27,8 +27,35 @@ pub struct CargoBuild<'a> {
     pub inputs: &'a [&'a str],
     /// Root relative folders below `inputs` the artifacts never read, left out of the digest.
     pub excluded: &'a [&'a str],
+    /// The Cargo target directory the build writes into. Reads below it are a build script's
+    /// generated sources, which derive from the inputs.
+    pub target: PathBuf,
     /// The absolute paths of what the build produces.
     pub artifacts: Vec<PathBuf>,
+}
+
+/// The target directory of the Cargo workspace whose manifest is `manifest`, root relative.
+pub fn target_directory(ctx: &Context, manifest: &str) -> Result<PathBuf> {
+    let metadata: serde_json::Value = serde_json::from_str(
+        &ctx.tool(
+            ".",
+            "cargo",
+            &[
+                "metadata",
+                "--format-version",
+                "1",
+                "--no-deps",
+                "--locked",
+                "--manifest-path",
+                manifest,
+            ],
+        )
+        .output_text()?,
+    )?;
+    let target = metadata["target_directory"]
+        .as_str()
+        .context("cargo metadata printed no target_directory")?;
+    Ok(PathBuf::from(target))
 }
 
 /// Whether [`CargoBuild::run`] ran Cargo.
@@ -143,9 +170,10 @@ impl CargoBuild<'_> {
     }
 
     /// Fails when Cargo's dependency file of an artifact names a repository file outside the
-    /// inputs. Files below build output (a build script's generated sources) derive from the
-    /// inputs, and files outside the repository come from the toolchain or from dependencies
-    /// `Cargo.lock` pins.
+    /// inputs. Files below the build's own target directory (a build script's generated sources)
+    /// derive from the inputs, and files outside the repository come from the toolchain or from
+    /// dependencies `Cargo.lock` pins. Another tool's build output is reported: the digest never
+    /// holds it.
     fn check_inputs(&self, ctx: &Context) -> Result<()> {
         let mut outside = Vec::new();
         for artifact in &self.artifacts {
@@ -153,15 +181,15 @@ impl CargoBuild<'_> {
             let text = fs::read_to_string(&dep_info)
                 .with_context(|| format!("cannot read {}", dep_info.display()))?;
             for file in dep_info_files(&text) {
-                let Ok(relative) = normalize(&file).strip_prefix(&ctx.root).map(Path::to_owned)
-                else {
+                let file = normalize(&file);
+                if file.starts_with(&self.target) {
+                    continue;
+                }
+                let Ok(relative) = file.strip_prefix(&ctx.root).map(Path::to_owned) else {
                     continue;
                 };
-                let output = relative
-                    .components()
-                    .any(|component| skipped(&component.as_os_str().to_string_lossy()));
                 let input = self.inputs.iter().any(|input| relative.starts_with(input));
-                if !output && (!input || self.is_excluded(&relative)) {
+                if !input || self.is_excluded(&relative) {
                     outside.push(relative.display().to_string());
                 }
             }
@@ -350,10 +378,12 @@ mod tests {
         root.write("skir-src/fixture.json", "{}");
         let cargo = FakeCargo { root: &root };
         let build = cargo.build(INPUTS, EXCLUDED);
+        root.write("services/sdk/build/fixtures/corpus.json", "[]");
         let reads = [
             "backend/src/lib.rs",
             "skir-src/fixture.json",
             "backend/tests/case.rs",
+            "services/sdk/build/fixtures/corpus.json",
         ];
 
         let error = build
@@ -362,6 +392,11 @@ mod tests {
             .to_string();
         assert!(error.contains("skir-src/fixture.json"), "{error}");
         assert!(error.contains("backend/tests/case.rs"), "{error}");
+        // Another tool's build output, which the digest never holds.
+        assert!(
+            error.contains("services/sdk/build/fixtures/corpus.json"),
+            "{error}"
+        );
         assert!(!error.contains("backend/src/lib.rs"), "{error}");
 
         let again = build.run(&root.ctx, &mut cargo.command("one", &reads));
@@ -370,14 +405,14 @@ mod tests {
     }
 
     #[test]
-    fn generated_build_output_and_files_outside_the_repository_are_not_inputs() {
+    fn generated_sources_in_its_own_target_and_files_outside_the_repository_are_not_inputs() {
         let root = TempRoot::new();
         root.write("backend/src/lib.rs", "fn main() {}");
         let cargo = FakeCargo { root: &root };
         let build = cargo.build(INPUTS, EXCLUDED);
         let reads = [
             "backend/src/../src/lib.rs",
-            "backend/target/debug/build/schema/out/files.rs",
+            "target/debug/build/schema/out/files.rs",
             "../rustlib/src/lib.rs",
         ];
 
