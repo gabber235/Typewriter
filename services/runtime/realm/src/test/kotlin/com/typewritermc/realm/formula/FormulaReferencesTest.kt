@@ -6,6 +6,8 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.formula.Formula
 import com.typewritermc.formula.TextSpan
+import com.typewritermc.formula.graph.GraphWork
+import com.typewritermc.realm.checking.CheckSubjects
 import com.typewritermc.realm.testing.CountedHook
 import com.typewritermc.realm.testing.HookGate
 import com.typewritermc.realm.testing.commit
@@ -546,6 +548,18 @@ val FormulaReferencesTest by testSuite {
             settle()
 
             CountedHook.runs.get() shouldBe runs
+        }
+    }
+
+    test("checking a view a commit installed after answering a broken formula's names reuses what the live graph checked") {
+        withSetup(page, catalog = catalog) { demo ->
+            commit(rename(demo.pageId, "renamed")).shouldBeCommitted()
+            settle()
+            val work = GraphWork()
+
+            views.capture().use { installed -> views.forkAt(installed.root).pin(work).read(CheckSubjects) }
+
+            work.counts().computed shouldBe 0
         }
     }
 

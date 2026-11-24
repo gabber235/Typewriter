@@ -92,8 +92,10 @@ private sealed interface BindingReason {
  * Realm owned writes that follow a creator's edit; they never decide whether it is accepted. Candidates come from
  * what is already known: formulas the edit changed or emptied, and saved broken formulas for which one of their
  * unbound names means something else in [proposed]. A commit that touches no formula in a realm without broken
- * formulas forks nothing, parses nothing and runs no hook on a warm memo. Answers in [proposed] and binding read one
- * fork at it, made on first need and thrown away; every read is counted on [work].
+ * formulas forks nothing, parses nothing and runs no hook on a warm memo. Answers in [proposed] and binding read the
+ * one fork at it, made on first need. When [proposed] is the view the commit installs, install merges that fork into
+ * the live graph; when binding writes more, the commit installs a new view and the fork goes with [proposed]. Every
+ * read is counted on [work].
  */
 internal fun AuthoringViewStore.repairIntents(
     saved: AuthoringView,

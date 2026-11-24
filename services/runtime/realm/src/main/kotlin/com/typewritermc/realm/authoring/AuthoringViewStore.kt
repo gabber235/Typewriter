@@ -92,7 +92,8 @@ data class AuthoringView internal constructor(
 
     /**
      * The one graph forked at this view while it was not current, made on first need: names judged here, binding over
-     * it and capture evaluation share it, and install merges it into the live graph so that work is not done again.
+     * it and capture evaluation share it. Install detaches it and merges it into the live graph so that work is not done
+     * again; a later fork of the view starts from the live graph.
      */
     internal val fork = AtomicReference<AuthoringGraph?>()
 }
@@ -308,8 +309,8 @@ interface AuthoringViewStore : AutoCloseable {
     fun pin(work: GraphWork): PinnedReads
 
     /**
-     * The graph that reads exactly [view], starting from the live graph's results where it can: one per view, made on
-     * first call, and merged into the live graph when [view] is installed. Forking copies nothing, so it costs no graph
+     * The graph that reads exactly [view], starting from the live graph's results where it can: one per view until
+     * [view] is installed, which merges it into the live graph and detaches it. Forking copies nothing, so it costs no graph
      * work; reads of the fork count theirs on the work they are pinned with.
      */
     fun forkAt(view: AuthoringView): AuthoringGraph
@@ -413,9 +414,12 @@ class InMemoryAuthoringViewStore(
             before.current = false
             prune(before)
             val environment = RealmEnvironment(view, services)
+            // Installed, the view is read through the live graph; a fork kept past this point would start from a
+            // revision the live graph left behind and recompute what it has.
+            val fork = view.fork.getAndSet(null)
             if (view.catalog.generation != before.root.catalog.generation) {
                 graph.reset(environment)
-            } else if (view.fork.get()?.let(graph::merge) != true) {
+            } else if (fork?.let(graph::merge) != true) {
                 graph.advance(environment, view.changesFrom(before.root))
             }
             changed.value += 1
