@@ -31,6 +31,12 @@ inputs:
       kinds build different outputs under the same commit, so with one key the first to finish took
       it and the others' saves were refused.
     default: ""
+  cargo-targets:
+    description: >-
+      `true` for the jobs that build the stack's Cargo targets and so own them on the cache volume:
+      the e2e suites (the `typewriter-stack` binary and the release components) and the components
+      check (the same components and the suite beside the binary). Other jobs do not mount them.
+    default: "false"
   gradle-outputs-from:
     description: >-
       Another job kind whose Gradle build cache entries this job restores, read only, instead of
@@ -65,6 +71,7 @@ runs:
         HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         REPO: ${{ github.repository }}
         HAS_TOKEN: ${{ inputs.op-service-account-token != '' }}
+        CARGO_TARGETS: ${{ inputs.cargo-targets }}
       run: |
         long_lived=false
         if [[ $REF == refs/heads/develop || $REF == refs/heads/features/v1 ]]; then
@@ -88,6 +95,16 @@ runs:
         # A Namespace runner with a cache volume (its `-with-cache` label) keeps the Nix store and
         # the caches every job shares on that volume instead of in the repository's Actions cache.
         echo "volume=$([[ -n ${NSC_CACHE_PATH:-} ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+        # The Cargo targets this job keeps on the volume, one per line; none unless it owns them.
+        {
+          echo "cargo-targets<<EOF"
+          if [[ $CARGO_TARGETS == true ]]; then
+            echo "$GITHUB_WORKSPACE/backend/target/release"
+            echo "$GITHUB_WORKSPACE/backend/target/wasm32-wasip2/release"
+            echo "$GITHUB_WORKSPACE/backend/tests/component/target/debug"
+          fi
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
         # Incremental artifacts only grow a cache that starts each job from the same state.
         echo "CARGO_INCREMENTAL=0" >> "$GITHUB_ENV"
         # A job never reuses a Gradle daemon, and an idle one held 2.4 GB that the panel's
@@ -110,8 +127,9 @@ runs:
     # at the end, so the last job to finish wins: caches that differ by job (Gradle's build cache,
     # the boot cache, xtask's Cargo target) stay on `actions/cache`, where every job keeps its own.
     #
-    # The Cargo targets the stack and the components check build go on the volume too, several GB
-    # that the repository's 10 GB of `actions/cache` has no room for: the release wasm build of the
+    # The jobs that build the stack's Cargo targets (`cargo-targets`) keep them on the volume too,
+    # several GB that the repository's 10 GB of `actions/cache` has no room for: the release wasm
+    # build of the
     # backend components (with its host build scripts and macros in `release`) and the component
     # test workspace's debug target, which holds the `typewriter-stack` binary and the suite. Cargo
     # keeps their dependencies; xtask stamps the stack's artifacts with the digest of their inputs
@@ -129,9 +147,7 @@ runs:
           ~/.gradle/caches/fabric-loom
           ~/.gradle/caches/run-task-jars
           ${{ github.workspace }}/services/.gradle/loom-cache
-          ${{ github.workspace }}/backend/target/release
-          ${{ github.workspace }}/backend/target/wasm32-wasip2/release
-          ${{ github.workspace }}/backend/tests/component/target/debug
+          ${{ steps.trust.outputs.cargo-targets }}
     - uses: cachix/install-nix-action@v31
     # Reads gabber235.cachix.org (the Rust toolchain and every other path a trusted run
     # built) and the public devenv cache. Pushing is the explicit step below, with a token only

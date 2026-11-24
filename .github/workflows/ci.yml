@@ -77,6 +77,7 @@ jobs:
         with:
           caches: gradle flutter frame-vectors ${{ matrix.area.area == 'services' && 'gradle-outputs' || '' }}
           cache-scope: check-${{ matrix.area.area }}
+          cargo-targets: ${{ matrix.area.area == 'components' }}
       # Untimed: the budget covers the area's steps, not the shell's first build or xtask's
       # compile.
       - run: devenv shell -- cargo xtask --help > /dev/null
@@ -151,6 +152,7 @@ jobs:
           caches: ${{ matrix.caches }}
           profile: e2e
           cache-scope: e2e-${{ matrix.suite }}
+          cargo-targets: true
           gradle-outputs-from: ${{ matrix.gradle-outputs-from }}
       # The game suite's demo reruns follow the lines the change added since the same base the
       # checks compare with.
