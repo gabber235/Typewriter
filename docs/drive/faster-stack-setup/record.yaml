@@ -1,0 +1,67 @@
+# docs/drive/faster-stack-setup/record.yaml: the working state of one piece of work.
+goal: Make CI setup for the e2e jobs (game and panel) much faster, so the whole run gets shorter and sharding the game suite becomes worth it later.
+
+pieces:
+  - id: protocol-only-for-the-game-stack
+    status: building
+  - id: reuse-rust-builds
+    status: building
+  - id: overlap-gradle-with-cargo
+    status: building
+  - id: shallow-game-checkout
+    status: building
+  - id: panel-gradle-outputs
+    status: building
+
+decided:
+  - id: approved-items
+    what: >-
+      The game stack generates only the protocol; reuse the typewriter-stack binary and the
+      release .wasm components by a digest of their inputs; cache cargo dependency builds; overlap
+      the Gradle builds with the cargo builds; shallow checkout for the game suite; the panel
+      suites keep Gradle's build outputs. Not in scope: one shared build job, wasmtime
+      optimization, Gradle configuration cache, sharding.
+  - id: rust-targets-on-the-volume
+    what: >-
+      The release wasm targets and the component test workspace's debug target live on the
+      Namespace cache volume, not actions/cache: the repository's actions/cache held 9.6 of its
+      10 GB on 2026-11-24, almost all per commit Gradle output entries, while the volume had 48 of
+      70 GB free. A stamp beside the artifacts makes a stale or reverted volume cost a rebuild,
+      never a wrong binary.
+  - id: one-build-phase
+    what: >-
+      A stack runs every build its services declare at once before the first service starts: each
+      Cargo build on a thread, every Gradle build (the Realm host, and the game suite for the game
+      stack) in one Gradle run. A service's command refuses to run a build it did not declare.
+  - id: digest-from-backend-with-dep-info-check
+    what: >-
+      The stack binary and the components are reused while every file below backend (the
+      components leave out backend/tests), .cargo/config.toml, the command and rustc -vV are
+      unchanged. After each build Cargo's dependency files must name no repository file outside
+      those inputs, or the build fails, so a missing input is caught on the change that adds it.
+  - id: panel-restores-services-outputs
+    what: >-
+      The panel suites restore the services check's Gradle build cache and save none of their own,
+      so the full actions/cache gets no new per commit entries.
+
+slices:
+  - id: digest-module
+    tests: [generate tests]
+    status: done
+  - id: build-stamps
+    tests: [cargo_build tests]
+    status: done
+  - id: parallel-stack-builds
+    tests: [stack::spec build tests]
+    status: building
+  - id: typewriter-stack-builds
+    tests: [stack::typewriter build tests, a real local build of the stack binary and components]
+    status: building
+  - id: shallow-merge-base
+    tests: [review::change shallow checkout tests]
+    status: done
+  - id: workflow
+    tests: [first CI run timings]
+    status: building
+
+next: build the slices test first.
