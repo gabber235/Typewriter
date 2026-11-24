@@ -1,7 +1,7 @@
 package com.typewritermc.services.libs.telemetry
 
-import com.typewritermc.services.libs.telemetry.testing.InMemoryTelemetry
 import com.typewritermc.services.libs.telemetry.testing.SpanBoundary
+import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.services.libs.telemetry.testing.TestVirtualMachineError
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
 
 val TelemetryLifecycleTest by testSuite {
     test("blocking context is current and restored") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             val outer =
                 test.openTelemetry
                     .getTracer("outer")
@@ -47,7 +47,7 @@ val TelemetryLifecycleTest by testSuite {
     }
 
     test("suspend context survives dispatchers and structured children") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             test.telemetry.mainSpan("main", ErrorSlug.of("main-failed")) { main ->
                 val mainSpanId = Span.current().spanContext.spanId
                 yield()
@@ -66,12 +66,12 @@ val TelemetryLifecycleTest by testSuite {
                 }
             }
             Span.current().spanContext.isValid shouldBe false
-            test.spans().size shouldBe 1
+            test.finishedSpans().size shouldBe 1
         }
     }
 
     test("main annotations stay on main while nested children form a tree") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             test.telemetry.mainSpanBlocking("main", ErrorSlug.of("main-failed")) { main ->
                 main.annotate { attribute("main.only", true) }
                 childSpanBlocking("child") { child ->
@@ -98,7 +98,7 @@ val TelemetryLifecycleTest by testSuite {
     }
 
     test("captured scopes and attribute writers reject use after close") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             lateinit var mainScope: MainSpanScope
             lateinit var childScope: ChildSpanScope
             lateinit var mainAttributes: MainAttributes
@@ -120,13 +120,13 @@ val TelemetryLifecycleTest by testSuite {
             context(mainScope) {
                 shouldThrow<IllegalStateException> { childSpanBlocking("late-child") { _ -> } }
             }
-            test.spans().size shouldBe 2
+            test.finishedSpans().size shouldBe 2
         }
     }
 
     SpanBoundary.entries.forEach { boundary ->
         test("cancellation at a ${boundary.label} boundary is unwrapped, not an error, and always ends the span") {
-            InMemoryTelemetry().use { test ->
+            TelemetryTestHarness.create().use { test ->
                 val cancellation = CancellationException("shutdown")
 
                 val thrown =
@@ -142,7 +142,7 @@ val TelemetryLifecycleTest by testSuite {
         }
 
         test("a source slug at a ${boundary.label} boundary reaches child and main without double wrapping") {
-            InMemoryTelemetry().use { test ->
+            TelemetryTestHarness.create().use { test ->
                 val cause = IllegalArgumentException("private details")
 
                 val thrown =
@@ -163,7 +163,7 @@ val TelemetryLifecycleTest by testSuite {
     }
 
     test("plain child failure receives fallback only at main boundary") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             val cause = IllegalStateException("secret response body")
             val thrown =
                 shouldThrow<SluggedException> {
@@ -183,7 +183,7 @@ val TelemetryLifecycleTest by testSuite {
     }
 
     test("suppressed slugged cleanup failure becomes additional event") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             val cause = IllegalStateException("primary")
             cause.addSuppressed(SluggedException.wrap(ErrorSlug.of("cleanup-failed"), IllegalArgumentException("cleanup")))
             val primary = SluggedException.wrap(ErrorSlug.of("primary-failed"), cause)
@@ -200,7 +200,7 @@ val TelemetryLifecycleTest by testSuite {
     }
 
     test("degraded and domain outcomes remain non-error") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             test.telemetry.mainSpanBlocking("main", ErrorSlug.of("main-failed")) { main ->
                 main.annotate { domainOutcome("not-found") }
                 main.recordDegraded(ErrorSlug.of("cache-read-failed"), IllegalStateException("cache"))
@@ -214,7 +214,7 @@ val TelemetryLifecycleTest by testSuite {
     }
 
     test("normal teardown never overwrites explicit error status") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             test.telemetry.mainSpanBlocking("main", ErrorSlug.of("main-failed")) { _ ->
                 Span.current().setStatus(StatusCode.ERROR, "explicit")
             }
@@ -223,7 +223,7 @@ val TelemetryLifecycleTest by testSuite {
     }
 
     test("typed universal helpers emit semantic keys and correlation") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             test.telemetry.mainSpanBlocking("main", ErrorSlug.of("main-failed")) { main ->
                 main.annotate {
                     httpRequestMethod("POST")
@@ -256,7 +256,7 @@ val TelemetryLifecycleTest by testSuite {
     }
 
     test("concurrent counter exports exact final value") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             val counter = CounterKey("stats.db_query_count")
             test.telemetry.mainSpan("main", ErrorSlug.of("main-failed")) { main ->
                 coroutineScope {
@@ -268,7 +268,7 @@ val TelemetryLifecycleTest by testSuite {
     }
 
     test("annotation blocks do not lock out concurrent attribute writers") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             val executor = Executors.newSingleThreadExecutor()
             try {
                 test.telemetry.mainSpanBlocking("main", ErrorSlug.of("main-failed")) { main ->
@@ -288,7 +288,7 @@ val TelemetryLifecycleTest by testSuite {
     }
 
     test("fatal failures escape main boundaries unchanged without error telemetry") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             val fatal = TestVirtualMachineError()
             shouldThrow<TestVirtualMachineError> {
                 test.telemetry.mainSpanBlocking("fatal-main", ErrorSlug.of("fallback")) { _ -> throw fatal }
@@ -296,12 +296,12 @@ val TelemetryLifecycleTest by testSuite {
             val span = test.span("fatal-main")
             span.status.statusCode shouldBe StatusCode.UNSET
             span.events.any { it.name == "exception" } shouldBe false
-            test.spans().size shouldBe 1
+            test.finishedSpans().size shouldBe 1
         }
     }
 
     test("cause-wrapped fatal failures escape child boundaries unchanged without error telemetry") {
-        InMemoryTelemetry().use { test ->
+        TelemetryTestHarness.create().use { test ->
             val fatal = TestVirtualMachineError()
             shouldThrow<TestVirtualMachineError> {
                 test.telemetry.mainSpanBlocking("fatal-parent", ErrorSlug.of("fallback")) { _ ->
@@ -312,7 +312,7 @@ val TelemetryLifecycleTest by testSuite {
                 span.status.statusCode shouldBe StatusCode.UNSET
                 span.events.any { it.name == "exception" } shouldBe false
             }
-            test.spans().size shouldBe 2
+            test.finishedSpans().size shouldBe 2
         }
     }
 }

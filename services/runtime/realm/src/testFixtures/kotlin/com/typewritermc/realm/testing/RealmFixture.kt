@@ -30,7 +30,7 @@ import com.typewritermc.realm.operation.RuntimeOperationPreparation
 import com.typewritermc.realm.search.SurrealAuthoringSearchRepository
 import com.typewritermc.realm.storage.MigrationResources
 import com.typewritermc.realm.storage.openTestDatabase
-import com.typewritermc.services.libs.telemetry.testing.InMemoryTelemetry
+import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.setup.Setup
 import com.typewritermc.testkit.CatalogEncoder
 import com.typewritermc.testkit.setup.SetupApplier
@@ -107,7 +107,7 @@ class RealmFixture private constructor(
     private var runtime: RealmCheckRuntime? = null
 
     /** Where the realm's commits log, read back in tests. A restart keeps it. */
-    internal val telemetry = InMemoryTelemetry()
+    internal val telemetry = TelemetryTestHarness.create()
 
     /** What each operation's graph reads did, recorded in [telemetry] as a running Realm records it. */
     private val graphWork = RealmGraphWorkTelemetry(telemetry.telemetry)
@@ -173,7 +173,7 @@ class RealmFixture private constructor(
     ) = repairFault.set(RepairFault(failure, afterBinding))
 
     /** The bodies of the log records the realm emitted so far. */
-    internal fun logLines(): List<String> = telemetry.logs().map { it.bodyValue?.asString().orEmpty() }
+    internal fun logLines(): List<String> = telemetry.finishedLogs().map { it.bodyValue?.asString().orEmpty() }
 
     /** Reads the saved authoring from storage again, as the Realm does after a failed persist. */
     internal fun reloadFromStorage() = views.invalidate(storage::readCoherent)

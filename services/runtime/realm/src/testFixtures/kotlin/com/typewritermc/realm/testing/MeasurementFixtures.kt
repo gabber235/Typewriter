@@ -197,9 +197,9 @@ private val PASS_WORK = setOf("checks.pass")
 
 /** What the realm's [operations] did on the graph so far, as its telemetry counts it. */
 private fun RealmFixture.workCounted(operations: Set<String>): GraphWork.Counts {
-    val sums = telemetry.counter("typewriter.realm.graph_work").filterKeys { it["realm.operation"] in operations }
+    val sums = telemetry.counts("typewriter.realm.graph_work", listOf("realm.operation", "graph.work"))
 
-    fun kind(name: String) = sums.filterKeys { it["graph.work"] == name }.values.sum()
+    fun kind(name: String) = sums.filterKeys { (operation, kind) -> operation in operations && kind == name }.values.sum()
 
     return GraphWork.Counts(kind("computed"), kind("verified"), kind("walked"))
 }
