@@ -385,6 +385,17 @@ val FormulaReferencesTest by testSuite {
         }
     }
 
+    test("creating the target of a missing quoted name binds the saved broken formula") {
+        withSetup(page, catalog = catalog) {
+            val reader = commitDefinition("reader", plainType(entryRef)) { computedVar(it.use, "`Gold Coin`") }.created()
+            val created = createEntry("Gold Coin")
+            commit(created).shouldBeCommitted()
+
+            referenceTargets(reader) shouldBe listOf(created.id)
+            errorCodesOn(reader).shouldBeEmpty()
+        }
+    }
+
     test("a new target with a deleted name binds the emptied reference") {
         withSetup(page, catalog = catalog) { demo ->
             val user = commitDefinition("user", plainType(entryRef)) { computedVar(it.use, "smith") }.created()

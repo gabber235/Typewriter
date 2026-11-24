@@ -41,8 +41,8 @@ internal fun AuthoringViewStore.commitRepairs(): CommitRepairs =
     }
 
 /**
- * The names a formula saved at [resource] left without a target, as written, and whether one of them has exactly one
- * candidate.
+ * The names a formula saved at [resource] left without a target, as the check looked them up, and whether one of them
+ * has exactly one candidate.
  */
 internal data class Unbound(
     val names: Set<String>,
@@ -68,8 +68,7 @@ internal data class UnboundIn(
                         .orEmpty()
                         .filter { it.meaning.isUnbound() }
                 if (names.isEmpty()) return@mapNotNull null
-                val written = names.mapTo(linkedSetOf()) { site.formula.source.substring(it.span.start, it.span.end) }
-                site.at to Unbound(names = written, bindable = names.any { it.candidates.size == 1 })
+                site.at to Unbound(names = names.mapTo(linkedSetOf()) { it.name }, bindable = names.any { it.candidates.size == 1 })
             }.toMap()
 }
 
