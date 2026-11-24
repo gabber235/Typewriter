@@ -225,8 +225,9 @@ internal class Probes(
     }
 
     /**
-     * Runs the work on Bukkit's async scheduler as a plugin would, counted from the moment it is handed
-     * over. An interrupt would cancel it before its chat line; nothing here interrupts it.
+     * Runs the work on Bukkit's async scheduler as a plugin would, counted for the player it names, or
+     * else for [player], from the moment it is handed over. An interrupt would cancel it before its chat
+     * line; nothing here interrupts it.
      */
     private fun work(
         player: Player,
@@ -234,7 +235,7 @@ internal class Probes(
     ) {
         Bukkit.getScheduler().runTaskAsynchronously(
             plugin,
-            PlayerWork.task(player, work.name) {
+            PlayerWork.task(setOf(work.countedFor?.let(UUID::fromString) ?: player.uniqueId), work.name) {
                 try {
                     Thread.sleep(work.millis.toLong())
                 } catch (_: InterruptedException) {

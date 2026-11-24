@@ -398,6 +398,14 @@ struct PlayerEvent(85030016) {
       work: string;
       began_after: int32;
     };
+    // Paper to session: the player's work `work`, which began after tick `began_after`, ended without its
+    // effect because of `cause`, such as an outbound operation that failed. It holds no more ticks; the
+    // attempt fails.
+    work_failed: struct {
+      work: string;
+      began_after: int32;
+      cause: string;
+    };
     // Pool to session: the player's client is lost; the attempt fails and the pool starts a new client for
     // the player.
     client_lost: ClientLoss;
@@ -617,13 +625,15 @@ enum PlayerAction(85030023) {
   mark: struct {
     kind: StateKind;
   };
-  // The player's work `name` runs off the main thread for `millis` of wall clock, counted as any plugin
-  // counts its work, then sends `chat` as a chat line. Only the framework's own test kit sends it, to
-  // prove ticks wait for counted work and hung work is reported.
+  // Work `name` runs off the main thread for `millis` of wall clock, counted as any plugin counts its
+  // work for the player of UUID `counted_for` (null: this player), who may be away, then sends `chat` to
+  // this player as a chat line. Only the framework's own test kit sends it, to prove ticks wait for
+  // counted work and hung work is reported.
   work: struct {
     name: string;
     millis: int32;
     chat: string;
+    counted_for: string?;
   };
   // The player sees a sidebar titled `title` holding `lines`, top to bottom.
   sidebar: struct {

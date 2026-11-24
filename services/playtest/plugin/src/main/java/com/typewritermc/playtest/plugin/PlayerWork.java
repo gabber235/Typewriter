@@ -1,5 +1,8 @@
 package com.typewritermc.playtest.plugin;
 
+import java.util.Collection;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 import org.bukkit.entity.Player;
 
@@ -10,6 +13,10 @@ import org.bukkit.entity.Player;
  * requirement's windows; a task handed to Bukkit's async scheduler lets the next tick start, whose
  * heartbeat starts it, and holds the one after. Work that still runs 1 s after it began fails the
  * player's attempt with its name; it is never cancelled, and it holds no tick from then on.
+ *
+ * <p>Work that ends without its effect, such as an outbound operation that failed, ends with
+ * {@link #failed} and fails the attempt of each of its players. Work for a player who is away counts
+ * until its attempt releases the player.
  *
  * <p>Count work that already runs with {@link #begin} and {@link #end}, or around a future with
  * {@link #around}, or around a task handed to Bukkit's async scheduler with {@link #task}. Any thread may count work. Every piece of
@@ -26,7 +33,23 @@ public final class PlayerWork implements AutoCloseable {
 
     /** [player]'s work [name] begins now and counts until {@link #end}. */
     public static PlayerWork begin(Player player, String name) {
-        return new PlayerWork(LEDGER.begin(player.getUniqueId(), player.getName(), name));
+        return new PlayerWork(LEDGER.begin(Set.of(player.getUniqueId()), name));
+    }
+
+    /**
+     * The work [name] of the players of [players], online or away, begins now and counts until
+     * {@link #end} or {@link #failed}.
+     */
+    public static PlayerWork begin(Collection<UUID> players, String name) {
+        return new PlayerWork(LEDGER.begin(Set.copyOf(players), name));
+    }
+
+    /**
+     * Work [name] for no player in particular begins now: it counts for every claimed player until
+     * {@link #end} or {@link #failed}.
+     */
+    public static PlayerWork server(String name) {
+        return new PlayerWork(LEDGER.begin(null, name));
     }
 
     /** [player]'s work [name] counts until [work] completes, either way; returns [work]. */
@@ -41,7 +64,16 @@ public final class PlayerWork implements AutoCloseable {
      * Bukkit's async scheduler, which starts it at the next tick's heartbeat.
      */
     public static Runnable task(Player player, String name, Runnable task) {
-        PlayerWork counted = new PlayerWork(LEDGER.schedule(player.getUniqueId(), player.getName(), name));
+        return task(Set.of(player.getUniqueId()), name, task);
+    }
+
+    /**
+     * The work [name] of the players of [players], online or away, counts from now until [task] returns
+     * or throws; hand the returned task to Bukkit's async scheduler, which starts it at the next tick's
+     * heartbeat.
+     */
+    public static Runnable task(Collection<UUID> players, String name, Runnable task) {
+        PlayerWork counted = new PlayerWork(LEDGER.schedule(Set.copyOf(players), name));
         return () -> {
             try {
                 task.run();
@@ -54,6 +86,16 @@ public final class PlayerWork implements AutoCloseable {
     /** The work is done; ending it again does nothing. */
     public void end() {
         entry.end();
+    }
+
+    /**
+     * The work ended without its effect because of [cause], such as an outbound operation that failed:
+     * the attempt of each of its players fails naming it, unless it already hung. Ending it again does
+     * nothing.
+     */
+    public void failed(Throwable cause) {
+        String message = cause.getMessage();
+        entry.failed(message != null ? message : cause.getClass().getSimpleName());
     }
 
     /** Ends the work, so a try with resources block counts what runs inside it. */

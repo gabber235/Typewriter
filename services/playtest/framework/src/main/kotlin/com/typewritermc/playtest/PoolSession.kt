@@ -520,6 +520,13 @@ internal class PoolSession private constructor(
                     Attempt.Event.Failed(player, WorkHung(player.name, happened.value.work, happened.value.beganAfter))
                 }
 
+                is PlayerEvent.Happened.WorkFailedWrapper -> {
+                    Attempt.Event.Failed(
+                        player,
+                        WorkFailed(player.name, happened.value.work, happened.value.beganAfter, happened.value.cause),
+                    )
+                }
+
                 is PlayerEvent.Happened.ClientLostWrapper -> {
                     Attempt.Event.Failed(player, ClientLost(player.name, happened.value))
                 }

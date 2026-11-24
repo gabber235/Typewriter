@@ -38,6 +38,7 @@ import skirout.harness.v1.wire.StateKind
 import java.io.IOException
 import java.util.TreeSet
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadPoolExecutor
 import kotlin.math.min
 
@@ -78,6 +79,9 @@ class PlaytestPlugin :
             },
         )
     private lateinit var pool: Link
+
+    /** The name of each player claimed so far, for reports from any thread about players who may be away. */
+    private val names = ConcurrentHashMap<UUID, String>()
 
     override fun onEnable() {
         val missing = TreeSet(Step.REQUIRED)
@@ -130,6 +134,7 @@ class PlaytestPlugin :
             pool = Link.open(port, Hello(role = Role.PAPER, name = name), { message -> onMainThread { receive(message) } }, ::poolLost)
             // Hung work is reported from its deadline's thread, so the report never waits for a long tick.
             work.reportHungTo(::reportHung)
+            work.reportFailedTo(::reportFailed)
         } catch (unreachable: IOException) {
             poolLost(unreachable)
         }
@@ -230,6 +235,7 @@ class PlaytestPlugin :
         coverage.started(attempt)
         attempts.claim(attempt, ids)
         ground.claim(attempt, claim.region)
+        players.online.forEach { names[it.uniqueId] = it.name }
         policy.claim(ids)
         probes.forget(players.online)
         for (player in players.online) {
@@ -261,6 +267,7 @@ class PlaytestPlugin :
         }
         coverage.started(attempt)
         attempts.claim(attempt, ids)
+        players.online.forEach { names[it.uniqueId] = it.name }
         policy.claim(ids)
         policy.deliver(ids) { pool.send(Message.createResumed(attempt = attempt, tick = ranAfter, failure = null)) }
     }
@@ -309,20 +316,37 @@ class PlaytestPlugin :
         for (player in Bukkit.getOnlinePlayers()) (player as CraftPlayer).handle.connection.send(ping)
     }
 
-    /** The player's attempt fails with the hung work; Paper never cancels it. */
+    /** The attempt of each of the work's players fails with the hung work; Paper never cancels it. */
     private fun reportHung(hung: WorkLedger.Hung) {
-        logger.warning(
-            "${hung.playerName()}'s work \"${hung.name()}\" began after tick ${hung.beganAfter()} and still runs after 1 s; it holds no more ticks.",
-        )
-        val happened = PlayerEvent.Happened.createWorkHung(work = hung.name(), beganAfter = hung.beganAfter())
-        pool.send(Message.PlayerEventWrapper(PlayerEvent(player = hung.playerName(), happened = happened)))
+        for (player in named(hung.players())) {
+            logger.warning(
+                "$player's work \"${hung.name()}\" began after tick ${hung.beganAfter()} and still runs after 1 s; it holds no more ticks.",
+            )
+            val happened = PlayerEvent.Happened.createWorkHung(work = hung.name(), beganAfter = hung.beganAfter())
+            pool.send(Message.PlayerEventWrapper(PlayerEvent(player = player, happened = happened)))
+        }
     }
 
-    /** Work reported hung ended; the pool lets its player back. */
-    private fun reportEnded(hung: WorkLedger.Hung) {
-        logger.info("${hung.playerName()}'s hung work \"${hung.name()}\" ended.")
-        pool.send(Message.createHungEnded(player = hung.playerName(), work = hung.name()))
+    /** The attempt of each of the work's players fails with the failed work. */
+    private fun reportFailed(failed: WorkLedger.Failed) {
+        for (player in named(failed.players())) {
+            logger.warning("$player's work \"${failed.name()}\" began after tick ${failed.beganAfter()} and failed: ${failed.cause()}.")
+            val happened =
+                PlayerEvent.Happened.createWorkFailed(work = failed.name(), beganAfter = failed.beganAfter(), cause = failed.cause())
+            pool.send(Message.PlayerEventWrapper(PlayerEvent(player = player, happened = happened)))
+        }
     }
+
+    /** Work reported hung ended; the pool lets its players back. */
+    private fun reportEnded(hung: WorkLedger.Hung) {
+        for (player in named(hung.players())) {
+            logger.info("$player's hung work \"${hung.name()}\" ended.")
+            pool.send(Message.createHungEnded(player = player, work = hung.name()))
+        }
+    }
+
+    /** The names of [players], each claimed before, as the pool knows them. */
+    private fun named(players: Set<UUID>): List<String> = players.mapNotNull(names::get)
 
     /** The client acked nothing for 5 s while behind; it holds back no tick and the pool replaces it. */
     private fun reportStalled(stalled: Acks.Stalled) {

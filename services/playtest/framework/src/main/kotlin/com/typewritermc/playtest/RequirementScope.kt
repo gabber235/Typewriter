@@ -161,8 +161,8 @@ class RequirementScope internal constructor(
     /**
      * Passes once every check of [checks] held in a tick of the window, the [window] ticks after the
      * last stimulus. Fails with [WindowMissed] once those ticks ran and a check never held, and with
-     * [WorkHung] or [ClientLost] as soon as work a plugin counted for a player of the attempt hangs or
-     * a player's client is lost. Ticks run only while a window waits, so a pass costs no more ticks than
+     * [WorkHung], [WorkFailed] or [ClientLost] as soon as work counted for a player of the attempt hangs
+     * or fails, or a player's client is lost. Ticks run only while a window waits, so a pass costs no more ticks than
      * the truth needs. A window that checks a player away since its [quit] is refused.
      */
     suspend fun within(

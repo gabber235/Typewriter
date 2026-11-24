@@ -34,7 +34,8 @@ import java.util.function.Predicate;
  * meanwhile so work handed to Bukkit's async scheduler can start.
  *
  * <p>A client that {@link Acks} finds stalled holds back no tick from then on, and counts as lost. Nor
- * does a client whose connection closed: Paper notices its player leave only in the next tick.
+ * does a client whose connection closed: Paper notices its player leave only in the next tick. A lost
+ * player's counted work still holds back ticks until its attempt releases it.
  */
 final class StepPolicy {
     /** Step pings carry the tick plus this, so they never collide with a barrier. */
@@ -144,17 +145,21 @@ final class StepPolicy {
     /** [players] belong to an attempt: from now on the work their plugins count holds back ticks. */
     void claim(Collection<UUID> players) {
         claimed.addAll(players);
+        work.claimed(claimed);
     }
 
     /** [players]' attempt ended: their work holds back no tick and their windows close without a barrier. */
     void release(Collection<UUID> players) {
         claimed.removeAll(players);
+        work.claimed(claimed);
         players.forEach(windows::remove);
     }
 
-    /** [player] left Paper: it holds back no tick, and nothing waits for its client any more. */
+    /**
+     * [player] left Paper: nothing waits for its client any more, but it stays claimed until its attempt
+     * releases it, so work counted for it while it is away, a rejoin's included, still holds back ticks.
+     */
     void lose(UUID player) {
-        claimed.remove(player);
         windows.remove(player);
         busy.remove(player);
         acks.lose(player);

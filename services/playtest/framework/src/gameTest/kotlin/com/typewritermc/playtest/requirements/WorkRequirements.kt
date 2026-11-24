@@ -32,6 +32,19 @@ val WorkRequirements by testSuite(compartment = { GameCompartment }) {
     }
 
     requirement(
+        "ASYNC-2",
+        "work counted for a player who quit holds the ticks until its attempt releases it, so the window beside it counts exactly its ticks",
+        players = 2,
+    ) {
+        val (leaver, stayer) = players
+        leaver.quit()
+
+        work(stayer, "Profile save", millis = 300, then = "Profile saved", countedFor = leaver)
+
+        within(4.ticks) { stayer sees chat("Profile saved") }
+    }
+
+    requirement(
         "HUNG-1",
         "work still running 1 s after it began fails the attempt, naming the work, the player and its tick, and is never cancelled",
         demonstrates = Demonstrates.FAILURE,

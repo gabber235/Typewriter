@@ -205,15 +205,26 @@ class Probe internal constructor(
     ): Mark = run(listOf(player), PlayerAction.createMark(kind = kind))
 
     /**
-     * [player]'s work [name] runs off Paper's main thread for [millis] of wall clock, counted as a
-     * plugin counts its work, then sends [chat] as a chat line; for the framework's own test kit.
+     * Work [name] runs off Paper's main thread for [millis] of wall clock, counted for [countedFor] as a
+     * plugin counts its work, then sends [chat] to [player] as a chat line; for the framework's own test
+     * kit. [countedFor] may be away.
      */
     internal suspend fun work(
         player: GamePlayer,
         name: String,
         millis: Int,
         chat: String,
-    ): Mark = run(listOf(player), PlayerAction.createWork(name = name, millis = millis, chat = chat))
+        countedFor: GamePlayer = player,
+    ): Mark =
+        run(
+            listOf(player),
+            PlayerAction.createWork(
+                name = name,
+                millis = millis,
+                chat = chat,
+                countedFor = countedFor.uuid.takeIf { countedFor != player }?.toString(),
+            ),
+        )
 
     private suspend fun run(
         players: List<GamePlayer>,

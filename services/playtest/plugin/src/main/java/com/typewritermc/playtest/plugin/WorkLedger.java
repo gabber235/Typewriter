@@ -3,6 +3,7 @@ package com.typewritermc.playtest.plugin;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,23 +30,32 @@ final class WorkLedger {
     /** How long work may run before it is reported as hung. */
     static final long HUNG_NANOS = 1_000_000_000L;
 
-    /** [player]'s work [name], which began after tick [beganAfter], still ran {@link #HUNG_NANOS} later. */
-    record Hung(UUID player, String playerName, String name, int beganAfter) {}
+    /**
+     * The work [name] of [players], which began after tick [beganAfter], still ran {@link #HUNG_NANOS}
+     * later. Work for no player is the work of the players claimed at its deadline.
+     */
+    record Hung(Set<UUID> players, String name, int beganAfter) {}
+
+    /**
+     * The work [name] of [players], which began after tick [beganAfter], ended without its effect because
+     * of [cause]. Work for no player is the work of the players claimed when it failed.
+     */
+    record Failed(Set<UUID> players, String name, int beganAfter, String cause) {}
 
     /** One piece of counted work, from its begin until {@link #end()}. */
     final class Entry {
-        private final UUID player;
-        private final String playerName;
+        private final Set<UUID> players;
         private final String name;
         private final int beganAfter;
         private final int holdsFrom;
+        // Whom the hang was reported to, which its end is reported to as well.
+        private Set<UUID> reportedTo;
         // Set once the hang report went out; work that ends before then is reported ended by the deadline.
         private boolean reported;
         private boolean endedUnreported;
 
-        private Entry(UUID player, String playerName, String name, int beganAfter, int holdsFrom) {
-            this.player = player;
-            this.playerName = playerName;
+        private Entry(Set<UUID> players, String name, int beganAfter, int holdsFrom) {
+            this.players = players;
             this.name = name;
             this.beganAfter = beganAfter;
             this.holdsFrom = holdsFrom;
@@ -58,14 +68,44 @@ final class WorkLedger {
         void end() {
             synchronized (WorkLedger.this) {
                 if (counted.remove(this)) return;
-                if (!hung.remove(this)) return;
-                if (reported) ended.add(this);
-                else endedUnreported = true;
+                endHung();
             }
         }
 
+        /**
+         * The work ended without its effect because of [cause]: reported once, now, on this thread, and it
+         * holds no tick from then on. Hung work that fails ends as hung work does; ending it again does
+         * nothing.
+         */
+        void failed(String cause) {
+            Failed report;
+            synchronized (WorkLedger.this) {
+                if (!counted.remove(this)) {
+                    endHung();
+                    return;
+                }
+                report = new Failed(players == null ? claimed : players, name, beganAfter, cause);
+            }
+            reportFailed.accept(report);
+        }
+
+        private void endHung() {
+            if (!hung.remove(this)) return;
+            if (reported) ended.add(this);
+            else endedUnreported = true;
+        }
+
+        /** Whether this is work of any of [claimed]; work for no player is everyone's. */
+        private boolean of(Collection<UUID> claimed) {
+            if (players == null) return !claimed.isEmpty();
+            for (UUID player : players) {
+                if (claimed.contains(player)) return true;
+            }
+            return false;
+        }
+
         private Hung report() {
-            return new Hung(player, playerName, name, beganAfter);
+            return new Hung(reportedTo, name, beganAfter);
         }
     }
 
@@ -87,6 +127,8 @@ final class WorkLedger {
 
     private final Deadlines deadlines;
     private volatile Consumer<Hung> reportHung = hung -> {};
+    private volatile Consumer<Failed> reportFailed = failed -> {};
+    private volatile Set<UUID> claimed = Set.of();
     // Work that is neither ended nor hung, in begin order.
     private final List<Entry> counted = new ArrayList<>();
     // Hung work that still runs, and hung work that ended since the last report.
@@ -104,6 +146,16 @@ final class WorkLedger {
         reportHung = report;
     }
 
+    /** [players] are claimed now: work for no player is theirs when it hangs or fails. Main thread. */
+    void claimed(Set<UUID> players) {
+        claimed = Set.copyOf(players);
+    }
+
+    /** Failed work goes to [report], from the thread that failed it. */
+    void reportFailedTo(Consumer<Failed> report) {
+        reportFailed = report;
+    }
+
     /** Paper started [tick]. Main thread. */
     synchronized void tickStarted(int tick) {
         running = tick;
@@ -115,25 +167,28 @@ final class WorkLedger {
         running = -1;
     }
 
-    /** [player]'s plugin began work [name] that already runs; it holds the next tick to start. Any thread. */
-    synchronized Entry begin(UUID player, String playerName, String name) {
-        return count(player, playerName, name, nextToStart());
+    /**
+     * A plugin began work [name] for [players] (null: for every claimed player) that already runs; it
+     * holds the next tick to start. Any thread.
+     */
+    synchronized Entry begin(Set<UUID> players, String name) {
+        return count(players, name, nextToStart());
     }
 
     /**
      * [player]'s plugin handed work [name] to Bukkit's async scheduler; it lets the next tick start, whose
      * heartbeat starts it, and holds the one after. Any thread.
      */
-    synchronized Entry schedule(UUID player, String playerName, String name) {
-        return count(player, playerName, name, nextToStart() + 1);
+    synchronized Entry schedule(Set<UUID> players, String name) {
+        return count(players, name, nextToStart() + 1);
     }
 
     private int nextToStart() {
         return (running >= 0 ? running : lastEnded) + 1;
     }
 
-    private Entry count(UUID player, String playerName, String name, int holdsFrom) {
-        var entry = new Entry(player, playerName, name, lastEnded, holdsFrom);
+    private Entry count(Set<UUID> players, String name, int holdsFrom) {
+        var entry = new Entry(players == null ? null : Set.copyOf(players), name, lastEnded, holdsFrom);
         counted.add(entry);
         deadlines.after(HUNG_NANOS, () -> deadline(entry));
         return entry;
@@ -142,7 +197,7 @@ final class WorkLedger {
     /** Whether work of any of [players] holds [tick] from starting. */
     synchronized boolean holds(Collection<UUID> players, int tick) {
         for (Entry entry : counted) {
-            if (tick >= entry.holdsFrom && players.contains(entry.player)) return true;
+            if (tick >= entry.holdsFrom && entry.of(players)) return true;
         }
         return false;
     }
@@ -150,7 +205,7 @@ final class WorkLedger {
     /** Whether none of [players] has work that is neither ended nor hung. */
     synchronized boolean quiet(Collection<UUID> players) {
         for (Entry entry : counted) {
-            if (players.contains(entry.player)) return false;
+            if (entry.of(players)) return false;
         }
         return true;
     }
@@ -170,6 +225,7 @@ final class WorkLedger {
         synchronized (this) {
             if (!counted.remove(entry)) return;
             hung.add(entry);
+            entry.reportedTo = entry.players == null ? claimed : entry.players;
         }
         reportHung.accept(entry.report());
         synchronized (this) {

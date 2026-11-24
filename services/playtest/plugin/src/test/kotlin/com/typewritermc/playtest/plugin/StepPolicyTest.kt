@@ -93,4 +93,23 @@ val StepPolicyTest by testSuite {
 
         granted shouldBe 1
     }
+
+    test("a claimed player who left keeps its counted work holding the next tick until its attempt is released") {
+        var granted = 0
+        val work = WorkLedger { _, _ -> }
+        val policy =
+            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, work, {}, Acks { 0L }, {}, { true })
+        policy.claim(listOf(claimed))
+        policy.tickEnded(10)
+        work.tickEnded(10)
+        policy.lose(claimed)
+
+        work.begin(setOf(claimed), "session take")
+        policy.run()
+        granted shouldBe 0
+
+        policy.release(listOf(claimed))
+        policy.run()
+        granted shouldBe 1
+    }
 }

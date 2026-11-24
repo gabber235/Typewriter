@@ -113,7 +113,7 @@ internal class Attempt(
 
         /**
          * The attempt fails because of [player], wherever the body waits: its counted work hung
-         * ([WorkHung]), its client or Paper was lost ([ClientLost], [PaperLost]), or its lease ran out
+         * ([WorkHung]) or failed ([WorkFailed]), its client or Paper was lost ([ClientLost], [PaperLost]), or its lease ran out
          * ([LeaseExpired]).
          */
         data class Failed(

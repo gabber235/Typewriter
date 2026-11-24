@@ -837,6 +837,7 @@ internal class Pool(
     ) {
         when (event.happened) {
             is PlayerEvent.Happened.WorkHungWrapper -> workHung(event)
+            is PlayerEvent.Happened.WorkFailedWrapper -> attemptHolding(event.player)?.session?.send(Message.PlayerEventWrapper(event))
             else -> System.err.println("${server.name} sent ${event.happened.kind}, which Paper never sends")
         }
     }
