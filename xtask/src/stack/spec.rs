@@ -115,27 +115,59 @@ pub struct Build {
 
 /// How a [`Build`] runs.
 pub enum How {
-    /// Arguments of the stack's one Gradle run in `services`, which takes those of every Gradle
-    /// build at once, so two never compete for the same projects.
-    Gradle(fn(&crate::Context) -> Vec<String>),
+    /// Tasks and properties of the stack's one Gradle run in `services`, which takes those of
+    /// every Gradle build at once, so two never compete for the same projects.
+    Gradle(fn(&crate::Context) -> GradleBuild),
     /// A build of its own, on a thread beside the others.
     Own(fn(&crate::Context) -> Result<()>),
 }
 
-/// The arguments of the one Gradle run that does every Gradle build of `builds`, in order and each
-/// once; none when no build uses Gradle.
-pub fn gradle_args(ctx: &crate::Context, builds: &[&Build]) -> Option<Vec<String>> {
-    let mut args: Vec<String> = Vec::new();
+/// What one Gradle build runs: its tasks and the project properties (`-P`) they read.
+pub struct GradleBuild {
+    pub tasks: Vec<String>,
+    pub properties: Vec<(String, String)>,
+}
+
+/// The arguments of the one Gradle run that does every Gradle build of `builds`: each task once,
+/// then each property; none when no build uses Gradle. Fails naming both builds when two set one
+/// property to different values, since Gradle would silently take the last.
+pub fn gradle_args(ctx: &crate::Context, builds: &[&Build]) -> Result<Option<Vec<String>>> {
+    let mut tasks: Vec<String> = Vec::new();
+    let mut properties: BTreeMap<String, (String, &str)> = BTreeMap::new();
     for build in builds {
-        if let How::Gradle(build_args) = build.how {
-            for arg in build_args(ctx) {
-                if !args.contains(&arg) {
-                    args.push(arg);
+        let How::Gradle(gradle) = build.how else {
+            continue;
+        };
+        let gradle = gradle(ctx);
+        for task in gradle.tasks {
+            if !tasks.contains(&task) {
+                tasks.push(task);
+            }
+        }
+        for (key, value) in gradle.properties {
+            match properties.get(&key) {
+                Some((set, by)) if *set != value => bail!(
+                    "{by} and {} set the Gradle property {key} to {set} and {value}",
+                    build.name
+                ),
+                Some(_) => {}
+                None => {
+                    properties.insert(key, (value, build.name));
                 }
             }
         }
     }
-    (!args.is_empty()).then_some(args)
+    if tasks.is_empty() {
+        return Ok(None);
+    }
+    let mut args = vec!["--quiet".to_owned()];
+    args.extend(tasks);
+    args.extend(
+        properties
+            .into_iter()
+            .map(|(key, (value, _))| format!("-P{key}={value}")),
+    );
+    Ok(Some(args))
 }
 
 /// When a started service counts as ready.
@@ -493,6 +525,7 @@ impl<'a> StackContext<'a> {
     /// lock. Fails naming each build that failed.
     pub fn build(&self, builds: &[&'static Build]) -> Result<()> {
         let ctx = self.ctx;
+        let gradle = gradle_args(ctx, builds)?;
         let failures: Vec<(&str, anyhow::Error)> = std::thread::scope(|scope| {
             let mut running = Vec::new();
             for build in builds {
@@ -500,7 +533,7 @@ impl<'a> StackContext<'a> {
                     running.push((build.name, scope.spawn(move || run(ctx))));
                 }
             }
-            if let Some(args) = gradle_args(ctx, builds) {
+            if let Some(args) = gradle {
                 let names: Vec<&str> = builds
                     .iter()
                     .filter(|build| matches!(build.how, How::Gradle(_)))
@@ -639,17 +672,30 @@ mod tests {
     };
     const REALM_HOST: Build = Build {
         name: "realm host",
-        how: How::Gradle(|ctx| {
-            vec![
-                "--quiet".to_owned(),
-                ":loader:installDist".to_owned(),
-                format!("-Pinbox={}", ctx.root.join("inbox").display()),
-            ]
+        how: How::Gradle(|ctx| GradleBuild {
+            tasks: vec![":loader:installDist".to_owned(), "assemble".to_owned()],
+            properties: vec![(
+                "inbox".to_owned(),
+                ctx.root.join("inbox").display().to_string(),
+            )],
         }),
     };
     const ENGINE_HOST: Build = Build {
         name: "engine host",
-        how: How::Gradle(|_| vec!["--quiet".to_owned(), ":engine:installDist".to_owned()]),
+        how: How::Gradle(|ctx| GradleBuild {
+            tasks: vec![":engine:installDist".to_owned(), "assemble".to_owned()],
+            properties: vec![(
+                "inbox".to_owned(),
+                ctx.root.join("inbox").display().to_string(),
+            )],
+        }),
+    };
+    const OTHER_INBOX: Build = Build {
+        name: "engine host elsewhere",
+        how: How::Gradle(|_| GradleBuild {
+            tasks: vec![":engine:installDist".to_owned()],
+            properties: vec![("inbox".to_owned(), "/elsewhere".to_owned())],
+        }),
     };
 
     mod built {
@@ -673,18 +719,37 @@ mod tests {
     }
 
     #[test]
-    fn every_gradle_build_of_a_stack_runs_in_one_gradle_with_each_argument_once() {
+    fn every_gradle_build_of_a_stack_runs_in_one_gradle_with_each_task_and_property_once() {
         let root = TempRoot::new();
         assert_eq!(
-            gradle_args(&root.ctx, &[&STACK_BINARY, &REALM_HOST, &ENGINE_HOST]).unwrap(),
+            gradle_args(&root.ctx, &[&STACK_BINARY, &REALM_HOST, &ENGINE_HOST])
+                .unwrap()
+                .unwrap(),
             [
                 "--quiet".to_owned(),
                 ":loader:installDist".to_owned(),
-                format!("-Pinbox={}", root.path("inbox").display()),
+                "assemble".to_owned(),
                 ":engine:installDist".to_owned(),
+                format!("-Pinbox={}", root.path("inbox").display()),
             ]
         );
-        assert_eq!(gradle_args(&root.ctx, &[&STACK_BINARY]), None);
+        assert_eq!(gradle_args(&root.ctx, &[&STACK_BINARY]).unwrap(), None);
+    }
+
+    #[test]
+    fn two_gradle_builds_that_set_one_property_differently_are_refused_before_anything_builds() {
+        let root = TempRoot::new();
+        let ctx = stack_context(&root);
+        let error = refusal(ctx.build(&[&REALM_HOST, &OTHER_INBOX]));
+        assert_eq!(
+            error,
+            format!(
+                "realm host and engine host elsewhere set the Gradle property inbox to {} and \
+                 /elsewhere",
+                root.path("inbox").display()
+            )
+        );
+        assert!(ctx.require(&REALM_HOST).is_err());
     }
 
     /// How many of [`MEETING`]'s builds have started.

@@ -18,8 +18,8 @@ use serde_json::Value;
 
 use super::client_configuration::{ClientConfiguration, FIXTURE_USERS};
 use super::spec::{
-    BACKEND, Build, How, Probe, Published, Role, Service, ServiceId, StackContext, StackSpec,
-    state_dir,
+    BACKEND, Build, GradleBuild, How, Probe, Published, Role, Service, ServiceId, StackContext,
+    StackSpec, state_dir,
 };
 use crate::cargo_build::{CargoBuild, Outcome, target_directory};
 use crate::cluster::CiCluster;
@@ -72,16 +72,18 @@ pub const COMPONENTS: Build = Build {
 /// inbox.
 pub const REALM_HOST_BUILD: Build = Build {
     name: "the standalone Realm host",
-    how: How::Gradle(|ctx| {
-        vec![
-            "--quiet".to_owned(),
+    how: How::Gradle(|ctx| GradleBuild {
+        tasks: vec![
             format!("{REALM_HOST_PROJECT}:installDist"),
             "assembleDevelopmentArtifacts".to_owned(),
-            format!(
-                "-PtypewriterArtifactInbox={}",
-                realm_host_work_dir(ctx).join("artifacts/inbox").display()
-            ),
-        ]
+        ],
+        properties: vec![(
+            "typewriterArtifactInbox".to_owned(),
+            realm_host_work_dir(ctx)
+                .join("artifacts/inbox")
+                .display()
+                .to_string(),
+        )],
     }),
 };
 
