@@ -95,6 +95,23 @@ impl TempRoot {
     pub fn commit(&self, message: &str) {
         self.git(&["commit", "--quiet", "--allow-empty", "-m", message]);
     }
+
+    /// A new root holding a checkout of `branch` of this repository, through a `file://` remote
+    /// named `origin`, with only the branch's last commit, as CI's shallow checkout has.
+    pub fn shallow_clone(&self, branch: &str) -> TempRoot {
+        let checkout = TempRoot::new();
+        let url = format!("file://{}", self.path("").display());
+        checkout.git(&[
+            "clone",
+            "--quiet",
+            "--depth=1",
+            "--branch",
+            branch,
+            &url,
+            ".",
+        ]);
+        checkout
+    }
 }
 
 /// A complete clients.json, with values of its own, for tests to change one fact of.
@@ -535,12 +552,14 @@ pub fn scopes(scopes: &[&str]) -> Scopes {
 }
 
 /// Declares a fake stack service `$name` that only names the services it needs, optionally
-/// followed by `; provides ROLE, ...` and `; needs_roles ROLE, ...`: its command does nothing and
-/// it is ready once that command exits.
+/// followed by `; provides ROLE, ...`, `; needs_roles ROLE, ...` and `; builds BUILD, ...` (each a
+/// `const` [`crate::stack::spec::Build`]): its command does nothing and it is ready once that
+/// command exits.
 macro_rules! fake_service {
     ($name:ident, $($need:ident),*
         $(; provides $($provided:path),+)?
-        $(; needs_roles $($role:path),+)?) => {
+        $(; needs_roles $($role:path),+)?
+        $(; builds $($build:path),+)?) => {
         pub struct $name;
         impl $crate::stack::spec::Service for $name {
             const ID: $crate::stack::spec::ServiceId =
@@ -553,6 +572,9 @@ macro_rules! fake_service {
             }
             fn needs_roles(&self) -> &'static [$crate::stack::spec::Role] {
                 &[$($($role),+)?]
+            }
+            fn builds(&self) -> &'static [&'static $crate::stack::spec::Build] {
+                &[$($(&$build),+)?]
             }
             fn command(
                 &self,
@@ -571,6 +593,50 @@ pub(crate) use fake_service;
 /// The ids of `services`, in their order.
 pub fn ids(services: &[&dyn crate::stack::spec::DynService]) -> Vec<&'static str> {
     services.iter().map(|service| service.id().0).collect()
+}
+
+/// The names of what `spec` builds before it starts, in its order.
+pub fn build_names(spec: &crate::stack::spec::StackSpec) -> Vec<&'static str> {
+    spec.builds().iter().map(|build| build.name).collect()
+}
+
+/// A stand in for Cargo in a [`TempRoot`]: each run is counted and writes [`Self::artifact`] and,
+/// as Cargo does beside each artifact, a dependency file naming the files the build read.
+pub struct FakeCargo<'a> {
+    pub root: &'a TempRoot,
+}
+
+impl FakeCargo<'_> {
+    /// What the build produces: `target/stack`.
+    pub fn artifact(&self) -> PathBuf {
+        self.root.path("target/stack")
+    }
+
+    /// A run that writes `contents` into the artifact and names `reads`, root relative, as read.
+    pub fn command(&self, contents: &str, reads: &[&str]) -> Command {
+        fs::create_dir_all(self.root.path("target")).unwrap();
+        let reads: Vec<String> = reads
+            .iter()
+            .map(|read| self.root.path(read).display().to_string())
+            .collect();
+        let mut command = Command::new("sh");
+        command
+            .args([
+                "-c",
+                r#"echo run >> "$RUNS" && printf %s "$CONTENTS" > "$ARTIFACT" && printf '%s: %s\n' "$ARTIFACT" "$READS" > "$DEP_INFO""#,
+            ])
+            .env("RUNS", self.root.path("runs"))
+            .env("CONTENTS", contents)
+            .env("ARTIFACT", self.artifact())
+            .env("READS", reads.join(" "))
+            .env("DEP_INFO", self.root.path("target/stack.d"));
+        command
+    }
+
+    /// How often it ran.
+    pub fn runs(&self) -> usize {
+        fs::read_to_string(self.root.path("runs")).map_or(0, |runs| runs.lines().count())
+    }
 }
 
 /// Each drive an attempt made, in order: its folder below the suite folder and the ids it was

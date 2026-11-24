@@ -641,13 +641,9 @@ mod tests {
         assert!(!ctx.state().join("panel.json").exists());
     }
 
-    fn nothing(_: &crate::Context) -> Result<()> {
-        Ok(())
-    }
-
     const STACK_BINARY: Build = Build {
         name: "stack binary",
-        how: How::Own(nothing),
+        how: How::Own(|_| Ok(())),
     };
     const REALM_HOST: Build = Build {
         name: "realm host",
@@ -664,42 +660,18 @@ mod tests {
         how: How::Gradle(|_| vec!["--quiet".to_owned(), "gameTestBuild".to_owned()]),
     };
 
-    struct Binder;
-
-    impl Service for Binder {
-        const ID: ServiceId = ServiceId("binder");
-        fn builds(&self) -> &'static [&'static Build] {
-            &[&STACK_BINARY]
-        }
-        fn command(&self, _: &StackContext) -> Result<Command> {
-            unreachable!()
-        }
-        fn ready(&self, _: &StackContext) -> Probe {
-            Probe::ExitSuccess
-        }
-    }
-
-    struct Host;
-
-    impl Service for Host {
-        const ID: ServiceId = ServiceId("host");
-        fn builds(&self) -> &'static [&'static Build] {
-            &[&STACK_BINARY, &REALM_HOST]
-        }
-        fn command(&self, _: &StackContext) -> Result<Command> {
-            unreachable!()
-        }
-        fn ready(&self, _: &StackContext) -> Probe {
-            Probe::ExitSuccess
-        }
+    mod built {
+        use super::*;
+        fake_service!(Binder, ; builds STACK_BINARY);
+        fake_service!(Host, ; builds STACK_BINARY, REALM_HOST);
     }
 
     #[test]
     fn a_stack_builds_what_its_services_and_its_command_need_once_each() {
         let spec = StackSpec::default()
-            .with(Binder)
+            .with(built::Binder)
             .with(roles::Owner)
-            .with(Host)
+            .with(built::Host)
             .building(&GAME_SUITE);
         let names: Vec<&str> = spec.builds().iter().map(|build| build.name).collect();
         assert_eq!(names, ["stack binary", "realm host", "game suite"]);
@@ -724,7 +696,7 @@ mod tests {
     static MET: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
     /// Starts, then waits up to ten seconds for the other build of [`MEETING`] to start too.
-    fn meet(_: &crate::Context) -> Result<()> {
+    const MEET: fn(&crate::Context) -> Result<()> = |_| {
         use std::sync::atomic::Ordering;
         MET.fetch_add(1, Ordering::SeqCst);
         let deadline = std::time::Instant::now() + Duration::from_secs(10);
@@ -735,16 +707,16 @@ mod tests {
             std::thread::sleep(Duration::from_millis(10));
         }
         Ok(())
-    }
+    };
 
     const MEETING: [Build; 2] = [
         Build {
             name: "components",
-            how: How::Own(meet),
+            how: How::Own(MEET),
         },
         Build {
             name: "stack binary",
-            how: How::Own(meet),
+            how: How::Own(MEET),
         },
     ];
 

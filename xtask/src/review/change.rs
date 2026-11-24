@@ -633,10 +633,9 @@ mod tests {
         assert_eq!(nearest_base(&root.ctx).unwrap(), "origin/features/v1");
     }
 
-    /// A remote whose `develop` moved three commits past `A`, where `feature` grew forty commits,
-    /// and a checkout of `feature` with only its last commit, as CI's shallow checkout has; returns
-    /// the remote, the checkout and `A`.
-    fn shallow_checkout() -> (TempRoot, TempRoot, String) {
+    #[test]
+    fn a_shallow_checkout_fetches_history_until_it_holds_the_merge_base() {
+        // `develop` moved three commits past `A`, where `feature` grew forty.
         let origin = TempRoot::new();
         origin.git(&["init", "--quiet", "--initial-branch=develop"]);
         // GitHub serves any commit a branch reaches, as the checkout asks for its base by hash.
@@ -652,31 +651,13 @@ mod tests {
         for n in 0..3 {
             origin.commit(&format!("develop {n}"));
         }
-        let checkout = TempRoot::new();
-        let url = format!("file://{}", origin.path("").display());
-        checkout.git(&[
-            "clone",
-            "--quiet",
-            "--depth=1",
-            "--branch",
-            "feature",
-            &url,
-            ".",
-        ]);
-        (origin, checkout, a)
-    }
-
-    #[test]
-    fn a_shallow_checkout_fetches_history_until_it_holds_the_merge_base() {
-        let (origin, checkout, a) = shallow_checkout();
         let develop = origin.git(&["rev-parse", "develop"]).trim().to_owned();
-        assert_eq!(base(&checkout.ctx, Some(&develop)).unwrap(), a);
-    }
 
-    #[test]
-    fn a_shallow_checkout_fetches_a_remote_branch_it_lacks() {
-        let (_origin, checkout, a) = shallow_checkout();
-        assert_eq!(base(&checkout.ctx, Some("origin/develop")).unwrap(), a);
+        let by_hash = origin.shallow_clone("feature");
+        assert_eq!(base(&by_hash.ctx, Some(&develop)).unwrap(), a);
+        // A checkout of one branch lacks the remote branch it is compared with.
+        let by_branch = origin.shallow_clone("feature");
+        assert_eq!(base(&by_branch.ctx, Some("origin/develop")).unwrap(), a);
     }
 
     #[test]

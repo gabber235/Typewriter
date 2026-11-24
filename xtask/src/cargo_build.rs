@@ -109,7 +109,11 @@ impl CargoBuild<'_> {
             digest.update(dir.as_os_str().as_encoded_bytes());
         }
         for flags in ["RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS"] {
-            digest.update(std::env::var(flags).unwrap_or_default().as_bytes());
+            digest.update(&[0]);
+            match std::env::var_os(flags) {
+                Some(value) => digest.update(value.as_encoded_bytes()),
+                None => digest.update(b"unset"),
+            }
         }
         let toolchain = ctx.tool(".", "rustc", &["-vV"]).output_text()?;
         digest.update(toolchain.as_bytes());
@@ -231,126 +235,85 @@ fn sha256(path: &Path) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::TempRoot;
+    use crate::test_support::{FakeCargo, TempRoot};
 
-    /// A stand in for Cargo that counts its runs in `runs`, writes `artifact` with `contents` and
-    /// the dependency file beside it naming `reads`, as Cargo writes one beside each artifact.
-    fn fake_cargo(root: &TempRoot, contents: &str, reads: &[&str]) -> Command {
-        let reads: Vec<String> = reads
-            .iter()
-            .map(|read| root.path(read).display().to_string())
-            .collect();
-        let mut command = Command::new("sh");
-        command
-            .args([
-                "-c",
-                r#"echo run >> "$RUNS" && printf %s "$CONTENTS" > "$ARTIFACT" && printf '%s: %s\n' "$ARTIFACT" "$READS" > "$DEP_INFO""#,
-            ])
-            .env("RUNS", root.path("runs"))
-            .env("CONTENTS", contents)
-            .env("ARTIFACT", root.path("target/stack"))
-            .env("READS", reads.join(" "))
-            .env("DEP_INFO", root.path("target/stack.d"));
-        command
-    }
-
-    fn build(root: &TempRoot) -> CargoBuild<'static> {
-        root.dir("target");
-        CargoBuild {
-            name: "stack",
-            inputs: &["backend", "Cargo.lock"],
-            excluded: &["backend/tests"],
-            artifacts: vec![root.path("target/stack")],
-        }
-    }
-
-    fn runs(root: &TempRoot) -> usize {
-        fs::read_to_string(root.path("runs")).map_or(0, |runs| runs.lines().count())
-    }
-
-    fn sources(root: &TempRoot) {
-        root.write("backend/src/lib.rs", "fn main() {}");
-        root.write("backend/tests/case.rs", "#[test] fn case() {}");
-        root.write("Cargo.lock", "version = 4");
-    }
+    /// The build every case runs: `backend` and `Cargo.lock` without `backend/tests`.
+    const INPUTS: &[&str] = &["backend", "Cargo.lock"];
+    const EXCLUDED: &[&str] = &["backend/tests"];
+    const READS: &[&str] = &["backend/src/lib.rs"];
 
     #[test]
     fn a_build_whose_inputs_are_unchanged_is_reused_without_running_cargo() {
         let root = TempRoot::new();
-        sources(&root);
-        let build = build(&root);
-        let reads = ["backend/src/lib.rs"];
+        root.write("backend/src/lib.rs", "fn main() {}");
+        root.write("Cargo.lock", "version = 4");
+        let cargo = FakeCargo { root: &root };
+        let build = CargoBuild {
+            name: "stack",
+            inputs: INPUTS,
+            excluded: EXCLUDED,
+            artifacts: vec![cargo.artifact()],
+        };
 
-        assert_eq!(
-            build
-                .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
-                .unwrap(),
-            Outcome::Compiled
-        );
-        assert_eq!(
-            build
-                .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
-                .unwrap(),
-            Outcome::Reused
-        );
-        assert_eq!(runs(&root), 1);
-        assert_eq!(
-            fs::read_to_string(root.path("target/stack")).unwrap(),
-            "one"
-        );
+        let first = build.run(&root.ctx, &mut cargo.command("one", READS));
+        let second = build.run(&root.ctx, &mut cargo.command("one", READS));
+
+        assert_eq!(first.unwrap(), Outcome::Compiled);
+        assert_eq!(second.unwrap(), Outcome::Reused);
+        assert_eq!(cargo.runs(), 1);
+        assert_eq!(fs::read_to_string(cargo.artifact()).unwrap(), "one");
     }
 
     #[test]
     fn an_edited_or_added_input_builds_again() {
         let root = TempRoot::new();
-        sources(&root);
-        let build = build(&root);
-        let reads = ["backend/src/lib.rs"];
+        root.write("backend/src/lib.rs", "fn main() {}");
+        root.write("Cargo.lock", "version = 4");
+        let cargo = FakeCargo { root: &root };
+        let build = CargoBuild {
+            name: "stack",
+            inputs: INPUTS,
+            excluded: EXCLUDED,
+            artifacts: vec![cargo.artifact()],
+        };
         build
-            .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
+            .run(&root.ctx, &mut cargo.command("one", READS))
             .unwrap();
 
-        root.write("backend/src/lib.rs", "fn main() { edited() }");
-        assert_eq!(
-            build
-                .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
-                .unwrap(),
-            Outcome::Compiled
-        );
-        root.write("Cargo.lock", "version = 4\n[[package]]");
-        assert_eq!(
-            build
-                .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
-                .unwrap(),
-            Outcome::Compiled
-        );
-        root.write("backend/src/new.rs", "");
-        assert_eq!(
-            build
-                .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
-                .unwrap(),
-            Outcome::Compiled
-        );
-        assert_eq!(runs(&root), 4);
+        for (file, contents) in [
+            ("backend/src/lib.rs", "fn main() { edited() }"),
+            ("Cargo.lock", "version = 4\n[[package]]"),
+            ("backend/src/new.rs", ""),
+        ] {
+            root.write(file, contents);
+            let outcome = build.run(&root.ctx, &mut cargo.command("one", READS));
+            assert_eq!(outcome.unwrap(), Outcome::Compiled, "after writing {file}");
+        }
+        assert_eq!(cargo.runs(), 4);
     }
 
     #[test]
     fn a_different_command_builds_again() {
         let root = TempRoot::new();
-        sources(&root);
-        let build = build(&root);
-        let reads = ["backend/src/lib.rs"];
+        root.write("backend/src/lib.rs", "fn main() {}");
+        let cargo = FakeCargo { root: &root };
+        let build = CargoBuild {
+            name: "stack",
+            inputs: INPUTS,
+            excluded: EXCLUDED,
+            artifacts: vec![cargo.artifact()],
+        };
         build
-            .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
+            .run(&root.ctx, &mut cargo.command("one", READS))
             .unwrap();
 
-        let mut release = fake_cargo(&root, "one", &reads);
+        let mut release = cargo.command("one", READS);
         release.arg("--release");
         assert_eq!(
             build.run(&root.ctx, &mut release).unwrap(),
             Outcome::Compiled
         );
-        let mut profile = fake_cargo(&root, "one", &reads);
+        let mut profile = cargo.command("one", READS);
         profile.env("CARGO_PROFILE_DEV_DEBUG", "0");
         assert_eq!(
             build.run(&root.ctx, &mut profile).unwrap(),
@@ -361,59 +324,62 @@ mod tests {
     #[test]
     fn an_artifact_changed_or_removed_since_its_build_builds_again() {
         let root = TempRoot::new();
-        sources(&root);
-        let build = build(&root);
-        let reads = ["backend/src/lib.rs"];
+        root.write("backend/src/lib.rs", "fn main() {}");
+        let cargo = FakeCargo { root: &root };
+        let build = CargoBuild {
+            name: "stack",
+            inputs: INPUTS,
+            excluded: EXCLUDED,
+            artifacts: vec![cargo.artifact()],
+        };
         build
-            .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
+            .run(&root.ctx, &mut cargo.command("one", READS))
             .unwrap();
 
-        root.write("target/stack", "built by hand");
-        assert_eq!(
-            build
-                .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
-                .unwrap(),
-            Outcome::Compiled
-        );
-        fs::remove_file(root.path("target/stack")).unwrap();
-        assert_eq!(
-            build
-                .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
-                .unwrap(),
-            Outcome::Compiled
-        );
-        assert_eq!(
-            fs::read_to_string(root.path("target/stack")).unwrap(),
-            "one"
-        );
+        fs::write(cargo.artifact(), "built by hand").unwrap();
+        let changed = build.run(&root.ctx, &mut cargo.command("one", READS));
+        assert_eq!(changed.unwrap(), Outcome::Compiled);
+        fs::remove_file(cargo.artifact()).unwrap();
+        let removed = build.run(&root.ctx, &mut cargo.command("one", READS));
+        assert_eq!(removed.unwrap(), Outcome::Compiled);
+        assert_eq!(fs::read_to_string(cargo.artifact()).unwrap(), "one");
     }
 
     #[test]
-    fn a_change_to_an_excluded_folder_reuses_the_build() {
+    fn a_change_to_an_excluded_folder_or_to_build_output_reuses_the_build() {
         let root = TempRoot::new();
-        sources(&root);
-        let build = build(&root);
-        let reads = ["backend/src/lib.rs"];
+        root.write("backend/src/lib.rs", "fn main() {}");
+        root.write("backend/tests/case.rs", "#[test] fn case() {}");
+        let cargo = FakeCargo { root: &root };
+        let build = CargoBuild {
+            name: "stack",
+            inputs: INPUTS,
+            excluded: EXCLUDED,
+            artifacts: vec![cargo.artifact()],
+        };
         build
-            .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
+            .run(&root.ctx, &mut cargo.command("one", READS))
             .unwrap();
 
         root.write("backend/tests/case.rs", "#[test] fn edited() {}");
         root.write("backend/target/release/libdep.rlib", "rebuilt");
-        assert_eq!(
-            build
-                .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
-                .unwrap(),
-            Outcome::Reused
-        );
+        let outcome = build.run(&root.ctx, &mut cargo.command("one", READS));
+        assert_eq!(outcome.unwrap(), Outcome::Reused);
     }
 
     #[test]
     fn a_build_that_read_a_repository_file_outside_its_inputs_is_refused_and_not_reused() {
         let root = TempRoot::new();
-        sources(&root);
+        root.write("backend/src/lib.rs", "fn main() {}");
+        root.write("backend/tests/case.rs", "#[test] fn case() {}");
         root.write("skir-src/fixture.json", "{}");
-        let build = build(&root);
+        let cargo = FakeCargo { root: &root };
+        let build = CargoBuild {
+            name: "stack",
+            inputs: INPUTS,
+            excluded: EXCLUDED,
+            artifacts: vec![cargo.artifact()],
+        };
         let reads = [
             "backend/src/lib.rs",
             "skir-src/fixture.json",
@@ -421,37 +387,37 @@ mod tests {
         ];
 
         let error = build
-            .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
+            .run(&root.ctx, &mut cargo.command("one", &reads))
             .unwrap_err()
             .to_string();
         assert!(error.contains("skir-src/fixture.json"), "{error}");
         assert!(error.contains("backend/tests/case.rs"), "{error}");
         assert!(!error.contains("backend/src/lib.rs"), "{error}");
 
-        let error = build
-            .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
-            .unwrap_err();
-        assert!(error.to_string().contains("skir-src"), "{error}");
-        assert_eq!(runs(&root), 2);
+        let again = build.run(&root.ctx, &mut cargo.command("one", &reads));
+        assert!(again.unwrap_err().to_string().contains("skir-src"));
+        assert_eq!(cargo.runs(), 2);
     }
 
     #[test]
     fn generated_build_output_and_files_outside_the_repository_are_not_inputs() {
         let root = TempRoot::new();
-        sources(&root);
-        let build = build(&root);
+        root.write("backend/src/lib.rs", "fn main() {}");
+        let cargo = FakeCargo { root: &root };
+        let build = CargoBuild {
+            name: "stack",
+            inputs: INPUTS,
+            excluded: EXCLUDED,
+            artifacts: vec![cargo.artifact()],
+        };
         let reads = [
             "backend/src/../src/lib.rs",
             "backend/target/debug/build/schema/out/files.rs",
             "../rustlib/src/lib.rs",
         ];
 
-        assert_eq!(
-            build
-                .run(&root.ctx, &mut fake_cargo(&root, "one", &reads))
-                .unwrap(),
-            Outcome::Compiled
-        );
+        let outcome = build.run(&root.ctx, &mut cargo.command("one", &reads));
+        assert_eq!(outcome.unwrap(), Outcome::Compiled);
     }
 
     #[test]

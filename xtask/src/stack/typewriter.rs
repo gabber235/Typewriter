@@ -763,7 +763,7 @@ fn deployable_components(ctx: &StackContext) -> Result<Vec<(String, PathBuf)>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{ci_cluster, ids};
+    use crate::test_support::{build_names, ci_cluster, ids};
 
     #[test]
     fn the_organization_is_provisioned_after_the_worktree_backend_routes() {
@@ -778,10 +778,6 @@ mod tests {
         let position = |id: &str| order.iter().position(|ordered| *ordered == id).unwrap();
         assert!(position("bind-realm-host") < position("observer"));
         assert!(position("bind-realm-host") < position("bind-engines"));
-    }
-
-    fn build_names(spec: &StackSpec) -> Vec<&'static str> {
-        spec.builds().iter().map(|build| build.name).collect()
     }
 
     #[test]
