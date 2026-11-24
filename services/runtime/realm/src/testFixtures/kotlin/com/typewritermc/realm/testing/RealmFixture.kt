@@ -10,6 +10,7 @@ import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.RealmGraphWorkTelemetry
 import com.typewritermc.realm.authoring.RealmServices
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.checking.checkingServices
@@ -108,6 +109,9 @@ class RealmFixture private constructor(
     /** Where the realm's commits log, read back in tests. A restart keeps it. */
     internal val telemetry = InMemoryTelemetry()
 
+    /** What each operation's graph reads did, recorded in [telemetry] as a running Realm records it. */
+    private val graphWork = RealmGraphWorkTelemetry(telemetry.telemetry)
+
     private val repairFault = AtomicReference<RepairFault?>()
 
     /** How long commits spent reading the query graph to find their realm owned writes so far, in nanoseconds. */
@@ -205,7 +209,7 @@ class RealmFixture private constructor(
         closeViews()
         val active = catalog.activate("realm-${++generations}")
         activation = active.owner
-        views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent(), services, graphRuns + listener)
+        views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent(), services, graphRuns + listener, graphWork)
         val binding = views.commitRepairs()
         owner =
             RealmAuthoringOwner(storage, views, findings = { findings() }, telemetry.telemetry) { saved, candidate, changed, work ->

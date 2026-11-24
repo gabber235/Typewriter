@@ -5,13 +5,13 @@ import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.text
 import com.typewritermc.failures.findExceptional
-import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.authoring.GraphWorkTelemetry
+import com.typewritermc.realm.authoring.GraphOperation
 import com.typewritermc.realm.authoring.conflicts
+import com.typewritermc.realm.authoring.counting
 import com.typewritermc.realm.authoring.savedState
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.formula.CommitRepairs
@@ -63,7 +63,6 @@ internal class RealmAuthoringOwner(
     private val repairs: CommitRepairs = views.commitRepairs(),
 ) : AuthoringRepository {
     private val admission = Mutex()
-    private val commitWork = GraphWorkTelemetry(telemetry, "typewriter.realm.commit.graph_work")
 
     suspend fun activateCatalog(
         next: AuthoringCatalogLease,
@@ -118,14 +117,8 @@ internal class RealmAuthoringOwner(
         }
 
     /** The saved state a commit replies with, recording the graph work of judging its findings. */
-    private fun reply(saved: AuthoringView): AuthoringState {
-        val work = GraphWork()
-        try {
-            return saved.savedState(findings(), work)
-        } finally {
-            commitWork.record(work, "realm.commit.stage" to "reply")
-        }
-    }
+    private fun reply(saved: AuthoringView): AuthoringState =
+        views.counting(GraphOperation.COMMIT_REPLY) { work -> saved.savedState(findings(), work) }
 
     /**
      * Checks [edit] on [current], binds the names it makes resolve, then persists and installs the result under the
@@ -204,9 +197,8 @@ internal class RealmAuthoringOwner(
         telemetry.mainSpan("realm.commit.bind", BINDING_FAILED) { scope ->
             val changed = plan.resources.keys + plan.removedResources
             try {
-                val work = GraphWork()
                 val intents =
-                    try {
+                    views.counting(GraphOperation.COMMIT_BIND) { work ->
                         logWhenSlow(
                             scope,
                             1.seconds,
@@ -214,8 +206,6 @@ internal class RealmAuthoringOwner(
                         ) {
                             repairs.intents(current, candidate, plan.resources.keys, work)
                         }
-                    } finally {
-                        commitWork.record(work, "realm.commit.stage" to "bind")
                     }
                 when (val repaired = if (intents.isEmpty()) null else planner.plan(edit, intents)) {
                     null -> {

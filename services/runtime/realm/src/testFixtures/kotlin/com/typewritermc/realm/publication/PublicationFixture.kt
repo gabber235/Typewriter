@@ -88,6 +88,11 @@ internal class PublicationFixture(
 
                 override fun <T> withCurrent(block: (AuthoringView) -> T): T = acceptance.withCurrent(block)
 
+                override fun judged(
+                    findings: List<FindingSet>,
+                    view: AuthoringView,
+                ): List<FindingSet> = acceptance.judged(findings, view)
+
                 override suspend fun evaluate(capture: AuthoringLease): CapturedAssessment {
                     onEvaluate?.invoke()
                     return acceptance.evaluate(capture)

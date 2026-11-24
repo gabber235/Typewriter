@@ -13,6 +13,10 @@ import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.GraphOperation
+import com.typewritermc.realm.authoring.counting
+import com.typewritermc.realm.authoring.forReply
+import com.typewritermc.realm.authoring.judgedForRelease
 import com.typewritermc.realm.checking.CapturedCheckReport
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.services.libs.utils.sha256Hex
@@ -35,6 +39,7 @@ import kotlinx.coroutines.sync.withLock
 import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.CheckEvidence
 import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.publication.DiagnosticEvidence
@@ -117,6 +122,12 @@ internal interface PublicationAcceptance {
     fun <T> withCurrent(block: (AuthoringView) -> T): T
 
     suspend fun evaluate(capture: AuthoringLease): CapturedAssessment
+
+    /** The sets a release lists for [findings], each current only while the runtime holds it current and [view] supports it. */
+    fun judged(
+        findings: List<FindingSet>,
+        view: AuthoringView,
+    ): List<FindingSet>
 }
 
 /**
@@ -134,6 +145,11 @@ internal class AuthoringAcceptance(
     override fun capture(): AuthoringLease = views.capture()
 
     override fun <T> withCurrent(block: (AuthoringView) -> T): T = views.read(block)
+
+    override fun judged(
+        findings: List<FindingSet>,
+        view: AuthoringView,
+    ): List<FindingSet> = views.counting(GraphOperation.RELEASE_JUDGEMENT) { work -> findings.forReply { it.judgedForRelease(view, work) } }
 
     override suspend fun evaluate(capture: AuthoringLease): CapturedAssessment {
         val snapshot = capture

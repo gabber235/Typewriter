@@ -2,13 +2,14 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.requireValid
-import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringEditCommit
 import com.typewritermc.protocol.transport.generated.authoringStateQuery
 import com.typewritermc.protocol.transport.generated.authoringTypeCommit
 import com.typewritermc.protocol.transport.generated.authoringTypePreview
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.GraphOperation
+import com.typewritermc.realm.authoring.counting
 import com.typewritermc.realm.authoring.savedState
 import com.typewritermc.realm.edit.AuthoringRepository
 import com.typewritermc.realm.edit.invalidCommit
@@ -79,7 +80,8 @@ internal class AuthoringRoutes(
                     SkirCatalogChanged(actualGeneration = root.catalog.generation),
                 )
             }
-            return QueryAuthoringStateResponse.StateWrapper(root.savedState(findings(), GraphWork()))
+            val state = views.counting(GraphOperation.STATE_REPLY) { work -> root.savedState(findings(), work) }
+            return QueryAuthoringStateResponse.StateWrapper(state)
         }
     }
 

@@ -320,17 +320,37 @@ interface AuthoringViewStore : AutoCloseable {
     fun install(view: AuthoringView)
 
     fun invalidate(reload: () -> AuthoringSeed)
+
+    /** Records what [operation]'s reads of this store's graphs did; [counting] records every operation's work here. */
+    fun record(
+        operation: GraphOperation,
+        work: GraphWork,
+    )
+}
+
+/** Runs [block] on a fresh [GraphWork] and records what it counted under [operation], also when [block] fails. */
+inline fun <T> AuthoringViewStore.counting(
+    operation: GraphOperation,
+    block: (GraphWork) -> T,
+): T {
+    val work = GraphWork()
+    try {
+        return block(work)
+    } finally {
+        record(operation, work)
+    }
 }
 
 /**
- * The view store of one realm. [services] are what every query reads besides the view, and [listener] hears what the
- * live graph computes; a fork reports to no one.
+ * The view store of one realm. [services] are what every query reads besides the view, [listener] hears what the live
+ * graph computes, a fork reports to no one, and [recorder] receives what each operation's graph reads did.
  */
 class InMemoryAuthoringViewStore(
     catalog: AuthoringCatalogLease,
     seed: AuthoringSeed,
     private val services: RealmServices = RealmServices(),
     listener: GraphListener = GraphListener.NONE,
+    private val recorder: GraphWorkRecorder = GraphWorkRecorder.NONE,
 ) : AuthoringViewStore {
     private val lock = Any()
     private val changed = MutableStateFlow(0L)
@@ -435,6 +455,11 @@ class InMemoryAuthoringViewStore(
             }
         }
     }
+
+    override fun record(
+        operation: GraphOperation,
+        work: GraphWork,
+    ) = recorder.record(operation, work)
 
     override fun invalidate(reload: () -> AuthoringSeed) =
         synchronized(lock) {

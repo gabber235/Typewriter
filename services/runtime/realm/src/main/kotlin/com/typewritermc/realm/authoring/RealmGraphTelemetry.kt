@@ -22,27 +22,62 @@ class RealmGraphTelemetry(
     private val GraphKey<*>.kind: String get() = this::class.simpleName ?: "anonymous"
 }
 
-/**
- * Records what one operation's graph reads did, as the counter [name] split by kind of work and by the attributes
- * given, so an operator sees what an operation cost in graph steps.
- */
-internal class GraphWorkTelemetry(
-    telemetry: ServiceTelemetry,
-    name: String,
+/** An operation that reads the realm's graph; each records its graph work under its own [label]. */
+enum class GraphOperation(
+    internal val label: String,
 ) {
-    private val counter = telemetry.counter(name, "{step}")
+    /** Binding the names a commit makes resolve. */
+    COMMIT_BIND("commit.bind"),
 
+    /** Judging the findings a commit replies with. */
+    COMMIT_REPLY("commit.reply"),
+
+    /** A check pass over the live graph. */
+    CHECK_PASS("checks.pass"),
+
+    /** Evaluating every check over one captured view, as publication does. */
+    CAPTURE_EVALUATION("capture.evaluation"),
+
+    /** Judging the findings a state query replies with. */
+    STATE_REPLY("state.reply"),
+
+    /** Judging the findings a release is gated on. */
+    RELEASE_JUDGEMENT("release.judgement"),
+}
+
+/** Where the realm records what one operation's graph reads did. */
+fun interface GraphWorkRecorder {
     fun record(
+        operation: GraphOperation,
         work: GraphWork,
-        vararg attributes: Pair<String, String>,
+    )
+
+    companion object {
+        val NONE = GraphWorkRecorder { _, _ -> }
+    }
+}
+
+/**
+ * Records what each operation's graph reads did on one counter, split by kind of work and by operation, so an operator
+ * sees what every operation cost in graph steps.
+ */
+class RealmGraphWorkTelemetry(
+    telemetry: ServiceTelemetry,
+) : GraphWorkRecorder {
+    private val counter = telemetry.counter("typewriter.realm.graph_work", "{step}")
+
+    override fun record(
+        operation: GraphOperation,
+        work: GraphWork,
     ) {
         val counts = work.counts()
-        counter.add(counts.computed, KIND to "computed", *attributes)
-        counter.add(counts.verified, KIND to "verified", *attributes)
-        counter.add(counts.walked, KIND to "walked", *attributes)
+        counter.add(counts.computed, KIND to "computed", OPERATION to operation.label)
+        counter.add(counts.verified, KIND to "verified", OPERATION to operation.label)
+        counter.add(counts.walked, KIND to "walked", OPERATION to operation.label)
     }
 
     private companion object {
         const val KIND = "graph.work"
+        const val OPERATION = "realm.operation"
     }
 }

@@ -189,12 +189,15 @@ internal suspend fun RealmFixture.measuredCommit(
     )
 }
 
-private const val COMMIT_WORK = "typewriter.realm.commit.graph_work"
-private const val PASS_WORK = "typewriter.realm.checks.graph_work"
+/** The operations of a commit: binding its names and judging the findings of its reply. */
+private val COMMIT_WORK = setOf("commit.bind", "commit.reply")
 
-/** What the realm did on the graph so far for [counter], as its telemetry counts it. */
-private fun RealmFixture.workCounted(counter: String): GraphWork.Counts {
-    val sums = telemetry.counter(counter)
+/** The operation of the check pass a commit starts. */
+private val PASS_WORK = setOf("checks.pass")
+
+/** What the realm's [operations] did on the graph so far, as its telemetry counts it. */
+private fun RealmFixture.workCounted(operations: Set<String>): GraphWork.Counts {
+    val sums = telemetry.counter("typewriter.realm.graph_work").filterKeys { it["realm.operation"] in operations }
 
     fun kind(name: String) = sums.filterKeys { it["graph.work"] == name }.values.sum()
 
