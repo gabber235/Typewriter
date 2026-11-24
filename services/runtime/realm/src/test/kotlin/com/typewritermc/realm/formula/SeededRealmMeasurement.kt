@@ -25,7 +25,8 @@ import kotlin.time.Duration.Companion.minutes
 val SeededRealmMeasurement by testSuite {
     // Thousands of resources seed, bind and check for real, twice, which outlasts the default minute.
     test(
-        "an unrelated broken formula costs a commit the same graph work in a seeded realm twice the size",
+        "in a seeded realm twice the size one unrelated broken formula adds no more graph work, twenty add at most " +
+            "twenty times one, a pass stays under 200 ms and findings under 1 MB",
         testConfig = TestConfig.testScope(isEnabled = true, timeout = 30.minutes),
     ) {
         val small = measureBrokenFormulas(SeededSize(names = 500, holders = 500, contentHolders = 100))
