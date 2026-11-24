@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.nats.jetstream)
     testFixturesApi(testFixtures(project(":telemetry")))
     testFixturesApi(libs.kotlin.serialize.json)
-    testImplementation(libs.kotlin.coroutines.test)
-    testImplementation(libs.kotest.property)
+    testFixturesApi(libs.kotlin.coroutines.test)
+    testFixturesApi(libs.kotest.property)
+    testFixturesApi(libs.kotest.assertions)
 }
