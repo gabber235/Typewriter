@@ -525,7 +525,7 @@ val FormulaReferencesTest by testSuite {
         }
     }
 
-    test("a commit on an unrelated resource with a broken formula saved forks nothing and runs no hook") {
+    test("a commit on an unrelated resource with a broken formula saved runs no hook") {
         withSetup(page, catalog = catalog) { demo ->
             val reader = commitDefinition("reader", plainType(textUse)) { computedVar(it.use, "counted.name + missing_name") }.created()
             settle()
