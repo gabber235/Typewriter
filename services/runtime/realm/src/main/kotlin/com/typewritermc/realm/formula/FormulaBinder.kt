@@ -8,7 +8,6 @@ import com.typewritermc.formula.check.check
 import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.authoring.CapturedAuthoringValues
 import com.typewritermc.realm.authoring.RealmQuery
 import com.typewritermc.realm.authoring.RealmReads
 import com.typewritermc.realm.authoring.holds
@@ -108,7 +107,7 @@ internal fun AuthoringViewStore.repairIntents(
     val (broken, lastSeen) =
         pin(work).use { pinned ->
             with(pinned.reads) {
-                brokenFormulas(saved, proposed) { fork.value } to
+                brokenFormulas(saved, proposed, work) to
                     emptied.mapValues { (at, formula) -> formula.displayed(at) }
             }
         }
@@ -165,17 +164,16 @@ private fun StoredFormula.emptiedFrom(old: StoredFormula): Boolean =
 /**
  * Saved formulas with an unbound name that this commit may bind: a bindable one, or one for which an unbound name
  * means something else in [proposed]. Only those names' answers are compared, as check evidence holds them, so the
- * comparison stops at each name's answer and never reads the scope around it; [proposed] answers names through
- * [after], read only when a broken formula exists.
+ * comparison stops at each name's answer and never reads the scope around it. [proposed] answers names through its
+ * fork, made only when a broken formula exists, counting the work on [work].
  */
 context(reads: RealmReads)
 private fun brokenFormulas(
     saved: AuthoringView,
     proposed: AuthoringView,
-    after: () -> RealmReads,
+    work: GraphWork,
 ): List<ValueLocation> {
-    val answers =
-        CapturedAuthoringValues(proposed.resources, { at, name -> after().read(NameAt(at, name)) }) { proposed.judged(it).projections }
+    val answers = proposed.values(work)
     return saved.resources.keys
         .flatMap { reads.read(UnboundIn(it)).entries }
         .filter { (at, unbound) -> unbound.bindable || !answers.holds(unbound.names.map { NameAt(at, it).entry() }) }
