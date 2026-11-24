@@ -117,7 +117,8 @@ jobs:
 
   # The display, Mesa, Vulkan, GTK and Chromium come from the devenv e2e profile, not apt. The
   # game suite runs four Minecraft clients, each on a virtual display of its own, against Paper on
-  # this runner; it also keeps Gradle's outputs (the patched Paper among them) and its downloads.
+  # this runner; it also keeps Gradle's outputs (the patched Paper among them) and its downloads,
+  # and generates only the protocol's sources, so it needs no Flutter or frame vector cache.
   # The panel suites generate every source, frame vectors included, before their stack starts,
   # and restore the services check's Gradle outputs for the SDK fixtures and the Realm host.
   e2e:
@@ -140,7 +141,7 @@ jobs:
             caches: gradle flutter frame-vectors gradle-outputs
             gradle-outputs-from: check-services
           - suite: game
-            caches: gradle flutter frame-vectors gradle-outputs game
+            caches: gradle gradle-outputs game
     steps:
       # One commit: the game suite reruns as demos the requirements that covered a line the change
       # added since its merge base with BASE_SHA, and fetches the history down to it itself.
