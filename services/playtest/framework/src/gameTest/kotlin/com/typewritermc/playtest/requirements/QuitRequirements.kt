@@ -41,10 +41,9 @@ val QuitRequirements by testSuite(compartment = { GameCompartment }) {
 
         leaver.rejoin()
 
-        within(20.ticks) {
-            leaver sees held("diamond")
-            stayer sees listed(leaver)
-        }
+        // Paper lists a joining player to the others in the tick it joins, however long its own client takes to load.
+        within(1.ticks) { stayer sees listed(leaver) }
+        within(20.ticks) { leaver sees held("diamond") }
     }
 
     requirement(
