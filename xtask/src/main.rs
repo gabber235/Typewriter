@@ -7,6 +7,7 @@ mod cluster;
 mod components;
 mod database;
 mod deploy;
+mod digest;
 mod docs;
 mod doctor;
 mod e2e;

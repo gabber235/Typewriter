@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context as _, Result};
 
+use crate::digest::{Digest, expand, walk};
 use crate::lock::HeavyLock;
 use crate::{CommandExt, Context};
 
@@ -387,13 +388,7 @@ impl Generator {
         let (program, args) = self.tool.version();
         digest.update(ctx.tool(".", program, args).output_text()?.as_bytes());
         for file in files {
-            let path = ctx.root.join(&file);
-            let contents =
-                fs::read(&path).with_context(|| format!("cannot read {}", path.display()))?;
-            digest.update(file.as_bytes());
-            digest.update(&[0]);
-            digest.update(&(contents.len() as u64).to_le_bytes());
-            digest.update(&contents);
+            digest.update_file(&ctx.root, &file)?;
         }
         Ok(digest)
     }
@@ -448,63 +443,6 @@ fn is_generator_file(relative: &str) -> bool {
         .any(|generator| generator.files.contains(&relative))
 }
 
-/// The existing paths `pattern` names, where a `*` component matches any one entry.
-fn expand(root: &Path, pattern: &str) -> Result<Vec<PathBuf>> {
-    let mut paths = vec![root.to_path_buf()];
-    for component in pattern.split('/') {
-        let mut next = Vec::new();
-        for path in paths {
-            if component == "*" {
-                let Ok(entries) = fs::read_dir(&path) else {
-                    continue;
-                };
-                for entry in entries {
-                    let entry = entry?;
-                    if entry.file_type()?.is_dir() && !skipped(&entry.file_name().to_string_lossy())
-                    {
-                        next.push(entry.path());
-                    }
-                }
-            } else {
-                let candidate = path.join(component);
-                if candidate.exists() {
-                    next.push(candidate);
-                }
-            }
-        }
-        paths = next;
-    }
-    paths.sort();
-    Ok(paths)
-}
-
-/// Calls `visit` with the root relative path of every file at or below `path`.
-fn walk(root: &Path, path: &Path, visit: &mut dyn FnMut(&str)) -> Result<()> {
-    let Ok(metadata) = fs::metadata(path) else {
-        return Ok(());
-    };
-    if metadata.is_file() {
-        let relative = path.strip_prefix(root).unwrap_or(path);
-        visit(&relative.to_string_lossy());
-        return Ok(());
-    }
-    let mut entries = fs::read_dir(path)
-        .with_context(|| format!("cannot read {}", path.display()))?
-        .collect::<Result<Vec<_>, _>>()?;
-    entries.sort_by_key(|entry| entry.file_name());
-    for entry in entries {
-        if !skipped(&entry.file_name().to_string_lossy()) {
-            walk(root, &entry.path(), visit)?;
-        }
-    }
-    Ok(())
-}
-
-/// Build output, dependencies and tool state, never generator input.
-fn skipped(name: &str) -> bool {
-    name.starts_with('.') || matches!(name, "node_modules" | "build" | "target")
-}
-
 fn say(log: Option<&File>, line: &str) -> Result<()> {
     use std::io::Write as _;
     match log {
@@ -512,27 +450,6 @@ fn say(log: Option<&File>, line: &str) -> Result<()> {
         None => eprintln!("{line}"),
     }
     Ok(())
-}
-
-/// FNV-1a over 64 bits: stable across Rust releases and machines, and enough to notice an edit.
-#[derive(Clone)]
-struct Digest(u64);
-
-impl Digest {
-    fn new() -> Self {
-        Self(0xcbf2_9ce4_8422_2325)
-    }
-
-    fn update(&mut self, bytes: &[u8]) {
-        for byte in bytes {
-            self.0 ^= u64::from(*byte);
-            self.0 = self.0.wrapping_mul(0x0000_0100_0000_01b3);
-        }
-    }
-
-    fn hex(&self) -> String {
-        format!("{:016x}", self.0)
-    }
 }
 
 #[cfg(test)]
