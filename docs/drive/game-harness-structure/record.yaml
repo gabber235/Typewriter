@@ -141,6 +141,12 @@ decided:
       (2026-11-24); then hold the CI job layout and pool admission too while the maintainer weighs
       sharding across runners
 
+  - id: build-without-stack
+    what: >-
+      scope added by the maintainer (2026-11-24): the game test build must not depend on the running
+      stack; values the stack publishes move from the build's inputs to the run's environment, which
+      the pool fills in as each Paper boots; check builds gameTestBuild with no stack
+
 open:
   - id: blocked-pushes
     ask: >-

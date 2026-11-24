@@ -89,11 +89,14 @@ val gameRequirements = extensions.create<GameRequirements>("gameRequirements").a
  * [slot] adds environment for one slot's Paper only, and [keptPerSlot] names paths in Paper's folder a
  * slot keeps: what one own Paper wrote there is in the slot's next own Paper too.
  *
+ * A value only the run knows, such as a path the running stack publishes, comes from the environment the
+ * game suite runs in through [fromRun]: the build never reads it, so the game build needs no stack.
+ *
  * ```
  * gamePaper {
  *     pluginJars.from(project(":loader-distribution"))
- *     environment.put("TYPEWRITER_CONFIG_FILE", configFile)
- *     slot(0) { environment.put("TYPEWRITER_REGISTRATION_TOKEN_FILE", tokenOfSlot0) }
+ *     environment.put("TYPEWRITER_CONFIG_FILE", fromRun("TYPEWRITER_CONFIG_FILE"))
+ *     slot(0) { environment.put("TYPEWRITER_REGISTRATION_TOKEN_FILE", "${fromRun("ENGINES")}/0/registration-token") }
  *     keptPerSlot.add("plugins/Typewriter/state")
  * }
  * ```
@@ -117,6 +120,9 @@ abstract class GamePaper
         val slots: MutableMap<Int, GamePaperSlot> = mutableMapOf()
 
         fun files(action: Action<CopySpec>) = action.execute(files)
+
+        /** The variable [name] of the environment the game suite runs in, which the pool fills in as each Paper boots. */
+        fun fromRun(name: String): String = "\${$name}"
 
         /** Adds to the Paper of slot [slot] only. */
         fun slot(
@@ -418,11 +424,15 @@ tasks.register<Test>("gameTest") {
 
 // `cargo xtask e2e game` builds everything gameTest runs in a Gradle of its own first, so the Kotlin
 // compile daemons end with that Gradle and hold no memory while the suite runs.
-tasks.register("gameTestBuild") {
-    description = "Builds everything gameTest runs, and runs nothing."
-    group = "build"
-    // A module outside the suite the build runs builds nothing: the product's additions need the stack.
-    if (inRun) {
-        dependsOn(gameTest.output, gameTest.runtimeClasspath, poolPart, paperPart, agentPart, pluginPart, coverageAgentPart, clientLaunchPart, allPaperAdditions)
+val gameTestBuild =
+    tasks.register("gameTestBuild") {
+        description = "Builds everything gameTest runs, and runs nothing."
+        group = "build"
+        if (inRun) {
+            dependsOn(gameTest.output, gameTest.runtimeClasspath, poolPart, paperPart, agentPart, pluginPart, coverageAgentPart, clientLaunchPart, allPaperAdditions)
+        }
     }
-}
+
+// The game build needs no running stack, so the stack's builds and this one can share one Gradle.
+// `check` runs where no stack runs, which holds that requirement.
+tasks.named("check") { dependsOn(gameTestBuild) }

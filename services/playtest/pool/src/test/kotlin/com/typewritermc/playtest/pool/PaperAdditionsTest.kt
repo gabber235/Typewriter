@@ -86,6 +86,25 @@ val PaperAdditionsTest by testSuite {
         PaperAdditions(listOf(first, second)).environment(slot = 2)["TOKEN"] shouldBe "/b"
     }
 
+    test("a value a module takes from the run's environment is filled in as Paper boots, and one the run does not set fails naming it") {
+        val typewriter =
+            addition(
+                env = mapOf("TYPEWRITER_CONFIG_FILE" to "\${TYPEWRITER_CONFIG_FILE}"),
+                slotEnv = mapOf(1 to mapOf("TYPEWRITER_REGISTRATION_TOKEN_FILE" to "\${STACK_GAME_ENGINES}/1/registration-token")),
+            )
+        val stack = mapOf("TYPEWRITER_CONFIG_FILE" to "/stack/paper.properties", "STACK_GAME_ENGINES" to "/stack/engines")
+
+        PaperAdditions(listOf(typewriter), run = stack).environment(slot = 1) shouldBe
+            mapOf(
+                "TYPEWRITER_CONFIG_FILE" to "/stack/paper.properties",
+                "TYPEWRITER_REGISTRATION_TOKEN_FILE" to "/stack/engines/1/registration-token",
+                "PLAYTEST_PAPER_SLOT" to "1",
+            )
+        val unset = shouldThrow<IllegalStateException> { PaperAdditions(listOf(typewriter), run = mapOf()).environment(slot = 0) }
+        unset.message shouldContain "TYPEWRITER_CONFIG_FILE"
+        unset.message shouldContain "not set"
+    }
+
     test("the paths kept per slot are every module's, each once") {
         val typewriter = addition(kept = listOf("plugins/Typewriter/state"))
         val sibling = addition(kept = listOf("plugins/Sibling/data", "plugins/Typewriter/state"))

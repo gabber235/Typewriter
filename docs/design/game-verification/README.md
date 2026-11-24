@@ -57,6 +57,11 @@ clients hold none.
   additions of the modules of the suite the build runs, for the shared Paper and each own Paper, and
   fails before Paper starts when two modules disagree on a file or a variable. The framework itself
   still holds no Typewriter code.
+- **The game build needs no stack.** A value only the running stack knows, such as the engine's
+  config file, comes from the environment the suite runs in: `gamePaper.fromRun("NAME")` writes a
+  reference the pool fills in as each Paper boots, and a variable the run does not set fails that
+  boot naming it. `gameTestBuild` builds the same whether a stack runs or not, and `check` builds it
+  where none runs, so the game build can share one Gradle with the stack's own builds.
 - **Two suites.** A module's suite follows its path: the framework's own modules
   (`services/playtest`) are the `playtest` suite, every other module the `game` suite. A build runs
   one suite (`-Pplaytest.suite`, which `cargo xtask e2e <suite>` passes): only that suite's `gameTest`
