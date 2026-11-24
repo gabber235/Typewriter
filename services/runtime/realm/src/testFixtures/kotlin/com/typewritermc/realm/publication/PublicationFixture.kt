@@ -10,6 +10,7 @@ import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RealmGraphWorkTelemetry
 import com.typewritermc.realm.checking.RealmCheckRuntime
+import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.recordBinding
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
@@ -67,6 +68,7 @@ internal class PublicationFixture(
         InMemoryAuthoringViewStore(
             PUBLICATION_CATALOG.lease(),
             AuthoringSeed(initial),
+            checkingServices(),
             recorder = RealmGraphWorkTelemetry(telemetry.telemetry),
         )
     private val checks = RealmCheckRuntime(views)
