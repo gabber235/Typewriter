@@ -7,7 +7,19 @@ pieces:
   - id: reuse-rust-builds
     status: building
   - id: overlap-gradle-with-cargo
-    status: building
+    status: figuring-out
+    open: >-
+      gameTestBuild cannot run before the services start: playtestPaperEnvironment reads
+      TYPEWRITER_CONFIG_FILE and STACK_GAME_ENGINES as task inputs
+      (services/runtime/engine/runtimes/paper/build.gradle.kts), which the stack publishes once its
+      services run. Only the Realm host's Gradle build overlaps the Cargo builds.
+    tries:
+      - id: game-suite-in-the-stack-gradle-run
+        what: the game stack adds gameTestBuild to the one Gradle run of its build phase
+        taught: gameTestBuild's paper additions take stack values as inputs, so it fails before the services publish them
+        state: dropped
+        why: every game run would fail before any requirement; all three review critics found it from source
+        evidence: [services/build-logic/src/main/kotlin/com.typewritermc.game-test.gradle.kts gameTestBuild]
   - id: shallow-game-checkout
     status: building
   - id: panel-gradle-outputs
@@ -31,8 +43,8 @@ decided:
   - id: one-build-phase
     what: >-
       A stack runs every build its services declare at once before the first service starts: each
-      Cargo build on a thread, every Gradle build (the Realm host, and the game suite for the game
-      stack) in one Gradle run. A service's command refuses to run a build it did not declare.
+      Cargo build on a thread, every Gradle build (today the Realm host) in one Gradle run. A
+      service's command refuses to run a build it did not declare.
   - id: digest-from-backend-with-dep-info-check
     what: >-
       The stack binary and the components are reused while every file below backend (the
@@ -53,10 +65,11 @@ slices:
     status: done
   - id: parallel-stack-builds
     tests: [stack::spec build tests]
-    status: building
+    status: done
   - id: typewriter-stack-builds
     tests: [stack::typewriter build tests, a real local build of the stack binary and components]
-    status: building
+    status: done
+    evidence: [local build 2026-11-24, stack binary 398 s then 3 s reused, components 166 s then 0.35 s reused]
   - id: shallow-merge-base
     tests: [review::change shallow checkout tests]
     status: done
@@ -64,4 +77,6 @@ slices:
     tests: [first CI run timings]
     status: building
 
-next: build the slices test first.
+next: >-
+  Hand back to the orchestrating thread: the first CI run measures the saving; ask whether the game
+  suite's stack values should leave gameTestBuild's inputs so it can overlap too.

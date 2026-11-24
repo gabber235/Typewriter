@@ -1,8 +1,7 @@
 //! `cargo xtask e2e game`: the game requirements against real Minecraft clients on a stepped
 //! Paper, which the game pool boots on this machine. Paper, the clients and the Gradle build that
-//! starts them all run here, so the whole run is one heavy build. The stack compiles the suite
-//! beside its Cargo builds (`typewriter::GAME_SUITE`), and a Gradle of its own checks the suite is
-//! built and exits before the run, so no compiler is alive while the suite runs. Every project's `gameTest` task
+//! starts them all run here, so the whole run is one heavy build. A Gradle of its own builds the
+//! suite first and exits, so no compiler is alive while the suite runs. Every project's `gameTest` task
 //! runs at once, so their test JVMs share the one pool, which retries failed requirements on its
 //! warm clients and writes the run file. That file is the gate: Gradle's exit only adds a failure
 //! the file cannot show.

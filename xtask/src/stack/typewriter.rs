@@ -48,13 +48,10 @@ pub fn panel() -> StackSpec {
 }
 
 /// The panel stack plus what the game suite needs: an engine binder that binds each game Paper's
-/// loader as the Realm's Paper engine, observer credentials the game requirements read the
-/// topology and the Realm's session keys with, and the suite itself, built beside the stack.
+/// loader as the Realm's Paper engine, and observer credentials the game requirements read the
+/// topology and the Realm's session keys with.
 pub fn game() -> StackSpec {
-    panel()
-        .with(Observer)
-        .with(BindEngines)
-        .building(&GAME_SUITE)
+    panel().with(Observer).with(BindEngines)
 }
 
 /// The `typewriter-stack` binary most services run. It links the wasm host, so its dependencies
@@ -85,18 +82,6 @@ pub const REALM_HOST_BUILD: Build = Build {
                 realm_host_work_dir(ctx).join("artifacts/inbox").display()
             ),
         ]
-    }),
-};
-
-/// The game suite, compiled while the Cargo builds run instead of after the stack is up. The run
-/// is a Gradle of its own (`--no-daemon`), so the Kotlin compilers it starts end with it before
-/// the clients and Paper start.
-pub const GAME_SUITE: Build = Build {
-    name: "the game suite",
-    how: How::Gradle(|_| {
-        ["--no-daemon", "--parallel", "gameTestBuild"]
-            .map(str::to_owned)
-            .to_vec()
     }),
 };
 
@@ -781,23 +766,15 @@ mod tests {
     }
 
     #[test]
-    fn the_game_suite_compiles_in_the_realm_hosts_gradle_run_beside_the_cargo_builds() {
-        let root = crate::test_support::TempRoot::new();
-        let game = game();
+    fn the_game_stack_builds_the_realm_host_beside_the_cargo_builds() {
         assert_eq!(
-            build_names(&game),
+            build_names(&game()),
             [
                 "typewriter-stack",
                 "the backend components",
                 "the standalone Realm host",
-                "the game suite",
             ]
         );
-        let gradle = super::super::spec::gradle_args(&root.ctx, &game.builds()).unwrap();
-        assert!(gradle.contains(&":loader-standalone:installDist".to_owned()));
-        assert!(gradle.contains(&"gameTestBuild".to_owned()));
-        assert!(gradle.contains(&"--no-daemon".to_owned()));
-        assert!(!build_names(&panel()).contains(&"the game suite"));
     }
 
     #[test]

@@ -154,10 +154,9 @@ impl Probe {
     }
 }
 
-/// A composition of services, and what the command run against it needs built; start order is
-/// derived from `needs`.
+/// A composition of services; start order is derived from `needs`.
 #[derive(Default)]
-pub struct StackSpec(Vec<Box<dyn DynService>>, Vec<&'static Build>);
+pub struct StackSpec(Vec<Box<dyn DynService>>);
 
 impl StackSpec {
     pub fn with<S: Service + 'static>(mut self, service: S) -> Self {
@@ -165,17 +164,10 @@ impl StackSpec {
         self
     }
 
-    /// Builds `build` with the services' own builds, for the command run against the stack.
-    pub fn building(mut self, build: &'static Build) -> Self {
-        self.1.push(build);
-        self
-    }
-
-    /// The services' builds, then the stack's own, each once.
+    /// The services' builds, each once, in the order the services declare them.
     pub fn builds(&self) -> Vec<&'static Build> {
         let mut builds: Vec<&'static Build> = Vec::new();
-        let all = self.0.iter().flat_map(|service| service.builds()).copied();
-        for build in all.chain(self.1.iter().copied()) {
+        for build in self.0.iter().flat_map(|service| service.builds()).copied() {
             if !builds.iter().any(|known| known.name == build.name) {
                 builds.push(build);
             }
@@ -564,7 +556,7 @@ impl<'a> StackContext<'a> {
 mod tests {
     use super::*;
     use crate::stack::client_configuration::ClientConfiguration;
-    use crate::test_support::{TempRoot, fake_service, ids, refusal, stack_context};
+    use crate::test_support::{TempRoot, build_names, fake_service, ids, refusal, stack_context};
 
     mod roles {
         use super::*;
@@ -655,38 +647,41 @@ mod tests {
             ]
         }),
     };
-    const GAME_SUITE: Build = Build {
-        name: "game suite",
-        how: How::Gradle(|_| vec!["--quiet".to_owned(), "gameTestBuild".to_owned()]),
+    const ENGINE_HOST: Build = Build {
+        name: "engine host",
+        how: How::Gradle(|_| vec!["--quiet".to_owned(), ":engine:installDist".to_owned()]),
     };
 
     mod built {
         use super::*;
         fake_service!(Binder, ; builds STACK_BINARY);
         fake_service!(Host, ; builds STACK_BINARY, REALM_HOST);
+        fake_service!(Engine, ; builds ENGINE_HOST);
     }
 
     #[test]
-    fn a_stack_builds_what_its_services_and_its_command_need_once_each() {
+    fn a_stack_builds_what_its_services_need_once_each() {
         let spec = StackSpec::default()
             .with(built::Binder)
             .with(roles::Owner)
             .with(built::Host)
-            .building(&GAME_SUITE);
-        let names: Vec<&str> = spec.builds().iter().map(|build| build.name).collect();
-        assert_eq!(names, ["stack binary", "realm host", "game suite"]);
+            .with(built::Engine);
+        assert_eq!(
+            build_names(&spec),
+            ["stack binary", "realm host", "engine host"]
+        );
     }
 
     #[test]
     fn every_gradle_build_of_a_stack_runs_in_one_gradle_with_each_argument_once() {
         let root = TempRoot::new();
         assert_eq!(
-            gradle_args(&root.ctx, &[&STACK_BINARY, &REALM_HOST, &GAME_SUITE]).unwrap(),
+            gradle_args(&root.ctx, &[&STACK_BINARY, &REALM_HOST, &ENGINE_HOST]).unwrap(),
             [
                 "--quiet".to_owned(),
                 ":loader:installDist".to_owned(),
                 format!("-Pinbox={}", root.path("inbox").display()),
-                "gameTestBuild".to_owned(),
+                ":engine:installDist".to_owned(),
             ]
         );
         assert_eq!(gradle_args(&root.ctx, &[&STACK_BINARY]), None);
