@@ -3,6 +3,7 @@
 //! provides the tools these commands call.
 
 mod branch;
+mod cargo_build;
 mod cluster;
 mod components;
 mod database;
