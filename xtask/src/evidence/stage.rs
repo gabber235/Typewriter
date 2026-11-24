@@ -177,7 +177,7 @@ fn create_parent(path: &Path) -> Result<()> {
 mod tests {
     use super::*;
     use crate::test_support::{
-        TempRoot, failed, failed_attempt, files_below, raw_failed_run, run_of,
+        TempRoot, failed, failed_attempt, files_below, raw_failed_run, raw_game_run, run_of,
     };
 
     const SECRET: &str = "ghp_0123456789abcdefghij";
@@ -327,62 +327,49 @@ mod tests {
         assert_eq!(files_below(&root.path(PUBLIC)), ["game/test_run.json"]);
     }
 
-    /// Writes every log the game pool can leave in `results/game/logs/1`: its own, the shared
-    /// Paper's, a restart attempt's own Paper's, a client's, a lost client's and a display's.
-    fn write_game_logs(root: &TempRoot) {
-        for file in [
-            "pool.log",
-            "paper.log",
-            "paper-a2.log",
-            "client-gv-1.log",
-            "client-gv-1-lost-1.log",
-            "display-gv-1.log",
-        ] {
-            root.write(&format!("results/game/logs/1/{file}"), "log");
-        }
-    }
+    /// What a game run that did not pass publishes from its logs folder, beside its run file.
+    const PUBLIC_GAME_LOGS: [&str; 4] = [
+        "game/logs/1/paper-a2.log",
+        "game/logs/1/paper.log",
+        "game/logs/1/pool.log",
+        "game/test_run.json",
+    ];
 
     #[test]
     fn a_game_run_that_could_not_run_publishes_its_pool_and_paper_logs_but_no_client_log() {
-        let root = TempRoot::new();
-        write_game_logs(&root);
         let mut run = run_of("PROBE-1", vec![]);
-        run.logs = "logs/1".to_owned();
         run.end = results::RunEnd::CouldNotRun("the game was not ready within 300 s".to_owned());
-        results::write(&run, &root.path("results/game/test_run.json")).unwrap();
+
+        let root = TempRoot::new();
+        raw_game_run(&root, "results/game", run);
 
         staged(&root.path(""), Path::new("results"), &[]).unwrap();
 
-        assert_eq!(
-            files_below(&root.path(PUBLIC)),
-            [
-                "game/logs/1/paper-a2.log",
-                "game/logs/1/paper.log",
-                "game/logs/1/pool.log",
-                "game/test_run.json",
-            ]
-        );
+        assert_eq!(files_below(&root.path(PUBLIC)), PUBLIC_GAME_LOGS);
     }
 
     #[test]
     fn a_game_run_whose_attempt_failed_publishes_its_pool_and_paper_logs() {
+        let run = run_of("PROBE-1", vec![failed_attempt((0, 1), &[])]);
+
         let root = TempRoot::new();
-        write_game_logs(&root);
-        let mut run = run_of("PROBE-1", vec![failed_attempt((0, 1), &[])]);
-        run.logs = "logs/1".to_owned();
-        results::write(&run, &root.path("results/game/test_run.json")).unwrap();
+        raw_game_run(&root, "results/game", run);
 
         staged(&root.path(""), Path::new("results"), &[]).unwrap();
 
-        assert_eq!(
-            files_below(&root.path(PUBLIC)),
-            [
-                "game/logs/1/paper-a2.log",
-                "game/logs/1/paper.log",
-                "game/logs/1/pool.log",
-                "game/test_run.json",
-            ]
-        );
+        assert_eq!(files_below(&root.path(PUBLIC)), PUBLIC_GAME_LOGS);
+    }
+
+    #[test]
+    fn a_game_run_whose_cases_all_passed_keeps_its_logs_on_the_machine() {
+        let run = run_of("PROBE-1", vec![crate::test_support::passed_attempt((0, 1))]);
+
+        let root = TempRoot::new();
+        raw_game_run(&root, "results/game", run);
+
+        staged(&root.path(""), Path::new("results"), &[]).unwrap();
+
+        assert_eq!(files_below(&root.path(PUBLIC)), ["game/test_run.json"]);
     }
 
     #[test]
@@ -404,19 +391,6 @@ mod tests {
             "{error}"
         );
         assert!(!root.path(PUBLIC).exists());
-    }
-
-    #[test]
-    fn a_game_run_whose_cases_all_passed_keeps_its_logs_on_the_machine() {
-        let root = TempRoot::new();
-        write_game_logs(&root);
-        let mut run = run_of("PROBE-1", vec![crate::test_support::passed_attempt((0, 1))]);
-        run.logs = "logs/1".to_owned();
-        results::write(&run, &root.path("results/game/test_run.json")).unwrap();
-
-        staged(&root.path(""), Path::new("results"), &[]).unwrap();
-
-        assert_eq!(files_below(&root.path(PUBLIC)), ["game/test_run.json"]);
     }
 
     #[test]
