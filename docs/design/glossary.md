@@ -60,7 +60,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`AuthoringCatalog`**: the checked catalog of one generation as an authoring client sees it, resolving types, schemas, and concrete forms. See [authoring-writes.md](authoring-writes.md#kotlin-api).
 
-**`AuthoringCommit`**: one record of the realm commit history: id, actor, session, and a `ValueChange` (before and after) per changed value; it stores attribution and drives undo. See [panel-engine-communication.md](panel-engine-communication.md) question 12.
+**`AuthoringCommit`**: one record of the realm commit history, the one durable record of authored change: id, actor, session, submission key, and a `ValueChange` (before and after) per changed value; it stores attribution, deduplicates submissions, and drives undo. See [collaboration.md](collaboration.md#1-clock-and-log).
 
 **`AuthoringTransaction`**: the `EditContext` of an authored write block, adding untyped reads and writes by path that are checked before commit. See [authoring-writes.md](authoring-writes.md#kotlin-api).
 
@@ -580,6 +580,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`PendingMigration`**: core resource storing a migration's creator inputs as `Var` values; unfinished inputs block publication. See [migrations.md](migrations.md#pendingmigration).
 
+**Part**: what one read looked at in a table: `Cell`, `Row(key)`, `Rows(prefix)`, or `Keys(prefix)`; each has a change revision. See [collaboration.md](collaboration.md#2-table).
+
 **Phase**: decision or after, chosen by a handler's return type. See [events-and-handlers.md](events-and-handlers.md#return-value-decides-the-phase).
 
 **`Player`**: Minecraft capability trait; core code says protagonist, never player. See [events-and-handlers.md](events-and-handlers.md#event).
@@ -642,7 +644,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`random(...)`**: formula randomness seeded by (run, place), so rechecking agrees and a new run rolls again; the run is the chain's seed record, the write, or the event, depending on the context. See [formula-language.md](formula-language.md#time-and-randomness).
 
+**Realm clock**: the in memory count of realm graph advances (commits, catalog activations, stored input changes); a restart starts a new epoch. See [collaboration.md](collaboration.md#1-clock-and-log).
+
 **`Readiness`**: the result of a preparation wait: `Ready`, `Failed(reason)`, or `TimedOut`. See [scenes.md](scenes.md#7-preparation-waits).
+
+**Remembered read**: `{table, part, seen}`, where `seen` is the revision the part last changed when it was read; edit guards, finding evidence, candidates and graph edges are all remembered reads. See [collaboration.md](collaboration.md#3-remembered-read).
 
 **`RealmAuthoring`**: one realm seen by one principal, with catalog, scoped read, prepare, and commit; routed or in process. See [authoring-writes.md](authoring-writes.md#kotlin-api).
 
@@ -822,7 +828,11 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`WaitDue`**: `Due` that releases a preparation wait as `TimedOut` after `waitAtMost`. See [scenes.md](scenes.md#7-preparation-waits).
 
-**`WatchValues`**: how a tab reads a mirror or stored value: one watch on the panel engine, with values as `DataValue`. See [panel-engine-communication.md](panel-engine-communication.md) (question 15).
+**Watch**: the one remote protocol for following a table: pull by watermark, digest, heartbeat hint carrying the revision, leased demand rows for computed tables. See [collaboration.md](collaboration.md#4-watch).
+
+**Watermark**: `{table, epoch, revision}`, how far a reader has followed a table. See [collaboration.md](collaboration.md#2-table).
+
+**`WatchValues`**: how a tab reads a mirror or stored value through the one watch on the panel engine, with values as `DataValue`. See [panel-engine-communication.md](panel-engine-communication.md) (question 15).
 
 **`Watched<T>`**: the mirror of a watched formula, keyed by its field and subject; its `Changed` is a real change and is what formula starts use. See [live-data.md](live-data.md#formula-changes).
 

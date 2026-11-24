@@ -619,10 +619,10 @@ Shape:
 - **Inputs** come from the installed `AuthoringView`: `Resource(id) -> AuthoringRecord?`, `ResourceIds`, each resource's slice of stored links, and the catalog. Per node `LinksAt` queries and `ProjectionAt`, which judges a slice through the tracked reader and gives `FitOf` its link fit, replace a per view graph index; the realm wide projection is a lazy fold of the node judgements.
 - **Commits set inputs** where views are installed: `AuthoringViewStore.install` applies the same `AuthoringViewDelta` (upserted resources, removed resources, catalog lease) to the graph, so a commit needs no separate report of changed inputs. A full reload (`views.invalidate`) sets every input again; early cutoff keeps that cheap.
 - **Derived queries:** each `InputIdentity` kind is a query, plus `checkRun(instance) -> FindingSet`, `dynamic`, `scopeAt`, `check` and `DerivedTypeOf(owner, key)`, what a bind computes. `CapturedAuthoringReads` keeps its API; each read is a query call, and it still records `EditExpectation`s for the commit guard.
-- **Revision:** one per view install.
-- **Finding currency:** the graph is the only rerun mechanism. `EditExpectation` stays the commit guard; a finding set's evidence is `CheckEvidence` (`checking.skir`): a `fact` holds one `EditExpectation`, and a `scope` records what a name meant where a formula looked it up. A reply judges each set against the view it describes: current when the set's catalog generation matches and every entry of its evidence still holds in that view's saved values, outdated otherwise (`FindingFreshness.kt` `judgedAgainst`). Only the realm judges a scope entry, since a name's meaning comes from extension hooks; an editor judges the fact entries and keeps the realm's answer for the scope entries. A reply judges first, then lists the sets with findings, an outcome other than finished, or an outdated status (`forReply`), so an outdated clean set stays listed. A check missing from a reply has no findings known: it is clean, or it has not run yet; publication status says whether checking still runs.
-- **Publication** captures one saved view and runs every check on a fork at exactly that view (`evaluateCapture`), whatever commits since; each error finding blocks. The findings it shows are the runtime's sets judged for release: current only while the runtime holds them current and their evidence matches the captured view. A candidate is kept only while the current view is still the captured one; publishing a stale candidate answers `CandidateChanged`, and the next refresh prepares again.
-- **`WatchFormula` overlay:** `graph.fork(working: OperationWorkingContext)` takes the panel's existing working context (saved observation plus unsaved upserts and removals, `resource_operations.skir`) and reuses base results whose inputs exclude the overlaid resources, like the staged view. On a new revision the overlay is applied to the latest saved view; only a saved change to an overlaid resource is a `stale_observation_error`.
+- **Revision:** the realm clock, one per graph advance (a commit, a catalog activation, a stored input change); in memory, a new epoch per restart ([collaboration.md](collaboration.md), decision 2).
+- **Finding currency** ([collaboration.md](collaboration.md), decision 8): findings are rows of a derived `Findings` table keyed by check instance. A row is outdated exactly while one of its edges is dirty, and clean again once the graph rechecks it; nothing is judged per reply. Its evidence on the wire is the parts it read, as remembered reads `{table, part, seen}`, where `seen` is the revision the part last changed. Clients watch the table; `AuthoringState.findings`, client judged `CheckEvidence` facts and `FindingFreshness` go.
+- **Publication** ([collaboration.md](collaboration.md), decisions 9 and 10): the graph evaluates only the current version. Publication state is derived rows per root that refer to finding rows. A candidate is issued for a root once its checks are clean at the current revision; it is a remembered read of the root rows it showed, including every part their checks read, captured inside the admission queue. `PublishAuthoring` releases exactly what was reviewed while none of those parts changed, else `candidate_changed_error`; a commit elsewhere in the realm does not block it.
+- **`WatchFormula` overlay** ([collaboration.md](collaboration.md), decision 7): the panel sends its pending intents plus their base watermark; the graph forks the current revision with those intents applied and reuses base results outside their cone. The answer names `at`, the revision it was computed at. A pending intent whose parts changed after its base gets the same conflict an edit would; there are no observation ids and no stale observation error.
 - **Cancellation:** a new revision cancels running queries; each query call checks the revision and stops when stale.
 - **Memory:** `checkRun` and `dynamic` results stay; other results are LRU bounded.
 
@@ -632,7 +632,7 @@ Compiled content carries each formula in its stored form (`Formula(source, refer
 
 ### WatchFormula
 
-The panel edits formulas language server style. The realm answers through a live subscription built from the existing search pieces (`search.skir`: a retained job, a snapshot stream, reusing the subscription id cancels the previous job), except that it never reaches `ready`: a `TrackedGraph` observer sends a new snapshot whenever the result changes, for example after another creator renames `base_reward`, until the panel replaces or cancels it. Unsaved panel edits arrive as the existing `OperationWorkingContext`:
+The panel edits formulas language server style. The realm answers through a live subscription built from the existing search pieces (`search.skir`: a retained job, a snapshot stream, reusing the subscription id cancels the previous job), except that it never reaches `ready`: a `TrackedGraph` observer sends a new snapshot whenever the result changes, for example after another creator renames `base_reward`, until the panel replaces or cancels it. Unsaved panel edits arrive as pending intents plus their base watermark ([collaboration.md](collaboration.md), decision 7):
 
 ```skir
 // editor/v1/formula.skir, next to search.skir
@@ -642,13 +642,14 @@ method WatchFormula(struct {
   location: ValueLocation;
   source: string;
   caret: int32?;                    // UTF-16; completions only when set
-  working: OperationWorkingContext; // unsaved panel edits
+  pending: [EditIntent];            // unsaved panel edits
+  base: Watermark;                  // the watermark the pending intents were planned on
   catalog: CatalogGeneration;
 }) streams FormulaUpdate
 
 enum FormulaUpdate {
   snapshot: FormulaSnapshot;
-  stale_observation_error: StaleAuthoringObservation;
+  conflict_error: [PartConflict];   // a pending intent's parts changed after its base
   unavailable_error: [Diagnostic];
   internal_error: InternalError;
 }
@@ -656,6 +657,7 @@ enum FormulaUpdate {
 struct FormulaSnapshot {
   subscription_id: string;
   input_revision: int64;            // the panel drops snapshots older than its latest keystroke
+  at: Revision;                     // the realm revision this snapshot was computed at
   display: string;
   references: [FormulaReference];
   diagnostics: [Diagnostic];        // TextSpan details

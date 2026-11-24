@@ -2,7 +2,7 @@
 
 > **Status: decided** (actor, tier A, tier B). The Open questions at the end are not decided. Every name marked *(proposed)* does not exist yet; every other name refers to existing code.
 
-How any client writes authored state (entries, fields, resources, list items, records of any catalog type) to the realm through the one existing edit contract, `CommitPreparedEdit`. Related: [engines.md](engines.md#engine-communication) (engines write authored state directly), [stored-data.md](stored-data.md#transactions) (the optimistic transaction pattern this mirrors), [live-data.md](live-data.md#session) (sessions).
+How any client writes authored state (entries, fields, resources, list items, records of any catalog type) to the realm through the one existing edit contract, `CommitPreparedEdit`. What an edit guards, how a client reads and stays current, and how conflicts are decided follow [collaboration.md](collaboration.md); this record covers who writes and the client side API. Related: [engines.md](engines.md#engine-communication) (engines write authored state directly), [stored-data.md](stored-data.md#transactions) (the optimistic transaction pattern this mirrors), [live-data.md](live-data.md#session) (sessions).
 
 ## Problem
 
@@ -10,7 +10,7 @@ Today only the panel writes authored state, and only the panel knows how:
 
 - The contract is general. `PreparedEdit{catalog, expectations, intents}` (`skir-src/editor/v1/authoring.skir` `PreparedEdit`) carries ordered `EditIntent`s (`authoring.skir` `EditIntent`) and the original facts they relied on (`authoring_facts.skir` `EditExpectation`). Admission (`SurrealAuthoringRepository.kt` `admit`) compares facts, plans, derives the **required** guards itself (`EditExpectations.kt` `requiredExpectations`) and rejects any edit that lacks one with `missing_expectation` (also in `admit`).
 - The knowledge to build a valid edit lives in two places: the panel's Dart model (`panel/lib/authoring/application/authoring_expectations.dart`, `realm_edit_model.dart`) and the realm's in process path (`WorkingViewEditContext`, `AuthoringPlanningSession`, used by `RealmStructureProvisioning.kt` `ensure`). Neither is usable by another service.
-- Reads are all or nothing. `QueryAuthoringState` (`authoring.skir` `QueryAuthoringState`, `AuthoringState.findings`) returns every resource and link of the realm and every finding set with findings, an unfinished outcome, or an outdated status, each judged against the reply's view first (`FindingFreshness.kt` `forReply`); a check missing from the list has no findings known: it is clean, or it has not run yet. A set's evidence is `CheckEvidence` (`checking.skir` `CheckEvidence`): `fact` entries hold an `EditExpectation` an editor can judge, `scope` entries record a name lookup only the realm judges.
+- Reads are all or nothing (replaced by the watch of [collaboration.md](collaboration.md#4-watch)). `QueryAuthoringState` (`authoring.skir` `QueryAuthoringState`, `AuthoringState.findings`) returns every resource and link of the realm and every finding set with findings, an unfinished outcome, or an outdated status, each judged against the reply's view first (`FindingFreshness.kt` `forReply`); a check missing from the list has no findings known: it is clean, or it has not run yet. A set's evidence is `CheckEvidence` (`checking.skir` `CheckEvidence`): `fact` entries hold an `EditExpectation` an editor can judge, `scope` entries record a name lookup only the realm judges.
 - Only `organization_member` (a panel user) may call the authoring routes (`transport-routes.yaml:465-525`).
 - The realm does not know who committed. Realm routes have no caller identity in the subject, and handlers see only `IncomingUnaryCall{address, request, headers, ...}` (`CommunicatorRouter.kt` `IncomingUnaryCall`).
 
@@ -112,22 +112,18 @@ method CommitPreparedEdit(
     initiated_by: PrincipalId? = 1;  // accepted only from service principals
   }
 ): enum {
-  committed = 1;
-  conflict_error: [ExpectationConflict] = 2;
+  committed: Revision = 1;               // the revision the commit produced (collaboration.md)
+  conflict_error: [PartConflict] = 2;    // proposed: the parts that changed after the edit's base
   rejected_error: [ValueProblem] = 3;
   catalog_changed_error: CatalogGeneration = 4;
   forbidden_error = 5;
   internal_error: InternalError = 6;
 } = ?;
-
-struct AuthoringChanged {
-  generation: CatalogGeneration = 0;
-  actor: Actor = 1;
-  resources: [ResourceId] = 2;
-}
 ```
 
-- `PreparedEdit` stays as is: it is also embedded in `TypeArgumentChangePreview` and `PreparedEditReady`, where an actor makes no sense.
+`AuthoringChanged` becomes the watch hint of [collaboration.md](collaboration.md#4-watch): it carries the catalog generation and the new revision, no rows. Who made a change is read from the commit history (`AuthoringCommit.actor`).
+
+- `PreparedEdit` carries no actor: it is also embedded in `TypeArgumentChangePreview` and `PreparedEditReady`, where an actor makes no sense.
 - Examples: a panel user: `Actor{user:u1}`. An engine committing a player's capture: `Actor{service:paper-1, initiated_by: protagonist:abc}`. An MCP server: it logs in as the user, so `Actor{user:u1}`. Realm provisioning in process: `Actor{service:<realm service>}`.
 - `initiated_by` from a non service principal is `forbidden_error`.
 - `forbidden_error` also covers a later realm side policy on which principals may author (team management, beta).
@@ -148,12 +144,11 @@ struct AuthoringChanged {
 
 Move from `services/runtime/realm` into the proposed module `services/sdk/typewriter-authoring-client` (or into `typewriter-api`, see open questions):
 
-- `requiredExpectations` and `sameFact` (`edit/EditExpectations.kt:24-195`)
 - `AuthoringPlanningSession` and `AuthoringMutationPlanner` (`edit/AuthoringPlanningSession.kt`, `edit/AuthoringMutationPlanner.kt`)
-- `WorkingViewEditContext` (`edit/WorkingViewEditContext.kt`), generalized from `AuthoringView` to `AuthoringBaseline` *(proposed interface)*: catalog, observation id, the resources in scope, their links
+- `WorkingViewEditContext` (`edit/WorkingViewEditContext.kt`), generalized from `AuthoringView` to `AuthoringBaseline` *(proposed interface)*: catalog, base watermark, the resources in scope, their links
 - the parts of `ResourceValueMapper` and `CurrentAuthoringValues` that read values and links
 
-Admission keeps calling the same `requiredExpectations`. Client and server can no longer drift.
+Admission derives the parts an edit reads from its intents with the same planner ([collaboration.md](collaboration.md#4-an-edit-is-intents-plus-a-base-watermark)). Client and server can no longer drift, and a client never states guards.
 
 ### Kotlin API
 
@@ -190,9 +185,9 @@ sealed interface ValueResult {                                        // propose
 }
 
 /**
- * Runs [block] against a fresh scoped read, commits its intents as one PreparedEdit, and reruns the whole
- * block on conflict_error with a new read, like apply() on stored data. Reads inside the block become
- * expectations; required guards are added automatically.
+ * Runs [block] against a fresh scoped read, commits its intents with the read's watermark as their base as one
+ * PreparedEdit, and reruns the whole block on conflict_error with a new read, like apply() on stored data. The
+ * realm derives what the intents read; the block states no guards.
  */
 suspend fun <R> RealmAuthoring.edit(                                  // proposed
     scope: AuthoringScope,
@@ -216,7 +211,7 @@ The transaction is the existing `EditContext` (`typewriter-api/.../authoring/Edi
 interface AuthoringTransaction : EditContext {                       // proposed
     val authoringCatalog: AuthoringCatalog
 
-    /** Untyped reads; each records a value expectation. */
+    /** Untyped reads from the scoped read at its base watermark. */
     fun value(at: ValueLocation): DataValue?
     fun record(id: ResourceId): AuthoringRecord?
     fun items(at: ValueLocation): List<ListItem>
@@ -238,21 +233,20 @@ fun ResourceId.at(vararg fields: String): ValueLocation =            // proposed
 - `ItemId`s are allocated client side, deterministic per attempt, as `WorkingViewEditContext.insert` does today.
 - **Batching** is the block: everything staged before it returns is one `PreparedEdit`, one atomic commit.
 
-### Guard collection
+### Base and guards
 
 At the end of the block:
 
 ```kotlin
 val (edit, plan) = session.finish()
-val required = baseline.values.requiredExpectations(edit, baseline.resources, baseline.relationIds, plan)
-edit.copy(expectations = (capturedReads.observations() + required).distinct())
+edit.copy(base = baseline.watermark)   // proposed: intents plus base, no expectations
 ```
 
-This is `WorkingViewEditContext.finish()` unchanged, over a scoped baseline. The scoped read must contain every fact `requiredExpectations` touches: each written resource, its configuration chain, and its links for every relation. The scope request therefore always widens to "resources written plus their link projections" (see below).
+The client sends intents and the watermark of the read it planned against. Admission derives the parts those intents read (narrow: the list items named plus their order anchors, the one relation touched) and refuses the edit when any of them changed after the base ([collaboration.md](collaboration.md#decisions), decisions 4 to 6). The scoped read still contains each written resource, its configuration chain, and its links for every relation, so the client planner can plan; the scope widens to "resources written plus their link projections" (see below).
 
 ### Wire: scoped reads
 
-Replace the request of `QueryAuthoringState` rather than add a method; the panel asks for `all`.
+A scoped read is the watch of [collaboration.md](collaboration.md#4-watch) with a scope: a first pull answers the rows in scope and their watermark, later pulls answer the rows changed after it. Replace the request of `QueryAuthoringState` rather than add a method; the panel asks for `all`. Findings are not part of it; they are the watched `Findings` table.
 
 ```skir
 enum AuthoringScope {                                                // proposed
@@ -266,7 +260,7 @@ method QueryAuthoringState(
   struct {
     generation: CatalogGeneration = 0;
     scope: AuthoringScope = 1;
-    include_findings: bool = 2;
+    have: Watermark? = 2;           // proposed: absent asks for a full read
   }
 ): enum {
   state: AuthoringState = 1;
@@ -279,10 +273,10 @@ struct AuthoringState {
   resources: [AuthoringResource] = 1;
   /// Every projection touching a returned resource, including links to resources outside the scope.
   links: [LinkProjection] = 2;
-  findings: [FindingSet] = 3;
-  confirmed_observation: AuthoringObservationId = 4;
-  /// Requested ids that do not exist; a valid observation for exists guards.
-  absent: [ResourceId] = 5;
+  /// The watermark these rows describe; an edit planned on them sends it as its base.
+  watermark: Watermark = 3;          // proposed
+  /// Requested ids that do not exist at the watermark.
+  absent: [ResourceId] = 4;
 }
 ```
 
@@ -414,7 +408,7 @@ class CapturePositionTool(private val realm: RealmAuthoring) {
 }
 ```
 
-The tool runs from a handler that asks for `origin: Origin` and passes it on, so `initiatedBy = origin.principal` names whoever caused the occurrence ([events-and-handlers.md](events-and-handlers.md)). Capturing a type's value is an event owned by that type, such as `CaptureLocation` ([panel-engine-communication.md](panel-engine-communication.md) question 6); this tool only shows the write. The panel needs no open tab; `AuthoringChanged{actor}` tells open panels who changed the entry.
+The tool runs from a handler that asks for `origin: Origin` and passes it on, so `initiatedBy = origin.principal` names whoever caused the occurrence ([events-and-handlers.md](events-and-handlers.md)). Capturing a type's value is an event owned by that type, such as `CaptureLocation` ([panel-engine-communication.md](panel-engine-communication.md) question 6); this tool only shows the write. The panel needs no open tab; open panels pull the changed row after the watch hint and read who changed it from the commit history.
 
 ### 3. Road network tool: insert and update node records
 
@@ -482,9 +476,9 @@ val second = async { tool.addNode(secondPosition, after = n2) }  // nodes = [n1,
 
 What happens:
 
-1. Each insert guards only its `after` anchor: `exists{at: network.nodes + ItemPathSegment(n2), expected: true}`. This is the **required** guard for `insert`, so a client could not omit it; nothing guards the whole list.
+1. Each insert sends its intent and the base watermark of its read. Admission derives the parts it read: whether `n2` exists in `network.nodes` (a `Keys` part), not the whole list and not `n2`'s value.
 2. Both commit; neither conflicts. The two new nodes land after `n2` in commit order.
-3. A rerun happens only when the anchor was removed: if another edit removed `n2` first, the insert gets `conflict_error` on its `exists` guard, and `edit` reruns the block on a fresh scoped read. A tool that means "append" reads the last item **inside** the block, as example 4 does, so the rerun picks an anchor that still exists.
+3. A rerun happens only when the anchor's existence changed: if another edit removed `n2` first, the insert gets `conflict_error` naming that part, and `edit` reruns the block on a fresh scoped read. A tool that means "append" reads the last item **inside** the block, as example 4 does, so the rerun picks an anchor that still exists.
 4. After `attempts` conflicts the outcome is `Refused`.
 
 Rule (as for transaction functions): every decision that depends on authored state belongs inside the block.
@@ -510,28 +504,28 @@ when (outcome) {
 
 Catalog changed: the client sends `catalog = G1`; an extension reload produced `G2`; admission answers `catalog_changed_error(G2)` (`SurrealAuthoringRepository.kt:62-66`). `edit` fetches the `G2` catalog, rereads, and reruns the block once. If the field no longer exists in `G2`, the typed draft read returns `Unavailable` or the path write is rejected with `ValueProblem`, and the outcome is `Refused`. A catalog change never counts toward `attempts`.
 
-A missing guard (`missing_expectation`) means a client bug in a non SDK client; the SDK cannot produce it because it uses the same `requiredExpectations` as admission. A scoped read that missed a fact (for example a link outside the scope) is the one exception, covered by the scope widening rule.
+A client cannot miss a guard: admission derives every guard from the intents. A scoped read that missed a fact (for example a link outside the scope) only weakens the client planner, covered by the scope widening rule.
 
 ## What changes in existing code
 
 | Where | Change |
 | --- | --- |
 | `skir-src/kernel/v1/principal.skir` (new) | `PrincipalId` |
-| `skir-src/editor/v1/authoring.skir:85-91` | `AuthoringState.absent` |
-| `authoring.skir:183-185` | `AuthoringChanged.actor`, `.resources` |
-| `authoring.skir:226-234` | `QueryAuthoringState` takes `AuthoringScope`, `include_findings` |
-| `authoring.skir:255-263` | `CommitPreparedEdit` request struct with `initiated_by`; `forbidden_error` |
+| `skir-src/editor/v1/authoring.skir:85-91` | `AuthoringState.watermark`, `.absent`; `.findings` and `.confirmed_observation` go ([collaboration.md](collaboration.md)) |
+| `authoring.skir:183-185` | `AuthoringChanged` becomes the watch hint (generation, revision) |
+| `authoring.skir:226-234` | `QueryAuthoringState` takes `AuthoringScope` and the watermark it has |
+| `authoring.skir:255-263` | `CommitPreparedEdit` request struct with `initiated_by`; `PreparedEdit` carries a base watermark instead of expectations; `committed` carries the revision; `forbidden_error` |
 | `authoring.skir` (new decls) | `Actor` |
-| `authoring.skir` (new decls) | `AuthoringCommit` and `ValueChange`, the realm commit history ([panel-engine-communication.md](panel-engine-communication.md) question 12) |
-| `skir-src/editor/v1/authoring_facts.skir:34-58` | `EditExpectation.exists` replaces `resource_exists`; list operations guard only the items they name ([panel-engine-communication.md](panel-engine-communication.md) question 12) |
+| `authoring.skir` (new decls) | `AuthoringCommit` and `ValueChange`, the realm commit history with the submission key ([panel-engine-communication.md](panel-engine-communication.md) question 12, [collaboration.md](collaboration.md)) |
+| `skir-src/editor/v1/authoring_facts.skir:34-58` | `EditExpectation` leaves the edit contract; admission derives narrow parts from intents ([collaboration.md](collaboration.md), decisions 4 and 5) |
 | representation and value contracts, `StandardTypes.kt` | `value_location` representation and `DataValue.value_location`; `BoundPath<T>` as a standard generic type ([panel-engine-communication.md](panel-engine-communication.md), Draft) |
 | `services/protocol/transport-routes.yaml:19-23` | `personal: service` on `realm_coordinator`, `realm_participant` |
 | `transport-routes.yaml:365-397, 465-525` | `realm_participant` callers on catalog fetch, value prepare, state query, edit commit, search; `caller: bound` on edit commit; higher `request_max_bytes` on edit commit |
 | `services/protocol/skir-gen/src/routes/manifest.ts:118-123`, `subject.ts:146-148`, `grants.ts:72-82` | `caller: bound` key, `by.<kind>.{id}` subject tokens, grants binding them |
 | `services/platform/messaging/.../CommunicatorRouter.kt:103-110` | `IncomingUnaryCall.caller` |
 | `services/runtime/realm/.../routes/AuthoringRoutes.kt:48-53, 56-87` | pass `Actor` to commit; filter the view by scope |
-| `.../edit/AuthoringRepository.kt:10-12`, `SurrealAuthoringRepository.kt:59-107` | `commit(edit, actor)`; reject `initiated_by` from non service principals and apply the authoring policy before planning; publish `AuthoringChanged{actor}` |
-| `.../edit/EditExpectations.kt`, `AuthoringPlanningSession.kt`, `AuthoringMutationPlanner.kt`, `WorkingViewEditContext.kt`, parts of `authoring/ResourceValueMapper.kt`, `authoring/CurrentAuthoringValues.kt` | move to the shared module over `AuthoringBaseline` |
+| `.../edit/AuthoringRepository.kt:10-12`, `SurrealAuthoringRepository.kt:59-107` | `commit(edit, actor)`; reject `initiated_by` from non service principals and apply the authoring policy before planning; derive parts and check them against the base; publish the watch hint |
+| `AuthoringPlanningSession.kt`, `AuthoringMutationPlanner.kt`, `WorkingViewEditContext.kt`, parts of `authoring/ResourceValueMapper.kt`, `authoring/CurrentAuthoringValues.kt` | move to the shared module over `AuthoringBaseline` |
 | `.../edit/RealmStructureProvisioning.kt:58-62` | use `InProcessRealmAuthoring.edit` *(proposed)* with the realm's own principal |
 | `services/sdk/typewriter-api/.../authoring/EditContext.kt` | `createNative`, `encode`; `AuthoredReads.resourceDraft` |
 | `services/sdk/typewriter-codegen/.../emit/DraftEmitter.kt:66-163` | `Companion.draft`, `Companion.create`, `insertX`/`removeX`/`moveX` for list fields; fixtures in `src/test/fixtures/accepted` |
@@ -542,7 +536,7 @@ A missing guard (`missing_expectation`) means a client bug in a non SDK client; 
 
 - **Extraction** is the largest item: about 1,000 lines of realm edit code plus the read helpers it depends on (`authoring/` is about 4,400 lines; only part moves). It must lose its dependency on the full `AuthoringView`.
 - **Scoped planning is weaker than admission.** Rules that need the whole realm (`singleton_exists`, relation cycles across unread resources) can only be checked by the realm. The client planner reports what it can; admission stays authoritative, and such rejections arrive as `Refused` after a round trip.
-- **List guards.** Today an insert guards the whole list value; the settled change (Open 8) guards only the named items, a change to `requiredExpectations`, admission, and the 15 files using `resource_exists`.
+- **Guards.** Today an insert guards the whole list value through client sent expectations; derived narrow parts ([collaboration.md](collaboration.md)) change admission and the 15 files using `resource_exists`, and `EditExpectations.kt` goes.
 - **Transport generator work** for caller bound subjects, plus a second principal kind in grants.
 - **`valueFromJson`** is a new converter over every `ResolvedRepresentation` (scalar, record, sequence, mapping, link, named wrappers).
 - **`EditorCatalog` to `CheckedCatalog`**: a generic client needs a checked catalog. Whether `FetchEditorCatalog` carries enough to build `DefaultCheckedCatalog` needs verification.
@@ -556,4 +550,4 @@ A missing guard (`missing_expectation`) means a client bug in a non SDK client; 
 5. Settled 2026-11-04: no generated `Var` shortcut. `setTo(Var.value(...))` stays until tools show it repeating.
 6. Settled 2026-11-04: a scoped read returns no findings, because engines do not use them.
 7. Settled 2026-11-04: an engine fetches the editor catalog on its first `edit` and caches it per `CatalogGeneration`, the same path as any other service. An engine that never writes never fetches it. Binding from the running publication was rejected: a second path, and writes fail whenever the editor catalog has moved ahead of the publication.
-8. Settled 2026-11-01 ([panel-engine-communication.md](panel-engine-communication.md) question 12): list operations guard only the items they name through `EditExpectation.exists`, which replaces `resource_exists`.
+8. Settled 2026-11-01, changed 2026-11-24: list operations guard only the items they name plus their order anchors; admission derives those parts from the intents ([collaboration.md](collaboration.md), decision 5).

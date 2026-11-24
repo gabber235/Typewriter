@@ -25,6 +25,7 @@ Read `overview.md` first; it introduces the seven primitives. The table below li
 | [minecraft-types.md](minecraft-types.md) | Minecraft value types: space (world, vectors, rotation, locations, positions) and items |
 | [engines.md](engines.md) | Bridges; engine communication summary |
 | [authoring-writes.md](authoring-writes.md) | How any client (panel, engine, MCP service) writes authored state: actor, generic SDK, generated helpers |
+| [collaboration.md](collaboration.md) | Many authors on one realm: clock and log, tables, remembered reads, the one watch, and the delivery plan |
 | [panel-engine-communication.md](panel-engine-communication.md) | Panel and engine communication: scenarios, target choice, emit actions, engine reports, results |
 | [glossary.md](glossary.md) | Every type and term, one line each |
 | [closed-beta-roadmap.md](closed-beta-roadmap.md) | What each layer contains and demos, and the decisions behind the plan toward the closed beta |
