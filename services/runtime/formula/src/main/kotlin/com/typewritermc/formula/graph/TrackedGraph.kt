@@ -433,7 +433,10 @@ class TrackedGraph<E> private constructor(
 
         override val revision: Long get() = snapshot.revision
 
-        override fun <T> read(key: GraphKey<T>): T = fetch(key, Frame(snapshot, RunningQueries(), null, work))
+        override fun <T> read(key: GraphKey<T>): T {
+            work.read()
+            return fetch(key, Frame(snapshot, RunningQueries(), null, work))
+        }
 
         override fun ensureCurrent() = ensureCurrent(snapshot.revision)
 
@@ -457,7 +460,10 @@ class TrackedGraph<E> private constructor(
 
         val depth: Int get() = stack.size
 
-        override fun <T> read(key: GraphKey<T>): T = fetch(key, this)
+        override fun <T> read(key: GraphKey<T>): T {
+            work.read()
+            return fetch(key, this)
+        }
 
         override fun ensureCurrent() = ensureCurrent(snapshot.revision)
 

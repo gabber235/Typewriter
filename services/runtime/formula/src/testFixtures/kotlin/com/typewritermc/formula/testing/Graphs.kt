@@ -211,6 +211,17 @@ class GeneratedGraph(
     /** Cells with random values, some of them absent. */
     fun cells(random: Random): Cells = names.filter { random.nextInt(4) != 0 }.associateWith { random.nextInt(4) }
 
+    /** A graph at random cells after up to three random changes, read in full at each revision, so its memos span several revisions. */
+    fun usedGraph(random: Random): TrackedGraph<Cells> {
+        val graph = TrackedGraph(cells(random))
+        repeat(random.nextInt(4)) {
+            outcomes(graph)
+            graph.change(*changes(random).toTypedArray())
+        }
+        outcomes(graph)
+        return graph
+    }
+
     /** One to three random changes, some of them removing a cell. */
     fun changes(random: Random): List<Pair<String, Int?>> =
         List(random.nextInt(1, 4)) { names.random(random) to random.nextInt(-1, 4).takeIf { it >= 0 } }

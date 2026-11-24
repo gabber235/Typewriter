@@ -44,12 +44,7 @@ val TrackedGraphPropertyTest by testSuite {
         checkAll(config, Arb.long()) { seed ->
             val random = Random(seed)
             val generated = GeneratedGraph(random)
-            val base = TrackedGraph(generated.cells(random))
-            repeat(random.nextInt(4)) {
-                generated.outcomes(base)
-                base.change(*generated.changes(random).toTypedArray())
-            }
-            generated.outcomes(base)
+            val base = generated.usedGraph(random)
             val forked = base.forkWith(*generated.changes(random).toTypedArray())
             if (random.nextBoolean()) {
                 base.change(*generated.changes(random).toTypedArray())
@@ -57,6 +52,22 @@ val TrackedGraphPropertyTest by testSuite {
             }
             generated.outcomes(forked) shouldBe generated.outcomes(TrackedGraph(forked.cells))
             generated.outcomes(base) shouldBe generated.outcomes(TrackedGraph(base.cells))
+        }
+    }
+
+    test("after a fork is merged, and after any changes that follow, every query equals a fresh computation") {
+        checkAll(config, Arb.long()) { seed ->
+            val random = Random(seed)
+            val generated = GeneratedGraph(random)
+            val base = generated.usedGraph(random)
+            val forked = base.forkWith(*generated.changes(random).toTypedArray())
+            generated.outcomes(forked)
+            base.merge(forked) shouldBe true
+            generated.outcomes(base) shouldBe generated.outcomes(TrackedGraph(base.cells))
+            repeat(4) {
+                base.change(*generated.changes(random).toTypedArray())
+                generated.outcomes(base) shouldBe generated.outcomes(TrackedGraph(base.cells))
+            }
         }
     }
 

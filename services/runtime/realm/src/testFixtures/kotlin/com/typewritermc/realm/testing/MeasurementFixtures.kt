@@ -6,8 +6,10 @@ import com.typewritermc.setup.setup
 import com.typewritermc.types.integer
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.kernel.v1.resource_id.ResourceId
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.measureTime
@@ -25,30 +27,42 @@ data class SeededSize(
     val contentHolders: Int,
 )
 
-/** What one value edit cost on one seeded realm with no, one and twenty unrelated broken formulas, [RUNS] edits each. */
-data class BrokenFormulaCosts(
+/**
+ * What commits cost on one seeded realm, [RUNS] of each: value edits of a name three formulas read, elements added to
+ * the shared page, renamed and removed, which no formula names, and value edits after one and after twenty unrelated
+ * formulas broke.
+ */
+data class SeededCosts(
     val size: SeededSize,
-    val none: List<CommitCost>,
-    val one: List<CommitCost>,
-    val twenty: List<CommitCost>,
+    val valueEdits: List<CommitCost>,
+    val added: List<CommitCost>,
+    val renamed: List<CommitCost>,
+    val removed: List<CommitCost>,
+    val oneBroken: List<CommitCost>,
+    val twentyBroken: List<CommitCost>,
 ) {
     /** The graph work one broken formula adds to a value edit, from the medians of the runs. */
-    val extraForOne: Long get() = one.medianWork() - none.medianWork()
+    val extraForOne: Long get() = oneBroken.medianWork() - valueEdits.medianWork()
 
     /** The graph work twenty broken formulas add to a value edit, from the medians of the runs. */
-    val extraForTwenty: Long get() = twenty.medianWork() - none.medianWork()
+    val extraForTwenty: Long get() = twentyBroken.medianWork() - valueEdits.medianWork()
 
     override fun toString(): String =
-        "$size: graph work per value edit, none ${none.medianWork()}, one ${one.medianWork()}, twenty ${twenty.medianWork()}; " +
+        "$size: median graph work per value edit ${valueEdits.medianWork()}, added element ${added.medianWork()}, " +
+            "renamed element ${renamed.medianWork()}, removed element ${removed.medianWork()}; " +
+            "median reply bytes per value edit ${valueEdits.medianReplyBytes()}, added element ${added.medianReplyBytes()}; " +
+            "value edit with one broken formula ${oneBroken.medianWork()}, with twenty ${twentyBroken.medianWork()}; " +
             "extra for one $extraForOne, for twenty $extraForTwenty"
 }
 
 /**
- * Seeds a realm of [size] with hooks, then measures value edits of its last name with no broken formula, after one
- * formula breaks, and after nineteen more break; the broken formulas read none of the edited name. Prints each commit.
+ * Seeds a realm of [size] with hooks, then measures value edits of its last name, elements added to its one shared
+ * page, renamed and removed, and value edits after one formula breaks and after nineteen more break; neither the
+ * elements nor the broken formulas are named by any formula, and the broken formulas read none of the edited name.
+ * Prints each commit.
  */
-suspend fun measureBrokenFormulas(size: SeededSize): BrokenFormulaCosts {
-    lateinit var costs: BrokenFormulaCosts
+suspend fun measureSeeded(size: SeededSize): SeededCosts {
+    lateinit var costs: SeededCosts
     withSetup(seededWorkload(size.names, size.holders, size.contentHolders), catalog = hookCatalog()) { seeded ->
         val edited = seeded.named("n${size.names - 1}")
 
@@ -59,13 +73,25 @@ suspend fun measureBrokenFormulas(size: SeededSize): BrokenFormulaCosts {
 
         println("$size seeded: ${startMeasuring()}")
         edits("warm up", 0)
-        val none = edits("no broken formula", 100)
+        val valueEdits = edits("value edit", 100)
+        val elements = mutableListOf<ResourceId>()
+        val added =
+            (0 until RUNS).map { index ->
+                val creation = createEntry("added_$index")
+                elements += creation.id
+                measuredCommit("$size added element", creation.edit).also(::println)
+            }
+        val renamed =
+            elements.mapIndexed { index, element ->
+                measuredCommit("$size renamed element", rename(element, "moved_$index")).also(::println)
+            }
+        val removed = elements.map { element -> measuredCommit("$size removed element", delete(element)).also(::println) }
         println(measuredCommit("$size break one", setFormula(seeded.named("f0"), "missing_0 + 1")))
-        val one = edits("one broken formula", 200)
+        val oneBroken = edits("one broken formula", 200)
         val nineteen = (1..19).map { setFormula(seeded.named("f$it"), "missing_$it + 1") }
         println(measuredCommit("$size break nineteen more", *nineteen.toTypedArray()))
-        val twenty = edits("twenty broken formulas", 300)
-        costs = BrokenFormulaCosts(size, none, one, twenty).also(::println)
+        val twentyBroken = edits("twenty broken formulas", 300)
+        costs = SeededCosts(size, valueEdits, added, renamed, removed, oneBroken, twentyBroken).also(::println)
     }
     return costs
 }
@@ -151,8 +177,13 @@ internal suspend fun RealmFixture.startMeasuring(): String {
 internal suspend fun RealmFixture.measuredCommit(
     label: String,
     vararg intents: EditIntent,
+): CommitCost = measuredCommit(label, prepare(intents.toList()))
+
+/** Commits [edit], which must commit, waits for the check pass it starts, and measures both. */
+internal suspend fun RealmFixture.measuredCommit(
+    label: String,
+    edit: PreparedEdit,
 ): CommitCost {
-    val edit = prepare(intents.toList())
     val computedBefore = graphRuns.totalRuns()
     val evictedBefore = graphRuns.evicted()
     val bindingBefore = bindingNanos.get()
@@ -201,7 +232,11 @@ private fun RealmFixture.workCounted(operations: Set<String>): GraphWork.Counts 
 
     fun kind(name: String) = sums.filterKeys { it["graph.work"] == name }.values.sum()
 
-    return GraphWork.Counts(kind("computed"), kind("verified"), kind("walked"))
+    return GraphWork.Counts(kind("computed"), kind("verified"), kind("walked"), kind("read"))
 }
 
-private fun List<CommitCost>.medianWork(): Long = map { it.work.total }.sorted()[size / 2]
+/** The median graph work of these commits, so one run that met a cold cache does not move a gate. */
+fun List<CommitCost>.medianWork(): Long = map { it.work.total }.sorted()[size / 2]
+
+/** The median size of these commits' replies. */
+fun List<CommitCost>.medianReplyBytes(): Int = map { it.replyBytes }.sorted()[size / 2]

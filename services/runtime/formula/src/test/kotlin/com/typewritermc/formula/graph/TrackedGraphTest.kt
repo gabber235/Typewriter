@@ -444,8 +444,21 @@ val TrackedGraphTest by testSuite {
         graph.change("b" to 2)
         val second = GraphWork()
         graph.pin(second).read(top)
-        first.counts() shouldBe GraphWork.Counts(computed = 2, verified = 0, walked = 0)
-        second.counts() shouldBe GraphWork.Counts(computed = 0, verified = 2, walked = 0)
+        first.counts() shouldBe GraphWork.Counts(computed = 2, verified = 0, walked = 0, read = 3)
+        second.counts() shouldBe GraphWork.Counts(computed = 0, verified = 2, walked = 0, read = 1)
+    }
+
+    test("a pin counts every read, also of a memo already current at its revision") {
+        val bench = QueryBench()
+        val onA = bench.query("onA") { read(Cell("a")) ?: 0 }
+        val top = bench.query("top") { read(onA) + read(onA) }
+        val graph = TrackedGraph(cells("a" to 1))
+        graph.read(top)
+        val work = GraphWork()
+        val pinned = graph.pin(work)
+        pinned.read(top)
+        pinned.read(onA)
+        work.counts() shouldBe GraphWork.Counts(computed = 0, verified = 0, walked = 0, read = 2)
     }
 
     test("a pin counts every key a walk of reads visits") {
