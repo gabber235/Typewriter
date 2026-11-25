@@ -8,6 +8,7 @@
 //! outside its inputs fails the build that introduced it instead of being reused after that file
 //! changes.
 
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
@@ -70,7 +71,7 @@ impl CargoBuild<'_> {
     /// Runs `cargo` unless the artifacts were built from the same inputs, the same toolchain and
     /// the same command, then stamps them.
     pub fn run(&self, ctx: &Context, cargo: &mut Command) -> Result<Outcome> {
-        let digest = self.digest(ctx, cargo)?;
+        let (digest, hashed) = self.digest(ctx, cargo)?;
         let stamp = self.stamp()?;
         let artifacts = self.artifact_names();
         if stamp.outputs(&ctx.root, &digest).as_ref() == Some(&artifacts) {
@@ -79,7 +80,7 @@ impl CargoBuild<'_> {
         // A build that fails, or reads outside its inputs, leaves nothing to reuse.
         stamp.clear()?;
         cargo.run()?;
-        self.check_inputs(ctx)?;
+        self.check_inputs(ctx, &hashed)?;
         stamp.record(&ctx.root, &digest, &artifacts)?;
         Ok(Outcome::Compiled)
     }
@@ -101,18 +102,17 @@ impl CargoBuild<'_> {
     }
 
     /// The digest of every input file, the command line with the variables it sets, the flags
-    /// the environment passes to rustc, and the toolchain's version.
-    fn digest(&self, ctx: &Context, cargo: &Command) -> Result<Digest> {
-        let mut files = Vec::new();
+    /// the environment passes to rustc, and the toolchain's version, with the root relative
+    /// files it hashed.
+    fn digest(&self, ctx: &Context, cargo: &Command) -> Result<(Digest, BTreeSet<PathBuf>)> {
+        let mut files = BTreeSet::new();
         for input in self.inputs {
             walk(&ctx.root, &ctx.root.join(input), &mut |relative| {
                 if !self.is_excluded(Path::new(relative)) {
-                    files.push(relative.to_owned());
+                    files.insert(relative.to_owned());
                 }
             })?;
         }
-        files.sort();
-        files.dedup();
         let mut digest = Digest::new();
         for file in &files {
             digest.update_file(&ctx.root, file)?;
@@ -144,7 +144,7 @@ impl CargoBuild<'_> {
         }
         let toolchain = ctx.tool(".", "rustc", &["-vV"]).output_text()?;
         digest.update(toolchain.as_bytes());
-        Ok(digest)
+        Ok((digest, files.into_iter().map(PathBuf::from).collect()))
     }
 
     fn is_excluded(&self, relative: &Path) -> bool {
@@ -153,12 +153,12 @@ impl CargoBuild<'_> {
             .any(|excluded| relative.starts_with(excluded))
     }
 
-    /// Fails when Cargo's dependency file of an artifact names a repository file outside the
-    /// inputs. Files below the build's own target directory (a build script's generated sources)
-    /// derive from the inputs, and files outside the repository come from the toolchain or from
-    /// dependencies `Cargo.lock` pins. Another tool's build output is reported: the digest never
-    /// holds it.
-    fn check_inputs(&self, ctx: &Context) -> Result<()> {
+    /// Fails when Cargo's dependency file of an artifact names a repository file the digest did
+    /// not hash (`hashed`): one outside the inputs, excluded, or in a folder the walk skips such as
+    /// a hidden folder or another tool's build output. Files below the build's own target
+    /// directory (a build script's generated sources) derive from the inputs, and files outside
+    /// the repository come from the toolchain or from dependencies `Cargo.lock` pins.
+    fn check_inputs(&self, ctx: &Context, hashed: &BTreeSet<PathBuf>) -> Result<()> {
         let mut outside = Vec::new();
         for artifact in &self.artifacts {
             let dep_info = artifact.with_extension("d");
@@ -172,8 +172,7 @@ impl CargoBuild<'_> {
                 let Ok(relative) = file.strip_prefix(&ctx.root).map(Path::to_owned) else {
                     continue;
                 };
-                let input = self.inputs.iter().any(|input| relative.starts_with(input));
-                if !input || self.is_excluded(&relative) {
+                if !hashed.contains(&relative) {
                     outside.push(relative.display().to_string());
                 }
             }
@@ -355,11 +354,13 @@ mod tests {
         let cargo = FakeCargo { root: &root };
         let build = cargo.build(INPUTS, EXCLUDED);
         root.write("services/sdk/build/fixtures/corpus.json", "[]");
+        root.write("backend/access/auth-callout/.wash/config.yaml", "");
         let reads = [
             "backend/src/lib.rs",
             "skir-src/fixture.json",
             "backend/tests/case.rs",
             "services/sdk/build/fixtures/corpus.json",
+            "backend/access/auth-callout/.wash/config.yaml",
         ];
 
         let error = build
@@ -371,6 +372,11 @@ mod tests {
         // Another tool's build output, which the digest never holds.
         assert!(
             error.contains("services/sdk/build/fixtures/corpus.json"),
+            "{error}"
+        );
+        // Below an input folder, but in a hidden folder the digest skips.
+        assert!(
+            error.contains("backend/access/auth-callout/.wash/config.yaml"),
             "{error}"
         );
         assert!(!error.contains("backend/src/lib.rs"), "{error}");
