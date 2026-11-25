@@ -264,7 +264,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Engine**: runs published content through extensions (Paper, panel, future engines); engines share stored state only through the realm; live effects and events go directly between sessions. `Engine(id)` is also an identity, keyed by the stable topology engine id, so what an engine knows (`Stored`) and is doing (`Live`) are ordinary values keyed by it. See [live-data.md](live-data.md#engines-and-traits).
 
-**Engine kind**: the engine artifact an engine runs (`EngineKind`, the topology `EngineTarget.engine_id`, such as `typewritermc:paper`); open to third party engines and stored once in the topology. Bridges register per kind, each kind supplies its session ids and grace, and interactions stay inside one kind. See [live-data.md](live-data.md#session).
+**Engine kind**: the engine artifact an engine runs (`EngineKind`, the topology `EngineTarget.engine_id`, such as `typewritermc:paper`); open to third party engines and stored once in the topology. Bridges register per kind, each kind supplies its session ids and its `SessionTimings`, among them the vacancy, and interactions stay inside one kind. See [live-data.md](live-data.md#session).
 
 **`EnginePart`**: marker for a class an extension adds to an engine; KSP finds it by supertype and it joins the deployment's Koin. See [events-and-handlers.md](events-and-handlers.md#engine-parts).
 
