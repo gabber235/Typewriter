@@ -38,6 +38,7 @@ final class Stepper {
     private static boolean perceiveDue;
     private static boolean ackDue;
     private static int askedAfter = -1;
+    private static final OncePerTick guiUpdate = new OncePerTick();
 
     private Stepper() {}
 
@@ -109,6 +110,7 @@ final class Stepper {
         lastRan = -1;
         perceiveDue = false;
         ackDue = false;
+        guiUpdate.reset();
         Clips.leftPaper();
     }
 
@@ -159,9 +161,18 @@ final class Stepper {
         lastRan = running;
         running = null;
         perceiveDue = true;
+        guiUpdate.ticked();
         Clips.ticked();
         // The tick's last record is taken in this loop pass unless a clip draws more frames after it.
         if (!Clips.morePassesDue()) Inputs.betweenTicks(mc, true);
+    }
+
+    /**
+     * Whether this frame runs the GUI's update, which moves toasts on: while stepping, in the first frame
+     * after each tick only ({@link OncePerTick}).
+     */
+    static boolean updatesGui() {
+        return !stepping || guiUpdate.runs();
     }
 
     /** Whether this frame runs at all: while stepping, only to perceive a tick that ran or a forced record. */

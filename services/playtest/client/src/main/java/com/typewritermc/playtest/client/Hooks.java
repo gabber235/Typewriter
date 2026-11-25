@@ -41,6 +41,10 @@ public final class Hooks {
         return Frames.begin(mc) == Frames.Mode.DRAW;
     }
 
+    public static boolean updatesGui() {
+        return Stepper.updatesGui();
+    }
+
     public static boolean extracts() {
         return Frames.mode() != Frames.Mode.SKIP;
     }

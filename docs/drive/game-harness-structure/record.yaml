@@ -82,25 +82,19 @@ pieces:
           passing attempt, retries included
         state: working
       - id: toast-1-cause
-        what: read the client's toast path for a wall clock dependence
+        what: record the tick Paper unlocks the recipe, the tick the client queues the toast, and each GUI update
         taught: >-
-          a toast slides in over 600 ms of Util.getMillis, and a stepped client's time source moves 50 ms
-          per granted tick, so pace never moves it: every attempt and pace of one run holds at one tick.
-          Two local runs held at 11 and at 10 throughout; a third, 8 attempts on one client, held at 11
-          except its 50 ms paced attempt at 10, which the steady check reported. So a wall clock dependent
-          step leaks into the toast window's count. Ruled out: the slide (Util.getMillis moves 50 ms per
-          tick), the text's position (toasts draw unclipped, so the text counts from the toast's first
-          frame), the client's queueing (handleRecipeBookAdd queues the toast at once), the window size
-        state: trying
+          Paper unlocks the recipe in the tick right after the give, and the client queues the toast in that
+          tick: no server delay. A toast takes two GUI updates to start its slide (queued to shown, then the
+          slide's start time), and Minecraft.renderFrame ran the GUI update in every frame, the skipped frames
+          between ticks too; so whether a frame ran between two ticks, which wall clock decides, moved the
+          slide's start and the window by a tick. The GUI update now runs once per tick while the client
+          steps, in the first frame after the tick (OncePerTick); TOAST-1 held at 12 in all 4 attempts on 2
+          clients and at 5 and 50 ms
+        state: working
         evidence:
-          - services/playtest/client/src/main/java/com/typewritermc/playtest/client/Stepper.java:81
-          - local playtest runs, 2026-11-24 (held at 11 in every attempt of one, at 10 in every attempt of the next)
-          - local run of TOAST-1 --repeat 8, 2026-11-25 (11 at 0 and 5 ms, 10 at 50 ms, all on gv-1)
-          - ToastManager.update runs once per frame from Minecraft.renderFrame, not from the client tick
-        next: >-
-          record on the client the tick a ClientboundRecipeBookAddPacket arrives and the frame its toast
-          first draws, and on Paper the tick it was sent, at 0 and 50 ms, to tell a server side delay from
-          a client frame that runs between ticks
+          - services/playtest/client/src/main/java/com/typewritermc/playtest/client/OncePerTick.java
+          - local probe runs 2026-11-25 (paper.log recipe tick, client toast add and update ticks, logs/8 and 9)
       - id: restart-2-cause
         what: run RESTART-2 at 0, 5 and 50 ms, then with a 1 tick window after the restart
         taught: >-
@@ -164,4 +158,4 @@ open:
 
 slices: []
 
-next: checks, commits and the handback; TOAST-1's tick from run to run stays open
+next: the pool dispatch keyed by message kind, the steady rule in Kotlin, then change 4
