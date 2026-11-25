@@ -115,7 +115,7 @@ internal fun Checker.name(
             if (function != null &&
                 wantedFunction == null
             ) {
-                invoke(named.node, function, emptyList(), expected, false, name.span, scope)
+                invoke(named.node, function, CallSite(emptyList(), expected, name.span, scope))
             } else {
                 named.node
             }
@@ -129,7 +129,7 @@ internal fun Checker.name(
             if (wantedFunction != null) {
                 functionValue(name, named.functions, wantedFunction)
             } else {
-                callFunctions(named.functions, null, emptyList(), expected, false, name.span, scope)
+                callFunctions(named.functions, null, CallSite(emptyList(), expected, name.span, scope))
             }
         }
 
@@ -173,7 +173,7 @@ private fun Checker.callName(
         is Named.Value -> invokeValue(named.node, arguments, expected, false, span, scope)
         is Named.Case -> construct(named.type, arguments, span, scope)
         is Named.Type -> construct(named.type, arguments, span, scope)
-        is Named.Functions -> callFunctions(named.functions, null, arguments, expected, false, span, scope)
+        is Named.Functions -> callFunctions(named.functions, null, CallSite(arguments, expected, span, scope))
         Named.Nothing -> construct(ERROR, arguments, span, scope)
     }
 }
@@ -190,7 +190,7 @@ private fun Checker.callMember(
     if (target.type == ERROR) return construct(ERROR, arguments, span, scope)
     val field =
         fieldType(target.type.nonNull(), callee.name.text, callee.name.span)
-            ?: return callNamed(callee.name.text, target, arguments, expected, span, scope, callee.safe, callee.name)
+            ?: return callNamed(callee.name.text, target, CallSite(arguments, expected, span, scope, callee.safe), callee.name)
     val read = FieldRead(target, callee.name.text, callee.safe, field, callee.span)
     return invokeValue(read, arguments, expected, callee.safe, span, scope)
 }
@@ -221,26 +221,26 @@ private fun Checker.invokeValue(
         report(callee.span, "formula_not_callable", "This is a ${shown(callee.type)}, not a function")
         return construct(ERROR, arguments, span, scope)
     }
-    return invoke(callee, function, arguments, expected, safe, span, scope)
+    return invoke(callee, function, CallSite(arguments, expected, span, scope, safe))
 }
 
-/** Calls the functions named [name] with [receiver] as their first context slot. */
+/**
+ * Calls the functions named [name] as [call], with [receiver] as their first context slot; [member] is the member
+ * the call was written as, and [operator] the operator it stands for.
+ */
 internal fun Checker.callNamed(
     name: String,
     receiver: CheckedExpression,
-    arguments: List<CallArgument>,
-    expected: TypeUse?,
-    span: TextSpan,
-    scope: Scope,
-    safe: Boolean = false,
+    call: CallSite,
     member: Name? = null,
     operator: String? = null,
 ): CheckedExpression {
+    val (arguments, _, span, scope) = call
     val functions = environment.functions(name)
     if (functions.isNotEmpty() ||
         receiver.type == ERROR
     ) {
-        return callFunctions(functions, receiver, arguments, expected, safe, span, scope, operator)
+        return callFunctions(functions, receiver, call, operator)
     }
     if (member != null) {
         report(member.span, "formula_unknown_member", "${shown(recordBehind(receiver.type.nonNull()))} has no member `$name`")
@@ -255,7 +255,7 @@ internal fun Checker.index(
     index: Index,
     expected: TypeUse?,
     scope: Scope,
-): CheckedExpression = callNamed("get", synthOnce(index.target, scope), listOf(written(index.index)), expected, index.span, scope)
+): CheckedExpression = callNamed("get", synthOnce(index.target, scope), CallSite(listOf(written(index.index)), expected, index.span, scope))
 
 internal fun Checker.list(
     node: ListNode,
@@ -357,8 +357,8 @@ private fun Checker.hole(
     var value = synthOnce(hole.value, scope)
     val format = hole.format
     if (format != null && value.type != ERROR) {
-        value = callNamed("format", value, listOf(CallArgument.Given(Constant(format, TEXT, hole.span))), null, hole.span, scope)
+        value = callNamed("format", value, CallSite(listOf(CallArgument.Given(Constant(format, TEXT, hole.span))), null, hole.span, scope))
     }
     if (value.type == ERROR) return Invalid(ERROR, hole.span)
-    return callNamed("interpolate", value, emptyList(), partType, hole.span, scope)
+    return callNamed("interpolate", value, CallSite(emptyList(), partType, hole.span, scope))
 }

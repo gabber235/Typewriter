@@ -169,7 +169,7 @@ private fun Checker.inPattern(
     }
     val element = CallArgument.Given(LocalRead(local, value.type, pattern.span))
     return CheckedPattern.Test(
-        callNamed("contains", synthOnce(pattern.value, scope), listOf(element), BOOLEAN, pattern.span, scope, operator = "in"),
+        callNamed("contains", synthOnce(pattern.value, scope), CallSite(listOf(element), BOOLEAN, pattern.span, scope), operator = "in"),
     )
 }
 

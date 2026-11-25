@@ -60,10 +60,7 @@ internal fun Checker.binary(
             callNamed(
                 name,
                 synthOnce(binary.left, scope),
-                listOf(written(binary.right)),
-                expected,
-                binary.span,
-                scope,
+                CallSite(listOf(written(binary.right)), expected, binary.span, scope),
                 operator = operator.symbol,
             )
         }
@@ -85,10 +82,7 @@ private fun Checker.membership(
         callNamed(
             "contains",
             synthOnce(binary.right, scope),
-            listOf(CallArgument.Given(element)),
-            BOOLEAN,
-            binary.span,
-            scope,
+            CallSite(listOf(CallArgument.Given(element)), BOOLEAN, binary.span, scope),
             operator = "in",
         )
     return if (binary.operator == BinaryOperator.NotIn) Not(contains, BOOLEAN, binary.span) else contains
@@ -101,7 +95,7 @@ private fun Checker.compare(
     span: TextSpan,
     scope: Scope,
 ): CheckedExpression {
-    val comparison = callNamed("compareTo", left, listOf(written(right)), INT, span, scope, operator = operator.symbol)
+    val comparison = callNamed("compareTo", left, CallSite(listOf(written(right)), INT, span, scope), operator = operator.symbol)
     return if (comparison.type == ERROR) Invalid(ERROR, span) else Compare(comparison, operator, BOOLEAN, span)
 }
 
@@ -176,7 +170,7 @@ internal fun Checker.unary(
         }
 
         else -> {
-            callNamed("unaryMinus", synthOnce(value, scope), emptyList(), expected, unary.span, scope, operator = "-")
+            callNamed("unaryMinus", synthOnce(value, scope), CallSite(emptyList(), expected, unary.span, scope), operator = "-")
         }
     }
 }
