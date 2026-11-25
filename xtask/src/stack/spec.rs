@@ -49,8 +49,9 @@ pub trait Service {
     fn builds(&self) -> &'static [&'static Build] {
         &[]
     }
-    /// The process, from what [`Self::builds`] built.
-    fn command(&self, ctx: &StackContext) -> Result<Command>;
+    /// The process, from what [`Self::builds`] built: `built` holds the artifacts of exactly
+    /// those builds.
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command>;
     fn ready(&self, ctx: &StackContext) -> Probe;
     /// How long the service may take to become ready.
     fn startup(&self) -> Duration {
@@ -70,7 +71,7 @@ pub trait DynService {
     fn provides(&self) -> &'static [Role];
     fn needs_roles(&self) -> &'static [Role];
     fn builds(&self) -> &'static [&'static Build];
-    fn command(&self, ctx: &StackContext) -> Result<Command>;
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command>;
     fn ready(&self, ctx: &StackContext) -> Probe;
     fn startup(&self) -> Duration;
     fn publish(&self, ctx: &StackContext, out: &mut Published) -> Result<()>;
@@ -92,8 +93,8 @@ impl<S: Service> DynService for S {
     fn builds(&self) -> &'static [&'static Build] {
         Service::builds(self)
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
-        Service::command(self, ctx)
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
+        Service::command(self, ctx, built)
     }
     fn ready(&self, ctx: &StackContext) -> Probe {
         Service::ready(self, ctx)
@@ -118,14 +119,55 @@ pub enum How {
     /// Tasks and properties of the stack's one Gradle run in `services`, which takes those of
     /// every Gradle build at once, so two never compete for the same projects.
     Gradle(fn(&crate::Context) -> GradleBuild),
-    /// A build of its own, on a thread beside the others.
-    Own(fn(&crate::Context) -> Result<()>),
+    /// A build of its own, on a thread beside the others, which returns what it made.
+    Own(fn(&crate::Context) -> Result<Artifacts>),
 }
 
-/// What one Gradle build runs: its tasks and the project properties (`-P`) they read.
+/// What a build made: each artifact's path by the name a service's command asks for it by.
+pub type Artifacts = BTreeMap<String, PathBuf>;
+
+/// What one Gradle build runs: its tasks, the project properties (`-P`) they read, and where the
+/// tasks leave what it makes.
 pub struct GradleBuild {
     pub tasks: Vec<String>,
     pub properties: Vec<(String, String)>,
+    pub artifacts: Artifacts,
+}
+
+/// What a stack's builds made, by build. A service's command is handed only the artifacts of the
+/// builds it lists ([`Self::for_builds`]).
+#[derive(Default)]
+pub struct Built(BTreeMap<&'static str, Artifacts>);
+
+impl Built {
+    /// Only the artifacts of `builds`.
+    pub fn for_builds(&self, builds: &[&'static Build]) -> Built {
+        Built(
+            self.0
+                .iter()
+                .filter(|(name, _)| builds.iter().any(|build| build.name == **name))
+                .map(|(name, artifacts)| (*name, artifacts.clone()))
+                .collect(),
+        )
+    }
+
+    /// What `build` made. Fails when the service handed this did not list `build`.
+    pub fn artifacts(&self, build: &Build) -> Result<&Artifacts> {
+        self.0.get(build.name).with_context(|| {
+            format!(
+                "{} is not among this service's builds; the service that runs it must list it",
+                build.name
+            )
+        })
+    }
+
+    /// The artifact `name` that `build` made.
+    pub fn artifact(&self, build: &Build, name: &str) -> Result<&Path> {
+        self.artifacts(build)?
+            .get(name)
+            .map(PathBuf::as_path)
+            .with_context(|| format!("{} made no {name}", build.name))
+    }
 }
 
 /// The arguments of the one Gradle run that does every Gradle build of `builds`: each task once,
@@ -427,7 +469,6 @@ pub fn state_dir(ctx: &crate::Context) -> PathBuf {
 pub struct StackContext<'a> {
     pub ctx: &'a crate::Context,
     pub ports: PortLease,
-    built: RefCell<BTreeSet<&'static str>>,
     /// What the started services published, in start order.
     values: RefCell<BTreeMap<String, String>>,
     clients: OnceCell<ClientConfiguration>,
@@ -438,7 +479,6 @@ impl<'a> StackContext<'a> {
         Self {
             ctx,
             ports,
-            built: RefCell::default(),
             values: RefCell::default(),
             clients: OnceCell::new(),
         }
@@ -520,25 +560,29 @@ impl<'a> StackContext<'a> {
         self.values.borrow().clone()
     }
 
-    /// Runs every one of `builds` at once and waits for all of them: each [`How::Own`] build on a
-    /// thread of its own and every Gradle build in one Gradle run. The caller holds the heavy
-    /// lock. Fails naming each build that failed.
-    pub fn build(&self, builds: &[&'static Build]) -> Result<()> {
+    /// Runs every one of `builds` at once, waits for all of them, and returns what they made:
+    /// each [`How::Own`] build on a thread of its own and every Gradle build in one Gradle run,
+    /// whose artifacts must exist afterwards. The caller holds the heavy lock. Fails naming each
+    /// build that failed.
+    pub fn build(&self, builds: &[&'static Build]) -> Result<Built> {
         let ctx = self.ctx;
         let gradle = gradle_args(ctx, builds)?;
-        let failures: Vec<(&str, anyhow::Error)> = std::thread::scope(|scope| {
+        let gradle_builds: Vec<(&'static str, GradleBuild)> = builds
+            .iter()
+            .filter_map(|build| match build.how {
+                How::Gradle(gradle) => Some((build.name, gradle(ctx))),
+                How::Own(_) => None,
+            })
+            .collect();
+        let results: Vec<(&str, Result<Option<Artifacts>>)> = std::thread::scope(|scope| {
             let mut running = Vec::new();
             for build in builds {
                 if let How::Own(run) = build.how {
-                    running.push((build.name, scope.spawn(move || run(ctx))));
+                    running.push((build.name, scope.spawn(move || run(ctx).map(Some))));
                 }
             }
             if let Some(args) = gradle {
-                let names: Vec<&str> = builds
-                    .iter()
-                    .filter(|build| matches!(build.how, How::Gradle(_)))
-                    .map(|build| build.name)
-                    .collect();
+                let names: Vec<&str> = gradle_builds.iter().map(|(name, _)| *name).collect();
                 running.push((
                     "Gradle",
                     scope.spawn(move || {
@@ -546,42 +590,47 @@ impl<'a> StackContext<'a> {
                         ctx.tool("services", "./gradlew", &args)
                             .run()
                             .with_context(|| format!("cannot build {}", names.join(", ")))
+                            .map(|()| None)
                     }),
                 ));
             }
             running
                 .into_iter()
-                .filter_map(|(name, thread)| {
+                .map(|(name, thread)| {
                     let result = thread
                         .join()
                         .unwrap_or_else(|_| Err(anyhow::anyhow!("the build panicked")));
-                    result.err().map(|error| (name, error))
+                    (name, result)
                 })
                 .collect()
         });
+        let mut built = BTreeMap::new();
+        let mut failures = Vec::new();
+        for (name, result) in results {
+            match result {
+                Ok(Some(artifacts)) => {
+                    built.insert(name, artifacts);
+                }
+                Ok(None) => {}
+                Err(error) => failures.push(format!("{name}: {error:#}")),
+            }
+        }
         if !failures.is_empty() {
-            let reasons: Vec<String> = failures
-                .iter()
-                .map(|(name, error)| format!("{name}: {error:#}"))
+            bail!("the stack's builds failed; {}", failures.join("; "));
+        }
+        for (name, gradle) in gradle_builds {
+            let missing: Vec<String> = gradle
+                .artifacts
+                .values()
+                .filter(|path| !path.exists())
+                .map(|path| path.display().to_string())
                 .collect();
-            bail!("the stack's builds failed; {}", reasons.join("; "));
+            if !missing.is_empty() {
+                bail!("{name} left no {}", missing.join(", "));
+            }
+            built.insert(name, gradle.artifacts);
         }
-        self.built
-            .borrow_mut()
-            .extend(builds.iter().map(|build| build.name));
-        Ok(())
-    }
-
-    /// Fails unless the stack built `build`, so a service whose command runs what a build makes
-    /// but leaves the build out of its [`Service::builds`] is refused.
-    pub fn require(&self, build: &Build) -> Result<()> {
-        if !self.built.borrow().contains(build.name) {
-            bail!(
-                "the stack did not build {}: the service that runs it must list it in its builds",
-                build.name
-            );
-        }
-        Ok(())
+        Ok(Built(built))
     }
 }
 
@@ -671,7 +720,12 @@ mod tests {
 
     const STACK_BINARY: Build = Build {
         name: "stack binary",
-        how: How::Own(|_| Ok(())),
+        how: How::Own(|ctx| {
+            Ok(Artifacts::from([(
+                "stack".to_owned(),
+                ctx.root.join("stack"),
+            )]))
+        }),
     };
     const REALM_HOST: Build = Build {
         name: "realm host",
@@ -681,6 +735,7 @@ mod tests {
                 "inbox".to_owned(),
                 ctx.root.join("inbox").display().to_string(),
             )],
+            artifacts: Artifacts::new(),
         }),
     };
     const ENGINE_HOST: Build = Build {
@@ -691,6 +746,7 @@ mod tests {
                 "inbox".to_owned(),
                 ctx.root.join("inbox").display().to_string(),
             )],
+            artifacts: Artifacts::new(),
         }),
     };
     const OTHER_INBOX: Build = Build {
@@ -698,6 +754,7 @@ mod tests {
         how: How::Gradle(|_| GradleBuild {
             tasks: vec![":engine:installDist".to_owned()],
             properties: vec![("inbox".to_owned(), "/elsewhere".to_owned())],
+            artifacts: Artifacts::new(),
         }),
     };
 
@@ -745,7 +802,7 @@ mod tests {
         let ctx = stack_context(&root);
         const RECORDS_START: Build = Build {
             name: "stack binary",
-            how: How::Own(record_build_start),
+            how: How::Own(|ctx| record_build_start(ctx).map(|()| Artifacts::new())),
         };
         let error = refusal(ctx.build(&[&REALM_HOST, &OTHER_INBOX, &RECORDS_START]));
         assert_eq!(
@@ -756,7 +813,6 @@ mod tests {
                 root.path("inbox").display()
             )
         );
-        assert!(ctx.require(&REALM_HOST).is_err());
         assert_eq!(started_builds(&root), 0);
     }
 
@@ -800,20 +856,36 @@ mod tests {
             "the stack's builds failed; components: wasm32 failed"
         );
         assert_eq!(finished_builds(&root), 1);
-        assert!(ctx.require(&FAILING[1]).is_err());
     }
 
     #[test]
-    fn a_service_runs_only_what_the_stack_built() {
+    fn a_service_is_handed_what_the_builds_it_lists_made_and_nothing_else() {
+        const COMPONENTS: Build = Build {
+            name: "components",
+            how: How::Own(|ctx| {
+                Ok(Artifacts::from([(
+                    "echo".to_owned(),
+                    ctx.root.join("echo.wasm"),
+                )]))
+            }),
+        };
         let root = TempRoot::new();
         let ctx = stack_context(&root);
+        let built = ctx.build(&[&STACK_BINARY, &COMPONENTS]).unwrap();
+
+        let handed = built.for_builds(&[&STACK_BINARY]);
         assert_eq!(
-            refusal(ctx.require(&STACK_BINARY)),
-            "the stack did not build stack binary: the service that runs it must list it in its \
-             builds"
+            handed.artifact(&STACK_BINARY, "stack").unwrap(),
+            root.path("stack")
         );
-        ctx.build(&[&STACK_BINARY]).unwrap();
-        ctx.require(&STACK_BINARY).unwrap();
+        assert_eq!(
+            refusal(handed.artifacts(&COMPONENTS)),
+            "components is not among this service's builds; the service that runs it must list it"
+        );
+        assert_eq!(
+            refusal(handed.artifact(&STACK_BINARY, "other")),
+            "stack binary made no other"
+        );
     }
 
     mod chain {

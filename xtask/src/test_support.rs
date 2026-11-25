@@ -596,6 +596,7 @@ macro_rules! fake_service {
             fn command(
                 &self,
                 _: &$crate::stack::spec::StackContext,
+                _: &$crate::stack::spec::Built,
             ) -> ::anyhow::Result<::std::process::Command> {
                 Ok(::std::process::Command::new("true"))
             }
@@ -631,7 +632,8 @@ pub const MEETS_ANOTHER: crate::stack::spec::How = crate::stack::spec::How::Own(
         thread::sleep(Duration::from_millis(10));
     }
     thread::sleep(Duration::from_millis(200));
-    append_line(&ctx.root.join("builds-finished"))
+    append_line(&ctx.root.join("builds-finished"))?;
+    Ok(crate::stack::spec::Artifacts::new())
 });
 
 /// Records in the stack's root that a build started, as [`MEETS_ANOTHER`] waits for.

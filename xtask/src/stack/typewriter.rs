@@ -18,8 +18,8 @@ use serde_json::Value;
 
 use super::client_configuration::{ClientConfiguration, FIXTURE_USERS};
 use super::spec::{
-    BACKEND, Build, GradleBuild, How, Probe, Published, Role, Service, ServiceId, StackContext,
-    StackSpec, state_dir,
+    Artifacts, BACKEND, Build, Built, GradleBuild, How, Probe, Published, Role, Service, ServiceId,
+    StackContext, StackSpec, state_dir,
 };
 use crate::cargo_build::{CargoBuild, Outcome, target_directory, workspace_files};
 use crate::cluster::CiCluster;
@@ -85,6 +85,10 @@ pub const REALM_HOST_BUILD: Build = Build {
                 .display()
                 .to_string(),
         )],
+        artifacts: Artifacts::from([(
+            REALM_HOST_ARTIFACT.to_owned(),
+            ctx.root.join(REALM_HOST_INSTALL),
+        )]),
     }),
 };
 
@@ -104,7 +108,7 @@ pub struct Toxiproxy;
 
 impl Service for Toxiproxy {
     const ID: ServiceId = ServiceId("toxiproxy");
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
+    fn command(&self, ctx: &StackContext, _: &Built) -> Result<Command> {
         let mut command = Command::new("toxiproxy-server");
         command
             .args(["-host", "127.0.0.1", "-port"])
@@ -128,8 +132,8 @@ impl Service for Faults {
     fn needs(&self) -> &'static [ServiceId] {
         &[Toxiproxy::ID]
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
-        front(ctx, "faults", "toxiproxy")
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
+        front(ctx, built, "faults", "toxiproxy")
     }
     fn ready(&self, ctx: &StackContext) -> Probe {
         Probe::http(ctx.port("faults"), "/version")
@@ -147,7 +151,7 @@ pub struct Collector;
 
 impl Service for Collector {
     const ID: ServiceId = ServiceId("collector");
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
+    fn command(&self, ctx: &StackContext, _: &Built) -> Result<Command> {
         let telemetry = ctx.state().join("telemetry");
         fs::create_dir_all(&telemetry)
             .with_context(|| format!("cannot create {}", telemetry.display()))?;
@@ -219,8 +223,8 @@ impl Service for Broker {
     fn builds(&self) -> &'static [&'static Build] {
         &[&STACK_BINARY]
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
-        let mut command = stack_binary(ctx, "broker")?;
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
+        let mut command = stack_binary(ctx, built, "broker")?;
         command
             .arg("--state")
             .arg(ctx.state())
@@ -240,8 +244,8 @@ impl Service for Identity {
     fn builds(&self) -> &'static [&'static Build] {
         &[&STACK_BINARY]
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
-        let mut command = stack_binary(ctx, "identity")?;
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
+        let mut command = stack_binary(ctx, built, "identity")?;
         command
             .arg("--users")
             .arg(ctx.root().join(FIXTURE_USERS))
@@ -267,9 +271,8 @@ impl Service for Backend {
     fn needs(&self) -> &'static [ServiceId] {
         &[Collector::ID, Broker::ID, Identity::ID, Toxiproxy::ID]
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
-        let components = deployable_components(ctx)?;
-        let mut command = stack_binary(ctx, "host")?;
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
+        let mut command = stack_binary(ctx, built, "host")?;
         command
             .arg("--state")
             .arg(ctx.state())
@@ -282,7 +285,7 @@ impl Service for Backend {
                 "toxiproxy",
                 "identity",
             ]));
-        for (package, artifact) in components {
+        for (package, artifact) in built.artifacts(&COMPONENTS)? {
             command
                 .arg("--component")
                 .arg(format!("{package}={}", artifact.display()));
@@ -319,8 +322,8 @@ impl Service for BackendRoutes {
     fn provides(&self) -> &'static [Role] {
         &[BACKEND]
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
-        front(ctx, "http", "backend-http")
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
+        front(ctx, built, "http", "backend-http")
     }
     fn ready(&self, ctx: &StackContext) -> Probe {
         Probe::http(ctx.port("http"), "/auth/sentinel")
@@ -332,8 +335,8 @@ impl Service for BackendRoutes {
 }
 
 /// `typewriter-stack front` from the port `listen` to the port `upstream`.
-fn front(ctx: &StackContext, listen: &str, upstream: &str) -> Result<Command> {
-    let mut command = stack_binary(ctx, "front")?;
+fn front(ctx: &StackContext, built: &Built, listen: &str, upstream: &str) -> Result<Command> {
+    let mut command = stack_binary(ctx, built, "front")?;
     command.args([
         "--listen",
         &ctx.port(listen).to_string(),
@@ -357,7 +360,7 @@ impl Service for CiClusterBackend {
     fn provides(&self) -> &'static [Role] {
         &[BACKEND]
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
+    fn command(&self, ctx: &StackContext, _: &Built) -> Result<Command> {
         Ok(self.0.test_users_generated(ctx.ctx))
     }
     fn ready(&self, _: &StackContext) -> Probe {
@@ -423,8 +426,8 @@ impl Service for Provision {
     fn needs_roles(&self) -> &'static [Role] {
         &[BACKEND]
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
-        let mut command = stack_binary(ctx, "provision")?;
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
+        let mut command = stack_binary(ctx, built, "provision")?;
         command.args(owner_args(ctx)?);
         Ok(command)
     }
@@ -447,8 +450,10 @@ impl Service for Provision {
 /// The standalone loader, the host the provisioned organization's Realm runs on.
 pub struct RealmHost;
 
-/// The Gradle project of the standalone loader and where `installDist` puts it.
+/// The Gradle project of the standalone loader, where `installDist` puts it, and the name
+/// [`REALM_HOST_BUILD`] hands it to the Realm host's command by.
 const REALM_HOST_PROJECT: &str = ":loader-standalone";
+const REALM_HOST_ARTIFACT: &str = "loader-standalone";
 const REALM_HOST_INSTALL: &str =
     "services/runtime/loader/standalone/build/install/loader-standalone/bin/loader-standalone";
 
@@ -460,12 +465,11 @@ impl Service for RealmHost {
     fn needs(&self) -> &'static [ServiceId] {
         &[Provision::ID]
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
-        ctx.require(&REALM_HOST_BUILD)?;
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
         let work_dir = realm_host_dir(ctx.ctx);
         fs::create_dir_all(&work_dir)
             .with_context(|| format!("cannot create {}", work_dir.display()))?;
-        let mut command = Command::new(ctx.root().join(REALM_HOST_INSTALL));
+        let mut command = Command::new(built.artifact(&REALM_HOST_BUILD, REALM_HOST_ARTIFACT)?);
         command
             .arg(&work_dir)
             .current_dir(&work_dir)
@@ -505,8 +509,8 @@ impl Service for BindRealmHost {
     fn needs_roles(&self) -> &'static [Role] {
         &[BACKEND]
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
-        let mut command = stack_binary(ctx, "bind")?;
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
+        let mut command = stack_binary(ctx, built, "bind")?;
         command
             .args(owner_args(ctx)?)
             .arg("--work-dir")
@@ -548,8 +552,8 @@ impl Service for BindEngines {
     fn needs_roles(&self) -> &'static [Role] {
         &[BACKEND]
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
-        let mut command = stack_binary(ctx, "bind")?;
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
+        let mut command = stack_binary(ctx, built, "bind")?;
         command
             .args(owner_args(ctx)?)
             .arg("--work-dir")
@@ -587,8 +591,8 @@ impl Service for Observer {
     fn needs(&self) -> &'static [ServiceId] {
         &[BindRealmHost::ID]
     }
-    fn command(&self, ctx: &StackContext) -> Result<Command> {
-        let mut command = stack_binary(ctx, "observer")?;
+    fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
+        let mut command = stack_binary(ctx, built, "observer")?;
         command.arg("--state").arg(ctx.state());
         Ok(command)
     }
@@ -647,24 +651,20 @@ fn field(value: &Value, name: &str) -> Result<String> {
 }
 
 /// `typewriter-stack <subcommand>`, from what [`STACK_BINARY`] built.
-fn stack_binary(ctx: &StackContext, subcommand: &str) -> Result<Command> {
-    ctx.require(&STACK_BINARY)?;
-    let mut command = Command::new(stack_binary_path(ctx.ctx)?);
+fn stack_binary(ctx: &StackContext, built: &Built, subcommand: &str) -> Result<Command> {
+    let mut command = Command::new(built.artifact(&STACK_BINARY, STACK_BINARY.name)?);
     command.arg(subcommand).current_dir(ctx.root());
     Ok(command)
 }
 
-/// Where Cargo puts the `typewriter-stack` binary: the component test workspace's target, whose
-/// dependencies its suite shares.
-fn stack_binary_path(ctx: &Context) -> Result<PathBuf> {
-    Ok(target_directory(ctx, STACK_WORKSPACE)?.join("debug/typewriter-stack"))
-}
-
-fn build_stack_binary(ctx: &Context) -> Result<()> {
+/// Builds the `typewriter-stack` binary in the component test workspace's target, whose
+/// dependencies its suite shares, and returns it by the build's name.
+fn build_stack_binary(ctx: &Context) -> Result<Artifacts> {
+    let binary = target_directory(ctx, STACK_WORKSPACE)?.join("debug/typewriter-stack");
     let built = CargoBuild {
         name: "typewriter-stack",
         workspace: workspace_files(ctx, STACK_WORKSPACE)?,
-        artifacts: vec![stack_binary_path(ctx)?],
+        artifacts: vec![binary.clone()],
     }
     .run(
         ctx,
@@ -684,10 +684,11 @@ fn build_stack_binary(ctx: &Context) -> Result<()> {
         &Environment::process(),
     )?;
     say_reused(STACK_BINARY.name, &built);
-    Ok(())
+    Ok(Artifacts::from([(STACK_BINARY.name.to_owned(), binary)]))
 }
 
-fn build_components(ctx: &Context) -> Result<()> {
+/// Builds every deployable component and returns each artifact by its package.
+fn build_components(ctx: &Context) -> Result<Artifacts> {
     let components = deploy::deployable(ctx)?;
     let built = deploy::reusable_components_build(ctx, "components", &components)?.run(
         ctx,
@@ -695,7 +696,10 @@ fn build_components(ctx: &Context) -> Result<()> {
         &Environment::process(),
     )?;
     say_reused(COMPONENTS.name, &built);
-    Ok(())
+    Ok(components
+        .into_iter()
+        .map(|component| (component.package, component.artifact))
+        .collect())
 }
 
 /// Says when a build was reused, so a run's log shows which builds its caches saved.
@@ -703,15 +707,6 @@ fn say_reused(name: &str, outcome: &Outcome) {
     if *outcome == Outcome::Reused {
         eprintln!("stack: reused {name}, built from the same inputs");
     }
-}
-
-/// Each deployable component's package and the artifact [`COMPONENTS`] built.
-fn deployable_components(ctx: &StackContext) -> Result<Vec<(String, PathBuf)>> {
-    ctx.require(&COMPONENTS)?;
-    Ok(deploy::deployable(ctx.ctx)?
-        .into_iter()
-        .map(|component| (component.package, component.artifact))
-        .collect())
 }
 
 #[cfg(test)]
