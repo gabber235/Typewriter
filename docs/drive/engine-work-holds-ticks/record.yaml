@@ -82,6 +82,9 @@ decided:
   - id: watchdog
     what: "One watchdog at the oldest open entry's deadline replaces a 1 s timer per item"
     why: Every engine task is counted now; open work is in begin order with one threshold, so the oldest is always due first
+  - id: drain-scope
+    what: "Per runtime: each item records the runtime that began it; a rollout drains only the leaving runtimes' items, shutdown drains all; the host total, the gauge and the game count stay host wide"
+    why: A busy sibling runtime made a rollout wait out the bound for work the rollout does not replace
 
 open:
   - id: pacing-gate
@@ -89,9 +92,6 @@ open:
     tied_to: fix/game-harness-structure
   - id: detekt-main-gate
     what: "check depending on detektMain (approved) surfaces 90 findings in 12 projects that plain detekt never ran: 64 LongParameterList (detekt 2 runs it only with type resolution, so no baseline holds them), 24 println in playtest framework and pool (observability.yml now runs), 1 CyclomaticComplexMethod in KSP generated typewriter-api sources (the detekt tasks exclude skirout but not generated/ksp), 1 UnusedPrivateFunction in typewriter-contracts. ReloadableEngineRuntime is fixed at its cause; the gate flip waits for a decision: fix all at their cause, or a detektMain baseline for the rest plus a generated sources exclusion"
-    tied_to: maintainer review
-  - id: drain-scope
-    what: The drain waits for the whole host's work, not only the runtime a rollout replaces, since items carry no runtime; a busy sibling runtime can make a rollout wait out the bound
     tied_to: maintainer review
 
 slices:
@@ -119,5 +119,8 @@ slices:
   - id: watchdog
     what: One watchdog at the oldest open entry's deadline
     evidence: [WorkLedgerTest.kt]
+  - id: drain-scope
+    what: Each staged runtime counts through its own view of the host; a rollout drains only the leaving projection's runtimes
+    evidence: [WorkDrainTest.kt, InFlightWorkTest.kt, HostRolloutParticipantTest.kt]
 
 next: detektMain in the gate and its findings, then the full checks and the game suite; the pacing gate flip waits for the harness branch

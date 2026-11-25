@@ -580,8 +580,10 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   host's one transport count all in flight work; per call site counting missed session writes,
   publication applies and the join path. The count lives in production as the host's
   `InFlightWork`: the artifact host exports it as the gauge `typewriter.work.in_flight` and drains
-  it, for at most `TYPEWRITER_WORK_DRAIN` (10 s by default), before it closes its runtimes and
-  before a rollout activates a candidate, logging what still runs when the bound runs out. It costs
+  it, for at most `TYPEWRITER_WORK_DRAIN` (10 s by default): all of it before it closes its
+  runtimes, and before a rollout activates a candidate only the work of the runtimes that leave,
+  since each runtime counts through its own view and every item names its runtime. Either drain
+  logs what still runs when the bound runs out. It costs
   one insert into and one removal from a concurrent set per task and per outbound call; observers
   attach any time and hear item events only while attached. A stepped Paper reports hung work with
   one watchdog that wakes at the deadline of the oldest open work. Failed outbound work fails the attempt as `WorkFailed`. An away
