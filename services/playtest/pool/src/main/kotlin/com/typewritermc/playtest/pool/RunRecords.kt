@@ -8,6 +8,7 @@ import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.test_run.Conclusion
 import skirout.harness.v1.test_run.CoveredClass
 import skirout.harness.v1.test_run.LossCause
+import skirout.harness.v1.test_run.MemoryKill
 import skirout.harness.v1.test_run.Outcome
 import skirout.harness.v1.test_run.Pacing
 import skirout.harness.v1.test_run.Part
@@ -73,7 +74,12 @@ internal class RunRecords(
 
     /** Whether the pool ended the run, as the build's last tests ended. */
     private var finished = false
+
+    /** The game's memory budget; null until the pool names it. */
     private var memoryBudget: RunBudget? = null
+
+    /** The most the planned limits of the parts that ran at once added up to so far. */
+    private var plannedAtOnce = 0L
 
     init {
         write()
@@ -120,14 +126,13 @@ internal class RunRecords(
     }
 
     /**
-     * The game started the part [name] of [kind], logging into [log], with its kind's memory limit and whether
-     * that limit [fitsBudget] beside the parts that ran then; a part of that name already listed keeps its place.
+     * The game started the part [name] of [kind], logging into [log], with its kind's memory limit; a part of
+     * that name already listed keeps its place.
      */
     fun started(
         name: String,
         kind: PartKind,
         log: Path,
-        fitsBudget: Boolean = true,
     ) {
         if (parts.any { it.name == name && it.end == PartEnd.RAN_TO_END }) return
         parts +=
@@ -138,7 +143,6 @@ internal class RunRecords(
                 end = PartEnd.RAN_TO_END,
                 limitBytes = kind.limit?.limitBytes ?: 0,
                 peakBytes = null,
-                fitsBudget = fitsBudget,
             )
         write()
     }
@@ -148,31 +152,57 @@ internal class RunRecords(
         bytes: Long,
         source: String,
     ) {
-        memoryBudget = RunBudget(bytes = bytes, source = source)
+        memoryBudget = RunBudget(bytes = bytes, source = source, plannedAtOnceBytes = plannedAtOnce)
         write()
     }
 
-    /** The part [name], while it runs, took at most [bytes] of memory so far. */
-    fun peak(
-        name: String,
-        bytes: Long,
-    ) {
-        val index = parts.indexOfFirst { it.name == name && it.end == PartEnd.RAN_TO_END }
-        if (index < 0) return
-        parts[index] = parts[index].copy(peakBytes = bytes)
+    /** The planned limits of the parts that run now add up to [bytes]. */
+    fun planned(bytes: Long) {
+        if (bytes <= plannedAtOnce) return
+        plannedAtOnce = bytes
+        memoryBudget = memoryBudget?.copy(plannedAtOnceBytes = bytes)
         write()
     }
 
     /**
-     * The part [name] was lost for [cause], other than when an attempt asked for it, having taken at most
-     * [peakBytes] of memory when that was read. A part whose log was [kept] under another name, as a
-     * replaced client's, is listed under that name from now on.
+     * A process of the part [name] took at most [bytes] of memory, while it ran or once it ended: the part's
+     * peak is the most any of its processes took, also when its loss was heard first.
+     */
+    fun peak(
+        name: String,
+        bytes: Long,
+    ) {
+        val index = parts.indexOfLast { it.name == name }
+        if (index < 0) return
+        val part = parts[index]
+        parts[index] = part.copy(peakBytes = maxOf(part.peakBytes ?: bytes, bytes))
+        write()
+    }
+
+    /**
+     * The kernel killed the part [name] for memory, as [kill] says why. That is how it was lost, whatever its
+     * loss looked like when the pool heard of it, as its connection closing; it was lost when first heard.
+     */
+    fun killedForMemory(
+        name: String,
+        kill: MemoryKill,
+    ) {
+        val index = parts.indexOfLast { it.name == name }
+        if (index < 0) return
+        val part = parts[index]
+        val at = (part.end as? PartEnd.LostWrapper)?.value?.atMillis ?: clock()
+        parts[index] = part.copy(end = PartEnd.createLost(cause = LossCause.KilledForMemoryWrapper(kill), atMillis = at))
+        write()
+    }
+
+    /**
+     * The part [name] was lost for [cause], other than when an attempt asked for it. A part whose log was
+     * [kept] under another name, as a replaced client's, is listed under that name from now on.
      */
     fun lost(
         name: String,
         cause: LossCause,
         kept: Path? = null,
-        peakBytes: Long? = null,
     ) {
         val index = parts.indexOfFirst { it.name == name && it.end == PartEnd.RAN_TO_END }
         if (index < 0) return
@@ -183,7 +213,6 @@ internal class RunRecords(
                 name = kept?.fileName?.toString()?.removeSuffix(".log") ?: part.name,
                 log = log,
                 end = PartEnd.createLost(cause = cause, atMillis = clock()),
-                peakBytes = peakBytes ?: part.peakBytes,
             )
         write()
     }

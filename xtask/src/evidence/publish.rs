@@ -553,8 +553,8 @@ fn render_coverage(out: &mut String, coverage: &Coverage) {
     let _ = writeln!(out, "\n</details>");
 }
 
-/// The most memory each part of each run took beside the limit planned for its kind, and whether
-/// those limits fit the run's memory budget. Reported, never gating: the limits are not enforced
+/// The most memory each part of each run took beside the limit planned for its kind, and the most
+/// the planned limits of the parts that ran at once took beside the run's memory budget. Reported, never gating: the limits are not enforced
 /// until measured peaks set them.
 fn render_memory(out: &mut String, runs: &[(PathBuf, TestRun)]) {
     let measured: Vec<&TestRun> = runs
@@ -569,11 +569,23 @@ fn render_memory(out: &mut String, runs: &[(PathBuf, TestRun)]) {
     for run in measured {
         let budget = run.memory_budget.as_ref().map_or_else(
             || "no budget recorded".to_owned(),
-            |budget| format!("budget {} ({})", mib(budget.bytes), budget.source),
+            |budget| {
+                let fit = if budget.planned_at_once_bytes > budget.bytes {
+                    "over the budget"
+                } else {
+                    "within the budget"
+                };
+                format!(
+                    "budget {} ({}); the planned limits of the parts that ran at once took up to {}, {fit}",
+                    mib(budget.bytes),
+                    budget.source,
+                    mib(budget.planned_at_once_bytes)
+                )
+            },
         );
         let _ = writeln!(
             out,
-            "\n{} run: {budget}\n\n| Part | Kind | Planned limit | Peak | Fits the budget |\n|---|---|---|---|---|",
+            "\n{} run: {budget}\n\n| Part | Kind | Planned limit | Peak |\n|---|---|---|---|",
             runner_name(&run.runner)
         );
         for part in &run.parts {
@@ -590,14 +602,9 @@ fn render_memory(out: &mut String, runs: &[(PathBuf, TestRun)]) {
                 Some(peak) => mib(peak),
                 None => "not measured".to_owned(),
             };
-            let fits = match (planned, part.fits_budget) {
-                (false, _) => "not planned",
-                (true, true) => "yes",
-                (true, false) => "no",
-            };
             let _ = writeln!(
                 out,
-                "| {} | {} | {limit} | {peak} | {fits} |",
+                "| {} | {} | {limit} | {peak} |",
                 cell(&part.name),
                 part_kind(&part.kind)
             );
@@ -1106,19 +1113,19 @@ mod tests {
     }
 
     #[test]
-    fn each_part_s_peak_shows_beside_its_planned_limit_and_whether_the_limits_fit_the_budget() {
+    fn each_part_s_peak_shows_beside_its_planned_limit_and_the_planned_limits_beside_the_budget() {
         let mib = 1024 * 1024;
         let mut run = requirement_run("a quest starts", "QUEST-1", Outcome::Passed);
         run.runner = Runner::Game;
         run.memory_budget = Some(MemoryBudget {
             bytes: 15 * 1024 * mib,
             source: "the game cgroup's memory.max".to_owned(),
+            planned_at_once_bytes: 16_800 * mib,
             ..MemoryBudget::default()
         });
-        let client = |name: &str, peak: Option<i64>, fits: bool| Part {
+        let client = |name: &str, peak: Option<i64>| Part {
             limit_bytes: 1946 * mib,
             peak_bytes: peak,
-            fits_budget: fits,
             ..part(
                 name,
                 PartKind::Client,
@@ -1127,12 +1134,11 @@ mod tests {
             )
         };
         run.parts = vec![
-            client("client-a", Some(1200 * mib), true),
-            client("client-d", Some(2100 * mib), false),
-            client("client-e", None, true),
+            client("client-a", Some(1200 * mib)),
+            client("client-d", Some(2100 * mib)),
+            client("client-e", None),
             Part {
                 peak_bytes: Some(900 * mib),
-                fits_budget: true,
                 ..part("gradle", PartKind::Gradle, "", PartEnd::RanToEnd)
             },
         ];
@@ -1151,14 +1157,16 @@ mod tests {
 
         let memory = &section[section.find("Memory per part").expect(&section)..];
         assert!(
-            memory.contains("game run: budget 15360 MiB (the game cgroup's memory.max)"),
+            memory.contains(
+                "game run: budget 15360 MiB (the game cgroup's memory.max); the planned limits of the parts that ran at once took up to 16800 MiB, over the budget"
+            ),
             "{memory}"
         );
         for row in [
-            "| client-a | client | 1946 MiB | 1200 MiB | yes |",
-            "| client-d | client | 1946 MiB | 2100 MiB, over the limit | no |",
-            "| client-e | client | 1946 MiB | not measured | yes |",
-            "| gradle | Gradle | none | 900 MiB | not planned |",
+            "| client-a | client | 1946 MiB | 1200 MiB |",
+            "| client-d | client | 1946 MiB | 2100 MiB, over the limit |",
+            "| client-e | client | 1946 MiB | not measured |",
+            "| gradle | Gradle | none | 900 MiB |",
         ] {
             assert!(memory.contains(row), "{row} missing from {memory}");
         }

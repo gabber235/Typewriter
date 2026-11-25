@@ -10,6 +10,7 @@ import skirout.harness.v1.test_run.Conclusion
 import skirout.harness.v1.test_run.Demonstrates
 import skirout.harness.v1.test_run.LossCause
 import skirout.harness.v1.test_run.MemoryBudget
+import skirout.harness.v1.test_run.MemoryKill
 import skirout.harness.v1.test_run.Outcome
 import skirout.harness.v1.test_run.Pacing
 import skirout.harness.v1.test_run.Part
@@ -162,7 +163,6 @@ val RunRecordsTest by testSuite {
                     end = PartEnd.RAN_TO_END,
                     limitBytes = PartLimit.SHARED_PAPER.limitBytes,
                     peakBytes = null,
-                    fitsBudget = true,
                 ),
                 Part(
                     name = "client-gv-1-lost-1",
@@ -171,7 +171,6 @@ val RunRecordsTest by testSuite {
                     end = PartEnd.createLost(cause = LossCause.ExitedWrapper(137), atMillis = 7_000),
                     limitBytes = PartLimit.CLIENT.limitBytes,
                     peakBytes = null,
-                    fitsBudget = true,
                 ),
                 Part(
                     name = "display-gv-1",
@@ -180,7 +179,6 @@ val RunRecordsTest by testSuite {
                     end = PartEnd.RAN_TO_END,
                     limitBytes = PartLimit.DISPLAY.limitBytes,
                     peakBytes = null,
-                    fitsBudget = true,
                 ),
                 Part(
                     name = "client-gv-1",
@@ -189,36 +187,70 @@ val RunRecordsTest by testSuite {
                     end = PartEnd.RAN_TO_END,
                     limitBytes = PartLimit.CLIENT.limitBytes,
                     peakBytes = null,
-                    fitsBudget = true,
                 ),
             )
     }
 
-    test("the run file says the game's memory budget, and each part's peak against its limit and whether its limit fit") {
+    test("the run file says the game's memory budget and the most the planned limits of the parts that ran at once added up to") {
+        val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
+        val logs = file.resolveSibling("logs/1")
+        val records = RunRecords("run-1", file, logs, retries)
+        val gib = 1024L * 1024 * 1024
+        records.budget(16 * gib, "the game's cgroup")
+
+        records.planned(10 * gib)
+        records.planned(17 * gib)
+        records.planned(12 * gib)
+        records.finished()
+
+        TestRun.serializer.fromJsonCode(Files.readString(file)).memoryBudget shouldBe
+            MemoryBudget(bytes = 16 * gib, source = "the game's cgroup", plannedAtOnceBytes = 17 * gib)
+    }
+
+    test("a part's peak is the most any of its processes took, also when it is read after the part was lost") {
         val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
         val logs = file.resolveSibling("logs/1")
         val records = RunRecords("run-1", file, logs, retries, clock = { 8_000 })
-        val budget = 16L * 1024 * 1024 * 1024
-        records.budget(budget, "the game's cgroup")
-        records.started("paper", PartKind.SHARED_PAPER, logs.resolve("paper.log"), fitsBudget = true)
-        records.started("Paper-7", PartKind.OWN_PAPER, logs.resolve("Paper-7.log"), fitsBudget = false)
+        records.started("paper", PartKind.SHARED_PAPER, logs.resolve("paper.log"))
+        records.started("paper-a29", PartKind.OWN_PAPER, logs.resolve("paper-a29.log"))
 
+        // The shared Paper's loss is heard before its process ends and its peak is read.
+        records.lost("paper", LossCause.LeftWrapper("it closed its pool connection"))
         records.peak("paper", 3_100_000_000)
-        records.lost("Paper-7", LossCause.MEMORY_LIMIT, peakBytes = 1_700_000_000)
+        // An own Paper's first boot took more than the boot killed while it started.
+        records.peak("paper-a29", 800_000_000)
+        records.lost("paper-a29", LossCause.ExitedWrapper(137))
+        records.peak("paper-a29", 0)
         records.finished()
 
-        val run = TestRun.serializer.fromJsonCode(Files.readString(file))
-        run.memoryBudget shouldBe MemoryBudget(bytes = budget, source = "the game's cgroup")
-        run.parts.map { listOf(it.name, it.limitBytes, it.peakBytes, it.fitsBudget, it.end) } shouldBe
+        TestRun.serializer
+            .fromJsonCode(Files.readString(file))
+            .parts
+            .map { it.name to it.peakBytes } shouldBe
+            listOf("paper" to 3_100_000_000L, "paper-a29" to 800_000_000L)
+    }
+
+    test("a part the kernel killed for memory reads as killed for memory, whatever its loss looked like first") {
+        val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
+        val logs = file.resolveSibling("logs/1")
+        var now = 8_000L
+        val records = RunRecords("run-1", file, logs, retries, clock = { now })
+        records.started("paper", PartKind.SHARED_PAPER, logs.resolve("paper.log"))
+        records.started("client-gv-1", PartKind.CLIENT, logs.resolve("client-gv-1.log"))
+
+        records.lost("paper", LossCause.LeftWrapper("it closed its pool connection"))
+        now = 8_400
+        records.killedForMemory("paper", MemoryKill.MACHINE_OUT_OF_MEMORY)
+        records.killedForMemory("client-gv-1", MemoryKill.OWN_LIMIT)
+        records.finished()
+
+        TestRun.serializer
+            .fromJsonCode(Files.readString(file))
+            .parts
+            .map { it.name to it.end } shouldBe
             listOf(
-                listOf("paper", PartLimit.SHARED_PAPER.limitBytes, 3_100_000_000L, true, PartEnd.RAN_TO_END),
-                listOf(
-                    "Paper-7",
-                    PartLimit.OWN_PAPER.limitBytes,
-                    1_700_000_000L,
-                    false,
-                    PartEnd.createLost(cause = LossCause.MEMORY_LIMIT, atMillis = 8_000),
-                ),
+                "paper" to PartEnd.createLost(cause = LossCause.KilledForMemoryWrapper(MemoryKill.MACHINE_OUT_OF_MEMORY), atMillis = 8_000),
+                "client-gv-1" to PartEnd.createLost(cause = LossCause.KilledForMemoryWrapper(MemoryKill.OWN_LIMIT), atMillis = 8_400),
             )
     }
 

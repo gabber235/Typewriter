@@ -32,6 +32,9 @@ struct MemoryBudget(85020002) {
   bytes: int64;
   // For a person to read, as "the game's cgroup" or "half the machine".
   source: string;
+  // The most the planned limits of the game parts that ran at once, the pool's included, added up to.
+  // Over `bytes`, the planned limits do not fit the budget.
+  planned_at_once_bytes: int64;
 }
 
 // How a run ended. A run that could not run, or was cut short, proves less than its cases say: the
@@ -222,9 +225,6 @@ struct Part(85020018) {
   // The most memory it took, in bytes, as the kernel counted it in a cgroup of its own; null where the
   // run measured none.
   peak_bytes: int64?;
-  // Whether its limit fit in the run's memory budget beside the limits of the parts that ran when it
-  // started; true for a part without a limit.
-  fits_budget: bool;
 }
 
 enum PartKind(85020019) {
@@ -269,22 +269,33 @@ enum LossCause(85020022) {
   never_ready;
   // It still ran but could no longer do what attempts need of it, for this reason.
   broke: string;
-  // The kernel killed it for taking more memory than its limit.
-  memory_limit;
+  // The kernel's out of memory killer killed it, as `MemoryKill` says why; whatever the part's loss
+  // looked like first, as its connection closing.
+  killed_for_memory: MemoryKill;
 }
 
-struct Failure(85020023) {
+// Why the kernel killed a part for memory, as its cgroup's `memory.events` tells.
+enum MemoryKill(85020023) {
+  // The machine ran out of memory, and the kernel chose a process of the part.
+  machine_out_of_memory;
+  // The part took all its own cgroup allows.
+  own_limit;
+  // The game's parts together took all the game's cgroup allows.
+  game_budget;
+}
+
+struct Failure(85020024) {
   message: string;
   // The first failing step or frame, when the runner knows it.
   first_broken: string?;
 }
 
-struct Span(85020024) {
+struct Span(85020025) {
   start_millis: int64;
   end_millis: int64;
 }
 
-enum ArtifactKind(85020025) {
+enum ArtifactKind(85020026) {
   clip;
   screenshot;
   log_excerpt;
@@ -295,7 +306,7 @@ enum ArtifactKind(85020025) {
   golden;
 }
 
-struct Artifact(85020026) {
+struct Artifact(85020027) {
   kind: ArtifactKind;
   path: string;
 }

@@ -107,7 +107,6 @@ impl Tree {
                 kind,
                 end: PartEnd::RanToEnd,
                 peak_bytes: leaf.peak(),
-                fits_budget: true,
                 ..Part::default()
             });
         }

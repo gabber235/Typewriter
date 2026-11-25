@@ -6,6 +6,7 @@ import com.typewritermc.playtest.launch.PoolProcess
 import com.typewritermc.playtest.pool.PaperRules.Do
 import com.typewritermc.playtest.wire.Wire
 import skirout.harness.v1.test_run.LossCause
+import skirout.harness.v1.test_run.MemoryKill
 import skirout.harness.v1.test_run.PartKind
 import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.wire.Answer
@@ -342,7 +343,7 @@ internal class Pool(
 
     // The leaf of the game's cgroup each part runs in, the pool's own first, where the run's tree gives the pool one.
     private val leaves = settings.cgroup?.let(::PartLeaves)
-    private val leafOf = mutableMapOf<Part, PartLeaves.Leaf>()
+    private val leafOf = mutableMapOf<Part, Placed>()
     private val ownLeaf = leaves?.place("pool", ProcessHandle.current().pid())
     private var nextAttempt = 0L
     private var nextTogether = 0L
@@ -371,7 +372,7 @@ internal class Pool(
                 throw couldNotStart(cannot)
             }
         runs.budget(settings.memoryBudget.bytes, settings.memoryBudget.source)
-        runs.started("pool", PartKind.POOL, settings.poolLog, fitsBudget = PartLimit.POOL.limitBytes <= settings.memoryBudget.bytes)
+        runs.started("pool", PartKind.POOL, settings.poolLog)
         shared = Server(game.paper, SharedPaper(game.paper.name, clients.map { it.player.name }.toSet()))
         shared.part = game.paperPart
         shared.boots = 1
@@ -1502,17 +1503,11 @@ internal class Pool(
      * replaced, a display's ends the game. A replaced client's old part ends unheard.
      */
     private fun exited(part: Part) {
-        val leaf = leafOf.remove(part)
-        val killed = leaf?.killedForMemory() == true
-        // A replaced client's entry already carries the peak its loss read.
-        if (part.player == null || clientNamed(part.player)?.part === part) leaf?.peakBytes()?.let { runs.peak(partName(part), it) }
-        leaf?.remove()
-        if (killed) {
-            return fail(
-                "${part.name} was killed for taking more memory than its limit; see ${part.log}",
-                part,
-                LossCause.MEMORY_LIMIT,
-            )
+        val placed = leafOf.remove(part)
+        val kill = placed?.let(::measure)
+        placed?.leaf?.remove()
+        if (kill != null) {
+            return fail("${part.name} was killed for memory; see ${part.log}", part, LossCause.KilledForMemoryWrapper(kill))
         }
         papers.all.firstOrNull { it.part === part }?.let { return paperExited(it, part) }
         val code = part.process.exitValue()
@@ -1547,7 +1542,19 @@ internal class Pool(
         moveTo(client, shared)
         claims.holdOut(client.player, Out.LOST_CLIENT)
         val replaced = game.replaceClient(name)
-        client.part?.let { runs.lost(partName(it), lossCause, kept = replaced.lostLog, peakBytes = leafOf[it]?.peakBytes()) }
+        client.part?.let { lostPart ->
+            runs.lost(partName(lostPart), lossCause, kept = replaced.lostLog)
+            // The lost process is listed under its kept log's name from now on, and measured there once it ends.
+            leafOf[lostPart]?.let {
+                leafOf[lostPart] =
+                    it.copy(
+                        name =
+                            replaced.lostLog.fileName
+                                .toString()
+                                .removeSuffix(".log"),
+                    )
+            }
+        }
         client.part = replaced.replacement.also(::watch)
         val loss = ClientLoss(kind = kind, detail = cause, log = replaced.lostLog.toString())
         System.err.println("The client of $name is lost: $cause; see ${loss.log}. A new one starts.")
@@ -1593,19 +1600,31 @@ internal class Pool(
     }
 
     /**
-     * Lists [part] in the run's file, with whether its limit fit in the budget beside the parts that run now,
-     * moves it into a leaf of its own, and reports into the loop once its process ends.
+     * Lists [part] in the run's file with what the planned limits of the parts that run now add up to, moves it
+     * into a leaf of its own, and reports into the loop once its process ends.
      */
     private fun watch(part: Part) {
-        val running = PartLimit.POOL.limitBytes + game.parts.sumOf { partKind(it).limit?.limitBytes ?: 0 }
-        runs.started(partName(part), partKind(part), part.log, fitsBudget = running <= settings.memoryBudget.bytes)
-        leaves?.let { leafOf[part] = it.place("${partName(part)}-${part.process.pid()}", part.process.pid()) }
+        runs.started(partName(part), partKind(part), part.log)
+        runs.planned(PartLimit.POOL.limitBytes + game.parts.sumOf { partKind(it).limit?.limitBytes ?: 0 })
+        leaves?.let { leafOf[part] = Placed(partName(part), it.place("${partName(part)}-${part.process.pid()}", part.process.pid())) }
         thread(name = "playtest-pool-${part.name}", isDaemon = true) { part.process.waitFor().also { events.put(Event.Exited(part)) } }
     }
 
-    /** Writes the most memory each part that still runs took, the pool's own included, into the run's file. */
+    /**
+     * Writes into the run's file the most memory [placed]'s part took and, when the kernel killed it for memory,
+     * that it was lost for that, and returns why it was killed; null when it was not.
+     */
+    private fun measure(placed: Placed): MemoryKill? {
+        placed.leaf.peakBytes()?.let { runs.peak(placed.name, it) }
+        return placed.leaf.memoryKill()?.also { runs.killedForMemory(placed.name, it) }
+    }
+
+    /**
+     * Measures every part whose process the pool did not see end, the parts that still run and those whose loss
+     * stopped the game first, and the pool itself.
+     */
     private fun measured() {
-        game.parts.forEach { part -> leafOf[part]?.peakBytes()?.let { runs.peak(partName(part), it) } }
+        leafOf.values.forEach { measure(it) }
         ownLeaf?.peakBytes()?.let { runs.peak("pool", it) }
     }
 
@@ -1739,3 +1758,9 @@ internal class Pool(
 /** Hands [handle] a message of kind [M]; a dispatch keyed by message kind passes it only messages of that kind. */
 private inline fun <reified M : Message> handler(crossinline handle: (Peer, M) -> Unit): (Peer, Message) -> Unit =
     { peer, message -> handle(peer, message as M) }
+
+/** The leaf a game part runs in, and the [name] the run's file lists the part under. */
+private data class Placed(
+    val name: String,
+    val leaf: PartLeaves.Leaf,
+)

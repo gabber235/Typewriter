@@ -17,8 +17,8 @@ use serde::Deserialize;
 use crate::Context;
 use crate::skirout::base::harness::v1::test_run::Runner;
 pub use crate::skirout::base::harness::v1::test_run::{
-    Artifact, ArtifactKind, Attempt, AttemptPolicy, Conclusion, Failure, LossCause, Outcome,
-    Pacing, Part, PartEnd, PartKind, RunEnd, RunLost, TestCase, TestRun,
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Conclusion, Failure, LossCause, MemoryKill,
+    Outcome, Pacing, Part, PartEnd, PartKind, RunEnd, RunLost, TestCase, TestRun,
 };
 
 /// The quarantine file, relative to the repository root.
@@ -237,9 +237,21 @@ pub fn loss_cause(cause: &LossCause) -> String {
         LossCause::Stalled => "it stopped answering".to_owned(),
         LossCause::NeverReady => "it never became ready".to_owned(),
         LossCause::Broke(reason) => format!("it could no longer serve attempts: {reason}"),
-        LossCause::MemoryLimit => {
-            "the kernel killed it for taking more memory than its cgroup allows".to_owned()
-        }
+        LossCause::KilledForMemory(kill) => match kill.as_ref() {
+            MemoryKill::MachineOutOfMemory => {
+                "the kernel killed it, as the machine ran out of memory".to_owned()
+            }
+            MemoryKill::OwnLimit => {
+                "the kernel killed it for taking all the memory its cgroup allows".to_owned()
+            }
+            MemoryKill::GameBudget => {
+                "the kernel killed it, as the game's parts together took all the game's budget"
+                    .to_owned()
+            }
+            MemoryKill::Unknown(_) => {
+                "the kernel killed it for memory, for a reason this xtask does not know".to_owned()
+            }
+        },
         LossCause::Unknown(_) => "for a reason this xtask does not know".to_owned(),
     }
 }
@@ -1034,8 +1046,16 @@ mod tests {
             (LossCause::Stalled, "it stopped answering"),
             (LossCause::NeverReady, "it never became ready"),
             (
-                LossCause::MemoryLimit,
-                "the kernel killed it for taking more memory than its cgroup allows",
+                LossCause::KilledForMemory(Box::new(MemoryKill::MachineOutOfMemory)),
+                "the kernel killed it, as the machine ran out of memory",
+            ),
+            (
+                LossCause::KilledForMemory(Box::new(MemoryKill::OwnLimit)),
+                "the kernel killed it for taking all the memory its cgroup allows",
+            ),
+            (
+                LossCause::KilledForMemory(Box::new(MemoryKill::GameBudget)),
+                "the kernel killed it, as the game's parts together took all the game's budget",
             ),
             (
                 LossCause::Broke("it could not claim gv-1".to_owned()),
