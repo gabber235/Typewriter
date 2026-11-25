@@ -91,10 +91,12 @@ data class AuthoringView internal constructor(
         CapturedAuthoringValues(resources, { at, name -> scopes.nameAt(this, at, name, work) }) { id -> judged(id).projections }
 
     /**
-     * The graph forked for this view from the live graph, made on first need: names judged here, binding over it and
-     * capture evaluation share it. It is valid only at the revision of the live graph it started from: once the live
-     * graph moves on it would recompute what the live graph learned since, so the next need forks again. Installing
-     * this view merges a valid one into the live graph, so that work is not done again.
+     * The graph that reads this view, made on first need: names judged here, binding over it and capture evaluation
+     * share it. For a view of the live graph's catalog generation it is a fork of the live graph, valid only at the
+     * revision it started from: once the live graph moves on it would recompute what the live graph learned since, so
+     * the next need forks again, and installing this view merges a valid one into the live graph so that work is not
+     * done again. For a view of another generation it is a graph of its own that shares nothing with the live graph, so
+     * it stays valid for the view's life.
      */
     internal val fork = AtomicReference<AuthoringGraph?>()
 }
@@ -311,8 +313,9 @@ interface AuthoringViewStore : AutoCloseable {
 
     /**
      * The graph that reads exactly [view], starting from the live graph's results where it can: one per view while the
-     * live graph stays at the revision it forked from, and a new one once the live graph moved on. Forking copies
-     * nothing, so it costs no graph work; reads of the fork count theirs on the work they are pinned with.
+     * live graph stays at the revision it forked from, and a new one once the live graph moved on; for a view of another
+     * catalog generation, one graph of its own for the view's life. Forking copies nothing, so it costs no graph work;
+     * reads of the graph count theirs on the work they are pinned with.
      */
     fun forkAt(view: AuthoringView): AuthoringGraph
 
@@ -393,14 +396,15 @@ class InMemoryAuthoringViewStore(
 
     override fun forkAt(view: AuthoringView): AuthoringGraph =
         synchronized(lock) {
+            val otherGeneration = view.catalog.generation != current.root.catalog.generation
+            // A graph of another generation shares nothing with the live graph, so it stays valid for the view's life.
             view.fork
                 .get()
-                ?.takeIf(graph::isCurrentFork)
+                ?.takeIf { otherGeneration || graph.isCurrentFork(it) }
                 ?.let { return@synchronized it }
             val environment = RealmEnvironment(view, services)
-            if (view.catalog.generation != current.root.catalog.generation) {
-                // Another generation shares nothing with the live graph.
-                graph.forkApart(environment)
+            if (otherGeneration) {
+                TrackedGraph(environment)
             } else {
                 graph.fork(environment, view.changesFrom(current.root))
             }.also(view.fork::set)

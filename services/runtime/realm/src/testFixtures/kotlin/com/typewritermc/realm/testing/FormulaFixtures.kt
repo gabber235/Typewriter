@@ -549,7 +549,7 @@ class FormulaReads internal constructor(
         resource: ResourceId,
         vararg path: String,
     ): Any? =
-        realm.views.pin(unobservedWork()).use { pinned ->
+        realm.views.unobservedPin { pinned ->
             with(pinned.reads) {
                 val environment = RealmEvaluationEnvironment(this, null)
                 val evaluated = read(Evaluate(siteOf(resource)))

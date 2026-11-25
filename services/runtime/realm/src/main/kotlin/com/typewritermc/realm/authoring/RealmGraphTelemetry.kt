@@ -5,18 +5,6 @@ import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 
-/**
- * Counts what the realm's live graph evicts, by the kind of query, so an operator sees whether the memo limit forgets
- * results. What the graph computes is graph work, recorded per operation by [RealmGraphWorkTelemetry].
- */
-class RealmGraphTelemetry(
-    telemetry: ServiceTelemetry,
-) : GraphListener {
-    private val evicted = telemetry.counter("typewriter.graph.evicted", "{memo}")
-
-    override fun evicted(key: GraphKey<*>) = evicted.add("query.kind" to (key::class.simpleName ?: "anonymous"))
-}
-
 /** An operation that reads the realm's graph; each records its graph work under its own [label]. */
 enum class GraphOperation(
     internal val label: String,
@@ -49,13 +37,19 @@ fun interface GraphWorkRecorder {
 }
 
 /**
- * Records what each operation's graph reads did on one counter, split by kind of work, by operation and by kind of
- * query, so an operator sees what every operation cost in graph steps and which queries that work went to.
+ * The realm's graph telemetry. What each operation's graph reads did goes on one counter, split by kind of work, by
+ * operation and by kind of query, so an operator sees what every operation cost in graph steps and which queries that
+ * work went to. From the live graph's per key events it counts only evictions, by kind of query, so an operator sees
+ * whether the memo limit forgets results.
  */
-class RealmGraphWorkTelemetry(
+class RealmGraphTelemetry(
     telemetry: ServiceTelemetry,
-) : GraphWorkRecorder {
+) : GraphWorkRecorder,
+    GraphListener {
     private val counter = telemetry.counter("typewriter.realm.graph_work", "{step}")
+    private val evictions = telemetry.counter("typewriter.graph.evicted", "{memo}")
+
+    override fun evicted(key: GraphKey<*>) = evictions.add(QUERY to (key::class.simpleName ?: "anonymous"))
 
     override fun record(
         operation: GraphOperation,

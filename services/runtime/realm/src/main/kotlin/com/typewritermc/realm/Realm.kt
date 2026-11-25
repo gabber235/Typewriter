@@ -13,7 +13,6 @@ import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RealmGraphTelemetry
-import com.typewritermc.realm.authoring.RealmGraphWorkTelemetry
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.RealmCheckRuntime
@@ -116,13 +115,14 @@ internal class Realm(
             val catalog = catalogs.captureCurrent()
             val storage = SurrealAuthoringStorage(connected)
             val seed = storage.readCoherent()
+            val graphTelemetry = RealmGraphTelemetry(telemetry)
             val viewStore =
                 InMemoryAuthoringViewStore(
                     catalog,
                     seed,
                     checkingServices(),
-                    RealmGraphTelemetry(telemetry),
-                    RealmGraphWorkTelemetry(telemetry),
+                    graphTelemetry,
+                    graphTelemetry,
                 )
             views = viewStore
             val authoring = RealmAuthoringOwner(storage, viewStore, findings = { checks?.findings().orEmpty() }, telemetry = telemetry)

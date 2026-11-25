@@ -3,14 +3,13 @@ package com.typewritermc.realm.testing
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.SubmissionKey
-import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.RealmGraphWorkTelemetry
+import com.typewritermc.realm.authoring.RealmGraphTelemetry
 import com.typewritermc.realm.authoring.RealmServices
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.checking.checkingServices
@@ -100,7 +99,6 @@ class RealmFixture private constructor(
     private var catalog: FixtureCatalog,
     private val storage: AuthoringStorage,
     private val services: RealmServices = checkingServices(),
-    private val listener: GraphListener = GraphListener.NONE,
 ) : AutoCloseable {
     private val authors = mutableListOf<RealmAuthor>()
     private var activation: AutoCloseable? = null
@@ -110,7 +108,7 @@ class RealmFixture private constructor(
     internal val telemetry = TelemetryTestHarness.create()
 
     /** What each operation's graph reads did, recorded in [telemetry] as a running Realm records it. */
-    private val graphWork = RealmGraphWorkTelemetry(telemetry.telemetry)
+    private val graphWork = RealmGraphTelemetry(telemetry.telemetry)
 
     private val repairFault = AtomicReference<RepairFault?>()
 
@@ -209,7 +207,7 @@ class RealmFixture private constructor(
         closeViews()
         val active = catalog.activate("realm-${++generations}")
         activation = active.owner
-        views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent(), services, graphRuns + listener, graphWork)
+        views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent(), services, graphRuns, graphWork)
         val binding = views.commitRepairs()
         owner =
             RealmAuthoringOwner(storage, views, findings = { findings() }, telemetry.telemetry) { saved, candidate, changed, work ->
@@ -415,8 +413,7 @@ class RealmFixture private constructor(
             seed: Map<ResourceId, AuthoringRecord> = emptyMap(),
             storage: MemoryAuthoringStorage = MemoryAuthoringStorage(AuthoringSeed(seed)),
             services: RealmServices = checkingServices(),
-            listener: GraphListener = GraphListener.NONE,
-        ): RealmFixture = start(RealmFixture(null, catalog, storage, services, listener))
+        ): RealmFixture = start(RealmFixture(null, catalog, storage, services))
 
         /**
          * A Realm on [catalog] whose authoring is saved in an embedded SurrealDB with the Realm schema, starting with

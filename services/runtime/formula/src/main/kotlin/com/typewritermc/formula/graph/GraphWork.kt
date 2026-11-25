@@ -14,6 +14,9 @@ class GraphWork
     internal constructor() {
         private val byKind = ConcurrentHashMap<Class<*>, Tally>()
 
+        @Volatile
+        private var closed = false
+
         /** What the reads did so far, over every kind of key. */
         fun counts(): Counts =
             byKind.values.map(Tally::counts).fold(Counts(0, 0, 0)) { sum, it ->
@@ -34,7 +37,16 @@ class GraphWork
 
         internal fun walked(key: GraphKey<*>) = tallyOf(key).walked.incrementAndGet()
 
-        private fun tallyOf(key: GraphKey<*>) = byKind.computeIfAbsent(key.javaClass) { Tally() }
+        private fun tallyOf(key: GraphKey<*>): Tally {
+            check(!closed) { "This work was already recorded, so nothing more can count on it." }
+            return byKind.computeIfAbsent(key.javaClass) { Tally() }
+        }
+
+        /** Ends the counting: what reads do on this work from now on fails instead of going uncounted. */
+        @PublishedApi
+        internal fun close() {
+            closed = true
+        }
 
         private class Tally {
             val computed = AtomicLong()
@@ -48,7 +60,10 @@ class GraphWork
             Counts(computed + other.computed, verified + other.verified, walked + other.walked)
 
         companion object {
-            /** Runs [block] on fresh work and hands that work to [record] once [block] ends, also when it fails. */
+            /**
+             * Runs [block] on fresh work and hands that work to [record] once [block] ends, also when it fails. The work
+             * is closed first, so a read that kept it past [block] fails instead of counting what [record] never sees.
+             */
             inline fun <T> counted(
                 record: (GraphWork) -> Unit,
                 block: (GraphWork) -> T,
@@ -57,6 +72,7 @@ class GraphWork
                 try {
                     return block(work)
                 } finally {
+                    work.close()
                     record(work)
                 }
             }

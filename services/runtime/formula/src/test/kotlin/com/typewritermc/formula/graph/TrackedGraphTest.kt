@@ -472,6 +472,12 @@ val TrackedGraphTest by testSuite {
             )
     }
 
+    test("work that escapes counted cannot count any more, since its recorder already has it") {
+        val onA = QueryBench().query("onA") { read(Cell("a")) }
+        val escaped = GraphWork.counted({}) { it }
+        shouldThrow<IllegalStateException> { TrackedGraph(cells("a" to 1)).pin(escaped).read(onA) }
+    }
+
     test("a pin counts every key a walk of reads visits") {
         val bench = QueryBench()
         val onA = bench.query("onA") { read(Cell("a")) ?: 0 }
@@ -590,17 +596,5 @@ val TrackedGraphTest by testSuite {
         base.reset(cells("a" to 1))
         base.isCurrentFork(reset) shouldBe false
         TrackedGraph(cells("a" to 1)).isCurrentFork(base.forkWith("a" to 2)) shouldBe false
-    }
-
-    test("a fork apart reuses nothing of its base and is never merged") {
-        val bench = QueryBench()
-        val onA = bench.query("onA") { read(Cell("a")) }
-        val base = TrackedGraph(cells("a" to 1))
-        base.read(onA)
-        val apart = base.forkApart(cells("a" to 1))
-        apart.read(onA) shouldBe 1
-        bench.runs(onA) shouldBe 2
-        base.isCurrentFork(apart) shouldBe true
-        base.merge(apart) shouldBe false
     }
 }

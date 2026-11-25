@@ -50,19 +50,3 @@ class GraphRuns : GraphListener {
 
 /** The keys whose count in [after] is higher than in [before]. */
 fun <K> Map<K, Long>.grewFrom(before: Map<K, Long>): Set<K> = filterTo(linkedMapOf()) { (key, count) -> count > (before[key] ?: 0) }.keys
-
-/** Tells both listeners what the graph does, this one first. */
-operator fun GraphListener.plus(other: GraphListener): GraphListener {
-    val first = this
-    return object : GraphListener {
-        override fun computed(key: GraphKey<*>) {
-            first.computed(key)
-            other.computed(key)
-        }
-
-        override fun evicted(key: GraphKey<*>) {
-            first.evicted(key)
-            other.evicted(key)
-        }
-    }
-}
