@@ -16,7 +16,7 @@ use anyhow::{Context as _, Result, bail, ensure};
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use crate::cargo_build::Outcome as Built;
+use crate::cargo_build::{Outcome as Built, target_directory};
 use crate::digest::sha256;
 use crate::results::{
     self, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase, TestRun,
@@ -279,8 +279,8 @@ fn build_components(
         .into_iter()
         .map(|(id, name)| (name, id))
         .collect();
-    let release = deploy::release_dir(ctx)?;
-    let wasm = |target: &str| release.join(format!("{}.wasm", target.replace('-', "_")));
+    let backend_target = target_directory(ctx, "backend/Cargo.toml")?;
+    let wasm = |target: &str| deploy::release_artifact(&backend_target, target);
     let mut components: Vec<deploy::Component> = Vec::new();
     for (package, target) in &wanted {
         if !components

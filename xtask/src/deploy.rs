@@ -229,9 +229,12 @@ pub(crate) fn reusable_components_build<'a>(
     })
 }
 
-/// Where the release build puts each component's `.wasm`.
-pub(crate) fn release_dir(ctx: &Context) -> Result<PathBuf> {
-    Ok(target_directory(ctx, "backend/Cargo.toml")?.join("wasm32-wasip2/release"))
+/// Where the release build puts the `.wasm` of the package or lib target `name`, below the
+/// backend's Cargo target directory `target`.
+pub(crate) fn release_artifact(target: &Path, name: &str) -> PathBuf {
+    target
+        .join("wasm32-wasip2/release")
+        .join(format!("{}.wasm", name.replace('-', "_")))
 }
 
 pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
@@ -246,7 +249,6 @@ pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
     let target = metadata["target_directory"]
         .as_str()
         .context("cargo metadata printed no target_directory")?;
-    let release = Path::new(target).join("wasm32-wasip2/release");
     let packages = metadata["packages"]
         .as_array()
         .context("cargo metadata printed no packages")?;
@@ -274,7 +276,7 @@ pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
         if cdylib && has_deploy {
             components.push(Component {
                 package: name.to_owned(),
-                artifact: release.join(format!("{}.wasm", name.replace('-', "_"))),
+                artifact: release_artifact(Path::new(target), name),
             });
         }
     }
