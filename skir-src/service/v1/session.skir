@@ -27,8 +27,26 @@ struct SessionId(83080004) {
 // The value of one session's entry in the realm's sessions bucket.
 struct SessionEntry(83080005) {
   protagonist: Protagonist;
-  // The engine that holds the connection now and keeps the entry alive.
-  holder: EngineId;
-  // When the session began; a rejoin within the grace and a server move keep it.
+  // When the session began; a rejoin while the session is vacant and a server move keep it.
   since: timestamp;
+  // Whether an engine holds the session now, or nobody does while it waits for a takeover.
+  state: SessionState;
+}
+
+// Who holds a session. A vacant session is alive, so a server move or a rejoin takes it over and nothing
+// it owns ends, but nobody holds it: nothing is sent to the engine its protagonist left.
+enum SessionState(83080006) {
+  // An engine holds the connection now and keeps the entry alive.
+  held: SessionHold;
+  // The holder released the session when its protagonist left; it stays alive for its engine kind's
+  // vacancy and ends unless an engine takes it over.
+  vacant;
+}
+
+// The engine holding a session and when its connection began.
+struct SessionHold(83080007) {
+  holder: EngineId;
+  // When the holder's connection began, on the holder's clock. Of two engines claiming the session,
+  // the later connection holds it; at the same instant, the greater engine id does.
+  connected: timestamp;
 }

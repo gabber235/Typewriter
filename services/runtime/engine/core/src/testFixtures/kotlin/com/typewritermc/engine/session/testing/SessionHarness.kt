@@ -5,8 +5,10 @@ import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.readSessionEntry
 import com.typewritermc.identity.EngineId
+import com.typewritermc.identity.OnlineSessions
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.protocol.transport.generated.SessionsBucket
@@ -14,6 +16,7 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueBuckets
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
+import com.typewritermc.services.libs.communicator.kv.LeaseTimings
 import com.typewritermc.services.libs.communicator.kv.NatsKeyValueBuckets
 import com.typewritermc.services.libs.communicator.nats.NatsAuthentication
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
@@ -41,7 +44,8 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Engines of one Realm on a real nats-server with JetStream, as in production but in one process: each engine keeps its
  * sessions through its own connection, and the Realm's sessions bucket exists once [createBucket] made it the way the
- * Realm does. Timings are short, so keys expire in seconds; the broker, not a fake, decides every expiry and conflict.
+ * Realm does. The broker, not a fake, decides every expiry and conflict, so a check waits for it with [eventually];
+ * keeper rules are proven on virtual time with VirtualSessions instead.
  */
 class SessionHarness private constructor(
     private val server: NatsTestServer,
@@ -51,23 +55,31 @@ class SessionHarness private constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val connections = mutableListOf<NatsConnection>()
-    private val engines = mutableListOf<HarnessEngine>()
+    private val keepers = mutableListOf<SessionKeeper>()
 
-    /** A Minecraft player, a protagonist whose session id is its UUID. */
-    fun player(): Pair<Protagonist, SessionId> {
+    /** A Minecraft player's session, of a protagonist whose session id is its UUID. */
+    fun player(): Session {
         val uuid = UUID.randomUUID().toString()
-        return Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid)) to SessionId(uuid)
+        return Session(Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid)), SessionId(uuid))
     }
 
-    /** Starts engine [id] of the Realm on a connection of its own. */
+    /** Starts engine [id] of the Realm on a connection of its own, whose sessions a test changes through its [HarnessEngine.online]. */
     suspend fun engine(
         id: String,
         timings: SessionTimings = SHORT,
     ): HarnessEngine {
-        val connection = connect()
-        val buckets = MutableStateFlow<KeyValueBuckets?>(NatsKeyValueBuckets(connection))
-        val keeper = SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, scope)
-        return HarnessEngine(EngineId(id), keeper, connection).also(engines::add)
+        val online = OnlineSet()
+        return HarnessEngine(EngineId(id), keeper(id, timings, online), online)
+    }
+
+    /** Starts engine [id] of the Realm on a connection of its own, keeping the sessions its engine kind has in [online]. */
+    suspend fun keeper(
+        id: String,
+        timings: SessionTimings,
+        online: OnlineSessions,
+    ): SessionKeeper {
+        val buckets = MutableStateFlow<KeyValueBuckets?>(NatsKeyValueBuckets(connect()))
+        return SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, online, scope).also(keepers::add)
     }
 
     /** Creates the Realm's sessions bucket, as the Realm does when it starts. */
@@ -82,14 +94,13 @@ class SessionHarness private constructor(
         id: SessionId,
     ): SessionEntry? = bucket().readSessionEntry(protagonist, id)
 
-    /** [engine] reports that [protagonist] connected with session [id]; returns once the bucket names it the holder. */
+    /** [session] connects to [engine]; returns once the bucket names it the holder. */
     suspend fun joined(
         engine: HarnessEngine,
-        protagonist: Protagonist,
-        id: SessionId,
+        session: Session,
     ) {
-        engine.keeper.connected(protagonist, id)
-        eventually { entry(protagonist, id)?.holder == engine.id }
+        engine.online.join(session)
+        eventually { entry(session.protagonist, session.id)?.holder == engine.id }
     }
 
     /** Waits until [condition] holds, polling the broker, and fails after [within]. */
@@ -140,7 +151,7 @@ class SessionHarness private constructor(
     }
 
     override fun close() {
-        engines.forEach { it.keeper.close() }
+        keepers.forEach { it.close() }
         scope.cancel()
         runBlocking { connections.forEach { it.shutdown() } }
         server.close()
@@ -150,24 +161,18 @@ class SessionHarness private constructor(
         /** The organization the harness's Realm belongs to. */
         const val ORGANIZATION: String = "organization"
 
-        /** Seconds instead of minutes: refresh every 300 ms, live 2 s, a grace of 1 s. */
+        /** Seconds instead of minutes: refresh every 300 ms, live 2 s, a vacancy of 1 s. */
         val SHORT: SessionTimings =
-            SessionTimings(refresh = 300.milliseconds, ttl = 2.seconds, grace = 1.seconds, retry = 100.milliseconds)
+            SessionTimings(LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, vacancy = 1.seconds, retry = 100.milliseconds))
 
         /** A harness on a fresh nats-server with JetStream. */
         fun start(): SessionHarness = SessionHarness(NatsTestServer.startWithJetStream())
     }
 }
 
-/** One engine of the harness. */
+/** One engine of the harness; [online] is the sessions it has. */
 class HarnessEngine(
     val id: EngineId,
     val keeper: SessionKeeper,
-    private val connection: NatsConnection,
-) {
-    /** The engine stops as a crash would: no further write, its connection gone. */
-    suspend fun crash() {
-        keeper.close()
-        connection.shutdown()
-    }
-}
+    val online: OnlineSet,
+)

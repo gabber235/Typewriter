@@ -1,0 +1,97 @@
+# docs/drive/session-keeper-interleavings/record.yaml: the working state of the sessions topic PR.
+goal: >
+  Split the SessionKeeper and its tests out of PR 580 onto features/v1: test keeper ordering and
+  compare and set semantics deterministically (virtual time and a fake bucket, or better), keep one or
+  two contract tests on real NATS with long windows, and carry the keeper fixes 580's flakes found.
+
+pieces:
+  - id: guarantees
+    status: building
+    tries:
+      - id: v1-keeper
+        what: v1 keeper as is
+        taught: >
+          A quit gives up on any conflict, also one caused by its own cut off refresh; a take retries
+          over whatever it reads last, so a late take displaces the engine the player moved to; a damaged
+          value under the session key throws out of the take and the session never starts.
+        state: dropped
+        why: real bugs, found by 580's flakes
+      - id: take-yields-on-takeover
+        what: 580's rule (9fe1972486), a take lets the session go once a third engine wrote after its first read
+        taught: >
+          Two concurrent takes from the same base revision: when the take with the older report lands
+          first, the engine the player is on now lets go for good.
+        state: dropped
+        why: displaces the current engine under concurrent takes
+      - id: losing-take-waits
+        what: a take that loses waits for the key to be free; a quit writes a left marker
+        state: dropped
+        why: the maintainer chose newest connect wins (option B)
+      - id: connect-stamp
+        what: each claim carries the instant of its connection on the holder's clock; the newer claim wins, ties by holder id
+        taught: one rule for every read (first read, after a conflict, on a refresh conflict); no waiting state
+        state: picked
+        why: decided by the maintainer on 2026-11-24
+        evidence: [services/platform/messaging/src/test/kotlin/com/typewritermc/services/libs/communicator/kv/LeasesTest.kt]
+  - id: natskt-retry
+    status: done
+    tries:
+      - id: fork-fix
+        what: publish retries only no responders; timeouts and cancellation propagate
+        taught: before the fix a conflict sent 3 publishes, a timeout took 15 s with 3 sends, a cancelled caller failed with a JetStreamException
+        state: picked
+        evidence: [gabber235/nats.kt PR 1, tag v0.9.2-typewriter.3, PublishRetryTest in the fork]
+  - id: lease-primitive
+    status: building
+    tries:
+      - id: leases
+        what: Leases<V> in services/platform/messaging; SessionKeeper is one lease per session
+        state: picked
+        why: decided by the maintainer on 2026-11-24; mirrors and demand follow the same pattern (live-data.md)
+  - id: test-approach
+    status: building
+    tries:
+      - id: virtual-time-memory-bucket
+        what: rules on virtual time over a memory bucket; one contract suite on memory and real NATS; generated schedules; one real NATS session story
+        state: picked
+        why: decided by the maintainer on 2026-11-24
+
+decided:
+  - id: split
+    what: Split PR 580 into topic PRs onto features/v1; this is the sessions PR.
+    why: approved by the maintainer on 2026-11-24
+  - id: newest-connect-wins
+    what: >
+      Option B, newest connect wins. SessionEntry gains a required connected timestamp from the engine clock
+      at connect; equal stamps break by engine id; a stamp read beyond a small bound ahead is logged and counted.
+      No waiting state, no left marker.
+    why: engines share a machine or run NTP; two real connects are at least a server transfer apart
+  - id: lease
+    what: Extract Lease<V> now in services/platform/messaging with SessionKeeper as its first user; build only what the records decide.
+  - id: natskt
+    what: Fix the fork first; the maintainer reviews, pushes and tags; then bump nats in this PR.
+  - id: kit
+    what: Grow the kit with MemoryKeyValueBuckets, ScriptedBuckets, KeyValueBucketContract on memory and real NATS, VirtualSessions.
+  - id: vacant-sessions
+    what: >
+      A quit leaves the session vacant: alive for its engine kind's vacancy so a server move or a rejoin takes it over,
+      but held by nobody. The lease entry carries a closed state, held or vacant; holders() lists only held entries.
+      The session's 10 s is no longer called a grace.
+    why: holding and the session's lifetime are two things (maintainer, 2026-11-25)
+
+open: []
+
+slices:
+  - id: kit-and-contract
+    tests: [KeyValueBucketContractTest, NatsKeyValueBucketTest]
+    status: green
+  - id: leases
+    tests: [LeasesTest]
+    status: green
+  - id: sessions-on-leases
+    tests: [SessionKeeperTest, SessionsOnNatsTest, EngineWiringTest]
+    status: green
+
+next: >
+  Run cargo xtask check for services, protocol, docs and quality; run the typewriter-review skill; write the
+  PR body with its Design record changes.

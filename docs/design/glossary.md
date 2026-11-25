@@ -264,7 +264,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Engine**: runs published content through extensions (Paper, panel, future engines); engines share stored state only through the realm; live effects and events go directly between sessions. `Engine(id)` is also an identity, keyed by the stable topology engine id, so what an engine knows (`Stored`) and is doing (`Live`) are ordinary values keyed by it. See [live-data.md](live-data.md#engines-and-traits).
 
-**Engine kind**: the engine artifact an engine runs (`EngineKind`, the topology `EngineTarget.engine_id`, such as `typewritermc:paper`); open to third party engines and stored once in the topology. Bridges register per kind, each kind supplies its session ids and grace, and interactions stay inside one kind. See [live-data.md](live-data.md#session).
+**Engine kind**: the engine artifact an engine runs (`EngineKind`, the topology `EngineTarget.engine_id`, such as `typewritermc:paper`); open to third party engines and stored once in the topology. Bridges register per kind, each kind supplies its session ids and its `SessionTimings`, among them the vacancy, and interactions stay inside one kind. See [live-data.md](live-data.md#session).
 
 **`EnginePart`**: marker for a class an extension adds to an engine; KSP finds it by supertype and it joins the deployment's Koin. See [events-and-handlers.md](events-and-handlers.md#engine-parts).
 
@@ -339,8 +339,6 @@ Every type, annotation, and term used in the design set, one line each, with the
 **Global record**: a chain context record keyed by type only that describes the chain as a whole; newest wins, never removed. See [events-and-handlers.md](events-and-handlers.md#context).
 
 **Grace (hold)**: the short delay (about 10 ticks) before a hold that stopped being returned is removed and restored. See [interactions.md](interactions.md#grace-and-adoption).
-
-**Grace (session)**: how long a session survives without an engine reporting it, set per engine kind (about 10 seconds for Minecraft). See [live-data.md](live-data.md#session).
 
 **`EntryGroup<K>`**: the group identity of our group entries, (entry, key), so deleting the entry ends its groups. See [interactions.md](interactions.md#groupings-and-membership).
 
@@ -542,6 +540,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`OnlinePlayer`**: `Live` mirror in the Minecraft capability with an online protagonist's name and its `Engine`, read by the panel's target list. See [panel-engine-communication.md](panel-engine-communication.md) question 9.
 
+**`OnlineSessions`**: the sessions an engine has right now, one observable set its engine kind supplies (Paper's online players, the panel's open tabs); the engine claims each session added, leaves each one removed vacant, and refreshes only sessions in the set. See [live-data.md](live-data.md#session).
+
 **`onRejoin`**: step rule: `Drop` (default), `RestartStep`, or `RestartInteraction`. See [interactions.md](interactions.md#leaving-and-rejoining).
 
 **`OnRejoin`**: step rule for a protagonist who returns: `Drop`, `RestartStep`, or `RestartInteraction`. See [interactions.md](interactions.md#steps).
@@ -702,9 +702,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **Session subject**: `typewriter.session.<id>`, subscribed by the engine holding that session; used only for targets that are one connection, such as the tab that started a capture, and for event results. See [live-data.md](live-data.md#routing).
 
-**`SessionReporter`**: engine kind interface reporting session `connected` and `disconnected`. See [live-data.md](live-data.md#session).
-
-**`sessions` KV bucket**: NATS KV bucket with one key per session, refreshed with a TTL equal to the grace; an expired key ends the session. See [live-data.md](live-data.md#nats-jetstream).
+**`sessions` KV bucket**: NATS KV bucket with one key per session, held by its engine and refreshed with a TTL, or vacant with a TTL equal to the vacancy once its protagonist left; an expired key ends the session. See [live-data.md](live-data.md#nats-jetstream).
 
 **`Settable<T>`**: generated reader and write target for a `stored()` declaration, with keys filled from scope. See [stored-data.md](stored-data.md#reading).
 
@@ -811,6 +809,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`Variable<K, T>`**: creator declared stored data as a static entry with name, keys, type, default, and reactions. See [stored-data.md](stored-data.md#variables).
 
 **Version layer**: a part of an extension or engine with `since`, loaded on that Minecraft release and newer, holding only what changed. See [engines.md](engines.md#version-layers).
+
+**Vacant session**, **vacancy**: a session its engine released when the protagonist left. It stays alive for the vacancy set per engine kind (about 10 seconds for Minecraft), so a server move or a rejoin takes it over and nothing it owns ends, but nobody holds it: nothing is sent to the engine the protagonist left, and `Sessions.holders` skips it. See [live-data.md](live-data.md#session).
 
 **Variants**: different behaviour (Java chat versus a Bedrock form) picked by the step at start through a different stored value. See [interactions.md](interactions.md#variants).
 

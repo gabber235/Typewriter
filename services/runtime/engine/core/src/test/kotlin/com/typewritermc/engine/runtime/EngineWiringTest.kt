@@ -3,12 +3,14 @@ package com.typewritermc.engine.runtime
 import com.typewritermc.engine.runtime.testing.wiredDeploymentContext
 import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.readSessionEntry
+import com.typewritermc.engine.session.testing.OnlineSet
 import com.typewritermc.engine.session.testing.SessionHarness
 import com.typewritermc.identity.EngineId
+import com.typewritermc.identity.OnlineSessions
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
-import com.typewritermc.identity.SessionReporter
 import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
 import com.typewritermc.services.libs.communicator.testing.NatsTestServer
@@ -24,28 +26,37 @@ import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import org.koin.dsl.module
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
 /** The Koin of one engine deployment: engine-core's session keeping, wired with the parts its engine kind brings. */
 val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = false)) {
-    test("an engine deployment reports its sessions as the engine the loader assigned it") {
+    test("an engine deployment keeps the sessions its engine kind has as the engine the loader assigned it") {
         NatsTestServer.startWithJetStream().use { server ->
             onBroker(server.url) {
                 val buckets = buckets()
                 check(buckets.ensure(SessionsBucket.declaration("realm")) is KeyValueOpen.Opened)
                 val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+                val online = OnlineSet()
                 val wiring =
-                    EngineWiring(wiredDeploymentContext(buckets), scope, module { single<SessionTimings> { SessionHarness.SHORT } })
+                    EngineWiring(
+                        wiredDeploymentContext(buckets),
+                        scope,
+                        module {
+                            single<SessionTimings> { SessionHarness.SHORT }
+                            single<OnlineSessions> { online }
+                        },
+                    )
                 try {
                     val uuid = UUID.randomUUID().toString()
                     val protagonist = Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid))
 
-                    wiring.application.koin
-                        .get<SessionReporter>()
-                        .connected(protagonist, SessionId(uuid))
+                    online.join(Session(protagonist, SessionId(uuid)))
 
                     val observer = (buckets.open(SessionsBucket.name("realm")) as KeyValueOpen.Opened).bucket
                     eventually(10.seconds) {
@@ -59,10 +70,37 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
         }
     }
 
+    test("an engine kind's work started in the scope its parts receive ends with the deployment") {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val wiring =
+            EngineWiring(
+                wiredDeploymentContext(),
+                scope,
+                module {
+                    single<SessionTimings> { SessionHarness.SHORT }
+                    single<OnlineSessions> { OnlineSet() }
+                },
+            )
+        try {
+            val work =
+                wiring.application.koin
+                    .get<CoroutineScope>()
+                    .launch { awaitCancellation() }
+
+            scope.cancel()
+
+            withTimeout(10.seconds) { work.join() }
+            work.isCancelled shouldBe true
+        } finally {
+            wiring.close()
+        }
+    }
+
     test("an engine kind that brings no session timings fails at start naming them") {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         try {
-            val failure = shouldThrow<Exception> { EngineWiring(wiredDeploymentContext(), scope, module { }) }
+            val failure =
+                shouldThrow<Exception> { EngineWiring(wiredDeploymentContext(), scope, module { single<OnlineSessions> { OnlineSet() } }) }
 
             generateSequence<Throwable>(failure) { it.cause }.joinToString(" | ") { it.message.orEmpty() } shouldContain "SessionTimings"
         } finally {

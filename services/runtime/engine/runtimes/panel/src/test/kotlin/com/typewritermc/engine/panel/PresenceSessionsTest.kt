@@ -17,7 +17,7 @@ import java.util.UUID
 
 /**
  * The panel engine of Realm `realm` on a real nats-server: panel tabs publish the presence heartbeat as the panel does,
- * and the broker decides every key's expiry. Timings are short: heartbeats every 300 ms, keys live 2 s, a grace of 1 s.
+ * and the broker decides every key's expiry. Timings are short: heartbeats every 300 ms, keys live 2 s, a vacancy of 1 s.
  */
 val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnabled = false)) {
     val panel = testFixture { PanelEngineHarness.start() }
@@ -27,7 +27,7 @@ val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnable
         panel().tab(id, realm("realm"))
 
         panel().sessions.eventually { panel().sessions.entry(panel().user, SessionId(id)) != null }
-        delay(TIMINGS.ttl * 2)
+        delay(TIMINGS.lease.ttl * 2)
 
         panel()
             .sessions
@@ -36,7 +36,7 @@ val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnable
             .holder shouldBe EngineId("panel.realm")
     }
 
-    test("PANEL-S2 a tab that leaves, or whose heartbeat stops, ends its session after the grace") {
+    test("PANEL-S2 a tab that leaves, or whose heartbeat stops, ends its session after the vacancy") {
         val leaving = UUID.randomUUID().toString()
         val closed = UUID.randomUUID().toString()
         val leavingTab = panel().tab(leaving, realm("realm"))
@@ -51,9 +51,9 @@ val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnable
         closedTab.cancel()
 
         panel().sessions.eventually(
-            within = TIMINGS.ttl + TIMINGS.grace,
+            within = TIMINGS.lease.ttl + TIMINGS.lease.vacancy,
         ) { panel().sessions.entry(panel().user, SessionId(leaving)) == null }
-        panel().sessions.eventually(within = TIMINGS.ttl * 2 + TIMINGS.grace) {
+        panel().sessions.eventually(within = TIMINGS.lease.ttl * 2 + TIMINGS.lease.vacancy) {
             panel().sessions.entry(panel().user, SessionId(closed)) ==
                 null
         }
@@ -65,7 +65,7 @@ val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnable
         panel().tab(elsewhere, realm("other"))
         panel().tab(members, PresenceLocation.createMembers())
 
-        delay(TIMINGS.ttl)
+        delay(TIMINGS.lease.ttl)
 
         panel().sessions.entry(panel().user, SessionId(elsewhere)).shouldBeNull()
         panel().sessions.entry(panel().user, SessionId(members)).shouldBeNull()

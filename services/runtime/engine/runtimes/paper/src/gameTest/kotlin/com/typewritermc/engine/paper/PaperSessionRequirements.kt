@@ -50,7 +50,7 @@ val PaperSessionRequirements by testSuite(
             within(20.ticks) {
                 state("the session is held by the shared Paper's engine since it first began") {
                     val session = observer.session(player.uuid)
-                    session != null && session.holder == engine && session.since == before.since
+                    session != null && session.holder == engine && session.value.since == before.value.since
                 }
                 never.state("the session is gone") { observer.session(player.uuid) == null }
             }

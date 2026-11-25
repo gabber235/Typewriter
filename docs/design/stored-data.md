@@ -28,7 +28,7 @@ An identity is something stored data can be about. Identities are the only types
 Every identity has a lifetime:
 
 - A step or interaction ends when it finishes.
-- A session ends when no engine reports it for longer than the grace of its engine kind.
+- A session ends when it stays vacant, held by no engine, for longer than the vacancy of its engine kind.
 - An identity defined by an entry ends when that entry is removed by a publication.
 - An identity ends when an identity inside it ends (decided 2026-11-05), so `EntryGroup(islands, "42")` ends with `islands`.
 - A `BoundPath` ends when its place is gone, for example when its list item is removed.

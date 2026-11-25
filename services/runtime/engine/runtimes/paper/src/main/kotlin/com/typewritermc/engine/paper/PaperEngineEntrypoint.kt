@@ -3,12 +3,13 @@ package com.typewritermc.engine.paper
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.engine.runtime.EngineDeployment
 import com.typewritermc.engine.session.SessionTimings
+import com.typewritermc.identity.OnlineSessions
 import com.typewritermc.imprint.ImprintRuntimeEntrypoint
 import com.typewritermc.loader.api.HostedRuntimeEntrypoint
 import com.typewritermc.loader.paper.TypewriterLoaderPlugin
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
-import org.koin.dsl.bind
+import org.koin.dsl.binds
 import org.koin.dsl.module
 
 /**
@@ -19,7 +20,7 @@ val paperModule =
     module {
         single<Plugin> { JavaPlugin.getPlugin(TypewriterLoaderPlugin::class.java) }
         single { SessionTimings.MINECRAFT }
-        single { SessionListener(get(), get()) } bind RuntimeRegistrar::class
+        single { SessionListener(get()) } binds arrayOf(OnlineSessions::class, RuntimeRegistrar::class)
     }
 
 /** Stages a Paper engine deployment. */

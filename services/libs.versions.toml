@@ -21,7 +21,7 @@ okio = "3.18.2"
 
 # A git tag of the natskt fork that settings.gradle.kts builds from source; the fork holds
 # kotlinx serialization at 1.11 with kotlin-serialize.
-nats = "v0.9.2-typewriter.2"
+nats = "v0.9.2-typewriter.3"
 cryptography = "0.6.0"
 surrealdb-server = "3.3.0"
 surrealdb-embedded = "3.1.5"

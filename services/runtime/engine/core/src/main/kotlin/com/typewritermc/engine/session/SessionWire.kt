@@ -6,17 +6,30 @@ import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.SessionId
 import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueRead
+import com.typewritermc.services.libs.communicator.kv.LeaseCodec
+import com.typewritermc.services.libs.communicator.kv.LeaseEntry
+import com.typewritermc.services.libs.communicator.kv.LeaseState
 import okio.ByteString.Companion.toByteString
+import java.io.IOException
 import java.time.Instant
+import java.util.logging.Logger
 import skirout.service.v1.session.EngineId as WireEngineId
 import skirout.service.v1.session.PrincipalId as WirePrincipalId
 import skirout.service.v1.session.Protagonist as WireProtagonist
 import skirout.service.v1.session.SessionEntry as WireSessionEntry
+import skirout.service.v1.session.SessionHold as WireSessionHold
+import skirout.service.v1.session.SessionState as WireSessionState
 
-/** One session's entry in the Realm's sessions bucket: who it belongs to, which engine holds it, and since when. */
-data class SessionEntry(
+/**
+ * One session's entry in the Realm's sessions bucket, a lease of engines: held by an engine since its connection began
+ * on that engine's clock, or vacant. A vacant session is alive, so a server move or a rejoin takes it over and nothing
+ * it owns ends, but nobody holds it: its engine released it when the protagonist left, and nothing is sent there.
+ */
+typealias SessionEntry = LeaseEntry<EngineId, SessionValue>
+
+/** What a session's lease keeps besides who holds it: whose session it is and since when it runs. */
+data class SessionValue(
     val protagonist: Protagonist,
-    val holder: EngineId,
     val since: Instant,
 )
 
@@ -32,35 +45,74 @@ internal fun sessionKey(
 /** The key filter matching every session of [protagonist]. */
 internal fun protagonistKeys(protagonist: Protagonist): String = "${protagonist.principal.kind}.${protagonist.principal.id}.*"
 
-internal fun SessionEntry.encode(): ByteArray =
-    WireSessionEntry.serializer
-        .toBytes(
-            WireSessionEntry(
-                protagonist =
-                    WireProtagonist(
-                        principal = WirePrincipalId(kind = protagonist.principal.kind, id = protagonist.principal.id),
-                    ),
-                holder = WireEngineId(value = holder.value),
-                since = since,
-            ),
-        ).toByteArray()
+/**
+ * Session entries as the sessions bucket stores them. A value no engine can read, damaged or cut off, is logged and
+ * read as no entry, so a join writes over it and a holder listing skips it.
+ */
+internal object SessionLeaseCodec : LeaseCodec<EngineId, SessionValue> {
+    private val log: Logger = Logger.getLogger(SessionLeaseCodec::class.java.name)
 
-internal fun decodeSessionEntry(bytes: ByteArray): SessionEntry {
-    val wire = WireSessionEntry.serializer.fromBytes(bytes.toByteString())
-    return SessionEntry(
-        protagonist = Protagonist(PrincipalId(wire.protagonist.principal.kind, wire.protagonist.principal.id)),
-        holder = EngineId(wire.holder.value),
-        since = wire.since,
-    )
+    override fun encode(entry: SessionEntry): ByteArray =
+        WireSessionEntry.serializer
+            .toBytes(
+                WireSessionEntry(
+                    protagonist =
+                        WireProtagonist(
+                            principal =
+                                WirePrincipalId(
+                                    kind = entry.value.protagonist.principal.kind,
+                                    id = entry.value.protagonist.principal.id,
+                                ),
+                        ),
+                    since = entry.value.since,
+                    state =
+                        when (val state = entry.state) {
+                            is LeaseState.Held -> {
+                                WireSessionState.HeldWrapper(
+                                    WireSessionHold(holder = WireEngineId(value = state.holder.value), connected = state.claimed),
+                                )
+                            }
+
+                            LeaseState.Vacant -> {
+                                WireSessionState.VACANT
+                            }
+                        },
+                ),
+            ).toByteArray()
+
+    override fun decode(bytes: ByteArray): SessionEntry? =
+        try {
+            val wire = WireSessionEntry.serializer.fromBytes(bytes.toByteString())
+            val state =
+                when (val state = wire.state) {
+                    is WireSessionState.HeldWrapper -> LeaseState.Held(EngineId(state.value.holder.value), state.value.connected)
+                    WireSessionState.VACANT -> LeaseState.Vacant
+                    else -> return unreadable("a session state no engine knows: $state")
+                }
+            LeaseEntry(
+                state,
+                SessionValue(Protagonist(PrincipalId(wire.protagonist.principal.kind, wire.protagonist.principal.id)), wire.since),
+            )
+        } catch (failure: IllegalArgumentException) {
+            unreadable(failure)
+        } catch (failure: IOException) {
+            // A cut off value ends the decoder's input early.
+            unreadable(failure)
+        }
+
+    private fun unreadable(failure: Any): Nothing? {
+        log.warning("Skipped a session value no engine can read: $failure")
+        return null
+    }
 }
 
-/** The live entry of [protagonist]'s session [id] in this sessions bucket, or null when there is none; a failed read throws its cause. */
+/** The live entry of [protagonist]'s session [id] in this sessions bucket, or null when there is none or no engine can read it; a failed read throws its cause. */
 suspend fun KeyValueBucket.readSessionEntry(
     protagonist: Protagonist,
     id: SessionId,
 ): SessionEntry? =
     when (val read = get(sessionKey(protagonist, id))) {
-        is KeyValueRead.Found -> decodeSessionEntry(read.entry.value)
+        is KeyValueRead.Found -> SessionLeaseCodec.decode(read.entry.value)
         KeyValueRead.Absent -> null
         is KeyValueRead.Failed -> throw read.cause
     }

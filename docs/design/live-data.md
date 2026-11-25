@@ -333,7 +333,7 @@ demand_<realm id>     <type>.<keys>.<reader engine>    one entry per reader; `_`
 mirrors_<realm id>    <type>.<keys>                    MirrorEntry { holder: EngineId; value }
 ```
 
-- **Same pattern as sessions.** Both are rewritten every 20 seconds with a 60 second TTL and checked by revision, so a dead reader stops demand and a dead producer ends its values. A server move rewrites the same key, so a reader sees no removal within the grace; the old holder's late write fails and it stops.
+- **Same pattern as sessions.** Both are [leases](#leases), rewritten every 20 seconds with a 60 second TTL and checked by revision, so a dead reader stops demand and a dead producer ends its values. A server move rewrites the same key, so a reader sees no removal while the key is vacant; the newer claim holds the key, and the old holder's late write fails and it stops.
 - **Reader.** A watch on the key pattern delivers current values, then updates, and sets them as `TrackedGraph` inputs. A put sets the value, a delete is `Removed` with `because = Value`, and an expiry (`MaxAge` marker, a purge in the watch) is `Removed` with `because = Tracking`.
 - **Producer.** Every engine watches `demand`. A demanded key this engine can produce becomes necessary here, exactly as if a local reader had asked.
 - **Rate.** A key is published at most 4 times a second across engines, keeping the latest value; local readers stay on every tick.
@@ -346,23 +346,26 @@ JetStream is right here though it was rejected for `Changed<T>` (see Lost pushes
 
 ## Session
 
-`Session(protagonist, id: SessionId) : Identity` is one connection of a protagonist. The engine kind supplies the id through a `SessionReporter`:
+`Session(protagonist, id: SessionId) : Identity` is one connection of a protagonist. The engine kind supplies the sessions it has right now as one observable set (decided 2026-11-25):
 
 ```kotlin
-interface SessionReporter {
-    fun connected(protagonist: Protagonist, id: SessionId)
-    fun disconnected(id: SessionId)
+interface OnlineSessions {
+    val sessions: StateFlow<Set<Session>>
 }
 ```
 
+- The set is the one source of an engine's sessions: a session added is claimed at once, a session removed is left vacant at once, and each refresh writes exactly the sessions in the set, so a missed quit cannot keep a session alive.
+- Paper keeps it from its online players, starting from `onlinePlayers` and changed by join and quit on the main thread; the panel engine keeps it from its open tabs. The engine reads it from any thread, so nothing asks Bukkit off the main thread.
+- A session added and removed again before the engine read the set is never written.
+
 | Engine kind | Session id | Survives |
 | --- | --- | --- |
-| Minecraft | the player's UUID (one login per UUID behind a proxy; Paper receives no connection id) | server moves, rejoins within the grace |
-| Panel | per tab id kept in sessionStorage on web, and for the app run on desktop and mobile | reloads; each tab is its own session, held by the panel engine (grace 45 s) |
+| Minecraft | the player's UUID (one login per UUID behind a proxy; Paper receives no connection id) | server moves, rejoins while the session is vacant |
+| Panel | per tab id kept in sessionStorage on web, and for the app run on desktop and mobile | reloads; each tab is its own session, held by the panel engine (vacancy 45 s after the tab leaves) |
 | Future engines | defined by the engine | engine specific |
 
 - A protagonist may have several sessions at once (tabs, Minecraft plus panel).
-- A session ends when no engine reports its id for longer than a grace set per engine kind (about 10 seconds for Minecraft). Ids come back: a player who ended a session while the realm was down and then returns simply keeps the session and its values. This is accepted (2026-11-03).
+- A session ends when it stays vacant longer than the vacancy set per engine kind (about 10 seconds for Minecraft). A vacant session is alive but held by nobody: its engine released it when the protagonist left, so a server move or a rejoin takes it over and nothing it owns ends, but nothing is sent to the engine the protagonist left, and `Sessions.holders` does not list it (decided 2026-11-25). Ids come back: a player who ended a session while the realm was down and then returns simply keeps the session and its values. This is accepted (2026-11-03).
 - A protagonist is online while it has at least one session. Three core events follow from this:
 
 | Event | Fired by | When |
@@ -371,7 +374,7 @@ interface SessionReporter {
 | `ProtagonistJoined(protagonist)` | that same engine | the protagonist had no session key yet |
 | `ProtagonistLeft(protagonist)` | the engine named as holder in the last key | the key expired and the protagonist has no other session |
 
-- `ProtagonistLeft` means gone everywhere and is best effort: after a crash or a server stop no holder is left, so it does not fire. It runs after the grace, so the player is no longer available; work that needs the player belongs to the session. Cleanup that must always happen uses session scoped values, which the realm removes.
+- `ProtagonistLeft` means gone everywhere and is best effort: after a crash or a server stop no holder is left, so it does not fire. It runs once the last session's vacancy ended, so the player is no longer available; work that needs the player belongs to the session. Cleanup that must always happen uses session scoped values, which the realm removes.
 - Two engines taking a protagonist's first sessions at the same moment may both fire `ProtagonistJoined`. This is rare and accepted.
 - Values keyed by a session are removed when it ends.
 - Sessions hold no write lease: every stored write is a realm transaction ([stored-data.md](stored-data.md#where-values-live-at-runtime)). Mirrors live on the engine that produces them.
@@ -462,10 +465,22 @@ Short lived data lives on NATS JetStream. This needs NATS 2.11 or newer with Jet
 
 | Resource | Content | Behaviour |
 | --- | --- | --- |
-| `sessions_<realm id>` KV bucket, one per realm | one key per session, `<protagonist kind>.<protagonist id>.<session id>`, value `SessionEntry { protagonist; holder: EngineId; since: Instant }` | while the protagonist is connected, the holding engine rewrites the key every 20 seconds with a 60 second TTL, so an engine that loses NATS for a while ends nothing; on a quit it rewrites once with a TTL equal to the grace and stops. Every write checks the revision, so a server move works in either join and quit order (the old engine's write fails and it stops). An expired key ends the session, so a crashed engine's sessions end on their own within 60 seconds, and a protagonist who reconnects in that time recovers the session. The realm keeps no grace timers; after connecting to NATS it waits 60 seconds before treating a missing key as ended, so engines can write their keys back after an outage |
+| `sessions_<realm id>` KV bucket, one per realm | one key per session, `<protagonist kind>.<protagonist id>.<session id>`, value `SessionEntry { protagonist; since: Instant; state: held { holder: EngineId; connected: Instant } or vacant }` | each session is a lease ([Leases](#leases)): while the protagonist is connected, the holding engine rewrites the key every 20 seconds with a 60 second TTL, so an engine that loses NATS for a while ends nothing; on a quit it writes the session vacant with a TTL equal to its engine kind's vacancy and stops. A vacant session is alive, so a server move or a rejoin takes it over, but nobody holds it (decided 2026-11-25). `connected` is when the holder's connection began, on the holder's clock, and the later connection holds the session (decided 2026-11-24): a server move works in either join and quit order, and a late write of an engine the protagonist already left never displaces the engine it moved to. `since` is when the session began; a rejoin while the session is vacant and a server move keep it. An expired key ends the session, so a crashed engine's sessions end on their own within 60 seconds, and a protagonist who reconnects in that time recovers the session. The realm keeps no vacancy timers; after connecting to NATS it waits 60 seconds before treating a missing key as ended, so engines can write their keys back after an outage |
 | `demand_<realm id>` and `mirrors_<realm id>` KV buckets, one each per realm | what readers demand and the published values ([Demand across engines](#demand-across-engines)) | rewritten every 20 seconds with a 60 second TTL, as for sessions; watched by engines, so they survive realm restarts and outages |
 
 Not on streams: stored data and `Due` (transactions, exactly once, realm owned) and mirrors no reader on another engine demands.
+
+### Leases
+
+A lease is one key of a KV bucket that one holder keeps alive (decided 2026-11-24). Sessions are the first leases; mirrors and demand entries are leases too. One primitive, `Leases<V>` in the messaging platform, keeps every guarantee for all of them:
+
+- **Claim.** A claim counts as held at once, without NATS, and writes the key held, naming its holder and the instant it was claimed on the holder's clock, with its value. Every write checks the revision.
+- **Newest claim wins.** Whenever a claim reads the key, also after a conflict, it writes over an absent, unreadable or vacant entry, its own, or an older claim; a newer claim of another holder means the key is lost for good. A refresh that conflicts follows the same rule. Claims at the same instant go to the greater holder id. Engines share a machine or run NTP, and two real connections of one protagonist are at least a server transfer apart, so a wrong order needs clock skew larger than a transfer; a claim read more than the skew bound ahead of the reader's clock is logged and counted (`typewriter.lease.claim.ahead`).
+- **Refresh.** A held key is rewritten every refresh with the TTL; one that expired during an outage is written again while the holder still claims it. A refresh that conflicts and finds the key vacant has lost it for good: a newer claim took the key and let it go, and the holder it took the key from never writes it again. This is a property of every lease, whatever its holders report (decided 2026-11-25).
+- **Release.** A release writes the key **vacant**, at its own revision, with a TTL equal to the holder kind's vacancy (decided 2026-11-25). A vacant key is alive, so any new claim takes it over, but held by nobody: listings of holders skip it, while each lease user decides for itself whether a vacant entry still counts (sessions do not; demand may, so a server move leaves no gap). A conflict whose key this holder still holds came from its own write whose answer was lost, so it goes on at the key's current revision, without waiting; a release never writes over another holder's claim.
+- **Order.** Calls apply per key in the order they were made; a newer call stops an older claim before its next write, and a claim released before it wrote anything writes nothing.
+- **Close** stops every write and leaves the keys, so a reloaded holder takes them over and a crashed one lets them expire within the TTL.
+- **A conflict costs one read and one write.** Only a failed request waits before it tries again; the NATS client sends a publish again only when no stream answered (natskt fork `v0.9.2-typewriter.3`).
 
 ## Hot publish
 

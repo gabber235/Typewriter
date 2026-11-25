@@ -3,10 +3,11 @@ package com.typewritermc.engine.panel
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.engine.session.SessionTimings
+import com.typewritermc.identity.OnlineSessions
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
-import com.typewritermc.identity.SessionReporter
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.protocol.transport.OrganizationActorRouteScope
@@ -15,33 +16,65 @@ import com.typewritermc.protocol.transport.generated.organizationPresence
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
 import skirout.organization.v1.presence.PresenceEvent
 import skirout.organization.v1.presence.PresenceLocation
-import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.ComparableTimeMark
+import kotlin.time.TimeSource
 
 /**
- * Reports each panel tab in this engine's Realm as a session of the tab's user, from the panel's presence heartbeat;
- * there is no second heartbeat. The first heartbeat in the Realm connects the tab's session, and each later one keeps
- * it. A tab that leaves the Realm or says it left disconnects at once, and a tab whose heartbeats stop for a key's
- * time to live disconnects then, so its key ends after the grace. The protagonist is the user the broker bound into
- * the subject, never a value from the payload.
+ * The panel tabs in this engine's Realm, each a session of the tab's user, from the panel's presence heartbeat; there
+ * is no second heartbeat. The first heartbeat in the Realm adds the tab's session, and each later one moves its
+ * deadline a key's time to live ahead. A tab that leaves the Realm or says it left is removed at once, and a tab whose
+ * deadline passes is removed then, so its session ends after the vacancy. The protagonist is the user the broker bound
+ * into the subject, never a value from the payload.
+ *
+ * Deadlines are kept here, not by the messaging session presence arrives through: one expiry loop in [deployment], the
+ * engine's own lifetime, removes every tab past its deadline, so a messaging session the host replaces changes nothing
+ * about when a tab leaves, and the loop ends with the deployment. Waiting for the next deadline is idle; only each
+ * expiry step runs as engine work.
  */
 class PresenceSessions(
     private val realmId: String,
-    private val sessions: SessionReporter,
     private val timings: SessionTimings,
-) {
-    private val tabs = ConcurrentHashMap<SessionId, Job>()
+    deployment: CoroutineScope,
+    private val time: TimeSource.WithComparableMarks = TimeSource.Monotonic,
+) : OnlineSessions {
+    /** The open tabs, each with its deadline; changed only under its own lock, together with [open]. */
+    private val tabs = HashMap<SessionId, Tab>()
+    private val open = MutableStateFlow<Set<Session>>(emptySet())
+
+    override val sessions: StateFlow<Set<Session>> = open.asStateFlow()
+
+    // Every deadline is set a time to live after its heartbeat, so a new one is never earlier than the one the loop waits
+    // for: a tab whose deadline moved is found unexpired and the loop waits for the next earliest.
+    init {
+        deployment.launch {
+            while (true) {
+                val next = synchronized(tabs) { tabs.values.minOfOrNull { it.deadline } }
+                if (next == null) {
+                    open.first { it.isNotEmpty() }
+                } else {
+                    // Waiting for the next tab deadline: a silent tab, not a tick, ends the session, so the wait is not work.
+                    @Suppress("ForbiddenMethodCall/engineWaits")
+                    delay(next - time.markNow())
+                    expire()
+                }
+            }
+        }
+    }
 
     /** Receives the presence of every member of [messaging]'s organization until cancelled. */
     suspend fun serve(messaging: HostedMessagingSession): Unit =
@@ -53,7 +86,7 @@ class PresenceSessions(
                 ).organizationPresence.everyMemberOf(messaging.organizationId)
             val router =
                 messaging.communicator.createRouter(
-                    communicatorRoutes { event(presence) { call -> receive(this@coroutineScope, call.address.userId, call.event) } },
+                    communicatorRoutes { event(presence) { call -> receive(call.address.userId, call.event) } },
                     this,
                 )
             val started = router.start()
@@ -66,7 +99,6 @@ class PresenceSessions(
         }
 
     private fun receive(
-        scope: CoroutineScope,
         userId: String,
         event: PresenceEvent,
     ) {
@@ -77,7 +109,7 @@ class PresenceSessions(
                         realmId,
                     )
                 ) {
-                    heartbeat(scope, Protagonist(PrincipalId(PrincipalId.USER, userId)), tab)
+                    heartbeat(Session(Protagonist(PrincipalId(PrincipalId.USER, userId)), tab))
                 } else {
                     end(tab)
                 }
@@ -93,26 +125,33 @@ class PresenceSessions(
         }
     }
 
-    private fun heartbeat(
-        scope: CoroutineScope,
-        protagonist: Protagonist,
-        tab: SessionId,
-    ) {
-        val silence =
-            scope.launch {
-                delay(timings.ttl)
-                if (tabs.remove(tab, coroutineContext[Job])) sessions.disconnected(tab)
-            }
-        val previous = tabs.put(tab, silence)
-        if (previous == null) sessions.connected(protagonist, tab) else previous.cancel()
+    private fun heartbeat(session: Session) {
+        synchronized(tabs) {
+            tabs[session.id] = Tab(session, time.markNow() + timings.lease.ttl)
+            publish()
+        }
     }
 
     private fun end(tab: SessionId) {
-        tabs.remove(tab)?.let {
-            it.cancel()
-            sessions.disconnected(tab)
+        synchronized(tabs) {
+            if (tabs.remove(tab) != null) publish()
         }
     }
+
+    private fun expire() {
+        synchronized(tabs) {
+            if (tabs.values.removeAll { it.deadline.hasPassedNow() }) publish()
+        }
+    }
+
+    private fun publish() {
+        open.value = tabs.values.mapTo(linkedSetOf()) { it.session }
+    }
+
+    private class Tab(
+        val session: Session,
+        val deadline: ComparableTimeMark,
+    )
 
     private companion object {
         /** The member of an organization actor scope whose value a subscription to every member leaves open. */

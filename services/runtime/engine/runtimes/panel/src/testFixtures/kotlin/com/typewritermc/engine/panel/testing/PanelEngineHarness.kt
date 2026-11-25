@@ -7,6 +7,7 @@ import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.protocol.transport.OrganizationActorRouteScope
 import com.typewritermc.protocol.transport.generated.organizationPresence
+import com.typewritermc.services.libs.communicator.kv.LeaseTimings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -24,7 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * The panel engine of the [sessions] harness's Realm, fed by panel tabs of [user] that publish the presence heartbeat
- * as the panel does. Heartbeats come every 300 ms, a key lives 2 s, a grace lasts 1 s.
+ * as the panel does. Heartbeats come every 300 ms, a key lives 2 s, a vacancy lasts 1 s.
  */
 class PanelEngineHarness private constructor(
     val sessions: SessionHarness,
@@ -49,7 +50,7 @@ class PanelEngineHarness private constructor(
                     actor,
                     PresenceEvent.createActive(sessionId = id, sequence = sequence++, location = location),
                 )
-                delay(TIMINGS.refresh)
+                delay(TIMINGS.lease.refresh)
             }
         }
     }
@@ -66,15 +67,16 @@ class PanelEngineHarness private constructor(
 
     /** Starts the panel engine; a heartbeat sent before it subscribed is followed by the next one. */
     private suspend fun startEngine() {
-        val engine = sessions.engine("panel.realm", TIMINGS)
+        val presence = PresenceSessions(sessions.realm, TIMINGS, scope)
+        sessions.keeper("panel.realm", TIMINGS, presence)
         val messaging = sessions.messaging()
-        scope.launch { PresenceSessions(sessions.realm, engine.keeper, TIMINGS).serve(messaging) }
+        scope.launch { presence.serve(messaging) }
     }
 
     companion object {
         /** The panel engine's timings in the harness. */
         val TIMINGS: SessionTimings =
-            SessionTimings(refresh = 300.milliseconds, ttl = 2.seconds, grace = 1.seconds, retry = 100.milliseconds)
+            SessionTimings(LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, vacancy = 1.seconds, retry = 100.milliseconds))
 
         /** The location of a tab in Realm [id]. */
         fun realm(id: String): PresenceLocation =
