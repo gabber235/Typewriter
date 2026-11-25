@@ -54,8 +54,12 @@ internal class StandInGame(
     override val goldens = Goldens(folder, "goldens", folder.resolve("images"), PinnedRenderer(mesa = "26.2.5"))
 
     val attempt =
-        Attempt(this, SubmissionId(1), listOf(player), Region(x = 0, z = 0), "paper-1", RequirementCode.of(this), restartsPaper)
-            .also { it.evidence = Evidence(folder, "stand-in", "attempt-1") }
+        Attempt(
+            this,
+            AttemptLease(SubmissionId(1), listOf(player), Region(x = 0, z = 0), "paper-1"),
+            RequirementCode.of(this),
+            restartsPaper,
+        ).also { it.evidence = Evidence(folder, "stand-in", "attempt-1") }
 
     /** [frame], as [renderer] draws it now, is the approved golden [name]. */
     fun approve(name: String) {

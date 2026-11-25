@@ -87,22 +87,33 @@ internal interface AttemptPool {
     suspend fun stopClip(player: GamePlayer): Answer.ClipWritten
 }
 
-/**
- * One attempt of one requirement while it holds its lease: the players' perception streams in arrival
- * order, kept whole as the attempt's timeline, and the pool it talks to. Positions
- * the requirement names count from the middle of the attempt's [region]; the attempt turns them into
- * world positions on the way out and turns what the players perceive back on the way in. It runs on
- * the Paper named [paper].
- */
-internal class Attempt(
-    private val session: AttemptPool,
-    private val submission: SubmissionId,
+/** What the pool leased to the attempt of [submission]: its [players], its [region] and the Paper named [paper] it runs on. */
+internal class AttemptLease(
+    val submission: SubmissionId,
     val players: List<GamePlayer>,
     val region: Region,
     val paper: String,
+)
+
+/**
+ * One attempt of one requirement while it holds its [lease]: the players' perception streams in arrival
+ * order, kept whole as the attempt's timeline, and the pool it talks to. Positions
+ * the requirement names count from the middle of the attempt's [region]; the attempt turns them into
+ * world positions on the way out and turns what the players perceive back on the way in. It runs on
+ * the Paper named [paper]. The requirement's code is in [requirementCode]; with [restartsPaper] it may
+ * restart its Paper.
+ */
+internal class Attempt(
+    private val session: AttemptPool,
+    private val lease: AttemptLease,
     private val requirementCode: RequirementCode,
     private val restartsPaper: Boolean,
 ) {
+    private val submission get() = lease.submission
+    val players: List<GamePlayer> get() = lease.players
+    val region: Region get() = lease.region
+    val paper: String get() = lease.paper
+
     /** One event of a leased player's stream. */
     sealed interface Event {
         val player: GamePlayer

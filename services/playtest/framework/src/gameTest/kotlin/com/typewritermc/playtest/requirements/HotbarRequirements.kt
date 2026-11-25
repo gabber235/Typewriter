@@ -3,6 +3,7 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.GameCompartment
+import com.typewritermc.playtest.Position
 import com.typewritermc.playtest.camera
 import com.typewritermc.playtest.held
 import com.typewritermc.playtest.offhand
@@ -15,7 +16,7 @@ import skirout.harness.v1.wire.KeyboardKey
 val HotbarRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("HOTBAR-1", "scrolling the wheel down selects the next hotbar slot") {
         probe.fill(BlockPos(-2, 99, -2), BlockPos(2, 99, 8), "stone")
-        probe.teleport(player, 0.5, 100.0, 0.5)
+        probe.teleport(player, Position(0.5, 100.0, 0.5))
         probe.gameMode(player, GameMode.CREATIVE)
         probe.give(player, slot = 0, item = "spyglass")
         probe.give(player, slot = 1, item = "stick")
@@ -28,7 +29,7 @@ val HotbarRequirements by testSuite(compartment = { GameCompartment }) {
 
     requirement("HOTBAR-2", "a number key selects its hotbar slot") {
         probe.fill(BlockPos(-2, 99, -2), BlockPos(2, 99, 8), "stone")
-        probe.teleport(player, 0.5, 100.0, 0.5)
+        probe.teleport(player, Position(0.5, 100.0, 0.5))
         probe.gameMode(player, GameMode.CREATIVE)
         probe.give(player, slot = 0, item = "spyglass")
         probe.give(player, slot = 2, item = "compass")
@@ -41,7 +42,7 @@ val HotbarRequirements by testSuite(compartment = { GameCompartment }) {
 
     requirement("HAND-1", "the swap key moves the held item to the off hand") {
         probe.fill(BlockPos(-2, 99, -2), BlockPos(2, 99, 8), "stone")
-        probe.teleport(player, 0.5, 100.0, 0.5)
+        probe.teleport(player, Position(0.5, 100.0, 0.5))
         probe.gameMode(player, GameMode.CREATIVE)
         probe.give(player, slot = 0, item = "spyglass")
         probe.give(player, slot = 40, item = "air")
@@ -54,7 +55,7 @@ val HotbarRequirements by testSuite(compartment = { GameCompartment }) {
 
     requirement("USE-1", "holding use with a spyglass looks through it") {
         probe.fill(BlockPos(-2, 99, -2), BlockPos(2, 99, 8), "stone")
-        probe.teleport(player, 0.5, 100.0, 0.5)
+        probe.teleport(player, Position(0.5, 100.0, 0.5))
         probe.gameMode(player, GameMode.SURVIVAL)
         probe.give(player, slot = 0, item = "spyglass")
         probe.selectSlot(player, 0)

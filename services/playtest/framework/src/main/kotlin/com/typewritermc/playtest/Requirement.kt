@@ -68,7 +68,7 @@ internal fun TestSuiteScope.attempts(
 ) {
     require(players >= 1) { "$id claims $players players; a requirement claims at least 1" }
     register(id, sentence, RequirementCode.of(bodies.first())) { session, demo ->
-        session.attempt(PoolSession.Planned("$id $sentence", id, players, demonstrates, bodies, restartsPaper, demo))
+        session.attempt(PoolSession.Planned("$id $sentence", id, demonstrates, PoolSession.Claim(players, restartsPaper), bodies, demo))
     }
 }
 
@@ -94,7 +94,14 @@ internal fun TestSuiteScope.sideBySide(
         val ended =
             session.sideBySide(
                 made.mapIndexed { index, body ->
-                    PoolSession.Planned("$id $sentence (attempt ${index + 1} of $count)", id, 1, demonstrates, listOf(body), demo = demo)
+                    PoolSession.Planned(
+                        "$id $sentence (attempt ${index + 1} of $count)",
+                        id,
+                        demonstrates,
+                        PoolSession.Claim(1),
+                        listOf(body),
+                        demo = demo,
+                    )
                 },
             )
         val failures = ended.mapNotNull { it.failure }
@@ -104,8 +111,8 @@ internal fun TestSuiteScope.sideBySide(
                     PoolSession.Planned(
                         "$id $sentence (attempt $count of $count)",
                         id,
-                        afterwardPlayers,
                         demonstrates,
+                        PoolSession.Claim(afterwardPlayers),
                         listOf(it),
                         demo = demo,
                     ),

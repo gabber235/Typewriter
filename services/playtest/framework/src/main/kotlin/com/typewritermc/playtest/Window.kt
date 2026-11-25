@@ -43,24 +43,23 @@ internal class Window(
     val anchor: Int,
     private val length: Ticks,
     val barrier: Int,
-    checks: List<Check>,
-    nevers: List<Check> = listOf(),
-    states: List<StateCheck> = listOf(),
-    /** The never state checks, read after every tick of the window. */
-    val neverStates: List<StateCheck> = listOf(),
-    stepping: Collection<GamePlayer> = (checks + nevers).map { it.player },
+    declared: WindowChecks,
+    stepping: Collection<GamePlayer> = (declared.checks + declared.nevers).map { it.player },
 ) {
+    /** The never state checks, read after every tick of the window. */
+    val neverStates: List<StateCheck> = declared.neverStates.toList()
+
     init {
-        if (checks.isEmpty() && states.isEmpty()) {
+        if (declared.checks.isEmpty() && declared.states.isEmpty()) {
             throw RequirementRefused("a window needs a positive check: without one it could never fail")
         }
     }
 
     val end: Int = anchor + length.count
 
-    private val open = checks.toMutableList()
-    private val nevers = nevers.toList()
-    private val states = states.toMutableList()
+    private val open = declared.checks.toMutableList()
+    private val nevers = declared.nevers.toList()
+    private val states = declared.states.toMutableList()
     private val waitingFor = stepping.toMutableSet()
 
     /** The positive state checks that have not held yet. */

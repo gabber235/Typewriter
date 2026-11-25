@@ -4,6 +4,7 @@ import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.Frame
 import com.typewritermc.playtest.GameCompartment
+import com.typewritermc.playtest.Position
 import com.typewritermc.playtest.backToBack
 import com.typewritermc.playtest.brightnessAt
 import com.typewritermc.playtest.camera
@@ -26,7 +27,7 @@ val GoldenRequirements by testSuite(compartment = { GameCompartment }) {
         probe.fill(BlockPos(-3, 99, -3), BlockPos(3, 99, 8), "smooth_stone")
         // A spectator holds no hand: its skin would differ with the pool player that runs the requirement.
         probe.gameMode(player, GameMode.SPECTATOR)
-        probe.teleport(player, 0.5, 100.0, 0.5)
+        probe.teleport(player, Position(0.5, 100.0, 0.5))
         probe.time(player, 6_000)
         probe.sidebar(player, "Quest", listOf("Find the key", "Gold: 3"))
 
@@ -41,7 +42,7 @@ val GoldenRequirements by testSuite(compartment = { GameCompartment }) {
         first = {
             probe.fill(BlockPos(-3, 99, -3), BlockPos(3, 99, 8), "smooth_stone")
             probe.gameMode(player, GameMode.SPECTATOR)
-            probe.teleport(player, 0.5, 100.0, 0.5)
+            probe.teleport(player, Position(0.5, 100.0, 0.5))
             probe.time(player, 6_000)
             within(10.ticks) { player sees camera.near(0.5, 0.5, within = 0.5) }
             beforeRain = frameOf(player, "before-rain")
@@ -58,7 +59,7 @@ val GoldenRequirements by testSuite(compartment = { GameCompartment }) {
         then = {
             probe.fill(BlockPos(-3, 99, -3), BlockPos(3, 99, 8), "smooth_stone")
             probe.gameMode(player, GameMode.SPECTATOR)
-            probe.teleport(player, 0.5, 100.0, 0.5)
+            probe.teleport(player, Position(0.5, 100.0, 0.5))
             probe.time(player, 6_000)
             within(10.ticks) { player sees camera.near(0.5, 0.5, within = 0.5) }
 
@@ -69,7 +70,7 @@ val GoldenRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("GOLDEN-3", "a still scene draws the same frame from the first tick it shows on") {
         probe.fill(BlockPos(-3, 99, -3), BlockPos(3, 99, 8), "smooth_stone")
         probe.gameMode(player, GameMode.SPECTATOR)
-        probe.teleport(player, 0.5, 100.0, 0.5)
+        probe.teleport(player, Position(0.5, 100.0, 0.5))
         probe.time(player, 6_000)
         within(10.ticks) { player sees camera.near(0.5, 0.5, within = 0.5) }
         val first = frameOf(player, "first")
@@ -82,7 +83,7 @@ val GoldenRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("GOLDEN-4", "a floor under the night sky draws far darker than by day") {
         probe.fill(BlockPos(-3, 99, -3), BlockPos(3, 99, 8), "smooth_stone")
         probe.gameMode(player, GameMode.SPECTATOR)
-        probe.teleport(player, 0.5, 100.0, 0.5)
+        probe.teleport(player, Position(0.5, 100.0, 0.5))
         probe.time(player, 6_000)
         within(10.ticks) { player sees camera.near(0.5, 0.5, within = 0.5) }
         val day = frameOf(player, "day")

@@ -3,6 +3,7 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.GameCompartment
+import com.typewritermc.playtest.Position
 import com.typewritermc.playtest.block
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.ticks
@@ -13,7 +14,7 @@ import skirout.harness.v1.wire.GameMode
 val BlockRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("BREAK-1", "leaves the player keeps hitting break") {
         probe.fill(BlockPos(-2, 99, -2), BlockPos(2, 99, 8), "stone")
-        probe.teleport(player, 0.5, 100.0, 0.5)
+        probe.teleport(player, Position(0.5, 100.0, 0.5))
         probe.gameMode(player, GameMode.SURVIVAL)
         val leaves = probe.block(BlockPos(0, 101, 2), "oak_leaves[persistent=true]")
 
@@ -25,7 +26,7 @@ val BlockRequirements by testSuite(compartment = { GameCompartment }) {
 
     requirement("BREAK-2", "leaves whose break is cancelled come back", demonstrates = Demonstrates.EDGE_CASE) {
         probe.fill(BlockPos(-2, 99, -2), BlockPos(2, 99, 8), "stone")
-        probe.teleport(player, 0.5, 100.0, 0.5)
+        probe.teleport(player, Position(0.5, 100.0, 0.5))
         probe.gameMode(player, GameMode.SURVIVAL)
         val leaves = probe.block(BlockPos(0, 101, 2), "oak_leaves[persistent=true]")
         probe.cancelBreaking(leaves)

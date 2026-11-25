@@ -11,6 +11,17 @@ data class BlockPos(
     override fun toString() = "$x $y $z"
 }
 
+/** A place [x], [y], [z] in the attempt's region, facing [yaw] (0 is south) and [pitch] (positive is down). */
+data class Position(
+    val x: Double,
+    val y: Double,
+    val z: Double,
+    val yaw: Float = 0f,
+    val pitch: Float = 0f,
+) {
+    override fun toString() = "$x $y $z"
+}
+
 /** A block a probe placed at [at]; the player's client watches it for the rest of the attempt. */
 data class BlockRef(
     val at: BlockPos,

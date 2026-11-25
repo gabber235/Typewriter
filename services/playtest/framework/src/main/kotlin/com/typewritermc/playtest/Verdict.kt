@@ -104,7 +104,7 @@ internal sealed interface Verdict {
             Passed -> {}
 
             is Quarantined -> {
-                System.err.println("Quarantined, not blocking: ${failures.joinToString("\n") { it.described }}")
+                Console.line("Quarantined, not blocking: ${failures.joinToString("\n") { it.described }}")
             }
 
             is Failed -> {

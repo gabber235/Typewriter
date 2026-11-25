@@ -49,18 +49,20 @@ class Probe internal constructor(
         time: Long,
     ): Mark = run(listOf(player), PlayerAction.createTime(time = time))
 
-    /** [player] stands at [x], [y], [z], looking toward [yaw] (0 is south) and [pitch] (positive is down). */
+    /** [player] stands at [at], looking as it faces. */
     suspend fun teleport(
         player: GamePlayer,
-        x: Double,
-        y: Double,
-        z: Double,
-        yaw: Float = 0f,
-        pitch: Float = 0f,
+        at: Position,
     ): Mark =
         run(
             listOf(player),
-            PlayerAction.createTeleport(x = attempt.region.worldX(x), y = y, z = attempt.region.worldZ(z), yaw = yaw, pitch = pitch),
+            PlayerAction.createTeleport(
+                x = attempt.region.worldX(at.x),
+                y = at.y,
+                z = attempt.region.worldZ(at.z),
+                yaw = at.yaw,
+                pitch = at.pitch,
+            ),
         )
 
     /** [player]'s inventory [slot] holds [count] of [item]: 0 to 8 is the hotbar, 9 to 35 the rest, 40 the off hand. */
@@ -101,35 +103,29 @@ class Probe internal constructor(
     }
 
     /**
-     * An entity of [type] stands still at [x], [y], [z] facing [yaw], [invisible] as the invisibility
-     * effect makes it, and every player of the attempt watches it. When a player hits it, its name tag
-     * shows [onHit]; when a player uses it, [onClick].
+     * An entity of [type] stands still at [at] facing its yaw, [invisible] as the invisibility effect makes
+     * it, and every player of the attempt watches it. When a player hits it, its name tag shows [onHit];
+     * when a player uses it, [onClick].
      */
     suspend fun spawn(
         type: String,
-        x: Double,
-        y: Double,
-        z: Double,
-        yaw: Float = 0f,
+        at: Position,
         invisible: Boolean = false,
         onHit: String? = null,
         onClick: String? = null,
-    ): EntityRef = spawn(attempt.players, type, x, y, z, yaw, packetOnly = false, invisible, onHit, onClick)
+    ): EntityRef = spawn(attempt.players, type, at, packetOnly = false, invisible, NameTags(onHit, onClick))
 
     /**
      * An entity of [type] that only [player]'s client knows, as Paper never holds it, standing still at
-     * [x], [y], [z] facing [yaw]. It reacts like [spawn]'s entity: its name tag shows [onHit] or [onClick].
+     * [at] facing its yaw. It reacts like [spawn]'s entity: its name tag shows [onHit] or [onClick].
      */
     suspend fun packetEntity(
         player: GamePlayer,
         type: String,
-        x: Double,
-        y: Double,
-        z: Double,
-        yaw: Float = 0f,
+        at: Position,
         onHit: String? = null,
         onClick: String? = null,
-    ): EntityRef = spawn(listOf(player), type, x, y, z, yaw, packetOnly = true, invisible = false, onHit, onClick)
+    ): EntityRef = spawn(listOf(player), type, at, packetOnly = true, invisible = false, NameTags(onHit, onClick))
 
     /** Paper cancels every break of [block], as a protection plugin would. */
     suspend fun cancelBreaking(block: BlockRef): Mark =
@@ -146,24 +142,28 @@ class Probe internal constructor(
         answer: String,
     ): Mark = run(attempt.players, PlayerAction.createCommand(name = name, suggestions = suggests, answer = answer))
 
+    /** What an entity's name tag shows when a player hits it, [onHit], and when a player uses it, [onClick]. */
+    private class NameTags(
+        val onHit: String?,
+        val onClick: String?,
+    )
+
     /**
-     * A new entity of [type] for [players], which watch it: one Paper holds, or with [packetOnly] one only
-     * their clients know.
+     * A new entity of [type] at [at] for [players], which watch it: one Paper holds, or with [packetOnly] one
+     * only their clients know.
      */
     private suspend fun spawn(
         players: List<GamePlayer>,
         type: String,
-        x: Double,
-        y: Double,
-        z: Double,
-        yaw: Float,
+        at: Position,
         packetOnly: Boolean,
         invisible: Boolean,
-        onHit: String?,
-        onClick: String?,
+        nameTags: NameTags,
     ): EntityRef {
         val entity = EntityRef(UUID.randomUUID(), type.id())
-        val (worldX, worldZ) = attempt.region.worldX(x) to attempt.region.worldZ(z)
+        val (worldX, worldZ) = attempt.region.worldX(at.x) to attempt.region.worldZ(at.z)
+        val (y, yaw) = at.y to at.yaw
+        val (onHit, onClick) = nameTags.onHit to nameTags.onClick
         val uuid = entity.uuid.toString()
         if (packetOnly) {
             run(
