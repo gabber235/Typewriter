@@ -12,8 +12,6 @@ import com.typewritermc.realm.authoring.counting
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
-import com.typewritermc.services.libs.telemetry.serviceTelemetry
-import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -65,8 +63,8 @@ data class CapturedCheckReport(
  */
 class RealmCheckRuntime(
     private val views: AuthoringViewStore,
+    private val telemetry: ServiceTelemetry,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
-    private val telemetry: ServiceTelemetry = OpenTelemetry.noop().serviceTelemetry("realm.checks"),
 ) : AutoCloseable {
     private val lock = Any()
     private val mutableFindingChanges =

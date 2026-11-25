@@ -40,7 +40,7 @@ val PublicationAcceptanceTest by testSuite {
 
         val assessment =
             RealmFixture.of(catalog, mapOf(firstResource to record(name = "ready"))).use { realm ->
-                RealmCheckRuntime(realm.views).use { checks ->
+                RealmCheckRuntime(realm.views, realm.telemetry.telemetry).use { checks ->
                     val acceptance = AuthoringAcceptance(realm.views, checks)
                     acceptance.capture().use { captured -> acceptance.evaluate(captured) }
                 }
@@ -86,7 +86,7 @@ val PublicationAcceptanceTest by testSuite {
                     mapOf(firstResource to record(name = "ready")),
                     services = RealmServices(predicates = traversalLimit, names = checkingServices().names),
                 ).use { realm ->
-                    RealmCheckRuntime(realm.views).use { checks ->
+                    RealmCheckRuntime(realm.views, realm.telemetry.telemetry).use { checks ->
                         val acceptance = AuthoringAcceptance(realm.views, checks)
                         acceptance.capture().use { captured -> acceptance.evaluate(captured) }
                     }

@@ -4,6 +4,7 @@ import com.typewritermc.authoring.CheckedWriteResult
 import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
+import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.TEST_DEFINITIONS
@@ -15,6 +16,8 @@ import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.publication.AuthoringAcceptance
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.UNOBSERVED_GRAPH_WORK
+import com.typewritermc.realm.testing.UNOBSERVED_TELEMETRY
 import com.typewritermc.realm.testing.conflictingFacts
 import com.typewritermc.realm.testing.linkOrNull
 import com.typewritermc.realm.testing.realmDatabase
@@ -154,7 +157,7 @@ val SurrealAuthoringRepositoryTest by testSuite {
             realm.restart()
 
             realm.resources.getValue(id).value("name") shouldBe DataValue.UNFILLED
-            RealmCheckRuntime(realm.views).use { checks ->
+            RealmCheckRuntime(realm.views, realm.telemetry.telemetry).use { checks ->
                 realm.views.capture().use { saved ->
                     AuthoringAcceptance(realm.views, checks).evaluate(saved).findings.map { it.code to it.primary } shouldBe
                         listOf("unfinished_value" to title)
@@ -436,8 +439,13 @@ val SurrealAuthoringRepositoryTest by testSuite {
             val storage = SurrealAuthoringStorage(database)
             storage.storeSeed(mapOf(id to initial))
             val generation = CatalogGeneration(value = "fresh")
-            InMemoryAuthoringViewStore(catalog.lease(generation), storage.readCoherent()).use { views ->
-                RealmAuthoringOwner(storage, views, findings = { emptyList() })
+            InMemoryAuthoringViewStore(
+                catalog.lease(generation),
+                storage.readCoherent(),
+                listener = GraphListener.NONE,
+                recorder = UNOBSERVED_GRAPH_WORK,
+            ).use { views ->
+                RealmAuthoringOwner(storage, views, findings = { emptyList() }, UNOBSERVED_TELEMETRY)
                     .commit(renameEdit(generation, id, initial), attempt)
                     .shouldBeCommitted()
             }

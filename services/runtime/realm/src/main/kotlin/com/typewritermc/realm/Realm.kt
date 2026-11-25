@@ -129,7 +129,7 @@ internal class Realm(
             catalogs.captureCurrent().use { next ->
                 catalogActivator.activate(authoring, next)
             }
-            val checkRuntime = RealmCheckRuntime(viewStore, telemetry = telemetry)
+            val checkRuntime = RealmCheckRuntime(viewStore, telemetry)
             checks = checkRuntime
             val compiledContent = SurrealRegisteredCompiledContentRepository(connected)
             val compilation = CompiledArtifactProducerRegistry(listOf(ResourceGraphArtifactProducer))

@@ -3,10 +3,13 @@ package com.typewritermc.realm.publication
 import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.of
 import com.typewritermc.engine.ResourceGraphCompileResult
+import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.testing.DefinitionCatalog
+import com.typewritermc.realm.testing.UNOBSERVED_GRAPH_WORK
+import com.typewritermc.realm.testing.UNOBSERVED_TELEMETRY
 import com.typewritermc.realm.testing.recordBinding
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
@@ -47,8 +50,13 @@ internal suspend fun compileOwnershipClosure(
     resources: Map<ResourceId, AuthoringRecord>,
     root: ResourceId,
 ): ResourceGraphCompileResult =
-    InMemoryAuthoringViewStore(COMPILER_CATALOG.lease(), AuthoringSeed(resources)).use { store ->
-        RealmCheckRuntime(store).use { checks ->
+    InMemoryAuthoringViewStore(
+        COMPILER_CATALOG.lease(),
+        AuthoringSeed(resources),
+        listener = GraphListener.NONE,
+        recorder = UNOBSERVED_GRAPH_WORK,
+    ).use { store ->
+        RealmCheckRuntime(store, UNOBSERVED_TELEMETRY).use { checks ->
             val acceptance = AuthoringAcceptance(store, checks)
             acceptance.capture().use { captured ->
                 val readiness = acceptance.evaluate(captured).resources

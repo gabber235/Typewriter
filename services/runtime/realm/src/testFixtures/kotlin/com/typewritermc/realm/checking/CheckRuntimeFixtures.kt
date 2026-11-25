@@ -90,7 +90,7 @@ internal suspend fun checking(
     test: suspend (RealmFixture, RealmCheckRuntime) -> Unit,
 ) {
     RealmFixture.of(catalog, seed, services = RealmServices(selectionPredicates, readLimits, checkingServices().names)).use { realm ->
-        val runtime = RealmCheckRuntime(realm.views, dispatcher)
+        val runtime = RealmCheckRuntime(realm.views, realm.telemetry.telemetry, dispatcher)
         realm.findings = runtime::findings
         try {
             test(realm, runtime)

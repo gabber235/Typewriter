@@ -349,8 +349,8 @@ class InMemoryAuthoringViewStore(
     catalog: AuthoringCatalogLease,
     seed: AuthoringSeed,
     private val services: RealmServices = RealmServices(),
-    listener: GraphListener = GraphListener.NONE,
-    private val recorder: GraphWorkRecorder = GraphWorkRecorder.NONE,
+    listener: GraphListener,
+    private val recorder: GraphWorkRecorder,
 ) : AuthoringViewStore {
     private val lock = Any()
     private val changed = MutableStateFlow(0L)

@@ -26,10 +26,8 @@ import com.typewritermc.services.libs.telemetry.LogSeverity
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
-import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.unknownVariant
-import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -59,7 +57,7 @@ internal class RealmAuthoringOwner(
     private val storage: AuthoringStorage,
     private val views: AuthoringViewStore,
     private val findings: () -> List<FindingSet>,
-    private val telemetry: ServiceTelemetry = OpenTelemetry.noop().serviceTelemetry("realm.authoring"),
+    private val telemetry: ServiceTelemetry,
     private val repairs: CommitRepairs = views.commitRepairs(),
 ) : AuthoringRepository {
     private val admission = Mutex()

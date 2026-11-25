@@ -3,6 +3,7 @@ package com.typewritermc.realm.publication
 import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.of
 import com.typewritermc.engine.decodeResourceGraphShard
+import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
@@ -69,9 +70,10 @@ internal class PublicationFixture(
             PUBLICATION_CATALOG.lease(),
             AuthoringSeed(initial),
             checkingServices(),
-            recorder = RealmGraphWorkTelemetry(telemetry.telemetry),
+            GraphListener.NONE,
+            RealmGraphWorkTelemetry(telemetry.telemetry),
         )
-    private val checks = RealmCheckRuntime(views)
+    private val checks = RealmCheckRuntime(views, telemetry.telemetry)
     private val database = publicationDatabase()
     val attempts = SurrealPublicationAttemptStore(database)
     val results = SurrealRegisteredCompiledContentRepository(database)

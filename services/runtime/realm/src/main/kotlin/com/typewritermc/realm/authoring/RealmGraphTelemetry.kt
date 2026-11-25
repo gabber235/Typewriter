@@ -51,10 +51,6 @@ fun interface GraphWorkRecorder {
         operation: GraphOperation,
         work: GraphWork,
     )
-
-    companion object {
-        val NONE = GraphWorkRecorder { _, _ -> }
-    }
 }
 
 /**

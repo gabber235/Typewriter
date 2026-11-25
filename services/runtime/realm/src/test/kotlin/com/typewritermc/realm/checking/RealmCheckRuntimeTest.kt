@@ -14,6 +14,7 @@ import com.typewritermc.checking.RealmChecks
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
 import com.typewritermc.configuration.field
+import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
@@ -34,6 +35,8 @@ import com.typewritermc.realm.catalog.CONTENT_RULE
 import com.typewritermc.realm.publication.ResourceReadiness
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.UNOBSERVED_GRAPH_WORK
+import com.typewritermc.realm.testing.UNOBSERVED_TELEMETRY
 import com.typewritermc.realm.testing.checksOf
 import com.typewritermc.realm.testing.facts
 import com.typewritermc.realm.testing.openCatalogLeases
@@ -194,7 +197,7 @@ val RealmCheckRuntimeTest by testSuite {
         val openLeases = realm.openCatalogLeases()
         val wrong = DefinitionCatalog(TEST_DEFINITIONS).lease(CatalogGeneration(value = "wrong"))
         realm.use {
-            RealmCheckRuntime(realm.views).use { runtime ->
+            RealmCheckRuntime(realm.views, realm.telemetry.telemetry).use { runtime ->
                 shouldThrow<IllegalArgumentException> {
                     runtime.evaluateCapture(realm.views.capture().use { it.root.copy(catalog = wrong) })
                 }
@@ -511,8 +514,13 @@ val RealmCheckRuntimeTest by testSuite {
                     definitions { record(TEST_TYPE) { field("name", integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template) } },
                     configuration = rule,
                 ).lease(CatalogGeneration(value = "replacement"))
-            InMemoryAuthoringViewStore(snapshot, AuthoringSeed(mapOf(firstResource to record(name = "")))).use { store ->
-                val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
+            InMemoryAuthoringViewStore(
+                snapshot,
+                AuthoringSeed(mapOf(firstResource to record(name = ""))),
+                listener = GraphListener.NONE,
+                recorder = UNOBSERVED_GRAPH_WORK,
+            ).use { store ->
+                val runtime = RealmCheckRuntime(store, UNOBSERVED_TELEMETRY, StandardTestDispatcher(testScheduler))
                 store.capture().use { captured ->
                     store.install(store.prepare(AuthoringViewDelta(catalog = replacement)))
 
