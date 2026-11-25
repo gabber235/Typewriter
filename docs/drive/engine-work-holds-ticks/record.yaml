@@ -82,8 +82,14 @@ open:
     what: Flip runtimes/paper to the pacing gate once the harness pull request (fix/game-harness-structure) lands; the commit goes last so it rebases onto that branch
     tied_to: fix/game-harness-structure
   - id: hung-threshold
-    what: One deadline per counted item; with every engine task counted, a watchdog may replace them if the per item cost shows
-    tied_to: game suite timings on CI
+    what: One deadline per counted item in WorkLedger, never cancelled when the item ends; entries are in begin order with one threshold, so one watchdog armed at the oldest entry's deadline can replace them
+    tied_to: maintainer review
+  - id: production-jobs-unbuilt
+    what: The design record and InFlightWork's KDoc name its production jobs (drain before shutdown or rollout, in flight work metric) as present, but neither is built; build both here or record them as planned
+    tied_to: maintainer review
+  - id: detekt-type-resolution
+    what: ForbiddenMethodCall instances fire only under detektMain; check likely runs plain detekt only, so engineThreads and engineWaits may not gate (observability.yml may share the gap)
+    tied_to: maintainer review
 
 slices:
   - id: count
@@ -101,5 +107,8 @@ slices:
   - id: game-s2
     what: GAME-S2 on the key's revision
     evidence: [4f3007c562]
+  - id: end-order
+    what: Observers hear an item's end before the count drops, also when one throws
+    evidence: [f8e4eeeb99e, InFlightWorkTest.kt]
 
 next: Run the checks, the typewriter-review skill, and hand back to the coordinating thread; the pacing gate flip waits for the harness branch
