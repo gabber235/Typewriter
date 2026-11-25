@@ -98,8 +98,9 @@ pub fn skipped(name: &str) -> bool {
 }
 
 /// What a generator or a build left last time: the digest of what it ran on and the sha256 of each
-/// file it vouches for (a generator's outputs; a build's artifacts and the files it read). Paths
-/// are relative to the root, or absolute.
+/// entry it vouches for (a generator's outputs; a build's artifacts and the files and environment
+/// variables it read). An entry is a path, relative to the root or absolute, or `$NAME` for the
+/// environment variable `NAME`.
 pub struct Stamp {
     pub path: PathBuf,
 }
@@ -124,8 +125,8 @@ impl Stamp {
         }
         lines
             .map(|line| {
-                let (sum, output) = line.split_once(' ')?;
-                (sha256(&root.join(output)).ok()? == sum).then(|| output.to_owned())
+                let (sum, entry) = line.split_once(' ')?;
+                (fingerprint(root, entry).ok()? == sum).then(|| entry.to_owned())
             })
             .collect()
     }
@@ -146,19 +147,35 @@ impl Stamp {
         fs::create_dir_all(dir).with_context(|| format!("cannot create {}", dir.display()))?;
         let mut record = format!("{}\n", digest.hex());
         for output in outputs {
-            record.push_str(&format!("{} {output}\n", sha256(&root.join(output))?));
+            record.push_str(&format!("{} {output}\n", fingerprint(root, output)?));
         }
         fs::write(&self.path, record)
             .with_context(|| format!("cannot write {}", self.path.display()))
     }
 }
 
+/// The sha256 of a stamp entry: a file's contents, or for `$NAME` the variable's value in this
+/// process, told apart from an unset one.
+fn fingerprint(root: &Path, entry: &str) -> Result<String> {
+    match entry.strip_prefix('$') {
+        Some(name) => {
+            let value = match std::env::var_os(name) {
+                Some(value) => [b"set ", value.as_encoded_bytes()].concat(),
+                None => b"unset".to_vec(),
+            };
+            Ok(hex(&Sha256::digest(value)))
+        }
+        None => sha256(&root.join(entry)),
+    }
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
 pub fn sha256(path: &Path) -> Result<String> {
     let bytes = fs::read(path).with_context(|| format!("cannot read {}", path.display()))?;
-    Ok(Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect())
+    Ok(hex(&Sha256::digest(bytes)))
 }
 
 #[cfg(test)]

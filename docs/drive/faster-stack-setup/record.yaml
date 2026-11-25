@@ -54,7 +54,11 @@ decided:
       .cargo/config.toml, beside a digest of the command, RUSTFLAGS and rustc -vV. The build is
       reused while all of them match; a missing dependency file means no reuse. No caller lists
       inputs, so a crate cannot read a file the stamp misses, and an edit the build never read
-      reuses it.
+      reuses it. The environment variables crates read at compile time are stamped with their
+      values too: rustc's env-dep lines, which only each unit's own dependency file holds, from
+      every unit in the target's build folders (Cargo's copy beside an artifact names path
+      packages only), so another build's variable may cost a rebuild, never a stale artifact.
+      Known issue: a build script without rerun-if-changed names none of its reads.
   - id: panel-restores-services-outputs
     what: >-
       The panel suites restore the services check's Gradle build cache and save none of their own,

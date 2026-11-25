@@ -668,24 +668,31 @@ pub fn cargo_workspace() -> TempRoot {
     root
 }
 
-/// A stand in for Cargo in a [`TempRoot`]: each run is counted and writes [`Self::artifact`] and,
-/// as Cargo does beside each artifact, a dependency file naming the files the build read.
+/// A stand in for Cargo in a repository root: each run is counted and writes [`Self::artifact`] in
+/// a marked target directory and, as Cargo does beside each artifact, a dependency file naming the
+/// files the build read.
 pub struct FakeCargo<'a> {
-    pub root: &'a TempRoot,
+    pub ctx: &'a Context,
 }
 
 impl FakeCargo<'_> {
+    fn path(&self, relative: &str) -> PathBuf {
+        self.ctx.root.join(relative)
+    }
+
     /// What the build produces: `target/stack`.
     pub fn artifact(&self) -> PathBuf {
-        self.root.path("target/stack")
+        self.path("target/stack")
     }
 
     /// A run that writes `contents` into the artifact and names `reads`, root relative, as read.
     pub fn command(&self, contents: &str, reads: &[&str]) -> Command {
-        fs::create_dir_all(self.root.path("target")).unwrap();
+        // Cargo marks its target directory with a CACHEDIR.TAG.
+        fs::create_dir_all(self.path("target")).unwrap();
+        fs::write(self.path("target/CACHEDIR.TAG"), "").unwrap();
         let reads: Vec<String> = reads
             .iter()
-            .map(|read| self.root.path(read).display().to_string())
+            .map(|read| self.path(read).display().to_string())
             .collect();
         let mut command = Command::new("sh");
         command
@@ -693,11 +700,11 @@ impl FakeCargo<'_> {
                 "-c",
                 r#"echo run >> "$RUNS" && printf %s "$CONTENTS" > "$ARTIFACT" && printf '%s: %s\n' "$ARTIFACT" "$READS" > "$DEP_INFO""#,
             ])
-            .env("RUNS", self.root.path("runs"))
+            .env("RUNS", self.path("runs"))
             .env("CONTENTS", contents)
             .env("ARTIFACT", self.artifact())
             .env("READS", reads.join(" "))
-            .env("DEP_INFO", self.root.path("target/stack.d"));
+            .env("DEP_INFO", self.path("target/stack.d"));
         command
     }
 
@@ -712,7 +719,7 @@ impl FakeCargo<'_> {
 
     /// How often it ran.
     pub fn runs(&self) -> usize {
-        fs::read_to_string(self.root.path("runs")).map_or(0, |runs| runs.lines().count())
+        fs::read_to_string(self.path("runs")).map_or(0, |runs| runs.lines().count())
     }
 }
 

@@ -1,13 +1,18 @@
 //! Cargo builds reused while what they read is unchanged. Cargo itself judges local crates by
 //! file times, so a fresh checkout recompiles every one of them even when a cached target holds
 //! what they would produce. A stamp beside the artifacts records the command, the toolchain and
-//! the sha256 of each artifact and of every repository file the build read: the files the
+//! the sha256 of each artifact and of everything the build read: the repository files the
 //! dependency files Cargo writes beside each artifact name (a build script's `rerun-if-changed`
-//! inputs included), and the workspace's manifests, lock file and Cargo configuration. While all of
+//! inputs included), the environment variables its crates read at compile time (`env!`,
+//! `option_env!`), and the workspace's manifests, lock file and Cargo configuration. While all of
 //! them match, Cargo does not run at all.
 //!
 //! Files outside the repository are not listed: the toolchain's sources change with `rustc -vV`
 //! and dependency sources with `Cargo.lock`.
+//!
+//! Known issue: a build script that prints no `rerun-if-changed` names none of the files it reads,
+//! so an edit only such a script reads reuses the build. The backend's one build script
+//! (`backend/database/schema/build.rs`) names every file it reads.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -17,7 +22,7 @@ use std::process::Command;
 use anyhow::{Context as _, Result, bail};
 use serde_json::Value;
 
-use crate::digest::{Digest, Stamp};
+use crate::digest::{Digest, Stamp, expand};
 use crate::{CommandExt as _, Context};
 
 /// One Cargo invocation and what it produces.
@@ -209,7 +214,9 @@ impl CargoBuild<'_> {
         Ok(digest)
     }
 
-    /// The root relative repository files the dependency file beside each artifact names.
+    /// What the build read: the root relative repository files the dependency file beside each
+    /// artifact names, and as `$NAME` each environment variable a crate of the build read at
+    /// compile time (`env!`, `option_env!`).
     fn reads(&self, ctx: &Context) -> Result<BTreeSet<String>> {
         let mut reads = BTreeSet::new();
         for artifact in &self.artifacts {
@@ -222,15 +229,58 @@ impl CargoBuild<'_> {
                 }
             }
         }
+        reads.extend(self.env_reads()?.iter().map(|name| format!("${name}")));
         Ok(reads)
+    }
+
+    /// The environment variables the crates in the build's target directory read at compile time.
+    /// Cargo's copy of the dependency file beside an artifact leaves out rustc's `# env-dep:`
+    /// lines and names only the sources of path packages, so the variables come from every unit's
+    /// own dependency file in the target directory's build folders. That may include units of
+    /// another build in the same target, which costs a rebuild when their variables change, never
+    /// a stale artifact. The variables Cargo sets for every crate itself are left out: they follow
+    /// from the command and the workspace.
+    fn env_reads(&self) -> Result<BTreeSet<String>> {
+        let first = self
+            .artifacts
+            .first()
+            .with_context(|| format!("the build {} names no artifact", self.name))?;
+        let target = first
+            .ancestors()
+            .find(|dir| dir.join("CACHEDIR.TAG").is_file())
+            .with_context(|| format!("{} lies in no Cargo target directory", first.display()))?;
+        let mut names = BTreeSet::new();
+        for pattern in ["*/build/*/*/out", "*/*/build/*/*/out", "*/deps", "*/*/deps"] {
+            for dir in expand(target, pattern)? {
+                for entry in fs::read_dir(&dir)? {
+                    let path = entry?.path();
+                    if path.extension().is_some_and(|extension| extension == "d") {
+                        let text = fs::read_to_string(&path)
+                            .with_context(|| format!("cannot read {}", path.display()))?;
+                        names.extend(env_deps(&text));
+                    }
+                }
+            }
+        }
+        Ok(names)
     }
 }
 
+/// The variables a dependency file's `# env-dep:NAME=value` (or `# env-dep:NAME` for an unset
+/// one) lines name, without those Cargo sets for every crate.
+fn env_deps(text: &str) -> Vec<String> {
+    text.lines()
+        .filter_map(|line| line.strip_prefix("# env-dep:"))
+        .map(|dep| dep.split_once('=').map_or(dep, |(name, _)| name).to_owned())
+        .filter(|name| name != "CARGO" && !name.starts_with("CARGO_") && name != "OUT_DIR")
+        .collect()
+}
+
 /// The files a Makefile style dependency file names after each rule's colon. A space inside a
-/// path is escaped with a backslash.
+/// path is escaped with a backslash; rustc's `#` comment lines name no file.
 fn dep_info_files(text: &str) -> Vec<PathBuf> {
     let mut files = Vec::new();
-    for line in text.lines() {
+    for line in text.lines().filter(|line| !line.starts_with('#')) {
         let Some((_, dependencies)) = line.split_once(": ") else {
             continue;
         };
@@ -279,7 +329,7 @@ mod tests {
     #[test]
     fn a_build_whose_reads_are_unchanged_is_reused_without_running_cargo() {
         let root = cargo_workspace();
-        let cargo = FakeCargo { root: &root };
+        let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
 
         let first = build.run(&root.ctx, &mut cargo.command("one", READS));
@@ -295,7 +345,7 @@ mod tests {
     fn editing_a_file_the_build_did_not_read_reuses_it() {
         let root = cargo_workspace();
         root.write("backend/tests/case.rs", "#[test] fn case() {}");
-        let cargo = FakeCargo { root: &root };
+        let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         build
             .run(&root.ctx, &mut cargo.command("one", READS))
@@ -310,7 +360,7 @@ mod tests {
     #[test]
     fn editing_a_file_the_build_read_or_a_workspace_file_builds_again() {
         let root = cargo_workspace();
-        let cargo = FakeCargo { root: &root };
+        let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         build
             .run(&root.ctx, &mut cargo.command("one", READS))
@@ -331,7 +381,7 @@ mod tests {
     #[test]
     fn adding_a_module_builds_again_and_the_new_module_is_read_from_then_on() {
         let root = cargo_workspace();
-        let cargo = FakeCargo { root: &root };
+        let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         build
             .run(&root.ctx, &mut cargo.command("one", READS))
@@ -351,7 +401,7 @@ mod tests {
     #[test]
     fn a_build_without_a_dependency_file_is_not_reused() {
         let root = cargo_workspace();
-        let cargo = FakeCargo { root: &root };
+        let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         let mut silent = cargo.command("one", READS);
         silent.env("DEP_INFO", "/dev/null");
@@ -365,7 +415,7 @@ mod tests {
     #[test]
     fn a_different_command_builds_again() {
         let root = cargo_workspace();
-        let cargo = FakeCargo { root: &root };
+        let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         build
             .run(&root.ctx, &mut cargo.command("one", READS))
@@ -388,7 +438,7 @@ mod tests {
     #[test]
     fn an_artifact_changed_or_removed_since_its_build_builds_again() {
         let root = cargo_workspace();
-        let cargo = FakeCargo { root: &root };
+        let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         build
             .run(&root.ctx, &mut cargo.command("one", READS))
@@ -407,7 +457,7 @@ mod tests {
     fn an_artifact_the_build_no_longer_writes_fails_it_even_when_an_old_copy_remains() {
         let root = cargo_workspace();
         root.write("target/renamed.wasm", "built before its target was renamed");
-        let cargo = FakeCargo { root: &root };
+        let cargo = FakeCargo { ctx: &root.ctx };
         let mut build = cargo.build(WORKSPACE);
         build.artifacts.push(root.path("target/renamed.wasm"));
 
@@ -416,10 +466,61 @@ mod tests {
         assert!(!root.path("target/renamed.wasm").exists());
     }
 
+    /// Set when the test below runs as its own child: the root of the parent's build.
+    const ENV_DEP_ROOT: &str = "XTASK_TEST_ENV_DEP_ROOT";
+
+    /// Runs twice: as a normal test it runs itself as a child process once per build, each with
+    /// its own value of the variable the build read, since a test may not change its own
+    /// environment while other tests run; each child runs one build in the parent's root.
+    #[test]
+    fn a_changed_value_of_a_variable_the_build_read_builds_again() {
+        if let Some(root) = std::env::var_os(ENV_DEP_ROOT) {
+            let ctx = Context {
+                root: PathBuf::from(root),
+            };
+            let cargo = FakeCargo { ctx: &ctx };
+            let outcome = cargo
+                .build(WORKSPACE)
+                .run(&ctx, &mut cargo.command("one", READS))
+                .unwrap();
+            fs::write(ctx.root.join("outcome"), format!("{outcome:?}")).unwrap();
+            return;
+        }
+        let root = cargo_workspace();
+        // The dependency file rustc writes for the crate itself, in the unit's own folder.
+        root.write(
+            "target/debug/build/backend/0123/out/backend.d",
+            &format!(
+                "{out}/backend.rmeta: {lib}\n\n# env-dep:XTASK_TEST_GREETING=hello\n\
+                 # env-dep:CARGO_PKG_VERSION=0.1.0\n",
+                out = root.path("target/debug/build/backend/0123/out").display(),
+                lib = root.path("backend/src/lib.rs").display()
+            ),
+        );
+        let build = |greeting: &str| {
+            let status = Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "cargo_build::tests::a_changed_value_of_a_variable_the_build_read_builds_again",
+                    "--exact",
+                    "--quiet",
+                ])
+                .env(ENV_DEP_ROOT, &root.ctx.root)
+                .env("XTASK_TEST_GREETING", greeting)
+                .status()
+                .unwrap();
+            assert!(status.success());
+            fs::read_to_string(root.path("outcome")).unwrap()
+        };
+
+        assert_eq!(build("hello"), "Compiled");
+        assert_eq!(build("hello"), "Reused");
+        assert_eq!(build("goodbye"), "Compiled");
+    }
+
     #[test]
     fn reads_are_normalized_and_files_outside_the_repository_are_not_listed() {
         let root = cargo_workspace();
-        let cargo = FakeCargo { root: &root };
+        let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         let reads = ["backend/src/../src/lib.rs", "../rustlib/src/lib.rs"];
         build
@@ -435,7 +536,8 @@ mod tests {
     fn dependency_files_name_every_file_after_each_colon_with_escaped_spaces() {
         assert_eq!(
             dep_info_files(
-                "/t/stack: /a/lib.rs /my\\ docs/x.rs\n/t/other.d: /b/mod.rs\n\n/a/lib.rs:\n"
+                "/t/stack: /a/lib.rs /my\\ docs/x.rs\n/t/other.d: /b/mod.rs\n\n/a/lib.rs:\n\
+                 # env-dep:CARGO_PKG_DESCRIPTION=a: b\n"
             ),
             [
                 PathBuf::from("/a/lib.rs"),
