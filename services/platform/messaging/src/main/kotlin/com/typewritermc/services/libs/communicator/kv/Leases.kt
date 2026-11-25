@@ -86,9 +86,9 @@ interface LeaseCodec<H : Comparable<H>, V> {
  * A [claim] writes the key naming this holder, the instant of the claim on [clock], and its value. Whenever a claim reads the key, also after a conflict, it writes over an absent,
  * unreadable or vacant entry, its own, or an older claim; a newer claim of another holder means the key is lost for
  * good. A held key is rewritten every refresh with the time to live and follows the same rule on a conflict, except
- * that a vacant entry means another holder took the key and let it go, so the key is lost for good: a holder that
- * missed its protagonist leaving stops once a newer claim took the key, even after that claim was released, and one
- * whose key expired during an outage writes it again. A [release] writes the key vacant at its own revision, with the vacancy as its time to live:
+ * that a vacant entry means another holder took the key and let it go, so the key is lost for good: once a newer
+ * claim took a key, the holder it took the key from never writes it again, even after that claim was released. A held
+ * key that expired during an outage is written again. A [release] writes the key vacant at its own revision, with the vacancy as its time to live:
  * the key stays alive for a takeover, but nobody holds it. A conflict on a key this holder still holds came from its own
  * write whose answer was lost, so the release goes on at the key's current revision; a release never writes over
  * another holder's claim. A conflict costs one read and one write; only a failed request waits before it tries again.
