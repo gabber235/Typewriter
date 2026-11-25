@@ -86,12 +86,21 @@ pieces:
         taught: >-
           a toast slides in over 600 ms of Util.getMillis, and a stepped client's time source moves 50 ms
           per granted tick, so pace never moves it: every attempt and pace of one run holds at one tick.
-          Two local runs still held at 11 and at 10, so something that differs between runs moves it by a
-          tick; the demo explanation for CI's 11 against 10 is unproven
+          Two local runs held at 11 and at 10 throughout; a third, 8 attempts on one client, held at 11
+          except its 50 ms paced attempt at 10, which the steady check reported. So a wall clock dependent
+          step leaks into the toast window's count. Ruled out: the slide (Util.getMillis moves 50 ms per
+          tick), the text's position (toasts draw unclipped, so the text counts from the toast's first
+          frame), the client's queueing (handleRecipeBookAdd queues the toast at once), the window size
         state: trying
         evidence:
           - services/playtest/client/src/main/java/com/typewritermc/playtest/client/Stepper.java:81
           - local playtest runs, 2026-11-24 (held at 11 in every attempt of one, at 10 in every attempt of the next)
+          - local run of TOAST-1 --repeat 8, 2026-11-25 (11 at 0 and 5 ms, 10 at 50 ms, all on gv-1)
+          - ToastManager.update runs once per frame from Minecraft.renderFrame, not from the client tick
+        next: >-
+          record on the client the tick a ClientboundRecipeBookAddPacket arrives and the frame its toast
+          first draws, and on Paper the tick it was sent, at 0 and 50 ms, to tell a server side delay from
+          a client frame that runs between ticks
       - id: restart-2-cause
         what: run RESTART-2 at 0, 5 and 50 ms, then with a 1 tick window after the restart
         taught: >-
