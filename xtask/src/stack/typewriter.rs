@@ -21,7 +21,7 @@ use super::spec::{
     BACKEND, Build, GradleBuild, How, Probe, Published, Role, Service, ServiceId, StackContext,
     StackSpec, state_dir,
 };
-use crate::cargo_build::{CargoBuild, Outcome, target_directory};
+use crate::cargo_build::{CargoBuild, Outcome, target_directory, workspace_files};
 use crate::cluster::CiCluster;
 use crate::{Context, deploy};
 
@@ -659,17 +659,10 @@ fn stack_binary_path(ctx: &Context) -> Result<PathBuf> {
     Ok(target_directory(ctx, STACK_WORKSPACE)?.join("debug/typewriter-stack"))
 }
 
-/// What the stack's Cargo builds are built from: every file below `backend` (the component test
-/// workspace depends on the backend's crates by path, and the components compile the protocol's
-/// generated sources there) and the profiles in `.cargo/config.toml`.
-const RUST_INPUTS: &[&str] = &["backend", ".cargo/config.toml"];
-
 fn build_stack_binary(ctx: &Context) -> Result<()> {
     let built = CargoBuild {
         name: "typewriter-stack",
-        inputs: RUST_INPUTS,
-        excluded: &[],
-        target: target_directory(ctx, STACK_WORKSPACE)?,
+        workspace: workspace_files(ctx, STACK_WORKSPACE)?,
         artifacts: vec![stack_binary_path(ctx)?],
     }
     .run(

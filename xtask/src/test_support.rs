@@ -650,6 +650,19 @@ fn lines(path: &Path) -> usize {
     fs::read_to_string(path).map_or(0, |text| text.lines().count())
 }
 
+/// The workspace files of [`cargo_workspace`].
+pub const CARGO_WORKSPACE: &[&str] = &["backend/Cargo.toml", "Cargo.lock"];
+
+/// A root holding a Cargo workspace's files ([`CARGO_WORKSPACE`]) and its one source,
+/// `backend/src/lib.rs`.
+pub fn cargo_workspace() -> TempRoot {
+    let root = TempRoot::new();
+    root.write("backend/Cargo.toml", "[package]");
+    root.write("Cargo.lock", "version = 4");
+    root.write("backend/src/lib.rs", "fn main() {}");
+    root
+}
+
 /// A stand in for Cargo in a [`TempRoot`]: each run is counted and writes [`Self::artifact`] and,
 /// as Cargo does beside each artifact, a dependency file naming the files the build read.
 pub struct FakeCargo<'a> {
@@ -683,17 +696,11 @@ impl FakeCargo<'_> {
         command
     }
 
-    /// The build named `stack` of [`Self::artifact`] from `inputs` without `excluded`.
-    pub fn build<'b>(
-        &self,
-        inputs: &'b [&'b str],
-        excluded: &'b [&'b str],
-    ) -> crate::cargo_build::CargoBuild<'b> {
+    /// The build named `stack` of [`Self::artifact`] with the root relative `workspace` files.
+    pub fn build(&self, workspace: &[&str]) -> crate::cargo_build::CargoBuild<'static> {
         crate::cargo_build::CargoBuild {
             name: "stack",
-            inputs,
-            excluded,
-            target: self.root.path("target"),
+            workspace: workspace.iter().map(|file| (*file).to_owned()).collect(),
             artifacts: vec![self.artifact()],
         }
     }

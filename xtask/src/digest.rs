@@ -97,8 +97,9 @@ pub fn skipped(name: &str) -> bool {
     name.starts_with('.') || matches!(name, "node_modules" | "build" | "target")
 }
 
-/// What a generator or a build left last time: the digest of the inputs it ran on and the sha256
-/// of each output it wrote. Output paths are relative to the root, or absolute.
+/// What a generator or a build left last time: the digest of what it ran on and the sha256 of each
+/// file it vouches for (a generator's outputs; a build's artifacts and the files it read). Paths
+/// are relative to the root, or absolute.
 pub struct Stamp {
     pub path: PathBuf,
 }
@@ -111,11 +112,11 @@ impl Stamp {
     /// Whether the stamp records `digest` and every output it lists still has the recorded
     /// contents, so an output that was deleted or edited by hand is stale.
     pub fn is_current(&self, root: &Path, digest: &Digest) -> bool {
-        self.outputs(root, digest).is_some()
+        self.files(root, digest).is_some()
     }
 
-    /// The outputs the stamp lists when it is current for `digest`.
-    pub fn outputs(&self, root: &Path, digest: &Digest) -> Option<Vec<String>> {
+    /// The files the stamp lists when it is current for `digest`.
+    pub fn files(&self, root: &Path, digest: &Digest) -> Option<Vec<String>> {
         let record = fs::read_to_string(&self.path).ok()?;
         let mut lines = record.lines();
         if lines.next()? != digest.hex() {

@@ -29,7 +29,7 @@ decided:
   - id: approved-items
     what: >-
       The game stack generates only the protocol; reuse the typewriter-stack binary and the
-      release .wasm components by a digest of their inputs; cache cargo dependency builds; overlap
+      release .wasm components while what they read is unchanged; cache cargo dependency builds; overlap
       the Gradle builds with the cargo builds; shallow checkout for the game suite; the panel
       suites keep Gradle's build outputs. Not in scope: one shared build job, wasmtime
       optimization, Gradle configuration cache, sharding.
@@ -45,12 +45,16 @@ decided:
       A stack runs every build its services declare at once before the first service starts: each
       Cargo build on a thread, every Gradle build (today the Realm host) in one Gradle run. A
       service's command refuses to run a build it did not declare.
-  - id: digest-from-backend-with-dep-info-check
+  - id: inputs-are-the-read-set
     what: >-
-      The stack binary and the components are reused while every file below backend (the
-      components leave out backend/tests), .cargo/config.toml, the command and rustc -vV are
-      unchanged. After each build Cargo's dependency files must name no repository file outside
-      those inputs, or the build fails, so a missing input is caught on the change that adds it.
+      Decided 2026-11-25 in review round 3, replacing a digest of every file below backend with a
+      dependency file check. A build's stamp lists the sha256 of each artifact, of every repository
+      file the dependency files Cargo writes beside its artifacts name (build script
+      rerun-if-changed inputs included), and of the workspace's manifests, lock file and
+      .cargo/config.toml, beside a digest of the command, RUSTFLAGS and rustc -vV. The build is
+      reused while all of them match; a missing dependency file means no reuse. No caller lists
+      inputs, so a crate cannot read a file the stamp misses, and an edit the build never read
+      reuses it.
   - id: panel-restores-services-outputs
     what: >-
       The panel suites restore the services check's Gradle build cache and save none of their own,

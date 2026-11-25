@@ -11,7 +11,7 @@ use anyhow::{Context as _, Result, bail, ensure};
 use clap::ValueEnum;
 use serde_json::Value;
 
-use crate::cargo_build::{CargoBuild, target_directory};
+use crate::cargo_build::{CargoBuild, workspace_files};
 use crate::cluster::CiCluster;
 use crate::lock::HeavyLock;
 use crate::{CommandExt, Context, Scratch, secrets};
@@ -213,9 +213,9 @@ pub(crate) fn components_build(ctx: &Context, components: &[Component]) -> Comma
     build
 }
 
-/// The release components build of `components` as a [`CargoBuild`] named `name`: reused while
-/// nothing below `backend` outside the component test workspace, the Cargo profiles, the command
-/// and the toolchain changed. The stack and the components check both build through it.
+/// The release components build of `components` as a [`CargoBuild`] named `name`, reused while
+/// what it read, the backend workspace's files, the command and the toolchain are unchanged. The
+/// stack and the components check both build through it.
 pub(crate) fn reusable_components_build<'a>(
     ctx: &Context,
     name: &'a str,
@@ -223,10 +223,7 @@ pub(crate) fn reusable_components_build<'a>(
 ) -> Result<CargoBuild<'a>> {
     Ok(CargoBuild {
         name,
-        inputs: &["backend", ".cargo/config.toml"],
-        // The component test workspace, which no component depends on.
-        excluded: &["backend/tests"],
-        target: target_directory(ctx, "backend/Cargo.toml")?,
+        workspace: workspace_files(ctx, "backend/Cargo.toml")?,
         artifacts: components
             .iter()
             .map(|component| component.artifact.clone())
