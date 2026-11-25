@@ -13,7 +13,8 @@ import kotlin.coroutines.CoroutineContext
  * no tick while work a tick caused still runs.
  *
  * Each item costs one atomic increment and one decrement. Item events reach observers only while one is attached; an
- * observer hears the end of exactly the items it heard begin. Any thread may begin, end and observe.
+ * observer hears the end of exactly the items it heard begin, before [count] drops. Any thread may begin, end and
+ * observe.
  */
 class InFlightWork {
     private val running = AtomicInteger()
@@ -45,8 +46,13 @@ class InFlightWork {
         item: WorkItem,
         failure: Throwable?,
     ) {
-        running.decrementAndGet()
-        item.heard.forEach { it.ended(item, failure) }
+        // Observers hear the end before the count drops, so a count of zero means every end was heard; an observer
+        // that throws still lets it drop, so a drain never waits on an item that ended.
+        try {
+            item.heard.forEach { it.ended(item, failure) }
+        } finally {
+            running.decrementAndGet()
+        }
     }
 }
 
@@ -57,9 +63,7 @@ class WorkItem internal constructor(
     val subjects: Set<WorkSubject>?,
     internal val heard: List<WorkObserver>,
 ) {
-    private val done =
-        java.util.concurrent.atomic
-            .AtomicBoolean()
+    private val done = AtomicBoolean()
 
     /** The item ended; ending it again does nothing. */
     fun end() = finish(null)
