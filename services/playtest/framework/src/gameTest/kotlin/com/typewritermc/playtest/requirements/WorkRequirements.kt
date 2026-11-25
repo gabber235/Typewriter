@@ -61,9 +61,10 @@ val WorkRequirements by testSuite(compartment = { GameCompartment }) {
         "a fact the attempt expects that no plugin reports within 1 s fails the attempt as hung work naming the fact",
         demonstrates = Demonstrates.FAILURE,
     ) {
+        probe.chat(player, "Waiting")
         expectFact("Ledger synced")
 
-        val hung = shouldThrow<WorkHung> { probe.chat(player, "Waiting") }
+        val hung = shouldThrow<WorkHung> { within(4.ticks) { player sees chat("Ledger synced") } }
 
         hung.report shouldContain "\"expected fact Ledger synced\""
         // Reporting the fact ends the hung work, so the player comes back to the pool.
