@@ -42,9 +42,8 @@ jobs:
     outputs:
       areas: ${{ steps.plan.outputs.areas }}
     steps:
+      # One commit: xtask fetches the history down to the merge base with BASE_SHA itself.
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
       # Every other job waits for this one, so the shell it pushes to the Nix cache is theirs to
       # pull, and the e2e shell it builds on the cache volume is there when the suites start.
       - uses: ./.github/actions/devenv
@@ -68,9 +67,9 @@ jobs:
       matrix:
         area: ${{ fromJSON(needs.plan.outputs.areas) }}
     steps:
+      # One commit: the quality gate fetches the history down to the merge base with BASE_SHA
+      # itself.
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
       # Generation runs Gradle and build_runner whatever the area; only the services area builds
       # enough to be worth keeping Gradle's build outputs for.
       - uses: ./.github/actions/devenv

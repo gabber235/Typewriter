@@ -107,8 +107,8 @@ pub fn covers(ctx: &Context, reviewed: &str, head: &str, base: &str) -> Result<b
 /// A hash of the change `commit` makes on top of its merge base with `base`, stable across the
 /// line shifts a rebase causes.
 fn patch_id(ctx: &Context, commit: &str, base: &str) -> Result<String> {
-    let merge_base = git(ctx, &["merge-base", base, commit]).output_text()?;
-    let mut diff = git(ctx, &["diff", merge_base.trim(), commit])
+    let merge_base = change::merge_base_of(ctx, commit, base)?;
+    let mut diff = git(ctx, &["diff", &merge_base, commit])
         .stdout(Stdio::piped())
         .spawn()
         .context("cannot start git diff")?;
@@ -133,6 +133,20 @@ mod tests {
         let head = commit(&root.ctx, "feature").unwrap();
         assert_ne!(reviewed, head);
         assert!(covers(&root.ctx, &reviewed, &head, "base").unwrap());
+    }
+
+    #[test]
+    fn a_one_commit_checkout_fetches_what_comparing_with_the_reviewed_commit_needs() {
+        let origin = diverged_branches();
+        // GitHub serves any commit by hash, a force pushed one included, as review.yml asks.
+        origin.git(&["config", "uploadpack.allowAnySHA1InWant", "true"]);
+        let reviewed = commit(&origin.ctx, "feature").unwrap();
+        origin.git(&["rebase", "--quiet", "base", "feature"]);
+        let head = commit(&origin.ctx, "feature").unwrap();
+        let base = commit(&origin.ctx, "base").unwrap();
+
+        let checkout = origin.shallow_clone("feature");
+        assert!(covers(&checkout.ctx, &reviewed, &head, &base).unwrap());
     }
 
     #[test]

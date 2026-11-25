@@ -253,42 +253,50 @@ fn nearest_base(ctx: &Context) -> Result<String> {
 
 /// The full hash of the merge base of `HEAD` and `reference`.
 fn merge_base(ctx: &Context, reference: &str) -> Result<String> {
+    merge_base_of(ctx, "HEAD", reference)
+}
+
+/// The full hash of the merge base of `commit` and `reference`. A shallow checkout, such as CI's
+/// one commit checkout, first fetches the history it needs ([`reach_merge_base`]).
+pub fn merge_base_of(ctx: &Context, commit: &str, reference: &str) -> Result<String> {
     let shallow = git(ctx, &["rev-parse", "--is-shallow-repository"]).output_text()?;
     if shallow.trim() == "true" {
-        reach_merge_base(ctx, reference)?;
+        reach_merge_base(ctx, commit, reference)?;
     }
-    let base = git(ctx, &["merge-base", "HEAD", reference])
+    let base = git(ctx, &["merge-base", commit, reference])
         .output_text()
         .with_context(|| {
-            format!("cannot find the merge base of HEAD and {reference}; pass --base")
+            format!("cannot find the merge base of {commit} and {reference}; pass --base")
         })?;
     Ok(base.trim().to_string())
 }
 
-/// Fetches history into a shallow checkout, such as CI's, until it holds the merge base of `HEAD`
-/// and `reference`: first `reference` itself when the checkout lacks it, then both histories
-/// deeper, doubling the depth each time, and the whole history last.
-fn reach_merge_base(ctx: &Context, reference: &str) -> Result<()> {
+/// Fetches history into a shallow checkout until it holds the merge base of `commit` and
+/// `reference`: first each of them the checkout lacks, then both histories deeper, doubling the
+/// depth each time, and the whole history last.
+fn reach_merge_base(ctx: &Context, commit_ref: &str, reference: &str) -> Result<()> {
     let found = || {
-        git(ctx, &["merge-base", "HEAD", reference])
+        git(ctx, &["merge-base", commit_ref, reference])
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .status()
             .is_ok_and(|status| status.success())
     };
-    let known = git(ctx, &["cat-file", "-e", &format!("{reference}^{{commit}}")])
-        .stderr(Stdio::null())
-        .status()
-        .is_ok_and(|status| status.success());
-    if !known {
-        // A checkout of one branch has no other remote branches.
-        let wanted = match reference.strip_prefix("origin/") {
-            Some(branch) => format!("+refs/heads/{branch}:refs/remotes/origin/{branch}"),
-            None => reference.to_owned(),
-        };
-        fetch(ctx, &["--depth=1", "origin", &wanted])?;
+    for wanted in [commit_ref, reference] {
+        let known = git(ctx, &["cat-file", "-e", &format!("{wanted}^{{commit}}")])
+            .stderr(Stdio::null())
+            .status()
+            .is_ok_and(|status| status.success());
+        if !known {
+            // A checkout of one branch has no other remote branches.
+            let refspec = match wanted.strip_prefix("origin/") {
+                Some(branch) => format!("+refs/heads/{branch}:refs/remotes/origin/{branch}"),
+                None => wanted.to_owned(),
+            };
+            fetch(ctx, &["--depth=1", "origin", &refspec])?;
+        }
     }
-    let tips = [commit(ctx, "HEAD")?, commit(ctx, reference)?];
+    let tips = [commit(ctx, commit_ref)?, commit(ctx, reference)?];
     for depth in [32, 64, 128, 256, 512, 1024] {
         if found() {
             return Ok(());
