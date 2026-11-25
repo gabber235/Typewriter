@@ -16,27 +16,7 @@ val PoolTest by testSuite {
     test("a game that cannot start fails the pool and leaves why in the run's file, before any session joined") {
         val dir = Files.createTempDirectory("pool")
         // No plugin jar was built, so the shared Paper's folder cannot be set up.
-        val settings =
-            PoolSettings(
-                poolDir = Files.createDirectories(dir.resolve("pool")),
-                run =
-                    ServedRun(
-                        id = "run-1",
-                        file = dir.resolve("results/test_run.json"),
-                        policy = AttemptPolicy.RerunFailuresWrapper(4),
-                        logs = Files.createDirectories(dir.resolve("logs")),
-                    ),
-                launched =
-                    Launched(
-                        java = dir.resolve("java"),
-                        paperDir = dir.resolve("paper"),
-                        agentJar = dir.resolve("agent.jar"),
-                        coverageAgentJar = dir.resolve("coverage-agent.jar"),
-                        pluginJar = dir.resolve("plugin.jar"),
-                        clientLaunch = dir.resolve("client-launch.json"),
-                    ),
-                clients = 1,
-            )
+        val settings = poolSettings(dir, clients = 1)
 
         ServerSocket(0, 1, InetAddress.getLoopbackAddress()).use { server ->
             shouldThrowAny { Pool(settings, server).run() }
