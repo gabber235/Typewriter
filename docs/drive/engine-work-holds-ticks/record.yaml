@@ -42,7 +42,7 @@ pieces:
         what: The host owns InFlightWork in loader-api, always counting; observers attach any time; a Bukkit service; a test only Paper plugin maps items to PlayerWork
         taught: Paper puts every plugin class loader in its global group, so a Bukkit plugin loads the Typewriter Paper plugin's classes (PaperPluginClassLoaderStorage, SpigotPluginClassLoaderGroup); the loader jar does not relocate loader-api
         state: picked
-        why: Production jobs of its own (drain before shutdown or rollout, in flight work metric) for one atomic increment and decrement per task and per outbound call
+        why: Production jobs of its own (bounded drain before shutdown or rollout, the typewriter.work.in_flight gauge) for one concurrent set insert and removal per task and per outbound call
         evidence: [db4a64964e, WorkPlayersTest.kt]
   - id: proof
     status: done
@@ -73,22 +73,25 @@ decided:
   - id: detekt-concurrency
     what: "Approved: a detekt config beside observability.yml for engine main sources"
     why: Makes every escape from the count visible
+  - id: wiring-only-rule
+    what: "Dropped: no rule that HostedRuntimeHost.messaging and sharedArtifacts are read only in EngineWiring"
+    why: The host hands runtimes only the counted session and counted shared artifacts, so every read of them is counted; the ways to escape the count are threads and waits, which concurrency.yml flags
+  - id: production-jobs
+    what: "Build the drain and the gauge here, test first: a gauge on the count, a bounded drain in ArtifactHost before shutdown and rollout, the bound from config, logging what still ran"
+    why: The design record named them as present while neither was built; a drain must name what it left, so the count keeps its items in a concurrent set
+  - id: watchdog
+    what: "One watchdog at the oldest open entry's deadline replaces a 1 s timer per item"
+    why: Every engine task is counted now; open work is in begin order with one threshold, so the oldest is always due first
 
 open:
-  - id: wiring-only-rule-dropped
-    what: The planned rule forbidding HostedRuntimeHost.messaging and sharedArtifacts outside EngineWiring has no job under option C, since the host hands out counted objects; not built
-    tied_to: maintainer review
   - id: pacing-gate
     what: Flip runtimes/paper to the pacing gate once the harness pull request (fix/game-harness-structure) lands; the commit goes last so it rebases onto that branch
     tied_to: fix/game-harness-structure
-  - id: hung-threshold
-    what: One deadline per counted item in WorkLedger, never cancelled when the item ends; entries are in begin order with one threshold, so one watchdog armed at the oldest entry's deadline can replace them
+  - id: detekt-main-gate
+    what: "check depending on detektMain (approved) surfaces 90 findings in 12 projects that plain detekt never ran: 64 LongParameterList (detekt 2 runs it only with type resolution, so no baseline holds them), 24 println in playtest framework and pool (observability.yml now runs), 1 CyclomaticComplexMethod in KSP generated typewriter-api sources (the detekt tasks exclude skirout but not generated/ksp), 1 UnusedPrivateFunction in typewriter-contracts. ReloadableEngineRuntime is fixed at its cause; the gate flip waits for a decision: fix all at their cause, or a detektMain baseline for the rest plus a generated sources exclusion"
     tied_to: maintainer review
-  - id: production-jobs-unbuilt
-    what: The design record and InFlightWork's KDoc name its production jobs (drain before shutdown or rollout, in flight work metric) as present, but neither is built; build both here or record them as planned
-    tied_to: maintainer review
-  - id: detekt-type-resolution
-    what: ForbiddenMethodCall instances fire only under detektMain; check likely runs plain detekt only, so engineThreads and engineWaits may not gate (observability.yml may share the gap)
+  - id: drain-scope
+    what: The drain waits for the whole host's work, not only the runtime a rollout replaces, since items carry no runtime; a busy sibling runtime can make a rollout wait out the bound
     tied_to: maintainer review
 
 slices:
@@ -110,5 +113,11 @@ slices:
   - id: end-order
     what: Observers hear an item's end before the count drops, also when one throws
     evidence: [f8e4eeeb99e, InFlightWorkTest.kt]
+  - id: production-jobs
+    what: The typewriter.work.in_flight gauge and the bounded drain before shutdown and rollout, bound from TYPEWRITER_WORK_DRAIN
+    evidence: [GaugeTest.kt, WorkDrainTest.kt, ArtifactHostWorkTest.kt, HostRolloutParticipantTest.kt, LoaderSettingsTest.kt]
+  - id: watchdog
+    what: One watchdog at the oldest open entry's deadline
+    evidence: [WorkLedgerTest.kt]
 
-next: Run the checks, the typewriter-review skill, and hand back to the coordinating thread; the pacing gate flip waits for the harness branch
+next: detektMain in the gate and its findings, then the full checks and the game suite; the pacing gate flip waits for the harness branch
