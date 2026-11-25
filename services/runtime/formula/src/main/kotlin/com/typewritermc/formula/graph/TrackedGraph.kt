@@ -89,7 +89,11 @@ data class GraphLimits(
  * must not read the graph. A fork does not report.
  */
 interface GraphListener {
-    /** A query runs its compute, also when the result turns out equal to the last one. */
+    /**
+     * The graph gained [key]'s result: it ran the compute here, also when the result turned out equal to the last one,
+     * or ran it in a fork this graph merged. Per key, so a caller can tell which results were made again; what reads
+     * cost is counted on their [GraphWork] instead.
+     */
     fun computed(key: GraphKey<*>) {}
 
     /** A memo was forgotten to stay within [GraphLimits.maxMemos]. */
@@ -290,12 +294,12 @@ class TrackedGraph<E> private constructor(
     ): T {
         if (memo != null && !memo.inCycle && verify(memo, running)) {
             // Two reads may verify one memo at once; only the one that marks it verified counts, so counts are repeatable.
-            if (store(query, memo.copy(verifiedAt = running.revision), running)) running.work.verified()
+            if (store(query, memo.copy(verifiedAt = running.revision), running)) running.work.verified(query)
             @Suppress("UNCHECKED_CAST")
             return memo.value as T
         }
         listener.computed(query)
-        running.work.computed()
+        running.work.computed(query)
         val value = failing(query, running) { context(running) { query.compute() } }
         val changedAt = if (memo != null && memo.value == value) memo.changedAt else running.revision
         store(query, Memo(value, running.dependencies(), false, running.revision, changedAt, running.revision), running)
@@ -338,7 +342,7 @@ class TrackedGraph<E> private constructor(
             for (dependency in currentDependencies(pending.removeLast(), frame)) {
                 @Suppress("UNCHECKED_CAST")
                 if (!found.add(dependency)) continue
-                frame.work.walked()
+                frame.work.walked(dependency)
                 if (dependency is Query<*, *> && !stopAt(dependency)) pending += dependency as Query<E, *>
             }
         }

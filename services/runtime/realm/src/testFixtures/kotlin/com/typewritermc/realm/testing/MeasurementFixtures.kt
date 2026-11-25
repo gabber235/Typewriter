@@ -116,8 +116,6 @@ data class CommitCost(
     val replyBytes: Int,
     /** The part of [replyBytes] that is the reply's finding sets; the rest is the saved state's resources and links. */
     val findingBytes: Int,
-    val computed: Long,
-    val evicted: Long,
     val evidence: Int,
     val hints: Int,
     /** The graph work of the commit's binding and reply, as the realm's telemetry counts it. */
@@ -131,7 +129,7 @@ data class CommitCost(
     override fun toString(): String =
         "$label: commit $commit, pass $pass, graph reads during commit $graphReads, reply $replyBytes bytes " +
             "(findings $findingBytes, saved state ${replyBytes - findingBytes}), " +
-            "computed $computed, evicted $evicted, evidence held $evidence, hints $hints, " +
+            "evidence held $evidence, hints $hints, " +
             "graph work ${work.total} (commit $commitWork, pass $passWork)"
 }
 
@@ -153,8 +151,6 @@ internal suspend fun RealmFixture.measuredCommit(
     vararg intents: EditIntent,
 ): CommitCost {
     val edit = prepare(intents.toList())
-    val computedBefore = graphRuns.totalRuns()
-    val evictedBefore = graphRuns.evicted()
     val bindingBefore = bindingNanos.get()
     val hintsBefore = hints
     val commitBefore = workCounted(COMMIT_WORK)
@@ -180,8 +176,6 @@ internal suspend fun RealmFixture.measuredCommit(
                     .encodeToByteArray()
                     .size
             },
-        computed = graphRuns.totalRuns() - computedBefore,
-        evicted = graphRuns.evicted() - evictedBefore,
         evidence = sets.sumOf { it.evidence.size },
         hints = hints - hintsBefore,
         commitWork = workCounted(COMMIT_WORK) - commitBefore,

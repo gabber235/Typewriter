@@ -836,6 +836,12 @@ internal class RealmLifecycleFixture(
         attribute: String,
     ): Map<String?, Long> = telemetry.counts(metric, attribute)
 
+    /** The current sum of counter [metric] per combination of values of [attributes], as the Realm reported it to telemetry. */
+    fun counts(
+        metric: String,
+        attributes: List<String>,
+    ): Map<List<String?>, Long> = telemetry.counts(metric, attributes)
+
     suspend fun close() {
         try {
             realm.shutdown()

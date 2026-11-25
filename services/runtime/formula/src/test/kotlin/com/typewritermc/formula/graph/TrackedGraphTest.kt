@@ -459,6 +459,19 @@ val TrackedGraphTest by testSuite {
             listOf(GraphWork.Counts(computed = 1, verified = 0, walked = 0), GraphWork.Counts(computed = 1, verified = 0, walked = 0))
     }
 
+    test("a pin counts its work by the kind of key it computed, verified or walked") {
+        val onA = QueryBench().query("onA") { read(Cell("a")) ?: 0 }
+        val graph = TrackedGraph(cells("a" to 1))
+        val work = GraphWork()
+        graph.pin(work).read(onA)
+        graph.pin(work).readsOf(onA)
+        work.countsByKind() shouldBe
+            mapOf(
+                "Probe" to GraphWork.Counts(computed = 1, verified = 0, walked = 0),
+                "Cell" to GraphWork.Counts(computed = 0, verified = 0, walked = 1),
+            )
+    }
+
     test("a pin counts every key a walk of reads visits") {
         val bench = QueryBench()
         val onA = bench.query("onA") { read(Cell("a")) ?: 0 }

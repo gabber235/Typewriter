@@ -11,7 +11,6 @@ import com.typewritermc.realm.routes.authoringRoutes
 import com.typewritermc.realm.routes.state
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.settle
-import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
@@ -21,18 +20,16 @@ import skirout.kernel.v1.resource_id.ResourceId
 val RealmGraphTelemetryTest by testSuite {
     val first = ResourceId(value = "first")
 
-    test("the live graph counts each computation by query kind in telemetry") {
-        TelemetryTestHarness.create().use { harness ->
-            val listener = RealmGraphTelemetry(harness.telemetry)
-            RealmFixture.of(rerunCatalog(), mapOf(first to record(name = "bad")), listener = listener).use { realm ->
-                realm.checks
-                realm.settle()
-                harness.counts("typewriter.graph.computed", "query.kind")["CheckRun"] shouldBe 4L
+    test("graph work counts each kind of query apart, so check passes say how many checks they ran") {
+        RealmFixture.of(rerunCatalog(), mapOf(first to record(name = "bad"))).use { realm ->
+            val checkRuns = listOf("checks.pass", "CheckRun", "computed")
+            realm.checks
+            realm.settle()
+            realm.telemetry.counts(GRAPH_WORK, listOf("realm.operation", "query.kind", "graph.work"))[checkRuns] shouldBe 4L
 
-                realm.commitChecked(rename(first, "valid"))
-                realm.commitChecked(renumber(first))
-                harness.counts("typewriter.graph.computed", "query.kind")["CheckRun"] shouldBe 5L
-            }
+            realm.commitChecked(rename(first, "valid"))
+            realm.commitChecked(renumber(first))
+            realm.telemetry.counts(GRAPH_WORK, listOf("realm.operation", "query.kind", "graph.work"))[checkRuns] shouldBe 5L
         }
     }
 
@@ -66,3 +63,5 @@ val RealmGraphTelemetryTest by testSuite {
         }
     }
 }
+
+private const val GRAPH_WORK = "typewriter.realm.graph_work"

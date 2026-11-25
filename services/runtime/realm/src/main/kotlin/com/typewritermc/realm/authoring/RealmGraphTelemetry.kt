@@ -6,20 +6,15 @@ import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 
 /**
- * Counts what the realm's live graph computes and evicts, by the kind of query, so an operator sees how much check
- * work each commit causes and whether the memo limit forgets results.
+ * Counts what the realm's live graph evicts, by the kind of query, so an operator sees whether the memo limit forgets
+ * results. What the graph computes is graph work, recorded per operation by [RealmGraphWorkTelemetry].
  */
 class RealmGraphTelemetry(
     telemetry: ServiceTelemetry,
 ) : GraphListener {
-    private val computed = telemetry.counter("typewriter.graph.computed", "{computation}")
     private val evicted = telemetry.counter("typewriter.graph.evicted", "{memo}")
 
-    override fun computed(key: GraphKey<*>) = computed.add("query.kind" to key.kind)
-
-    override fun evicted(key: GraphKey<*>) = evicted.add("query.kind" to key.kind)
-
-    private val GraphKey<*>.kind: String get() = this::class.simpleName ?: "anonymous"
+    override fun evicted(key: GraphKey<*>) = evicted.add("query.kind" to (key::class.simpleName ?: "anonymous"))
 }
 
 /** An operation that reads the realm's graph; each records its graph work under its own [label]. */
@@ -54,8 +49,8 @@ fun interface GraphWorkRecorder {
 }
 
 /**
- * Records what each operation's graph reads did on one counter, split by kind of work and by operation, so an operator
- * sees what every operation cost in graph steps.
+ * Records what each operation's graph reads did on one counter, split by kind of work, by operation and by kind of
+ * query, so an operator sees what every operation cost in graph steps and which queries that work went to.
  */
 class RealmGraphWorkTelemetry(
     telemetry: ServiceTelemetry,
@@ -66,14 +61,16 @@ class RealmGraphWorkTelemetry(
         operation: GraphOperation,
         work: GraphWork,
     ) {
-        val counts = work.counts()
-        counter.add(counts.computed, KIND to "computed", OPERATION to operation.label)
-        counter.add(counts.verified, KIND to "verified", OPERATION to operation.label)
-        counter.add(counts.walked, KIND to "walked", OPERATION to operation.label)
+        work.countsByKind().forEach { (query, counts) ->
+            counter.add(counts.computed, KIND to "computed", OPERATION to operation.label, QUERY to query)
+            counter.add(counts.verified, KIND to "verified", OPERATION to operation.label, QUERY to query)
+            counter.add(counts.walked, KIND to "walked", OPERATION to operation.label, QUERY to query)
+        }
     }
 
     private companion object {
         const val KIND = "graph.work"
         const val OPERATION = "realm.operation"
+        const val QUERY = "query.kind"
     }
 }
