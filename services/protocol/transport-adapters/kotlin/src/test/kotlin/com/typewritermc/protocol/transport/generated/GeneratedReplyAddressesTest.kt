@@ -25,7 +25,8 @@ val GeneratedReplyAddressesTest by testSuite {
     }
 
     test("a route only panels call refuses a service inbox") {
-        realm.editorCatalogWatch.replyAddresses.answered(realm, PANEL_INBOX, SERVICE_INBOX) shouldBe listOf(PANEL_INBOX)
+        realm.editorCatalogWatch.initial.replyAddresses
+            .answered(realm, PANEL_INBOX, SERVICE_INBOX) shouldBe listOf(PANEL_INBOX)
     }
 
     test("a service scoped route answers only the inbox of the service it names") {

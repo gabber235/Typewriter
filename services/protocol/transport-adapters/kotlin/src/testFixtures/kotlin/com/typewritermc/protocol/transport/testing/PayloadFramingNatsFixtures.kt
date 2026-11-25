@@ -7,8 +7,10 @@ import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
+import com.typewritermc.services.libs.communicator.contract.Messages
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.Replies
 import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
@@ -153,7 +155,7 @@ suspend fun BrokerClient.requestAimedAt(
     contract: UnaryContract<RealmRouteScope, ByteArray, ByteArray>,
     replyTo: String,
 ) {
-    val request = OutboundMessage(contract.requestAddress.render(SCOPE), bytes(1), replyTo = MessageAddress.of(replyTo))
+    val request = OutboundMessage(contract.request.address.render(SCOPE), bytes(1), replyTo = MessageAddress.of(replyTo))
     transport.publish(request) shouldBe TransportResult.Success(Unit)
 }
 
@@ -186,15 +188,15 @@ fun bytesRoute(
     limits: TransportLimits?,
 ) = UnaryContract(
     name = name,
-    requestAddress = address,
-    requestCodec = bytesCodec,
-    responseCodec = bytesCodec,
-    responsePolicy =
-        ResponsePolicy(byteArrayOf()) {
-            if (it.isEmpty()) ResponseClassification.internalError("internal") else ResponseClassification.success("bytes")
-        },
+    request = Messages(address, bytesCodec),
+    replies =
+        Replies(
+            bytesCodec,
+            ResponsePolicy(byteArrayOf()) {
+                if (it.isEmpty()) ResponseClassification.internalError("internal") else ResponseClassification.success("bytes")
+            },
+        ),
     replyAddresses = replyAddresses,
-    failureSlug = ErrorSlug.of("payload-framing-on-nats-failed"),
     limits = limits,
 )
 

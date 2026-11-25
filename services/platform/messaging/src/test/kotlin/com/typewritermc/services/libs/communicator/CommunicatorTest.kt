@@ -4,7 +4,9 @@ import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.EncodedPublication
 import com.typewritermc.services.libs.communicator.client.ScatterPolicy
 import com.typewritermc.services.libs.communicator.contract.EventContract
+import com.typewritermc.services.libs.communicator.contract.Messages
 import com.typewritermc.services.libs.communicator.contract.OperationName
+import com.typewritermc.services.libs.communicator.contract.Replies
 import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
@@ -80,41 +82,33 @@ val CommunicatorTest by testSuite {
     val unary =
         UnaryContract(
             OperationName.of("book.get"),
-            serviceRequestAddress,
-            stringPayloadCodec,
-            stringPayloadCodec,
-            successPolicy,
+            Messages(serviceRequestAddress, stringPayloadCodec),
+            Replies(stringPayloadCodec, successPolicy),
             anyReply,
             2.seconds,
-            ErrorSlug.of("book-get-failed"),
         )
 
     val scatter =
         ScatterContract(
             OperationName.of("host.probe"),
-            serviceRequestAddress,
-            stringPayloadCodec,
-            stringPayloadCodec,
-            successPolicy,
+            Messages(serviceRequestAddress, stringPayloadCodec),
+            Replies(stringPayloadCodec, successPolicy),
             anyReply,
-            ErrorSlug.of("host-probe-failed"),
         )
 
     val event =
-        EventContract(OperationName.of("book.changed"), serviceRequestAddress, stringPayloadCodec, ErrorSlug.of("book-publish-failed"))
+        EventContract(OperationName.of("book.changed"), serviceRequestAddress, stringPayloadCodec)
 
     val watch =
         WatchContract(
-            OperationName.of("book.watch"),
-            serviceRequestAddress,
-            serviceUpdateAddress,
-            stringPayloadCodec,
-            stringPayloadCodec,
-            stringPayloadCodec,
-            successPolicy,
-            anyReply,
-            2.seconds,
-            ErrorSlug.of("book-watch-failed"),
+            UnaryContract(
+                OperationName.of("book.watch"),
+                Messages(serviceRequestAddress, stringPayloadCodec),
+                Replies(stringPayloadCodec, successPolicy),
+                anyReply,
+                2.seconds,
+            ),
+            Messages(serviceUpdateAddress, stringPayloadCodec),
         )
 
     test("scatter subscribes before publishing and collects every expected reply") {
@@ -235,13 +229,10 @@ val CommunicatorTest by testSuite {
                 val brokenEncode =
                     UnaryContract(
                         unary.name,
-                        serviceRequestAddress,
-                        throwingCodec(true),
-                        stringPayloadCodec,
-                        successPolicy,
+                        Messages(serviceRequestAddress, throwingCodec(true)),
+                        Replies(stringPayloadCodec, successPolicy),
                         anyReply,
                         1.seconds,
-                        unary.failureSlug,
                     )
                 (
                     client.request(
@@ -394,7 +385,7 @@ val CommunicatorTest by testSuite {
                 child.parentSpanId shouldBe parent.spanId
                 parent.status.statusCode shouldBe StatusCode.UNSET
                 child.status.statusCode shouldBe StatusCode.ERROR
-                child.attributes[AttributeKey.stringKey("exception.slug")] shouldBe "book-publish-failed"
+                child.attributes[AttributeKey.stringKey("exception.slug")] shouldBe "book-changed-failed"
             }
         }
     }
@@ -499,16 +490,8 @@ val CommunicatorTest by testSuite {
                 }
                 val isolated =
                     WatchContract(
-                        watch.name,
-                        watch.requestAddress,
-                        watch.updateAddress,
-                        watch.requestCodec,
-                        watch.initialCodec,
-                        watch.updateCodec,
-                        watch.initialPolicy,
-                        watch.replyAddresses,
-                        watch.timeout,
-                        watch.failureSlug,
+                        watch.initial,
+                        watch.updates,
                         updateFilter = { request, update -> request == update },
                     )
                 val values = async { client.watch(isolated, TestTarget("a"), "wanted").take(2).toList() }

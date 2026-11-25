@@ -74,7 +74,6 @@ val routerEvent =
         OperationName.of("router.event"),
         routerAddress,
         stringPayloadCodec,
-        ErrorSlug.of("router-event-failed"),
     )
 
 /** Event contract on `other.{id}.get`, a second route beside the `router.{id}.get` ones. */
@@ -83,7 +82,6 @@ val routerOtherEvent =
         OperationName.of("router.other"),
         "other.{id}.get".addressTemplate({ addressValuesOf("id" to it.id) }, { TestTarget(it.require("id")) }),
         stringPayloadCodec,
-        ErrorSlug.of("router-other-failed"),
     )
 
 /** Routes holding [routerEvent] and [routerOtherEvent]. */
@@ -202,7 +200,7 @@ fun routerFixture(
     val harness = TelemetryTestHarness.create()
     val communicator = Communicator(fake, harness.telemetry, testPropagators)
     return RouterFixture(
-        CommunicatorRouter(fake, routes, communicator, harness.telemetry, testPropagators, scope, options),
+        CommunicatorRouter(routes, communicator, scope, options),
         fake,
         harness,
     )

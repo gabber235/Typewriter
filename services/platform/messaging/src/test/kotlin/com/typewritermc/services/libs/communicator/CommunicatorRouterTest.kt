@@ -7,7 +7,9 @@ import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.EventContract
+import com.typewritermc.services.libs.communicator.contract.Messages
 import com.typewritermc.services.libs.communicator.contract.OperationName
+import com.typewritermc.services.libs.communicator.contract.Replies
 import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
@@ -72,12 +74,9 @@ val CommunicatorRouterTest by testSuite {
     val routerUnary =
         UnaryContract(
             OperationName.of("router.get"),
-            routerAddress,
-            stringPayloadCodec,
-            stringPayloadCodec,
-            routerPolicy,
+            Messages(routerAddress, stringPayloadCodec),
+            Replies(stringPayloadCodec, routerPolicy),
             replyAddresses = routerReplies,
-            failureSlug = ErrorSlug.of("router-get-failed"),
         )
 
     test("concrete route subscriptions avoid wildcard permissions") {
@@ -112,14 +111,7 @@ val CommunicatorRouterTest by testSuite {
             val harness = TelemetryTestHarness.create()
             val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
             shouldThrow<IllegalArgumentException> {
-                CommunicatorRouter(
-                    fake,
-                    routes,
-                    Communicator(fake, harness.telemetry, propagators),
-                    harness.telemetry,
-                    propagators,
-                    this,
-                )
+                CommunicatorRouter(routes, Communicator(fake, harness.telemetry, propagators), this)
             }
             fake.actions shouldBe emptyList()
             fake.close()
@@ -137,7 +129,6 @@ val CommunicatorRouterTest by testSuite {
                         { TestTarget(it.require("id")) },
                     ),
                     stringPayloadCodec,
-                    ErrorSlug.of("service-middle-failed"),
                 )
             val wildcardEnd =
                 EventContract(
@@ -147,7 +138,6 @@ val CommunicatorRouterTest by testSuite {
                         { TestTarget(it.require("id")) },
                     ),
                     stringPayloadCodec,
-                    ErrorSlug.of("service-alpha-failed"),
                 )
             val routes =
                 communicatorRoutes {
@@ -159,14 +149,7 @@ val CommunicatorRouterTest by testSuite {
             val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
             try {
                 shouldThrow<IllegalArgumentException> {
-                    CommunicatorRouter(
-                        fake,
-                        routes,
-                        Communicator(fake, harness.telemetry, propagators),
-                        harness.telemetry,
-                        propagators,
-                        this,
-                    )
+                    CommunicatorRouter(routes, Communicator(fake, harness.telemetry, propagators), this)
                 }
                 fake.actions shouldBe emptyList()
             } finally {
@@ -204,7 +187,7 @@ val CommunicatorRouterTest by testSuite {
                 val reply =
                     fixture.fake.publications.single()
                 reply.address shouldBe MessageAddress.of("reply.alpha")
-                routerUnary.responseCodec.decode(reply.payload) shouldBe "ok"
+                routerUnary.replies.codec.decode(reply.payload) shouldBe "ok"
                 fixture.router.stop() shouldBe RouterResult.Success
                 fixture.harness.assertNoActiveSpans()
             }
@@ -232,7 +215,6 @@ val CommunicatorRouterTest by testSuite {
                                 OperationName.of("router.event"),
                                 routerAddress,
                                 stringPayloadCodec,
-                                ErrorSlug.of("router-event-failed"),
                             ),
                         ) { }
                     },
@@ -278,7 +260,7 @@ val CommunicatorRouterTest by testSuite {
                 started.isCompleted shouldBe false
                 val reply = fixture.fake.publications.single()
                 reply.address shouldBe MessageAddress.of("reply.alpha")
-                routerUnary.responseCodec.decode(reply.payload) shouldBe "answered request"
+                routerUnary.replies.codec.decode(reply.payload) shouldBe "answered request"
                 laterRoute.complete(Unit)
                 started.await() shouldBe RouterResult.Success
                 fixture.router.stop() shouldBe RouterResult.Success
@@ -316,7 +298,7 @@ val CommunicatorRouterTest by testSuite {
                     .shouldBeInstanceOf<RouterResult.Failure>()
                     .error
                     .shouldBeInstanceOf<RouterError.Startup>()
-                fixture.fake.publications.associate { it.address.value to routerUnary.responseCodec.decode(it.payload) } shouldBe
+                fixture.fake.publications.associate { it.address.value to routerUnary.replies.codec.decode(it.payload) } shouldBe
                     mapOf("reply.alpha" to "answered first", "reply.beta" to "answered second")
                 fixture.router.state shouldBe RouterState.STOPPED
                 fixture.fake.activeSubscriptionCount shouldBe 0
@@ -420,12 +402,9 @@ val CommunicatorRouterTest by testSuite {
             val contract =
                 UnaryContract(
                     OperationName.of("router.classified"),
-                    routerAddress,
-                    stringPayloadCodec,
-                    stringPayloadCodec,
-                    policy,
+                    Messages(routerAddress, stringPayloadCodec),
+                    Replies(stringPayloadCodec, policy),
                     replyAddresses = routerReplies,
-                    failureSlug = ErrorSlug.of("router-classified-failed"),
                 )
             val fixture = routerFixture(communicatorRoutes { unary(contract) { it.request } }, this)
             fixture.use { fixture ->

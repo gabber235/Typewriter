@@ -9,7 +9,6 @@ import com.typewritermc.protocol.transport.generated.serviceShutdown
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.WatchMessage
-import com.typewritermc.services.libs.communicator.contract.initialRequest
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
 import com.typewritermc.services.libs.communicator.nats.NatsConnectionState
 import com.typewritermc.services.libs.communicator.nats.NatsLifecycleResult
@@ -109,7 +108,7 @@ internal class TypewriterRegistrarRuntime(
     override suspend fun reconnectForBoundPermissions() = lifecycle(MessagingOperation.REAUTHORIZE) { nats.reconnect() }
 
     override suspend fun queryBinding(): RuntimeResult<BindingStatus> =
-        when (val result = communicator.request(queryBindingContract.initialRequest(), service, QueryServiceBindingRequest())) {
+        when (val result = communicator.request(queryBindingContract.initial, service, QueryServiceBindingRequest())) {
             is CommunicationResult.Failure -> messaging(MessagingOperation.BINDING_QUERY, result.error.cause)
             is CommunicationResult.Success -> mapQueryBinding(result.value)
         }

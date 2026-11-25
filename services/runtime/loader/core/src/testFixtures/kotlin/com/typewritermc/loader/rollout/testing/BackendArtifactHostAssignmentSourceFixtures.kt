@@ -51,7 +51,9 @@ class Backend(
 
     private fun answer(request: OutboundMessage): InboundMessage =
         when (request.address) {
-            HOST_SCOPE.serviceHostRegister.requestAddress.render(HOST_SCOPE) -> {
+            HOST_SCOPE.serviceHostRegister.request.address
+                .render(HOST_SCOPE),
+            -> {
                 events += "register"
                 val response =
                     if (failedRegistrations-- > 0) {
@@ -59,13 +61,23 @@ class Backend(
                     } else {
                         RegisterServiceHostResponse.SuccessWrapper(ServiceHost.partial())
                     }
-                InboundMessage(request.address, HOST_SCOPE.serviceHostRegister.responseCodec.encode(response))
+                InboundMessage(
+                    request.address,
+                    HOST_SCOPE.serviceHostRegister.replies.codec
+                        .encode(response),
+                )
             }
 
-            HOST_SCOPE.hostExecutionWatch.requestAddress.render(HOST_SCOPE) -> {
+            HOST_SCOPE.hostExecutionWatch.initial.request.address
+                .render(HOST_SCOPE),
+            -> {
                 events += "watch"
                 val initial = WatchHostExecutionResponse.createDesired(topologyRevision = 1, realm = realmInstance(), engine = null)
-                InboundMessage(request.address, HOST_SCOPE.hostExecutionWatch.initialCodec.encode(initial))
+                InboundMessage(
+                    request.address,
+                    HOST_SCOPE.hostExecutionWatch.initial.replies.codec
+                        .encode(initial),
+                )
             }
 
             else -> {

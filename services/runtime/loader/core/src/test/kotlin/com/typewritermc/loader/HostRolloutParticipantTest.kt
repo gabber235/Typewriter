@@ -413,8 +413,10 @@ val HostRolloutParticipantTest by testSuite {
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
-                            commandContract.requestAddress.render(address),
-                            commandContract.requestCodec.encode(command).toByteArray(),
+                            commandContract.request.address.render(address),
+                            commandContract.request.codec
+                                .encode(command)
+                                .toByteArray(),
                             MessageAddress.of("$coordinatorReplyInbox.command"),
                         ),
                     ),
@@ -427,8 +429,10 @@ val HostRolloutParticipantTest by testSuite {
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
-                            statusContract.requestAddress.render(address),
-                            statusContract.requestCodec.encode(QueryParticipantStatusRequest(attempt = attempt)).toByteArray(),
+                            statusContract.request.address.render(address),
+                            statusContract.request.codec
+                                .encode(QueryParticipantStatusRequest(attempt = attempt))
+                                .toByteArray(),
                             MessageAddress.of("$coordinatorReplyInbox.status"),
                         ),
                     ),
@@ -436,8 +440,10 @@ val HostRolloutParticipantTest by testSuite {
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
-                            probeContract.requestAddress.render(address),
-                            probeContract.requestCodec.encode(ProbeRealmHostsRequest.partial()).toByteArray(),
+                            probeContract.request.address.render(address),
+                            probeContract.request.codec
+                                .encode(ProbeRealmHostsRequest.partial())
+                                .toByteArray(),
                             MessageAddress.of("$coordinatorReplyInbox.presence"),
                         ),
                     ),

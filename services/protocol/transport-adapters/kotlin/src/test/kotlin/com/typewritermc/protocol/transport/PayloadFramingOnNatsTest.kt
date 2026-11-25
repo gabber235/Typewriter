@@ -101,7 +101,7 @@ val PayloadFramingOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEn
 
     test("a framed reply between services waits for the credits the requester answers under its response permission") {
         brokerFixture(broker().url) { realm, quests, _ ->
-            val probe = SCOPE.rolloutProbe.let { bytesRoute(it.name, it.requestAddress, it.replyAddresses, it.limits) }
+            val probe = SCOPE.rolloutProbe.let { bytesRoute(it.name, it.request.address, it.replyAddresses, it.limits) }
             probe.limits?.replyCredit shouldBe true
             val reply = bytes(chunk * TRANSPORT_LIMITS.windowFrames * 2 + 5)
             quests.serving(communicatorRoutes { unaryAt(probe, SCOPE) { reply } }) {
@@ -112,7 +112,7 @@ val PayloadFramingOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEn
 
     test("a framed reply to a panel caller streams without credit, since the panel holds no response permission") {
         brokerFixture(broker().url) { realm, _, panel ->
-            val fetch = SCOPE.editorCatalogFetch.let { bytesRoute(it.name, it.requestAddress, it.replyAddresses, it.limits) }
+            val fetch = SCOPE.editorCatalogFetch.let { bytesRoute(it.name, it.request.address, it.replyAddresses, it.limits) }
             (fetch.limits ?: TRANSPORT_LIMITS).replyCredit shouldBe false
             val reply = bytes(chunk * TRANSPORT_LIMITS.windowFrames * 2 + 5)
             realm.serving(communicatorRoutes { unaryAt(fetch, SCOPE) { reply } }) {
@@ -124,7 +124,7 @@ val PayloadFramingOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEn
     test("a panel request naming a privileged reply subject is not answered there, while its own inbox is") {
         brokerFixture(broker().url) { realm, _, panel ->
             val watcher = watcher()
-            val fetch = SCOPE.editorCatalogFetch.let { bytesRoute(it.name, it.requestAddress, it.replyAddresses, it.limits) }
+            val fetch = SCOPE.editorCatalogFetch.let { bytesRoute(it.name, it.request.address, it.replyAddresses, it.limits) }
             val handled = AtomicInteger()
             realm.serving(communicatorRoutes { unaryAt(fetch, SCOPE) { handled.incrementAndGet().let { bytes(3) } } }) {
                 watcher.landedOn(BLOB_STORE_SUBJECT) {
@@ -140,7 +140,7 @@ val PayloadFramingOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEn
         brokerFixture(broker().url) { _, _, _ ->
             val host = connect("host", "${serviceReplyInboxPrefix("host")}.")
             val watcher = watcher()
-            val store = SCOPE.sharedBlobStore.let { bytesRoute(it.name, it.requestAddress, it.replyAddresses, it.limits) }
+            val store = SCOPE.sharedBlobStore.let { bytesRoute(it.name, it.request.address, it.replyAddresses, it.limits) }
             val handled = AtomicInteger()
             host.serving(communicatorRoutes { unaryAt(store, SCOPE) { handled.incrementAndGet().let { bytes(3) } } }) {
                 watcher.landedOn(ROLLOUT_PROBE_SUBJECT) {
@@ -155,7 +155,7 @@ val PayloadFramingOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEn
     test("a reply waiting for credit cannot reach a panel caller, whose credit the broker refuses") {
         brokerFixture(broker().url) { realm, _, panel ->
             val credited = TRANSPORT_LIMITS.copy(replyCredit = true, frameInactivity = 2.seconds)
-            val fetch = SCOPE.editorCatalogFetch.let { bytesRoute(it.name, it.requestAddress, it.replyAddresses, credited) }
+            val fetch = SCOPE.editorCatalogFetch.let { bytesRoute(it.name, it.request.address, it.replyAddresses, credited) }
             val reply = bytes(chunk * TRANSPORT_LIMITS.windowFrames * 2 + 5)
             realm.serving(communicatorRoutes { unaryAt(fetch, SCOPE) { reply } }) {
                 val started = TimeSource.Monotonic.markNow()

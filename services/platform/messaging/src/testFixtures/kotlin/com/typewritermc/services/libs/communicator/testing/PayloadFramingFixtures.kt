@@ -5,8 +5,10 @@ import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
+import com.typewritermc.services.libs.communicator.contract.Messages
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.Replies
 import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
@@ -84,19 +86,22 @@ val brokerInboxes: ReplyAddressRule<Any> = ReplyAddressRule { _, reply -> reply.
 val UPLOAD =
     UnaryContract(
         OperationName.of("upload.put"),
-        "upload.{id}.put".addressTemplate({ addressValuesOf("id" to it.id) }, { UploadTarget(it.require("id")) }),
-        bytesCodec,
-        bytesCodec,
-        ResponsePolicy(byteArrayOf()) {
-            if (it.isEmpty()) {
-                ResponseClassification(ResponseOutcome.INTERNAL_ERROR, ResponseVariant.of("internal"))
-            } else {
-                ResponseClassification(ResponseOutcome.SUCCESS, ResponseVariant.of("success"))
-            }
-        },
+        Messages(
+            "upload.{id}.put".addressTemplate({ addressValuesOf("id" to it.id) }, { UploadTarget(it.require("id")) }),
+            bytesCodec,
+        ),
+        Replies(
+            bytesCodec,
+            ResponsePolicy(byteArrayOf()) {
+                if (it.isEmpty()) {
+                    ResponseClassification(ResponseOutcome.INTERNAL_ERROR, ResponseVariant.of("internal"))
+                } else {
+                    ResponseClassification(ResponseOutcome.SUCCESS, ResponseVariant.of("success"))
+                }
+            },
+        ),
         replyAddresses = brokerInboxes,
         timeout = 5.seconds,
-        failureSlug = ErrorSlug.of("upload-put-failed"),
         limits = uploadRouterLimits,
     )
 
@@ -144,11 +149,8 @@ suspend fun withUploadRouter(
         }
     val router =
         CommunicatorRouter(
-            serverTransport,
             routes,
             Communicator(serverTransport, harness.telemetry, testPropagators),
-            harness.telemetry,
-            testPropagators,
             this,
             options,
         )

@@ -54,7 +54,8 @@ fun absentContentReply(request: OutboundMessage): TransportResult<InboundMessage
     TransportResult.Success(
         InboundMessage(
             request.address,
-            queryAddress.authoringCompiledQuery.responseCodec.encode(QueryPublishedContentResponse.createAbsent()),
+            queryAddress.authoringCompiledQuery.replies.codec
+                .encode(QueryPublishedContentResponse.createAbsent()),
         ),
     )
 

@@ -15,7 +15,7 @@ val GeneratedResponsePoliciesTest by testSuite {
     val scope = RealmRouteScope(organizationId = "writers", realmId = "quests")
 
     test("variant names classify the responses of a generated route") {
-        val policy = scope.authoringStateQuery.responsePolicy
+        val policy = scope.authoringStateQuery.replies.policy
 
         policy.classify(QueryAuthoringStateResponse.StateWrapper(AuthoringState.partial())) shouldBe
             ResponseClassification.success("state")
@@ -25,7 +25,7 @@ val GeneratedResponsePoliciesTest by testSuite {
     }
 
     test("the internal_error wrapper is the fallback reply") {
-        val policy = scope.authoringStateQuery.responsePolicy
+        val policy = scope.authoringStateQuery.replies.policy
 
         policy.internalFailureResponse shouldBe QueryAuthoringStateResponse.InternalErrorWrapper(InternalError.partial())
         policy.classify(policy.internalFailureResponse) shouldBe ResponseClassification.internalError("internal-error")
@@ -34,7 +34,7 @@ val GeneratedResponsePoliciesTest by testSuite {
     test("artifact conflicts are domain errors rather than successes") {
         val conflict = PublishSharedArtifactResponse.ConflictErrorWrapper(null)
 
-        scope.sharedPublish.responsePolicy
+        scope.sharedPublish.replies.policy
             .classify(conflict)
             .outcome shouldBe ResponseOutcome.DOMAIN_ERROR
     }

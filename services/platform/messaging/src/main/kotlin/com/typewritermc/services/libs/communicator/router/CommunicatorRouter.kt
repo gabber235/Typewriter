@@ -8,10 +8,9 @@ import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
-import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.Replies
 import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
-import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ScatterContract
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.contract.WatchContract
@@ -200,9 +199,9 @@ class CommunicatorRoutesBuilder internal constructor() {
         handler: UnaryHandler<A, Q, R>,
     ) = add(
         parallelism,
-        contract.requestAddress.subscriptionPattern,
+        contract.request.address.subscriptionPattern,
         consumerGroup,
-        contract.replies(),
+        contract.replyCheck(),
         contract.framing(consumerGroup),
     ) { router, message, received ->
         router.unary(contract, handler, message, received)
@@ -217,9 +216,11 @@ class CommunicatorRoutesBuilder internal constructor() {
         handler: UnaryHandler<A, Q, R>,
     ) = add(
         parallelism,
-        contract.requestAddress.subscribedAt(address).subscriptionPattern,
+        contract.request.address
+            .subscribedAt(address)
+            .subscriptionPattern,
         consumerGroup,
-        contract.replies(),
+        contract.replyCheck(),
         contract.framing(consumerGroup),
     ) { router, message, received ->
         router.unary(contract, handler, message, received)
@@ -230,7 +231,7 @@ class CommunicatorRoutesBuilder internal constructor() {
         contract: ScatterContract<A, Q, R>,
         parallelism: Int? = null,
         handler: ScatterHandler<A, Q, R>,
-    ) = add(parallelism, contract.requestAddress.subscriptionPattern, null, contract.replies()) { router, message, received ->
+    ) = add(parallelism, contract.request.address.subscriptionPattern, null, contract.replyCheck()) { router, message, received ->
         router.scatter(contract, handler, message, received)
     }
 
@@ -242,9 +243,11 @@ class CommunicatorRoutesBuilder internal constructor() {
         handler: ScatterHandler<A, Q, R>,
     ) = add(
         parallelism,
-        contract.requestAddress.subscribedAt(address).subscriptionPattern,
+        contract.request.address
+            .subscribedAt(address)
+            .subscriptionPattern,
         null,
-        contract.replies(),
+        contract.replyCheck(),
     ) { router, message, received ->
         router.scatter(contract, handler, message, received)
     }
@@ -276,7 +279,12 @@ class CommunicatorRoutesBuilder internal constructor() {
         parallelism: Int? = null,
         consumerGroup: ConsumerGroup? = null,
         handler: WatchHandler<A, Q, I, U>,
-    ) = add(parallelism, contract.requestAddress.subscriptionPattern, consumerGroup, contract.replies()) { router, message, received ->
+    ) = add(
+        parallelism,
+        contract.initial.request.address.subscriptionPattern,
+        consumerGroup,
+        contract.replyCheck(),
+    ) { router, message, received ->
         router.watch(contract, handler, message, received)
     }
 
@@ -289,9 +297,11 @@ class CommunicatorRoutesBuilder internal constructor() {
         handler: WatchHandler<A, Q, I, U>,
     ) = add(
         parallelism,
-        contract.requestAddress.subscribedAt(address).subscriptionPattern,
+        contract.initial.request.address
+            .subscribedAt(address)
+            .subscriptionPattern,
         consumerGroup,
-        contract.replies(),
+        contract.replyCheck(),
     ) { router, message, received ->
         router.watch(contract, handler, message, received)
     }
@@ -308,11 +318,11 @@ class CommunicatorRoutesBuilder internal constructor() {
         routes += Route(pattern, parallelism, group, replies, framing, process)
     }
 
-    private fun <A : Any> UnaryContract<A, *, *>.replies() = ReplyCheck(name, failureSlug, requestAddress, replyAddresses)
+    private fun <A : Any> UnaryContract<A, *, *>.replyCheck() = ReplyCheck(name, failureSlug, request.address, replyAddresses)
 
-    private fun <A : Any> ScatterContract<A, *, *>.replies() = ReplyCheck(name, failureSlug, requestAddress, replyAddresses)
+    private fun <A : Any> ScatterContract<A, *, *>.replyCheck() = ReplyCheck(name, failureSlug, request.address, replyAddresses)
 
-    private fun <A : Any> WatchContract<A, *, *, *>.replies() = ReplyCheck(name, failureSlug, requestAddress, replyAddresses)
+    private fun <A : Any> WatchContract<A, *, *, *>.replyCheck() = initial.replyCheck()
 
     /**
      * The limits a route assembles framed requests by, or null for routes whose requests are single messages. Frames
@@ -365,14 +375,25 @@ internal class Received(
     val at: TimeMark,
 )
 
-/** How a route sends the reply to one request: by the route's [limits], or the transport's when null, timed from [received]. */
-private class Replying(
+/**
+ * The reply one request owes: which operation owes it, the [replies] it is encoded and classified by, and where it goes
+ * ([to]). It is sent by the route's [limits], or the transport's when null, timed from [received] when set. [template]
+ * is the address template its telemetry records, when it records one.
+ */
+internal class OwedReply<Response : Any>(
+    val name: OperationName,
+    val template: String?,
+    val replies: Replies<Response>,
+    val to: MessageAddress,
     val limits: TransportLimits?,
-    val received: TimeMark,
-)
+    val received: TimeMark?,
+) {
+    val failureSlug: ErrorSlug get() = name.failureSlug
+}
 
 /**
- * Owns route subscriptions and bounded handler workers beneath the supplied parent scope.
+ * Owns route subscriptions and bounded handler workers beneath the supplied parent scope. It sends and records
+ * through the transport, telemetry and propagators of its [communicator].
  *
  * Overlapping patterns are rejected. Start is allowed once; each route answers from the moment it is subscribed, and
  * a failed start releases its subscriptions after draining what they received. Stop closes subscriptions and drains
@@ -380,14 +401,14 @@ private class Replying(
  * session.
  */
 class CommunicatorRouter internal constructor(
-    private val transport: MessageTransport,
     routes: CommunicatorRoutes,
     private val communicator: Communicator,
-    private val telemetry: ServiceTelemetry,
-    private val propagators: ContextPropagators,
     parentScope: CoroutineScope,
     private val options: RouterOptions = RouterOptions(),
 ) {
+    private val transport: MessageTransport = communicator.transport
+    private val telemetry: ServiceTelemetry = communicator.telemetry
+    private val propagators: ContextPropagators = communicator.propagators
     private val definitions =
         routes.routes.also { all ->
             require(
@@ -777,7 +798,7 @@ class CommunicatorRouter internal constructor(
         handler: UnaryHandler<A, Q, R>,
         message: InboundMessage,
         received: TimeMark,
-    ) = replying(contract, message, received) { main, address, request ->
+    ) = replying(contract, null, message, received) { main, address, request ->
         context(main) {
             handler.handle(
                 IncomingUnaryCall(address, request, message.headers, message.address, contract, communicator),
@@ -810,47 +831,29 @@ class CommunicatorRouter internal constructor(
         message: InboundMessage,
         received: TimeMark,
         handler: suspend (MainSpanScope, A, Q) -> R?,
-    ) = consume(contract.name, contract.requestAddress.template, contract.failureSlug, message) { main ->
+    ) = consume(contract.name, contract.request.address.template, contract.failureSlug, message) { main ->
         val replyTo =
             message.replyTo ?: throw SluggedException.wrap(
                 contract.failureSlug,
                 IllegalStateException("Missing reply address"),
             )
+        val reply = OwedReply(contract.name, null, contract.replies, replyTo, contract.limits, received)
         val response =
             try {
                 handler(
                     main,
-                    requireNotNull(contract.requestAddress.match(message.address)),
-                    contract.requestCodec.decode(message.payload),
+                    requireNotNull(contract.request.address.match(message.address)),
+                    contract.request.codec.decode(message.payload),
                 )
             } catch (original: Throwable) {
                 original.rethrowExceptional()
-                sendInternalFailure(
-                    main,
-                    contract.name,
-                    null,
-                    contract.responseCodec,
-                    contract.responsePolicy,
-                    contract.failureSlug,
-                    replyTo,
-                    original,
-                    Replying(contract.limits, received),
-                )
+                sendInternalFailure(main, reply, original)
                 throw original
             }
         if (response == null) return@consume Unit
-        val classification = contract.responsePolicy.classify(response)
+        val classification = contract.replies.policy.classify(response)
         annotateResponse(main, classification)
-        sendReply(
-            contract.name,
-            null,
-            contract.responseCodec,
-            contract.failureSlug,
-            replyTo,
-            response,
-            classification,
-            Replying(contract.limits, received),
-        )
+        sendReply(reply, response, classification)
         classification.operationOutcome(Unit)
     }
 
@@ -859,7 +862,7 @@ class CommunicatorRouter internal constructor(
         handler: WatchHandler<A, Q, I, U>,
         message: InboundMessage,
         received: TimeMark,
-    ) = replying(contract, message, received) { main, address, request ->
+    ) = replying(contract.initial, contract.initial.request.address.template, message, received) { main, address, request ->
         context(main) {
             handler.handle(
                 IncomingWatchCall(address, request, message.headers, message.address, contract, communicator),
@@ -879,65 +882,31 @@ class CommunicatorRouter internal constructor(
         }
     }
 
+    /** Handles one request of [contract] and sends its reply; [responseTemplate] is the template the reply's telemetry records. */
     private suspend fun <A : Any, Q : Any, R : Any> replying(
         contract: UnaryContract<A, Q, R>,
-        message: InboundMessage,
-        received: TimeMark,
-        handler: suspend (MainSpanScope, A, Q) -> R,
-    ) = replying(
-        contract.name,
-        contract.requestAddress,
-        null,
-        contract.requestCodec,
-        contract.responseCodec,
-        contract.responsePolicy,
-        contract.failureSlug,
-        Replying(contract.limits, received),
-        message,
-        handler,
-    )
-
-    private suspend fun <A : Any, Q : Any, R : Any> replying(
-        contract: WatchContract<A, Q, R, *>,
-        message: InboundMessage,
-        received: TimeMark,
-        handler: suspend (MainSpanScope, A, Q) -> R,
-    ) = replying(
-        contract.name,
-        contract.requestAddress,
-        contract.requestAddress.template,
-        contract.requestCodec,
-        contract.initialCodec,
-        contract.initialPolicy,
-        contract.failureSlug,
-        Replying(contract.limits, received),
-        message,
-        handler,
-    )
-
-    private suspend fun <A : Any, Q : Any, R : Any> replying(
-        name: OperationName,
-        template: AddressTemplate<A>,
         responseTemplate: String?,
-        requestCodec: PayloadCodec<Q>,
-        responseCodec: PayloadCodec<R>,
-        policy: ResponsePolicy<R>,
-        slug: ErrorSlug,
-        replying: Replying,
         message: InboundMessage,
+        received: TimeMark,
         handler: suspend (MainSpanScope, A, Q) -> R,
-    ) = consume(name, template.template, slug, message) { main ->
+    ) = consume(contract.name, contract.request.address.template, contract.failureSlug, message) { main ->
         val replyTo =
             message.replyTo ?: throw SluggedException.wrap(
-                slug,
+                contract.failureSlug,
                 IllegalStateException("Missing reply address"),
             )
+        val reply = OwedReply(contract.name, responseTemplate, contract.replies, replyTo, contract.limits, received)
+        val policy = contract.replies.policy
         val response =
             try {
-                handler(main, requireNotNull(template.match(message.address)), requestCodec.decode(message.payload))
+                handler(
+                    main,
+                    requireNotNull(contract.request.address.match(message.address)),
+                    contract.request.codec.decode(message.payload),
+                )
             } catch (original: Throwable) {
                 original.rethrowExceptional()
-                sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original, replying)
+                sendInternalFailure(main, reply, original)
                 throw original
             }
         val classification =
@@ -945,33 +914,28 @@ class CommunicatorRouter internal constructor(
                 policy.classify(response)
             } catch (original: Throwable) {
                 original.rethrowExceptional()
-                sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original, replying)
+                sendInternalFailure(main, reply, original)
                 throw original
             }
         annotateResponse(main, classification)
-        sendReply(name, responseTemplate, responseCodec, slug, replyTo, response, classification, replying)
+        sendReply(reply, response, classification)
         classification.operationOutcome(Unit)
     }
 
     private suspend fun <R : Any> sendInternalFailure(
         main: MainSpanScope,
-        name: OperationName,
-        template: String?,
-        codec: PayloadCodec<R>,
-        policy: ResponsePolicy<R>,
-        slug: ErrorSlug,
-        replyTo: MessageAddress,
+        reply: OwedReply<R>,
         original: Throwable,
-        replying: Replying,
     ) {
         try {
+            val policy = reply.replies.policy
             val response = policy.internalFailureResponse
             val classification = policy.classify(response)
             annotateResponse(main, classification)
-            sendReply(name, template, codec, slug, replyTo, response, classification, replying)
+            sendReply(reply, response, classification)
         } catch (secondary: Throwable) {
             secondary.rethrowExceptional()
-            val wrapped = SluggedException.wrap(slug, secondary)
+            val wrapped = SluggedException.wrap(reply.failureSlug, secondary)
             if (wrapped !== original) original.addSuppressed(wrapped)
         }
     }
@@ -987,27 +951,11 @@ class CommunicatorRouter internal constructor(
     }
 
     private suspend fun <R : Any> sendReply(
-        name: OperationName,
-        template: String?,
-        codec: PayloadCodec<R>,
-        slug: ErrorSlug,
-        replyTo: MessageAddress,
+        reply: OwedReply<R>,
         response: R,
         classification: ResponseClassification,
-        replying: Replying,
     ) {
-        val sent =
-            communicator.sendResponse(
-                name.value,
-                template,
-                replyTo,
-                response,
-                codec,
-                classification,
-                slug,
-                limits = replying.limits,
-                received = replying.received,
-            )
+        val sent = communicator.sendResponse(reply, response, classification)
         if (sent is CommunicationResult.Failure) {
             throw SluggedException.wrap(sent.error.slug, sent.error.cause ?: IllegalStateException("Reply failed"))
         }
@@ -1086,16 +1034,7 @@ class CommunicatorRouter internal constructor(
 }
 
 private fun <A : Any, Q : Any, R : Any> ScatterContract<A, Q, R>.asUnaryContract(): UnaryContract<A, Q, R> =
-    UnaryContract(
-        name = name,
-        requestAddress = requestAddress,
-        requestCodec = requestCodec,
-        responseCodec = responseCodec,
-        responsePolicy = responsePolicy,
-        replyAddresses = replyAddresses,
-        failureSlug = failureSlug,
-        limits = limits,
-    )
+    UnaryContract(name, request, replies, replyAddresses, limits = limits)
 
 private fun sluggedClose(
     route: Route,

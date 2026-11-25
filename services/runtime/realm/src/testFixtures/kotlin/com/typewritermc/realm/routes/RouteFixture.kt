@@ -52,7 +52,7 @@ internal class RouteFixture(
             contract,
             address
                 .contract()
-                .requestCodec
+                .request.codec
                 .encode(request)
                 .toByteArray(),
         )
@@ -63,7 +63,7 @@ internal class RouteFixture(
         payload: ByteArray,
     ): Response {
         val unary = address.contract()
-        return unary.responseCodec.decode(exchange(unary.requestAddress.render(address), payload))
+        return unary.replies.codec.decode(exchange(unary.request.address.render(address), payload))
     }
 
     /** Opens the watch of [contract] with [request] and returns the initial reply the route answers with. */
@@ -72,7 +72,15 @@ internal class RouteFixture(
         request: Request,
     ): Initial {
         val watch = address.contract()
-        return watch.initialCodec.decode(exchange(watch.requestAddress.render(address), watch.requestCodec.encode(request).toByteArray()))
+        return watch.initial.replies.codec.decode(
+            exchange(
+                watch.initial.request.address
+                    .render(address),
+                watch.initial.request.codec
+                    .encode(request)
+                    .toByteArray(),
+            ),
+        )
     }
 
     /** The events of [contract] the routes published so far, in order. */

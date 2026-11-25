@@ -101,7 +101,7 @@ class FakeMessageTransport(
     fun <Response : Any> answer(
         contract: UnaryContract<*, *, Response>,
         response: Response,
-    ) = respondWith { request, _ -> TransportResult.Success(InboundMessage(request.address, contract.responseCodec.encode(response))) }
+    ) = respondWith { request, _ -> TransportResult.Success(InboundMessage(request.address, contract.replies.codec.encode(response))) }
 
     /** Configures the next request to return [error]. */
     fun failNextRequest(error: TransportError) = synchronized(lock) { requestFailures.addLast(error) }
