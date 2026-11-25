@@ -11,6 +11,7 @@ import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.SessionId
 import com.typewritermc.services.libs.communicator.kv.LeaseEntry
+import com.typewritermc.services.libs.communicator.kv.LeaseState
 import com.typewritermc.services.libs.communicator.kv.LeaseTimings
 import com.typewritermc.services.libs.communicator.testing.ScriptedBuckets
 import com.typewritermc.services.libs.communicator.testing.VirtualKeyValue
@@ -22,7 +23,7 @@ import java.util.UUID
 /**
  * Engines of one Realm keeping sessions in a sessions bucket in memory, all on the virtual time of [scope]: each engine
  * reaches the bucket through its own [ScriptedBuckets], and [keyValue] moves time for all of them. Timings are
- * [SessionHarness.SHORT]: refresh every 300 ms, live 2 s, a grace of 1 s.
+ * [SessionHarness.SHORT]: refresh every 300 ms, live 2 s, a vacancy of 1 s.
  */
 class VirtualSessions(
     private val scope: TestScope,
@@ -63,7 +64,10 @@ class VirtualSessions(
         protagonist: Protagonist,
         id: SessionId,
     ) {
-        val whole = SessionLeaseCodec.encode(LeaseEntry("engine-gone", Instant.EPOCH, SessionValue(protagonist, Instant.EPOCH)))
+        val whole =
+            SessionLeaseCodec.encode(
+                LeaseEntry(LeaseState.Held("engine-gone", Instant.EPOCH), SessionValue(protagonist, Instant.EPOCH)),
+            )
         keyValue.write(sessionKey(protagonist, id), whole.copyOf(whole.size / 2), timings.ttl, BUCKET)
     }
 

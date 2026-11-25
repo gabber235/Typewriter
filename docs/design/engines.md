@@ -87,7 +87,7 @@ val paperModule = module {
 }
 ```
 
-On a join, the session listener starts the key write off the game thread, so the tick never waits on NATS; on a quit, it shortens the key to the grace. An engine reload without a Paper restart unregisters the listener and leaves the keys alone; the new engine lists the online players and takes their keys over, so sessions survive an engine upgrade.
+On a join, the session listener starts the key write off the game thread, so the tick never waits on NATS; on a quit, it writes the session vacant: alive for the vacancy so a server move or a rejoin takes it over, but held by nobody. An engine reload without a Paper restart unregisters the listener and leaves the keys alone; the new engine lists the online players and takes their keys over, so sessions survive an engine upgrade.
 
 ## Engine communication
 

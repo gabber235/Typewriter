@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Reports each panel tab in this engine's Realm as a session of the tab's user, from the panel's presence heartbeat;
  * there is no second heartbeat. The first heartbeat in the Realm connects the tab's session, and each later one keeps
  * it. A tab that leaves the Realm or says it left disconnects at once, and a tab whose heartbeats stop for a key's
- * time to live disconnects then, so its key ends after the grace. The protagonist is the user the broker bound into
+ * time to live disconnects then, so its session ends after the vacancy. The protagonist is the user the broker bound into
  * the subject, never a value from the payload.
  */
 class PresenceSessions(

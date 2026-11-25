@@ -24,7 +24,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * The panel engine of the [sessions] harness's Realm, fed by panel tabs of [user] that publish the presence heartbeat
- * as the panel does. Heartbeats come every 300 ms, a key lives 2 s, a grace lasts 1 s.
+ * as the panel does. Heartbeats come every 300 ms, a key lives 2 s, a vacancy lasts 1 s.
  */
 class PanelEngineHarness private constructor(
     val sessions: SessionHarness,
@@ -74,7 +74,7 @@ class PanelEngineHarness private constructor(
     companion object {
         /** The panel engine's timings in the harness. */
         val TIMINGS: LeaseTimings =
-            LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, grace = 1.seconds, retry = 100.milliseconds)
+            LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, vacancy = 1.seconds, retry = 100.milliseconds)
 
         /** The location of a tab in Realm [id]. */
         fun realm(id: String): PresenceLocation =

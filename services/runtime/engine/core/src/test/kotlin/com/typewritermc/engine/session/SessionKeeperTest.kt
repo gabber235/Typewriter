@@ -28,10 +28,14 @@ val SessionKeeperTest by testSuite {
         sessions.keyValue.settle()
 
         sessions.entry(protagonist, session) shouldBe
-            SessionEntry(protagonist, EngineId("engine-a"), since = VirtualKeyValue.START, connected = VirtualKeyValue.START)
+            SessionEntry(
+                protagonist,
+                since = VirtualKeyValue.START,
+                state = SessionState.Held(EngineId("engine-a"), connected = VirtualKeyValue.START),
+            )
     }
 
-    test("SESSION-2 a rejoin within the grace keeps when the session began and stamps the new connection") {
+    test("SESSION-2 a rejoin within the vacancy keeps when the session began and stamps the new connection") {
         val sessions = VirtualSessions(testScope).apply { createBucket() }
         val engine = sessions.engine("engine-a")
         val (protagonist, session) = sessions.player()
@@ -39,16 +43,20 @@ val SessionKeeperTest by testSuite {
         sessions.keyValue.advance(sessions.timings.ttl)
 
         engine.keeper.disconnected(session)
-        sessions.keyValue.advance(sessions.timings.grace / 2)
+        sessions.keyValue.advance(sessions.timings.vacancy / 2)
         engine.keeper.connected(protagonist, session)
         sessions.keyValue.advance(sessions.timings.ttl * 3)
 
         val entry = sessions.entry(protagonist, session).shouldNotBeNull()
         entry.since shouldBe VirtualKeyValue.START
-        entry.connected shouldBe VirtualKeyValue.START + (sessions.timings.ttl + sessions.timings.grace / 2).toJavaDuration()
+        entry.state shouldBe
+            SessionState.Held(
+                EngineId("engine-a"),
+                VirtualKeyValue.START + (sessions.timings.ttl + sessions.timings.vacancy / 2).toJavaDuration(),
+            )
     }
 
-    test("SESSION-3 a server move keeps when the session began, whether the join or the quit comes first") {
+    test("SESSION-3 a server move in either order keeps the session and when it began, and lists only the new engine as holder") {
         for (joinFirst in listOf(true, false)) {
             val sessions = VirtualSessions(testScope).apply { createBucket() }
             val old = sessions.engine("engine-a")
@@ -66,6 +74,7 @@ val SessionKeeperTest by testSuite {
             val entry = sessions.entry(protagonist, session).shouldNotBeNull()
             entry.holder shouldBe EngineId("engine-b")
             entry.since shouldBe began
+            old.keeper.holders(protagonist) shouldBe setOf(EngineId("engine-b"))
             new.keeper.holds(protagonist) shouldBe true
             old.keeper.holds(protagonist) shouldBe false
         }
@@ -107,7 +116,7 @@ val SessionKeeperTest by testSuite {
         entry.since shouldBeGreaterThan VirtualKeyValue.START + sessions.timings.ttl.toJavaDuration()
     }
 
-    test("SESSION-6 quits reported right after their joins end every session once the grace passed") {
+    test("SESSION-6 quits reported right after their joins end every session once the vacancy passed") {
         val sessions = VirtualSessions(testScope).apply { createBucket() }
         val engine = sessions.engine("engine-a")
         val players = List(20) { sessions.player() }
@@ -116,12 +125,12 @@ val SessionKeeperTest by testSuite {
             engine.keeper.connected(protagonist, session)
             engine.keeper.disconnected(session)
         }
-        sessions.keyValue.advance(sessions.timings.grace)
+        sessions.keyValue.advance(sessions.timings.vacancy)
 
         players.forEach { (protagonist, session) -> sessions.entry(protagonist, session).shouldBeNull() }
     }
 
-    test("SESSION-7 the holders of a protagonist are every engine holding one of its sessions, and none once it left") {
+    test("SESSION-7 the holders of a protagonist are every engine holding one of its sessions") {
         val sessions = VirtualSessions(testScope).apply { createBucket() }
         val minecraft = sessions.engine("engine-a")
         val panel = sessions.engine("panel.realm")
@@ -132,11 +141,6 @@ val SessionKeeperTest by testSuite {
         sessions.keyValue.settle()
 
         minecraft.keeper.holders(protagonist) shouldContainExactlyInAnyOrder setOf(EngineId("engine-a"), EngineId("panel.realm"))
-
-        minecraft.keeper.disconnected(session)
-        panel.keeper.disconnected(tab)
-        sessions.keyValue.advance(sessions.timings.grace)
-        minecraft.keeper.holders(protagonist) shouldBe emptySet()
     }
 
     test("SESSION-8 a damaged or cut off value under a joining session's key is written over, and holders skip such values") {
@@ -153,5 +157,19 @@ val SessionKeeperTest by testSuite {
 
         sessions.entry(protagonist, session).shouldNotBeNull().holder shouldBe EngineId("engine-a")
         engine.keeper.holders(protagonist) shouldBe setOf(EngineId("engine-a"))
+    }
+
+    test("SESSION-9 right after a quit the session has no holder, while it stays alive and keeps when it began") {
+        val sessions = VirtualSessions(testScope).apply { createBucket() }
+        val engine = sessions.engine("engine-a")
+        val (protagonist, session) = sessions.player()
+        engine.keeper.connected(protagonist, session)
+        sessions.keyValue.advance(sessions.timings.ttl)
+
+        engine.keeper.disconnected(session)
+        sessions.keyValue.settle()
+
+        engine.keeper.holders(protagonist) shouldBe emptySet()
+        sessions.entry(protagonist, session) shouldBe SessionEntry(protagonist, since = VirtualKeyValue.START, state = SessionState.Vacant)
     }
 }

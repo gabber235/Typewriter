@@ -11,12 +11,18 @@ interface SessionReporter {
         id: SessionId,
     )
 
-    /** Session [id] left this engine; it ends after its engine kind's grace unless an engine takes it again. */
+    /**
+     * Session [id] left this engine. Nobody holds it from then on; it stays alive, vacant, for its engine kind's vacancy
+     * and ends unless an engine takes it over.
+     */
     fun disconnected(id: SessionId)
 }
 
 /** Reads which engines hold a protagonist's sessions now, across the Realm. */
 interface Sessions {
-    /** The engines that hold at least one live session of [protagonist]; empty while it is offline. */
+    /**
+     * The engines holding at least one session of [protagonist] now. A vacant session, alive but left by its protagonist
+     * and awaiting a takeover, has no holder, so an engine the protagonist left is never listed.
+     */
     suspend fun holders(protagonist: Protagonist): Set<EngineId>
 }

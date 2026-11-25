@@ -8,6 +8,7 @@ import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueRead
 import com.typewritermc.services.libs.communicator.kv.LeaseCodec
 import com.typewritermc.services.libs.communicator.kv.LeaseEntry
+import com.typewritermc.services.libs.communicator.kv.LeaseState
 import okio.ByteString.Companion.toByteString
 import java.io.IOException
 import java.time.Instant
@@ -16,17 +17,32 @@ import skirout.service.v1.session.EngineId as WireEngineId
 import skirout.service.v1.session.PrincipalId as WirePrincipalId
 import skirout.service.v1.session.Protagonist as WireProtagonist
 import skirout.service.v1.session.SessionEntry as WireSessionEntry
+import skirout.service.v1.session.SessionHold as WireSessionHold
+import skirout.service.v1.session.SessionState as WireSessionState
 
-/**
- * One session's entry in the Realm's sessions bucket: who it belongs to, which engine holds it, since when the
- * session runs, and when the holder's connection began on the holder's clock.
- */
+/** One session's entry in the Realm's sessions bucket: who it belongs to, since when it runs, and who holds it. */
 data class SessionEntry(
     val protagonist: Protagonist,
-    val holder: EngineId,
     val since: Instant,
-    val connected: Instant,
-)
+    val state: SessionState,
+) {
+    /** The engine holding the session, or null while it is vacant. */
+    val holder: EngineId? get() = (state as? SessionState.Held)?.holder
+}
+
+/**
+ * Who holds a session. A vacant session is alive, so a server move or a rejoin takes it over and nothing it owns ends,
+ * but nobody holds it: its engine released it when the protagonist left, and nothing is sent there.
+ */
+sealed interface SessionState {
+    /** [holder] holds the session; its connection began at [connected] on its own clock. */
+    data class Held(
+        val holder: EngineId,
+        val connected: Instant,
+    ) : SessionState
+
+    data object Vacant : SessionState
+}
 
 /** What a session's lease keeps besides its holder and claim: whose session it is and since when it runs. */
 internal data class SessionValue(
@@ -65,19 +81,34 @@ internal object SessionLeaseCodec : LeaseCodec<SessionValue> {
                                     id = entry.value.protagonist.principal.id,
                                 ),
                         ),
-                    holder = WireEngineId(value = entry.holder),
                     since = entry.value.since,
-                    connected = entry.claimed,
+                    state =
+                        when (val state = entry.state) {
+                            is LeaseState.Held -> {
+                                WireSessionState.HeldWrapper(
+                                    WireSessionHold(holder = WireEngineId(value = state.holder), connected = state.claimed),
+                                )
+                            }
+
+                            LeaseState.Vacant -> {
+                                WireSessionState.VACANT
+                            }
+                        },
                 ),
             ).toByteArray()
 
     override fun decode(bytes: ByteArray): LeaseEntry<SessionValue>? =
         try {
             val wire = WireSessionEntry.serializer.fromBytes(bytes.toByteString())
+            val state =
+                when (val state = wire.state) {
+                    is WireSessionState.HeldWrapper -> LeaseState.Held(state.value.holder.value, state.value.connected)
+                    WireSessionState.VACANT -> LeaseState.Vacant
+                    else -> return unreadable("a session state no engine knows: $state")
+                }
             LeaseEntry(
-                holder = wire.holder.value,
-                claimed = wire.connected,
-                value = SessionValue(Protagonist(PrincipalId(wire.protagonist.principal.kind, wire.protagonist.principal.id)), wire.since),
+                state,
+                SessionValue(Protagonist(PrincipalId(wire.protagonist.principal.kind, wire.protagonist.principal.id)), wire.since),
             )
         } catch (failure: IllegalArgumentException) {
             unreadable(failure)
@@ -86,14 +117,22 @@ internal object SessionLeaseCodec : LeaseCodec<SessionValue> {
             unreadable(failure)
         }
 
-    private fun unreadable(failure: Exception): Nothing? {
+    private fun unreadable(failure: Any): Nothing? {
         log.warning("Skipped a session value no engine can read: $failure")
         return null
     }
 }
 
 internal fun LeaseEntry<SessionValue>.toSessionEntry(): SessionEntry =
-    SessionEntry(value.protagonist, EngineId(holder), value.since, claimed)
+    SessionEntry(
+        protagonist = value.protagonist,
+        since = value.since,
+        state =
+            when (val state = state) {
+                is LeaseState.Held -> SessionState.Held(EngineId(state.holder), state.claimed)
+                LeaseState.Vacant -> SessionState.Vacant
+            },
+    )
 
 /** The live entry of [protagonist]'s session [id] in this sessions bucket, or null when there is none or no engine can read it; a failed read throws its cause. */
 suspend fun KeyValueBucket.readSessionEntry(

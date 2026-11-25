@@ -26,13 +26,14 @@ import kotlin.time.toJavaDuration
 
 /**
  * How long leased keys live. A held key is rewritten every [refresh] with [ttl], so a holder that loses the broker for
- * less than [ttl] loses nothing; a released key lives [grace], its holder kind's time to come back. A failed request
- * waits [retry] before it tries again. A claim read more than [skew] ahead of the reader's clock is reported.
+ * less than [ttl] loses nothing; a released key stays vacant for [vacancy], its holder kind's time for a takeover. A
+ * failed request waits [retry] before it tries again. A claim read more than [skew] ahead of the reader's clock is
+ * reported.
  */
 data class LeaseTimings(
     val refresh: Duration,
     val ttl: Duration,
-    val grace: Duration,
+    val vacancy: Duration,
     val retry: Duration = 1.seconds,
     val skew: Duration = 1.seconds,
 ) {
@@ -41,14 +42,29 @@ data class LeaseTimings(
     }
 }
 
-/** One leased key's entry: the [holder], the instant its claim began on that holder's clock, and the [value] it keeps. */
+/** One leased key's entry: who holds it, if anyone, and the [value] it keeps. */
 data class LeaseEntry<V>(
-    val holder: String,
-    val claimed: Instant,
+    val state: LeaseState,
     val value: V,
 ) {
-    /** Whether this claim is newer than [other]: claimed later, or at the same instant by a greater holder id. */
-    fun newerThan(other: LeaseEntry<*>): Boolean = claimed > other.claimed || (claimed == other.claimed && holder > other.holder)
+    /** The holder keeping the key alive, or null while the key is vacant. */
+    val holder: String? get() = (state as? LeaseState.Held)?.holder
+}
+
+/**
+ * Who holds a leased key. A held key names its holder and when its claim began; a vacant key is alive but held by
+ * nobody: its holder released it, and it waits for a takeover until its vacancy ends.
+ */
+sealed interface LeaseState {
+    data class Held(
+        val holder: String,
+        val claimed: Instant,
+    ) : LeaseState {
+        /** Whether this claim is newer than [other]: claimed later, or at the same instant by a greater holder id. */
+        fun newerThan(other: Held): Boolean = claimed > other.claimed || (claimed == other.claimed && holder > other.holder)
+    }
+
+    data object Vacant : LeaseState
 }
 
 /** Writes a lease's entry and reads it back; [decode] returns null for a value it cannot read, which counts as no entry. */
@@ -63,14 +79,16 @@ interface LeaseCodec<V> {
  * and of two holders claiming a key the newer claim holds it, whatever order the broker sees their writes in.
  *
  * A [claim] counts in [holds] at once, without the network, and writes the key naming this holder, the instant of the
- * claim on [clock], and its value. Whenever a claim reads the key, also after a conflict, it writes over an absent or
- * unreadable entry, its own, or an older claim; a newer claim of another holder means the key is lost for good. A held
- * key is rewritten every refresh with the time to live and follows the same rule on a conflict, so a holder that missed
- * its protagonist leaving stops once a newer claim took the key, and one whose key expired during an outage writes it
- * again. A [release] writes the key once more with the grace as its time to live; a conflict on a key this holder still
- * holds came from its own write whose answer was lost, so the release goes on at the key's current revision. A conflict
- * costs one read and one write; only a failed request waits before it tries again. [close] stops every write and leaves
- * the keys, so a reloaded holder takes them over and a crashed one lets them expire.
+ * claim on [clock], and its value. Whenever a claim reads the key, also after a conflict, it writes over an absent,
+ * unreadable or vacant entry, its own, or an older claim; a newer claim of another holder means the key is lost for
+ * good. A held key is rewritten every refresh with the time to live and follows the same rule on a conflict, so a
+ * holder that missed its protagonist leaving stops once a newer claim took the key, and one whose key expired during an
+ * outage writes it again. A [release] writes the key vacant at its own revision, with the vacancy as its time to live:
+ * the key stays alive for a takeover, but nobody holds it. A conflict on a key this holder still holds came from its own
+ * write whose answer was lost, so the release goes on at the key's current revision; a release never writes over
+ * another holder's claim. A conflict costs one read and one write; only a failed request waits before it tries again.
+ * [close] stops every write and leaves the keys, so a reloaded holder takes them over and a crashed one lets them
+ * expire.
  *
  * Calls return at once; their writes run on [parent]'s dispatcher, per key in the order of the calls, and a newer call
  * stops an older claim before its next write.
@@ -108,13 +126,13 @@ class Leases<V>(
             slot.lock.withLock {
                 slot.refresher?.cancelAndJoin()
                 slot.refresher = null
-                when (val taken = take(key, Claim(claimed, value), slot, call)) {
+                when (val taken = take(key, Claim(LeaseState.Held(holder, claimed), value), slot, call)) {
                     is Taken.Held -> {
                         slot.held = taken.held
                         if (slot.calls == call) slot.refresher = scope.launch { keep(key, slot, taken.held, call) }
                     }
 
-                    // A newer call came: it leaves the key the way it finds it, so a release still shortens the last held key.
+                    // A newer call came: it leaves the key the way it finds it, so a release still vacates the last held key.
                     Taken.Superseded -> {
                         Unit
                     }
@@ -127,14 +145,14 @@ class Leases<V>(
         }
     }
 
-    /** Lets [key] go: it lives the grace, so this holder or another can claim it again before it expires. */
+    /** Lets [key] go: it stays vacant for the vacancy, held by nobody, so this holder or another can take it over. */
     fun release(key: String) {
         val (slot, call) = call(key, holding = false)
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
             slot.lock.withLock {
                 slot.refresher?.cancelAndJoin()
                 slot.refresher = null
-                slot.held?.let { shorten(key, it) }
+                slot.held?.let { vacate(key, it) }
                 slot.held = null
                 // Forget the key unless a call came since, so a holder keeps no state for keys it let go.
                 slots.computeIfPresent(key) { _, current -> current.takeUnless { it === slot && it.calls == call } }
@@ -145,7 +163,7 @@ class Leases<V>(
     /** Whether this holder holds [key]: claimed, not released since, and not lost to a newer claim. */
     fun holds(key: String): Boolean = slots[key]?.holding == true
 
-    /** The live entries of the keys matching [filter], skipping values no holder can read; a failed read throws its cause. */
+    /** The live entries of the keys matching [filter], held and vacant, skipping values no holder can read; a failed read throws its cause. */
     suspend fun entries(filter: String): List<LeaseEntry<V>> {
         val bucket = bucket() ?: return emptyList()
         val keys =
@@ -204,8 +222,8 @@ class Leases<V>(
     }
 
     /**
-     * Reads [key] and writes [claim] over it when the rule lets it: over an absent or unreadable entry, its own, or an
-     * older claim. [current] says whether the call is still the slot's latest, checked right before the write.
+     * Reads [key] and writes [claim] over it when the rule lets it: over an absent, unreadable or vacant entry, its own,
+     * or an older claim. [current] says whether the call is still the slot's latest, checked right before the write.
      */
     private suspend fun write(
         bucket: KeyValueBucket,
@@ -220,17 +238,17 @@ class Leases<V>(
 
             KeyValueRead.Absent -> {
                 if (!current()) return Write.Conflict
-                val entry = LeaseEntry(holder, claim.claimed, claim.value(null))
+                val entry = LeaseEntry(claim.state, claim.value(null))
                 bucket.create(key, codec.encode(entry), timings.ttl).outcome(entry, claim)
             }
 
             is KeyValueRead.Found -> {
                 val found = codec.decode(read.entry.value)
-                val mine = LeaseEntry(holder, claim.claimed, Unit)
-                if (found != null && found.holder != holder) report(found)
-                if (found != null && found.holder != holder && found.newerThan(mine)) return Write.Lost
+                val other = (found?.state as? LeaseState.Held)?.takeIf { it.holder != holder }
+                other?.let(::report)
+                if (other != null && other.newerThan(claim.state)) return Write.Lost
                 if (!current()) return Write.Conflict
-                val entry = LeaseEntry(holder, claim.claimed, claim.value(found?.value))
+                val entry = LeaseEntry(claim.state, claim.value(found?.value))
                 bucket.update(key, codec.encode(entry), timings.ttl, read.entry.revision).outcome(entry, claim)
             }
         }
@@ -271,58 +289,58 @@ class Leases<V>(
     }
 
     /**
-     * Writes [held] once more with the grace as its time to live, until it is written, another holder holds the key, or
-     * the key is gone. A conflict on a key this holder still holds came from its own write whose answer was lost.
+     * Writes [held] vacant with the vacancy as its time to live, until it is written, the key is no longer this holder's,
+     * or the key is gone. A conflict on a key this holder still holds came from its own write whose answer was lost.
      */
-    private suspend fun shorten(
+    private suspend fun vacate(
         key: String,
         held: Held<V>,
     ) {
         var revision = held.revision
         while (true) {
-            when (val step = bucket()?.let { shortenAt(it, key, held, revision) } ?: Shorten.Retry) {
-                Shorten.Done -> return
-                is Shorten.Again -> revision = step.revision
-                Shorten.Retry -> delay(timings.retry)
+            when (val step = bucket()?.let { vacateAt(it, key, held, revision) } ?: Vacate.Retry) {
+                Vacate.Done -> return
+                is Vacate.Again -> revision = step.revision
+                Vacate.Retry -> delay(timings.retry)
             }
         }
     }
 
-    /** One try of [shorten] at [revision]: done, again at the key's current revision, or again after the retry wait. */
-    private suspend fun shortenAt(
+    /** One try of [vacate] at [revision]: done, again at the key's current revision, or again after the retry wait. */
+    private suspend fun vacateAt(
         bucket: KeyValueBucket,
         key: String,
         held: Held<V>,
         revision: Long,
-    ): Shorten =
-        when (bucket.update(key, codec.encode(held.entry), timings.grace, revision)) {
+    ): Vacate =
+        when (bucket.update(key, codec.encode(held.entry.copy(state = LeaseState.Vacant)), timings.vacancy, revision)) {
             is KeyValueWrite.Written -> {
-                Shorten.Done
+                Vacate.Done
             }
 
             KeyValueWrite.Conflict -> {
                 when (val read = bucket.get(key)) {
                     is KeyValueRead.Found -> {
-                        if (codec.decode(read.entry.value)?.holder == holder) Shorten.Again(read.entry.revision) else Shorten.Done
+                        if (codec.decode(read.entry.value)?.holder == holder) Vacate.Again(read.entry.revision) else Vacate.Done
                     }
 
                     KeyValueRead.Absent -> {
-                        Shorten.Done
+                        Vacate.Done
                     }
 
                     is KeyValueRead.Failed -> {
-                        Shorten.Retry
+                        Vacate.Retry
                     }
                 }
             }
 
             is KeyValueWrite.Failed -> {
-                Shorten.Retry
+                Vacate.Retry
             }
         }
 
     /** Logs and counts [found] when its claim is further ahead of this holder's clock than the skew bound. */
-    private fun report(found: LeaseEntry<V>) {
+    private fun report(found: LeaseState.Held) {
         val bound = clock.instant().plus(timings.skew.toJavaDuration())
         if (found.claimed <= bound) return
         ahead.add(1, bucketAttributes)
@@ -371,7 +389,7 @@ class Leases<V>(
 
     /** A claim as it was made: its instant, and how it derives its value from the value the key kept. */
     private class Claim<V>(
-        val claimed: Instant,
+        val state: LeaseState.Held,
         val value: (previous: V?) -> V,
     )
 
@@ -394,14 +412,14 @@ class Leases<V>(
         data object Failed : Write<Nothing>
     }
 
-    private sealed interface Shorten {
-        data object Done : Shorten
+    private sealed interface Vacate {
+        data object Done : Vacate
 
         data class Again(
             val revision: Long,
-        ) : Shorten
+        ) : Vacate
 
-        data object Retry : Shorten
+        data object Retry : Vacate
     }
 
     private sealed interface Taken<out V> {

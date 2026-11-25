@@ -17,7 +17,7 @@ import java.util.UUID
 
 /**
  * The panel engine of Realm `realm` on a real nats-server: panel tabs publish the presence heartbeat as the panel does,
- * and the broker decides every key's expiry. Timings are short: heartbeats every 300 ms, keys live 2 s, a grace of 1 s.
+ * and the broker decides every key's expiry. Timings are short: heartbeats every 300 ms, keys live 2 s, a vacancy of 1 s.
  */
 val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnabled = false)) {
     val panel = testFixture { PanelEngineHarness.start() }
@@ -36,7 +36,7 @@ val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnable
             .holder shouldBe EngineId("panel.realm")
     }
 
-    test("PANEL-S2 a tab that leaves, or whose heartbeat stops, ends its session after the grace") {
+    test("PANEL-S2 a tab that leaves, or whose heartbeat stops, ends its session after the vacancy") {
         val leaving = UUID.randomUUID().toString()
         val closed = UUID.randomUUID().toString()
         val leavingTab = panel().tab(leaving, realm("realm"))
@@ -51,9 +51,9 @@ val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnable
         closedTab.cancel()
 
         panel().sessions.eventually(
-            within = TIMINGS.ttl + TIMINGS.grace,
+            within = TIMINGS.ttl + TIMINGS.vacancy,
         ) { panel().sessions.entry(panel().user, SessionId(leaving)) == null }
-        panel().sessions.eventually(within = TIMINGS.ttl * 2 + TIMINGS.grace) {
+        panel().sessions.eventually(within = TIMINGS.ttl * 2 + TIMINGS.vacancy) {
             panel().sessions.entry(panel().user, SessionId(closed)) ==
                 null
         }

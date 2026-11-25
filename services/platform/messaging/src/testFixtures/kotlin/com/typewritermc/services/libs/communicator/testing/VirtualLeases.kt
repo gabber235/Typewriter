@@ -7,6 +7,7 @@ import com.typewritermc.services.libs.communicator.kv.KeyValueRead
 import com.typewritermc.services.libs.communicator.kv.KeyValueWrite
 import com.typewritermc.services.libs.communicator.kv.LeaseCodec
 import com.typewritermc.services.libs.communicator.kv.LeaseEntry
+import com.typewritermc.services.libs.communicator.kv.LeaseState
 import com.typewritermc.services.libs.communicator.kv.LeaseTimings
 import com.typewritermc.services.libs.communicator.kv.Leases
 import com.typewritermc.services.libs.telemetry.testing.InMemoryTelemetry
@@ -93,7 +94,7 @@ class VirtualKeyValue(
 }
 
 /**
- * Holders of leases on one [VirtualKeyValue], with short timings: refresh every 300 ms, live 2 s, a grace of 1 s, a
+ * Holders of leases on one [VirtualKeyValue], with short timings: refresh every 300 ms, live 2 s, a vacancy of 1 s, a
  * retry after 100 ms, and a claim more than 1 s ahead reported.
  */
 class VirtualLeases(
@@ -127,7 +128,7 @@ class VirtualLeases(
 
     companion object {
         val SHORT: LeaseTimings =
-            LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, grace = 1.seconds, retry = 100.milliseconds, skew = 1.seconds)
+            LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, vacancy = 1.seconds, retry = 100.milliseconds, skew = 1.seconds)
     }
 }
 
@@ -149,14 +150,29 @@ class LeaseHolder(
     fun crash() = leases.close()
 }
 
-/** A lease entry as text, `holder|claimed|value`; anything else reads as no entry. */
+/** A lease entry as text, `held|holder|claimed|value` or `vacant|value`; anything else reads as no entry. */
 object TextLeaseCodec : LeaseCodec<String> {
-    override fun encode(entry: LeaseEntry<String>): ByteArray = "${entry.holder}|${entry.claimed}|${entry.value}".encodeToByteArray()
+    override fun encode(entry: LeaseEntry<String>): ByteArray =
+        when (val state = entry.state) {
+            is LeaseState.Held -> "held|${state.holder}|${state.claimed}|${entry.value}"
+            LeaseState.Vacant -> "vacant|${entry.value}"
+        }.encodeToByteArray()
 
     override fun decode(bytes: ByteArray): LeaseEntry<String>? {
         val parts = bytes.decodeToString().split('|')
-        if (parts.size != 3) return null
-        val claimed = runCatching { Instant.parse(parts[1]) }.getOrNull() ?: return null
-        return LeaseEntry(parts[0], claimed, parts[2])
+        return when {
+            parts.size == 4 && parts[0] == "held" -> {
+                val claimed = runCatching { Instant.parse(parts[2]) }.getOrNull() ?: return null
+                LeaseEntry(LeaseState.Held(parts[1], claimed), parts[3])
+            }
+
+            parts.size == 2 && parts[0] == "vacant" -> {
+                LeaseEntry(LeaseState.Vacant, parts[1])
+            }
+
+            else -> {
+                null
+            }
+        }
     }
 }

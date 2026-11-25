@@ -14,14 +14,14 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Sessions through a real nats-server and the client production uses, end to end. Keys live minutes, so whatever must
- * still be there is; what must end is waited for with a bound far above the grace. Every ordering and timing rule is
+ * still be there is; what must end is waited for with a bound far above the vacancy. Every ordering and timing rule is
  * proven on virtual time in LeasesTest and SessionKeeperTest.
  */
 val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled = false)) {
     val harness = testFixture { SessionHarness.start() }
-    val timings = LeaseTimings(refresh = 1.seconds, ttl = 5.minutes, grace = 1.seconds, retry = 100.milliseconds)
+    val timings = LeaseTimings(refresh = 1.seconds, ttl = 5.minutes, vacancy = 1.seconds, retry = 100.milliseconds)
 
-    test("SESSION-NATS a session is taken, moved to another engine and ended after the grace through the broker") {
+    test("SESSION-NATS a session is taken, moved to another engine and ended after the vacancy through the broker") {
         harness().createBucket()
         val old = harness().engine("engine-a", timings)
         val new = harness().engine("engine-b", timings)
@@ -37,6 +37,6 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         new.keeper.holders(protagonist) shouldBe setOf(EngineId("engine-b"))
 
         new.keeper.disconnected(session)
-        harness().eventually(within = timings.grace + 30.seconds) { harness().entry(protagonist, session) == null }
+        harness().eventually(within = timings.vacancy + 30.seconds) { harness().entry(protagonist, session) == null }
     }
 }

@@ -72,10 +72,14 @@ decided:
     what: Fix the fork first; the maintainer reviews, pushes and tags; then bump nats in this PR.
   - id: kit
     what: Grow the kit with MemoryKeyValueBuckets, ScriptedBuckets, KeyValueBucketContract on memory and real NATS, VirtualSessions.
+  - id: vacant-sessions
+    what: >
+      A quit leaves the session vacant: alive for its engine kind's vacancy so a server move or a rejoin takes it over,
+      but held by nobody. The lease entry carries a closed state, held or vacant; holders() lists only held entries.
+      The session's 10 s is no longer called a grace.
+    why: holding and the session's lifetime are two things (maintainer, 2026-11-25)
 
-open:
-  - id: holders-in-grace
-    ask: Should holders() skip sessions in their grace? Raise separately if worth it.
+open: []
 
 slices:
   - id: kit-and-contract
@@ -86,7 +90,7 @@ slices:
     status: green
   - id: sessions-on-leases
     tests: [SessionKeeperTest, SessionsOnNatsTest, EngineWiringTest]
-    status: building
+    status: green
 
 next: >
   Run cargo xtask check for services, protocol, docs and quality; run the typewriter-review skill; write the

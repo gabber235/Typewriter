@@ -18,7 +18,7 @@ import org.bukkit.plugin.Plugin
 
 /**
  * Reports each Minecraft player as a session of its protagonist: a join starts the session's key write and a quit
- * shortens the key to the grace. The reporter only queues the writes, so the tick never waits on NATS.
+ * leaves the session vacant. The reporter only queues the writes, so the tick never waits on NATS.
  *
  * Each activation registers the listener and takes over the players already online, so an engine reload keeps their
  * sessions without a gap; quiescing unregisters it and leaves the keys to the next activation or to their expiry.

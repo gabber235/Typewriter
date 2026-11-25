@@ -156,7 +156,7 @@ class PlayedSchedule internal constructor(
     /**
      * The guarantees every schedule keeps: at most one live holder holds the key, and the store names it; the newest
      * claim ever made holds the key whenever its holder still stands by it; and with no claim standing the key ends
-     * within the time to live and the grace. Every holder stops afterwards.
+     * within the time to live and the vacancy. Every holder stops afterwards.
      */
     suspend fun shouldEndWithNewestClaimHolding() {
         try {
@@ -169,7 +169,7 @@ class PlayedSchedule internal constructor(
                 holding shouldBe listOf(newest.holder)
             }
             if (standing.isEmpty()) {
-                leases.keyValue.advance(leases.timings.ttl + leases.timings.grace)
+                leases.keyValue.advance(leases.timings.ttl + leases.timings.vacancy)
                 leases.entry(key).shouldBeNull()
                 live.filter { it.leases.holds(key) } shouldBe emptyList()
             }

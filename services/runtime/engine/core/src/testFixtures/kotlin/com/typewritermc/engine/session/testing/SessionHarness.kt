@@ -151,9 +151,9 @@ class SessionHarness private constructor(
         /** The organization the harness's Realm belongs to. */
         const val ORGANIZATION: String = "organization"
 
-        /** Seconds instead of minutes: refresh every 300 ms, live 2 s, a grace of 1 s. */
+        /** Seconds instead of minutes: refresh every 300 ms, live 2 s, a vacancy of 1 s. */
         val SHORT: LeaseTimings =
-            LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, grace = 1.seconds, retry = 100.milliseconds)
+            LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, vacancy = 1.seconds, retry = 100.milliseconds)
 
         /** A harness on a fresh nats-server with JetStream. */
         fun start(): SessionHarness = SessionHarness(NatsTestServer.startWithJetStream())
