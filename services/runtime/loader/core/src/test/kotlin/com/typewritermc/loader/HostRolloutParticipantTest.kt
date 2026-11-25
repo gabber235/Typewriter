@@ -9,6 +9,7 @@ import com.typewritermc.loader.api.HostedRuntimeEntrypoint
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
+import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.loader.rollout.HostRolloutParticipant
 import com.typewritermc.loader.runtime.HostedRuntimeLoader
 import com.typewritermc.loader.runtime.LoadedHostedRuntime
@@ -51,6 +52,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
@@ -483,6 +485,7 @@ val HostRolloutParticipantTest by testSuite {
                 val projection =
                     HostRolloutParticipant.LocalProjection(
                         listOf(LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<java.net.URL>()))),
+                        emptyList(),
                         this,
                         1.seconds,
                     )
@@ -514,6 +517,7 @@ val HostRolloutParticipantTest by testSuite {
             val projection =
                 HostRolloutParticipant.LocalProjection(
                     listOf(unfinished, finished).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
+                    emptyList(),
                     this,
                     1.seconds,
                 )
@@ -538,6 +542,7 @@ val HostRolloutParticipantTest by testSuite {
             val projection =
                 HostRolloutParticipant.LocalProjection(
                     listOf(completed, failing).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
+                    emptyList(),
                     this,
                     1.seconds,
                 )
@@ -578,11 +583,14 @@ val HostRolloutParticipantTest by testSuite {
         }
     }
 
-    test("a commit activates its candidate only after the host's work in flight ended") {
+    test("a commit activates its candidate only after the leaving runtime's work in flight ended") {
         runTest {
             val fixture = participantFixture(this)
             val (_, candidateAttempt, candidate) = fixture.candidateOverBaseline()
-            val item = fixture.host.work.begin("kv update sessions alex", null)
+            val item =
+                fixture.stagedContexts[0]
+                    .host.work
+                    .begin("kv update sessions alex", null)
 
             val committed = async { fixture.participant.apply(fixture.commit(candidateAttempt, candidate)) }
             advanceTimeBy(5.seconds)
@@ -592,6 +600,23 @@ val HostRolloutParticipantTest by testSuite {
             item.end()
 
             committed.await() shouldBe fixture.accepted
+            fixture.runtimes[1].operations shouldContainExactly listOf("activate")
+            fixture.participant.close()
+        }
+    }
+
+    test("a busy sibling runtime does not delay a commit's drain") {
+        runTest {
+            val fixture = participantFixture(this)
+            val (_, candidateAttempt, candidate) = fixture.candidateOverBaseline()
+            fixture.host.work
+                .of(WorkRuntime("sibling engine"))
+                .begin("engine task chat", null)
+
+            val result = fixture.participant.apply(fixture.commit(candidateAttempt, candidate))
+
+            result shouldBe fixture.accepted
+            currentTime shouldBe 0L
             fixture.runtimes[1].operations shouldContainExactly listOf("activate")
             fixture.participant.close()
         }

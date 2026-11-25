@@ -3,6 +3,7 @@ package com.typewritermc.loader.work
 import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.api.work.WorkItem
 import com.typewritermc.loader.api.work.WorkObserver
+import com.typewritermc.loader.api.work.WorkRuntime
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -48,5 +49,17 @@ val InFlightWorkTest by testSuite {
         shouldThrow<IllegalStateException> { item.end() }
 
         work.count shouldBe 0
+    }
+
+    test("work begun through a runtime's view belongs to that runtime and counts in the host's total") {
+        val work = InFlightWork()
+        val engine = WorkRuntime("primary engine")
+
+        val item = work.of(engine).begin("engine task join", null)
+        work.begin("kv get sessions alex", null)
+
+        item.runtime shouldBe engine
+        work.count shouldBe 2
+        work.of(engine).count shouldBe 2
     }
 }

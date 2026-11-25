@@ -5,7 +5,6 @@ import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.loader.LoaderService
 import com.typewritermc.loader.api.HOST_API_VERSION
 import com.typewritermc.loader.api.HostedMessagingSession
-import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
 import com.typewritermc.loader.api.work.InFlightWork
@@ -26,7 +25,6 @@ import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.RealmLoaderIntent
 import com.typewritermc.loader.deployment.ResolutionResult
 import com.typewritermc.loader.deployment.resolveDeployment
-import com.typewritermc.loader.work.counted
 import com.typewritermc.loader.work.drain
 import com.typewritermc.loader.work.exportTo
 import com.typewritermc.protocol.transport.RealmRouteScope
@@ -45,8 +43,6 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -311,10 +307,10 @@ internal class AssignmentRuntime(
             null
         }
     private val mutableMessaging = MutableStateFlow<HostedMessagingSession?>(null)
-
-    /** The session the runtimes borrow: the host's, with every outbound operation counted in [work]. */
-    private val runtimeMessaging = MutableStateFlow<HostedMessagingSession?>(null)
     private val sharedArtifacts = localShared ?: ReconnectingSharedArtifactAccess(assignment.realmId.value, mutableMessaging)
+
+    /** The host as each staged runtime sees it, following the current session. */
+    private val runtimeHosts = SessionRuntimeHosts(work, sharedArtifacts, openTelemetry, publicationRetention)
     private val projections = BlobProjectionRepository(sharedArtifacts)
     private val participant =
         HostRolloutParticipant(
@@ -322,16 +318,7 @@ internal class AssignmentRuntime(
             assignment::engineIdOf,
             serviceId,
             workDirectory,
-            object : HostedRuntimeHost {
-                override val publicationRetention = this@AssignmentRuntime.publicationRetention
-                override val messaging: StateFlow<HostedMessagingSession?> = runtimeMessaging.asStateFlow()
-                override val openTelemetry: OpenTelemetry = openTelemetry
-                override val sharedArtifacts: SharedArtifactAccess =
-                    this@AssignmentRuntime.sharedArtifacts.counted(
-                        this@AssignmentRuntime.work,
-                    )
-                override val work: InFlightWork = this@AssignmentRuntime.work
-            },
+            runtimeHosts,
             projections,
             VerifiedArtifactCache(sharedArtifacts, localBlobs),
             { changed -> status = changed },
@@ -360,11 +347,11 @@ internal class AssignmentRuntime(
         router?.stop()?.requireSuccess("replace")
         router = null
         mutableMessaging.value = null
-        runtimeMessaging.value = null
+        runtimeHosts.follow(null)
         router = session?.let { createRouter(it) }
         router?.start()?.requireSuccess("start")
         mutableMessaging.value = session
-        runtimeMessaging.value = session?.counted(work)
+        runtimeHosts.follow(session)
         coordinator =
             session?.takeIf { rolloutState != null }?.let { current ->
                 scope.launch { coordinateDeployments(current, requireNotNull(rolloutState)) }
@@ -463,7 +450,7 @@ internal class AssignmentRuntime(
         router?.stop()?.requireSuccess("stop")
         router = null
         mutableMessaging.value = null
-        runtimeMessaging.value = null
+        runtimeHosts.follow(null)
         participant.close()
     }
 

@@ -21,6 +21,7 @@ import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.loader.api.StagedHostedRuntime
+import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifact.FileDigestBlobStore
@@ -34,6 +35,8 @@ import com.typewritermc.loader.rollout.ArtifactHostAssignment
 import com.typewritermc.loader.rollout.HostRolloutParticipant
 import com.typewritermc.loader.rollout.ProjectionSource
 import com.typewritermc.loader.rollout.RealmId
+import com.typewritermc.loader.rollout.RuntimeHost
+import com.typewritermc.loader.rollout.RuntimeHosts
 import com.typewritermc.loader.rollout.VerifiedArtifactSource
 import com.typewritermc.loader.rollout.toSkir
 import com.typewritermc.loader.runtime.HostedRuntimeStager
@@ -280,7 +283,7 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
             ArtifactHostAssignment(realmId, setOf(RuntimePlacement.PRIMARY_ENGINE), engineInstance = "engine")::engineIdOf,
             serviceId,
             root,
-            host,
+            host.perRuntime(),
             object : ProjectionSource {
                 override suspend fun fetch(reference: ProjectionReference) = projections.getValue(reference)
             },
@@ -436,5 +439,21 @@ class RecordingRuntime : StagedHostedRuntime {
     private suspend fun failIfRequested(operation: String) {
         if (operation in suspendOn) awaitCancellation()
         if (operation in failOn) error("Fixture $operation failure")
+    }
+}
+
+/** Views of this host for each staged runtime: the same host, with each runtime's work counted as its own. */
+fun HostedRuntimeHost.perRuntime(): RuntimeHosts {
+    val shared = this
+    return object : RuntimeHosts {
+        override val work = shared.work
+
+        override fun open(runtime: WorkRuntime): RuntimeHost =
+            object : RuntimeHost, HostedRuntimeHost by shared {
+                override val runtime = runtime
+                override val work = shared.work.of(runtime)
+
+                override fun close() = Unit
+            }
     }
 }

@@ -11,12 +11,12 @@ import com.typewritermc.loader.api.HostedArtifactPackage
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.HostedExtensionArtifact
 import com.typewritermc.loader.api.HostedRuntimeDirectories
-import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.loader.api.HostedRuntimeIdentity
 import com.typewritermc.loader.api.HostedSourcePart
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
+import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifactSpan
 import com.typewritermc.loader.deployment.HostDeploymentProjection
@@ -92,8 +92,9 @@ fun interface ParticipantStatusListener {
 /**
  * Owns staged, active, and retained projections for one Realm and host.
  *
- * A mutex serializes commands and rejects stale or conflicting attempts. Commit quiesces the baseline and drains the
- * host's work in flight for at most [workDrain] before activating a candidate, and attempts recovery on failure. Successful replacement retains one prior projection for
+ * A mutex serializes commands and rejects stale or conflicting attempts. Each staged runtime sees the host through its
+ * own view from [hosts]. Commit quiesces the baseline and drains the baseline runtimes' work in flight for at most
+ * [workDrain] before activating a candidate, and attempts recovery on failure. Successful replacement retains one prior projection for
  * rollback. The assignment lifecycle must close the participant and its health monitor.
  */
 class HostRolloutParticipant(
@@ -101,7 +102,7 @@ class HostRolloutParticipant(
     private val engineIdOf: (RuntimePlacement) -> String?,
     internal val serviceId: ServiceId,
     private val workDirectory: Path,
-    private val host: HostedRuntimeHost,
+    private val hosts: RuntimeHosts,
     private val projections: ProjectionSource,
     private val artifacts: VerifiedArtifactSource,
     private val statuses: ParticipantStatusListener,
@@ -266,7 +267,7 @@ class HostRolloutParticipant(
         val baseline = staged.baseline
         try {
             baseline?.projection?.quiesce()
-            if (baseline != null) drainWork()
+            baseline?.projection?.let { drainWork(it) }
             staged.projection.activate()
         } catch (failure: Throwable) {
             withContext(NonCancellable) {
@@ -282,9 +283,9 @@ class HostRolloutParticipant(
         baseline?.retained?.projection?.close()
     }
 
-    /** Waits for the host's work in flight, once the runtime it leaves quiesced, before another takes over. */
-    private suspend fun drainWork() {
-        host.work.drain(workDrain, "rollout", telemetry)
+    /** Waits for the work in flight of the runtimes of [leaving], once they quiesced, before others take over. */
+    private suspend fun drainWork(leaving: LocalProjection) {
+        hosts.work.drain(workDrain, "rollout", telemetry, leaving.work)
     }
 
     private suspend fun abort(
@@ -334,7 +335,7 @@ class HostRolloutParticipant(
                 val retained = requireNotNull(active.retained)
                 try {
                     active.projection.quiesce()
-                    drainWork()
+                    drainWork(active.projection)
                     retained.projection.resume()
                 } catch (failure: Throwable) {
                     withContext(NonCancellable) {
@@ -356,7 +357,7 @@ class HostRolloutParticipant(
                     monitorHealth(active)
                     throw failure
                 }
-                drainWork()
+                drainWork(active.projection)
                 try {
                     active.projection.close()
                 } finally {
@@ -407,6 +408,7 @@ class HostRolloutParticipant(
             validateManifest(extension.artifact, path, manifestByPath.getValue(path))
         }
         val loaded = mutableListOf<LoadedHostedRuntime>()
+        val runtimeHosts = mutableListOf<RuntimeHost>()
         try {
             projection.runtimes.forEach { runtime ->
                 val runtimePath = runtimePaths.getValue(runtime)
@@ -431,6 +433,9 @@ class HostRolloutParticipant(
                         .resolve(runtime.placement.name.lowercase())
                         .resolve("state")
                         .also(Path::createDirectories)
+                val runtimeHost =
+                    hosts.open(WorkRuntime("${runtime.placement.name.lowercase()} of projection ${reference.blob.value}"))
+                runtimeHosts += runtimeHost
                 val context =
                     HostedDeploymentContext(
                         identity = HostedRuntimeIdentity(serviceId.value, realmId.value, runtime.placement, engineIdOf(runtime.placement)),
@@ -439,17 +444,18 @@ class HostRolloutParticipant(
                         publicationTarget = projection.publicationTarget,
                         engineImplementation = runtime.implementation,
                         facts = projection.facts,
-                        host = host,
+                        host = runtimeHost,
                     )
                 loaded += runtimeLoader.stage(context)
             }
             require(loaded.all { it.runtime.health.value == RuntimeHealth.Staged }) {
                 "Every local runtime must report staged before the projection is accepted."
             }
-            return LocalProjection(loaded, scope, lifecycleTimeout)
+            return LocalProjection(loaded, runtimeHosts, scope, lifecycleTimeout)
         } catch (failure: Throwable) {
             withContext(NonCancellable) {
                 loaded.asReversed().forEach { runtime -> runtime.closePreserving(failure) }
+                runtimeHosts.forEach(RuntimeHost::close)
             }
             throw failure
         }
@@ -620,9 +626,13 @@ class HostRolloutParticipant(
      */
     internal class LocalProjection(
         private val runtimes: List<LoadedHostedRuntime>,
+        private val hosts: List<RuntimeHost>,
         scope: CoroutineScope,
         private val lifecycleTimeout: Duration,
     ) {
+        /** The runtimes whose work in flight is this projection's. */
+        val work: Set<WorkRuntime> = hosts.mapTo(mutableSetOf()) { it.runtime }
+
         private val mutableHealth = MutableStateFlow(runtimes.map { it.runtime.health.value }.toProjectionHealth())
         val health: StateFlow<ProjectionHealth> = mutableHealth
         private val healthMonitor =
@@ -675,6 +685,7 @@ class HostRolloutParticipant(
                 failures.drop(1).forEach(failure::addSuppressed)
                 throw failure
             }
+            hosts.forEach(RuntimeHost::close)
         }
 
         private suspend fun transition(

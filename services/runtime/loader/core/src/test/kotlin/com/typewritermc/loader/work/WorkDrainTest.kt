@@ -1,6 +1,7 @@
 package com.typewritermc.loader.work
 
 import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.services.libs.telemetry.LogSeverity
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
@@ -58,6 +59,25 @@ val WorkDrainTest by testSuite {
                 log.bodyValue.toString() shouldContain "request realm.authoring"
                 log.bodyValue.toString() shouldContain "rollout"
             }
+        }
+    }
+
+    test("a drain of some runtimes waits only for their work in flight") {
+        runTest {
+            val work = InFlightWork()
+            val leaving = WorkRuntime("leaving engine")
+            val sibling = WorkRuntime("sibling engine")
+            work.of(sibling).begin("engine task chat", null)
+            val leavingTask = work.of(leaving).begin("engine task join", null)
+
+            val drained = async { work.drain(10.seconds, "rollout", null, setOf(leaving)) }
+            advanceTimeBy(500.milliseconds)
+            runCurrent()
+            drained.isCompleted shouldBe false
+            leavingTask.end()
+
+            drained.await().shouldBeEmpty()
+            (currentTime < 1_000L) shouldBe true
         }
     }
 }
