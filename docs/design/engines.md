@@ -71,7 +71,7 @@ Not proven: the loader only adds parts today, so "newest wins" is new; a part pe
 
 ## Wiring inside an engine
 
-Engine internals are plain classes wired with Koin (decided 2026-11-03). Each engine deployment has one isolated `koinApplication`, closed with its runtime; `startKoin` is never used, because a global Koin would keep old engine classes alive after a reload and two engines in one test process would share it. Each engine kind brings its own module and hands it over through its own runtime entrypoint, with no provider discovery (node 3, 2026-11-21):
+Engine internals are plain classes wired with Koin (decided 2026-11-03). Each engine deployment has one isolated `koinApplication`, closed with its runtime; `startKoin` is never used, because a global Koin would keep old engine classes alive after a reload and two engines in one test process would share it. Each engine kind brings its own module and hands it over through its own runtime entrypoint, with no provider discovery (node 3, 2026-11-21). Engine core offers the deployment's `CoroutineScope` as a single: a part of the engine kind that runs work of its own launches it there, on the engine's dispatcher, and the work ends with the deployment; an engine kind never builds a scope or dispatcher of its own (decided 2026-11-25):
 
 ```kotlin
 @ImprintRuntimeEntrypoint

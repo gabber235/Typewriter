@@ -19,8 +19,8 @@ import org.koin.dsl.module
 import org.koin.dsl.onClose
 
 /**
- * The Koin of one engine deployment: engine-core's parts, such as the engine's identity and its session keeping,
- * together with the module its engine kind brings. Every deployment has its own, so a reloaded engine leaves no class
+ * The Koin of one engine deployment: engine-core's parts, such as the engine's identity, its session keeping and its
+ * [CoroutineScope], together with the module its engine kind brings. Every deployment has its own, so a reloaded engine leaves no class
  * behind and two engines in one process share nothing. Every single is built at once, so a missing dependency fails
  * the deployment's start and names the type; closing runs each single's close.
  */
@@ -46,6 +46,9 @@ private fun engineCoreModule(
     context: HostedDeploymentContext,
     scope: CoroutineScope,
 ) = module {
+    // The deployment's lifetime: an engine kind part runs its work here, on the engine's dispatcher, and it ends with
+    // the deployment.
+    single { scope }
     single { context.identity }
     single { context.host }
     single { Engine(EngineId(requireNotNull(context.identity.engineId) { "An engine deployment needs the engine id its host assigned." })) }

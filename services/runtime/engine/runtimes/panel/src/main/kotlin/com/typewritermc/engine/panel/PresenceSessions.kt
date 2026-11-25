@@ -16,7 +16,6 @@ import com.typewritermc.protocol.transport.generated.organizationPresence
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
@@ -42,17 +41,17 @@ import kotlin.time.TimeSource
  * deadline passes is removed then, so its session ends after the vacancy. The protagonist is the user the broker bound
  * into the subject, never a value from the payload.
  *
- * Deadlines are kept here, not by the messaging session presence arrives through: one expiry loop on [parent] removes
- * every tab past its deadline, so a messaging session the host replaces changes nothing about when a tab leaves. The
- * loop runs until [close].
+ * Deadlines are kept here, not by the messaging session presence arrives through: one expiry loop in [deployment], the
+ * engine's own lifetime, removes every tab past its deadline, so a messaging session the host replaces changes nothing
+ * about when a tab leaves, and the loop ends with the deployment. Waiting for the next deadline is idle; only each
+ * expiry step runs as engine work.
  */
 class PresenceSessions(
     private val realmId: String,
     private val timings: SessionTimings,
-    parent: CoroutineScope,
+    deployment: CoroutineScope,
     private val time: TimeSource.WithComparableMarks = TimeSource.Monotonic,
-) : OnlineSessions,
-    AutoCloseable {
+) : OnlineSessions {
     /** The open tabs, each with its deadline; changed only under its own lock, together with [open]. */
     private val tabs = HashMap<SessionId, Tab>()
     private val open = MutableStateFlow<Set<Session>>(emptySet())
@@ -61,18 +60,21 @@ class PresenceSessions(
 
     // Every deadline is set a time to live after its heartbeat, so a new one is never earlier than the one the loop waits
     // for: a tab whose deadline moved is found unexpired and the loop waits for the next earliest.
-    private val expiry: Job =
-        parent.launch {
+    init {
+        deployment.launch {
             while (true) {
                 val next = synchronized(tabs) { tabs.values.minOfOrNull { it.deadline } }
                 if (next == null) {
                     open.first { it.isNotEmpty() }
                 } else {
+                    // Waiting for the next tab deadline: a silent tab, not a tick, ends the session, so the wait is not work.
+                    @Suppress("ForbiddenMethodCall/engineWaits")
                     delay(next - time.markNow())
                     expire()
                 }
             }
         }
+    }
 
     /** Receives the presence of every member of [messaging]'s organization until cancelled. */
     suspend fun serve(messaging: HostedMessagingSession): Unit =
@@ -145,9 +147,6 @@ class PresenceSessions(
     private fun publish() {
         open.value = tabs.values.mapTo(linkedSetOf()) { it.session }
     }
-
-    /** Stops the expiry loop; the tabs stay as they are. */
-    override fun close() = expiry.cancel()
 
     private class Tab(
         val session: Session,
