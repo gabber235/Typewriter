@@ -16,7 +16,7 @@ use anyhow::{Context as _, Result, bail, ensure};
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use crate::cargo_build::{Outcome as Built, target_directory};
+use crate::cargo_build::target_directory;
 use crate::digest::sha256;
 use crate::results::{
     self, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase, TestRun,
@@ -256,12 +256,10 @@ impl Catalog {
 struct Artifact {
     package_id: String,
     path: PathBuf,
-    fresh: bool,
 }
 
 /// Builds every component the fixtures name in one Cargo invocation, keyed by package and target,
-/// through the same reusable release build the stack uses; an artifact is fresh when the build was
-/// reused.
+/// through the same reusable release build the stack uses.
 fn build_components(
     ctx: &Context,
     fixtures: &[&Fixture],
@@ -290,7 +288,7 @@ fn build_components(
     let mut cargo = deploy::components_build(ctx, &components);
     jobs(&mut cargo, args);
     cargo.log_stderr(log)?;
-    let outcome = deploy::reusable_components_build(ctx, "component-tests", &components)?
+    deploy::reusable_components_build(ctx, "component-tests", &components)?
         .run(ctx, &mut cargo)
         .context("the component build failed")?;
     let mut artifacts = BTreeMap::new();
@@ -304,7 +302,6 @@ fn build_components(
             Artifact {
                 package_id: package_id.clone(),
                 path,
-                fresh: outcome == Built::Reused,
             },
         );
     }
@@ -366,7 +363,6 @@ fn write_manifest(
                 "target_name": component.target,
                 "path": built.path,
                 "sha256": sha256(&built.path)?,
-                "fresh": built.fresh,
             }));
         }
     }

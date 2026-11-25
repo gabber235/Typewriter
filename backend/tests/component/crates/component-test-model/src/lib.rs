@@ -126,7 +126,6 @@ pub struct ArtifactRecord {
     pub target_name: String,
     pub path: PathBuf,
     pub sha256: String,
-    pub fresh: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
