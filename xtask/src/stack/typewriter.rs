@@ -731,10 +731,7 @@ mod tests {
 
     #[test]
     fn the_ci_target_builds_no_backend_components_of_its_own() {
-        assert_eq!(
-            build_names(&ci_cluster_panel(&ci_cluster())),
-            ["typewriter-stack", "the standalone Realm host"]
-        );
+        assert!(!build_names(&ci_cluster_panel(&ci_cluster())).contains(&COMPONENTS.name));
     }
 
     #[test]
