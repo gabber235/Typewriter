@@ -12,7 +12,9 @@ import com.typewritermc.configuration.representationKind
 import com.typewritermc.presentation.CheckedPresentationTemplate
 import com.typewritermc.presentation.NestedPresentationSlot
 import com.typewritermc.presentation.PresentationBuildBinding
+import com.typewritermc.presentation.PresentationLinkTemplate
 import com.typewritermc.presentation.PresentationNestedTemplate
+import com.typewritermc.presentation.PresentationTemplateCatalog
 import com.typewritermc.presentation.PresentationTyping
 import com.typewritermc.presentation.inferInheritableNodes
 import com.typewritermc.presentation.selectMostSpecificDescriptors
@@ -44,6 +46,7 @@ import com.typewritermc.types.use
 import com.typewritermc.types.validOrNull
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.catalog.PresentationTarget
 import skirout.editor.v1.catalog.RepresentationKind
@@ -83,123 +86,130 @@ internal data class PresentationMaterialCollection(
     val callbackFailures: List<CatalogCallbackFailure>,
 )
 
-internal fun collectPresentationMaterials(
-    presentations: List<OwnedPresentation>,
-    declarations: List<OwnedTypeDeclaration>,
-    nativeBindings: List<OwnedNativeBinding>,
-    definitions: Map<TypeDefinitionId, TypeDefinition>,
-    catalog: CheckedCatalog,
-    typing: PresentationTyping,
-    resourceTypes: Set<TypeDefinitionId>,
-    ownershipEndpoints: Set<EndpointId>,
-): PresentationMaterialCollection {
-    val materials = mutableListOf<CollectedPresentationMaterial>()
-    val failures = mutableListOf<DeclarationDiagnostic>()
-    val rejected = mutableListOf<DeclarationDiagnostic>()
-    val callbackFailures = mutableListOf<CatalogCallbackFailure>()
-    val nativeTypes =
-        (
-            declarations.mapNotNull { owned ->
-                val native = owned.nativeClass ?: return@mapNotNull null
-                val definition = definitions[owned.definition.id] ?: return@mapNotNull null
-                if (catalog.declaration(definition.id) !is Resolution.Ready) return@mapNotNull null
-                native to definition.id.namedTemplate(definition.parameters.map { it.key.template })
-            } +
-                nativeBindings
-                    .mapNotNull { owned ->
-                        val native = owned.factory.nativeClass ?: return@mapNotNull null
-                        val definition = definitions[owned.factory.definition] ?: return@mapNotNull null
-                        if (catalog.declaration(definition.id) !is Resolution.Ready) return@mapNotNull null
-                        native to definition.id.namedTemplate(definition.parameters.map { it.key.template })
-                    }
-        ).groupBy(Pair<kotlin.reflect.KClass<*>, NamedTypeTemplate>::first)
-            .mapNotNull { (native, declarations) ->
-                declarations
-                    .map { it.second }
-                    .distinct()
-                    .singleOrNull()
-                    ?.let { native to it }
-            }.toMap()
-    presentations.forEach { owned ->
-        val target = owned.descriptor.target
-        val subjects = target.presentationSubjects(definitions)
-        if (subjects.isEmpty() && target is PresentationTarget.NamedWrapper) {
-            failures +=
-                DeclarationDiagnostic.of(
-                    affected = target.value.definition,
-                    code = "invalid_presentation_target",
-                    origins = listOf(DeclarationOrigin(owner = owned.descriptor.owner)),
-                )
-        }
-        subjects.forEach { subject ->
-            val template = subject.presentationTemplate(definitions, catalog, typing)
-            owned.descriptor.roles.sortedBy { it.kind.ordinal }.forEach { role ->
-                try {
-                    val result = owned.provider.build(PresentationBuildBinding(template, role, nativeTypes, ownershipEndpoints))
-                    val inferred = result.layout.inferInheritableNodes(result.dependencies)
-                    result.layout.validateInheritableNodes(
-                        inferred,
-                        result.dependencies,
-                        partOwnerCompatible = { key ->
-                            val owner = key.owner
-                            val actual = (subject as? TypeTemplate.NamedWrapper)?.value?.definition
-                            actual != null && definitions[owner]?.representation is RepresentationTemplate.RecordWrapper &&
-                                catalog.isNominalSubtype(actual, owner)
-                        },
-                    ) { field ->
-                        subject.field(field, definitions) !=
-                            null
-                    }
-                    if (result.dependencies.validCollections(subject, definitions, catalog, resourceTypes)) {
-                        materials +=
-                            CollectedPresentationMaterial(
-                                subject = subject,
-                                target = owned.descriptor.target,
-                                material =
-                                    PresentationMaterial(
-                                        provider = owned.descriptor.id,
-                                        target = owned.descriptor.target,
-                                        role = role,
-                                        layout = result.layout,
-                                        dependencies = result.dependencies,
-                                        subject = subject,
-                                        inheritableNodes = inferred,
-                                    ),
+/**
+ * Collects presentation material against one catalog: its [definitions], the [catalog] checked so far, the [typing]
+ * of presentation expressions, the definitions that are [resourceTypes], and the [ownershipEndpoints] of resources.
+ */
+internal class PresentationMaterialCollector(
+    private val definitions: Map<TypeDefinitionId, TypeDefinition>,
+    private val catalog: CheckedCatalog,
+    private val typing: PresentationTyping,
+    private val resourceTypes: Set<TypeDefinitionId>,
+    private val ownershipEndpoints: Set<EndpointId>,
+) {
+    fun collect(
+        presentations: List<OwnedPresentation>,
+        declarations: List<OwnedTypeDeclaration>,
+        nativeBindings: List<OwnedNativeBinding>,
+    ): PresentationMaterialCollection {
+        val materials = mutableListOf<CollectedPresentationMaterial>()
+        val failures = mutableListOf<DeclarationDiagnostic>()
+        val rejected = mutableListOf<DeclarationDiagnostic>()
+        val callbackFailures = mutableListOf<CatalogCallbackFailure>()
+        val nativeTypes =
+            (
+                declarations.mapNotNull { owned ->
+                    val native = owned.nativeClass ?: return@mapNotNull null
+                    val definition = definitions[owned.definition.id] ?: return@mapNotNull null
+                    if (catalog.declaration(definition.id) !is Resolution.Ready) return@mapNotNull null
+                    native to definition.id.namedTemplate(definition.parameters.map { it.key.template })
+                } +
+                    nativeBindings
+                        .mapNotNull { owned ->
+                            val native = owned.factory.nativeClass ?: return@mapNotNull null
+                            val definition = definitions[owned.factory.definition] ?: return@mapNotNull null
+                            if (catalog.declaration(definition.id) !is Resolution.Ready) return@mapNotNull null
+                            native to definition.id.namedTemplate(definition.parameters.map { it.key.template })
+                        }
+            ).groupBy(Pair<kotlin.reflect.KClass<*>, NamedTypeTemplate>::first)
+                .mapNotNull { (native, declarations) ->
+                    declarations
+                        .map { it.second }
+                        .distinct()
+                        .singleOrNull()
+                        ?.let { native to it }
+                }.toMap()
+        presentations.forEach { owned ->
+            val target = owned.descriptor.target
+            val subjects = target.presentationSubjects(definitions)
+            if (subjects.isEmpty() && target is PresentationTarget.NamedWrapper) {
+                failures +=
+                    DeclarationDiagnostic.of(
+                        affected = target.value.definition,
+                        code = "invalid_presentation_target",
+                        origins = listOf(DeclarationOrigin(owner = owned.descriptor.owner)),
+                    )
+            }
+            subjects.forEach { subject ->
+                val template = subject.presentationTemplate(definitions, catalog, typing)
+                owned.descriptor.roles.sortedBy { it.kind.ordinal }.forEach { role ->
+                    try {
+                        val result = owned.provider.build(PresentationBuildBinding(template, role, nativeTypes, ownershipEndpoints))
+                        val inferred = result.layout.inferInheritableNodes(result.dependencies)
+                        result.layout.validateInheritableNodes(
+                            inferred,
+                            result.dependencies,
+                            partOwnerCompatible = { key ->
+                                val owner = key.owner
+                                val actual = (subject as? TypeTemplate.NamedWrapper)?.value?.definition
+                                actual != null && definitions[owner]?.representation is RepresentationTemplate.RecordWrapper &&
+                                    catalog.isNominalSubtype(actual, owner)
+                            },
+                        ) { field ->
+                            subject.field(field, definitions) !=
+                                null
+                        }
+                        if (result.dependencies.validCollections(subject, definitions, catalog, resourceTypes)) {
+                            materials +=
+                                CollectedPresentationMaterial(
+                                    subject = subject,
+                                    target = owned.descriptor.target,
+                                    material =
+                                        PresentationMaterial(
+                                            provider = owned.descriptor.id,
+                                            target = owned.descriptor.target,
+                                            role = role,
+                                            layout = result.layout,
+                                            dependencies = result.dependencies,
+                                            subject = subject,
+                                            inheritableNodes = inferred,
+                                        ),
+                                )
+                        } else {
+                            val affected = (subject as? TypeTemplate.NamedWrapper)?.value?.definition
+                            if (affected != null) {
+                                failures +=
+                                    DeclarationDiagnostic.of(
+                                        affected = affected,
+                                        code = "invalid_presentation_collection_dependency",
+                                        origins = listOf(DeclarationOrigin(owner = owned.descriptor.owner)),
+                                    )
+                            }
+                        }
+                    } catch (cancellation: CancellationException) {
+                        throw cancellation
+                    } catch (cause: Exception) {
+                        callbackFailures +=
+                            CatalogCallbackFailure(
+                                owned.origin,
+                                CatalogCallback.Presentation(subject, role),
+                                cause,
                             )
-                    } else {
                         val affected = (subject as? TypeTemplate.NamedWrapper)?.value?.definition
                         if (affected != null) {
-                            failures +=
+                            rejected +=
                                 DeclarationDiagnostic.of(
                                     affected = affected,
-                                    code = "invalid_presentation_collection_dependency",
+                                    code = "presentation_material_build_failed",
                                     origins = listOf(DeclarationOrigin(owner = owned.descriptor.owner)),
                                 )
                         }
                     }
-                } catch (cancellation: CancellationException) {
-                    throw cancellation
-                } catch (cause: Exception) {
-                    callbackFailures +=
-                        CatalogCallbackFailure(
-                            owned.origin,
-                            CatalogCallback.Presentation(subject, role),
-                            cause,
-                        )
-                    val affected = (subject as? TypeTemplate.NamedWrapper)?.value?.definition
-                    if (affected != null) {
-                        rejected +=
-                            DeclarationDiagnostic.of(
-                                affected = affected,
-                                code = "presentation_material_build_failed",
-                                origins = listOf(DeclarationOrigin(owner = owned.descriptor.owner)),
-                            )
-                    }
                 }
             }
         }
+        return PresentationMaterialCollection(materials, failures, rejected, callbackFailures)
     }
-    return PresentationMaterialCollection(materials, failures, rejected, callbackFailures)
 }
 
 private fun skirout.editor.v1.presentation.PresentationDependencies.validCollections(
@@ -448,34 +458,60 @@ private fun RepresentationTemplate.presentationKind(): RepresentationKind =
 private fun TypeTemplate.presentationTemplate(
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     catalog: CheckedCatalog,
-    typing: PresentationTyping,
+    presentationTyping: PresentationTyping,
 ): CheckedPresentationTemplate =
     CheckedPresentationTemplate(
-        type = this,
-        fieldResolver = { parent, name -> parent.unwrapNullable().field(name, definitions) },
-        nestedResolver = { parent, slot -> parent.presentationNested(slot, definitions) },
-        typing = typing,
-        payloadResolver = { parent ->
-            val scalar = (parent.unwrapNullable().representation(definitions)?.first as? RepresentationTemplate.ScalarWrapper)?.value?.kind
-            if (scalar == null) parent.unwrapNullable() else scalar.template
-        },
-        linkResolver = { parent ->
-            parent.unwrapNullable().representation(definitions)?.let { (representation, arguments) ->
-                (representation as? RepresentationTemplate.LinkWrapper)?.let { link ->
-                    com.typewritermc.presentation.PresentationLinkTemplate(
-                        link.value.endpoint,
-                        link.value.target.mapTemplate { it.substitute(arguments) },
-                    )
-                }
+        this,
+        object : PresentationTemplateCatalog {
+            override val typing = presentationTyping
+
+            override fun field(
+                parent: TypeTemplate,
+                name: String,
+            ): TypeTemplate? = parent.unwrapNullable().field(name, definitions)
+
+            override fun nested(
+                parent: TypeTemplate,
+                slot: NestedPresentationSlot,
+            ): PresentationNestedTemplate? = parent.presentationNested(slot, definitions)
+
+            override fun payload(parent: TypeTemplate): TypeTemplate {
+                val scalar =
+                    (
+                        parent
+                            .unwrapNullable()
+                            .representation(
+                                definitions,
+                            )?.first as? RepresentationTemplate.ScalarWrapper
+                    )?.value?.kind
+                return if (scalar == null) parent.unwrapNullable() else scalar.template
             }
-        },
-        subtypeChecker = catalog::isNominalSubtype,
-        descriptorSelector = { actual, descriptors ->
-            val bounds = definitions.parameterBounds()
-            selectMostSpecificDescriptors(
-                descriptors.filter { descriptor -> descriptor.target.appliesTo(actual, definitions, bounds) },
-                catalog,
-            )
+
+            override fun link(parent: TypeTemplate): PresentationLinkTemplate? =
+                parent.unwrapNullable().representation(definitions)?.let { (representation, arguments) ->
+                    (representation as? RepresentationTemplate.LinkWrapper)?.let { link ->
+                        PresentationLinkTemplate(
+                            link.value.endpoint,
+                            link.value.target.mapTemplate { it.substitute(arguments) },
+                        )
+                    }
+                }
+
+            override fun isNominalSubtype(
+                actual: TypeDefinitionId,
+                expected: TypeDefinitionId,
+            ): Boolean = catalog.isNominalSubtype(actual, expected)
+
+            override fun select(
+                actual: TypeTemplate,
+                descriptors: List<PresentationDescriptor>,
+            ): PresentationDescriptor? {
+                val bounds = definitions.parameterBounds()
+                return selectMostSpecificDescriptors(
+                    descriptors.filter { descriptor -> descriptor.target.appliesTo(actual, definitions, bounds) },
+                    catalog,
+                )
+            }
         },
     )
 

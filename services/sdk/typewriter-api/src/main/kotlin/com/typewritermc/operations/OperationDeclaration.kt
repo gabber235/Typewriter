@@ -136,7 +136,10 @@ class OperationDeclaration internal constructor(
  * Runs the declaration of one operation object. Generated providers call it with the object's identity, its target and
  * input computed at compile time, and the label derived from its name. A declaration that throws is retained as a
  * failure, which catalog assembly reports without publishing the operation.
+ *
+ * Generated SDK entry point: generated providers pass each fact the code generator computed for the declaration.
  */
+@Suppress("LongParameterList")
 @GeneratedSdkApi
 fun <D : ResourceDraft, I> collectOperation(
     origin: ProviderOrigin,

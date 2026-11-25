@@ -202,16 +202,13 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         DefaultCheckedCatalog(context.generation, definitions + opaqueParameters.definitions, quarantine = reservedDiagnostics)
     val presentationTyping = PresentationTyping(presentationCatalog::resolve, opaqueParameters)
     val materialCollection =
-        collectPresentationMaterials(
-            presentations,
-            assembledDeclarations,
-            nativeBindings,
+        PresentationMaterialCollector(
             definitionIndex,
             structural,
             presentationTyping,
             resourceTypes,
             publishedRelations.ownershipEndpoints(),
-        )
+        ).collect(presentations, assembledDeclarations, nativeBindings)
     val directFailures =
         configurationFailures.map { it.diagnostic } +
             duplicateDiagnostics + reservedDiagnostics + symbolicDiagnostics + ruleDiagnostics +

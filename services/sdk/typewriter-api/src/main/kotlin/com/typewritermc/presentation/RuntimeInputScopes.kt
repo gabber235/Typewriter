@@ -123,6 +123,8 @@ internal class RuntimeDurationInputScope(
     }
 }
 
+// Authoring DSL runtime scope: it composes the build state and every author facing scope it delegates to.
+@Suppress("LongParameterList")
 internal class RuntimeColorInputScope(
     private val state: PresentationBuildState,
     appearance: TextEntryAppearanceScope,
@@ -306,6 +308,8 @@ internal class RuntimeSliderInputScope<N>(
     }
 }
 
+// Authoring DSL runtime scope: it composes the build state and every author facing scope it delegates to.
+@Suppress("LongParameterList")
 internal class RuntimeSelectInputScope<V>(
     private val state: PresentationBuildState,
     private val author: RuntimePresentationBuildScope,
