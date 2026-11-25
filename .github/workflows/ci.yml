@@ -154,6 +154,11 @@ jobs:
           cache-scope: e2e-${{ matrix.suite }}
           cargo-targets: true
           gradle-outputs-from: ${{ !(matrix.suite == 'game' || matrix.suite == 'playtest') && 'check-services' || '' }}
+      # The game suites measure each part's memory in a cgroup of its own. The step remounts the
+      # runner's cgroup tree writable, moves the job's processes into `typewriter/job`, gives the
+      # job user `typewriter` and names it in `TYPEWRITER_CGROUP` for the steps after it.
+      - if: env.GAME_SUITE
+        run: devenv --profile e2e shell -- cargo xtask cgroup delegate
       # The game suites' demo reruns follow the lines the change added since the same base the
       # checks compare with.
       - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }} --base "$BASE_SHA"
