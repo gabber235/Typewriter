@@ -6,7 +6,7 @@ goal: >
 
 pieces:
   - id: guarantees
-    status: building
+    status: done
     tries:
       - id: v1-keeper
         what: v1 keeper as is
@@ -42,14 +42,14 @@ pieces:
         state: picked
         evidence: [gabber235/nats.kt PR 1, tag v0.9.2-typewriter.3, PublishRetryTest in the fork]
   - id: lease-primitive
-    status: building
+    status: done
     tries:
       - id: leases
-        what: Leases<V> in services/platform/messaging; SessionKeeper is one lease per session
+        what: Leases<H : Comparable<H>, V> in services/platform/messaging; SessionKeeper is one lease per session
         state: picked
         why: decided by the maintainer on 2026-11-24; mirrors and demand follow the same pattern (live-data.md)
   - id: test-approach
-    status: building
+    status: done
     tries:
       - id: virtual-time-memory-bucket
         what: rules on virtual time over a memory bucket; one contract suite on memory and real NATS; generated schedules; one real NATS session story
@@ -67,7 +67,9 @@ decided:
       No waiting state, no left marker.
     why: engines share a machine or run NTP; two real connects are at least a server transfer apart
   - id: lease
-    what: Extract Lease<V> now in services/platform/messaging with SessionKeeper as its first user; build only what the records decide.
+    what: >
+      Extract Leases<H : Comparable<H>, V> now in services/platform/messaging, generic over the holder id, with
+      SessionKeeper as its first user; build only what the records decide.
   - id: natskt
     what: Fix the fork first; the maintainer reviews, pushes and tags; then bump nats in this PR.
   - id: kit
@@ -78,6 +80,28 @@ decided:
       but held by nobody. The lease entry carries a closed state, held or vacant; holders() lists only held entries.
       The session's 10 s is no longer called a grace.
     why: holding and the session's lifetime are two things (maintainer, 2026-11-25)
+  - id: refresh-finds-vacant
+    what: >
+      A refresh that conflicts and finds the key vacant has lost it for good: a newer claim took the key and let it go,
+      so the holder it took the key from never writes it again. A property of every lease.
+    why: decided by the maintainer on 2026-11-25
+  - id: one-observable-set
+    what: >
+      Each engine kind supplies its sessions as one observable set, OnlineSessions; the keeper claims each session
+      added, leaves each one removed vacant at once, and refreshes only what is still claimed. SessionReporter and its
+      events are gone. The panel's tabs keep their own deadlines, removed by one expiry loop PresenceSessions owns.
+    why: the engine's live session list is the one source, so a missed quit cannot keep a session alive (maintainer, 2026-11-25)
+  - id: connection-instants
+    what: >
+      OnlineSessions carries each session with the instant it connected, stamped by the engine kind where the
+      connection happens (Paper the player's own login instant, also for players already online at start; the panel a
+      tab's first heartbeat); Leases.claim takes the instant from its caller.
+    why: an engine that sees a join late, or reloads, must never claim as newer than a real later connection (maintainer, 2026-11-25)
+  - id: deployment-scope
+    what: >
+      Engine core offers the deployment's CoroutineScope as a Koin single; engine kind parts run their own work there
+      and never build a scope or dispatcher of their own.
+    why: all engine work runs on the engine's one dispatcher, so it can be counted (maintainer, 2026-11-25)
 
 open: []
 
@@ -89,9 +113,11 @@ slices:
     tests: [LeasesTest]
     status: green
   - id: sessions-on-leases
-    tests: [SessionKeeperTest, SessionsOnNatsTest, EngineWiringTest]
+    tests: [SessionKeeperTest, SessionsOnNatsTest, EngineWiringTest, EngineDeploymentTest]
+    status: green
+  - id: engine-kind-sets
+    tests: [PresenceSessionsTest, PresenceDeadlineTest, PaperSessionRequirements]
     status: green
 
 next: >
-  Run cargo xtask check for services, protocol, docs and quality; run the typewriter-review skill; write the
-  PR body with its Design record changes.
+  Answer review round 3, then the next review round on PR 585.
