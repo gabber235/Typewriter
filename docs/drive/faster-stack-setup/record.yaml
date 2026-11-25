@@ -51,7 +51,10 @@ decided:
       dependency file check. A build's stamp lists the sha256 of each artifact, of every repository
       file the dependency files Cargo writes beside its artifacts name (build script
       rerun-if-changed inputs included), and of the workspace's manifests, lock file and
-      .cargo/config.toml, beside a digest of the command, RUSTFLAGS and rustc -vV. The build is
+      every Cargo configuration file Cargo loads (config.toml and config from the folder the command
+      runs in up to the root, then Cargo's home, recorded absent while missing), beside a digest
+      of the command, rustc -vV and every inherited CARGO and RUST variable but those Cargo sets
+      per crate, so Cargo's whole configuration surface counts (decided in round 4). The build is
       reused while all of them match; a missing dependency file means no reuse. No caller lists
       inputs, so a crate cannot read a file the stamp misses, and an edit the build never read
       reuses it. The environment variables crates read at compile time are stamped with their
@@ -61,7 +64,8 @@ decided:
       Build scripts follow Cargo's own rule, from what each printed: a rerun-if-env-changed
       variable is stamped with its value, and a script that printed no rerun-if-changed or
       rerun-if-env-changed line has every file of its package (all of its folder but target, .git
-      and nested packages) stamped.
+      and nested packages) stamped. Trusted on purpose, as Cargo trusts it: a procedural macro
+      that reads a file or a variable no dependency file names.
   - id: panel-restores-services-outputs
     what: >-
       The panel suites restore the services check's Gradle build cache and save none of their own,
