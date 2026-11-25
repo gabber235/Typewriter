@@ -435,10 +435,15 @@ struct Captured {
     png: PathBuf,
 }
 
-/// Every frame the runs under `folder` captured, from the golden candidates their run files list.
+/// Every frame the verdict runs under `folder` captured, from the golden candidates their run files
+/// list. A demo run's frames are evidence only: its clip draws frames between ticks, so they need not
+/// match the verdict run's.
 fn captured_under(folder: &Path) -> Result<Vec<Captured>> {
     let mut found = Vec::new();
     for (path, run) in results::read_all(folder)? {
+        if run.evidence_only {
+            continue;
+        }
         let at = path.parent().context("a run file without a folder")?;
         for case in &run.cases {
             for (file, artifact) in results::artifacts(case) {
@@ -470,6 +475,7 @@ mod tests {
     use std::cell::RefCell;
 
     use super::{Golden, approve, fetch_into, named_on, place, pull_request_frames};
+    use crate::results::ArtifactKind;
     use crate::skirout::base::harness::v1::golden::Renderer;
     use crate::test_support::{TempRoot, captured_golden};
 
@@ -600,6 +606,38 @@ mod tests {
             "{error:#}"
         );
         assert!(!root.path("services").exists());
+    }
+
+    #[test]
+    fn approve_takes_no_frame_from_a_demo_run_whose_clip_drew_extra_frames() {
+        let (root, run) = (TempRoot::new(), TempRoot::new());
+        captured_golden(
+            &run,
+            "GOLDEN-1 a sidebar/attempt-1/sidebar",
+            SIDEBAR,
+            "png bytes",
+        );
+        run.write(
+            "playtest-demos/GOLDEN-1 a sidebar/demo/sidebar.golden",
+            &SIDEBAR.replace("5e1d", "0bad"),
+        );
+        run.write(
+            "playtest-demos/GOLDEN-1 a sidebar/demo/sidebar.png",
+            "other",
+        );
+        let mut demo = crate::test_support::failed_attempt(
+            (0, 1),
+            &[(ArtifactKind::Golden, "sidebar.golden")],
+        );
+        demo.folder = "GOLDEN-1 a sidebar/demo".to_owned();
+        let mut demos = crate::test_support::run_of("GOLDEN-1 a sidebar", vec![demo]);
+        demos.evidence_only = true;
+        crate::results::write(&demos, &run.path("playtest-demos/test_run.json")).unwrap();
+
+        let approved = approve(&root.ctx.root, &run.ctx.root, &root.path("images")).unwrap();
+
+        assert_eq!(approved.len(), 1);
+        assert_eq!(approved[0].image, root.path("images/5e1d.png"));
     }
 
     #[test]
