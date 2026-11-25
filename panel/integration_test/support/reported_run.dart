@@ -54,6 +54,8 @@ final class ReportedRun {
         touched: false,
         paced: const [],
         pacing: results.Pacing.gates,
+        // The panel runner concludes nothing: xtask judges its cases by their attempts.
+        conclusion: null,
       ),
     );
   }
@@ -94,6 +96,8 @@ final class ReportedRun {
       touched: false,
       paced: const [],
       pacing: results.Pacing.gates,
+      // The panel runner concludes nothing: xtask judges its cases by their attempts.
+      conclusion: null,
     );
     final listed = _cases.indexWhere((known) => known.id == reported.id);
     if (listed < 0) {
@@ -134,6 +138,7 @@ final class ReportedRun {
       touched: reported.touched,
       paced: reported.paced,
       pacing: reported.pacing,
+      conclusion: reported.conclusion,
     );
   }
 
@@ -155,6 +160,8 @@ final class ReportedRun {
     parts: const [],
     // Every panel run judges its scenarios.
     evidenceOnly: false,
+    // Its scenarios run in the app the stack serves; it starts no game parts to budget memory for.
+    memoryBudget: null,
   );
 
   /// The run as JSON, the form the app reports it to the host driver in.
