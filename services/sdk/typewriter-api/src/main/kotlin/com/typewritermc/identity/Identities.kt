@@ -37,15 +37,18 @@ data class Protagonist(
 /**
  * One engine of a Realm: the topology engine instance id, `panel.<realm id>` for the Realm's panel engine, or
  * `local.<realm id>` for an engine of a host running without topology. It survives restarts and ends when the engine
- * leaves the topology.
+ * leaves the topology. Engine ids order by their text, so two engines claiming a session at the same instant agree on
+ * which one holds it.
  */
 @JvmInline
 value class EngineId(
     val value: String,
-) {
+) : Comparable<EngineId> {
     init {
         require(value.isNotBlank()) { "An engine id is not blank." }
     }
+
+    override fun compareTo(other: EngineId): Int = value.compareTo(other.value)
 
     override fun toString(): String = value
 }

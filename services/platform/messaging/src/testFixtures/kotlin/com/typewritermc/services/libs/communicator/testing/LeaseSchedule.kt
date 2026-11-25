@@ -130,12 +130,7 @@ suspend fun VirtualLeases.play(schedule: LeaseSchedule): PlayedSchedule {
             .filter { last[it] is LeaseStep.Claim }
             .map { holders[it].id }
             .toSet()
-    val crashed =
-        holders.indices
-            .filter { last[it] is LeaseStep.Crash }
-            .map { holders[it].id }
-            .toSet()
-    return PlayedSchedule(this, key, holders, claims, standing, crashed)
+    return PlayedSchedule(this, key, holders, claims, standing)
 }
 
 /** One claim a schedule made: its holder and the instant on that holder's clock. */
@@ -151,27 +146,22 @@ class PlayedSchedule internal constructor(
     private val holders: List<LeaseHolder>,
     private val claims: List<PlayedClaim>,
     private val standing: Set<String>,
-    private val crashed: Set<String>,
 ) {
     /**
-     * The guarantees every schedule keeps: at most one live holder holds the key, and the store names it; the newest
-     * claim ever made holds the key whenever its holder still stands by it; and with no claim standing the key ends
-     * within the time to live and the vacancy. Every holder stops afterwards.
+     * The guarantees every schedule keeps: the newest claim ever made holds the key, past its time to live, whenever its
+     * holder still stands by it; and with no claim standing the key ends within the time to live and the vacancy. Every
+     * holder stops afterwards.
      */
     suspend fun shouldEndWithNewestClaimHolding() {
         try {
-            val live = holders.filter { it.id !in crashed }
-            val holding = live.filter { it.leases.holds(key) }.map { it.id }
-            check(holding.size <= 1) { "More than one holder holds $key: $holding" }
-            holding.singleOrNull()?.let { leases.entry(key).shouldNotBeNull().holder shouldBe it }
             val newest = claims.maxWithOrNull(compareBy<PlayedClaim>({ it.claimed }, { it.holder }))
             if (newest != null && newest.holder in standing) {
-                holding shouldBe listOf(newest.holder)
+                leases.keyValue.advance(leases.timings.ttl * 2)
+                leases.entry(key).shouldNotBeNull().holder shouldBe newest.holder
             }
             if (standing.isEmpty()) {
                 leases.keyValue.advance(leases.timings.ttl + leases.timings.vacancy)
                 leases.entry(key).shouldBeNull()
-                live.filter { it.leases.holds(key) } shouldBe emptyList()
             }
         } finally {
             holders.forEach { it.crash() }

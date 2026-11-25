@@ -3,16 +3,15 @@ package com.typewritermc.engine.session.testing
 import com.typewritermc.engine.session.SessionEntry
 import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.engine.session.SessionLeaseCodec
+import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.SessionValue
 import com.typewritermc.engine.session.sessionKey
-import com.typewritermc.engine.session.toSessionEntry
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.SessionId
 import com.typewritermc.services.libs.communicator.kv.LeaseEntry
 import com.typewritermc.services.libs.communicator.kv.LeaseState
-import com.typewritermc.services.libs.communicator.kv.LeaseTimings
 import com.typewritermc.services.libs.communicator.testing.ScriptedBuckets
 import com.typewritermc.services.libs.communicator.testing.VirtualKeyValue
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +26,7 @@ import java.util.UUID
  */
 class VirtualSessions(
     private val scope: TestScope,
-    val timings: LeaseTimings = SessionHarness.SHORT,
+    val timings: SessionTimings = SessionHarness.SHORT,
 ) {
     val keyValue = VirtualKeyValue(scope)
 
@@ -51,13 +50,13 @@ class VirtualSessions(
     suspend fun entry(
         protagonist: Protagonist,
         id: SessionId,
-    ): SessionEntry? = keyValue.read(sessionKey(protagonist, id), BUCKET)?.let(SessionLeaseCodec::decode)?.toSessionEntry()
+    ): SessionEntry? = keyValue.read(sessionKey(protagonist, id), BUCKET)?.let(SessionLeaseCodec::decode)
 
     /** Writes an empty value no engine can read under [protagonist]'s session [id], as a damaged write would. */
     suspend fun unreadable(
         protagonist: Protagonist,
         id: SessionId,
-    ) = keyValue.write(sessionKey(protagonist, id), ByteArray(0), timings.ttl, BUCKET)
+    ) = keyValue.write(sessionKey(protagonist, id), ByteArray(0), timings.lease.ttl, BUCKET)
 
     /** Writes the first half of a real session entry under [protagonist]'s session [id], as a cut off write would. */
     suspend fun truncated(
@@ -66,9 +65,9 @@ class VirtualSessions(
     ) {
         val whole =
             SessionLeaseCodec.encode(
-                LeaseEntry(LeaseState.Held("engine-gone", Instant.EPOCH), SessionValue(protagonist, Instant.EPOCH)),
+                LeaseEntry(LeaseState.Held(EngineId("engine-gone"), Instant.EPOCH), SessionValue(protagonist, Instant.EPOCH)),
             )
-        keyValue.write(sessionKey(protagonist, id), whole.copyOf(whole.size / 2), timings.ttl, BUCKET)
+        keyValue.write(sessionKey(protagonist, id), whole.copyOf(whole.size / 2), timings.lease.ttl, BUCKET)
     }
 
     companion object {

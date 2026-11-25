@@ -27,7 +27,7 @@ val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnable
         panel().tab(id, realm("realm"))
 
         panel().sessions.eventually { panel().sessions.entry(panel().user, SessionId(id)) != null }
-        delay(TIMINGS.ttl * 2)
+        delay(TIMINGS.lease.ttl * 2)
 
         panel()
             .sessions
@@ -51,9 +51,9 @@ val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnable
         closedTab.cancel()
 
         panel().sessions.eventually(
-            within = TIMINGS.ttl + TIMINGS.vacancy,
+            within = TIMINGS.lease.ttl + TIMINGS.lease.vacancy,
         ) { panel().sessions.entry(panel().user, SessionId(leaving)) == null }
-        panel().sessions.eventually(within = TIMINGS.ttl * 2 + TIMINGS.vacancy) {
+        panel().sessions.eventually(within = TIMINGS.lease.ttl * 2 + TIMINGS.lease.vacancy) {
             panel().sessions.entry(panel().user, SessionId(closed)) ==
                 null
         }
@@ -65,7 +65,7 @@ val PresenceSessionsTest by testSuite(testConfig = TestConfig.testScope(isEnable
         panel().tab(elsewhere, realm("other"))
         panel().tab(members, PresenceLocation.createMembers())
 
-        delay(TIMINGS.ttl)
+        delay(TIMINGS.lease.ttl)
 
         panel().sessions.entry(panel().user, SessionId(elsewhere)).shouldBeNull()
         panel().sessions.entry(panel().user, SessionId(members)).shouldBeNull()

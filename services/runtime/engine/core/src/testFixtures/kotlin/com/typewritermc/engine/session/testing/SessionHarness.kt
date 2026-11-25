@@ -2,6 +2,7 @@ package com.typewritermc.engine.session.testing
 
 import com.typewritermc.engine.session.SessionEntry
 import com.typewritermc.engine.session.SessionKeeper
+import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.readSessionEntry
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
@@ -63,7 +64,7 @@ class SessionHarness private constructor(
     /** Starts engine [id] of the Realm on a connection of its own. */
     suspend fun engine(
         id: String,
-        timings: LeaseTimings = SHORT,
+        timings: SessionTimings = SHORT,
     ): HarnessEngine {
         val connection = connect()
         val buckets = MutableStateFlow<KeyValueBuckets?>(NatsKeyValueBuckets(connection))
@@ -152,8 +153,8 @@ class SessionHarness private constructor(
         const val ORGANIZATION: String = "organization"
 
         /** Seconds instead of minutes: refresh every 300 ms, live 2 s, a vacancy of 1 s. */
-        val SHORT: LeaseTimings =
-            LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, vacancy = 1.seconds, retry = 100.milliseconds)
+        val SHORT: SessionTimings =
+            SessionTimings(LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, vacancy = 1.seconds, retry = 100.milliseconds))
 
         /** A harness on a fresh nats-server with JetStream. */
         fun start(): SessionHarness = SessionHarness(NatsTestServer.startWithJetStream())

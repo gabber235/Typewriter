@@ -1,6 +1,7 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.engine.runtime.testing.wiredDeploymentContext
+import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.readSessionEntry
 import com.typewritermc.engine.session.testing.SessionHarness
 import com.typewritermc.identity.EngineId
@@ -10,7 +11,6 @@ import com.typewritermc.identity.SessionId
 import com.typewritermc.identity.SessionReporter
 import com.typewritermc.protocol.transport.generated.SessionsBucket
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
-import com.typewritermc.services.libs.communicator.kv.LeaseTimings
 import com.typewritermc.services.libs.communicator.testing.NatsTestServer
 import com.typewritermc.services.libs.communicator.testing.onBroker
 import de.infix.testBalloon.framework.core.TestConfig
@@ -38,7 +38,7 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
                 check(buckets.ensure(SessionsBucket.declaration("realm")) is KeyValueOpen.Opened)
                 val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
                 val wiring =
-                    EngineWiring(wiredDeploymentContext(buckets), scope, module { single<LeaseTimings> { SessionHarness.SHORT } })
+                    EngineWiring(wiredDeploymentContext(buckets), scope, module { single<SessionTimings> { SessionHarness.SHORT } })
                 try {
                     val uuid = UUID.randomUUID().toString()
                     val protagonist = Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid))
@@ -64,7 +64,7 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
         try {
             val failure = shouldThrow<Exception> { EngineWiring(wiredDeploymentContext(), scope, module { }) }
 
-            generateSequence<Throwable>(failure) { it.cause }.joinToString(" | ") { it.message.orEmpty() } shouldContain "LeaseTimings"
+            generateSequence<Throwable>(failure) { it.cause }.joinToString(" | ") { it.message.orEmpty() } shouldContain "SessionTimings"
         } finally {
             scope.cancel()
         }

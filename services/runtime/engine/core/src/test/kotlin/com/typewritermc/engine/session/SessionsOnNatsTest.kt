@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled = false)) {
     val harness = testFixture { SessionHarness.start() }
-    val timings = LeaseTimings(refresh = 1.seconds, ttl = 5.minutes, vacancy = 1.seconds, retry = 100.milliseconds)
+    val timings = SessionTimings(LeaseTimings(refresh = 1.seconds, ttl = 5.minutes, vacancy = 1.seconds, retry = 100.milliseconds))
 
     test("SESSION-NATS a session is taken, moved to another engine and ended after the vacancy through the broker") {
         harness().createBucket()
@@ -28,15 +28,22 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         val (protagonist, session) = harness().player()
 
         harness().joined(old, protagonist, session)
-        val began = harness().entry(protagonist, session).shouldNotBeNull().since
+        val began =
+            harness()
+                .entry(protagonist, session)
+                .shouldNotBeNull()
+                .value.since
         harness().joined(new, protagonist, session)
-        harness().eventually { !old.keeper.holds(protagonist) }
+        harness().eventually { harness().entry(protagonist, session)?.holder == EngineId("engine-b") }
         old.keeper.disconnected(session)
 
-        harness().entry(protagonist, session).shouldNotBeNull().since shouldBe began
+        harness()
+            .entry(protagonist, session)
+            .shouldNotBeNull()
+            .value.since shouldBe began
         new.keeper.holders(protagonist) shouldBe setOf(EngineId("engine-b"))
 
         new.keeper.disconnected(session)
-        harness().eventually(within = timings.vacancy + 30.seconds) { harness().entry(protagonist, session) == null }
+        harness().eventually(within = timings.lease.vacancy + 30.seconds) { harness().entry(protagonist, session) == null }
     }
 }

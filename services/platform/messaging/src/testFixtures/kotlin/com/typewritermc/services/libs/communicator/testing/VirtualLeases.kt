@@ -124,7 +124,7 @@ class VirtualLeases(
     }
 
     /** The live entry of [key], or null when there is none or no holder could read it. */
-    suspend fun entry(key: String): LeaseEntry<String>? = keyValue.read(key)?.let(TextLeaseCodec::decode)
+    suspend fun entry(key: String): LeaseEntry<String, String>? = keyValue.read(key)?.let(TextLeaseCodec::decode)
 
     companion object {
         val SHORT: LeaseTimings =
@@ -135,7 +135,7 @@ class VirtualLeases(
 /** One holder of a [VirtualLeases]; [buckets] is its way to the store. */
 class LeaseHolder(
     val id: String,
-    val leases: Leases<String>,
+    val leases: Leases<String, String>,
     val buckets: ScriptedBuckets,
 ) {
     /** Claims [key], keeping the value the key kept before, else [value]. */
@@ -151,14 +151,14 @@ class LeaseHolder(
 }
 
 /** A lease entry as text, `held|holder|claimed|value` or `vacant|value`; anything else reads as no entry. */
-object TextLeaseCodec : LeaseCodec<String> {
-    override fun encode(entry: LeaseEntry<String>): ByteArray =
+object TextLeaseCodec : LeaseCodec<String, String> {
+    override fun encode(entry: LeaseEntry<String, String>): ByteArray =
         when (val state = entry.state) {
             is LeaseState.Held -> "held|${state.holder}|${state.claimed}|${entry.value}"
             LeaseState.Vacant -> "vacant|${entry.value}"
         }.encodeToByteArray()
 
-    override fun decode(bytes: ByteArray): LeaseEntry<String>? {
+    override fun decode(bytes: ByteArray): LeaseEntry<String, String>? {
         val parts = bytes.decodeToString().split('|')
         return when {
             parts.size == 4 && parts[0] == "held" -> {

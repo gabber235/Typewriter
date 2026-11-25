@@ -2,6 +2,7 @@ package com.typewritermc.engine.session
 
 import com.typewritermc.engine.session.testing.VirtualSessions
 import com.typewritermc.identity.EngineId
+import com.typewritermc.services.libs.communicator.kv.LeaseState
 import com.typewritermc.services.libs.communicator.testing.VirtualKeyValue
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -24,15 +25,10 @@ val SessionKeeperTest by testSuite {
         val (protagonist, session) = sessions.player()
 
         engine.keeper.connected(protagonist, session)
-        engine.keeper.holds(protagonist) shouldBe true
         sessions.keyValue.settle()
 
         sessions.entry(protagonist, session) shouldBe
-            SessionEntry(
-                protagonist,
-                since = VirtualKeyValue.START,
-                state = SessionState.Held(EngineId("engine-a"), connected = VirtualKeyValue.START),
-            )
+            SessionEntry(LeaseState.Held(EngineId("engine-a"), VirtualKeyValue.START), SessionValue(protagonist, VirtualKeyValue.START))
     }
 
     test("SESSION-2 a rejoin within the vacancy keeps when the session began and stamps the new connection") {
@@ -40,19 +36,19 @@ val SessionKeeperTest by testSuite {
         val engine = sessions.engine("engine-a")
         val (protagonist, session) = sessions.player()
         engine.keeper.connected(protagonist, session)
-        sessions.keyValue.advance(sessions.timings.ttl)
+        sessions.keyValue.advance(sessions.timings.lease.ttl)
 
         engine.keeper.disconnected(session)
-        sessions.keyValue.advance(sessions.timings.vacancy / 2)
+        sessions.keyValue.advance(sessions.timings.lease.vacancy / 2)
         engine.keeper.connected(protagonist, session)
-        sessions.keyValue.advance(sessions.timings.ttl * 3)
+        sessions.keyValue.advance(sessions.timings.lease.ttl * 3)
 
         val entry = sessions.entry(protagonist, session).shouldNotBeNull()
-        entry.since shouldBe VirtualKeyValue.START
+        entry.value.since shouldBe VirtualKeyValue.START
         entry.state shouldBe
-            SessionState.Held(
+            LeaseState.Held(
                 EngineId("engine-a"),
-                VirtualKeyValue.START + (sessions.timings.ttl + sessions.timings.vacancy / 2).toJavaDuration(),
+                VirtualKeyValue.START + (sessions.timings.lease.ttl + sessions.timings.lease.vacancy / 2).toJavaDuration(),
             )
     }
 
@@ -63,20 +59,22 @@ val SessionKeeperTest by testSuite {
             val new = sessions.engine("engine-b")
             val (protagonist, session) = sessions.player()
             old.keeper.connected(protagonist, session)
-            sessions.keyValue.advance(sessions.timings.ttl)
-            val began = sessions.entry(protagonist, session).shouldNotBeNull().since
+            sessions.keyValue.advance(sessions.timings.lease.ttl)
+            val began =
+                sessions
+                    .entry(protagonist, session)
+                    .shouldNotBeNull()
+                    .value.since
 
             if (joinFirst) new.keeper.connected(protagonist, session)
             old.keeper.disconnected(session)
             if (!joinFirst) new.keeper.connected(protagonist, session)
-            sessions.keyValue.advance(sessions.timings.ttl * 3)
+            sessions.keyValue.advance(sessions.timings.lease.ttl * 3)
 
             val entry = sessions.entry(protagonist, session).shouldNotBeNull()
             entry.holder shouldBe EngineId("engine-b")
-            entry.since shouldBe began
+            entry.value.since shouldBe began
             old.keeper.holders(protagonist) shouldBe setOf(EngineId("engine-b"))
-            new.keeper.holds(protagonist) shouldBe true
-            old.keeper.holds(protagonist) shouldBe false
         }
     }
 
@@ -85,7 +83,7 @@ val SessionKeeperTest by testSuite {
         val before = sessions.engine("engine-a")
         val (protagonist, session) = sessions.player()
         before.keeper.connected(protagonist, session)
-        sessions.keyValue.advance(sessions.timings.ttl)
+        sessions.keyValue.advance(sessions.timings.lease.ttl)
 
         before.keeper.close()
         val after = sessions.engine("engine-a")
@@ -94,8 +92,8 @@ val SessionKeeperTest by testSuite {
 
         val entry = sessions.entry(protagonist, session).shouldNotBeNull()
         entry.holder shouldBe EngineId("engine-a")
-        entry.since shouldBe VirtualKeyValue.START
-        sessions.keyValue.advance(sessions.timings.ttl * 3)
+        entry.value.since shouldBe VirtualKeyValue.START
+        sessions.keyValue.advance(sessions.timings.lease.ttl * 3)
         sessions.entry(protagonist, session).shouldNotBeNull().holder shouldBe EngineId("engine-a")
     }
 
@@ -107,13 +105,15 @@ val SessionKeeperTest by testSuite {
         sessions.keyValue.settle()
 
         engine.buckets.unreachable = true
-        sessions.keyValue.advance(sessions.timings.ttl * 2)
+        sessions.keyValue.advance(sessions.timings.lease.ttl * 2)
         engine.buckets.unreachable = false
-        sessions.keyValue.advance(sessions.timings.refresh)
+        sessions.keyValue.advance(sessions.timings.lease.refresh)
 
         val entry = sessions.entry(protagonist, session).shouldNotBeNull()
         entry.holder shouldBe EngineId("engine-a")
-        entry.since shouldBeGreaterThan VirtualKeyValue.START + sessions.timings.ttl.toJavaDuration()
+        entry.value.since shouldBeGreaterThan VirtualKeyValue.START +
+            sessions.timings.lease.ttl
+                .toJavaDuration()
     }
 
     test("SESSION-6 quits reported right after their joins end every session once the vacancy passed") {
@@ -125,7 +125,7 @@ val SessionKeeperTest by testSuite {
             engine.keeper.connected(protagonist, session)
             engine.keeper.disconnected(session)
         }
-        sessions.keyValue.advance(sessions.timings.vacancy)
+        sessions.keyValue.advance(sessions.timings.lease.vacancy)
 
         players.forEach { (protagonist, session) -> sessions.entry(protagonist, session).shouldBeNull() }
     }
@@ -164,12 +164,12 @@ val SessionKeeperTest by testSuite {
         val engine = sessions.engine("engine-a")
         val (protagonist, session) = sessions.player()
         engine.keeper.connected(protagonist, session)
-        sessions.keyValue.advance(sessions.timings.ttl)
+        sessions.keyValue.advance(sessions.timings.lease.ttl)
 
         engine.keeper.disconnected(session)
         sessions.keyValue.settle()
 
         engine.keeper.holders(protagonist) shouldBe emptySet()
-        sessions.entry(protagonist, session) shouldBe SessionEntry(protagonist, since = VirtualKeyValue.START, state = SessionState.Vacant)
+        sessions.entry(protagonist, session) shouldBe SessionEntry(LeaseState.Vacant, SessionValue(protagonist, VirtualKeyValue.START))
     }
 }

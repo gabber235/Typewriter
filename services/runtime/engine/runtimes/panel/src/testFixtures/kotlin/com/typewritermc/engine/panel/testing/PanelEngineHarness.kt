@@ -1,6 +1,7 @@
 package com.typewritermc.engine.panel.testing
 
 import com.typewritermc.engine.panel.PresenceSessions
+import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.testing.SessionHarness
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
@@ -49,7 +50,7 @@ class PanelEngineHarness private constructor(
                     actor,
                     PresenceEvent.createActive(sessionId = id, sequence = sequence++, location = location),
                 )
-                delay(TIMINGS.refresh)
+                delay(TIMINGS.lease.refresh)
             }
         }
     }
@@ -73,8 +74,8 @@ class PanelEngineHarness private constructor(
 
     companion object {
         /** The panel engine's timings in the harness. */
-        val TIMINGS: LeaseTimings =
-            LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, vacancy = 1.seconds, retry = 100.milliseconds)
+        val TIMINGS: SessionTimings =
+            SessionTimings(LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, vacancy = 1.seconds, retry = 100.milliseconds))
 
         /** The location of a tab in Realm [id]. */
         fun realm(id: String): PresenceLocation =

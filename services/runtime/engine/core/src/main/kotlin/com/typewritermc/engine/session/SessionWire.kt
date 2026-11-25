@@ -20,32 +20,15 @@ import skirout.service.v1.session.SessionEntry as WireSessionEntry
 import skirout.service.v1.session.SessionHold as WireSessionHold
 import skirout.service.v1.session.SessionState as WireSessionState
 
-/** One session's entry in the Realm's sessions bucket: who it belongs to, since when it runs, and who holds it. */
-data class SessionEntry(
-    val protagonist: Protagonist,
-    val since: Instant,
-    val state: SessionState,
-) {
-    /** The engine holding the session, or null while it is vacant. */
-    val holder: EngineId? get() = (state as? SessionState.Held)?.holder
-}
-
 /**
- * Who holds a session. A vacant session is alive, so a server move or a rejoin takes it over and nothing it owns ends,
- * but nobody holds it: its engine released it when the protagonist left, and nothing is sent there.
+ * One session's entry in the Realm's sessions bucket, a lease of engines: held by an engine since its connection began
+ * on that engine's clock, or vacant. A vacant session is alive, so a server move or a rejoin takes it over and nothing
+ * it owns ends, but nobody holds it: its engine released it when the protagonist left, and nothing is sent there.
  */
-sealed interface SessionState {
-    /** [holder] holds the session; its connection began at [connected] on its own clock. */
-    data class Held(
-        val holder: EngineId,
-        val connected: Instant,
-    ) : SessionState
+typealias SessionEntry = LeaseEntry<EngineId, SessionValue>
 
-    data object Vacant : SessionState
-}
-
-/** What a session's lease keeps besides its holder and claim: whose session it is and since when it runs. */
-internal data class SessionValue(
+/** What a session's lease keeps besides who holds it: whose session it is and since when it runs. */
+data class SessionValue(
     val protagonist: Protagonist,
     val since: Instant,
 )
@@ -66,10 +49,10 @@ internal fun protagonistKeys(protagonist: Protagonist): String = "${protagonist.
  * Session entries as the sessions bucket stores them. A value no engine can read, damaged or cut off, is logged and
  * read as no entry, so a join writes over it and a holder listing skips it.
  */
-internal object SessionLeaseCodec : LeaseCodec<SessionValue> {
+internal object SessionLeaseCodec : LeaseCodec<EngineId, SessionValue> {
     private val log: Logger = Logger.getLogger(SessionLeaseCodec::class.java.name)
 
-    override fun encode(entry: LeaseEntry<SessionValue>): ByteArray =
+    override fun encode(entry: SessionEntry): ByteArray =
         WireSessionEntry.serializer
             .toBytes(
                 WireSessionEntry(
@@ -86,7 +69,7 @@ internal object SessionLeaseCodec : LeaseCodec<SessionValue> {
                         when (val state = entry.state) {
                             is LeaseState.Held -> {
                                 WireSessionState.HeldWrapper(
-                                    WireSessionHold(holder = WireEngineId(value = state.holder), connected = state.claimed),
+                                    WireSessionHold(holder = WireEngineId(value = state.holder.value), connected = state.claimed),
                                 )
                             }
 
@@ -97,12 +80,12 @@ internal object SessionLeaseCodec : LeaseCodec<SessionValue> {
                 ),
             ).toByteArray()
 
-    override fun decode(bytes: ByteArray): LeaseEntry<SessionValue>? =
+    override fun decode(bytes: ByteArray): SessionEntry? =
         try {
             val wire = WireSessionEntry.serializer.fromBytes(bytes.toByteString())
             val state =
                 when (val state = wire.state) {
-                    is WireSessionState.HeldWrapper -> LeaseState.Held(state.value.holder.value, state.value.connected)
+                    is WireSessionState.HeldWrapper -> LeaseState.Held(EngineId(state.value.holder.value), state.value.connected)
                     WireSessionState.VACANT -> LeaseState.Vacant
                     else -> return unreadable("a session state no engine knows: $state")
                 }
@@ -123,24 +106,13 @@ internal object SessionLeaseCodec : LeaseCodec<SessionValue> {
     }
 }
 
-internal fun LeaseEntry<SessionValue>.toSessionEntry(): SessionEntry =
-    SessionEntry(
-        protagonist = value.protagonist,
-        since = value.since,
-        state =
-            when (val state = state) {
-                is LeaseState.Held -> SessionState.Held(EngineId(state.holder), state.claimed)
-                LeaseState.Vacant -> SessionState.Vacant
-            },
-    )
-
 /** The live entry of [protagonist]'s session [id] in this sessions bucket, or null when there is none or no engine can read it; a failed read throws its cause. */
 suspend fun KeyValueBucket.readSessionEntry(
     protagonist: Protagonist,
     id: SessionId,
 ): SessionEntry? =
     when (val read = get(sessionKey(protagonist, id))) {
-        is KeyValueRead.Found -> SessionLeaseCodec.decode(read.entry.value)?.toSessionEntry()
+        is KeyValueRead.Found -> SessionLeaseCodec.decode(read.entry.value)
         KeyValueRead.Absent -> null
         is KeyValueRead.Failed -> throw read.cause
     }

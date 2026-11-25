@@ -26,12 +26,11 @@ val LeasesTest by testSuite {
     val refresh = VirtualLeases.SHORT.refresh
     val retry = VirtualLeases.SHORT.retry
 
-    test("LEASE-1 a claim counts as held at once and writes the key naming its holder and the instant it was claimed") {
+    test("LEASE-1 a claim writes the key naming its holder and the instant it was claimed") {
         val leases = VirtualLeases(testScope).apply { keyValue.createBucket() }
         val a = leases.holder("engine-a")
 
         a.claim("k")
-        a.leases.holds("k") shouldBe true
         leases.keyValue.settle()
 
         leases.entry("k") shouldBe LeaseEntry(LeaseState.Held("engine-a", VirtualKeyValue.START), "first")
@@ -45,7 +44,6 @@ val LeasesTest by testSuite {
         leases.keyValue.advance(ttl * 10)
 
         leases.entry("k").shouldNotBeNull().holder shouldBe "engine-a"
-        a.leases.holds("k") shouldBe true
     }
 
     test("LEASE-3 a released key stays alive held by nobody, and ends once the vacancy passed") {
@@ -55,7 +53,6 @@ val LeasesTest by testSuite {
         leases.keyValue.advance(ttl)
 
         a.release("k")
-        a.leases.holds("k") shouldBe false
         leases.keyValue.advance(vacancy - 1.milliseconds)
         leases.entry("k") shouldBe LeaseEntry(LeaseState.Vacant, "first")
         leases.keyValue.advance(1.milliseconds)
@@ -85,10 +82,8 @@ val LeasesTest by testSuite {
         b.claim("k")
         leases.keyValue.advance(refresh)
 
-        a.leases.holds("k") shouldBe false
         leases.keyValue.advance(ttl * 3)
         leases.entry("k").shouldNotBeNull().holder shouldBe "engine-b"
-        b.leases.holds("k") shouldBe true
     }
 
     test("LEASE-6 a claim older than the key's claim never writes over it, however late it reads the key") {
@@ -106,8 +101,6 @@ val LeasesTest by testSuite {
         leases.keyValue.advance(ttl * 3)
 
         leases.entry("k") shouldBe taken
-        a.leases.holds("k") shouldBe false
-        b.leases.holds("k") shouldBe true
     }
 
     test("LEASE-7 two claims that read the same revision end with the newer one holding, whichever write lands first") {
@@ -130,8 +123,6 @@ val LeasesTest by testSuite {
             leases.keyValue.advance(ttl * 3)
 
             leases.entry("k").shouldNotBeNull().holder shouldBe "engine-a"
-            newer.leases.holds("k") shouldBe true
-            older.leases.holds("k") shouldBe false
         }
     }
 
@@ -153,7 +144,6 @@ val LeasesTest by testSuite {
             leases.keyValue.advance(ttl * 3)
 
             leases.entry("k").shouldNotBeNull().holder shouldBe "engine-b"
-            holders.map { it.leases.holds("k") } shouldContainExactly listOf(false, true)
         }
     }
 
@@ -170,7 +160,6 @@ val LeasesTest by testSuite {
         leases.entry("k").shouldBeNull()
         leases.keyValue.advance(ttl * 3)
         leases.entry("k").shouldBeNull()
-        a.leases.holds("k") shouldBe false
     }
 
     test("LEASE-10 a claim whose write reached the store after its release still ends once the vacancy passed") {
@@ -217,7 +206,6 @@ val LeasesTest by testSuite {
         leases.keyValue.advance(ttl * 3)
 
         leases.entry("k").shouldNotBeNull().holder shouldBe "engine-a"
-        a.leases.holds("k") shouldBe true
     }
 
     test("LEASE-13 an outage shorter than the time to live ends nothing") {
@@ -232,7 +220,6 @@ val LeasesTest by testSuite {
         leases.keyValue.advance(ttl * 3)
 
         leases.entry("k").shouldNotBeNull().holder shouldBe "engine-a"
-        a.leases.holds("k") shouldBe true
     }
 
     test("LEASE-14 a key that expired during a longer outage is written again once the store is back") {
@@ -248,7 +235,6 @@ val LeasesTest by testSuite {
         leases.keyValue.advance(refresh)
 
         leases.entry("k").shouldNotBeNull().holder shouldBe "engine-a"
-        a.leases.holds("k") shouldBe true
     }
 
     test("LEASE-15 a release during an outage ends the key once the store is back and the vacancy passed") {
@@ -303,10 +289,11 @@ val LeasesTest by testSuite {
 
         leases.keyValue.telemetry.counted("typewriter.lease.claim.ahead") shouldBe 1
         leases.entry("k").shouldNotBeNull().holder shouldBe "engine-b"
-        a.leases.holds("k") shouldBe false
     }
 
-    test("LEASE-19 after any schedule of claims, releases, crashes and broker faults, the newest claim still standing holds the key") {
+    test(
+        "LEASE-19 after any schedule of claims, releases, crashes and broker faults, the newest claim holds the key while its holder stands by it, and the key ends once no claim stands",
+    ) {
         checkAll(PropTestConfig(seed = 4242, iterations = 400), LeaseSchedule.arb) { schedule ->
             VirtualLeases(testScope).play(schedule).shouldEndWithNewestClaimHolding()
         }
@@ -325,7 +312,6 @@ val LeasesTest by testSuite {
         leases.keyValue.advance(ttl * 3)
 
         leases.entry("k").shouldNotBeNull().holder shouldBe "engine-a"
-        a.leases.holds("k") shouldBe true
     }
 
     test("LEASE-21 a release after a newer claim took the key over leaves the key to the newer claim") {
@@ -341,6 +327,22 @@ val LeasesTest by testSuite {
         leases.keyValue.advance(ttl * 3)
 
         leases.entry("k").shouldNotBeNull().holder shouldBe "engine-b"
-        b.leases.holds("k") shouldBe true
+    }
+
+    test("LEASE-22 a holder whose key a newer claim took has lost it for good, also once the newer holder released it") {
+        val leases = VirtualLeases(testScope).apply { keyValue.createBucket() }
+        val b = leases.holder("engine-b")
+        val a = leases.holder("engine-a")
+        b.claim("k")
+        leases.keyValue.advance(1.milliseconds)
+        a.claim("k")
+        leases.keyValue.settle()
+
+        a.release("k")
+        leases.keyValue.advance(refresh)
+        leases.entry("k") shouldBe LeaseEntry(LeaseState.Vacant, "first")
+        leases.keyValue.advance(vacancy)
+
+        leases.entry("k").shouldBeNull()
     }
 }

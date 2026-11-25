@@ -2,6 +2,7 @@ package com.typewritermc.engine.panel
 
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
+import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.SessionId
@@ -11,7 +12,6 @@ import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.protocol.transport.OrganizationActorRouteScope
 import com.typewritermc.protocol.transport.everyMemberOf
 import com.typewritermc.protocol.transport.generated.organizationPresence
-import com.typewritermc.services.libs.communicator.kv.LeaseTimings
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import kotlinx.coroutines.CoroutineScope
@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap
 class PresenceSessions(
     private val realmId: String,
     private val sessions: SessionReporter,
-    private val timings: LeaseTimings,
+    private val timings: SessionTimings,
 ) {
     private val tabs = ConcurrentHashMap<SessionId, Job>()
 
@@ -100,7 +100,7 @@ class PresenceSessions(
     ) {
         val silence =
             scope.launch {
-                delay(timings.ttl)
+                delay(timings.lease.ttl)
                 if (tabs.remove(tab, coroutineContext[Job])) sessions.disconnected(tab)
             }
         val previous = tabs.put(tab, silence)
