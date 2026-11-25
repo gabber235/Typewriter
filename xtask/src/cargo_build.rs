@@ -77,9 +77,32 @@ impl CargoBuild<'_> {
         if stamp.outputs(&ctx.root, &digest).as_ref() == Some(&artifacts) {
             return Ok(Outcome::Reused);
         }
-        // A build that fails, or reads outside its inputs, leaves nothing to reuse.
+        // A build that fails, or reads outside its inputs, leaves nothing to reuse, and an
+        // artifact Cargo does not write again (a renamed or dropped target) is not taken for one.
         stamp.clear()?;
+        for artifact in &self.artifacts {
+            match fs::remove_file(artifact) {
+                Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
+                    return Err(error)
+                        .with_context(|| format!("cannot remove {}", artifact.display()));
+                }
+                _ => {}
+            }
+        }
         cargo.run()?;
+        let missing: Vec<String> = self
+            .artifacts
+            .iter()
+            .filter(|artifact| !artifact.is_file())
+            .map(|artifact| artifact.display().to_string())
+            .collect();
+        if !missing.is_empty() {
+            bail!(
+                "the build {} wrote no {}; Cargo builds no target by that name",
+                self.name,
+                missing.join(", ")
+            );
+        }
         self.check_inputs(ctx, &hashed)?;
         stamp.record(&ctx.root, &digest, &artifacts)?;
         Ok(Outcome::Compiled)
@@ -238,7 +261,7 @@ fn normalize(path: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{FakeCargo, TempRoot};
+    use crate::test_support::{FakeCargo, TempRoot, refusal};
 
     /// The build every case runs: `backend` and `Cargo.lock` without `backend/tests`.
     const INPUTS: &[&str] = &["backend", "Cargo.lock"];
@@ -326,6 +349,20 @@ mod tests {
         let removed = build.run(&root.ctx, &mut cargo.command("one", READS));
         assert_eq!(removed.unwrap(), Outcome::Compiled);
         assert_eq!(fs::read_to_string(cargo.artifact()).unwrap(), "one");
+    }
+
+    #[test]
+    fn an_artifact_the_build_no_longer_writes_fails_it_even_when_an_old_copy_remains() {
+        let root = TempRoot::new();
+        root.write("backend/src/lib.rs", "fn main() {}");
+        root.write("target/renamed.wasm", "built before its target was renamed");
+        let cargo = FakeCargo { root: &root };
+        let mut build = cargo.build(INPUTS, EXCLUDED);
+        build.artifacts.push(root.path("target/renamed.wasm"));
+
+        let error = refusal(build.run(&root.ctx, &mut cargo.command("one", READS)));
+        assert!(error.contains("target/renamed.wasm"), "{error}");
+        assert!(!root.path("target/renamed.wasm").exists());
     }
 
     #[test]

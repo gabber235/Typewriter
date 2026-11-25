@@ -1,6 +1,7 @@
 //! Publishes the backend to a cluster: every deployable component, the database image, then a
 //! restart so the runtime operator pulls the new images.
 
+use std::collections::BTreeSet;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -202,8 +203,12 @@ pub(crate) fn components_build(ctx: &Context, components: &[Component]) -> Comma
             "wasm32-wasip2",
         ],
     );
+    // A package with several wanted targets is named once.
+    let mut packages = BTreeSet::new();
     for component in components {
-        build.args(["-p", &component.package]);
+        if packages.insert(component.package.as_str()) {
+            build.args(["-p", &component.package]);
+        }
     }
     build
 }

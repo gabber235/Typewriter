@@ -281,18 +281,14 @@ fn build_components(
         .collect();
     let backend_target = target_directory(ctx, "backend/Cargo.toml")?;
     let wasm = |target: &str| deploy::release_artifact(&backend_target, target);
-    let mut components: Vec<deploy::Component> = Vec::new();
-    for (package, target) in &wanted {
-        if !components
-            .iter()
-            .any(|component| component.package == *package)
-        {
-            components.push(deploy::Component {
-                package: (*package).to_owned(),
-                artifact: wasm(target),
-            });
-        }
-    }
+    // Every wanted target's artifact, so the build fails on one Cargo no longer writes.
+    let components: Vec<deploy::Component> = wanted
+        .iter()
+        .map(|(package, target)| deploy::Component {
+            package: (*package).to_owned(),
+            artifact: wasm(target),
+        })
+        .collect();
     let mut cargo = deploy::components_build(ctx, &components);
     jobs(&mut cargo, args);
     cargo.log_stderr(log)?;
@@ -302,10 +298,6 @@ fn build_components(
     let mut artifacts = BTreeMap::new();
     for (package, target) in wanted {
         let path = wasm(target);
-        ensure!(
-            path.is_file(),
-            "the build produced no artifact for package `{package}` target `{target}`"
-        );
         let package_id = ids
             .get(package)
             .with_context(|| format!("cargo metadata lists no package `{package}`"))?;
