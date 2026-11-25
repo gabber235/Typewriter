@@ -106,6 +106,7 @@ pub struct Environment(BTreeMap<String, OsString>);
 
 impl Environment {
     /// No variables at all.
+    #[cfg(test)]
     pub const EMPTY: Self = Self(BTreeMap::new());
 
     /// This process's variables; one whose name is not Unicode is left out, as no step names it.
@@ -118,6 +119,7 @@ impl Environment {
     }
 
     /// This environment with `name` set to `value`.
+    #[cfg(test)]
     pub fn with(mut self, name: &str, value: &str) -> Self {
         self.0.insert(name.to_owned(), value.into());
         self
