@@ -3,17 +3,15 @@ package com.typewritermc.realm.publication
 import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.of
 import com.typewritermc.engine.decodeResourceGraphShard
-import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.realm.authoring.AuthoringLease
-import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewDelta
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RealmGraphWorkTelemetry
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.recordBinding
+import com.typewritermc.realm.testing.viewStore
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
@@ -65,14 +63,7 @@ internal class PublicationFixture(
 ) {
     /** What each operation's graph reads did, as a running Realm records it. */
     val telemetry = TelemetryTestHarness.create()
-    val views =
-        InMemoryAuthoringViewStore(
-            PUBLICATION_CATALOG.lease(),
-            AuthoringSeed(initial),
-            checkingServices(),
-            GraphListener.NONE,
-            RealmGraphWorkTelemetry(telemetry.telemetry),
-        )
+    val views = viewStore(PUBLICATION_CATALOG.lease(), initial, checkingServices(), RealmGraphWorkTelemetry(telemetry.telemetry))
     private val checks = RealmCheckRuntime(views, telemetry.telemetry)
     private val database = publicationDatabase()
     val attempts = SurrealPublicationAttemptStore(database)

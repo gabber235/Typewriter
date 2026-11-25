@@ -4,9 +4,7 @@ import com.typewritermc.authoring.CheckedWriteResult
 import com.typewritermc.authoring.SubmissionKey
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.with
-import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.realm.authoring.AuthoringSeed
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.TEST_TYPE
 import com.typewritermc.realm.authoring.location
@@ -16,7 +14,6 @@ import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.publication.AuthoringAcceptance
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
-import com.typewritermc.realm.testing.UNOBSERVED_GRAPH_WORK
 import com.typewritermc.realm.testing.UNOBSERVED_TELEMETRY
 import com.typewritermc.realm.testing.conflictingFacts
 import com.typewritermc.realm.testing.linkOrNull
@@ -27,6 +24,7 @@ import com.typewritermc.realm.testing.shouldBeRejected
 import com.typewritermc.realm.testing.storeSeed
 import com.typewritermc.realm.testing.text
 import com.typewritermc.realm.testing.value
+import com.typewritermc.realm.testing.viewStore
 import com.typewritermc.types.bytes
 import com.typewritermc.types.integer
 import com.typewritermc.types.listValue
@@ -439,12 +437,7 @@ val SurrealAuthoringRepositoryTest by testSuite {
             val storage = SurrealAuthoringStorage(database)
             storage.storeSeed(mapOf(id to initial))
             val generation = CatalogGeneration(value = "fresh")
-            InMemoryAuthoringViewStore(
-                catalog.lease(generation),
-                storage.readCoherent(),
-                listener = GraphListener.NONE,
-                recorder = UNOBSERVED_GRAPH_WORK,
-            ).use { views ->
+            viewStore(catalog.lease(generation), storage.readCoherent().resources).use { views ->
                 RealmAuthoringOwner(storage, views, findings = { emptyList() }, UNOBSERVED_TELEMETRY)
                     .commit(renameEdit(generation, id, initial), attempt)
                     .shouldBeCommitted()

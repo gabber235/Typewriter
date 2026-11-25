@@ -5,16 +5,13 @@ import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
-import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.loader.api.artifact.PublicationBlobRetention
 import com.typewritermc.loader.api.artifact.PublicationBlobRoots
-import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.TestCatalogLease
 import com.typewritermc.realm.storage.MigrationResources
 import com.typewritermc.realm.storage.openTestDatabase
-import com.typewritermc.realm.testing.UNOBSERVED_GRAPH_WORK
+import com.typewritermc.realm.testing.viewStore
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import skirout.editor.v1.compilation_root.CompilationProjectionId
 import skirout.editor.v1.compilation_root.CompilationRoot
@@ -130,12 +127,7 @@ internal fun compiledArtifactProducer(
 
 /** Registers [producers] and compiles an empty saved view with them, so registration and output rules both apply. */
 internal fun compileEmptyView(vararg producers: CompiledArtifactProducer): List<CompilationResult> =
-    InMemoryAuthoringViewStore(
-        TestCatalogLease(),
-        AuthoringSeed(emptyMap()),
-        listener = GraphListener.NONE,
-        recorder = UNOBSERVED_GRAPH_WORK,
-    ).use { views ->
+    viewStore(TestCatalogLease(), emptyMap()).use { views ->
         views.capture().use { capture ->
             with(CompilationInputs(capture.root, emptyMap())) { CompiledArtifactProducerRegistry(producers.toList()).compile() }
         }

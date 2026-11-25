@@ -11,13 +11,12 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.formula.graph.TrackedGraph
 import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
-import com.typewritermc.realm.testing.UNOBSERVED_GRAPH_WORK
+import com.typewritermc.realm.testing.viewStore
 import com.typewritermc.testkit.definitions
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
@@ -214,13 +213,7 @@ internal fun <T> graphReads(
     staged: Map<ResourceId, AuthoringRecord>? = null,
     block: CapturedAuthoringReads.() -> T,
 ): T {
-    val store =
-        InMemoryAuthoringViewStore(
-            GRAPH_CATALOG.lease(CatalogGeneration(value = "graph_catalog")),
-            AuthoringSeed(resources),
-            listener = GraphListener.NONE,
-            recorder = UNOBSERVED_GRAPH_WORK,
-        )
+    val store = viewStore(GRAPH_CATALOG.lease(CatalogGeneration(value = "graph_catalog")), resources)
     return try {
         store.capture().use { lease ->
             CapturedAuthoringReads(if (staged == null) lease.originalView() else lease.stagedView(staged)).block()
