@@ -77,7 +77,10 @@ import skirout.editor.v1.authoring.PreparedEdit
  * Session replacement rebuilds routing while database, checks, and publication remain active. Shutdown retires
  * publishers and routes before closing their views and database. The managed runtime serializes activation
  * and shutdown; the local lifecycle mutex protects router replacement within an activation.
+ *
+ * The realm runtime is its composition root: it wires storage, catalogs, the host and the engine source into one deployment.
  */
+@Suppress("LongParameterList")
 internal class Realm(
     private val databaseProvider: RealmDatabaseProvider,
     private val catalogs: RealmCatalogStore,

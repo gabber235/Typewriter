@@ -55,8 +55,7 @@ internal class RelationValueSynchronizer(
     fun connect(
         resources: MutableMap<ResourceId, AuthoringRecord>,
         intent: EditIntent.ConnectRelationWrapper,
-        batch: String,
-        ordinal: Int,
+        seed: ItemSeed,
         problems: MutableList<ValueProblem>,
     ) {
         val source = intent.value.source
@@ -106,8 +105,7 @@ internal class RelationValueSynchronizer(
                                 binding.location,
                                 oppositeEndpoint,
                                 LinkTarget(resource = source.source, opposite = source.id.location.path),
-                                batch,
-                                ordinal,
+                                seed,
                                 problems,
                             )
                         }
@@ -176,7 +174,7 @@ internal class RelationValueSynchronizer(
                     val embedded =
                         if (targetRecord?.declaresCollection(counterpart.value.containing, catalog) == true) {
                             val current = targetRecord.collectionValue(counterpart.value.containing, catalog, problems) ?: return
-                            val item = deterministicItem(batch, ordinal, counterpart.value.containing)
+                            val item = seed.item(counterpart.value.containing)
                             insert(
                                 resources,
                                 EditIntent.createInsert(
@@ -238,8 +236,7 @@ internal class RelationValueSynchronizer(
         before: List<LinkOccurrence>,
         resources: MutableMap<ResourceId, AuthoringRecord>,
         at: ValueLocation,
-        batch: String,
-        ordinal: Int,
+        seed: ItemSeed,
         problems: MutableList<ValueProblem>,
     ) {
         if (problems.isNotEmpty()) return
@@ -272,8 +269,7 @@ internal class RelationValueSynchronizer(
                 EditIntent.ConnectRelationWrapper(
                     ConnectIntent(source = occurrence, target = occurrence.target.resource, counterpart = counterpart),
                 ),
-                batch,
-                ordinal + offset,
+                seed.offset(offset),
                 problems,
             )
         }
@@ -384,8 +380,7 @@ internal class RelationValueSynchronizer(
         collection: ValueLocation,
         endpoint: EndpointId,
         target: LinkTarget,
-        batch: String,
-        ordinal: Int,
+        seed: ItemSeed,
         problems: MutableList<ValueProblem>,
     ): ValueLocation? {
         val record = resources[collection.resource]
@@ -395,7 +390,7 @@ internal class RelationValueSynchronizer(
         }
         val current = record.collectionValue(collection, catalog, problems) ?: return null
         val items = current.itemsOrNull() ?: return null
-        val item = deterministicItem(batch, ordinal, collection)
+        val item = seed.item(collection)
         val location = collection.item(item)
         val named = record.authoredTypeAt(location.resource, location.path, catalog).namedType()
         if (named == null) {
@@ -473,13 +468,22 @@ internal class RelationValueSynchronizer(
     }
 }
 
-private fun deterministicItem(
-    batch: String,
-    ordinal: Int,
-    containing: ValueLocation,
-): ItemId {
-    val content = "$batch:$ordinal:${containing.resource.value}:${ValuePath.serializer.toJsonCode(containing.path)}"
-    return ItemId(value = "relation:${content.sha256Hex()}")
+/**
+ * Seeds the ids of the relation items one intent creates: the edit's [batch] identity and the intent's [ordinal] in
+ * it, so replaying the same edit creates the same items.
+ */
+internal data class ItemSeed(
+    val batch: String,
+    val ordinal: Int,
+) {
+    /** The seed of the intent [by] places after this one. */
+    fun offset(by: Int): ItemSeed = copy(ordinal = ordinal + by)
+
+    /** The id of the item this seed creates in [containing]. */
+    fun item(containing: ValueLocation): ItemId {
+        val content = "$batch:$ordinal:${containing.resource.value}:${ValuePath.serializer.toJsonCode(containing.path)}"
+        return ItemId(value = "relation:${content.sha256Hex()}")
+    }
 }
 
 private fun ValuePath.startsWith(prefix: ValuePath): Boolean =

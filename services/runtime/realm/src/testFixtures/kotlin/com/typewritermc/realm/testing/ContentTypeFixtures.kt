@@ -27,6 +27,7 @@ import com.typewritermc.realm.authoring.RelationReads
 import com.typewritermc.realm.authoring.tracked
 import com.typewritermc.realm.catalog.code
 import com.typewritermc.realm.edit.WorkingViewEditContext
+import com.typewritermc.realm.operation.WorkingObservation
 import com.typewritermc.realm.operation.operationObservation
 import com.typewritermc.testing.routes.FixtureStaticEntryDefinition
 import com.typewritermc.types.Ref
@@ -611,4 +612,7 @@ val RealmFixture.codeCatalog: CheckedCatalog get() = views.read { view -> view.c
 fun <T> RealmFixture.overDraft(
     upserts: Map<ResourceId, AuthoringRecord>,
     read: (CheckedCatalog) -> T,
-): T = views.capture().use { lease -> read(lease.operationObservation(lease.root.observationId, upserts, emptySet()).catalog.checked) }
+): T =
+    views.capture().use { lease ->
+        read(lease.operationObservation(WorkingObservation(lease.root.observationId, upserts)).catalog.checked)
+    }

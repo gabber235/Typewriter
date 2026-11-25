@@ -87,10 +87,11 @@ internal class AuthoringSnapshotValidator(
                     .map { it.problem }
         }
         problems += touching.problems
-        validateOwnership(links, contracts, problems)
-        validateRealmStructure(before, resources, affected, links, contracts, catalog, problems)
-        validateCardinality(links, contracts, problems)
-        validateAcyclic(links, contracts, affected, problems)
+        val rules = StructureRules(links, contracts, problems)
+        rules.ownership()
+        rules.realmStructure(before, resources, affected, catalog)
+        rules.cardinality()
+        rules.acyclic(affected)
         return problems.distinct()
     }
 
@@ -123,140 +124,134 @@ private fun List<Misfit>.withoutOwnBinds(owner: ResourceId): List<Misfit> {
     return filterNot { misfit -> misfit in own || values.any { misfit.problem.location.isWithin(it) } }
 }
 
-/** A resource with more than one owner, where one of its ownership links has an affected end. */
-private fun validateOwnership(
-    links: PlannedLinks,
-    contracts: List<RelationContract>,
-    problems: MutableList<ValueProblem>,
-) {
-    val ownership = contracts.filter { it.ownsResources }
-    links.touching.projections
-        .filter { link -> ownership.any { it.id == link.contract } }
-        .mapTo(linkedSetOf()) { it.second }
-        .filter { owned -> ownership.sumOf { links.at(owned, it.id, EndpointSlot.SECOND).size } > 1 }
-        .forEach { resource -> problems += problem(resource, "multiple_immediate_owners") }
-}
-
 /**
- * Keeps every resource reachable from the single realm root. An affected resource whose type is the member of an
- * ownership relation needs an owner (owner_required); catalog assembly makes every concrete resource type except the
- * realm root such a member, so this is every resource but the root. The root and each concrete realm section type
- * have exactly one instance, so a second one is rejected (singleton_exists) and so is removing or retyping the last
- * one (singleton_required).
+ * The structure rules a planned change must keep, read over its planned [links] and the relation [contracts] they
+ * follow; each rule adds what it refuses to [problems].
  */
-private fun validateRealmStructure(
-    before: Map<ResourceId, AuthoringRecord>,
-    resources: Map<ResourceId, AuthoringRecord>,
-    affected: Set<ResourceId>,
-    links: PlannedLinks,
-    contracts: List<RelationContract>,
-    catalog: CheckedCatalog,
-    problems: MutableList<ValueProblem>,
+private class StructureRules(
+    private val links: PlannedLinks,
+    private val contracts: List<RelationContract>,
+    private val problems: MutableList<ValueProblem>,
 ) {
-    fun AuthoringRecord.isRealmRoot() =
-        configuration.definition.let {
-            it == RealmRootDefinition.id ||
-                catalog.isNominalSubtype(it, RealmRootDefinition.id)
-        }
+    /** A resource with more than one owner, where one of its ownership links has an affected end. */
+    fun ownership() {
+        val ownership = contracts.filter { it.ownsResources }
+        links.touching.projections
+            .filter { link -> ownership.any { it.id == link.contract } }
+            .mapTo(linkedSetOf()) { it.second }
+            .filter { owned -> ownership.sumOf { links.at(owned, it.id, EndpointSlot.SECOND).size } > 1 }
+            .forEach { resource -> problems += problem(resource, "multiple_immediate_owners") }
+    }
 
-    fun AuthoringRecord.singletonKey(): TypeDefinitionId? =
-        when {
-            isRealmRoot() -> RealmRootDefinition.id
-            catalog.isNominalSubtype(configuration.definition, RealmSectionDefinition.id) -> configuration.definition
-            else -> null
-        }
+    /**
+     * Keeps every resource reachable from the single realm root. An affected resource whose type is the member of an
+     * ownership relation needs an owner (owner_required); catalog assembly makes every concrete resource type except the
+     * realm root such a member, so this is every resource but the root. The root and each concrete realm section type
+     * have exactly one instance, so a second one is rejected (singleton_exists) and so is removing or retyping the last
+     * one (singleton_required).
+     */
+    fun realmStructure(
+        before: Map<ResourceId, AuthoringRecord>,
+        resources: Map<ResourceId, AuthoringRecord>,
+        affected: Set<ResourceId>,
+        catalog: CheckedCatalog,
+    ) {
+        fun AuthoringRecord.isRealmRoot() =
+            configuration.definition.let {
+                it == RealmRootDefinition.id ||
+                    catalog.isNominalSubtype(it, RealmRootDefinition.id)
+            }
 
-    val ownership = contracts.filter { it.ownsResources }
-    // A member endpoint naming every resource, with no definition, makes every resource ownable.
-    val members = ownership.map { it.second.resource.definition }
+        fun AuthoringRecord.singletonKey(): TypeDefinitionId? =
+            when {
+                isRealmRoot() -> RealmRootDefinition.id
+                catalog.isNominalSubtype(configuration.definition, RealmSectionDefinition.id) -> configuration.definition
+                else -> null
+            }
 
-    fun ResourceId.isOwned() = ownership.any { links.at(this, it.id, EndpointSlot.SECOND).isNotEmpty() }
+        val ownership = contracts.filter { it.ownsResources }
+        // A member endpoint naming every resource, with no definition, makes every resource ownable.
+        val members = ownership.map { it.second.resource.definition }
 
-    fun AuthoringRecord.isOwnable() =
-        configuration.definition.let { type -> members.any { it == null || it == type || catalog.isNominalSubtype(type, it) } }
+        fun ResourceId.isOwned() = ownership.any { links.at(this, it.id, EndpointSlot.SECOND).isNotEmpty() }
 
-    // A member without a back reference loses its owner when only the owner's record changes, so the resources an
-    // affected resource owned before the change are checked too.
-    val formerlyOwned =
-        ResourceValueMapper
-            .project(ResourceValueMapper.discover(before.filterKeys { it in affected }), before, contracts, catalog)
-            .projections
-            .filter { projection -> projection.first in affected && ownership.any { it.id == projection.contract } }
-            .map { it.second }
-    (affected + formerlyOwned)
-        .distinct()
-        .filter { id -> resources[id]?.let { !it.isRealmRoot() && it.isOwnable() } == true && !id.isOwned() }
-        .forEach { id -> problems += problem(id, "owner_required") }
-    val singletons = resources.entries.groupBy({ it.value.singletonKey() }, { it.key })
-    singletons
-        .filterKeys { it != null }
-        .filterValues { ids -> ids.size > 1 && ids.any { it in affected } }
-        .values
-        .forEach { ids -> ids.filter { it in affected }.forEach { id -> problems += problem(id, "singleton_exists") } }
-    before
-        .filterKeys { it in affected }
-        .forEach { (id, record) ->
-            val key = record.singletonKey() ?: return@forEach
-            if (resources[id]?.singletonKey() != key && singletons[key].isNullOrEmpty()) problems += problem(id, "singleton_required")
-        }
-}
+        fun AuthoringRecord.isOwnable() =
+            configuration.definition.let { type -> members.any { it == null || it == type || catalog.isNominalSubtype(type, it) } }
 
-/** An end of a link with an affected end that holds more links of its relation than its endpoint allows. */
-private fun validateCardinality(
-    links: PlannedLinks,
-    contracts: List<RelationContract>,
-    problems: MutableList<ValueProblem>,
-) {
-    val touching = links.touching.projections.groupBy { it.contract }
-    contracts.forEach { contract ->
-        val touched = touching[contract.id].orEmpty()
-        if (contract.first.cardinality == EndpointCardinality.ONE) {
-            touched
-                .mapTo(linkedSetOf()) { it.second }
-                .filter { links.at(it, contract.id, EndpointSlot.SECOND).size > 1 }
-                .forEach { resource -> problems += problem(resource, "first_endpoint_cardinality_exceeded") }
-        }
-        if (contract.second.cardinality == EndpointCardinality.ONE) {
-            touched
-                .mapTo(linkedSetOf()) { it.first }
-                .filter { links.at(it, contract.id, EndpointSlot.FIRST).size > 1 }
-                .forEach { resource -> problems += problem(resource, "second_endpoint_cardinality_exceeded") }
+        // A member without a back reference loses its owner when only the owner's record changes, so the resources an
+        // affected resource owned before the change are checked too.
+        val formerlyOwned =
+            ResourceValueMapper
+                .project(ResourceValueMapper.discover(before.filterKeys { it in affected }), before, contracts, catalog)
+                .projections
+                .filter { projection -> projection.first in affected && ownership.any { it.id == projection.contract } }
+                .map { it.second }
+        (affected + formerlyOwned)
+            .distinct()
+            .filter { id -> resources[id]?.let { !it.isRealmRoot() && it.isOwnable() } == true && !id.isOwned() }
+            .forEach { id -> problems += problem(id, "owner_required") }
+        val singletons = resources.entries.groupBy({ it.value.singletonKey() }, { it.key })
+        singletons
+            .filterKeys { it != null }
+            .filterValues { ids -> ids.size > 1 && ids.any { it in affected } }
+            .values
+            .forEach { ids -> ids.filter { it in affected }.forEach { id -> problems += problem(id, "singleton_exists") } }
+        before
+            .filterKeys { it in affected }
+            .forEach { (id, record) ->
+                val key = record.singletonKey() ?: return@forEach
+                if (resources[id]?.singletonKey() != key && singletons[key].isNullOrEmpty()) problems += problem(id, "singleton_required")
+            }
+    }
+
+    /** An end of a link with an affected end that holds more links of its relation than its endpoint allows. */
+    fun cardinality() {
+        val touching = links.touching.projections.groupBy { it.contract }
+        contracts.forEach { contract ->
+            val touched = touching[contract.id].orEmpty()
+            if (contract.first.cardinality == EndpointCardinality.ONE) {
+                touched
+                    .mapTo(linkedSetOf()) { it.second }
+                    .filter { links.at(it, contract.id, EndpointSlot.SECOND).size > 1 }
+                    .forEach { resource -> problems += problem(resource, "first_endpoint_cardinality_exceeded") }
+            }
+            if (contract.second.cardinality == EndpointCardinality.ONE) {
+                touched
+                    .mapTo(linkedSetOf()) { it.first }
+                    .filter { links.at(it, contract.id, EndpointSlot.FIRST).size > 1 }
+                    .forEach { resource -> problems += problem(resource, "second_endpoint_cardinality_exceeded") }
+            }
         }
     }
-}
 
-/**
- * Rejects a cycle through any acyclic relation reachable from an affected resource.
- *
- * Walks first to second endpoints iteratively so long chains cannot exhaust the stack, and finishes every resource
- * once per contract.
- */
-private fun validateAcyclic(
-    links: PlannedLinks,
-    contracts: List<RelationContract>,
-    affected: Set<ResourceId>,
-    problems: MutableList<ValueProblem>,
-) {
-    contracts.filter { it.isAcyclic }.forEach { contract ->
-        val next = { id: ResourceId -> links.at(id, contract.id, EndpointSlot.FIRST).map { it.second } }
-        val finished = hashSetOf<ResourceId>()
-        affected.forEach root@{ root ->
-            val active = hashSetOf<ResourceId>()
-            val stack = ArrayDeque(listOf(root to false))
-            while (stack.isNotEmpty()) {
-                val (id, leaving) = stack.removeLast()
-                if (leaving) {
-                    active -= id
-                    finished += id
-                    continue
+    /**
+     * Rejects a cycle through any acyclic relation reachable from an affected resource.
+     *
+     * Walks first to second endpoints iteratively so long chains cannot exhaust the stack, and finishes every resource
+     * once per contract.
+     */
+    fun acyclic(affected: Set<ResourceId>) {
+        contracts.filter { it.isAcyclic }.forEach { contract ->
+            val next = { id: ResourceId -> links.at(id, contract.id, EndpointSlot.FIRST).map { it.second } }
+            val finished = hashSetOf<ResourceId>()
+            affected.forEach root@{ root ->
+                val active = hashSetOf<ResourceId>()
+                val stack = ArrayDeque(listOf(root to false))
+                while (stack.isNotEmpty()) {
+                    val (id, leaving) = stack.removeLast()
+                    if (leaving) {
+                        active -= id
+                        finished += id
+                        continue
+                    }
+                    if (id in finished) continue
+                    if (!active.add(id)) {
+                        problems += problem(root, "relation_cycle")
+                        return@root
+                    }
+                    stack.addLast(id to true)
+                    next(id).forEach { stack.addLast(it to false) }
                 }
-                if (id in finished) continue
-                if (!active.add(id)) {
-                    problems += problem(root, "relation_cycle")
-                    return@root
-                }
-                stack.addLast(id to true)
-                next(id).forEach { stack.addLast(it to false) }
             }
         }
     }

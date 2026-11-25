@@ -311,23 +311,16 @@ internal object ResourceValueMapper {
         catalog: CheckedCatalog,
         capabilities: LinkSchemaCapabilities = LinkSchemaCapabilities(catalog),
     ): DeclaredLinkEvidence {
-        val values = linkedSetOf<ValuePath>()
-        val memberships = linkedSetOf<ValuePath>()
-        val forms = linkedSetOf<ValuePath>()
+        val walk = LinkEvidenceWalk(endpoint, catalog, capabilities)
         val fields = record.resolvedFields(resource, catalog)
         fields.forEach { field ->
-            collectLinkEvidence(
+            walk.collect(
                 declared = field.type,
                 value = record.field(field.key) ?: DataValue.UNFILLED,
                 path = ValuePath.root.field(field.key),
-                endpoint = endpoint,
-                catalog = catalog,
-                capabilities = capabilities,
-                values = values,
-                memberships = memberships,
-                forms = forms,
             )
         }
+        val (values, memberships, forms) = Triple(walk.values, walk.memberships, walk.forms)
         return DeclaredLinkEvidence(
             values = values.sortedBy(ValuePath.serializer::toJsonCode).map { ValueLocation.of(resource, it) },
             memberships = memberships.sortedBy(ValuePath.serializer::toJsonCode).map { ValueLocation.of(resource, it) },
@@ -379,19 +372,17 @@ private fun AuthoringRecord.linkSlots(
     owner: ResourceId,
     catalog: CheckedCatalog,
 ): List<LinkSchemaSlot> {
-    val slots = mutableListOf<LinkSchemaSlot>()
+    val walk = LinkSlotWalk(catalog)
     resolvedFields(owner, catalog).forEach { field ->
-        collectLinkSlots(
+        walk.collect(
             declared = field.type,
             value = this.field(field.key) ?: DataValue.UNFILLED,
             path = ValuePath.root.field(field.key),
-            catalog = catalog,
             containsCollection = false,
             directCollection = null,
-            slots = slots,
         )
     }
-    return slots.distinct()
+    return walk.slots.distinct()
 }
 
 private fun AuthoringRecord.resolvedFields(
@@ -399,220 +390,202 @@ private fun AuthoringRecord.resolvedFields(
     catalog: CheckedCatalog,
 ) = (catalog.typeOf(owner, configuration) as? Resolution.Ready)?.value?.knownFields.orEmpty()
 
-private fun collectLinkEvidence(
-    declared: TypeUse,
-    value: DataValue,
-    path: ValuePath,
-    endpoint: EndpointId,
-    catalog: CheckedCatalog,
-    capabilities: LinkSchemaCapabilities,
-    values: MutableSet<ValuePath>,
-    memberships: MutableSet<ValuePath>,
-    forms: MutableSet<ValuePath>,
+/**
+ * Walks values for where they link to [endpoint], reading types through [catalog] and [capabilities]: the paths
+ * holding such a link ([values]), the collections whose items can ([memberships]), and every form that can hold one
+ * ([forms]).
+ */
+private class LinkEvidenceWalk(
+    private val endpoint: EndpointId,
+    private val catalog: CheckedCatalog,
+    private val capabilities: LinkSchemaCapabilities,
 ) {
-    val nonNull = (if (declared is TypeUse.NullableWrapper) declared.value.value else declared).storedUse
-    if (declared is TypeUse.NullableWrapper && value == DataValue.NULL) {
-        if (capabilities.contains(nonNull, endpoint)) forms += path
-        return
-    }
-    val named = value as? DataValue.NamedWrapper
-    val effective = named?.actualType?.use ?: nonNull
-    if (named != null && !catalog.isReadableAs(named.actualType.use, nonNull)) {
-        if (capabilities.contains(nonNull, endpoint)) forms += path
-        return
-    }
-    val resolved = catalog.resolve(effective) as? Resolution.Ready ?: return
-    val payload = named?.payload ?: value
-    when (val representation = resolved.value.schema.representation) {
-        is ResolvedRepresentation.LinkWrapper -> {
-            if (representation.value.endpoint == endpoint) values += path
-        }
+    val values = linkedSetOf<ValuePath>()
+    val memberships = linkedSetOf<ValuePath>()
+    val forms = linkedSetOf<ValuePath>()
 
-        is ResolvedRepresentation.RecordWrapper -> {
-            if (!capabilities.contains(effective, endpoint)) return
-            forms += path
-            val record = payload as? DataValue.RecordWrapper ?: return
-            representation.value.fields.forEach { field ->
-                collectLinkEvidence(
-                    field.type,
-                    record.field(field.key) ?: DataValue.UNFILLED,
-                    path.field(field.key),
-                    endpoint,
-                    catalog,
-                    capabilities,
-                    values,
-                    memberships,
-                    forms,
-                )
+    fun collect(
+        declared: TypeUse,
+        value: DataValue,
+        path: ValuePath,
+    ) {
+        val nonNull = (if (declared is TypeUse.NullableWrapper) declared.value.value else declared).storedUse
+        if (declared is TypeUse.NullableWrapper && value == DataValue.NULL) {
+            if (capabilities.contains(nonNull, endpoint)) forms += path
+            return
+        }
+        val named = value as? DataValue.NamedWrapper
+        val effective = named?.actualType?.use ?: nonNull
+        if (named != null && !catalog.isReadableAs(named.actualType.use, nonNull)) {
+            if (capabilities.contains(nonNull, endpoint)) forms += path
+            return
+        }
+        val resolved = catalog.resolve(effective) as? Resolution.Ready ?: return
+        val payload = named?.payload ?: value
+        when (val representation = resolved.value.schema.representation) {
+            is ResolvedRepresentation.LinkWrapper -> {
+                if (representation.value.endpoint == endpoint) values += path
             }
-        }
 
-        is ResolvedRepresentation.SequenceWrapper -> {
-            if (!capabilities.contains(representation.value.item, endpoint)) return
-            forms += path
-            memberships += path
-            val items =
-                when (payload) {
-                    is DataValue.ListValueWrapper -> payload.items
-                    is DataValue.SetValueWrapper -> payload.items
-                    else -> emptyList()
-                }
-            items.forEach { item ->
-                collectLinkEvidence(
-                    representation.value.item,
-                    item.value,
-                    path.item(item.id),
-                    endpoint,
-                    catalog,
-                    capabilities,
-                    values,
-                    memberships,
-                    forms,
-                )
-            }
-        }
-
-        is ResolvedRepresentation.MappingWrapper -> {
-            val keyContains = capabilities.contains(representation.value.key, endpoint)
-            val valueContains = capabilities.contains(representation.value.value, endpoint)
-            if (!keyContains && !valueContains) return
-            forms += path
-            memberships += path
-            val mapping = payload as? DataValue.MapValueWrapper ?: return
-            mapping.rows.forEach { row ->
-                if (keyContains) {
-                    collectLinkEvidence(
-                        representation.value.key,
-                        row.key,
-                        path.item(row.id).mapKey(),
-                        endpoint,
-                        catalog,
-                        capabilities,
-                        values,
-                        memberships,
-                        forms,
-                    )
-                }
-                if (valueContains) {
-                    collectLinkEvidence(
-                        representation.value.value,
-                        row.value,
-                        path.item(row.id).mapValue(),
-                        endpoint,
-                        catalog,
-                        capabilities,
-                        values,
-                        memberships,
-                        forms,
+            is ResolvedRepresentation.RecordWrapper -> {
+                if (!capabilities.contains(effective, endpoint)) return
+                forms += path
+                val record = payload as? DataValue.RecordWrapper ?: return
+                representation.value.fields.forEach { field ->
+                    collect(
+                        field.type,
+                        record.field(field.key) ?: DataValue.UNFILLED,
+                        path.field(field.key),
                     )
                 }
             }
-        }
 
-        else -> {}
+            is ResolvedRepresentation.SequenceWrapper -> {
+                if (!capabilities.contains(representation.value.item, endpoint)) return
+                forms += path
+                memberships += path
+                val items =
+                    when (payload) {
+                        is DataValue.ListValueWrapper -> payload.items
+                        is DataValue.SetValueWrapper -> payload.items
+                        else -> emptyList()
+                    }
+                items.forEach { item ->
+                    collect(
+                        representation.value.item,
+                        item.value,
+                        path.item(item.id),
+                    )
+                }
+            }
+
+            is ResolvedRepresentation.MappingWrapper -> {
+                val keyContains = capabilities.contains(representation.value.key, endpoint)
+                val valueContains = capabilities.contains(representation.value.value, endpoint)
+                if (!keyContains && !valueContains) return
+                forms += path
+                memberships += path
+                val mapping = payload as? DataValue.MapValueWrapper ?: return
+                mapping.rows.forEach { row ->
+                    if (keyContains) {
+                        collect(
+                            representation.value.key,
+                            row.key,
+                            path.item(row.id).mapKey(),
+                        )
+                    }
+                    if (valueContains) {
+                        collect(
+                            representation.value.value,
+                            row.value,
+                            path.item(row.id).mapValue(),
+                        )
+                    }
+                }
+            }
+
+            else -> {}
+        }
     }
 }
 
 private const val MAX_SCHEMA_CAPABILITY_DEPTH = 64
 
-private fun collectLinkSlots(
-    declared: TypeUse,
-    value: DataValue,
-    path: ValuePath,
-    catalog: CheckedCatalog,
-    containsCollection: Boolean,
-    directCollection: ValuePath?,
-    slots: MutableList<LinkSchemaSlot>,
+/** Walks values for the link slots their types declare, reading types through [catalog], into [slots]. */
+private class LinkSlotWalk(
+    private val catalog: CheckedCatalog,
 ) {
-    val nonNull = (if (declared is TypeUse.NullableWrapper) declared.value.value else declared).storedUse
-    if (value == DataValue.NULL) return
-    val named = value as? DataValue.NamedWrapper
-    // A stored value declares the slots of its own type, also where its position now declares another: whether the
-    // value still fits there is judged on the value, and the links it holds keep their slots while it is kept.
-    val effective = named?.actualType?.use ?: nonNull
-    val resolved = catalog.resolve(effective) as? Resolution.Ready ?: return
-    val payload = named?.payload ?: value
-    when (val representation = resolved.value.schema.representation) {
-        is ResolvedRepresentation.LinkWrapper -> {
-            slots +=
-                LinkSchemaSlot(
-                    endpoint = representation.value.endpoint,
-                    target = representation.value.target,
-                    location = path,
-                    containsCollection = containsCollection,
-                    directCollection = directCollection,
-                )
-        }
+    val slots = mutableListOf<LinkSchemaSlot>()
 
-        is ResolvedRepresentation.RecordWrapper -> {
-            val record = payload as? DataValue.RecordWrapper ?: return
-            representation.value.fields.forEach { field ->
-                val child = record.field(field.key) ?: DataValue.UNFILLED
-                collectLinkSlots(
-                    field.type,
-                    child,
-                    path.field(field.key),
-                    catalog,
-                    containsCollection,
-                    directCollection,
-                    slots,
-                )
+    fun collect(
+        declared: TypeUse,
+        value: DataValue,
+        path: ValuePath,
+        containsCollection: Boolean,
+        directCollection: ValuePath?,
+    ) {
+        val nonNull = (if (declared is TypeUse.NullableWrapper) declared.value.value else declared).storedUse
+        if (value == DataValue.NULL) return
+        val named = value as? DataValue.NamedWrapper
+        // A stored value declares the slots of its own type, also where its position now declares another: whether the
+        // value still fits there is judged on the value, and the links it holds keep their slots while it is kept.
+        val effective = named?.actualType?.use ?: nonNull
+        val resolved = catalog.resolve(effective) as? Resolution.Ready ?: return
+        val payload = named?.payload ?: value
+        when (val representation = resolved.value.schema.representation) {
+            is ResolvedRepresentation.LinkWrapper -> {
+                slots +=
+                    LinkSchemaSlot(
+                        endpoint = representation.value.endpoint,
+                        target = representation.value.target,
+                        location = path,
+                        containsCollection = containsCollection,
+                        directCollection = directCollection,
+                    )
             }
-        }
 
-        is ResolvedRepresentation.SequenceWrapper -> {
-            val items =
-                when (payload) {
-                    is DataValue.ListValueWrapper -> payload.items
-                    is DataValue.SetValueWrapper -> payload.items
-                    else -> emptyList()
+            is ResolvedRepresentation.RecordWrapper -> {
+                val record = payload as? DataValue.RecordWrapper ?: return
+                representation.value.fields.forEach { field ->
+                    val child = record.field(field.key) ?: DataValue.UNFILLED
+                    collect(
+                        field.type,
+                        child,
+                        path.field(field.key),
+                        containsCollection,
+                        directCollection,
+                    )
                 }
-            val itemRepresentation = catalog.resolve(representation.value.item) as? Resolution.Ready
-            val directLink =
-                itemRepresentation?.value?.schema?.representation
-                    as? ResolvedRepresentation.LinkWrapper
-            if (directLink != null) {
-                val link = directLink
-                slots += LinkSchemaSlot(link.value.endpoint, link.value.target, null, true, path)
             }
-            items.forEach { item ->
-                collectLinkSlots(
-                    representation.value.item,
-                    item.value,
-                    path.item(item.id),
-                    catalog,
-                    containsCollection = true,
-                    directCollection = path.takeIf { directLink != null },
-                    slots = slots,
-                )
-            }
-        }
 
-        is ResolvedRepresentation.MappingWrapper -> {
-            val mapping = payload as? DataValue.MapValueWrapper ?: return
-            mapping.rows.forEach { row ->
-                collectLinkSlots(
-                    representation.value.key,
-                    row.key,
-                    path.item(row.id).mapKey(),
-                    catalog,
-                    containsCollection = true,
-                    directCollection = null,
-                    slots = slots,
-                )
-                collectLinkSlots(
-                    representation.value.value,
-                    row.value,
-                    path.item(row.id).mapValue(),
-                    catalog,
-                    containsCollection = true,
-                    directCollection = null,
-                    slots = slots,
-                )
+            is ResolvedRepresentation.SequenceWrapper -> {
+                val items =
+                    when (payload) {
+                        is DataValue.ListValueWrapper -> payload.items
+                        is DataValue.SetValueWrapper -> payload.items
+                        else -> emptyList()
+                    }
+                val itemRepresentation = catalog.resolve(representation.value.item) as? Resolution.Ready
+                val directLink =
+                    itemRepresentation?.value?.schema?.representation
+                        as? ResolvedRepresentation.LinkWrapper
+                if (directLink != null) {
+                    val link = directLink
+                    slots += LinkSchemaSlot(link.value.endpoint, link.value.target, null, true, path)
+                }
+                items.forEach { item ->
+                    collect(
+                        representation.value.item,
+                        item.value,
+                        path.item(item.id),
+                        containsCollection = true,
+                        directCollection = path.takeIf { directLink != null },
+                    )
+                }
             }
-        }
 
-        else -> {
+            is ResolvedRepresentation.MappingWrapper -> {
+                val mapping = payload as? DataValue.MapValueWrapper ?: return
+                mapping.rows.forEach { row ->
+                    collect(
+                        representation.value.key,
+                        row.key,
+                        path.item(row.id).mapKey(),
+                        containsCollection = true,
+                        directCollection = null,
+                    )
+                    collect(
+                        representation.value.value,
+                        row.value,
+                        path.item(row.id).mapValue(),
+                        containsCollection = true,
+                        directCollection = null,
+                    )
+                }
+            }
+
+            else -> {
+            }
         }
     }
 }

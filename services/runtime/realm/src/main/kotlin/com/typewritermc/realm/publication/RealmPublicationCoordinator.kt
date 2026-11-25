@@ -116,7 +116,10 @@ interface PublicationAttemptStore {
  * One release runs at a time, while later saved edits can produce the next review beside the frozen release.
  * Candidate leases keep their catalog callbacks alive through assessment and release. Closing stops observation
  * and waits for the active release before dropping retained preparation state.
+ *
+ * The coordinator orders acceptance, compilation, artifact storage and selection, so it holds each of those parts.
  */
+@Suppress("LongParameterList")
 internal class RealmPublicationCoordinator(
     private val acceptance: PublicationAcceptance,
     private val attempts: PublicationAttemptStore,

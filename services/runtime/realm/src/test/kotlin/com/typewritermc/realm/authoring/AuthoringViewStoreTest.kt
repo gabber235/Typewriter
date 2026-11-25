@@ -12,6 +12,7 @@ import com.typewritermc.realm.checking.nameFinding
 import com.typewritermc.realm.checking.rename
 import com.typewritermc.realm.checking.rerunCatalog
 import com.typewritermc.realm.edit.MemoryAuthoringStorage
+import com.typewritermc.realm.operation.WorkingObservation
 import com.typewritermc.realm.operation.operationObservation
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
@@ -56,7 +57,10 @@ val AuthoringViewStoreTest by testSuite {
         RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), mapOf(id to record(name = "Saved"))).use { realm ->
             val token =
                 realm.views.capture().use { saved ->
-                    val working = saved.operationObservation(saved.root.observationId, mapOf(id to record(name = "Draft")), emptySet())
+                    val working =
+                        saved.operationObservation(
+                            WorkingObservation(saved.root.observationId, mapOf(id to record(name = "Draft"))),
+                        )
                     (
                         working.resources
                             .getValue(id)
@@ -75,7 +79,7 @@ val AuthoringViewStoreTest by testSuite {
             realm.views.capture().use { next ->
                 (next.root.observationId != token) shouldBe true
                 shouldThrow<com.typewritermc.realm.operation.StaleOperationObservation> {
-                    next.operationObservation(token, mapOf(id to record(name = "Draft")), emptySet())
+                    next.operationObservation(WorkingObservation(token, mapOf(id to record(name = "Draft"))))
                 }
             }
         }

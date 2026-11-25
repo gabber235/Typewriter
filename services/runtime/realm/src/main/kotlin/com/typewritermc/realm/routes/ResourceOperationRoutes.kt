@@ -17,6 +17,7 @@ import com.typewritermc.realm.operation.OperationPreparationResult
 import com.typewritermc.realm.operation.OperationResolutionFailure
 import com.typewritermc.realm.operation.ResourceOperationRuntime
 import com.typewritermc.realm.operation.StaleOperationObservation
+import com.typewritermc.realm.operation.WorkingObservation
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.requireValid
@@ -67,9 +68,7 @@ internal class ResourceOperationRoutes(
                 runtime.resolve(
                     request.invocation.decodeInvocation(),
                     request.invocation.catalog,
-                    context.confirmed,
-                    context.upserts,
-                    context.removals,
+                    context,
                 )
             ResolveResourceOperationsResult.ResolvedWrapper(resolved)
         } catch (stale: StaleOperationObservation) {
@@ -131,9 +130,7 @@ internal class ResourceOperationRoutes(
                 runtime.resolveDropCandidates(
                     request.invocation.decodeInvocation(),
                     request.invocation.catalog,
-                    context.confirmed,
-                    context.upserts,
-                    context.removals,
+                    context,
                 )
             ResolveDropCandidatesResult.ResolvedWrapper(candidates)
         } catch (stale: StaleOperationObservation) {
@@ -175,9 +172,7 @@ internal class ResourceOperationRoutes(
                         request.invocation.decodeInvocation(),
                         request.invocation.catalog,
                         request.capability,
-                        context.confirmed,
-                        context.upserts,
-                        context.removals,
+                        context,
                         request.input?.let {
                             it.requirePortable()
                         },
@@ -295,13 +290,7 @@ internal class ResourceOperationRoutes(
         }
 }
 
-internal data class DecodedOperationContext(
-    val confirmed: String,
-    val upserts: Map<ResourceId, AuthoringRecord>,
-    val removals: Set<ResourceId>,
-)
-
-internal fun OperationWorkingContext.decodeWorkingContext(): DecodedOperationContext {
+internal fun OperationWorkingContext.decodeWorkingContext(): WorkingObservation {
     require(confirmedObservation.value.isNotBlank()) { "The saved authoring observation is required." }
     val upserts = overlay.upserts.map { it.resource.requireValid() to it.content.requireValid() }
     val removals = overlay.removals.map { it.requireValid() }
@@ -312,7 +301,7 @@ internal fun OperationWorkingContext.decodeWorkingContext(): DecodedOperationCon
             }.distinct()
             .size == upserts.size && removals.distinct().size == removals.size,
     ) { "An operation overlay contains duplicate identities." }
-    return DecodedOperationContext(confirmedObservation.value, upserts.toMap(), removals.toSet())
+    return WorkingObservation(confirmedObservation.value, upserts.toMap(), removals.toSet())
 }
 
 internal fun SkirOperationInvocation.decodeInvocation(): OperationInvocation {
