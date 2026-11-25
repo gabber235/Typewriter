@@ -301,13 +301,13 @@ class TypewriterRegistrarRuntimeFactory(
         progress: RuntimeSetupProgressSink,
     ): RuntimeCreateResult {
         val exchanger =
-            AuthentikTokenExchanger(httpClient, configuration.oauthTokenUri, configuration.oauthClientId, configuration.oauthScopes)
-        val access = AccessTokenCache(credentials, exchanger, clock, configuration.accessTokenRefreshSkew)
+            AuthentikTokenExchanger(httpClient, configuration.oauth.tokenUri, configuration.oauth.clientId, configuration.oauth.scopes)
+        val access = AccessTokenCache(credentials, exchanger, clock, configuration.timing.accessTokenRefreshSkew)
         val sentinel =
             SentinelCache(
                 TypewriterSentinelProvider(httpClient, configuration.sentinelCredentialsUri),
-                configuration.sentinelRefreshAfter,
-                configuration.sentinelMaximumStaleness,
+                configuration.timing.sentinelRefreshAfter,
+                configuration.timing.sentinelMaximumStaleness,
                 clock,
             )
         progress.report(RuntimeSetupProgress.ACQUIRING_ACCESS_TOKEN)

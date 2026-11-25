@@ -20,7 +20,7 @@ val LoaderSettingsTest by testSuite {
             // A shipped profile must never fall back to the production defaults for a value it leaves out.
             requiredProfileSettings.forEach { name -> settings.getOrNull(name).shouldNotBeNull() }
             configuration.identityIssueUri.host shouldBe URI(settings.get("API_BASE_URL", "")).host
-            configuration.oauthTokenUri.host shouldBe URI(settings.get("AUTH_BASE_URL", "")).host
+            configuration.oauth.tokenUri.host shouldBe URI(settings.get("AUTH_BASE_URL", "")).host
             configuration.natsServerUri shouldBe URI(settings.get("NATS_URL", ""))
             settings.telemetryConfiguration().otlpEndpoint.shouldNotBeNull()
         }
@@ -36,7 +36,7 @@ val LoaderSettingsTest by testSuite {
         val configuration = settings.registrarConfiguration()
 
         configuration.identityIssueUri shouldBe URI("https://system.example.test/service/identity/issue")
-        configuration.oauthTokenUri shouldBe URI("https://environment.example.test/application/o/token/")
+        configuration.oauth.tokenUri shouldBe URI("https://environment.example.test/application/o/token/")
         configuration.natsServerUri shouldBe URI("nats://profile.example.test:4222")
     }
 

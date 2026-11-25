@@ -65,15 +65,15 @@ class JdkHttpTransport(
     override suspend fun execute(request: HttpRequest): HttpResult {
         check(!closed.get()) { "JdkHttpTransport is closed" }
         val body = request.body
-        val requestLimit = request.maximumRequestBytes ?: configuration.defaultMaximumRequestBytes
+        val requestLimit = request.limits.maximumRequestBytes ?: configuration.defaultMaximumRequestBytes
         if (body.size.toLong() > requestLimit) return HttpResult.Failure(HttpError.RequestTooLarge(requestLimit, body.size.toLong()))
         val builder =
             java.net.http.HttpRequest
                 .newBuilder(request.uri)
-                .timeout((request.timeout ?: configuration.defaultRequestTimeout).toJavaDuration())
+                .timeout((request.limits.timeout ?: configuration.defaultRequestTimeout).toJavaDuration())
         request.headers.forEach { (name, value) -> builder.header(name, value) }
         builder.method(request.method.name, if (body.isEmpty()) BodyPublishers.noBody() else BodyPublishers.ofByteArray(body))
-        val limit = request.maximumResponseBytes ?: configuration.defaultMaximumResponseBytes
+        val limit = request.limits.maximumResponseBytes ?: configuration.defaultMaximumResponseBytes
         return try {
             val response = client.sendAsync(builder.build(), BodyHandler { LimitedBodySubscriber(limit) }).await()
             HttpResult.Success(

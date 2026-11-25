@@ -38,7 +38,10 @@ import kotlin.time.TimeSource
  * A command loop owns lifecycle state while the coordinator performs setup and ready supervision. Ambiguous
  * identity issuance is surfaced explicitly. The supplied scope must remain active while callers issue commands;
  * stop before cancelling it. Shutdown uses one bounded budget and reports cleanup failures.
+ *
+ * The registrar supervises identity, runtime setup, telemetry and retry, so it holds each collaborator its Koin module wires.
  */
+@Suppress("LongParameterList")
 class ServiceRegistrar(
     private val configuration: RegistrarConfiguration,
     private val scope: CoroutineScope,
@@ -258,7 +261,7 @@ class ServiceRegistrar(
             coordinator?.cancel()
             withContext(NonCancellable) {
                 transitionOwned(RegistrarState.Stopping, main)
-                val deadline = timeSource.markNow() + configuration.shutdownTimeout
+                val deadline = timeSource.markNow() + configuration.timing.shutdownTimeout
                 val failures = mutableListOf<RegistrarStopFailure>()
                 if (!withinBudget(deadline) { coordinator?.join() }) {
                     failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.COORDINATOR_TIMEOUT)
@@ -581,7 +584,7 @@ class ServiceRegistrar(
     }
 
     private suspend fun awaitBindingEvent(active: RegistrarRuntime): BindingEvent? =
-        withTimeoutOrNull(configuration.bindingRefreshInterval) {
+        withTimeoutOrNull(configuration.timing.bindingRefreshInterval) {
             merge(
                 active.watchBinding().map { BindingEvent.Observation(it) },
                 active.connectivity.map { BindingEvent.Connectivity(it) },
@@ -637,7 +640,7 @@ class ServiceRegistrar(
             val degraded = async { active.connectivity.first { it != RuntimeConnectivity.CONNECTED } }
             val requested = async { reauthorizationRequests.receive() }
             val event: ReadyEvent =
-                withTimeoutOrNull<ReadyEvent>(configuration.heartbeatInterval) {
+                withTimeoutOrNull<ReadyEvent>(configuration.timing.heartbeatInterval) {
                     select<ReadyEvent> {
                         degraded.onAwait { ReadyEvent.Degraded }
                         requested.onAwait { ReadyEvent.Reauthorize(it) }

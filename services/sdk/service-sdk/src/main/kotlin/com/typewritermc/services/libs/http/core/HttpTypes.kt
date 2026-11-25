@@ -66,9 +66,10 @@ class HttpHeaders private constructor(
     }
 }
 
-/** Stable operation identifier used for HTTP telemetry and failure classification. */
-@JvmInline value class HttpOperation(
+/** Stable operation identifier used for HTTP telemetry, whose failures are classified under [failureSlug]. */
+data class HttpOperation(
     val value: String,
+    val failureSlug: ErrorSlug,
 ) {
     init {
         require(Regex("[a-z0-9]+(?:[.-][a-z0-9]+)*").matches(value)) { "Invalid HTTP operation" }
@@ -87,23 +88,33 @@ enum class HttpMethod(
     OPTIONS(true),
 }
 
+/** How long one HTTP request may take and how many bytes it may send and receive; null uses the transport's default. */
+data class HttpLimits(
+    val timeout: Duration? = null,
+    val maximumRequestBytes: Long? = null,
+    val maximumResponseBytes: Long? = null,
+) {
+    init {
+        timeout?.let { require(it.isFinite() && it.isPositive()) { "Timeout must be positive and finite" } }
+        maximumRequestBytes?.let { require(it > 0) { "Maximum request bytes must be positive" } }
+        maximumResponseBytes?.let { require(it > 0) { "Maximum response bytes must be positive" } }
+    }
+}
+
 /**
  * Captures a bounded HTTP operation with validated endpoint, headers, and body policy.
  *
  * Body bytes are copied on input and access. GET and HEAD cannot carry bodies, transport controlled headers are
- * rejected, and URI user credentials are forbidden. Optional limits override transport defaults; rendering omits
- * paths, queries, and body content.
+ * rejected, and URI user credentials are forbidden. [limits] override transport defaults; rendering omits paths,
+ * queries, and body content.
  */
 class HttpRequest(
     val operation: HttpOperation,
-    val failureSlug: ErrorSlug,
     val method: HttpMethod,
     val uri: URI,
     val headers: HttpHeaders = HttpHeaders.Empty,
     body: ByteArray = byteArrayOf(),
-    val timeout: Duration? = null,
-    val maximumRequestBytes: Long? = null,
-    val maximumResponseBytes: Long? = null,
+    val limits: HttpLimits = HttpLimits(),
 ) {
     private val bodyBytes = body.copyOf()
     val body: ByteArray get() = bodyBytes.copyOf()
@@ -113,9 +124,6 @@ class HttpRequest(
         require(!uri.host.isNullOrBlank() && !uri.isOpaque && uri.userInfo == null) { "HTTP URI must have a host and no user info" }
         require(method.permitsBody || body.isEmpty()) { "$method requests cannot have a body" }
         require(headers.none { (name) -> name.lowercase() in RestrictedRequestHeaders }) { "Restricted HTTP request header name" }
-        timeout?.let { require(it.isFinite() && it.isPositive()) { "Timeout must be positive and finite" } }
-        maximumRequestBytes?.let { require(it > 0) { "Maximum request bytes must be positive" } }
-        maximumResponseBytes?.let { require(it > 0) { "Maximum response bytes must be positive" } }
     }
 
     override fun toString(): String =

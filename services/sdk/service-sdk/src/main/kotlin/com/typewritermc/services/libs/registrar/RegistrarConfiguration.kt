@@ -7,20 +7,44 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Validates registrar endpoints, identity role, refresh intervals, and shutdown budget.
+ * Validates registrar endpoints, identity role, OAuth client and timing.
  *
- * Endpoint URIs require supported schemes, a host, and no embedded user credentials. Durations must be positive
- * and finite; binding refresh stays below the registration lease and Sentinel refresh cannot exceed maximum
- * staleness. OAuth scopes are copied at construction.
+ * Endpoint URIs require supported schemes, a host, and no embedded user credentials.
  */
 class RegistrarConfiguration(
     val identityIssueUri: URI,
     val sentinelCredentialsUri: URI,
-    val oauthTokenUri: URI,
-    val oauthClientId: String,
-    oauthScopes: Set<String>,
+    val oauth: OAuthClient,
     val natsServerUri: URI,
     val role: ServiceRole,
+    val timing: RegistrarTiming = RegistrarTiming(),
+) {
+    init {
+        listOf(identityIssueUri, sentinelCredentialsUri).forEach { requireUri(it, setOf("http", "https")) }
+        requireUri(natsServerUri, setOf("nats", "tls", "ws", "wss"))
+    }
+}
+
+/** The OAuth client a service exchanges its identity for access tokens as: at [tokenUri], as [clientId], for [scopes]. */
+class OAuthClient(
+    val tokenUri: URI,
+    val clientId: String,
+    scopes: Set<String>,
+) {
+    val scopes: Set<String> = scopes.toSet()
+
+    init {
+        requireUri(tokenUri, setOf("http", "https"))
+        require(clientId.isNotBlank() && clientId == clientId.trim())
+        require(this.scopes.isNotEmpty() && this.scopes.all { it.isNotBlank() && it == it.trim() })
+    }
+}
+
+/**
+ * How often a registrar refreshes and how long it waits. Durations must be positive and finite; binding refresh stays
+ * below the registration lease and Sentinel refresh cannot exceed maximum staleness.
+ */
+data class RegistrarTiming(
     val bindingRefreshInterval: Duration = 2.minutes,
     val heartbeatInterval: Duration = 30.seconds,
     val accessTokenRefreshSkew: Duration = 1.minutes,
@@ -28,13 +52,7 @@ class RegistrarConfiguration(
     val sentinelMaximumStaleness: Duration = 24.hours,
     val shutdownTimeout: Duration = 30.seconds,
 ) {
-    val oauthScopes: Set<String> = oauthScopes.toSet()
-
     init {
-        listOf(identityIssueUri, sentinelCredentialsUri, oauthTokenUri).forEach { requireUri(it, setOf("http", "https")) }
-        requireUri(natsServerUri, setOf("nats", "tls", "ws", "wss"))
-        require(oauthClientId.isNotBlank() && oauthClientId == oauthClientId.trim())
-        require(this.oauthScopes.isNotEmpty() && this.oauthScopes.all { it.isNotBlank() && it == it.trim() })
         listOf(
             bindingRefreshInterval,
             heartbeatInterval,

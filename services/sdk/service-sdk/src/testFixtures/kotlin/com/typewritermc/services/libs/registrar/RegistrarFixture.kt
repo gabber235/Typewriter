@@ -127,12 +127,8 @@ fun registrarConfiguration(
 ) = RegistrarConfiguration(
     identityUri,
     URI("https://example.test/sentinel"),
-    URI("https://example.test/token"),
-    "client",
-    setOf("openid"),
+    OAuthClient(URI("https://example.test/token"), "client", setOf("openid")),
     URI("nats://example.test"),
     role,
-    bindingRefreshInterval = bindingRefresh,
-    heartbeatInterval = heartbeat,
-    shutdownTimeout = shutdown,
+    RegistrarTiming(bindingRefreshInterval = bindingRefresh, heartbeatInterval = heartbeat, shutdownTimeout = shutdown),
 )

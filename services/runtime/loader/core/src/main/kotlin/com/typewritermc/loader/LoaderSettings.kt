@@ -1,5 +1,6 @@
 package com.typewritermc.loader
 
+import com.typewritermc.services.libs.registrar.OAuthClient
 import com.typewritermc.services.libs.registrar.RegistrarConfiguration
 import com.typewritermc.services.libs.registrar.ServiceRole
 import java.net.URI
@@ -78,9 +79,12 @@ internal fun LoaderSettings.registrarConfiguration(): RegistrarConfiguration {
     return RegistrarConfiguration(
         identityIssueUri = apiBase.resolve("/service/identity/issue"),
         sentinelCredentialsUri = apiBase.resolve("/auth/sentinel"),
-        oauthTokenUri = authBase.resolve("/application/o/token/"),
-        oauthClientId = get("JWT_CLIENT_ID", "typewriter-services"),
-        oauthScopes = get("JWT_SCOPES", "openid profile entitlements").split(' ').filter(String::isNotBlank).toSet(),
+        oauth =
+            OAuthClient(
+                tokenUri = authBase.resolve("/application/o/token/"),
+                clientId = get("JWT_CLIENT_ID", "typewriter-services"),
+                scopes = get("JWT_SCOPES", "openid profile entitlements").split(' ').filter(String::isNotBlank).toSet(),
+            ),
         natsServerUri = URI(get("NATS_URL", "nats://nats.seamlezz.com:4222")),
         role = ServiceRole.Host(LOADER_VERSION),
     )

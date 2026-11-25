@@ -5,6 +5,7 @@ import com.typewritermc.services.libs.http.core.HttpOperation
 import com.typewritermc.services.libs.http.core.HttpRequest
 import com.typewritermc.services.libs.http.core.HttpTransport
 import com.typewritermc.services.libs.registrar.CredentialStorage
+import com.typewritermc.services.libs.registrar.OAuthClient
 import com.typewritermc.services.libs.registrar.RegistrarConfiguration
 import com.typewritermc.services.libs.registrar.ServiceRegistrar
 import com.typewritermc.services.libs.registrar.ServiceRole
@@ -42,9 +43,12 @@ val RegistrarKoinModuleTest by testSuite {
                         RegistrarConfiguration(
                             identityIssueUri = URI("https://api.example.test/service/identity/issue"),
                             sentinelCredentialsUri = URI("https://api.example.test/auth/sentinel"),
-                            oauthTokenUri = URI("https://auth.example.test/application/o/token/"),
-                            oauthClientId = "typewriter-services",
-                            oauthScopes = setOf("openid"),
+                            oauth =
+                                OAuthClient(
+                                    URI("https://auth.example.test/application/o/token/"),
+                                    "typewriter-services",
+                                    setOf("openid"),
+                                ),
                             natsServerUri = URI("nats://nats.example.test:4222"),
                             role = ServiceRole.Custom("realm", "1.0.0"),
                         ),
@@ -61,8 +65,7 @@ val RegistrarKoinModuleTest by testSuite {
         application.close()
         val request =
             HttpRequest(
-                HttpOperation("registrar.closed"),
-                ErrorSlug.of("registrar-http-failed"),
+                HttpOperation("registrar.closed", ErrorSlug.of("registrar-http-failed")),
                 HttpMethod.GET,
                 URI("https://api.example.test"),
             )

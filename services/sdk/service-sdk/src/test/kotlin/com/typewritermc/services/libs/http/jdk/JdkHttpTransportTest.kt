@@ -2,6 +2,7 @@ package com.typewritermc.services.libs.http.jdk
 
 import com.sun.net.httpserver.HttpServer
 import com.typewritermc.services.libs.http.core.HttpError
+import com.typewritermc.services.libs.http.core.HttpLimits
 import com.typewritermc.services.libs.http.core.HttpMethod
 import com.typewritermc.services.libs.http.core.HttpOperation
 import com.typewritermc.services.libs.http.core.HttpRequest
@@ -115,11 +116,10 @@ val JdkHttpTransportTest by testSuite {
                 withTimeout(2.seconds) {
                     transport.execute(
                         HttpRequest(
-                            HttpOperation("jdk.unavailable"),
-                            ErrorSlug.of("jdk-failed"),
+                            HttpOperation("jdk.unavailable", ErrorSlug.of("jdk-failed")),
                             HttpMethod.GET,
                             URI("http://127.0.0.1:$port"),
-                            timeout = 1.seconds,
+                            limits = HttpLimits(timeout = 1.seconds),
                         ),
                     ) shouldBe HttpResult.Failure(HttpError.Unavailable)
                 }
@@ -181,11 +181,10 @@ val JdkHttpTransportTest by testSuite {
                     withTimeout(2.seconds) {
                         val limited =
                             HttpRequest(
-                                HttpOperation("jdk.stream"),
-                                ErrorSlug.of("jdk-failed"),
+                                HttpOperation("jdk.stream", ErrorSlug.of("jdk-failed")),
                                 HttpMethod.GET,
                                 URI("http://127.0.0.1:${server.address.port}/stream"),
-                                maximumResponseBytes = 1024,
+                                limits = HttpLimits(maximumResponseBytes = 1024),
                             )
                         transport.execute(limited) shouldBe HttpResult.Failure(HttpError.ResponseTooLarge(1024))
                     }
@@ -202,8 +201,7 @@ val JdkHttpTransportTest by testSuite {
         transport.close()
         val request =
             HttpRequest(
-                HttpOperation("jdk.closed"),
-                ErrorSlug.of("jdk-failed"),
+                HttpOperation("jdk.closed", ErrorSlug.of("jdk-failed")),
                 HttpMethod.GET,
                 URI("http://127.0.0.1"),
             )

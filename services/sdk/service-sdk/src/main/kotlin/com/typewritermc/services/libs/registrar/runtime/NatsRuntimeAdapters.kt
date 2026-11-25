@@ -20,7 +20,7 @@ internal fun serviceNatsConfiguration(
     serverUrl = configuration.natsServerUri.toString(),
     clientName = credentials.identity.serviceId.value,
     inboxPrefix = "${serviceReplyInboxPrefix(credentials.identity.serviceId.value)}.",
-    shutdownTimeout = configuration.shutdownTimeout,
+    shutdownTimeout = configuration.timing.shutdownTimeout,
 )
 
 /**

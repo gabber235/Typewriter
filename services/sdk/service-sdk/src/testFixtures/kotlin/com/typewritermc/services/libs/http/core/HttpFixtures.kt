@@ -19,15 +19,12 @@ fun httpRequest(
     maximumRequestBytes: Long? = null,
     maximumResponseBytes: Long? = null,
 ) = HttpRequest(
-    HttpOperation("http.test"),
-    ErrorSlug.of("http-failed"),
+    HttpOperation("http.test", ErrorSlug.of("http-failed")),
     method ?: if (body.isEmpty()) HttpMethod.GET else HttpMethod.POST,
     uri,
     headers,
     body,
-    timeout,
-    maximumRequestBytes,
-    maximumResponseBytes,
+    HttpLimits(timeout, maximumRequestBytes, maximumResponseBytes),
 )
 
 /** A client over a transport that answers each request with [execute], recording spans on [harness]. */
