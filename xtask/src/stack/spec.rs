@@ -589,7 +589,10 @@ impl<'a> StackContext<'a> {
 mod tests {
     use super::*;
     use crate::stack::client_configuration::ClientConfiguration;
-    use crate::test_support::{TempRoot, build_names, fake_service, ids, refusal, stack_context};
+    use crate::test_support::{
+        MEETS_ANOTHER, TempRoot, build_names, fake_service, finished_builds, ids,
+        record_build_start, refusal, stack_context,
+    };
 
     mod roles {
         use super::*;
@@ -752,67 +755,46 @@ mod tests {
         assert!(ctx.require(&REALM_HOST).is_err());
     }
 
-    /// How many of [`MEETING`]'s builds have started.
-    static MET: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-
-    /// Starts, then waits up to ten seconds for the other build of [`MEETING`] to start too.
-    const MEET: fn(&crate::Context) -> Result<()> = |_| {
-        use std::sync::atomic::Ordering;
-        MET.fetch_add(1, Ordering::SeqCst);
-        let deadline = std::time::Instant::now() + Duration::from_secs(10);
-        while MET.load(Ordering::SeqCst) < 2 {
-            if std::time::Instant::now() > deadline {
-                bail!("the other build never started while this one ran");
-            }
-            std::thread::sleep(Duration::from_millis(10));
-        }
-        Ok(())
-    };
-
-    const MEETING: [Build; 2] = [
-        Build {
-            name: "components",
-            how: How::Own(MEET),
-        },
-        Build {
-            name: "stack binary",
-            how: How::Own(MEET),
-        },
-    ];
-
     #[test]
     fn builds_of_their_own_run_at_the_same_time() {
         let root = TempRoot::new();
         let ctx = stack_context(&root);
+        const MEETING: [Build; 2] = [
+            Build {
+                name: "components",
+                how: MEETS_ANOTHER,
+            },
+            Build {
+                name: "stack binary",
+                how: MEETS_ANOTHER,
+            },
+        ];
         ctx.build(&[&MEETING[0], &MEETING[1]]).unwrap();
+        assert_eq!(finished_builds(&root), 2);
     }
-
-    static FINISHED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
-    const FAILING: [Build; 2] = [
-        Build {
-            name: "components",
-            how: How::Own(|_| bail!("wasm32 failed")),
-        },
-        Build {
-            name: "stack binary",
-            how: How::Own(|_| {
-                std::thread::sleep(Duration::from_millis(200));
-                FINISHED.store(true, std::sync::atomic::Ordering::SeqCst);
-                Ok(())
-            }),
-        },
-    ];
 
     #[test]
     fn a_failed_build_is_named_once_the_other_builds_have_finished() {
         let root = TempRoot::new();
         let ctx = stack_context(&root);
+        const FAILING: [Build; 2] = [
+            Build {
+                name: "components",
+                how: How::Own(|ctx| {
+                    record_build_start(ctx)?;
+                    bail!("wasm32 failed")
+                }),
+            },
+            Build {
+                name: "stack binary",
+                how: MEETS_ANOTHER,
+            },
+        ];
         assert_eq!(
             refusal(ctx.build(&[&FAILING[0], &FAILING[1]])),
             "the stack's builds failed; components: wasm32 failed"
         );
-        assert!(FINISHED.load(std::sync::atomic::Ordering::SeqCst));
+        assert_eq!(finished_builds(&root), 1);
         assert!(ctx.require(&FAILING[1]).is_err());
     }
 

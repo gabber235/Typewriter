@@ -610,6 +610,46 @@ pub fn build_names(spec: &crate::stack::spec::StackSpec) -> Vec<&'static str> {
     spec.builds().iter().map(|build| build.name).collect()
 }
 
+/// A build of its own that records in the stack's root that it started, waits up to ten seconds
+/// for another build of the same stack to start, takes a moment more, then records that it
+/// finished. What it records lives in the root, so tests that run at once never share it.
+pub const MEETS_ANOTHER: crate::stack::spec::How = crate::stack::spec::How::Own(|ctx| {
+    record_build_start(ctx)?;
+    let deadline = std::time::Instant::now() + Duration::from_secs(10);
+    while lines(&ctx.root.join("builds-started")) < 2 {
+        anyhow::ensure!(
+            std::time::Instant::now() < deadline,
+            "the other build never started while this one ran"
+        );
+        thread::sleep(Duration::from_millis(10));
+    }
+    thread::sleep(Duration::from_millis(200));
+    append_line(&ctx.root.join("builds-finished"))
+});
+
+/// Records in the stack's root that a build started, as [`MEETS_ANOTHER`] waits for.
+pub fn record_build_start(ctx: &Context) -> Result<()> {
+    append_line(&ctx.root.join("builds-started"))
+}
+
+/// How many [`MEETS_ANOTHER`] builds of the stack in `root` finished.
+pub fn finished_builds(root: &TempRoot) -> usize {
+    lines(&root.path("builds-finished"))
+}
+
+fn append_line(path: &Path) -> Result<()> {
+    let mut file = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)?;
+    file.write_all(b"\n")?;
+    Ok(())
+}
+
+fn lines(path: &Path) -> usize {
+    fs::read_to_string(path).map_or(0, |text| text.lines().count())
+}
+
 /// A stand in for Cargo in a [`TempRoot`]: each run is counted and writes [`Self::artifact`] and,
 /// as Cargo does beside each artifact, a dependency file naming the files the build read.
 pub struct FakeCargo<'a> {
