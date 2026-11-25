@@ -9,23 +9,28 @@ import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.engine.runtime.EngineContentGateway
 import com.typewritermc.engine.runtime.ReloadableEngineRuntime
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.TestScope
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 
-/** A reloadable engine runtime over [registrars] with the generated provider deployment of an empty catalog. */
+/**
+ * A reloadable engine runtime over [registrars] with the generated provider deployment of an empty catalog, in the
+ * deployment scope [deploymentScope].
+ */
 fun TestScope.runtime(
     registrars: List<RuntimeRegistrar>,
     revisions: MutableList<Long>? = null,
     requiredImplementation: String? = "implementation",
+    deploymentScope: CoroutineScope = this,
 ): RuntimeFixture {
     val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(emptyMap()), DiscoveryDomains.Execution)
     return RuntimeFixture(
         ReloadableEngineRuntime(
             deployment = deployment,
             registrars = registrars,
-            parentScope = this,
+            parentScope = deploymentScope,
             requiredImplementation = requiredImplementation,
             contentGateway =
                 revisions?.let { values ->

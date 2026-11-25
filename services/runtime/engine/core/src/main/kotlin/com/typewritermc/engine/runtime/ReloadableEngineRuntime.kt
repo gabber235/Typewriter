@@ -5,9 +5,11 @@ import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.StagedHostedRuntime
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.job
 
 /**
  * Owns the activation scope of a staged discovery deployment and orders compiled content application.
@@ -15,7 +17,9 @@ import kotlinx.coroutines.flow.StateFlow
  * Activation runs registrars in list order and starts delivery. Quiescing stops delivery and releases activation
  * resources while retaining discovery and the last content for resume. Final closure also closes discovery.
  * Lifecycle methods and external content application require serialized access. Content must target
- * [requiredImplementation] when one is set; a runtime without one applies content of any implementation.
+ * [requiredImplementation] when one is set; a runtime without one applies content of any implementation. When
+ * [parentScope], the deployment's scope, fails because work in it threw, the runtime reports itself unhealthy with
+ * that cause, so the host's rollout replaces it as it would a crashed engine.
  */
 class ReloadableEngineRuntime(
     deployment: GeneratedProviderDeployment,
@@ -30,6 +34,14 @@ class ReloadableEngineRuntime(
     private var deployment: GeneratedProviderDeployment? = deployment
     private var scope: ManagedRuntimeScope? = null
     private var lastContent: LoadedPublishedContent? = null
+
+    init {
+        parentScope.coroutineContext.job.invokeOnCompletion { cause ->
+            if (cause != null && cause !is CancellationException) {
+                mutableHealth.value = RuntimeHealth.Unhealthy("Engine deployment scope failed: $cause")
+            }
+        }
+    }
 
     override suspend fun activate() {
         val currentDeployment = checkNotNull(deployment) { "Engine deployment is stopped." }
