@@ -389,18 +389,54 @@ val TrackedGraphTest by testSuite {
         bench.runs(topParity) shouldBe 1
     }
 
-    test("a fork keeps answering with its own state after the base moves on") {
+    test("a fork's reads throw a stale revision once the base moves on, and a new fork answers") {
         val bench = QueryBench()
         val shared = bench.query("shared") { read(Cell("a")) ?: 0 }
         val top = bench.query("top") { read(shared) + 1 }
-        val otherReader = bench.query("otherReader") { read(shared) * 10 }
         val base = TrackedGraph(cells("a" to 1))
         base.read(top)
-        val forked = base.forkWith("a" to 2)
-        forked.read(top) shouldBe 3
+        val forked = base.forkWith("b" to 2)
+        forked.read(top) shouldBe 2
         base.change("a" to 3)
-        base.read(shared) shouldBe 3
-        forked.read(otherReader) shouldBe 20
+        shouldThrow<StaleRevision> { forked.read(top) }
+        shouldThrow<StaleRevision> { forked.read(Cell("a")) }
+        base.forkWith("b" to 2).read(top) shouldBe 4
+    }
+
+    test("a fork's reads throw a stale revision once the base is reset") {
+        val bench = QueryBench()
+        val onA = bench.query("onA") { read(Cell("a")) ?: 0 }
+        val base = TrackedGraph(cells("a" to 1))
+        val forked = base.forkWith("b" to 5)
+        base.reset(cells("a" to 3))
+        shouldThrow<StaleRevision> { forked.read(onA) }
+    }
+
+    test("a fork of one changed input reuses every unrelated result of the base without checking it") {
+        val bench = QueryBench()
+        val readers = List(100) { index -> bench.query("reader$index") { read(Cell("c$index")) ?: 0 } }
+        val base = TrackedGraph(cells())
+        readers.forEach { base.read(it) }
+        val forked = base.forkWith("c0" to 7)
+        val work = GraphWork()
+        val pinned = forked.pin(work)
+        readers.map { pinned.read(it) } shouldBe listOf(7) + List(99) { 0 }
+        work.counts() shouldBe GraphWork.Counts(computed = 1, read = 101)
+    }
+
+    test("a fork made while the base still has unchecked changes answers right after the base checks them") {
+        val bench = QueryBench()
+        // The base checks gate only after the fork was made, and only then does gate read x, the fork's overlay.
+        val gate = bench.query("gate") { if (read(Cell("switch")) == 1) (read(Cell("x")) ?: 0) - 1 else 0 }
+        val top = bench.query("top") { read(gate) + 1 }
+        val base = TrackedGraph(cells("switch" to 0, "x" to 1))
+        base.read(top) shouldBe 1
+        base.change("switch" to 1)
+        val forked = base.forkWith("x" to 5)
+        base.read(top) shouldBe 1
+        // In the fork switch is 1 and x is 5, so gate is 4.
+        forked.read(top) shouldBe 5
+        bench.runs(top) shouldBe 2
     }
 
     test("a fork's results never reach the base") {
@@ -445,7 +481,7 @@ val TrackedGraphTest by testSuite {
         bench.runs(onA) shouldBe 2
     }
 
-    test("a pin counts the queries it computed and the memos it found unchanged") {
+    test("a pin counts the queries it computed, and a change nothing read costs a later read nothing") {
         val bench = QueryBench()
         val onA = bench.query("onA") { read(Cell("a")) ?: 0 }
         val top = bench.query("top") { read(onA) + 1 }
@@ -455,8 +491,9 @@ val TrackedGraphTest by testSuite {
         graph.change("b" to 2)
         val second = GraphWork()
         graph.pin(second).read(top)
-        first.counts() shouldBe GraphWork.Counts(computed = 2, verified = 0, walked = 0, read = 3)
-        second.counts() shouldBe GraphWork.Counts(computed = 0, verified = 2, walked = 0, read = 1)
+        first.counts() shouldBe GraphWork.Counts(computed = 2, read = 3)
+        // Nothing read b, so nothing is checked again.
+        second.counts() shouldBe GraphWork.Counts(read = 1)
     }
 
     test("a pin counts every read, also of a memo already current at its revision") {
@@ -469,7 +506,56 @@ val TrackedGraphTest by testSuite {
         val pinned = graph.pin(work)
         pinned.read(top)
         pinned.read(onA)
-        work.counts() shouldBe GraphWork.Counts(computed = 0, verified = 0, walked = 0, read = 2)
+        work.counts() shouldBe GraphWork.Counts(read = 2)
+    }
+
+    test("an advance marks the readers of what changed and no one else, at any number of other queries") {
+        listOf(10, 10_000).forEach { size ->
+            val bench = QueryBench()
+            val readers = List(size) { index -> bench.query("reader$index") { read(Cell("c$index")) ?: 0 } }
+            val sum = bench.query("sum") { read(readers[0]) + read(readers[1]) }
+            val graph = TrackedGraph(cells())
+            readers.forEach { graph.read(it) }
+            graph.read(sum)
+            val advance = GraphWork()
+            graph.change("c0" to 3, work = advance)
+            val reads = GraphWork()
+            val pinned = graph.pin(reads)
+            readers.forEach { pinned.read(it) }
+            pinned.read(sum) shouldBe 3
+            advance.counts() shouldBe GraphWork.Counts(dirtied = 2)
+            // The pinned reads, and reader0 and sum reading again.
+            reads.counts() shouldBe GraphWork.Counts(computed = 2, read = size + 4L)
+        }
+    }
+
+    test("a reader of a query that reran to an equal value is cleaned, not rerun") {
+        val bench = QueryBench()
+        val parity = bench.query("parity") { (read(Cell("a")) ?: 0) % 2 }
+        val top = bench.query("top") { if (read(parity) == 0) "even" else "odd" }
+        val graph = TrackedGraph(cells("a" to 2))
+        graph.read(top)
+        graph.change("a" to 4)
+        val work = GraphWork()
+        graph.pin(work).read(top) shouldBe "even"
+        work.counts() shouldBe GraphWork.Counts(computed = 1, cleaned = 1, read = 2)
+    }
+
+    test("a forgotten result keeps what read it, so its readers do not rerun after an unrelated change") {
+        val bench = QueryBench()
+        val onA = bench.query("onA") { read(Cell("a")) ?: 0 }
+        val top = bench.query("top") { read(onA) + 1 }
+        val log = GraphLog()
+        // One memo: storing top forgets onA.
+        val graph = TrackedGraph(cells("a" to 1), GraphLimits(maxMemos = 1), log)
+        graph.read(top) shouldBe 2
+        log.evicted shouldContain onA
+        graph.change("b" to 1)
+        graph.read(top) shouldBe 2
+        bench.runs(top) shouldBe 1
+        bench.runs(onA) shouldBe 1
+        graph.change("a" to 5)
+        graph.read(top) shouldBe 6
     }
 
     test("a pin counts every key a walk of reads visits") {
@@ -493,29 +579,6 @@ val TrackedGraphTest by testSuite {
         bench.runs(onA) shouldBe 1
     }
 
-    test("a fork does not trust a result the base computed again after the fork, even when it came out equal") {
-        val bench = QueryBench()
-        val pick = bench.query("pick") { if (read(Cell("useA")) == 1) read(Cell("a")) else read(Cell("b")) }
-        val base = TrackedGraph(cells("useA" to 1, "a" to 5, "b" to 5))
-        base.read(pick)
-        val forked = base.forkWith("a" to 7)
-        base.change("useA" to 0)
-        base.read(pick) shouldBe 5
-        forked.read(pick) shouldBe freshComputation(forked.cells, pick)
-    }
-
-    test("a fork trusts a result the base only verified after the fork") {
-        val bench = QueryBench()
-        val onA = bench.query("onA") { read(Cell("a")) }
-        val base = TrackedGraph(cells("a" to 1, "b" to 1))
-        base.read(onA)
-        val forked = base.forkWith("b" to 2)
-        base.change("c" to 1)
-        base.read(onA)
-        forked.read(onA) shouldBe 1
-        bench.runs(onA) shouldBe 1
-    }
-
     test("a fork recomputes, and answers right, when the base evicts what it trusted") {
         val bench = QueryBench()
         val onA = bench.query("onA") { read(Cell("a")) ?: 0 }
@@ -527,17 +590,6 @@ val TrackedGraphTest by testSuite {
         others.forEach { base.read(it) }
         forked.read(top) shouldBe 6
         forked.read(onA) shouldBe 1
-    }
-
-    test("a fork answers right after the base is reset") {
-        val bench = QueryBench()
-        val onA = bench.query("onA") { read(Cell("a")) ?: 0 }
-        val top = bench.query("top") { read(onA) + (read(Cell("b")) ?: 0) }
-        val base = TrackedGraph(cells("a" to 1, "b" to 1))
-        base.read(top)
-        val forked = base.forkWith("b" to 5)
-        base.reset(cells("a" to 3, "b" to 1))
-        forked.read(top) shouldBe freshComputation(forked.cells, top)
     }
 
     test("a fork merged into a base still at its revision gives the base its results without a rerun") {

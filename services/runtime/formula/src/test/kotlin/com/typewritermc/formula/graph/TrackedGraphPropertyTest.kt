@@ -68,13 +68,26 @@ val TrackedGraphPropertyTest by testSuite {
             val random = Random(seed)
             val generated = GeneratedGraph(random)
             val base = generated.usedGraph(random)
+            // Sometimes the base still has changes nobody checked when the fork is made.
+            if (random.nextBoolean()) base.change(*generated.changes(random).toTypedArray())
             val forked = base.forkWith(*generated.changes(random).toTypedArray())
-            if (random.nextBoolean()) {
-                base.change(*generated.changes(random).toTypedArray())
-                generated.outcomes(base)
-            }
-            generated.outcomes(forked) shouldBe generated.outcomes(TrackedGraph(forked.cells))
-            generated.outcomes(base) shouldBe generated.outcomes(TrackedGraph(base.cells))
+            // Base and fork read in any interleaving, so the base checks its changes while the fork reads.
+            val order = (generated.queries.indices.map { it to true } + generated.queries.indices.map { it to false }).shuffled(random)
+            val answers = order.associateWith { (index, fromFork) -> generated.outcome(if (fromFork) forked else base, index) }
+            generated.queries.indices.map { answers.getValue(it to true) } shouldBe generated.outcomes(TrackedGraph(forked.cells))
+            generated.queries.indices.map { answers.getValue(it to false) } shouldBe generated.outcomes(TrackedGraph(base.cells))
+        }
+    }
+
+    test("once the base moves on, every read of a fork throws a stale revision") {
+        checkAll(config, Arb.long()) { seed ->
+            val random = Random(seed)
+            val generated = GeneratedGraph(random)
+            val base = generated.usedGraph(random)
+            val forked = base.forkWith(*generated.changes(random).toTypedArray())
+            generated.outcomes(forked)
+            base.change(*generated.changes(random).toTypedArray())
+            generated.outcomes(forked).toSet() shouldBe setOf(StaleRevision::class)
         }
     }
 

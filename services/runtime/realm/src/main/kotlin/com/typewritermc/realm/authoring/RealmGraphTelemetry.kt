@@ -26,6 +26,9 @@ class RealmGraphTelemetry(
 enum class GraphOperation(
     internal val label: String,
 ) {
+    /** Installing a view, which marks what its changes reach in the live graph. */
+    VIEW_INSTALL("view.install"),
+
     /** Binding the names a commit makes resolve. */
     COMMIT_BIND("commit.bind"),
 
@@ -72,7 +75,8 @@ class RealmGraphWorkTelemetry(
     ) {
         val counts = work.counts()
         counter.add(counts.computed, KIND to "computed", OPERATION to operation.label)
-        counter.add(counts.verified, KIND to "verified", OPERATION to operation.label)
+        counter.add(counts.cleaned, KIND to "cleaned", OPERATION to operation.label)
+        counter.add(counts.dirtied, KIND to "dirtied", OPERATION to operation.label)
         counter.add(counts.walked, KIND to "walked", OPERATION to operation.label)
         counter.add(counts.read, KIND to "read", OPERATION to operation.label)
     }

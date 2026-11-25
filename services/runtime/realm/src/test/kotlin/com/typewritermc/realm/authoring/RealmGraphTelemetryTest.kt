@@ -51,7 +51,15 @@ val RealmGraphTelemetryTest by testSuite {
                     .groupBy({ it.key["realm.operation"] }, { it.value })
                     .mapValues { (_, steps) -> steps.sum() }
             recorded.keys shouldBe
-                setOf("commit.bind", "commit.reply", "checks.pass", "state.reply", "capture.evaluation", "release.judgement")
+                setOf(
+                    "view.install",
+                    "commit.bind",
+                    "commit.reply",
+                    "checks.pass",
+                    "state.reply",
+                    "capture.evaluation",
+                    "release.judgement",
+                )
             recorded.getValue("checks.pass") shouldBeGreaterThan 0
             recorded.getValue("capture.evaluation") shouldBeGreaterThan 0
         }

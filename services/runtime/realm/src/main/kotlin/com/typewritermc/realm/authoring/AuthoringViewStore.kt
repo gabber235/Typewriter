@@ -359,14 +359,11 @@ class InMemoryAuthoringViewStore(
     private var closed = false
     private var reload: (() -> AuthoringSeed)? = null
 
-    /** Names in the current view come from the live graph, and in any other view from one fork made for it. */
-    private val scopes =
-        ViewScopes { view, at, name, work ->
-            val query = services.names.at(at, name)
-            val live = synchronized(lock) { graph.pin(work).takeIf { current.root === view } }
-            live?.let { reads -> runCatching { reads.read(query) }.getOrElse { if (it is StaleRevision) null else throw it } }
-                ?: forkAt(view).pin(work).read(query)
-        }
+    /**
+     * Names in the current view come from the live graph, and in any other view from one fork made for it. A read a commit
+     * overtakes reads again, from the live graph when the view became current and otherwise from a fork made anew.
+     */
+    private val scopes = ViewScopes { view, at, name, work -> readIn(view, services.names.at(at, name), work) }
     private var current = createRoot(catalog, seed.resources).also { roots[it.root.readContext] = it }
     override val graph: AuthoringGraph = TrackedGraph(RealmEnvironment(current.root, services), listener = listener)
 
@@ -397,9 +394,27 @@ class InMemoryAuthoringViewStore(
             PinnedReads(retain(current), graph.pin(work))
         }
 
+    private fun <T> readIn(
+        view: AuthoringView,
+        query: RealmQuery<T>,
+        work: GraphWork,
+    ): T {
+        val reads = synchronized(lock) { if (current.root === view) graph.pin(work) else null } ?: forkAt(view).pin(work)
+        return try {
+            reads.read(query)
+        } catch (_: StaleRevision) {
+            // Overtaken by a commit: read again at the newer revision.
+            readIn(view, query, work)
+        }
+    }
+
     override fun forkAt(view: AuthoringView): AuthoringGraph =
         synchronized(lock) {
-            view.fork.get()?.let { return@synchronized it }
+            // A fork is valid only at the live graph's revision it was made at; once a view is installed it forks again.
+            view.fork
+                .get()
+                ?.takeUnless { it.isStale }
+                ?.let { return@synchronized it }
             val environment = RealmEnvironment(view, services)
             if (view.catalog.generation != current.root.catalog.generation) {
                 // Another generation shares nothing with the live graph.
@@ -439,8 +454,10 @@ class InMemoryAuthoringViewStore(
             val fork = view.fork.getAndSet(null)
             if (view.catalog.generation != before.root.catalog.generation) {
                 graph.reset(environment)
-            } else if (fork?.let(graph::merge) != true) {
-                graph.advance(environment, view.changesFrom(before.root))
+            } else {
+                counting(GraphOperation.VIEW_INSTALL) { work ->
+                    if (fork?.let { graph.merge(it, work) } != true) graph.advance(environment, view.changesFrom(before.root), work)
+                }
             }
             changed.value += 1
         }

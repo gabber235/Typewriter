@@ -220,8 +220,8 @@ internal suspend fun RealmFixture.measuredCommit(
     )
 }
 
-/** The operations of a commit: binding its names and judging the findings of its reply. */
-private val COMMIT_WORK = setOf("commit.bind", "commit.reply")
+/** The operations of a commit: binding its names, installing its view and judging the findings of its reply. */
+private val COMMIT_WORK = setOf("commit.bind", "view.install", "commit.reply")
 
 /** The operation of the check pass a commit starts. */
 private val PASS_WORK = setOf("checks.pass")
@@ -232,7 +232,13 @@ private fun RealmFixture.workCounted(operations: Set<String>): GraphWork.Counts 
 
     fun kind(name: String) = sums.filterKeys { it["graph.work"] == name }.values.sum()
 
-    return GraphWork.Counts(kind("computed"), kind("verified"), kind("walked"), kind("read"))
+    return GraphWork.Counts(
+        computed = kind("computed"),
+        cleaned = kind("cleaned"),
+        dirtied = kind("dirtied"),
+        walked = kind("walked"),
+        read = kind("read"),
+    )
 }
 
 /** The median graph work of these commits, so one run that met a cold cache does not move a gate. */

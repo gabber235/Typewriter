@@ -8,6 +8,8 @@ import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
+import com.typewritermc.formula.graph.GraphWork
+import com.typewritermc.formula.graph.StaleRevision
 import com.typewritermc.realm.checking.rename
 import com.typewritermc.realm.edit.MemoryAuthoringStorage
 import com.typewritermc.realm.operation.operationObservation
@@ -69,6 +71,31 @@ val AuthoringViewStoreTest by testSuite {
                 shouldThrow<com.typewritermc.realm.operation.StaleOperationObservation> {
                     next.operationObservation(token, mapOf(id to record(name = "Draft")), emptySet())
                 }
+            }
+        }
+    }
+    test("a view no longer current is read through a fork made anew after each install, and still answers that view") {
+        /** The name stored on [id], read through the graph. */
+        data class NameOf(
+            val id: ResourceId,
+        ) : RealmQuery<String?> {
+            context(reads: RealmReads)
+            override fun compute(): String? = tracked().read(boundPath<String>(location(id, "name"), TEXT_USE)).available()
+        }
+        val id = ResourceId(value = "page")
+        RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), mapOf(id to record(name = "Quest"))).use { realm ->
+            realm.views.capture().use { earlier ->
+                realm.commit(rename(id, "Story")).shouldBeCommitted()
+                val first = realm.views.forkAt(earlier.root)
+                first.pin(GraphWork()).read(NameOf(id)) shouldBe "Quest"
+
+                realm.commit(rename(id, "Saga")).shouldBeCommitted()
+
+                shouldThrow<StaleRevision> { first.pin(GraphWork()).read(NameOf(id)) }
+                realm.views
+                    .forkAt(earlier.root)
+                    .pin(GraphWork())
+                    .read(NameOf(id)) shouldBe "Quest"
             }
         }
     }

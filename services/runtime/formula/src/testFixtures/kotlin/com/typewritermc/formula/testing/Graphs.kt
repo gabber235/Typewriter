@@ -107,9 +107,12 @@ fun <E, T> TrackedGraph<E>.read(key: GraphKey<T>): T = pin(GraphWork()).read(key
 @OptIn(UntrackedEnvironment::class)
 val TrackedGraph<Cells>.cells: Cells get() = pin(GraphWork()).environment
 
-/** Advances to the current cells with [values] applied; a null value removes the cell. */
-fun TrackedGraph<Cells>.change(vararg values: Pair<String, Int?>) {
-    advance(cells.with(*values), values.map { Cell(it.first) }.toSet())
+/** Advances to the current cells with [values] applied, counting the marking on [work]; a null value removes the cell. */
+fun TrackedGraph<Cells>.change(
+    vararg values: Pair<String, Int?>,
+    work: GraphWork = GraphWork(),
+) {
+    advance(cells.with(*values), values.map { Cell(it.first) }.toSet(), work)
 }
 
 /** A fork at the current cells with [values] applied as its overlay. */
@@ -231,9 +234,15 @@ class GeneratedGraph(
         graph: TrackedGraph<Cells>,
         order: List<Int> = queries.indices.toList(),
     ): List<Any?> {
-        val read = order.associateWith { index -> runCatching { graph.read(queries[index]) }.fold({ it }, { it::class }) }
+        val read = order.associateWith { index -> outcome(graph, index) }
         return queries.indices.map(read::getValue)
     }
+
+    /** What the query at [index] gives at the graph's revision, a failure as its class. */
+    fun outcome(
+        graph: TrackedGraph<Cells>,
+        index: Int,
+    ): Any? = runCatching { graph.read(queries[index]) }.fold({ it }, { it::class })
 
     private fun step(
         random: Random,
