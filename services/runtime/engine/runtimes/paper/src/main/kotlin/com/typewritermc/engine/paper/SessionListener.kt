@@ -20,12 +20,13 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.Plugin
-import java.time.Clock
 import java.time.Instant
 
 /**
- * The online Minecraft players, each a session of its protagonist with the instant it connected, kept on the main
- * thread from Paper's own list and its join and quit events. Changing the set only records it, so the tick never waits on NATS, and the engine reads it
+ * The online Minecraft players, each a session of its protagonist with the instant it logged in, kept on the main
+ * thread from Paper's own list and its join and quit events. A player already online when the listener starts keeps
+ * its own login instant too, so a reloaded engine never claims a session as newer than a connection made elsewhere
+ * since. Changing the set only records it, so the tick never waits on NATS, and the engine reads it
  * from any thread without asking Bukkit.
  *
  * Each activation registers the listener and starts the set from the players already online, so an engine reload
@@ -34,7 +35,6 @@ import java.time.Instant
  */
 class SessionListener(
     private val plugin: Plugin,
-    private val clock: Clock = Clock.systemUTC(),
 ) : OnlineSessions,
     Listener,
     RuntimeRegistrar {
@@ -47,18 +47,13 @@ class SessionListener(
         // Registering and reading the players on the main thread orders the start before any later join or quit event.
         plugin.onMainThread {
             plugin.server.pluginManager.registerEvents(this, plugin)
-            // A player already online connected before this engine saw it; it counts from the instant it was first seen.
-            val seen = clock.instant()
-            online.value = plugin.server.onlinePlayers.associate { it.session to seen }
+            online.value = plugin.server.onlinePlayers.associate { it.session to it.connected }
         }
         scope.own { HandlerList.unregisterAll(this) }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    fun onJoin(event: PlayerJoinEvent) {
-        val connected = clock.instant()
-        online.update { it + (event.player.session to connected) }
-    }
+    fun onJoin(event: PlayerJoinEvent) = online.update { it + (event.player.session to event.player.connected) }
 
     @EventHandler(priority = EventPriority.MONITOR)
     fun onQuit(event: PlayerQuitEvent) = online.update { it - event.player.session }
@@ -79,3 +74,6 @@ private suspend fun <T> Plugin.onMainThread(block: () -> T): T {
         continuation.invokeOnCancellation { task.cancel() }
     }
 }
+
+/** When the player's connection began: Paper stamps each login before its join event, and keeps it while it lasts. */
+private val Player.connected: Instant get() = Instant.ofEpochMilli(lastLogin)
