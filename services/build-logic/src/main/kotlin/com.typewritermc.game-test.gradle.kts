@@ -329,6 +329,9 @@ abstract class GameParts : CommandLineArgumentProvider {
     /** Whether this machine is the pinned runner, where a frame from another renderer fails its golden. */
     @get:Internal abstract val pinnedRunner: Property<Boolean>
 
+    /** The cgroup the run's tree gives the game, where the pool runs each part in a leaf of its own. */
+    @get:Internal abstract val cgroup: Property<String>
+
     override fun asArguments() = properties().map { (name, value) -> "-D$name=$value" }
 
     /** Every property by its full name. */
@@ -361,6 +364,7 @@ abstract class GameParts : CommandLineArgumentProvider {
                     "paces" to paces,
                     "pacing" to pacing,
                     "demo" to demo,
+                    "cgroup" to cgroup,
                 )
                     .mapNotNull { (name, value) -> value.orNull?.let { name to it } }
         ).mapKeys { (name, _) -> "playtest.$name" }
@@ -416,6 +420,8 @@ tasks.register<Test>("gameTest") {
             mesa.set(providers.environmentVariable("PLAYTEST_MESA"))
             // CI's game job runs on the pinned runner and says so; other machines only note frames they cannot check.
             pinnedRunner.set(providers.environmentVariable("PLAYTEST_PINNED_RUNNER").map { it == "1" }.orElse(false))
+            // `cargo xtask e2e` names it where the machine delegates a cgroup to the run (Linux CI).
+            cgroup.set(providers.environmentVariable("PLAYTEST_CGROUP"))
         }
     jvmArgumentProviders += parts
     // The build's pool runs before the first test JVM starts, which only connects to it.

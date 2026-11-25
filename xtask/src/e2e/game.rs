@@ -21,6 +21,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use anyhow::{Context as _, Result, anyhow, bail};
 
 use super::{E2eArgs, take_turn};
+use crate::cgroup;
 use crate::lock::{self, HeavyLock};
 use crate::process::{self, Group};
 use crate::results::{self, Quarantine, TestRun, Verdict};
@@ -198,6 +199,33 @@ struct Asked<'a> {
 /// Runs what was `asked` in Gradle, writing into `evidence`: the product's suite inside the stack,
 /// with the stack's environment, the framework's without one.
 fn gradle_run(ctx: &Context, asked: &Asked, evidence: &Path) -> Result<Ran> {
+    // The run's cgroup tree lives as long as its Gradle; the stack places its services in it.
+    let id = format!("{}-{}", now_millis(), std::process::id());
+    let parts = cgroup::install(cgroup::Tree::delegated(&id)?);
+    if parts.tree().is_none() {
+        println!(
+            "{}: memory per part is not measured, since no cgroup is delegated ({})",
+            asked.suite.name(),
+            cgroup::DELEGATED
+        );
+    }
+    let ran = suite_run(ctx, asked, evidence);
+    if let Some(tree) = parts.tree() {
+        // Peaks are reported, never part of the verdict: a run whose peaks cannot be added keeps
+        // its verdict. A run that wrote no file has nothing to add them to.
+        if let Ok(ran) = &ran
+            && ran.file.exists()
+            && let Err(error) = tree.record(&ran.file)
+        {
+            eprintln!("cannot add the stack's and Gradle's peaks to the run file: {error:#}");
+        }
+        tree.remove();
+    }
+    ran
+}
+
+/// Runs what was `asked` of the suite: the game suite against the stack, the playtest suite alone.
+fn suite_run(ctx: &Context, asked: &Asked, evidence: &Path) -> Result<Ran> {
     match asked.suite {
         GameSuite::Game => {
             let keep = ctx
@@ -261,11 +289,17 @@ fn in_turn(
         run_id: run_id.clone(),
         gradle: build_then_run(
             |arguments| {
-                gradle(&mut ctx.tool(
+                let mut command = ctx.tool(
                     "services",
                     "./gradlew",
                     &arguments.iter().map(String::as_str).collect::<Vec<_>>(),
-                ))
+                );
+                // Gradle and the daemon it starts run in the gradle leaf; the pool, in the game's.
+                if let Some(tree) = cgroup::installed() {
+                    tree.gradle().place(&mut command)?;
+                    command.env(cgroup::GAME, tree.game());
+                }
+                gradle(&mut command)
             },
             asked.suite,
             &gradle_args(asked.args, asked.quarantine, &planned),

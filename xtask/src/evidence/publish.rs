@@ -19,7 +19,7 @@ use crate::results::{self, Quarantine, TestRun, Verdict as CaseVerdict, runner_n
 use crate::review::verdict::{
     COMMIT as VERDICT_COMMIT, END as VERDICT_END, START as VERDICT_START, covers,
 };
-use crate::skirout::base::harness::v1::test_run::{ArtifactKind, Demonstrates, TestCase};
+use crate::skirout::base::harness::v1::test_run::{ArtifactKind, Demonstrates, PartKind, TestCase};
 use crate::{CommandExt, Context};
 
 const START: &str = "<!-- evidence:start -->";
@@ -270,6 +270,7 @@ fn render_section(section: &Section) -> String {
     render_review(&mut out, section);
     render_recordings(&mut out, section);
     render_coverage(&mut out, &section.report.coverage);
+    render_memory(&mut out, section.runs);
     render_test_changes(&mut out, section);
     render_change_map(&mut out, section);
     out
@@ -552,6 +553,78 @@ fn render_coverage(out: &mut String, coverage: &Coverage) {
     let _ = writeln!(out, "\n</details>");
 }
 
+/// The most memory each part of each run took beside the limit planned for its kind, and whether
+/// those limits fit the run's memory budget. Reported, never gating: the limits are not enforced
+/// until measured peaks set them.
+fn render_memory(out: &mut String, runs: &[(PathBuf, TestRun)]) {
+    let measured: Vec<&TestRun> = runs
+        .iter()
+        .map(|(_, run)| run)
+        .filter(|run| !run.parts.is_empty())
+        .collect();
+    if measured.is_empty() {
+        return;
+    }
+    let _ = writeln!(out, "\n<details><summary>Memory per part</summary>");
+    for run in measured {
+        let budget = run.memory_budget.as_ref().map_or_else(
+            || "no budget recorded".to_owned(),
+            |budget| format!("budget {} ({})", mib(budget.bytes), budget.source),
+        );
+        let _ = writeln!(
+            out,
+            "\n{} run: {budget}\n\n| Part | Kind | Planned limit | Peak | Fits the budget |\n|---|---|---|---|---|",
+            runner_name(&run.runner)
+        );
+        for part in &run.parts {
+            let planned = part.limit_bytes > 0;
+            let limit = if planned {
+                mib(part.limit_bytes)
+            } else {
+                "none".to_owned()
+            };
+            let peak = match part.peak_bytes {
+                Some(peak) if planned && peak > part.limit_bytes => {
+                    format!("{}, over the limit", mib(peak))
+                }
+                Some(peak) => mib(peak),
+                None => "not measured".to_owned(),
+            };
+            let fits = match (planned, part.fits_budget) {
+                (false, _) => "not planned",
+                (true, true) => "yes",
+                (true, false) => "no",
+            };
+            let _ = writeln!(
+                out,
+                "| {} | {} | {limit} | {peak} | {fits} |",
+                cell(&part.name),
+                part_kind(&part.kind)
+            );
+        }
+    }
+    let _ = writeln!(out, "\n</details>");
+}
+
+/// `bytes` in whole MiB.
+fn mib(bytes: i64) -> String {
+    format!("{} MiB", bytes / (1024 * 1024))
+}
+
+/// How the memory table names a part of `kind`.
+fn part_kind(kind: &PartKind) -> &'static str {
+    match kind {
+        PartKind::SharedPaper => "shared Paper",
+        PartKind::OwnPaper => "own Paper",
+        PartKind::Client => "client",
+        PartKind::Display => "display",
+        PartKind::Pool => "pool",
+        PartKind::StackService => "stack service",
+        PartKind::Gradle => "Gradle",
+        _ => "part",
+    }
+}
+
 /// The cases of every run of `runs` that judges them; a demo run's only record evidence.
 fn cases(runs: &[(PathBuf, TestRun)]) -> impl Iterator<Item = (&TestRun, &TestCase)> {
     verdict_runs(runs).flat_map(|run| run.cases.iter().map(move |case| (run, case)))
@@ -825,10 +898,10 @@ fn set_pull_body(ctx: &Context, pr: u64, body: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::results::{Outcome, RunEnd};
-    use crate::skirout::base::harness::v1::test_run::Runner;
+    use crate::results::{Outcome, Part, PartEnd, RunEnd};
+    use crate::skirout::base::harness::v1::test_run::{MemoryBudget, Runner};
     use crate::test_support::{
-        TempRoot, empty_change_report, failed, raw_failed_run, requirement_run,
+        TempRoot, empty_change_report, failed, part, raw_failed_run, requirement_run,
     };
 
     const SECRET: &str = "ghp_0123456789abcdefghij";
@@ -1030,6 +1103,86 @@ mod tests {
             .find("The game run could not run: the game was not ready within 300 s")
             .expect(&section);
         assert!(cut < first_fold && unable < first_fold, "{section}");
+    }
+
+    #[test]
+    fn each_part_s_peak_shows_beside_its_planned_limit_and_whether_the_limits_fit_the_budget() {
+        let mib = 1024 * 1024;
+        let mut run = requirement_run("a quest starts", "QUEST-1", Outcome::Passed);
+        run.runner = Runner::Game;
+        run.memory_budget = Some(MemoryBudget {
+            bytes: 15 * 1024 * mib,
+            source: "the game cgroup's memory.max".to_owned(),
+            ..MemoryBudget::default()
+        });
+        let client = |name: &str, peak: Option<i64>, fits: bool| Part {
+            limit_bytes: 1946 * mib,
+            peak_bytes: peak,
+            fits_budget: fits,
+            ..part(
+                name,
+                PartKind::Client,
+                &format!("{name}.log"),
+                PartEnd::RanToEnd,
+            )
+        };
+        run.parts = vec![
+            client("client-a", Some(1200 * mib), true),
+            client("client-d", Some(2100 * mib), false),
+            client("client-e", None, true),
+            Part {
+                peak_bytes: Some(900 * mib),
+                fits_budget: true,
+                ..part("gradle", PartKind::Gradle, "", PartEnd::RanToEnd)
+            },
+        ];
+        let runs = [(PathBuf::from("game"), run)];
+        let section = render_section(&Section {
+            sha: "1111111",
+            provenance: "Evidence from a measured run.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: None,
+            covered: false,
+            jobs_failed: false,
+        });
+
+        let memory = &section[section.find("Memory per part").expect(&section)..];
+        assert!(
+            memory.contains("game run: budget 15360 MiB (the game cgroup's memory.max)"),
+            "{memory}"
+        );
+        for row in [
+            "| client-a | client | 1946 MiB | 1200 MiB | yes |",
+            "| client-d | client | 1946 MiB | 2100 MiB, over the limit | no |",
+            "| client-e | client | 1946 MiB | not measured | yes |",
+            "| gradle | Gradle | none | 900 MiB | not planned |",
+        ] {
+            assert!(memory.contains(row), "{row} missing from {memory}");
+        }
+    }
+
+    #[test]
+    fn a_run_without_parts_shows_no_memory_table() {
+        let runs = [(
+            PathBuf::from("panel"),
+            requirement_run("a user joins", "JOIN-1", Outcome::Passed),
+        )];
+        let section = render_section(&Section {
+            sha: "1111111",
+            provenance: "Evidence.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: None,
+            covered: false,
+            jobs_failed: false,
+        });
+
+        assert!(!section.contains("Memory per part"), "{section}");
     }
 
     #[test]

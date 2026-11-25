@@ -4,6 +4,7 @@
 
 mod branch;
 mod cargo_build;
+mod cgroup;
 mod cluster;
 mod components;
 mod database;
@@ -43,6 +44,14 @@ use skir_client;
 use crate::deploy::Cluster;
 use crate::graph::Area;
 
+/// What `cargo xtask cgroup` does.
+#[derive(clap::Subcommand)]
+enum CgroupCommand {
+    /// Remounts cgroup2 read write with sudo, moves the job's processes into a leaf, hands
+    /// `/sys/fs/cgroup/typewriter` to this user and names it in `TYPEWRITER_CGROUP` (Linux CI).
+    Delegate,
+}
+
 #[derive(Parser)]
 #[command(name = "xtask", about = "The Typewriter harness")]
 enum Cli {
@@ -68,6 +77,9 @@ enum Cli {
     Components(components::ComponentTestArgs),
     /// Builds and pushes components and the database image, then restarts workloads.
     Deploy { cluster: Cluster },
+    /// Delegates a cgroup to this user for the game runs' memory per part (CI's game job).
+    #[command(subcommand)]
+    Cgroup(CgroupCommand),
     /// Creates the throwaway CI cluster the full tier deploys to.
     #[command(subcommand)]
     Cluster(cluster::ClusterCommand),
@@ -150,6 +162,7 @@ fn main() -> ExitCode {
         Cli::Cluster(command) => cluster::command(&context, command),
         Cli::Generate => generate::generate(&context, None),
         Cli::E2e(args) => e2e::run(&context, &args),
+        Cli::Cgroup(CgroupCommand::Delegate) => cgroup::delegate(),
         Cli::Stack(command) => stack::command(&context, command),
         Cli::Doctor => doctor::doctor(&context),
         Cli::Secrets(command) => secrets::command(&context, command),

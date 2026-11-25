@@ -9,6 +9,7 @@ import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.test_run.Conclusion
 import skirout.harness.v1.test_run.Demonstrates
 import skirout.harness.v1.test_run.LossCause
+import skirout.harness.v1.test_run.MemoryBudget
 import skirout.harness.v1.test_run.Outcome
 import skirout.harness.v1.test_run.Pacing
 import skirout.harness.v1.test_run.Part
@@ -160,6 +161,8 @@ val RunRecordsTest by testSuite {
                     log = "paper.log",
                     end = PartEnd.RAN_TO_END,
                     limitBytes = PartLimit.SHARED_PAPER.limitBytes,
+                    peakBytes = null,
+                    fitsBudget = true,
                 ),
                 Part(
                     name = "client-gv-1-lost-1",
@@ -167,6 +170,8 @@ val RunRecordsTest by testSuite {
                     log = "client-gv-1-lost-1.log",
                     end = PartEnd.createLost(cause = LossCause.ExitedWrapper(137), atMillis = 7_000),
                     limitBytes = PartLimit.CLIENT.limitBytes,
+                    peakBytes = null,
+                    fitsBudget = true,
                 ),
                 Part(
                     name = "display-gv-1",
@@ -174,6 +179,8 @@ val RunRecordsTest by testSuite {
                     log = "display-gv-1.log",
                     end = PartEnd.RAN_TO_END,
                     limitBytes = PartLimit.DISPLAY.limitBytes,
+                    peakBytes = null,
+                    fitsBudget = true,
                 ),
                 Part(
                     name = "client-gv-1",
@@ -181,6 +188,36 @@ val RunRecordsTest by testSuite {
                     log = "client-gv-1.log",
                     end = PartEnd.RAN_TO_END,
                     limitBytes = PartLimit.CLIENT.limitBytes,
+                    peakBytes = null,
+                    fitsBudget = true,
+                ),
+            )
+    }
+
+    test("the run file says the game's memory budget, and each part's peak against its limit and whether its limit fit") {
+        val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
+        val logs = file.resolveSibling("logs/1")
+        val records = RunRecords("run-1", file, logs, retries, clock = { 8_000 })
+        val budget = 16L * 1024 * 1024 * 1024
+        records.budget(budget, "the game's cgroup")
+        records.started("paper", PartKind.SHARED_PAPER, logs.resolve("paper.log"), fitsBudget = true)
+        records.started("Paper-7", PartKind.OWN_PAPER, logs.resolve("Paper-7.log"), fitsBudget = false)
+
+        records.peak("paper", 3_100_000_000)
+        records.lost("Paper-7", LossCause.MEMORY_LIMIT, peakBytes = 1_700_000_000)
+        records.finished()
+
+        val run = TestRun.serializer.fromJsonCode(Files.readString(file))
+        run.memoryBudget shouldBe MemoryBudget(bytes = budget, source = "the game's cgroup")
+        run.parts.map { listOf(it.name, it.limitBytes, it.peakBytes, it.fitsBudget, it.end) } shouldBe
+            listOf(
+                listOf("paper", PartLimit.SHARED_PAPER.limitBytes, 3_100_000_000L, true, PartEnd.RAN_TO_END),
+                listOf(
+                    "Paper-7",
+                    PartLimit.OWN_PAPER.limitBytes,
+                    1_700_000_000L,
+                    false,
+                    PartEnd.createLost(cause = LossCause.MEMORY_LIMIT, atMillis = 8_000),
                 ),
             )
     }

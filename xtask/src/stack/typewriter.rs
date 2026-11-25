@@ -473,6 +473,10 @@ impl Service for RealmHost {
                 "TYPEWRITER_CONFIG_FILE",
                 ctx.state().join("realm.properties"),
             )
+            // Its heap follows the limit of its own cgroup where a game run places it in one, and
+            // the machine's memory elsewhere: the share is the JVM's default until measured peaks
+            // set the Realm host's limit.
+            .env("JAVA_OPTS", "-XX:MaxRAMPercentage=25")
             // Opts in to the token file `ready` waits for and `bind` reads.
             .env(
                 "TYPEWRITER_REGISTRATION_TOKEN_FILE",

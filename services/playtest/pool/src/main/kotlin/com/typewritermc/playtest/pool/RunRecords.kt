@@ -24,6 +24,7 @@ import skirout.harness.v1.wire.Submit
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import skirout.harness.v1.test_run.MemoryBudget as RunBudget
 
 /**
  * The attempts of [run], the one run the pool serves, written into its [file] under its [policy], naming
@@ -72,6 +73,7 @@ internal class RunRecords(
 
     /** Whether the pool ended the run, as the build's last tests ended. */
     private var finished = false
+    private var memoryBudget: RunBudget? = null
 
     init {
         write()
@@ -118,27 +120,59 @@ internal class RunRecords(
     }
 
     /**
-     * The game started the part [name] of [kind], logging into [log], with its kind's memory limit; a part of
-     * that name already listed keeps its place.
+     * The game started the part [name] of [kind], logging into [log], with its kind's memory limit and whether
+     * that limit [fitsBudget] beside the parts that ran then; a part of that name already listed keeps its place.
      */
     fun started(
         name: String,
         kind: PartKind,
         log: Path,
+        fitsBudget: Boolean = true,
     ) {
         if (parts.any { it.name == name && it.end == PartEnd.RAN_TO_END }) return
-        parts += Part(name = name, kind = kind, log = logName(log), end = PartEnd.RAN_TO_END, limitBytes = kind.limit?.limitBytes ?: 0)
+        parts +=
+            Part(
+                name = name,
+                kind = kind,
+                log = logName(log),
+                end = PartEnd.RAN_TO_END,
+                limitBytes = kind.limit?.limitBytes ?: 0,
+                peakBytes = null,
+                fitsBudget = fitsBudget,
+            )
+        write()
+    }
+
+    /** The run's game parts may take [bytes] of memory together, as [source] says. */
+    fun budget(
+        bytes: Long,
+        source: String,
+    ) {
+        memoryBudget = RunBudget(bytes = bytes, source = source)
+        write()
+    }
+
+    /** The part [name], while it runs, took at most [bytes] of memory so far. */
+    fun peak(
+        name: String,
+        bytes: Long,
+    ) {
+        val index = parts.indexOfFirst { it.name == name && it.end == PartEnd.RAN_TO_END }
+        if (index < 0) return
+        parts[index] = parts[index].copy(peakBytes = bytes)
         write()
     }
 
     /**
-     * The part [name] was lost for [cause], other than when an attempt asked for it. A part whose log
-     * was [kept] under another name, as a replaced client's, is listed under that name from now on.
+     * The part [name] was lost for [cause], other than when an attempt asked for it, having taken at most
+     * [peakBytes] of memory when that was read. A part whose log was [kept] under another name, as a
+     * replaced client's, is listed under that name from now on.
      */
     fun lost(
         name: String,
         cause: LossCause,
         kept: Path? = null,
+        peakBytes: Long? = null,
     ) {
         val index = parts.indexOfFirst { it.name == name && it.end == PartEnd.RAN_TO_END }
         if (index < 0) return
@@ -149,6 +183,7 @@ internal class RunRecords(
                 name = kept?.fileName?.toString()?.removeSuffix(".log") ?: part.name,
                 log = log,
                 end = PartEnd.createLost(cause = cause, atMillis = clock()),
+                peakBytes = peakBytes ?: part.peakBytes,
             )
         write()
     }
@@ -252,6 +287,7 @@ internal class RunRecords(
                 parts = parts.toList(),
                 // `cargo xtask e2e --demos` marks its demo run once the run is over.
                 evidenceOnly = false,
+                memoryBudget = memoryBudget,
             )
         Files.createDirectories(file.toAbsolutePath().parent)
         val partial = file.resolveSibling("${file.fileName}.partial")
@@ -285,5 +321,6 @@ internal val PartKind.limit: PartLimit?
             PartKind.OWN_PAPER -> PartLimit.OWN_PAPER
             PartKind.CLIENT -> PartLimit.CLIENT
             PartKind.DISPLAY -> PartLimit.DISPLAY
+            PartKind.POOL -> PartLimit.POOL
             else -> null
         }

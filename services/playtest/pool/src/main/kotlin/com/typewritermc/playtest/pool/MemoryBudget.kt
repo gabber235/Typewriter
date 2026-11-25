@@ -11,11 +11,12 @@ import kotlin.math.min
  * The memory the pool's parts may take together, [bytes], named by where it comes from, [source]. The
  * pool, the shared Paper and every client with its display take their kinds' limits ([PartLimit]) for
  * the whole run; the own Papers of restart attempts take what is left, as many at once as fit and at
- * most one per slot. A sum of limits that fits never overcommits the budget.
+ * most one per slot. A sum of limits that fits never overcommits the budget. While limits are only
+ * measured, the pool reports whether its parts fit and starts them either way.
  */
 internal class MemoryBudget(
     val bytes: Long,
-    private val source: String,
+    val source: String,
 ) {
     /** How many own Papers may run at once beside the pool's other parts: [clients], each with a display when [displays]. */
     fun ownPapers(

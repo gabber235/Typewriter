@@ -18,7 +18,7 @@ use crate::Context;
 use crate::skirout::base::harness::v1::test_run::Runner;
 pub use crate::skirout::base::harness::v1::test_run::{
     Artifact, ArtifactKind, Attempt, AttemptPolicy, Conclusion, Failure, LossCause, Outcome,
-    Pacing, PartEnd, PartKind, RunEnd, RunLost, TestCase, TestRun,
+    Pacing, Part, PartEnd, PartKind, RunEnd, RunLost, TestCase, TestRun,
 };
 
 /// The quarantine file, relative to the repository root.
@@ -169,6 +169,9 @@ fn lost_part(run: &TestRun, stopped: &RunLost) -> String {
         Some(PartKind::OwnPaper) => "the own Paper",
         Some(PartKind::Client) => "the client",
         Some(PartKind::Display) => "the display",
+        Some(PartKind::Pool) => "the pool",
+        Some(PartKind::StackService) => "the stack service",
+        Some(PartKind::Gradle) => "Gradle",
         _ => "the part",
     };
     let cause = match part.map(|part| &part.end) {
@@ -234,6 +237,9 @@ pub fn loss_cause(cause: &LossCause) -> String {
         LossCause::Stalled => "it stopped answering".to_owned(),
         LossCause::NeverReady => "it never became ready".to_owned(),
         LossCause::Broke(reason) => format!("it could no longer serve attempts: {reason}"),
+        LossCause::MemoryLimit => {
+            "the kernel killed it for taking more memory than its cgroup allows".to_owned()
+        }
         LossCause::Unknown(_) => "for a reason this xtask does not know".to_owned(),
     }
 }
@@ -1027,6 +1033,10 @@ mod tests {
             ),
             (LossCause::Stalled, "it stopped answering"),
             (LossCause::NeverReady, "it never became ready"),
+            (
+                LossCause::MemoryLimit,
+                "the kernel killed it for taking more memory than its cgroup allows",
+            ),
             (
                 LossCause::Broke("it could not claim gv-1".to_owned()),
                 "it could no longer serve attempts: it could not claim gv-1",

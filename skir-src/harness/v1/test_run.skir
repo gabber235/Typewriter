@@ -23,11 +23,20 @@ struct TestRun(85020001) {
   // Whether the run only records evidence of another run's cases, as a game suite's demo run records
   // clips of the cases of its verdict run: its cases are never verdicts.
   evidence_only: bool;
+  // The memory the run's game parts may take together; null for a run that starts no parts.
+  memory_budget: MemoryBudget?;
+}
+
+// How much memory a run's game parts may take together, and where that number comes from.
+struct MemoryBudget(85020002) {
+  bytes: int64;
+  // For a person to read, as "the game's cgroup" or "half the machine".
+  source: string;
 }
 
 // How a run ended. A run that could not run, or was cut short, proves less than its cases say: the
 // cases it never reached are missing from it.
-enum RunEnd(85020002) {
+enum RunEnd(85020003) {
   // It ran to the end.
   completed;
   // It stopped before it was over. Only the game pool says so: on every rewrite until the run is over,
@@ -41,20 +50,20 @@ enum RunEnd(85020002) {
 }
 
 // The run stopped because the part named `part` was lost.
-struct RunLost(85020003) {
+struct RunLost(85020004) {
   part: string;
   // The cases that were waiting and never ran, by id.
   not_run: [string];
 }
 
-enum AttemptPolicy(85020004) {
+enum AttemptPolicy(85020005) {
   // Failed cases run again until they pass, up to this many attempts in total.
   rerun_failures: int32;
   // Every case ran exactly this many times.
   exactly: int32;
 }
 
-struct TestCase(85020005) {
+struct TestCase(85020006) {
   // The test path or step name, unique within its run.
   id: string;
   // The requirement the test declares it demonstrates, for example "QUEST-1.E1".
@@ -78,7 +87,7 @@ struct TestCase(85020005) {
 }
 
 // What a runner concluded of a case's attempts and paced attempts.
-enum Conclusion(85020006) {
+enum Conclusion(85020007) {
   // Every attempt passed and every window held at one tick in every passing run.
   passed;
   // An attempt failed and a later one passed.
@@ -92,7 +101,7 @@ enum Conclusion(85020006) {
 }
 
 // What a case whose windows hold at different ticks at different paces does to the verdict.
-enum Pacing(85020007) {
+enum Pacing(85020008) {
   // It fails the case: the window depends on wall clock.
   gates;
   // It is reported and blocks nothing, while the code under test still waits on work no tick waits for.
@@ -100,7 +109,7 @@ enum Pacing(85020007) {
 }
 
 // One run of one case.
-struct Attempt(85020008) {
+struct Attempt(85020009) {
   // What this attempt observed. Quarantine and flakiness are the attempt policy's verdict.
   outcome: Outcome;
   // Where the attempt sits in the run's recording, when there is one.
@@ -127,7 +136,7 @@ struct Attempt(85020008) {
 }
 
 // How one window of an attempt ended.
-struct WindowEnd(85020009) {
+struct WindowEnd(85020010) {
   // The requirement line that opened it, as `File.kt:42`.
   at: string;
   // How many ticks it lasted at most.
@@ -141,7 +150,7 @@ struct WindowEnd(85020009) {
 }
 
 // One class an attempt ran code of, with the lines of its source file that ran.
-struct CoveredClass(85020010) {
+struct CoveredClass(85020011) {
   // The JVM name, with slashes: "com/typewritermc/playtest/plugin/Probes".
   name: string;
   // The source file by its package path: "com/typewritermc/playtest/plugin/Probes.java".
@@ -151,7 +160,7 @@ struct CoveredClass(85020010) {
 }
 
 // One thing a scenario did or checked, in the words a reader would use.
-struct Step(85020011) {
+struct Step(85020012) {
   // Unix milliseconds, the clock of the attempt's span.
   at_millis: int64;
   // The user signed in when the step started.
@@ -162,14 +171,14 @@ struct Step(85020011) {
 }
 
 // One tap, in pixels of the recorded screen.
-struct Tap(85020012) {
+struct Tap(85020013) {
   // Unix milliseconds, the clock of the attempt's span.
   at_millis: int64;
   x: int32;
   y: int32;
 }
 
-enum Runner(85020013) {
+enum Runner(85020014) {
   components;
   schema;
   panel;
@@ -181,26 +190,26 @@ enum Runner(85020013) {
   game;
 }
 
-enum Demonstrates(85020014) {
+enum Demonstrates(85020015) {
   happy_path;
   failure;
   edge_case;
 }
 
-enum Outcome(85020015) {
+enum Outcome(85020016) {
   passed;
   failed: Failure;
   // A part the attempt depended on was lost while it ran: the attempt proves nothing either way.
   interrupted: Interruption;
 }
 
-struct Interruption(85020016) {
+struct Interruption(85020017) {
   // The lost part, by its name in the run's `parts`.
   part: string;
 }
 
 // One process a run started, such as a Paper or a Minecraft client.
-struct Part(85020017) {
+struct Part(85020018) {
   // Unique within its run: "paper" for the shared Paper, "paper-<attempt>" for an attempt's own,
   // "client-<player>" for a client (with "-<n>" for the n-th replacement).
   name: string;
@@ -208,11 +217,17 @@ struct Part(85020017) {
   // Its log, relative to the run's `logs` folder; empty when it keeps none.
   log: string;
   end: PartEnd;
-  // The memory it may take, in bytes, fixed for its kind; 0 for a part without a limit of its own.
+  // The memory it may take, in bytes, fixed for its kind; 0 for a part without a planned limit.
   limit_bytes: int64;
+  // The most memory it took, in bytes, as the kernel counted it in a cgroup of its own; null where the
+  // run measured none.
+  peak_bytes: int64?;
+  // Whether its limit fit in the run's memory budget beside the limits of the parts that ran when it
+  // started; true for a part without a limit.
+  fits_budget: bool;
 }
 
-enum PartKind(85020018) {
+enum PartKind(85020019) {
   // The Paper every attempt that does not restart Paper shares.
   shared_paper;
   // The Paper of an attempt that restarts Paper, its own.
@@ -221,23 +236,29 @@ enum PartKind(85020018) {
   client;
   // The virtual display a client draws on (Linux).
   display;
+  // The game pool, which starts and watches the other game parts.
+  pool;
+  // A service of the stack the run started, such as the Realm host.
+  stack_service;
+  // The Gradle build that ran the suite, with its daemon and test JVMs.
+  gradle;
 }
 
-enum PartEnd(85020019) {
+enum PartEnd(85020020) {
   // It ran until the run stopped it.
   ran_to_end;
   // It ended before the run stopped it, other than when an attempt asked for it.
   lost: PartLoss;
 }
 
-struct PartLoss(85020020) {
+struct PartLoss(85020021) {
   cause: LossCause;
   // Unix milliseconds, when the run noticed.
   at_millis: int64;
 }
 
 // Why a part was lost, as far as the run could tell.
-enum LossCause(85020021) {
+enum LossCause(85020022) {
   // Its process exited with this status; a status over 128 means the signal `status - 128` ended it.
   exited: int32;
   // It closed its connection to the pool, or left Paper, for this reason.
@@ -248,20 +269,22 @@ enum LossCause(85020021) {
   never_ready;
   // It still ran but could no longer do what attempts need of it, for this reason.
   broke: string;
+  // The kernel killed it for taking more memory than its limit.
+  memory_limit;
 }
 
-struct Failure(85020022) {
+struct Failure(85020023) {
   message: string;
   // The first failing step or frame, when the runner knows it.
   first_broken: string?;
 }
 
-struct Span(85020023) {
+struct Span(85020024) {
   start_millis: int64;
   end_millis: int64;
 }
 
-enum ArtifactKind(85020024) {
+enum ArtifactKind(85020025) {
   clip;
   screenshot;
   log_excerpt;
@@ -272,7 +295,7 @@ enum ArtifactKind(85020024) {
   golden;
 }
 
-struct Artifact(85020025) {
+struct Artifact(85020026) {
   kind: ArtifactKind;
   path: string;
 }

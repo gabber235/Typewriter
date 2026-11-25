@@ -189,6 +189,10 @@ impl Stack {
     fn start(&mut self, service: &dyn DynService, ctx: &StackContext, built: &Built) -> Result<()> {
         let id = service.id().0;
         let mut command = service.command(ctx, built)?;
+        // A game run measures each service's memory in a leaf of its own.
+        if let Some(tree) = crate::cgroup::installed() {
+            tree.stack_service(id)?.place(&mut command)?;
+        }
         let log_path = self.logs.join(format!("{id}.log"));
         let log = File::create(&log_path)
             .with_context(|| format!("cannot create {}", log_path.display()))?;

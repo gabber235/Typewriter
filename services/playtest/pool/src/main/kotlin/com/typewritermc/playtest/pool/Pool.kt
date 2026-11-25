@@ -60,10 +60,9 @@ fun main() {
         FileChannel.open(settings.poolLog, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
         val pool = Pool(settings, server)
         onEndOf(System.`in`) { pool.stop() }
-        // The build's test JVMs find no pool of their run, and point at this log.
+        // Limits are only measured for now: a pool over its budget still runs, and its log says so.
         settings.memoryBudget.overBudget(settings.clients, InputPath.here() == InputPath.XTEST)?.let { reason ->
-            pool.couldNotRun(reason)
-            exitProcess(1)
+            System.err.println("Over the memory budget, measured only: $reason")
         }
         PoolFile.of(server.localPort, settings.run).write(poolFile)
         try {
@@ -295,9 +294,7 @@ internal class Pool(
             Client(Player(name = "gv-$it", uuid = UUID.nameUUIDFromBytes("OfflinePlayer:gv-$it".toByteArray()).toString()))
         }
 
-    // As many own Papers run at once as fit in the pool's memory beside its other parts.
-    private val ownPapers = settings.memoryBudget.ownPapers(settings.clients, InputPath.here() == InputPath.XTEST)
-    private val claims = Claims<Peer, Player>(clients.map { it.player }, ownPapers)
+    private val claims = Claims<Peer, Player>(clients.map { it.player })
 
     /** Sessions the pool refused as they joined: what they still send is dropped until they leave. */
     private val refused = mutableSetOf<Peer>()
@@ -327,7 +324,7 @@ internal class Pool(
             slot,
             ->
             game.ownFolder(name, slot)
-        }, remove = { game.removeOwn(it) }, ownSlots = ownPapers)
+        }, remove = { game.removeOwn(it) })
     private val aot = AotCache(settings.aotDir)
 
     // Every restart Paper of the pool boots the same JDK, class path, plugins and flags, its heap share included.
@@ -342,6 +339,11 @@ internal class Pool(
         )
     }
     private var failure: String? = null
+
+    // The leaf of the game's cgroup each part runs in, the pool's own first, where the run's tree gives the pool one.
+    private val leaves = settings.cgroup?.let(::PartLeaves)
+    private val leafOf = mutableMapOf<Part, PartLeaves.Leaf>()
+    private val ownLeaf = leaves?.place("pool", ProcessHandle.current().pid())
     private var nextAttempt = 0L
     private var nextTogether = 0L
 
@@ -368,6 +370,8 @@ internal class Pool(
             } catch (cannot: IllegalStateException) {
                 throw couldNotStart(cannot)
             }
+        runs.budget(settings.memoryBudget.bytes, settings.memoryBudget.source)
+        runs.started("pool", PartKind.POOL, settings.poolLog, fitsBudget = PartLimit.POOL.limitBytes <= settings.memoryBudget.bytes)
         shared = Server(game.paper, SharedPaper(game.paper.name, clients.map { it.player.name }.toSet()))
         shared.part = game.paperPart
         shared.boots = 1
@@ -385,6 +389,7 @@ internal class Pool(
                 val now = System.currentTimeMillis()
                 attempts.all.filter { attempt -> attempt.deadline?.let { it <= now } == true }.forEach(::expire)
             }
+            measured()
             // The build's tests all ended, unless the build died: a session still connected leaves the run cut short.
             if (sessions.isEmpty()) runs.finished()
             server.close()
@@ -1491,8 +1496,24 @@ internal class Pool(
     /** The attempt [id], which the rules of its Paper name only while it runs. */
     private fun running(id: Long): Attempt = checkNotNull(attempts[id]) { "attempt $id no longer runs" }
 
-    /** A game part ended: a Paper's rules say what follows, a client's is lost and replaced, a display's ends the game. A replaced client's old part ends unheard. */
+    /**
+     * A game part ended: one the kernel killed for memory stops the run, since a part serves many attempts and
+     * its growth is no one attempt's fault; otherwise a Paper's rules say what follows, a client's is lost and
+     * replaced, a display's ends the game. A replaced client's old part ends unheard.
+     */
     private fun exited(part: Part) {
+        val leaf = leafOf.remove(part)
+        val killed = leaf?.killedForMemory() == true
+        // A replaced client's entry already carries the peak its loss read.
+        if (part.player == null || clientNamed(part.player)?.part === part) leaf?.peakBytes()?.let { runs.peak(partName(part), it) }
+        leaf?.remove()
+        if (killed) {
+            return fail(
+                "${part.name} was killed for taking more memory than its limit; see ${part.log}",
+                part,
+                LossCause.MEMORY_LIMIT,
+            )
+        }
         papers.all.firstOrNull { it.part === part }?.let { return paperExited(it, part) }
         val code = part.process.exitValue()
         val reason = "${part.name} exited with code $code; see ${part.log}"
@@ -1526,7 +1547,7 @@ internal class Pool(
         moveTo(client, shared)
         claims.holdOut(client.player, Out.LOST_CLIENT)
         val replaced = game.replaceClient(name)
-        client.part?.let { runs.lost(partName(it), lossCause, kept = replaced.lostLog) }
+        client.part?.let { runs.lost(partName(it), lossCause, kept = replaced.lostLog, peakBytes = leafOf[it]?.peakBytes()) }
         client.part = replaced.replacement.also(::watch)
         val loss = ClientLoss(kind = kind, detail = cause, log = replaced.lostLog.toString())
         System.err.println("The client of $name is lost: $cause; see ${loss.log}. A new one starts.")
@@ -1571,10 +1592,21 @@ internal class Pool(
         }
     }
 
-    /** Lists [part] in the run's file and reports into the loop once its process ends. */
+    /**
+     * Lists [part] in the run's file, with whether its limit fit in the budget beside the parts that run now,
+     * moves it into a leaf of its own, and reports into the loop once its process ends.
+     */
     private fun watch(part: Part) {
-        runs.started(partName(part), partKind(part), part.log)
+        val running = PartLimit.POOL.limitBytes + game.parts.sumOf { partKind(it).limit?.limitBytes ?: 0 }
+        runs.started(partName(part), partKind(part), part.log, fitsBudget = running <= settings.memoryBudget.bytes)
+        leaves?.let { leafOf[part] = it.place("${partName(part)}-${part.process.pid()}", part.process.pid()) }
         thread(name = "playtest-pool-${part.name}", isDaemon = true) { part.process.waitFor().also { events.put(Event.Exited(part)) } }
+    }
+
+    /** Writes the most memory each part that still runs took, the pool's own included, into the run's file. */
+    private fun measured() {
+        game.parts.forEach { part -> leafOf[part]?.peakBytes()?.let { runs.peak(partName(part), it) } }
+        ownLeaf?.peakBytes()?.let { runs.peak("pool", it) }
     }
 
     private fun clientNamed(name: String): Client? = clients.firstOrNull { it.player.name == name }
