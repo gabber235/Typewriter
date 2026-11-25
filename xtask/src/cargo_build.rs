@@ -1,6 +1,10 @@
 //! Cargo builds reused while everything Cargo would consult is unchanged. Cargo itself judges
 //! local crates by file times, so a fresh checkout recompiles every one of them even when a cached
-//! target holds what they would produce. A stamp beside the artifacts records:
+//! target holds what they would produce. Cargo's own content based check (`-Z checksum-freshness`)
+//! is refused on the stable toolchain the repository pins (1.100), so this module decides instead.
+//! Once checksum freshness is stable, delete this read set: keep only the cached target and the
+//! removal of each artifact before Cargo runs, and let Cargo decide. A stamp beside the artifacts
+//! records:
 //!
 //! - the command, with the variables it sets, and the toolchain (`rustc -vV`);
 //! - Cargo's whole configuration surface: every inherited `CARGO*` and `RUST*` variable but those
