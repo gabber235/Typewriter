@@ -714,8 +714,8 @@ mod tests {
     use super::*;
     use crate::stack::client_configuration::ClientConfiguration;
     use crate::test_support::{
-        MEETS_ANOTHER, TempRoot, build_names, fake_service, finished_builds, ids,
-        record_build_start, refusal, stack_context, started_builds,
+        GRADLE_MEETS_ANOTHER, MEETS_ANOTHER, TempRoot, build_names, fake_gradlew, fake_service,
+        finished_builds, ids, record_build_start, refusal, stack_context, started_builds,
     };
 
     mod roles {
@@ -922,6 +922,46 @@ mod tests {
             "the stack's builds failed; components: wasm32 failed"
         );
         assert_eq!(finished_builds(&root), 1);
+    }
+
+    /// A build of its own that waits for another build to start, beside Gradle.
+    static CARGO_BESIDE_GRADLE: Build<PathBuf> = Build {
+        name: "stack binary",
+        how: MEETS_ANOTHER,
+    };
+
+    #[test]
+    fn the_gradle_run_runs_beside_the_builds_of_their_own() {
+        let root = TempRoot::new();
+        fake_gradlew(&root, GRADLE_MEETS_ANOTHER);
+        let ctx = stack_context(&root);
+        let built = ctx.build(&[&CARGO_BESIDE_GRADLE, &REALM_HOST]).unwrap();
+        assert_eq!(finished_builds(&root), 2);
+        assert_eq!(built.get(&REALM_HOST).unwrap(), &root.path("loader"));
+    }
+
+    #[test]
+    fn a_failed_gradle_run_is_named_once_the_other_builds_have_finished() {
+        let root = TempRoot::new();
+        fake_gradlew(&root, "echo >> ../builds-started\nexit 1\n");
+        let ctx = stack_context(&root);
+        let error = refusal(ctx.build(&[&CARGO_BESIDE_GRADLE, &REALM_HOST]));
+        assert!(
+            error.starts_with("the stack's builds failed; Gradle: cannot build realm host: "),
+            "{error}"
+        );
+        assert_eq!(finished_builds(&root), 1);
+    }
+
+    #[test]
+    fn a_gradle_run_that_leaves_no_artifact_is_refused() {
+        let root = TempRoot::new();
+        fake_gradlew(&root, "exit 0\n");
+        let ctx = stack_context(&root);
+        assert_eq!(
+            refusal(ctx.build(&[&REALM_HOST])),
+            format!("realm host left no {}", root.path("loader").display())
+        );
     }
 
     #[test]

@@ -639,6 +639,34 @@ pub const MEETS_ANOTHER: crate::stack::spec::How<std::path::PathBuf> =
         Ok(finished)
     });
 
+/// A Gradle run that, like [`MEETS_ANOTHER`], records that it started, waits up to ten seconds
+/// for another build of the same stack to start, takes a moment more, records that it finished,
+/// and leaves `loader` in the root.
+pub const GRADLE_MEETS_ANOTHER: &str = r#"
+echo >> ../builds-started
+waited=0
+while [ "$(wc -l < ../builds-started | tr -d ' ')" -lt 2 ]; do
+    waited=$((waited + 1))
+    [ "$waited" -gt 1000 ] && echo "the other build never started while Gradle ran" >&2 && exit 3
+    sleep 0.01
+done
+sleep 0.2
+echo >> ../builds-finished
+touch ../loader
+"#;
+
+/// Writes `services/gradlew` into `root`: a shell script that runs `script` in `services`, as the
+/// stack's one Gradle run.
+pub fn fake_gradlew(root: &TempRoot, script: &str) {
+    use std::os::unix::fs::PermissionsExt as _;
+    root.write("services/gradlew", &format!("#!/bin/sh\n{script}"));
+    fs::set_permissions(
+        root.path("services/gradlew"),
+        fs::Permissions::from_mode(0o755),
+    )
+    .unwrap();
+}
+
 /// Records in the stack's root that a build started, as [`MEETS_ANOTHER`] waits for.
 pub fn record_build_start(ctx: &Context) -> Result<()> {
     append_line(&ctx.root.join("builds-started"))
