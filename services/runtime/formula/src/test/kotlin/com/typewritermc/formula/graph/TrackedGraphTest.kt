@@ -555,4 +555,28 @@ val TrackedGraphTest by testSuite {
         base.merge(forked) shouldBe false
         base.read(onA) shouldBe 1
     }
+
+    test("a fork is current only while its base stays at the revision it started from and is not reset") {
+        val base = TrackedGraph(cells("a" to 1))
+        val moved = base.forkWith("a" to 2)
+        base.isCurrentFork(moved) shouldBe true
+        base.change("b" to 1)
+        base.isCurrentFork(moved) shouldBe false
+        val reset = base.forkWith("a" to 2)
+        base.reset(cells("a" to 1))
+        base.isCurrentFork(reset) shouldBe false
+        TrackedGraph(cells("a" to 1)).isCurrentFork(base.forkWith("a" to 2)) shouldBe false
+    }
+
+    test("a fork apart reuses nothing of its base and is never merged") {
+        val bench = QueryBench()
+        val onA = bench.query("onA") { read(Cell("a")) }
+        val base = TrackedGraph(cells("a" to 1))
+        base.read(onA)
+        val apart = base.forkApart(cells("a" to 1))
+        apart.read(onA) shouldBe 1
+        bench.runs(onA) shouldBe 2
+        base.isCurrentFork(apart) shouldBe true
+        base.merge(apart) shouldBe false
+    }
 }

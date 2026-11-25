@@ -186,12 +186,34 @@ class TrackedGraph<E> private constructor(
         environment: E,
         candidates: Set<InputKey<E, *>>,
     ): TrackedGraph<E> {
-        val forked =
-            synchronized(maps) {
-                TrackedGraph(state, limits, GraphListener.NONE, ForkBase(this, state.revision, resets))
-            }
+        val forked = synchronized(maps) { TrackedGraph(state, limits, GraphListener.NONE, ForkBase(this, state.revision, resets, true)) }
         forked.advance(environment, candidates)
         return forked
+    }
+
+    /**
+     * A fork at [environment] that trusts nothing of this graph, for an environment this graph's memos say nothing
+     * about, such as another catalog. Like any fork it starts from this graph's current revision, so [isCurrentFork]
+     * says when it is behind; it can never be [merge]d.
+     */
+    fun forkApart(environment: E): TrackedGraph<E> =
+        synchronized(maps) {
+            TrackedGraph(
+                Snapshot(state.revision + 1, environment),
+                limits,
+                GraphListener.NONE,
+                ForkBase(this, state.revision, resets, false),
+            )
+        }
+
+    /**
+     * Whether [fork] was forked from this graph at its current revision, with no reset since. A fork stays right after
+     * this graph moves on, but recomputes what this graph learned since; so a caller that keeps a fork forks again once
+     * this is false, and only a fork for which this is true can be [merge]d.
+     */
+    fun isCurrentFork(fork: TrackedGraph<E>): Boolean {
+        val from = fork.base ?: return false
+        return from.graph === this && synchronized(maps) { state.revision == from.revision && resets == from.resets }
     }
 
     /**
@@ -202,7 +224,7 @@ class TrackedGraph<E> private constructor(
      */
     fun merge(fork: TrackedGraph<E>): Boolean {
         val from = fork.base ?: return false
-        if (from.graph !== this) return false
+        if (from.graph !== this || !from.shares) return false
         val (computed, evicted) =
             synchronized(maps) {
                 if (state.revision != from.revision || resets != from.resets) return false
@@ -394,20 +416,24 @@ class TrackedGraph<E> private constructor(
      * from its last compute to its last verification, so the fork trusts one computed at or before [revision] as verified
      * at [revision] at most, and nothing the base computed after: its reads may differ from the fork's. An input the base
      * changed after [revision] changed at [revision] at the latest, so the fork assumes [revision], which can only cost a
-     * recompute. After a reset of the base nothing of it is known, and the same assumptions keep the fork right.
+     * recompute. After a reset of the base nothing of it is known, and the same assumptions keep the fork right; a fork
+     * that [shares] nothing makes them from the start.
      */
     private class ForkBase<E>(
         val graph: TrackedGraph<E>,
         val revision: Long,
         val resets: Long,
+        val shares: Boolean,
     ) {
         fun trusted(key: GraphKey<*>): Memo? {
+            if (!shares) return null
             val memo = graph.memoOf(key) ?: return null
             if (memo.computedAt > revision || graph.resets != resets) return null
             return if (memo.verifiedAt > revision) memo.copy(verifiedAt = revision) else memo
         }
 
         fun changedAt(key: InputKey<E, *>): Long {
+            if (!shares) return revision
             val at = graph.changedAtOf(key)
             return if (graph.resets != resets) revision else minOf(at, revision)
         }

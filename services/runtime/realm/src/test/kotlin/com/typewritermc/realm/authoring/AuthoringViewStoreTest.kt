@@ -8,12 +8,16 @@ import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
+import com.typewritermc.formula.graph.GraphWork
+import com.typewritermc.realm.checking.nameFinding
 import com.typewritermc.realm.checking.rename
+import com.typewritermc.realm.checking.rerunCatalog
 import com.typewritermc.realm.edit.MemoryAuthoringStorage
 import com.typewritermc.realm.operation.operationObservation
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.openCatalogLeases
+import com.typewritermc.realm.testing.settle
 import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.types.actualType
 import com.typewritermc.types.integer
@@ -25,9 +29,9 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.longs.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import kotlinx.coroutines.runBlocking
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -36,6 +40,7 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 import java.math.BigInteger
 import java.util.concurrent.CountDownLatch
@@ -193,16 +198,23 @@ val AuthoringViewStoreTest by testSuite {
             (numbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "staged"))
         }
     }
-    test("an install detaches the fork of the view it replaces, so a later fork of that view starts from the live graph") {
-        val id = ResourceId(value = "page")
-        RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), mapOf(id to record(name = "Quest"))).use { realm ->
-            realm.views.capture().use { replaced ->
-                val before = realm.views.forkAt(replaced.root)
-                realm.commit(rename(id, "Renamed")).shouldBeCommitted()
-                replaced.root.fork
-                    .get()
-                    .shouldBeNull()
-                realm.views.forkAt(replaced.root) shouldNotBeSameInstanceAs before
+    test("a capture evaluation of a view retained across installs computes nothing the live graph already verified") {
+        val first = ResourceId(value = "first")
+        RealmFixture.of(rerunCatalog(), mapOf(first to record(name = "bad"))).use { realm ->
+            realm.checks
+            realm.settle()
+            realm.views.capture().use { retained ->
+                realm.commitChecked(rename(first, "valid"))
+                // Judging a release of the retained view answers a name on a fork of the live graph as it is now.
+                nameFinding(retained.root.catalog.generation, ValueLocation.of(first)).judgedForRelease(retained.root, GraphWork())
+                // Back to what the retained view holds: the live graph checks it again, newer than that fork.
+                realm.commitChecked(rename(first, "bad"))
+
+                realm.checks.evaluateCapture(retained.root)
+
+                val work = realm.telemetry.counts("typewriter.realm.graph_work", listOf("realm.operation", "graph.work"))
+                work[listOf("capture.evaluation", "verified")].shouldNotBeNull() shouldBeGreaterThan 0
+                work[listOf("capture.evaluation", "computed")] shouldBe 0L
             }
         }
     }

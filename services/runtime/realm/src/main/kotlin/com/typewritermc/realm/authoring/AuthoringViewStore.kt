@@ -91,10 +91,10 @@ data class AuthoringView internal constructor(
         CapturedAuthoringValues(resources, { at, name -> scopes.nameAt(this, at, name, work) }) { id -> judged(id).projections }
 
     /**
-     * The one graph forked at this view, made on first need: names judged here, binding over it and capture evaluation
-     * share it. Installing this view detaches it and merges it into the live graph so that work is not done again;
-     * installing the view after this one detaches it as well. Either way a later fork of the view starts from the live
-     * graph.
+     * The graph forked for this view from the live graph, made on first need: names judged here, binding over it and
+     * capture evaluation share it. It is valid only at the revision of the live graph it started from: once the live
+     * graph moves on it would recompute what the live graph learned since, so the next need forks again. Installing
+     * this view merges a valid one into the live graph, so that work is not done again.
      */
     internal val fork = AtomicReference<AuthoringGraph?>()
 }
@@ -310,9 +310,9 @@ interface AuthoringViewStore : AutoCloseable {
     fun pin(work: GraphWork): PinnedReads
 
     /**
-     * The graph that reads exactly [view], starting from the live graph's results where it can: one per view until
-     * [view] is installed, which merges it into the live graph and detaches it. Forking copies nothing, so it costs no graph
-     * work; reads of the fork count theirs on the work they are pinned with.
+     * The graph that reads exactly [view], starting from the live graph's results where it can: one per view while the
+     * live graph stays at the revision it forked from, and a new one once the live graph moved on. Forking copies
+     * nothing, so it costs no graph work; reads of the fork count theirs on the work they are pinned with.
      */
     fun forkAt(view: AuthoringView): AuthoringGraph
 
@@ -400,11 +400,14 @@ class InMemoryAuthoringViewStore(
 
     override fun forkAt(view: AuthoringView): AuthoringGraph =
         synchronized(lock) {
-            view.fork.get()?.let { return@synchronized it }
+            view.fork
+                .get()
+                ?.takeIf(graph::isCurrentFork)
+                ?.let { return@synchronized it }
             val environment = RealmEnvironment(view, services)
             if (view.catalog.generation != current.root.catalog.generation) {
                 // Another generation shares nothing with the live graph.
-                TrackedGraph(environment)
+                graph.forkApart(environment)
             } else {
                 graph.fork(environment, view.changesFrom(current.root))
             }.also(view.fork::set)
@@ -435,10 +438,7 @@ class InMemoryAuthoringViewStore(
             before.current = false
             prune(before)
             val environment = RealmEnvironment(view, services)
-            // Installed, the view is read through the live graph, and the view it replaced no longer is; a fork either
-            // kept past this point would start from a revision the live graph left behind and recompute what it has.
-            before.root.fork.set(null)
-            val fork = view.fork.getAndSet(null)
+            val fork = view.fork.get()
             if (view.catalog.generation != before.root.catalog.generation) {
                 graph.reset(environment)
             } else if (fork?.let(graph::merge) != true) {
