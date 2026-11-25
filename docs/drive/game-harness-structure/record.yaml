@@ -157,6 +157,14 @@ decided:
       the pool fills in as each Paper boots; check builds gameTestBuild with no stack
 
 open:
+  - id: limits-do-not-fit-the-runner
+    ask: >-
+      the approved starting limits (shared Paper 4.5 GiB, own Paper 1.6, client 1.9, display 0.25, pool
+      0.5) hold 13.6 GiB for 4 clients before any own Paper, and a 16 GB runner has 15.0 GiB in all,
+      before the stack and Gradle; hard admission would refuse every CI game run. Lower the starting
+      limits, run fewer clients on CI, or admit over the budget until the first enforced run measures
+      peaks? Slice 1 (limits, heap from the limit, admission) waits on local branch
+      feat/part-memory-limits, off the PR branch
   - id: blocked-pushes
     ask: >-
       the probe push and the ci.yml edit were denied by the permission classifier; allow them, or
@@ -164,4 +172,4 @@ open:
 
 slices: []
 
-next: change 4, hard memory limits per part and pool admission by memory
+next: change 4 waits on limits-do-not-fit-the-runner; then the pool's cgroup leaves, the xtask run tree (stack, gradle, game) and the CI delegation step
