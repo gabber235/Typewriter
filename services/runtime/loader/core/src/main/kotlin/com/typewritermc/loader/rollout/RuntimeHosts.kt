@@ -6,6 +6,7 @@ import com.typewritermc.loader.api.artifact.PublicationBlobRetention
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
 import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.api.work.WorkRuntime
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.loader.work.counted
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,8 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /** The host as the runtimes it stages see it: each runtime gets its own view, whose work counts as that runtime's. */
 interface RuntimeHosts {
-    /** The host's work in flight, every runtime's included. */
-    val work: InFlightWork
+    /** The host's work in flight, every runtime's included, and how long a drain of it waits. */
+    val work: HostWork
 
     /** The host as [runtime] sees it, until the view closes once the runtime closed. */
     fun open(runtime: WorkRuntime): RuntimeHost
@@ -33,7 +34,7 @@ interface RuntimeHost :
  * artifacts' operations in [work] as its runtime's, and follows every session [follow] hands it until it closes.
  */
 internal class SessionRuntimeHosts(
-    override val work: InFlightWork,
+    override val work: HostWork,
     private val sharedArtifacts: SharedArtifactAccess,
     private val openTelemetry: OpenTelemetry,
     private val publicationRetention: PublicationBlobRetention?,
@@ -61,7 +62,7 @@ internal class SessionRuntimeHosts(
     private inner class View(
         override val runtime: WorkRuntime,
     ) : RuntimeHost {
-        override val work: InFlightWork = this@SessionRuntimeHosts.work.of(runtime)
+        override val work: InFlightWork = this@SessionRuntimeHosts.work.inFlight.of(runtime)
         private val session = MutableStateFlow<HostedMessagingSession?>(null)
         override val messaging: StateFlow<HostedMessagingSession?> = session.asStateFlow()
         override val sharedArtifacts: SharedArtifactAccess = this@SessionRuntimeHosts.sharedArtifacts.counted(work)

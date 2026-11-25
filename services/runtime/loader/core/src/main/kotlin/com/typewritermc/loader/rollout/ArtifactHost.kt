@@ -25,8 +25,7 @@ import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.RealmLoaderIntent
 import com.typewritermc.loader.deployment.ResolutionResult
 import com.typewritermc.loader.deployment.resolveDeployment
-import com.typewritermc.loader.work.drain
-import com.typewritermc.loader.work.exportTo
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
@@ -102,15 +101,14 @@ fun interface ArtifactHostAssignmentSource {
  * Assignment and session replacement share a lifecycle mutex. Assignment changes rotate authorization; selected
  * transient registrar states retain a valid hosted session. Background jobs and assignment resources are released
  * through [stop]. While started, the host exports its [work] in flight as a metric; it drains that work for at most
- * [workDrain] before it closes its runtimes, as each rollout does before it activates a candidate.
+ * its bound before it closes its runtimes, as each rollout does for the runtimes it replaces.
  */
 class ArtifactHost(
     private val serviceId: ServiceId,
     private val workDirectory: Path,
     private val service: LoaderService,
     private val assignments: ArtifactHostAssignmentSource,
-    private val work: InFlightWork,
-    private val workDrain: Duration,
+    private val work: HostWork,
     private val scope: CoroutineScope,
 ) {
     private val artifactsRoot = workDirectory.resolve("artifacts")
@@ -120,22 +118,7 @@ class ArtifactHost(
     private val lifecycle = Mutex()
     private var latestSession: HostedMessagingSession? = null
     private val execution =
-        HostExecutionOwner { assignment ->
-            AssignmentRuntime(
-                assignment,
-                serviceId,
-                workDirectory,
-                artifactsRoot,
-                service.openTelemetry,
-                service.telemetry,
-                localBlobs,
-                candidates,
-                if (RuntimePlacement.REALM in assignment.roles) service.sharedArtifacts(assignment.realmId.value) else null,
-                work,
-                workDrain,
-                scope,
-            )
-        }
+        HostExecutionOwner { assignment -> AssignmentRuntime(assignment) }
     private val desiredExecution = MutableStateFlow<DesiredHostExecution?>(null)
     private val executionReporter = BackendHostExecutionReporter()
     private var reconciliationJob: Job? = null
@@ -263,7 +246,7 @@ class ArtifactHost(
         reconciliationJob?.cancelAndJoin()
         sessionJob?.cancelAndJoin()
         lifecycle.withLock {
-            work.drain(workDrain, "shutdown", service.telemetry)
+            work.drain("shutdown", service.telemetry)
             execution.close()
             releasePendingAuthorization()
             latestSession = null
@@ -277,214 +260,208 @@ class ArtifactHost(
         workMetric = null
         service.stop().requireSuccess()
     }
+
+    /** What this host runs for one [assignment], from the host's own resources. */
+    private inner class AssignmentRuntime(
+        override val assignment: ArtifactHostAssignment,
+    ) : HostAssignmentRuntime {
+        private val telemetry = service.telemetry
+        private val localShared =
+            if (RuntimePlacement.REALM in assignment.roles) service.sharedArtifacts(assignment.realmId.value) else null
+
+        @Volatile
+        override var status: ParticipantStatus? = null
+            private set
+
+        private val publicationRetention =
+            if (RuntimePlacement.REALM in assignment.roles) {
+                localBlobs.publicationRetention(assignment.realmId.value)
+            } else {
+                null
+            }
+        private val mutableMessaging = MutableStateFlow<HostedMessagingSession?>(null)
+        private val sharedArtifacts = localShared ?: ReconnectingSharedArtifactAccess(assignment.realmId.value, mutableMessaging)
+
+        /** The host as each staged runtime sees it, following the current session. */
+        private val runtimeHosts = SessionRuntimeHosts(work, sharedArtifacts, service.openTelemetry, publicationRetention)
+        private val projections = BlobProjectionRepository(sharedArtifacts)
+        private val participant =
+            HostRolloutParticipant(
+                assignment.realmId,
+                assignment::engineIdOf,
+                serviceId,
+                workDirectory,
+                runtimeHosts,
+                projections,
+                VerifiedArtifactCache(sharedArtifacts, localBlobs),
+                { changed -> status = changed },
+                scope,
+                telemetry = telemetry,
+            )
+        private val rolloutState =
+            if (RuntimePlacement.REALM in assignment.roles) FileRolloutStateRepository(assignment.realmId, artifactsRoot) else null
+        private var router: CommunicatorRouter? = null
+        private var coordinator: Job? = null
+        private val maintenance: Job? =
+            localShared?.let {
+                scope.launch {
+                    while (true) {
+                        maintainArtifacts()
+                        delay(1.hours)
+                    }
+                }
+            }
+
+        override suspend fun replaceSession(session: HostedMessagingSession?) {
+            if (mutableMessaging.value?.id == session?.id && (session != null || router == null)) return
+            coordinator?.cancelAndJoin()
+            coordinator = null
+            router?.stop()?.requireSuccess("replace")
+            router = null
+            mutableMessaging.value = null
+            runtimeHosts.follow(null)
+            router = session?.let { createRouter(it) }
+            router?.start()?.requireSuccess("start")
+            mutableMessaging.value = session
+            runtimeHosts.follow(session)
+            coordinator =
+                session?.takeIf { rolloutState != null }?.let { current ->
+                    scope.launch { coordinateDeployments(current, requireNotNull(rolloutState)) }
+                }
+        }
+
+        private fun createRouter(session: HostedMessagingSession): CommunicatorRouter {
+            val artifactAddress = session.realmScope()
+            val routes =
+                communicatorRoutes {
+                    RolloutHostRoutes(
+                        presence = {
+                            RealmHostPresence(
+                                serviceId = serviceId.value,
+                                hostApi = HOST_API_VERSION,
+                                assignedRoles = assignment.roles.map { it.toSkir() },
+                                activeProjection = participant.activeProjection,
+                            )
+                        },
+                        participant = participant,
+                    ).register(this, artifactAddress)
+                    if (RuntimePlacement.REALM in assignment.roles) {
+                        StableRealmArtifactRoutes(sharedArtifacts).register(this, artifactAddress)
+                    }
+                }
+            return session.communicator.createRouter(routes, scope)
+        }
+
+        private suspend fun coordinateDeployments(
+            session: HostedMessagingSession,
+            state: FileRolloutStateRepository,
+        ) {
+            val primaryEngine = requireNotNull(assignment.primaryEngine)
+            val intent = requireNotNull(assignment.intent)
+            val messenger = CommunicatorRolloutMessenger(session.realmScope(), session.communicator)
+            while (true) {
+                val selection = messenger.discover(emptySet(), 5.seconds).deploymentSelectionOrNull()
+                if (selection == null) {
+                    delay(1.seconds)
+                    continue
+                }
+                val resolution =
+                    telemetry.artifactSpan(
+                        "artifact.deployment.resolve",
+                        "artifact-deployment-resolve-failed",
+                    ) { span ->
+                        span?.annotate {
+                            attribute("realm.id", assignment.realmId.value)
+                            attribute("service.id", serviceId.value)
+                        }
+                        resolveDeployment(CandidateIndex(candidates.candidates()), selection, primaryEngine, intent)
+                    }
+                if (resolution is ResolutionResult.Resolved) {
+                    val digest = DeploymentContentCodec.digest(resolution.content)
+                    val current = state.committed()
+                    val rollout =
+                        CoordinatedRollout(
+                            assignment.realmId,
+                            selection,
+                            resolution.manifests,
+                            messenger,
+                            projections,
+                            state,
+                            telemetry = telemetry,
+                        )
+                    if (current?.snapshot?.contentDigest != digest) {
+                        val snapshot =
+                            DeploymentSnapshot(
+                                DeploymentGeneration((current?.snapshot?.generation?.value ?: 0L) + 1L),
+                                digest,
+                                resolution.content,
+                            )
+                        runRollout { rollout.rollOut(snapshot) }
+                    } else {
+                        runRollout { rollout.reconcileCommitted(current) }
+                    }
+                }
+                delay(1.seconds)
+            }
+        }
+
+        private suspend fun runRollout(block: suspend () -> Unit) {
+            try {
+                block()
+            } catch (failure: Throwable) {
+                failure.rethrowExceptional()
+            }
+        }
+
+        private fun HostedMessagingSession.realmScope() =
+            RealmRouteScope(organizationId = organizationId, realmId = assignment.realmId.value)
+
+        override suspend fun close() {
+            maintenance?.cancelAndJoin()
+            coordinator?.cancelAndJoin()
+            coordinator = null
+            router?.stop()?.requireSuccess("stop")
+            router = null
+            mutableMessaging.value = null
+            runtimeHosts.follow(null)
+            participant.close()
+        }
+
+        private suspend fun maintainArtifacts() {
+            telemetry.artifactSpan(
+                "artifact.maintenance",
+                "artifact-maintenance-failed",
+            ) { span ->
+                val current = rolloutState?.committed()
+                val previous = rolloutState?.previous()
+                val shared = requireNotNull(localShared).catalog()
+                val accepted = candidates.candidates()
+                val projectionDigests =
+                    buildSet {
+                        current?.projections?.values?.let(::addAll)
+                        previous?.projections?.values?.let(::addAll)
+                    }
+                val protection =
+                    DigestProtectionState(
+                        currentDeployment = current?.snapshot,
+                        previousDeployment = previous?.snapshot,
+                        currentSharedArtifacts = shared.artifacts,
+                        acceptedCandidateDigests = accepted.mapTo(mutableSetOf()) { it.artifact.digest },
+                        rolloutProjectionDigests = projectionDigests,
+                    )
+                val deleted = localBlobs.collectGarbage(protection.protectedDigests())
+                span?.annotate {
+                    attribute("realm.id", assignment.realmId.value)
+                    attribute("service.id", serviceId.value)
+                    attribute("maintenance.deleted_count", deleted.toLong())
+                }
+            }
+        }
+    }
 }
 
 internal fun RegistrarState.invalidatesHostedMessagingSession(): Boolean =
     this is RegistrarState.DegradedAfterReady || this is RegistrarState.Failed || this is RegistrarState.Stopped
-
-internal class AssignmentRuntime(
-    override val assignment: ArtifactHostAssignment,
-    private val serviceId: ServiceId,
-    private val workDirectory: Path,
-    private val artifactsRoot: Path,
-    openTelemetry: OpenTelemetry,
-    private val telemetry: ServiceTelemetry,
-    private val localBlobs: FileDigestBlobStore,
-    private val candidates: FileCandidateRepository,
-    private val localShared: SharedArtifactAccess?,
-    private val work: InFlightWork,
-    private val workDrain: Duration,
-    private val scope: CoroutineScope,
-) : HostAssignmentRuntime {
-    @Volatile
-    override var status: ParticipantStatus? = null
-        private set
-
-    private val publicationRetention =
-        if (RuntimePlacement.REALM in assignment.roles) {
-            localBlobs.publicationRetention(assignment.realmId.value)
-        } else {
-            null
-        }
-    private val mutableMessaging = MutableStateFlow<HostedMessagingSession?>(null)
-    private val sharedArtifacts = localShared ?: ReconnectingSharedArtifactAccess(assignment.realmId.value, mutableMessaging)
-
-    /** The host as each staged runtime sees it, following the current session. */
-    private val runtimeHosts = SessionRuntimeHosts(work, sharedArtifacts, openTelemetry, publicationRetention)
-    private val projections = BlobProjectionRepository(sharedArtifacts)
-    private val participant =
-        HostRolloutParticipant(
-            assignment.realmId,
-            assignment::engineIdOf,
-            serviceId,
-            workDirectory,
-            runtimeHosts,
-            projections,
-            VerifiedArtifactCache(sharedArtifacts, localBlobs),
-            { changed -> status = changed },
-            scope,
-            workDrain = workDrain,
-            telemetry = telemetry,
-        )
-    private val rolloutState =
-        if (RuntimePlacement.REALM in assignment.roles) FileRolloutStateRepository(assignment.realmId, artifactsRoot) else null
-    private var router: CommunicatorRouter? = null
-    private var coordinator: Job? = null
-    private val maintenance: Job? =
-        localShared?.let {
-            scope.launch {
-                while (true) {
-                    maintainArtifacts()
-                    delay(1.hours)
-                }
-            }
-        }
-
-    override suspend fun replaceSession(session: HostedMessagingSession?) {
-        if (mutableMessaging.value?.id == session?.id && (session != null || router == null)) return
-        coordinator?.cancelAndJoin()
-        coordinator = null
-        router?.stop()?.requireSuccess("replace")
-        router = null
-        mutableMessaging.value = null
-        runtimeHosts.follow(null)
-        router = session?.let { createRouter(it) }
-        router?.start()?.requireSuccess("start")
-        mutableMessaging.value = session
-        runtimeHosts.follow(session)
-        coordinator =
-            session?.takeIf { rolloutState != null }?.let { current ->
-                scope.launch { coordinateDeployments(current, requireNotNull(rolloutState)) }
-            }
-    }
-
-    private fun createRouter(session: HostedMessagingSession): CommunicatorRouter {
-        val artifactAddress = session.realmScope()
-        val routes =
-            communicatorRoutes {
-                RolloutHostRoutes(
-                    presence = {
-                        RealmHostPresence(
-                            serviceId = serviceId.value,
-                            hostApi = HOST_API_VERSION,
-                            assignedRoles = assignment.roles.map { it.toSkir() },
-                            activeProjection = participant.activeProjection,
-                        )
-                    },
-                    participant = participant,
-                ).register(this, artifactAddress)
-                if (RuntimePlacement.REALM in assignment.roles) {
-                    StableRealmArtifactRoutes(sharedArtifacts).register(this, artifactAddress)
-                }
-            }
-        return session.communicator.createRouter(routes, scope)
-    }
-
-    private suspend fun coordinateDeployments(
-        session: HostedMessagingSession,
-        state: FileRolloutStateRepository,
-    ) {
-        val primaryEngine = requireNotNull(assignment.primaryEngine)
-        val intent = requireNotNull(assignment.intent)
-        val messenger = CommunicatorRolloutMessenger(session.realmScope(), session.communicator)
-        while (true) {
-            val selection = messenger.discover(emptySet(), 5.seconds).deploymentSelectionOrNull()
-            if (selection == null) {
-                delay(1.seconds)
-                continue
-            }
-            val resolution =
-                telemetry.artifactSpan(
-                    "artifact.deployment.resolve",
-                    "artifact-deployment-resolve-failed",
-                ) { span ->
-                    span?.annotate {
-                        attribute("realm.id", assignment.realmId.value)
-                        attribute("service.id", serviceId.value)
-                    }
-                    resolveDeployment(CandidateIndex(candidates.candidates()), selection, primaryEngine, intent)
-                }
-            if (resolution is ResolutionResult.Resolved) {
-                val digest = DeploymentContentCodec.digest(resolution.content)
-                val current = state.committed()
-                val rollout =
-                    CoordinatedRollout(
-                        assignment.realmId,
-                        selection,
-                        resolution.manifests,
-                        messenger,
-                        projections,
-                        state,
-                        telemetry = telemetry,
-                    )
-                if (current?.snapshot?.contentDigest != digest) {
-                    val snapshot =
-                        DeploymentSnapshot(
-                            DeploymentGeneration((current?.snapshot?.generation?.value ?: 0L) + 1L),
-                            digest,
-                            resolution.content,
-                        )
-                    runRollout { rollout.rollOut(snapshot) }
-                } else {
-                    runRollout { rollout.reconcileCommitted(current) }
-                }
-            }
-            delay(1.seconds)
-        }
-    }
-
-    private suspend fun runRollout(block: suspend () -> Unit) {
-        try {
-            block()
-        } catch (failure: Throwable) {
-            failure.rethrowExceptional()
-        }
-    }
-
-    private fun HostedMessagingSession.realmScope() = RealmRouteScope(organizationId = organizationId, realmId = assignment.realmId.value)
-
-    override suspend fun close() {
-        maintenance?.cancelAndJoin()
-        coordinator?.cancelAndJoin()
-        coordinator = null
-        router?.stop()?.requireSuccess("stop")
-        router = null
-        mutableMessaging.value = null
-        runtimeHosts.follow(null)
-        participant.close()
-    }
-
-    private suspend fun maintainArtifacts() {
-        telemetry.artifactSpan(
-            "artifact.maintenance",
-            "artifact-maintenance-failed",
-        ) { span ->
-            val current = rolloutState?.committed()
-            val previous = rolloutState?.previous()
-            val shared = requireNotNull(localShared).catalog()
-            val accepted = candidates.candidates()
-            val projectionDigests =
-                buildSet {
-                    current?.projections?.values?.let(::addAll)
-                    previous?.projections?.values?.let(::addAll)
-                }
-            val protection =
-                DigestProtectionState(
-                    currentDeployment = current?.snapshot,
-                    previousDeployment = previous?.snapshot,
-                    currentSharedArtifacts = shared.artifacts,
-                    acceptedCandidateDigests = accepted.mapTo(mutableSetOf()) { it.artifact.digest },
-                    rolloutProjectionDigests = projectionDigests,
-                )
-            val deleted = localBlobs.collectGarbage(protection.protectedDigests())
-            span?.annotate {
-                attribute("realm.id", assignment.realmId.value)
-                attribute("service.id", serviceId.value)
-                attribute("maintenance.deleted_count", deleted.toLong())
-            }
-        }
-    }
-}
 
 /** Derives artifact selection from unambiguous responding hosts without inferring absent assignments. */
 internal fun List<RealmHostPresence>.deploymentSelectionOrNull(): RealmDeploymentSelection? {

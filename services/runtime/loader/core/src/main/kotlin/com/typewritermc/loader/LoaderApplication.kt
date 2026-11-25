@@ -13,6 +13,7 @@ import com.typewritermc.loader.rollout.ArtifactHostAssignmentSource
 import com.typewritermc.loader.rollout.BackendArtifactHostAssignmentSource
 import com.typewritermc.loader.rollout.DesiredHostExecution
 import com.typewritermc.loader.rollout.RealmId
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.koin.serviceTelemetryModule
@@ -54,8 +55,7 @@ internal class ArtifactLoaderBootstrap(
                 workDirectory,
                 service,
                 assignments(entrypoint, service),
-                work,
-                settings.workDrain(),
+                HostWork(work, settings.workDrain()),
                 scope,
             )
         try {

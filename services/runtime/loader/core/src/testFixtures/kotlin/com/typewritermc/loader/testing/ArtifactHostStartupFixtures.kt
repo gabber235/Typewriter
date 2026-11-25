@@ -12,6 +12,7 @@ import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.artifact.FileDigestBlobStore
 import com.typewritermc.loader.rollout.ArtifactHost
 import com.typewritermc.loader.rollout.ArtifactHostAssignmentSource
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.services.libs.registrar.RegistrarSnapshot
 import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.registrar.RegistrarStopResult
@@ -96,8 +97,7 @@ suspend fun TestScope.withIdleHost(
                 workDirectory,
                 StartupLoaderService(workDirectory.resolve("artifacts"), openTelemetry),
                 ArtifactHostAssignmentSource { emptyFlow() },
-                work,
-                drain,
+                HostWork(work, drain),
                 backgroundScope,
             )
         host.start()

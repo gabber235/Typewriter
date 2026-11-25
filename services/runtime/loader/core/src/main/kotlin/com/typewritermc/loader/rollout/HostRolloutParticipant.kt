@@ -25,7 +25,6 @@ import com.typewritermc.loader.deployment.ProjectedRuntime
 import com.typewritermc.loader.runtime.HostedRuntimeLoader
 import com.typewritermc.loader.runtime.HostedRuntimeStager
 import com.typewritermc.loader.runtime.LoadedHostedRuntime
-import com.typewritermc.loader.work.drain
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
@@ -94,7 +93,7 @@ fun interface ParticipantStatusListener {
  *
  * A mutex serializes commands and rejects stale or conflicting attempts. Each staged runtime sees the host through its
  * own view from [hosts]. Commit quiesces the baseline and drains the baseline runtimes' work in flight for at most
- * [workDrain] before activating a candidate, and attempts recovery on failure. Successful replacement retains one prior projection for
+ * the host's drain bound before activating a candidate, and attempts recovery on failure. Successful replacement retains one prior projection for
  * rollback. The assignment lifecycle must close the participant and its health monitor.
  */
 class HostRolloutParticipant(
@@ -109,7 +108,6 @@ class HostRolloutParticipant(
     private val scope: CoroutineScope,
     private val runtimeLoader: HostedRuntimeStager = HostedRuntimeLoader(),
     private val lifecycleTimeout: Duration = 30.seconds,
-    private val workDrain: Duration,
     private val telemetry: ServiceTelemetry? = null,
 ) {
     private val commands = Mutex()
@@ -285,7 +283,7 @@ class HostRolloutParticipant(
 
     /** Waits for the work in flight of the runtimes of [leaving], once they quiesced, before others take over. */
     private suspend fun drainWork(leaving: LocalProjection) {
-        hosts.work.drain(workDrain, "rollout", telemetry, leaving.work)
+        hosts.work.drain("rollout", telemetry, leaving.work)
     }
 
     private suspend fun abort(

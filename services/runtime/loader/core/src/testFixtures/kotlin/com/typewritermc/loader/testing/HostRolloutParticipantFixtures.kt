@@ -43,6 +43,7 @@ import com.typewritermc.loader.runtime.HostedRuntimeStager
 import com.typewritermc.loader.runtime.LoadedHostedRuntime
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.registrar.ServiceId
 import io.opentelemetry.api.OpenTelemetry
@@ -325,7 +326,6 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
             scope,
             stager,
             1.seconds,
-            10.seconds,
         )
     return ParticipantFixture(serviceId, realmId, host, participant, projections, contexts, runtimes, events, root)
 }
@@ -446,7 +446,7 @@ class RecordingRuntime : StagedHostedRuntime {
 fun HostedRuntimeHost.perRuntime(): RuntimeHosts {
     val shared = this
     return object : RuntimeHosts {
-        override val work = shared.work
+        override val work = HostWork(shared.work, 10.seconds)
 
         override fun open(runtime: WorkRuntime): RuntimeHost =
             object : RuntimeHost, HostedRuntimeHost by shared {

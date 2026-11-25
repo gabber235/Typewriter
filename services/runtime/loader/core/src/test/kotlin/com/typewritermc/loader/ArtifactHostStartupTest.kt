@@ -13,6 +13,7 @@ import com.typewritermc.loader.rollout.ArtifactHostAssignmentSource
 import com.typewritermc.loader.testing.StartupLoaderService
 import com.typewritermc.loader.testing.startupEngineManifest
 import com.typewritermc.loader.testing.writeStartupJar
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.registrar.ServiceId
 import de.infix.testBalloon.framework.core.testSuite
@@ -72,8 +73,7 @@ val ArtifactHostStartupTest by testSuite {
                                 )
                             }
                         },
-                        InFlightWork(),
-                        10.seconds,
+                        HostWork(InFlightWork(), 10.seconds),
                         backgroundScope,
                     )
 

@@ -9,6 +9,7 @@ import com.typewritermc.loader.artifact.testing.BLOB
 import com.typewritermc.loader.artifact.testing.REALM
 import com.typewritermc.loader.artifact.testing.answerMetadata
 import com.typewritermc.loader.testing.hostedSession
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import de.infix.testBalloon.framework.core.testSuite
@@ -16,6 +17,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlin.time.Duration.Companion.seconds
 
 /** Each runtime a host stages sees the host through its own view, so the work it causes names it. */
 val SessionRuntimeHostsTest by testSuite {
@@ -38,7 +40,12 @@ val SessionRuntimeHostsTest by testSuite {
         transport.answerMetadata()
         val session = hostedSession(transport)
         val hosts =
-            SessionRuntimeHosts(work, ReconnectingSharedArtifactAccess(REALM, MutableStateFlow(session)), OpenTelemetry.noop(), null)
+            SessionRuntimeHosts(
+                HostWork(work, 10.seconds),
+                ReconnectingSharedArtifactAccess(REALM, MutableStateFlow(session)),
+                OpenTelemetry.noop(),
+                null,
+            )
         hosts.follow(session)
         val engine = WorkRuntime("primary engine")
         val view = hosts.open(engine)
@@ -55,7 +62,7 @@ val SessionRuntimeHostsTest by testSuite {
         val first = hostedSession(FakeMessageTransport(), id = 1)
         val hosts =
             SessionRuntimeHosts(
-                InFlightWork(),
+                HostWork(InFlightWork(), 10.seconds),
                 ReconnectingSharedArtifactAccess(REALM, MutableStateFlow(first)),
                 OpenTelemetry.noop(),
                 null,
