@@ -3,10 +3,11 @@ package com.typewritermc.engine.panel
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.engine.session.SessionTimings
+import com.typewritermc.identity.OnlineSessions
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
-import com.typewritermc.identity.SessionReporter
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.protocol.transport.OrganizationActorRouteScope
@@ -20,6 +21,9 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,21 +31,23 @@ import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
 import skirout.organization.v1.presence.PresenceEvent
 import skirout.organization.v1.presence.PresenceLocation
-import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Reports each panel tab in this engine's Realm as a session of the tab's user, from the panel's presence heartbeat;
- * there is no second heartbeat. The first heartbeat in the Realm connects the tab's session, and each later one keeps
- * it. A tab that leaves the Realm or says it left disconnects at once, and a tab whose heartbeats stop for a key's
- * time to live disconnects then, so its session ends after the vacancy. The protagonist is the user the broker bound into
- * the subject, never a value from the payload.
+ * The panel tabs in this engine's Realm, each a session of the tab's user, from the panel's presence heartbeat; there
+ * is no second heartbeat. The first heartbeat in the Realm adds the tab's session, and each later one keeps it. A tab
+ * that leaves the Realm or says it left is removed at once, and a tab whose heartbeats stop for a key's time to live is
+ * removed then, so its session ends after the vacancy. The protagonist is the user the broker bound into the subject,
+ * never a value from the payload.
  */
 class PresenceSessions(
     private val realmId: String,
-    private val sessions: SessionReporter,
     private val timings: SessionTimings,
-) {
-    private val tabs = ConcurrentHashMap<SessionId, Job>()
+) : OnlineSessions {
+    /** The open tabs, each with the job that removes it once its heartbeats stop; changed only under its own lock. */
+    private val tabs = HashMap<SessionId, Tab>()
+    private val open = MutableStateFlow<Set<Session>>(emptySet())
+
+    override val sessions: StateFlow<Set<Session>> = open.asStateFlow()
 
     /** Receives the presence of every member of [messaging]'s organization until cancelled. */
     suspend fun serve(messaging: HostedMessagingSession): Unit =
@@ -77,7 +83,7 @@ class PresenceSessions(
                         realmId,
                     )
                 ) {
-                    heartbeat(scope, Protagonist(PrincipalId(PrincipalId.USER, userId)), tab)
+                    heartbeat(scope, Session(Protagonist(PrincipalId(PrincipalId.USER, userId)), tab))
                 } else {
                     end(tab)
                 }
@@ -95,24 +101,41 @@ class PresenceSessions(
 
     private fun heartbeat(
         scope: CoroutineScope,
-        protagonist: Protagonist,
-        tab: SessionId,
+        session: Session,
     ) {
         val silence =
             scope.launch {
                 delay(timings.lease.ttl)
-                if (tabs.remove(tab, coroutineContext[Job])) sessions.disconnected(tab)
+                end(session.id, silenced = coroutineContext[Job])
             }
-        val previous = tabs.put(tab, silence)
-        if (previous == null) sessions.connected(protagonist, tab) else previous.cancel()
-    }
-
-    private fun end(tab: SessionId) {
-        tabs.remove(tab)?.let {
-            it.cancel()
-            sessions.disconnected(tab)
+        synchronized(tabs) {
+            tabs.put(session.id, Tab(session, silence))?.silence?.cancel()
+            publish()
         }
     }
+
+    /** Removes [tab]; with [silenced], only while that silence is still the tab's latest. */
+    private fun end(
+        tab: SessionId,
+        silenced: Job? = null,
+    ) {
+        synchronized(tabs) {
+            val current = tabs[tab] ?: return
+            if (silenced != null && current.silence !== silenced) return
+            tabs.remove(tab)
+            current.silence.cancel()
+            publish()
+        }
+    }
+
+    private fun publish() {
+        open.value = tabs.values.mapTo(linkedSetOf()) { it.session }
+    }
+
+    private class Tab(
+        val session: Session,
+        val silence: Job,
+    )
 
     private companion object {
         /** The member of an organization actor scope whose value a subscription to every member leaves open. */

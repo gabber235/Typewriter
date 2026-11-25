@@ -1,21 +1,16 @@
 package com.typewritermc.identity
 
-/**
- * How an engine kind tells its engine which sessions it holds. Paper reports a player's join and quit; the panel
- * engine reports each tab's heartbeat and its leave. Calls never wait on the network, so a game thread can make them.
- */
-interface SessionReporter {
-    /** [protagonist] connected to this engine as session [id], or this engine took the session over. */
-    fun connected(
-        protagonist: Protagonist,
-        id: SessionId,
-    )
+import kotlinx.coroutines.flow.StateFlow
 
-    /**
-     * Session [id] left this engine. Nobody holds it from then on; it stays alive, vacant, for its engine kind's vacancy
-     * and ends unless an engine takes it over.
-     */
-    fun disconnected(id: SessionId)
+/**
+ * The sessions an engine has right now, as its engine kind sees them: Paper's online players, the panel's open tabs.
+ * Each engine kind supplies one, and its engine keeps exactly these: a session added is claimed at once, a session
+ * removed is left vacant at once, alive for its engine kind's vacancy so another engine or a rejoin takes it over, and
+ * only sessions in the set are refreshed. The set may change on any thread, so a game thread updates it without
+ * waiting on the network.
+ */
+interface OnlineSessions {
+    val sessions: StateFlow<Set<Session>>
 }
 
 /** Reads which engines hold a protagonist's sessions now, across the Realm. */

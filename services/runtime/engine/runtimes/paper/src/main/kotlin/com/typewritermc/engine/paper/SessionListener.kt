@@ -2,10 +2,15 @@ package com.typewritermc.engine.paper
 
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
+import com.typewritermc.identity.OnlineSessions
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
-import com.typewritermc.identity.SessionReporter
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -17,41 +22,46 @@ import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.Plugin
 
 /**
- * Reports each Minecraft player as a session of its protagonist: a join starts the session's key write and a quit
- * leaves the session vacant. The reporter only queues the writes, so the tick never waits on NATS.
+ * The online Minecraft players, each a session of its protagonist, kept on the main thread from Paper's own list and
+ * its join and quit events. Changing the set only records it, so the tick never waits on NATS, and the engine reads it
+ * from any thread without asking Bukkit.
  *
- * Each activation registers the listener and takes over the players already online, so an engine reload keeps their
- * sessions without a gap; quiescing unregisters it and leaves the keys to the next activation or to their expiry.
+ * Each activation registers the listener and starts the set from the players already online, so an engine reload
+ * keeps their sessions without a gap; quiescing unregisters it and leaves the keys to the next activation or to their
+ * expiry.
  */
 class SessionListener(
     private val plugin: Plugin,
-    private val sessions: SessionReporter,
-) : Listener,
+) : OnlineSessions,
+    Listener,
     RuntimeRegistrar {
+    private val online = MutableStateFlow<Set<Session>>(emptySet())
+
+    override val sessions: StateFlow<Set<Session>> = online.asStateFlow()
+
     context(scope: RuntimeScope)
     override suspend fun register() {
-        // Registering and taking over on the main thread orders the takeover before any later join or quit event.
+        // Registering and reading the players on the main thread orders the start before any later join or quit event.
         plugin.onMainThread {
             plugin.server.pluginManager.registerEvents(this, plugin)
-            plugin.server.onlinePlayers.forEach(::connected)
+            online.value = plugin.server.onlinePlayers.mapTo(linkedSetOf()) { it.session }
         }
         scope.own { HandlerList.unregisterAll(this) }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    fun onJoin(event: PlayerJoinEvent) = connected(event.player)
+    fun onJoin(event: PlayerJoinEvent) = online.update { it + event.player.session }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    fun onQuit(event: PlayerQuitEvent) = sessions.disconnected(event.player.session)
-
-    private fun connected(player: Player) = sessions.connected(player.protagonist, player.session)
+    fun onQuit(event: PlayerQuitEvent) = online.update { it - event.player.session }
 }
 
-/** A player's protagonist: the Minecraft principal of its UUID. */
-private val Player.protagonist: Protagonist get() = Protagonist(PrincipalId(PrincipalId.MINECRAFT, uniqueId.toString()))
-
-/** A Minecraft player has one session at a time, named by its UUID, so a rejoin continues it. */
-private val Player.session: SessionId get() = SessionId(uniqueId.toString())
+/**
+ * A player's session: its protagonist is the Minecraft principal of its UUID, and a player has one session at a time,
+ * named by its UUID, so a rejoin continues it.
+ */
+private val Player.session: Session
+    get() = Session(Protagonist(PrincipalId(PrincipalId.MINECRAFT, uniqueId.toString())), SessionId(uniqueId.toString()))
 
 /** Runs [block] on the server's main thread and returns its result. */
 private suspend fun <T> Plugin.onMainThread(block: () -> T): T {

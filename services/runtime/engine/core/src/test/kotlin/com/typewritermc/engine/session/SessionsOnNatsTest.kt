@@ -25,25 +25,26 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         harness().createBucket()
         val old = harness().engine("engine-a", timings)
         val new = harness().engine("engine-b", timings)
-        val (protagonist, session) = harness().player()
+        val session = harness().player()
+        val protagonist = session.protagonist
 
-        harness().joined(old, protagonist, session)
+        harness().joined(old, session)
         val began =
             harness()
-                .entry(protagonist, session)
+                .entry(protagonist, session.id)
                 .shouldNotBeNull()
                 .value.since
-        harness().joined(new, protagonist, session)
-        harness().eventually { harness().entry(protagonist, session)?.holder == EngineId("engine-b") }
-        old.keeper.disconnected(session)
+        harness().joined(new, session)
+        harness().eventually { harness().entry(protagonist, session.id)?.holder == EngineId("engine-b") }
+        old.online.quit(session)
 
         harness()
-            .entry(protagonist, session)
+            .entry(protagonist, session.id)
             .shouldNotBeNull()
             .value.since shouldBe began
         new.keeper.holders(protagonist) shouldBe setOf(EngineId("engine-b"))
 
-        new.keeper.disconnected(session)
-        harness().eventually(within = timings.lease.vacancy + 30.seconds) { harness().entry(protagonist, session) == null }
+        new.online.quit(session)
+        harness().eventually(within = timings.lease.vacancy + 30.seconds) { harness().entry(protagonist, session.id) == null }
     }
 }

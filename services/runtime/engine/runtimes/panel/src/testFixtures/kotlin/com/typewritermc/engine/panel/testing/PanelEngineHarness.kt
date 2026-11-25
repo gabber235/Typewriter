@@ -67,9 +67,10 @@ class PanelEngineHarness private constructor(
 
     /** Starts the panel engine; a heartbeat sent before it subscribed is followed by the next one. */
     private suspend fun startEngine() {
-        val engine = sessions.engine("panel.realm", TIMINGS)
+        val presence = PresenceSessions(sessions.realm, TIMINGS)
+        sessions.keeper("panel.realm", TIMINGS, presence)
         val messaging = sessions.messaging()
-        scope.launch { PresenceSessions(sessions.realm, engine.keeper, TIMINGS).serve(messaging) }
+        scope.launch { presence.serve(messaging) }
     }
 
     companion object {

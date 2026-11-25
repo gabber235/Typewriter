@@ -5,8 +5,10 @@ import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.readSessionEntry
 import com.typewritermc.identity.EngineId
+import com.typewritermc.identity.OnlineSessions
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.protocol.transport.generated.SessionsBucket
@@ -53,23 +55,31 @@ class SessionHarness private constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val connections = mutableListOf<NatsConnection>()
-    private val engines = mutableListOf<HarnessEngine>()
+    private val keepers = mutableListOf<SessionKeeper>()
 
-    /** A Minecraft player, a protagonist whose session id is its UUID. */
-    fun player(): Pair<Protagonist, SessionId> {
+    /** A Minecraft player's session, of a protagonist whose session id is its UUID. */
+    fun player(): Session {
         val uuid = UUID.randomUUID().toString()
-        return Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid)) to SessionId(uuid)
+        return Session(Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid)), SessionId(uuid))
     }
 
-    /** Starts engine [id] of the Realm on a connection of its own. */
+    /** Starts engine [id] of the Realm on a connection of its own, whose sessions a test changes through its [HarnessEngine.online]. */
     suspend fun engine(
         id: String,
         timings: SessionTimings = SHORT,
     ): HarnessEngine {
-        val connection = connect()
-        val buckets = MutableStateFlow<KeyValueBuckets?>(NatsKeyValueBuckets(connection))
-        val keeper = SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, scope)
-        return HarnessEngine(EngineId(id), keeper).also(engines::add)
+        val online = OnlineSet()
+        return HarnessEngine(EngineId(id), keeper(id, timings, online), online)
+    }
+
+    /** Starts engine [id] of the Realm on a connection of its own, keeping the sessions its engine kind has in [online]. */
+    suspend fun keeper(
+        id: String,
+        timings: SessionTimings,
+        online: OnlineSessions,
+    ): SessionKeeper {
+        val buckets = MutableStateFlow<KeyValueBuckets?>(NatsKeyValueBuckets(connect()))
+        return SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, online, scope).also(keepers::add)
     }
 
     /** Creates the Realm's sessions bucket, as the Realm does when it starts. */
@@ -84,14 +94,13 @@ class SessionHarness private constructor(
         id: SessionId,
     ): SessionEntry? = bucket().readSessionEntry(protagonist, id)
 
-    /** [engine] reports that [protagonist] connected with session [id]; returns once the bucket names it the holder. */
+    /** [session] connects to [engine]; returns once the bucket names it the holder. */
     suspend fun joined(
         engine: HarnessEngine,
-        protagonist: Protagonist,
-        id: SessionId,
+        session: Session,
     ) {
-        engine.keeper.connected(protagonist, id)
-        eventually { entry(protagonist, id)?.holder == engine.id }
+        engine.online.join(session)
+        eventually { entry(session.protagonist, session.id)?.holder == engine.id }
     }
 
     /** Waits until [condition] holds, polling the broker, and fails after [within]. */
@@ -142,7 +151,7 @@ class SessionHarness private constructor(
     }
 
     override fun close() {
-        engines.forEach { it.keeper.close() }
+        keepers.forEach { it.close() }
         scope.cancel()
         runBlocking { connections.forEach { it.shutdown() } }
         server.close()
@@ -161,8 +170,9 @@ class SessionHarness private constructor(
     }
 }
 
-/** One engine of the harness. */
+/** One engine of the harness; [online] is the sessions it has. */
 class HarnessEngine(
     val id: EngineId,
     val keeper: SessionKeeper,
+    val online: OnlineSet,
 )

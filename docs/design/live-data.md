@@ -346,14 +346,17 @@ JetStream is right here though it was rejected for `Changed<T>` (see Lost pushes
 
 ## Session
 
-`Session(protagonist, id: SessionId) : Identity` is one connection of a protagonist. The engine kind supplies the id through a `SessionReporter`:
+`Session(protagonist, id: SessionId) : Identity` is one connection of a protagonist. The engine kind supplies the sessions it has right now as one observable set (decided 2026-11-25):
 
 ```kotlin
-interface SessionReporter {
-    fun connected(protagonist: Protagonist, id: SessionId)
-    fun disconnected(id: SessionId)
+interface OnlineSessions {
+    val sessions: StateFlow<Set<Session>>
 }
 ```
+
+- The set is the one source of an engine's sessions: a session added is claimed at once, a session removed is left vacant at once, and each refresh writes exactly the sessions in the set, so a missed quit cannot keep a session alive.
+- Paper keeps it from its online players, starting from `onlinePlayers` and changed by join and quit on the main thread; the panel engine keeps it from its open tabs. The engine reads it from any thread, so nothing asks Bukkit off the main thread.
+- A session added and removed again before the engine read the set is never written.
 
 | Engine kind | Session id | Survives |
 | --- | --- | --- |

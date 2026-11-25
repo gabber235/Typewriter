@@ -540,6 +540,8 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`OnlinePlayer`**: `Live` mirror in the Minecraft capability with an online protagonist's name and its `Engine`, read by the panel's target list. See [panel-engine-communication.md](panel-engine-communication.md) question 9.
 
+**`OnlineSessions`**: the sessions an engine has right now, one observable set its engine kind supplies (Paper's online players, the panel's open tabs); the engine claims each session added, leaves each one removed vacant, and refreshes only sessions in the set. See [live-data.md](live-data.md#session).
+
 **`onRejoin`**: step rule: `Drop` (default), `RestartStep`, or `RestartInteraction`. See [interactions.md](interactions.md#leaving-and-rejoining).
 
 **`OnRejoin`**: step rule for a protagonist who returns: `Drop`, `RestartStep`, or `RestartInteraction`. See [interactions.md](interactions.md#steps).
@@ -699,8 +701,6 @@ Every type, annotation, and term used in the design set, one line each, with the
 **`SessionArrived`**: fired by the engine that takes a session, each time it takes one. See [live-data.md](live-data.md#session).
 
 **Session subject**: `typewriter.session.<id>`, subscribed by the engine holding that session; used only for targets that are one connection, such as the tab that started a capture, and for event results. See [live-data.md](live-data.md#routing).
-
-**`SessionReporter`**: engine kind interface reporting session `connected` and `disconnected`. See [live-data.md](live-data.md#session).
 
 **`sessions` KV bucket**: NATS KV bucket with one key per session, held by its engine and refreshed with a TTL, or vacant with a TTL equal to the vacancy once its protagonist left; an expired key ends the session. See [live-data.md](live-data.md#nats-jetstream).
 

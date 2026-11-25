@@ -9,6 +9,7 @@ import com.typewritermc.engine.session.sessionKey
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
+import com.typewritermc.identity.Session
 import com.typewritermc.identity.SessionId
 import com.typewritermc.services.libs.communicator.kv.LeaseEntry
 import com.typewritermc.services.libs.communicator.kv.LeaseState
@@ -30,20 +31,25 @@ class VirtualSessions(
 ) {
     val keyValue = VirtualKeyValue(scope)
 
-    /** A Minecraft player, a protagonist whose session id is its UUID. */
-    fun player(): Pair<Protagonist, SessionId> {
+    /** A Minecraft player's session, of a protagonist whose session id is its UUID. */
+    fun player(): Session {
         val uuid = UUID.randomUUID().toString()
-        return Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid)) to SessionId(uuid)
+        return Session(Protagonist(PrincipalId(PrincipalId.MINECRAFT, uuid)), SessionId(uuid))
     }
 
     /** Creates the Realm's sessions bucket, as the Realm does when it starts. */
     suspend fun createBucket() = keyValue.createBucket(BUCKET)
 
-    /** Starts engine [id] of the Realm with its own way to the bucket. */
-    fun engine(id: String): VirtualEngine {
+    /** Starts engine [id] of the Realm with its own way to the bucket, already having the sessions in [online]. */
+    fun engine(
+        id: String,
+        online: Set<Session> = emptySet(),
+    ): VirtualEngine {
         val buckets = ScriptedBuckets(keyValue.store)
-        val keeper = SessionKeeper(EngineId(id), MutableStateFlow(buckets), BUCKET, timings, scope.backgroundScope, keyValue.clock())
-        return VirtualEngine(EngineId(id), keeper, buckets)
+        val sessions = OnlineSet(online)
+        val keeper =
+            SessionKeeper(EngineId(id), MutableStateFlow(buckets), BUCKET, timings, sessions, scope.backgroundScope, keyValue.clock())
+        return VirtualEngine(EngineId(id), keeper, buckets, sessions)
     }
 
     /** The live entry of [protagonist]'s session [id], or null when there is none or no engine can read it. */
@@ -76,9 +82,10 @@ class VirtualSessions(
     }
 }
 
-/** One engine of [VirtualSessions]; [buckets] is its way to the sessions bucket. */
+/** One engine of [VirtualSessions]; [buckets] is its way to the sessions bucket and [online] the sessions it has. */
 class VirtualEngine(
     val id: EngineId,
     val keeper: SessionKeeper,
     val buckets: ScriptedBuckets,
+    val online: OnlineSet,
 )

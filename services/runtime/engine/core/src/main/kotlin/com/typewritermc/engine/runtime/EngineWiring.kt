@@ -4,7 +4,6 @@ import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.identity.Engine
 import com.typewritermc.identity.EngineId
-import com.typewritermc.identity.SessionReporter
 import com.typewritermc.identity.Sessions
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.protocol.transport.generated.SessionsBucket
@@ -14,7 +13,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.koin.core.KoinApplication
 import org.koin.core.module.Module
-import org.koin.dsl.binds
+import org.koin.dsl.bind
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.dsl.onClose
@@ -62,8 +61,9 @@ private fun engineCoreModule(
                 ),
             bucketName = SessionsBucket.name(context.identity.realmId),
             timings = get(),
+            online = get(),
             parent = scope,
             openTelemetry = context.host.openTelemetry,
         )
-    } onClose { it?.close() } binds arrayOf(SessionReporter::class, Sessions::class)
+    } onClose { it?.close() } bind Sessions::class
 }
