@@ -31,9 +31,11 @@ detekt {
 // Generated sources are not reviewed and change on every generation, so no baseline can hold them.
 tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
     exclude { it.file.invariantSeparatorsPath.contains("/skirout/") }
+    exclude { it.file.invariantSeparatorsPath.contains("/generated/ksp/") }
 }
 tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
     exclude { it.file.invariantSeparatorsPath.contains("/skirout/") }
+    exclude { it.file.invariantSeparatorsPath.contains("/generated/ksp/") }
 }
 
 ktlint {
