@@ -15,6 +15,7 @@ import com.typewritermc.services.libs.communicator.contract.ResponseClassificati
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
+import com.typewritermc.services.libs.communicator.contract.ScatterContract
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.IncomingUnaryCall
@@ -427,6 +428,39 @@ val CommunicatorRouterTest by testSuite {
                         "internal",
                     )
                 spans.map { it.status.statusCode.name } shouldBe listOf("UNSET", "UNSET")
+                fixture.router.stop()
+            }
+        }
+    }
+
+    test("a scatter listener whose reply cannot be classified answers with its internal failure response") {
+        runTest {
+            val policy =
+                ResponsePolicy("internal") {
+                    check(it != "unclassifiable") { "No variant classifies $it" }
+                    ResponseClassification(ResponseOutcome.INTERNAL_ERROR, ResponseVariant.of("internal"))
+                }
+            val contract =
+                ScatterContract(
+                    OperationName.of("router.probe"),
+                    Messages(routerAddress, stringPayloadCodec),
+                    Replies(stringPayloadCodec, policy),
+                    routerReplies,
+                )
+            val fixture = routerFixture(communicatorRoutes { scatter(contract) { "unclassifiable" } }, this)
+            fixture.use { fixture ->
+                fixture.router.start()
+                fixture.fake.deliver(deliveryOf("router.a.get", "probe", "reply.one"))
+                runCurrent()
+                fixture.fake.actions
+                    .filterIsInstance<FakeMessageTransport.Action.Publish>()
+                    .map {
+                        it.message.address.value to
+                            it.message.payload
+                                .toByteArray()
+                                .decodeToString()
+                    } shouldBe
+                    listOf("reply.one" to "internal")
                 fixture.router.stop()
             }
         }

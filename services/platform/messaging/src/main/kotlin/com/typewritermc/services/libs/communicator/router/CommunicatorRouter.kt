@@ -811,50 +811,13 @@ class CommunicatorRouter internal constructor(
         handler: ScatterHandler<A, Q, R>,
         message: InboundMessage,
         received: TimeMark,
-    ) = scatterReplying(contract, message, received) { main, address, request ->
-        context(main) {
-            handler.handle(
-                IncomingUnaryCall(
-                    address,
-                    request,
-                    message.headers,
-                    message.address,
-                    contract.asUnaryContract(),
-                    communicator,
-                ),
-            )
-        }
-    }
-
-    private suspend fun <A : Any, Q : Any, R : Any> scatterReplying(
-        contract: ScatterContract<A, Q, R>,
-        message: InboundMessage,
-        received: TimeMark,
-        handler: suspend (MainSpanScope, A, Q) -> R?,
-    ) = consume(contract.name, contract.request.address.template, contract.failureSlug, message) { main ->
-        val replyTo =
-            message.replyTo ?: throw SluggedException.wrap(
-                contract.failureSlug,
-                IllegalStateException("Missing reply address"),
-            )
-        val reply = OwedReply(contract.name, null, contract.replies, replyTo, contract.limits, received)
-        val response =
-            try {
-                handler(
-                    main,
-                    requireNotNull(contract.request.address.match(message.address)),
-                    contract.request.codec.decode(message.payload),
-                )
-            } catch (original: Throwable) {
-                original.rethrowExceptional()
-                sendInternalFailure(main, reply, original)
-                throw original
+    ) {
+        val unary = contract.asUnaryContract()
+        replying(unary, null, message, received) { main, address, request ->
+            context(main) {
+                handler.handle(IncomingUnaryCall(address, request, message.headers, message.address, unary, communicator))
             }
-        if (response == null) return@consume Unit
-        val classification = contract.replies.policy.classify(response)
-        annotateResponse(main, classification)
-        sendReply(reply, response, classification)
-        classification.operationOutcome(Unit)
+        }
     }
 
     internal suspend fun <A : Any, Q : Any, I : Any, U : Any> watch(
@@ -882,13 +845,17 @@ class CommunicatorRouter internal constructor(
         }
     }
 
-    /** Handles one request of [contract] and sends its reply; [responseTemplate] is the template the reply's telemetry records. */
+    /**
+     * Handles one request of [contract] and sends its reply; [responseTemplate] is the template the reply's telemetry
+     * records. A handler that answers null, as a scatter listener may, sends no reply. A handler or classification
+     * that fails sends the contract's internal failure response.
+     */
     private suspend fun <A : Any, Q : Any, R : Any> replying(
         contract: UnaryContract<A, Q, R>,
         responseTemplate: String?,
         message: InboundMessage,
         received: TimeMark,
-        handler: suspend (MainSpanScope, A, Q) -> R,
+        handler: suspend (MainSpanScope, A, Q) -> R?,
     ) = consume(contract.name, contract.request.address.template, contract.failureSlug, message) { main ->
         val replyTo =
             message.replyTo ?: throw SluggedException.wrap(
@@ -908,7 +875,7 @@ class CommunicatorRouter internal constructor(
                 original.rethrowExceptional()
                 sendInternalFailure(main, reply, original)
                 throw original
-            }
+            } ?: return@consume Unit
         val classification =
             try {
                 policy.classify(response)
