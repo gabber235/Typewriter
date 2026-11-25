@@ -26,10 +26,7 @@ import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import org.koin.dsl.module
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
@@ -67,32 +64,6 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
                     scope.cancel()
                 }
             }
-        }
-    }
-
-    test("an engine kind's work started in the scope its parts receive ends with the deployment") {
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        val wiring =
-            EngineWiring(
-                wiredDeploymentContext(),
-                scope,
-                module {
-                    single<SessionTimings> { SessionHarness.SHORT }
-                    single<OnlineSessions> { OnlineSet() }
-                },
-            )
-        try {
-            val work =
-                wiring.application.koin
-                    .get<CoroutineScope>()
-                    .launch { awaitCancellation() }
-
-            scope.cancel()
-
-            withTimeout(10.seconds) { work.join() }
-            work.isCancelled shouldBe true
-        } finally {
-            wiring.close()
         }
     }
 

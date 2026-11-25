@@ -65,25 +65,27 @@ fun deliveryHost(
 ) = object : HostedRuntimeHost {
     override val messaging = MutableStateFlow<HostedMessagingSession?>(session)
     override val openTelemetry = telemetry.openTelemetry
-    override val sharedArtifacts =
-        object : SharedArtifactAccess {
-            override suspend fun publish(command: PublishSharedArtifact): Nothing = error("No content was returned")
+    override val sharedArtifacts = RefusingSharedArtifacts
+}
 
-            override suspend fun delete(
-                id: SharedArtifactId,
-                expectedRevision: SharedArtifactRevision,
-                provenance: SharedArtifactProvenance,
-            ): Nothing = error("No content was returned")
+/** Shared artifacts no test reaches: every call fails, so a test that does reach one sees it. */
+object RefusingSharedArtifacts : SharedArtifactAccess {
+    override suspend fun publish(command: PublishSharedArtifact): Nothing = error("No content was returned")
 
-            override suspend fun catalog(): Nothing = error("No content was returned")
+    override suspend fun delete(
+        id: SharedArtifactId,
+        expectedRevision: SharedArtifactRevision,
+        provenance: SharedArtifactProvenance,
+    ): Nothing = error("No content was returned")
 
-            override suspend fun metadata(digest: ArtifactDigest): Nothing = error("No content was returned")
+    override suspend fun catalog(): Nothing = error("No content was returned")
 
-            override suspend fun fetch(digest: ArtifactDigest): Nothing = error("No content was returned")
+    override suspend fun metadata(digest: ArtifactDigest): Nothing = error("No content was returned")
 
-            override suspend fun store(
-                expected: BlobMetadata,
-                content: ByteArray,
-            ): Nothing = error("No content was returned")
-        }
+    override suspend fun fetch(digest: ArtifactDigest): Nothing = error("No content was returned")
+
+    override suspend fun store(
+        expected: BlobMetadata,
+        content: ByteArray,
+    ): Nothing = error("No content was returned")
 }

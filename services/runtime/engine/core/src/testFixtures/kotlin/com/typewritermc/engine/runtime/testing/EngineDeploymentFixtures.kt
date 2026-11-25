@@ -57,13 +57,22 @@ private object UnusedHost : HostedRuntimeHost {
     override val sharedArtifacts get() = error("A refused deployment never reaches shared artifacts.")
 }
 
-/** A primary engine deployment of engine `engine` in Realm `realm` whose host messaging reaches [buckets]. */
+/**
+ * A primary engine deployment of engine `engine` in Realm `realm` whose host messaging reaches [buckets]; its runtime
+ * artifact is [runtimeArtifact], which staging reads, so a deployment staged from it gives an existing directory.
+ */
 fun wiredDeploymentContext(
     buckets: com.typewritermc.services.libs.communicator.kv.KeyValueBuckets =
         com.typewritermc.services.libs.communicator.testing.UnreachableKeyValueBuckets,
-) = deploymentContext(RuntimePlacement.PRIMARY_ENGINE, RuntimePlacement.PRIMARY_ENGINE).copy(host = MessagingHost(buckets))
+    runtimeArtifact: Path = Path.of("engine.jar"),
+) = deploymentContext(RuntimePlacement.PRIMARY_ENGINE, RuntimePlacement.PRIMARY_ENGINE).let {
+    it.copy(
+        host = MessagingHost(buckets),
+        artifacts = it.artifacts.copy(runtimeArtifact = it.artifacts.runtimeArtifact.copy(path = runtimeArtifact)),
+    )
+}
 
-/** A host whose messaging session reaches [buckets] and whose communicator is never used. */
+/** A host whose messaging session reaches [buckets], whose communicator is never used and whose shared artifacts refuse every call. */
 private class MessagingHost(
     buckets: com.typewritermc.services.libs.communicator.kv.KeyValueBuckets,
 ) : HostedRuntimeHost {
@@ -87,5 +96,5 @@ private class MessagingHost(
             ),
         )
     override val openTelemetry get() = telemetry
-    override val sharedArtifacts get() = error("Wiring never reaches shared artifacts.")
+    override val sharedArtifacts = RefusingSharedArtifacts
 }
