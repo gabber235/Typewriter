@@ -17,6 +17,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 
 use crate::cargo_build::target_directory;
+use crate::digest::Environment;
 use crate::digest::sha256;
 use crate::results::{
     self, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase, TestRun,
@@ -289,7 +290,7 @@ fn build_components(
     jobs(&mut cargo, args);
     cargo.log_stderr(log)?;
     deploy::reusable_components_build(ctx, "component-tests", &components)?
-        .run(ctx, &mut cargo)
+        .run(ctx, &mut cargo, &Environment::process())
         .context("the component build failed")?;
     let mut artifacts = BTreeMap::new();
     for (package, target) in wanted {

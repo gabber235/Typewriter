@@ -9,7 +9,7 @@ use std::fs::File;
 
 use anyhow::Result;
 
-use crate::digest::{Digest, Stamp, expand, walk};
+use crate::digest::{Digest, Environment, Stamp, expand, walk};
 use crate::lock::HeavyLock;
 use crate::{CommandExt, Context};
 
@@ -246,7 +246,7 @@ fn bring_up_to_date(
     let mut held = None;
     for generator in generators {
         let before = generator.digest(ctx, &upstream)?;
-        if stamp(ctx, generator).is_current(&ctx.root, &before) {
+        if stamp(ctx, generator).is_current(&ctx.root, &before, &Environment::process()) {
             upstream = before;
             continue;
         }
@@ -268,7 +268,7 @@ fn is_up_to_date_over(ctx: &Context, generators: &[Generator]) -> Result<bool> {
     let mut upstream = Digest::new();
     for generator in generators {
         let digest = generator.digest(ctx, &upstream)?;
-        if !stamp(ctx, generator).is_current(&ctx.root, &digest) {
+        if !stamp(ctx, generator).is_current(&ctx.root, &digest, &Environment::process()) {
             return Ok(false);
         }
         upstream = digest;
@@ -278,7 +278,12 @@ fn is_up_to_date_over(ctx: &Context, generators: &[Generator]) -> Result<bool> {
 
 /// Writes `generator`'s stamp: the `digest` it ran on and the outputs it left.
 fn record(ctx: &Context, generator: &Generator, digest: &Digest) -> Result<()> {
-    stamp(ctx, generator).record(&ctx.root, digest, &generator.output_files(ctx)?)
+    stamp(ctx, generator).record(
+        &ctx.root,
+        digest,
+        &generator.output_files(ctx)?,
+        &Environment::process(),
+    )
 }
 
 fn stamp(ctx: &Context, generator: &Generator) -> Stamp {

@@ -20,7 +20,7 @@ use std::process::Command;
 use anyhow::{Context as _, Result, bail};
 use serde_json::Value;
 
-use crate::digest::{Digest, Stamp, expand};
+use crate::digest::{Digest, Environment, Stamp, expand};
 use crate::{CommandExt as _, Context};
 
 /// One Cargo invocation and what it produces.
@@ -103,11 +103,11 @@ impl CargoBuild<'_> {
     /// Runs `cargo` unless its stamp records the same command and toolchain and every file it
     /// lists (the artifacts, what the last build read, the workspace files) still has the same
     /// contents, then stamps the artifacts again.
-    pub fn run(&self, ctx: &Context, cargo: &mut Command) -> Result<Outcome> {
-        let digest = self.digest(ctx, cargo)?;
+    pub fn run(&self, ctx: &Context, cargo: &mut Command, env: &Environment) -> Result<Outcome> {
+        let digest = self.digest(ctx, cargo, env)?;
         let stamp = self.stamp()?;
         let artifacts = self.artifact_names();
-        if let Some(listed) = stamp.files(&ctx.root, &digest)
+        if let Some(listed) = stamp.files(&ctx.root, &digest, env)
             && artifacts
                 .iter()
                 .chain(&self.workspace)
@@ -151,7 +151,7 @@ impl CargoBuild<'_> {
             files.extend(reads);
             files.sort();
             files.dedup();
-            stamp.record(&ctx.root, &digest, &files)
+            stamp.record(&ctx.root, &digest, &files, env)
         });
         if let Err(error) = recorded {
             eprintln!(
@@ -180,7 +180,7 @@ impl CargoBuild<'_> {
 
     /// The digest of the command line with the variables it sets, the flags the environment
     /// passes to rustc, and the toolchain's version.
-    fn digest(&self, ctx: &Context, cargo: &Command) -> Result<Digest> {
+    fn digest(&self, ctx: &Context, cargo: &Command, env: &Environment) -> Result<Digest> {
         let mut digest = Digest::new();
         digest.update(cargo.get_program().as_encoded_bytes());
         for arg in cargo.get_args() {
@@ -202,7 +202,7 @@ impl CargoBuild<'_> {
         }
         for flags in ["RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS"] {
             digest.update(&[0]);
-            match std::env::var_os(flags) {
+            match env.get(flags) {
                 Some(value) => digest.update(value.as_encoded_bytes()),
                 None => digest.update(b"unset"),
             }
@@ -440,10 +440,10 @@ fn normalize(path: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{
-        CARGO_WORKSPACE as WORKSPACE, FakeCargo, cargo_workspace, fake_cargo_child,
-        fake_cargo_in_child, refusal,
-    };
+    use crate::test_support::{CARGO_WORKSPACE as WORKSPACE, FakeCargo, cargo_workspace, refusal};
+
+    /// The environment of every case that does not vary one.
+    const NONE: Environment = Environment::EMPTY;
 
     const READS: &[&str] = &["backend/src/lib.rs"];
 
@@ -453,8 +453,8 @@ mod tests {
         let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
 
-        let first = build.run(&root.ctx, &mut cargo.command("one", READS));
-        let second = build.run(&root.ctx, &mut cargo.command("one", READS));
+        let first = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
+        let second = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
 
         assert_eq!(first.unwrap(), Outcome::Compiled);
         assert_eq!(second.unwrap(), Outcome::Reused);
@@ -469,12 +469,12 @@ mod tests {
         let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         build
-            .run(&root.ctx, &mut cargo.command("one", READS))
+            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
             .unwrap();
 
         root.write("backend/tests/case.rs", "#[test] fn edited() {}");
         root.write("backend/src/unused.rs", "");
-        let outcome = build.run(&root.ctx, &mut cargo.command("one", READS));
+        let outcome = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
         assert_eq!(outcome.unwrap(), Outcome::Reused);
     }
 
@@ -484,7 +484,7 @@ mod tests {
         let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         build
-            .run(&root.ctx, &mut cargo.command("one", READS))
+            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
             .unwrap();
 
         for (file, contents) in [
@@ -493,7 +493,7 @@ mod tests {
             ("backend/Cargo.toml", "[package]\nname = \"edited\""),
         ] {
             root.write(file, contents);
-            let outcome = build.run(&root.ctx, &mut cargo.command("one", READS));
+            let outcome = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
             assert_eq!(outcome.unwrap(), Outcome::Compiled, "after writing {file}");
         }
         assert_eq!(cargo.runs(), 4);
@@ -505,17 +505,17 @@ mod tests {
         let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         build
-            .run(&root.ctx, &mut cargo.command("one", READS))
+            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
             .unwrap();
 
         root.write("backend/src/new.rs", "pub fn new() {}");
         root.write("backend/src/lib.rs", "mod new;\nfn main() {}");
         let with_module = ["backend/src/lib.rs", "backend/src/new.rs"];
-        let added = build.run(&root.ctx, &mut cargo.command("one", &with_module));
+        let added = build.run(&root.ctx, &mut cargo.command("one", &with_module), &NONE);
         assert_eq!(added.unwrap(), Outcome::Compiled);
 
         root.write("backend/src/new.rs", "pub fn new() { edited() }");
-        let edited = build.run(&root.ctx, &mut cargo.command("one", &with_module));
+        let edited = build.run(&root.ctx, &mut cargo.command("one", &with_module), &NONE);
         assert_eq!(edited.unwrap(), Outcome::Compiled);
     }
 
@@ -526,11 +526,14 @@ mod tests {
         let build = cargo.build(WORKSPACE);
         let mut silent = cargo.command("one", READS);
         silent.env("DEP_INFO", "/dev/null");
-        build.run(&root.ctx, &mut silent).unwrap();
+        build.run(&root.ctx, &mut silent, &NONE).unwrap();
 
         let mut again = cargo.command("one", READS);
         again.env("DEP_INFO", "/dev/null");
-        assert_eq!(build.run(&root.ctx, &mut again).unwrap(), Outcome::Compiled);
+        assert_eq!(
+            build.run(&root.ctx, &mut again, &NONE).unwrap(),
+            Outcome::Compiled
+        );
     }
 
     #[test]
@@ -539,19 +542,19 @@ mod tests {
         let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         build
-            .run(&root.ctx, &mut cargo.command("one", READS))
+            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
             .unwrap();
 
         let mut release = cargo.command("one", READS);
         release.arg("--release");
         assert_eq!(
-            build.run(&root.ctx, &mut release).unwrap(),
+            build.run(&root.ctx, &mut release, &NONE).unwrap(),
             Outcome::Compiled
         );
         let mut profile = cargo.command("one", READS);
         profile.env("CARGO_PROFILE_DEV_DEBUG", "0");
         assert_eq!(
-            build.run(&root.ctx, &mut profile).unwrap(),
+            build.run(&root.ctx, &mut profile, &NONE).unwrap(),
             Outcome::Compiled
         );
     }
@@ -562,14 +565,14 @@ mod tests {
         let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         build
-            .run(&root.ctx, &mut cargo.command("one", READS))
+            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
             .unwrap();
 
         fs::write(cargo.artifact(), "built by hand").unwrap();
-        let changed = build.run(&root.ctx, &mut cargo.command("one", READS));
+        let changed = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
         assert_eq!(changed.unwrap(), Outcome::Compiled);
         fs::remove_file(cargo.artifact()).unwrap();
-        let removed = build.run(&root.ctx, &mut cargo.command("one", READS));
+        let removed = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
         assert_eq!(removed.unwrap(), Outcome::Compiled);
         assert_eq!(fs::read_to_string(cargo.artifact()).unwrap(), "one");
     }
@@ -582,18 +585,13 @@ mod tests {
         let mut build = cargo.build(WORKSPACE);
         build.artifacts.push(root.path("target/renamed.wasm"));
 
-        let error = refusal(build.run(&root.ctx, &mut cargo.command("one", READS)));
+        let error = refusal(build.run(&root.ctx, &mut cargo.command("one", READS), &NONE));
         assert!(error.contains("target/renamed.wasm"), "{error}");
         assert!(!root.path("target/renamed.wasm").exists());
     }
 
-    /// Runs twice: as a normal test it runs itself as a child once per build, each with its own
-    /// value of the variable a crate read ([`fake_cargo_in_child`]).
     #[test]
     fn a_changed_value_of_a_variable_a_crate_read_builds_again() {
-        if fake_cargo_child() {
-            return;
-        }
         let root = cargo_workspace();
         // The dependency file rustc writes for the crate itself, in the unit's own folder.
         root.write(
@@ -605,42 +603,40 @@ mod tests {
                 lib = root.path("backend/src/lib.rs").display()
             ),
         );
-        let build = |greeting: &str| {
-            fake_cargo_in_child(
-                "cargo_build::tests::a_changed_value_of_a_variable_a_crate_read_builds_again",
-                &root,
-                ("XTASK_TEST_GREETING", greeting),
-            )
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let build = cargo.build(WORKSPACE);
+        let run = |greeting: &str| {
+            let env = NONE.with("XTASK_TEST_GREETING", greeting);
+            build
+                .run(&root.ctx, &mut cargo.command("one", READS), &env)
+                .unwrap()
         };
 
-        assert_eq!(build("hello"), Outcome::Compiled);
-        assert_eq!(build("hello"), Outcome::Reused);
-        assert_eq!(build("goodbye"), Outcome::Compiled);
+        assert_eq!(run("hello"), Outcome::Compiled);
+        assert_eq!(run("hello"), Outcome::Reused);
+        assert_eq!(run("goodbye"), Outcome::Compiled);
     }
 
-    /// Runs twice, as the case above does.
     #[test]
     fn a_changed_value_of_a_variable_a_build_script_watches_builds_again() {
-        if fake_cargo_child() {
-            return;
-        }
         let root = cargo_workspace();
         // What the build script printed, in its run's own folder.
         root.write(
             "target/debug/build/schema/4567/run/stdout",
             "cargo::rerun-if-env-changed=XTASK_TEST_SCHEMA\ncargo:rerun-if-changed=build.rs\n",
         );
-        let build = |schema: &str| {
-            fake_cargo_in_child(
-                "cargo_build::tests::a_changed_value_of_a_variable_a_build_script_watches_builds_again",
-                &root,
-                ("XTASK_TEST_SCHEMA", schema),
-            )
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let build = cargo.build(WORKSPACE);
+        let run = |schema: &str| {
+            let env = NONE.with("XTASK_TEST_SCHEMA", schema);
+            build
+                .run(&root.ctx, &mut cargo.command("one", READS), &env)
+                .unwrap()
         };
 
-        assert_eq!(build("v1"), Outcome::Compiled);
-        assert_eq!(build("v1"), Outcome::Reused);
-        assert_eq!(build("v2"), Outcome::Compiled);
+        assert_eq!(run("v1"), Outcome::Compiled);
+        assert_eq!(run("v1"), Outcome::Reused);
+        assert_eq!(run("v2"), Outcome::Compiled);
     }
 
     #[test]
@@ -668,16 +664,16 @@ mod tests {
         let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
         build
-            .run(&root.ctx, &mut cargo.command("one", READS))
+            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
             .unwrap();
 
         // Build output and a nested package are not the package's files.
         root.write("backend/schema/target/scratch", "rebuilt");
         root.write("backend/schema/nested/src/lib.rs", "pub fn nested() {}");
-        let outside = build.run(&root.ctx, &mut cargo.command("one", READS));
+        let outside = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
         assert_eq!(outside.unwrap(), Outcome::Reused);
         root.write("backend/schema/tables/user.sql", "DEFINE TABLE person;");
-        let edited = build.run(&root.ctx, &mut cargo.command("one", READS));
+        let edited = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
         assert_eq!(edited.unwrap(), Outcome::Compiled);
     }
 
@@ -688,11 +684,11 @@ mod tests {
         let build = cargo.build(WORKSPACE);
         let reads = ["backend/src/../src/lib.rs", "../rustlib/src/lib.rs"];
         build
-            .run(&root.ctx, &mut cargo.command("one", &reads))
+            .run(&root.ctx, &mut cargo.command("one", &reads), &NONE)
             .unwrap();
 
         root.write("backend/src/lib.rs", "fn main() { edited() }");
-        let outcome = build.run(&root.ctx, &mut cargo.command("one", &reads));
+        let outcome = build.run(&root.ctx, &mut cargo.command("one", &reads), &NONE);
         assert_eq!(outcome.unwrap(), Outcome::Compiled);
     }
 

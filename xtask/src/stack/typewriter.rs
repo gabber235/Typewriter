@@ -23,6 +23,7 @@ use super::spec::{
 };
 use crate::cargo_build::{CargoBuild, Outcome, target_directory, workspace_files};
 use crate::cluster::CiCluster;
+use crate::digest::Environment;
 use crate::{Context, deploy};
 
 /// The component test workspace the `typewriter-stack` binary lives in.
@@ -680,6 +681,7 @@ fn build_stack_binary(ctx: &Context) -> Result<()> {
                 "typewriter-stack",
             ],
         ),
+        &Environment::process(),
     )?;
     say_reused(STACK_BINARY.name, &built);
     Ok(())
@@ -687,8 +689,11 @@ fn build_stack_binary(ctx: &Context) -> Result<()> {
 
 fn build_components(ctx: &Context) -> Result<()> {
     let components = deploy::deployable(ctx)?;
-    let built = deploy::reusable_components_build(ctx, "components", &components)?
-        .run(ctx, &mut deploy::components_build(ctx, &components))?;
+    let built = deploy::reusable_components_build(ctx, "components", &components)?.run(
+        ctx,
+        &mut deploy::components_build(ctx, &components),
+        &Environment::process(),
+    )?;
     say_reused(COMPONENTS.name, &built);
     Ok(())
 }

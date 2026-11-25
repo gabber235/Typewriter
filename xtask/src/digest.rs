@@ -1,6 +1,8 @@
 //! Digests of input files, which decide whether a generator or a build can reuse what it wrote
 //! last time: the same digest means the same inputs.
 
+use std::collections::BTreeMap;
+use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -97,6 +99,35 @@ pub fn skipped(name: &str) -> bool {
     name.starts_with('.') || matches!(name, "node_modules" | "build" | "target")
 }
 
+/// The environment variables a step runs with, which its caller passes in: the process's own in
+/// production, chosen values in a test.
+#[derive(Clone)]
+pub struct Environment(BTreeMap<String, OsString>);
+
+impl Environment {
+    /// No variables at all.
+    pub const EMPTY: Self = Self(BTreeMap::new());
+
+    /// This process's variables; one whose name is not Unicode is left out, as no step names it.
+    pub fn process() -> Self {
+        Self(
+            std::env::vars_os()
+                .filter_map(|(name, value)| Some((name.into_string().ok()?, value)))
+                .collect(),
+        )
+    }
+
+    /// This environment with `name` set to `value`.
+    pub fn with(mut self, name: &str, value: &str) -> Self {
+        self.0.insert(name.to_owned(), value.into());
+        self
+    }
+
+    pub fn get(&self, name: &str) -> Option<&OsStr> {
+        self.0.get(name).map(OsString::as_os_str)
+    }
+}
+
 /// What a generator or a build left last time: the digest of what it ran on and the sha256 of each
 /// entry it vouches for (a generator's outputs; a build's artifacts and the files and environment
 /// variables it read). An entry is a path, relative to the root or absolute, or `$NAME` for the
@@ -110,14 +141,14 @@ impl Stamp {
         Self { path }
     }
 
-    /// Whether the stamp records `digest` and every output it lists still has the recorded
-    /// contents, so an output that was deleted or edited by hand is stale.
-    pub fn is_current(&self, root: &Path, digest: &Digest) -> bool {
-        self.files(root, digest).is_some()
+    /// Whether the stamp records `digest` and every entry it lists still has the recorded
+    /// contents in `env`, so an output that was deleted or edited by hand is stale.
+    pub fn is_current(&self, root: &Path, digest: &Digest, env: &Environment) -> bool {
+        self.files(root, digest, env).is_some()
     }
 
-    /// The files the stamp lists when it is current for `digest`.
-    pub fn files(&self, root: &Path, digest: &Digest) -> Option<Vec<String>> {
+    /// The entries the stamp lists when it is current for `digest` in `env`.
+    pub fn files(&self, root: &Path, digest: &Digest, env: &Environment) -> Option<Vec<String>> {
         let record = fs::read_to_string(&self.path).ok()?;
         let mut lines = record.lines();
         if lines.next()? != digest.hex() {
@@ -126,7 +157,7 @@ impl Stamp {
         lines
             .map(|line| {
                 let (sum, entry) = line.split_once(' ')?;
-                (fingerprint(root, entry).ok()? == sum).then(|| entry.to_owned())
+                (fingerprint(root, entry, env).ok()? == sum).then(|| entry.to_owned())
             })
             .collect()
     }
@@ -141,25 +172,31 @@ impl Stamp {
         }
     }
 
-    /// Records `digest` and the current contents of each of `outputs`.
-    pub fn record(&self, root: &Path, digest: &Digest, outputs: &[String]) -> Result<()> {
+    /// Records `digest` and the current contents of each of `outputs` in `env`.
+    pub fn record(
+        &self,
+        root: &Path,
+        digest: &Digest,
+        outputs: &[String],
+        env: &Environment,
+    ) -> Result<()> {
         let dir = self.path.parent().unwrap_or(root);
         fs::create_dir_all(dir).with_context(|| format!("cannot create {}", dir.display()))?;
         let mut record = format!("{}\n", digest.hex());
         for output in outputs {
-            record.push_str(&format!("{} {output}\n", fingerprint(root, output)?));
+            record.push_str(&format!("{} {output}\n", fingerprint(root, output, env)?));
         }
         fs::write(&self.path, record)
             .with_context(|| format!("cannot write {}", self.path.display()))
     }
 }
 
-/// The sha256 of a stamp entry: a file's contents, or for `$NAME` the variable's value in this
-/// process, told apart from an unset one.
-fn fingerprint(root: &Path, entry: &str) -> Result<String> {
+/// The sha256 of a stamp entry: a file's contents, or for `$NAME` the variable's value in `env`,
+/// told apart from an unset one.
+fn fingerprint(root: &Path, entry: &str, env: &Environment) -> Result<String> {
     match entry.strip_prefix('$') {
         Some(name) => {
-            let value = match std::env::var_os(name) {
+            let value = match env.get(name) {
                 Some(value) => [b"set ", value.as_encoded_bytes()].concat(),
                 None => b"unset".to_vec(),
             };
@@ -190,7 +227,7 @@ mod tests {
         let root = TempRoot::new();
         root.write(OUTPUT, "generated");
         let stamp = root.stamp("panel.stamp", &Digest::new(), &[OUTPUT]);
-        assert!(stamp.is_current(&root.ctx.root, &Digest::new()));
+        assert!(stamp.is_current(&root.ctx.root, &Digest::new(), &Environment::EMPTY));
     }
 
     #[test]
@@ -200,7 +237,7 @@ mod tests {
         let stamp = root.stamp("panel.stamp", &Digest::new(), &[OUTPUT]);
         let mut edited = Digest::new();
         edited.update(b"edited inputs");
-        assert!(!stamp.is_current(&root.ctx.root, &edited));
+        assert!(!stamp.is_current(&root.ctx.root, &edited, &Environment::EMPTY));
     }
 
     #[test]
@@ -209,7 +246,7 @@ mod tests {
         root.write(OUTPUT, "generated");
         let stamp = root.stamp("panel.stamp", &Digest::new(), &[OUTPUT]);
         fs::remove_file(root.path(OUTPUT)).unwrap();
-        assert!(!stamp.is_current(&root.ctx.root, &Digest::new()));
+        assert!(!stamp.is_current(&root.ctx.root, &Digest::new(), &Environment::EMPTY));
     }
 
     #[test]
@@ -218,7 +255,7 @@ mod tests {
         root.write(OUTPUT, "generated");
         let stamp = root.stamp("panel.stamp", &Digest::new(), &[OUTPUT]);
         root.write(OUTPUT, "edited by hand");
-        assert!(!stamp.is_current(&root.ctx.root, &Digest::new()));
+        assert!(!stamp.is_current(&root.ctx.root, &Digest::new(), &Environment::EMPTY));
     }
 
     #[test]
@@ -226,6 +263,10 @@ mod tests {
         let root = TempRoot::new();
         root.write(OUTPUT, "generated");
         root.stamp("panel.stamp", &Digest::new(), &[OUTPUT]);
-        assert!(!Stamp::at(root.path("protocol.stamp")).is_current(&root.ctx.root, &Digest::new()));
+        assert!(!Stamp::at(root.path("protocol.stamp")).is_current(
+            &root.ctx.root,
+            &Digest::new(),
+            &Environment::EMPTY
+        ));
     }
 }
