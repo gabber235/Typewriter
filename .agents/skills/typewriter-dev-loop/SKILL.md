@@ -34,15 +34,19 @@ description: Run Typewriter locally: builds, the agent stack, Paper, the panel, 
   read it before rerunning.
 
 ## Game suite
-- `cargo xtask e2e game` runs every `src/gameTest` requirement against real Minecraft clients on a
-  stepped Paper, inside the stack's `game` spec (evidence in `.xtask/state/e2e/game`). It builds
+- `cargo xtask e2e game` runs the product's `src/gameTest` requirements against real Minecraft
+  clients on a stepped Paper, inside the stack's `game` spec (evidence in `.xtask/state/e2e/game`).
+  `cargo xtask e2e playtest` runs the framework's own (`services/playtest`) the same way, without a
+  stack. It builds
   first, then boots its own pool, Papers and clients; never start them by hand. The pool lives exactly as long as the Gradle build. When a stuck pool still holds
   `pool.lock`, the next run fails with `GameUnavailable` naming `pool.log`; read that log.
 - `--only GROUP-1,WINDOW-1` runs those requirements; `--repeat <n>` runs exactly n attempts of each,
   to hunt a flaky one.
-- A smaller pool: `cargo xtask e2e game --clients 1` (default 4 clients). Every game Paper loads
-  Typewriter, which needs the stack's environment, so a direct `./gradlew gameTest` fails naming the
-  missing variable.
+- A smaller pool: `cargo xtask e2e game --clients 1` (default 4 clients). A `game` Paper loads
+  Typewriter, which needs the stack's environment, so a direct `./gradlew gameTest` of the product
+  fails as its Paper boots, naming the missing variable; the build itself needs no stack.
+- `--demos`, after a run, reruns its failed, flaky, quarantined, unsteady and touched requirements
+  once each with clips into `<suite>-demos`; it never fails.
 - Results: `.xtask/results/game/` holds `test_run.json`, one evidence folder per attempt (frames,
   golden candidates, clips) and `logs/<n>/` with `pool.log`, `paper.log` and `client-gv-<i>.log` for
   the newest 3 runs. Read them before rerunning.
