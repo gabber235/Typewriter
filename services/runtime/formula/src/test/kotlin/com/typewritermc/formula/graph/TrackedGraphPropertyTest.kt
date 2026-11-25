@@ -40,7 +40,10 @@ val TrackedGraphPropertyTest by testSuite {
         }
     }
 
-    test("after any changes and any overlay, every fork query equals a fresh computation over the fork's environment") {
+    test(
+        "after any changes and any overlay, every fork query equals a fresh computation over the fork's environment, " +
+            "and so does every query of an untouched base the fork merged into, before and after its next change",
+    ) {
         checkAll(config, Arb.long()) { seed ->
             val random = Random(seed)
             val generated = GeneratedGraph(random)
@@ -51,11 +54,17 @@ val TrackedGraphPropertyTest by testSuite {
             }
             generated.outcomes(base)
             val forked = base.forkWith(*generated.changes(random).toTypedArray())
-            if (random.nextBoolean()) {
+            val moved = random.nextBoolean()
+            if (moved) {
                 base.change(*generated.changes(random).toTypedArray())
                 generated.outcomes(base)
             }
             generated.outcomes(forked) shouldBe generated.outcomes(TrackedGraph(forked.cells))
+            if (!moved && random.nextBoolean()) {
+                base.merge(forked) shouldBe true
+                generated.outcomes(base) shouldBe generated.outcomes(TrackedGraph(forked.cells))
+                base.change(*generated.changes(random).toTypedArray())
+            }
             generated.outcomes(base) shouldBe generated.outcomes(TrackedGraph(base.cells))
         }
     }
@@ -73,7 +82,7 @@ val TrackedGraphPropertyTest by testSuite {
                 thread {
                     while (advancing.get()) {
                         // A read overtaken by an advance gives no answer at all.
-                        val outcome = runCatching { graph.pin().read(difference) }
+                        val outcome = runCatching { graph.pin(GraphWork()).read(difference) }
                         if (outcome.getOrNull() != 0 && outcome.exceptionOrNull() !is StaleRevision) wrong += outcome
                     }
                 }

@@ -202,7 +202,10 @@ fun RealmFixture.previewTypeChange(
  */
 suspend fun RealmFixture.publishToEngine(): Map<ResourceId, Any> =
     views.capture().use { captured ->
-        val assessment = RealmCheckRuntime(views).use { checks -> AuthoringAcceptance(views, checks).evaluate(captured) }
+        val assessment =
+            RealmCheckRuntime(views, telemetry.telemetry).use { checks ->
+                AuthoringAcceptance(views, checks).evaluate(captured)
+            }
         val view = captured.root
         val compiled =
             with(CompilationInputs(view, assessment.resources)) {
@@ -546,7 +549,7 @@ class FormulaReads internal constructor(
         resource: ResourceId,
         vararg path: String,
     ): Any? =
-        realm.views.pin().use { pinned ->
+        realm.views.unobservedPin { pinned ->
             with(pinned.reads) {
                 val environment = RealmEvaluationEnvironment(this, null)
                 val evaluated = read(Evaluate(siteOf(resource)))
@@ -672,7 +675,7 @@ suspend fun RealmFixture.publicationBlockers(): List<Diagnostic> =
     views
         .capture()
         .use { captured ->
-            RealmCheckRuntime(views).use { checks -> AuthoringAcceptance(views, checks).evaluate(captured).findings }
+            RealmCheckRuntime(views, telemetry.telemetry).use { checks -> AuthoringAcceptance(views, checks).evaluate(captured).findings }
         }.filter { it.severity == DiagnosticSeverity.ERROR }
 
 /** Asserts that one of these findings points at [resource]. */

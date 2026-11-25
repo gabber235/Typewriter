@@ -62,6 +62,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.longs.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.CancellationException
@@ -385,6 +387,17 @@ val FormulaReferencesTest by testSuite {
         }
     }
 
+    test("creating the target of a missing quoted name binds the saved broken formula") {
+        withSetup(page, catalog = catalog) {
+            val reader = commitDefinition("reader", plainType(entryRef)) { computedVar(it.use, "`Gold Coin`") }.created()
+            val created = createEntry("Gold Coin")
+            commit(created).shouldBeCommitted()
+
+            referenceTargets(reader) shouldBe listOf(created.id)
+            errorCodesOn(reader).shouldBeEmpty()
+        }
+    }
+
     test("a new target with a deleted name binds the emptied reference") {
         withSetup(page, catalog = catalog) { demo ->
             val user = commitDefinition("user", plainType(entryRef)) { computedVar(it.use, "smith") }.created()
@@ -525,7 +538,7 @@ val FormulaReferencesTest by testSuite {
         }
     }
 
-    test("a commit on an unrelated resource with a broken formula saved forks nothing and runs no hook") {
+    test("a commit on an unrelated resource with a broken formula saved runs no hook") {
         withSetup(page, catalog = catalog) { demo ->
             val reader = commitDefinition("reader", plainType(textUse)) { computedVar(it.use, "counted.name + missing_name") }.created()
             settle()
@@ -535,6 +548,19 @@ val FormulaReferencesTest by testSuite {
             settle()
 
             CountedHook.runs.get() shouldBe runs
+        }
+    }
+
+    test("evaluating a view a commit installed after answering a broken formula's names reuses what the live graph checked") {
+        withSetup(page, catalog = catalog) { demo ->
+            commit(rename(demo.pageId, "renamed")).shouldBeCommitted()
+            settle()
+
+            views.capture().use { installed -> checks.evaluateCapture(installed.root) }
+
+            val work = telemetry.counts("typewriter.realm.graph_work", listOf("realm.operation", "graph.work"))
+            work[listOf("capture.evaluation", "verified")].shouldNotBeNull() shouldBeGreaterThan 0
+            work[listOf("capture.evaluation", "computed")] shouldBe 0L
         }
     }
 

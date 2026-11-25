@@ -93,23 +93,23 @@ internal fun AuthoringView.expectations(identity: InputIdentity): List<EditExpec
     when (identity) {
         is InputIdentity.Value, is InputIdentity.Membership, is InputIdentity.Order -> {
             val at = identity.locationOf()
-            listOf(EditExpectation.createValue(at = at, expected = values.value(at)))
+            listOf(EditExpectation.createValue(at = at, expected = facts.value(at)))
         }
 
         is InputIdentity.Form -> {
-            listOf(EditExpectation.createConfiguration(at = identity.at, expected = values.configuration(identity.at)))
+            listOf(EditExpectation.createConfiguration(at = identity.at, expected = facts.configuration(identity.at)))
         }
 
         is InputIdentity.Existence -> {
-            listOf(EditExpectation.createResourceExists(id = identity.resource, expected = values.resource(identity.resource) != null))
+            listOf(EditExpectation.createResourceExists(id = identity.resource, expected = facts.resource(identity.resource) != null))
         }
 
         is InputIdentity.Resource -> {
-            listOf(EditExpectation.createResource(id = identity.resource, expected = values.resource(identity.resource)))
+            listOf(EditExpectation.createResource(id = identity.resource, expected = facts.resource(identity.resource)))
         }
 
         is InputIdentity.Selection -> {
-            listOf(EditExpectation.resourceIds(values.resourceIds()))
+            listOf(EditExpectation.resourceIds(facts.resourceIds()))
         }
 
         is InputIdentity.Incoming -> {
@@ -118,13 +118,13 @@ internal fun AuthoringView.expectations(identity: InputIdentity): List<EditExpec
                     identity.resource,
                     contract.id,
                     TraversalDirection.BOTH,
-                    values.links(identity.resource, contract.id, TraversalDirection.BOTH),
+                    facts.links(identity.resource, contract.id, TraversalDirection.BOTH),
                 )
             }
         }
 
         is InputIdentity.Types -> {
-            listOf(EditExpectation.createTypes(resource = identity.resource, expected = values.types(identity.resource)))
+            listOf(EditExpectation.createTypes(resource = identity.resource, expected = facts.types(identity.resource)))
         }
 
         is InputIdentity.Catalog -> {

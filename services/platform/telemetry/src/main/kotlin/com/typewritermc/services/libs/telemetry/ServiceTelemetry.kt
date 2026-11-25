@@ -86,8 +86,14 @@ class ServiceTelemetry(
 class TelemetryCounter internal constructor(
     private val counter: LongCounter,
 ) {
-    fun add(vararg attributes: Pair<String, String>) {
-        counter.add(1, Attributes.builder().apply { attributes.forEach { (key, value) -> put(key, value) } }.build())
+    fun add(vararg attributes: Pair<String, String>) = add(1, *attributes)
+
+    /** Adds [amount], which must not be negative. */
+    fun add(
+        amount: Long,
+        vararg attributes: Pair<String, String>,
+    ) {
+        counter.add(amount, Attributes.builder().apply { attributes.forEach { (key, value) -> put(key, value) } }.build())
     }
 }
 

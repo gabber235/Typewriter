@@ -13,24 +13,16 @@ import skirout.kernel.v1.resource_id.ResourceId
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
-/** Counts what a realm's query graph computes, also a rerun that gives an equal result, and what it evicts. */
+/**
+ * Counts, per key, how often a realm's live graph gained a result: computed there, also a rerun that gives an equal
+ * result, or computed in a fork it merged. Tests read which results were made again; graph work counts what they cost.
+ */
 class GraphRuns : GraphListener {
     private val computed = ConcurrentHashMap<GraphKey<*>, AtomicLong>()
-    private val evictions = AtomicLong()
 
     override fun computed(key: GraphKey<*>) {
         computed.computeIfAbsent(key) { AtomicLong() }.incrementAndGet()
     }
-
-    override fun evicted(key: GraphKey<*>) {
-        evictions.incrementAndGet()
-    }
-
-    /** How many computations the graph ran so far, over every key. */
-    fun totalRuns(): Long = computed.values.sumOf { it.get() }
-
-    /** How many memos the graph evicted so far. */
-    fun evicted(): Long = evictions.get()
 
     /** How often [key] was computed so far. */
     fun runsOf(key: GraphKey<*>): Long = computed[key]?.get() ?: 0
@@ -58,19 +50,3 @@ class GraphRuns : GraphListener {
 
 /** The keys whose count in [after] is higher than in [before]. */
 fun <K> Map<K, Long>.grewFrom(before: Map<K, Long>): Set<K> = filterTo(linkedMapOf()) { (key, count) -> count > (before[key] ?: 0) }.keys
-
-/** Tells both listeners what the graph does, this one first. */
-operator fun GraphListener.plus(other: GraphListener): GraphListener {
-    val first = this
-    return object : GraphListener {
-        override fun computed(key: GraphKey<*>) {
-            first.computed(key)
-            other.computed(key)
-        }
-
-        override fun evicted(key: GraphKey<*>) {
-            first.evicted(key)
-            other.evicted(key)
-        }
-    }
-}

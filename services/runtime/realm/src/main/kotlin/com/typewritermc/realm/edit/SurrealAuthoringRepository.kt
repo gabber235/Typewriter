@@ -9,7 +9,9 @@ import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.GraphOperation
 import com.typewritermc.realm.authoring.conflicts
+import com.typewritermc.realm.authoring.counting
 import com.typewritermc.realm.authoring.savedState
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.formula.CommitRepairs
@@ -24,16 +26,15 @@ import com.typewritermc.services.libs.telemetry.LogSeverity
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
-import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.unknownVariant
-import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import skirout.editor.v1.authoring.AuthoringState
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring_facts.EditExpectation
@@ -56,7 +57,7 @@ internal class RealmAuthoringOwner(
     private val storage: AuthoringStorage,
     private val views: AuthoringViewStore,
     private val findings: () -> List<FindingSet>,
-    private val telemetry: ServiceTelemetry = OpenTelemetry.noop().serviceTelemetry("realm.authoring"),
+    private val telemetry: ServiceTelemetry,
     private val repairs: CommitRepairs = views.commitRepairs(),
 ) : AuthoringRepository {
     private val admission = Mutex()
@@ -96,7 +97,7 @@ internal class RealmAuthoringOwner(
                 null -> {}
 
                 request -> {
-                    return@withLock views.capture().use { CommitPreparedEditResponse.CommittedWrapper(it.root.savedState(findings())) }
+                    return@withLock views.capture().use { CommitPreparedEditResponse.CommittedWrapper(reply(it.root)) }
                 }
 
                 else -> {
@@ -109,9 +110,13 @@ internal class RealmAuthoringOwner(
             val admitted = views.capture().use { lease -> admit(lease.root, edit, submission, request) }
             when (admitted) {
                 is Admission.Refused -> admitted.response
-                is Admission.Installed -> admitted.saved.use { CommitPreparedEditResponse.CommittedWrapper(it.root.savedState(findings())) }
+                is Admission.Installed -> admitted.saved.use { CommitPreparedEditResponse.CommittedWrapper(reply(it.root)) }
             }
         }
+
+    /** The saved state a commit replies with, recording the graph work of judging its findings. */
+    private fun reply(saved: AuthoringView): AuthoringState =
+        views.counting(GraphOperation.COMMIT_REPLY) { work -> saved.savedState(findings(), work) }
 
     /**
      * Checks [edit] on [current], binds the names it makes resolve, then persists and installs the result under the
@@ -127,7 +132,7 @@ internal class RealmAuthoringOwner(
         if (edit.catalog != current.catalog.generation) {
             return Admission.Refused(CommitPreparedEditResponse.CatalogChangedErrorWrapper(current.catalog.generation))
         }
-        val values = current.values
+        val values = current.facts
         val conflicts = values.conflicts(edit.expectations)
         if (conflicts.isNotEmpty()) return Admission.Refused(CommitPreparedEditResponse.ConflictErrorWrapper(conflicts))
         val planner = AuthoringMutationPlanner(current)
@@ -191,12 +196,14 @@ internal class RealmAuthoringOwner(
             val changed = plan.resources.keys + plan.removedResources
             try {
                 val intents =
-                    logWhenSlow(
-                        scope,
-                        1.seconds,
-                        { "Binding names for commit ${submission.value}, editing ${changed.joinToString { it.value }}" },
-                    ) {
-                        repairs.intents(current, candidate, plan.resources.keys)
+                    views.counting(GraphOperation.COMMIT_BIND) { work ->
+                        logWhenSlow(
+                            scope,
+                            1.seconds,
+                            { "Binding names for commit ${submission.value}, editing ${changed.joinToString { it.value }}" },
+                        ) {
+                            repairs.intents(current, candidate, plan.resources.keys, work)
+                        }
                     }
                 when (val repaired = if (intents.isEmpty()) null else planner.plan(edit, intents)) {
                     null -> {

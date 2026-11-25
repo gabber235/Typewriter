@@ -8,8 +8,6 @@ import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.authoring.forReply
-import com.typewritermc.realm.authoring.judgedForRelease
 import com.typewritermc.realm.storage.decodeSkir
 import com.typewritermc.realm.storage.encodeSkir
 import com.typewritermc.realm.storage.inTransaction
@@ -438,7 +436,7 @@ internal class RealmPublicationCoordinator(
         }
     }
 
-    private fun capturedFindings(root: AuthoringView) = findings().forReply { it.judgedForRelease(root) }
+    private fun capturedFindings(root: AuthoringView) = acceptance.judged(findings(), root)
 
     private fun updateForPrepared(next: Prepared) {
         val active = releasing

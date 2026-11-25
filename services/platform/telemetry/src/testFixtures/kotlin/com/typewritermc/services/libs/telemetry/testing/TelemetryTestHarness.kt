@@ -88,15 +88,27 @@ class TelemetryTestHarness private constructor(
     fun counts(
         metric: String,
         attribute: String,
-    ): Map<String?, Long> =
+    ): Map<String?, Long> = counts(metric, listOf(attribute)).mapKeys { (values, _) -> values.single() }
+
+    /**
+     * The current sum of counter [metric] per combination of values of [attributes], each key listing the values in
+     * the order of [attributes]; empty while nothing was counted.
+     */
+    fun counts(
+        metric: String,
+        attributes: List<String>,
+    ): Map<List<String?>, Long> =
         metrics
             .collectAllMetrics()
             .filter { it.name == metric }
             .flatMap { it.longSumData.points }
-            .groupingBy { it.attributes.get(AttributeKey.stringKey(attribute)) }
+            .groupingBy { point -> attributes.map { point.attributes.get(AttributeKey.stringKey(it)) } }
             .fold(0L) { sum, point -> sum + point.value }
 
     fun finishedSpans(): List<SpanData> = exporter.finishedSpanItems
+
+    /** The one finished span named [name]. */
+    fun span(name: String): SpanData = finishedSpans().single { it.name == name }
 
     fun finishedLogs(): List<LogRecordData> = logExporter.finishedLogRecordItems
 

@@ -196,5 +196,5 @@ internal fun Checker.answer(
     meaning: NameMeaning,
     candidates: List<ResourceId>,
 ) {
-    trace.names += NameAnswer(name.span, meaning, candidates)
+    trace.names += NameAnswer(name.span, name.text, meaning, candidates)
 }

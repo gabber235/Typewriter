@@ -3,13 +3,13 @@ package com.typewritermc.realm.testing
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.SubmissionKey
-import com.typewritermc.formula.graph.GraphListener
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.RealmGraphTelemetry
 import com.typewritermc.realm.authoring.RealmServices
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.checking.checkingServices
@@ -29,7 +29,7 @@ import com.typewritermc.realm.operation.RuntimeOperationPreparation
 import com.typewritermc.realm.search.SurrealAuthoringSearchRepository
 import com.typewritermc.realm.storage.MigrationResources
 import com.typewritermc.realm.storage.openTestDatabase
-import com.typewritermc.services.libs.telemetry.testing.InMemoryTelemetry
+import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.setup.Setup
 import com.typewritermc.testkit.CatalogEncoder
 import com.typewritermc.testkit.setup.SetupApplier
@@ -99,14 +99,16 @@ class RealmFixture private constructor(
     private var catalog: FixtureCatalog,
     private val storage: AuthoringStorage,
     private val services: RealmServices = checkingServices(),
-    private val listener: GraphListener = GraphListener.NONE,
 ) : AutoCloseable {
     private val authors = mutableListOf<RealmAuthor>()
     private var activation: AutoCloseable? = null
     private var runtime: RealmCheckRuntime? = null
 
     /** Where the realm's commits log, read back in tests. A restart keeps it. */
-    internal val telemetry = InMemoryTelemetry()
+    internal val telemetry = TelemetryTestHarness.create()
+
+    /** What each operation's graph reads did, recorded in [telemetry] as a running Realm records it. */
+    private val graphWork = RealmGraphTelemetry(telemetry.telemetry)
 
     private val repairFault = AtomicReference<RepairFault?>()
 
@@ -132,7 +134,7 @@ class RealmFixture private constructor(
      */
     internal val checks: RealmCheckRuntime
         get() =
-            runtime ?: RealmCheckRuntime(views).also { runtime = it }.apply {
+            runtime ?: RealmCheckRuntime(views, telemetry = telemetry.telemetry).also { runtime = it }.apply {
                 hearHints(this)
                 start()
             }
@@ -169,7 +171,7 @@ class RealmFixture private constructor(
     ) = repairFault.set(RepairFault(failure, afterBinding))
 
     /** The bodies of the log records the realm emitted so far. */
-    internal fun logLines(): List<String> = telemetry.logs().map { it.bodyValue?.asString().orEmpty() }
+    internal fun logLines(): List<String> = telemetry.finishedLogs().map { it.bodyValue?.asString().orEmpty() }
 
     /** Reads the saved authoring from storage again, as the Realm does after a failed persist. */
     internal fun reloadFromStorage() = views.invalidate(storage::readCoherent)
@@ -205,14 +207,14 @@ class RealmFixture private constructor(
         closeViews()
         val active = catalog.activate("realm-${++generations}")
         activation = active.owner
-        views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent(), services, graphRuns + listener)
+        views = InMemoryAuthoringViewStore(active.lease, storage.readCoherent(), services, graphRuns, graphWork)
         val binding = views.commitRepairs()
         owner =
-            RealmAuthoringOwner(storage, views, findings = { findings() }, telemetry.telemetry) { saved, candidate, changed ->
+            RealmAuthoringOwner(storage, views, findings = { findings() }, telemetry.telemetry) { saved, candidate, changed, work ->
                 val fault = repairFault.getAndSet(null)
                 if (fault?.afterBinding == false) throw fault.failure
                 val started = System.nanoTime()
-                binding.intents(saved, candidate, changed).also {
+                binding.intents(saved, candidate, changed, work).also {
                     bindingNanos.addAndGet(System.nanoTime() - started)
                     if (fault != null) throw fault.failure
                 }
@@ -284,7 +286,7 @@ class RealmFixture private constructor(
 
                 is MutationPlanningResult.Accepted -> {
                     val relations = view.catalog.relations.mapTo(linkedSetOf()) { it.id }
-                    edit.copy(expectations = view.values.requiredExpectations(edit, view.resources, relations, planned.plan))
+                    edit.copy(expectations = view.facts.requiredExpectations(edit, view.resources, relations, planned.plan))
                 }
             }
         }
@@ -411,8 +413,7 @@ class RealmFixture private constructor(
             seed: Map<ResourceId, AuthoringRecord> = emptyMap(),
             storage: MemoryAuthoringStorage = MemoryAuthoringStorage(AuthoringSeed(seed)),
             services: RealmServices = checkingServices(),
-            listener: GraphListener = GraphListener.NONE,
-        ): RealmFixture = start(RealmFixture(null, catalog, storage, services, listener))
+        ): RealmFixture = start(RealmFixture(null, catalog, storage, services))
 
         /**
          * A Realm on [catalog] whose authoring is saved in an embedded SurrealDB with the Realm schema, starting with

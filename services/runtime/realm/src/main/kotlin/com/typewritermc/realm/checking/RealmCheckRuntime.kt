@@ -2,15 +2,16 @@ package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.failures.rethrowExceptional
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.formula.graph.StaleRevision
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.GraphOperation
 import com.typewritermc.realm.authoring.RealmReads
+import com.typewritermc.realm.authoring.counting
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
-import com.typewritermc.services.libs.telemetry.serviceTelemetry
-import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -62,8 +63,8 @@ data class CapturedCheckReport(
  */
 class RealmCheckRuntime(
     private val views: AuthoringViewStore,
+    private val telemetry: ServiceTelemetry,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
-    private val telemetry: ServiceTelemetry = OpenTelemetry.noop().serviceTelemetry("realm.checks"),
 ) : AutoCloseable {
     private val lock = Any()
     private val mutableFindingChanges =
@@ -116,22 +117,28 @@ class RealmCheckRuntime(
     /** Evaluates [view] exactly, whatever has been committed since it was captured. */
     suspend fun evaluateCapture(view: AuthoringView): CapturedCheckReport =
         views.retain(view.readContext).use {
-            val reads = views.forkAt(view).pin()
-            val subjects = reads.read(CheckSubjects).subjects
-            val results =
-                subjects.map { subject ->
-                    val run = CheckRun(subject.id)
-                    runCatching { with(reads) { read(run).toCheckResult(run.evidence()) } }.getOrElse { failure ->
-                        failure.rethrowExceptional()
-                        subject
-                            .failedRun(
-                                CheckTicket(instance = subject.id, catalog = view.catalog.generation),
-                                failure,
-                            ).toCheckResult(emptyList())
-                    }
-                }
-            CapturedCheckReport(view.readContext, view.catalog.generation, subjects.mapTo(linkedSetOf()) { it.id }, results)
+            views.counting(GraphOperation.CAPTURE_EVALUATION) { work -> evaluate(view, views.forkAt(view).pin(work)) }
         }
+
+    private fun evaluate(
+        view: AuthoringView,
+        reads: RealmReads,
+    ): CapturedCheckReport {
+        val subjects = reads.read(CheckSubjects).subjects
+        val results =
+            subjects.map { subject ->
+                val run = CheckRun(subject.id)
+                runCatching { with(reads) { read(run).toCheckResult(run.evidence()) } }.getOrElse { failure ->
+                    failure.rethrowExceptional()
+                    subject
+                        .failedRun(
+                            CheckTicket(instance = subject.id, catalog = view.catalog.generation),
+                            failure,
+                        ).toCheckResult(emptyList())
+                }
+            }
+        return CapturedCheckReport(view.readContext, view.catalog.generation, subjects.mapTo(linkedSetOf()) { it.id }, results)
+    }
 
     override fun close() {
         signals.cancel()
@@ -157,8 +164,10 @@ class RealmCheckRuntime(
         }
     }
 
-    private suspend fun settle() {
-        views.pin().use { pinned ->
+    private suspend fun settle() = views.counting(GraphOperation.CHECK_PASS) { work -> settle(work) }
+
+    private suspend fun settle(work: GraphWork) {
+        views.pin(work).use { pinned ->
             val reads = pinned.reads
             val discovery =
                 try {

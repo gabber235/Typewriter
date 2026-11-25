@@ -54,7 +54,10 @@ import com.typewritermc.realm.testing.setTypes
 import com.typewritermc.realm.testing.settle
 import com.typewritermc.realm.testing.textUse
 import com.typewritermc.realm.testing.typeUse
+import com.typewritermc.realm.testing.unobserved
+import com.typewritermc.realm.testing.unobservedPin
 import com.typewritermc.types.integer
+import com.typewritermc.types.qualified
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.boolean
 import io.kotest.property.arbitrary.choice
@@ -70,11 +73,13 @@ import skirout.editor.v1.checking.FindingStatus
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.ResourceMatch
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
@@ -330,7 +335,7 @@ internal fun RealmFixture.findingGenerations(): Set<String> = checks.findings().
  * query read is its evidence, as the check runtime builds it.
  */
 internal fun RealmFixture.findingOver(query: RealmQuery<*>): FindingSet =
-    views.pin().use { pinned ->
+    views.unobservedPin { pinned ->
         with(pinned.reads) {
             read(query)
             val instance =
@@ -360,7 +365,33 @@ internal fun RealmFixture.findingOver(query: RealmQuery<*>): FindingSet =
     }
 
 /** The finding sets a state reply of the saved view lists when the check runtime holds [findings]. */
-internal fun RealmFixture.stateReply(findings: List<FindingSet>): List<FindingSet> = views.read { it.savedState(findings) }.findings
+internal fun RealmFixture.stateReply(findings: List<FindingSet>): List<FindingSet> =
+    unobserved { work -> views.read { it.savedState(findings, work) } }.findings
+
+/** A current, clean finding set whose only evidence is what a name no check looks up means at [at]. */
+internal fun nameFinding(
+    catalog: CatalogGeneration,
+    at: ValueLocation,
+): FindingSet =
+    FindingSet(
+        ticket =
+            CheckTicket(
+                instance =
+                    CheckInstanceId(
+                        rule =
+                            RuleId(
+                                origin = RuleOrigin(owner = TypeDefinitionId.qualified("test", "names"), ordinal = 0),
+                                localIndex = 0,
+                            ),
+                        location = at,
+                    ),
+                catalog = catalog,
+            ),
+        evidence = listOf(CheckEvidence.createScope(at = at, name = "looked_up_by_no_check", expected = emptyList())),
+        outcome = CheckOutcome.FINISHED,
+        findings = emptyList(),
+        status = FindingStatus.CURRENT,
+    )
 
 /** The declarations a drawn declaration edit touches: the record type Gift, the alias Amount, and the entry Gift's user names. */
 internal data class DeclarationWorld(

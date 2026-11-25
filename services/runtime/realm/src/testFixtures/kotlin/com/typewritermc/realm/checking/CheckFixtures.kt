@@ -10,9 +10,7 @@ import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.RegisteredPredicate
 import com.typewritermc.configuration.field
-import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.TEST_DEFINITIONS
 import com.typewritermc.realm.authoring.TEST_TYPE
 import com.typewritermc.realm.authoring.TestCatalogLease
@@ -20,6 +18,7 @@ import com.typewritermc.realm.authoring.ViewReadHealth
 import com.typewritermc.realm.authoring.ViewReadLimits
 import com.typewritermc.realm.authoring.location
 import com.typewritermc.realm.authoring.record
+import com.typewritermc.realm.testing.viewStore
 import com.typewritermc.testkit.ready
 import com.typewritermc.types.catalog.ResourceType
 import com.typewritermc.types.use
@@ -43,7 +42,7 @@ internal fun evaluate(
     definitions: List<TypeDefinition> = TEST_DEFINITIONS,
 ): Pair<CheckEvaluation, ViewReadHealth> {
     val catalog = TestCatalogLease(definitions = definitions)
-    return InMemoryAuthoringViewStore(catalog, AuthoringSeed(mapOf(RESOURCE to record))).use { store ->
+    return viewStore(catalog, mapOf(RESOURCE to record)).use { store ->
         store.capture().use { lease ->
             val reads = CapturedAuthoringReads(lease.originalView(), limits = limits)
             val binding =

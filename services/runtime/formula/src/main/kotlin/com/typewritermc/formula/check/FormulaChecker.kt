@@ -97,11 +97,13 @@ sealed interface NameMeaning {
 }
 
 /**
- * What one name in the source means. [candidates] are the resources scope offers for a name with no stored target,
- * unbound or emptied, which binding reads; they stay empty for a name with a filled reference or a local meaning.
+ * What one name in the source means. [name] is the name as looked up, without the backticks a quoted name is written
+ * with. [candidates] are the resources scope offers for a name with no stored target, unbound or emptied, which binding
+ * reads; they stay empty for a name with a filled reference or a local meaning.
  */
 data class NameAnswer(
     val span: TextSpan,
+    val name: String,
     val meaning: NameMeaning,
     val candidates: List<ResourceId>,
 )

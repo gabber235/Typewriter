@@ -16,6 +16,7 @@ import com.typewritermc.expression.isInstance
 import com.typewritermc.expression.length
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.not
+import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.INT_USE
 import com.typewritermc.realm.authoring.LIST_USE
@@ -89,7 +90,7 @@ internal suspend fun checking(
     test: suspend (RealmFixture, RealmCheckRuntime) -> Unit,
 ) {
     RealmFixture.of(catalog, seed, services = RealmServices(selectionPredicates, readLimits, checkingServices().names)).use { realm ->
-        val runtime = RealmCheckRuntime(realm.views, dispatcher)
+        val runtime = RealmCheckRuntime(realm.views, realm.telemetry.telemetry, dispatcher)
         realm.findings = runtime::findings
         try {
             test(realm, runtime)
@@ -294,12 +295,12 @@ internal class BlockingPinStore(
     val entered = CountDownLatch(1)
     val release = CountDownLatch(1)
 
-    override fun pin(): PinnedReads {
+    override fun pin(work: GraphWork): PinnedReads {
         if (calls.incrementAndGet() == blockedCall) {
             entered.countDown()
             release.await()
         }
-        return delegate.pin()
+        return delegate.pin(work)
     }
 }
 

@@ -8,13 +8,17 @@ import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
+import com.typewritermc.realm.checking.nameFinding
 import com.typewritermc.realm.checking.rename
+import com.typewritermc.realm.checking.rerunCatalog
 import com.typewritermc.realm.edit.MemoryAuthoringStorage
 import com.typewritermc.realm.operation.operationObservation
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.openCatalogLeases
+import com.typewritermc.realm.testing.settle
 import com.typewritermc.realm.testing.shouldBeCommitted
+import com.typewritermc.realm.testing.unobserved
 import com.typewritermc.types.actualType
 import com.typewritermc.types.integer
 import com.typewritermc.types.items
@@ -25,15 +29,19 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.longs.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 import java.math.BigInteger
 import java.util.concurrent.CountDownLatch
@@ -191,6 +199,63 @@ val AuthoringViewStoreTest by testSuite {
             (numbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "staged"))
         }
     }
+    test("a capture evaluation of a view retained across installs computes nothing the live graph already verified") {
+        val first = ResourceId(value = "first")
+        RealmFixture.of(rerunCatalog(), mapOf(first to record(name = "bad"))).use { realm ->
+            realm.checks
+            realm.settle()
+            realm.views.capture().use { retained ->
+                realm.commitChecked(rename(first, "valid"))
+                // Judging a release of the retained view answers a name on a fork of the live graph as it is now.
+                unobserved { work ->
+                    nameFinding(retained.root.catalog.generation, ValueLocation.of(first)).judgedForRelease(retained.root, work)
+                }
+                // Back to what the retained view holds: the live graph checks it again, newer than that fork.
+                realm.commitChecked(rename(first, "bad"))
+
+                realm.checks.evaluateCapture(retained.root)
+
+                val work = realm.telemetry.counts("typewriter.realm.graph_work", listOf("realm.operation", "graph.work"))
+                work[listOf("capture.evaluation", "verified")].shouldNotBeNull() shouldBeGreaterThan 0
+                work[listOf("capture.evaluation", "computed")] shouldBe 0L
+            }
+        }
+    }
+    test("a view of another catalog generation keeps its graph across live commits") {
+        val first = ResourceId(value = "first")
+        RealmFixture.of(rerunCatalog(), mapOf(first to record(name = "bad"))).use { realm ->
+            realm.checks
+            realm.settle()
+            val lease = rerunCatalog().lease(CatalogGeneration(value = "other"))
+            val other = realm.views.prepare(AuthoringViewDelta(catalog = lease))
+            try {
+                // Judging a release of the other view answers a name on the graph that view has, never the live one.
+                val judge = {
+                    realm.views.counting(GraphOperation.RELEASE_JUDGEMENT) { work ->
+                        nameFinding(other.catalog.generation, ValueLocation.of(first)).judgedForRelease(other, work)
+                    }
+                }
+                val computed = {
+                    realm.telemetry.counts(
+                        "typewriter.realm.graph_work",
+                        listOf("realm.operation", "graph.work"),
+                    )[listOf("release.judgement", "computed")]
+                }
+                judge()
+                val firstJudgement = computed().shouldNotBeNull()
+                firstJudgement shouldBeGreaterThan 0
+
+                realm.commitChecked(rename(first, "valid"))
+                judge()
+
+                computed() shouldBe firstJudgement
+            } finally {
+                other.catalog.close()
+                lease.close()
+            }
+        }
+    }
+
     test("an install waits until a current read in progress has finished") {
         val id = ResourceId(value = "page")
         RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), mapOf(id to record(name = "Quest"))).use { realm ->

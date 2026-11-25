@@ -178,7 +178,7 @@ val RealmLifecycleTest by testSuite {
         }
     }
 
-    test("a started Realm counts its check graph's computations in telemetry") {
+    test("a started Realm counts its check graph's work by query kind in telemetry") {
         runTest {
             val fixture = RealmLifecycleFixture(this)
             try {
@@ -187,7 +187,11 @@ val RealmLifecycleTest by testSuite {
 
                 withContext(Dispatchers.Default) {
                     eventually(10.seconds) {
-                        fixture.counts("typewriter.graph.computed", "query.kind")["CheckSubjects"] shouldBe 1L
+                        fixture.counts(
+                            "typewriter.realm.graph_work",
+                            listOf("query.kind", "graph.work"),
+                        )[listOf("CheckSubjects", "computed")] shouldBe
+                            1L
                     }
                 }
             } finally {

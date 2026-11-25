@@ -194,7 +194,7 @@ internal class DefaultTypeArgumentOperations(
         evidence.forEach(reads::observeInput)
         val witness = PreparedEdit(catalog = root.catalog.generation, expectations = emptyList(), intents = plannedIntents)
         val required =
-            root.values.requiredExpectations(
+            root.facts.requiredExpectations(
                 witness,
                 root.resources,
                 root.catalog.relations.mapTo(linkedSetOf()) {
@@ -230,7 +230,7 @@ internal class DefaultTypeArgumentOperations(
                     listOf(ValueProblem(location = rootLocation, code = "catalog_changed")),
                 )
             }
-            val conflicts = snapshot.root.values.conflicts(edit.expectations)
+            val conflicts = snapshot.root.facts.conflicts(edit.expectations)
             if (conflicts.isNotEmpty()) {
                 return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
                     listOf(ValueProblem(location = rootLocation, code = "expectation_conflict")),

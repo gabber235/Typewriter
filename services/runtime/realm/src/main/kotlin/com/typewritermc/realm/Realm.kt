@@ -115,13 +115,21 @@ internal class Realm(
             val catalog = catalogs.captureCurrent()
             val storage = SurrealAuthoringStorage(connected)
             val seed = storage.readCoherent()
-            val viewStore = InMemoryAuthoringViewStore(catalog, seed, checkingServices(), RealmGraphTelemetry(telemetry))
+            val graphTelemetry = RealmGraphTelemetry(telemetry)
+            val viewStore =
+                InMemoryAuthoringViewStore(
+                    catalog,
+                    seed,
+                    checkingServices(),
+                    graphTelemetry,
+                    graphTelemetry,
+                )
             views = viewStore
-            val authoring = RealmAuthoringOwner(storage, viewStore, findings = { checks?.findings().orEmpty() })
+            val authoring = RealmAuthoringOwner(storage, viewStore, findings = { checks?.findings().orEmpty() }, telemetry = telemetry)
             catalogs.captureCurrent().use { next ->
                 catalogActivator.activate(authoring, next)
             }
-            val checkRuntime = RealmCheckRuntime(viewStore, telemetry = telemetry)
+            val checkRuntime = RealmCheckRuntime(viewStore, telemetry)
             checks = checkRuntime
             val compiledContent = SurrealRegisteredCompiledContentRepository(connected)
             val compilation = CompiledArtifactProducerRegistry(listOf(ResourceGraphArtifactProducer))

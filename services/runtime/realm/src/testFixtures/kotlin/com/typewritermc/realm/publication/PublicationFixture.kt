@@ -4,13 +4,14 @@ import com.typewritermc.authoring.CompilationUnitDefinition
 import com.typewritermc.authoring.of
 import com.typewritermc.engine.decodeResourceGraphShard
 import com.typewritermc.realm.authoring.AuthoringLease
-import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewDelta
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.RealmGraphTelemetry
 import com.typewritermc.realm.checking.RealmCheckRuntime
+import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.recordBinding
+import com.typewritermc.realm.testing.viewStore
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
@@ -18,6 +19,7 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
 import com.typewritermc.services.libs.filetransfer.blob.InMemoryBlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.StoreResult
+import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.types.field
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
@@ -59,8 +61,10 @@ internal class PublicationFixture(
     initial: Map<ResourceId, AuthoringRecord> = mapOf(PUBLICATION_PAGE_ID to publicationPageRecord("Quest")),
     producers: List<CompiledArtifactProducer> = listOf(ResourceGraphArtifactProducer),
 ) {
-    val views = InMemoryAuthoringViewStore(PUBLICATION_CATALOG.lease(), AuthoringSeed(initial))
-    private val checks = RealmCheckRuntime(views)
+    /** What each operation's graph reads did, as a running Realm records it. */
+    val telemetry = TelemetryTestHarness.create()
+    val views = viewStore(PUBLICATION_CATALOG.lease(), initial, checkingServices(), RealmGraphTelemetry(telemetry.telemetry))
+    private val checks = RealmCheckRuntime(views, telemetry.telemetry)
     private val database = publicationDatabase()
     val attempts = SurrealPublicationAttemptStore(database)
     val results = SurrealRegisteredCompiledContentRepository(database)
@@ -87,6 +91,11 @@ internal class PublicationFixture(
                 }
 
                 override fun <T> withCurrent(block: (AuthoringView) -> T): T = acceptance.withCurrent(block)
+
+                override fun judged(
+                    findings: List<FindingSet>,
+                    view: AuthoringView,
+                ): List<FindingSet> = acceptance.judged(findings, view)
 
                 override suspend fun evaluate(capture: AuthoringLease): CapturedAssessment {
                     onEvaluate?.invoke()
@@ -190,6 +199,7 @@ internal class PublicationFixture(
         checks.close()
         views.close()
         database.close()
+        telemetry.close()
     }
 }
 
