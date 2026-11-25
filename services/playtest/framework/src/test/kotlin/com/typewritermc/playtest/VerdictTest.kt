@@ -6,6 +6,7 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import skirout.harness.v1.test_run.AttemptPolicy
+import skirout.harness.v1.test_run.Conclusion
 import skirout.harness.v1.test_run.Pacing
 import skirout.harness.v1.test_run.WindowEnd
 import skirout.harness.v1.wire.ClientLoss
@@ -135,5 +136,18 @@ val VerdictTest by testSuite {
             "at 5 ms held ToastRequirements.kt:42 at tick 10; at 50 ms missed ToastRequirements.kt:42 (failed: ${missed.message})"
         Verdict.Passed.steadied(attempts, paced, Pacing.REPORTS).conclude(RequirementCode.of {})
         Verdict.Flaky(listOf(missed), 2).steadied(attempts, paced, Pacing.GATES) shouldBe Verdict.Flaky(listOf(missed), 2)
+    }
+
+    test("the run file carries what the session concluded of each requirement, an unsteady one with the tick of each window in each run") {
+        val ticks = "attempt 1 at 0 ms held ToastRequirements.kt:42 at tick 10; at 50 ms held ToastRequirements.kt:42 at tick 11"
+
+        listOf(
+            Verdict.Passed,
+            Verdict.Flaky(listOf(missed), 2),
+            Verdict.Failed(listOf(missed), 1),
+            Verdict.Quarantined(listOf(missed), 1),
+            Verdict.Unsteady(ticks, gates = false),
+        ).map { it.conclusion } shouldBe
+            listOf(Conclusion.PASSED, Conclusion.FLAKY, Conclusion.FAILED, Conclusion.QUARANTINED, Conclusion.UnsteadyWrapper(ticks))
     }
 }

@@ -17,8 +17,8 @@ use serde::Deserialize;
 use crate::Context;
 use crate::skirout::base::harness::v1::test_run::Runner;
 pub use crate::skirout::base::harness::v1::test_run::{
-    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, LossCause, Outcome, Pacing, PartEnd,
-    PartKind, RunEnd, RunLost, TestCase, TestRun,
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Conclusion, Failure, LossCause, Outcome,
+    Pacing, PartEnd, PartKind, RunEnd, RunLost, TestCase, TestRun,
 };
 
 /// The quarantine file, relative to the repository root.
@@ -91,15 +91,17 @@ pub enum Verdict {
 /// The one policy every reader applies to a case of `run`. An attempt whose outcome this build
 /// does not know proves nothing, so it counts as a failure. An interrupted attempt counts neither
 /// way, and a case whose last attempt was interrupted has no verdict of its own: the run's trouble
-/// names the part whose loss interrupted it. A case that otherwise passed is unsteady when a window
-/// held at another tick in another of its passing runs ([`unsteady`]), and that blocks unless its
-/// pacing only reports.
+/// names the part whose loss interrupted it. A case its runner concluded has that conclusion
+/// ([`concluded`]); the game runner's test JVM alone compares the ticks its windows held at.
 pub fn verdict(run: &TestRun, case: &TestCase, quarantine: &Quarantine) -> Result<Verdict> {
     let Some(last) = case.attempts.last() else {
         bail!("{} has no attempts", case.id);
     };
     if matches!(last.outcome, Outcome::Interrupted(_)) {
         return Ok(Verdict::Interrupted);
+    }
+    if let Some(conclusion) = &case.conclusion {
+        return Ok(concluded(case, conclusion));
     }
     let failed = failed_attempts(case).count();
     let passed_last = matches!(last.outcome, Outcome::Passed);
@@ -109,7 +111,6 @@ pub fn verdict(run: &TestRun, case: &TestCase, quarantine: &Quarantine) -> Resul
             quarantine.entry(&run.runner, case),
             &run.attempt_policy,
         ) {
-            (0, None, _) if pacing_gates(case) && unsteady(case).is_some() => Verdict::Unsteady,
             (0, _, _) => Verdict::Passed,
             (_, Some(_), _) => Verdict::Quarantined,
             (_, None, AttemptPolicy::RerunFailures(_)) if passed_last => Verdict::Flaky,
@@ -118,82 +119,28 @@ pub fn verdict(run: &TestRun, case: &TestCase, quarantine: &Quarantine) -> Resul
     )
 }
 
-/// Whether a window of `case` that holds at another tick at another pace blocks: it does unless
-/// the case says it only reports, so a pacing this build does not know blocks too.
-fn pacing_gates(case: &TestCase) -> bool {
-    !matches!(case.pacing, Pacing::Reports)
-}
-
-/// How `case`'s windows held in each of its passing runs, its attempts and its paced attempts,
-/// when they did not all hold at the same ticks or a paced attempt failed; `None` when they are
-/// steady or fewer than two runs can be compared. A window decided after its attempt met hung work
-/// or a lost part measures wall clock, so its tick is left out of the comparison.
-pub fn unsteady(case: &TestCase) -> Option<String> {
-    let runs: Vec<(String, &Attempt)> = case
-        .attempts
-        .iter()
-        .enumerate()
-        .filter(|(_, attempt)| matches!(attempt.outcome, Outcome::Passed))
-        .map(|(index, attempt)| {
-            (
-                format!("attempt {} at {} ms", index + 1, attempt.pace_millis),
-                attempt,
-            )
-        })
-        .chain(
-            case.paced
-                .iter()
-                .map(|attempt| (format!("at {} ms", attempt.pace_millis), attempt)),
-        )
-        .collect();
-    let first = runs.first()?.1;
-    let steady = runs.iter().all(|(_, attempt)| {
-        matches!(attempt.outcome, Outcome::Passed) && same_ticks(first, attempt)
-    });
-    if steady || runs.len() < 2 {
-        return None;
+/// The verdict of a case its runner `conclusion` judged: an unsteady case blocks unless its pacing
+/// only reports, so a pacing this build does not know blocks too, and a conclusion this build does
+/// not know proves nothing.
+fn concluded(case: &TestCase, conclusion: &Conclusion) -> Verdict {
+    match conclusion {
+        Conclusion::Passed => Verdict::Passed,
+        Conclusion::Flaky => Verdict::Flaky,
+        Conclusion::Failed => Verdict::Failed,
+        Conclusion::Quarantined => Verdict::Quarantined,
+        Conclusion::Unsteady(_) if matches!(case.pacing, Pacing::Reports) => Verdict::Passed,
+        Conclusion::Unsteady(_) => Verdict::Unsteady,
+        Conclusion::Unknown(_) => Verdict::Failed,
     }
-    let described = runs
-        .iter()
-        .map(|(label, attempt)| {
-            let windows = attempt
-                .windows
-                .iter()
-                .map(|window| match window.held_at {
-                    Some(tick) => format!("held {} at tick {tick}", window.at),
-                    None => format!("missed {}", window.at),
-                })
-                .collect::<Vec<_>>()
-                .join(", ");
-            let failure = match &attempt.outcome {
-                Outcome::Failed(failure) => {
-                    format!(
-                        "failed: {}",
-                        failure.message.lines().next().unwrap_or_default()
-                    )
-                }
-                _ => String::new(),
-            };
-            match (windows.is_empty(), failure.is_empty()) {
-                (_, true) => format!("{label} {windows}"),
-                (true, false) => format!("{label} {failure}"),
-                (false, false) => format!("{label} {windows} ({failure})"),
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("; ");
-    Some(described)
 }
 
-/// Whether `a` and `b` waited in the same windows and held each at the same tick, leaving out a
-/// window either decided after it met hung work or a lost part.
-fn same_ticks(a: &Attempt, b: &Attempt) -> bool {
-    a.windows.len() == b.windows.len()
-        && a.windows.iter().zip(&b.windows).all(|(a, b)| {
-            a.at == b.at
-                && a.length == b.length
-                && (a.after_wall_clock || b.after_wall_clock || a.held_at == b.held_at)
-        })
+/// How the windows of an unsteady `case` held in each of its passing runs, as its runner described
+/// them; `None` unless its runner concluded it unsteady.
+pub fn unsteady(case: &TestCase) -> Option<&str> {
+    match &case.conclusion {
+        Some(Conclusion::Unsteady(runs)) => Some(runs),
+        _ => None,
+    }
 }
 
 /// Why `run` as a whole proves less than its cases say, judged once for every suite and the pull
@@ -677,7 +624,7 @@ mod tests {
     use super::*;
     use crate::test_support::{
         attempted, case, failed, game_run, interrupted, lost, once, outcomes, part, quarantining,
-        ran, report_text, requirement_run, run, unknown, window,
+        report_text, requirement_run, run, unknown,
     };
 
     #[test]
@@ -1095,98 +1042,84 @@ mod tests {
     }
 
     #[test]
-    fn every_window_holds_at_the_same_tick_in_every_passing_run_of_a_case_or_the_case_is_unsteady()
-    {
-        use AttemptPolicy::{Exactly, RerunFailures};
-        let steady = [
-            window("A.kt:10", 20, Some(5)),
-            window("A.kt:12", 10, Some(1)),
-        ];
-        let later = [
-            window("A.kt:10", 20, Some(3)),
-            window("A.kt:12", 10, Some(1)),
-        ];
-        let mut wall_clock = later.clone();
-        wall_clock[0].after_wall_clock = true;
+    fn a_case_its_runner_concluded_has_that_verdict_and_an_unsteady_one_blocks_only_where_its_pacing_gates()
+     {
+        let ticks = "attempt 1 at 0 ms held A.kt:10 at tick 5; at 50 ms held A.kt:10 at tick 3";
         let table = [
             (
-                "steady at every pace",
-                RerunFailures(4),
-                vec![ran(Outcome::Passed, 0, &steady)],
-                vec![
-                    ran(Outcome::Passed, 5, &steady),
-                    ran(Outcome::Passed, 50, &steady),
-                ],
+                "passed",
+                Outcome::Passed,
+                Pacing::Gates,
+                Some(Conclusion::Passed),
                 Verdict::Passed,
             ),
             (
-                "held earlier at 50 ms",
-                RerunFailures(4),
-                vec![ran(Outcome::Passed, 0, &steady)],
-                vec![
-                    ran(Outcome::Passed, 5, &steady),
-                    ran(Outcome::Passed, 50, &later),
-                ],
-                Verdict::Unsteady,
-            ),
-            (
-                "missed at 50 ms",
-                RerunFailures(4),
-                vec![ran(Outcome::Passed, 0, &steady)],
-                vec![ran(failed("missed"), 50, &[window("A.kt:10", 20, None)])],
-                Verdict::Unsteady,
-            ),
-            (
-                "a window after hung work measures wall clock",
-                RerunFailures(4),
-                vec![ran(Outcome::Passed, 0, &steady)],
-                vec![ran(Outcome::Passed, 50, &wall_clock)],
-                Verdict::Passed,
-            ),
-            (
-                "two passing attempts at one pace disagree",
-                Exactly(2),
-                vec![
-                    ran(Outcome::Passed, 0, &steady),
-                    ran(Outcome::Passed, 0, &later),
-                ],
-                vec![],
-                Verdict::Unsteady,
-            ),
-            (
-                "a failed attempt holds no ticks to compare",
-                RerunFailures(4),
-                vec![
-                    ran(failed("x"), 0, &later),
-                    ran(Outcome::Passed, 0, &steady),
-                ],
-                vec![ran(Outcome::Passed, 50, &steady)],
+                "flaky",
+                Outcome::Passed,
+                Pacing::Gates,
+                Some(Conclusion::Flaky),
                 Verdict::Flaky,
             ),
+            (
+                "failed",
+                failed("x"),
+                Pacing::Gates,
+                Some(Conclusion::Failed),
+                Verdict::Failed,
+            ),
+            (
+                "quarantined",
+                failed("x"),
+                Pacing::Gates,
+                Some(Conclusion::Quarantined),
+                Verdict::Quarantined,
+            ),
+            (
+                "unsteady where pacing gates",
+                Outcome::Passed,
+                Pacing::Gates,
+                Some(Conclusion::Unsteady(ticks.to_owned())),
+                Verdict::Unsteady,
+            ),
+            (
+                "unsteady where pacing reports",
+                Outcome::Passed,
+                Pacing::Reports,
+                Some(Conclusion::Unsteady(ticks.to_owned())),
+                Verdict::Passed,
+            ),
+            (
+                "a lost part interrupted its last attempt",
+                interrupted("paper"),
+                Pacing::Gates,
+                Some(Conclusion::Failed),
+                Verdict::Interrupted,
+            ),
+            (
+                "judged by its attempts",
+                Outcome::Passed,
+                Pacing::Gates,
+                None,
+                Verdict::Passed,
+            ),
         ];
-        for (row, policy, attempts, paced, expected) in table {
-            let mut run = attempted(policy, &[]);
-            run.cases[0].attempts = attempts;
-            run.cases[0].paced = paced;
-            run.cases[0].pacing = Pacing::Gates;
+        for (row, outcome, pacing, conclusion, expected) in table {
+            let mut run = attempted(AttemptPolicy::RerunFailures(4), &[outcome]);
+            run.cases[0].pacing = pacing;
+            run.cases[0].conclusion = conclusion;
             let verdict = verdict(&run, &run.cases[0], &Quarantine::default()).unwrap();
             assert_eq!(verdict, expected, "{row}");
         }
     }
 
     #[test]
-    fn an_unsteady_case_names_the_tick_of_each_window_in_each_run_and_blocks_only_when_its_pacing_gates()
-     {
-        let mut run = attempted(AttemptPolicy::RerunFailures(4), &[]);
-        run.cases[0].attempts = vec![ran(Outcome::Passed, 0, &[window("A.kt:10", 20, Some(13))])];
-        run.cases[0].paced = vec![
-            ran(Outcome::Passed, 5, &[window("A.kt:10", 20, Some(13))]),
-            ran(failed("missed"), 50, &[window("A.kt:10", 20, None)]),
-        ];
-        let unsteady = "a: unsteady, a window holds at another tick at another pace: \
-                        attempt 1 at 0 ms held A.kt:10 at tick 13; \
-                        at 5 ms held A.kt:10 at tick 13; \
-                        at 50 ms missed A.kt:10 (failed: missed)";
+    fn an_unsteady_case_names_the_tick_of_each_window_in_each_run_its_runner_described() {
+        let mut run = attempted(AttemptPolicy::RerunFailures(4), &[Outcome::Passed]);
+        let ticks = "attempt 1 at 0 ms held A.kt:10 at tick 13; at 5 ms held A.kt:10 at tick 13; \
+                     at 50 ms missed A.kt:10 (failed: missed)";
+        run.cases[0].conclusion = Some(Conclusion::Unsteady(ticks.to_owned()));
+        let unsteady =
+            format!("a: unsteady, a window holds at another tick at another pace: {ticks}");
 
         run.cases[0].pacing = Pacing::Gates;
         let (result, out) = report_text(&run, &Quarantine::default());

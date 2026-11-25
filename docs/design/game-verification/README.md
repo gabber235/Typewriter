@@ -219,8 +219,10 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
 
 - A requirement refused as written (a window without a positive check, `restartPaper()` without the
   flag, a claim the pool can never grant) and a game that cannot run never retry.
-- Kotlin decides retries and fails the mirrored testBalloon test; xtask judges every runner's run file
-  with the same rule for the gate ([p2-testballoon-runner.md](spikes/p2-testballoon-runner.md)).
+- Kotlin decides retries and the verdict and fails the mirrored testBalloon test; it writes the verdict
+  into the case's entry in the run file (`conclusion`), and xtask gates on it. xtask judges the run
+  files of the other runners by their attempts with the same retry rule
+  ([p2-testballoon-runner.md](spikes/p2-testballoon-runner.md)). Steady ticks are Kotlin's alone.
 - `--repeat N` runs exactly N attempts of each selected requirement.
 - **Steady ticks.** Every attempt records each window's end: its line, its length, and the tick
   after its stimulus it held at. Every passing run of a requirement, retries and paced attempts

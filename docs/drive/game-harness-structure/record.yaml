@@ -144,6 +144,12 @@ decided:
       (2026-11-24); then hold the CI job layout and pool admission too while the maintainer weighs
       sharding across runners
 
+  - id: kotlin-owns-steady-rule
+    what: >-
+      the maintainer chose (2026-11-25): the test JVM writes each case's verdict, unsteady included, into
+      the run file through `concluded` (TestCase.conclusion); xtask gates on it and no longer compares
+      window ticks itself; other runners' cases are still judged by their attempts
+
   - id: build-without-stack
     what: >-
       scope added by the maintainer (2026-11-24): the game test build must not depend on the running
@@ -158,4 +164,4 @@ open:
 
 slices: []
 
-next: the pool dispatch keyed by message kind, the steady rule in Kotlin, then change 4
+next: change 4, hard memory limits per part and pool admission by memory

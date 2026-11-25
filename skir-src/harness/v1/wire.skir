@@ -7,6 +7,7 @@
 import { Renderer } from "harness/v1/golden.skir";
 import {
   Artifact,
+  Conclusion,
   CoveredClass,
   Demonstrates,
   Pacing,
@@ -76,11 +77,13 @@ enum Message(85030001) {
   // Session to pool: the attempt ended and its players are free again.
   result: Result;
   // Session to pool: the case `test_id` made its last attempt, for its entry in the run file: whether the
-  // change under test touched it, and what a window that holds at another tick at another pace does.
+  // change under test touched it, what a window that holds at another tick at another pace does, and
+  // what the session concluded of it.
   concluded: struct {
     test_id: string;
     touched: bool;
     pacing: Pacing;
+    conclusion: Conclusion;
   };
   // Session to pool: the session is done; once every session of its run is, the run file no longer reads
   // as cut short.

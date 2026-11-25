@@ -8,6 +8,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import skirout.harness.v1.golden.Renderer
+import skirout.harness.v1.test_run.Conclusion
 import skirout.harness.v1.test_run.CoveredClass
 import skirout.harness.v1.test_run.Demonstrates
 import skirout.harness.v1.test_run.Pacing
@@ -160,13 +161,15 @@ internal class PoolSession private constructor(
 
     /**
      * The case [testId] made its last attempt: the pool notes in its entry whether the change [touched]
-     * it, and what a window held at another tick at another pace does, its [pacing].
+     * it, what a window held at another tick at another pace does, its [pacing], and what this session
+     * concluded of it, its [conclusion].
      */
     fun concluded(
         testId: String,
         touched: Boolean,
         pacing: Pacing,
-    ) = send(Message.createConcluded(testId = testId, touched = touched, pacing = pacing))
+        conclusion: Conclusion,
+    ) = send(Message.createConcluded(testId = testId, touched = touched, pacing = pacing, conclusion = conclusion))
 
     /**
      * Runs one attempt of a requirement: waits for its lease and runs its bodies in order, then reports

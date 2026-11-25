@@ -500,7 +500,12 @@ internal class Pool(
             Message.Kind.REJOIN_WRAPPER to handler<Message.RejoinWrapper> { session, it -> rejoin(session, it.value) },
             Message.Kind.RESULT_WRAPPER to handler<Message.ResultWrapper> { session, it -> result(session, it.value) },
             Message.Kind.CONCLUDED_WRAPPER to
-                handler<Message.ConcludedWrapper> { _, it -> runs.concluded(it.value.testId, it.value.touched, it.value.pacing) },
+                handler<Message.ConcludedWrapper> {
+                    _,
+                    it,
+                    ->
+                    it.value.let { c -> runs.concluded(c.testId, c.touched, c.pacing, c.conclusion) }
+                },
         )
 
     /** [session]'s attempt for submission [id] ended its body; it is settled once its players' work is quiet. */

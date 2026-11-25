@@ -24,7 +24,7 @@ use crate::results::{
     Quarantine, RunEnd, TestCase, TestRun,
 };
 use crate::skirout::base::harness::v1::test_run::{
-    Interruption, Part, PartLoss, Runner, Span, Step as ScenarioStep, WindowEnd,
+    Interruption, Part, PartLoss, Runner, Span, Step as ScenarioStep,
 };
 use crate::stack::StackRecord;
 use crate::stack::spec::{PortLease, StackContext};
@@ -352,27 +352,6 @@ pub fn lost(cause: LossCause) -> PartEnd {
         cause,
         ..PartLoss::default()
     }))
-}
-
-/// A window opened at the requirement line `at`, `length` ticks long, that held at tick `held_at`
-/// or, when `None`, missed.
-pub fn window(at: &str, length: i32, held_at: Option<i32>) -> WindowEnd {
-    WindowEnd {
-        at: at.to_owned(),
-        length,
-        held_at,
-        ..WindowEnd::default()
-    }
-}
-
-/// An attempt that ended with `outcome` at a pace of `pace_millis` between ticks, after `windows`.
-pub fn ran(outcome: Outcome, pace_millis: i32, windows: &[WindowEnd]) -> Attempt {
-    Attempt {
-        outcome,
-        pace_millis,
-        windows: windows.to_vec(),
-        ..Attempt::default()
-    }
 }
 
 /// The message of a failed `outcome`. Panics on any other outcome.

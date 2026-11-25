@@ -4,6 +4,7 @@ import build.skir.JsonFlavor
 import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.Attempt
 import skirout.harness.v1.test_run.AttemptPolicy
+import skirout.harness.v1.test_run.Conclusion
 import skirout.harness.v1.test_run.CoveredClass
 import skirout.harness.v1.test_run.LossCause
 import skirout.harness.v1.test_run.Outcome
@@ -100,14 +101,18 @@ internal class RunRecords(
         write()
     }
 
-    /** The case [testId] made its last attempt: whether the change [touched] it, and what its [pacing] does. */
+    /**
+     * The case [testId] made its last attempt: whether the change [touched] it, what its [pacing] does,
+     * and what its session concluded of it, which readers take as its verdict.
+     */
     fun concluded(
         testId: String,
         touched: Boolean,
         pacing: Pacing,
+        conclusion: Conclusion,
     ) {
         val case = cases[testId] ?: return
-        cases[testId] = case.copy(touched = touched, pacing = pacing)
+        cases[testId] = case.copy(touched = touched, pacing = pacing, conclusion = conclusion)
         write()
     }
 
@@ -218,6 +223,8 @@ internal class RunRecords(
                     touched = false,
                     paced = listOf(),
                     pacing = Pacing.GATES,
+                    // Until its session concludes it, readers judge the case by its attempts.
+                    conclusion = null,
                 )
         // A paced attempt runs after the case's attempts passed and is never one of them.
         cases[submit.testId] = if (submit.paced) case.copy(paced = case.paced + attempt) else case.copy(attempts = case.attempts + attempt)

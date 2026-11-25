@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.AttemptPolicy
+import skirout.harness.v1.test_run.Conclusion
 import skirout.harness.v1.test_run.Demonstrates
 import skirout.harness.v1.test_run.LossCause
 import skirout.harness.v1.test_run.Outcome
@@ -113,7 +114,7 @@ val RunRecordsTest by testSuite {
             listOf(Triple(640L, 50, listOf(held.copy(heldAt = 3))))
     }
 
-    test("a concluded case says whether the change touched it and what its pacing does to the verdict") {
+    test("a concluded case says whether the change touched it, what its pacing does to the verdict, and what the session concluded") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         val probe = "PROBE-1 a chat line reaches the player"
@@ -121,15 +122,19 @@ val RunRecordsTest by testSuite {
         records.record(submitted(1, probe), Result.partial(submission = 1, durationMillis = 420))
         records.record(submitted(2, session), Result.partial(submission = 2, durationMillis = 420))
 
-        records.concluded(probe, touched = true, pacing = Pacing.GATES)
-        records.concluded(session, touched = false, pacing = Pacing.REPORTS)
+        val ticks = "attempt 1 at 0 ms held ProbeRequirements.kt:12 at tick 2; at 50 ms held ProbeRequirements.kt:12 at tick 3"
+        records.concluded(probe, touched = true, pacing = Pacing.GATES, conclusion = Conclusion.UnsteadyWrapper(ticks))
+        records.concluded(session, touched = false, pacing = Pacing.REPORTS, conclusion = Conclusion.PASSED)
         records.finished()
 
         TestRun.serializer
             .fromJsonCode(Files.readString(file))
             .cases
-            .map { Triple(it.id, it.touched, it.pacing) } shouldBe
-            listOf(Triple(probe, true, Pacing.GATES), Triple(session, false, Pacing.REPORTS))
+            .map { listOf(it.id, it.touched, it.pacing, it.conclusion) } shouldBe
+            listOf(
+                listOf(probe, true, Pacing.GATES, Conclusion.UnsteadyWrapper(ticks)),
+                listOf(session, false, Pacing.REPORTS, Conclusion.PASSED),
+            )
     }
 
     test("every part the run started is listed with its log and how it ended; a lost client keeps its kept log's name") {

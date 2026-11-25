@@ -1,6 +1,7 @@
 package com.typewritermc.playtest
 
 import skirout.harness.v1.test_run.AttemptPolicy
+import skirout.harness.v1.test_run.Conclusion
 import skirout.harness.v1.test_run.Pacing
 import skirout.harness.v1.test_run.WindowEnd
 import java.net.URL
@@ -129,6 +130,17 @@ internal sealed interface Verdict {
             }
         return Unsteady(described, gates = pacing != Pacing.REPORTS)
     }
+
+    /** What the run file says the session concluded: readers take it as the case's verdict. */
+    val conclusion: Conclusion
+        get() =
+            when (this) {
+                Passed -> Conclusion.PASSED
+                is Flaky -> Conclusion.FLAKY
+                is Failed -> Conclusion.FAILED
+                is Quarantined -> Conclusion.QUARANTINED
+                is Unsteady -> Conclusion.UnsteadyWrapper(runs)
+            }
 
     /**
      * Ends the requirement's test as its verdict says: a failure or a flaky pass fails it, with the

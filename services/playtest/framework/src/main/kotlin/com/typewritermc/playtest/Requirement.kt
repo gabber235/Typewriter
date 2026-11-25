@@ -170,8 +170,9 @@ private fun TestSuiteScope.register(
             } else {
                 listOf()
             }
-        session.concluded(testId, touched, plan.pacing)
-        verdict.steadied(ends, paced, plan.pacing).conclude(code)
+        val steadied = verdict.steadied(ends, paced, plan.pacing)
+        session.concluded(testId, touched, plan.pacing, steadied.conclusion)
+        steadied.conclude(code)
     }
 }
 
