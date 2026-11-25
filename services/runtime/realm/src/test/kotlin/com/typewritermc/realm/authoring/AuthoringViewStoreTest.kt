@@ -8,7 +8,6 @@ import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.realm.checking.nameFinding
 import com.typewritermc.realm.checking.rename
 import com.typewritermc.realm.checking.rerunCatalog
@@ -19,6 +18,7 @@ import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.openCatalogLeases
 import com.typewritermc.realm.testing.settle
 import com.typewritermc.realm.testing.shouldBeCommitted
+import com.typewritermc.realm.testing.unobservedWork
 import com.typewritermc.types.actualType
 import com.typewritermc.types.integer
 import com.typewritermc.types.items
@@ -206,7 +206,7 @@ val AuthoringViewStoreTest by testSuite {
             realm.views.capture().use { retained ->
                 realm.commitChecked(rename(first, "valid"))
                 // Judging a release of the retained view answers a name on a fork of the live graph as it is now.
-                nameFinding(retained.root.catalog.generation, ValueLocation.of(first)).judgedForRelease(retained.root, GraphWork())
+                nameFinding(retained.root.catalog.generation, ValueLocation.of(first)).judgedForRelease(retained.root, unobservedWork())
                 // Back to what the retained view holds: the live graph checks it again, newer than that fork.
                 realm.commitChecked(rename(first, "bad"))
 

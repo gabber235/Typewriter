@@ -448,6 +448,17 @@ val TrackedGraphTest by testSuite {
         second.counts() shouldBe GraphWork.Counts(computed = 0, verified = 2, walked = 0)
     }
 
+    test("counted work reaches its recorder with what the reads did, also when they fail") {
+        val graph = TrackedGraph(cells("a" to 1))
+        val failing = QueryBench().query("failing") { read(Cell("a")) ?: error("no a") }
+        val recorded = mutableListOf<GraphWork.Counts>()
+        GraphWork.counted({ recorded += it.counts() }) { work -> graph.pin(work).read(failing) } shouldBe 1
+        graph.change("a" to null)
+        shouldThrow<IllegalStateException> { GraphWork.counted({ recorded += it.counts() }) { work -> graph.pin(work).read(failing) } }
+        recorded shouldBe
+            listOf(GraphWork.Counts(computed = 1, verified = 0, walked = 0), GraphWork.Counts(computed = 1, verified = 0, walked = 0))
+    }
+
     test("a pin counts every key a walk of reads visits") {
         val bench = QueryBench()
         val onA = bench.query("onA") { read(Cell("a")) ?: 0 }

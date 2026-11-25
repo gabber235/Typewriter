@@ -19,7 +19,6 @@ import com.typewritermc.engine.pages.StaticPageDefinition
 import com.typewritermc.formula.ContentReferences
 import com.typewritermc.formula.Var
 import com.typewritermc.formula.VarDefinition
-import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.RealmGraphReads
 import com.typewritermc.realm.authoring.RealmQuery
@@ -314,14 +313,14 @@ fun setReference(
  * The resources that hold a content reference to [target], as a check reads them through the graph: one step back
  * along the content references relation.
  */
-fun RealmFixture.usagesOf(target: ResourceId): List<ResourceId> = views.pin(GraphWork()).use { it.reads.read(UsagesOf(target)) }
+fun RealmFixture.usagesOf(target: ResourceId): List<ResourceId> = views.pin(unobservedWork()).use { it.reads.read(UsagesOf(target)) }
 
 /** How often the graph computed the usages of [target] so far. */
 internal fun RealmFixture.usageRuns(target: ResourceId): Long = graphRuns.runsOf(UsagesOf(target))
 
 /** The resources [target] is graph linked with, read through the graph as a check over its links reads them. */
 internal fun RealmFixture.graphLinksOf(target: ResourceId): List<ResourceId> =
-    views.pin(GraphWork()).use { it.reads.read(GraphLinksOf(target)) }
+    views.pin(unobservedWork()).use { it.reads.read(GraphLinksOf(target)) }
 
 /** How often the graph computed the graph links of [target] so far. */
 internal fun RealmFixture.graphLinkRuns(target: ResourceId): Long = graphRuns.runsOf(GraphLinksOf(target))

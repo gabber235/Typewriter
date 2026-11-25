@@ -333,14 +333,7 @@ interface AuthoringViewStore : AutoCloseable {
 inline fun <T> AuthoringViewStore.counting(
     operation: GraphOperation,
     block: (GraphWork) -> T,
-): T {
-    val work = GraphWork()
-    try {
-        return block(work)
-    } finally {
-        record(operation, work)
-    }
-}
+): T = GraphWork.counted({ record(operation, it) }, block)
 
 /**
  * The view store of one realm. [services] are what every query reads besides the view, [listener] hears what the live

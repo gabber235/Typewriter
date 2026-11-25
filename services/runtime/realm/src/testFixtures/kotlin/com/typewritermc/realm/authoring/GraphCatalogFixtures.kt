@@ -11,11 +11,11 @@ import com.typewritermc.authoring.field
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.formula.graph.TrackedGraph
 import com.typewritermc.realm.checking.checkingServices
 import com.typewritermc.realm.testing.DefinitionCatalog
 import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.unobservedWork
 import com.typewritermc.realm.testing.viewStore
 import com.typewritermc.testkit.definitions
 import com.typewritermc.types.listValue
@@ -275,11 +275,11 @@ internal data class Reach(
 }
 
 /** Reads [query] at the realm's current revision, as a check pass does. */
-internal fun <T> RealmFixture.readNow(query: RealmQuery<T>): T = views.pin(GraphWork()).use { it.reads.read(query) }
+internal fun <T> RealmFixture.readNow(query: RealmQuery<T>): T = views.pin(unobservedWork()).use { it.reads.read(query) }
 
 /** The evidence of [query] at the realm's current revision, as a check records it: every fact and name it read. */
 internal fun RealmFixture.evidenceNow(query: RealmQuery<*>): List<CheckEvidence> =
-    views.pin(GraphWork()).use { pinned ->
+    views.pin(unobservedWork()).use { pinned ->
         with(pinned.reads) {
             read(query)
             query.evidence { false }
@@ -338,16 +338,16 @@ private fun RealmQuery<*>.factsRead(): Set<EditExpectation> =
 
 /** [query]'s answer and evidence from the realm's live graph at its current revision. */
 internal fun <T> RealmFixture.liveNow(query: RealmQuery<T>): Pair<T, Set<EditExpectation>> =
-    views.pin(GraphWork()).use { pinned -> with(pinned.reads) { read(query) to query.factsRead() } }
+    views.pin(unobservedWork()).use { pinned -> with(pinned.reads) { read(query) to query.factsRead() } }
 
 /** [query]'s answer and evidence from a new graph over the current view, which remembers nothing. */
 internal fun <T> RealmFixture.freshNow(query: RealmQuery<T>): Pair<T, Set<EditExpectation>> =
-    views.pin(GraphWork()).use { pinned ->
-        with(TrackedGraph(RealmEnvironment(pinned.view, checkingServices())).pin(GraphWork())) { read(query) to query.factsRead() }
+    views.pin(unobservedWork()).use { pinned ->
+        with(TrackedGraph(RealmEnvironment(pinned.view, checkingServices())).pin(unobservedWork())) { read(query) to query.factsRead() }
     }
 
 /** [query]'s answer from the live graph and from a new graph over the view pinned with it, both under one pin. */
 internal fun <T> RealmFixture.liveAndFreshUnderOnePin(query: RealmQuery<T>): Pair<T, T> =
-    views.pin(GraphWork()).use { pinned ->
-        pinned.reads.read(query) to TrackedGraph(RealmEnvironment(pinned.view, checkingServices())).pin(GraphWork()).read(query)
+    views.pin(unobservedWork()).use { pinned ->
+        pinned.reads.read(query) to TrackedGraph(RealmEnvironment(pinned.view, checkingServices())).pin(unobservedWork()).read(query)
     }

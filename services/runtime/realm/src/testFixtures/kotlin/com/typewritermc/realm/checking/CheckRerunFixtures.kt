@@ -14,7 +14,6 @@ import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
-import com.typewritermc.formula.graph.GraphWork
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.INT_USE
@@ -55,6 +54,7 @@ import com.typewritermc.realm.testing.setTypes
 import com.typewritermc.realm.testing.settle
 import com.typewritermc.realm.testing.textUse
 import com.typewritermc.realm.testing.typeUse
+import com.typewritermc.realm.testing.unobservedWork
 import com.typewritermc.types.integer
 import com.typewritermc.types.qualified
 import io.kotest.property.Arb
@@ -334,7 +334,7 @@ internal fun RealmFixture.findingGenerations(): Set<String> = checks.findings().
  * query read is its evidence, as the check runtime builds it.
  */
 internal fun RealmFixture.findingOver(query: RealmQuery<*>): FindingSet =
-    views.pin(GraphWork()).use { pinned ->
+    views.pin(unobservedWork()).use { pinned ->
         with(pinned.reads) {
             read(query)
             val instance =
@@ -365,7 +365,7 @@ internal fun RealmFixture.findingOver(query: RealmQuery<*>): FindingSet =
 
 /** The finding sets a state reply of the saved view lists when the check runtime holds [findings]. */
 internal fun RealmFixture.stateReply(findings: List<FindingSet>): List<FindingSet> =
-    views.read { it.savedState(findings, GraphWork()) }.findings
+    views.read { it.savedState(findings, unobservedWork()) }.findings
 
 /** A current, clean finding set whose only evidence is what a name no check looks up means at [at]. */
 internal fun nameFinding(
