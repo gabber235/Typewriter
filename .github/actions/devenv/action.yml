@@ -129,10 +129,12 @@ runs:
     #
     # The jobs that build the stack's Cargo targets (`cargo-targets`) keep them on the volume too,
     # several GB that the repository's 10 GB of `actions/cache` has no room for: the release wasm
-    # build of the
-    # backend components (with its host build scripts and macros in `release`) and the component
-    # test workspace's debug target, which holds the `typewriter-stack` binary and the suite. Cargo
-    # keeps their dependencies; xtask stamps the stack's artifacts with the digest of their inputs
+    # build of the backend components (with its host build scripts and macros in `release`) and the
+    # component test workspace's debug target, which holds the `typewriter-stack` binary and the
+    # suite. Cargo keeps their dependencies. Only these jobs mount them, so no other job changes
+    # them, but every job that ends cleanly saves the whole volume, these folders included as it
+    # found them: a job that started before an owner saved puts the older targets back if it ends
+    # last. xtask stamps the stack's artifacts with the digest of their inputs
     # (xtask/src/cargo_build.rs) and reuses them while it matches, so a state another job's save
     # replaced costs a rebuild, never a stale binary. The backend's debug and coverage targets,
     # tens of GB, stay off.
