@@ -311,18 +311,17 @@ was proven on ([h-ci-runner.md](spikes/h-ci-runner.md)) took 13 to 14.
 - A dispatched run saves these caches only on `develop` or `features/v1` and only restores them on
   any other branch, so work branches cannot evict the base branch's caches past the 10 GB limit.
 - Runners: every CI job but the gate runs on `nscloud-ubuntu-24.04-amd64-4x16-with-cache` with
-  `nscloud-cache-tag-typewriter` and `nscloud-cache-size-50gb`, a cache volume all jobs share for the
-  Nix store, Gradle's dependencies, the pub cache and Loom's downloads. The jobs that build the
+  `nscloud-cache-tag-typewriter` and `nscloud-cache-size-50gb`, a cache volume all jobs share for
+  the Nix store, Gradle's dependencies, the pub cache and Loom's downloads. The jobs that build the
   stack (the components check and the e2e suites) also keep its Cargo targets there: the release
   wasm build of the components and the component test workspace's debug target with the
-  `typewriter-stack` binary, which xtask reuses while every file and variable the last build read, the workspace's manifests
-  and lock file, Cargo's configuration files and variables, the command and the toolchain are
-  unchanged. Gradle's
-  build cache and the AOT cache stay on the Actions cache: every job saves the whole volume and the
-  last one wins. Run
-  44247548234 against the GitHub hosted 44203399779: job setup from 160 to 340 s to 21 to 39 s, the
-  suite from 818 s to 557 s, the same renderer and goldens. A cold volume is slow once, since the
-  first fetch of a Nix path from Namespace's network crawls.
+  `typewriter-stack` binary, which xtask reuses while every file and variable the last build read,
+  the workspace's manifests and lock file, Cargo's configuration files and variables, the command
+  and the toolchain are unchanged. Gradle's build cache and the AOT cache stay on the Actions cache:
+  every job saves the whole volume and the last one wins. Run 44247548234 against the GitHub hosted
+  44203399779: job setup from 160 to 340 s to 21 to 39 s, the suite from 818 s to 557 s, the same
+  renderer and goldens. A cold volume is slow once, since the first fetch of a Nix path from
+  Namespace's network crawls.
 - The job checks out one commit; `reach_merge_base` fetches the history down to the merge base for
   the touched lines. It stages and uploads evidence even when the suite failed.
 
