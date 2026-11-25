@@ -1,0 +1,123 @@
+# Temporary probe: can a job on the Namespace runner get a writable cgroup2 and enforce memory limits
+# per process? Tries a read write remount, then a fresh cgroup2 mount, then the privileged container
+# label. Deleted with its branch and run once read. Prints no process command lines and no environment.
+name: cgroup probe 2
+on:
+  push:
+    branches: [chore/namespace-cgroup-probe-2]
+permissions:
+  contents: read
+jobs:
+  container:
+    runs-on:
+      - nscloud-ubuntu-24.04-amd64-4x16-with-cache
+      - nscloud-cache-tag-typewriter
+      - nscloud-cache-size-50gb
+    outputs:
+      works: ${{ steps.mount.outputs.works }}
+    steps:
+      - name: identity
+        run: &identity |
+          uname -r; id; nproc; free -m
+          cat /proc/self/cgroup
+          mount | grep -i cgroup || true
+          grep -E '^Cap(Prm|Eff|Bnd)' /proc/self/status
+          sudo grep -E '^Cap(Prm|Eff|Bnd)' /proc/self/status
+          command -v capsh && capsh --decode="$(sudo awk '/^CapEff/ {print $2}' /proc/self/status)" || true
+          cat /sys/fs/cgroup/cgroup.controllers || true
+          cat /sys/fs/cgroup/cgroup.subtree_control || true
+          wc -l < /sys/fs/cgroup/cgroup.procs || true
+      - name: writable cgroup2
+        id: mount
+        run: &mount |
+          set -x
+          works=false
+          if sudo mount -o remount,rw /sys/fs/cgroup && sudo mkdir /sys/fs/cgroup/tw-check; then
+            sudo rmdir /sys/fs/cgroup/tw-check
+            echo "ROOT=/sys/fs/cgroup" >> "$GITHUB_ENV"; echo "METHOD=remount" >> "$GITHUB_ENV"; works=true
+          else
+            sudo mkdir -p /mnt/cg2
+            if sudo mount -t cgroup2 none /mnt/cg2 && sudo mkdir /mnt/cg2/tw-check; then
+              sudo rmdir /mnt/cg2/tw-check
+              echo "ROOT=/mnt/cg2" >> "$GITHUB_ENV"; echo "METHOD=fresh-mount" >> "$GITHUB_ENV"; works=true
+            fi
+          fi
+          echo "works=$works" >> "$GITHUB_OUTPUT"
+          echo "works=$works"
+      - name: limits
+        if: steps.mount.outputs.works == 'true'
+        run: &limits |
+          set -x
+          echo "method $METHOD root $ROOT"
+          # A cgroup holding processes cannot enable controllers for its children, so every process of the
+          # namespace root moves into a leaf first.
+          sudo mkdir -p "$ROOT/job"
+          for pid in $(cat "$ROOT/cgroup.procs"); do echo "$pid" | sudo tee "$ROOT/job/cgroup.procs" > /dev/null || echo "could not move $pid"; done
+          wc -l < "$ROOT/cgroup.procs"
+          echo "+memory +pids" | sudo tee "$ROOT/cgroup.subtree_control"
+          cat "$ROOT/cgroup.subtree_control"
+          R="$ROOT/tw-probe"
+          sudo mkdir -p "$R"
+          echo "+memory +pids" | sudo tee "$R/cgroup.subtree_control"
+          sudo mkdir -p "$R/leaf" "$R/other"
+          echo 200M | sudo tee "$R/leaf/memory.max"
+          echo 0 | sudo tee "$R/leaf/memory.swap.max" || true
+          echo 1 | sudo tee "$R/leaf/memory.oom.group"
+          cat > /tmp/hog.py <<'PY'
+          import sys, time
+          blocks = []
+          for i in range(int(sys.argv[1])):
+              blocks.append(bytearray(20 * 1024 * 1024))
+              time.sleep(0.02)
+          print("hog survived", flush=True)
+          PY
+          echo "--- a 800 MB hog in a 200 MB part"
+          sudo sh -c "echo \$\$ > $R/leaf/cgroup.procs; exec setpriv --reuid=$(id -u) --regid=$(id -g) --clear-groups python3 /tmp/hog.py 40"; echo "hog exit $?"
+          cat "$R/leaf/memory.events"
+          cat "$R/leaf/memory.peak" || true
+          echo "--- a 100 MB process in the sibling part survives"
+          sudo sh -c "echo \$\$ > $R/other/cgroup.procs; exec setpriv --reuid=$(id -u) --regid=$(id -g) --clear-groups python3 /tmp/hog.py 5"; echo "small exit $?"
+          cat "$R/other/memory.events"
+          echo "--- the job user moves processes within a tree delegated to it"
+          sudo mkdir -p "$R/deleg/shell"
+          sudo chown -R "$(id -u):$(id -g)" "$R/deleg"
+          echo "+memory +pids" | sudo tee "$R/deleg/cgroup.subtree_control"
+          echo $$ | sudo tee "$R/deleg/shell/cgroup.procs"
+          mkdir "$R/deleg/part" && echo 150M > "$R/deleg/part/memory.max" && echo "limit as user"
+          sh -c "echo \$\$ > $R/deleg/part/cgroup.procs && cat /proc/self/cgroup && echo moved-within-delegation" || echo MOVE_WITHIN_FAILED
+      - name: JVM reads its part limit
+        if: steps.mount.outputs.works == 'true'
+        run: &jvm |
+          set -x
+          R="$ROOT/tw-probe"
+          sudo mkdir -p "$R/jvm"
+          echo 1G | sudo tee "$R/jvm/memory.max"
+          sudo sh -c "echo \$\$ > $R/jvm/cgroup.procs; exec setpriv --reuid=$(id -u) --regid=$(id -g) --clear-groups java -XX:MaxRAMPercentage=50 -XX:+PrintFlagsFinal -version" | grep -E ' MaxHeapSize | MaxRAMPercentage '
+          sudo sh -c "echo \$\$ > $R/jvm/cgroup.procs; exec setpriv --reuid=$(id -u) --regid=$(id -g) --clear-groups java -XshowSettings:system -version" 2>&1 | head -20
+      - if: always()
+        name: kernel log
+        run: &kernel sudo dmesg | grep -iE 'oom|memory cgroup' | tail -20 || true
+
+  privileged:
+    needs: container
+    if: needs.container.outputs.works != 'true'
+    runs-on:
+      - nscloud-ubuntu-24.04-amd64-4x16-with-cache-with-features
+      - nscloud-cache-tag-typewriter
+      - nscloud-cache-size-50gb
+      - namespace-features:container.privileged=true
+    steps:
+      - name: identity
+        run: *identity
+      - name: writable cgroup2
+        id: mount
+        run: *mount
+      - name: limits
+        if: steps.mount.outputs.works == 'true'
+        run: *limits
+      - name: JVM reads its part limit
+        if: steps.mount.outputs.works == 'true'
+        run: *jvm
+      - if: always()
+        name: kernel log
+        run: *kernel

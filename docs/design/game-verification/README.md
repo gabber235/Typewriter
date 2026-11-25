@@ -328,12 +328,24 @@ JVM's heap is a share of its own part's limit (`-Xmx`):
 | Display (Linux) | 256 MiB | none |
 | Pool | 512 MiB | 64 % |
 
-- **Admission by memory.** The pool has a budget (`MemoryBudget`), half the machine where nothing
-  gives it one. The pool, the shared Paper and each client with its display hold their limits for the
-  whole run; the own Papers of restart attempts take what is left, as many at once as fit and at most
-  one per slot (`PartLimit.OWN_PAPER_SLOTS`, 2). A pool where no own Paper fits refuses to start and
-  names how many clients would.
-- **The run file lists each part's limit** (`Part.limit_bytes`).
+- **A cgroup per part.** Where CI delegates a cgroup (`cargo xtask cgroup delegate`, which names it in
+  `TYPEWRITER_CGROUP`), `cargo xtask e2e` makes a tree per run: `run-<id>/stack/<service>`,
+  `run-<id>/gradle` and `run-<id>/game`. Each stack service and Gradle start in their leaf, which
+  their process enters before it execs; Gradle passes `game` to the pool (`playtest.cgroup`). The pool
+  moves itself into `game/pool` and each part it starts into `game/<part>-<pid>`, every leaf with
+  `memory.oom.group`, so a kill takes the whole part. A part the kernel killed for memory is lost to
+  `memory_limit`.
+- **Budget.** The pool's budget (`MemoryBudget`) is the game cgroup's `memory.max`, or half the
+  machine where nothing gives it one. The pool, the shared Paper and each client with its display hold
+  their limits for the whole run; the own Papers of restart attempts take what is left, at most one per
+  slot (`PartLimit.OWN_PAPER_SLOTS`, 2).
+- **The run file lists each part's limit, its peak and whether the limits fit** (`Part.limit_bytes`,
+  `Part.peak_bytes`, `Part.fits_budget`, `TestRun.memory_budget`), Gradle and each stack service
+  included; the evidence shows them as a table per run.
+- **Report mode, for now.** Every cgroup's `memory.max` is the machine's total, so nothing is killed,
+  and admission records whether each part's limit fits the budget without refusing any part. The
+  planned limits do not fit a 16 GB runner with four clients; one CI run's peaks set the limits that
+  are then enforced, and only then does the pinned runner fail where it cannot enforce them.
 - The starting numbers come from run 43996334142's peaks; each run's peaks recalibrate them.
 
 ## CI
@@ -459,6 +471,10 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   no process.
 - **Absolute limits per part kind** (2026-11-25): `PartLimit` replaces `HeapShare`, below, and the pool
   admits own Papers while their limits fit its memory budget beside its other parts.
+- **Measure before enforcing** (2026-11-25): the planned limits do not fit the CI runner, so each part
+  runs in a cgroup of its own held only to the machine's total, the run file records each part's peak
+  and whether its limit fits, and admission refuses nothing. Enforcement, and failing a pinned runner
+  that cannot enforce, wait for one CI run's peaks.
 - **Every game JVM takes a share of the machine** (2026-11-17, replaced 2026-11-25): `HeapShare` in the wire module held
   each part kind's `-XX:MaxRAMPercentage` (shared Paper 16, own Paper 7, client 4.5, pool 2), so the caps
   scale with the machine; the pool starts each part with its share, and the test JVM starts the pool

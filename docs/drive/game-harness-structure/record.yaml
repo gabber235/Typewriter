@@ -150,6 +150,15 @@ decided:
       the run file through `concluded` (TestCase.conclusion); xtask gates on it and no longer compares
       window ticks itself; other runners' cases are still judged by their attempts
 
+  - id: measure-first
+    what: >-
+      the maintainer chose measure first for change 4 (2026-11-25), resolving limits-do-not-fit-the-runner:
+      slice 1 comes onto the PR branch with admission in report mode (it records whether each part fits,
+      never refuses one); the pool's cgroup leaves, the memory_limit loss cause, each part's peak in the
+      run file, the xtask run tree and the CI delegation step are built with every memory.max at the
+      runner's total; the evidence shows peak against planned limit per part. Enforcement and failing a
+      pinned runner that cannot enforce wait for the maintainer's word after one CI run
+
   - id: build-without-stack
     what: >-
       scope added by the maintainer (2026-11-24): the game test build must not depend on the running
@@ -157,14 +166,11 @@ decided:
       the pool fills in as each Paper boots; check builds gameTestBuild with no stack
 
 open:
-  - id: limits-do-not-fit-the-runner
+  - id: enforce-limits
     ask: >-
-      the approved starting limits (shared Paper 4.5 GiB, own Paper 1.6, client 1.9, display 0.25, pool
-      0.5) hold 13.6 GiB for 4 clients before any own Paper, and a 16 GB runner has 15.0 GiB in all,
-      before the stack and Gradle; hard admission would refuse every CI game run. Lower the starting
-      limits, run fewer clients on CI, or admit over the budget until the first enforced run measures
-      peaks? Slice 1 (limits, heap from the limit, admission) waits on local branch
-      feat/part-memory-limits, off the PR branch
+      after one CI run with the delegation step gives each part's peak: set the enforced limits from
+      those peaks, turn on enforcement (memory.max per leaf, admission that refuses) and fail the
+      pinned runner where limits are not enforced; waits on the maintainer's word
   - id: blocked-pushes
     ask: >-
       the probe push and the ci.yml edit were denied by the permission classifier; allow them, or
@@ -172,4 +178,4 @@ open:
 
 slices: []
 
-next: change 4 waits on limits-do-not-fit-the-runner; then the pool's cgroup leaves, the xtask run tree (stack, gradle, game) and the CI delegation step
+next: the maintainer applies the cgroup delegation step to ci.yml; one CI run's peaks, then enforce-limits
