@@ -55,6 +55,21 @@ pieces:
           limit; the pool admits parts while the sum of limits fits its own budget; memory.events names
           the part the kernel killed
         state: trying
+      - id: first-measured-run
+        what: the playtest suite on CI run 45575711222, the first with `cargo xtask cgroup delegate`
+        taught: >-
+          the delegated tree works: every part ran in its leaf and recorded a peak (clients 1.3 to
+          1.4 GiB, own Papers up to 2.1 GiB, pool 0.48 GiB, Gradle 8.35 GiB). The shared Paper died with
+          no log line while two own Papers and two replacement clients booted and the planned limits of
+          the running parts added up to 16.8 GiB of a 15.7 GiB machine with no swap; Gradle's leaf may hold a
+          Kotlin daemon (4 GiB heap ceiling), a Gradle daemon (2 GiB) and two test JVMs beside it. The pool heard the
+          connection close first, called it `left`, and stopped before it saw the process end, so it
+          never read the leaf's kill count or peak. Peaks are now read for every part the pool did not
+          see end, a kill names its cause, and a part's peak is the most any of its processes took
+        state: working
+        evidence:
+          - CI run 45575711222 artifact results-e2e-playtest (test_run.json, pool.log, paper.log)
+          - services/playtest/pool/src/main/kotlin/com/typewritermc/playtest/pool/Pool.kt (measure, measured)
   - id: one-infrastructure-verdict
     status: building
     tries:
@@ -178,4 +193,4 @@ open:
 
 slices: []
 
-next: the maintainer applies the cgroup delegation step to ci.yml; one CI run's peaks, then enforce-limits
+next: a CI run with the kill reporting names what killed the shared Paper; then enforce-limits

@@ -333,17 +333,25 @@ JVM's heap is a share of its own part's limit (`-Xmx`):
   `run-<id>/gradle` and `run-<id>/game`. Each stack service and Gradle start in their leaf, which
   their process enters before it execs; Gradle passes `game` to the pool (`playtest.cgroup`). The pool
   moves itself into `game/pool` and each part it starts into `game/<part>-<pid>`, every leaf with
-  `memory.oom.group`, so a kill takes the whole part. A part the kernel killed for memory is lost to
-  `memory_limit`.
+  `memory.oom.group`, so a kill takes the whole part.
+- **A kill for memory names why.** The kernel counts an out of memory kill (`oom_kill`) in the victim's
+  cgroup whichever killer chose it, and counts `oom` where a cgroup reached its own limit. A part whose
+  leaf counts a kill is lost to `killed_for_memory`: `own_limit` when its leaf counts `oom`,
+  `game_budget` when the game's cgroup does, `machine_out_of_memory` otherwise. That cause replaces how
+  its loss looked first, as its connection closing, and the pool reads it for every part it did not
+  see end, also when a lost part stopped the game.
 - **Budget.** The pool's budget (`MemoryBudget`) is the game cgroup's `memory.max`, or half the
   machine where nothing gives it one. The pool, the shared Paper and each client with its display hold
   their limits for the whole run; the own Papers of restart attempts take what is left, at most one per
   slot (`PartLimit.OWN_PAPER_SLOTS`, 2).
-- **The run file lists each part's limit, its peak and whether the limits fit** (`Part.limit_bytes`,
-  `Part.peak_bytes`, `Part.fits_budget`, `TestRun.memory_budget`), Gradle and each stack service
-  included; the evidence shows them as a table per run.
-- **Report mode, for now.** Every cgroup's `memory.max` is the machine's total, so nothing is killed,
-  and admission records whether each part's limit fits the budget without refusing any part. The
+- **The run file lists each part's limit and its peak** (`Part.limit_bytes`, `Part.peak_bytes`), Gradle
+  and each stack service included: the most any process of the part took, a restarted Paper's boots
+  together, read once the process ended, also after the part's loss. Its budget
+  (`TestRun.memory_budget`) holds the most the planned limits of the parts that ran at once added up
+  to (`planned_at_once_bytes`); the evidence shows both as a table per run. A peak counts the page cache
+  the part's files filled, which the kernel takes back before it kills.
+- **Report mode, for now.** Every cgroup's `memory.max` is the machine's total, and admission refuses no
+  part; the kernel still kills where the machine runs out. The
   planned limits do not fit a 16 GB runner with four clients; one CI run's peaks set the limits that
   are then enforced, and only then does the pinned runner fail where it cannot enforce them.
 - The starting numbers come from run 43996334142's peaks; each run's peaks recalibrate them.
