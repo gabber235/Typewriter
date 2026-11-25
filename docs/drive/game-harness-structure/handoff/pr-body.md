@@ -99,6 +99,23 @@ Local `cargo xtask e2e playtest --only TOAST-1,RESTART-2,QUIT-2`:
 - Failing the pinned runner when it cannot enforce limits: with enforcement.
 - Sharing the stack build between jobs: a follow up.
 
+## CI workflow changes
+
+`.github/workflows/ci.yml`:
+
+- **One runner per suite** (5aae01d7a6a): the plan job writes `suites` beside `areas`, and the e2e
+  matrix runs one runner per suite the change affects instead of the fixed panel, panel-web and game
+  list. Each suite keeps only the caches it uses; the playtest suite skips Flutter and the frame
+  vectors.
+- **Demos after the verdict** (5aae01d7a6a): a game suite's runner runs `cargo xtask e2e <suite>
+  --demos` after its verdict run, whatever the verdict was, and that step never gates.
+- **The gate follows the plan** (5aae01d7a6a): the gate and the report's `--jobs-failed` expect a
+  skipped e2e job when the plan named no suite, and a successful one when it named any.
+- **A cgroup for the game suites** (7ebc35942fb): before the verdict run, `cargo xtask cgroup
+  delegate` remounts the runner's cgroup tree writable, moves the job's processes into
+  `typewriter/job`, gives the job user `typewriter`, and names it in `TYPEWRITER_CGROUP`, so each
+  game run measures every part's memory.
+
 ## Design record changes
 
 `docs/design/game-verification/README.md`:
