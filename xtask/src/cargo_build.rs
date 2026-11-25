@@ -798,18 +798,43 @@ mod tests {
     }
 
     #[test]
-    fn reads_are_normalized_and_files_outside_the_repository_are_not_listed() {
+    fn a_read_inside_the_repository_once_normalized_is_listed_and_one_outside_it_is_not() {
         let root = cargo_workspace();
+        let outside = tempfile::tempdir().unwrap();
+        let toolchain = outside.path().join("rustlib/src/lib.rs");
+        fs::create_dir_all(toolchain.parent().unwrap()).unwrap();
+        fs::write(&toolchain, "pub fn std() {}").unwrap();
+        // Lands inside the repository only once its `..` is applied.
+        let name = root.ctx.root.file_name().unwrap().to_string_lossy();
+        let roundabout = root
+            .ctx
+            .root
+            .parent()
+            .unwrap()
+            .join(format!("sibling/../{name}/backend/src/lib.rs"));
+        let reads = [
+            roundabout.display().to_string(),
+            toolchain.display().to_string(),
+        ];
+        let reads: Vec<&str> = reads.iter().map(String::as_str).collect();
         let cargo = FakeCargo { ctx: &root.ctx };
         let build = cargo.build(WORKSPACE);
-        let reads = ["backend/src/../src/lib.rs", "../rustlib/src/lib.rs"];
-        build
-            .run(&root.ctx, &mut cargo.command("one", &reads), &NONE)
-            .unwrap();
+        let run = || {
+            build
+                .run(&root.ctx, &mut cargo.command("one", &reads), &NONE)
+                .unwrap()
+        };
+        assert_eq!(run(), Outcome::Compiled);
+        assert_eq!(run(), Outcome::Reused);
 
+        fs::write(&toolchain, "pub fn std() { edited() }").unwrap();
+        assert_eq!(run(), Outcome::Reused, "after editing a file outside it");
         root.write("backend/src/lib.rs", "fn main() { edited() }");
-        let outcome = build.run(&root.ctx, &mut cargo.command("one", &reads), &NONE);
-        assert_eq!(outcome.unwrap(), Outcome::Compiled);
+        assert_eq!(
+            run(),
+            Outcome::Compiled,
+            "after editing the file read roundabout"
+        );
     }
 
     #[test]
