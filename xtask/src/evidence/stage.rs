@@ -242,12 +242,9 @@ mod tests {
     #[test]
     fn a_demo_run_publishes_its_clips_beside_the_run_it_demonstrates() {
         let root = TempRoot::new();
-        root.write(
-            "results/game-demos/PROBE-1/attempt-1/clips/gv-1.mp4",
-            "clip",
-        );
+        root.write("results/game-demos/PROBE-1/demo/clips/gv-1.mp4", "clip");
         let mut demo = crate::test_support::passed_attempt((0, 1));
-        demo.folder = "PROBE-1/attempt-1".to_owned();
+        demo.folder = "PROBE-1/demo".to_owned();
         demo.artifacts = vec![results::Artifact {
             kind: ArtifactKind::Clip,
             path: "clips/gv-1.mp4".to_owned(),
@@ -266,7 +263,7 @@ mod tests {
         assert_eq!(
             files_below(&root.path(PUBLIC)),
             [
-                "game-demos/PROBE-1/attempt-1/clips/gv-1.mp4",
+                "game-demos/PROBE-1/demo/clips/gv-1.mp4",
                 "game-demos/test_run.json",
                 "game/test_run.json"
             ]
