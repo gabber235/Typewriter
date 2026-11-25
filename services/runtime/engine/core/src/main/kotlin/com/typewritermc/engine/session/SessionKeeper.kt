@@ -20,8 +20,8 @@ object SessionTimings {
     /** A Minecraft player: 20 second refresh, 60 second time to live, 10 second vacancy. */
     val MINECRAFT: LeaseTimings = LeaseTimings(refresh = 20.seconds, ttl = 60.seconds, vacancy = 10.seconds)
 
-    /** A panel tab, refreshed by its heartbeat: 45 second time to live, 10 second vacancy after it leaves. */
-    val PANEL: LeaseTimings = LeaseTimings(refresh = 15.seconds, ttl = 45.seconds, vacancy = 10.seconds)
+    /** A panel tab, refreshed by its heartbeat: 45 second time to live, 45 second vacancy after it leaves, the presence expiry. */
+    val PANEL: LeaseTimings = LeaseTimings(refresh = 15.seconds, ttl = 45.seconds, vacancy = 45.seconds)
 }
 
 /**

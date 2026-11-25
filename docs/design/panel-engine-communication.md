@@ -171,7 +171,7 @@ No event core, sessions, principals, or bridges are built yet; `runtimes/paper` 
 | F1 engine reports | concept accepted; shape, merge, storage settled: question 10 | `ProbeRealmHosts` roles and versions only |
 | G1 engine gone, server move | partly: leave and rejoin, cancellation of suspended handlers, atomic edits | not built |
 | G2 realm or cloud offline | partly: live effects survive realm outage; NATS or cloud outage silent | engines keep last publication |
-| G3 several engines, panel engine | partly: panel sessions per tab, presence heartbeat reuse; client link and grace missing | `PANEL_ENGINE` placement, `PanelPresence` |
+| G3 several engines, panel engine | partly: panel sessions per tab, presence heartbeat reuse; client link and vacancy missing | `PANEL_ENGINE` placement, `PanelPresence` |
 | Action declaration, context | settled: question 8 (`EditorAction.emit`) | `EditorAction` without engine target |
 | Fresh content | partly: panel engine tracks drafts; silent for Paper | not built |
 | Long running work | building blocks only (session keyed values, cancellation, `Runtime`, `Simulating`) | search watch only |
@@ -287,7 +287,7 @@ Gaps: no engine or player target, no caller in capability contexts, no progress 
 2. Settled 2026-10-31: engines share stored state only through the realm; live effects and events go directly between sessions. The realm is not a gateway (vision updated).
 3. Settled with 2.
 4. Dropped 2026-11-04: "the realm is treated as untrusted" has no source in any design or vision doc; authoring-writes.md says `initiated_by` comes from a trusted service.
-5. Settled 2026-10-31: the panel session grace is 45 s, the current presence expiry.
+5. Settled 2026-10-31: the panel session vacancy is 45 s, the current presence expiry: a tab's session stays vacant, alive but held by nobody, for 45 s after the tab leaves.
 6. Settled 2026-11-01 by questions 10a and 14: engine reports are mirrors (published through cross engine demand) and stored values keyed by `Engine`; neither needs a report path.
 7. Settled 2026-11-03: each engine decides for itself, and the sender merges the results (events-and-handlers.md).
 

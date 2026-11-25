@@ -358,7 +358,7 @@ interface SessionReporter {
 | Engine kind | Session id | Survives |
 | --- | --- | --- |
 | Minecraft | the player's UUID (one login per UUID behind a proxy; Paper receives no connection id) | server moves, rejoins while the session is vacant |
-| Panel | per tab id kept in sessionStorage on web, and for the app run on desktop and mobile | reloads; each tab is its own session, held by the panel engine (vacancy 10 s after the tab leaves) |
+| Panel | per tab id kept in sessionStorage on web, and for the app run on desktop and mobile | reloads; each tab is its own session, held by the panel engine (vacancy 45 s after the tab leaves) |
 | Future engines | defined by the engine | engine specific |
 
 - A protagonist may have several sessions at once (tabs, Minecraft plus panel).
