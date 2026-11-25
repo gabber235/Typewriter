@@ -2,9 +2,12 @@ package com.typewritermc.loader
 
 import com.typewritermc.loader.testing.shippedProfiles
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import java.net.URI
+import kotlin.time.Duration.Companion.seconds
 
 val LoaderSettingsTest by testSuite {
     val requiredProfileSettings = listOf("API_BASE_URL", "AUTH_BASE_URL", "NATS_URL", "OTEL_EXPORTER_OTLP_ENDPOINT")
@@ -57,5 +60,16 @@ val LoaderSettingsTest by testSuite {
         LoaderSettings(
             configuration = mapOf("OTEL_TRACES_SAMPLER" to "unsupported"),
         ).telemetryConfiguration().sampler shouldBe LoaderSamplerConfiguration.AlwaysOn
+    }
+
+    test("a host drains its work in flight for the configured bound, 10 seconds when none is set") {
+        LoaderSettings(configuration = mapOf("TYPEWRITER_WORK_DRAIN" to "30s")).workDrain() shouldBe 30.seconds
+        LoaderSettings().workDrain() shouldBe 10.seconds
+    }
+
+    test("an unparsable drain bound fails startup, naming the setting") {
+        shouldThrow<IllegalArgumentException> {
+            LoaderSettings(configuration = mapOf("TYPEWRITER_WORK_DRAIN" to "soon")).workDrain()
+        }.message shouldContain "TYPEWRITER_WORK_DRAIN"
     }
 }

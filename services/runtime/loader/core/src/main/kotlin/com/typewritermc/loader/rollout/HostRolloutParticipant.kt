@@ -25,6 +25,7 @@ import com.typewritermc.loader.deployment.ProjectedRuntime
 import com.typewritermc.loader.runtime.HostedRuntimeLoader
 import com.typewritermc.loader.runtime.HostedRuntimeStager
 import com.typewritermc.loader.runtime.LoadedHostedRuntime
+import com.typewritermc.loader.work.drain
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
@@ -91,8 +92,8 @@ fun interface ParticipantStatusListener {
 /**
  * Owns staged, active, and retained projections for one Realm and host.
  *
- * A mutex serializes commands and rejects stale or conflicting attempts. Commit quiesces the baseline before
- * activating a candidate and attempts recovery on failure. Successful replacement retains one prior projection for
+ * A mutex serializes commands and rejects stale or conflicting attempts. Commit quiesces the baseline and drains the
+ * host's work in flight for at most [workDrain] before activating a candidate, and attempts recovery on failure. Successful replacement retains one prior projection for
  * rollback. The assignment lifecycle must close the participant and its health monitor.
  */
 class HostRolloutParticipant(
@@ -107,6 +108,7 @@ class HostRolloutParticipant(
     private val scope: CoroutineScope,
     private val runtimeLoader: HostedRuntimeStager = HostedRuntimeLoader(),
     private val lifecycleTimeout: Duration = 30.seconds,
+    private val workDrain: Duration,
     private val telemetry: ServiceTelemetry? = null,
 ) {
     private val commands = Mutex()
@@ -264,6 +266,7 @@ class HostRolloutParticipant(
         val baseline = staged.baseline
         try {
             baseline?.projection?.quiesce()
+            if (baseline != null) drainWork()
             staged.projection.activate()
         } catch (failure: Throwable) {
             withContext(NonCancellable) {
@@ -277,6 +280,11 @@ class HostRolloutParticipant(
         localState = replacement
         monitorHealth(replacement)
         baseline?.retained?.projection?.close()
+    }
+
+    /** Waits for the host's work in flight, once the runtime it leaves quiesced, before another takes over. */
+    private suspend fun drainWork() {
+        host.work.drain(workDrain, "rollout", telemetry)
     }
 
     private suspend fun abort(
@@ -326,6 +334,7 @@ class HostRolloutParticipant(
                 val retained = requireNotNull(active.retained)
                 try {
                     active.projection.quiesce()
+                    drainWork()
                     retained.projection.resume()
                 } catch (failure: Throwable) {
                     withContext(NonCancellable) {
@@ -347,6 +356,7 @@ class HostRolloutParticipant(
                     monitorHealth(active)
                     throw failure
                 }
+                drainWork()
                 try {
                     active.projection.close()
                 } finally {

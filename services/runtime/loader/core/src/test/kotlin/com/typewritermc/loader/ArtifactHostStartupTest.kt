@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 val ArtifactHostStartupTest by testSuite {
     test("first assignment observes every valid inbox replacement at startup") {
@@ -72,6 +73,7 @@ val ArtifactHostStartupTest by testSuite {
                             }
                         },
                         InFlightWork(),
+                        10.seconds,
                         backgroundScope,
                     )
 

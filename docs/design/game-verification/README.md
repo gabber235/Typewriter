@@ -579,9 +579,12 @@ Dated decisions, oldest first. The sections above describe what they add up to.
 - **Engine work holds ticks by construction** (2026-11-24). The engine's one dispatcher and the
   host's one transport count all in flight work; per call site counting missed session writes,
   publication applies and the join path. The count lives in production as the host's
-  `InFlightWork`: it drains before shutdown or rollout and is the in flight work metric, at one
-  atomic increment and decrement per task and per outbound call; observers attach any time and hear
-  item events only while attached. Failed outbound work fails the attempt as `WorkFailed`. An away
+  `InFlightWork`: the artifact host exports it as the gauge `typewriter.work.in_flight` and drains
+  it, for at most `TYPEWRITER_WORK_DRAIN` (10 s by default), before it closes its runtimes and
+  before a rollout activates a candidate, logging what still runs when the bound runs out. It costs
+  one insert into and one removal from a concurrent set per task and per outbound call; observers
+  attach any time and hear item events only while attached. A stepped Paper reports hung work with
+  one watchdog that wakes at the deadline of the oldest open work. Failed outbound work fails the attempt as `WorkFailed`. An away
   player stays claimed for its work. A test opens an expected fact hold for a change it causes
   outside Paper. Across processes the rule is count before ack: a receiver counts before it
   acknowledges and the sender until the ack, built with the realm's transactions.

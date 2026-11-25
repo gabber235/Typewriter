@@ -50,10 +50,10 @@ fun writeStartupJar(
 
 class StartupLoaderService(
     root: Path,
+    override val openTelemetry: OpenTelemetry = OpenTelemetry.noop(),
 ) : LoaderService {
     override val artifactBlobs = FileDigestBlobStore(root)
     override val states = MutableStateFlow(RegistrarSnapshot(0, 0, RegistrarState.Idle))
-    override val openTelemetry = OpenTelemetry.noop()
     override val telemetry = openTelemetry.serviceTelemetry("host-startup-test")
 
     override suspend fun start(): Nothing = error("The bootstrap owns service startup.")

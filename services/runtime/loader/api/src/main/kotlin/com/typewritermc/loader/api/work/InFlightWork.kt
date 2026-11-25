@@ -1,37 +1,41 @@
 package com.typewritermc.loader.api.work
 
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
 /**
  * The work in flight in the runtimes of one host: every task an engine's dispatcher runs, and every outbound operation
  * a runtime makes through the host's messaging and shared artifacts, from its start until its result is back with
- * its caller. A host drains it before shutdown or rollout, exports [count] as a metric, and a stepped game test starts
- * no tick while work a tick caused still runs.
+ * its caller. The loader's artifact host exports [count] as the gauge `typewriter.work.in_flight` and drains the work,
+ * for at most its configured bound, before it closes its runtimes and before a rollout activates a candidate, logging
+ * the [items] still in flight when the bound runs out. A stepped game test starts no tick while work a tick caused
+ * still runs.
  *
- * Each item costs one atomic increment and one decrement. Item events reach observers only while one is attached; an
- * observer hears the end of exactly the items it heard begin, before [count] drops. Any thread may begin, end and
- * observe.
+ * Each item costs one insert into and one removal from a concurrent set, which is what lets a drain name what still
+ * runs. Item events reach observers only while one is attached; an observer hears the end of exactly the items it
+ * heard begin, before [count] drops. Any thread may begin, end and observe.
  */
 class InFlightWork {
-    private val running = AtomicInteger()
+    private val running: MutableSet<WorkItem> = ConcurrentHashMap.newKeySet()
     private val observers = CopyOnWriteArrayList<WorkObserver>()
 
     /** How many items run now. */
-    val count: Int get() = running.get()
+    val count: Int get() = running.size
+
+    /** The items that run now, in no particular order. */
+    val items: List<WorkItem> get() = running.toList()
 
     /** Item [name] for [subjects] (null: for every subject) begins now and runs until [WorkItem.end]. */
     fun begin(
         name: String,
         subjects: Set<WorkSubject>?,
     ): WorkItem {
-        running.incrementAndGet()
-        if (observers.isEmpty()) return WorkItem(this, name, subjects, emptyList())
-        val heard = observers.toList()
+        val heard = if (observers.isEmpty()) emptyList() else observers.toList()
         val item = WorkItem(this, name, subjects, heard)
+        running += item
         heard.forEach { it.began(item) }
         return item
     }
@@ -51,7 +55,7 @@ class InFlightWork {
         try {
             item.heard.forEach { it.ended(item, failure) }
         } finally {
-            running.decrementAndGet()
+            running -= item
         }
     }
 }

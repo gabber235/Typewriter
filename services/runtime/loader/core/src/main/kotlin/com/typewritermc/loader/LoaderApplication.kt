@@ -55,6 +55,7 @@ internal class ArtifactLoaderBootstrap(
                 service,
                 assignments(entrypoint, service),
                 work,
+                settings.workDrain(),
                 scope,
             )
         try {

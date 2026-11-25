@@ -27,6 +27,8 @@ import com.typewritermc.loader.deployment.RealmLoaderIntent
 import com.typewritermc.loader.deployment.ResolutionResult
 import com.typewritermc.loader.deployment.resolveDeployment
 import com.typewritermc.loader.work.counted
+import com.typewritermc.loader.work.drain
+import com.typewritermc.loader.work.exportTo
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
@@ -52,6 +54,7 @@ import kotlinx.coroutines.withContext
 import skirout.service.v1.rollout.ParticipantStatus
 import skirout.service.v1.rollout.RealmHostPresence
 import java.nio.file.Path
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
 
@@ -102,7 +105,8 @@ fun interface ArtifactHostAssignmentSource {
  *
  * Assignment and session replacement share a lifecycle mutex. Assignment changes rotate authorization; selected
  * transient registrar states retain a valid hosted session. Background jobs and assignment resources are released
- * through [stop].
+ * through [stop]. While started, the host exports its [work] in flight as a metric; it drains that work for at most
+ * [workDrain] before it closes its runtimes, as each rollout does before it activates a candidate.
  */
 class ArtifactHost(
     private val serviceId: ServiceId,
@@ -110,6 +114,7 @@ class ArtifactHost(
     private val service: LoaderService,
     private val assignments: ArtifactHostAssignmentSource,
     private val work: InFlightWork,
+    private val workDrain: Duration,
     private val scope: CoroutineScope,
 ) {
     private val artifactsRoot = workDirectory.resolve("artifacts")
@@ -131,6 +136,7 @@ class ArtifactHost(
                 candidates,
                 if (RuntimePlacement.REALM in assignment.roles) service.sharedArtifacts(assignment.realmId.value) else null,
                 work,
+                workDrain,
                 scope,
             )
         }
@@ -142,8 +148,10 @@ class ArtifactHost(
     private var inboxJob: Job? = null
     private var assignmentJob: Job? = null
     private var sessionJob: Job? = null
+    private var workMetric: AutoCloseable? = null
 
     suspend fun start() {
+        workMetric = work.exportTo(service.telemetry)
         withContext(Dispatchers.IO) { inbox.reconcile() }
         inboxJob = scope.launch { inbox.run() }
         sessionJob =
@@ -259,6 +267,7 @@ class ArtifactHost(
         reconciliationJob?.cancelAndJoin()
         sessionJob?.cancelAndJoin()
         lifecycle.withLock {
+            work.drain(workDrain, "shutdown", service.telemetry)
             execution.close()
             releasePendingAuthorization()
             latestSession = null
@@ -268,6 +277,8 @@ class ArtifactHost(
         sessionJob = null
         reconciliationJob = null
         inboxJob = null
+        workMetric?.close()
+        workMetric = null
         service.stop().requireSuccess()
     }
 }
@@ -286,6 +297,7 @@ internal class AssignmentRuntime(
     private val candidates: FileCandidateRepository,
     private val localShared: SharedArtifactAccess?,
     private val work: InFlightWork,
+    private val workDrain: Duration,
     private val scope: CoroutineScope,
 ) : HostAssignmentRuntime {
     @Volatile
@@ -324,6 +336,7 @@ internal class AssignmentRuntime(
             VerifiedArtifactCache(sharedArtifacts, localBlobs),
             { changed -> status = changed },
             scope,
+            workDrain = workDrain,
             telemetry = telemetry,
         )
     private val rolloutState =

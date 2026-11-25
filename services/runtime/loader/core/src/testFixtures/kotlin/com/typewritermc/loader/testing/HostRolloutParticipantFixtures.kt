@@ -301,6 +301,7 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
             scope,
             stager,
             1.seconds,
+            10.seconds,
         )
     return ParticipantFixture(serviceId, realmId, host, participant, projections, contexts, runtimes, events, root)
 }

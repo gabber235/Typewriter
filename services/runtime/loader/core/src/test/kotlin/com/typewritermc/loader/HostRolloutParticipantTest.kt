@@ -578,6 +578,33 @@ val HostRolloutParticipantTest by testSuite {
         }
     }
 
+    test("a commit activates its candidate only after the host's work in flight ended") {
+        runTest {
+            val fixture = participantFixture(this)
+            val baselineAttempt = attempt(1, 1)
+            val baseline = fixture.reference("baseline")
+            fixture.projections[baseline] = fixture.projection(baseline)
+            fixture.participant.apply(fixture.stage(baselineAttempt, baseline))
+            fixture.participant.apply(fixture.commit(baselineAttempt, baseline))
+            val candidateAttempt = attempt(2, 2)
+            val candidate = fixture.reference("candidate")
+            fixture.projections[candidate] = fixture.projection(candidate)
+            fixture.participant.apply(fixture.stage(candidateAttempt, candidate))
+            val item = fixture.host.work.begin("kv update sessions alex", null)
+
+            val committed = async { fixture.participant.apply(fixture.commit(candidateAttempt, candidate)) }
+            advanceTimeBy(5.seconds)
+            runCurrent()
+            fixture.runtimes[0].operations shouldContainExactly listOf("activate", "quiesce")
+            fixture.runtimes[1].operations shouldContainExactly emptyList()
+            item.end()
+
+            committed.await() shouldBe fixture.accepted
+            fixture.runtimes[1].operations shouldContainExactly listOf("activate")
+            fixture.participant.close()
+        }
+    }
+
     test("failed candidate activation restores the complete baseline") {
         runTest {
             val fixture = participantFixture(this)

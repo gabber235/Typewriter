@@ -11,6 +11,7 @@ import io.opentelemetry.sdk.logs.SdkLoggerProvider
 import io.opentelemetry.sdk.logs.data.LogRecordData
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor
 import io.opentelemetry.sdk.metrics.SdkMeterProvider
+import io.opentelemetry.sdk.metrics.data.MetricData
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Owns an isolated SDK with in memory span and log exporters for contract tests.
+ * Owns an isolated SDK with in memory span and log exporters and a metric reader for contract tests.
  *
  * Simple processors expose completed records synchronously. Active span tracking detects leaked boundaries. Close
  * flushes and shuts down providers with bounded waits; clear removes recorded output without closing active spans.
@@ -39,7 +40,7 @@ class TelemetryTestHarness private constructor(
     private val provider: SdkTracerProvider,
     private val loggerProvider: SdkLoggerProvider,
     private val trackingProcessor: TrackingSpanProcessor,
-    private val metrics: InMemoryMetricReader,
+    private val metricReader: InMemoryMetricReader,
 ) : AutoCloseable {
     private val closed = AtomicBoolean()
 
@@ -98,12 +99,22 @@ class TelemetryTestHarness private constructor(
         metric: String,
         attributes: List<String>,
     ): Map<List<String?>, Long> =
-        metrics
-            .collectAllMetrics()
+        metrics()
             .filter { it.name == metric }
             .flatMap { it.longSumData.points }
             .groupingBy { point -> attributes.map { point.attributes.get(AttributeKey.stringKey(it)) } }
             .fold(0L) { sum, point -> sum + point.value }
+
+    /** Every metric as collected now. */
+    fun metrics(): Collection<MetricData> = metricReader.collectAllMetrics()
+
+    /** The one value the long gauge [name] reports now. */
+    fun gaugeValue(name: String): Long =
+        metrics()
+            .single { it.name == name }
+            .longGaugeData.points
+            .single()
+            .value
 
     fun finishedSpans(): List<SpanData> = exporter.finishedSpanItems
 
