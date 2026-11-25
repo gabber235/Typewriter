@@ -27,7 +27,7 @@ import org.bukkit.entity.Player;
  * work a plugin starts for a player must be counted, or a check may run before its effect.
  */
 public final class PlayerWork implements AutoCloseable {
-    static final WorkLedger LEDGER = new WorkLedger(WorkLedger.deadlineThread());
+    static final WorkLedger LEDGER = new WorkLedger(WorkLedger.watchThread());
 
     // The holds of the facts attempts expect, by fact, until a plugin reports it.
     private static final Map<String, List<PlayerWork>> EXPECTED = new ConcurrentHashMap<>();
