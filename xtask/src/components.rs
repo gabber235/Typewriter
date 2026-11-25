@@ -30,10 +30,8 @@ pub const DESCRIBE: &str = "cargo xtask components --results .xtask/results/comp
 /// The suite's Cargo manifest, relative to the repository root.
 const SUITE: &str = "backend/tests/component/Cargo.toml";
 const SUITE_PACKAGE: &str = "typewriter-component-tests";
-/// Must match `component_test_model::{COMPONENT_TARGET, COMPONENT_PROFILE,
-/// RUN_MANIFEST_SCHEMA_VERSION}`, which the suite checks every manifest against.
-const COMPONENT_TARGET: &str = "wasm32-wasip2";
-const COMPONENT_PROFILE: &str = "release";
+/// Must match `component_test_model::RUN_MANIFEST_SCHEMA_VERSION`, which the suite checks every
+/// manifest against.
 const RUN_MANIFEST_SCHEMA_VERSION: u32 = 1;
 
 #[derive(clap::Args, Default)]
@@ -380,8 +378,8 @@ fn write_manifest(
         "test_lock_sha256": sha256(&ctx.root.join("backend/tests/component/Cargo.lock"))?,
         "rustc_version": ctx.tool(".", "rustc", &["--version"]).output_text()?.trim(),
         "cargo_version": ctx.tool(".", "cargo", &["--version"]).output_text()?.trim(),
-        "target": COMPONENT_TARGET,
-        "profile": COMPONENT_PROFILE,
+        "target": deploy::COMPONENT_TARGET,
+        "profile": deploy::COMPONENT_PROFILE,
         "fixtures": fixtures.iter().map(|fixture| &fixture.id).collect::<Vec<_>>(),
         "artifacts": records,
     });

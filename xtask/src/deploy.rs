@@ -189,6 +189,12 @@ fn ensure_main_checkout(ctx: &Context) -> Result<()> {
     Ok(())
 }
 
+/// The target and profile every component is built for. Must match
+/// `component_test_model::{COMPONENT_TARGET, COMPONENT_PROFILE}`, which the component suite checks
+/// every run manifest against.
+pub(crate) const COMPONENT_TARGET: &str = "wasm32-wasip2";
+pub(crate) const COMPONENT_PROFILE: &str = "release";
+
 /// The Cargo build of the release wasm artifact of every component in `components`. The caller
 /// holds the heavy lock while it runs.
 pub(crate) fn components_build(ctx: &Context, components: &[Component]) -> Command {
@@ -198,9 +204,10 @@ pub(crate) fn components_build(ctx: &Context, components: &[Component]) -> Comma
         &[
             "build",
             "--locked",
-            "--release",
+            "--profile",
+            COMPONENT_PROFILE,
             "--target",
-            "wasm32-wasip2",
+            COMPONENT_TARGET,
         ],
     );
     // A package with several wanted targets is named once.
@@ -235,7 +242,8 @@ pub(crate) fn reusable_components_build<'a>(
 /// backend's Cargo target directory `target`.
 pub(crate) fn release_artifact(target: &Path, name: &str) -> PathBuf {
     target
-        .join("wasm32-wasip2/release")
+        .join(COMPONENT_TARGET)
+        .join(COMPONENT_PROFILE)
         .join(format!("{}.wasm", name.replace('-', "_")))
 }
 
