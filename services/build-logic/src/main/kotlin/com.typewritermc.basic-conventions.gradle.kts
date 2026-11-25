@@ -38,6 +38,9 @@ tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
     exclude { it.file.invariantSeparatorsPath.contains("/generated/ksp/") }
 }
 
+// Rules that need type resolution, such as LongParameterList, run only in detektMain, so check runs it.
+tasks.named("check") { dependsOn("detektMain") }
+
 ktlint {
     version.set(libs.findVersion("ktlint").get().requiredVersion)
     filter {
