@@ -10,7 +10,7 @@ val StepPolicyTest by testSuite {
 
     test("a free player's client behind the last tick holds back the next tick until it acks it") {
         var granted = 0
-        val policy = policy({ granted++ })
+        val policy = stepPolicy({ granted++ })
         policy.claim(listOf(claimed))
         policy.acked(claimed, 9, false)
         policy.acked(free, 9, false)
@@ -28,7 +28,7 @@ val StepPolicyTest by testSuite {
 
     test("a client that never acked a tick, still joining, holds back no tick") {
         var granted = 0
-        val policy = policy({ granted++ })
+        val policy = stepPolicy({ granted++ })
         policy.claim(listOf(claimed))
         policy.tickEnded(10)
         policy.acked(claimed, 10, false)
@@ -43,7 +43,7 @@ val StepPolicyTest by testSuite {
         var now = 0L
         var granted = 0
         val stalled = mutableListOf<UUID>()
-        val policy = policy({ granted++ }, clock = { now }, reportStalled = { stalled += it })
+        val policy = stepPolicy({ granted++ }, clock = { now }, reportStalled = { stalled += it })
         policy.claim(listOf(claimed))
         policy.acked(claimed, 9, false)
         policy.acked(free, 9, false)
@@ -62,7 +62,7 @@ val StepPolicyTest by testSuite {
     test("a client whose connection closed holds back no tick, though Paper notices its player leave only in a tick") {
         var granted = 0
         val closed = mutableSetOf<UUID>()
-        val policy = policy({ granted++ }, connected = { it !in closed })
+        val policy = stepPolicy({ granted++ }, connected = { it !in closed })
         policy.claim(listOf(claimed))
         policy.acked(claimed, 9, false)
         policy.acked(free, 9, false)
@@ -79,7 +79,7 @@ val StepPolicyTest by testSuite {
     test("at a pace, a tick a window waits for is granted no sooner than the pace after the tick before it") {
         var now = 0L
         var granted = 0
-        val policy = policy({ granted++ }, clock = { now })
+        val policy = stepPolicy({ granted++ }, clock = { now })
         policy.claim(listOf(claimed))
         policy.pace(50)
         policy.tickEnded(10)
@@ -108,7 +108,7 @@ val StepPolicyTest by testSuite {
     test("a delivery ends with the tick after which its client holds everything sent, however many ticks it took") {
         var granted = 0
         val ended = mutableListOf<Int>()
-        val policy = policy({ granted++ })
+        val policy = stepPolicy({ granted++ })
         policy.claim(listOf(claimed))
         policy.tickEnded(10)
         policy.acked(claimed, 10, false)
@@ -127,27 +127,3 @@ val StepPolicyTest by testSuite {
         granted shouldBe 2
     }
 }
-
-/**
- * A step policy whose granted ticks run [grantTick], with nothing left to send, every main thread task
- * run at once and no counted work; [clock] is its wall clock, [reportStalled] hears each stalled client
- * and [connected] says whose connection is open.
- */
-private fun policy(
-    grantTick: () -> Unit,
-    clock: () -> Long = { 0L },
-    reportStalled: (UUID) -> Unit = {},
-    connected: (UUID) -> Boolean = { true },
-) = StepPolicy(
-    { false },
-    grantTick,
-    { _, _ -> },
-    { true },
-    { it.run() },
-    WorkLedger { _, _ -> },
-    {},
-    Acks { clock() },
-    { reportStalled(it.player()) },
-    connected,
-    { clock() },
-)
