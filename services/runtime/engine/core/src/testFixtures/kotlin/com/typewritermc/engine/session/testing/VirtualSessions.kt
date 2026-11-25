@@ -7,6 +7,7 @@ import com.typewritermc.engine.session.SessionTimings
 import com.typewritermc.engine.session.SessionValue
 import com.typewritermc.engine.session.sessionKey
 import com.typewritermc.identity.EngineId
+import com.typewritermc.identity.OnlineSessions
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
 import com.typewritermc.identity.Session
@@ -47,10 +48,16 @@ class VirtualSessions(
     ): VirtualEngine {
         val buckets = ScriptedBuckets(keyValue.store)
         val sessions = OnlineSet(online)
-        val keeper =
-            SessionKeeper(EngineId(id), MutableStateFlow(buckets), BUCKET, timings, sessions, scope.backgroundScope, keyValue.clock())
-        return VirtualEngine(EngineId(id), keeper, buckets, sessions)
+        return VirtualEngine(EngineId(id), keeper(id, sessions, buckets), buckets, sessions)
     }
+
+    /** Starts engine [id] of the Realm keeping the sessions its engine kind has in [online], through [buckets]. */
+    fun keeper(
+        id: String,
+        online: OnlineSessions,
+        buckets: ScriptedBuckets = ScriptedBuckets(keyValue.store),
+    ): SessionKeeper =
+        SessionKeeper(EngineId(id), MutableStateFlow(buckets), BUCKET, timings, online, scope.backgroundScope, keyValue.clock())
 
     /** The live entry of [protagonist]'s session [id], or null when there is none or no engine can read it. */
     suspend fun entry(

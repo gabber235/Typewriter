@@ -25,29 +25,54 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
 import skirout.organization.v1.presence.PresenceEvent
 import skirout.organization.v1.presence.PresenceLocation
+import kotlin.time.ComparableTimeMark
+import kotlin.time.TimeSource
 
 /**
  * The panel tabs in this engine's Realm, each a session of the tab's user, from the panel's presence heartbeat; there
- * is no second heartbeat. The first heartbeat in the Realm adds the tab's session, and each later one keeps it. A tab
- * that leaves the Realm or says it left is removed at once, and a tab whose heartbeats stop for a key's time to live is
- * removed then, so its session ends after the vacancy. The protagonist is the user the broker bound into the subject,
- * never a value from the payload.
+ * is no second heartbeat. The first heartbeat in the Realm adds the tab's session, and each later one moves its
+ * deadline a key's time to live ahead. A tab that leaves the Realm or says it left is removed at once, and a tab whose
+ * deadline passes is removed then, so its session ends after the vacancy. The protagonist is the user the broker bound
+ * into the subject, never a value from the payload.
+ *
+ * Deadlines are kept here, not by the messaging session presence arrives through: one expiry loop on [parent] removes
+ * every tab past its deadline, so a messaging session the host replaces changes nothing about when a tab leaves. The
+ * loop runs until [close].
  */
 class PresenceSessions(
     private val realmId: String,
     private val timings: SessionTimings,
-) : OnlineSessions {
-    /** The open tabs, each with the job that removes it once its heartbeats stop; changed only under its own lock. */
+    parent: CoroutineScope,
+    private val time: TimeSource.WithComparableMarks = TimeSource.Monotonic,
+) : OnlineSessions,
+    AutoCloseable {
+    /** The open tabs, each with its deadline; changed only under its own lock, together with [open]. */
     private val tabs = HashMap<SessionId, Tab>()
     private val open = MutableStateFlow<Set<Session>>(emptySet())
 
     override val sessions: StateFlow<Set<Session>> = open.asStateFlow()
+
+    // Every deadline is set a time to live after its heartbeat, so a new one is never earlier than the one the loop waits
+    // for: a tab whose deadline moved is found unexpired and the loop waits for the next earliest.
+    private val expiry: Job =
+        parent.launch {
+            while (true) {
+                val next = synchronized(tabs) { tabs.values.minOfOrNull { it.deadline } }
+                if (next == null) {
+                    open.first { it.isNotEmpty() }
+                } else {
+                    delay(next - time.markNow())
+                    expire()
+                }
+            }
+        }
 
     /** Receives the presence of every member of [messaging]'s organization until cancelled. */
     suspend fun serve(messaging: HostedMessagingSession): Unit =
@@ -59,7 +84,7 @@ class PresenceSessions(
                 ).organizationPresence.everyMemberOf(messaging.organizationId)
             val router =
                 messaging.communicator.createRouter(
-                    communicatorRoutes { event(presence) { call -> receive(this@coroutineScope, call.address.userId, call.event) } },
+                    communicatorRoutes { event(presence) { call -> receive(call.address.userId, call.event) } },
                     this,
                 )
             val started = router.start()
@@ -72,7 +97,6 @@ class PresenceSessions(
         }
 
     private fun receive(
-        scope: CoroutineScope,
         userId: String,
         event: PresenceEvent,
     ) {
@@ -83,7 +107,7 @@ class PresenceSessions(
                         realmId,
                     )
                 ) {
-                    heartbeat(scope, Session(Protagonist(PrincipalId(PrincipalId.USER, userId)), tab))
+                    heartbeat(Session(Protagonist(PrincipalId(PrincipalId.USER, userId)), tab))
                 } else {
                     end(tab)
                 }
@@ -99,32 +123,22 @@ class PresenceSessions(
         }
     }
 
-    private fun heartbeat(
-        scope: CoroutineScope,
-        session: Session,
-    ) {
-        val silence =
-            scope.launch {
-                delay(timings.lease.ttl)
-                end(session.id, silenced = coroutineContext[Job])
-            }
+    private fun heartbeat(session: Session) {
         synchronized(tabs) {
-            tabs.put(session.id, Tab(session, silence))?.silence?.cancel()
+            tabs[session.id] = Tab(session, time.markNow() + timings.lease.ttl)
             publish()
         }
     }
 
-    /** Removes [tab]; with [silenced], only while that silence is still the tab's latest. */
-    private fun end(
-        tab: SessionId,
-        silenced: Job? = null,
-    ) {
+    private fun end(tab: SessionId) {
         synchronized(tabs) {
-            val current = tabs[tab] ?: return
-            if (silenced != null && current.silence !== silenced) return
-            tabs.remove(tab)
-            current.silence.cancel()
-            publish()
+            if (tabs.remove(tab) != null) publish()
+        }
+    }
+
+    private fun expire() {
+        synchronized(tabs) {
+            if (tabs.values.removeAll { it.deadline.hasPassedNow() }) publish()
         }
     }
 
@@ -132,9 +146,12 @@ class PresenceSessions(
         open.value = tabs.values.mapTo(linkedSetOf()) { it.session }
     }
 
+    /** Stops the expiry loop; the tabs stay as they are. */
+    override fun close() = expiry.cancel()
+
     private class Tab(
         val session: Session,
-        val silence: Job,
+        val deadline: ComparableTimeMark,
     )
 
     private companion object {
