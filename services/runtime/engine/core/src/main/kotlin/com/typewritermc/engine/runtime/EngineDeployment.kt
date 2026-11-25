@@ -80,9 +80,9 @@ class EngineDeployment(
                     deployment = deployment,
                     registrars = deployment.providers.registrars.map { it.registrar } + engine.registrars,
                     parentScope = deploymentScope,
-                    implementationToken = implementation.fingerprint(),
-                    enforceImplementationCompatibility =
-                        context.identity.placement == RuntimePlacement.PRIMARY_ENGINE,
+                    // Only a primary engine runs the compiled content of its own implementation.
+                    requiredImplementation =
+                        implementation.fingerprint().takeIf { context.identity.placement == RuntimePlacement.PRIMARY_ENGINE },
                     contentGateway = ResourceGraphContentGateway(assembly.checked, assembly.bindings, assembly.relations),
                     contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, deploymentScope),
                 )

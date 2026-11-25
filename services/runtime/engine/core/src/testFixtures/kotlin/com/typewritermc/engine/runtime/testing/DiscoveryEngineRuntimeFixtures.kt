@@ -18,7 +18,7 @@ import skirout.editor.v1.type_catalog.PublicationId
 fun TestScope.runtime(
     registrars: List<RuntimeRegistrar>,
     revisions: MutableList<Long>? = null,
-    enforceImplementationCompatibility: Boolean = true,
+    requiredImplementation: String? = "implementation",
 ): RuntimeFixture {
     val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(emptyMap()), DiscoveryDomains.Execution)
     return RuntimeFixture(
@@ -26,8 +26,7 @@ fun TestScope.runtime(
             deployment = deployment,
             registrars = registrars,
             parentScope = this,
-            implementationToken = "implementation",
-            enforceImplementationCompatibility = enforceImplementationCompatibility,
+            requiredImplementation = requiredImplementation,
             contentGateway =
                 revisions?.let { values ->
                     EngineContentGateway {

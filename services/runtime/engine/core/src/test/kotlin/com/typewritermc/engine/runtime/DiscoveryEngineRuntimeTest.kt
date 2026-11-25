@@ -111,7 +111,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
     test("panel preview accepts primary content without claiming implementation compatibility") {
         runTest {
             val revisions = mutableListOf<Long>()
-            val fixture = runtime(emptyList(), revisions, enforceImplementationCompatibility = false)
+            val fixture = runtime(emptyList(), revisions, requiredImplementation = null)
             fixture.runtime.activate()
 
             fixture.runtime.applyContent(content(1, '9', implementationToken = "primary implementation")) shouldBe

@@ -14,14 +14,14 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * Activation runs registrars in list order and starts delivery. Quiescing stops delivery and releases activation
  * resources while retaining discovery and the last content for resume. Final closure also closes discovery.
- * Lifecycle methods and external content application require serialized access.
+ * Lifecycle methods and external content application require serialized access. Content must target
+ * [requiredImplementation] when one is set; a runtime without one applies content of any implementation.
  */
 class ReloadableEngineRuntime(
     deployment: GeneratedProviderDeployment,
     private val registrars: List<RuntimeRegistrar>,
     private val parentScope: CoroutineScope,
-    private val implementationToken: String,
-    private val enforceImplementationCompatibility: Boolean = true,
+    private val requiredImplementation: String?,
     private val contentGateway: EngineContentGateway? = null,
     private val contentDelivery: EngineContentDelivery? = null,
 ) : StagedHostedRuntime {
@@ -53,8 +53,8 @@ class ReloadableEngineRuntime(
     /** Applies a current descriptor delivered by the serialized content worker. */
     suspend fun applyContent(content: LoadedPublishedContent): ContentApplicationResult {
         check(scope != null) { "Engine deployment is not active." }
-        if (enforceImplementationCompatibility) {
-            require(content.descriptor.implementationToken == implementationToken) {
+        if (requiredImplementation != null) {
+            require(content.descriptor.implementationToken == requiredImplementation) {
                 "Compiled content targets a different engine implementation."
             }
         }
