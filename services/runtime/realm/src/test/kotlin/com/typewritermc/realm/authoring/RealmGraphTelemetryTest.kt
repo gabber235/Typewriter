@@ -1,6 +1,7 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.of
+import com.typewritermc.realm.checking.nameFinding
 import com.typewritermc.realm.checking.rename
 import com.typewritermc.realm.checking.renumber
 import com.typewritermc.realm.checking.rerunCatalog
@@ -11,20 +12,9 @@ import com.typewritermc.realm.routes.state
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.settle
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
-import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
-import skirout.editor.v1.checking.CheckEvidence
-import skirout.editor.v1.checking.CheckInstanceId
-import skirout.editor.v1.checking.CheckOutcome
-import skirout.editor.v1.checking.CheckTicket
-import skirout.editor.v1.checking.FindingSet
-import skirout.editor.v1.checking.FindingStatus
-import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.RuleId
-import skirout.editor.v1.type_catalog.RuleOrigin
-import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
@@ -76,28 +66,3 @@ val RealmGraphTelemetryTest by testSuite {
         }
     }
 }
-
-/** A current, clean finding set whose only evidence is what a name no check looks up means at [at]. */
-private fun nameFinding(
-    catalog: CatalogGeneration,
-    at: ValueLocation,
-): FindingSet =
-    FindingSet(
-        ticket =
-            CheckTicket(
-                instance =
-                    CheckInstanceId(
-                        rule =
-                            RuleId(
-                                origin = RuleOrigin(owner = TypeDefinitionId.qualified("test", "names"), ordinal = 0),
-                                localIndex = 0,
-                            ),
-                        location = at,
-                    ),
-                catalog = catalog,
-            ),
-        evidence = listOf(CheckEvidence.createScope(at = at, name = "looked_up_by_no_check", expected = emptyList())),
-        outcome = CheckOutcome.FINISHED,
-        findings = emptyList(),
-        status = FindingStatus.CURRENT,
-    )
