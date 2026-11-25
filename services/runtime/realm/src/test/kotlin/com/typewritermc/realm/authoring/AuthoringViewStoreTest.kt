@@ -25,7 +25,9 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import kotlinx.coroutines.runBlocking
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -189,6 +191,19 @@ val AuthoringViewStoreTest by testSuite {
             kept.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("Story")
             val numbers = kept.fieldMap.getValue("numbers") as DataValue.NamedWrapper
             (numbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "staged"))
+        }
+    }
+    test("an install detaches the fork of the view it replaces, so a later fork of that view starts from the live graph") {
+        val id = ResourceId(value = "page")
+        RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), mapOf(id to record(name = "Quest"))).use { realm ->
+            realm.views.capture().use { replaced ->
+                val before = realm.views.forkAt(replaced.root)
+                realm.commit(rename(id, "Renamed")).shouldBeCommitted()
+                replaced.root.fork
+                    .get()
+                    .shouldBeNull()
+                realm.views.forkAt(replaced.root) shouldNotBeSameInstanceAs before
+            }
         }
     }
     test("an install waits until a current read in progress has finished") {

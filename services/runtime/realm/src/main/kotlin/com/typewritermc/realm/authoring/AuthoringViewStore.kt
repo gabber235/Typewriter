@@ -91,9 +91,10 @@ data class AuthoringView internal constructor(
         CapturedAuthoringValues(resources, { at, name -> scopes.nameAt(this, at, name, work) }) { id -> judged(id).projections }
 
     /**
-     * The one graph forked at this view while it was not current, made on first need: names judged here, binding over
-     * it and capture evaluation share it. Install detaches it and merges it into the live graph so that work is not done
-     * again; a later fork of the view starts from the live graph.
+     * The one graph forked at this view, made on first need: names judged here, binding over it and capture evaluation
+     * share it. Installing this view detaches it and merges it into the live graph so that work is not done again;
+     * installing the view after this one detaches it as well. Either way a later fork of the view starts from the live
+     * graph.
      */
     internal val fork = AtomicReference<AuthoringGraph?>()
 }
@@ -434,8 +435,9 @@ class InMemoryAuthoringViewStore(
             before.current = false
             prune(before)
             val environment = RealmEnvironment(view, services)
-            // Installed, the view is read through the live graph; a fork kept past this point would start from a
-            // revision the live graph left behind and recompute what it has.
+            // Installed, the view is read through the live graph, and the view it replaced no longer is; a fork either
+            // kept past this point would start from a revision the live graph left behind and recompute what it has.
+            before.root.fork.set(null)
             val fork = view.fork.getAndSet(null)
             if (view.catalog.generation != before.root.catalog.generation) {
                 graph.reset(environment)
