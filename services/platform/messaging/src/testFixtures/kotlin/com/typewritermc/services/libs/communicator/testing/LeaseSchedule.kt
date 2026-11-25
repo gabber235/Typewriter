@@ -125,8 +125,16 @@ suspend fun VirtualLeases.play(schedule: LeaseSchedule): PlayedSchedule {
         keyValue.settle()
     }
     keyValue.advance(timings.refresh * 2 + timings.retry * 2)
-    val standing = holders.indices.filter { last[it] is LeaseStep.Claim }.map { holders[it].id }.toSet()
-    val crashed = holders.indices.filter { last[it] is LeaseStep.Crash }.map { holders[it].id }.toSet()
+    val standing =
+        holders.indices
+            .filter { last[it] is LeaseStep.Claim }
+            .map { holders[it].id }
+            .toSet()
+    val crashed =
+        holders.indices
+            .filter { last[it] is LeaseStep.Crash }
+            .map { holders[it].id }
+            .toSet()
     return PlayedSchedule(this, key, holders, claims, standing, crashed)
 }
 

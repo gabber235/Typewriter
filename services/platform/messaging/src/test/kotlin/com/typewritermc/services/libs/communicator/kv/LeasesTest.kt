@@ -145,7 +145,11 @@ val LeasesTest by testSuite {
 
             writes.getValue(firstToLand).land()
             leases.keyValue.settle()
-            writes.filterKeys { it != firstToLand }.values.single().land()
+            writes
+                .filterKeys { it != firstToLand }
+                .values
+                .single()
+                .land()
             leases.keyValue.advance(ttl * 3)
 
             leases.entry("k").shouldNotBeNull().holder shouldBe "engine-b"

@@ -47,7 +47,11 @@ val KeyValueBucketContractTest by testSuite(testConfig = TestConfig.testScope(is
 
                 bucket.create("a.b", byteArrayOf(2), long) shouldBe KeyValueWrite.Conflict
 
-                bucket.get("a.b").shouldBeInstanceOf<KeyValueRead.Found>().entry.value.toList() shouldBe listOf<Byte>(1)
+                bucket
+                    .get("a.b")
+                    .shouldBeInstanceOf<KeyValueRead.Found>()
+                    .entry.value
+                    .toList() shouldBe listOf<Byte>(1)
             }
 
             test("an update at the key's revision writes a later revision, and one at an older revision conflicts") {
@@ -59,7 +63,11 @@ val KeyValueBucketContractTest by testSuite(testConfig = TestConfig.testScope(is
 
                 second.revision shouldBeGreaterThan first.revision
                 stale shouldBe KeyValueWrite.Conflict
-                bucket.get("a.b").shouldBeInstanceOf<KeyValueRead.Found>().entry.value.toList() shouldBe listOf<Byte>(2)
+                bucket
+                    .get("a.b")
+                    .shouldBeInstanceOf<KeyValueRead.Found>()
+                    .entry.value
+                    .toList() shouldBe listOf<Byte>(2)
             }
 
             test("an update of a key that was never written conflicts") {
@@ -72,9 +80,17 @@ val KeyValueBucketContractTest by testSuite(testConfig = TestConfig.testScope(is
                     bucket.create(it, byteArrayOf(1), long)
                 }
 
-                bucket.keys("minecraft.alex.*").shouldBeInstanceOf<KeyValueKeys.Listed>().keys.sorted() shouldContainExactly
+                bucket
+                    .keys("minecraft.alex.*")
+                    .shouldBeInstanceOf<KeyValueKeys.Listed>()
+                    .keys
+                    .sorted() shouldContainExactly
                     listOf("minecraft.alex.one", "minecraft.alex.two")
-                bucket.keys("minecraft.>").shouldBeInstanceOf<KeyValueKeys.Listed>().keys.sorted() shouldContainExactly
+                bucket
+                    .keys("minecraft.>")
+                    .shouldBeInstanceOf<KeyValueKeys.Listed>()
+                    .keys
+                    .sorted() shouldContainExactly
                     listOf("minecraft.alex.one", "minecraft.alex.two", "minecraft.sam.one")
             }
 

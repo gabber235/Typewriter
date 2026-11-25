@@ -115,9 +115,13 @@ class Leases<V>(
                     }
 
                     // A newer call came: it leaves the key the way it finds it, so a release still shortens the last held key.
-                    Taken.Superseded -> Unit
+                    Taken.Superseded -> {
+                        Unit
+                    }
 
-                    Taken.Lost -> slot.lose(call)
+                    Taken.Lost -> {
+                        slot.lose(call)
+                    }
                 }
             }
         }
@@ -250,7 +254,9 @@ class Leases<V>(
                 KeyValueWrite.Conflict -> {
                     when (val again = write(bucket, key, held.claim)) {
                         is Write.Held -> held = again.held
+
                         Write.Lost -> return slot.lose(call)
+
                         // Tried again at the next refresh.
                         Write.Conflict, Write.Failed -> Unit
                     }
@@ -274,39 +280,46 @@ class Leases<V>(
     ) {
         var revision = held.revision
         while (true) {
-            val bucket = bucket()
-            if (bucket != null) {
-                when (bucket.update(key, codec.encode(held.entry), timings.grace, revision)) {
-                    is KeyValueWrite.Written -> {
-                        return
+            when (val step = bucket()?.let { shortenAt(it, key, held, revision) } ?: Shorten.Retry) {
+                Shorten.Done -> return
+                is Shorten.Again -> revision = step.revision
+                Shorten.Retry -> delay(timings.retry)
+            }
+        }
+    }
+
+    /** One try of [shorten] at [revision]: done, again at the key's current revision, or again after the retry wait. */
+    private suspend fun shortenAt(
+        bucket: KeyValueBucket,
+        key: String,
+        held: Held<V>,
+        revision: Long,
+    ): Shorten =
+        when (bucket.update(key, codec.encode(held.entry), timings.grace, revision)) {
+            is KeyValueWrite.Written -> {
+                Shorten.Done
+            }
+
+            KeyValueWrite.Conflict -> {
+                when (val read = bucket.get(key)) {
+                    is KeyValueRead.Found -> {
+                        if (codec.decode(read.entry.value)?.holder == holder) Shorten.Again(read.entry.revision) else Shorten.Done
                     }
 
-                    KeyValueWrite.Conflict -> {
-                        when (val read = bucket.get(key)) {
-                            is KeyValueRead.Found -> {
-                                if (codec.decode(read.entry.value)?.holder != holder) return
-                                revision = read.entry.revision
-                                continue
-                            }
-
-                            KeyValueRead.Absent -> {
-                                return
-                            }
-
-                            is KeyValueRead.Failed -> {
-                                Unit
-                            }
-                        }
+                    KeyValueRead.Absent -> {
+                        Shorten.Done
                     }
 
-                    is KeyValueWrite.Failed -> {
-                        Unit
+                    is KeyValueRead.Failed -> {
+                        Shorten.Retry
                     }
                 }
             }
-            delay(timings.retry)
+
+            is KeyValueWrite.Failed -> {
+                Shorten.Retry
+            }
         }
-    }
 
     /** Logs and counts [found] when its claim is further ahead of this holder's clock than the skew bound. */
     private fun report(found: LeaseEntry<V>) {
@@ -314,7 +327,8 @@ class Leases<V>(
         if (found.claimed <= bound) return
         ahead.add(1, bucketAttributes)
         log.warning(
-            "A claim of ${found.holder} in $bucketName is stamped ${found.claimed}, beyond the skew bound of this holder's clock ($bound); " +
+            "A claim of ${found.holder} in $bucketName is stamped ${found.claimed}, " +
+                "beyond the skew bound of this holder's clock ($bound); " +
                 "leases order claims by these stamps, so the holders' clocks disagree",
         )
     }
@@ -378,6 +392,16 @@ class Leases<V>(
         data object Lost : Write<Nothing>
 
         data object Failed : Write<Nothing>
+    }
+
+    private sealed interface Shorten {
+        data object Done : Shorten
+
+        data class Again(
+            val revision: Long,
+        ) : Shorten
+
+        data object Retry : Shorten
     }
 
     private sealed interface Taken<out V> {

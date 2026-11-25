@@ -59,7 +59,11 @@ internal object SessionLeaseCodec : LeaseCodec<SessionValue> {
                 WireSessionEntry(
                     protagonist =
                         WireProtagonist(
-                            principal = WirePrincipalId(kind = entry.value.protagonist.principal.kind, id = entry.value.protagonist.principal.id),
+                            principal =
+                                WirePrincipalId(
+                                    kind = entry.value.protagonist.principal.kind,
+                                    id = entry.value.protagonist.principal.id,
+                                ),
                         ),
                     holder = WireEngineId(value = entry.holder),
                     since = entry.value.since,
@@ -88,7 +92,8 @@ internal object SessionLeaseCodec : LeaseCodec<SessionValue> {
     }
 }
 
-internal fun LeaseEntry<SessionValue>.toSessionEntry(): SessionEntry = SessionEntry(value.protagonist, EngineId(holder), value.since, claimed)
+internal fun LeaseEntry<SessionValue>.toSessionEntry(): SessionEntry =
+    SessionEntry(value.protagonist, EngineId(holder), value.since, claimed)
 
 /** The live entry of [protagonist]'s session [id] in this sessions bucket, or null when there is none or no engine can read it; a failed read throws its cause. */
 suspend fun KeyValueBucket.readSessionEntry(

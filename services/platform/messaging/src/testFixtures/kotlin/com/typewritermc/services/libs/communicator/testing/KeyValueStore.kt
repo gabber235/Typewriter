@@ -6,12 +6,12 @@ import com.typewritermc.services.libs.communicator.kv.KeyValueBuckets
 import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
 import com.typewritermc.services.libs.communicator.kv.NatsKeyValueBuckets
 import com.typewritermc.services.libs.communicator.nats.NatsAuthentication
+import com.typewritermc.services.libs.communicator.nats.NatsClientMessage
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
 import com.typewritermc.services.libs.communicator.nats.NatsConnectionConfiguration
-import com.typewritermc.services.libs.communicator.nats.NatsClientMessage
 import com.typewritermc.services.libs.communicator.nats.NatsLifecycleResult
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -97,13 +97,28 @@ sealed interface KeyValueStore : AutoCloseable {
                 val counted = CompletableDeferred<Int>()
                 launch(start = CoroutineStart.UNDISPATCHED) {
                     var count = 0
-                    subscription.messages.takeWhile { it.subject != "$subjects.$MARKER" }.collect { if (it.subject == "$subjects.$key") count++ }
+                    subscription.messages.takeWhile { it.subject != "$subjects.$MARKER" }.collect {
+                        if (it.subject ==
+                            "$subjects.$key"
+                        ) {
+                            count++
+                        }
+                    }
                     counted.complete(count)
                 }
                 client.flush()
                 during()
                 // The server delivers this client's publishes in order, so the marker comes after every one before it.
-                client.publish(NatsClientMessage("$subjects.$MARKER", payload = null, headers = null, replyTo = null, status = null, statusDescription = null))
+                client.publish(
+                    NatsClientMessage(
+                        "$subjects.$MARKER",
+                        payload = null,
+                        headers = null,
+                        replyTo = null,
+                        status = null,
+                        statusDescription = null,
+                    ),
+                )
                 counted.await().also { subscription.unsubscribe() }
             }
 
