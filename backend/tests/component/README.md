@@ -16,7 +16,7 @@ cargo xtask components service-identity engine_identity_persists_credentials_and
 
 `cargo xtask check components` runs every fixture and writes the results as a `TestRun` (`skir-src/harness/v1/test_run.skir`) to `.xtask/results/components.json`. `cargo xtask components` runs one fixture, or the cases of one fixture matching a filter; `--results <path>` writes its `TestRun`. Either way a failed case runs a second time and every attempt is recorded: passing on the second attempt reports it as flaky without failing the run, and cases listed in `harness/quarantine.toml` are reported without gating. devenv provides the pinned Rust toolchain, the Wasm target and `nats-server`.
 
-The runner reads the fixture catalog from the suite's `catalog` binary, checks that every deployable backend component has a fixture, asks Cargo to build the selected components, reads exact artifacts from Cargo JSON messages, hashes them, writes an immutable run manifest, then starts one library test process. Direct `cargo test` intentionally fails without that manifest because it cannot guarantee fresh Wasm artifacts.
+The runner reads the fixture catalog from the suite's `catalog` binary, checks that every deployable backend component has a fixture, builds the selected components through the same reusable release build the stack uses (each wanted target's `.wasm` at its release path, which xtask removes before Cargo runs so only a fresh one passes), hashes them, writes an immutable run manifest, then starts one library test process. Direct `cargo test` intentionally fails without that manifest because it cannot guarantee fresh Wasm artifacts.
 
 `--live` streams redacted fixture diagnostics. Passing tests otherwise remain quiet.
 
