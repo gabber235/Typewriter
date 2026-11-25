@@ -632,6 +632,11 @@ pub fn record_build_start(ctx: &Context) -> Result<()> {
     append_line(&ctx.root.join("builds-started"))
 }
 
+/// How many builds of the stack in `root` recorded their start ([`record_build_start`]).
+pub fn started_builds(root: &TempRoot) -> usize {
+    lines(&root.path("builds-started"))
+}
+
 /// How many [`MEETS_ANOTHER`] builds of the stack in `root` finished.
 pub fn finished_builds(root: &TempRoot) -> usize {
     lines(&root.path("builds-finished"))

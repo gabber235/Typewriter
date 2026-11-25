@@ -591,7 +591,7 @@ mod tests {
     use crate::stack::client_configuration::ClientConfiguration;
     use crate::test_support::{
         MEETS_ANOTHER, TempRoot, build_names, fake_service, finished_builds, ids,
-        record_build_start, refusal, stack_context,
+        record_build_start, refusal, stack_context, started_builds,
     };
 
     mod roles {
@@ -743,7 +743,11 @@ mod tests {
     fn two_gradle_builds_that_set_one_property_differently_are_refused_before_anything_builds() {
         let root = TempRoot::new();
         let ctx = stack_context(&root);
-        let error = refusal(ctx.build(&[&REALM_HOST, &OTHER_INBOX]));
+        const RECORDS_START: Build = Build {
+            name: "stack binary",
+            how: How::Own(record_build_start),
+        };
+        let error = refusal(ctx.build(&[&REALM_HOST, &OTHER_INBOX, &RECORDS_START]));
         assert_eq!(
             error,
             format!(
@@ -753,6 +757,7 @@ mod tests {
             )
         );
         assert!(ctx.require(&REALM_HOST).is_err());
+        assert_eq!(started_builds(&root), 0);
     }
 
     #[test]
