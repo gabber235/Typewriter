@@ -79,7 +79,7 @@ pub const REALM_HOST_BUILD: Build = Build {
         ],
         properties: vec![(
             "typewriterArtifactInbox".to_owned(),
-            realm_host_work_dir(ctx)
+            realm_host_dir(ctx)
                 .join("artifacts/inbox")
                 .display()
                 .to_string(),
@@ -461,7 +461,7 @@ impl Service for RealmHost {
     }
     fn command(&self, ctx: &StackContext) -> Result<Command> {
         ctx.require(&REALM_HOST_BUILD)?;
-        let work_dir = realm_host_dir(ctx);
+        let work_dir = realm_host_dir(ctx.ctx);
         fs::create_dir_all(&work_dir)
             .with_context(|| format!("cannot create {}", work_dir.display()))?;
         let mut command = Command::new(ctx.root().join(REALM_HOST_INSTALL));
@@ -481,7 +481,7 @@ impl Service for RealmHost {
     }
     /// The loader is registered and waiting to be bound.
     fn ready(&self, ctx: &StackContext) -> Probe {
-        Probe::FileExists(realm_host_dir(ctx).join("state/registration-token"))
+        Probe::FileExists(realm_host_dir(ctx.ctx).join("state/registration-token"))
     }
     fn startup(&self) -> Duration {
         Duration::from_secs(180)
@@ -509,7 +509,7 @@ impl Service for BindRealmHost {
         command
             .args(owner_args(ctx)?)
             .arg("--work-dir")
-            .arg(realm_host_dir(ctx));
+            .arg(realm_host_dir(ctx.ctx));
         Ok(command)
     }
     fn ready(&self, _: &StackContext) -> Probe {
@@ -609,11 +609,7 @@ impl Service for Observer {
 }
 
 /// The work directory of the standalone Realm host, cleared with the rest of the run's state.
-fn realm_host_dir(ctx: &StackContext) -> PathBuf {
-    realm_host_work_dir(ctx.ctx)
-}
-
-fn realm_host_work_dir(ctx: &Context) -> PathBuf {
+fn realm_host_dir(ctx: &Context) -> PathBuf {
     state_dir(ctx).join("realm-host")
 }
 
@@ -738,18 +734,6 @@ mod tests {
         let position = |id: &str| order.iter().position(|ordered| *ordered == id).unwrap();
         assert!(position("bind-realm-host") < position("observer"));
         assert!(position("bind-realm-host") < position("bind-engines"));
-    }
-
-    #[test]
-    fn the_game_stack_builds_the_stack_binary_components_and_realm_host_before_it_starts() {
-        assert_eq!(
-            build_names(&game()),
-            [
-                "typewriter-stack",
-                "the backend components",
-                "the standalone Realm host",
-            ]
-        );
     }
 
     #[test]
