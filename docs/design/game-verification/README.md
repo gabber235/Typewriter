@@ -317,19 +317,24 @@ own Papers run at once.
 
 ## Memory
 
-Every game JVM takes a share of the machine (`HeapShare`, `-XX:MaxRAMPercentage`), so the caps scale
-with the machine:
+Every kind of game part may take a fixed amount of memory (`PartLimit`, in the launch module), and a
+JVM's heap is a share of its own part's limit (`-Xmx`):
 
-| Part | Share | On a 16 GB runner |
+| Part | Limit | Heap |
 |---|---|---|
-| Shared Paper | 16 % | 2.6 GB |
-| Own Paper | 7 % | 1.1 GB |
-| Client | 4.5 % | 740 MB |
-| Pool | 2 % | 330 MB |
+| Shared Paper | 4.5 GiB | 56 % |
+| Own Paper | 1.6 GiB | 67 % |
+| Client | 1.9 GiB | 38 % |
+| Display (Linux) | 256 MiB | none |
+| Pool | 512 MiB | 64 % |
 
-The parts that can run at once (the shared Paper, 2 own Papers, 4 clients, the pool) hold at most half
-the machine in heap, which a unit test pins. Memory outside the heap (about 1 GB per client, mostly
-the software renderer) is not capped yet; that stays open.
+- **Admission by memory.** The pool has a budget (`MemoryBudget`), half the machine where nothing
+  gives it one. The pool, the shared Paper and each client with its display hold their limits for the
+  whole run; the own Papers of restart attempts take what is left, as many at once as fit and at most
+  one per slot (`PartLimit.OWN_PAPER_SLOTS`, 2). A pool where no own Paper fits refuses to start and
+  names how many clients would.
+- **The run file lists each part's limit** (`Part.limit_bytes`).
+- The starting numbers come from run 43996334142's peaks; each run's peaks recalibrate them.
 
 ## CI
 
@@ -452,7 +457,9 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   folder at every boot (`part.running`), and tests find a client or Paper by it. Linux shows Java only
   the first page of a command line, so arguments cannot name a part; a file a crash left behind names
   no process.
-- **Every game JVM takes a share of the machine** (2026-11-17): `HeapShare` in the wire module holds
+- **Absolute limits per part kind** (2026-11-25): `PartLimit` replaces `HeapShare`, below, and the pool
+  admits own Papers while their limits fit its memory budget beside its other parts.
+- **Every game JVM takes a share of the machine** (2026-11-17, replaced 2026-11-25): `HeapShare` in the wire module held
   each part kind's `-XX:MaxRAMPercentage` (shared Paper 16, own Paper 7, client 4.5, pool 2), so the caps
   scale with the machine; the pool starts each part with its share, and the test JVM starts the pool
   with the pool's, which is why it lives in the module both share. The parts that can run at once (the

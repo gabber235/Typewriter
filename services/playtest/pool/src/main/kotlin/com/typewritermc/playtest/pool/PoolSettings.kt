@@ -31,6 +31,8 @@ internal class PoolSettings(
     val coveredPackages: List<String> = listOf("com.typewritermc"),
     /** What the build's game modules add to every Paper. */
     val paperAdditions: PaperAdditions = PaperAdditions(listOf()),
+    /** The memory the pool's parts may take together. */
+    val memoryBudget: MemoryBudget = MemoryBudget.halfTheMachine(),
 ) {
     /** Where the ahead of time caches for the restart Papers' boots stay across runs. */
     val aotDir: Path get() = poolDir.resolve("aot")

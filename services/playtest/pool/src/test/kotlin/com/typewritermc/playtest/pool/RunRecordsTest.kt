@@ -1,5 +1,6 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.launch.PartLimit
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.harness.v1.test_run.Artifact
@@ -137,7 +138,9 @@ val RunRecordsTest by testSuite {
             )
     }
 
-    test("every part the run started is listed with its log and how it ended; a lost client keeps its kept log's name") {
+    test(
+        "every part the run started is listed with its log, its kind's memory limit and how it ended; a lost client keeps its kept log's name",
+    ) {
         val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
         val logs = file.resolveSibling("logs/1")
         val records = RunRecords("run-1", file, logs, retries, clock = { 7_000 })
@@ -151,15 +154,34 @@ val RunRecordsTest by testSuite {
 
         TestRun.serializer.fromJsonCode(Files.readString(file)).parts shouldBe
             listOf(
-                Part(name = "paper", kind = PartKind.SHARED_PAPER, log = "paper.log", end = PartEnd.RAN_TO_END),
+                Part(
+                    name = "paper",
+                    kind = PartKind.SHARED_PAPER,
+                    log = "paper.log",
+                    end = PartEnd.RAN_TO_END,
+                    limitBytes = PartLimit.SHARED_PAPER.limitBytes,
+                ),
                 Part(
                     name = "client-gv-1-lost-1",
                     kind = PartKind.CLIENT,
                     log = "client-gv-1-lost-1.log",
                     end = PartEnd.createLost(cause = LossCause.ExitedWrapper(137), atMillis = 7_000),
+                    limitBytes = PartLimit.CLIENT.limitBytes,
                 ),
-                Part(name = "display-gv-1", kind = PartKind.DISPLAY, log = "display-gv-1.log", end = PartEnd.RAN_TO_END),
-                Part(name = "client-gv-1", kind = PartKind.CLIENT, log = "client-gv-1.log", end = PartEnd.RAN_TO_END),
+                Part(
+                    name = "display-gv-1",
+                    kind = PartKind.DISPLAY,
+                    log = "display-gv-1.log",
+                    end = PartEnd.RAN_TO_END,
+                    limitBytes = PartLimit.DISPLAY.limitBytes,
+                ),
+                Part(
+                    name = "client-gv-1",
+                    kind = PartKind.CLIENT,
+                    log = "client-gv-1.log",
+                    end = PartEnd.RAN_TO_END,
+                    limitBytes = PartLimit.CLIENT.limitBytes,
+                ),
             )
     }
 

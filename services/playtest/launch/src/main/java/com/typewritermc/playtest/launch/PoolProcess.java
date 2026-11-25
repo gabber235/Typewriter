@@ -44,7 +44,7 @@ public final class PoolProcess implements AutoCloseable {
 
     /** The pool's command line: its heap capped at the pool's share, with every {@code playtest.*} property of its build. */
     public static List<String> command(String java, Map<String, String> properties, String classpath) {
-        List<String> command = new ArrayList<>(List.of(java, HeapShare.POOL.flag()));
+        List<String> command = new ArrayList<>(List.of(java, PartLimit.POOL.heapFlag()));
         properties.forEach((key, value) -> command.add("-D" + key + "=" + value));
         command.addAll(List.of("-cp", classpath, MAIN));
         return command;

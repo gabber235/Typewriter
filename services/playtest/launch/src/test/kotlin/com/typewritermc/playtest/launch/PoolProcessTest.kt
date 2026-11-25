@@ -12,8 +12,8 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 val PoolProcessTest by testSuite {
-    test("the pool's JVM caps its heap at the pool's share of the machine") {
-        PoolProcess.command("java", mapOf("playtest.run" to "run-1"), "pool.jar") shouldContain HeapShare.POOL.flag()
+    test("the pool's JVM caps its heap at its share of the pool's memory limit") {
+        PoolProcess.command("java", mapOf("playtest.run" to "run-1"), "pool.jar") shouldContain PartLimit.POOL.heapFlag()
     }
 
     test("the pool runs with every playtest property of its build, on the pool's classpath") {

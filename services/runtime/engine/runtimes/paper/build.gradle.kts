@@ -1,5 +1,5 @@
 import com.typewritermc.buildlogic.realmDatabaseCredentials
-import com.typewritermc.playtest.launch.HeapShare
+import com.typewritermc.playtest.launch.PartLimit
 import xyz.jpenilla.runpaper.task.RunServer
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -81,7 +81,7 @@ dependencies {
 gamePaper {
     pluginJars.from(loaderPlugin)
     environment.put("TYPEWRITER_CONFIG_FILE", fromRun("TYPEWRITER_CONFIG_FILE"))
-    (0..HeapShare.OWN_PAPERS).forEach { slot ->
+    (0..PartLimit.OWN_PAPER_SLOTS).forEach { slot ->
         slot(slot) {
             environment.put("TYPEWRITER_REGISTRATION_TOKEN_FILE", "${fromRun("STACK_GAME_ENGINES")}/$slot/registration-token")
         }

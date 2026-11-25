@@ -1,6 +1,6 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.launch.HeapShare
+import com.typewritermc.playtest.launch.PartLimit
 import com.typewritermc.playtest.launch.PoolFile
 import com.typewritermc.playtest.launch.PoolProcess
 import com.typewritermc.playtest.pool.PaperRules.Do
@@ -61,7 +61,7 @@ fun main() {
         val pool = Pool(settings, server)
         onEndOf(System.`in`) { pool.stop() }
         // The build's test JVMs find no pool of their run, and point at this log.
-        HeapShare.overLimit(settings.clients)?.let { reason ->
+        settings.memoryBudget.overBudget(settings.clients, InputPath.here() == InputPath.XTEST)?.let { reason ->
             pool.couldNotRun(reason)
             exitProcess(1)
         }
@@ -294,7 +294,10 @@ internal class Pool(
         (1..settings.clients).map {
             Client(Player(name = "gv-$it", uuid = UUID.nameUUIDFromBytes("OfflinePlayer:gv-$it".toByteArray()).toString()))
         }
-    private val claims = Claims<Peer, Player>(clients.map { it.player })
+
+    // As many own Papers run at once as fit in the pool's memory beside its other parts.
+    private val ownPapers = settings.memoryBudget.ownPapers(settings.clients, InputPath.here() == InputPath.XTEST)
+    private val claims = Claims<Peer, Player>(clients.map { it.player }, ownPapers)
 
     /** Sessions the pool refused as they joined: what they still send is dropped until they leave. */
     private val refused = mutableSetOf<Peer>()
@@ -318,7 +321,13 @@ internal class Pool(
     private lateinit var shared: Server
 
     // Every Paper the pool runs, the shared one included, each under a name and in a folder of its own.
-    private val papers = Papers(folderOf = { name, slot -> game.ownFolder(name, slot) }, remove = { game.removeOwn(it) })
+    private val papers =
+        Papers(folderOf = {
+            name,
+            slot,
+            ->
+            game.ownFolder(name, slot)
+        }, remove = { game.removeOwn(it) }, ownSlots = ownPapers)
     private val aot = AotCache(settings.aotDir)
 
     // Every restart Paper of the pool boots the same JDK, class path, plugins and flags, its heap share included.
@@ -329,7 +338,7 @@ internal class Pool(
         AotCache.key(
             jdk,
             PaperServer.of(settings.paperDir).classPath + listOf(settings.agentJar, settings.coverageAgentJar, settings.pluginJar),
-            listOf(HeapShare.OWN_PAPER.flag()) + RESTART_FLAGS,
+            listOf(PartLimit.OWN_PAPER.heapFlag()) + RESTART_FLAGS,
         )
     }
     private var failure: String? = null

@@ -1,6 +1,7 @@
 package com.typewritermc.playtest.pool
 
 import build.skir.JsonFlavor
+import com.typewritermc.playtest.launch.PartLimit
 import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.Attempt
 import skirout.harness.v1.test_run.AttemptPolicy
@@ -116,14 +117,17 @@ internal class RunRecords(
         write()
     }
 
-    /** The game started the part [name] of [kind], logging into [log]; a part of that name already listed keeps its place. */
+    /**
+     * The game started the part [name] of [kind], logging into [log], with its kind's memory limit; a part of
+     * that name already listed keeps its place.
+     */
     fun started(
         name: String,
         kind: PartKind,
         log: Path,
     ) {
         if (parts.any { it.name == name && it.end == PartEnd.RAN_TO_END }) return
-        parts += Part(name = name, kind = kind, log = logName(log), end = PartEnd.RAN_TO_END)
+        parts += Part(name = name, kind = kind, log = logName(log), end = PartEnd.RAN_TO_END, limitBytes = kind.limit?.limitBytes ?: 0)
         write()
     }
 
@@ -272,3 +276,14 @@ internal class RunRecords(
                 },
         )
 }
+
+/** The memory limit of a part of this kind; null for a kind this build does not know. */
+internal val PartKind.limit: PartLimit?
+    get() =
+        when (this) {
+            PartKind.SHARED_PAPER -> PartLimit.SHARED_PAPER
+            PartKind.OWN_PAPER -> PartLimit.OWN_PAPER
+            PartKind.CLIENT -> PartLimit.CLIENT
+            PartKind.DISPLAY -> PartLimit.DISPLAY
+            else -> null
+        }

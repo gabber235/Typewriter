@@ -208,6 +208,8 @@ struct Part(85020017) {
   // Its log, relative to the run's `logs` folder; empty when it keeps none.
   log: string;
   end: PartEnd;
+  // The memory it may take, in bytes, fixed for its kind; 0 for a part without a limit of its own.
+  limit_bytes: int64;
 }
 
 enum PartKind(85020018) {
