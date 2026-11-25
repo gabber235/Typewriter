@@ -69,12 +69,16 @@ internal class RunRecords(
         val outcome = result.failure?.let { Outcome.createFailed(message = it, firstBroken = result.firstBroken) } ?: Outcome.PASSED
         add(
             submit,
-            outcome,
-            result.durationMillis,
-            (claimed + result.steps).sortedBy { it.atMillis },
-            result.folder,
-            result.artifacts,
-            covered,
+            Attempt(
+                outcome = outcome,
+                span = null,
+                durationMillis = result.durationMillis,
+                artifacts = result.artifacts,
+                folder = result.folder,
+                steps = (claimed + result.steps).sortedBy { it.atMillis },
+                taps = listOf(),
+                covered = covered,
+            ),
         )
         write()
     }
@@ -84,7 +88,18 @@ internal class RunRecords(
         unfinished: List<Submit>,
         reason: String,
     ) {
-        unfinished.forEach { add(it, Outcome.createFailed(message = reason, firstBroken = null), 0, listOf()) }
+        val failed =
+            Attempt(
+                outcome = Outcome.createFailed(message = reason, firstBroken = null),
+                span = null,
+                durationMillis = 0,
+                artifacts = listOf(),
+                folder = "",
+                steps = listOf(),
+                taps = listOf(),
+                covered = listOf(),
+            )
+        unfinished.forEach { add(it, failed) }
         write()
     }
 
@@ -100,26 +115,11 @@ internal class RunRecords(
         write()
     }
 
+    /** [attempt] of [submit] joins its case, or is the case's demo. */
     private fun add(
         submit: Submit,
-        outcome: Outcome,
-        durationMillis: Long,
-        steps: List<Step>,
-        folder: String = "",
-        artifacts: List<Artifact> = listOf(),
-        covered: List<CoveredClass> = listOf(),
+        attempt: Attempt,
     ) {
-        val attempt =
-            Attempt(
-                outcome = outcome,
-                span = null,
-                durationMillis = durationMillis,
-                artifacts = artifacts,
-                folder = folder,
-                steps = steps,
-                taps = listOf(),
-                covered = covered,
-            )
         val case =
             cases[submit.testId]
                 ?: TestCase(

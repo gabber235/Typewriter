@@ -4,27 +4,40 @@ import com.typewritermc.playtest.wire.ofRepeat
 import skirout.harness.v1.test_run.AttemptPolicy
 import java.nio.file.Path
 
-/**
- * Where the pool lives and what it launches. The build starts the pool with every `-Dplaytest.*`
- * property its game test tasks set.
- */
-internal class PoolSettings(
-    val poolDir: Path,
+/** The run the pool serves: run [id], its [file], its attempt [policy] and its [logs] folder. */
+internal class ServedRun(
     /** The run that started the pool, the only one it serves. */
-    val run: String,
+    val id: String,
     /** The run's file, which the pool writes as it takes up the run and after every attempt. */
-    val testRun: Path,
+    val file: Path,
     /** How the run makes the attempts of each requirement, as its file states. */
     val policy: AttemptPolicy,
     /** The run's logs folder: the pool's own log, and one for every Paper, client and display. */
     val logs: Path,
+)
+
+/**
+ * What the pool launches: Paper from [paperDir] with [pluginJar], every Paper with the playtest agent
+ * [agentJar] and the JaCoCo agent [coverageAgentJar] (so each attempt's coverage can be read), clients as
+ * [clientLaunch] describes, all on [java].
+ */
+internal class Launched(
     val java: Path,
     val paperDir: Path,
     val agentJar: Path,
-    /** The JaCoCo agent every Paper runs with, so each attempt's coverage can be read. */
     val coverageAgentJar: Path,
     val pluginJar: Path,
     val clientLaunch: Path,
+)
+
+/**
+ * Where the pool lives, the [run] it serves and what it [launched]. The build starts the pool with every
+ * `-Dplaytest.*` property its game test tasks set.
+ */
+internal class PoolSettings(
+    val poolDir: Path,
+    val run: ServedRun,
+    val launched: Launched,
     /** How many warm clients the pool keeps, each with a player of its own. */
     val clients: Int,
     /** The packages of the build's own code, the only classes coverage counts. */
@@ -36,22 +49,28 @@ internal class PoolSettings(
     val aotDir: Path get() = poolDir.resolve("aot")
 
     /** The pool's own log, which the build appends the pool's output to. */
-    val poolLog: Path get() = logs.resolve("pool.log")
+    val poolLog: Path get() = run.logs.resolve("pool.log")
 
     companion object {
         fun fromSystemProperties() =
             PoolSettings(
                 poolDir = path("playtest.poolDir"),
-                run = required("playtest.run"),
-                testRun = path("playtest.testRun"),
-                policy = AttemptPolicy.ofRepeat(System.getProperty("playtest.repeat")),
-                logs = path("playtest.logs"),
-                java = path("playtest.java"),
-                paperDir = path("playtest.paper"),
-                agentJar = path("playtest.agent"),
-                coverageAgentJar = path("playtest.coverageAgent"),
-                pluginJar = path("playtest.plugin"),
-                clientLaunch = path("playtest.clientLaunch"),
+                run =
+                    ServedRun(
+                        id = required("playtest.run"),
+                        file = path("playtest.testRun"),
+                        policy = AttemptPolicy.ofRepeat(System.getProperty("playtest.repeat")),
+                        logs = path("playtest.logs"),
+                    ),
+                launched =
+                    Launched(
+                        java = path("playtest.java"),
+                        paperDir = path("playtest.paper"),
+                        agentJar = path("playtest.agent"),
+                        coverageAgentJar = path("playtest.coverageAgent"),
+                        pluginJar = path("playtest.plugin"),
+                        clientLaunch = path("playtest.clientLaunch"),
+                    ),
                 clients = System.getProperty("playtest.clients", "4").toInt(),
                 coveredPackages = required("playtest.coveredPackages").split(",").filter(String::isNotEmpty),
                 paperAdditions =

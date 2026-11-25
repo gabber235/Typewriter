@@ -52,7 +52,7 @@ internal class Peer(
                 if (next.last) return close()
             }
         } catch (gone: IOException) {
-            if (!socket.isClosed) System.err.println("Could not send ${sending?.kind} to $this: ${gone.message}")
+            if (!socket.isClosed) PoolLog.line("Could not send ${sending?.kind} to $this: ${gone.message}")
             socket.close()
         } catch (_: InterruptedException) {
             // The pool closed the connection, so nothing is left to send.
