@@ -10,19 +10,7 @@ val StepPolicyTest by testSuite {
 
     test("a free player's client behind the last tick holds back the next tick until it acks it") {
         var granted = 0
-        val policy =
-            StepPolicy(
-                { false },
-                { granted++ },
-                { _, _ -> },
-                { true },
-                { it.run() },
-                WorkLedger(ManualWatch()),
-                {},
-                Acks { 0L },
-                {},
-                { true },
-            )
+        val policy = stepPolicy({ granted++ })
         policy.claim(listOf(claimed))
         policy.acked(claimed, 9, false)
         policy.acked(free, 9, false)
@@ -40,19 +28,7 @@ val StepPolicyTest by testSuite {
 
     test("a client that never acked a tick, still joining, holds back no tick") {
         var granted = 0
-        val policy =
-            StepPolicy(
-                { false },
-                { granted++ },
-                { _, _ -> },
-                { true },
-                { it.run() },
-                WorkLedger(ManualWatch()),
-                {},
-                Acks { 0L },
-                {},
-                { true },
-            )
+        val policy = stepPolicy({ granted++ })
         policy.claim(listOf(claimed))
         policy.tickEnded(10)
         policy.acked(claimed, 10, false)
@@ -67,19 +43,7 @@ val StepPolicyTest by testSuite {
         var now = 0L
         var granted = 0
         val stalled = mutableListOf<UUID>()
-        val policy =
-            StepPolicy(
-                { false },
-                { granted++ },
-                { _, _ -> },
-                { true },
-                { it.run() },
-                WorkLedger(ManualWatch()),
-                {},
-                Acks { now },
-                { stalled += it.player() },
-                { true },
-            )
+        val policy = stepPolicy({ granted++ }, acks = Acks { now }, stalled = { stalled += it.player() })
         policy.claim(listOf(claimed))
         policy.acked(claimed, 9, false)
         policy.acked(free, 9, false)
@@ -98,11 +62,7 @@ val StepPolicyTest by testSuite {
     test("a client whose connection closed holds back no tick, though Paper notices its player leave only in a tick") {
         var granted = 0
         val closed = mutableSetOf<UUID>()
-        val policy =
-            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, WorkLedger(ManualWatch()), {}, Acks { 0L }, {}, {
-                it !in
-                    closed
-            })
+        val policy = stepPolicy({ granted++ }, connected = { it !in closed })
         policy.claim(listOf(claimed))
         policy.acked(claimed, 9, false)
         policy.acked(free, 9, false)
@@ -119,8 +79,7 @@ val StepPolicyTest by testSuite {
     test("a claimed player who left keeps its counted work holding the next tick until its attempt is released") {
         var granted = 0
         val work = WorkLedger(ManualWatch())
-        val policy =
-            StepPolicy({ false }, { granted++ }, { _, _ -> }, { true }, { it.run() }, work, {}, Acks { 0L }, {}, { true })
+        val policy = stepPolicy({ granted++ }, work = work)
         policy.claim(listOf(claimed))
         policy.tickEnded(10)
         work.tickEnded(10)

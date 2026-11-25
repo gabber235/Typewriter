@@ -581,15 +581,7 @@ val HostRolloutParticipantTest by testSuite {
     test("a commit activates its candidate only after the host's work in flight ended") {
         runTest {
             val fixture = participantFixture(this)
-            val baselineAttempt = attempt(1, 1)
-            val baseline = fixture.reference("baseline")
-            fixture.projections[baseline] = fixture.projection(baseline)
-            fixture.participant.apply(fixture.stage(baselineAttempt, baseline))
-            fixture.participant.apply(fixture.commit(baselineAttempt, baseline))
-            val candidateAttempt = attempt(2, 2)
-            val candidate = fixture.reference("candidate")
-            fixture.projections[candidate] = fixture.projection(candidate)
-            fixture.participant.apply(fixture.stage(candidateAttempt, candidate))
+            val (_, candidateAttempt, candidate) = fixture.candidateOverBaseline()
             val item = fixture.host.work.begin("kv update sessions alex", null)
 
             val committed = async { fixture.participant.apply(fixture.commit(candidateAttempt, candidate)) }
@@ -608,16 +600,7 @@ val HostRolloutParticipantTest by testSuite {
     test("failed candidate activation restores the complete baseline") {
         runTest {
             val fixture = participantFixture(this)
-            val baselineAttempt = attempt(1, 1)
-            val baseline = fixture.reference("baseline")
-            fixture.projections[baseline] = fixture.projection(baseline)
-            fixture.participant.apply(fixture.stage(baselineAttempt, baseline))
-            fixture.participant.apply(fixture.commit(baselineAttempt, baseline))
-
-            val candidateAttempt = attempt(2, 2)
-            val candidate = fixture.reference("candidate")
-            fixture.projections[candidate] = fixture.projection(candidate)
-            fixture.participant.apply(fixture.stage(candidateAttempt, candidate))
+            val (baseline, candidateAttempt, candidate) = fixture.candidateOverBaseline()
             fixture.runtimes[1].failOn += "activate"
 
             val result = fixture.participant.apply(fixture.commit(candidateAttempt, candidate))

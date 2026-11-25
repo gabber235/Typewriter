@@ -8,17 +8,24 @@ import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.imprint.ImprintManifestCodec
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.loader.LoaderService
+import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.artifact.FileDigestBlobStore
+import com.typewritermc.loader.rollout.ArtifactHost
+import com.typewritermc.loader.rollout.ArtifactHostAssignmentSource
 import com.typewritermc.services.libs.registrar.RegistrarSnapshot
 import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.registrar.RegistrarStopResult
+import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.test.TestScope
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlin.time.Duration
 
 fun startupEngineManifest(id: String): EngineManifest =
     EngineManifest(
@@ -69,4 +76,33 @@ class StartupLoaderService(
     override fun sharedArtifacts(realmId: String): Nothing = error("No runtime is assigned.")
 
     override suspend fun stop(): RegistrarStopResult = RegistrarStopResult.Success
+}
+
+/**
+ * Runs [block] with a started host that never gets an assignment, over a fresh work directory deleted afterwards. It
+ * counts in [work], drains for [drain] and reports to [openTelemetry]; [block] stops it.
+ */
+suspend fun TestScope.withIdleHost(
+    work: InFlightWork,
+    drain: Duration,
+    openTelemetry: OpenTelemetry,
+    block: suspend (ArtifactHost) -> Unit,
+) {
+    val workDirectory = Files.createTempDirectory("typewriter-host-work")
+    try {
+        val host =
+            ArtifactHost(
+                ServiceId("host"),
+                workDirectory,
+                StartupLoaderService(workDirectory.resolve("artifacts"), openTelemetry),
+                ArtifactHostAssignmentSource { emptyFlow() },
+                work,
+                drain,
+                backgroundScope,
+            )
+        host.start()
+        block(host)
+    } finally {
+        workDirectory.toFile().deleteRecursively()
+    }
 }

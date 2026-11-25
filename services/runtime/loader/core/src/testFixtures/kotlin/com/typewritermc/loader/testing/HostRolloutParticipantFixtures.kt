@@ -116,6 +116,20 @@ class ParticipantFixture(
         ),
     )
 
+    /** Commits a baseline projection in attempt 1, then stages a candidate over it in attempt 2. */
+    suspend fun candidateOverBaseline(): CandidateOverBaseline {
+        val baselineAttempt = attempt(1, 1)
+        val baseline = reference("baseline")
+        projections[baseline] = projection(baseline)
+        participant.apply(stage(baselineAttempt, baseline))
+        participant.apply(commit(baselineAttempt, baseline))
+        val candidateAttempt = attempt(2, 2)
+        val candidate = reference("candidate")
+        projections[candidate] = projection(candidate)
+        participant.apply(stage(candidateAttempt, candidate))
+        return CandidateOverBaseline(baseline, candidateAttempt, candidate)
+    }
+
     private fun projections(reference: ProjectionReference) =
         listOf(ParticipantProjection(serviceId = serviceId.value, projection = reference))
 
@@ -225,6 +239,13 @@ fun implementationTarget(
             emptyList(),
         ),
     extensions = emptyList(),
+)
+
+/** An active [baseline] projection and a [candidate] staged over it in [attempt]. */
+data class CandidateOverBaseline(
+    val baseline: ProjectionReference,
+    val attempt: RolloutAttempt,
+    val candidate: ProjectionReference,
 )
 
 fun participantFixture(scope: TestScope): ParticipantFixture {
