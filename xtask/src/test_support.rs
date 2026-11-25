@@ -570,7 +570,7 @@ pub fn scopes(scopes: &[&str]) -> Scopes {
 
 /// Declares a fake stack service `$name` that only names the services it needs, optionally
 /// followed by `; provides ROLE, ...`, `; needs_roles ROLE, ...` and `; builds BUILD, ...` (each a
-/// `const` [`crate::stack::spec::Build`]): its command does nothing and it is ready once that
+/// `static` [`crate::stack::spec::Build`]): its command does nothing and it is ready once that
 /// command exits.
 macro_rules! fake_service {
     ($name:ident, $($need:ident),*
@@ -590,8 +590,8 @@ macro_rules! fake_service {
             fn needs_roles(&self) -> &'static [$crate::stack::spec::Role] {
                 &[$($($role),+)?]
             }
-            fn builds(&self) -> &'static [&'static $crate::stack::spec::Build] {
-                &[$($(&$build),+)?]
+            fn builds(&self) -> &'static [&'static dyn $crate::stack::spec::AnyBuild] {
+                const { &[$($(&$build),+)?] }
             }
             fn command(
                 &self,
@@ -615,26 +615,29 @@ pub fn ids(services: &[&dyn crate::stack::spec::DynService]) -> Vec<&'static str
 
 /// The names of what `spec` builds before it starts, in its order.
 pub fn build_names(spec: &crate::stack::spec::StackSpec) -> Vec<&'static str> {
-    spec.builds().iter().map(|build| build.name).collect()
+    spec.builds().iter().map(|build| build.name()).collect()
 }
 
 /// A build of its own that records in the stack's root that it started, waits up to ten seconds
 /// for another build of the same stack to start, takes a moment more, then records that it
-/// finished. What it records lives in the root, so tests that run at once never share it.
-pub const MEETS_ANOTHER: crate::stack::spec::How = crate::stack::spec::How::Own(|ctx| {
-    record_build_start(ctx)?;
-    let deadline = std::time::Instant::now() + Duration::from_secs(10);
-    while lines(&ctx.root.join("builds-started")) < 2 {
-        anyhow::ensure!(
-            std::time::Instant::now() < deadline,
-            "the other build never started while this one ran"
-        );
-        thread::sleep(Duration::from_millis(10));
-    }
-    thread::sleep(Duration::from_millis(200));
-    append_line(&ctx.root.join("builds-finished"))?;
-    Ok(crate::stack::spec::Artifacts::new())
-});
+/// finished, and returns that record. What it records lives in the root, so tests that run at once
+/// never share it.
+pub const MEETS_ANOTHER: crate::stack::spec::How<std::path::PathBuf> =
+    crate::stack::spec::How::Own(|ctx| {
+        record_build_start(ctx)?;
+        let deadline = std::time::Instant::now() + Duration::from_secs(10);
+        while lines(&ctx.root.join("builds-started")) < 2 {
+            anyhow::ensure!(
+                std::time::Instant::now() < deadline,
+                "the other build never started while this one ran"
+            );
+            thread::sleep(Duration::from_millis(10));
+        }
+        thread::sleep(Duration::from_millis(200));
+        let finished = ctx.root.join("builds-finished");
+        append_line(&finished)?;
+        Ok(finished)
+    });
 
 /// Records in the stack's root that a build started, as [`MEETS_ANOTHER`] waits for.
 pub fn record_build_start(ctx: &Context) -> Result<()> {

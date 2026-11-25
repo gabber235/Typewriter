@@ -1,12 +1,15 @@
 //! How a stack is described: each service is a typed handle with its dependencies, the command
 //! that runs it and the probe that says it is ready. Internal to xtask, not a reusable library.
 
+use std::any::Any;
 use std::cell::{OnceCell, RefCell};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File, OpenOptions};
 use std::net::{Ipv4Addr, TcpListener};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::Arc;
+use std::thread::ScopedJoinHandle;
 use std::time::Duration;
 
 use anyhow::{Context as _, Result, bail};
@@ -45,12 +48,13 @@ pub trait Service {
     fn needs_roles(&self) -> &'static [Role] {
         &[]
     }
-    /// What the process runs, built before the stack's first service starts.
-    fn builds(&self) -> &'static [&'static Build] {
+    /// What the process runs, built before the stack's first service starts. A build is a
+    /// `static`, so the list is a `const` block: `const { &[&STACK_BINARY] }`.
+    fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         &[]
     }
-    /// The process, from what [`Self::builds`] built: `built` holds the artifacts of exactly
-    /// those builds.
+    /// The process, from what [`Self::builds`] built: `built` holds what exactly those builds
+    /// made.
     fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command>;
     fn ready(&self, ctx: &StackContext) -> Probe;
     /// How long the service may take to become ready.
@@ -70,7 +74,7 @@ pub trait DynService {
     fn needs(&self) -> &'static [ServiceId];
     fn provides(&self) -> &'static [Role];
     fn needs_roles(&self) -> &'static [Role];
-    fn builds(&self) -> &'static [&'static Build];
+    fn builds(&self) -> &'static [&'static dyn AnyBuild];
     fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command>;
     fn ready(&self, ctx: &StackContext) -> Probe;
     fn startup(&self) -> Duration;
@@ -90,7 +94,7 @@ impl<S: Service> DynService for S {
     fn needs_roles(&self) -> &'static [Role] {
         Service::needs_roles(self)
     }
-    fn builds(&self) -> &'static [&'static Build] {
+    fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         Service::builds(self)
     }
     fn command(&self, ctx: &StackContext, built: &Built) -> Result<Command> {
@@ -107,80 +111,143 @@ impl<S: Service> DynService for S {
     }
 }
 
-/// Something a stack builds before its first service starts. Every build of a stack runs at
-/// once, so a service waits for the slowest build instead of for the sum of them.
-pub struct Build {
+/// Something a stack builds before its first service starts; `A` is what it makes, which a
+/// service's command reads through this handle ([`Built::get`]). A build is a `static`, and a
+/// stack tells builds apart by that static, never by name, so two builds with one name stay two.
+/// Every build of a stack runs at once, so a service waits for the slowest build instead of for
+/// the sum of them.
+pub struct Build<A: 'static> {
     pub name: &'static str,
-    pub how: How,
+    pub how: How<A>,
 }
 
 /// How a [`Build`] runs.
-pub enum How {
+pub enum How<A> {
     /// Tasks and properties of the stack's one Gradle run in `services`, which takes those of
     /// every Gradle build at once, so two never compete for the same projects.
-    Gradle(fn(&crate::Context) -> GradleBuild),
+    Gradle(fn(&crate::Context) -> GradleBuild<A>),
     /// A build of its own, on a thread beside the others, which returns what it made.
-    Own(fn(&crate::Context) -> Result<Artifacts>),
+    Own(fn(&crate::Context) -> Result<A>),
 }
 
-/// What a build made: each artifact's path by the name a service's command asks for it by.
-pub type Artifacts = BTreeMap<String, PathBuf>;
-
-/// What one Gradle build runs: its tasks, the project properties (`-P`) they read, and where the
-/// tasks leave what it makes.
-pub struct GradleBuild {
+/// What one Gradle build runs: its tasks, the project properties (`-P`) they read, and what the
+/// tasks make.
+pub struct GradleBuild<A> {
     pub tasks: Vec<String>,
     pub properties: Vec<(String, String)>,
-    pub artifacts: Artifacts,
+    pub artifacts: A,
 }
 
-/// What a stack's builds made, by build. A service's command is handed only the artifacts of the
-/// builds it lists ([`Self::for_builds`]).
+/// What a build makes, by the files it leaves; a Gradle build's must exist once Gradle has run.
+pub trait Made: Any + Send + Sync {
+    fn files(&self) -> Vec<&Path>;
+}
+
+impl Made for PathBuf {
+    fn files(&self) -> Vec<&Path> {
+        vec![self]
+    }
+}
+
+impl Made for BTreeMap<String, PathBuf> {
+    fn files(&self) -> Vec<&Path> {
+        self.values().map(PathBuf::as_path).collect()
+    }
+}
+
+/// The object safe face of a [`Build`], so one service can list builds that make different
+/// things.
+pub trait AnyBuild: Sync {
+    fn name(&self) -> &'static str;
+    /// How the build runs, with what it makes boxed.
+    fn plan<'a>(&self, ctx: &'a crate::Context) -> Plan<'a>;
+}
+
+/// A [`How`] whose build is about to run, with what it makes boxed.
+pub enum Plan<'a> {
+    Gradle(GradleBuild<Arc<dyn Made>>),
+    Own(Box<dyn FnOnce() -> Result<Arc<dyn Made>> + Send + 'a>),
+}
+
+impl<A: Made> AnyBuild for Build<A> {
+    fn name(&self) -> &'static str {
+        self.name
+    }
+
+    fn plan<'a>(&self, ctx: &'a crate::Context) -> Plan<'a> {
+        match self.how {
+            How::Gradle(gradle) => {
+                let GradleBuild {
+                    tasks,
+                    properties,
+                    artifacts,
+                } = gradle(ctx);
+                Plan::Gradle(GradleBuild {
+                    tasks,
+                    properties,
+                    artifacts: Arc::new(artifacts),
+                })
+            }
+            How::Own(run) => Plan::Own(Box::new(move || Ok(Arc::new(run(ctx)?) as Arc<dyn Made>))),
+        }
+    }
+}
+
+/// The `static` a build is, by its address, which tells builds apart however they are named.
+fn build_id<T: ?Sized>(build: &'static T) -> usize {
+    std::ptr::from_ref(build).cast::<()>().addr()
+}
+
+/// What a stack's builds made, by build. A service's command is handed only what the builds it
+/// lists made ([`Self::for_builds`]).
 #[derive(Default)]
-pub struct Built(BTreeMap<&'static str, Artifacts>);
+pub struct Built(BTreeMap<usize, Arc<dyn Made>>);
 
 impl Built {
-    /// Only the artifacts of `builds`.
-    pub fn for_builds(&self, builds: &[&'static Build]) -> Built {
+    /// Only what `builds` made.
+    pub fn for_builds(&self, builds: &[&'static dyn AnyBuild]) -> Built {
         Built(
-            self.0
+            builds
                 .iter()
-                .filter(|(name, _)| builds.iter().any(|build| build.name == **name))
-                .map(|(name, artifacts)| (*name, artifacts.clone()))
+                .filter_map(|build| {
+                    let id = build_id(*build);
+                    Some((id, Arc::clone(self.0.get(&id)?)))
+                })
                 .collect(),
         )
     }
 
     /// What `build` made. Fails when the service handed this did not list `build`.
-    pub fn artifacts(&self, build: &Build) -> Result<&Artifacts> {
-        self.0.get(build.name).with_context(|| {
-            format!(
-                "{} is not among this service's builds; the service that runs it must list it",
-                build.name
-            )
-        })
-    }
-
-    /// The artifact `name` that `build` made.
-    pub fn artifact(&self, build: &Build, name: &str) -> Result<&Path> {
-        self.artifacts(build)?
-            .get(name)
-            .map(PathBuf::as_path)
-            .with_context(|| format!("{} made no {name}", build.name))
+    pub fn get<A: Made>(&self, build: &'static Build<A>) -> Result<&A> {
+        let made: &dyn Any = self
+            .0
+            .get(&build_id(build))
+            .with_context(|| {
+                format!(
+                    "{} is not among this service's builds; the service that runs it must list it",
+                    build.name
+                )
+            })?
+            .as_ref();
+        Ok(made
+            .downcast_ref()
+            .expect("a build's handle names the type of what it made"))
     }
 }
 
 /// The arguments of the one Gradle run that does every Gradle build of `builds`: each task once,
 /// then each property; none when no build uses Gradle. Fails naming both builds when two set one
 /// property to different values, since Gradle would silently take the last.
-pub fn gradle_args(ctx: &crate::Context, builds: &[&Build]) -> Result<Option<Vec<String>>> {
+pub fn gradle_args(
+    ctx: &crate::Context,
+    builds: &[&'static dyn AnyBuild],
+) -> Result<Option<Vec<String>>> {
     let mut tasks: Vec<String> = Vec::new();
     let mut properties: BTreeMap<String, (String, &str)> = BTreeMap::new();
     for build in builds {
-        let How::Gradle(gradle) = build.how else {
+        let Plan::Gradle(gradle) = build.plan(ctx) else {
             continue;
         };
-        let gradle = gradle(ctx);
         for task in gradle.tasks {
             if !tasks.contains(&task) {
                 tasks.push(task);
@@ -190,11 +257,11 @@ pub fn gradle_args(ctx: &crate::Context, builds: &[&Build]) -> Result<Option<Vec
             match properties.get(&key) {
                 Some((set, by)) if *set != value => bail!(
                     "{by} and {} set the Gradle property {key} to {set} and {value}",
-                    build.name
+                    build.name()
                 ),
                 Some(_) => {}
                 None => {
-                    properties.insert(key, (value, build.name));
+                    properties.insert(key, (value, build.name()));
                 }
             }
         }
@@ -239,10 +306,13 @@ impl StackSpec {
     }
 
     /// The services' builds, each once, in the order the services declare them.
-    pub fn builds(&self) -> Vec<&'static Build> {
-        let mut builds: Vec<&'static Build> = Vec::new();
+    pub fn builds(&self) -> Vec<&'static dyn AnyBuild> {
+        let mut builds: Vec<&'static dyn AnyBuild> = Vec::new();
         for build in self.0.iter().flat_map(|service| service.builds()).copied() {
-            if !builds.iter().any(|known| known.name == build.name) {
+            if !builds
+                .iter()
+                .any(|known| build_id(*known) == build_id(build))
+            {
                 builds.push(build);
             }
         }
@@ -564,74 +634,79 @@ impl<'a> StackContext<'a> {
     /// each [`How::Own`] build on a thread of its own and every Gradle build in one Gradle run,
     /// whose artifacts must exist afterwards. The caller holds the heavy lock. Fails naming each
     /// build that failed.
-    pub fn build(&self, builds: &[&'static Build]) -> Result<Built> {
+    pub fn build(&self, builds: &[&'static dyn AnyBuild]) -> Result<Built> {
         let ctx = self.ctx;
         let gradle = gradle_args(ctx, builds)?;
-        let gradle_builds: Vec<(&'static str, GradleBuild)> = builds
+        let mut gradle_builds = Vec::new();
+        let mut own_builds = Vec::new();
+        for build in builds {
+            match build.plan(ctx) {
+                Plan::Gradle(gradle) => gradle_builds.push((*build, gradle)),
+                Plan::Own(run) => own_builds.push((*build, run)),
+            }
+        }
+        let names: Vec<&str> = gradle_builds
             .iter()
-            .filter_map(|build| match build.how {
-                How::Gradle(gradle) => Some((build.name, gradle(ctx))),
-                How::Own(_) => None,
-            })
+            .map(|(build, _)| build.name())
             .collect();
-        let results: Vec<(&str, Result<Option<Artifacts>>)> = std::thread::scope(|scope| {
-            let mut running = Vec::new();
-            for build in builds {
-                if let How::Own(run) = build.how {
-                    running.push((build.name, scope.spawn(move || run(ctx).map(Some))));
-                }
-            }
-            if let Some(args) = gradle {
-                let names: Vec<&str> = gradle_builds.iter().map(|(name, _)| *name).collect();
-                running.push((
-                    "Gradle",
-                    scope.spawn(move || {
-                        let args: Vec<&str> = args.iter().map(String::as_str).collect();
-                        ctx.tool("services", "./gradlew", &args)
-                            .run()
-                            .with_context(|| format!("cannot build {}", names.join(", ")))
-                            .map(|()| None)
-                    }),
-                ));
-            }
-            running
+        let (own_results, gradle_result) = std::thread::scope(|scope| {
+            let running: Vec<_> = own_builds
                 .into_iter()
-                .map(|(name, thread)| {
-                    let result = thread
-                        .join()
-                        .unwrap_or_else(|_| Err(anyhow::anyhow!("the build panicked")));
-                    (name, result)
+                .map(|(build, run)| (build, scope.spawn(run)))
+                .collect();
+            let gradle = gradle.map(|args| {
+                let names = &names;
+                scope.spawn(move || {
+                    let args: Vec<&str> = args.iter().map(String::as_str).collect();
+                    ctx.tool("services", "./gradlew", &args)
+                        .run()
+                        .with_context(|| format!("cannot build {}", names.join(", ")))
                 })
-                .collect()
+            });
+            let own_results: Vec<_> = running
+                .into_iter()
+                .map(|(build, thread)| (build, joined(thread)))
+                .collect();
+            (own_results, gradle.map(joined))
         });
         let mut built = BTreeMap::new();
         let mut failures = Vec::new();
-        for (name, result) in results {
+        for (build, result) in own_results {
             match result {
-                Ok(Some(artifacts)) => {
-                    built.insert(name, artifacts);
+                Ok(made) => {
+                    built.insert(build_id(build), made);
                 }
-                Ok(None) => {}
-                Err(error) => failures.push(format!("{name}: {error:#}")),
+                Err(error) => failures.push(format!("{}: {error:#}", build.name())),
             }
+        }
+        if let Some(Err(error)) = gradle_result {
+            failures.push(format!("Gradle: {error:#}"));
         }
         if !failures.is_empty() {
             bail!("the stack's builds failed; {}", failures.join("; "));
         }
-        for (name, gradle) in gradle_builds {
+        for (build, gradle) in gradle_builds {
             let missing: Vec<String> = gradle
                 .artifacts
-                .values()
+                .files()
+                .into_iter()
                 .filter(|path| !path.exists())
                 .map(|path| path.display().to_string())
                 .collect();
             if !missing.is_empty() {
-                bail!("{name} left no {}", missing.join(", "));
+                bail!("{} left no {}", build.name(), missing.join(", "));
             }
-            built.insert(name, gradle.artifacts);
+            built.insert(build_id(build), gradle.artifacts);
         }
         Ok(Built(built))
     }
+}
+
+/// What a build's thread returned, or an error when it panicked.
+fn joined<T>(thread: ScopedJoinHandle<'_, Result<T>>) -> Result<T> {
+    thread
+        .join()
+        .unwrap_or_else(|_| Err(anyhow::anyhow!("the build panicked")))
 }
 
 #[cfg(test)]
@@ -718,16 +793,11 @@ mod tests {
         assert!(!ctx.state().join("panel.json").exists());
     }
 
-    const STACK_BINARY: Build = Build {
+    static STACK_BINARY: Build<PathBuf> = Build {
         name: "stack binary",
-        how: How::Own(|ctx| {
-            Ok(Artifacts::from([(
-                "stack".to_owned(),
-                ctx.root.join("stack"),
-            )]))
-        }),
+        how: How::Own(|ctx| Ok(ctx.root.join("stack"))),
     };
-    const REALM_HOST: Build = Build {
+    static REALM_HOST: Build<PathBuf> = Build {
         name: "realm host",
         how: How::Gradle(|ctx| GradleBuild {
             tasks: vec![":loader:installDist".to_owned(), "assemble".to_owned()],
@@ -735,10 +805,10 @@ mod tests {
                 "inbox".to_owned(),
                 ctx.root.join("inbox").display().to_string(),
             )],
-            artifacts: Artifacts::new(),
+            artifacts: ctx.root.join("loader"),
         }),
     };
-    const ENGINE_HOST: Build = Build {
+    static ENGINE_HOST: Build<PathBuf> = Build {
         name: "engine host",
         how: How::Gradle(|ctx| GradleBuild {
             tasks: vec![":engine:installDist".to_owned(), "assemble".to_owned()],
@@ -746,15 +816,15 @@ mod tests {
                 "inbox".to_owned(),
                 ctx.root.join("inbox").display().to_string(),
             )],
-            artifacts: Artifacts::new(),
+            artifacts: ctx.root.join("engine"),
         }),
     };
-    const OTHER_INBOX: Build = Build {
+    static OTHER_INBOX: Build<PathBuf> = Build {
         name: "engine host elsewhere",
-        how: How::Gradle(|_| GradleBuild {
+        how: How::Gradle(|ctx| GradleBuild {
             tasks: vec![":engine:installDist".to_owned()],
             properties: vec![("inbox".to_owned(), "/elsewhere".to_owned())],
-            artifacts: Artifacts::new(),
+            artifacts: ctx.root.join("engine"),
         }),
     };
 
@@ -800,9 +870,9 @@ mod tests {
     fn two_gradle_builds_that_set_one_property_differently_are_refused_before_anything_builds() {
         let root = TempRoot::new();
         let ctx = stack_context(&root);
-        const RECORDS_START: Build = Build {
+        static RECORDS_START: Build<PathBuf> = Build {
             name: "stack binary",
-            how: How::Own(|ctx| record_build_start(ctx).map(|()| Artifacts::new())),
+            how: How::Own(|ctx| record_build_start(ctx).map(|()| ctx.root.join("stack"))),
         };
         let error = refusal(ctx.build(&[&REALM_HOST, &OTHER_INBOX, &RECORDS_START]));
         assert_eq!(
@@ -820,17 +890,15 @@ mod tests {
     fn builds_of_their_own_run_at_the_same_time() {
         let root = TempRoot::new();
         let ctx = stack_context(&root);
-        const MEETING: [Build; 2] = [
-            Build {
-                name: "components",
-                how: MEETS_ANOTHER,
-            },
-            Build {
-                name: "stack binary",
-                how: MEETS_ANOTHER,
-            },
-        ];
-        ctx.build(&[&MEETING[0], &MEETING[1]]).unwrap();
+        static COMPONENTS: Build<PathBuf> = Build {
+            name: "components",
+            how: MEETS_ANOTHER,
+        };
+        static STACK_BINARY: Build<PathBuf> = Build {
+            name: "stack binary",
+            how: MEETS_ANOTHER,
+        };
+        ctx.build(&[&COMPONENTS, &STACK_BINARY]).unwrap();
         assert_eq!(finished_builds(&root), 2);
     }
 
@@ -838,21 +906,19 @@ mod tests {
     fn a_failed_build_is_named_once_the_other_builds_have_finished() {
         let root = TempRoot::new();
         let ctx = stack_context(&root);
-        const FAILING: [Build; 2] = [
-            Build {
-                name: "components",
-                how: How::Own(|ctx| {
-                    record_build_start(ctx)?;
-                    bail!("wasm32 failed")
-                }),
-            },
-            Build {
-                name: "stack binary",
-                how: MEETS_ANOTHER,
-            },
-        ];
+        static COMPONENTS: Build<PathBuf> = Build {
+            name: "components",
+            how: How::Own(|ctx| {
+                record_build_start(ctx)?;
+                bail!("wasm32 failed")
+            }),
+        };
+        static STACK_BINARY: Build<PathBuf> = Build {
+            name: "stack binary",
+            how: MEETS_ANOTHER,
+        };
         assert_eq!(
-            refusal(ctx.build(&[&FAILING[0], &FAILING[1]])),
+            refusal(ctx.build(&[&COMPONENTS, &STACK_BINARY])),
             "the stack's builds failed; components: wasm32 failed"
         );
         assert_eq!(finished_builds(&root), 1);
@@ -860,10 +926,10 @@ mod tests {
 
     #[test]
     fn a_service_is_handed_what_the_builds_it_lists_made_and_nothing_else() {
-        const COMPONENTS: Build = Build {
+        static COMPONENTS: Build<BTreeMap<String, PathBuf>> = Build {
             name: "components",
             how: How::Own(|ctx| {
-                Ok(Artifacts::from([(
+                Ok(BTreeMap::from([(
                     "echo".to_owned(),
                     ctx.root.join("echo.wasm"),
                 )]))
@@ -874,17 +940,41 @@ mod tests {
         let built = ctx.build(&[&STACK_BINARY, &COMPONENTS]).unwrap();
 
         let handed = built.for_builds(&[&STACK_BINARY]);
+        assert_eq!(handed.get(&STACK_BINARY).unwrap(), &root.path("stack"));
         assert_eq!(
-            handed.artifact(&STACK_BINARY, "stack").unwrap(),
-            root.path("stack")
-        );
-        assert_eq!(
-            refusal(handed.artifacts(&COMPONENTS)),
+            refusal(handed.get(&COMPONENTS)),
             "components is not among this service's builds; the service that runs it must list it"
         );
+    }
+
+    static TWIN_ONE: Build<PathBuf> = Build {
+        name: "twin",
+        how: How::Own(|ctx| Ok(ctx.root.join("one"))),
+    };
+    static TWIN_TWO: Build<PathBuf> = Build {
+        name: "twin",
+        how: How::Own(|ctx| Ok(ctx.root.join("two"))),
+    };
+
+    mod twins {
+        use super::*;
+        fake_service!(First, ; builds TWIN_ONE);
+        fake_service!(Second, ; builds TWIN_TWO);
+    }
+
+    #[test]
+    fn two_builds_with_one_name_are_both_built_and_each_handed_to_the_service_that_lists_it() {
+        let root = TempRoot::new();
+        let ctx = stack_context(&root);
+        let spec = StackSpec::default().with(twins::First).with(twins::Second);
+        let built = ctx.build(&spec.builds()).unwrap();
         assert_eq!(
-            refusal(handed.artifact(&STACK_BINARY, "other")),
-            "stack binary made no other"
+            built.for_builds(&[&TWIN_ONE]).get(&TWIN_ONE).unwrap(),
+            &root.path("one")
+        );
+        assert_eq!(
+            built.for_builds(&[&TWIN_TWO]).get(&TWIN_TWO).unwrap(),
+            &root.path("two")
         );
     }
 
