@@ -15,6 +15,7 @@ use anyhow::Result;
 use clap::ValueEnum as _;
 
 use crate::cluster::{CiClients, CiCluster};
+use crate::digest::{Digest, Stamp};
 use crate::e2e::E2eArgs;
 use crate::graph::{Area, Run, Step};
 use crate::hooks::commit_msg::Scopes;
@@ -61,6 +62,15 @@ impl TempRoot {
         let path = self.path(relative);
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(path, contents).unwrap();
+    }
+
+    /// Records the stamp `relative` for the inputs `digest` and the root relative `outputs` as
+    /// they are now.
+    pub fn stamp(&self, relative: &str, digest: &Digest, outputs: &[&str]) -> Stamp {
+        let stamp = Stamp::at(self.path(relative));
+        let outputs: Vec<String> = outputs.iter().map(|output| (*output).to_owned()).collect();
+        stamp.record(&self.ctx.root, digest, &outputs).unwrap();
+        stamp
     }
 
     /// Writes `relative` and commits it.

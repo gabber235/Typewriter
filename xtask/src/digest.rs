@@ -165,32 +165,21 @@ mod tests {
     use super::*;
     use crate::test_support::TempRoot;
 
-    /// A root with one output recorded in `panel.stamp` for the digest of `inputs`.
-    fn recorded() -> (TempRoot, Stamp, Digest) {
-        let mut inputs = Digest::new();
-        inputs.update(b"inputs");
-        let root = TempRoot::new();
-        root.write("panel/lib/model.g.dart", "generated");
-        let stamp = Stamp::at(root.path("panel.stamp"));
-        stamp
-            .record(
-                &root.ctx.root,
-                &inputs,
-                &["panel/lib/model.g.dart".to_owned()],
-            )
-            .unwrap();
-        (root, stamp, inputs)
-    }
+    const OUTPUT: &str = "panel/lib/model.g.dart";
 
     #[test]
     fn unchanged_inputs_with_every_output_unchanged_are_current() {
-        let (root, stamp, inputs) = recorded();
-        assert!(stamp.is_current(&root.ctx.root, &inputs));
+        let root = TempRoot::new();
+        root.write(OUTPUT, "generated");
+        let stamp = root.stamp("panel.stamp", &Digest::new(), &[OUTPUT]);
+        assert!(stamp.is_current(&root.ctx.root, &Digest::new()));
     }
 
     #[test]
     fn changed_inputs_are_stale() {
-        let (root, stamp, _) = recorded();
+        let root = TempRoot::new();
+        root.write(OUTPUT, "generated");
+        let stamp = root.stamp("panel.stamp", &Digest::new(), &[OUTPUT]);
         let mut edited = Digest::new();
         edited.update(b"edited inputs");
         assert!(!stamp.is_current(&root.ctx.root, &edited));
@@ -198,21 +187,27 @@ mod tests {
 
     #[test]
     fn a_deleted_output_is_stale() {
-        let (root, stamp, inputs) = recorded();
-        fs::remove_file(root.path("panel/lib/model.g.dart")).unwrap();
-        assert!(!stamp.is_current(&root.ctx.root, &inputs));
+        let root = TempRoot::new();
+        root.write(OUTPUT, "generated");
+        let stamp = root.stamp("panel.stamp", &Digest::new(), &[OUTPUT]);
+        fs::remove_file(root.path(OUTPUT)).unwrap();
+        assert!(!stamp.is_current(&root.ctx.root, &Digest::new()));
     }
 
     #[test]
     fn an_output_edited_by_hand_is_stale() {
-        let (root, stamp, inputs) = recorded();
-        root.write("panel/lib/model.g.dart", "edited by hand");
-        assert!(!stamp.is_current(&root.ctx.root, &inputs));
+        let root = TempRoot::new();
+        root.write(OUTPUT, "generated");
+        let stamp = root.stamp("panel.stamp", &Digest::new(), &[OUTPUT]);
+        root.write(OUTPUT, "edited by hand");
+        assert!(!stamp.is_current(&root.ctx.root, &Digest::new()));
     }
 
     #[test]
     fn a_step_that_never_ran_is_stale() {
-        let (root, _, inputs) = recorded();
-        assert!(!Stamp::at(root.path("protocol.stamp")).is_current(&root.ctx.root, &inputs));
+        let root = TempRoot::new();
+        root.write(OUTPUT, "generated");
+        root.stamp("panel.stamp", &Digest::new(), &[OUTPUT]);
+        assert!(!Stamp::at(root.path("protocol.stamp")).is_current(&root.ctx.root, &Digest::new()));
     }
 }
