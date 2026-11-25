@@ -692,7 +692,8 @@ impl FakeCargo<'_> {
         self.path("target/stack")
     }
 
-    /// A run that writes `contents` into the artifact and names `reads`, root relative, as read.
+    /// A run in `backend` that writes `contents` into the artifact and names `reads`, root
+    /// relative, as read.
     pub fn command(&self, contents: &str, reads: &[&str]) -> Command {
         // Cargo marks its target directory with a CACHEDIR.TAG.
         fs::create_dir_all(self.path("target")).unwrap();
@@ -711,7 +712,8 @@ impl FakeCargo<'_> {
             .env("CONTENTS", contents)
             .env("ARTIFACT", self.artifact())
             .env("READS", reads.join(" "))
-            .env("DEP_INFO", self.path("target/stack.d"));
+            .env("DEP_INFO", self.path("target/stack.d"))
+            .current_dir(self.path("backend"));
         command
     }
 

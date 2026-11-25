@@ -126,6 +126,13 @@ impl Environment {
     pub fn get(&self, name: &str) -> Option<&OsStr> {
         self.0.get(name).map(OsString::as_os_str)
     }
+
+    /// Every variable, by name.
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &OsStr)> {
+        self.0
+            .iter()
+            .map(|(name, value)| (name.as_str(), value.as_os_str()))
+    }
 }
 
 /// What a generator or a build left last time: the digest of what it ran on and the sha256 of each
@@ -191,8 +198,8 @@ impl Stamp {
     }
 }
 
-/// The sha256 of a stamp entry: a file's contents, or for `$NAME` the variable's value in `env`,
-/// told apart from an unset one.
+/// The sha256 of a stamp entry: a file's contents (`absent` for a missing file), or for `$NAME` the
+/// variable's value in `env`, told apart from an unset one.
 fn fingerprint(root: &Path, entry: &str, env: &Environment) -> Result<String> {
     match entry.strip_prefix('$') {
         Some(name) => {
@@ -202,7 +209,12 @@ fn fingerprint(root: &Path, entry: &str, env: &Environment) -> Result<String> {
             };
             Ok(hex(&Sha256::digest(value)))
         }
-        None => sha256(&root.join(entry)),
+        // A file that is not there yet, such as a configuration file nobody wrote, is recorded
+        // as absent, so writing it later makes the stamp stale.
+        None => match fs::metadata(root.join(entry)) {
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok("absent".to_owned()),
+            _ => sha256(&root.join(entry)),
+        },
     }
 }
 

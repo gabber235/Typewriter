@@ -1,16 +1,27 @@
-//! Cargo builds reused while what they read is unchanged. Cargo itself judges local crates by
-//! file times, so a fresh checkout recompiles every one of them even when a cached target holds
-//! what they would produce. A stamp beside the artifacts records the command, the toolchain and
-//! the sha256 of each artifact and of everything the build read: the repository files the
-//! dependency files Cargo writes beside each artifact name (a build script's `rerun-if-changed`
-//! inputs included), the environment variables its crates read at compile time (`env!`,
-//! `option_env!`) and its build scripts watch (`rerun-if-env-changed`), every file of a package
-//! whose build script watches nothing (Cargo runs such a script again when any of them changes),
-//! and the workspace's manifests, lock file and Cargo configuration. While all of them match,
-//! Cargo does not run at all.
+//! Cargo builds reused while everything Cargo would consult is unchanged. Cargo itself judges
+//! local crates by file times, so a fresh checkout recompiles every one of them even when a cached
+//! target holds what they would produce. A stamp beside the artifacts records:
 //!
-//! Files outside the repository are not listed: the toolchain's sources change with `rustc -vV`
-//! and dependency sources with `Cargo.lock`.
+//! - the command, with the variables it sets, and the toolchain (`rustc -vV`);
+//! - Cargo's whole configuration surface: every inherited `CARGO*` and `RUST*` variable but those
+//!   Cargo sets for each crate itself, and every configuration file Cargo loads (`.cargo/config.toml`
+//!   and `.cargo/config` from the directory it runs in up to the file system root, then those in
+//!   Cargo's home), each recorded absent while it does not exist;
+//! - the workspace's manifests (path dependencies included) and lock file;
+//! - the sha256 of each artifact and of everything the build read: the repository files the
+//!   dependency files Cargo writes beside each artifact name (a build script's `rerun-if-changed`
+//!   inputs included), the environment variables its crates read at compile time (`env!`,
+//!   `option_env!`) and its build scripts watch (`rerun-if-env-changed`), and every file of a
+//!   package whose build script watches nothing (Cargo runs such a script again when any of them
+//!   changes).
+//!
+//! While all of them match, Cargo does not run at all. Files outside the repository are not
+//! listed: the toolchain's sources change with `rustc -vV` and dependency sources with
+//! `Cargo.lock`.
+//!
+//! Known issue, trusted on purpose as Cargo trusts it: a procedural macro that reads a file or a
+//! variable no dependency file names (outside `include_str!`, `env!` and `proc_macro`'s tracked
+//! paths) is not listed, so an edit only such a macro reads reuses the build, as Cargo would.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -28,7 +39,7 @@ pub struct CargoBuild<'a> {
     /// Names the stamp, which lies beside the first artifact as `<name>.xtask-stamp`.
     pub name: &'a str,
     /// Root relative files every build depends on although no dependency file names them: the
-    /// workspace's manifests, lock file and Cargo configuration ([`workspace_files`]).
+    /// workspace's manifests and lock file ([`workspace_files`]).
     pub workspace: Vec<String>,
     /// The absolute paths of what the build produces.
     pub artifacts: Vec<PathBuf>,
@@ -56,8 +67,7 @@ pub fn target_directory(ctx: &Context, manifest: &str) -> Result<PathBuf> {
 
 /// The root relative files a build in the workspace of `manifest` depends on that no dependency
 /// file names: the manifest of every package in the repository it builds (path dependencies
-/// outside the workspace included), the workspace's own manifest and lock file, and each
-/// `.cargo/config.toml` from the workspace up to the repository root.
+/// outside the workspace included), and the workspace's own manifest and lock file.
 pub fn workspace_files(ctx: &Context, manifest: &str) -> Result<Vec<String>> {
     let metadata = metadata(ctx, manifest, true)?;
     let workspace = metadata["workspace_root"]
@@ -70,12 +80,6 @@ pub fn workspace_files(ctx: &Context, manifest: &str) -> Result<Vec<String>> {
             && let Some(manifest) = package["manifest_path"].as_str()
         {
             files.push(PathBuf::from(manifest));
-        }
-    }
-    for dir in workspace.ancestors() {
-        files.push(dir.join(".cargo/config.toml"));
-        if dir == ctx.root {
-            break;
         }
     }
     let mut relative: Vec<String> = files
@@ -107,10 +111,12 @@ impl CargoBuild<'_> {
         let digest = self.digest(ctx, cargo, env)?;
         let stamp = self.stamp()?;
         let artifacts = self.artifact_names();
+        let configs = configs(ctx, cargo, env);
         if let Some(listed) = stamp.files(&ctx.root, &digest, env)
             && artifacts
                 .iter()
                 .chain(&self.workspace)
+                .chain(&configs)
                 .all(|file| listed.contains(file))
         {
             return Ok(Outcome::Reused);
@@ -148,6 +154,7 @@ impl CargoBuild<'_> {
         let recorded = self.reads(ctx).and_then(|reads| {
             let mut files: Vec<String> = artifacts;
             files.extend(self.workspace.iter().cloned());
+            files.extend(configs);
             files.extend(reads);
             files.sort();
             files.dedup();
@@ -178,8 +185,9 @@ impl CargoBuild<'_> {
         Ok(Stamp::at(dir.join(format!("{}.xtask-stamp", self.name))))
     }
 
-    /// The digest of the command line with the variables it sets, the flags the environment
-    /// passes to rustc, and the toolchain's version.
+    /// The digest of the command line with the variables it sets, every `CARGO*` and `RUST*`
+    /// variable it inherits from `env` but those Cargo sets for each crate itself, and the
+    /// toolchain's version.
     fn digest(&self, ctx: &Context, cargo: &Command, env: &Environment) -> Result<Digest> {
         let mut digest = Digest::new();
         digest.update(cargo.get_program().as_encoded_bytes());
@@ -200,11 +208,12 @@ impl CargoBuild<'_> {
         if let Some(dir) = cargo.get_current_dir() {
             digest.update(dir.as_os_str().as_encoded_bytes());
         }
-        for flags in ["RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS"] {
-            digest.update(&[0]);
-            match env.get(flags) {
-                Some(value) => digest.update(value.as_encoded_bytes()),
-                None => digest.update(b"unset"),
+        for (name, value) in env.iter() {
+            if (name.starts_with("CARGO") || name.starts_with("RUST")) && !cargo_sets(name) {
+                digest.update(&[0]);
+                digest.update(name.as_bytes());
+                digest.update(&[1]);
+                digest.update(value.as_encoded_bytes());
             }
         }
         let toolchain = ctx.tool(".", "rustc", &["-vV"]).output_text()?;
@@ -390,8 +399,69 @@ fn env_deps(text: &str) -> Vec<String> {
     text.lines()
         .filter_map(|line| line.strip_prefix("# env-dep:"))
         .map(|dep| dep.split_once('=').map_or(dep, |(name, _)| name).to_owned())
-        .filter(|name| name != "CARGO" && !name.starts_with("CARGO_") && name != "OUT_DIR")
+        .filter(|name| !cargo_sets(name))
         .collect()
+}
+
+/// Whether Cargo sets the variable `name` itself, for each crate it compiles or runs or for each
+/// build script, so its value follows from the command and the workspace.
+fn cargo_sets(name: &str) -> bool {
+    matches!(
+        name,
+        "CARGO"
+            | "CARGO_MANIFEST_DIR"
+            | "CARGO_MANIFEST_PATH"
+            | "CARGO_MANIFEST_LINKS"
+            | "CARGO_CRATE_NAME"
+            | "CARGO_BIN_NAME"
+            | "CARGO_PRIMARY_PACKAGE"
+            | "CARGO_TARGET_TMPDIR"
+            | "CARGO_RUSTC_CURRENT_DIR"
+            | "CARGO_MAKEFLAGS"
+            | "OUT_DIR"
+    ) || [
+        "CARGO_PKG_",
+        "CARGO_BIN_EXE_",
+        "CARGO_CFG_",
+        "CARGO_FEATURE_",
+    ]
+    .iter()
+    .any(|prefix| name.starts_with(prefix))
+}
+
+/// Every Cargo configuration file `cargo` loads, whether it exists yet or not: `.cargo/config.toml`
+/// and `.cargo/config` in the directory it runs in and each one above, then `config.toml` and
+/// `config` in Cargo's home (`CARGO_HOME`, or `.cargo` in `HOME`). Root relative inside the
+/// repository, absolute outside it.
+fn configs(ctx: &Context, cargo: &Command, env: &Environment) -> Vec<String> {
+    let dir = cargo
+        .get_current_dir()
+        .map_or_else(|| ctx.root.clone(), |dir| ctx.root.join(dir));
+    let mut files = Vec::new();
+    for ancestor in dir.ancestors() {
+        files.push(ancestor.join(".cargo/config.toml"));
+        files.push(ancestor.join(".cargo/config"));
+    }
+    let home = env
+        .get("CARGO_HOME")
+        .map(PathBuf::from)
+        .or_else(|| env.get("HOME").map(|home| Path::new(home).join(".cargo")));
+    if let Some(home) = home {
+        files.push(home.join("config.toml"));
+        files.push(home.join("config"));
+    }
+    let mut entries: Vec<String> = files
+        .iter()
+        .map(|file| {
+            file.strip_prefix(&ctx.root)
+                .unwrap_or(file)
+                .display()
+                .to_string()
+        })
+        .collect();
+    entries.sort();
+    entries.dedup();
+    entries
 }
 
 /// The files a Makefile style dependency file names after each rule's colon. A space inside a
@@ -588,6 +658,56 @@ mod tests {
         let error = refusal(build.run(&root.ctx, &mut cargo.command("one", READS), &NONE));
         assert!(error.contains("target/renamed.wasm"), "{error}");
         assert!(!root.path("target/renamed.wasm").exists());
+    }
+
+    #[test]
+    fn an_inherited_cargo_or_rust_variable_builds_again_but_one_cargo_sets_per_crate_does_not() {
+        let root = cargo_workspace();
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let build = cargo.build(WORKSPACE);
+        let run = |env: &Environment| {
+            build
+                .run(&root.ctx, &mut cargo.command("one", READS), env)
+                .unwrap()
+        };
+        let optimized = NONE.with("CARGO_PROFILE_RELEASE_OPT_LEVEL", "3");
+
+        assert_eq!(run(&optimized), Outcome::Compiled);
+        assert_eq!(run(&optimized), Outcome::Reused);
+        // As `cargo run` sets it for xtask itself, whose children inherit it.
+        let per_crate = optimized.clone().with("CARGO_PKG_VERSION", "9.9.9");
+        assert_eq!(run(&per_crate), Outcome::Reused);
+        let smaller = NONE.with("CARGO_PROFILE_RELEASE_OPT_LEVEL", "s");
+        assert_eq!(run(&smaller), Outcome::Compiled);
+        let wrapped = smaller.with("RUSTC_WRAPPER", "sccache");
+        assert_eq!(run(&wrapped), Outcome::Compiled);
+    }
+
+    #[test]
+    fn editing_or_adding_a_cargo_configuration_builds_again() {
+        let root = cargo_workspace();
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let build = cargo.build(WORKSPACE);
+        let env = NONE.with("CARGO_HOME", &root.path("cargo-home").display().to_string());
+        let run = || {
+            build
+                .run(&root.ctx, &mut cargo.command("one", READS), &env)
+                .unwrap()
+        };
+        assert_eq!(run(), Outcome::Compiled);
+        assert_eq!(run(), Outcome::Reused);
+
+        // Above the directory Cargo runs in, and in Cargo's home, under either name.
+        for (file, contents) in [
+            (".cargo/config.toml", "[build]\njobs = 2"),
+            (".cargo/config.toml", "[build]\njobs = 4"),
+            ("cargo-home/config.toml", "[profile.release]\nopt-level = 3"),
+            ("cargo-home/config", "[build]\nrustflags = [\"-Dwarnings\"]"),
+        ] {
+            root.write(file, contents);
+            assert_eq!(run(), Outcome::Compiled, "after writing {file}");
+            assert_eq!(run(), Outcome::Reused, "again after writing {file}");
+        }
     }
 
     #[test]
