@@ -109,6 +109,7 @@ class VirtualLeases(
         ahead: Duration = Duration.ZERO,
     ): LeaseHolder {
         val buckets = ScriptedBuckets(keyValue.store)
+        val clock = keyValue.clock(ahead)
         val leases =
             Leases(
                 holder = id,
@@ -117,10 +118,10 @@ class VirtualLeases(
                 codec = TextLeaseCodec,
                 timings = timings,
                 parent = scope.backgroundScope,
-                clock = keyValue.clock(ahead),
+                clock = clock,
                 openTelemetry = keyValue.telemetry.openTelemetry,
             )
-        return LeaseHolder(id, leases, buckets)
+        return LeaseHolder(id, leases, buckets, clock)
     }
 
     /** The live entry of [key], or null when there is none or no holder could read it. */
@@ -132,17 +133,18 @@ class VirtualLeases(
     }
 }
 
-/** One holder of a [VirtualLeases]; [buckets] is its way to the store. */
+/** One holder of a [VirtualLeases]; [buckets] is its way to the store and [clock] its own clock. */
 class LeaseHolder(
     val id: String,
     val leases: Leases<String, String>,
     val buckets: ScriptedBuckets,
+    private val clock: Clock,
 ) {
-    /** Claims [key], keeping the value the key kept before, else [value]. */
+    /** Claims [key] now on this holder's clock, keeping the value the key kept before, else [value]. */
     fun claim(
         key: String,
         value: String = "first",
-    ) = leases.claim(key) { previous -> previous ?: value }
+    ) = leases.claim(key, clock.instant()) { previous -> previous ?: value }
 
     fun release(key: String) = leases.release(key)
 

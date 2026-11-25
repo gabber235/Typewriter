@@ -87,7 +87,7 @@ val paperModule = module {
 }
 ```
 
-The session listener is the engine's `OnlineSessions`: it keeps the online players as a set on the main thread, and the engine writes the keys off the game thread, so the tick never waits on NATS. A player who joins is claimed; a player who quits leaves the session vacant: alive for the vacancy so a server move or a rejoin takes it over, but held by nobody. An engine reload without a Paper restart unregisters the listener and leaves the keys alone; the new engine starts its set from the online players and takes their keys over, so sessions survive an engine upgrade.
+The session listener is the engine's `OnlineSessions`: it keeps the online players as a set on the main thread, each with the instant it joined (the instant it first saw the players already online when it starts), and the engine writes the keys off the game thread, so the tick never waits on NATS. A player who joins is claimed; a player who quits leaves the session vacant: alive for the vacancy so a server move or a rejoin takes it over, but held by nobody. An engine reload without a Paper restart unregisters the listener and leaves the keys alone; the new engine starts its set from the online players and takes their keys over, so sessions survive an engine upgrade.
 
 ## Engine communication
 

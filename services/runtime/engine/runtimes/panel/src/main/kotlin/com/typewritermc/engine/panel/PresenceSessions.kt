@@ -31,32 +31,34 @@ import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
 import skirout.organization.v1.presence.PresenceEvent
 import skirout.organization.v1.presence.PresenceLocation
+import java.time.Clock
+import java.time.Instant
 import kotlin.time.ComparableTimeMark
 import kotlin.time.TimeSource
 
 /**
  * The panel tabs in this engine's Realm, each a session of the tab's user, from the panel's presence heartbeat; there
- * is no second heartbeat. The first heartbeat in the Realm adds the tab's session, and each later one moves its
- * deadline a key's time to live ahead. A tab that leaves the Realm or says it left is removed at once, and a tab whose
+ * is no second heartbeat. The first heartbeat in the Realm adds the tab's session, connected at that instant, and each
+ * later one moves its deadline a key's time to live ahead. A tab that leaves the Realm or says it left is removed at once, and a tab whose
  * deadline passes is removed then, so its session ends after the vacancy. The protagonist is the user the broker bound
  * into the subject, never a value from the payload.
  *
  * Deadlines are kept here, not by the messaging session presence arrives through: one expiry loop in [deployment], the
  * engine's own lifetime, removes every tab past its deadline, so a messaging session the host replaces changes nothing
- * about when a tab leaves, and the loop ends with the deployment. Waiting for the next deadline is idle; only each
- * expiry step runs as engine work.
+ * about when a tab leaves, and the loop ends with the deployment.
  */
 class PresenceSessions(
     private val realmId: String,
     private val timings: SessionTimings,
     deployment: CoroutineScope,
     private val time: TimeSource.WithComparableMarks = TimeSource.Monotonic,
+    private val clock: Clock = Clock.systemUTC(),
 ) : OnlineSessions {
     /** The open tabs, each with its deadline; changed only under its own lock, together with [open]. */
     private val tabs = HashMap<SessionId, Tab>()
-    private val open = MutableStateFlow<Set<Session>>(emptySet())
+    private val open = MutableStateFlow<Map<Session, Instant>>(emptyMap())
 
-    override val sessions: StateFlow<Set<Session>> = open.asStateFlow()
+    override val sessions: StateFlow<Map<Session, Instant>> = open.asStateFlow()
 
     // Every deadline is set a time to live after its heartbeat, so a new one is never earlier than the one the loop waits
     // for: a tab whose deadline moved is found unexpired and the loop waits for the next earliest.
@@ -67,8 +69,6 @@ class PresenceSessions(
                 if (next == null) {
                     open.first { it.isNotEmpty() }
                 } else {
-                    // Waiting for the next tab deadline: a silent tab, not a tick, ends the session, so the wait is not work.
-                    @Suppress("ForbiddenMethodCall/engineWaits")
                     delay(next - time.markNow())
                     expire()
                 }
@@ -127,7 +127,7 @@ class PresenceSessions(
 
     private fun heartbeat(session: Session) {
         synchronized(tabs) {
-            tabs[session.id] = Tab(session, time.markNow() + timings.lease.ttl)
+            tabs[session.id] = Tab(session, tabs[session.id]?.connected ?: clock.instant(), time.markNow() + timings.lease.ttl)
             publish()
         }
     }
@@ -145,11 +145,12 @@ class PresenceSessions(
     }
 
     private fun publish() {
-        open.value = tabs.values.mapTo(linkedSetOf()) { it.session }
+        open.value = tabs.values.associate { it.session to it.connected }
     }
 
     private class Tab(
         val session: Session,
+        val connected: Instant,
         val deadline: ComparableTimeMark,
     )
 

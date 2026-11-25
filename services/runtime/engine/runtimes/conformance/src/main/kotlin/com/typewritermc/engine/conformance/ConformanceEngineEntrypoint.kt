@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import java.time.Instant
 
 /** The parts of the conformance engine, which stands in for a game engine and keeps its sessions like one. */
 val conformanceModule =
@@ -21,7 +22,7 @@ val conformanceModule =
 
 /** The conformance engine's sessions: it has no players, so none. */
 class ConformanceSessions : OnlineSessions {
-    override val sessions: StateFlow<Set<Session>> = MutableStateFlow(emptySet<Session>()).asStateFlow()
+    override val sessions: StateFlow<Map<Session, Instant>> = MutableStateFlow(emptyMap<Session, Instant>()).asStateFlow()
 }
 
 /** Stages a conformance engine deployment. */

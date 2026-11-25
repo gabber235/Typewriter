@@ -1,6 +1,7 @@
 package com.typewritermc.identity
 
 import kotlinx.coroutines.flow.StateFlow
+import java.time.Instant
 
 /**
  * The sessions an engine has right now, as its engine kind sees them: Paper's online players, the panel's open tabs.
@@ -10,7 +11,11 @@ import kotlinx.coroutines.flow.StateFlow
  * waiting on the network.
  */
 interface OnlineSessions {
-    val sessions: StateFlow<Set<Session>>
+    /**
+     * Each session with the instant it connected, stamped by the engine kind where the connection happens, so of two
+     * engines the later connection holds the session however late either engine sees it.
+     */
+    val sessions: StateFlow<Map<Session, Instant>>
 }
 
 /** Reads which engines hold a protagonist's sessions now, across the Realm. */

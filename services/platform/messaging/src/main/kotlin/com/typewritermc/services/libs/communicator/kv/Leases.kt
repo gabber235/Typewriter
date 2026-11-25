@@ -83,7 +83,8 @@ interface LeaseCodec<H : Comparable<H>, V> {
  * The keys one holder leases in one bucket: a session, a mirror, a demand entry. Each key names one holder at a time,
  * and of two holders claiming a key the newer claim holds it, whatever order the broker sees their writes in.
  *
- * A [claim] writes the key naming this holder, the instant of the claim on [clock], and its value. Whenever a claim reads the key, also after a conflict, it writes over an absent,
+ * A [claim] writes the key naming this holder, the instant its caller claimed it at, and its value; the caller stamps
+ * where the claim happens (a session's connection), so a holder that sees it late still claims at that instant. Whenever a claim reads the key, also after a conflict, it writes over an absent,
  * unreadable or vacant entry, its own, or an older claim; a newer claim of another holder means the key is lost for
  * good. A held key is rewritten every refresh with the time to live and follows the same rule on a conflict, except
  * that a vacant entry means another holder took the key and let it go, so the key is lost for good: once a newer
@@ -120,12 +121,15 @@ class Leases<H : Comparable<H>, V>(
             .build()
     private val bucketAttributes = Attributes.of(AttributeKey.stringKey("lease.bucket"), bucketName)
 
-    /** Claims [key] for this holder; [value] gets the value the key kept before, null when it kept none it can read. */
+    /**
+     * Claims [key] for this holder as of [claimed], the instant the claim happened on this holder's clock; [value] gets
+     * the value the key kept before, null when it kept none it can read.
+     */
     fun claim(
         key: String,
+        claimed: Instant,
         value: (previous: V?) -> V,
     ) {
-        val claimed = clock.instant()
         val (slot, call) = call(key)
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
             slot.lock.withLock {

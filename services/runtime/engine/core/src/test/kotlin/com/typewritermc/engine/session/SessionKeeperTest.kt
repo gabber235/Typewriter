@@ -180,7 +180,7 @@ val SessionKeeperTest by testSuite {
             SessionEntry(LeaseState.Vacant, SessionValue(session.protagonist, VirtualKeyValue.START))
     }
 
-    test("SESSION-10 refreshes keep exactly the sessions the engine has held, and none it had before") {
+    test("SESSION-10 a quit keeps refreshing the sessions still in the set") {
         val sessions = VirtualSessions(testScope).apply { createBucket() }
         val engine = sessions.engine("engine-a")
         val (stays, leaves) = List(2) { sessions.player() }
@@ -192,7 +192,6 @@ val SessionKeeperTest by testSuite {
         sessions.keyValue.advance(sessions.timings.lease.ttl * 3)
 
         sessions.entry(stays.protagonist, stays.id).shouldNotBeNull().holder shouldBe EngineId("engine-a")
-        sessions.entry(leaves.protagonist, leaves.id).shouldBeNull()
     }
 
     test("SESSION-11 a session that left is vacant at once and never written again, also after its vacancy ended") {
@@ -210,5 +209,24 @@ val SessionKeeperTest by testSuite {
         sessions.entry(session.protagonist, session.id).shouldBeNull()
         sessions.keyValue.advance(sessions.timings.lease.ttl * 3)
         sessions.entry(session.protagonist, session.id).shouldBeNull()
+    }
+
+    test("SESSION-12 an engine that sees an older connection late never displaces the newer one, and its quit leaves the session held") {
+        val sessions = VirtualSessions(testScope).apply { createBucket() }
+        val old = sessions.engine("engine-a")
+        val new = sessions.engine("engine-b")
+        val session = sessions.player()
+        val connectedToOld = sessions.keyValue.clock().instant()
+        sessions.keyValue.advance(sessions.timings.lease.refresh)
+        new.online.join(session)
+        sessions.keyValue.advance(sessions.timings.lease.refresh)
+
+        old.online.join(session, connected = connectedToOld)
+        sessions.keyValue.advance(sessions.timings.lease.ttl)
+        old.online.quit(session)
+        sessions.keyValue.settle()
+
+        sessions.entry(session.protagonist, session.id).shouldNotBeNull().holder shouldBe EngineId("engine-b")
+        old.keeper.holders(session.protagonist) shouldBe setOf(EngineId("engine-b"))
     }
 }

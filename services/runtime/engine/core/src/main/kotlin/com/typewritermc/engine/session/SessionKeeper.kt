@@ -15,6 +15,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.Clock
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -35,7 +36,8 @@ data class SessionTimings(
 
 /**
  * Keeps this engine's sessions in the Realm's sessions bucket, exactly the sessions its engine kind has in [online],
- * one lease per session. A session added to the set claims its key with the instant it connected; of two engines
+ * one lease per session. A session added to the set claims its key with the instant it connected, as its engine kind
+ * stamped it, however late this keeper sees it; a session whose instant changed connected again and claims again; of two engines
  * claiming one session, the later connection holds it, so a server move works in either order of join and quit and a
  * late write of an engine the protagonist left never displaces the engine it moved to. A session removed from the set
  * is left vacant at once: alive for the vacancy so another engine or a rejoin takes it over, but held by nobody, and
@@ -60,11 +62,18 @@ class SessionKeeper(
 
     private val keeping: Job =
         parent.launch(start = CoroutineStart.UNDISPATCHED) {
-            var kept = emptySet<Session>()
+            var kept = emptyMap<Session, Instant>()
             online.sessions.collect { current ->
-                (kept - current).forEach { leases.release(it.key) }
-                (current - kept).forEach { session ->
-                    leases.claim(session.key) { previous -> SessionValue(session.protagonist, previous?.since ?: clock.instant()) }
+                (kept.keys - current.keys).forEach { leases.release(it.key) }
+                current.forEach { (session, connected) ->
+                    if (kept[session] != connected) {
+                        leases.claim(session.key, connected) { previous ->
+                            SessionValue(
+                                session.protagonist,
+                                previous?.since ?: clock.instant(),
+                            )
+                        }
+                    }
                 }
                 kept = current
             }

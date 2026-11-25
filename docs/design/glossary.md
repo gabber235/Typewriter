@@ -540,7 +540,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`OnlinePlayer`**: `Live` mirror in the Minecraft capability with an online protagonist's name and its `Engine`, read by the panel's target list. See [panel-engine-communication.md](panel-engine-communication.md) question 9.
 
-**`OnlineSessions`**: the sessions an engine has right now, one observable set its engine kind supplies (Paper's online players, the panel's open tabs); the engine claims each session added, leaves each one removed vacant, and refreshes only sessions in the set. See [live-data.md](live-data.md#session).
+**`OnlineSessions`**: the sessions an engine has right now, one observable set its engine kind supplies (Paper's online players, the panel's open tabs), each with the instant it connected, which its claim carries; the engine claims each session added, leaves each one removed vacant, and refreshes only sessions in the set. See [live-data.md](live-data.md#session).
 
 **`onRejoin`**: step rule: `Drop` (default), `RestartStep`, or `RestartInteraction`. See [interactions.md](interactions.md#leaving-and-rejoining).
 

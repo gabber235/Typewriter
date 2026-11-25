@@ -26,10 +26,10 @@ val PresenceDeadlineTest by testSuite {
 
         panel.connect()
         panel.sessions.keyValue.advance(TIMINGS.lease.ttl - 1.milliseconds)
-        panel.presence.sessions.value shouldBe setOf(tab)
+        panel.presence.sessions.value.keys shouldBe setOf(tab)
 
         panel.sessions.keyValue.advance(1.milliseconds)
-        panel.presence.sessions.value shouldBe emptySet()
+        panel.presence.sessions.value.keys shouldBe emptySet()
         panel.sessions
             .entry(tab.protagonist, tab.id)
             .shouldNotBeNull()

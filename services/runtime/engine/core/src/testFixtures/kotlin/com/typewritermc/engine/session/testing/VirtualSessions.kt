@@ -47,7 +47,7 @@ class VirtualSessions(
         online: Set<Session> = emptySet(),
     ): VirtualEngine {
         val buckets = ScriptedBuckets(keyValue.store)
-        val sessions = OnlineSet(online)
+        val sessions = OnlineSet(keyValue.clock(), online)
         return VirtualEngine(EngineId(id), keeper(id, sessions, buckets), buckets, sessions)
     }
 

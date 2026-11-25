@@ -36,7 +36,8 @@ class VirtualPanel(
     val sessions: VirtualSessions = VirtualSessions(scope, TIMINGS)
 
     /** The panel engine's sessions. */
-    val presence: PresenceSessions = PresenceSessions(REALM, TIMINGS, scope.backgroundScope, scope.testTimeSource)
+    val presence: PresenceSessions =
+        PresenceSessions(REALM, TIMINGS, scope.backgroundScope, scope.testTimeSource, sessions.keyValue.clock())
 
     /** The protagonist every tab belongs to. */
     val user: Protagonist = Protagonist(PrincipalId(PrincipalId.USER, "user"))
