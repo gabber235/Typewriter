@@ -17,6 +17,8 @@ import com.typewritermc.loader.rollout.CoordinatedRollout
 import com.typewritermc.loader.rollout.FileRolloutStateRepository
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.loader.rollout.RolloutMessenger
+import com.typewritermc.loader.rollout.RolloutTarget
+import com.typewritermc.loader.rollout.RolloutTiming
 import com.typewritermc.loader.rollout.commandKind
 import com.typewritermc.loader.rollout.projectionOf
 import com.typewritermc.loader.rollout.toSkir
@@ -146,16 +148,16 @@ class RolloutFixture(
     val snapshot = deploymentSnapshot()
     val rollout =
         CoordinatedRollout(
-            RealmId("realm"),
-            selection,
-            deploymentManifests(),
+            RolloutTarget(RealmId("realm"), selection, deploymentManifests()),
             host,
             projections,
             state,
-            requestTimeout = 1.seconds,
-            participantDeadline = participantDeadline,
-            healthyDuration = healthyDuration,
-            timeSource = timeSource,
+            RolloutTiming(
+                requestTimeout = 1.seconds,
+                participantDeadline = participantDeadline,
+                healthyDuration = healthyDuration,
+                timeSource = timeSource,
+            ),
         )
 }
 

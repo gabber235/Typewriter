@@ -9,8 +9,10 @@ import com.typewritermc.loader.api.HostedRuntimeEntrypoint
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
+import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.loader.rollout.HostRolloutParticipant
+import com.typewritermc.loader.rollout.StagedRuntimes
 import com.typewritermc.loader.runtime.HostedRuntimeLoader
 import com.typewritermc.loader.runtime.LoadedHostedRuntime
 import com.typewritermc.loader.testing.NoZeroArgumentHostedRuntimeEntrypoint
@@ -24,6 +26,7 @@ import com.typewritermc.loader.testing.activeProjection
 import com.typewritermc.loader.testing.attempt
 import com.typewritermc.loader.testing.participantFixture
 import com.typewritermc.loader.testing.writeRuntimeJar
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.rolloutCommand
 import com.typewritermc.protocol.transport.generated.rolloutProbe
@@ -484,8 +487,11 @@ val HostRolloutParticipantTest by testSuite {
                 runtime.suspendOn += operationName
                 val projection =
                     HostRolloutParticipant.LocalProjection(
-                        listOf(LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<java.net.URL>()))),
-                        emptyList(),
+                        StagedRuntimes(
+                            listOf(LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<java.net.URL>()))),
+                            emptyList(),
+                            HostWork(InFlightWork(), 1.seconds),
+                        ),
                         this,
                         1.seconds,
                     )
@@ -516,8 +522,13 @@ val HostRolloutParticipantTest by testSuite {
             unfinished.suspendOn += "close"
             val projection =
                 HostRolloutParticipant.LocalProjection(
-                    listOf(unfinished, finished).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
-                    emptyList(),
+                    StagedRuntimes(
+                        listOf(unfinished, finished).map {
+                            LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>()))
+                        },
+                        emptyList(),
+                        HostWork(InFlightWork(), 1.seconds),
+                    ),
                     this,
                     1.seconds,
                 )
@@ -541,8 +552,13 @@ val HostRolloutParticipantTest by testSuite {
             failing.failOn += "activate"
             val projection =
                 HostRolloutParticipant.LocalProjection(
-                    listOf(completed, failing).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
-                    emptyList(),
+                    StagedRuntimes(
+                        listOf(completed, failing).map {
+                            LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>()))
+                        },
+                        emptyList(),
+                        HostWork(InFlightWork(), 1.seconds),
+                    ),
                     this,
                     1.seconds,
                 )

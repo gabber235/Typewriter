@@ -32,8 +32,10 @@ import com.typewritermc.loader.deployment.ProjectedExtension
 import com.typewritermc.loader.deployment.ProjectedRuntime
 import com.typewritermc.loader.deployment.ProjectedSourcePart
 import com.typewritermc.loader.rollout.ArtifactHostAssignment
+import com.typewritermc.loader.rollout.AssignmentPlace
 import com.typewritermc.loader.rollout.HostRolloutParticipant
 import com.typewritermc.loader.rollout.ProjectionSource
+import com.typewritermc.loader.rollout.ProjectionStager
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.loader.rollout.RuntimeHost
 import com.typewritermc.loader.rollout.RuntimeHosts
@@ -278,12 +280,11 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
             runtimes += runtime
             LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<java.net.URL>()))
         }
-    val participant =
-        HostRolloutParticipant(
-            realmId,
-            ArtifactHostAssignment(realmId, setOf(RuntimePlacement.PRIMARY_ENGINE), engineInstance = "engine")::engineIdOf,
-            serviceId,
-            root,
+    val place =
+        AssignmentPlace(serviceId, ArtifactHostAssignment(realmId, setOf(RuntimePlacement.PRIMARY_ENGINE), engineInstance = "engine"), root)
+    val staging =
+        ProjectionStager(
+            place,
             host.perRuntime(),
             object : ProjectionSource {
                 override suspend fun fetch(reference: ProjectionReference) = projections.getValue(reference)
@@ -322,11 +323,9 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
                         }
                     }
             },
-            { status -> events += status },
-            scope,
             stager,
-            1.seconds,
         )
+    val participant = HostRolloutParticipant(place, staging, { status -> events += status }, scope, 1.seconds)
     return ParticipantFixture(serviceId, realmId, host, participant, projections, contexts, runtimes, events, root)
 }
 

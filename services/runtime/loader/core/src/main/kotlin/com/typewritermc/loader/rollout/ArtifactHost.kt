@@ -286,18 +286,21 @@ class ArtifactHost(
         private val runtimeHosts = SessionRuntimeHosts(work, sharedArtifacts, service.openTelemetry, publicationRetention)
         private val projections = BlobProjectionRepository(sharedArtifacts)
         private val participant =
-            HostRolloutParticipant(
-                assignment.realmId,
-                assignment::engineIdOf,
-                serviceId,
-                workDirectory,
-                runtimeHosts,
-                projections,
-                VerifiedArtifactCache(sharedArtifacts, localBlobs),
-                { changed -> status = changed },
-                scope,
-                telemetry = telemetry,
-            )
+            AssignmentPlace(serviceId, assignment, workDirectory).let { place ->
+                HostRolloutParticipant(
+                    place,
+                    ProjectionStager(
+                        place,
+                        runtimeHosts,
+                        projections,
+                        VerifiedArtifactCache(sharedArtifacts, localBlobs),
+                        telemetry = telemetry,
+                    ),
+                    { changed -> status = changed },
+                    scope,
+                    telemetry = telemetry,
+                )
+            }
         private val rolloutState =
             if (RuntimePlacement.REALM in assignment.roles) FileRolloutStateRepository(assignment.realmId, artifactsRoot) else null
         private var router: CommunicatorRouter? = null
@@ -381,9 +384,7 @@ class ArtifactHost(
                     val current = state.committed()
                     val rollout =
                         CoordinatedRollout(
-                            assignment.realmId,
-                            selection,
-                            resolution.manifests,
+                            RolloutTarget(assignment.realmId, selection, resolution.manifests),
                             messenger,
                             projections,
                             state,
