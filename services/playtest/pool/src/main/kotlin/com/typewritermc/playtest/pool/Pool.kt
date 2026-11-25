@@ -484,54 +484,24 @@ internal class Pool(
         session: Peer,
         message: Message,
     ) {
-        when (message) {
-            is Message.JoinWrapper -> {
-                join(session, message.value)
-            }
-
-            is Message.QueueWrapper -> {
-                queue(session, message.value.together)
-            }
-
-            Message.END -> {
-                session.send(Message.ENDED)
-            }
-
-            is Message.ReclaimWrapper -> {
-                reclaim(session, message.value)
-            }
-
-            is Message.SettleWrapper, is Message.RestartWrapper, is Message.QuitWrapper, is Message.RejoinWrapper -> {
-                ofPaper(session, message)
-            }
-
-            is Message.ResultWrapper -> {
-                result(session, message.value)
-            }
-
-            is Message.ConcludedWrapper -> {
-                message.value.let { runs.concluded(it.testId, it.touched, it.pacing) }
-            }
-
-            else -> {
-                toGame(session, message)
-            }
-        }
+        (ofSession[message.kind] ?: ::toGame)(session, message)
     }
 
-    /** What [session]'s attempt asks of its Paper: settle it, restart it, or send a player away and back. */
-    private fun ofPaper(
-        session: Peer,
-        message: Message,
-    ) {
-        when (message) {
-            is Message.SettleWrapper -> settle(session, message.value.id)
-            is Message.RestartWrapper -> restart(session, message.value)
-            is Message.QuitWrapper -> quit(session, message.value)
-            is Message.RejoinWrapper -> rejoin(session, message.value)
-            else -> error("$message asks nothing of an attempt's Paper")
-        }
-    }
+    /** What the pool does with each kind of message a session sends; every other kind is for the game ([toGame]). */
+    private val ofSession: Map<Message.Kind, (Peer, Message) -> Unit> =
+        mapOf(
+            Message.Kind.JOIN_WRAPPER to handler<Message.JoinWrapper> { session, it -> join(session, it.value) },
+            Message.Kind.QUEUE_WRAPPER to handler<Message.QueueWrapper> { session, it -> queue(session, it.value.together) },
+            Message.Kind.END_CONST to { session, _ -> session.send(Message.ENDED) },
+            Message.Kind.RECLAIM_WRAPPER to handler<Message.ReclaimWrapper> { session, it -> reclaim(session, it.value) },
+            Message.Kind.SETTLE_WRAPPER to handler<Message.SettleWrapper> { session, it -> settle(session, it.value.id) },
+            Message.Kind.RESTART_WRAPPER to handler<Message.RestartWrapper> { session, it -> restart(session, it.value) },
+            Message.Kind.QUIT_WRAPPER to handler<Message.QuitWrapper> { session, it -> quit(session, it.value) },
+            Message.Kind.REJOIN_WRAPPER to handler<Message.RejoinWrapper> { session, it -> rejoin(session, it.value) },
+            Message.Kind.RESULT_WRAPPER to handler<Message.ResultWrapper> { session, it -> result(session, it.value) },
+            Message.Kind.CONCLUDED_WRAPPER to
+                handler<Message.ConcludedWrapper> { _, it -> runs.concluded(it.value.testId, it.value.touched, it.value.pacing) },
+        )
 
     /** [session]'s attempt for submission [id] ended its body; it is settled once its players' work is quiet. */
     private fun settle(
@@ -1719,3 +1689,7 @@ internal class Pool(
             )
     }
 }
+
+/** Hands [handle] a message of kind [M]; a dispatch keyed by message kind passes it only messages of that kind. */
+private inline fun <reified M : Message> handler(crossinline handle: (Peer, M) -> Unit): (Peer, Message) -> Unit =
+    { peer, message -> handle(peer, message as M) }
