@@ -58,7 +58,10 @@ decided:
       values too: rustc's env-dep lines, which only each unit's own dependency file holds, from
       every unit in the target's build folders (Cargo's copy beside an artifact names path
       packages only), so another build's variable may cost a rebuild, never a stale artifact.
-      Known issue: a build script without rerun-if-changed names none of its reads.
+      Build scripts follow Cargo's own rule, from what each printed: a rerun-if-env-changed
+      variable is stamped with its value, and a script that printed no rerun-if-changed or
+      rerun-if-env-changed line has every file of its package (all of its folder but target, .git
+      and nested packages) stamped.
   - id: panel-restores-services-outputs
     what: >-
       The panel suites restore the services check's Gradle build cache and save none of their own,

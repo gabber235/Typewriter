@@ -4,15 +4,13 @@
 //! the sha256 of each artifact and of everything the build read: the repository files the
 //! dependency files Cargo writes beside each artifact name (a build script's `rerun-if-changed`
 //! inputs included), the environment variables its crates read at compile time (`env!`,
-//! `option_env!`), and the workspace's manifests, lock file and Cargo configuration. While all of
-//! them match, Cargo does not run at all.
+//! `option_env!`) and its build scripts watch (`rerun-if-env-changed`), every file of a package
+//! whose build script watches nothing (Cargo runs such a script again when any of them changes),
+//! and the workspace's manifests, lock file and Cargo configuration. While all of them match,
+//! Cargo does not run at all.
 //!
 //! Files outside the repository are not listed: the toolchain's sources change with `rustc -vV`
 //! and dependency sources with `Cargo.lock`.
-//!
-//! Known issue: a build script that prints no `rerun-if-changed` names none of the files it reads,
-//! so an edit only such a script reads reuses the build. The backend's one build script
-//! (`backend/database/schema/build.rs`) names every file it reads.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -229,41 +227,161 @@ impl CargoBuild<'_> {
                 }
             }
         }
-        reads.extend(self.env_reads()?.iter().map(|name| format!("${name}")));
+        let target = self.target_dir()?;
+        reads.extend(env_reads(target)?.iter().map(|name| format!("${name}")));
+        reads.extend(build_script_reads(ctx, target)?);
         Ok(reads)
     }
 
-    /// The environment variables the crates in the build's target directory read at compile time.
-    /// Cargo's copy of the dependency file beside an artifact leaves out rustc's `# env-dep:`
-    /// lines and names only the sources of path packages, so the variables come from every unit's
-    /// own dependency file in the target directory's build folders. That may include units of
-    /// another build in the same target, which costs a rebuild when their variables change, never
-    /// a stale artifact. The variables Cargo sets for every crate itself are left out: they follow
-    /// from the command and the workspace.
-    fn env_reads(&self) -> Result<BTreeSet<String>> {
+    /// The Cargo target directory the artifacts lie in, which Cargo marks with a CACHEDIR.TAG.
+    fn target_dir(&self) -> Result<&Path> {
         let first = self
             .artifacts
             .first()
             .with_context(|| format!("the build {} names no artifact", self.name))?;
-        let target = first
+        first
             .ancestors()
             .find(|dir| dir.join("CACHEDIR.TAG").is_file())
-            .with_context(|| format!("{} lies in no Cargo target directory", first.display()))?;
-        let mut names = BTreeSet::new();
-        for pattern in ["*/build/*/*/out", "*/*/build/*/*/out", "*/deps", "*/*/deps"] {
-            for dir in expand(target, pattern)? {
-                for entry in fs::read_dir(&dir)? {
-                    let path = entry?.path();
-                    if path.extension().is_some_and(|extension| extension == "d") {
-                        let text = fs::read_to_string(&path)
-                            .with_context(|| format!("cannot read {}", path.display()))?;
-                        names.extend(env_deps(&text));
-                    }
-                }
+            .with_context(|| format!("{} lies in no Cargo target directory", first.display()))
+    }
+}
+
+/// The environment variables the crates in the Cargo target directory `target` read at compile
+/// time. Cargo's copy of the dependency file beside an artifact leaves out rustc's `# env-dep:`
+/// lines and names only the sources of path packages, so the variables come from every unit's own
+/// dependency file in the target's build folders. That may include units of another build in the
+/// same target, which costs a rebuild when their variables change, never a stale artifact. The
+/// variables Cargo sets for every crate itself are left out: they follow from the command and the
+/// workspace.
+fn env_reads(target: &Path) -> Result<BTreeSet<String>> {
+    let mut names = BTreeSet::new();
+    for dir in unit_dirs(target, &["out", "deps"])? {
+        for (path, name) in files_in(&dir)? {
+            if name.ends_with(".d") {
+                names.extend(env_deps(&read(&path)?));
             }
         }
-        Ok(names)
     }
+    Ok(names)
+}
+
+/// What the build scripts that ran in `target` read, decided the way Cargo decides to run one
+/// again, from what each printed: `$NAME` for each `rerun-if-env-changed`, and for a script that
+/// printed no `rerun-if-changed` or `rerun-if-env-changed` line, every file of its package.
+/// (Its `rerun-if-changed` files are in the dependency files beside the artifacts already.)
+fn build_script_reads(ctx: &Context, target: &Path) -> Result<BTreeSet<String>> {
+    let mut reads = BTreeSet::new();
+    for run in unit_dirs(target, &["run"])? {
+        let mut watches = false;
+        for line in read(&run.join("stdout"))?.lines() {
+            let Some(directive) = line
+                .strip_prefix("cargo::")
+                .or_else(|| line.strip_prefix("cargo:"))
+            else {
+                continue;
+            };
+            if let Some(name) = directive.strip_prefix("rerun-if-env-changed=") {
+                reads.insert(format!("${name}"));
+                watches = true;
+            } else if directive.starts_with("rerun-if-changed=") {
+                watches = true;
+            }
+        }
+        if !watches {
+            for dir in script_packages(ctx, &run)? {
+                package_files(ctx, &dir, &mut reads)?;
+            }
+        }
+    }
+    Ok(reads)
+}
+
+/// The repository folders of the packages whose build script ran in `run`
+/// (`build/<package>/<hash>/run`): each holds a `Cargo.toml` above a build script source that a
+/// compile unit of the same package, `build/<package>/<other hash>/out/build_script_build*.d`,
+/// names.
+fn script_packages(ctx: &Context, run: &Path) -> Result<BTreeSet<PathBuf>> {
+    let mut packages = BTreeSet::new();
+    let Some(package) = run.parent().and_then(Path::parent) else {
+        return Ok(packages);
+    };
+    for unit in fs::read_dir(package)? {
+        let out = unit?.path().join("out");
+        if !out.is_dir() {
+            continue;
+        }
+        for (path, name) in files_in(&out)? {
+            if !(name.starts_with("build_script_build") && name.ends_with(".d")) {
+                continue;
+            }
+            for source in dep_info_files(&read(&path)?) {
+                let source = normalize(&source);
+                let dir = source
+                    .ancestors()
+                    .skip(1)
+                    .take_while(|dir| dir.starts_with(&ctx.root))
+                    .find(|dir| dir.join("Cargo.toml").is_file());
+                packages.extend(dir.map(Path::to_path_buf));
+            }
+        }
+    }
+    Ok(packages)
+}
+
+/// Adds every file of the package in `dir`, root relative, to `reads`: all of the folder but
+/// build output (`target`), Git's folder and nested packages, as Cargo lists a package's files.
+fn package_files(ctx: &Context, dir: &Path, reads: &mut BTreeSet<String>) -> Result<()> {
+    for (path, name) in files_in(dir)? {
+        if path.is_dir() {
+            if name != "target" && name != ".git" && !path.join("Cargo.toml").is_file() {
+                package_files(ctx, &path, reads)?;
+            }
+        } else if let Ok(relative) = path.strip_prefix(&ctx.root) {
+            reads.insert(relative.display().to_string());
+        }
+    }
+    Ok(())
+}
+
+/// The unit folders below `target`'s build folders (`<profile>/build/<package>/<hash>/<kind>`, also
+/// below a target triple) for each of `kinds`, and Cargo's older flat `deps` folders.
+fn unit_dirs(target: &Path, kinds: &[&str]) -> Result<Vec<PathBuf>> {
+    let mut dirs = Vec::new();
+    for kind in kinds {
+        let patterns = if *kind == "deps" {
+            ["*/deps".to_owned(), "*/*/deps".to_owned()]
+        } else {
+            [
+                format!("*/build/*/*/{kind}"),
+                format!("*/*/build/*/*/{kind}"),
+            ]
+        };
+        for pattern in patterns {
+            dirs.extend(expand(target, &pattern)?);
+        }
+    }
+    Ok(dirs)
+}
+
+/// The entries of `dir` as (path, name), sorted.
+fn files_in(dir: &Path) -> Result<Vec<(PathBuf, String)>> {
+    let mut entries = fs::read_dir(dir)
+        .with_context(|| format!("cannot read {}", dir.display()))?
+        .map(|entry| {
+            entry.map(|entry| {
+                (
+                    entry.path(),
+                    entry.file_name().to_string_lossy().into_owned(),
+                )
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    entries.sort();
+    Ok(entries)
+}
+
+fn read(path: &Path) -> Result<String> {
+    fs::read_to_string(path).with_context(|| format!("cannot read {}", path.display()))
 }
 
 /// The variables a dependency file's `# env-dep:NAME=value` (or `# env-dep:NAME` for an unset
@@ -322,7 +440,10 @@ fn normalize(path: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{CARGO_WORKSPACE as WORKSPACE, FakeCargo, cargo_workspace, refusal};
+    use crate::test_support::{
+        CARGO_WORKSPACE as WORKSPACE, FakeCargo, cargo_workspace, fake_cargo_child,
+        fake_cargo_in_child, refusal,
+    };
 
     const READS: &[&str] = &["backend/src/lib.rs"];
 
@@ -466,24 +587,11 @@ mod tests {
         assert!(!root.path("target/renamed.wasm").exists());
     }
 
-    /// Set when the test below runs as its own child: the root of the parent's build.
-    const ENV_DEP_ROOT: &str = "XTASK_TEST_ENV_DEP_ROOT";
-
-    /// Runs twice: as a normal test it runs itself as a child process once per build, each with
-    /// its own value of the variable the build read, since a test may not change its own
-    /// environment while other tests run; each child runs one build in the parent's root.
+    /// Runs twice: as a normal test it runs itself as a child once per build, each with its own
+    /// value of the variable a crate read ([`fake_cargo_in_child`]).
     #[test]
-    fn a_changed_value_of_a_variable_the_build_read_builds_again() {
-        if let Some(root) = std::env::var_os(ENV_DEP_ROOT) {
-            let ctx = Context {
-                root: PathBuf::from(root),
-            };
-            let cargo = FakeCargo { ctx: &ctx };
-            let outcome = cargo
-                .build(WORKSPACE)
-                .run(&ctx, &mut cargo.command("one", READS))
-                .unwrap();
-            fs::write(ctx.root.join("outcome"), format!("{outcome:?}")).unwrap();
+    fn a_changed_value_of_a_variable_a_crate_read_builds_again() {
+        if fake_cargo_child() {
             return;
         }
         let root = cargo_workspace();
@@ -498,23 +606,79 @@ mod tests {
             ),
         );
         let build = |greeting: &str| {
-            let status = Command::new(std::env::current_exe().unwrap())
-                .args([
-                    "cargo_build::tests::a_changed_value_of_a_variable_the_build_read_builds_again",
-                    "--exact",
-                    "--quiet",
-                ])
-                .env(ENV_DEP_ROOT, &root.ctx.root)
-                .env("XTASK_TEST_GREETING", greeting)
-                .status()
-                .unwrap();
-            assert!(status.success());
-            fs::read_to_string(root.path("outcome")).unwrap()
+            fake_cargo_in_child(
+                "cargo_build::tests::a_changed_value_of_a_variable_a_crate_read_builds_again",
+                &root,
+                ("XTASK_TEST_GREETING", greeting),
+            )
         };
 
-        assert_eq!(build("hello"), "Compiled");
-        assert_eq!(build("hello"), "Reused");
-        assert_eq!(build("goodbye"), "Compiled");
+        assert_eq!(build("hello"), Outcome::Compiled);
+        assert_eq!(build("hello"), Outcome::Reused);
+        assert_eq!(build("goodbye"), Outcome::Compiled);
+    }
+
+    /// Runs twice, as the case above does.
+    #[test]
+    fn a_changed_value_of_a_variable_a_build_script_watches_builds_again() {
+        if fake_cargo_child() {
+            return;
+        }
+        let root = cargo_workspace();
+        // What the build script printed, in its run's own folder.
+        root.write(
+            "target/debug/build/schema/4567/run/stdout",
+            "cargo::rerun-if-env-changed=XTASK_TEST_SCHEMA\ncargo:rerun-if-changed=build.rs\n",
+        );
+        let build = |schema: &str| {
+            fake_cargo_in_child(
+                "cargo_build::tests::a_changed_value_of_a_variable_a_build_script_watches_builds_again",
+                &root,
+                ("XTASK_TEST_SCHEMA", schema),
+            )
+        };
+
+        assert_eq!(build("v1"), Outcome::Compiled);
+        assert_eq!(build("v1"), Outcome::Reused);
+        assert_eq!(build("v2"), Outcome::Compiled);
+    }
+
+    #[test]
+    fn every_file_of_a_package_whose_build_script_watches_nothing_is_read() {
+        let root = cargo_workspace();
+        root.write("backend/schema/Cargo.toml", "[package]");
+        root.write("backend/schema/build.rs", "fn main() {}");
+        root.write("backend/schema/tables/user.sql", "DEFINE TABLE user;");
+        root.write("backend/schema/target/scratch", "");
+        root.write("backend/schema/nested/Cargo.toml", "[package]");
+        root.write("backend/schema/nested/src/lib.rs", "");
+        // The build script's own compile unit names its source; its run printed no rerun line.
+        root.write(
+            "target/debug/build/schema/0123/out/build_script_build.d",
+            &format!(
+                "{out}/build_script_build: {script}\n",
+                out = root.path("target/debug/build/schema/0123/out").display(),
+                script = root.path("backend/schema/build.rs").display()
+            ),
+        );
+        root.write(
+            "target/debug/build/schema/4567/run/stdout",
+            "cargo:rustc-cfg=schema\n",
+        );
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let build = cargo.build(WORKSPACE);
+        build
+            .run(&root.ctx, &mut cargo.command("one", READS))
+            .unwrap();
+
+        // Build output and a nested package are not the package's files.
+        root.write("backend/schema/target/scratch", "rebuilt");
+        root.write("backend/schema/nested/src/lib.rs", "pub fn nested() {}");
+        let outside = build.run(&root.ctx, &mut cargo.command("one", READS));
+        assert_eq!(outside.unwrap(), Outcome::Reused);
+        root.write("backend/schema/tables/user.sql", "DEFINE TABLE person;");
+        let edited = build.run(&root.ctx, &mut cargo.command("one", READS));
+        assert_eq!(edited.unwrap(), Outcome::Compiled);
     }
 
     #[test]

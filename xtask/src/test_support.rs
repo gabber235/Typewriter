@@ -668,6 +668,50 @@ pub fn cargo_workspace() -> TempRoot {
     root
 }
 
+/// Set in a child [`fake_cargo_in_child`] starts: the root of the parent's build.
+const FAKE_CARGO_ROOT: &str = "XTASK_TEST_FAKE_CARGO_ROOT";
+
+/// Runs the test `test` of this test binary as a child that runs the [`FakeCargo`] build of
+/// [`CARGO_WORKSPACE`] once in `root` with the environment variable `variable` set, and returns
+/// what the build did. A test may not change its own environment while other tests run, so a
+/// build that depends on a variable's value runs in a child per value.
+pub fn fake_cargo_in_child(
+    test: &str,
+    root: &TempRoot,
+    (variable, value): (&str, &str),
+) -> crate::cargo_build::Outcome {
+    let status = Command::new(std::env::current_exe().unwrap())
+        .args([test, "--exact", "--quiet"])
+        .env(FAKE_CARGO_ROOT, &root.ctx.root)
+        .env(variable, value)
+        .status()
+        .unwrap();
+    assert!(status.success(), "the child build failed: {status}");
+    match fs::read_to_string(root.path("outcome")).unwrap().as_str() {
+        "Reused" => crate::cargo_build::Outcome::Reused,
+        "Compiled" => crate::cargo_build::Outcome::Compiled,
+        other => panic!("the child wrote the outcome {other}"),
+    }
+}
+
+/// In a child [`fake_cargo_in_child`] started: runs the build once in the parent's root, writes
+/// what it did there, and returns true. Returns false in any other test run.
+pub fn fake_cargo_child() -> bool {
+    let Some(root) = std::env::var_os(FAKE_CARGO_ROOT) else {
+        return false;
+    };
+    let ctx = Context {
+        root: PathBuf::from(root),
+    };
+    let cargo = FakeCargo { ctx: &ctx };
+    let outcome = cargo
+        .build(CARGO_WORKSPACE)
+        .run(&ctx, &mut cargo.command("one", &["backend/src/lib.rs"]))
+        .unwrap();
+    fs::write(ctx.root.join("outcome"), format!("{outcome:?}")).unwrap();
+    true
+}
+
 /// A stand in for Cargo in a repository root: each run is counted and writes [`Self::artifact`] in
 /// a marked target directory and, as Cargo does beside each artifact, a dependency file naming the
 /// files the build read.
