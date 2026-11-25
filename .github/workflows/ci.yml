@@ -193,9 +193,9 @@ jobs:
       pull-requests: write
       security-events: write
     steps:
+      # One commit: the report fetches the history down to the merge base with BASE_SHA itself, and
+      # publishing the evidence reads only the run's results and the pull request.
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
           pattern: results-*
