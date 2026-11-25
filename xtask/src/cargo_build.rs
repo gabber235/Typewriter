@@ -155,21 +155,23 @@ impl CargoBuild<'_> {
             );
         }
         // Without a dependency file the build cannot say what it read, so it is not reused.
-        let recorded = self.reads(ctx).and_then(|reads| {
-            let mut files: Vec<String> = artifacts;
-            files.extend(self.workspace.iter().cloned());
-            files.extend(configs);
-            files.extend(reads);
-            files.sort();
-            files.dedup();
-            stamp.record(&ctx.root, &digest, &files, env)
-        });
-        if let Err(error) = recorded {
+        let Some(reads) = self.reads(ctx)? else {
             eprintln!(
-                "{}: no stamp, so the next run builds again: {error:#}",
+                "{}: Cargo wrote no dependency file beside an artifact, so the next run builds \
+                 again",
                 self.name
             );
-        }
+            return Ok(Outcome::Compiled);
+        };
+        let mut files: Vec<String> = artifacts;
+        files.extend(self.workspace.iter().cloned());
+        files.extend(configs);
+        files.extend(reads);
+        files.sort();
+        files.dedup();
+        stamp
+            .record(&ctx.root, &digest, &files, env)
+            .with_context(|| format!("cannot stamp the build {}", self.name))?;
         Ok(Outcome::Compiled)
     }
 
@@ -227,13 +229,15 @@ impl CargoBuild<'_> {
 
     /// What the build read: the root relative repository files the dependency file beside each
     /// artifact names, and as `$NAME` each environment variable a crate of the build read at
-    /// compile time (`env!`, `option_env!`).
-    fn reads(&self, ctx: &Context) -> Result<BTreeSet<String>> {
+    /// compile time (`env!`, `option_env!`). None when an artifact has no dependency file.
+    fn reads(&self, ctx: &Context) -> Result<Option<BTreeSet<String>>> {
         let mut reads = BTreeSet::new();
         for artifact in &self.artifacts {
             let dep_info = artifact.with_extension("d");
-            let text = fs::read_to_string(&dep_info)
-                .with_context(|| format!("cannot read {}", dep_info.display()))?;
+            let text = match fs::read_to_string(&dep_info) {
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+                text => text.with_context(|| format!("cannot read {}", dep_info.display()))?,
+            };
             for file in dep_info_files(&text) {
                 if let Ok(relative) = normalize(&file).strip_prefix(&ctx.root) {
                     reads.insert(relative.display().to_string());
@@ -243,7 +247,7 @@ impl CargoBuild<'_> {
         let target = self.target_dir()?;
         reads.extend(env_reads(target)?.iter().map(|name| format!("${name}")));
         reads.extend(build_script_reads(ctx, target)?);
-        Ok(reads)
+        Ok(Some(reads))
     }
 
     /// The Cargo target directory the artifacts lie in, which Cargo marks with a CACHEDIR.TAG.
@@ -608,6 +612,26 @@ mod tests {
             build.run(&root.ctx, &mut again, &NONE).unwrap(),
             Outcome::Compiled
         );
+    }
+
+    #[test]
+    fn a_read_file_that_cannot_be_hashed_fails_the_build_with_its_cause() {
+        use std::os::unix::fs::PermissionsExt as _;
+        let root = cargo_workspace();
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let read = root.path("backend/src/lib.rs");
+        fs::set_permissions(&read, fs::Permissions::from_mode(0o000)).unwrap();
+        let result = cargo
+            .build(WORKSPACE)
+            .run(&root.ctx, &mut cargo.command("one", READS), &NONE);
+        fs::set_permissions(&read, fs::Permissions::from_mode(0o644)).unwrap();
+
+        let error = format!("{:#}", result.unwrap_err());
+        assert!(
+            error.contains(&format!("cannot read {}", read.display())),
+            "{error}"
+        );
+        assert!(error.contains("Permission denied"), "{error}");
     }
 
     #[test]
