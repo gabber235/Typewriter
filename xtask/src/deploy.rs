@@ -1,7 +1,7 @@
 //! Publishes the backend to a cluster: every deployable component, the database image, then a
 //! restart so the runtime operator pulls the new images.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -11,8 +11,9 @@ use anyhow::{Context as _, Result, bail, ensure};
 use clap::ValueEnum;
 use serde_json::Value;
 
-use crate::cargo_build::{CargoBuild, workspace_files};
+use crate::cargo_build::{CargoBuild, Outcome, workspace_files};
 use crate::cluster::CiCluster;
+use crate::digest::Environment;
 use crate::lock::HeavyLock;
 use crate::{CommandExt, Context, Scratch, secrets};
 
@@ -140,18 +141,12 @@ pub fn deploy_ci(ctx: &Context, ci: &CiCluster) -> Result<()> {
 fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
     // The components compile against the generated Skir sources.
     crate::generate::generate(ctx, None)?;
-    let components = deployable(ctx)?;
-    {
+    let (components, _) = {
         let _lock = HeavyLock::acquire("deploy")?;
-        components_build(ctx, &components).run()?;
-    }
-    for component in &components {
-        let reference = format!(
-            "{}/{}:{}",
-            registry.repository(),
-            component.package,
-            COMPONENT_TAG
-        );
+        build_deployable(ctx)?
+    };
+    for (package, artifact) in &components {
+        let reference = format!("{}/{package}:{COMPONENT_TAG}", registry.repository());
         // The wash fork reads registry credentials from flags only; the long form keeps the
         // password out of errors (`crate::display`), and `=` keeps a password that starts with
         // `-` from parsing as a flag.
@@ -167,7 +162,7 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
                 &reference,
             ],
         )
-        .arg(&component.artifact)
+        .arg(artifact)
         .run()
         .with_context(|| format!("cannot push {reference}"))?;
     }
@@ -220,9 +215,26 @@ pub(crate) fn components_build(ctx: &Context, components: &[Component]) -> Comma
     build
 }
 
+/// Builds the release `.wasm` of every deployable component and returns each by its package, with
+/// whether the build was reused. The stack's components build and `cargo xtask deploy` both build
+/// them here, so one stamp covers that artifact. The caller holds the heavy lock.
+pub(crate) fn build_deployable(ctx: &Context) -> Result<(BTreeMap<String, PathBuf>, Outcome)> {
+    let components = deployable(ctx)?;
+    let outcome = reusable_components_build(ctx, "components", &components)?.run(
+        ctx,
+        &mut components_build(ctx, &components),
+        &Environment::process(),
+    )?;
+    let artifacts = components
+        .into_iter()
+        .map(|component| (component.package, component.artifact))
+        .collect();
+    Ok((artifacts, outcome))
+}
+
 /// The release components build of `components` as a [`CargoBuild`] named `name`, reused while
-/// what it read, the backend workspace's files, the command and the toolchain are unchanged. The
-/// stack and the components check both build through it.
+/// everything it read is unchanged ([`CargoBuild`]). [`build_deployable`] and the components check
+/// both build through it.
 pub(crate) fn reusable_components_build<'a>(
     ctx: &Context,
     name: &'a str,

@@ -683,19 +683,12 @@ fn build_stack_binary(ctx: &Context) -> Result<PathBuf> {
     Ok(binary)
 }
 
-/// Builds every deployable component and returns each artifact by its package.
+/// Builds every deployable component, as `cargo xtask deploy` does, and returns each artifact by
+/// its package.
 fn build_components(ctx: &Context) -> Result<BTreeMap<String, PathBuf>> {
-    let components = deploy::deployable(ctx)?;
-    let built = deploy::reusable_components_build(ctx, "components", &components)?.run(
-        ctx,
-        &mut deploy::components_build(ctx, &components),
-        &Environment::process(),
-    )?;
-    say_reused(COMPONENTS.name, &built);
-    Ok(components
-        .into_iter()
-        .map(|component| (component.package, component.artifact))
-        .collect())
+    let (artifacts, outcome) = deploy::build_deployable(ctx)?;
+    say_reused(COMPONENTS.name, &outcome);
+    Ok(artifacts)
 }
 
 /// Says when a build was reused, so a run's log shows which builds its caches saved.
