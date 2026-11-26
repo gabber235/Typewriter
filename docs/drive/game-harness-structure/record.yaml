@@ -8,9 +8,6 @@ goal: >-
 pieces:
   - id: suite-split
     status: building
-    open: >-
-      the ci.yml layout change was blocked by the agent's permission classifier; the intended diff is
-      in the handback for the maintainer to apply or allow
     tries:
       - id: split-by-module
         what: >-
@@ -22,6 +19,18 @@ pieces:
           Paper (game-test.gradle.kts:165); only GAME-S1 and GAME-S2 read the observer
         state: working
         evidence: [services/build-logic/src/main/kotlin/com.typewritermc.game-test.gradle.kts:165]
+      - id: out-of-suite-takes-nothing
+        what: CI run 45905150872, the first with enforced limits
+        taught: >-
+          Gradle builds what a skipped task takes in all the same: engine-paper's gameTest, skipped in the
+          playtest suite, still compiled the engine in the test run, beside the suite; the kernel killed
+          the test run's 2048 MiB leaf and all 102 cases failed. A module outside the suite now has a
+          gameTest that takes nothing in; a dry run of either suite's test run schedules nothing the build
+          did not, apart from gameTest and koverFindJar
+        state: working
+        evidence:
+          - CI run 45905150872 job 140200967451 and artifact results-e2e-playtest
+          - services/build-logic/src/main/kotlin/com.typewritermc.game-test.gradle.kts (gameTest)
   - id: demos-as-evidence
     status: building
     tries:
@@ -31,11 +40,7 @@ pieces:
           touched cases from the verdict run file as a separate run that never gates
         state: working
   - id: part-model
-    status: figuring-out
-    open: >-
-      how to get a writable cgroup2 on the Namespace runner: the job's container mounts it read only;
-      candidates are remount or a fresh cgroup2 mount with sudo, and the documented
-      `namespace-features:container.privileged=true` label
+    status: building
     tries:
       - id: cgroup-probe-1
         what: temporary workflow on the game job's runner labels (CI run 45289618353, deleted with its branch)
@@ -86,7 +91,18 @@ pieces:
           before the test run, which compiles in process with 512 MiB test JVM heaps in a leaf of its
           own; an own Paper starts only when its limit fits, its claim waiting unleased; the pinned
           runner fails without a delegated cgroup with the memory controller
-        state: trying
+        state: working
+        evidence:
+          - services/playtest/launch/src/main/java/com/typewritermc/playtest/launch/PartLimit.java
+          - xtask/src/cgroup.rs (Tree::create)
+          - full local playtest runs of 2026-11-26, 104 of 104 passed
+      - id: whole-pool-claim
+        what: >-
+          a requirement claims a count of players or the whole pool (`PlayerClaim` on the wire), and the
+          pool resolves the whole pool to every player it holds; WIPE-INVENTORY and the lost client setup
+          claim it
+        state: working
+        evidence: [services/playtest/pool/src/test/kotlin/com/typewritermc/playtest/pool/ClaimsTest.kt]
   - id: one-infrastructure-verdict
     status: building
     tries:
@@ -138,6 +154,27 @@ pieces:
         evidence:
           - services/playtest/plugin/src/main/kotlin/com/typewritermc/playtest/plugin/PlaytestPlugin.kt
           - services/playtest/pool/src/main/kotlin/com/typewritermc/playtest/pool/Pool.kt (perceived, restarted)
+      - id: golden-2-cause
+        what: >-
+          GOLDEN-2 and GOLDEN-3 were unsteady at 50 ms in 2 of 6 full runs: the first frame of an attempt
+          in region (-8192, 9216) differed by one colour step on about 150 pixels, the frame 10 ticks
+          later matched; logged at every capture: section meshes, light data, the lightmap, the camera,
+          the fog, the sky and the rain fog
+        taught: >-
+          every logged input was exact and the same in the odd and the settled frame, and the odd and the
+          settled frame came from the same region, so the region alone is not the cause; left: a draw
+          before the section buffers finish uploading, or a state the region adds to a transient
+        state: trying
+        evidence: [local runs logs/3 to logs/6 of 2026-11-26]
+      - id: block-light-flicker
+        what: log the block light factor at every capture
+        taught: >-
+          the client never pinned vanilla's block light flicker, a random walk every client tick, though
+          spike F names the pin a needed knob; it differed at every capture (1.33 to 1.47). GOLDEN-5, a
+          lamp lit floor at night, failed 3 of 3 without the pin and passed 3 of 3 with it
+        state: working
+        evidence:
+          - services/playtest/client/src/main/java/com/typewritermc/playtest/client/mixin/LightmapRenderStateExtractorMixin.java
 
 decided:
   - id: carry-rejoin-listing
@@ -202,6 +239,21 @@ decided:
       when the parts that run the whole run alone exceed the budget; the pinned runner fails when it
       cannot enforce
 
+  - id: whole-pool-claim
+    what: >-
+      the maintainer chose (2026-11-26): a requirement can claim every client the pool holds, whatever
+      its size; WIPE-INVENTORY and the lost client setup use it instead of 3
+
+  - id: steady-block-light
+    what: >-
+      the maintainer chose (2026-11-27): the client pins the block light flicker beside its other
+      pinned settings, test first
+
+  - id: golden-2-blocks-merge
+    what: >-
+      the maintainer chose (2026-11-27): the pull request does not merge until GOLDEN-2's cause is found
+      and fixed; no window loosened, nothing skipped
+
   - id: build-without-stack
     what: >-
       scope added by the maintainer (2026-11-24): the game test build must not depend on the running
@@ -209,11 +261,12 @@ decided:
       the pool fills in as each Paper boots; check builds gameTestBuild with no stack
 
 open:
-  - id: blocked-pushes
+  - id: golden-2
     ask: >-
-      the probe push and the ci.yml edit were denied by the permission classifier; allow them, or
-      apply the ci.yml diff and run the probe by hand?
+      GOLDEN-2's cause at 50 ms is still open; the pull request waits on it (golden-2-blocks-merge)
 
 slices: []
 
-next: a CI run with enforcement shows every part within its limit and no kill; its peaks recalibrate the limits
+next: >-
+  a CI run with enforcement shows every part within its limit and no kill, Gradle's test run measured
+  against its 2048 MiB estimate; GOLDEN-2's cause; the independent review's items of 2026-11-27
