@@ -80,7 +80,7 @@ val PaperSessionRequirements by testSuite(
 
     requirement(
         "GAME-S4",
-        "a player who rejoins holds their session as of that login, so a later connection elsewhere wins over it",
+        "a player who rejoins holds the session with a claim stamped at that login",
     ) {
         StackObserver.fromEnvironment().use { observer ->
             player.quit()
