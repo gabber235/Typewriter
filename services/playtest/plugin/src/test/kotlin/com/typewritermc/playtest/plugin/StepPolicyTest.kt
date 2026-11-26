@@ -76,6 +76,47 @@ val StepPolicyTest by testSuite {
         granted shouldBe 1
     }
 
+    test("a window reading state between its ticks lets no tick run on its Paper, idle or for another window, until it stops") {
+        var granted = 0
+        val policy = stepPolicy({ granted++ })
+        policy.claim(listOf(claimed, free))
+        policy.tickEnded(10)
+        policy.acked(claimed, 10, false)
+        policy.acked(free, 10, false)
+        policy.stepUntil(claimed, 11, 1)
+        policy.run()
+        policy.tickEnded(11)
+        policy.acked(claimed, 11, false)
+        policy.acked(free, 11, false)
+        // Tick 11's barrier goes out; the window now reads its state checks before it asks for tick 12.
+        policy.run()
+
+        policy.run()
+        policy.stepUntil(free, 20, 2)
+        policy.run()
+        granted shouldBe 1
+
+        policy.stop(claimed)
+        policy.run()
+        granted shouldBe 2
+    }
+
+    test("each player of a window whose tick already ran gets its barrier at once, though another player of it took its own first") {
+        val barriers = mutableListOf<Pair<UUID, Int>>()
+        val policy = stepPolicy({}, barrier = { player, id -> barriers += player to id })
+        policy.claim(listOf(claimed, free))
+        policy.tickEnded(13)
+        policy.acked(claimed, 13, false)
+        policy.acked(free, 13, false)
+
+        policy.stepUntil(claimed, 11, 3)
+        policy.run()
+        policy.stepUntil(free, 11, 4)
+        policy.run()
+
+        barriers shouldBe listOf(claimed to 3, free to 4)
+    }
+
     test("a claimed player who left keeps its counted work holding the next tick until its attempt is released") {
         var granted = 0
         val work = WorkLedger(ManualWatch())

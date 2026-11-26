@@ -13,11 +13,12 @@ internal fun stepPolicy(
     acks: Acks = Acks { 0L },
     stalled: (Acks.Stalled) -> Unit = {},
     connected: (UUID) -> Boolean = { true },
+    barrier: (UUID, Int) -> Unit = { _, _ -> },
 ): StepPolicy =
     StepPolicy(
         { false },
         { granted() },
-        { _, _ -> },
+        { player, id -> barrier(player, id) },
         { true },
         { it.run() },
         work,

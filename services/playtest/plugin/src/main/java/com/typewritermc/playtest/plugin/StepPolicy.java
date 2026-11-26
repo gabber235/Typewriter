@@ -33,6 +33,10 @@ import java.util.function.Predicate;
  * deadline by the ledger and holds no tick from then on. An attempt is settled once its players' work is quiet, stepping on
  * meanwhile so work handed to Bukkit's async scheduler can start.
  *
+ * <p>Between two ticks of a window, while the requirement reads its state checks, no tick runs on this
+ * Paper either, idle or for another window, so a slow read costs wall time and never a tick of the
+ * window; the window holds its Paper from its first tick until the requirement stops it.
+ *
  * <p>A client that {@link Acks} finds stalled holds back no tick from then on, and counts as lost. Nor
  * does a client whose connection closed: Paper notices its player leave only in the next tick. A lost
  * player's counted work still holds back ticks until its attempt releases it.
@@ -66,6 +70,8 @@ final class StepPolicy {
     private final BooleanSupplier tickPending;
     private final Runnable grantTick;
     private final Set<UUID> claimed = new HashSet<>();
+    /** Players whose window runs, from its first tick until the requirement stops it. */
+    private final Set<UUID> stepping = new HashSet<>();
     private final List<Settling> settling = new ArrayList<>();
     private final Map<UUID, Window> windows = new HashMap<>();
     private final Set<UUID> busy = new HashSet<>();
@@ -153,6 +159,7 @@ final class StepPolicy {
         claimed.removeAll(players);
         work.claimed(claimed);
         players.forEach(windows::remove);
+        players.forEach(stepping::remove);
     }
 
     /**
@@ -161,6 +168,7 @@ final class StepPolicy {
      */
     void lose(UUID player) {
         windows.remove(player);
+        stepping.remove(player);
         busy.remove(player);
         acks.lose(player);
         for (Delivery delivery : deliveries) delivery.waiting.remove(player);
@@ -168,10 +176,12 @@ final class StepPolicy {
 
     void stepUntil(UUID player, int tick, int barrier) {
         windows.put(player, new Window(tick, barrier));
+        stepping.add(player);
     }
 
     void stop(UUID player) {
         windows.remove(player);
+        stepping.remove(player);
     }
 
     /** Work for [players] just ran; [done] runs once its effect reached each of their clients. */
@@ -214,6 +224,7 @@ final class StepPolicy {
         }
         if (work.holds(claimed, lastEnded + 1)) return;
         if (windows.isEmpty() && busy.isEmpty() && deliveries.isEmpty() && settling.isEmpty()) {
+            if (readingBetweenTicks()) return;
             long now = System.nanoTime();
             if (now - lastIdleTick >= IDLE_TICK_NANOS) {
                 lastIdleTick = now;
@@ -229,6 +240,12 @@ final class StepPolicy {
                 open.remove();
             }
         }
+        if (readingBetweenTicks()) return;
         if (!windows.isEmpty() || !busy.isEmpty() || !deliveries.isEmpty() || !settling.isEmpty()) grantTick.run();
+    }
+
+    /** Whether a window between two of its ticks reads its state checks: no tick may run, though its due barriers still go out. */
+    private boolean readingBetweenTicks() {
+        return !windows.keySet().containsAll(stepping);
     }
 }
