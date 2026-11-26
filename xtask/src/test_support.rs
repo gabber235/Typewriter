@@ -709,8 +709,8 @@ pub fn cargo_workspace() -> TempRoot {
 }
 
 /// A stand in for Cargo in a repository root: each run is counted and writes [`Self::artifact`] in
-/// a marked target directory and, as Cargo does beside each artifact, a dependency file naming the
-/// files the build read.
+/// its target directory and, as Cargo does beside each artifact, a dependency file naming the files
+/// the build read.
 pub struct FakeCargo<'a> {
     pub ctx: &'a Context,
 }

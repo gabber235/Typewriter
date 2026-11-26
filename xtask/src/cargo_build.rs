@@ -726,6 +726,9 @@ mod tests {
         root.write("unwatched/build.rs", "fn main() {}\n");
         root.write("unwatched/src/lib.rs", "");
         root.write("unwatched/data.txt", "one");
+        // CI's cache volume mounts folders below the target before Cargo runs, so Cargo finds the
+        // target made and never marks it with a CACHEDIR.TAG.
+        fs::create_dir_all(root.path("target/debug")).unwrap();
         root.ctx
             .tool(".", "cargo", &["generate-lockfile", "--offline", "--quiet"])
             .run()
@@ -795,22 +798,6 @@ mod tests {
             "pub fn read() -> Option<&'static str> { None }\n",
         );
         assert_eq!(run("two", "two"), Outcome::Compiled, "after lib.rs changed");
-    }
-
-    #[test]
-    fn a_target_folder_cargo_did_not_create_itself_is_still_stamped_and_reused() {
-        // On CI the cache volume mounts folders below the target before Cargo runs, so Cargo
-        // finds the target folder made and never writes its CACHEDIR.TAG.
-        let root = cargo_workspace();
-        let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
-        let run = || {
-            let mut command = cargo.command("one", READS);
-            assert!(!root.path("target/CACHEDIR.TAG").exists());
-            build.run(&root.ctx, &mut command, &NONE).unwrap()
-        };
-        assert_eq!(run(), Outcome::Compiled);
-        assert_eq!(run(), Outcome::Reused);
     }
 
     #[test]
