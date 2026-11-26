@@ -543,7 +543,11 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   44019397538). With `gameTestBuild` in place, the suite kept at least 3785 MB free and no Kotlin daemon
   was alive during it (run 44041628191). Compiling inside Gradle frees nothing, as the
   Gradle daemon grows by what the daemons held. It never runs `--stop`, which would stop other
-  worktrees' builds.
+  worktrees' builds. A module outside the suite the run builds has a `gameTest` that takes nothing in
+  (2026-11-27): Gradle builds what a skipped task takes in all the same, so the playtest suite's test
+  run compiled the engine for `engine-paper` beside the suite, and its 2048 MiB leaf was killed for
+  memory (run 45905150872). The test run of either suite now schedules nothing its build did not,
+  apart from `gameTest` and Kover's `koverFindJar`.
 - **The pool stays attached to its starter** (2026-11-17): the test JVM starts the pool without `setsid`.
   It outlives its starter's normal exit anyway, since the system reparents an orphan, and staying in the
   starter's process tree is what lets Gradle's cancel stop it: Gradle destroys every descendant by pid.
