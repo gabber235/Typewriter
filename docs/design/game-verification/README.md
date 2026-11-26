@@ -85,7 +85,7 @@ clients hold none.
 ## How a requirement runs
 
 ```kotlin
-requirement("GROUP-1", "a line sent to the members of a group reaches each member and nobody else", players = 3) {
+requirement("GROUP-1", "a line sent to the members of a group reaches each member and nobody else", players = Players.count(3)) {
     val (member, partner, outsider) = players
     probe.chat(to = listOf(member, partner), "Bank: 1")
     within(10.ticks) {
@@ -334,7 +334,9 @@ Each stack service declares its own limit the same way (`Service::MEMORY_MIB`): 
 (heap fixed at 800 MiB), the backend 354, the collector 229, every other service 64; together 2489 MiB
 for the game suite's stack.
 
-- **3 clients.** A suite's pool runs 3 warm clients (`-Pplaytest.clients`); no requirement leases more.
+- **3 clients.** A suite's pool runs 3 warm clients (`-Pplaytest.clients`). A requirement claims a
+  count (`Players.count(n)`) or the whole pool (`Players.wholePool`), which the pool resolves to every
+  client it runs, so a requirement that needs every player holds at any pool size.
 - **A cgroup per part.** Where CI delegates a cgroup (`cargo xtask cgroup delegate`, which names it in
   `TYPEWRITER_CGROUP`), `cargo xtask e2e` makes a tree per run: `run-<id>/stack/<service>`,
   `run-<id>/gradle-build`, `run-<id>/gradle-test` and `run-<id>/game`. Each stack service starts in its
@@ -511,6 +513,9 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   15 %; the game cgroup holds the budget the machine leaves beside the system, Gradle's test run and the
   stack; each leaf holds its kind's limit. An own Paper starts only when its limit fits in what is left,
   and its attempt waits unleased until then. The pinned runner fails where it cannot enforce.
+- **A claim for the whole pool** (2026-11-26): a requirement that needs every player claims the whole
+  pool instead of naming the pool's size, and the pool resolves it to every client it runs
+  (`PlayerClaim.whole_pool` on the wire), so the requirement holds at 2, 3 or more clients.
 - **Measure before enforcing** (2026-11-25, replaced 2026-11-26): the planned limits did not fit the CI
   runner, so each part ran in a cgroup of its own held only to the machine's total, the run file
   recorded each part's peak, and admission refused nothing, until one CI run's peaks set the limits.
