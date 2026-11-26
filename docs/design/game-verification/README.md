@@ -318,43 +318,69 @@ own Papers run at once.
 ## Memory
 
 Every kind of game part may take a fixed amount of memory (`PartLimit`, in the launch module), and a
-JVM's heap is a share of its own part's limit (`-Xmx`):
+JVM's heap is a share of its own part's limit (`-Xmx`). Each limit is the most a part of its kind took
+on the 16 GB CI runner (runs 45575711222 and 45595894285, page cache included) plus 15 %, at least
+64 MiB; each heap keeps the size it ran those peaks with.
 
-| Part | Limit | Heap |
-|---|---|---|
-| Shared Paper | 4.5 GiB | 56 % |
-| Own Paper | 1.6 GiB | 67 % |
-| Client | 1.9 GiB | 38 % |
-| Display (Linux) | 256 MiB | none |
-| Pool | 512 MiB | 64 % |
+| Part | Peak | Limit | Heap |
+|---|---|---|---|
+| Shared Paper | 3395 MiB | 3904 MiB | 66 % (2576 MiB) |
+| Own Paper | 2081 MiB | 2393 MiB | 46 % (1100 MiB) |
+| Client | 1543 MiB | 1775 MiB | 42 % (745 MiB) |
+| Pool | 706 MiB | 812 MiB | 40 % (324 MiB) |
+| Display (Linux) | 15 MiB | 64 MiB | none |
 
+Each stack service declares its own limit the same way (`Service::MEMORY_MIB`): the Realm host 1330 MiB
+(heap fixed at 800 MiB), the backend 354, the collector 229, every other service 64; together 2489 MiB
+for the game suite's stack.
+
+- **3 clients.** A suite's pool runs 3 warm clients (`-Pplaytest.clients`); no requirement leases more.
 - **A cgroup per part.** Where CI delegates a cgroup (`cargo xtask cgroup delegate`, which names it in
   `TYPEWRITER_CGROUP`), `cargo xtask e2e` makes a tree per run: `run-<id>/stack/<service>`,
-  `run-<id>/gradle` and `run-<id>/game`. Each stack service and Gradle start in their leaf, which
-  their process enters before it execs; Gradle passes `game` to the pool (`playtest.cgroup`). The pool
-  moves itself into `game/pool` and each part it starts into `game/<part>-<pid>`, every leaf with
-  `memory.oom.group`, so a kill takes the whole part.
+  `run-<id>/gradle-build`, `run-<id>/gradle-test` and `run-<id>/game`. Each stack service starts in its
+  leaf, held to its limit. Every Gradle build of the run, the stack's included, runs in `gradle-build`;
+  once the suite is built, xtask kills that leaf whole (`cgroup.kill`), so no Kotlin daemon outlives the
+  build. The Gradle that runs the suite starts in `gradle-test`, compiles anything left in process, and
+  holds its test JVMs to a 512 MiB heap. It passes `game` to the pool (`playtest.cgroup`). The pool moves
+  itself into `game/pool` and each part it starts into `game/<part>-<pid>`, each leaf held to its kind's
+  limit with `memory.oom.group`, so a kill takes the whole part.
+- **The game's budget** is the game cgroup's `memory.max`: the machine, less 768 MiB for the system,
+  less Gradle's test run (`GRADLE_TEST_MIB`, 2048 MiB), less the stack's limits in the game suite. xtask
+  refuses a run where nothing is left. On the 16053 MiB runner:
+
+  | | Playtest suite | Game suite |
+  |---|---|---|
+  | Machine | 16053 MiB | 16053 MiB |
+  | System, Gradle's test run | 2816 MiB | 2816 MiB |
+  | Stack | none | 2489 MiB |
+  | **Game budget** | **13237 MiB** | **10748 MiB** |
+  | Shared Paper, pool, 3 clients with displays | 10233 MiB | 10233 MiB |
+  | Left for own Papers | 3004 MiB: 1 | 515 MiB: none |
+
+- **Admission by memory.** The pool, the shared Paper and each client with its display hold their
+  limits for the whole run. A restart attempt's own Paper starts only when its limit fits in what they
+  leave; until then its claim waits, unleased, so its windows have not started. Own Papers run at once as
+  many as fit, at most one per slot the build prepares (`PartLimit.OWN_PAPER_SLOTS`, 2). An attempt
+  whose restarts need more own Papers side by side than ever fit is refused, naming the numbers.
+- **Refusal.** The pool refuses to start when the parts that run the whole run alone exceed the budget,
+  naming both and how many clients fit (`cargo xtask e2e game --clients <n>`).
+- **The pinned runner enforces.** With `PLAYTEST_PINNED_RUNNER=1`, a game run fails before it builds
+  when no cgroup is delegated or the delegated cgroup lacks the memory controller.
 - **A kill for memory names why.** The kernel counts an out of memory kill (`oom_kill`) in the victim's
   cgroup whichever killer chose it, and counts `oom` where a cgroup reached its own limit. A part whose
   leaf counts a kill is lost to `killed_for_memory`: `own_limit` when its leaf counts `oom`,
   `game_budget` when the game's cgroup does, `machine_out_of_memory` otherwise. That cause replaces how
   its loss looked first, as its connection closing, and the pool reads it for every part it did not
-  see end, also when a lost part stopped the game.
-- **Budget.** The pool's budget (`MemoryBudget`) is the game cgroup's `memory.max`, or half the
-  machine where nothing gives it one. The pool, the shared Paper and each client with its display hold
-  their limits for the whole run; the own Papers of restart attempts take what is left, at most one per
-  slot (`PartLimit.OWN_PAPER_SLOTS`, 2).
+  see end, also when a lost part stopped the game. Stack services and Gradle's leaves are read the same
+  way.
 - **The run file lists each part's limit and its peak** (`Part.limit_bytes`, `Part.peak_bytes`), Gradle
   and each stack service included: the most any process of the part took, a restarted Paper's boots
   together, read once the process ended, also after the part's loss. Its budget
   (`TestRun.memory_budget`) holds the most the planned limits of the parts that ran at once added up
   to (`planned_at_once_bytes`); the evidence shows both as a table per run. A peak counts the page cache
-  the part's files filled, which the kernel takes back before it kills.
-- **Report mode, for now.** Every cgroup's `memory.max` is the machine's total, and admission refuses no
-  part; the kernel still kills where the machine runs out. The
-  planned limits do not fit a 16 GB runner with four clients; one CI run's peaks set the limits that
-  are then enforced, and only then does the pinned runner fail where it cannot enforce them.
-- The starting numbers come from run 43996334142's peaks; each run's peaks recalibrate them.
+  the part's files filled, which the kernel takes back before it kills. Each run's peaks recalibrate
+  the limits.
+- Where nothing gives the pool a budget, as on a developer's machine, it takes half the machine.
 
 ## CI
 
@@ -422,9 +448,9 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   (2026-11-06), applied 2026-11-07 as a live `StepClock` per step on each engine. See the
   engine clock decision below.
 - **Group behaviour must be testable** (group chat, shared audiences, world groups), and requirements
-  share a **pool of 4 warm clients**: a requirement claims as many as it needs and the rest keep
-  running other requirements (2026-11-06). Books scoped per player are expected to remove most
-  conflicts. Fresh identity per requirement versus a wipe of the player's state is decided from
+  share a **pool of warm clients** (4, then 3 from 2026-11-26): a requirement claims as many as it
+  needs and the rest keep running other requirements (2026-11-06). Books scoped per player are
+  expected to remove most conflicts. Fresh identity per requirement versus a wipe of the player's state is decided from
   spike K's numbers (see the K row).
 - Each requirement gets a **full wipe** of its player (2026-11-07, replacing an earlier choice of a
   fresh identity): the realm gets a general "purge all data of this subject" operation, useful beyond
@@ -479,10 +505,15 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   no process.
 - **Absolute limits per part kind** (2026-11-25): `PartLimit` replaces `HeapShare`, below, and the pool
   admits own Papers while their limits fit its memory budget beside its other parts.
-- **Measure before enforcing** (2026-11-25): the planned limits do not fit the CI runner, so each part
-  runs in a cgroup of its own held only to the machine's total, the run file records each part's peak
-  and whether its limit fits, and admission refuses nothing. Enforcement, and failing a pinned runner
-  that cannot enforce, wait for one CI run's peaks.
+- **3 clients and admission by memory** (2026-11-26): the second CI run showed the shared Paper killed
+  as the machine ran out (planned at once 18.0 GiB on a 15.7 GiB runner). The suites run 3 clients on
+  the same 16 GB runner, with no further measuring run. Each limit is its kind's measured peak plus
+  15 %; the game cgroup holds the budget the machine leaves beside the system, Gradle's test run and the
+  stack; each leaf holds its kind's limit. An own Paper starts only when its limit fits in what is left,
+  and its attempt waits unleased until then. The pinned runner fails where it cannot enforce.
+- **Measure before enforcing** (2026-11-25, replaced 2026-11-26): the planned limits did not fit the CI
+  runner, so each part ran in a cgroup of its own held only to the machine's total, the run file
+  recorded each part's peak, and admission refused nothing, until one CI run's peaks set the limits.
 - **Every game JVM takes a share of the machine** (2026-11-17, replaced 2026-11-25): `HeapShare` in the wire module held
   each part kind's `-XX:MaxRAMPercentage` (shared Paper 16, own Paper 7, client 4.5, pool 2), so the caps
   scale with the machine; the pool starts each part with its share, and the test JVM starts the pool

@@ -42,7 +42,7 @@ description: Run Typewriter locally: builds, the agent stack, Paper, the panel, 
   `pool.lock`, the next run fails with `GameUnavailable` naming `pool.log`; read that log.
 - `--only GROUP-1,WINDOW-1` runs those requirements; `--repeat <n>` runs exactly n attempts of each,
   to hunt a flaky one.
-- A smaller pool: `cargo xtask e2e game --clients 1` (default 4 clients). A `game` Paper loads
+- A smaller pool: `cargo xtask e2e game --clients 1` (default 3 clients). A `game` Paper loads
   Typewriter, which needs the stack's environment, so a direct `./gradlew gameTest` of the product
   fails as its Paper boots, naming the missing variable; the build itself needs no stack.
 - `--demos`, after a run, reruns its failed, flaky, quarantined, unsteady and touched requirements

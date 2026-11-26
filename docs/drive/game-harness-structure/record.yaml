@@ -70,6 +70,23 @@ pieces:
         evidence:
           - CI run 45575711222 artifact results-e2e-playtest (test_run.json, pool.log, paper.log)
           - services/playtest/pool/src/main/kotlin/com/typewritermc/playtest/pool/Pool.kt (measure, measured)
+      - id: second-measured-run
+        what: CI run 45595894285, with the kill reporting
+        taught: >-
+          the shared Paper was `killed_for_memory: machine_out_of_memory`; peaks: shared Paper 3395 MiB,
+          clients up to 1543 MiB, pool 706 MiB, own Papers 0.76 to 2.03 GiB, Gradle 6.43 GiB; the
+          planned limits of the parts that ran at once added up to 18.0 GiB on a 15.7 GiB machine
+        state: working
+        evidence: [CI run 45595894285 artifacts results-e2e-playtest and results-e2e-game (test_run.json)]
+      - id: enforced-budget
+        what: >-
+          3 clients; limits from the peaks plus 15 % (at least 64 MiB) per part kind and per stack
+          service; the game cgroup holds the machine less 768 MiB, Gradle's test run (2048 MiB) and
+          the stack's limits; each leaf holds its kind's limit; Gradle builds in a leaf xtask kills whole
+          before the test run, which compiles in process with 512 MiB test JVM heaps in a leaf of its
+          own; an own Paper starts only when its limit fits, its claim waiting unleased; the pinned
+          runner fails without a delegated cgroup with the memory controller
+        state: trying
   - id: one-infrastructure-verdict
     status: building
     tries:
@@ -174,6 +191,17 @@ decided:
       runner's total; the evidence shows peak against planned limit per part. Enforcement and failing a
       pinned runner that cannot enforce wait for the maintainer's word after one CI run
 
+  - id: three-clients-admission-by-memory
+    what: >-
+      3 clients and admission by memory, decided 2026-11-26 by the maintainer after CI run 45595894285,
+      resolving enforce-limits with no further measuring run: the suites run 3 clients on the 16 GB
+      runner; limits are measured peaks plus 15 % per part kind; the game budget (machine less the
+      system, Gradle's test run and the stack) goes into the game cgroup's memory.max and each leaf
+      holds its kind's limit; an own Paper starts only when its limit fits in what is left, and its
+      attempt waits, not running, until its Paper is up; the pool refuses to start, naming the numbers,
+      when the parts that run the whole run alone exceed the budget; the pinned runner fails when it
+      cannot enforce
+
   - id: build-without-stack
     what: >-
       scope added by the maintainer (2026-11-24): the game test build must not depend on the running
@@ -181,11 +209,6 @@ decided:
       the pool fills in as each Paper boots; check builds gameTestBuild with no stack
 
 open:
-  - id: enforce-limits
-    ask: >-
-      after one CI run with the delegation step gives each part's peak: set the enforced limits from
-      those peaks, turn on enforcement (memory.max per leaf, admission that refuses) and fail the
-      pinned runner where limits are not enforced; waits on the maintainer's word
   - id: blocked-pushes
     ask: >-
       the probe push and the ci.yml edit were denied by the permission classifier; allow them, or
@@ -193,4 +216,4 @@ open:
 
 slices: []
 
-next: a CI run with the kill reporting names what killed the shared Paper; then enforce-limits
+next: a CI run with enforcement shows every part within its limit and no kill; its peaks recalibrate the limits
