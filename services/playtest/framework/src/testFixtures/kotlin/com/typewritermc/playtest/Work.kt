@@ -9,6 +9,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.wire.PlayerClaim
 
 /**
  * [player]'s work [name] runs off Paper's main thread for [millis] of wall clock, counted as any plugin
@@ -35,7 +36,7 @@ fun TestSuiteScope.alongside(
     demonstrates: Demonstrates = Demonstrates.HAPPY_PATH,
     busy: suspend RequirementScope.(otherWaits: Deferred<Unit>) -> Unit,
     other: suspend RequirementScope.(waiting: CompletableDeferred<Unit>) -> Unit,
-    afterwardPlayers: Int = 1,
+    afterwardPlayers: PlayerClaim = Players.count(1),
     afterward: (suspend RequirementScope.() -> Unit)? = null,
 ) = sideBySide(
     id,

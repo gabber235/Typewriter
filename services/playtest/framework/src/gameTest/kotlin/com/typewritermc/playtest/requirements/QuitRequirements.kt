@@ -2,6 +2,7 @@ package com.typewritermc.playtest.requirements
 
 import com.typewritermc.playtest.ClientLost
 import com.typewritermc.playtest.GameCompartment
+import com.typewritermc.playtest.Players
 import com.typewritermc.playtest.backToBack
 import com.typewritermc.playtest.chat
 import com.typewritermc.playtest.crashClient
@@ -17,7 +18,7 @@ import skirout.harness.v1.test_run.Demonstrates
 import skirout.harness.v1.wire.ClientLossKind
 
 val QuitRequirements by testSuite(compartment = { GameCompartment }) {
-    requirement("QUIT-1", "a player who quits leaves the other player's player list", players = 2) {
+    requirement("QUIT-1", "a player who quits leaves the other player's player list", players = Players.count(2)) {
         val (leaver, stayer) = players
         probe.chat(stayer, "Ready")
         within(10.ticks) { stayer sees listed(leaver) }
@@ -30,7 +31,7 @@ val QuitRequirements by testSuite(compartment = { GameCompartment }) {
     requirement(
         "QUIT-2",
         "a player who quits and rejoins is listed again and holds the item Paper kept for it",
-        players = 2,
+        players = Players.count(2),
     ) {
         val (leaver, stayer) = players
         probe.give(leaver, slot = 0, item = "diamond")
@@ -49,7 +50,7 @@ val QuitRequirements by testSuite(compartment = { GameCompartment }) {
     requirement(
         "QUIT-3",
         "while a player is away, a window on the player still on Paper decides as usual",
-        players = 2,
+        players = Players.count(2),
         demonstrates = Demonstrates.EDGE_CASE,
     ) {
         val (leaver, stayer) = players
@@ -77,7 +78,7 @@ val QuitRequirements by testSuite(compartment = { GameCompartment }) {
     backToBack(
         "QUIT-5",
         "a player whose attempt ends while it is away joins again and serves the next attempt",
-        players = 2,
+        players = Players.count(2),
         demonstrates = Demonstrates.EDGE_CASE,
         first = {
             val (leaver, stayer) = players

@@ -3,6 +3,7 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.GameCompartment
+import com.typewritermc.playtest.Players
 import com.typewritermc.playtest.backToBack
 import com.typewritermc.playtest.block
 import com.typewritermc.playtest.camera
@@ -35,7 +36,7 @@ val WipeRequirements by testSuite(compartment = { GameCompartment }) {
     backToBack(
         "WIPE-INVENTORY",
         "an attempt finds none of the items the attempt before it gave its players",
-        players = 3,
+        players = Players.wholePool,
         first = {
             players.forEach { probe.give(it, 0, "stick") }
             within(10.ticks) { players.forEach { it sees held("stick") } }

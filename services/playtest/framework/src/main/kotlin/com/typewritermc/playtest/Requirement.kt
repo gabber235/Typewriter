@@ -8,6 +8,7 @@ import de.infix.testBalloon.framework.core.invocation
 import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.wire.PlayerClaim
 
 /**
  * The compartment every game requirement registers in. Its tests start at once and each waits in the
@@ -35,7 +36,7 @@ private var currentSession: Result<PoolSession>? = null
 
 /**
  * Registers one requirement as one testBalloon test named "[id] [sentence]". Its body runs in this
- * test JVM once the pool has [players] free, each wiped and standing in a region of the world that is
+ * test JVM once the pool has the [players] it claims free, each wiped and standing in a region of the world that is
  * the attempt's own. A failed attempt goes to the end of the pool's line and runs again on warm
  * clients, up to 4 attempts in total; a pass after a failure is flaky and fails the test like a
  * failure. [demonstrates] says what the case shows, in the run file. With [restartsPaper] the attempt
@@ -46,7 +47,7 @@ private var currentSession: Result<PoolSession>? = null
 fun TestSuiteScope.requirement(
     @TestElementName id: String,
     sentence: String,
-    players: Int = 1,
+    players: PlayerClaim = Players.count(1),
     demonstrates: Demonstrates = Demonstrates.HAPPY_PATH,
     restartsPaper: Boolean = false,
     body: suspend RequirementScope.() -> Unit,
@@ -61,12 +62,16 @@ fun TestSuiteScope.requirement(
 internal fun TestSuiteScope.attempts(
     @TestElementName id: String,
     sentence: String,
-    players: Int,
+    players: PlayerClaim,
     demonstrates: Demonstrates,
     bodies: List<suspend RequirementScope.() -> Unit>,
     restartsPaper: Boolean = false,
 ) {
-    require(players >= 1) { "$id claims $players players; a requirement claims at least 1" }
+    (players as? PlayerClaim.CountWrapper)?.let {
+        require(
+            it.value >= 1,
+        ) { "$id claims ${it.value} players; a requirement claims at least 1" }
+    }
     register(id, sentence, RequirementCode.of(bodies.first())) { session, condition ->
         session.attempt(
             PoolSession.Planned(
@@ -97,7 +102,7 @@ internal fun TestSuiteScope.sideBySide(
     sentence: String,
     demonstrates: Demonstrates,
     bodies: () -> List<suspend RequirementScope.() -> Unit>,
-    afterwardPlayers: Int = 1,
+    afterwardPlayers: PlayerClaim = Players.count(1),
     afterward: (suspend RequirementScope.() -> Unit)? = null,
 ) {
     register(id, sentence, RequirementCode.of(bodies)) { session, condition ->
@@ -106,7 +111,7 @@ internal fun TestSuiteScope.sideBySide(
 
         fun planned(
             number: Int,
-            players: Int,
+            players: PlayerClaim,
             body: suspend RequirementScope.() -> Unit,
         ) = PoolSession.Planned(
             "$id $sentence (attempt $number of $count)",
@@ -118,7 +123,7 @@ internal fun TestSuiteScope.sideBySide(
             paceMillis = condition.paceMillis,
             paced = condition.paced,
         )
-        val ended = session.sideBySide(made.mapIndexed { index, body -> planned(index + 1, 1, body) })
+        val ended = session.sideBySide(made.mapIndexed { index, body -> planned(index + 1, Players.count(1), body) })
         val failures = ended.mapNotNull { it.failure }
         failures.firstOrNull()?.let { first -> PoolSession.AttemptEnd(first.also { failures.drop(1).forEach(it::addSuppressed) }) }
             ?: afterward?.let { session.attempt(planned(count, afterwardPlayers, it)) }

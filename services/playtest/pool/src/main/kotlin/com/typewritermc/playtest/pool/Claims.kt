@@ -1,5 +1,7 @@
 package com.typewritermc.playtest.pool
 
+import skirout.harness.v1.wire.PlayerClaim
+
 /** Why a player sits out of every claim. */
 internal enum class Out {
     /** Its client is lost and the new one is not ready yet. */
@@ -13,12 +15,12 @@ internal enum class Out {
 }
 
 /**
- * Submission [submission] waits for [players] players, and for a Paper of its own when it [restarts]
- * Paper; its Paper grants ticks no sooner than [pace] milliseconds apart.
+ * Submission [submission] waits for the [players] it claims, a count or the whole pool, and for a Paper of
+ * its own when it [restarts] Paper; its Paper grants ticks no sooner than [pace] milliseconds apart.
  */
 internal data class Claim(
     val submission: Long,
-    val players: Int,
+    val players: PlayerClaim,
     val restarts: Boolean = false,
     val pace: Int = 0,
 )
@@ -49,11 +51,12 @@ internal class Claims<S, P>(
     private val players: List<P>,
     private val ownPaperRoom: OwnPaperRoom = OwnPaperRoom.EVERY_SLOT,
 ) {
-    /** Submissions that wait together, each for its count of players. */
+    /** Submissions that wait together, each for its [counts] of players. */
     private class Waiting(
         val together: List<Claim>,
+        val counts: List<Int>,
     ) {
-        val count = together.sumOf { it.players }
+        val count = counts.sum()
 
         /** The pace its attempts on the shared Paper run at; null when every one of them restarts Paper. */
         val sharedPace = together.firstOrNull { !it.restarts }?.pace
@@ -86,15 +89,24 @@ internal class Claims<S, P>(
         vararg together: Claim,
     ) {
         require(together.isNotEmpty()) { "a submission names at least 1 attempt" }
-        for (claim in together) require(claim.players >= 1) { "a requirement claims at least 1 player, not ${claim.players}" }
+        val counts = together.map { countOf(it.players) }
+        for (count in counts) require(count >= 1) { "a requirement claims at least 1 player, not $count" }
         val restarts = together.count { it.restarts }
         require(ownPaperRoom.fits(restarts)) {
             "attempts side by side need $restarts Papers of their own, but the game's memory holds at most ${ownPaperRoom.most} at once"
         }
-        val count = together.sumOf { it.players }
+        val count = counts.sum()
         require(count <= players.size) { "a requirement claims $count players, but the pool holds ${players.size}" }
-        turns.getOrPut(session) { Turn(clock++) }.waiting.addLast(Waiting(together.toList()))
+        turns.getOrPut(session) { Turn(clock++) }.waiting.addLast(Waiting(together.toList(), counts))
     }
+
+    /** How many players [claimed] takes of this pool. */
+    private fun countOf(claimed: PlayerClaim): Int =
+        when (claimed) {
+            is PlayerClaim.CountWrapper -> claimed.value
+            PlayerClaim.WHOLE_POOL -> players.size
+            else -> throw IllegalArgumentException("a requirement claims players in a way this pool does not know: ${claimed.kind}")
+        }
 
     /** The attempt holding [released] ended; they are free for the next claim unless something holds them out. */
     fun release(released: List<P>) {
@@ -148,9 +160,9 @@ internal class Claims<S, P>(
             if (head.count > free.size || !ownPaperRoom.fits(ownPapersAlive + restarts)) break
             head.sharedPace?.let { sharedPace = it }
             var next = 0
-            for (claim in head.together) {
-                val taken = free.subList(next, next + claim.players)
-                next += claim.players
+            for ((claim, count) in head.together.zip(head.counts)) {
+                val taken = free.subList(next, next + count)
+                next += count
                 claimed += taken
                 if (!claim.restarts) onShared += taken
                 granted += Grant(session, claim.submission, taken.toList())

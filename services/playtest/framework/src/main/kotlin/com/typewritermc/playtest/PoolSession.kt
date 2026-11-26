@@ -22,6 +22,7 @@ import skirout.harness.v1.wire.InputStep
 import skirout.harness.v1.wire.Lease
 import skirout.harness.v1.wire.Message
 import skirout.harness.v1.wire.PaperAsk
+import skirout.harness.v1.wire.PlayerClaim
 import skirout.harness.v1.wire.PlayerEvent
 import skirout.harness.v1.wire.Probe
 import skirout.harness.v1.wire.ProbeAction
@@ -139,7 +140,7 @@ internal class PoolSession private constructor(
     class Planned(
         val testId: String,
         val requirement: String,
-        val players: Int,
+        val players: PlayerClaim,
         val demonstrates: Demonstrates,
         val bodies: List<suspend RequirementScope.() -> Unit>,
         val restartsPaper: Boolean = false,

@@ -1,6 +1,7 @@
 package com.typewritermc.playtest.pool
 
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.wire.PlayerClaim
 import skirout.harness.v1.wire.Submit
 
 /**
@@ -20,9 +21,12 @@ fun submitted(
         submission = submission,
         testId = testId,
         requirement = testId.substringBefore(' '),
-        players = 1,
+        players = count(1),
         demonstrates = demonstrates,
         demo = demo,
         paceMillis = paceMillis,
         paced = paced,
     )
+
+/** A claim for [players] players. */
+fun count(players: Int): PlayerClaim = PlayerClaim.CountWrapper(players)
