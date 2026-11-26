@@ -73,7 +73,10 @@ decided:
   - id: natskt
     what: Fix the fork first; the maintainer reviews, pushes and tags; then bump nats in this PR.
   - id: kit
-    what: Grow the kit with MemoryKeyValueBuckets, ScriptedBuckets, KeyValueBucketContract on memory and real NATS, VirtualSessions.
+    what: >
+      Grow the kit with MemoryKeyValueBuckets, ScriptedBuckets and KeyValueBucketContract on memory and real NATS. One
+      kit per stack (leases, sessions, panel) takes a KeyValueStore: memory on virtual time or the real broker, so the
+      virtual cases and the broker stories share every step (decided 2026-11-26).
   - id: vacant-sessions
     what: >
       A quit leaves the session vacant: alive for its engine kind's vacancy so a server move or a rejoin takes it over,
@@ -116,8 +119,8 @@ slices:
     tests: [SessionKeeperTest, SessionsOnNatsTest, EngineWiringTest, EngineDeploymentTest]
     status: green
   - id: engine-kind-sets
-    tests: [PresenceSessionsTest, PresenceDeadlineTest, PaperSessionRequirements]
+    tests: [PresenceSessionsTest, PresenceOnNatsTest, PaperSessionRequirements]
     status: green
 
 next: >
-  Answer review round 3, then the next review round on PR 585.
+  Answer review round 4, then the next review round on PR 585.

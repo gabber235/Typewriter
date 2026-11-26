@@ -29,7 +29,10 @@ data class SessionTimings(
         /** A Minecraft player: 20 second refresh, 60 second time to live, 10 second vacancy. */
         val MINECRAFT: SessionTimings = SessionTimings(LeaseTimings(refresh = 20.seconds, ttl = 60.seconds, vacancy = 10.seconds))
 
-        /** A panel tab, refreshed by its heartbeat: 45 second time to live, 45 second vacancy after it leaves, the presence expiry. */
+        /**
+         * A panel tab: 15 second refresh on the lease's own timer, 45 second time to live, 45 second vacancy after it
+         * leaves, the presence expiry. A heartbeat only moves the tab's deadline in the panel engine's set.
+         */
         val PANEL: SessionTimings = SessionTimings(LeaseTimings(refresh = 15.seconds, ttl = 45.seconds, vacancy = 45.seconds))
     }
 }
