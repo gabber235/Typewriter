@@ -49,10 +49,16 @@ pieces:
     open: none
     tries:
       - id: strengthened-game-s2
-        what: GAME-S2 checks the session key's revision after the quit and the rejoin; GAME-S1 folds into it; ASYNC-2 and FACT-1 and FACT-2 prove the framework holds
-        taught: GAME-S1 and GAME-S2 as written could not fail, since their state held before the rejoin
+        what: GAME-S2 on the session key's revision after the quit and the rejoin as the proof that engine work holds ticks
+        taught: GAME-S2 passes with the tick hold removed (work.holds in StepPolicy), so it cannot show the hold
+        state: dropped
+        why: A proof must fail without the thing it proves
+        evidence: [cargo xtask e2e game --only ASYNC-2,FACT-1,FACT-2,GAME-S2 with the hold removed]
+      - id: work-requirements-red
+        what: ASYNC-2, FACT-1 and FACT-2 prove the hold; GAME-S2 stays a sessions requirement (a quit and a rejoin write the session key)
+        taught: With the hold removed all three fail 4 of 4 attempts; with it restored the whole game suite passes
         state: picked
-        evidence: [4f3007c562, b6906ec295, c27704b937, cargo xtask e2e game at f864708294f (108 passed on the first attempt)]
+        evidence: [c27704b937, b6906ec295, cargo xtask e2e game with the hold removed (3 of 4 failed)]
 
 decided:
   - id: q-meter-source
@@ -68,8 +74,8 @@ decided:
     what: "This pull request builds the general expected fact hold; the event core pull request pushes the applied publication over the pool wire"
     why: Backend topology stays untouched; node 9b replaces the push later
   - id: q-proof
-    what: "A. Strengthened GAME-S2 on the key's revision plus a framework requirement for away work"
-    why: The only falsifiable proof without waiting out the grace
+    what: "The three work requirements seen red (decided 2026-11-26): ASYNC-2, FACT-1 and FACT-2 each fail with the tick hold removed; GAME-S2 stays a sessions requirement and proves no hold"
+    why: GAME-S2, the earlier choice, passed with the hold removed
   - id: detekt-concurrency
     what: "Approved: a detekt config beside observability.yml for engine main sources"
     why: Makes every escape from the count visible
@@ -111,7 +117,7 @@ slices:
     what: expectFact and PlayerWork.factHappened
     evidence: [b6906ec295]
   - id: game-s2
-    what: GAME-S2 on the key's revision
+    what: GAME-S2 checks that a quit and a rejoin write the session key, on its revision
     evidence: [4f3007c562]
   - id: end-order
     what: Observers hear an item's end before the count drops, also when one throws
