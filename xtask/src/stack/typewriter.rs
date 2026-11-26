@@ -656,11 +656,13 @@ fn stack_binary(ctx: &StackContext, built: &Built, subcommand: &str) -> Result<C
 /// Builds the `typewriter-stack` binary in the component test workspace's target, whose
 /// dependencies its suite shares, and returns it.
 fn build_stack_binary(ctx: &Context) -> Result<PathBuf> {
-    let binary = target_directory(ctx, STACK_WORKSPACE)?.join("debug/typewriter-stack");
+    let target = target_directory(ctx, STACK_WORKSPACE)?;
+    let binary = target.join("debug/typewriter-stack");
     let built = CargoBuild {
         name: "typewriter-stack",
         workspace: workspace_files(ctx, STACK_WORKSPACE)?,
         artifacts: vec![binary.clone()],
+        target,
     }
     .run(
         ctx,

@@ -11,7 +11,7 @@ use anyhow::{Context as _, Result, bail, ensure};
 use clap::ValueEnum;
 use serde_json::Value;
 
-use crate::cargo_build::{CargoBuild, Outcome, workspace_files};
+use crate::cargo_build::{CargoBuild, Outcome, target_directory, workspace_files};
 use crate::cluster::CiCluster;
 use crate::digest::Environment;
 use crate::lock::HeavyLock;
@@ -247,6 +247,7 @@ pub(crate) fn reusable_components_build<'a>(
             .iter()
             .map(|component| component.artifact.clone())
             .collect(),
+        target: target_directory(ctx, "backend/Cargo.toml")?,
     })
 }
 

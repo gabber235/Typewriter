@@ -47,6 +47,11 @@ pub struct CargoBuild<'a> {
     pub workspace: Vec<String>,
     /// The absolute paths of what the build produces.
     pub artifacts: Vec<PathBuf>,
+    /// The Cargo target directory the build writes to, as `cargo metadata` names it
+    /// ([`target_directory`]). It is not found from the artifacts: Cargo marks a target directory
+    /// with a CACHEDIR.TAG only when it creates it, and CI's cache volume makes the folders it
+    /// mounts below it first.
+    pub target: PathBuf,
 }
 
 fn metadata(ctx: &Context, manifest: &str, deps: bool) -> Result<Value> {
@@ -244,22 +249,13 @@ impl CargoBuild<'_> {
                 }
             }
         }
-        let target = self.target_dir()?;
-        reads.extend(env_reads(target)?.iter().map(|name| format!("${name}")));
-        reads.extend(build_script_reads(ctx, target)?);
+        reads.extend(
+            env_reads(&self.target)?
+                .iter()
+                .map(|name| format!("${name}")),
+        );
+        reads.extend(build_script_reads(ctx, &self.target)?);
         Ok(Some(reads))
-    }
-
-    /// The Cargo target directory the artifacts lie in, which Cargo marks with a CACHEDIR.TAG.
-    fn target_dir(&self) -> Result<&Path> {
-        let first = self
-            .artifacts
-            .first()
-            .with_context(|| format!("the build {} names no artifact", self.name))?;
-        first
-            .ancestors()
-            .find(|dir| dir.join("CACHEDIR.TAG").is_file())
-            .with_context(|| format!("{} lies in no Cargo target directory", first.display()))
     }
 }
 
@@ -612,6 +608,22 @@ mod tests {
             build.run(&root.ctx, &mut again, &NONE).unwrap(),
             Outcome::Compiled
         );
+    }
+
+    #[test]
+    fn a_target_folder_cargo_did_not_create_itself_is_still_stamped_and_reused() {
+        // On CI the cache volume mounts folders below the target before Cargo runs, so Cargo
+        // finds the target folder made and never writes its CACHEDIR.TAG.
+        let root = cargo_workspace();
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let build = cargo.build(WORKSPACE);
+        let run = || {
+            let mut command = cargo.command("one", READS);
+            assert!(!root.path("target/CACHEDIR.TAG").exists());
+            build.run(&root.ctx, &mut command, &NONE).unwrap()
+        };
+        assert_eq!(run(), Outcome::Compiled);
+        assert_eq!(run(), Outcome::Reused);
     }
 
     #[test]

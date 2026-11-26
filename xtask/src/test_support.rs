@@ -728,9 +728,7 @@ impl FakeCargo<'_> {
     /// A run in `backend` that writes `contents` into the artifact and names `reads`, root
     /// relative, as read.
     pub fn command(&self, contents: &str, reads: &[&str]) -> Command {
-        // Cargo marks its target directory with a CACHEDIR.TAG.
         fs::create_dir_all(self.path("target")).unwrap();
-        fs::write(self.path("target/CACHEDIR.TAG"), "").unwrap();
         let reads: Vec<String> = reads
             .iter()
             .map(|read| self.path(read).display().to_string())
@@ -756,6 +754,7 @@ impl FakeCargo<'_> {
             name: "stack",
             workspace: workspace.iter().map(|file| (*file).to_owned()).collect(),
             artifacts: vec![self.artifact()],
+            target: self.path("target"),
         }
     }
 
