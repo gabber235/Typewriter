@@ -755,6 +755,7 @@ impl FakeCargo<'_> {
             workspace: workspace.iter().map(|file| (*file).to_owned()).collect(),
             artifacts: vec![self.artifact()],
             target: self.path("target"),
+            workspace_root: self.path("backend"),
         }
     }
 

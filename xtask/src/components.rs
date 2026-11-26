@@ -14,9 +14,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result, bail, ensure};
 use serde::Deserialize;
-use serde_json::{Value, json};
+use serde_json::json;
 
-use crate::cargo_build::target_directory;
+use crate::cargo_build::{Packages, metadata};
 use crate::digest::Environment;
 use crate::digest::sha256;
 use crate::results::{
@@ -272,11 +272,14 @@ fn build_components(
         .flat_map(|fixture| fixture.components())
         .map(|component| (component.package.as_str(), component.target.as_str()))
         .collect();
-    let ids: BTreeMap<String, String> = package_names(ctx)?
+    // Cargo's package ids are opaque, so a package's id is looked up by its name.
+    let backend = metadata(ctx, "backend/Cargo.toml", Packages::Members)?;
+    let ids: BTreeMap<String, String> = backend
+        .packages
         .into_iter()
-        .map(|(id, name)| (name, id))
+        .map(|package| (package.name, package.id))
         .collect();
-    let backend_target = target_directory(ctx, "backend/Cargo.toml")?;
+    let backend_target = backend.target_directory;
     let wasm = |target: &str| deploy::release_artifact(&backend_target, target);
     // Every wanted target's artifact, so the build fails on one Cargo no longer writes.
     let components: Vec<deploy::Component> = wanted
@@ -307,37 +310,6 @@ fn build_components(
         );
     }
     Ok(artifacts)
-}
-
-/// Backend package names by package id. Cargo's package ids are opaque, so a build message's
-/// package is looked up here rather than parsed out of its id.
-fn package_names(ctx: &Context) -> Result<BTreeMap<String, String>> {
-    let metadata: Value = serde_json::from_str(
-        &cargo(
-            ctx,
-            &[
-                "metadata",
-                "--format-version",
-                "1",
-                "--no-deps",
-                "--locked",
-                "--manifest-path",
-                "backend/Cargo.toml",
-            ],
-        )
-        .output_text()?,
-    )?;
-    Ok(metadata["packages"]
-        .as_array()
-        .context("cargo metadata printed no packages")?
-        .iter()
-        .filter_map(|package| {
-            Some((
-                package["id"].as_str()?.to_owned(),
-                package["name"].as_str()?.to_owned(),
-            ))
-        })
-        .collect())
 }
 
 /// Writes the manifest that ties each fixture to the exact artifacts this run built. The suite

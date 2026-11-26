@@ -91,7 +91,9 @@ fn run_then<T, U>(
     let built = if builds.is_empty() {
         Built::default()
     } else {
-        // Every build compiles against the protocol's generated sources.
+        // Every build compiles against the protocol's generated sources. They are brought up to
+        // date before the builds start, which run at once, so none regenerates them while another
+        // compiles against them; the components build checks them again and finds them current.
         generate::protocol(ctx)?;
         let _lock = HeavyLock::acquire("stack: building")?;
         stack_ctx.build(&builds)?

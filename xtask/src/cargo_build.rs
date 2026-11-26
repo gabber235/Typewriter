@@ -26,6 +26,12 @@
 //! Known issue, trusted on purpose as Cargo trusts it: a procedural macro that reads a file or a
 //! variable no dependency file names (outside `include_str!`, `env!` and `proc_macro`'s tracked
 //! paths) is not listed, so an edit only such a macro reads reuses the build, as Cargo would.
+//!
+//! Known issue: where the reads come from is Cargo's own layout, not a stable interface: the units'
+//! dependency files and each build script's output below the target's `build` folders, and
+//! sources named relative to the workspace's root. A test builds a small workspace with the real
+//! toolchain and fails when a read goes missing, so a toolchain that moves them fails loudly
+//! instead of reusing a build whose inputs changed.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -33,7 +39,7 @@ use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{Context as _, Result, bail};
-use serde_json::Value;
+use serde::Deserialize;
 
 use crate::digest::{Digest, Environment, Stamp, expand};
 use crate::{CommandExt as _, Context};
@@ -43,63 +49,129 @@ pub struct CargoBuild<'a> {
     /// Names the stamp, which lies beside the first artifact as `<name>.xtask-stamp`.
     pub name: &'a str,
     /// Root relative files every build depends on although no dependency file names them: the
-    /// workspace's manifests and lock file ([`workspace_files`]).
+    /// manifest of every package in the repository it builds (path dependencies outside the
+    /// workspace included), and the workspace's own manifest and lock file.
     pub workspace: Vec<String>,
     /// The absolute paths of what the build produces.
     pub artifacts: Vec<PathBuf>,
-    /// The Cargo target directory the build writes to, as `cargo metadata` names it
-    /// ([`target_directory`]). It is not found from the artifacts: Cargo marks a target directory
-    /// with a CACHEDIR.TAG only when it creates it, and CI's cache volume makes the folders it
-    /// mounts below it first.
+    /// The Cargo target directory the build writes to, as `cargo metadata` names it. It is not
+    /// found from the artifacts: Cargo marks a target directory with a CACHEDIR.TAG only when it
+    /// creates it, and CI's cache volume makes the folders it mounts below it first.
     pub target: PathBuf,
+    /// The workspace's root, where Cargo runs rustc for its members, so their dependency files
+    /// name sources relative to it.
+    pub workspace_root: PathBuf,
 }
 
-fn metadata(ctx: &Context, manifest: &str, deps: bool) -> Result<Value> {
+impl<'a> CargoBuild<'a> {
+    /// The build `name` in the Cargo workspace of `manifest`, root relative, of the artifacts
+    /// `artifacts` names below the workspace's target directory.
+    pub fn in_workspace(
+        ctx: &Context,
+        name: &'a str,
+        manifest: &str,
+        artifacts: impl FnOnce(&Path) -> Vec<PathBuf>,
+    ) -> Result<Self> {
+        let metadata = metadata(ctx, manifest, Packages::All)?;
+        Ok(Self {
+            name,
+            workspace: workspace_files(&Repository::of(ctx)?, &metadata),
+            artifacts: artifacts(&metadata.target_directory),
+            target: metadata.target_directory,
+            workspace_root: metadata.workspace_root,
+        })
+    }
+}
+
+/// What `cargo metadata` says about a workspace, as far as xtask reads it.
+#[derive(Deserialize)]
+pub struct Metadata {
+    pub target_directory: PathBuf,
+    pub workspace_root: PathBuf,
+    pub packages: Vec<Package>,
+}
+
+#[derive(Deserialize)]
+pub struct Package {
+    /// Cargo's opaque id, which build messages name the package by.
+    pub id: String,
+    pub name: String,
+    pub manifest_path: PathBuf,
+    /// Where a dependency comes from; none for a package in the repository.
+    pub source: Option<String>,
+    pub targets: Vec<Target>,
+}
+
+#[derive(Deserialize)]
+pub struct Target {
+    pub crate_types: Vec<String>,
+}
+
+/// Which packages [`metadata`] lists.
+#[derive(Clone, Copy)]
+pub enum Packages {
+    /// The workspace's members.
+    Members,
+    /// Every package a build of the workspace compiles, dependencies included.
+    All,
+}
+
+/// `cargo metadata` of the workspace whose manifest is `manifest`, root relative.
+pub fn metadata(ctx: &Context, manifest: &str, packages: Packages) -> Result<Metadata> {
     let mut args = vec!["metadata", "--format-version", "1", "--locked"];
-    if !deps {
+    if let Packages::Members = packages {
         args.push("--no-deps");
     }
     args.extend(["--manifest-path", manifest]);
-    Ok(serde_json::from_str(
-        &ctx.tool(".", "cargo", &args).output_text()?,
-    )?)
+    serde_json::from_str(&ctx.tool(".", "cargo", &args).output_text()?)
+        .with_context(|| format!("cargo metadata printed an unexpected description of {manifest}"))
 }
 
-/// The target directory of the Cargo workspace whose manifest is `manifest`, root relative.
-pub fn target_directory(ctx: &Context, manifest: &str) -> Result<PathBuf> {
-    let target = metadata(ctx, manifest, false)?["target_directory"]
-        .as_str()
-        .map(PathBuf::from)
-        .context("cargo metadata printed no target_directory")?;
-    Ok(target)
-}
-
-/// The root relative files a build in the workspace of `manifest` depends on that no dependency
-/// file names: the manifest of every package in the repository it builds (path dependencies
-/// outside the workspace included), and the workspace's own manifest and lock file.
-pub fn workspace_files(ctx: &Context, manifest: &str) -> Result<Vec<String>> {
-    let metadata = metadata(ctx, manifest, true)?;
-    let workspace = metadata["workspace_root"]
-        .as_str()
-        .map(PathBuf::from)
-        .context("cargo metadata printed no workspace_root")?;
+/// The root relative files a build of the workspace `metadata` describes depends on that no
+/// dependency file names ([`CargoBuild::workspace`]).
+fn workspace_files(repository: &Repository, metadata: &Metadata) -> Vec<String> {
+    let workspace = &metadata.workspace_root;
     let mut files = vec![workspace.join("Cargo.toml"), workspace.join("Cargo.lock")];
-    for package in metadata["packages"].as_array().into_iter().flatten() {
-        if package["source"].is_null()
-            && let Some(manifest) = package["manifest_path"].as_str()
-        {
-            files.push(PathBuf::from(manifest));
+    for package in &metadata.packages {
+        if package.source.is_none() {
+            files.push(package.manifest_path.clone());
         }
     }
     let mut relative: Vec<String> = files
         .iter()
         .filter(|file| file.is_file())
-        .filter_map(|file| file.strip_prefix(&ctx.root).ok())
+        .filter_map(|file| repository.relative(file))
         .map(|file| file.display().to_string())
         .collect();
     relative.sort();
     relative.dedup();
-    Ok(relative)
+    relative
+}
+
+/// The repository root in both spellings a path inside it may take: as xtask was handed it, and
+/// physical, as Cargo spells the paths it reports. Cargo starts from the physical working
+/// directory, so it resolves a root reached through a symbolic link (macOS's `/var`, for one).
+struct Repository {
+    given: PathBuf,
+    physical: PathBuf,
+}
+
+impl Repository {
+    fn of(ctx: &Context) -> Result<Self> {
+        let physical = fs::canonicalize(&ctx.root)
+            .with_context(|| format!("cannot resolve {}", ctx.root.display()))?;
+        Ok(Self {
+            given: ctx.root.clone(),
+            physical,
+        })
+    }
+
+    /// `path` relative to the root, when it lies inside it.
+    fn relative<'p>(&self, path: &'p Path) -> Option<&'p Path> {
+        path.strip_prefix(&self.physical)
+            .or_else(|_| path.strip_prefix(&self.given))
+            .ok()
+    }
 }
 
 /// Whether [`CargoBuild::run`] ran Cargo.
@@ -236,6 +308,7 @@ impl CargoBuild<'_> {
     /// artifact names, and as `$NAME` each environment variable a crate of the build read at
     /// compile time (`env!`, `option_env!`). None when an artifact has no dependency file.
     fn reads(&self, ctx: &Context) -> Result<Option<BTreeSet<String>>> {
+        let repository = Repository::of(ctx)?;
         let mut reads = BTreeSet::new();
         for artifact in &self.artifacts {
             let dep_info = artifact.with_extension("d");
@@ -244,7 +317,7 @@ impl CargoBuild<'_> {
                 text => text.with_context(|| format!("cannot read {}", dep_info.display()))?,
             };
             for file in dep_info_files(&text) {
-                if let Ok(relative) = normalize(&file).strip_prefix(&ctx.root) {
+                if let Some(relative) = repository.relative(&self.source(&file)) {
                     reads.insert(relative.display().to_string());
                 }
             }
@@ -254,8 +327,14 @@ impl CargoBuild<'_> {
                 .iter()
                 .map(|name| format!("${name}")),
         );
-        reads.extend(build_script_reads(ctx, &self.target)?);
+        reads.extend(build_script_reads(&repository, self)?);
         Ok(Some(reads))
+    }
+
+    /// The absolute path of a file a dependency file names: a source of a workspace member is
+    /// named relative to the workspace's root.
+    fn source(&self, file: &Path) -> PathBuf {
+        normalize(&self.workspace_root.join(file))
     }
 }
 
@@ -282,9 +361,9 @@ fn env_reads(target: &Path) -> Result<BTreeSet<String>> {
 /// again, from what each printed: `$NAME` for each `rerun-if-env-changed`, and for a script that
 /// printed no `rerun-if-changed` or `rerun-if-env-changed` line, every file of its package.
 /// (Its `rerun-if-changed` files are in the dependency files beside the artifacts already.)
-fn build_script_reads(ctx: &Context, target: &Path) -> Result<BTreeSet<String>> {
+fn build_script_reads(repository: &Repository, build: &CargoBuild) -> Result<BTreeSet<String>> {
     let mut reads = BTreeSet::new();
-    for run in unit_dirs(target, &["run"])? {
+    for run in unit_dirs(&build.target, &["run"])? {
         let mut watches = false;
         for line in read(&run.join("stdout"))?.lines() {
             let Some(directive) = line
@@ -301,8 +380,8 @@ fn build_script_reads(ctx: &Context, target: &Path) -> Result<BTreeSet<String>> 
             }
         }
         if !watches {
-            for dir in script_packages(ctx, &run)? {
-                package_files(ctx, &dir, &mut reads)?;
+            for dir in script_packages(repository, build, &run)? {
+                package_files(repository, &dir, &mut reads)?;
             }
         }
     }
@@ -313,7 +392,11 @@ fn build_script_reads(ctx: &Context, target: &Path) -> Result<BTreeSet<String>> 
 /// (`build/<package>/<hash>/run`): each holds a `Cargo.toml` above a build script source that a
 /// compile unit of the same package, `build/<package>/<other hash>/out/build_script_build*.d`,
 /// names.
-fn script_packages(ctx: &Context, run: &Path) -> Result<BTreeSet<PathBuf>> {
+fn script_packages(
+    repository: &Repository,
+    build: &CargoBuild,
+    run: &Path,
+) -> Result<BTreeSet<PathBuf>> {
     let mut packages = BTreeSet::new();
     let Some(package) = run.parent().and_then(Path::parent) else {
         return Ok(packages);
@@ -328,11 +411,11 @@ fn script_packages(ctx: &Context, run: &Path) -> Result<BTreeSet<PathBuf>> {
                 continue;
             }
             for source in dep_info_files(&read(&path)?) {
-                let source = normalize(&source);
+                let source = build.source(&source);
                 let dir = source
                     .ancestors()
                     .skip(1)
-                    .take_while(|dir| dir.starts_with(&ctx.root))
+                    .take_while(|dir| repository.relative(dir).is_some())
                     .find(|dir| dir.join("Cargo.toml").is_file());
                 packages.extend(dir.map(Path::to_path_buf));
             }
@@ -343,13 +426,13 @@ fn script_packages(ctx: &Context, run: &Path) -> Result<BTreeSet<PathBuf>> {
 
 /// Adds every file of the package in `dir`, root relative, to `reads`: all of the folder but
 /// build output (`target`), Git's folder and nested packages, as Cargo lists a package's files.
-fn package_files(ctx: &Context, dir: &Path, reads: &mut BTreeSet<String>) -> Result<()> {
+fn package_files(repository: &Repository, dir: &Path, reads: &mut BTreeSet<String>) -> Result<()> {
     for (path, name) in files_in(dir)? {
         if path.is_dir() {
             if name != "target" && name != ".git" && !path.join("Cargo.toml").is_file() {
-                package_files(ctx, &path, reads)?;
+                package_files(repository, &path, reads)?;
             }
-        } else if let Ok(relative) = path.strip_prefix(&ctx.root) {
+        } else if let Some(relative) = repository.relative(&path) {
             reads.insert(relative.display().to_string());
         }
     }
@@ -514,7 +597,9 @@ fn normalize(path: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{CARGO_WORKSPACE as WORKSPACE, FakeCargo, cargo_workspace, refusal};
+    use crate::test_support::{
+        CARGO_WORKSPACE as WORKSPACE, FakeCargo, TempRoot, cargo_workspace, refusal,
+    };
 
     /// The environment of every case that does not vary one.
     const NONE: Environment = Environment::EMPTY;
@@ -608,6 +693,108 @@ mod tests {
             build.run(&root.ctx, &mut again, &NONE).unwrap(),
             Outcome::Compiled
         );
+    }
+
+    #[test]
+    fn real_cargo_leaves_what_a_build_read_where_the_stamp_looks_for_it() {
+        // Where Cargo keeps dependency files and build script output is its own layout; a
+        // toolchain that moves them must fail here instead of reusing a build whose inputs changed.
+        let root = TempRoot::new();
+        root.write(
+            "Cargo.toml",
+            "[workspace]\nmembers = [\"watched\", \"unwatched\"]\nresolver = \"3\"\n",
+        );
+        let manifest = |name: &str, dependencies: &str| {
+            format!(
+                "[package]\nname = \"{name}\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n\
+                 [dependencies]\n{dependencies}"
+            )
+        };
+        root.write(
+            "watched/Cargo.toml",
+            &manifest("watched", "unwatched = { path = \"../unwatched\" }\n"),
+        );
+        root.write(
+            "watched/build.rs",
+            "fn main() { println!(\"cargo::rerun-if-env-changed=PROBE_WATCHED\"); }\n",
+        );
+        root.write(
+            "watched/src/lib.rs",
+            "pub fn read() -> Option<&'static str> { option_env!(\"PROBE_READ\") }\n",
+        );
+        root.write("unwatched/Cargo.toml", &manifest("unwatched", ""));
+        root.write("unwatched/build.rs", "fn main() {}\n");
+        root.write("unwatched/src/lib.rs", "");
+        root.write("unwatched/data.txt", "one");
+        root.ctx
+            .tool(".", "cargo", &["generate-lockfile", "--offline", "--quiet"])
+            .run()
+            .unwrap();
+        let build = CargoBuild::in_workspace(&root.ctx, "probe", "Cargo.toml", |target| {
+            vec![target.join("debug/libwatched.rlib")]
+        })
+        .unwrap();
+        assert_eq!(
+            build.workspace,
+            [
+                "Cargo.lock",
+                "Cargo.toml",
+                "unwatched/Cargo.toml",
+                "watched/Cargo.toml"
+            ]
+        );
+        let run = |watched: &str, read: &str| {
+            let mut cargo = root.ctx.tool(
+                ".",
+                "cargo",
+                &["build", "--quiet", "--offline", "-p", "watched"],
+            );
+            // The test's own Cargo must not move the probe's target elsewhere.
+            for name in [
+                "CARGO_TARGET_DIR",
+                "CARGO_BUILD_TARGET_DIR",
+                "CARGO_BUILD_BUILD_DIR",
+            ] {
+                cargo.env_remove(name);
+            }
+            let env = Environment::EMPTY
+                .with("PROBE_WATCHED", watched)
+                .with("PROBE_READ", read);
+            build.run(&root.ctx, &mut cargo, &env).unwrap()
+        };
+
+        assert_eq!(run("one", "one"), Outcome::Compiled);
+        let reads = build.reads(&root.ctx).unwrap().unwrap();
+        for read in [
+            "watched/src/lib.rs",
+            "$PROBE_READ",
+            "$PROBE_WATCHED",
+            "unwatched/data.txt",
+        ] {
+            assert!(reads.contains(read), "{read} is not among {reads:?}");
+        }
+        assert_eq!(run("one", "one"), Outcome::Reused);
+        assert_eq!(
+            run("two", "one"),
+            Outcome::Compiled,
+            "after PROBE_WATCHED changed"
+        );
+        assert_eq!(
+            run("two", "two"),
+            Outcome::Compiled,
+            "after PROBE_READ changed"
+        );
+        root.write("unwatched/data.txt", "two");
+        assert_eq!(
+            run("two", "two"),
+            Outcome::Compiled,
+            "after data.txt changed"
+        );
+        root.write(
+            "watched/src/lib.rs",
+            "pub fn read() -> Option<&'static str> { None }\n",
+        );
+        assert_eq!(run("two", "two"), Outcome::Compiled, "after lib.rs changed");
     }
 
     #[test]

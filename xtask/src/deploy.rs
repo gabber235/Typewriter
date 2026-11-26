@@ -9,9 +9,8 @@ use std::process::{Command, Stdio};
 
 use anyhow::{Context as _, Result, bail, ensure};
 use clap::ValueEnum;
-use serde_json::Value;
 
-use crate::cargo_build::{CargoBuild, Outcome, target_directory, workspace_files};
+use crate::cargo_build::{CargoBuild, Outcome, Packages, metadata};
 use crate::cluster::CiCluster;
 use crate::digest::Environment;
 use crate::lock::HeavyLock;
@@ -139,8 +138,6 @@ pub fn deploy_ci(ctx: &Context, ci: &CiCluster) -> Result<()> {
 /// Builds every deployable component and pushes it and the database image to `registry`; the
 /// caller restarts the cluster's workloads so they pull them.
 fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
-    // The components compile against the generated Skir sources.
-    crate::generate::generate(ctx, None)?;
     let (components, _) = {
         let _lock = HeavyLock::acquire("deploy")?;
         build_deployable(ctx)?
@@ -217,8 +214,10 @@ pub(crate) fn components_build(ctx: &Context, components: &[Component]) -> Comma
 
 /// Builds the release `.wasm` of every deployable component and returns each by its package, with
 /// whether the build was reused. The stack's components build and `cargo xtask deploy` both build
-/// them here, so one stamp covers that artifact. The caller holds the heavy lock.
+/// them here, so one stamp covers that artifact, and both get the generated protocol sources the
+/// components compile against brought up to date first. The caller holds the heavy lock.
 pub(crate) fn build_deployable(ctx: &Context) -> Result<(BTreeMap<String, PathBuf>, Outcome)> {
+    crate::generate::protocol_holding_lock(ctx)?;
     let components = deployable(ctx)?;
     let outcome = reusable_components_build(ctx, "components", &components)?.run(
         ctx,
@@ -240,14 +239,11 @@ pub(crate) fn reusable_components_build<'a>(
     name: &'a str,
     components: &[Component],
 ) -> Result<CargoBuild<'a>> {
-    Ok(CargoBuild {
-        name,
-        workspace: workspace_files(ctx, "backend/Cargo.toml")?,
-        artifacts: components
+    CargoBuild::in_workspace(ctx, name, "backend/Cargo.toml", |_| {
+        components
             .iter()
             .map(|component| component.artifact.clone())
-            .collect(),
-        target: target_directory(ctx, "backend/Cargo.toml")?,
+            .collect()
     })
 }
 
@@ -261,45 +257,21 @@ pub(crate) fn release_artifact(target: &Path, name: &str) -> PathBuf {
 }
 
 pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
-    let metadata: Value = serde_json::from_str(
-        &ctx.tool(
-            "backend",
-            "cargo",
-            &["metadata", "--format-version", "1", "--no-deps", "--locked"],
-        )
-        .output_text()?,
-    )?;
-    let target = metadata["target_directory"]
-        .as_str()
-        .context("cargo metadata printed no target_directory")?;
-    let packages = metadata["packages"]
-        .as_array()
-        .context("cargo metadata printed no packages")?;
+    let metadata = metadata(ctx, "backend/Cargo.toml", Packages::Members)?;
     let mut components = Vec::new();
-    for package in packages {
-        let (Some(name), Some(manifest)) =
-            (package["name"].as_str(), package["manifest_path"].as_str())
-        else {
-            continue;
-        };
-        let cdylib = package["targets"]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .any(|target| {
-                target["crate_types"]
-                    .as_array()
-                    .into_iter()
-                    .flatten()
-                    .any(|kind| kind == "cdylib")
-            });
-        let has_deploy = Path::new(manifest)
+    for package in metadata.packages {
+        let cdylib = package
+            .targets
+            .iter()
+            .any(|target| target.crate_types.iter().any(|kind| kind == "cdylib"));
+        let has_deploy = package
+            .manifest_path
             .parent()
             .is_some_and(|dir| dir.join("deploy").is_dir());
         if cdylib && has_deploy {
             components.push(Component {
-                package: name.to_owned(),
-                artifact: release_artifact(Path::new(target), name),
+                artifact: release_artifact(&metadata.target_directory, &package.name),
+                package: package.name,
             });
         }
     }

@@ -207,6 +207,11 @@ pub fn protocol(ctx: &Context) -> Result<()> {
     bring_up_to_date(ctx, None, through("protocol"), Lock::BeforeFirstRun)
 }
 
+/// [`protocol`] for a caller that already holds the heavy lock.
+pub fn protocol_holding_lock(ctx: &Context) -> Result<()> {
+    bring_up_to_date(ctx, None, through("protocol"), Lock::Held)
+}
+
 /// The graph step: [`generate`] with its output in the step's log, run as a heavy step that
 /// already holds the lock.
 pub fn step(ctx: &Context, log: &File) -> Result<()> {
