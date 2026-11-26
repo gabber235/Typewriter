@@ -161,6 +161,8 @@ plans/
 !/docs/vision/
 !/docs/design/
 !/docs/drive/
+# A drive topic's handoff notes are working files of one machine; its record.yaml is tracked.
+/docs/drive/*/handoff/
 AGENTS.local.md
 
 # devenv shell state; devenv.lock is committed
