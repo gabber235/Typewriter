@@ -57,10 +57,13 @@ class SessionHarness(
     /** Creates the Realm's sessions bucket, as the Realm does when it starts. */
     suspend fun createBucket() = store.createBucket(SessionsBucket.declaration(realm))
 
-    /** Starts engine [id] of the Realm on a connection of its own, already having the sessions in [online]. */
+    /**
+     * Starts engine [id] of the Realm on a connection of its own, already having the sessions in [online], each with the
+     * instant it connected.
+     */
     suspend fun engine(
         id: String,
-        online: Set<Session> = emptySet(),
+        online: Map<Session, Instant> = emptyMap(),
     ): HarnessEngine {
         val buckets = store.connect()
         val sessions = OnlineSet(store.clock(), online)

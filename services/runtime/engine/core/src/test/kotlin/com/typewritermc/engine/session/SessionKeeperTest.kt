@@ -93,11 +93,11 @@ val SessionKeeperTest by testSuite {
         sessions.store.advance(sessions.timings.lease.ttl)
 
         before.keeper.close()
-        sessions.engine("engine-a", online = setOf(session))
+        sessions.engine("engine-a", online = mapOf(session to KeyValueStore.Memory.START))
         sessions.store.settle()
 
         val entry = sessions.entry(session.protagonist, session.id).shouldNotBeNull()
-        entry.holder shouldBe EngineId("engine-a")
+        entry.state shouldBe LeaseState.Held(EngineId("engine-a"), KeyValueStore.Memory.START)
         entry.value.since shouldBe KeyValueStore.Memory.START
         sessions.store.advance(sessions.timings.lease.ttl * 3)
         sessions.entry(session.protagonist, session.id).shouldNotBeNull().holder shouldBe EngineId("engine-a")
