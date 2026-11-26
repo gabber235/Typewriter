@@ -481,6 +481,9 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   I measures.
 - A frame that differs from its approved golden **fails the test** and the pull request shows golden,
   new frame and diff (2026-11-06). Goldens are exact on the pinned runner platform (spike F).
+- **Block light glows steadily** (2026-11-27): the client keeps vanilla's block light flicker, a random
+  walk every client tick, at 0, the middle of the walk, so a floor a lamp lights draws the same shade
+  every frame (GOLDEN-5). Without it the lit floor drew another frame 10 ticks later in 3 of 3 attempts.
 - The **pinned renderer** is Vulkan through llvmpipe on Linux amd64 with the Mesa devenv ships
   (2026-11-15). devenv exports that release as `PLAYTEST_MESA`, and the game framework owns the pin
   and its one match rule. On the pinned renderer a golden never approved, or one another renderer drew
