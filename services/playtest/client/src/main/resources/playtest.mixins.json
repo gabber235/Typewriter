@@ -17,6 +17,7 @@
     "HudMixin",
     "LevelExtractorMixin",
     "LevelRendererInvoker",
+    "LightmapRenderStateExtractorMixin",
     "MinecraftMixin",
     "MouseHandlerAccessor",
     "MouseHandlerMixin",

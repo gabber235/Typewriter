@@ -94,4 +94,25 @@ val GoldenRequirements by testSuite(compartment = { GameCompartment }) {
         // The floor right below the camera, at the bottom of the frame, where the fog hardly reaches.
         night.brightnessAt(night.width / 2, night.height - 20) shouldBeLessThan day.brightnessAt(day.width / 2, day.height - 20) / 2
     }
+
+    requirement("GOLDEN-5", "a floor lit by a lamp at night draws the same frame from the first tick it shows on") {
+        probe.fill(BlockPos(-3, 99, -3), BlockPos(3, 99, 8), "smooth_stone")
+        // An invisible light: a torch would add flame particles of its own. At night the sky hardly lights
+        // the floor, so every shade of the lamp's falloff shows instead of the full brightness of day.
+        probe.fill(BlockPos(0, 100, 4), BlockPos(0, 100, 4), "light[level=15]")
+        probe.gameMode(player, GameMode.SPECTATOR)
+        probe.teleport(player, 0.5, 100.0, 0.5)
+        probe.time(player, 18_000)
+        within(10.ticks) { player sees camera.near(0.5, 0.5, within = 0.5) }
+        val first = frameOf(player, "first")
+
+        idle(player, 10.ticks)
+
+        frameOf(player, "later").sha256 shouldBe first.sha256
+
+        // The lamp lit the frames compared: without it the floor draws otherwise.
+        probe.fill(BlockPos(0, 100, 4), BlockPos(0, 100, 4), "air")
+        idle(player, 10.ticks)
+        frameOf(player, "unlit").sha256 shouldNotBe first.sha256
+    }
 }
