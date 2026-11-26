@@ -18,7 +18,7 @@ use crate::Context;
 use crate::skirout::base::harness::v1::test_run::Runner;
 pub use crate::skirout::base::harness::v1::test_run::{
     Artifact, ArtifactKind, Attempt, AttemptPolicy, Conclusion, Failure, LossCause, MemoryKill,
-    Outcome, Pacing, Part, PartEnd, PartKind, RunEnd, RunLost, TestCase, TestRun,
+    Outcome, Pacing, Part, PartEnd, PartKind, PartLoss, RunEnd, RunLost, TestCase, TestRun,
 };
 
 /// The quarantine file, relative to the repository root.

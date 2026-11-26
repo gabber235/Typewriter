@@ -1,10 +1,11 @@
 //! Memory per part through cgroup v2, where the machine delegates a cgroup to the run's user, as
 //! CI does with `cargo xtask cgroup delegate` and names in [`DELEGATED`]. A game run makes its
-//! tree there: `run-<id>` holds `stack` (a leaf per service), `gradle` (the suite's Gradle, its
-//! daemon and test JVMs) and `game`, where the pool makes a leaf per game part and its own. The
-//! kernel counts each leaf's memory and records the most it took. While limits are only measured,
-//! every cgroup takes the machine's memory as its limit, so nothing is killed for its limit; the
-//! run file lists each part's peak beside its planned limit.
+//! tree there: `run-<id>` holds `stack` (a leaf per service, held to the service's limit),
+//! `gradle-build` (every Gradle build of the run, the Kotlin daemon it starts among them),
+//! `gradle-test` (the Gradle that runs the suite, with its test JVMs) and `game`, where the pool
+//! makes a leaf per game part and its own. The game's `memory.max` is its budget: the machine less
+//! the system's share, the test run's limit and the stack's limits. The build ends whole before the
+//! test run starts, so it may take the machine.
 
 use std::ffi::CString;
 use std::fs;
@@ -17,7 +18,7 @@ use std::sync::{Arc, Mutex};
 
 use anyhow::{Context as _, Result, bail};
 
-use crate::results::{self, Part, PartEnd, PartKind};
+use crate::results::{self, LossCause, MemoryKill, Part, PartEnd, PartKind, PartLoss};
 
 /// The cgroup the machine delegates to the run's user.
 pub const DELEGATED: &str = "TYPEWRITER_CGROUP";
@@ -25,41 +26,76 @@ pub const DELEGATED: &str = "TYPEWRITER_CGROUP";
 /// The game's cgroup in the run's tree, which the build hands the pool.
 pub const GAME: &str = "PLAYTEST_CGROUP";
 
+/// Set to `1` on the pinned runner, which must enforce every limit.
+pub const PINNED_RUNNER: &str = "PLAYTEST_PINNED_RUNNER";
+
 /// Where `cargo xtask cgroup delegate` makes the delegated cgroup.
 const DELEGATE_ROOT: &str = "/sys/fs/cgroup";
 
 /// The controllers every cgroup of the tree enables for its children.
 const CONTROLLERS: &str = "+memory +pids";
 
+const MIB: u64 = 1024 * 1024;
+
+/// What the system outside the run keeps: the kernel, the runner's agent and xtask itself.
+const SYSTEM_MIB: u64 = 768;
+
+/// The most memory the Gradle that runs the suite may take with its test JVMs.
+pub const GRADLE_TEST_MIB: u64 = 2048;
+
 /// One run's tree under the delegated cgroup.
 pub struct Tree {
     run: PathBuf,
-    limit: u64,
 }
 
 impl Tree {
-    /// The tree of the run `id` under the cgroup the machine delegates, each cgroup held to the
-    /// machine's memory; `None` where the machine delegates none, as on macOS.
-    pub fn delegated(id: &str) -> Result<Option<Self>> {
-        let Some(root) = std::env::var_os(DELEGATED).filter(|root| !root.is_empty()) else {
+    /// The tree of the run `id` under the cgroup the machine delegates, its game held to what the
+    /// machine leaves beside a stack whose services may take `stack_bytes`; `None` where the
+    /// machine delegates none, as on macOS, which the pinned runner refuses.
+    pub fn delegated(id: &str, stack_bytes: u64) -> Result<Option<Self>> {
+        let root = std::env::var_os(DELEGATED).filter(|root| !root.is_empty());
+        let pinned = std::env::var_os(PINNED_RUNNER).is_some_and(|pinned| pinned == "1");
+        require_enforced(pinned, root.is_some())?;
+        let Some(root) = root else {
             return Ok(None);
         };
-        Self::create(Path::new(&root), id, machine_memory()?).map(Some)
+        Self::create(Path::new(&root), id, machine_memory()?, stack_bytes).map(Some)
     }
 
-    /// Makes the tree of the run `id` under `root`, every cgroup held to `limit` bytes. A parent
-    /// enables the memory controller for its children before they are made, since a child gets its
-    /// memory files only then.
-    pub fn create(root: &Path, id: &str, limit: u64) -> Result<Self> {
+    /// Makes the tree of the run `id` under `root` on a machine of `machine` bytes, beside a stack
+    /// whose services may take `stack_bytes`. A parent enables the memory controller for its
+    /// children before they are made, since a child gets its memory files only then.
+    pub fn create(root: &Path, id: &str, machine: u64, stack_bytes: u64) -> Result<Self> {
+        let controllers = fs::read_to_string(root.join("cgroup.controllers"))
+            .with_context(|| format!("cannot read {}/cgroup.controllers", root.display()))?;
+        if !controllers
+            .split_whitespace()
+            .any(|controller| controller == "memory")
+        {
+            bail!(
+                "{} does not offer the memory controller, so no part's memory can be held to its limit",
+                root.display()
+            );
+        }
+        let kept = (SYSTEM_MIB + GRADLE_TEST_MIB) * MIB + stack_bytes;
+        let Some(game) = machine.checked_sub(kept).filter(|game| *game > 0) else {
+            bail!(
+                "the machine's {} MiB, less {SYSTEM_MIB} MiB for the system, {GRADLE_TEST_MIB} MiB for Gradle's test run and {} MiB for the stack, leave nothing for the game",
+                machine / MIB,
+                stack_bytes / MIB
+            );
+        };
         let run = root.join(format!("run-{id}"));
-        make(&run, limit)?;
+        make(&run, machine)?;
         write(&run.join("cgroup.subtree_control"), CONTROLLERS)?;
-        let tree = Self { run, limit };
-        for parent in [tree.stack(), tree.game()] {
+        let tree = Self { run };
+        // Each stack service is held by its own leaf; the game, by its budget.
+        for (parent, limit) in [(tree.stack(), machine), (tree.game(), game)] {
             make(&parent, limit)?;
             write(&parent.join("cgroup.subtree_control"), CONTROLLERS)?;
         }
-        leaf(&tree.run.join("gradle"), limit)?;
+        leaf(&tree.run.join("gradle-build"), machine)?;
+        leaf(&tree.run.join("gradle-test"), GRADLE_TEST_MIB * MIB)?;
         Ok(tree)
     }
 
@@ -72,23 +108,46 @@ impl Tree {
         self.run.join("stack")
     }
 
-    /// The leaf of the suite's Gradle.
-    pub fn gradle(&self) -> Leaf {
-        Leaf(self.run.join("gradle"))
+    /// The leaf of every Gradle build of the run.
+    pub fn gradle_build(&self) -> Leaf {
+        Leaf(self.run.join("gradle-build"))
     }
 
-    /// The leaf of the stack service `id`, made on first use.
-    pub fn stack_service(&self, id: &str) -> Result<Leaf> {
+    /// The leaf of the Gradle that runs the suite.
+    pub fn gradle_test(&self) -> Leaf {
+        Leaf(self.run.join("gradle-test"))
+    }
+
+    /// Kills every process the builds left, as the Kotlin daemon, so only the test run's Gradle
+    /// sits beside the game.
+    pub fn end_build(&self) -> Result<()> {
+        write(&self.run.join("gradle-build/cgroup.kill"), "1")
+    }
+
+    /// The leaf of the stack service `id`, made on first use and held to `limit` bytes.
+    pub fn stack_service(&self, id: &str, limit: u64) -> Result<Leaf> {
         let dir = self.stack().join(id);
-        leaf(&dir, self.limit)?;
+        leaf(&dir, limit)?;
         Ok(Leaf(dir))
     }
 
-    /// Adds Gradle and every stack service to the parts of the run file at `file`, each with the
-    /// most memory it took. They have no planned limit yet; their first peaks set one.
+    /// Adds Gradle's build and test run and every stack service to the parts of the run file at
+    /// `file`, each with its limit, the most memory it took and whether the kernel killed it for
+    /// memory. The build has no limit of its own: it ends before the game starts.
     pub fn record(&self, file: &Path) -> Result<()> {
         let mut run = results::read(file)?;
-        let mut measured = vec![("gradle".to_owned(), PartKind::Gradle, self.gradle())];
+        let mut measured = vec![
+            (
+                "gradle-build".to_owned(),
+                PartKind::Gradle,
+                self.gradle_build(),
+            ),
+            (
+                "gradle-test".to_owned(),
+                PartKind::Gradle,
+                self.gradle_test(),
+            ),
+        ];
         let mut services = Vec::new();
         for entry in fs::read_dir(self.stack())
             .with_context(|| format!("cannot read {}", self.stack().display()))?
@@ -102,10 +161,23 @@ impl Tree {
         services.sort_by(|a, b| a.0.cmp(&b.0));
         measured.extend(services);
         for (name, kind, leaf) in measured {
+            let limit_bytes = if name == "gradle-build" {
+                0
+            } else {
+                leaf.limit()?
+            };
+            let end = match leaf.kill()? {
+                Some(kill) => PartEnd::Lost(Box::new(PartLoss {
+                    cause: LossCause::KilledForMemory(Box::new(kill)),
+                    ..PartLoss::default()
+                })),
+                None => PartEnd::RanToEnd,
+            };
             run.parts.push(Part {
                 name,
                 kind,
-                end: PartEnd::RanToEnd,
+                end,
+                limit_bytes,
                 peak_bytes: leaf.peak(),
                 ..Part::default()
             });
@@ -125,12 +197,24 @@ impl Tree {
         for dir in [
             self.stack(),
             self.game(),
-            self.run.join("gradle"),
+            self.run.join("gradle-build"),
+            self.run.join("gradle-test"),
             self.run.clone(),
         ] {
             let _ = fs::remove_dir(dir);
         }
     }
+}
+
+/// Refuses a run on the `pinned` runner that is not `enforced`: there a part over its limit must
+/// be killed for it, not pass on a runner that happens to have room.
+pub fn require_enforced(pinned: bool, enforced: bool) -> Result<()> {
+    if pinned && !enforced {
+        bail!(
+            "this is the pinned runner ({PINNED_RUNNER}=1), but no cgroup is delegated ({DELEGATED}), so no part's memory is held to its limit; run `cargo xtask cgroup delegate` first"
+        );
+    }
+    Ok(())
 }
 
 /// One part's leaf.
@@ -165,6 +249,44 @@ impl Leaf {
             .trim()
             .parse()
             .ok()
+    }
+
+    /// The memory the leaf may take, in bytes.
+    fn limit(&self) -> Result<i64> {
+        let file = self.0.join("memory.max");
+        let limit =
+            fs::read_to_string(&file).with_context(|| format!("cannot read {}", file.display()))?;
+        limit
+            .trim()
+            .parse()
+            .with_context(|| format!("{} holds no limit: {limit}", file.display()))
+    }
+
+    /// Why the kernel killed the leaf's processes for memory, if it did: for its own limit when the
+    /// leaf reached it, otherwise because the machine ran out. The kernel counts a kill in the
+    /// victim's cgroup whatever chose it, but a reached limit only where it was reached.
+    fn kill(&self) -> Result<Option<MemoryKill>> {
+        let file = self.0.join("memory.events");
+        let events = match fs::read_to_string(&file) {
+            Ok(events) => events,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+            Err(error) => {
+                return Err(error).with_context(|| format!("cannot read {}", file.display()));
+            }
+        };
+        let count = |name: &str| {
+            events
+                .lines()
+                .filter_map(|line| line.split_once(' '))
+                .find(|(event, _)| *event == name)
+                .map_or(Ok(0), |(_, count)| count.trim().parse::<u64>())
+                .with_context(|| format!("{} counts {name} as no number", file.display()))
+        };
+        Ok(match (count("oom_kill")?, count("oom")?) {
+            (0, _) => None,
+            (_, 0) => Some(MemoryKill::MachineOutOfMemory),
+            _ => Some(MemoryKill::OwnLimit),
+        })
     }
 }
 
@@ -306,48 +428,124 @@ fn machine_memory() -> Result<u64> {
 mod tests {
     use super::*;
     use crate::results::TestRun;
+    use crate::test_support::delegated_cgroup;
 
-    const LIMIT: u64 = 16_834_887_680;
-
-    // A folder stands in for the delegated cgroup: the kernel makes a cgroup's control files as the
-    // cgroup is made, and counts into memory.peak.
+    const MIB: u64 = 1024 * 1024;
+    const MACHINE: u64 = 16_053 * MIB;
+    const STACK: u64 = 2_489 * MIB;
 
     #[test]
-    fn a_run_makes_its_tree_under_the_delegated_cgroup_each_cgroup_held_to_the_machines_memory() {
-        let root = tempfile::tempdir().unwrap();
+    fn a_run_holds_the_game_to_the_machine_less_the_system_gradle_s_test_run_and_the_stack() {
+        let root = delegated_cgroup();
 
-        let tree = Tree::create(root.path(), "7", LIMIT).unwrap();
+        let tree = Tree::create(root.path(), "7", MACHINE, STACK).unwrap();
 
         let run = root.path().join("run-7");
+        assert_eq!(
+            fs::read_to_string(run.join("game").join("memory.max")).unwrap(),
+            ((16_053 - 768 - GRADLE_TEST_MIB - 2_489) * MIB).to_string()
+        );
+        assert_eq!(
+            fs::read_to_string(run.join("gradle-test").join("memory.max")).unwrap(),
+            (GRADLE_TEST_MIB * MIB).to_string()
+        );
+        // The build ends before the game starts, so it may take the machine.
+        assert_eq!(
+            fs::read_to_string(run.join("gradle-build").join("memory.max")).unwrap(),
+            MACHINE.to_string()
+        );
         for dir in [&run, &run.join("stack"), &run.join("game")] {
             assert_eq!(
-                fs::read_to_string(dir.join("memory.max")).unwrap(),
-                LIMIT.to_string(),
+                fs::read_to_string(dir.join("cgroup.subtree_control")).unwrap(),
+                CONTROLLERS,
                 "{}",
                 dir.display()
             );
+        }
+        for leaf in ["gradle-build", "gradle-test"] {
             assert_eq!(
-                fs::read_to_string(dir.join("cgroup.subtree_control")).unwrap(),
-                CONTROLLERS
+                fs::read_to_string(run.join(leaf).join("memory.oom.group")).unwrap(),
+                "1",
+                "{leaf}"
             );
         }
-        assert_eq!(
-            fs::read_to_string(run.join("gradle/memory.max")).unwrap(),
-            LIMIT.to_string()
-        );
-        assert_eq!(
-            fs::read_to_string(run.join("gradle/memory.oom.group")).unwrap(),
-            "1"
-        );
         assert_eq!(tree.game(), run.join("game"));
     }
 
     #[test]
-    fn a_placed_command_writes_itself_into_its_leaf_before_it_runs() {
+    fn each_stack_service_runs_held_to_its_own_limit() {
+        let root = delegated_cgroup();
+        let tree = Tree::create(root.path(), "7", MACHINE, STACK).unwrap();
+
+        tree.stack_service("realm", 1_330 * MIB).unwrap();
+
+        let leaf = root.path().join("run-7/stack/realm");
+        assert_eq!(
+            fs::read_to_string(leaf.join("memory.max")).unwrap(),
+            (1_330 * MIB).to_string()
+        );
+        assert_eq!(
+            fs::read_to_string(leaf.join("memory.oom.group")).unwrap(),
+            "1"
+        );
+    }
+
+    #[test]
+    fn a_machine_the_system_gradle_s_test_run_and_the_stack_leave_no_game_budget_of_is_refused_naming_the_numbers()
+     {
+        let root = delegated_cgroup();
+
+        let error = Tree::create(root.path(), "7", 4_000 * MIB, STACK)
+            .err()
+            .unwrap()
+            .to_string();
+
+        assert!(error.contains("4000 MiB"), "{error}");
+        assert!(error.contains("2489 MiB"), "{error}");
+    }
+
+    #[test]
+    fn a_delegated_cgroup_without_the_memory_controller_is_refused() {
         let root = tempfile::tempdir().unwrap();
-        let tree = Tree::create(root.path(), "7", LIMIT).unwrap();
-        let leaf = tree.stack_service("realm-host").unwrap();
-        let dir = root.path().join("run-7/stack/realm-host");
+        fs::write(root.path().join("cgroup.controllers"), "cpu pids\n").unwrap();
+
+        let error = Tree::create(root.path(), "7", MACHINE, 0)
+            .err()
+            .unwrap()
+            .to_string();
+
+        assert!(error.contains("memory controller"), "{error}");
+    }
+
+    #[test]
+    fn the_build_ends_whole_before_the_test_run_starts() {
+        let root = delegated_cgroup();
+        let tree = Tree::create(root.path(), "7", MACHINE, 0).unwrap();
+
+        tree.end_build().unwrap();
+
+        // The kernel kills every process the leaf still holds, the Kotlin daemon the build left among them.
+        assert_eq!(
+            fs::read_to_string(root.path().join("run-7/gradle-build/cgroup.kill")).unwrap(),
+            "1"
+        );
+    }
+
+    #[test]
+    fn the_pinned_runner_fails_where_no_cgroup_enforces_the_limits() {
+        let error = require_enforced(true, false).unwrap_err().to_string();
+
+        assert!(error.contains(DELEGATED), "{error}");
+        require_enforced(true, true).unwrap();
+        require_enforced(false, false).unwrap();
+    }
+
+    #[test]
+    fn a_placed_command_writes_itself_into_its_leaf_before_it_runs() {
+        let root = delegated_cgroup();
+        let tree = Tree::create(root.path(), "7", MACHINE, 0).unwrap();
+        let leaf = tree.stack_service("realm", 1_330 * MIB).unwrap();
+        let dir = root.path().join("run-7/stack/realm");
         fs::write(dir.join("cgroup.procs"), "").unwrap();
         let mut command = Command::new("true");
 
@@ -355,25 +553,24 @@ mod tests {
         assert!(command.status().unwrap().success());
 
         assert_eq!(fs::read_to_string(dir.join("cgroup.procs")).unwrap(), "0");
-        assert_eq!(
-            fs::read_to_string(dir.join("memory.max")).unwrap(),
-            LIMIT.to_string()
-        );
-        assert_eq!(
-            fs::read_to_string(dir.join("memory.oom.group")).unwrap(),
-            "1"
-        );
     }
 
     #[test]
-    fn the_run_file_lists_gradle_and_each_stack_service_with_the_most_memory_it_took() {
-        let root = tempfile::tempdir().unwrap();
-        let tree = Tree::create(root.path(), "7", LIMIT).unwrap();
-        tree.stack_service("realm-host").unwrap();
-        tree.stack_service("nats").unwrap();
+    fn the_run_file_lists_gradle_s_build_and_test_run_and_each_stack_service_with_its_limit_peak_and_kill()
+     {
+        let root = delegated_cgroup();
+        let tree = Tree::create(root.path(), "7", MACHINE, STACK).unwrap();
+        tree.stack_service("realm", 1_330 * MIB).unwrap();
+        tree.stack_service("broker", 64 * MIB).unwrap();
         let run = root.path().join("run-7");
-        fs::write(run.join("gradle/memory.peak"), "2147483648\n").unwrap();
-        fs::write(run.join("stack/realm-host/memory.peak"), "1073741824\n").unwrap();
+        fs::write(run.join("gradle-build/memory.peak"), "4294967296\n").unwrap();
+        fs::write(run.join("gradle-test/memory.peak"), "1073741824\n").unwrap();
+        fs::write(run.join("stack/realm/memory.peak"), "1073741824\n").unwrap();
+        fs::write(
+            run.join("stack/broker/memory.events"),
+            "low 0\nhigh 0\nmax 9\noom 1\noom_kill 1\noom_group_kill 1\n",
+        )
+        .unwrap();
         let file = root.path().join("test_run.json");
         results::write(&TestRun::default(), &file).unwrap();
 
@@ -383,23 +580,50 @@ mod tests {
             .unwrap()
             .parts
             .into_iter()
-            .map(|part| (part.name, part.kind, part.peak_bytes, part.limit_bytes))
+            .map(|part| {
+                (
+                    part.name,
+                    part.kind,
+                    part.limit_bytes,
+                    part.peak_bytes,
+                    part.end,
+                )
+            })
             .collect();
+        let killed = PartEnd::Lost(Box::new(PartLoss {
+            cause: LossCause::KilledForMemory(Box::new(MemoryKill::OwnLimit)),
+            ..PartLoss::default()
+        }));
         assert_eq!(
             parts,
             [
                 (
-                    "gradle".to_owned(),
+                    "gradle-build".to_owned(),
                     PartKind::Gradle,
-                    Some(2_147_483_648),
-                    0
+                    0,
+                    Some(4_294_967_296),
+                    PartEnd::RanToEnd
                 ),
-                ("nats".to_owned(), PartKind::StackService, None, 0),
                 (
-                    "realm-host".to_owned(),
-                    PartKind::StackService,
+                    "gradle-test".to_owned(),
+                    PartKind::Gradle,
+                    (GRADLE_TEST_MIB * MIB) as i64,
                     Some(1_073_741_824),
-                    0
+                    PartEnd::RanToEnd
+                ),
+                (
+                    "broker".to_owned(),
+                    PartKind::StackService,
+                    (64 * MIB) as i64,
+                    None,
+                    killed
+                ),
+                (
+                    "realm".to_owned(),
+                    PartKind::StackService,
+                    (1_330 * MIB) as i64,
+                    Some(1_073_741_824),
+                    PartEnd::RanToEnd
                 ),
             ]
         );

@@ -201,10 +201,14 @@ struct Asked<'a> {
 fn gradle_run(ctx: &Context, asked: &Asked, evidence: &Path) -> Result<Ran> {
     // The run's cgroup tree lives as long as its Gradle; the stack places its services in it.
     let id = format!("{}-{}", now_millis(), std::process::id());
-    let parts = cgroup::install(cgroup::Tree::delegated(&id)?);
+    let stack_bytes = match asked.suite {
+        GameSuite::Game => typewriter::game().memory_bytes(),
+        GameSuite::Playtest => 0,
+    };
+    let parts = cgroup::install(cgroup::Tree::delegated(&id, stack_bytes)?);
     if parts.tree().is_none() {
         println!(
-            "{}: memory per part is not measured, since no cgroup is delegated ({})",
+            "{}: no part's memory is held to its limit or measured, since no cgroup is delegated ({})",
             asked.suite.name(),
             cgroup::DELEGATED
         );
@@ -288,16 +292,24 @@ fn in_turn(
         file: turn.file.clone(),
         run_id: run_id.clone(),
         gradle: build_then_run(
-            |arguments| {
+            |step, arguments| {
                 let mut command = ctx.tool(
                     "services",
                     "./gradlew",
                     &arguments.iter().map(String::as_str).collect::<Vec<_>>(),
                 );
-                // Gradle and the daemon it starts run in the gradle leaf; the pool, in the game's.
+                // The build runs in the build's leaf with the stack's builds. The test run starts
+                // once the daemons they left are gone, in a leaf held to its limit; the pool it
+                // starts goes into the game's cgroup.
                 if let Some(tree) = cgroup::installed() {
-                    tree.gradle().place(&mut command)?;
-                    command.env(cgroup::GAME, tree.game());
+                    match step {
+                        Step::Build => tree.gradle_build().place(&mut command)?,
+                        Step::Test => {
+                            tree.end_build()?;
+                            tree.gradle_test().place(&mut command)?;
+                            command.env(cgroup::GAME, tree.game());
+                        }
+                    }
                 }
                 gradle(&mut command)
             },
@@ -350,12 +362,20 @@ pub(crate) struct Ran {
     pub pool_log: PathBuf,
 }
 
+/// Which Gradle of a game run: the one that builds the suite, or the one that runs it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Step {
+    Build,
+    Test,
+}
+
 /// Builds the modules of `suite` in a Gradle of its own, then runs `run` with `gradle`. The build's
-/// Gradle exits before the suite starts, and the Kotlin compile daemons it started end with it, so
-/// no compiler holds memory while the clients and Paper run. It never stops other daemons
-/// (`--stop`): another worktree's build may share them.
+/// Gradle exits before the suite starts; where the run has a cgroup tree, the Kotlin daemon it
+/// started ends with the build's leaf, and the test run compiles in its own Gradle, so no compiler
+/// holds memory while the clients and Paper run. It never stops other daemons (`--stop`): another
+/// worktree's build may share them.
 pub(crate) fn build_then_run(
-    mut gradle: impl FnMut(&[String]) -> Result<ExitStatus>,
+    mut gradle: impl FnMut(Step, &[String]) -> Result<ExitStatus>,
     suite: GameSuite,
     run: &[String],
 ) -> Result<ExitStatus> {
@@ -366,13 +386,15 @@ pub(crate) fn build_then_run(
         "gameTestBuild".to_owned(),
         format!("-Pplaytest.suite={}", suite.name()),
     ];
-    let built = gradle(&build)?;
+    let built = gradle(Step::Build, &build)?;
     if !built.success() {
         bail!(
             "game: building the game suite failed with {built}, so no requirement ran; Gradle's output above says why"
         );
     }
-    gradle(run)
+    let mut run = run.to_vec();
+    run.push("-Pkotlin.compiler.execution.strategy=in-process".to_owned());
+    gradle(Step::Test, &run)
 }
 
 /// One Gradle run of a game suite as xtask plans it: the suite, the requirements a demo run reruns
@@ -1011,8 +1033,8 @@ mod tests {
         let mut calls = Vec::new();
 
         let status = build_then_run(
-            |gradle: &[String]| {
-                calls.push(gradle.to_vec());
+            |step: Step, gradle: &[String]| {
+                calls.push((step, gradle.to_vec()));
                 Ok(exited(0))
             },
             GameSuite::Playtest,
@@ -1021,8 +1043,9 @@ mod tests {
         .unwrap();
 
         assert!(status.success());
-        assert_eq!(calls.len(), 2, "{calls:?}");
-        let (build, run) = (&calls[0], &calls[1]);
+        let steps: Vec<_> = calls.iter().map(|(step, _)| *step).collect();
+        assert_eq!(steps, [Step::Build, Step::Test]);
+        let (build, run) = (&calls[0].1, &calls[1].1);
         assert!(build.contains(&"gameTestBuild".to_owned()), "{build:?}");
         // The build builds only the suite's modules: the product's need the stack to configure.
         assert!(
@@ -1032,16 +1055,24 @@ mod tests {
         assert!(build.contains(&"--no-daemon".to_owned()), "{build:?}");
         // Another worktree's Gradle may share the daemons, so the build never stops them.
         assert!(!build.contains(&"--stop".to_owned()), "{build:?}");
-        assert_eq!(run, &suite);
+        // Whatever the test run still compiles, it compiles in its own Gradle, starting no Kotlin
+        // daemon beside the game.
+        assert_eq!(
+            run,
+            &[
+                "gameTest".to_owned(),
+                "-Pkotlin.compiler.execution.strategy=in-process".to_owned()
+            ]
+        );
     }
 
     #[test]
     fn a_suite_that_fails_to_build_runs_no_requirement() {
-        let mut calls = 0;
+        let mut steps = Vec::new();
 
         let error = build_then_run(
-            |_: &[String]| {
-                calls += 1;
+            |step: Step, _: &[String]| {
+                steps.push(step);
                 Ok(exited(1))
             },
             GameSuite::Game,
@@ -1050,7 +1081,7 @@ mod tests {
         .unwrap_err()
         .to_string();
 
-        assert_eq!(calls, 1);
+        assert_eq!(steps, [Step::Build]);
         assert!(error.contains("building the game suite failed"), "{error}");
         assert!(error.contains("no requirement ran"), "{error}");
     }

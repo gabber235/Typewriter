@@ -627,8 +627,8 @@ pub fn scopes(scopes: &[&str]) -> Scopes {
 
 /// Declares a fake stack service `$name` that only names the services it needs, optionally
 /// followed by `; provides ROLE, ...`, `; needs_roles ROLE, ...` and `; builds BUILD, ...` (each a
-/// `static` [`crate::stack::spec::Build`]): its command does nothing and it is ready once that
-/// command exits.
+/// `static` [`crate::stack::spec::Build`]): its command does nothing, it may take 64 MiB and it is
+/// ready once that command exits.
 macro_rules! fake_service {
     ($name:ident, $($need:ident),*
         $(; provides $($provided:path),+)?
@@ -638,6 +638,7 @@ macro_rules! fake_service {
         impl $crate::stack::spec::Service for $name {
             const ID: $crate::stack::spec::ServiceId =
                 $crate::stack::spec::ServiceId(stringify!($name));
+            const MEMORY_MIB: u64 = 64;
             fn needs(&self) -> &'static [$crate::stack::spec::ServiceId] {
                 &[$(<$need as $crate::stack::spec::Service>::ID),*]
             }
@@ -1036,4 +1037,17 @@ pub fn changed(path: &str, added: &[u32]) -> crate::review::change::FileChange {
         status: crate::review::change::Status::Modified,
         added: added.to_vec(),
     }
+}
+
+/// A folder that stands in for the cgroup the machine delegates, offering the memory controller. The
+/// kernel makes a cgroup's control files as the cgroup is made and counts into `memory.peak` and
+/// `memory.events`; a test writes those itself.
+pub(crate) fn delegated_cgroup() -> tempfile::TempDir {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(
+        root.path().join("cgroup.controllers"),
+        "cpuset cpu io memory pids\n",
+    )
+    .unwrap();
+    root
 }

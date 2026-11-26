@@ -79,7 +79,7 @@ pub struct E2eArgs {
     /// merge commit `gh` cannot place.
     #[arg(long)]
     pub(crate) base: Option<String>,
-    /// How many Minecraft clients the game suite's pool runs (4 by default); fewer fit a busy
+    /// How many Minecraft clients the game suite's pool runs (3 by default); fewer fit a busy
     /// machine.
     #[arg(long)]
     pub(crate) clients: Option<NonZeroU32>,
