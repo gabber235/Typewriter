@@ -13,14 +13,13 @@ import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
-import com.typewritermc.services.libs.communicator.nats.NatsAuthentication
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
-import com.typewritermc.services.libs.communicator.nats.NatsConnectionConfiguration
-import com.typewritermc.services.libs.communicator.nats.NatsLifecycleResult
 import com.typewritermc.services.libs.communicator.nats.NatsMessageTransport
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
 import com.typewritermc.services.libs.communicator.router.RouterResult
+import com.typewritermc.services.libs.communicator.testing.BrokerClients
+import com.typewritermc.services.libs.communicator.testing.BrokerLogin
 import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
@@ -64,32 +63,23 @@ class BrokerClient(
 /** The connected clients of one test; [connect] adds a fixture user the test needs beyond the usual three. */
 class BrokerFixture(
     scope: CoroutineScope,
-    private val url: String,
+    url: String,
     private val harness: TelemetryTestHarness,
 ) : CoroutineScope by scope {
     private val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
-    val clients = mutableListOf<BrokerClient>()
+    private val broker = BrokerClients(scope, url)
 
     suspend fun connect(
         user: String,
         inboxPrefix: String,
     ): BrokerClient {
-        val connection =
-            NatsConnection(
-                {
-                    NatsConnectionConfiguration(
-                        serverUrl = url,
-                        clientName = user,
-                        inboxPrefix = inboxPrefix,
-                        maxReconnects = 0,
-                    )
-                },
-                { NatsAuthentication(username = user, password = PASSWORD) },
-            )
-        connection.connect() shouldBe NatsLifecycleResult.Success
+        val connection = broker.connection(inboxPrefix, BrokerLogin(user, PASSWORD))
         val transport = NatsMessageTransport(connection, TRANSPORT_LIMITS)
-        return BrokerClient(connection, transport, Communicator(transport, harness.telemetry, propagators)).also(clients::add)
+        return BrokerClient(connection, transport, Communicator(transport, harness.telemetry, propagators))
     }
+
+    /** Shuts every client's connection down. */
+    suspend fun shutdown() = broker.shutdown()
 }
 
 /**
@@ -109,7 +99,7 @@ suspend fun brokerFixture(
             fixture.connect("alice", PANEL_INBOX_PREFIX),
         )
     } finally {
-        fixture.clients.forEach { it.connection.shutdown() }
+        fixture.shutdown()
         harness.close()
     }
 }

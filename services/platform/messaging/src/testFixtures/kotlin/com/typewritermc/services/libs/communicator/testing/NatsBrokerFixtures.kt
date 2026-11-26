@@ -44,12 +44,15 @@ class BrokerClients(
     /** The key value buckets of a new connection to the broker, which must run JetStream. */
     suspend fun buckets(): KeyValueBuckets = NatsKeyValueBuckets(connection())
 
-    /** A new connection to the broker; it must succeed. */
-    suspend fun connection(inboxPrefix: String = "_INBOX."): NatsConnection {
+    /** A new connection to the broker, logged in as [login] when the broker has users, named after it; it must succeed. */
+    suspend fun connection(
+        inboxPrefix: String = "_INBOX.",
+        login: BrokerLogin? = null,
+    ): NatsConnection {
         val connection =
             NatsConnection(
-                { NatsConnectionConfiguration(url, inboxPrefix = inboxPrefix, maxReconnects = 0) },
-                { NatsAuthentication() },
+                { NatsConnectionConfiguration(url, clientName = login?.user, inboxPrefix = inboxPrefix, maxReconnects = 0) },
+                { login?.let { NatsAuthentication(username = it.user, password = it.password) } ?: NatsAuthentication() },
             )
         synchronized(connections) { connections += connection }
         val connected = connection.connect()
@@ -60,6 +63,12 @@ class BrokerClients(
     /** Shuts every connection down. */
     suspend fun shutdown() = synchronized(connections) { connections.toList() }.forEach { it.shutdown() }
 }
+
+/** A user of a broker whose configuration names its users. */
+data class BrokerLogin(
+    val user: String,
+    val password: String,
+)
 
 /** Runs [block] with [BrokerClients] for the broker at [url], shutting every connection down afterwards. */
 suspend fun onBroker(
