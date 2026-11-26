@@ -21,6 +21,7 @@ import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.loader.api.StagedHostedRuntime
+import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.DeploymentArtifact
@@ -74,6 +75,8 @@ import kotlin.time.Duration.Companion.seconds
 class ParticipantFixture(
     val serviceId: ServiceId,
     val realmId: RealmId,
+    /** The host's work in flight, which every runtime the participant stages counts in. */
+    val work: InFlightWork,
     val host: HostedRuntimeHost,
     val participant: HostRolloutParticipant,
     val projections: MutableMap<ProjectionReference, HostDeploymentProjection>,
@@ -264,13 +267,12 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
     val events = mutableListOf<ParticipantStatus>()
     val blobs = FileDigestBlobStore(root)
     val shared = SharedArtifactService(realmId.value, blobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
+    val work = InFlightWork()
     val host =
         object : HostedRuntimeHost {
             override val messaging: StateFlow<HostedMessagingSession?> = MutableStateFlow(null)
             override val openTelemetry: OpenTelemetry = OpenTelemetry.noop()
-            override val work =
-                com.typewritermc.loader.api.work
-                    .InFlightWork()
+            override val work = work.of(WorkRuntime("unstaged"))
             override val sharedArtifacts = shared
         }
     val stager =
@@ -285,7 +287,7 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
     val staging =
         ProjectionStager(
             place,
-            host.perRuntime(),
+            host.perRuntime(work),
             object : ProjectionSource {
                 override suspend fun fetch(reference: ProjectionReference) = projections.getValue(reference)
             },
@@ -326,7 +328,7 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
             stager,
         )
     val participant = HostRolloutParticipant(place, staging, { status -> events += status }, scope, 1.seconds)
-    return ParticipantFixture(serviceId, realmId, host, participant, projections, contexts, runtimes, events, root)
+    return ParticipantFixture(serviceId, realmId, work, host, participant, projections, contexts, runtimes, events, root)
 }
 
 fun attempt(
@@ -441,16 +443,16 @@ class RecordingRuntime : StagedHostedRuntime {
     }
 }
 
-/** Views of this host for each staged runtime: the same host, with each runtime's work counted as its own. */
-fun HostedRuntimeHost.perRuntime(): RuntimeHosts {
+/** Views of this host for each staged runtime: the same host, with each runtime's work counted as its own in [work]. */
+fun HostedRuntimeHost.perRuntime(work: InFlightWork): RuntimeHosts {
     val shared = this
     return object : RuntimeHosts {
-        override val work = HostWork(shared.work, 10.seconds)
+        override val work = HostWork(work, 10.seconds)
 
         override fun open(runtime: WorkRuntime): RuntimeHost =
             object : RuntimeHost, HostedRuntimeHost by shared {
                 override val runtime = runtime
-                override val work = shared.work.of(runtime)
+                override val work = work.of(runtime)
 
                 override fun close() = Unit
             }

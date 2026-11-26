@@ -8,7 +8,7 @@ import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.HostedArtifactManifest
 import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
-import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.RuntimeWork
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import io.opentelemetry.api.OpenTelemetry
@@ -246,8 +246,8 @@ interface HostedRuntimeHost {
     val openTelemetry: OpenTelemetry
     val sharedArtifacts: SharedArtifactAccess
 
-    /** The host's work in flight, which this runtime's tasks and outbound operations count in. */
-    val work: InFlightWork
+    /** The work this runtime begins in its host, which its tasks and outbound operations count in. */
+    val work: RuntimeWork
 }
 
 /**

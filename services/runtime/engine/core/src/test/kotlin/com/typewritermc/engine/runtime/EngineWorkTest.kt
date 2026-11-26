@@ -24,7 +24,7 @@ import kotlin.time.Duration.Companion.milliseconds
 val EngineWorkTest by testSuite {
     test("a task of an engine counts for the subjects of its coroutine from its dispatch until it ran") {
         val recorded = RecordedWork()
-        val scope = engineScope(recorded.work)
+        val scope = engineScope(recorded.runtime)
         val player = minecraftSubject("8d6c")
         val parked = CompletableDeferred<Continuation<Unit>>()
         val countWhileRunning = CompletableDeferred<Int>()
@@ -53,7 +53,7 @@ val EngineWorkTest by testSuite {
 
     test("a task on a narrowed view of an engine's dispatcher counts as well") {
         val recorded = RecordedWork()
-        val scope = engineScope(recorded.work)
+        val scope = engineScope(recorded.runtime)
         val narrowed = (scope.coroutineContext[ContinuationInterceptor] as CoroutineDispatcher).limitedParallelism(1)
 
         val job = scope.launch { withContext(narrowed + CoroutineName("narrowed")) {} }

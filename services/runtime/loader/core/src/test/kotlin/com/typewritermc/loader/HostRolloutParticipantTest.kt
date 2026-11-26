@@ -631,7 +631,7 @@ val HostRolloutParticipantTest by testSuite {
         runTest {
             val fixture = participantFixture(this)
             val (_, candidateAttempt, candidate) = fixture.candidateOverBaseline()
-            fixture.host.work
+            fixture.work
                 .of(WorkRuntime("sibling engine"))
                 .begin("engine task chat", null)
 

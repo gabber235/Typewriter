@@ -14,50 +14,49 @@ import kotlin.coroutines.CoroutineContext
  * only the work of the runtimes that leave. Either drain logs the [items] still in flight when the bound runs out. A
  * stepped game test starts no tick while work a tick caused still runs.
  *
- * The host hands each runtime it stages the view [of] that runtime, so every item the runtime begins carries it as
- * [WorkItem.runtime]; a view shares the host's items, count and observers.
+ * The host hands each runtime it stages only the [RuntimeWork] [of] that runtime, so every item the runtime begins
+ * carries it as [WorkItem.runtime]; only the host counts, lists and observes its work, and a drain picks a runtime's
+ * items by that field.
  *
  * Each item costs one insert into and one removal from a concurrent set, which is what lets a drain name what still
  * runs. Item events reach observers only while one is attached; an observer hears the end of exactly the items it
  * heard begin, before [count] drops. Any thread may begin, end and observe.
  */
-class InFlightWork private constructor(
-    private val host: Host,
-    /** The runtime whose items this view begins; null for the host's own work. */
-    val runtime: WorkRuntime?,
-) {
-    constructor() : this(Host(), null)
+class InFlightWork {
+    private val running: MutableSet<WorkItem> = ConcurrentHashMap.newKeySet()
+    private val observers = CopyOnWriteArrayList<WorkObserver>()
 
-    private class Host {
-        val running: MutableSet<WorkItem> = ConcurrentHashMap.newKeySet()
-        val observers = CopyOnWriteArrayList<WorkObserver>()
-    }
+    /** The work [runtime] begins in this host. */
+    fun of(runtime: WorkRuntime): RuntimeWork = RuntimeWork(this, runtime)
 
-    /** The view of this host's work whose items belong to [runtime]. */
-    fun of(runtime: WorkRuntime): InFlightWork = InFlightWork(host, runtime)
+    /** How many items run now, in every runtime and in the host itself. */
+    val count: Int get() = running.size
 
-    /** How many items run now. */
-    val count: Int get() = host.running.size
+    /** The items that run now, in every runtime and in the host itself, in no particular order. */
+    val items: List<WorkItem> get() = running.toList()
 
-    /** The items that run now, in no particular order. */
-    val items: List<WorkItem> get() = host.running.toList()
-
-    /** Item [name] for [subjects] (null: for every subject) begins now and runs until [WorkItem.end]. */
+    /** Item [name] of the host's own work for [subjects] (null: for every subject) begins now and runs until [WorkItem.end]. */
     fun begin(
         name: String,
         subjects: Set<WorkSubject>?,
+    ): WorkItem = begin(name, subjects, null)
+
+    internal fun begin(
+        name: String,
+        subjects: Set<WorkSubject>?,
+        runtime: WorkRuntime?,
     ): WorkItem {
-        val heard = if (host.observers.isEmpty()) emptyList() else host.observers.toList()
+        val heard = if (observers.isEmpty()) emptyList() else observers.toList()
         val item = WorkItem(this, name, subjects, runtime, heard)
-        host.running += item
+        running += item
         heard.forEach { it.began(item) }
         return item
     }
 
     /** [observer] hears every item that begins from now on, until the returned handle closes. */
     fun observe(observer: WorkObserver): AutoCloseable {
-        host.observers += observer
-        return AutoCloseable { host.observers -= observer }
+        observers += observer
+        return AutoCloseable { observers -= observer }
     }
 
     internal fun ended(
@@ -69,9 +68,24 @@ class InFlightWork private constructor(
         try {
             item.heard.forEach { it.ended(item, failure) }
         } finally {
-            host.running -= item
+            running -= item
         }
     }
+}
+
+/**
+ * The work one [runtime] begins in its host's [InFlightWork]: every item it begins carries [runtime]. It reads nothing
+ * back, since the host's count and items span every runtime.
+ */
+class RuntimeWork internal constructor(
+    private val host: InFlightWork,
+    val runtime: WorkRuntime,
+) {
+    /** Item [name] for [subjects] (null: for every subject) begins now in [runtime] and runs until [WorkItem.end]. */
+    fun begin(
+        name: String,
+        subjects: Set<WorkSubject>?,
+    ): WorkItem = host.begin(name, subjects, runtime)
 }
 
 /**

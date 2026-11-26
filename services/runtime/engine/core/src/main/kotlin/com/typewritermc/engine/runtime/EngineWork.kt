@@ -1,6 +1,6 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.RuntimeWork
 import com.typewritermc.loader.api.work.WorkSubjects
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -19,7 +19,7 @@ import kotlin.coroutines.CoroutineContext
  * Work in the scope that throws fails the whole scope, and the deployment then reports itself unhealthy with that
  * cause ([ReloadableEngineRuntime]), so the failure is handled there and never left to the global handler alone.
  */
-internal fun engineScope(work: InFlightWork): CoroutineScope =
+internal fun engineScope(work: RuntimeWork): CoroutineScope =
     CoroutineScope(CountingDispatcher(Dispatchers.Default, work) + ReportedByDeployment)
 
 /** A failed deployment scope is reported by the deployment that watches it, through its health. */
@@ -27,7 +27,7 @@ private val ReportedByDeployment = CoroutineExceptionHandler { _, _ -> }
 
 private class CountingDispatcher(
     private val dispatcher: CoroutineDispatcher,
-    private val work: InFlightWork,
+    private val work: RuntimeWork,
 ) : CoroutineDispatcher() {
     override fun isDispatchNeeded(context: CoroutineContext): Boolean = dispatcher.isDispatchNeeded(context)
 

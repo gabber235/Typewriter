@@ -5,6 +5,7 @@ import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.loader.api.artifact.PublicationBlobRetention
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
 import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.RuntimeWork
 import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.loader.work.HostWork
 import com.typewritermc.loader.work.counted
@@ -62,7 +63,7 @@ internal class SessionRuntimeHosts(
     private inner class View(
         override val runtime: WorkRuntime,
     ) : RuntimeHost {
-        override val work: InFlightWork = this@SessionRuntimeHosts.work.inFlight.of(runtime)
+        override val work: RuntimeWork = this@SessionRuntimeHosts.work.inFlight.of(runtime)
         private val session = MutableStateFlow<HostedMessagingSession?>(null)
         override val messaging: StateFlow<HostedMessagingSession?> = session.asStateFlow()
         override val sharedArtifacts: SharedArtifactAccess = this@SessionRuntimeHosts.sharedArtifacts.counted(work)

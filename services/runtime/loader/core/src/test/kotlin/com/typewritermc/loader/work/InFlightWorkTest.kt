@@ -1,6 +1,7 @@
 package com.typewritermc.loader.work
 
 import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.RuntimeWork
 import com.typewritermc.loader.api.work.WorkItem
 import com.typewritermc.loader.api.work.WorkObserver
 import com.typewritermc.loader.api.work.WorkRuntime
@@ -51,15 +52,15 @@ val InFlightWorkTest by testSuite {
         work.count shouldBe 0
     }
 
-    test("work begun through a runtime's view belongs to that runtime and counts in the host's total") {
+    test("a runtime's work names its runtime, and only the host lists and counts it, beside the host's own work") {
         val work = InFlightWork()
         val engine = WorkRuntime("primary engine")
+        val engineWork: RuntimeWork = work.of(engine)
 
-        val item = work.of(engine).begin("engine task join", null)
+        engineWork.begin("engine task join", null)
         work.begin("kv get sessions alex", null)
 
-        item.runtime shouldBe engine
+        work.items.map { it.name to it.runtime }.toSet() shouldBe setOf("engine task join" to engine, "kv get sessions alex" to null)
         work.count shouldBe 2
-        work.of(engine).count shouldBe 2
     }
 }

@@ -1,8 +1,10 @@
 package com.typewritermc.loader.api.work.testing
 
 import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.RuntimeWork
 import com.typewritermc.loader.api.work.WorkItem
 import com.typewritermc.loader.api.work.WorkObserver
+import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.loader.api.work.WorkSubject
 
 /** A Minecraft player's subject, as Typewriter names its protagonist. */
@@ -33,6 +35,9 @@ sealed interface WorkEvent {
  */
 class RecordedWork {
     val work = InFlightWork()
+
+    /** The work one runtime begins here, as a host hands it to the runtime it stages. */
+    val runtime: RuntimeWork = work.of(WorkRuntime("recorded runtime"))
     private val recorded = mutableListOf<WorkEvent>()
 
     /** Every event heard so far, in order. */

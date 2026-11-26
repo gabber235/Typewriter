@@ -8,7 +8,7 @@ import com.typewritermc.loader.api.artifact.SharedArtifactCatalog
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.api.artifact.SharedArtifactRevision
-import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.RuntimeWork
 import com.typewritermc.loader.api.work.WorkSubjects
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.kv.KeyValueBucket
@@ -41,20 +41,20 @@ import kotlin.time.TimeMark
  * until its result is back in the calling coroutine. Inbound deliveries do not count here; their handling counts at
  * the dispatcher that runs it.
  */
-fun HostedMessagingSession.counted(work: InFlightWork): HostedMessagingSession =
+fun HostedMessagingSession.counted(work: RuntimeWork): HostedMessagingSession =
     copy(
         communicator = communicator.over { CountedTransport(it, work) },
         buckets = CountedBuckets(buckets, work),
     )
 
 /** This access with every operation counted in [work], from its start until its result is back in the calling coroutine. */
-fun SharedArtifactAccess.counted(work: InFlightWork): SharedArtifactAccess = CountedSharedArtifacts(this, work)
+fun SharedArtifactAccess.counted(work: RuntimeWork): SharedArtifactAccess = CountedSharedArtifacts(this, work)
 
 /**
  * Counts [operation] as item [name] for the subjects of the calling coroutine. A result [failure] names a cause for, or
  * a thrown exception other than cancellation, fails the item; anything else ends it.
  */
-private suspend inline fun <T> InFlightWork.awaiting(
+private suspend inline fun <T> RuntimeWork.awaiting(
     name: String,
     failure: (T) -> Throwable? = { null },
     operation: () -> T,
@@ -83,7 +83,7 @@ private fun TransportError.asCause(): Throwable = cause ?: IllegalStateException
 
 private class CountedTransport(
     private val transport: MessageTransport,
-    private val work: InFlightWork,
+    private val work: RuntimeWork,
 ) : MessageTransport {
     override val system get() = transport.system
 
@@ -146,7 +146,7 @@ private class CountedTransport(
 
 private class CountedBuckets(
     private val buckets: KeyValueBuckets,
-    private val work: InFlightWork,
+    private val work: RuntimeWork,
 ) : KeyValueBuckets {
     override suspend fun open(name: String) = work.awaiting("kv open $name", { it.failure() }) { buckets.open(name) }.counted(name)
 
@@ -162,7 +162,7 @@ private class CountedBuckets(
 private class CountedBucket(
     private val name: String,
     private val bucket: KeyValueBucket,
-    private val work: InFlightWork,
+    private val work: RuntimeWork,
 ) : KeyValueBucket {
     override suspend fun get(key: String) = work.awaiting("kv get $name $key", { (it as? KeyValueRead.Failed)?.cause }) { bucket.get(key) }
 
@@ -187,7 +187,7 @@ private class CountedBucket(
 
 private class CountedSharedArtifacts(
     private val access: SharedArtifactAccess,
-    private val work: InFlightWork,
+    private val work: RuntimeWork,
 ) : SharedArtifactAccess {
     override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> =
         work.awaiting("blob metadata ${digest.value}") { access.metadata(digest) }

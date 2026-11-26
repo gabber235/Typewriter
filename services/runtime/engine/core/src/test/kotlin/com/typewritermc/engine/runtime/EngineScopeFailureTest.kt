@@ -3,6 +3,7 @@ package com.typewritermc.engine.runtime
 import com.typewritermc.engine.runtime.testing.runtime
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.WorkRuntime
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -14,7 +15,7 @@ import kotlinx.coroutines.test.runTest
 val EngineScopeFailureTest by testSuite {
     test("a part that throws in the deployment scope makes the deployment report failed with the cause") {
         runTest {
-            val deploymentScope = engineScope(InFlightWork())
+            val deploymentScope = engineScope(InFlightWork().of(WorkRuntime("engine")))
             val fixture = runtime(emptyList(), deploymentScope = deploymentScope)
             fixture.runtime.activate()
 

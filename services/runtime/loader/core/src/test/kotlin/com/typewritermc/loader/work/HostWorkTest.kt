@@ -34,7 +34,7 @@ val HostWorkTest by testSuite(testConfig = TestConfig.testScope(isEnabled = fals
         NatsTestServer.startWithJetStream().use { server ->
             onBroker(server.url) {
                 val recorded = RecordedWork()
-                val session = hostedSession(FakeMessageTransport()).copy(buckets = buckets()).counted(recorded.work)
+                val session = hostedSession(FakeMessageTransport()).copy(buckets = buckets()).counted(recorded.runtime)
                 val player = minecraftSubject("8d6c")
 
                 val written =
@@ -61,8 +61,8 @@ val HostWorkTest by testSuite(testConfig = TestConfig.testScope(isEnabled = fals
         NatsTestServer.startWithJetStream().use { server ->
             onBroker(server.url) {
                 val recorded = RecordedWork()
-                val reachable = hostedSession(FakeMessageTransport()).copy(buckets = buckets()).counted(recorded.work)
-                val unreachable = hostedSession(FakeMessageTransport()).counted(recorded.work)
+                val reachable = hostedSession(FakeMessageTransport()).copy(buckets = buckets()).counted(recorded.runtime)
+                val unreachable = hostedSession(FakeMessageTransport()).counted(recorded.runtime)
 
                 val bucket = (reachable.buckets.ensure(KeyValueBucketDeclaration("sessions", 1.seconds)) as KeyValueOpen.Opened).bucket
                 bucket.create("taken", byteArrayOf(1), 60.seconds)
@@ -79,7 +79,7 @@ val HostWorkTest by testSuite(testConfig = TestConfig.testScope(isEnabled = fals
     test("a request through a runtime's communicator counts until its reply is back, and fails its item when it fails") {
         val recorded = RecordedWork()
         val transport = FakeMessageTransport()
-        val access = ReconnectingSharedArtifactAccess(REALM, MutableStateFlow(hostedSession(transport).counted(recorded.work)))
+        val access = ReconnectingSharedArtifactAccess(REALM, MutableStateFlow(hostedSession(transport).counted(recorded.runtime)))
         transport.answerMetadata()
 
         access.metadata(BLOB.digest) shouldBe BlobResult.Success(BLOB)
@@ -96,7 +96,7 @@ val HostWorkTest by testSuite(testConfig = TestConfig.testScope(isEnabled = fals
     test("a shared artifact read that throws fails its item with the cause") {
         val recorded = RecordedWork()
         val transport = FakeMessageTransport()
-        val shared = ReconnectingSharedArtifactAccess(REALM, MutableStateFlow(hostedSession(transport))).counted(recorded.work)
+        val shared = ReconnectingSharedArtifactAccess(REALM, MutableStateFlow(hostedSession(transport))).counted(recorded.runtime)
         transport.failNextRequest(TransportError.Timeout())
 
         shouldThrow<IllegalStateException> { shared.fetch(BLOB.digest) }

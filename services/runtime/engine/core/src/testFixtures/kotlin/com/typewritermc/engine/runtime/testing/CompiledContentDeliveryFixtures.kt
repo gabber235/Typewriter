@@ -10,6 +10,8 @@ import com.typewritermc.loader.api.artifact.SharedArtifactAccess
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.api.artifact.SharedArtifactRevision
+import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -66,9 +68,7 @@ fun deliveryHost(
 ) = object : HostedRuntimeHost {
     override val messaging = MutableStateFlow<HostedMessagingSession?>(session)
     override val openTelemetry = telemetry.openTelemetry
-    override val work =
-        com.typewritermc.loader.api.work
-            .InFlightWork()
+    override val work = InFlightWork().of(WorkRuntime("engine"))
     override val sharedArtifacts =
         object : SharedArtifactAccess {
             override suspend fun publish(command: PublishSharedArtifact): Nothing = error("No content was returned")
