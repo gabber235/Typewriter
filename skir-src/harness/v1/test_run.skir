@@ -261,13 +261,19 @@ struct PartLoss(85020021) {
 enum LossCause(85020022) {
   // Its process exited with this status; a status over 128 means the signal `status - 128` ended it.
   exited: int32;
-  // It closed its connection to the pool, or left Paper, for this reason.
+  // It closed its connection to the pool, for this reason.
   left: string;
+  // Paper saw its player leave, for this reason.
+  left_paper: string;
+  // It lost its Paper without being told to leave, for this reason: its connection dropped or it could
+  // not join.
+  dropped: string;
   // It answered nothing for longer than the run waits for it.
   stalled;
   // It never became ready within the run's limit.
   never_ready;
-  // It still ran but could no longer do what attempts need of it, for this reason.
+  // It still ran but could no longer do what attempts need of it, for this reason, as a Paper that could
+  // not claim or resume its attempt's players.
   broke: string;
   // The kernel's out of memory killer killed it, as `MemoryKill` says why; whatever the part's loss
   // looked like first, as its connection closing.

@@ -6,7 +6,6 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import skirout.harness.v1.test_run.LossCause
-import skirout.harness.v1.wire.PaperLossKind
 
 val OwnPaperTest by testSuite {
     test("the attempt stands at the spawn, its players join only once their Paper is up, and it steps once all of them joined") {
@@ -89,7 +88,6 @@ val OwnPaperTest by testSuite {
             listOf(
                 Do.Lost(
                     1,
-                    PaperLossKind.EXITED_WHILE_BOOTING,
                     "paper-gv-1 exited with code 137 while it booted",
                     LossCause.ExitedWrapper(137),
                 ),
@@ -111,7 +109,6 @@ val OwnPaperTest by testSuite {
             listOf(
                 Do.Lost(
                     1,
-                    PaperLossKind.EXITED_WHILE_RUNNING,
                     "paper-gv-1 exited with code 1 while its attempt ran",
                     LossCause.ExitedWrapper(1),
                 ),
@@ -119,7 +116,7 @@ val OwnPaperTest by testSuite {
             )
         booting.exited(1) shouldContainExactly
             listOf(
-                Do.Lost(2, PaperLossKind.EXITED_WHILE_BOOTING, "paper-gv-2 exited with code 1 while it booted", LossCause.ExitedWrapper(1)),
+                Do.Lost(2, "paper-gv-2 exited with code 1 while it booted", LossCause.ExitedWrapper(1)),
                 Do.Gone,
             )
     }
@@ -137,13 +134,11 @@ val OwnPaperTest by testSuite {
         paper.ready("gv-1")
 
         paper.failed(
-            PaperLossKind.RESUME_FAILED,
             "paper-gv-1 could not resume its attempt: the player gv-1 is not online",
         ) shouldContainExactly
             listOf(
                 Do.Lost(
                     1,
-                    PaperLossKind.RESUME_FAILED,
                     "paper-gv-1 could not resume its attempt: the player gv-1 is not online",
                     LossCause.BrokeWrapper("paper-gv-1 could not resume its attempt: the player gv-1 is not online"),
                 ),
@@ -165,7 +160,6 @@ val OwnPaperTest by testSuite {
             listOf(
                 Do.Lost(
                     1,
-                    PaperLossKind.BOOT_TIMED_OUT,
                     "paper-gv-1 did not boot within ${OwnPaper.BOOT_SECONDS} s",
                     LossCause.NEVER_READY,
                 ),

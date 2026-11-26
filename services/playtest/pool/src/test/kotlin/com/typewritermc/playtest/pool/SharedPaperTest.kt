@@ -8,7 +8,6 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import skirout.harness.v1.test_run.LossCause
-import skirout.harness.v1.wire.PaperLossKind
 
 val SharedPaperTest by testSuite {
     test("once up, the shared Paper hears the regions ahead and every client is told to join it") {
@@ -93,7 +92,7 @@ val SharedPaperTest by testSuite {
         paper.exited(137) shouldContainExactly listOf(Do.Fail("paper exited with code 137", LossCause.ExitedWrapper(137)))
         paper.closed() shouldContainExactly
             listOf(Do.Fail("paper closed its pool connection", LossCause.LeftWrapper("it closed its pool connection")))
-        paper.failed(PaperLossKind.CLAIM_FAILED, "paper could not claim gv-1: no such player") shouldContainExactly
+        paper.failed("paper could not claim gv-1: no such player") shouldContainExactly
             listOf(
                 Do.Fail("paper could not claim gv-1: no such player", LossCause.BrokeWrapper("paper could not claim gv-1: no such player")),
             )

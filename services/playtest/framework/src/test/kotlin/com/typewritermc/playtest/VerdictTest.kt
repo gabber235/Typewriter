@@ -7,10 +7,10 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.test_run.Conclusion
+import skirout.harness.v1.test_run.LossCause
 import skirout.harness.v1.test_run.Pacing
 import skirout.harness.v1.test_run.WindowEnd
 import skirout.harness.v1.wire.ClientLoss
-import skirout.harness.v1.wire.ClientLossKind
 
 val VerdictTest by testSuite {
     val retries = AttemptPolicy.RerunFailuresWrapper(4)
@@ -19,7 +19,7 @@ val VerdictTest by testSuite {
     val lost =
         ClientLost(
             "gv-1",
-            ClientLoss(kind = ClientLossKind.EXITED, detail = "its process exited with code 137", log = "client-gv-1/lost-1.log"),
+            ClientLoss(cause = LossCause.ExitedWrapper(137), detail = "its process exited with code 137", log = "client-gv-1/lost-1.log"),
         )
     val declined = RequirementDeclined("GROUP-1 cannot run here: a requirement claims 3 players, but the pool holds 1")
     val refused = RequirementRefused("a window needs a positive check: without one it could never fail")

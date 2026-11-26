@@ -15,7 +15,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeIn
 import skirout.harness.v1.test_run.Demonstrates
-import skirout.harness.v1.wire.ClientLossKind
+import skirout.harness.v1.test_run.LossCause
 
 val QuitRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("QUIT-1", "a player who quits leaves the other player's player list", players = Players.count(2)) {
@@ -72,7 +72,7 @@ val QuitRequirements by testSuite(compartment = { GameCompartment }) {
         val lost = shouldThrow<ClientLost> { player.rejoin() }
 
         // The crash shows first as the process's exit or as the pool connection closing; Paper no longer sees the player.
-        lost.kind shouldBeIn listOf(ClientLossKind.EXITED, ClientLossKind.LEFT_POOL)
+        lost.loss.kind shouldBeIn listOf(LossCause.Kind.EXITED_WRAPPER, LossCause.Kind.LEFT_WRAPPER)
     }
 
     backToBack(

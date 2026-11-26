@@ -3,7 +3,6 @@ package com.typewritermc.playtest.pool
 import com.typewritermc.playtest.pool.PaperRules.Claiming
 import com.typewritermc.playtest.pool.PaperRules.Do
 import skirout.harness.v1.test_run.LossCause
-import skirout.harness.v1.wire.PaperLossKind
 import skirout.harness.v1.wire.Region
 
 /**
@@ -114,17 +113,11 @@ internal class OwnPaper(
             }
 
             Phase.RUNNING -> {
-                lost(
-                    PaperLossKind.EXITED_WHILE_RUNNING,
-                    "$name exited with code $code while its attempt ran",
-                    LossCause.ExitedWrapper(code),
-                ) +
-                    Do.Gone
+                lost("$name exited with code $code while its attempt ran", LossCause.ExitedWrapper(code)) + Do.Gone
             }
 
             else -> {
-                lost(PaperLossKind.EXITED_WHILE_BOOTING, "$name exited with code $code while it booted", LossCause.ExitedWrapper(code)) +
-                    Do.Gone
+                lost("$name exited with code $code while it booted", LossCause.ExitedWrapper(code)) + Do.Gone
             }
         }
 
@@ -133,16 +126,13 @@ internal class OwnPaper(
         return if (boot == boots &&
             booting
         ) {
-            lost(PaperLossKind.BOOT_TIMED_OUT, "$name did not boot within $BOOT_SECONDS s", LossCause.NEVER_READY)
+            lost("$name did not boot within $BOOT_SECONDS s", LossCause.NEVER_READY)
         } else {
             listOf()
         }
     }
 
-    override fun failed(
-        kind: PaperLossKind,
-        cause: String,
-    ): List<Do> = if (phase == Phase.OVER) listOf() else lost(kind, cause, LossCause.BrokeWrapper(cause))
+    override fun failed(cause: String): List<Do> = if (phase == Phase.OVER) listOf() else lost(cause, LossCause.BrokeWrapper(cause))
 
     override fun ended(
         attempt: Long,
@@ -162,12 +152,11 @@ internal class OwnPaper(
     }
 
     private fun lost(
-        kind: PaperLossKind,
         cause: String,
         loss: LossCause,
     ): List<Do> {
         phase = Phase.OVER
-        return listOf(Do.Lost(attempt, kind, cause, loss))
+        return listOf(Do.Lost(attempt, cause, loss))
     }
 
     companion object {

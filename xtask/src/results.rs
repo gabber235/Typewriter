@@ -234,6 +234,10 @@ pub fn loss_cause(cause: &LossCause) -> String {
         }
         LossCause::Exited(status) => format!("it exited with status {status}"),
         LossCause::Left(reason) => format!("it left: {reason}"),
+        LossCause::LeftPaper(reason) => format!("its player left Paper: {reason}"),
+        LossCause::Dropped(reason) => {
+            format!("it lost its Paper without being told to leave: {reason}")
+        }
         LossCause::Stalled => "it stopped answering".to_owned(),
         LossCause::NeverReady => "it never became ready".to_owned(),
         LossCause::Broke(reason) => format!("it could no longer serve attempts: {reason}"),
@@ -1042,6 +1046,14 @@ mod tests {
             (
                 LossCause::Left("paper closed its pool connection".to_owned()),
                 "it left: paper closed its pool connection",
+            ),
+            (
+                LossCause::LeftPaper("Disconnected".to_owned()),
+                "its player left Paper: Disconnected",
+            ),
+            (
+                LossCause::Dropped("it could not join paper-gv-1".to_owned()),
+                "it lost its Paper without being told to leave: it could not join paper-gv-1",
             ),
             (LossCause::Stalled, "it stopped answering"),
             (LossCause::NeverReady, "it never became ready"),

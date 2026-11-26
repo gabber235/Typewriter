@@ -1,7 +1,6 @@
 package com.typewritermc.playtest.pool
 
 import skirout.harness.v1.test_run.LossCause
-import skirout.harness.v1.wire.PaperLossKind
 import skirout.harness.v1.wire.Region
 
 /**
@@ -46,11 +45,8 @@ internal interface PaperRules {
     /** An attempt asks, as [request], for its Paper to be killed and booted again. */
     fun restart(request: Long): List<Do>
 
-    /** Paper could not do what an attempt needs, as [kind] says (it could not claim or resume), for [cause]. */
-    fun failed(
-        kind: PaperLossKind,
-        cause: String,
-    ): List<Do>
+    /** Paper could not do what an attempt needs (it could not claim or resume), as [cause] says. */
+    fun failed(cause: String): List<Do>
 
     /** [attempt] on this Paper ended, for [why]; every way an attempt ends comes here, once. */
     fun ended(
@@ -147,12 +143,11 @@ internal interface PaperRules {
         ) : Life
 
         /**
-         * The Paper is lost, as [kind] says, for [cause], which the run file lists as [loss]: [attempt]
+         * The Paper is lost for [loss], as [cause] says, the same loss the run file lists: [attempt]
          * fails, the process ends, the players go back to the shared Paper.
          */
         data class Lost(
             val attempt: Long,
-            val kind: PaperLossKind,
             val cause: String,
             val loss: LossCause,
         ) : Life

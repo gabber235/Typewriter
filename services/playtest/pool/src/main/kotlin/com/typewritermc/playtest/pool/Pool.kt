@@ -12,12 +12,10 @@ import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.wire.Answer
 import skirout.harness.v1.wire.Ask
 import skirout.harness.v1.wire.ClientLoss
-import skirout.harness.v1.wire.ClientLossKind
 import skirout.harness.v1.wire.Lease
 import skirout.harness.v1.wire.Message
 import skirout.harness.v1.wire.PaperAsk
 import skirout.harness.v1.wire.PaperLoss
-import skirout.harness.v1.wire.PaperLossKind
 import skirout.harness.v1.wire.Player
 import skirout.harness.v1.wire.PlayerEvent
 import skirout.harness.v1.wire.Region
@@ -731,7 +729,8 @@ internal class Pool(
     ) {
         val client = clientNamed(left.player)
         val cause = "its player left Paper (${left.reason.lowercase()})"
-        val away = client?.away ?: return lostOn(server, left.player, ClientLossKind.LEFT_PAPER, cause)
+        val loss = LossCause.LeftPaperWrapper(left.reason.lowercase())
+        val away = client?.away ?: return lostOn(server, left.player, cause, loss)
         when (val meaning = away.left(onItsPaper = client.on == server)) {
             Away.Left.Moved -> {}
 
@@ -747,7 +746,7 @@ internal class Pool(
             }
 
             Away.Left.Lost -> {
-                clientLost(left.player, ClientLossKind.LEFT_PAPER, cause)
+                clientLost(left.player, cause, loss)
             }
         }
     }
@@ -821,8 +820,8 @@ internal class Pool(
                 lostOn(
                     server,
                     message.value.player,
-                    ClientLossKind.STALLED,
                     "it acked no tick for 5 s after tick ${message.value.lastAcked}",
+                    LossCause.STALLED,
                 )
             }
 
@@ -872,19 +871,19 @@ internal class Pool(
         val rules = server.rules
         if (failure != null) {
             val cause = "${server.name} could not resume its attempt: $failure"
-            return act(server, rules.failed(PaperLossKind.RESUME_FAILED, cause))
+            return act(server, rules.failed(cause))
         }
         act(server, rules.resumed(message.tick))
     }
 
-    /** [server] lost [player]'s client, as [kind] says, for [cause]; a client the pool moved to another Paper left this one on purpose. */
+    /** [server] lost [player]'s client for [loss], as [cause] says; a client the pool moved to another Paper left this one on purpose. */
     private fun lostOn(
         server: Server,
         player: String,
-        kind: ClientLossKind,
         cause: String,
+        loss: LossCause,
     ) {
-        if (clientNamed(player)?.on == server) clientLost(player, kind, cause)
+        if (clientNamed(player)?.on == server) clientLost(player, cause, loss)
     }
 
     /** Paper or a client answered a request with [reply]: the session that sent it gets it under its own request id. */
@@ -975,7 +974,7 @@ internal class Pool(
         val names = attempt.players.joinToString { it.name }
         if (failure != null) {
             val cause = "${server.name} could not claim $names: $failure"
-            return act(server, server.rules.failed(PaperLossKind.CLAIM_FAILED, cause))
+            return act(server, server.rules.failed(cause))
         }
         attempt.players.forEach { clientOf(it.uuid)?.peer?.send(Message.RESET) }
     }
@@ -1045,12 +1044,7 @@ internal class Pool(
 
             Role.CLIENT -> {
                 clients.firstOrNull { it.peer == peer }?.let {
-                    lost(
-                        it,
-                        ClientLossKind.LEFT_POOL,
-                        "its connection to the pool closed",
-                        LossCause.LeftWrapper("its connection to the pool closed"),
-                    )
+                    lost(it, "its connection to the pool closed", LossCause.LeftWrapper("its connection to the pool closed"))
                 }
             }
 
@@ -1187,7 +1181,7 @@ internal class Pool(
 
             is Do.Free -> clientNamed(next.player)?.let(::free)
 
-            is Do.Lose -> clientLost(next.player, ClientLossKind.DROPPED, next.cause)
+            is Do.Lose -> clientLost(next.player, next.cause, LossCause.DroppedWrapper(next.cause))
 
             // Records sent before the drop show the Paper that is gone; the next ones show the new one.
             is Do.Forget -> attemptHolding(next.player)?.fresh?.remove(next.player)
@@ -1202,7 +1196,7 @@ internal class Pool(
             is Do.Boot -> boot(server, next.number)
             is Do.Kill -> kill(server, next.attempt)
             is Do.Restarted -> restarted(server, next)
-            is Do.Lost -> lostPaper(server, next.attempt, next.kind, next.cause, next.loss)
+            is Do.Lost -> lostPaper(server, next.attempt, next.cause, next.loss)
             is Do.Return -> returnFrom(server, next.attempt)
             Do.Gone -> gone(server)
         }
@@ -1323,7 +1317,6 @@ internal class Pool(
     private fun lostPaper(
         server: Server,
         id: Long,
-        kind: PaperLossKind,
         cause: String,
         lossCause: LossCause,
     ) {
@@ -1332,7 +1325,7 @@ internal class Pool(
             it.destroyForcibly()
             it.waitFor(STOP_SECONDS, TimeUnit.SECONDS)
         }
-        val loss = PaperLoss(kind = kind, detail = cause, log = server.folder.log.toString())
+        val loss = PaperLoss(cause = lossCause, detail = cause, log = server.folder.log.toString())
         val reason = "$cause; see ${loss.log}"
         System.err.println("The Paper ${server.name} is lost: $reason")
         val attempt = running(id)
@@ -1517,12 +1510,12 @@ internal class Pool(
         val reason = "${part.name} exited with code $code; see ${part.log}"
         if (part.player == null) return fail(reason, part, LossCause.ExitedWrapper(code))
         clientNamed(part.player)?.takeIf { it.part === part }?.let {
-            lost(it, ClientLossKind.EXITED, "its process exited with code $code", LossCause.ExitedWrapper(code))
+            lost(it, "its process exited with code $code", LossCause.ExitedWrapper(code))
         }
     }
 
     /**
-     * [client] crashed, froze until Paper timed its player out, or left, as [kind] says: its attempt fails
+     * [client] crashed, froze until Paper timed its player out, or left, as [lossCause] says: its attempt fails
      * with [cause] and the lost client's log, Paper already holds back no tick for it, and the pool starts a new
      * client for the player. Until that one is ready, no claim gets the player. An attempt still being
      * claimed goes back in line. A new client lost before it stepped is replaced the same way, so its
@@ -1531,11 +1524,10 @@ internal class Pool(
      */
     private fun lost(
         client: Client,
-        kind: ClientLossKind,
         cause: String,
         lossCause: LossCause,
     ) {
-        if ((client.lost && !kind.losesNewClient) || failure != null) return
+        if ((client.lost && !lossCause.losesNewClient) || failure != null) return
         val name = client.player.name
         client.lost = true
         client.away = null
@@ -1559,7 +1551,7 @@ internal class Pool(
             }
         }
         client.part = replaced.replacement.also(::watch)
-        val loss = ClientLoss(kind = kind, detail = cause, log = replaced.lostLog.toString())
+        val loss = ClientLoss(cause = lossCause, detail = cause, log = replaced.lostLog.toString())
         System.err.println("The client of $name is lost: $cause; see ${loss.log}. A new one starts.")
         attemptHolding(name)?.let { attempt ->
             if (attempt.started) {
@@ -1577,11 +1569,10 @@ internal class Pool(
 
     private fun clientLost(
         player: String,
-        kind: ClientLossKind,
         cause: String,
+        loss: LossCause,
     ) {
-        val loss = if (kind == ClientLossKind.STALLED) LossCause.STALLED else LossCause.LeftWrapper(cause)
-        clientNamed(player)?.let { lost(it, kind, cause, loss) }
+        clientNamed(player)?.let { lost(it, cause, loss) }
     }
 
     /** [client] steps with the Paper it is on; one that rejoined its attempt's Paper belongs to that attempt again there. */
