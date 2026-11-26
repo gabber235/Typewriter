@@ -37,6 +37,11 @@ class ScriptedBuckets(
     /** The held requests that reached this point and wait for the test, oldest first. */
     val pending: List<HeldRequest> get() = synchronized(waiting) { waiting.toList() }
 
+    private val reachedBroker = mutableListOf<SentRequest>()
+
+    /** Every request that reached the broker, oldest first; one that failed on its way is not among them. */
+    val sent: List<SentRequest> get() = synchronized(reachedBroker) { reachedBroker.toList() }
+
     /** Holds the next request of [kind]; its [HeldRequest.reached] completes once that request arrives. */
     fun holdNext(kind: RequestKind): HeldRequest = HeldRequest(kind).also { synchronized(waiting) { armed += it } }
 
@@ -100,18 +105,22 @@ class ScriptedBuckets(
             send: suspend () -> T,
         ): T {
             if (unreachable) return failed(unreachableFailure())
+            val reach: suspend () -> T = {
+                synchronized(reachedBroker) { reachedBroker += SentRequest(kind, key) }
+                send()
+            }
             return when (arrive(kind, key)) {
                 null, Resolution.LAND -> {
-                    send()
+                    reach()
                 }
 
                 Resolution.LAND_AND_FAIL -> {
-                    send()
+                    reach()
                     failed(IOException("The broker's answer to this $kind of $key was lost"))
                 }
 
                 Resolution.LAND_AND_HANG -> {
-                    send()
+                    reach()
                     awaitCancellation()
                 }
 
@@ -127,6 +136,12 @@ class ScriptedBuckets(
 
 /** What a scripted request does at the broker. */
 enum class RequestKind { READ, WRITE, LIST }
+
+/** One request of [kind] about [key], or the filter of a listing, that reached the broker. */
+data class SentRequest(
+    val kind: RequestKind,
+    val key: String,
+)
 
 /** One request a [ScriptedBuckets] holds until the test decides its fate. */
 class HeldRequest internal constructor(

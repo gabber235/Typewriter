@@ -71,8 +71,8 @@ enum class Delivery { LAND, LAND_AND_FAIL, FAIL }
 
 /** Plays [schedule] on a fresh key with fresh holders, then lets every held request land and the holders settle. */
 suspend fun VirtualLeases.play(schedule: LeaseSchedule): PlayedSchedule {
-    keyValue.createBucket()
-    val key = "played.${keyValue.clock().instant().toEpochMilli()}.${System.identityHashCode(schedule)}"
+    createBucket()
+    val key = "played.${store.clock().instant().toEpochMilli()}.${System.identityHashCode(schedule)}"
     val holders = List(3) { holder("engine-$it") }
     holders.forEach { it.buckets.holdEvery = true }
     val claims = mutableListOf<PlayedClaim>()
@@ -81,7 +81,7 @@ suspend fun VirtualLeases.play(schedule: LeaseSchedule): PlayedSchedule {
         when (step) {
             is LeaseStep.Claim -> {
                 if (last[step.holder] !is LeaseStep.Crash) {
-                    claims += PlayedClaim(holders[step.holder].id, keyValue.clock().instant())
+                    claims += PlayedClaim(holders[step.holder].id, store.clock().instant())
                     holders[step.holder].claim(key)
                     last[step.holder] = step
                 }
@@ -112,19 +112,19 @@ suspend fun VirtualLeases.play(schedule: LeaseSchedule): PlayedSchedule {
             }
 
             is LeaseStep.Wait -> {
-                keyValue.advance(step.millis.milliseconds)
+                store.advance(step.millis.milliseconds)
             }
         }
-        keyValue.settle()
+        store.settle()
     }
     holders.forEach { it.buckets.holdEvery = false }
     while (true) {
         val pending = holders.flatMap { it.buckets.pending }
         if (pending.isEmpty()) break
         pending.forEach { it.land() }
-        keyValue.settle()
+        store.settle()
     }
-    keyValue.advance(timings.refresh * 2 + timings.retry * 2)
+    store.advance(timings.refresh * 2 + timings.retry * 2)
     val standing =
         holders.indices
             .filter { last[it] is LeaseStep.Claim }
@@ -156,11 +156,11 @@ class PlayedSchedule internal constructor(
         try {
             val newest = claims.maxWithOrNull(compareBy<PlayedClaim>({ it.claimed }, { it.holder }))
             if (newest != null && newest.holder in standing) {
-                leases.keyValue.advance(leases.timings.ttl * 2)
+                leases.store.advance(leases.timings.ttl * 2)
                 leases.entry(key).shouldNotBeNull().holder shouldBe newest.holder
             }
             if (standing.isEmpty()) {
-                leases.keyValue.advance(leases.timings.ttl + leases.timings.vacancy)
+                leases.store.advance(leases.timings.ttl + leases.timings.vacancy)
                 leases.entry(key).shouldBeNull()
             }
         } finally {
