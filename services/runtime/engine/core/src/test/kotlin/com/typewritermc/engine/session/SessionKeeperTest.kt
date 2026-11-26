@@ -7,6 +7,7 @@ import com.typewritermc.services.libs.communicator.testing.KeyValueStore
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -102,7 +103,7 @@ val SessionKeeperTest by testSuite {
         sessions.entry(session.protagonist, session.id).shouldNotBeNull().holder shouldBe EngineId("engine-a")
     }
 
-    test("SESSION-5 a session whose key expired during an outage starts again once the bucket is back") {
+    test("SESSION-5 a session whose key expired during an outage starts again, beginning when the bucket is back") {
         val sessions = SessionHarness(KeyValueStore.Memory(testScope)).apply { createBucket() }
         val engine = sessions.engine("engine-a")
         val session = sessions.player()
@@ -111,14 +112,14 @@ val SessionKeeperTest by testSuite {
 
         engine.buckets.unreachable = true
         sessions.store.advance(sessions.timings.lease.ttl * 2)
+        val back = sessions.store.clock().instant()
         engine.buckets.unreachable = false
         sessions.store.advance(sessions.timings.lease.refresh)
 
         val entry = sessions.entry(session.protagonist, session.id).shouldNotBeNull()
         entry.holder shouldBe EngineId("engine-a")
-        entry.value.since shouldBeGreaterThan KeyValueStore.Memory.START +
-            sessions.timings.lease.ttl
-                .toJavaDuration()
+        entry.value.since shouldBeGreaterThan back
+        entry.value.since shouldBeLessThanOrEqualTo sessions.store.clock().instant()
     }
 
     test("SESSION-6 sessions that leave right after joining all end once the vacancy passed") {
@@ -228,5 +229,21 @@ val SessionKeeperTest by testSuite {
 
         sessions.entry(session.protagonist, session.id).shouldNotBeNull().holder shouldBe EngineId("engine-b")
         old.keeper.holders(session.protagonist) shouldBe setOf(EngineId("engine-b"))
+    }
+
+    test("SESSION-13 a new session begins at the instant it connected, however late its engine sees the join") {
+        val sessions = SessionHarness(KeyValueStore.Memory(testScope)).apply { createBucket() }
+        val engine = sessions.engine("engine-a")
+        val session = sessions.player()
+        val connected = sessions.store.clock().instant()
+        sessions.store.advance(sessions.timings.lease.ttl)
+
+        engine.online.join(session, connected = connected)
+        sessions.store.settle()
+
+        sessions
+            .entry(session.protagonist, session.id)
+            .shouldNotBeNull()
+            .value.since shouldBe connected
     }
 }

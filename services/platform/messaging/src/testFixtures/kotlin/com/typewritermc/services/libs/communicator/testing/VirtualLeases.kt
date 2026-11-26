@@ -91,7 +91,7 @@ class LeaseHolder(
     fun claim(
         key: String,
         value: String = "first",
-    ) = leases.claim(key, clock.instant()) { previous -> previous ?: value }
+    ) = leases.claim(key, clock.instant()) { previous, _ -> previous ?: value }
 
     fun release(key: String) = leases.release(key)
 

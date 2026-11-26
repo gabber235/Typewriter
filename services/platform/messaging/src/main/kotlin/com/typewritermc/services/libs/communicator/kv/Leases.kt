@@ -122,13 +122,14 @@ class Leases<H : Comparable<H>, V>(
     private val bucketAttributes = Attributes.of(AttributeKey.stringKey("lease.bucket"), bucketName)
 
     /**
-     * Claims [key] for this holder as of [claimed], the instant the claim happened on this holder's clock; [value] gets
-     * the value the key kept before, null when it kept none it can read.
+     * Claims [key] for this holder as of [claimed], the instant the claim happened on this holder's clock. [value] gets
+     * the value the key kept before, null when it kept none it can read, and the value this claim last wrote, null
+     * until its first write landed; so a write after the key expired knows it writes the key again.
      */
     fun claim(
         key: String,
         claimed: Instant,
-        value: (previous: V?) -> V,
+        value: (previous: V?, written: V?) -> V,
     ) {
         val (slot, call) = call(key)
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -220,14 +221,15 @@ class Leases<H : Comparable<H>, V>(
 
     /**
      * Reads [key] and writes [claim] over it when the rule lets it: over an absent or unreadable entry, its own, an older
-     * claim, or a vacant entry when [takesVacant]. [current] says whether the call is still the slot's latest, checked
-     * right before the write.
+     * claim, or a vacant entry when [takesVacant]. [written] is the value the claim last wrote, null before its first
+     * write landed. [current] says whether the call is still the slot's latest, checked right before the write.
      */
     private suspend fun write(
         bucket: KeyValueBucket,
         key: String,
         claim: Claim<H, V>,
         takesVacant: Boolean,
+        written: V? = null,
         current: () -> Boolean = { true },
     ): Write<H, V> =
         when (val read = bucket.get(key)) {
@@ -237,7 +239,7 @@ class Leases<H : Comparable<H>, V>(
 
             KeyValueRead.Absent -> {
                 if (!current()) return Write.Conflict
-                val entry = LeaseEntry(claim.state, claim.value(null))
+                val entry = LeaseEntry(claim.state, claim.value(null, written))
                 bucket.create(key, codec.encode(entry), timings.ttl).outcome(entry, claim)
             }
 
@@ -252,7 +254,7 @@ class Leases<H : Comparable<H>, V>(
                 if (other != null && other.newerThan(claim.state)) return Write.Lost
                 if (found?.state == LeaseState.Vacant && !takesVacant) return Write.Lost
                 if (!current()) return Write.Conflict
-                val entry = LeaseEntry(claim.state, claim.value(found?.value))
+                val entry = LeaseEntry(claim.state, claim.value(found?.value, written))
                 bucket.update(key, codec.encode(entry), timings.ttl, read.entry.revision).outcome(entry, claim)
             }
         }
@@ -276,7 +278,7 @@ class Leases<H : Comparable<H>, V>(
                 }
 
                 KeyValueWrite.Conflict -> {
-                    when (val again = write(bucket, key, held.claim, takesVacant = false)) {
+                    when (val again = write(bucket, key, held.claim, takesVacant = false, written = held.entry.value)) {
                         is Write.Held -> held = again.held
 
                         Write.Lost -> return slot.lose()
@@ -392,7 +394,7 @@ class Leases<H : Comparable<H>, V>(
     /** A claim as it was made: its instant, and how it derives its value from the value the key kept. */
     private class Claim<H : Comparable<H>, V>(
         val state: LeaseState.Held<H>,
-        val value: (previous: V?) -> V,
+        val value: (previous: V?, written: V?) -> V,
     )
 
     /** A key this holder wrote: the entry, the revision it is at, and the claim that keeps it. */

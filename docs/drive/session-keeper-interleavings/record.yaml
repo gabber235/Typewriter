@@ -105,6 +105,12 @@ decided:
       Engine core offers the deployment's CoroutineScope as a Koin single; engine kind parts run their own work there
       and never build a scope or dispatcher of their own.
     why: all engine work runs on the engine's one dispatcher, so it can be counted (maintainer, 2026-11-25)
+  - id: session-since
+    what: >
+      A new session's since is its connection instant, the instant its claim carries; a session whose key expired while
+      the protagonist stayed connected begins again at the keeper's clock when it is written back; an existing entry
+      keeps its since. The lease value function also gets the value its claim last wrote, so it tells the two apart.
+    why: a session begins when its protagonist connected, and the old one ended when its key expired (maintainer, 2026-11-26)
 
 open: []
 

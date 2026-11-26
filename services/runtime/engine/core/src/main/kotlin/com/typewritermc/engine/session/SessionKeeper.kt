@@ -40,7 +40,8 @@ data class SessionTimings(
 /**
  * Keeps this engine's sessions in the Realm's sessions bucket, exactly the sessions its engine kind has in [online],
  * one lease per session. A session added to the set claims its key with the instant it connected, as its engine kind
- * stamped it, however late this keeper sees it; a session whose instant changed connected again and claims again; of two engines
+ * stamped it, however late this keeper sees it, and a new session begins at that instant; one whose key expired while
+ * it stayed in the set begins again when it is written back, and an existing entry keeps when it began; a session whose instant changed connected again and claims again; of two engines
  * claiming one session, the later connection holds it, so a server move works in either order of join and quit and a
  * late write of an engine the protagonist left never displaces the engine it moved to. A session removed from the set
  * is left vacant at once: alive for the vacancy so another engine or a rejoin takes it over, but held by nobody, and
@@ -70,11 +71,9 @@ class SessionKeeper(
                 (kept.keys - current.keys).forEach { leases.release(it.key) }
                 current.forEach { (session, connected) ->
                     if (kept[session] != connected) {
-                        leases.claim(session.key, connected) { previous ->
-                            SessionValue(
-                                session.protagonist,
-                                previous?.since ?: clock.instant(),
-                            )
+                        leases.claim(session.key, connected) { previous, written ->
+                            // A key that expired under this claim ended its session, so the new one begins now.
+                            SessionValue(session.protagonist, previous?.since ?: written?.let { clock.instant() } ?: connected)
                         }
                     }
                 }
