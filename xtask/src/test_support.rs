@@ -695,22 +695,26 @@ fn lines(path: &Path) -> usize {
     fs::read_to_string(path).map_or(0, |text| text.lines().count())
 }
 
-/// The workspace files of [`cargo_workspace`].
-pub const CARGO_WORKSPACE: &[&str] = &["backend/Cargo.toml", "Cargo.lock"];
+/// The folder [`cargo_workspace`]'s build declares as its inputs.
+pub const CARGO_TREES: &[&str] = &["backend"];
 
-/// A root holding a Cargo workspace's files ([`CARGO_WORKSPACE`]) and its one source,
-/// `backend/src/lib.rs`.
+/// A Git repository holding a Cargo workspace in `backend` ([`CARGO_TREES`]): its manifest, lock
+/// file and one source, `backend/src/lib.rs`, committed, with `target` ignored.
 pub fn cargo_workspace() -> TempRoot {
     let root = TempRoot::new();
+    root.git(&["init", "--quiet"]);
+    root.write(".gitignore", "target/\nruns\n");
     root.write("backend/Cargo.toml", "[package]");
-    root.write("Cargo.lock", "version = 4");
+    root.write("backend/Cargo.lock", "version = 4");
     root.write("backend/src/lib.rs", "fn main() {}");
+    root.git(&["add", "."]);
+    root.git(&["commit", "--quiet", "-m", "workspace"]);
     root
 }
 
 /// A stand in for Cargo in a repository root: each run is counted and writes [`Self::artifact`] in
-/// its target directory and, as Cargo does beside each artifact, a dependency file naming the files
-/// the build read.
+/// its target directory, as Cargo does beside each artifact a dependency file naming the files the
+/// build read, and on standard output the JSON messages it is handed ([`Self::messages`]).
 pub struct FakeCargo<'a> {
     pub ctx: &'a Context,
 }
@@ -726,7 +730,7 @@ impl FakeCargo<'_> {
     }
 
     /// A run in `backend` that writes `contents` into the artifact and names `reads`, root
-    /// relative, as read.
+    /// relative or absolute, as read.
     pub fn command(&self, contents: &str, reads: &[&str]) -> Command {
         fs::create_dir_all(self.path("target")).unwrap();
         let reads: Vec<String> = reads
@@ -737,26 +741,57 @@ impl FakeCargo<'_> {
         command
             .args([
                 "-c",
-                r#"echo run >> "$RUNS" && printf %s "$CONTENTS" > "$ARTIFACT" && printf '%s: %s\n' "$ARTIFACT" "$READS" > "$DEP_INFO""#,
+                r#"echo run >> "$RUNS" && printf %s "$CONTENTS" > "$ARTIFACT" && printf '%s: %s\n' "$ARTIFACT" "$READS" > "$DEP_INFO" && printf %s "$MESSAGES""#,
             ])
             .env("RUNS", self.path("runs"))
             .env("CONTENTS", contents)
             .env("ARTIFACT", self.artifact())
             .env("READS", reads.join(" "))
             .env("DEP_INFO", self.path("target/stack.d"))
+            .env("MESSAGES", "")
             .current_dir(self.path("backend"));
         command
     }
 
-    /// The build named `stack` of [`Self::artifact`] with the root relative `workspace` files.
-    pub fn build(&self, workspace: &[&str]) -> crate::cargo_build::CargoBuild<'static> {
+    /// The JSON message Cargo prints when the build script of `package` ran, or was replayed, with
+    /// what it printed (`printed`) where Cargo keeps it, beside its `out` folder.
+    pub fn build_script(&self, package: &str, printed: &str) -> String {
+        let unit = self.path(&format!("target/debug/build/{package}/0123"));
+        fs::create_dir_all(unit.join("out")).unwrap();
+        fs::create_dir_all(unit.join("run")).unwrap();
+        fs::write(unit.join("run/stdout"), printed).unwrap();
+        format!(
+            "{}\n",
+            serde_json::json!({
+                "reason": "build-script-executed",
+                "package_id": package,
+                "out_dir": unit.join("out"),
+            })
+        )
+    }
+
+    /// The build named `stack` of [`Self::artifact`] whose inputs are the root relative `trees`;
+    /// a case that hands it build scripts adds their packages.
+    pub fn build(&self, trees: &[&str]) -> crate::cargo_build::CargoBuild<'static> {
         crate::cargo_build::CargoBuild {
             name: "stack",
-            workspace: workspace.iter().map(|file| (*file).to_owned()).collect(),
+            trees: trees.iter().map(|tree| (*tree).to_owned()).collect(),
             artifacts: vec![self.artifact()],
             target: self.path("target"),
-            workspace_root: self.path("backend"),
+            packages: std::collections::BTreeMap::new(),
         }
+    }
+
+    /// Runs `build` with no variables through a fresh [`Self::command`] that writes `one` and
+    /// reads the workspace's one source, as [`cargo_workspace`] lays it out.
+    pub fn run(&self, build: &crate::cargo_build::CargoBuild) -> crate::cargo_build::Outcome {
+        build
+            .run(
+                self.ctx,
+                &mut self.command("one", &["backend/src/lib.rs"]),
+                &crate::digest::Environment::EMPTY,
+            )
+            .unwrap()
     }
 
     /// How often it ran.

@@ -1,39 +1,40 @@
-//! Cargo builds reused while everything Cargo would consult is unchanged. Cargo itself judges
-//! local crates by file times, so a fresh checkout recompiles every one of them even when a cached
-//! target holds what they would produce. Cargo's own content based check (`-Z checksum-freshness`)
-//! is refused on the stable toolchain the repository pins (1.100), so this module decides instead.
-//! Once checksum freshness is stable, delete this read set: keep only the cached target and the
-//! removal of each artifact before Cargo runs, and let Cargo decide. A stamp beside the artifacts
-//! records:
+//! Cargo builds reused while their declared inputs are unchanged. Cargo itself judges local
+//! crates by file times, so a fresh checkout recompiles every one of them even when a cached target
+//! holds what they would produce. Cargo's own content based check (`-Z checksum-freshness`) is
+//! refused on the stable toolchain the repository pins (1.100), so this module decides instead.
+//! Once checksum freshness is stable, delete the declared trees and their checks: keep only the
+//! cached target and the removal of each artifact before Cargo runs, and let Cargo decide.
+//!
+//! A build declares the folders it reads, its trees: its workspace's folder, the folder of every
+//! package in the repository it builds, and any folder its caller adds. A stamp beside the
+//! artifacts records:
 //!
 //! - the command, with the variables it sets, and the toolchain (`rustc -vV`);
 //! - Cargo's whole configuration surface: every inherited `CARGO*` and `RUST*` variable but those
 //!   Cargo sets for each crate itself, and every configuration file Cargo loads (`.cargo/config.toml`
 //!   and `.cargo/config` from the directory it runs in up to the file system root, then those in
 //!   Cargo's home), each recorded absent while it does not exist;
-//! - the workspace's manifests (path dependencies included) and lock file;
-//! - the sha256 of each artifact and of everything the build read: the repository files the
-//!   dependency files Cargo writes beside each artifact name (a build script's `rerun-if-changed`
-//!   inputs included), the environment variables its crates read at compile time (`env!`,
-//!   `option_env!`) and its build scripts watch (`rerun-if-env-changed`), and every file of a
-//!   package whose build script watches nothing (Cargo runs such a script again when any of them
-//!   changes).
+//! - the sha256 of each artifact, of every file in the trees that Git does not ignore (tracked, or
+//!   untracked but not ignored, so a new module counts before it is added), of the generated
+//!   protocol sources inside them, and of each variable outside `CARGO*` and `RUST*` a build script
+//!   watches (`rerun-if-env-changed`).
 //!
 //! While all of them match, Cargo does not run at all. Files outside the repository are not
 //! listed: the toolchain's sources change with `rustc -vV` and dependency sources with
 //! `Cargo.lock`.
 //!
-//! Known issue, trusted on purpose as Cargo trusts it: a procedural macro that reads a file or a
-//! variable no dependency file names (outside `include_str!`, `env!` and `proc_macro`'s tracked
-//! paths) is not listed, so an edit only such a macro reads reuses the build, as Cargo would.
+//! So that no input goes unseen, a build that read a repository file outside its trees fails,
+//! naming it: one the dependency file Cargo writes beside each artifact names (an `include_str!`
+//! of a file elsewhere), or one a build script watches (`rerun-if-changed`) outside its trees, or
+//! outside its own folder for a package from elsewhere. Its caller then declares the folder.
 //!
-//! Known issue: where the reads come from is Cargo's own layout, not a stable interface: the units'
-//! dependency files and each build script's output below the target's `build` folders, and
-//! sources named relative to the workspace's root. A test builds a small workspace with the real
-//! toolchain and fails when a read goes missing, so a toolchain that moves them fails loudly
-//! instead of reusing a build whose inputs changed.
+//! Known issues: a variable a crate reads at compile time (`env!`, `option_env!`) outside `CARGO*`
+//! and `RUST*` is not an input unless a build script watches it, since Cargo's dependency file
+//! beside an artifact leaves those out; and a procedural macro that reads a file no dependency file
+//! names is trusted, as Cargo trusts it. Where a build script's output lies is found from the
+//! `out_dir` Cargo's JSON messages name; a toolchain that moves it fails the build loudly.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
@@ -41,45 +42,78 @@ use std::process::Command;
 use anyhow::{Context as _, Result, bail};
 use serde::Deserialize;
 
-use crate::digest::{Digest, Environment, Stamp, expand};
-use crate::{CommandExt as _, Context};
+use crate::digest::{Digest, Environment, Stamp};
+use crate::{CommandExt as _, Context, generate};
 
-/// One Cargo invocation and what it produces.
+/// One Cargo invocation, the folders it reads and what it produces.
 pub struct CargoBuild<'a> {
     /// Names the stamp, which lies beside the first artifact as `<name>.xtask-stamp`.
     pub name: &'a str,
-    /// Root relative files every build depends on although no dependency file names them: the
-    /// manifest of every package in the repository it builds (path dependencies outside the
-    /// workspace included), and the workspace's own manifest and lock file.
-    pub workspace: Vec<String>,
+    /// The root relative folders whose files are the build's inputs (`.` for the whole
+    /// repository).
+    pub trees: Vec<String>,
     /// The absolute paths of what the build produces.
     pub artifacts: Vec<PathBuf>,
-    /// The Cargo target directory the build writes to, as `cargo metadata` names it. It is not
-    /// found from the artifacts: Cargo marks a target directory with a CACHEDIR.TAG only when it
-    /// creates it, and CI's cache volume makes the folders it mounts below it first.
+    /// The Cargo target directory the build writes to, as `cargo metadata` names it; what a build
+    /// script generates there is output, never input.
     pub target: PathBuf,
-    /// The workspace's root, where Cargo runs rustc for its members, so their dependency files
-    /// name sources relative to it.
-    pub workspace_root: PathBuf,
+    /// The folder of each package the build compiles, by Cargo's package id, which its JSON
+    /// messages name the package by.
+    pub packages: BTreeMap<String, PathBuf>,
 }
 
 impl<'a> CargoBuild<'a> {
     /// The build `name` in the Cargo workspace of `manifest`, root relative, of the artifacts
-    /// `artifacts` names below the workspace's target directory.
+    /// `artifacts` names below the workspace's target directory. Its trees are the workspace's
+    /// folder, the folder of every package in the repository it builds, and `declared`.
     pub fn in_workspace(
         ctx: &Context,
         name: &'a str,
         manifest: &str,
+        declared: &[&str],
         artifacts: impl FnOnce(&Path) -> Vec<PathBuf>,
     ) -> Result<Self> {
         let metadata = metadata(ctx, manifest, Packages::All)?;
+        let repository = Repository::of(ctx)?;
+        let local = metadata
+            .packages
+            .iter()
+            .filter(|package| package.source.is_none())
+            .filter_map(|package| package.manifest_path.parent());
+        let mut trees: Vec<String> = declared.iter().map(|tree| (*tree).to_owned()).collect();
+        for dir in std::iter::once(metadata.workspace_root.as_path()).chain(local) {
+            if let Some(relative) = repository.relative(dir) {
+                trees.push(tree(relative));
+            }
+        }
+        trees.sort();
+        trees.dedup();
+        let packages = metadata
+            .packages
+            .iter()
+            .filter_map(|package| {
+                Some((
+                    package.id.clone(),
+                    package.manifest_path.parent()?.to_owned(),
+                ))
+            })
+            .collect();
         Ok(Self {
             name,
-            workspace: workspace_files(&Repository::of(ctx)?, &metadata),
+            trees,
             artifacts: artifacts(&metadata.target_directory),
             target: metadata.target_directory,
-            workspace_root: metadata.workspace_root,
+            packages,
         })
+    }
+}
+
+/// A root relative folder as a tree: `.` for the root itself.
+fn tree(relative: &Path) -> String {
+    if relative.as_os_str().is_empty() {
+        ".".to_owned()
+    } else {
+        relative.display().to_string()
     }
 }
 
@@ -127,27 +161,6 @@ pub fn metadata(ctx: &Context, manifest: &str, packages: Packages) -> Result<Met
         .with_context(|| format!("cargo metadata printed an unexpected description of {manifest}"))
 }
 
-/// The root relative files a build of the workspace `metadata` describes depends on that no
-/// dependency file names ([`CargoBuild::workspace`]).
-fn workspace_files(repository: &Repository, metadata: &Metadata) -> Vec<String> {
-    let workspace = &metadata.workspace_root;
-    let mut files = vec![workspace.join("Cargo.toml"), workspace.join("Cargo.lock")];
-    for package in &metadata.packages {
-        if package.source.is_none() {
-            files.push(package.manifest_path.clone());
-        }
-    }
-    let mut relative: Vec<String> = files
-        .iter()
-        .filter(|file| file.is_file())
-        .filter_map(|file| repository.relative(file))
-        .map(|file| file.display().to_string())
-        .collect();
-    relative.sort();
-    relative.dedup();
-    relative
-}
-
 /// The repository root in both spellings a path inside it may take: as xtask was handed it, and
 /// physical, as Cargo spells the paths it reports. Cargo starts from the physical working
 /// directory, so it resolves a root reached through a symbolic link (macOS's `/var`, for one).
@@ -179,32 +192,38 @@ impl Repository {
 pub enum Outcome {
     /// The artifacts on disk were built from what is there now; Cargo did not run.
     Reused,
-    /// Cargo ran, and the artifacts are stamped with what it read unless a dependency file was
-    /// missing.
+    /// Cargo ran, and the artifacts are stamped with the inputs it ran on.
     Compiled,
 }
 
+/// One JSON message Cargo prints, as far as the build reads it.
+#[derive(Deserialize)]
+struct Message {
+    reason: String,
+    #[serde(default)]
+    package_id: String,
+    out_dir: Option<PathBuf>,
+}
+
 impl CargoBuild<'_> {
-    /// Runs `cargo` unless its stamp records the same command and toolchain and every file it
-    /// lists (the artifacts, what the last build read, the workspace files) still has the same
-    /// contents, then stamps the artifacts again.
+    /// Runs `cargo` unless its stamp records the same command and toolchain and every input still
+    /// has the same contents, checks that it read nothing outside its trees, then stamps the
+    /// artifacts with the inputs it ran on. Cargo prints its messages as JSON, which the check
+    /// reads; its diagnostics stay as they are.
     pub fn run(&self, ctx: &Context, cargo: &mut Command, env: &Environment) -> Result<Outcome> {
+        cargo.arg("--message-format=json-render-diagnostics");
         let digest = self.digest(ctx, cargo, env)?;
         let stamp = self.stamp()?;
-        let artifacts = self.artifact_names();
-        let configs = configs(ctx, cargo, env);
+        let mut inputs = self.artifact_names();
+        inputs.extend(self.files(ctx)?);
+        inputs.extend(configs(ctx, cargo, env));
         if let Some(listed) = stamp.files(&ctx.root, &digest, env)
-            && artifacts
-                .iter()
-                .chain(&self.workspace)
-                .chain(&configs)
-                .all(|file| listed.contains(file))
+            && inputs.iter().all(|file| listed.contains(file))
         {
             return Ok(Outcome::Reused);
         }
-        // A build that fails leaves nothing to reuse, an artifact Cargo does not write again (a
-        // renamed or dropped target) is not taken for one, and only this run's dependency files
-        // say what it read.
+        // A build that fails leaves nothing to reuse, and an artifact Cargo does not write again
+        // (a renamed or dropped target) is not taken for one.
         stamp.clear()?;
         for artifact in &self.artifacts {
             for file in [artifact.clone(), artifact.with_extension("d")] {
@@ -217,7 +236,7 @@ impl CargoBuild<'_> {
                 }
             }
         }
-        cargo.run()?;
+        let messages = cargo.output_text()?;
         let missing: Vec<String> = self
             .artifacts
             .iter()
@@ -231,23 +250,11 @@ impl CargoBuild<'_> {
                 missing.join(", ")
             );
         }
-        // Without a dependency file the build cannot say what it read, so it is not reused.
-        let Some(reads) = self.reads(ctx)? else {
-            eprintln!(
-                "{}: Cargo wrote no dependency file beside an artifact, so the next run builds \
-                 again",
-                self.name
-            );
-            return Ok(Outcome::Compiled);
-        };
-        let mut files: Vec<String> = artifacts;
-        files.extend(self.workspace.iter().cloned());
-        files.extend(configs);
-        files.extend(reads);
-        files.sort();
-        files.dedup();
+        inputs.extend(self.check(ctx, &messages)?);
+        inputs.sort();
+        inputs.dedup();
         stamp
-            .record(&ctx.root, &digest, &files, env)
+            .record(&ctx.root, &digest, &inputs, env)
             .with_context(|| format!("cannot stamp the build {}", self.name))?;
         Ok(Outcome::Compiled)
     }
@@ -266,6 +273,46 @@ impl CargoBuild<'_> {
             .with_context(|| format!("the build {} names no artifact", self.name))?;
         let dir = first.parent().unwrap_or(Path::new("."));
         Ok(Stamp::at(dir.join(format!("{}.xtask-stamp", self.name))))
+    }
+
+    /// The root relative files of the trees: every one Git lists there, tracked or untracked but
+    /// not ignored, and the generated protocol sources inside them, which Git ignores.
+    fn files(&self, ctx: &Context) -> Result<Vec<String>> {
+        let listing = ctx
+            .tool(
+                ".",
+                "git",
+                &[
+                    "-c",
+                    "core.quotePath=false",
+                    "ls-files",
+                    "-z",
+                    "--cached",
+                    "--others",
+                    "--exclude-standard",
+                    "--",
+                ],
+            )
+            .args(&self.trees)
+            .output_text()?;
+        let mut files: Vec<String> = listing
+            .split('\0')
+            .filter(|file| !file.is_empty())
+            .map(str::to_owned)
+            .collect();
+        files.extend(
+            generate::protocol_files(ctx)?
+                .into_iter()
+                .filter(|file| self.holds(Path::new(file))),
+        );
+        Ok(files)
+    }
+
+    /// Whether the root relative `path` lies in one of the trees.
+    fn holds(&self, path: &Path) -> bool {
+        self.trees
+            .iter()
+            .any(|tree| tree == "." || path.starts_with(tree))
     }
 
     /// The digest of the command line with the variables it sets, every `CARGO*` and `RUST*`
@@ -304,190 +351,134 @@ impl CargoBuild<'_> {
         Ok(digest)
     }
 
-    /// What the build read: the root relative repository files the dependency file beside each
-    /// artifact names, and as `$NAME` each environment variable a crate of the build read at
-    /// compile time (`env!`, `option_env!`). None when an artifact has no dependency file.
-    fn reads(&self, ctx: &Context) -> Result<Option<BTreeSet<String>>> {
+    /// Fails, naming each, when the build read a repository file outside its trees: one the
+    /// dependency file beside an artifact names, or one a build script watches. Returns, as
+    /// `$NAME`, each variable outside `CARGO*` and `RUST*` its build scripts watch, which the
+    /// stamp records with its value.
+    fn check(&self, ctx: &Context, messages: &str) -> Result<BTreeSet<String>> {
         let repository = Repository::of(ctx)?;
-        let mut reads = BTreeSet::new();
+        let mut outside = BTreeSet::new();
         for artifact in &self.artifacts {
             let dep_info = artifact.with_extension("d");
-            let text = match fs::read_to_string(&dep_info) {
-                Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-                text => text.with_context(|| format!("cannot read {}", dep_info.display()))?,
-            };
+            let text = fs::read_to_string(&dep_info).with_context(|| {
+                format!(
+                    "cannot read {}, which names what the build {} read",
+                    dep_info.display(),
+                    self.name
+                )
+            })?;
             for file in dep_info_files(&text) {
-                if let Some(relative) = repository.relative(&self.source(&file)) {
-                    reads.insert(relative.display().to_string());
+                let file = normalize(&file);
+                if let Some(relative) = repository.relative(&file)
+                    && !file.starts_with(&self.target)
+                    && !self.holds(relative)
+                {
+                    outside.insert(relative.display().to_string());
                 }
             }
         }
-        reads.extend(
-            env_reads(&self.target)?
-                .iter()
-                .map(|name| format!("${name}")),
-        );
-        reads.extend(build_script_reads(&repository, self)?);
-        Ok(Some(reads))
-    }
-
-    /// The absolute path of a file a dependency file names: a source of a workspace member is
-    /// named relative to the workspace's root.
-    fn source(&self, file: &Path) -> PathBuf {
-        normalize(&self.workspace_root.join(file))
-    }
-}
-
-/// The environment variables the crates in the Cargo target directory `target` read at compile
-/// time. Cargo's copy of the dependency file beside an artifact leaves out rustc's `# env-dep:`
-/// lines and names only the sources of path packages, so the variables come from every unit's own
-/// dependency file in the target's build folders. That may include units of another build in the
-/// same target, which costs a rebuild when their variables change, never a stale artifact. The
-/// variables Cargo sets for every crate itself are left out: they follow from the command and the
-/// workspace.
-fn env_reads(target: &Path) -> Result<BTreeSet<String>> {
-    let mut names = BTreeSet::new();
-    for dir in unit_dirs(target, &["out", "deps"])? {
-        for (path, name) in files_in(&dir)? {
-            if name.ends_with(".d") {
-                names.extend(env_deps(&read(&path)?));
-            }
-        }
-    }
-    Ok(names)
-}
-
-/// What the build scripts that ran in `target` read, decided the way Cargo decides to run one
-/// again, from what each printed: `$NAME` for each `rerun-if-env-changed`, and for a script that
-/// printed no `rerun-if-changed` or `rerun-if-env-changed` line, every file of its package.
-/// (Its `rerun-if-changed` files are in the dependency files beside the artifacts already.)
-fn build_script_reads(repository: &Repository, build: &CargoBuild) -> Result<BTreeSet<String>> {
-    let mut reads = BTreeSet::new();
-    for run in unit_dirs(&build.target, &["run"])? {
-        let mut watches = false;
-        for line in read(&run.join("stdout"))?.lines() {
-            let Some(directive) = line
-                .strip_prefix("cargo::")
-                .or_else(|| line.strip_prefix("cargo:"))
-            else {
-                continue;
-            };
-            if let Some(name) = directive.strip_prefix("rerun-if-env-changed=") {
-                reads.insert(format!("${name}"));
-                watches = true;
-            } else if directive.starts_with("rerun-if-changed=") {
-                watches = true;
-            }
-        }
-        if !watches {
-            for dir in script_packages(repository, build, &run)? {
-                package_files(repository, &dir, &mut reads)?;
-            }
-        }
-    }
-    Ok(reads)
-}
-
-/// The repository folders of the packages whose build script ran in `run`
-/// (`build/<package>/<hash>/run`): each holds a `Cargo.toml` above a build script source that a
-/// compile unit of the same package, `build/<package>/<other hash>/out/build_script_build*.d`,
-/// names.
-fn script_packages(
-    repository: &Repository,
-    build: &CargoBuild,
-    run: &Path,
-) -> Result<BTreeSet<PathBuf>> {
-    let mut packages = BTreeSet::new();
-    let Some(package) = run.parent().and_then(Path::parent) else {
-        return Ok(packages);
-    };
-    for unit in fs::read_dir(package)? {
-        let out = unit?.path().join("out");
-        if !out.is_dir() {
-            continue;
-        }
-        for (path, name) in files_in(&out)? {
-            if !(name.starts_with("build_script_build") && name.ends_with(".d")) {
+        let mut watched = BTreeSet::new();
+        for line in messages.lines().filter(|line| !line.trim().is_empty()) {
+            let message: Message = serde_json::from_str(line)
+                .with_context(|| format!("Cargo printed an unexpected message: {line}"))?;
+            if message.reason != "build-script-executed" {
                 continue;
             }
-            for source in dep_info_files(&read(&path)?) {
-                let source = build.source(&source);
-                let dir = source
-                    .ancestors()
-                    .skip(1)
-                    .take_while(|dir| repository.relative(dir).is_some())
-                    .find(|dir| dir.join("Cargo.toml").is_file());
-                packages.extend(dir.map(Path::to_path_buf));
-            }
-        }
-    }
-    Ok(packages)
-}
-
-/// Adds every file of the package in `dir`, root relative, to `reads`: all of the folder but
-/// build output (`target`), Git's folder and nested packages, as Cargo lists a package's files.
-fn package_files(repository: &Repository, dir: &Path, reads: &mut BTreeSet<String>) -> Result<()> {
-    for (path, name) in files_in(dir)? {
-        if path.is_dir() {
-            if name != "target" && name != ".git" && !path.join("Cargo.toml").is_file() {
-                package_files(repository, &path, reads)?;
-            }
-        } else if let Some(relative) = repository.relative(&path) {
-            reads.insert(relative.display().to_string());
-        }
-    }
-    Ok(())
-}
-
-/// The unit folders below `target`'s build folders (`<profile>/build/<package>/<hash>/<kind>`, also
-/// below a target triple) for each of `kinds`, and Cargo's older flat `deps` folders.
-fn unit_dirs(target: &Path, kinds: &[&str]) -> Result<Vec<PathBuf>> {
-    let mut dirs = Vec::new();
-    for kind in kinds {
-        let patterns = if *kind == "deps" {
-            ["*/deps".to_owned(), "*/*/deps".to_owned()]
-        } else {
-            [
-                format!("*/build/*/*/{kind}"),
-                format!("*/*/build/*/*/{kind}"),
-            ]
-        };
-        for pattern in patterns {
-            dirs.extend(expand(target, &pattern)?);
-        }
-    }
-    Ok(dirs)
-}
-
-/// The entries of `dir` as (path, name), sorted.
-fn files_in(dir: &Path) -> Result<Vec<(PathBuf, String)>> {
-    let mut entries = fs::read_dir(dir)
-        .with_context(|| format!("cannot read {}", dir.display()))?
-        .map(|entry| {
-            entry.map(|entry| {
-                (
-                    entry.path(),
-                    entry.file_name().to_string_lossy().into_owned(),
+            let package = self.packages.get(&message.package_id).with_context(|| {
+                format!(
+                    "the build {} compiles no package {}",
+                    self.name, message.package_id
                 )
-            })
+            })?;
+            let out_dir = message.out_dir.with_context(|| {
+                format!(
+                    "Cargo named no output folder for the build script of {}",
+                    message.package_id
+                )
+            })?;
+            for directive in directives(&build_script_output(&out_dir)?) {
+                match directive {
+                    Watch::Variable(name) => {
+                        if !(name.starts_with("CARGO") || name.starts_with("RUST")) {
+                            watched.insert(format!("${name}"));
+                        }
+                    }
+                    Watch::File(path) => {
+                        let path = normalize(&package.join(path));
+                        let declared = match repository.relative(&path) {
+                            Some(relative) => self.holds(relative),
+                            None => {
+                                repository.relative(package).is_none() && path.starts_with(package)
+                            }
+                        };
+                        if !declared {
+                            outside.insert(
+                                repository
+                                    .relative(&path)
+                                    .unwrap_or(&path)
+                                    .display()
+                                    .to_string(),
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        if !outside.is_empty() {
+            bail!(
+                "the build {} read {}, outside the folders it declares ({}); declare the folder \
+                 that holds each",
+                self.name,
+                outside.into_iter().collect::<Vec<_>>().join(", "),
+                self.trees.join(", ")
+            );
+        }
+        Ok(watched)
+    }
+}
+
+/// What a build script asks Cargo to watch.
+enum Watch<'a> {
+    Variable(&'a str),
+    File(&'a str),
+}
+
+/// The `rerun-if-env-changed` and `rerun-if-changed` lines a build script printed, in either
+/// syntax (`cargo::` or the older `cargo:`).
+fn directives(printed: &str) -> Vec<Watch<'_>> {
+    printed
+        .lines()
+        .filter_map(|line| {
+            line.strip_prefix("cargo::")
+                .or_else(|| line.strip_prefix("cargo:"))
         })
-        .collect::<Result<Vec<_>, _>>()?;
-    entries.sort();
-    Ok(entries)
-}
-
-fn read(path: &Path) -> Result<String> {
-    fs::read_to_string(path).with_context(|| format!("cannot read {}", path.display()))
-}
-
-/// The variables a dependency file's `# env-dep:NAME=value` (or `# env-dep:NAME` for an unset
-/// one) lines name, without those Cargo sets for every crate.
-fn env_deps(text: &str) -> Vec<String> {
-    text.lines()
-        .filter_map(|line| line.strip_prefix("# env-dep:"))
-        .map(|dep| dep.split_once('=').map_or(dep, |(name, _)| name).to_owned())
-        .filter(|name| !cargo_sets(name))
+        .filter_map(|directive| {
+            if let Some(name) = directive.strip_prefix("rerun-if-env-changed=") {
+                Some(Watch::Variable(name))
+            } else {
+                directive.strip_prefix("rerun-if-changed=").map(Watch::File)
+            }
+        })
         .collect()
+}
+
+/// What the build script whose output folder is `out_dir` printed, which Cargo keeps beside it:
+/// `run/stdout` in its current layout, `output` in the older one.
+fn build_script_output(out_dir: &Path) -> Result<String> {
+    let unit = out_dir.parent().unwrap_or(out_dir);
+    for printed in [unit.join("run/stdout"), unit.join("output")] {
+        match fs::read_to_string(&printed) {
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            text => return text.with_context(|| format!("cannot read {}", printed.display())),
+        }
+    }
+    bail!(
+        "Cargo keeps what the build script with the output folder {} printed in neither {} nor {}; \
+         its layout changed",
+        out_dir.display(),
+        unit.join("run/stdout").display(),
+        unit.join("output").display()
+    )
 }
 
 /// Whether Cargo sets the variable `name` itself, for each crate it compiles or runs or for each
@@ -598,7 +589,7 @@ fn normalize(path: &Path) -> PathBuf {
 mod tests {
     use super::*;
     use crate::test_support::{
-        CARGO_WORKSPACE as WORKSPACE, FakeCargo, TempRoot, cargo_workspace, refusal,
+        CARGO_TREES as TREES, FakeCargo, TempRoot, cargo_workspace, refusal,
     };
 
     /// The environment of every case that does not vary one.
@@ -607,208 +598,153 @@ mod tests {
     const READS: &[&str] = &["backend/src/lib.rs"];
 
     #[test]
-    fn a_build_whose_reads_are_unchanged_is_reused_without_running_cargo() {
+    fn a_build_whose_inputs_are_unchanged_is_reused_without_running_cargo() {
         let root = cargo_workspace();
         let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
+        let build = cargo.build(TREES);
 
-        let first = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
-        let second = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
-
-        assert_eq!(first.unwrap(), Outcome::Compiled);
-        assert_eq!(second.unwrap(), Outcome::Reused);
+        assert_eq!(cargo.run(&build), Outcome::Compiled);
+        assert_eq!(cargo.run(&build), Outcome::Reused);
         assert_eq!(cargo.runs(), 1);
         assert_eq!(fs::read_to_string(cargo.artifact()).unwrap(), "one");
     }
 
     #[test]
-    fn editing_a_file_the_build_did_not_read_reuses_it() {
+    fn editing_any_tracked_file_in_the_trees_builds_again_even_one_the_build_never_read() {
         let root = cargo_workspace();
         root.write("backend/tests/case.rs", "#[test] fn case() {}");
+        root.git(&["add", "."]);
         let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
-        build
-            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
-            .unwrap();
-
-        root.write("backend/tests/case.rs", "#[test] fn edited() {}");
-        root.write("backend/src/unused.rs", "");
-        let outcome = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
-        assert_eq!(outcome.unwrap(), Outcome::Reused);
-    }
-
-    #[test]
-    fn editing_a_file_the_build_read_or_a_workspace_file_builds_again() {
-        let root = cargo_workspace();
-        let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
-        build
-            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
-            .unwrap();
+        let build = cargo.build(TREES);
+        cargo.run(&build);
 
         for (file, contents) in [
             ("backend/src/lib.rs", "fn main() { edited() }"),
-            ("Cargo.lock", "version = 4\n[[package]]"),
+            ("backend/Cargo.lock", "version = 4\n[[package]]"),
             ("backend/Cargo.toml", "[package]\nname = \"edited\""),
+            ("backend/tests/case.rs", "#[test] fn edited() {}"),
         ] {
             root.write(file, contents);
-            let outcome = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
-            assert_eq!(outcome.unwrap(), Outcome::Compiled, "after writing {file}");
+            assert_eq!(cargo.run(&build), Outcome::Compiled, "after writing {file}");
+            assert_eq!(
+                cargo.run(&build),
+                Outcome::Reused,
+                "again after writing {file}"
+            );
         }
-        assert_eq!(cargo.runs(), 4);
-    }
-
-    #[test]
-    fn adding_a_module_builds_again_and_the_new_module_is_read_from_then_on() {
-        let root = cargo_workspace();
-        let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
-        build
-            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
-            .unwrap();
-
-        root.write("backend/src/new.rs", "pub fn new() {}");
-        root.write("backend/src/lib.rs", "mod new;\nfn main() {}");
-        let with_module = ["backend/src/lib.rs", "backend/src/new.rs"];
-        let added = build.run(&root.ctx, &mut cargo.command("one", &with_module), &NONE);
-        assert_eq!(added.unwrap(), Outcome::Compiled);
-
-        root.write("backend/src/new.rs", "pub fn new() { edited() }");
-        let edited = build.run(&root.ctx, &mut cargo.command("one", &with_module), &NONE);
-        assert_eq!(edited.unwrap(), Outcome::Compiled);
-    }
-
-    #[test]
-    fn a_build_without_a_dependency_file_is_not_reused() {
-        let root = cargo_workspace();
-        let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
-        let mut silent = cargo.command("one", READS);
-        silent.env("DEP_INFO", "/dev/null");
-        build.run(&root.ctx, &mut silent, &NONE).unwrap();
-
-        let mut again = cargo.command("one", READS);
-        again.env("DEP_INFO", "/dev/null");
+        fs::remove_file(root.path("backend/tests/case.rs")).unwrap();
         assert_eq!(
-            build.run(&root.ctx, &mut again, &NONE).unwrap(),
-            Outcome::Compiled
+            cargo.run(&build),
+            Outcome::Compiled,
+            "after deleting a file"
         );
     }
 
     #[test]
-    fn real_cargo_leaves_what_a_build_read_where_the_stamp_looks_for_it() {
-        // Where Cargo keeps dependency files and build script output is its own layout; a
-        // toolchain that moves them must fail here instead of reusing a build whose inputs changed.
+    fn editing_a_file_outside_the_trees_reuses_the_build() {
+        let root = cargo_workspace();
+        root.write("services/build.gradle.kts", "plugins {}");
+        root.git(&["add", "."]);
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let build = cargo.build(TREES);
+        cargo.run(&build);
+
+        root.write("services/build.gradle.kts", "plugins { kotlin }");
+        root.write("README.md", "new");
+        assert_eq!(cargo.run(&build), Outcome::Reused);
+    }
+
+    #[test]
+    fn an_untracked_file_in_the_trees_builds_again_but_an_ignored_one_does_not() {
+        let root = cargo_workspace();
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let build = cargo.build(TREES);
+        cargo.run(&build);
+
+        // A module written but not yet added counts at once, and from then on.
+        root.write("backend/src/new.rs", "pub fn new() {}");
+        assert_eq!(cargo.run(&build), Outcome::Compiled);
+        root.write("backend/src/new.rs", "pub fn new() { edited() }");
+        assert_eq!(cargo.run(&build), Outcome::Compiled);
+        root.write("backend/target/scratch", "build output");
+        assert_eq!(cargo.run(&build), Outcome::Reused);
+    }
+
+    #[test]
+    fn editing_a_generated_protocol_source_inside_the_trees_builds_again() {
+        let root = cargo_workspace();
+        let generated = "backend/wasmcloud-utils/src/skirout/protocol.rs";
+        root.write(".gitignore", "target/\nruns\nskirout/\n");
+        root.write(generated, "pub struct Old;");
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let build = cargo.build(TREES);
+        cargo.run(&build);
+
+        root.write(generated, "pub struct New;");
+        assert_eq!(cargo.run(&build), Outcome::Compiled);
+    }
+
+    #[test]
+    fn a_build_names_its_workspace_and_every_repository_package_it_builds_as_trees() {
         let root = TempRoot::new();
         root.write(
-            "Cargo.toml",
-            "[workspace]\nmembers = [\"watched\", \"unwatched\"]\nresolver = \"3\"\n",
-        );
-        let manifest = |name: &str, dependencies: &str| {
-            format!(
-                "[package]\nname = \"{name}\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n\
-                 [dependencies]\n{dependencies}"
-            )
-        };
-        root.write(
-            "watched/Cargo.toml",
-            &manifest("watched", "unwatched = { path = \"../unwatched\" }\n"),
+            "backend/tests/component/Cargo.toml",
+            "[workspace]\nmembers = [\"suite\"]\nresolver = \"3\"\n",
         );
         root.write(
-            "watched/build.rs",
-            "fn main() { println!(\"cargo::rerun-if-env-changed=PROBE_WATCHED\"); }\n",
+            "backend/tests/component/suite/Cargo.toml",
+            "[package]\nname = \"suite\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n\
+             [dependencies]\nschema = { path = \"../../../database/schema\" }\n",
         );
+        root.write("backend/tests/component/suite/src/lib.rs", "");
         root.write(
-            "watched/src/lib.rs",
-            "pub fn read() -> Option<&'static str> { option_env!(\"PROBE_READ\") }\n",
+            "backend/database/schema/Cargo.toml",
+            "[package]\nname = \"schema\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
         );
-        root.write("unwatched/Cargo.toml", &manifest("unwatched", ""));
-        root.write("unwatched/build.rs", "fn main() {}\n");
-        root.write("unwatched/src/lib.rs", "");
-        root.write("unwatched/data.txt", "one");
-        // CI's cache volume mounts folders below the target before Cargo runs, so Cargo finds the
-        // target made and never marks it with a CACHEDIR.TAG.
-        fs::create_dir_all(root.path("target/debug")).unwrap();
+        root.write("backend/database/schema/src/lib.rs", "");
         root.ctx
-            .tool(".", "cargo", &["generate-lockfile", "--offline", "--quiet"])
-            .run()
-            .unwrap();
-        let build = CargoBuild::in_workspace(&root.ctx, "probe", "Cargo.toml", |target| {
-            vec![target.join("debug/libwatched.rlib")]
-        })
-        .unwrap();
-        assert_eq!(
-            build.workspace,
-            [
-                "Cargo.lock",
-                "Cargo.toml",
-                "unwatched/Cargo.toml",
-                "watched/Cargo.toml"
-            ]
-        );
-        let run = |watched: &str, read: &str| {
-            let mut cargo = root.ctx.tool(
+            .tool(
                 ".",
                 "cargo",
-                &["build", "--quiet", "--offline", "-p", "watched"],
-            );
-            // The test's own Cargo must not move the probe's target elsewhere.
-            for name in [
-                "CARGO_TARGET_DIR",
-                "CARGO_BUILD_TARGET_DIR",
-                "CARGO_BUILD_BUILD_DIR",
-            ] {
-                cargo.env_remove(name);
-            }
-            let env = Environment::EMPTY
-                .with("PROBE_WATCHED", watched)
-                .with("PROBE_READ", read);
-            build.run(&root.ctx, &mut cargo, &env).unwrap()
-        };
+                &[
+                    "generate-lockfile",
+                    "--offline",
+                    "--quiet",
+                    "--manifest-path",
+                    "backend/tests/component/Cargo.toml",
+                ],
+            )
+            .run()
+            .unwrap();
 
-        assert_eq!(run("one", "one"), Outcome::Compiled);
-        let reads = build.reads(&root.ctx).unwrap().unwrap();
-        for read in [
-            "watched/src/lib.rs",
-            "$PROBE_READ",
-            "$PROBE_WATCHED",
-            "unwatched/data.txt",
-        ] {
-            assert!(reads.contains(read), "{read} is not among {reads:?}");
-        }
-        assert_eq!(run("one", "one"), Outcome::Reused);
+        let build = CargoBuild::in_workspace(
+            &root.ctx,
+            "suite",
+            "backend/tests/component/Cargo.toml",
+            &["backend/database"],
+            |target| vec![target.join("debug/libsuite.rlib")],
+        )
+        .unwrap();
         assert_eq!(
-            run("two", "one"),
-            Outcome::Compiled,
-            "after PROBE_WATCHED changed"
+            build.trees,
+            [
+                "backend/database",
+                "backend/database/schema",
+                "backend/tests/component",
+                "backend/tests/component/suite"
+            ]
         );
-        assert_eq!(
-            run("two", "two"),
-            Outcome::Compiled,
-            "after PROBE_READ changed"
-        );
-        root.write("unwatched/data.txt", "two");
-        assert_eq!(
-            run("two", "two"),
-            Outcome::Compiled,
-            "after data.txt changed"
-        );
-        root.write(
-            "watched/src/lib.rs",
-            "pub fn read() -> Option<&'static str> { None }\n",
-        );
-        assert_eq!(run("two", "two"), Outcome::Compiled, "after lib.rs changed");
     }
 
     #[test]
-    fn a_read_file_that_cannot_be_hashed_fails_the_build_with_its_cause() {
+    fn a_file_that_cannot_be_hashed_fails_the_build_with_its_cause() {
         use std::os::unix::fs::PermissionsExt as _;
         let root = cargo_workspace();
         let cargo = FakeCargo { ctx: &root.ctx };
         let read = root.path("backend/src/lib.rs");
         fs::set_permissions(&read, fs::Permissions::from_mode(0o000)).unwrap();
         let result = cargo
-            .build(WORKSPACE)
+            .build(TREES)
             .run(&root.ctx, &mut cargo.command("one", READS), &NONE);
         fs::set_permissions(&read, fs::Permissions::from_mode(0o644)).unwrap();
 
@@ -824,10 +760,8 @@ mod tests {
     fn a_different_command_builds_again() {
         let root = cargo_workspace();
         let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
-        build
-            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
-            .unwrap();
+        let build = cargo.build(TREES);
+        cargo.run(&build);
 
         let mut release = cargo.command("one", READS);
         release.arg("--release");
@@ -847,17 +781,13 @@ mod tests {
     fn an_artifact_changed_or_removed_since_its_build_builds_again() {
         let root = cargo_workspace();
         let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
-        build
-            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
-            .unwrap();
+        let build = cargo.build(TREES);
+        cargo.run(&build);
 
         fs::write(cargo.artifact(), "built by hand").unwrap();
-        let changed = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
-        assert_eq!(changed.unwrap(), Outcome::Compiled);
+        assert_eq!(cargo.run(&build), Outcome::Compiled);
         fs::remove_file(cargo.artifact()).unwrap();
-        let removed = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
-        assert_eq!(removed.unwrap(), Outcome::Compiled);
+        assert_eq!(cargo.run(&build), Outcome::Compiled);
         assert_eq!(fs::read_to_string(cargo.artifact()).unwrap(), "one");
     }
 
@@ -866,7 +796,7 @@ mod tests {
         let root = cargo_workspace();
         root.write("target/renamed.wasm", "built before its target was renamed");
         let cargo = FakeCargo { ctx: &root.ctx };
-        let mut build = cargo.build(WORKSPACE);
+        let mut build = cargo.build(TREES);
         build.artifacts.push(root.path("target/renamed.wasm"));
 
         let error = refusal(build.run(&root.ctx, &mut cargo.command("one", READS), &NONE));
@@ -878,7 +808,7 @@ mod tests {
     fn an_inherited_cargo_or_rust_variable_builds_again_but_one_cargo_sets_per_crate_does_not() {
         let root = cargo_workspace();
         let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
+        let build = cargo.build(TREES);
         let run = |env: &Environment| {
             build
                 .run(&root.ctx, &mut cargo.command("one", READS), env)
@@ -901,7 +831,7 @@ mod tests {
     fn editing_or_adding_a_cargo_configuration_builds_again() {
         let root = cargo_workspace();
         let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
+        let build = cargo.build(TREES);
         let env = NONE.with("CARGO_HOME", &root.path("cargo-home").display().to_string());
         let run = || {
             build
@@ -925,130 +855,190 @@ mod tests {
     }
 
     #[test]
-    fn a_changed_value_of_a_variable_a_crate_read_builds_again() {
+    fn a_build_that_read_a_repository_file_outside_its_trees_fails_naming_it() {
         let root = cargo_workspace();
-        // The dependency file rustc writes for the crate itself, in the unit's own folder.
-        root.write(
-            "target/debug/build/backend/0123/out/backend.d",
-            &format!(
-                "{out}/backend.rmeta: {lib}\n\n# env-dep:XTASK_TEST_GREETING=hello\n\
-                 # env-dep:CARGO_PKG_VERSION=0.1.0\n",
-                out = root.path("target/debug/build/backend/0123/out").display(),
-                lib = root.path("backend/src/lib.rs").display()
-            ),
-        );
+        root.write("skir-src/protocol.skir", "struct Old {}");
+        let outside = tempfile::tempdir().unwrap();
+        let toolchain = outside.path().join("rustlib/src/lib.rs");
+        fs::create_dir_all(toolchain.parent().unwrap()).unwrap();
+        fs::write(&toolchain, "pub fn std() {}").unwrap();
+        // Lands outside the trees only once its `..` is applied.
+        let roundabout = root.path("backend/../skir-src/protocol.skir");
+        let generated = root.path("target/debug/build/schema/out/files.rs");
+        let reads = [
+            "backend/src/lib.rs".to_owned(),
+            roundabout.display().to_string(),
+            toolchain.display().to_string(),
+            generated.display().to_string(),
+        ];
+        let reads: Vec<&str> = reads.iter().map(String::as_str).collect();
         let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
-        let run = |greeting: &str| {
-            let env = NONE.with("XTASK_TEST_GREETING", greeting);
-            build
-                .run(&root.ctx, &mut cargo.command("one", READS), &env)
-                .unwrap()
-        };
 
-        assert_eq!(run("hello"), Outcome::Compiled);
-        assert_eq!(run("hello"), Outcome::Reused);
-        assert_eq!(run("goodbye"), Outcome::Compiled);
+        let error = refusal(cargo.build(TREES).run(
+            &root.ctx,
+            &mut cargo.command("one", &reads),
+            &NONE,
+        ));
+        assert_eq!(
+            error,
+            "the build stack read skir-src/protocol.skir, outside the folders it declares \
+             (backend); declare the folder that holds each"
+        );
+        let declared = cargo.build(&["backend", "skir-src"]);
+        let outcome = declared.run(&root.ctx, &mut cargo.command("one", &reads), &NONE);
+        assert_eq!(outcome.unwrap(), Outcome::Compiled);
+    }
+
+    #[test]
+    fn a_build_without_a_dependency_file_beside_an_artifact_fails() {
+        let root = cargo_workspace();
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let mut silent = cargo.command("one", READS);
+        silent.env("DEP_INFO", "/dev/null");
+        let error = refusal(cargo.build(TREES).run(&root.ctx, &mut silent, &NONE));
+        assert!(error.starts_with("cannot read "), "{error}");
+        assert!(
+            error.ends_with("stack.d, which names what the build stack read"),
+            "{error}"
+        );
+    }
+
+    #[test]
+    fn a_build_script_that_watches_a_file_outside_the_trees_fails_the_build_naming_it() {
+        let root = cargo_workspace();
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let registry = tempfile::tempdir().unwrap();
+        let mut build = cargo.build(TREES);
+        build
+            .packages
+            .insert("schema".to_owned(), root.path("backend/database/schema"));
+        build
+            .packages
+            .insert("ring".to_owned(), registry.path().join("ring-0.17.0"));
+        let messages = cargo.build_script(
+            "schema",
+            "cargo:rerun-if-changed=build.rs\ncargo::rerun-if-changed=../../../skir-src/x.skir\n",
+        ) + &cargo.build_script(
+            "ring",
+            "cargo:rerun-if-changed=crypto/curve25519.c\ncargo:rerun-if-changed=/usr/include/x.h\n",
+        );
+        let mut command = cargo.command("one", READS);
+        command.env("MESSAGES", messages);
+
+        let error = refusal(build.run(&root.ctx, &mut command, &NONE));
+        assert_eq!(
+            error,
+            "the build stack read /usr/include/x.h, skir-src/x.skir, outside the folders it \
+             declares (backend); declare the folder that holds each"
+        );
     }
 
     #[test]
     fn a_changed_value_of_a_variable_a_build_script_watches_builds_again() {
         let root = cargo_workspace();
-        // What the build script printed, in its run's own folder.
-        root.write(
-            "target/debug/build/schema/4567/run/stdout",
-            "cargo::rerun-if-env-changed=XTASK_TEST_SCHEMA\ncargo:rerun-if-changed=build.rs\n",
-        );
         let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
-        let run = |schema: &str| {
-            let env = NONE.with("XTASK_TEST_SCHEMA", schema);
-            build
-                .run(&root.ctx, &mut cargo.command("one", READS), &env)
-                .unwrap()
-        };
-
-        assert_eq!(run("v1"), Outcome::Compiled);
-        assert_eq!(run("v1"), Outcome::Reused);
-        assert_eq!(run("v2"), Outcome::Compiled);
-    }
-
-    #[test]
-    fn every_file_of_a_package_whose_build_script_watches_nothing_is_read() {
-        let root = cargo_workspace();
-        root.write("backend/schema/Cargo.toml", "[package]");
-        root.write("backend/schema/build.rs", "fn main() {}");
-        root.write("backend/schema/tables/user.sql", "DEFINE TABLE user;");
-        root.write("backend/schema/target/scratch", "");
-        root.write("backend/schema/nested/Cargo.toml", "[package]");
-        root.write("backend/schema/nested/src/lib.rs", "");
-        // The build script's own compile unit names its source; its run printed no rerun line.
-        root.write(
-            "target/debug/build/schema/0123/out/build_script_build.d",
-            &format!(
-                "{out}/build_script_build: {script}\n",
-                out = root.path("target/debug/build/schema/0123/out").display(),
-                script = root.path("backend/schema/build.rs").display()
-            ),
-        );
-        root.write(
-            "target/debug/build/schema/4567/run/stdout",
-            "cargo:rustc-cfg=schema\n",
-        );
-        let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
+        let mut build = cargo.build(TREES);
         build
-            .run(&root.ctx, &mut cargo.command("one", READS), &NONE)
-            .unwrap();
+            .packages
+            .insert("cc".to_owned(), root.path("backend/cc"));
+        let messages = cargo.build_script(
+            "cc",
+            "cargo:rerun-if-env-changed=CC\ncargo::rerun-if-env-changed=CARGO_CFG_TARGET_OS\n",
+        );
+        let run = |cc: &str| {
+            let mut command = cargo.command("one", READS);
+            command.env("MESSAGES", &messages);
+            build
+                .run(&root.ctx, &mut command, &NONE.with("CC", cc))
+                .unwrap()
+        };
 
-        // Build output and a nested package are not the package's files.
-        root.write("backend/schema/target/scratch", "rebuilt");
-        root.write("backend/schema/nested/src/lib.rs", "pub fn nested() {}");
-        let outside = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
-        assert_eq!(outside.unwrap(), Outcome::Reused);
-        root.write("backend/schema/tables/user.sql", "DEFINE TABLE person;");
-        let edited = build.run(&root.ctx, &mut cargo.command("one", READS), &NONE);
-        assert_eq!(edited.unwrap(), Outcome::Compiled);
+        assert_eq!(run("clang"), Outcome::Compiled);
+        assert_eq!(run("clang"), Outcome::Reused);
+        assert_eq!(run("gcc"), Outcome::Compiled);
     }
 
     #[test]
-    fn a_read_inside_the_repository_once_normalized_is_listed_and_one_outside_it_is_not() {
+    fn a_build_script_whose_output_cargo_keeps_elsewhere_fails_the_build_loudly() {
         let root = cargo_workspace();
-        let outside = tempfile::tempdir().unwrap();
-        let toolchain = outside.path().join("rustlib/src/lib.rs");
-        fs::create_dir_all(toolchain.parent().unwrap()).unwrap();
-        fs::write(&toolchain, "pub fn std() {}").unwrap();
-        // Lands inside the repository only once its `..` is applied.
-        let name = root.ctx.root.file_name().unwrap().to_string_lossy();
-        let roundabout = root
-            .ctx
-            .root
-            .parent()
-            .unwrap()
-            .join(format!("sibling/../{name}/backend/src/lib.rs"));
-        let reads = [
-            roundabout.display().to_string(),
-            toolchain.display().to_string(),
-        ];
-        let reads: Vec<&str> = reads.iter().map(String::as_str).collect();
         let cargo = FakeCargo { ctx: &root.ctx };
-        let build = cargo.build(WORKSPACE);
-        let run = || {
+        let mut build = cargo.build(TREES);
+        build
+            .packages
+            .insert("schema".to_owned(), root.path("backend/schema"));
+        let messages = cargo.build_script("schema", "");
+        fs::remove_file(root.path("target/debug/build/schema/0123/run/stdout")).unwrap();
+        let mut command = cargo.command("one", READS);
+        command.env("MESSAGES", messages);
+
+        let error = refusal(build.run(&root.ctx, &mut command, &NONE));
+        assert!(error.ends_with("its layout changed"), "{error}");
+    }
+
+    #[test]
+    fn real_cargo_tells_which_build_script_output_to_read_through_its_json_messages() {
+        // Where Cargo keeps a build script's output is its own layout; a toolchain that moves it
+        // must fail here, and in every build, instead of missing what the script watches.
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet"]);
+        root.write(".gitignore", "target/\n");
+        root.write(
+            "probe/Cargo.toml",
+            "[package]\nname = \"probe\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+        );
+        root.write(
+            "probe/build.rs",
+            "fn main() {\n    println!(\"cargo::rerun-if-env-changed=PROBE_WATCHED\");\n    \
+             println!(\"cargo::rerun-if-changed=build.rs\");\n}\n",
+        );
+        root.write("probe/src/lib.rs", "");
+        root.ctx
+            .tool(
+                ".",
+                "cargo",
+                &[
+                    "generate-lockfile",
+                    "--offline",
+                    "--quiet",
+                    "--manifest-path",
+                    "probe/Cargo.toml",
+                ],
+            )
+            .run()
+            .unwrap();
+        let build =
+            CargoBuild::in_workspace(&root.ctx, "probe", "probe/Cargo.toml", &[], |target| {
+                vec![target.join("debug/libprobe.rlib")]
+            })
+            .unwrap();
+        let run = |watched: &str| {
+            let mut cargo = root.ctx.tool(
+                ".",
+                "cargo",
+                &[
+                    "build",
+                    "--quiet",
+                    "--offline",
+                    "--manifest-path",
+                    "probe/Cargo.toml",
+                ],
+            );
+            // The test's own Cargo must not move the probe's target elsewhere.
+            for name in [
+                "CARGO_TARGET_DIR",
+                "CARGO_BUILD_TARGET_DIR",
+                "CARGO_BUILD_BUILD_DIR",
+            ] {
+                cargo.env_remove(name);
+            }
             build
-                .run(&root.ctx, &mut cargo.command("one", &reads), &NONE)
+                .run(&root.ctx, &mut cargo, &NONE.with("PROBE_WATCHED", watched))
                 .unwrap()
         };
-        assert_eq!(run(), Outcome::Compiled);
-        assert_eq!(run(), Outcome::Reused);
 
-        fs::write(&toolchain, "pub fn std() { edited() }").unwrap();
-        assert_eq!(run(), Outcome::Reused, "after editing a file outside it");
-        root.write("backend/src/lib.rs", "fn main() { edited() }");
-        assert_eq!(
-            run(),
-            Outcome::Compiled,
-            "after editing the file read roundabout"
-        );
+        assert_eq!(run("one"), Outcome::Compiled);
+        assert_eq!(run("one"), Outcome::Reused);
+        assert_eq!(run("two"), Outcome::Compiled, "after PROBE_WATCHED changed");
     }
 
     #[test]

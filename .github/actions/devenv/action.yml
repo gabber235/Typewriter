@@ -135,8 +135,8 @@ runs:
     # them, but every job that ends cleanly saves the whole volume, these folders included as it
     # found them: a job that started before an owner saved puts the older targets back if it ends
     # last. xtask stamps the stack's artifacts with the sha256 of each artifact and of every file
-    # the build read (xtask/src/cargo_build.rs) and reuses them while all match, so a state another
-    # job's save replaced costs a rebuild, never a stale binary. The backend's debug and coverage targets,
+    # in the folders the build declares (xtask/src/cargo_build.rs) and reuses them while all match,
+    # so a state another job's save replaced costs a rebuild, never a stale binary. The backend's debug and coverage targets,
     # tens of GB, stay off.
     - if: steps.trust.outputs.volume == 'true'
       uses: namespacelabs/nscloud-cache-action@v1

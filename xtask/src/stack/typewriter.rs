@@ -29,6 +29,9 @@ use crate::{Context, deploy};
 /// The component test workspace the `typewriter-stack` binary lives in, and where in its target.
 const STACK_WORKSPACE: &str = "backend/tests/component/Cargo.toml";
 const STACK_BINARY_IN_TARGET: &str = "debug/typewriter-stack";
+/// What the stack binary reads beyond its workspace and packages: the database schema crate, one of
+/// its path dependencies, embeds `capabilities.toml` from the folder above its own.
+const STACK_DECLARED: &[&str] = &["backend/database"];
 
 /// The span collector, the broker, the identity stand in, the faults links and every backend
 /// component.
@@ -657,9 +660,13 @@ fn stack_binary(ctx: &StackContext, built: &Built, subcommand: &str) -> Result<C
 /// Builds the `typewriter-stack` binary in the component test workspace's target, whose
 /// dependencies its suite shares, and returns it.
 fn build_stack_binary(ctx: &Context) -> Result<PathBuf> {
-    let build = CargoBuild::in_workspace(ctx, "typewriter-stack", STACK_WORKSPACE, |target| {
-        vec![target.join(STACK_BINARY_IN_TARGET)]
-    })?;
+    let build = CargoBuild::in_workspace(
+        ctx,
+        "typewriter-stack",
+        STACK_WORKSPACE,
+        STACK_DECLARED,
+        |target| vec![target.join(STACK_BINARY_IN_TARGET)],
+    )?;
     let binary = build.target.join(STACK_BINARY_IN_TARGET);
     let built = build.run(
         ctx,

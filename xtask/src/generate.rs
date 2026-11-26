@@ -207,6 +207,13 @@ pub fn protocol(ctx: &Context) -> Result<()> {
     bring_up_to_date(ctx, None, through("protocol"), Lock::BeforeFirstRun)
 }
 
+/// The protocol's generated sources, root relative, which the backend's Cargo builds compile
+/// against although Git ignores them.
+pub fn protocol_files(ctx: &Context) -> Result<Vec<String>> {
+    let protocol = through("protocol");
+    protocol[protocol.len() - 1].output_files(ctx)
+}
+
 /// [`protocol`] for a caller that already holds the heavy lock.
 pub fn protocol_holding_lock(ctx: &Context) -> Result<()> {
     bring_up_to_date(ctx, None, through("protocol"), Lock::Held)

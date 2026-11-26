@@ -239,7 +239,7 @@ pub(crate) fn reusable_components_build<'a>(
     name: &'a str,
     components: &[Component],
 ) -> Result<CargoBuild<'a>> {
-    CargoBuild::in_workspace(ctx, name, "backend/Cargo.toml", |_| {
+    CargoBuild::in_workspace(ctx, name, "backend/Cargo.toml", &[], |_| {
         components
             .iter()
             .map(|component| component.artifact.clone())
