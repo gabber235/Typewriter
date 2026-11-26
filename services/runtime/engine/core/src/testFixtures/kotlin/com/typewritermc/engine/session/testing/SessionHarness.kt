@@ -20,6 +20,7 @@ import com.typewritermc.services.libs.communicator.kv.LeaseState
 import com.typewritermc.services.libs.communicator.kv.LeaseTimings
 import com.typewritermc.services.libs.communicator.testing.KeyValueStore
 import com.typewritermc.services.libs.communicator.testing.ScriptedBuckets
+import com.typewritermc.services.libs.communicator.testing.VirtualLeases
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.Instant
 import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -130,9 +132,15 @@ class SessionHarness(
         /** The organization the harness's Realm belongs to. */
         const val ORGANIZATION: String = "organization"
 
-        /** Seconds instead of minutes: refresh every 300 ms, live 2 s, a vacancy of 1 s. */
-        val SHORT: SessionTimings =
-            SessionTimings(LeaseTimings(refresh = 300.milliseconds, ttl = 2.seconds, vacancy = 1.seconds, retry = 100.milliseconds))
+        /** The leases' short timings, for virtual time: refresh every 300 ms, live 2 s, a vacancy of 1 s. */
+        val SHORT: SessionTimings = SessionTimings(VirtualLeases.SHORT)
+
+        /**
+         * For stories on a real broker: keys live minutes, so whatever must still be there is, while a vacancy of 1 s
+         * lets what must end end soon.
+         */
+        val BROKER: SessionTimings =
+            SessionTimings(LeaseTimings(refresh = 1.seconds, ttl = 5.minutes, vacancy = 1.seconds, retry = 100.milliseconds))
     }
 }
 

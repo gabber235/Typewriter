@@ -7,12 +7,7 @@ import com.typewritermc.services.libs.communicator.kv.KeyValueOpen
 import com.typewritermc.services.libs.communicator.kv.KeyValueRead
 import com.typewritermc.services.libs.communicator.kv.KeyValueWrite
 import com.typewritermc.services.libs.communicator.kv.NatsKeyValueBuckets
-import com.typewritermc.services.libs.communicator.nats.NatsAuthentication
 import com.typewritermc.services.libs.communicator.nats.NatsClientMessage
-import com.typewritermc.services.libs.communicator.nats.NatsConnection
-import com.typewritermc.services.libs.communicator.nats.NatsConnectionConfiguration
-import com.typewritermc.services.libs.communicator.nats.NatsLifecycleResult
-import com.typewritermc.services.libs.communicator.nats.NatsMessageTransport
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -194,22 +189,25 @@ sealed interface KeyValueStore : AutoCloseable {
         }
     }
 
-    /** Buckets on a fresh nats-server with JetStream, through the client production uses, on the wall clock. */
+    /**
+     * Buckets on a fresh nats-server with JetStream, through the client production uses, on the wall clock. Every
+     * connection comes from one [BrokerClients].
+     */
     class Broker private constructor(
         private val server: NatsTestServer,
-        private val connection: NatsConnection,
     ) : KeyValueStore {
-        private val connections = mutableListOf(connection)
         override val name: String = "nats-server"
-        override val buckets: KeyValueBuckets = NatsKeyValueBuckets(connection)
         override val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         override val time: TimeSource.WithComparableMarks = TimeSource.Monotonic
+        private val clients = BrokerClients(scope, server.url)
+        private val connection = runBlocking { clients.connection() }
+        override val buckets: KeyValueBuckets = NatsKeyValueBuckets(connection)
 
         override fun clock(ahead: Duration): Clock = Clock.offset(Clock.systemUTC(), ahead.toJavaDuration())
 
-        override suspend fun connect(): ScriptedBuckets = ScriptedBuckets(NatsKeyValueBuckets(newConnection()))
+        override suspend fun connect(): ScriptedBuckets = ScriptedBuckets(clients.buckets())
 
-        override suspend fun transport(): MessageTransport = NatsMessageTransport(newConnection(), brokerLimits)
+        override suspend fun transport(): MessageTransport = clients.transport()
 
         override suspend fun advance(time: Duration) = delay(time)
 
@@ -265,11 +263,9 @@ sealed interface KeyValueStore : AutoCloseable {
                 counted.await().also { subscription.unsubscribe() }
             }
 
-        private suspend fun newConnection(): NatsConnection = connect(server).also { synchronized(connections) { connections += it } }
-
         override fun close() {
             scope.cancel()
-            runBlocking { synchronized(connections) { connections.toList() }.forEach { it.shutdown() } }
+            runBlocking { clients.shutdown() }
             server.close()
         }
 
@@ -286,18 +282,10 @@ sealed interface KeyValueStore : AutoCloseable {
             /** A store on a nats-server started for it. */
             fun start(): Broker {
                 val server = NatsTestServer.startWithJetStream()
-                return Broker(server, runBlocking { connect(server) })
-            }
-
-            private suspend fun connect(server: NatsTestServer): NatsConnection {
-                val connection =
-                    NatsConnection(
-                        { NatsConnectionConfiguration(server.url, maxReconnects = 0) },
-                        { NatsAuthentication() },
-                    )
-                val connected = connection.connect()
-                check(connected == NatsLifecycleResult.Success) { "The broker connection failed with $connected" }
-                return connection
+                return runCatching { Broker(server) }.getOrElse {
+                    server.close()
+                    throw it
+                }
             }
         }
     }

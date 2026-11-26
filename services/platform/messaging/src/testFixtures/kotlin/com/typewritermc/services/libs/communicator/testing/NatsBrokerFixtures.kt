@@ -27,30 +27,38 @@ val brokerLimits: TransportLimits =
         replyCredit = false,
     )
 
-/** The connections of one test, each shut down when the test ends. */
+/**
+ * The clients of one test on the broker at [url], the one owner of broker connections in tests: each comes from
+ * [connection], and [shutdown] ends every one.
+ */
 class BrokerClients(
     scope: CoroutineScope,
     private val url: String,
 ) : CoroutineScope by scope {
-    val connections = mutableListOf<NatsConnection>()
+    private val connections = mutableListOf<NatsConnection>()
 
     /** A transport on a new connection to the broker; the connection must succeed. */
-    suspend fun transport(inboxPrefix: String = "_INBOX."): NatsMessageTransport = NatsMessageTransport(connect(inboxPrefix), brokerLimits)
+    suspend fun transport(inboxPrefix: String = "_INBOX."): NatsMessageTransport =
+        NatsMessageTransport(connection(inboxPrefix), brokerLimits)
 
     /** The key value buckets of a new connection to the broker, which must run JetStream. */
-    suspend fun buckets(): KeyValueBuckets = NatsKeyValueBuckets(connect())
+    suspend fun buckets(): KeyValueBuckets = NatsKeyValueBuckets(connection())
 
-    private suspend fun connect(inboxPrefix: String = "_INBOX."): NatsConnection {
+    /** A new connection to the broker; it must succeed. */
+    suspend fun connection(inboxPrefix: String = "_INBOX."): NatsConnection {
         val connection =
             NatsConnection(
                 { NatsConnectionConfiguration(url, inboxPrefix = inboxPrefix, maxReconnects = 0) },
                 { NatsAuthentication() },
             )
-        connections += connection
+        synchronized(connections) { connections += connection }
         val connected = connection.connect()
         check(connected == NatsLifecycleResult.Success) { "The broker connection failed with $connected" }
         return connection
     }
+
+    /** Shuts every connection down. */
+    suspend fun shutdown() = synchronized(connections) { connections.toList() }.forEach { it.shutdown() }
 }
 
 /** Runs [block] with [BrokerClients] for the broker at [url], shutting every connection down afterwards. */
@@ -62,7 +70,7 @@ suspend fun onBroker(
     try {
         clients.block()
     } finally {
-        clients.connections.forEach { it.shutdown() }
+        clients.shutdown()
     }
 }
 
