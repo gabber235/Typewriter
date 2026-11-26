@@ -46,13 +46,13 @@ pieces:
         evidence: [db4a64964e, WorkPlayersTest.kt]
   - id: proof
     status: done
-    open: the game suite has not run on this branch; it runs only inside the stack cargo xtask e2e game starts
+    open: none
     tries:
       - id: strengthened-game-s2
         what: GAME-S2 checks the session key's revision after the quit and the rejoin; GAME-S1 folds into it; ASYNC-2 and FACT-1 and FACT-2 prove the framework holds
         taught: GAME-S1 and GAME-S2 as written could not fail, since their state held before the rejoin
         state: picked
-        evidence: [4f3007c562, b6906ec295, c27704b937]
+        evidence: [4f3007c562, b6906ec295, c27704b937, cargo xtask e2e game at f864708294f (108 passed on the first attempt)]
 
 decided:
   - id: q-meter-source
@@ -132,4 +132,4 @@ slices:
     what: check runs detektMain and every project passes it without new baseline entries
     evidence: [basic-conventions gradle script]
 
-next: the full checks and the game suite; the pacing gate flip waits for the harness branch
+next: the pacing gate flip once the harness branch lands
