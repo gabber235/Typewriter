@@ -1,7 +1,5 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.launch.PartLimit
-
 /** Why a player sits out of every claim. */
 internal enum class Out {
     /** Its client is lost and the new one is not ready yet. */
@@ -38,8 +36,9 @@ internal data class Grant<S, P>(
  * Sessions (test JVMs) take turns, so one that arrives late is served next instead of behind everything
  * queued before it. The claim whose turn it is holds back every later claim until enough players are
  * free for it, so a group is never starved by smaller claims. A player is free once no attempt holds it
- * and nothing holds it [out][holdOut]. A claim that restarts Paper also waits until fewer than
- * [ownPapers] own Papers have not fully exited, as many as fit in the pool's memory ([MemoryBudget]).
+ * and nothing holds it [out][holdOut]. A claim that restarts Paper also waits until its own Papers fit beside
+ * the own Papers that have not fully exited, in the memory the budget leaves them ([ownPaperRoom]); until then
+ * it waits, and nothing of its attempt starts.
  *
  * The shared Paper runs the attempts of one pace at a time, so no attempt paces another's windows: a
  * claim at the shared Paper's current pace goes before any at another, in turn order, and the pace
@@ -48,7 +47,7 @@ internal data class Grant<S, P>(
  */
 internal class Claims<S, P>(
     private val players: List<P>,
-    private val ownPapers: Int = PartLimit.OWN_PAPER_SLOTS,
+    private val ownPaperRoom: OwnPaperRoom = OwnPaperRoom.EVERY_SLOT,
 ) {
     /** Submissions that wait together, each for its count of players. */
     private class Waiting(
@@ -89,8 +88,8 @@ internal class Claims<S, P>(
         require(together.isNotEmpty()) { "a submission names at least 1 attempt" }
         for (claim in together) require(claim.players >= 1) { "a requirement claims at least 1 player, not ${claim.players}" }
         val restarts = together.count { it.restarts }
-        require(restarts <= ownPapers) {
-            "attempts side by side need $restarts Papers of their own, but the pool runs at most $ownPapers at once"
+        require(ownPaperRoom.fits(restarts)) {
+            "attempts side by side need $restarts Papers of their own, but the game's memory holds at most ${ownPaperRoom.most} at once"
         }
         val count = together.sumOf { it.players }
         require(count <= players.size) { "a requirement claims $count players, but the pool holds ${players.size}" }
@@ -146,7 +145,7 @@ internal class Claims<S, P>(
             val (session, turn, head) = next() ?: break
             val free = players.filter { it !in claimed && it !in out }
             val restarts = head.together.count { it.restarts }
-            if (head.count > free.size || ownPapersAlive + restarts > ownPapers) break
+            if (head.count > free.size || !ownPaperRoom.fits(ownPapersAlive + restarts)) break
             head.sharedPace?.let { sharedPace = it }
             var next = 0
             for (claim in head.together) {

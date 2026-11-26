@@ -7,7 +7,7 @@ import com.typewritermc.playtest.launch.PartLimit
  * Paper of each restart attempt, named after its attempt. Nothing that ends an older Paper, its exit or
  * the removal of its folder, so reaches a newer one, even the Paper of a later attempt of the same
  * submission. Each Paper also holds a slot: the shared Paper 0, an own Paper the lowest of 1 to
- * [ownSlots] no running Paper holds (as many as the pool's memory holds), freed when that Paper is gone. [folderOf] sets up a fresh folder for
+ * [ownSlots] no running Paper holds (as many as the game's memory holds), freed when that Paper is gone. [folderOf] sets up a fresh folder for
  * a name and slot; [remove] removes a Paper's folder.
  */
 internal class Papers(

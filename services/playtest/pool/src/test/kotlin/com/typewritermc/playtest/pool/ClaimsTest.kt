@@ -1,5 +1,6 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.launch.PartLimit
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -193,6 +194,32 @@ val ClaimsTest by testSuite {
         claims.grants().shouldBeEmpty()
         claims.ownPaperGone()
         claims.grants() shouldContainExactly listOf(Grant("module", 3L, listOf("gv-1")))
+    }
+
+    test("an own Paper that does not fit in what is left of the budget waits until another one ends, then is claimed to boot") {
+        val ownPaper = PartLimit.OWN_PAPER.limitBytes
+        val claims = Claims<String, String>(pool, OwnPaperRoom(leftBytes = ownPaper * 3 / 2, slots = 2))
+        claims.submit("module", Claim(1L, 1, restarts = true))
+        claims.submit("module", Claim(2L, 1, restarts = true))
+
+        claims.grants().map { it.submission } shouldContainExactly listOf(1L)
+        // The attempt ended, but its own Paper still takes its memory while it stops.
+        claims.release(listOf("gv-1"))
+        claims.grants().shouldBeEmpty()
+        claims.ownPaperGone()
+        claims.grants() shouldContainExactly listOf(Grant("module", 2L, listOf("gv-1")))
+    }
+
+    test("attempts side by side that need more own Papers than the budget holds at once are refused with both numbers") {
+        val claims = Claims<String, String>(pool, OwnPaperRoom(leftBytes = PartLimit.OWN_PAPER.limitBytes, slots = 2))
+
+        val refused =
+            shouldThrow<IllegalArgumentException> {
+                claims.submit("module", *(1L..2L).map { Claim(it, 1, restarts = true) }.toTypedArray())
+            }
+
+        refused.message shouldContain "2 Papers of their own"
+        refused.message shouldContain "at most 1"
     }
 
     test("attempts side by side that need more own Papers than may run at once are refused with both numbers") {

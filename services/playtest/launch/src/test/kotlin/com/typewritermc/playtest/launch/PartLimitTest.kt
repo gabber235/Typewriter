@@ -21,6 +21,6 @@ val PartLimitTest by testSuite {
                 heap shouldBeLessThan kind.limitBytes
             }
         }
-        PartLimit.SHARED_PAPER.heapFlag() shouldBe "-Xmx2580m"
+        PartLimit.SHARED_PAPER.heapFlag() shouldBe "-Xmx2576m"
     }
 }

@@ -1,15 +1,15 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.launch.PartLimit
 import skirout.harness.v1.test_run.MemoryKill
 import java.nio.file.Files
 import java.nio.file.Path
 
 /**
  * The cgroup v2 folder the run's tree gives the game ([game]), where every game part runs in a leaf of
- * its own, the pool's own included. The kernel counts each leaf's memory, records the most it took, and
- * kills the leaf's processes together once they take more than the leaf's limit. While limits are only
- * measured, every leaf takes the game's limit, the runner's memory; each kind's own limit ([PartLimit])
- * comes in once the measured peaks set it.
+ * its own, the pool's own included, held to its kind's [PartLimit]. The kernel counts each leaf's
+ * memory, records the most it took, and kills the leaf's processes together once they take more than
+ * the leaf's limit, or once the game's parts together take more than the game's budget.
  */
 internal class PartLeaves(
     private val game: Path,
@@ -17,14 +17,15 @@ internal class PartLeaves(
     /** The game's limit as the pool's memory budget; null when the game's cgroup has none. */
     fun budget(): MemoryBudget? = limitOf(game)?.let { MemoryBudget(it, "the game's cgroup") }
 
-    /** Makes the leaf [name] and moves the process [pid] into it. */
+    /** Makes the leaf [name], held to [limit], and moves the process [pid] into it. */
     fun place(
         name: String,
         pid: Long,
+        limit: PartLimit,
     ): Leaf {
         val dir = game.resolve(name)
         Files.createDirectories(dir)
-        Files.writeString(dir.resolve("memory.max"), Files.readString(game.resolve("memory.max")).trim())
+        Files.writeString(dir.resolve("memory.max"), limit.limitBytes.toString())
         // The kernel kills every process of the leaf together, so a part dies whole.
         Files.writeString(dir.resolve("memory.oom.group"), "1")
         Files.writeString(dir.resolve("cgroup.procs"), pid.toString())

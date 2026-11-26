@@ -56,7 +56,7 @@ internal class PoolSettings(
                 coverageAgentJar = path("playtest.coverageAgent"),
                 pluginJar = path("playtest.plugin"),
                 clientLaunch = path("playtest.clientLaunch"),
-                clients = System.getProperty("playtest.clients", "4").toInt(),
+                clients = System.getProperty("playtest.clients", "3").toInt(),
                 coveredPackages = required("playtest.coveredPackages").split(",").filter(String::isNotEmpty),
                 paperAdditions =
                     PaperAdditions(

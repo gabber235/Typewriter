@@ -61,9 +61,10 @@ fun main() {
         FileChannel.open(settings.poolLog, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { it.truncate(0) }
         val pool = Pool(settings, server)
         onEndOf(System.`in`) { pool.stop() }
-        // Limits are only measured for now: a pool over its budget still runs, and its log says so.
+        // The build's test JVMs find no pool of their run, and point at this log.
         settings.memoryBudget.overBudget(settings.clients, InputPath.here() == InputPath.XTEST)?.let { reason ->
-            System.err.println("Over the memory budget, measured only: $reason")
+            pool.couldNotRun(reason)
+            exitProcess(1)
         }
         PoolFile.of(server.localPort, settings.run).write(poolFile)
         try {
@@ -295,7 +296,9 @@ internal class Pool(
             Client(Player(name = "gv-$it", uuid = UUID.nameUUIDFromBytes("OfflinePlayer:gv-$it".toByteArray()).toString()))
         }
 
-    private val claims = Claims<Peer, Player>(clients.map { it.player })
+    // An own Paper starts only once its limit fits in what the parts that run the whole run leave of the budget.
+    private val ownPaperRoom = settings.memoryBudget.ownPaperRoom(settings.clients, InputPath.here() == InputPath.XTEST)
+    private val claims = Claims<Peer, Player>(clients.map { it.player }, ownPaperRoom)
 
     /** Sessions the pool refused as they joined: what they still send is dropped until they leave. */
     private val refused = mutableSetOf<Peer>()
@@ -325,7 +328,7 @@ internal class Pool(
             slot,
             ->
             game.ownFolder(name, slot)
-        }, remove = { game.removeOwn(it) })
+        }, remove = { game.removeOwn(it) }, ownSlots = ownPaperRoom.most)
     private val aot = AotCache(settings.aotDir)
 
     // Every restart Paper of the pool boots the same JDK, class path, plugins and flags, its heap share included.
@@ -344,7 +347,7 @@ internal class Pool(
     // The leaf of the game's cgroup each part runs in, the pool's own first, where the run's tree gives the pool one.
     private val leaves = settings.cgroup?.let(::PartLeaves)
     private val leafOf = mutableMapOf<Part, Placed>()
-    private val ownLeaf = leaves?.place("pool", ProcessHandle.current().pid())
+    private val ownLeaf = leaves?.place("pool", ProcessHandle.current().pid(), PartLimit.POOL)
     private var nextAttempt = 0L
     private var nextTogether = 0L
 
@@ -1606,7 +1609,12 @@ internal class Pool(
     private fun watch(part: Part) {
         runs.started(partName(part), partKind(part), part.log)
         runs.planned(PartLimit.POOL.limitBytes + game.parts.sumOf { partKind(it).limit?.limitBytes ?: 0 })
-        leaves?.let { leafOf[part] = Placed(partName(part), it.place("${partName(part)}-${part.process.pid()}", part.process.pid())) }
+        leaves?.let { leaves ->
+            // Every kind of part the pool starts has a limit; only a kind from a newer build lacks one.
+            val limit = checkNotNull(partKind(part).limit) { "${partName(part)} is of a kind without a memory limit" }
+            val leaf = leaves.place("${partName(part)}-${part.process.pid()}", part.process.pid(), limit)
+            leafOf[part] = Placed(partName(part), leaf)
+        }
         thread(name = "playtest-pool-${part.name}", isDaemon = true) { part.process.waitFor().also { events.put(Event.Exited(part)) } }
     }
 

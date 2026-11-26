@@ -35,7 +35,7 @@ val WipeRequirements by testSuite(compartment = { GameCompartment }) {
     backToBack(
         "WIPE-INVENTORY",
         "an attempt finds none of the items the attempt before it gave its players",
-        players = 4,
+        players = 3,
         first = {
             players.forEach { probe.give(it, 0, "stick") }
             within(10.ticks) { players.forEach { it sees held("stick") } }

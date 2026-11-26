@@ -381,6 +381,9 @@ tasks.register<Test>("gameTest") {
     // the selected requirements. Whether a selected id matched nothing is the whole run's question,
     // and xtask's selection check (`results::selection_matches`) answers it from the run file.
     filter.isFailOnNoMatchingTests = false
+    // The test JVM only drives the game and compares what it reports; the clients and Papers hold the
+    // game's memory. Its heap counts toward Gradle's test run limit (`cgroup::GRADLE_TEST_MIB`).
+    maxHeapSize = "512m"
     usesService(gameRun)
     val runs = inRun
     onlyIf("its module is in the suite the build runs") { runs }
@@ -397,7 +400,7 @@ tasks.register<Test>("gameTest") {
             coveredPackages.set(listOf("com.typewritermc"))
             java.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) }.map { it.executablePath.asFile.path })
             // `cargo xtask e2e game --clients 1` passes `-Pplaytest.clients=1`: a pool of one client.
-            clients.set(providers.gradleProperty("playtest.clients").map(String::toInt).orElse(4))
+            clients.set(providers.gradleProperty("playtest.clients").map(String::toInt).orElse(3))
             runId.set(gameRun.map { it.id })
             poolDir.set(servicesDirectory.resolve("build/playtest/pool").path)
             // `cargo xtask e2e game` names the run file it gates on; other runs keep theirs in the build.
