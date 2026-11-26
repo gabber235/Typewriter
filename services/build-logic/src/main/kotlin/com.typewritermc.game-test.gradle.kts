@@ -373,6 +373,14 @@ abstract class GameParts : CommandLineArgumentProvider {
 tasks.register<Test>("gameTest") {
     description = "Runs the game requirements against real Minecraft clients on a stepped Paper."
     group = "verification"
+    // A module outside the suite the build runs takes nothing in: Gradle builds what a skipped task
+    // takes in all the same, and that build would run beside the suite (see gameTestBuild).
+    if (!inRun) {
+        testClassesDirs = files()
+        classpath = files()
+        onlyIf("its module is in the suite the build runs") { false }
+        return@register
+    }
     testClassesDirs = gameTest.output.classesDirs
     classpath = gameTest.runtimeClasspath
     // The game's state lives outside Gradle's view, so a game run is never up to date.
@@ -385,8 +393,6 @@ tasks.register<Test>("gameTest") {
     // game's memory. Its heap counts toward Gradle's test run limit (`cgroup::GRADLE_TEST_MIB`).
     maxHeapSize = "512m"
     usesService(gameRun)
-    val runs = inRun
-    onlyIf("its module is in the suite the build runs") { runs }
     val parts =
         objects.newInstance<GameParts>().apply {
             pool.from(poolPart)
