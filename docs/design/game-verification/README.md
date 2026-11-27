@@ -154,11 +154,14 @@ never waits for wall clock timers ([n-stepped-ticks.md](spikes/n-stepped-ticks.m
   as their player's work. Work for no player in particular counts for every claimed player.
 - **Typewriter's work counts by construction.** Every engine task runs on its deployment's one
   dispatcher, which counts it from its dispatch until it ran, and every outbound operation goes
-  through the host, which counts it until its result is back with its caller. The host's
-  `InFlightWork` is a Bukkit service; the test only `PlaytestTypewriter` plugin counts each item as
+  through the host, which counts it until its result is back with its caller. The loader counts its
+  own work the same way, as the host's work of no runtime: its tasks on the host's counted scope,
+  its file operations on the host's counted io, its own messaging through counted sessions; a thread
+  blocked on an outside event (a file watch) counts nothing. The host's `InFlightWork` is a Bukkit
+  service; the test only `PlaytestTypewriter` plugin counts each item as
   `PlayerWork` for the Minecraft players among its subjects. No call site opts in, so new engine code
-  cannot forget; a detekt rule (`config/detekt/concurrency.yml`) keeps engine code off other threads
-  and makes every wall clock or callback wait name why it holds no tick.
+  cannot forget; a detekt rule (`config/detekt/concurrency.yml`) keeps engine and loader code off
+  other threads and makes every wall clock or callback wait name why it holds no tick.
 - **Expected facts.** An attempt about to cause a change outside Paper (content it writes) calls
   `expectFact` first; its players' ticks wait until a plugin on Paper reports the fact through
   `PlayerWork.factHappened`. A fact no plugin reports within 1 s is hung work named after it.

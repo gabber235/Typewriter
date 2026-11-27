@@ -94,14 +94,17 @@ decided:
   - id: detekt-main-gate
     what: "check runs detektMain. Every finding is fixed at its cause: real concepts where a long parameter list hid one, a site suppression with a one line reason where a composition root, the authoring DSL or a generated SDK entry point truly takes them, no baseline entry and no ignoreDefaultParameters; println goes through one console writer per playtest module; generated/ksp is excluded like skirout; the unused remappingContent is deleted"
     why: LongParameterList needs type resolution, so plain detekt never ran it and no baseline could hold it
+  - id: cells-outcome
+    what: "Merge close to as it is (decided 2026-11-27): keep the tick hold while a window reads state, since it fixes a real deadlock today; build no read budget, no fault link per Paper and no pacing gate flip, since cells delete or replace them; the real product case for the hold and a Typewriter fact producer come with the crossing's release rules"
+    why: The game harness moves to owned cells with scripted time; nothing more is built on the parts cells delete
+  - id: loader-own-work
+    what: "The loader counts its own work as the host's work of no runtime: its tasks on the host's counting dispatcher, its file operations on the host's counted io, its own messaging through counted sessions; a thread blocked on an outside event waits uncounted; concurrency.yml covers loader sources"
+    why: The crossing must see every outbound call, and the loader's work ran uncounted on Dispatchers.IO
   - id: engine-scope-failure
     what: "Fail loud: a deployment scope whose work throws makes ReloadableEngineRuntime report unhealthy with the cause, so the rollout replaces it through the existing health path; the scope keeps its plain job"
     why: A part failing in the offered scope otherwise died silently while the engine reported healthy
 
-open:
-  - id: pacing-gate
-    what: Flip runtimes/paper to the pacing gate once the harness pull request (fix/game-harness-structure) lands; the commit goes last so it rebases onto that branch
-    tied_to: fix/game-harness-structure
+open: []
 
 slices:
   - id: count
@@ -134,8 +137,14 @@ slices:
   - id: engine-scope-failure
     what: A part that throws in the deployment scope makes the engine deployment report unhealthy with its cause
     evidence: [ea3283c0ed2, EngineScopeFailureTest.kt]
+  - id: reading-between-ticks
+    what: While a window reads its state checks between two ticks, no tick runs on its Paper; its due barriers still go out
+    evidence: [StepPolicyTest.kt]
+  - id: loader-own-work
+    what: The loader's tasks, file operations and own messaging count as the host's own work
+    evidence: [LoaderWorkTest.kt]
   - id: detekt-main-gate
     what: check runs detektMain and every project passes it without new baseline entries
     evidence: [basic-conventions gradle script]
 
-next: the pacing gate flip once the harness branch lands
+next: merge; the game harness moves to owned cells with scripted time, where the counted dispatcher and transport become the crossing
