@@ -2,25 +2,16 @@ package com.typewritermc.playtest.launch
 
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.withClue
-import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 
 val PartLimitTest by testSuite {
-    test("a game JVM's heap is its kind's share of the part's own memory limit, leaving the rest for what the JVM keeps beside it") {
-        val mib = 1024L * 1024
-        for (kind in PartLimit.entries.filter { it.heapPercent > 0 }) {
-            val heap =
-                kind
-                    .heapFlag()
-                    .removePrefix("-Xmx")
-                    .removeSuffix("m")
-                    .toLong() * mib
-
-            withClue(kind) {
-                heap shouldBe kind.limitBytes * kind.heapPercent / 100 / mib * mib
-                heap shouldBeLessThan kind.limitBytes
-            }
-        }
-        PartLimit.SHARED_PAPER.heapFlag() shouldBe "-Xmx2576m"
+    test("a game JVM's heap is its kind's share of the part's memory limit in whole MiB, never rounded up past it") {
+        // 3904 MiB at 66%, 2393 MiB at 46%, 1775 MiB at 42% and 812 MiB at 40%.
+        mapOf(
+            PartLimit.SHARED_PAPER to "-Xmx2576m",
+            PartLimit.OWN_PAPER to "-Xmx1100m",
+            PartLimit.CLIENT to "-Xmx745m",
+            PartLimit.POOL to "-Xmx324m",
+        ).forEach { (kind, flag) -> withClue(kind) { kind.heapFlag() shouldBe flag } }
     }
 }

@@ -17,7 +17,8 @@ val PartLeavesTest by testSuite {
         PartLeaves(game).place("client-gv-1-4242", 4242, PartLimit.CLIENT)
 
         val leaf = game.resolve("client-gv-1-4242")
-        Files.readString(leaf.resolve("memory.max")) shouldBe PartLimit.CLIENT.limitBytes.toString()
+        // A client's 1775 MiB.
+        Files.readString(leaf.resolve("memory.max")) shouldBe "1861222400"
         Files.readString(leaf.resolve("memory.oom.group")) shouldBe "1"
         Files.readString(leaf.resolve("cgroup.procs")) shouldBe "4242"
     }

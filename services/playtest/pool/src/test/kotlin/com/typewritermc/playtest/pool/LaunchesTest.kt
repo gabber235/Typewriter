@@ -1,6 +1,5 @@
 package com.typewritermc.playtest.pool
 
-import com.typewritermc.playtest.launch.PartLimit
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import skirout.harness.v1.test_run.AttemptPolicy
@@ -33,8 +32,9 @@ val LaunchesTest by testSuite {
         val server = PaperServer(listOf(dir.resolve("server.jar")), "io.papermc.paper.PaperBootstrap")
         val folder = PaperFolder("paper", dir.resolve("paper"), 25565, dir.resolve("paper.log"), slot = 0)
 
-        Launches.sharedPaper(settings, 4000, folder, server, "output=none") shouldContain PartLimit.SHARED_PAPER.heapFlag()
-        Launches.ownPaper(settings, 4000, folder, server, "output=none", listOf()) shouldContain PartLimit.OWN_PAPER.heapFlag()
-        Launches.client(settings, 4000, "gv-1", InputPath.SDL, dir.resolve("client-gv-1")) shouldContain PartLimit.CLIENT.heapFlag()
+        // 66% of 3904 MiB, 46% of 2393 MiB and 42% of 1775 MiB.
+        Launches.sharedPaper(settings, 4000, folder, server, "output=none") shouldContain "-Xmx2576m"
+        Launches.ownPaper(settings, 4000, folder, server, "output=none", listOf()) shouldContain "-Xmx1100m"
+        Launches.client(settings, 4000, "gv-1", InputPath.SDL, dir.resolve("client-gv-1")) shouldContain "-Xmx745m"
     }
 }
