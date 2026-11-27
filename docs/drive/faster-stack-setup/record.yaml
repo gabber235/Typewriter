@@ -50,8 +50,9 @@ decided:
       Decided 2026-11-27 after review rounds 7 to 9 each found another hole in the read set
       (inputs found by digging through Cargo's target folder: unit dependency files, build script
       output, a rule for scripts that watch nothing), which this replaces. A build declares the
-      folders it reads: its workspace's folder, the folder of every repository package it builds
-      (from the one typed cargo metadata read), and any folder its caller adds. Its stamp lists the
+      folders it reads: its workspace's folder, the folder of every repository package it builds,
+      and the paths each such package lists in its manifest's [package.metadata.typewriter] inputs
+      for what it embeds from outside its folder (all from the one typed cargo metadata read). Its stamp lists the
       sha256 of each artifact, of every file Git does not ignore in those folders (untracked ones
       too, so a new module counts before it is added), of the generated protocol sources inside
       them, of every Cargo configuration file Cargo loads (recorded absent while missing), and of
@@ -60,8 +61,9 @@ decided:
       build is reused while all of them match. A build that read a repository file outside its
       folders fails, naming it: one the dependency file Cargo documents beside each artifact names,
       or one a build script watches (found through the out_dir of this build's JSON messages)
-      outside its folders, or outside its own folder for a package from elsewhere. The stack
-      binary declares backend/database, whose capabilities.toml the schema crate embeds. Watched
+      outside its folders, or outside its own folder for a package from elsewhere. The declaration
+      lives with the crate that embeds, not with the build's caller: a caller list missed the
+      component test crate's embed of the user organization's join transaction on CI. Watched
       variables are stamped rather than refused, since registry build scripts such as cc's watch
       dozens (CC, CFLAGS, SDKROOT). Known issues: a variable a crate reads at compile time outside
       CARGO and RUST is not an input unless a build script watches it, and a procedural macro that

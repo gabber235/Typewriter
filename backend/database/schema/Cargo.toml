@@ -7,6 +7,10 @@ repository.workspace = true
 publish = false
 description = "The backend's SurrealDB schema files and the presets of capabilities.toml, embedded at build time."
 
+# What the crate embeds from outside its folder, which xtask's Cargo builds count as their inputs.
+[package.metadata.typewriter]
+inputs = ["../capabilities.toml"]
+
 [dependencies]
 anyhow = "1"
 indexmap = { version = "2", features = ["serde"] }

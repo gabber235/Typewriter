@@ -6,8 +6,15 @@
 //! cached target and the removal of each artifact before Cargo runs, and let Cargo decide.
 //!
 //! A build declares the folders it reads, its trees: its workspace's folder, the folder of every
-//! package in the repository it builds, and any folder its caller adds. A stamp beside the
-//! artifacts records:
+//! package in the repository it builds, and the files or folders outside its own folder such a
+//! package declares it embeds, in its manifest:
+//!
+//! ```toml
+//! [package.metadata.typewriter]
+//! inputs = ["../capabilities.toml"]
+//! ```
+//!
+//! A stamp beside the artifacts records:
 //!
 //! - the command, with the variables it sets, and the toolchain (`rustc -vV`);
 //! - Cargo's whole configuration surface: every inherited `CARGO*` and `RUST*` variable but those
@@ -26,7 +33,7 @@
 //! So that no input goes unseen, a build that read a repository file outside its trees fails,
 //! naming it: one the dependency file Cargo writes beside each artifact names (an `include_str!`
 //! of a file elsewhere), or one a build script watches (`rerun-if-changed`) outside its trees, or
-//! outside its own folder for a package from elsewhere. Its caller then declares the folder.
+//! outside its own folder for a package from elsewhere. The crate that reads it then declares it.
 //!
 //! Known issues: a variable a crate reads at compile time (`env!`, `option_env!`) outside `CARGO*`
 //! and `RUST*` is not an input unless a build script watches it, since Cargo's dependency file
@@ -49,7 +56,7 @@ use crate::{CommandExt as _, Context, generate};
 pub struct CargoBuild<'a> {
     /// Names the stamp, which lies beside the first artifact as `<name>.xtask-stamp`.
     pub name: &'a str,
-    /// The root relative folders whose files are the build's inputs (`.` for the whole
+    /// The root relative folders and files that are the build's inputs (`.` for the whole
     /// repository).
     pub trees: Vec<String>,
     /// The absolute paths of what the build produces.
@@ -65,23 +72,34 @@ pub struct CargoBuild<'a> {
 impl<'a> CargoBuild<'a> {
     /// The build `name` in the Cargo workspace of `manifest`, root relative, of the artifacts
     /// `artifacts` names below the workspace's target directory. Its trees are the workspace's
-    /// folder, the folder of every package in the repository it builds, and `declared`.
+    /// folder, the folder of every package in the repository it builds, and what each of those
+    /// declares it embeds from outside its folder.
     pub fn in_workspace(
         ctx: &Context,
         name: &'a str,
         manifest: &str,
-        declared: &[&str],
         artifacts: impl FnOnce(&Path) -> Vec<PathBuf>,
     ) -> Result<Self> {
         let metadata = metadata(ctx, manifest, Packages::All)?;
         let repository = Repository::of(ctx)?;
-        let local = metadata
+        let mut dirs = vec![metadata.workspace_root.clone()];
+        for package in metadata
             .packages
             .iter()
             .filter(|package| package.source.is_none())
-            .filter_map(|package| package.manifest_path.parent());
-        let mut trees: Vec<String> = declared.iter().map(|tree| (*tree).to_owned()).collect();
-        for dir in std::iter::once(metadata.workspace_root.as_path()).chain(local) {
+        {
+            let Some(dir) = package.manifest_path.parent() else {
+                continue;
+            };
+            dirs.push(dir.to_owned());
+            dirs.extend(
+                package
+                    .declared_inputs()
+                    .map(|input| normalize(&dir.join(input))),
+            );
+        }
+        let mut trees = Vec::new();
+        for dir in &dirs {
             if let Some(relative) = repository.relative(dir) {
                 trees.push(tree(relative));
             }
@@ -134,6 +152,32 @@ pub struct Package {
     /// Where a dependency comes from; none for a package in the repository.
     pub source: Option<String>,
     pub targets: Vec<Target>,
+    /// The manifest's `[package.metadata]` table.
+    #[serde(default)]
+    metadata: Option<PackageMetadata>,
+}
+
+impl Package {
+    /// What the package declares it embeds from outside its own folder, relative to its folder
+    /// (`[package.metadata.typewriter] inputs`).
+    fn declared_inputs(&self) -> impl Iterator<Item = &PathBuf> {
+        self.metadata
+            .iter()
+            .flat_map(|metadata| &metadata.typewriter)
+            .flat_map(|typewriter| &typewriter.inputs)
+    }
+}
+
+#[derive(Deserialize)]
+struct PackageMetadata {
+    #[serde(default)]
+    typewriter: Option<TypewriterMetadata>,
+}
+
+#[derive(Deserialize)]
+struct TypewriterMetadata {
+    #[serde(default)]
+    inputs: Vec<PathBuf>,
 }
 
 #[derive(Deserialize)]
@@ -426,8 +470,8 @@ impl CargoBuild<'_> {
         }
         if !outside.is_empty() {
             bail!(
-                "the build {} read {}, outside the folders it declares ({}); declare the folder \
-                 that holds each",
+                "the build {} read {}, outside the folders it declares ({}); the crate that reads \
+                 each declares it in its manifest's [package.metadata.typewriter] inputs",
                 self.name,
                 outside.into_iter().collect::<Vec<_>>().join(", "),
                 self.trees.join(", ")
@@ -699,7 +743,8 @@ mod tests {
         root.write("backend/tests/component/suite/src/lib.rs", "");
         root.write(
             "backend/database/schema/Cargo.toml",
-            "[package]\nname = \"schema\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+            "[package]\nname = \"schema\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n\
+             [package.metadata.typewriter]\ninputs = [\"../capabilities.toml\"]\n",
         );
         root.write("backend/database/schema/src/lib.rs", "");
         root.ctx
@@ -721,14 +766,13 @@ mod tests {
             &root.ctx,
             "suite",
             "backend/tests/component/Cargo.toml",
-            &["backend/database"],
             |target| vec![target.join("debug/libsuite.rlib")],
         )
         .unwrap();
         assert_eq!(
             build.trees,
             [
-                "backend/database",
+                "backend/database/capabilities.toml",
                 "backend/database/schema",
                 "backend/tests/component",
                 "backend/tests/component/suite"
@@ -882,7 +926,8 @@ mod tests {
         assert_eq!(
             error,
             "the build stack read skir-src/protocol.skir, outside the folders it declares \
-             (backend); declare the folder that holds each"
+             (backend); the crate that reads each declares it in its manifest's \
+             [package.metadata.typewriter] inputs"
         );
         let declared = cargo.build(&["backend", "skir-src"]);
         let outcome = declared.run(&root.ctx, &mut cargo.command("one", &reads), &NONE);
@@ -929,7 +974,8 @@ mod tests {
         assert_eq!(
             error,
             "the build stack read /usr/include/x.h, skir-src/x.skir, outside the folders it \
-             declares (backend); declare the folder that holds each"
+             declares (backend); the crate that reads each declares it in its manifest's \
+             [package.metadata.typewriter] inputs"
         );
     }
 
@@ -1006,11 +1052,10 @@ mod tests {
             )
             .run()
             .unwrap();
-        let build =
-            CargoBuild::in_workspace(&root.ctx, "probe", "probe/Cargo.toml", &[], |target| {
-                vec![target.join("debug/libprobe.rlib")]
-            })
-            .unwrap();
+        let build = CargoBuild::in_workspace(&root.ctx, "probe", "probe/Cargo.toml", |target| {
+            vec![target.join("debug/libprobe.rlib")]
+        })
+        .unwrap();
         let run = |watched: &str| {
             let mut cargo = root.ctx.tool(
                 ".",
@@ -1039,6 +1084,70 @@ mod tests {
         assert_eq!(run("one"), Outcome::Compiled);
         assert_eq!(run("one"), Outcome::Reused);
         assert_eq!(run("two"), Outcome::Compiled, "after PROBE_WATCHED changed");
+    }
+
+    #[test]
+    fn a_crate_that_embeds_a_file_of_another_crate_declares_it_in_its_manifest() {
+        // The component suite races a component's own transaction, which it embeds from the
+        // component's folder although it does not build the component.
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet"]);
+        root.write(".gitignore", "target/\n");
+        root.write("component/src/query.surql", "SELECT 1;");
+        root.write(
+            "tests/suite/Cargo.toml",
+            "[package]\nname = \"suite\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n\
+             [package.metadata.typewriter]\ninputs = [\"../../component/src/query.surql\"]\n",
+        );
+        root.write(
+            "tests/suite/src/lib.rs",
+            "pub const QUERY: &str = include_str!(\"../../../component/src/query.surql\");\n",
+        );
+        root.ctx
+            .tool(
+                ".",
+                "cargo",
+                &[
+                    "generate-lockfile",
+                    "--offline",
+                    "--quiet",
+                    "--manifest-path",
+                    "tests/suite/Cargo.toml",
+                ],
+            )
+            .run()
+            .unwrap();
+        let build =
+            CargoBuild::in_workspace(&root.ctx, "suite", "tests/suite/Cargo.toml", |target| {
+                vec![target.join("debug/libsuite.rlib")]
+            })
+            .unwrap();
+        let run = || {
+            let mut cargo = root.ctx.tool(
+                ".",
+                "cargo",
+                &[
+                    "build",
+                    "--quiet",
+                    "--offline",
+                    "--manifest-path",
+                    "tests/suite/Cargo.toml",
+                ],
+            );
+            for name in [
+                "CARGO_TARGET_DIR",
+                "CARGO_BUILD_TARGET_DIR",
+                "CARGO_BUILD_BUILD_DIR",
+            ] {
+                cargo.env_remove(name);
+            }
+            build.run(&root.ctx, &mut cargo, &NONE).unwrap()
+        };
+
+        assert_eq!(run(), Outcome::Compiled);
+        assert_eq!(run(), Outcome::Reused);
+        root.write("component/src/query.surql", "SELECT 2;");
+        assert_eq!(run(), Outcome::Compiled, "after the embedded file changed");
     }
 
     #[test]
