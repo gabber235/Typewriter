@@ -1,17 +1,17 @@
 //! Publishes the backend to a cluster: every deployable component, the database image, then a
 //! restart so the runtime operator pulls the new images.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::fs::{self, File};
 use std::io::Write;
 use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 use anyhow::{Context as _, Result, bail, ensure};
 use clap::ValueEnum;
 
-use crate::cargo_build::{CargoBuild, Outcome, Packages, metadata};
+use crate::cargo_build::{CargoBuild, Invocation, Outcome, Packages, metadata};
 use crate::cluster::CiCluster;
 use crate::digest::Environment;
 use crate::lock::HeavyLock;
@@ -82,6 +82,8 @@ impl Registry {
 /// runtime deploys or the component suite runs.
 pub(crate) struct Component {
     pub(crate) package: String,
+    /// Cargo's opaque id of its package, which the component suite's artifact manifest names.
+    pub(crate) package_id: String,
     /// Its library target, which names its artifact.
     pub(crate) target: String,
     /// The release `.wasm` the shared components build writes.
@@ -194,60 +196,35 @@ fn ensure_main_checkout(ctx: &Context) -> Result<()> {
 pub(crate) const COMPONENT_TARGET: &str = "wasm32-wasip2";
 pub(crate) const COMPONENT_PROFILE: &str = "release";
 
-/// The Cargo build of the release wasm artifact of every component in `components`, running
-/// `jobs` jobs at once when given.
-fn components_build(
-    ctx: &Context,
-    components: &[Component],
-    jobs: Option<NonZeroUsize>,
-) -> Command {
-    let mut build = ctx.tool(
-        "backend",
-        "cargo",
-        &[
-            "build",
-            "--locked",
-            "--profile",
-            COMPONENT_PROFILE,
-            "--target",
-            COMPONENT_TARGET,
-        ],
-    );
-    // A package with several wanted targets is named once.
-    let mut packages = BTreeSet::new();
-    for component in components {
-        if packages.insert(component.package.as_str()) {
-            build.args(["-p", &component.package]);
-        }
-    }
-    if let Some(jobs) = jobs {
-        build.args(["--jobs", &jobs.to_string()]);
-    }
-    build
-}
-
-/// Builds the release `.wasm` of every backend component in one shared build and returns them,
-/// with whether the build was reused. The stack, `cargo xtask deploy` and the components check
-/// all build here, so one stamp covers each artifact and none undoes another's (the job count
-/// they ask for is no input), and each gets the generated protocol sources the components
-/// compile against brought up to date first. Stderr goes to `log`, or to the terminal. The caller
-/// holds the heavy lock.
+/// Builds the release `.wasm` of every backend component in one shared build, running `jobs`
+/// jobs at once when given, and returns them with whether the build was reused. The stack,
+/// `cargo xtask deploy` and the components check all build here, so one stamp covers each artifact
+/// and none undoes another's (the job count is no input). Diagnostics go to `log`, or to the
+/// terminal. The caller holds the heavy lock.
 pub(crate) fn build_components(
     ctx: &Context,
     jobs: Option<NonZeroUsize>,
     log: Option<&File>,
 ) -> Result<(Vec<Component>, Outcome)> {
-    crate::generate::protocol_holding_lock(ctx)?;
     let components = components(ctx)?;
-    let mut cargo = components_build(ctx, &components, jobs);
-    cargo.log_stderr(log)?;
-    let build = CargoBuild::in_workspace(ctx, "components", "backend/Cargo.toml", &cargo, |_| {
+    let mut packages: Vec<&str> = components
+        .iter()
+        .map(|component| component.package.as_str())
+        .collect();
+    packages.dedup();
+    let invocation = Invocation {
+        profile: Some(COMPONENT_PROFILE),
+        target: Some(COMPONENT_TARGET),
+        jobs,
+        ..Invocation::new("backend/Cargo.toml", &packages)
+    };
+    let build = CargoBuild::in_workspace(ctx, "components", invocation, |_| {
         components
             .iter()
             .map(|component| component.artifact.clone())
             .collect()
     })?;
-    let outcome = build.run(ctx, &mut cargo, &Environment::process())?;
+    let outcome = build.run(ctx, &Environment::process(), log)?;
     Ok((components, outcome))
 }
 
@@ -294,6 +271,7 @@ pub(crate) fn components(ctx: &Context) -> Result<Vec<Component>> {
             artifact: release_artifact(&metadata.target_directory, &library.name),
             target: library.name.clone(),
             package: package.name,
+            package_id: package.id,
             deployable,
         });
     }

@@ -21,7 +21,7 @@ use super::spec::{
     AnyBuild, BACKEND, Build, Built, GradleBuild, How, Probe, Published, Role, Service, ServiceId,
     StackContext, StackSpec, state_dir,
 };
-use crate::cargo_build::{CargoBuild, Outcome};
+use crate::cargo_build::{CargoBuild, Invocation, Outcome};
 use crate::cluster::CiCluster;
 use crate::digest::Environment;
 use crate::{Context, deploy};
@@ -656,25 +656,14 @@ fn stack_binary(ctx: &StackContext, built: &Built, subcommand: &str) -> Result<C
 /// Builds the `typewriter-stack` binary in the component test workspace's target, whose
 /// dependencies its suite shares, and returns it.
 fn build_stack_binary(ctx: &Context) -> Result<PathBuf> {
-    let mut cargo = ctx.tool(
-        ".",
-        "cargo",
-        &[
-            "build",
-            "--quiet",
-            "--locked",
-            "--manifest-path",
-            STACK_WORKSPACE,
-            "-p",
-            "typewriter-stack",
-        ],
-    );
-    let build =
-        CargoBuild::in_workspace(ctx, "typewriter-stack", STACK_WORKSPACE, &cargo, |target| {
-            vec![target.join(STACK_BINARY_IN_TARGET)]
-        })?;
+    let build = CargoBuild::in_workspace(
+        ctx,
+        "typewriter-stack",
+        Invocation::new(STACK_WORKSPACE, &["typewriter-stack"]),
+        |target| vec![target.join(STACK_BINARY_IN_TARGET)],
+    )?;
     let binary = build.target.join(STACK_BINARY_IN_TARGET);
-    let built = build.run(ctx, &mut cargo, &Environment::process())?;
+    let built = build.run(ctx, &Environment::process(), None)?;
     say_reused(STACK_BINARY.name, &built);
     Ok(binary)
 }
@@ -697,7 +686,7 @@ fn say_reused(name: &str, outcome: &Outcome) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_support::{build_names, ci_cluster, ids};
+    use crate::test_support::{ci_cluster, ids, runs_build};
 
     #[test]
     fn the_organization_is_provisioned_after_the_worktree_backend_routes() {
@@ -716,7 +705,7 @@ mod tests {
 
     #[test]
     fn the_ci_target_builds_no_backend_components_of_its_own() {
-        assert!(!build_names(&ci_cluster_panel(&ci_cluster())).contains(&COMPONENTS.name));
+        assert!(!runs_build(&ci_cluster_panel(&ci_cluster()), &COMPONENTS));
     }
 
     #[test]

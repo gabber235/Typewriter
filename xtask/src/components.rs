@@ -16,7 +16,6 @@ use anyhow::{Context as _, Result, bail, ensure};
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::cargo_build::{Packages, metadata};
 use crate::digest::sha256;
 use crate::results::{
     self, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase, TestRun,
@@ -271,13 +270,6 @@ fn build_components(
         .flat_map(|fixture| fixture.components())
         .map(|component| (component.package.as_str(), component.target.as_str()))
         .collect();
-    // Cargo's package ids are opaque, so a package's id is looked up by its name.
-    let backend = metadata(ctx, "backend/Cargo.toml", Packages::Members)?;
-    let ids: BTreeMap<String, String> = backend
-        .packages
-        .into_iter()
-        .map(|package| (package.name, package.id))
-        .collect();
     let (built, _) =
         deploy::build_components(ctx, args.jobs, log).context("the component build failed")?;
     let mut artifacts = BTreeMap::new();
@@ -291,13 +283,10 @@ fn build_components(
                      component: a workspace member whose library is only a cdylib"
                 )
             })?;
-        let package_id = ids
-            .get(package)
-            .with_context(|| format!("cargo metadata lists no package `{package}`"))?;
         artifacts.insert(
             (package.to_owned(), target.to_owned()),
             Artifact {
-                package_id: package_id.clone(),
+                package_id: component.package_id.clone(),
                 path: component.artifact.clone(),
             },
         );

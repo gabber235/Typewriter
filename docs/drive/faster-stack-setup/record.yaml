@@ -83,9 +83,11 @@ decided:
       file, the folder of every repository package it builds, and the paths each such package lists
       in its manifest's [package.metadata.typewriter] inputs for what it embeds from outside its
       folder (all from the one typed cargo metadata read). The packages are those reachable, in
-      the metadata's resolve graph, from the packages the command selects (-p, or every member),
-      through normal and build dependencies, and through the selected ones' dev dependencies when
-      it builds tests: an edit to a workspace member the build never compiles reuses it. What Cargo
+      the metadata's resolve graph, from the packages its typed invocation selects (packages,
+      profile, target and job count, from which the build makes its Cargo command), through
+      normal and build dependencies: an edit to a workspace member the build never compiles
+      reuses it. Every Cargo build brings the protocol's generated sources up to date itself
+      before it hashes them. What Cargo
       writes to its target or build directory is never input. Not the workspace's whole folder, nor
       the whole backend tree: the release components would rebuild for an edit to a component test
       case or backend/AGENTS.md, the stack binary for each component it never compiles. A package

@@ -91,9 +91,9 @@ fn run_then<T, U>(
     let built = if builds.is_empty() {
         Built::default()
     } else {
-        // Every build compiles against the protocol's generated sources. They are brought up to
-        // date before the builds start, which run at once, so none regenerates them while another
-        // compiles against them; the components build checks them again and finds them current.
+        // The Gradle build (the Realm host) compiles against the protocol's generated sources too,
+        // and starts with the Cargo builds, so they are brought up to date before any build
+        // starts; each Cargo build, which brings them up to date itself, then finds them current.
         generate::protocol(ctx)?;
         let _lock = HeavyLock::acquire("stack: building")?;
         stack_ctx.build(&builds)?

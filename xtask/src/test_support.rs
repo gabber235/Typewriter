@@ -618,6 +618,14 @@ pub fn build_names(spec: &crate::stack::spec::StackSpec) -> Vec<&'static str> {
     spec.builds().iter().map(|build| build.name()).collect()
 }
 
+/// Whether `spec` runs `build`, told apart by handle as the stack tells builds apart.
+pub fn runs_build<T: ?Sized>(spec: &crate::stack::spec::StackSpec, build: &'static T) -> bool {
+    use crate::stack::spec::build_id;
+    spec.builds()
+        .iter()
+        .any(|known| build_id(*known) == build_id(build))
+}
+
 /// A build of its own that records in the stack's root that it started, waits up to ten seconds
 /// for another build of the same stack to start, takes a moment more, then records that it
 /// finished, and returns that record. What it records lives in the root, so tests that run at once
@@ -783,6 +791,7 @@ impl FakeCargo<'_> {
     pub fn build(&self, trees: &[&str]) -> crate::cargo_build::CargoBuild<'static> {
         crate::cargo_build::CargoBuild {
             name: "stack",
+            invocation: crate::cargo_build::Invocation::new("backend/Cargo.toml", &["stack"]),
             trees: trees.iter().map(|tree| (*tree).to_owned()).collect(),
             artifacts: vec![self.artifact()],
             target: self.path("target"),
@@ -794,7 +803,7 @@ impl FakeCargo<'_> {
     /// reads the workspace's one source, as [`cargo_workspace`] lays it out.
     pub fn run(&self, build: &crate::cargo_build::CargoBuild) -> crate::cargo_build::Outcome {
         build
-            .run(
+            .run_with(
                 self.ctx,
                 &mut self.command("one", &["backend/src/lib.rs"]),
                 &crate::digest::Environment::EMPTY,
@@ -812,8 +821,6 @@ impl FakeCargo<'_> {
 /// real Cargo shows: the dependency files it writes and where it keeps build script output.
 pub struct RealCargo<'a> {
     root: &'a TempRoot,
-    manifest: &'static str,
-    name: &'static str,
     build: crate::cargo_build::CargoBuild<'static>,
 }
 
@@ -855,42 +862,10 @@ impl<'a> RealCargo<'a> {
         let build = crate::cargo_build::CargoBuild::in_workspace(
             &root.ctx,
             name,
-            manifest,
-            &Self::command(root, manifest, name),
+            crate::cargo_build::Invocation::new(manifest, &[name]),
             |target| vec![target.join(format!("debug/lib{name}.rlib"))],
         )?;
-        Ok(Self {
-            root,
-            manifest,
-            name,
-            build,
-        })
-    }
-
-    /// `cargo build -p name` of the workspace of `manifest`, offline.
-    fn command(root: &TempRoot, manifest: &str, name: &str) -> Command {
-        let mut cargo = root.ctx.tool(
-            ".",
-            "cargo",
-            &[
-                "build",
-                "--quiet",
-                "--offline",
-                "--manifest-path",
-                manifest,
-                "-p",
-                name,
-            ],
-        );
-        // The test's own Cargo must not move the workspace's target elsewhere.
-        for name in [
-            "CARGO_TARGET_DIR",
-            "CARGO_BUILD_TARGET_DIR",
-            "CARGO_BUILD_BUILD_DIR",
-        ] {
-            cargo.env_remove(name);
-        }
-        cargo
+        Ok(Self { root, build })
     }
 
     /// Makes `crate`, a library with the build script `build_script`, the only crate of the
@@ -921,10 +896,18 @@ impl<'a> RealCargo<'a> {
         );
     }
 
-    /// Runs the build with the variables `env` through its `cargo build`.
+    /// Runs the build with the variables `env` through the command of its invocation.
     pub fn run(&self, env: &crate::digest::Environment) -> Result<crate::cargo_build::Outcome> {
-        let mut cargo = Self::command(self.root, self.manifest, self.name);
-        self.build.run(&self.root.ctx, &mut cargo, env)
+        let mut cargo = self.build.invocation.command(&self.root.ctx);
+        // The test's own Cargo must not move the workspace's target elsewhere.
+        for name in [
+            "CARGO_TARGET_DIR",
+            "CARGO_BUILD_TARGET_DIR",
+            "CARGO_BUILD_BUILD_DIR",
+        ] {
+            cargo.env_remove(name);
+        }
+        self.build.run_with(&self.root.ctx, &mut cargo, env)
     }
 }
 

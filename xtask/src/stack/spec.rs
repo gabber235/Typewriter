@@ -194,7 +194,7 @@ impl<A: Made> AnyBuild for Build<A> {
 }
 
 /// The `static` a build is, by its address, which tells builds apart however they are named.
-fn build_id<T: ?Sized>(build: &'static T) -> usize {
+pub(crate) fn build_id<T: ?Sized>(build: &'static T) -> usize {
     std::ptr::from_ref(build).cast::<()>().addr()
 }
 
