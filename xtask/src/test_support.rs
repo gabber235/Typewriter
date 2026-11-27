@@ -786,6 +786,7 @@ impl FakeCargo<'_> {
             trees: trees.iter().map(|tree| (*tree).to_owned()).collect(),
             artifacts: vec![self.artifact()],
             target: self.path("target"),
+            build_directory: self.path("target"),
         }
     }
 
@@ -812,6 +813,7 @@ impl FakeCargo<'_> {
 pub struct RealCargo<'a> {
     root: &'a TempRoot,
     manifest: &'static str,
+    name: &'static str,
     build: crate::cargo_build::CargoBuild<'static>,
 }
 
@@ -832,8 +834,9 @@ impl<'a> RealCargo<'a> {
     }
 
     /// The build `name` of the library of the package `name` in the workspace of `manifest`, root
-    /// relative, as the root holds it now; its lock file is written first. Fails as
-    /// [`crate::cargo_build::CargoBuild::in_workspace`] refuses a workspace.
+    /// relative, as the root holds it now, which `cargo build -p name` builds; its lock file is
+    /// written first. Fails as [`crate::cargo_build::CargoBuild::in_workspace`] refuses a
+    /// workspace.
     pub fn new(root: &'a TempRoot, manifest: &'static str, name: &'static str) -> Result<Self> {
         root.ctx
             .tool(
@@ -849,15 +852,45 @@ impl<'a> RealCargo<'a> {
             )
             .run()
             .unwrap();
-        let build =
-            crate::cargo_build::CargoBuild::in_workspace(&root.ctx, name, manifest, |target| {
-                vec![target.join(format!("debug/lib{name}.rlib"))]
-            })?;
+        let build = crate::cargo_build::CargoBuild::in_workspace(
+            &root.ctx,
+            name,
+            manifest,
+            &Self::command(root, manifest, name),
+            |target| vec![target.join(format!("debug/lib{name}.rlib"))],
+        )?;
         Ok(Self {
             root,
             manifest,
+            name,
             build,
         })
+    }
+
+    /// `cargo build -p name` of the workspace of `manifest`, offline.
+    fn command(root: &TempRoot, manifest: &str, name: &str) -> Command {
+        let mut cargo = root.ctx.tool(
+            ".",
+            "cargo",
+            &[
+                "build",
+                "--quiet",
+                "--offline",
+                "--manifest-path",
+                manifest,
+                "-p",
+                name,
+            ],
+        );
+        // The test's own Cargo must not move the workspace's target elsewhere.
+        for name in [
+            "CARGO_TARGET_DIR",
+            "CARGO_BUILD_TARGET_DIR",
+            "CARGO_BUILD_BUILD_DIR",
+        ] {
+            cargo.env_remove(name);
+        }
+        cargo
     }
 
     /// Makes `crate`, a library with the build script `build_script`, the only crate of the
@@ -888,27 +921,9 @@ impl<'a> RealCargo<'a> {
         );
     }
 
-    /// Runs the build with the variables `env` through `cargo build`.
+    /// Runs the build with the variables `env` through its `cargo build`.
     pub fn run(&self, env: &crate::digest::Environment) -> Result<crate::cargo_build::Outcome> {
-        let mut cargo = self.root.ctx.tool(
-            ".",
-            "cargo",
-            &[
-                "build",
-                "--quiet",
-                "--offline",
-                "--manifest-path",
-                self.manifest,
-            ],
-        );
-        // The test's own Cargo must not move the workspace's target elsewhere.
-        for name in [
-            "CARGO_TARGET_DIR",
-            "CARGO_BUILD_TARGET_DIR",
-            "CARGO_BUILD_BUILD_DIR",
-        ] {
-            cargo.env_remove(name);
-        }
+        let mut cargo = Self::command(self.root, self.manifest, self.name);
         self.build.run(&self.root.ctx, &mut cargo, env)
     }
 }

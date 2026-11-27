@@ -656,27 +656,25 @@ fn stack_binary(ctx: &StackContext, built: &Built, subcommand: &str) -> Result<C
 /// Builds the `typewriter-stack` binary in the component test workspace's target, whose
 /// dependencies its suite shares, and returns it.
 fn build_stack_binary(ctx: &Context) -> Result<PathBuf> {
-    let build = CargoBuild::in_workspace(ctx, "typewriter-stack", STACK_WORKSPACE, |target| {
-        vec![target.join(STACK_BINARY_IN_TARGET)]
-    })?;
+    let mut cargo = ctx.tool(
+        ".",
+        "cargo",
+        &[
+            "build",
+            "--quiet",
+            "--locked",
+            "--manifest-path",
+            STACK_WORKSPACE,
+            "-p",
+            "typewriter-stack",
+        ],
+    );
+    let build =
+        CargoBuild::in_workspace(ctx, "typewriter-stack", STACK_WORKSPACE, &cargo, |target| {
+            vec![target.join(STACK_BINARY_IN_TARGET)]
+        })?;
     let binary = build.target.join(STACK_BINARY_IN_TARGET);
-    let built = build.run(
-        ctx,
-        &mut ctx.tool(
-            ".",
-            "cargo",
-            &[
-                "build",
-                "--quiet",
-                "--locked",
-                "--manifest-path",
-                STACK_WORKSPACE,
-                "-p",
-                "typewriter-stack",
-            ],
-        ),
-        &Environment::process(),
-    )?;
+    let built = build.run(ctx, &mut cargo, &Environment::process())?;
     say_reused(STACK_BINARY.name, &built);
     Ok(binary)
 }

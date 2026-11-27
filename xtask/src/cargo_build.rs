@@ -6,8 +6,10 @@
 //! cached target and the removal of each artifact before Cargo runs, and let Cargo decide.
 //!
 //! A build declares the files and folders it reads, its trees: its workspace's manifest and lock
-//! file, the folder of every package in the repository it builds, and the files or folders outside
-//! its own folder such a package declares it embeds, in its manifest:
+//! file, the folder of every repository package reachable from the selected packages (those its
+//! command names with `-p`, or every member, followed through normal and build dependencies, and
+//! through the selected packages' dev dependencies when it builds their tests), and the files or
+//! folders outside its own folder such a package declares it embeds, in its manifest:
 //!
 //! ```toml
 //! [package.metadata.typewriter]
@@ -16,7 +18,10 @@
 //!
 //! A stamp beside the artifacts records:
 //!
-//! - the command, with the variables it sets, and the toolchain (`rustc -vV`);
+//! - the command, with the variables it sets but the job count, which changes no output;
+//! - the toolchain: `rustc -vV`, and the path and `--version` of the C compiler (`CC`, or `cc`) and
+//!   of each linker a `CARGO_TARGET_<TRIPLE>_LINKER` names, which build scripts and the final link
+//!   run;
 //! - Cargo's whole configuration surface: every inherited `CARGO*` and `RUST*` variable but those
 //!   Cargo sets for each crate itself, and every configuration file Cargo loads (`.cargo/config.toml`
 //!   and `.cargo/config` from the directory it runs in up to the file system root, then those in
@@ -37,7 +42,8 @@
 //! fails, naming it. The dependency file Cargo writes beside each artifact names what the crates
 //! read (an `include_str!` of a file elsewhere) and what the build scripts of the repository's
 //! packages watch (`rerun-if-changed`); each such file must be one the stamp lists, or lie in a
-//! folder inside the trees a build script watches. One outside the trees is declared by the crate
+//! folder inside the trees a build script watches; what Cargo writes to its target or build
+//! directory is output, never input. One outside the trees is declared by the crate
 //! that reads it; one Git ignores is no input at all. A registry or Git dependency may read and
 //! watch what it likes outside the repository: its sources change with `Cargo.lock`, and the
 //! system files it watches are the toolchain's. A build script's output is read only for the
@@ -55,7 +61,7 @@
 //! watches is not hashed. Where a build script's output lies is found from the `out_dir` Cargo's
 //! JSON messages name; a toolchain that moves it fails the build loudly.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
@@ -78,23 +84,28 @@ pub struct CargoBuild<'a> {
     /// The Cargo target directory the build writes to, as `cargo metadata` names it; what a build
     /// script generates there is output, never input.
     pub target: PathBuf,
+    /// Where Cargo keeps its intermediate output, the target directory unless configured apart
+    /// (`build.build-dir`); output, never input, as well.
+    pub build_directory: PathBuf,
 }
 
 impl<'a> CargoBuild<'a> {
-    /// The build `name` in the Cargo workspace of `manifest`, root relative, of the artifacts
-    /// `artifacts` names below the workspace's target directory. Its trees are the workspace's
-    /// manifest and lock file, the folder of every package in the repository it builds, and what
-    /// each of those declares it embeds from outside its folder. Fails on a package with no source
-    /// outside the repository, such as a local `[patch]`, which neither the stamp nor `Cargo.lock`
-    /// follows.
+    /// The build `name` that `cargo` runs in the Cargo workspace of `manifest`, root relative, of
+    /// the artifacts `artifacts` names below the workspace's target directory. Its trees are the
+    /// workspace's manifest and lock file, the folder of every repository package reachable from
+    /// the packages `cargo` selects, and what each of those declares it embeds from outside its
+    /// folder. Fails on such a package with no source outside the repository, such as a local
+    /// `[patch]`, which neither the stamp nor `Cargo.lock` follows.
     pub fn in_workspace(
         ctx: &Context,
         name: &'a str,
         manifest: &str,
+        cargo: &Command,
         artifacts: impl FnOnce(&Path) -> Vec<PathBuf>,
     ) -> Result<Self> {
         let metadata = metadata(ctx, manifest, Packages::All)?;
         let repository = Repository::of(ctx)?;
+        let compiled = metadata.compiled_by(cargo)?;
         // Not the workspace's whole folder: anything else in it a crate reads, it declares.
         let mut dirs = vec![
             metadata.workspace_root.join("Cargo.toml"),
@@ -103,7 +114,7 @@ impl<'a> CargoBuild<'a> {
         for package in metadata
             .packages
             .iter()
-            .filter(|package| package.source.is_none())
+            .filter(|package| package.source.is_none() && compiled.contains(package.id.as_str()))
         {
             let Some(dir) = package.manifest_path.parent() else {
                 continue;
@@ -143,6 +154,10 @@ impl<'a> CargoBuild<'a> {
             name,
             trees,
             artifacts: artifacts(&metadata.target_directory),
+            build_directory: metadata
+                .build_directory
+                .clone()
+                .unwrap_or_else(|| metadata.target_directory.clone()),
             target: metadata.target_directory,
         })
     }
@@ -161,8 +176,110 @@ fn tree(relative: &Path) -> String {
 #[derive(Deserialize)]
 pub struct Metadata {
     pub target_directory: PathBuf,
+    /// Where Cargo keeps intermediate output, when its version names it.
+    #[serde(default)]
+    build_directory: Option<PathBuf>,
     pub workspace_root: PathBuf,
     pub packages: Vec<Package>,
+    workspace_members: Vec<String>,
+    /// The dependency graph; absent from a [`Packages::Members`] read.
+    resolve: Option<Resolve>,
+}
+
+impl Metadata {
+    /// The ids of every package `cargo` compiles: the packages it selects (each `-p` or
+    /// `--package`, or every member when it names none or passes `--workspace`) and every package
+    /// reachable from them through normal and build dependencies, and through the selected
+    /// packages' development dependencies when it builds their tests, benches or examples.
+    fn compiled_by(&self, cargo: &Command) -> Result<BTreeSet<&str>> {
+        let args: Vec<&str> = cargo.get_args().filter_map(|arg| arg.to_str()).collect();
+        let mut specs = Vec::new();
+        let mut whole = false;
+        let mut dev = false;
+        let mut args_iter = args.iter();
+        while let Some(arg) = args_iter.next() {
+            match *arg {
+                "-p" | "--package" => specs.extend(args_iter.next().copied()),
+                "--workspace" | "--all" => whole = true,
+                "--all-targets" | "--tests" | "--test" | "--benches" | "--bench" | "--examples"
+                | "--example" => dev = true,
+                other => {
+                    if let Some(spec) = other.strip_prefix("--package=") {
+                        specs.push(spec);
+                    } else if let Some(spec) = other.strip_prefix("-p").filter(|s| !s.is_empty()) {
+                        specs.push(spec);
+                    }
+                }
+            }
+        }
+        let mut selected = BTreeSet::new();
+        if whole || specs.is_empty() {
+            selected.extend(self.workspace_members.iter().map(String::as_str));
+        }
+        for spec in specs {
+            let name = spec.split('@').next().unwrap_or(spec);
+            let package = self
+                .packages
+                .iter()
+                .filter(|package| package.name == name)
+                .min_by_key(|package| !self.workspace_members.contains(&package.id))
+                .with_context(|| format!("Cargo's metadata lists no package {name} to build"))?;
+            selected.insert(package.id.as_str());
+        }
+        let resolve = self
+            .resolve
+            .as_ref()
+            .context("Cargo's metadata holds no dependency graph")?;
+        let nodes: BTreeMap<&str, &Node> = resolve
+            .nodes
+            .iter()
+            .map(|node| (node.id.as_str(), node))
+            .collect();
+        let mut compiled = BTreeSet::new();
+        let mut pending: Vec<(&str, bool)> = selected.iter().map(|id| (*id, dev)).collect();
+        while let Some((id, with_dev)) = pending.pop() {
+            if !compiled.insert(id) {
+                continue;
+            }
+            let Some(node) = nodes.get(id) else {
+                continue;
+            };
+            for dep in &node.deps {
+                let follows = dep
+                    .dep_kinds
+                    .iter()
+                    .any(|kind| kind.kind.as_deref() != Some("dev") || with_dev);
+                if follows {
+                    pending.push((dep.pkg.as_str(), false));
+                }
+            }
+        }
+        Ok(compiled)
+    }
+}
+
+/// The resolved dependency graph of `cargo metadata`.
+#[derive(Deserialize)]
+struct Resolve {
+    nodes: Vec<Node>,
+}
+
+#[derive(Deserialize)]
+struct Node {
+    id: String,
+    deps: Vec<NodeDep>,
+}
+
+#[derive(Deserialize)]
+struct NodeDep {
+    pkg: String,
+    dep_kinds: Vec<DepKind>,
+}
+
+#[derive(Deserialize)]
+struct DepKind {
+    /// `dev`, `build`, or none for a normal dependency.
+    kind: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -204,6 +321,8 @@ struct TypewriterMetadata {
 
 #[derive(Deserialize)]
 pub struct Target {
+    /// The target's name, which names its artifact (a library's crate name).
+    pub name: String,
     pub crate_types: Vec<String>,
 }
 
@@ -382,11 +501,30 @@ impl CargoBuild<'_> {
     fn digest(&self, ctx: &Context, cargo: &Command, env: &Environment) -> Result<Digest> {
         let mut digest = Digest::new();
         digest.update(cargo.get_program().as_encoded_bytes());
-        for arg in cargo.get_args() {
+        // How many jobs Cargo runs changes no output, so builds asking for different counts share
+        // one stamp.
+        let mut args = cargo.get_args();
+        while let Some(arg) = args.next() {
+            match arg.to_str() {
+                Some("--jobs" | "-j") => {
+                    args.next();
+                    continue;
+                }
+                Some(text)
+                    if text.starts_with("--jobs=")
+                        || (text.starts_with("-j") && text.len() > 2) =>
+                {
+                    continue;
+                }
+                _ => {}
+            }
             digest.update(&[0]);
             digest.update(arg.as_encoded_bytes());
         }
         for (key, value) in cargo.get_envs() {
+            if key == "CARGO_BUILD_JOBS" {
+                continue;
+            }
             digest.update(&[0]);
             digest.update(key.as_encoded_bytes());
             digest.update(&[1]);
@@ -400,7 +538,10 @@ impl CargoBuild<'_> {
             digest.update(dir.as_os_str().as_encoded_bytes());
         }
         for (name, value) in env.iter() {
-            if (name.starts_with("CARGO") || name.starts_with("RUST")) && !cargo_sets(name) {
+            if (name.starts_with("CARGO") || name.starts_with("RUST"))
+                && !cargo_sets(name)
+                && name != "CARGO_BUILD_JOBS"
+            {
                 digest.update(&[0]);
                 digest.update(name.as_bytes());
                 digest.update(&[1]);
@@ -409,6 +550,24 @@ impl CargoBuild<'_> {
         }
         let toolchain = ctx.tool(".", "rustc", &["-vV"]).output_text()?;
         digest.update(toolchain.as_bytes());
+        for program in native_tools(env) {
+            digest.update(&[0]);
+            digest.update(program.as_bytes());
+            digest.update(&[1]);
+            match find_program(&program, env) {
+                Some(path) => {
+                    digest.update(path.as_os_str().as_encoded_bytes());
+                    match Command::new(&path).arg("--version").output() {
+                        Ok(output) => {
+                            digest.update(&output.stdout);
+                            digest.update(&output.stderr);
+                        }
+                        Err(error) => digest.update(format!("cannot run: {error}").as_bytes()),
+                    }
+                }
+                None => digest.update(b"absent"),
+            }
+        }
         Ok(digest)
     }
 
@@ -438,7 +597,10 @@ impl CargoBuild<'_> {
                     continue;
                 };
                 let name = relative.display().to_string();
-                if file.starts_with(&self.target) || hashed.contains(name.as_str()) {
+                if file.starts_with(&self.target)
+                    || file.starts_with(&self.build_directory)
+                    || hashed.contains(name.as_str())
+                {
                     continue;
                 }
                 if !self.holds(relative) {
@@ -523,6 +685,44 @@ fn build_script_output(out_dir: &Path) -> Result<String> {
         unit.join("run/stdout").display(),
         unit.join("output").display()
     )
+}
+
+/// The C compiler and linkers a build may run, as `env` names them: the compiler `CC` names, or
+/// `cc`, which build scripts compile C with (through the `cc` crate) and Cargo links with on Unix
+/// unless told otherwise, and the linker each `CARGO_TARGET_<TRIPLE>_LINKER` names. A linker a
+/// configuration file names is hashed as that file.
+fn native_tools(env: &Environment) -> BTreeSet<String> {
+    let mut tools = BTreeSet::from(["cc".to_owned()]);
+    let first_word = |value: &std::ffi::OsStr| {
+        value
+            .to_str()
+            .and_then(|value| value.split_whitespace().next())
+            .map(str::to_owned)
+    };
+    tools.extend(env.get("CC").and_then(first_word));
+    for (name, value) in env.iter() {
+        if name.starts_with("CARGO_TARGET_") && name.ends_with("_LINKER") {
+            tools.extend(first_word(value));
+        }
+    }
+    tools
+}
+
+/// Where `program` lies: itself when it names a path, else the first executable of that name on
+/// `env`'s `PATH`.
+fn find_program(program: &str, env: &Environment) -> Option<PathBuf> {
+    use std::os::unix::fs::PermissionsExt as _;
+    let executable = |path: &Path| {
+        fs::metadata(path)
+            .is_ok_and(|meta| meta.is_file() && meta.permissions().mode() & 0o111 != 0)
+    };
+    if program.contains('/') {
+        let path = PathBuf::from(program);
+        return executable(&path).then_some(path);
+    }
+    std::env::split_paths(env.get("PATH")?)
+        .map(|dir| dir.join(program))
+        .find(|path| executable(path))
 }
 
 /// Whether Cargo sets the variable `name` itself, for each crate it compiles or runs or for each
@@ -805,6 +1005,135 @@ mod tests {
                 "after writing {file}"
             );
         }
+    }
+
+    #[test]
+    fn an_edit_to_a_workspace_member_the_build_does_not_compile_reuses_it() {
+        // `cargo build -p probe` compiles probe and what it depends on, not its dev dependencies
+        // nor the workspace's other members.
+        let root = RealCargo::workspace();
+        root.write(
+            "ws/Cargo.toml",
+            "[workspace]\nmembers = [\"probe\", \"base\", \"tested\", \"sibling\"]\n\
+             resolver = \"3\"\n",
+        );
+        root.write(
+            "ws/probe/Cargo.toml",
+            "[package]\nname = \"probe\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n\
+             [dependencies]\nbase = { path = \"../base\" }\n\n\
+             [dev-dependencies]\ntested = { path = \"../tested\" }\n",
+        );
+        root.write("ws/probe/src/lib.rs", "pub use base::*;\n");
+        for member in ["base", "tested", "sibling"] {
+            root.write(
+                &format!("ws/{member}/Cargo.toml"),
+                &format!(
+                    "[package]\nname = \"{member}\"\nversion = \"0.1.0\"\nedition = \"2024\"\n"
+                ),
+            );
+            root.write(&format!("ws/{member}/src/lib.rs"), "");
+        }
+        let cargo = RealCargo::new(&root, "ws/Cargo.toml", "probe").unwrap();
+
+        assert_eq!(cargo.run(&NONE).unwrap(), Outcome::Compiled);
+        for member in ["sibling", "tested"] {
+            root.write(&format!("ws/{member}/src/lib.rs"), "pub fn edited() {}\n");
+            assert_eq!(
+                cargo.run(&NONE).unwrap(),
+                Outcome::Reused,
+                "after editing {member}"
+            );
+        }
+        root.write("ws/base/src/lib.rs", "pub fn edited() {}\n");
+        assert_eq!(cargo.run(&NONE).unwrap(), Outcome::Compiled);
+    }
+
+    #[test]
+    fn a_build_that_differs_only_in_its_parallelism_is_reused() {
+        // The components check and the stack build the same components with different job
+        // counts; neither may undo the other's stamp.
+        let root = cargo_workspace();
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let build = cargo.build(TREES);
+        let run = |args: &[&str], env: &Environment| {
+            let mut command = cargo.command("one", READS);
+            command.args(args);
+            build.run(&root.ctx, &mut command, env).unwrap()
+        };
+
+        assert_eq!(run(&["--jobs", "2"], &NONE), Outcome::Compiled);
+        assert_eq!(run(&[], &NONE), Outcome::Reused);
+        assert_eq!(run(&["--jobs=8"], &NONE), Outcome::Reused);
+        assert_eq!(run(&["-j", "3"], &NONE), Outcome::Reused);
+        assert_eq!(
+            run(&[], &NONE.with("CARGO_BUILD_JOBS", "4")),
+            Outcome::Reused
+        );
+        assert_eq!(run(&["--release"], &NONE), Outcome::Compiled);
+    }
+
+    #[test]
+    fn a_different_c_compiler_or_linker_builds_again() {
+        // Build scripts compile C with it, and the final link runs through one.
+        use std::os::unix::fs::PermissionsExt as _;
+        let root = cargo_workspace();
+        let cargo = FakeCargo { ctx: &root.ctx };
+        let build = cargo.build(TREES);
+        let tools = root.dir("tools");
+        let tool = |name: &str, version: &str| {
+            let path = tools.join(name);
+            fs::write(&path, format!("#!/bin/sh\necho '{version}'\n")).unwrap();
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+        };
+        tool("cc", "clang version 21");
+        tool("gcc-13", "gcc 13.1");
+        tool("wasm-ld", "wasm-ld 19");
+        let path = NONE.with("PATH", &tools.display().to_string());
+        let run = |env: &Environment| {
+            build
+                .run(&root.ctx, &mut cargo.command("one", READS), env)
+                .unwrap()
+        };
+
+        assert_eq!(run(&path), Outcome::Compiled);
+        assert_eq!(run(&path), Outcome::Reused);
+        tool("cc", "clang version 22");
+        assert_eq!(run(&path), Outcome::Compiled, "after cc changed");
+        let gcc = path.clone().with("CC", "gcc-13");
+        assert_eq!(
+            run(&gcc),
+            Outcome::Compiled,
+            "after CC named another compiler"
+        );
+        assert_eq!(run(&gcc), Outcome::Reused);
+        tool("gcc-13", "gcc 13.2");
+        assert_eq!(run(&gcc), Outcome::Compiled, "after that compiler changed");
+        let linked = gcc.with("CARGO_TARGET_WASM32_WASIP2_LINKER", "wasm-ld");
+        assert_eq!(run(&linked), Outcome::Compiled);
+        assert_eq!(run(&linked), Outcome::Reused);
+        tool("wasm-ld", "wasm-ld 20");
+        assert_eq!(run(&linked), Outcome::Compiled, "after the linker changed");
+    }
+
+    #[test]
+    fn what_cargo_writes_to_a_separate_build_directory_is_no_input() {
+        let root = RealCargo::workspace();
+        root.write(".gitignore", "target/\nbuild-out/\n");
+        root.write(".cargo/config.toml", "[build]\nbuild-dir = \"build-out\"\n");
+        root.write(
+            "probe/build.rs",
+            "fn main() {\n    let out = std::env::var(\"OUT_DIR\").unwrap();\n    \
+             std::fs::write(format!(\"{out}/generated.rs\"), \"pub fn generated() {}\").unwrap();\n    \
+             println!(\"cargo::rerun-if-changed=build.rs\");\n}\n",
+        );
+        root.write(
+            "probe/src/lib.rs",
+            "include!(concat!(env!(\"OUT_DIR\"), \"/generated.rs\"));\n",
+        );
+        let cargo = RealCargo::new(&root, "probe/Cargo.toml", "probe").unwrap();
+
+        assert_eq!(cargo.run(&NONE).unwrap(), Outcome::Compiled);
+        assert_eq!(cargo.run(&NONE).unwrap(), Outcome::Reused);
     }
 
     #[test]

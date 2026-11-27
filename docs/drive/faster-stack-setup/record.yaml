@@ -2,10 +2,10 @@
 goal: Make CI setup for the e2e jobs (game and panel) much faster, so the whole run gets shorter and sharding the game suite becomes worth it later.
 
 pieces:
-  - id: protocol-only-for-the-game-stack
-    status: building
+  - id: protocol-only-for-every-stack
+    status: done
   - id: reuse-rust-builds
-    status: building
+    status: done
   - id: overlap-gradle-with-cargo
     status: figuring-out
     open: >-
@@ -20,19 +20,48 @@ pieces:
         state: dropped
         why: every game run would fail before any requirement; all three review critics found it from source
         evidence: [services/build-logic/src/main/kotlin/com.typewritermc.game-test.gradle.kts gameTestBuild]
-  - id: shallow-game-checkout
-    status: building
+  - id: shallow-checkouts
+    status: done
   - id: panel-gradle-outputs
-    status: building
+    status: done
 
 decided:
   - id: approved-items
     what: >-
-      The game stack generates only the protocol; reuse the typewriter-stack binary and the
+      The game stack generates only the protocol (since widened, protocol-only-for-every-stack); reuse the typewriter-stack binary and the
       release .wasm components while what they read is unchanged; cache cargo dependency builds; overlap
-      the Gradle builds with the cargo builds; shallow checkout for the game suite; the panel
+      the Gradle builds with the cargo builds; shallow checkout for the game suite (since widened, shallow-checkouts); the panel
       suites keep Gradle's build outputs. Not in scope: one shared build job, wasmtime
       optimization, Gradle configuration cache, sharding.
+  - id: protocol-only-for-every-stack
+    what: >-
+      Widened 2026-11-24 from the game stack alone: every stack, and cargo xtask stack run,
+      generates only the protocol before its builds. Every stack build compiles against the
+      protocol's generated sources and nothing else generated, so the Flutter and frame vector
+      generators only cost time there; the panel suites still generate what they need themselves.
+      One rule for every stack instead of a game stack exception.
+  - id: shallow-checkouts
+    what: >-
+      Widened 2026-11-25 from the game suite: plan, check, review, report and the review
+      workflow's covered job check out one commit too, and xtask fetches the history down to the
+      merge base itself (review::change reach_merge_base, used by the review verdict's patch id).
+      A full history fetch cost each of them about as much as the game suite's, and once xtask
+      fetches what it needs, a shallow checkout serves every job that compares with the base. The
+      commits job keeps its full range, since it reads every commit of it.
+  - id: one-shared-components-build
+    what: >-
+      Decided 2026-11-27 (review round 12): the stack, cargo xtask deploy and the components check
+      build every backend component (each workspace member whose library is only a cdylib) in one
+      build with one stamp, and each takes the artifacts it needs. The job count is no input. Two
+      builds stamping the same .wasm with different package sets would undo each other's stamps
+      on the shared volume. Building the test components for a deploy costs little, as they are
+      tiny and share every dependency.
+  - id: native-tools-in-the-digest
+    what: >-
+      Decided 2026-11-27 (review round 12): a build's digest holds the path and --version output
+      of the C compiler (CC, or cc) and of each linker a CARGO_TARGET_<TRIPLE>_LINKER names, beside
+      rustc -vV, since build scripts compile C with it and the final link runs through one. A
+      linker a Cargo configuration file names is covered by hashing that file.
   - id: rust-targets-on-the-volume
     what: >-
       The release wasm targets and the component test workspace's debug target live on the
@@ -53,7 +82,11 @@ decided:
       and 11. A build declares the files and folders it reads: its workspace's manifest and lock
       file, the folder of every repository package it builds, and the paths each such package lists
       in its manifest's [package.metadata.typewriter] inputs for what it embeds from outside its
-      folder (all from the one typed cargo metadata read). Not the workspace's whole folder, nor
+      folder (all from the one typed cargo metadata read). The packages are those reachable, in
+      the metadata's resolve graph, from the packages the command selects (-p, or every member),
+      through normal and build dependencies, and through the selected ones' dev dependencies when
+      it builds tests: an edit to a workspace member the build never compiles reuses it. What Cargo
+      writes to its target or build directory is never input. Not the workspace's whole folder, nor
       the whole backend tree: the release components would rebuild for an edit to a component test
       case or backend/AGENTS.md, the stack binary for each component it never compiles. A package
       with no source outside the repository (a local [patch]) fails the build, as neither the
@@ -107,7 +140,9 @@ slices:
   - id: workflow
     tests: [first CI run timings]
     status: building
+    evidence: [e2e (game) passed on c215ec9 with the guard on the real stack build]
 
 next: >-
-  Hand back to the orchestrating thread: the first CI run measures the saving; ask whether the game
-  suite's stack values should leave gameTestBuild's inputs so it can overlap too.
+  Review rounds on PR 584 until it is ready, then measure the saving on a CI run that reuses both
+  builds. After that, ask whether the game suite's stack values should leave gameTestBuild's
+  inputs so it can overlap too (overlap-gradle-with-cargo).

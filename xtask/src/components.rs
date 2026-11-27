@@ -17,7 +17,6 @@ use serde::Deserialize;
 use serde_json::json;
 
 use crate::cargo_build::{Packages, metadata};
-use crate::digest::Environment;
 use crate::digest::sha256;
 use crate::results::{
     self, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase, TestRun,
@@ -259,8 +258,8 @@ struct Artifact {
     path: PathBuf,
 }
 
-/// Builds every component the fixtures name in one Cargo invocation, keyed by package and target,
-/// through the same reusable release build the stack uses.
+/// The artifact of every component the fixtures name, keyed by package and target, from the
+/// shared components build the stack and `cargo xtask deploy` use too.
 fn build_components(
     ctx: &Context,
     fixtures: &[&Fixture],
@@ -279,25 +278,19 @@ fn build_components(
         .into_iter()
         .map(|package| (package.name, package.id))
         .collect();
-    let backend_target = backend.target_directory;
-    let wasm = |target: &str| deploy::release_artifact(&backend_target, target);
-    // Every wanted target's artifact, so the build fails on one Cargo no longer writes.
-    let components: Vec<deploy::Component> = wanted
-        .iter()
-        .map(|(package, target)| deploy::Component {
-            package: (*package).to_owned(),
-            artifact: wasm(target),
-        })
-        .collect();
-    let mut cargo = deploy::components_build(ctx, &components);
-    jobs(&mut cargo, args);
-    cargo.log_stderr(log)?;
-    deploy::reusable_components_build(ctx, "component-tests", &components)?
-        .run(ctx, &mut cargo, &Environment::process())
-        .context("the component build failed")?;
+    let (built, _) =
+        deploy::build_components(ctx, args.jobs, log).context("the component build failed")?;
     let mut artifacts = BTreeMap::new();
     for (package, target) in wanted {
-        let path = wasm(target);
+        let component = built
+            .iter()
+            .find(|component| component.package == package && component.target == target)
+            .with_context(|| {
+                format!(
+                    "a fixture names the target {target} of {package}, which is no backend \
+                     component: a workspace member whose library is only a cdylib"
+                )
+            })?;
         let package_id = ids
             .get(package)
             .with_context(|| format!("cargo metadata lists no package `{package}`"))?;
@@ -305,7 +298,7 @@ fn build_components(
             (package.to_owned(), target.to_owned()),
             Artifact {
                 package_id: package_id.clone(),
-                path,
+                path: component.artifact.clone(),
             },
         );
     }
