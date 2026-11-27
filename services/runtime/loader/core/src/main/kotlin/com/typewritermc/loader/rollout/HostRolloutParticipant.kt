@@ -528,6 +528,8 @@ class HostRolloutParticipant(
             operationName: String,
             operation: suspend () -> Unit,
         ) {
+            // A lifecycle deadline on the wall clock: an operation that overruns it fails the rollout, not a tick.
+            @Suppress("ForbiddenMethodCall/loaderWaits")
             val completed = withTimeoutOrNull(lifecycleTimeout) { operation() }
             currentCoroutineContext().ensureActive()
             if (completed == null) {

@@ -43,7 +43,9 @@ internal class ArtifactLoaderBootstrap(
         work: InFlightWork,
         scope: CoroutineScope,
     ): RunningHost {
-        val service = serviceFactory.create(workDirectory, scope)
+        val hostWork = HostWork(work, settings.workDrain())
+        // The registrar and the blob store run as the host's own work; the host counts its own tasks itself.
+        val service = serviceFactory.create(workDirectory, hostWork.scope(scope), hostWork.io)
         val ready =
             when (val result = service.start()) {
                 is RegistrarResult.Success -> result.value
@@ -54,8 +56,8 @@ internal class ArtifactLoaderBootstrap(
                 ready.identity.serviceId,
                 workDirectory,
                 service,
-                assignments(entrypoint, service),
-                HostWork(work, settings.workDrain()),
+                assignments(entrypoint, service, work),
+                hostWork,
                 scope,
             )
         try {
@@ -76,6 +78,7 @@ internal class ArtifactLoaderBootstrap(
     private fun assignments(
         entrypoint: HostEntrypoint,
         service: com.typewritermc.loader.LoaderService,
+        work: InFlightWork,
     ): ArtifactHostAssignmentSource {
         val panelEngine =
             ArtifactRequirement(
@@ -84,7 +87,7 @@ internal class ArtifactLoaderBootstrap(
             )
         val localRealmId = settings.getOrNull("TYPEWRITER_LOCAL_REALM_ID")
         if (entrypoint != HostEntrypoint.STANDALONE || localRealmId == null) {
-            return BackendArtifactHostAssignmentSource(service, panelEngine, entrypoint)
+            return BackendArtifactHostAssignmentSource(service, panelEngine, entrypoint, work)
         }
         return ArtifactHostAssignmentSource {
             flowOf(

@@ -289,6 +289,8 @@ class CoordinatedRollout(
                 val started = healthySince ?: timeSource.markNow().also { healthySince = it }
                 if (started.elapsedNow() >= healthyDuration) return
             }
+            // Polls the rollout's health window on the wall clock: no tick caused the wait.
+            @Suppress("ForbiddenMethodCall/loaderWaits")
             delay(100)
         }
         error("Timed out while proving rollout stability.")
@@ -303,6 +305,8 @@ class CoordinatedRollout(
         while (deadline.elapsedNow() < participantDeadline) {
             val statuses = messenger.statuses(QueryParticipantStatusRequest(attempt = attempt), participants, requestTimeout)
             if (participants.all { host -> statuses[host]?.let { condition(host, it) } == true }) return
+            // Polls the participants' statuses until the deadline: no tick caused the wait.
+            @Suppress("ForbiddenMethodCall/loaderWaits")
             delay(100)
         }
         error("Timed out waiting for rollout participants.")

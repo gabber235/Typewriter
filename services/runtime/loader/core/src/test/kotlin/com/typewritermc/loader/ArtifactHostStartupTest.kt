@@ -20,6 +20,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
@@ -50,7 +51,7 @@ val ArtifactHostStartupTest by testSuite {
                 val candidates = FileCandidateRepository(artifactsRoot)
                 ArtifactInboxReconciler(
                     artifactsRoot,
-                    FileDigestBlobStore(artifactsRoot),
+                    FileDigestBlobStore(artifactsRoot, io = Dispatchers.IO),
                     candidates,
                     Duration.ZERO,
                 ).reconcile()

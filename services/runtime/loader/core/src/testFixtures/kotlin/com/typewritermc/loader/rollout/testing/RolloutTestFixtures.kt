@@ -26,6 +26,7 @@ import com.typewritermc.loader.testing.FIXTURE_VERSION
 import com.typewritermc.loader.testing.deploymentArtifact
 import com.typewritermc.loader.testing.engineManifest
 import com.typewritermc.services.libs.registrar.ServiceId
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import skirout.service.v1.rollout.ActiveProjection
 import skirout.service.v1.rollout.ApplyRolloutCommandRequest
@@ -144,7 +145,7 @@ class RolloutFixture(
 ) {
     private val root = Files.createTempDirectory("typewriter-rollout")
     val state = FileRolloutStateRepository(RealmId("realm"), root)
-    val projections = BlobProjectionRepository(FileDigestBlobStore(root))
+    val projections = BlobProjectionRepository(FileDigestBlobStore(root, io = Dispatchers.IO))
     val snapshot = deploymentSnapshot()
     val rollout =
         CoordinatedRollout(

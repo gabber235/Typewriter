@@ -5,6 +5,7 @@ import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.loader.HostEntrypoint
 import com.typewritermc.loader.LoaderServiceConnection
+import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.rollout.BackendArtifactHostAssignmentSource
 import com.typewritermc.protocol.transport.ServiceRouteScope
 import com.typewritermc.protocol.transport.generated.hostExecutionWatch
@@ -85,7 +86,11 @@ class Backend(
             }
         }
 
-    fun source(ready: Boolean): BackendArtifactHostAssignmentSource {
+    /** The host's assignment source over this backend; its own requests count in [work]. */
+    fun source(
+        ready: Boolean,
+        work: InFlightWork = InFlightWork(),
+    ): BackendArtifactHostAssignmentSource {
         val communicator = Communicator(transport, harness.telemetry, ContextPropagators.noop())
         val state =
             if (ready) {
@@ -119,6 +124,7 @@ class Backend(
             connection,
             ArtifactRequirement(ArtifactId("typewritermc:panel"), VersionConstraint("^1")),
             HostEntrypoint.STANDALONE,
+            work,
         )
     }
 

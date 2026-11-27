@@ -50,6 +50,7 @@ import com.typewritermc.loader.work.HostWork
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.registrar.ServiceId
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -265,7 +266,7 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
     val contexts = mutableListOf<HostedDeploymentContext>()
     val runtimes = mutableListOf<RecordingRuntime>()
     val events = mutableListOf<ParticipantStatus>()
-    val blobs = FileDigestBlobStore(root)
+    val blobs = FileDigestBlobStore(root, io = Dispatchers.IO)
     val shared = SharedArtifactService(realmId.value, blobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
     val work = InFlightWork()
     val host =

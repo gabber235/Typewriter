@@ -19,6 +19,7 @@ import com.typewritermc.services.libs.registrar.RegistrarStopResult
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.TestScope
@@ -60,7 +61,7 @@ class StartupLoaderService(
     root: Path,
     override val openTelemetry: OpenTelemetry = OpenTelemetry.noop(),
 ) : LoaderService {
-    override val artifactBlobs = FileDigestBlobStore(root)
+    override val artifactBlobs = FileDigestBlobStore(root, io = Dispatchers.IO)
     override val states = MutableStateFlow(RegistrarSnapshot(0, 0, RegistrarState.Idle))
     override val telemetry = openTelemetry.serviceTelemetry("host-startup-test")
 

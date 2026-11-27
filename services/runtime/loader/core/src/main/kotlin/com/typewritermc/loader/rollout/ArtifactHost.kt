@@ -26,6 +26,7 @@ import com.typewritermc.loader.deployment.RealmLoaderIntent
 import com.typewritermc.loader.deployment.ResolutionResult
 import com.typewritermc.loader.deployment.resolveDeployment
 import com.typewritermc.loader.work.HostWork
+import com.typewritermc.loader.work.counted
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
@@ -36,7 +37,6 @@ import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
@@ -109,12 +109,19 @@ class ArtifactHost(
     private val service: LoaderService,
     private val assignments: ArtifactHostAssignmentSource,
     private val work: HostWork,
-    private val scope: CoroutineScope,
+    scope: CoroutineScope,
 ) {
+    private val scope = work.scope(scope)
     private val artifactsRoot = workDirectory.resolve("artifacts")
     private val localBlobs = service.artifactBlobs
     private val candidates = FileCandidateRepository(artifactsRoot)
-    private val inbox = ArtifactInboxReconciler(artifactsRoot, localBlobs, candidates, telemetry = service.telemetry)
+    private val inbox =
+        ArtifactInboxReconciler(
+            artifactsRoot,
+            localBlobs,
+            candidates,
+            telemetry = service.telemetry,
+        )
     private val lifecycle = Mutex()
     private var latestSession: HostedMessagingSession? = null
     private val execution =
@@ -131,8 +138,8 @@ class ArtifactHost(
 
     suspend fun start() {
         workMetric = work.exportTo(service.telemetry)
-        withContext(Dispatchers.IO) { inbox.reconcile() }
-        inboxJob = scope.launch { inbox.run() }
+        withContext(work.io) { inbox.reconcile() }
+        inboxJob = scope.launch { inbox.run(work.waits) }
         sessionJob =
             scope.launch {
                 service.states.collect {
@@ -156,6 +163,8 @@ class ArtifactHost(
                             break
                         } catch (failure: Throwable) {
                             failure.rethrowExceptional()
+                            // A retry after a failed session replacement: no tick caused the wait.
+                            @Suppress("ForbiddenMethodCall/loaderWaits")
                             delay(1.seconds)
                         }
                     }
@@ -197,7 +206,7 @@ class ArtifactHost(
                                     releasePendingAuthorization()
                                     if (desiredExecution.value == desired) {
                                         execution.report(desired, latestSession?.id) { observation ->
-                                            executionReporter.report(observation, requireNotNull(latestSession))
+                                            executionReporter.report(observation, requireNotNull(latestSession).counted(work.inFlight))
                                         }
                                     }
                                 }
@@ -206,6 +215,8 @@ class ArtifactHost(
                             failure.rethrowExceptional()
                         }
                     }
+                    // The reconciliation loop's period: no tick caused the wait.
+                    @Suppress("ForbiddenMethodCall/loaderWaits")
                     delay(1.seconds)
                 }
             }
@@ -284,7 +295,10 @@ class ArtifactHost(
 
         /** The host as each staged runtime sees it, following the current session. */
         private val runtimeHosts = SessionRuntimeHosts(work, sharedArtifacts, service.openTelemetry, publicationRetention)
-        private val projections = BlobProjectionRepository(sharedArtifacts)
+
+        // The host's own reads of shared artifacts, to stage projections, count as its own work.
+        private val ownSharedArtifacts = sharedArtifacts.counted(work.inFlight)
+        private val projections = BlobProjectionRepository(ownSharedArtifacts)
         private val participant =
             AssignmentPlace(serviceId, assignment, workDirectory).let { place ->
                 HostRolloutParticipant(
@@ -293,7 +307,7 @@ class ArtifactHost(
                         place,
                         runtimeHosts,
                         projections,
-                        VerifiedArtifactCache(sharedArtifacts, localBlobs),
+                        VerifiedArtifactCache(ownSharedArtifacts, localBlobs),
                         telemetry = telemetry,
                     ),
                     { changed -> status = changed },
@@ -310,6 +324,8 @@ class ArtifactHost(
                 scope.launch {
                     while (true) {
                         maintainArtifacts()
+                        // Hourly maintenance: no tick caused the wait.
+                        @Suppress("ForbiddenMethodCall/loaderWaits")
                         delay(1.hours)
                     }
                 }
@@ -323,13 +339,13 @@ class ArtifactHost(
             router = null
             mutableMessaging.value = null
             runtimeHosts.follow(null)
-            router = session?.let { createRouter(it) }
+            router = session?.let { createRouter(it.counted(work.inFlight)) }
             router?.start()?.requireSuccess("start")
             mutableMessaging.value = session
             runtimeHosts.follow(session)
             coordinator =
                 session?.takeIf { rolloutState != null }?.let { current ->
-                    scope.launch { coordinateDeployments(current, requireNotNull(rolloutState)) }
+                    scope.launch { coordinateDeployments(current.counted(work.inFlight), requireNotNull(rolloutState)) }
                 }
         }
 
@@ -365,6 +381,8 @@ class ArtifactHost(
             while (true) {
                 val selection = messenger.discover(emptySet(), 5.seconds).deploymentSelectionOrNull()
                 if (selection == null) {
+                    // Waits for a deployment selection to appear: no tick caused the wait.
+                    @Suppress("ForbiddenMethodCall/loaderWaits")
                     delay(1.seconds)
                     continue
                 }
@@ -402,6 +420,8 @@ class ArtifactHost(
                         runRollout { rollout.reconcileCommitted(current) }
                     }
                 }
+                // The rollout coordinator's period: no tick caused the wait.
+                @Suppress("ForbiddenMethodCall/loaderWaits")
                 delay(1.seconds)
             }
         }

@@ -34,6 +34,8 @@ suspend fun InFlightWork.drain(
             attribute("work.drain.reason", reason)
             attribute("work.drain.bound_ms", bound.inWholeMilliseconds)
         }
+        // The drain waits for work to end, for at most its bound; the wait itself is no work.
+        @Suppress("ForbiddenMethodCall/loaderWaits")
         val drained = withTimeoutOrNull(bound) { while (waitingFor().isNotEmpty()) delay(DRAIN_POLL) } != null
         val left = if (drained) emptyList() else waitingFor()
         if (left.isNotEmpty()) {

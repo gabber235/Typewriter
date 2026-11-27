@@ -22,7 +22,7 @@ import kotlin.coroutines.CoroutineContext
  * runs. Item events reach observers only while one is attached; an observer hears the end of exactly the items it
  * heard begin, before [count] drops. Any thread may begin, end and observe.
  */
-class InFlightWork {
+class InFlightWork : WorkSource {
     private val running: MutableSet<WorkItem> = ConcurrentHashMap.newKeySet()
     private val observers = CopyOnWriteArrayList<WorkObserver>()
 
@@ -36,7 +36,7 @@ class InFlightWork {
     val items: List<WorkItem> get() = running.toList()
 
     /** Item [name] of the host's own work for [subjects] (null: for every subject) begins now and runs until [WorkItem.end]. */
-    fun begin(
+    override fun begin(
         name: String,
         subjects: Set<WorkSubject>?,
     ): WorkItem = begin(name, subjects, null)
@@ -74,15 +74,27 @@ class InFlightWork {
 }
 
 /**
+ * Where items of a host's [InFlightWork] begin: the host's own work ([InFlightWork] itself), or one runtime's
+ * ([RuntimeWork]). Whatever counts work, a dispatcher or an outbound operation, begins its items here.
+ */
+interface WorkSource {
+    /** Item [name] for [subjects] (null: for every subject) begins now and runs until [WorkItem.end]. */
+    fun begin(
+        name: String,
+        subjects: Set<WorkSubject>?,
+    ): WorkItem
+}
+
+/**
  * The work one [runtime] begins in its host's [InFlightWork]: every item it begins carries [runtime]. It reads nothing
  * back, since the host's count and items span every runtime.
  */
 class RuntimeWork internal constructor(
     private val host: InFlightWork,
     val runtime: WorkRuntime,
-) {
+) : WorkSource {
     /** Item [name] for [subjects] (null: for every subject) begins now in [runtime] and runs until [WorkItem.end]. */
-    fun begin(
+    override fun begin(
         name: String,
         subjects: Set<WorkSubject>?,
     ): WorkItem = host.begin(name, subjects, runtime)

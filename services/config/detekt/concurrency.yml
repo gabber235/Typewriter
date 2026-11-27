@@ -1,7 +1,9 @@
 # Engine code runs every task on its deployment's one dispatcher, which counts the task as in flight
 # work of its host, and reaches the outside through its host, which counts every outbound operation.
+# Loader code does the same for the host's own work: its tasks run on the host's counted scope, its
+# file operations on the host's counted io, and its own messaging through counted sessions.
 # A stepped game test holds its ticks with that count, so work that escapes it makes windows race.
-# These rule instances check engine main sources only.
+# The engine instances check engine main sources, the loader instances loader main sources.
 style:
   ForbiddenImport/engineThreads:
     active: true
@@ -42,6 +44,66 @@ style:
   ForbiddenMethodCall/engineWaits:
     active: true
     includes: ['**/runtime/engine/**/src/main/**']
+    methods:
+      - value: 'kotlinx.coroutines.delay'
+        reason: 'A wall clock wait holds no tick; suppress it with a comment naming why the wait is not work.'
+      - value: 'kotlinx.coroutines.withTimeout'
+        reason: 'A wall clock wait holds no tick; suppress it with a comment naming why the wait is not work.'
+      - value: 'kotlinx.coroutines.withTimeoutOrNull'
+        reason: 'A wall clock wait holds no tick; suppress it with a comment naming why the wait is not work.'
+      - value: 'java.lang.Thread.sleep'
+        reason: 'A wall clock wait holds no tick; suppress it with a comment naming why the wait is not work.'
+      - value: 'kotlinx.coroutines.suspendCancellableCoroutine'
+        reason: 'A callback resumes the coroutine uncounted; suppress it with a comment naming what delivers it.'
+      - value: 'kotlin.coroutines.suspendCoroutine'
+        reason: 'A callback resumes the coroutine uncounted; suppress it with a comment naming what delivers it.'
+      - value: 'kotlinx.coroutines.future.await'
+        reason: 'A future completes uncounted; suppress it with a comment naming what delivers it.'
+  ForbiddenImport/loaderThreads:
+    active: true
+    includes: ['**/runtime/loader/**/src/main/**']
+    excludes:
+      # The one place that builds the host's counted dispatchers over Dispatchers.IO.
+      - '**/runtime/loader/core/src/main/kotlin/com/typewritermc/loader/work/HostWork.kt'
+      # Process entrypoints: each owns its process's threads and hands its scope to the bootstrap, which counts it.
+      - '**/runtime/loader/paper/src/main/kotlin/com/typewritermc/loader/paper/TypewriterLoaderPlugin.kt'
+      - '**/runtime/loader/standalone/src/main/kotlin/com/typewritermc/loader/standalone/StandaloneLoader.kt'
+    forbiddenImports:
+      - value: 'kotlinx.coroutines.Dispatchers'
+        reason: 'Loader work runs on the host scope or on HostWork.io, which count it; another dispatcher runs it uncounted.'
+      - value: 'kotlinx.coroutines.newSingleThreadContext'
+        reason: 'A thread of its own runs loader work uncounted; launch it in the host scope.'
+      - value: 'kotlinx.coroutines.newFixedThreadPoolContext'
+        reason: 'A pool of its own runs loader work uncounted; launch it in the host scope.'
+      - value: 'kotlinx.coroutines.asCoroutineDispatcher'
+        reason: 'An executor runs loader work uncounted; launch it in the host scope.'
+      - value: 'kotlinx.coroutines.GlobalScope'
+        reason: 'GlobalScope runs loader work uncounted and outlives the host; launch it in the host scope.'
+      - value: 'kotlinx.coroutines.runBlocking'
+        reason: 'Blocking a thread hides the work it waits for; suspend instead.'
+      - value: 'java.util.concurrent.Executors'
+        reason: 'An executor runs loader work uncounted; launch it in the host scope.'
+      - value: 'java.util.concurrent.CompletableFuture'
+        reason: 'A future runs its stages uncounted on its own pool; suspend instead.'
+      - value: 'java.util.Timer'
+        reason: 'A timer thread runs loader work uncounted; delay in the host scope.'
+      - value: 'kotlin.concurrent.thread'
+        reason: 'A thread of its own runs loader work uncounted; launch it in the host scope.'
+      - value: 'kotlin.concurrent.timer'
+        reason: 'A timer thread runs loader work uncounted; delay in the host scope.'
+  ForbiddenMethodCall/loaderThreads:
+    active: true
+    includes: ['**/runtime/loader/**/src/main/**']
+    excludes:
+      - '**/runtime/loader/paper/src/main/kotlin/com/typewritermc/loader/paper/TypewriterLoaderPlugin.kt'
+      - '**/runtime/loader/standalone/src/main/kotlin/com/typewritermc/loader/standalone/StandaloneLoader.kt'
+    methods:
+      - value: 'java.lang.Thread.<init>'
+        reason: 'A thread of its own runs loader work uncounted; launch it in the host scope.'
+  # As in the engine, a wait on the wall clock or on a callback holds no tick, so each one says why.
+  ForbiddenMethodCall/loaderWaits:
+    active: true
+    includes: ['**/runtime/loader/**/src/main/**']
     methods:
       - value: 'kotlinx.coroutines.delay'
         reason: 'A wall clock wait holds no tick; suppress it with a comment naming why the wait is not work.'

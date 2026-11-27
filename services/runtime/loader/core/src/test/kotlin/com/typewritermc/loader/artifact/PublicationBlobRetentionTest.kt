@@ -9,12 +9,13 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.SerializationException
 import java.nio.file.Files
 
 val PublicationBlobRetentionTest by testSuite {
     test("collection deletes old blobs no publication protects and keeps the selected and pending ones") {
-        val blobs = FileDigestBlobStore(Files.createTempDirectory("publication-retention"))
+        val blobs = FileDigestBlobStore(Files.createTempDirectory("publication-retention"), io = Dispatchers.IO)
         val retention = blobs.publicationRetention("realm")
         retention.reconcile(null)
         val selected = blobs.storeAged(byteArrayOf(1))
@@ -33,7 +34,7 @@ val PublicationBlobRetentionTest by testSuite {
 
     test("publication protection survives a process restart") {
         val root = Files.createTempDirectory("publication-retention-restart")
-        val blobs = FileDigestBlobStore(root)
+        val blobs = FileDigestBlobStore(root, io = Dispatchers.IO)
         val retention = blobs.publicationRetention("realm")
         retention.reconcile(null)
         val selected = blobs.storeAged(byteArrayOf(1))
@@ -42,7 +43,7 @@ val PublicationBlobRetentionTest by testSuite {
         retention.selected("selected")
         retention.protect("pending", setOf(pending))
 
-        val restarted = FileDigestBlobStore(root)
+        val restarted = FileDigestBlobStore(root, io = Dispatchers.IO)
         restarted.collectGarbage(emptySet())
 
         restarted.shouldHold(selected)
@@ -51,7 +52,7 @@ val PublicationBlobRetentionTest by testSuite {
 
     test("reconciling with the Realm's selection releases pending blobs it did not select") {
         val root = Files.createTempDirectory("publication-retention-reconcile")
-        val blobs = FileDigestBlobStore(root)
+        val blobs = FileDigestBlobStore(root, io = Dispatchers.IO)
         blobs.publicationRetention("realm").apply {
             reconcile(null)
             protect("pending", setOf(blobs.storeAged(byteArrayOf(2))))
@@ -59,7 +60,7 @@ val PublicationBlobRetentionTest by testSuite {
         val selected = blobs.storeAged(byteArrayOf(1))
         val pending = ArtifactDigest.sha256(byteArrayOf(2))
 
-        val restarted = FileDigestBlobStore(root)
+        val restarted = FileDigestBlobStore(root, io = Dispatchers.IO)
         restarted.publicationRetention("realm").reconcile(PublicationBlobRoots("selected", setOf(selected)))
         restarted.collectGarbage(emptySet())
 
@@ -68,7 +69,7 @@ val PublicationBlobRetentionTest by testSuite {
     }
 
     test("collection deletes nothing while an active Realm has not reconciled its publications") {
-        val blobs = FileDigestBlobStore(Files.createTempDirectory("publication-retention-unreconciled"))
+        val blobs = FileDigestBlobStore(Files.createTempDirectory("publication-retention-unreconciled"), io = Dispatchers.IO)
         val source = blobs.storeAged(byteArrayOf(4))
         blobs.publicationRetention("new-realm")
 
@@ -79,7 +80,7 @@ val PublicationBlobRetentionTest by testSuite {
 
     test("a corrupt retention ledger fails collection and deletes nothing") {
         val root = Files.createTempDirectory("publication-retention-corrupt")
-        val blobs = FileDigestBlobStore(root)
+        val blobs = FileDigestBlobStore(root, io = Dispatchers.IO)
         val source = blobs.storeAged(byteArrayOf(4))
         blobs.publicationRetention("realm").reconcile(null)
         Files.write(root.ledger(), byteArrayOf(-1, -1))
@@ -90,7 +91,7 @@ val PublicationBlobRetentionTest by testSuite {
     }
 
     test("different bytes cannot replace a protected publication") {
-        val blobs = FileDigestBlobStore(Files.createTempDirectory("publication-retention-identity"))
+        val blobs = FileDigestBlobStore(Files.createTempDirectory("publication-retention-identity"), io = Dispatchers.IO)
         val retention = blobs.publicationRetention("realm")
         retention.reconcile(null)
         val first = blobs.storeAged(byteArrayOf(1))

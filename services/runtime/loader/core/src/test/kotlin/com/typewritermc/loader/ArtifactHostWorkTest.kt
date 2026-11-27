@@ -8,6 +8,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.seconds
 
@@ -18,6 +19,8 @@ val ArtifactHostWorkTest by testSuite {
             TelemetryTestHarness.create().use { memory ->
                 val work = InFlightWork()
                 withIdleHost(work, 10.seconds, memory.openTelemetry) { host ->
+                    // The host's own startup tasks run and end first, since they count too.
+                    runCurrent()
                     val item = work.begin("kv update sessions alex", null)
 
                     memory.gaugeValue("typewriter.work.in_flight") shouldBe 1L

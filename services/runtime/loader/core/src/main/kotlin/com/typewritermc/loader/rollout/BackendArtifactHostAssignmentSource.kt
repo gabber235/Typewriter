@@ -6,8 +6,10 @@ import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.loader.HostEntrypoint
 import com.typewritermc.loader.LoaderServiceConnection
 import com.typewritermc.loader.api.RuntimePlacement
+import com.typewritermc.loader.api.work.WorkSource
 import com.typewritermc.loader.deployment.PrimaryEngineTarget
 import com.typewritermc.loader.deployment.RealmLoaderIntent
+import com.typewritermc.loader.work.counted
 import com.typewritermc.protocol.transport.ServiceRouteScope
 import com.typewritermc.protocol.transport.generated.hostExecutionReport
 import com.typewritermc.protocol.transport.generated.hostExecutionWatch
@@ -48,12 +50,14 @@ import kotlin.time.Duration.Companion.seconds
  * Registers host capabilities and watches backend execution assignments through ready messaging generations.
  *
  * Session changes replace the watch and repeated assignments are suppressed. Realm assignment also supplies a
- * panel engine role. Losing readiness alone does not emit a removal assignment.
+ * panel engine role. Losing readiness alone does not emit a removal assignment. Its requests count as the host's
+ * own [work].
  */
 class BackendArtifactHostAssignmentSource(
     private val service: LoaderServiceConnection,
     private val panelEngine: ArtifactRequirement,
     private val entrypoint: HostEntrypoint,
+    private val work: WorkSource,
 ) : ArtifactHostAssignmentSource {
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun assignments(): Flow<DesiredHostExecution> =
@@ -62,7 +66,7 @@ class BackendArtifactHostAssignmentSource(
                 val ready = snapshot.state as? RegistrarState.Ready ?: return@flatMapLatest emptyFlow()
                 val communicator =
                     when (val result = service.communicatorFor(ready.connectionGeneration)) {
-                        is RegistrarResult.Success -> result.value
+                        is RegistrarResult.Success -> result.value.counted(work)
                         is RegistrarResult.Failure -> return@flatMapLatest emptyFlow()
                     }
                 flow {
@@ -77,6 +81,8 @@ class BackendArtifactHostAssignmentSource(
                                     is RegisterServiceHostResponse.SuccessWrapper
                             )
                         if (!registered) {
+                            // A retry after a refused registration: no tick caused the wait.
+                            @Suppress("ForbiddenMethodCall/loaderWaits")
                             delay(1.seconds)
                             continue
                         }
@@ -96,6 +102,8 @@ class BackendArtifactHostAssignmentSource(
                                     .toDesiredHostExecution(panelEngine, ready.session.identity.serviceId)
                                     ?.let { emit(it) }
                             }
+                        // A pause before the assignment watch opens again: no tick caused the wait.
+                        @Suppress("ForbiddenMethodCall/loaderWaits")
                         delay(1.seconds)
                     }
                 }

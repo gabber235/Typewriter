@@ -296,7 +296,7 @@ val ArtifactDistributionTest by testSuite {
 
     test("a stored blob becomes visible only when its size and digest match") {
         runTest {
-            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs"))
+            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs"), io = Dispatchers.IO)
             val bytes = "verified artifact content".encodeToByteArray()
             val expected = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
 
@@ -313,7 +313,12 @@ val ArtifactDistributionTest by testSuite {
     test("storing content that is already present succeeds and refreshes it, so a lost reply can be retried") {
         runTest {
             val now = Instant.parse("2026-10-24T12:00:00Z")
-            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-retry"), Clock.fixed(now, ZoneOffset.UTC))
+            val store =
+                FileDigestBlobStore(
+                    Files.createTempDirectory("typewriter-blobs-retry"),
+                    Clock.fixed(now, ZoneOffset.UTC),
+                    io = Dispatchers.IO,
+                )
             val bytes = "retried artifact content".encodeToByteArray()
             val expected = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
             store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
@@ -330,7 +335,7 @@ val ArtifactDistributionTest by testSuite {
 
     test("storing verified content over a corrupt blob repairs it, while unverified content leaves it") {
         runTest {
-            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-repair"))
+            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-repair"), io = Dispatchers.IO)
             val bytes = "content that is repaired".encodeToByteArray()
             val expected = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
             store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
@@ -347,7 +352,7 @@ val ArtifactDistributionTest by testSuite {
 
     test("a blob corrupted on disk is reported invalid instead of served") {
         runTest {
-            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-corrupt"))
+            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-corrupt"), io = Dispatchers.IO)
             val bytes = "content that rots".encodeToByteArray()
             val expected = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
             store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
@@ -365,7 +370,7 @@ val ArtifactDistributionTest by testSuite {
             val harness = TelemetryTestHarness.create()
             val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
             val root = Files.createTempDirectory("typewriter-remote-blobs")
-            val realmBlobs = FileDigestBlobStore(root)
+            val realmBlobs = FileDigestBlobStore(root, io = Dispatchers.IO)
             val shared = SharedArtifactService("quests", realmBlobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
             val address = RealmRouteScope(realmId = "quests", organizationId = "writers")
             val realmHost = Communicator(broker.transport(TRANSPORT_LIMITS), harness.telemetry, propagators)
@@ -395,7 +400,7 @@ val ArtifactDistributionTest by testSuite {
             val harness = TelemetryTestHarness.create()
             val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
             val root = Files.createTempDirectory("typewriter-oversized-blobs")
-            val realmBlobs = FileDigestBlobStore(root)
+            val realmBlobs = FileDigestBlobStore(root, io = Dispatchers.IO)
             val digest = ArtifactDigest.sha256("an oversized realm jar".encodeToByteArray())
             // A sparse file: its size exceeds the ceiling without writing the bytes.
             val path = realmBlobs.pathFor(digest)
@@ -557,7 +562,13 @@ val ArtifactDistributionTest by testSuite {
         runTest {
             val root = Files.createTempDirectory("typewriter-inbox")
             val candidates = FileCandidateRepository(root)
-            val reconciler = ArtifactInboxReconciler(root, FileDigestBlobStore(root), candidates, Duration.ZERO)
+            val reconciler =
+                ArtifactInboxReconciler(
+                    root,
+                    FileDigestBlobStore(root, io = Dispatchers.IO),
+                    candidates,
+                    Duration.ZERO,
+                )
             writeArtifactJar(root.resolve("inbox/manual/realm.jar"), realmManifest())
             reconciler.reconcile()
             val accepted = candidates.candidates().single()
@@ -572,7 +583,13 @@ val ArtifactDistributionTest by testSuite {
         runTest {
             val root = Files.createTempDirectory("typewriter-inbox-malformed")
             val candidates = FileCandidateRepository(root)
-            val reconciler = ArtifactInboxReconciler(root, FileDigestBlobStore(root), candidates, Duration.ZERO)
+            val reconciler =
+                ArtifactInboxReconciler(
+                    root,
+                    FileDigestBlobStore(root, io = Dispatchers.IO),
+                    candidates,
+                    Duration.ZERO,
+                )
             val artifact = root.resolve("inbox/manual/realm.jar")
             writeArtifactJar(artifact, realmManifest())
             reconciler.reconcile()
@@ -590,7 +607,13 @@ val ArtifactDistributionTest by testSuite {
         runTest {
             val root = Files.createTempDirectory("typewriter-inbox-removal")
             val candidates = FileCandidateRepository(root)
-            val reconciler = ArtifactInboxReconciler(root, FileDigestBlobStore(root), candidates, Duration.ZERO)
+            val reconciler =
+                ArtifactInboxReconciler(
+                    root,
+                    FileDigestBlobStore(root, io = Dispatchers.IO),
+                    candidates,
+                    Duration.ZERO,
+                )
             val artifact = root.resolve("inbox/manual/realm.jar")
             writeArtifactJar(artifact, realmManifest())
             reconciler.reconcile()
@@ -607,7 +630,13 @@ val ArtifactDistributionTest by testSuite {
         runTest {
             val root = Files.createTempDirectory("typewriter-inbox-boundary")
             val candidates = FileCandidateRepository(root)
-            val reconciler = ArtifactInboxReconciler(root, FileDigestBlobStore(root), candidates, Duration.ZERO)
+            val reconciler =
+                ArtifactInboxReconciler(
+                    root,
+                    FileDigestBlobStore(root, io = Dispatchers.IO),
+                    candidates,
+                    Duration.ZERO,
+                )
             val manifest = realmManifest()
             writeArtifactJar(root.resolve("inbox/development/realm.jar"), manifest)
             writeArtifactJar(root.resolve("inbox/realm.jar"), manifest)
@@ -623,14 +652,19 @@ val ArtifactDistributionTest by testSuite {
         runTest {
             val root = Files.createTempDirectory("typewriter-inbox-unstable")
             val candidates = FileCandidateRepository(root)
-            val blobs = FileDigestBlobStore(root)
+            val blobs = FileDigestBlobStore(root, io = Dispatchers.IO)
             val artifact = root.resolve("inbox/manual/realm.jar")
             writeArtifactJar(artifact, realmManifest())
             ArtifactInboxReconciler(root, blobs, candidates, Duration.ZERO).reconcile()
             val accepted = candidates.candidates().single()
             val reconcile =
                 async {
-                    ArtifactInboxReconciler(root, blobs, candidates, 50.milliseconds).reconcile()
+                    ArtifactInboxReconciler(
+                        root,
+                        blobs,
+                        candidates,
+                        50.milliseconds,
+                    ).reconcile()
                 }
             runCurrent()
             Files.write(artifact, "replacement in progress".encodeToByteArray())

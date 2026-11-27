@@ -15,6 +15,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Composes persistent registration, registrar observation, and shared artifact storage for one host. Shared
@@ -32,6 +33,7 @@ internal class DefaultLoaderServiceFactory(
     override fun create(
         workDirectory: Path,
         scope: CoroutineScope,
+        io: CoroutineContext,
     ): LoaderService {
         val service =
             TypewriterService.create(
@@ -50,7 +52,7 @@ internal class DefaultLoaderServiceFactory(
             )
         val observerJob = scope.launch(start = CoroutineStart.UNDISPATCHED) { observer.observe(service.states) }
         val artifactsRoot = workDirectory.resolve("artifacts")
-        val blobs = FileDigestBlobStore(artifactsRoot, telemetry = telemetry)
+        val blobs = FileDigestBlobStore(artifactsRoot, telemetry = telemetry, io = io)
         val shared = ConcurrentHashMap<String, SharedArtifactService>()
         return RegistrarLoaderService(
             blobs,

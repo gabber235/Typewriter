@@ -17,7 +17,6 @@ import com.typewritermc.services.libs.filetransfer.blob.requireStored
 import com.typewritermc.services.libs.telemetry.EventProjection
 import com.typewritermc.services.libs.telemetry.LogSeverity
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -28,6 +27,7 @@ import java.nio.file.StandardWatchEventKinds
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 import kotlin.io.path.createDirectories
 import kotlin.io.path.fileSize
 import kotlin.io.path.getLastModifiedTime
@@ -113,7 +113,11 @@ class ArtifactInboxReconciler(
             "artifact-inbox-reconcile-failed",
         ) { span ->
             val initial = scan()
-            if (initial.isNotEmpty()) delay(stableDuration)
+            if (initial.isNotEmpty()) {
+                // Waits for the inbox files to stop changing before importing them: no tick caused the wait.
+                @Suppress("ForbiddenMethodCall/loaderWaits")
+                delay(stableDuration)
+            }
             val after = scan()
             val stable =
                 after.filter { (path, observation) ->
@@ -141,24 +145,27 @@ class ArtifactInboxReconciler(
             }
         }
 
-    suspend fun run() =
-        withContext(Dispatchers.IO) {
-            inbox.fileSystem.newWatchService().use { watchService ->
-                listOf(inbox, manualInbox).forEach { directory ->
-                    directory.register(
-                        watchService,
-                        StandardWatchEventKinds.ENTRY_CREATE,
-                        StandardWatchEventKinds.ENTRY_MODIFY,
-                        StandardWatchEventKinds.ENTRY_DELETE,
-                        StandardWatchEventKinds.OVERFLOW,
-                    )
-                }
+    /**
+     * Reconciles now and again on every change of the inbox, and at least every [scanInterval]. Each pass runs in the
+     * caller's context; the thread that waits for the next file event blocks on [waits], which a host keeps uncounted,
+     * since a wait is no work.
+     */
+    suspend fun run(waits: CoroutineContext) =
+        inbox.fileSystem.newWatchService().use { watchService ->
+            listOf(inbox, manualInbox).forEach { directory ->
+                directory.register(
+                    watchService,
+                    StandardWatchEventKinds.ENTRY_CREATE,
+                    StandardWatchEventKinds.ENTRY_MODIFY,
+                    StandardWatchEventKinds.ENTRY_DELETE,
+                    StandardWatchEventKinds.OVERFLOW,
+                )
+            }
+            reconcile()
+            while (true) {
+                currentCoroutineContext().ensureActive()
+                withContext(waits) { watchService.poll(scanInterval.inWholeMilliseconds, TimeUnit.MILLISECONDS)?.reset() }
                 reconcile()
-                while (true) {
-                    coroutineContext.ensureActive()
-                    watchService.poll(scanInterval.inWholeMilliseconds, TimeUnit.MILLISECONDS)?.reset()
-                    reconcile()
-                }
             }
         }
 
