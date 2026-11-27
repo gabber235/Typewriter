@@ -40,6 +40,7 @@ import com.typewritermc.loader.testing.FetchForbiddenSharedArtifactAccess
 import com.typewritermc.loader.testing.active
 import com.typewritermc.loader.testing.deploymentArtifact
 import com.typewritermc.loader.testing.engineManifest
+import com.typewritermc.loader.testing.inboxReconciler
 import com.typewritermc.loader.testing.realmManifest
 import com.typewritermc.loader.testing.record
 import com.typewritermc.loader.testing.sharedPublication
@@ -562,13 +563,7 @@ val ArtifactDistributionTest by testSuite {
         runTest {
             val root = Files.createTempDirectory("typewriter-inbox")
             val candidates = FileCandidateRepository(root)
-            val reconciler =
-                ArtifactInboxReconciler(
-                    root,
-                    FileDigestBlobStore(root, io = Dispatchers.IO),
-                    candidates,
-                    Duration.ZERO,
-                )
+            val reconciler = inboxReconciler(root, candidates)
             writeArtifactJar(root.resolve("inbox/manual/realm.jar"), realmManifest())
             reconciler.reconcile()
             val accepted = candidates.candidates().single()
@@ -583,13 +578,7 @@ val ArtifactDistributionTest by testSuite {
         runTest {
             val root = Files.createTempDirectory("typewriter-inbox-malformed")
             val candidates = FileCandidateRepository(root)
-            val reconciler =
-                ArtifactInboxReconciler(
-                    root,
-                    FileDigestBlobStore(root, io = Dispatchers.IO),
-                    candidates,
-                    Duration.ZERO,
-                )
+            val reconciler = inboxReconciler(root, candidates)
             val artifact = root.resolve("inbox/manual/realm.jar")
             writeArtifactJar(artifact, realmManifest())
             reconciler.reconcile()
@@ -607,13 +596,7 @@ val ArtifactDistributionTest by testSuite {
         runTest {
             val root = Files.createTempDirectory("typewriter-inbox-removal")
             val candidates = FileCandidateRepository(root)
-            val reconciler =
-                ArtifactInboxReconciler(
-                    root,
-                    FileDigestBlobStore(root, io = Dispatchers.IO),
-                    candidates,
-                    Duration.ZERO,
-                )
+            val reconciler = inboxReconciler(root, candidates)
             val artifact = root.resolve("inbox/manual/realm.jar")
             writeArtifactJar(artifact, realmManifest())
             reconciler.reconcile()
@@ -630,13 +613,7 @@ val ArtifactDistributionTest by testSuite {
         runTest {
             val root = Files.createTempDirectory("typewriter-inbox-boundary")
             val candidates = FileCandidateRepository(root)
-            val reconciler =
-                ArtifactInboxReconciler(
-                    root,
-                    FileDigestBlobStore(root, io = Dispatchers.IO),
-                    candidates,
-                    Duration.ZERO,
-                )
+            val reconciler = inboxReconciler(root, candidates)
             val manifest = realmManifest()
             writeArtifactJar(root.resolve("inbox/development/realm.jar"), manifest)
             writeArtifactJar(root.resolve("inbox/realm.jar"), manifest)
