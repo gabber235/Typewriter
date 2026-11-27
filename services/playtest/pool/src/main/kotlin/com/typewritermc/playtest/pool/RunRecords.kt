@@ -2,6 +2,7 @@ package com.typewritermc.playtest.pool
 
 import build.skir.JsonFlavor
 import com.typewritermc.playtest.launch.PartLimit
+import com.typewritermc.playtest.wire.paceMillis
 import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.Attempt
 import skirout.harness.v1.test_run.AttemptPolicy
@@ -20,6 +21,7 @@ import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.test_run.TestCase
 import skirout.harness.v1.test_run.TestRun
 import skirout.harness.v1.test_run.WindowEnd
+import skirout.harness.v1.wire.AttemptKind
 import skirout.harness.v1.wire.Result
 import skirout.harness.v1.wire.Submit
 import java.nio.file.Files
@@ -278,7 +280,7 @@ internal class RunRecords(
                 steps = steps,
                 taps = listOf(),
                 covered = covered,
-                paceMillis = submit.paceMillis,
+                paceMillis = submit.kind.paceMillis,
                 windows = windows,
             )
         val case =
@@ -295,7 +297,15 @@ internal class RunRecords(
                     conclusion = null,
                 )
         // A paced attempt runs after the case's attempts passed and is never one of them.
-        cases[submit.testId] = if (submit.paced) case.copy(paced = case.paced + attempt) else case.copy(attempts = case.attempts + attempt)
+        cases[submit.testId] =
+            if (submit.kind is AttemptKind.PacedWrapper) {
+                case.copy(paced = case.paced + attempt)
+            } else {
+                case.copy(
+                    attempts =
+                        case.attempts + attempt,
+                )
+            }
     }
 
     /** Writes the run as a `TestRun` into its file. */

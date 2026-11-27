@@ -21,6 +21,7 @@ import skirout.harness.v1.test_run.Runner
 import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.test_run.TestRun
 import skirout.harness.v1.test_run.WindowEnd
+import skirout.harness.v1.wire.AttemptKind
 import skirout.harness.v1.wire.Result
 import java.nio.file.Files
 
@@ -101,7 +102,7 @@ val RunRecordsTest by testSuite {
         val held = WindowEnd(at = "ProbeRequirements.kt:20", length = 10, heldAt = 1, afterWallClock = false)
         records.record(submitted(1, probe), Result.partial(submission = 1, durationMillis = 420, windows = listOf(held)))
         records.record(
-            submitted(2, probe, paceMillis = 50, paced = true),
+            submitted(2, probe, kind = AttemptKind.PacedWrapper(50)),
             Result.partial(submission = 2, durationMillis = 640, windows = listOf(held.copy(heldAt = 3))),
         )
 

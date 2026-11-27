@@ -1,5 +1,6 @@
 package com.typewritermc.playtest
 
+import com.typewritermc.playtest.wire.paceMillis
 import de.infix.testBalloon.framework.core.TestCompartment
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.TestSuiteScope
@@ -8,6 +9,7 @@ import de.infix.testBalloon.framework.core.invocation
 import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.wire.AttemptKind
 import skirout.harness.v1.wire.PlayerClaim
 
 /**
@@ -72,7 +74,7 @@ internal fun TestSuiteScope.attempts(
             it.value >= 1,
         ) { "$id claims ${it.value} players; a requirement claims at least 1" }
     }
-    register(id, sentence, RequirementCode.of(bodies.first())) { session, condition ->
+    register(id, sentence, RequirementCode.of(bodies.first())) { session, kind ->
         session.attempt(
             PoolSession.Planned(
                 "$id $sentence",
@@ -81,9 +83,7 @@ internal fun TestSuiteScope.attempts(
                 demonstrates,
                 bodies,
                 restartsPaper,
-                condition.demo,
-                condition.paceMillis,
-                condition.paced,
+                kind,
             ),
         )
     }
@@ -105,7 +105,7 @@ internal fun TestSuiteScope.sideBySide(
     afterwardPlayers: PlayerClaim = Players.count(1),
     afterward: (suspend RequirementScope.() -> Unit)? = null,
 ) {
-    register(id, sentence, RequirementCode.of(bodies)) { session, condition ->
+    register(id, sentence, RequirementCode.of(bodies)) { session, kind ->
         val made = bodies()
         val count = made.size + if (afterward == null) 0 else 1
 
@@ -119,24 +119,15 @@ internal fun TestSuiteScope.sideBySide(
             players,
             demonstrates,
             listOf(body),
-            demo = condition.demo,
-            paceMillis = condition.paceMillis,
-            paced = condition.paced,
+            kind = kind,
         )
         val ended = session.sideBySide(made.mapIndexed { index, body -> planned(index + 1, Players.count(1), body) })
         val failures = ended.mapNotNull { it.failure }
         failures.firstOrNull()?.let { first -> PoolSession.AttemptEnd(first.also { failures.drop(1).forEach(it::addSuppressed) }) }
             ?: afterward?.let { session.attempt(planned(count, afterwardPlayers, it)) }
-            ?: PoolSession.AttemptEnd(null, paceMillis = condition.paceMillis)
+            ?: PoolSession.AttemptEnd(null, paceMillis = kind.paceMillis)
     }
 }
-
-/** What an attempt runs under: whether its clients record clips, its pace, and whether it is a paced attempt. */
-private class Condition(
-    val demo: Boolean = false,
-    val paceMillis: Int = 0,
-    val paced: Boolean = false,
-)
 
 /**
  * Registers the test "[id] [sentence]": it makes the requirement's attempts as the run's policy asks,
@@ -150,7 +141,7 @@ private fun TestSuiteScope.register(
     id: String,
     sentence: String,
     code: RequirementCode,
-    attempt: suspend (session: PoolSession, condition: Condition) -> PoolSession.AttemptEnd,
+    attempt: suspend (session: PoolSession, kind: AttemptKind) -> PoolSession.AttemptEnd,
 ) {
     val plan = RunPlan.current
     val testId = "$id $sentence"
@@ -161,17 +152,17 @@ private fun TestSuiteScope.register(
     test(testId) {
         val session = session(id)
         if (plan.demo) {
-            attempt(session, Condition(demo = true)).failure?.let { throw it }
+            attempt(session, AttemptKind.DEMO).failure?.let { throw it }
             return@test
         }
         val ends = mutableListOf<PoolSession.AttemptEnd>()
-        val verdict = plan.policy.attempt(plan.quarantines(id, testId)) { attempt(session, Condition()).also(ends::add).failure }
+        val verdict = plan.policy.attempt(plan.quarantines(id, testId)) { attempt(session, AttemptKind.VERDICT).also(ends::add).failure }
         val touched = plan.touches(lines(), ends.last().covered)
         val paced =
             if (verdict == Verdict.Passed &&
                 touched
             ) {
-                plan.paces.map { attempt(session, Condition(paceMillis = it, paced = true)) }
+                plan.paces.map { attempt(session, AttemptKind.PacedWrapper(it)) }
             } else {
                 listOf()
             }

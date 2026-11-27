@@ -1,6 +1,7 @@
 package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.Wire
+import com.typewritermc.playtest.wire.paceMillis
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
@@ -16,6 +17,7 @@ import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.test_run.WindowEnd
 import skirout.harness.v1.wire.Answer
 import skirout.harness.v1.wire.Ask
+import skirout.harness.v1.wire.AttemptKind
 import skirout.harness.v1.wire.ClientTask
 import skirout.harness.v1.wire.Hello
 import skirout.harness.v1.wire.InputStep
@@ -133,9 +135,7 @@ internal class PoolSession private constructor(
 
     /**
      * One attempt of a requirement to run: [bodies] in order on [players] players, on a Paper of its own
-     * with [restartsPaper]. A [demo]'s clients record clips. Its Paper grants ticks no sooner than
-     * [paceMillis] apart; a [paced] attempt runs after the requirement's attempts passed and lands among
-     * the case's paced attempts.
+     * with [restartsPaper], for what its [kind] says.
      */
     class Planned(
         val testId: String,
@@ -144,9 +144,7 @@ internal class PoolSession private constructor(
         val demonstrates: Demonstrates,
         val bodies: List<suspend RequirementScope.() -> Unit>,
         val restartsPaper: Boolean = false,
-        val demo: Boolean = false,
-        val paceMillis: Int = 0,
-        val paced: Boolean = false,
+        val kind: AttemptKind = AttemptKind.VERDICT,
     )
 
     /**
@@ -202,9 +200,7 @@ internal class PoolSession private constructor(
                                 players = it.players,
                                 demonstrates = it.demonstrates,
                                 restartsPaper = it.restartsPaper,
-                                demo = it.demo,
-                                paceMillis = it.paceMillis,
-                                paced = it.paced,
+                                kind = it.kind,
                             )
                         },
                 ),
@@ -244,9 +240,9 @@ internal class PoolSession private constructor(
             Evidence(
                 settings.testRun.toAbsolutePath().parent,
                 planned.testId,
-                when {
-                    planned.demo -> "demo"
-                    planned.paced -> "paced-${planned.paceMillis}ms"
+                when (val kind = planned.kind) {
+                    AttemptKind.DEMO -> "demo"
+                    is AttemptKind.PacedWrapper -> "paced-${kind.value}ms"
                     else -> "attempt-${attemptsOf.merge(planned.testId, 1, Int::plus)}"
                 },
             )
@@ -256,7 +252,7 @@ internal class PoolSession private constructor(
                 attempt = lease(submission, leasing) { send(Message.createReclaim(submission = submission.value)) }
             }
             attempt.evidence = evidence
-            val ended = runBody(submission, attempt, body, if (planned.demo) clipSuffix(planned, index) else null)
+            val ended = runBody(submission, attempt, body, if (planned.kind == AttemptKind.DEMO) clipSuffix(planned, index) else null)
             failure = ended.failure
             covered = ended.covered
             steps += attempt.steps
@@ -269,7 +265,7 @@ internal class PoolSession private constructor(
                 result(submission, attempt, failure, (System.nanoTime() - started) / 1_000_000, steps, windows, evidence),
             ),
         )
-        return AttemptEnd(failure, covered, windows, planned.paceMillis)
+        return AttemptEnd(failure, covered, windows, planned.kind.paceMillis)
     }
 
     /** What [submission]'s attempt reports to the pool once it ended with [failure] after [millis]. */

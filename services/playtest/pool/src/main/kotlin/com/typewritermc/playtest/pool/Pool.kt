@@ -5,6 +5,7 @@ import com.typewritermc.playtest.launch.PoolFile
 import com.typewritermc.playtest.launch.PoolProcess
 import com.typewritermc.playtest.pool.PaperRules.Do
 import com.typewritermc.playtest.wire.Wire
+import com.typewritermc.playtest.wire.paceMillis
 import skirout.harness.v1.test_run.LossCause
 import skirout.harness.v1.test_run.MemoryKill
 import skirout.harness.v1.test_run.PartKind
@@ -185,7 +186,7 @@ internal class Pool(
             private set
 
         /** The players it waits for in line. */
-        val claim: Claim get() = Claim(submit.submission, submit.players, submit.restartsPaper, submit.paceMillis)
+        val claim: Claim get() = Claim(submit.submission, submit.players, submit.restartsPaper, submit.kind.paceMillis)
 
         val running: Attempt? get() = (state as? State.Running)?.attempt
 
@@ -1167,7 +1168,7 @@ internal class Pool(
         server: Server,
         attempt: Attempt,
     ) {
-        server.peer?.send(Message.createPace(millis = attempt.submit.paceMillis))
+        server.peer?.send(Message.createPace(millis = attempt.submit.kind.paceMillis))
     }
 
     private fun toPlayers(
