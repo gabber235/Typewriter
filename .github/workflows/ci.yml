@@ -119,15 +119,11 @@ jobs:
       - run: devenv shell -- cargo xtask hook commit-msg --range "$BASE_SHA..$HEAD_SHA"
 
   # One runner per end to end suite the change affects. The display, Mesa, Vulkan, GTK and Chromium
-  # come from the devenv e2e profile, not apt. The game suite runs Minecraft clients, each on a
-  # virtual display of its own, against Paper on this runner, inside the stack; the playtest suite
-  # runs the framework's own requirements on Paper without the stack. Both keep Gradle's outputs (the
-  # patched Paper among them) and the game downloads, and generate only the protocol's sources, so
-  # they need no Flutter or frame vector cache. The panel suites generate every source, frame vectors
-  # included, before their stack starts, and restore the services check's Gradle outputs for the SDK
-  # fixtures and the Realm host.
+  # come from the devenv e2e profile, not apt. The plan lists each suite as xtask defines it: its
+  # name, whether its runner runs the game (Minecraft clients, each on a virtual display of its own,
+  # against Paper on this runner), the caches it keeps and the job whose Gradle outputs it restores.
   e2e:
-    name: e2e (${{ matrix.suite }})
+    name: e2e (${{ matrix.suite.suite }})
     needs: plan
     if: needs.plan.outputs.suites != '[]'
     runs-on:
@@ -140,20 +136,18 @@ jobs:
       matrix:
         suite: ${{ fromJSON(needs.plan.outputs.suites) }}
     env:
-      GAME_SUITE: ${{ (matrix.suite == 'game' || matrix.suite == 'playtest') && '1' || '' }}
+      GAME_SUITE: ${{ matrix.suite.game && '1' || '' }}
     steps:
       # One commit: the game suites rerun as demos the requirements that covered a line the change
       # added since its merge base with BASE_SHA, and fetch the history down to it themselves.
       - uses: actions/checkout@v6
       - uses: ./.github/actions/devenv
         with:
-          caches: >-
-            ${{ (matrix.suite == 'game' || matrix.suite == 'playtest') && 'gradle gradle-outputs game'
-            || 'gradle flutter frame-vectors gradle-outputs' }}
+          caches: ${{ matrix.suite.caches }}
           profile: e2e
-          cache-scope: e2e-${{ matrix.suite }}
+          cache-scope: e2e-${{ matrix.suite.suite }}
           cargo-targets: true
-          gradle-outputs-from: ${{ !(matrix.suite == 'game' || matrix.suite == 'playtest') && 'check-services' || '' }}
+          gradle-outputs-from: ${{ matrix.suite['gradle-outputs-from'] }}
       # The game suites measure each part's memory in a cgroup of its own. The step remounts the
       # runner's cgroup tree writable, moves the job's processes into `typewriter/job`, gives the
       # job user `typewriter` and names it in `TYPEWRITER_CGROUP` for the steps after it.
@@ -161,7 +155,7 @@ jobs:
         run: devenv --profile e2e shell -- cargo xtask cgroup delegate
       # The game suites' demo reruns follow the lines the change added since the same base the
       # checks compare with.
-      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }} --base "$BASE_SHA"
+      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite.suite }} --base "$BASE_SHA"
         env:
           # The game suites fetch approved golden images from the evidence branch through gh.
           GH_TOKEN: ${{ github.token }}
@@ -170,7 +164,7 @@ jobs:
           PLAYTEST_PINNED_RUNNER: ${{ env.GAME_SUITE }}
       # Evidence after the verdict, never part of it: the demo run never gates.
       - if: always() && env.GAME_SUITE
-        run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }} --demos --base "$BASE_SHA"
+        run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite.suite }} --demos --base "$BASE_SHA"
         env:
           GH_TOKEN: ${{ github.token }}
           PLAYTEST_PINNED_RUNNER: ${{ env.GAME_SUITE }}
@@ -181,7 +175,7 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: results-e2e-${{ matrix.suite }}
+          name: results-e2e-${{ matrix.suite.suite }}
           path: .xtask/public/
           if-no-files-found: ignore
       # Last, and whatever happened before: a failed or timed out job still keeps its Gradle caches.

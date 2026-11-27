@@ -120,6 +120,22 @@ pub enum Suite {
 }
 
 impl Suite {
+    /// Its name on the command line, `cargo xtask e2e <name>`.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Panel => "panel",
+            Self::PanelWeb => "panel-web",
+            Self::Full => "full",
+            Self::Game => "game",
+            Self::Playtest => "playtest",
+        }
+    }
+
+    /// Whether it runs real game clients against Paper.
+    pub fn runs_game(self) -> bool {
+        matches!(self, Self::Game | Self::Playtest)
+    }
+
     /// The whole run of one attempt once the stack is up: the app build, the scenarios and
     /// one rerun.
     fn budget(self) -> Duration {
@@ -710,11 +726,24 @@ fn desktop_device() -> Result<&'static str> {
 
 #[cfg(test)]
 mod tests {
+    use clap::ValueEnum as _;
+
     use super::*;
     use crate::test_support::{
         Drove, drive_attempts, drove, e2e_args as parsed, exited, failed, refusal, report_text,
         requirement_run, run,
     };
+
+    #[test]
+    fn each_suite_s_name_is_the_one_its_command_line_takes() {
+        for suite in Suite::value_variants() {
+            assert!(
+                Suite::from_str(suite.name(), false).is_ok_and(|parsed| parsed == *suite),
+                "{}",
+                suite.name()
+            );
+        }
+    }
 
     #[test]
     fn a_stopped_suite_keeps_what_every_drive_left() {
