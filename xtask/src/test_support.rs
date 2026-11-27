@@ -15,7 +15,7 @@ use anyhow::Result;
 use clap::ValueEnum as _;
 
 use crate::cluster::{CiClients, CiCluster};
-use crate::digest::{Digest, Stamp};
+use crate::digest::{Digest, Entry, Stamp};
 use crate::e2e::E2eArgs;
 use crate::graph::{Area, Run, Step};
 use crate::hooks::commit_msg::Scopes;
@@ -68,7 +68,10 @@ impl TempRoot {
     /// they are now.
     pub fn stamp(&self, relative: &str, digest: &Digest, outputs: &[&str]) -> Stamp {
         let stamp = Stamp::at(self.path(relative));
-        let outputs: Vec<String> = outputs.iter().map(|output| (*output).to_owned()).collect();
+        let outputs: Vec<Entry> = outputs
+            .iter()
+            .map(|output| Entry::File((*output).to_owned()))
+            .collect();
         stamp
             .record(
                 &self.ctx.root,
@@ -754,7 +757,9 @@ impl FakeCargo<'_> {
     }
 
     /// The JSON message Cargo prints when the build script of `package` ran, or was replayed, with
-    /// what it printed (`printed`) where Cargo keeps it, beside its `out` folder.
+    /// what it printed (`printed`) where Cargo keeps it, beside its `out` folder. Real Cargo also
+    /// names the files a repository package's script watches in the dependency file beside each
+    /// artifact; this does not, so a case about watched files runs [`RealCargo`] instead.
     pub fn build_script(&self, package: &str, printed: &str) -> String {
         let unit = self.path(&format!("target/debug/build/{package}/0123"));
         fs::create_dir_all(unit.join("out")).unwrap();
@@ -770,15 +775,13 @@ impl FakeCargo<'_> {
         )
     }
 
-    /// The build named `stack` of [`Self::artifact`] whose inputs are the root relative `trees`;
-    /// a case that hands it build scripts adds their packages.
+    /// The build named `stack` of [`Self::artifact`] whose inputs are the root relative `trees`.
     pub fn build(&self, trees: &[&str]) -> crate::cargo_build::CargoBuild<'static> {
         crate::cargo_build::CargoBuild {
             name: "stack",
             trees: trees.iter().map(|tree| (*tree).to_owned()).collect(),
             artifacts: vec![self.artifact()],
             target: self.path("target"),
-            packages: std::collections::BTreeMap::new(),
         }
     }
 
@@ -797,6 +800,84 @@ impl FakeCargo<'_> {
     /// How often it ran.
     pub fn runs(&self) -> usize {
         fs::read_to_string(self.path("runs")).map_or(0, |runs| runs.lines().count())
+    }
+}
+
+/// The real toolchain building one workspace of a throwaway repository, offline, for what only
+/// real Cargo shows: the dependency files it writes and where it keeps build script output.
+pub struct RealCargo<'a> {
+    root: &'a TempRoot,
+    manifest: &'static str,
+    build: crate::cargo_build::CargoBuild<'static>,
+}
+
+impl<'a> RealCargo<'a> {
+    /// A Git repository, its `target` folders ignored, holding the package `probe` with an empty
+    /// library, whose manifest is `probe/Cargo.toml`. Nothing is committed: Git lists untracked
+    /// files, which builds count.
+    pub fn workspace() -> TempRoot {
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet"]);
+        root.write(".gitignore", "target/\n");
+        root.write(
+            "probe/Cargo.toml",
+            "[package]\nname = \"probe\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+        );
+        root.write("probe/src/lib.rs", "");
+        root
+    }
+
+    /// The build `name` of the library of the package `name` in the workspace of `manifest`, root
+    /// relative, as the root holds it now; its lock file is written first.
+    pub fn new(root: &'a TempRoot, manifest: &'static str, name: &'static str) -> Self {
+        root.ctx
+            .tool(
+                ".",
+                "cargo",
+                &[
+                    "generate-lockfile",
+                    "--offline",
+                    "--quiet",
+                    "--manifest-path",
+                    manifest,
+                ],
+            )
+            .run()
+            .unwrap();
+        let build =
+            crate::cargo_build::CargoBuild::in_workspace(&root.ctx, name, manifest, |target| {
+                vec![target.join(format!("debug/lib{name}.rlib"))]
+            })
+            .unwrap();
+        Self {
+            root,
+            manifest,
+            build,
+        }
+    }
+
+    /// Runs the build with the variables `env` through `cargo build`.
+    pub fn run(&self, env: &crate::digest::Environment) -> Result<crate::cargo_build::Outcome> {
+        let mut cargo = self.root.ctx.tool(
+            ".",
+            "cargo",
+            &[
+                "build",
+                "--quiet",
+                "--offline",
+                "--manifest-path",
+                self.manifest,
+            ],
+        );
+        // The test's own Cargo must not move the workspace's target elsewhere.
+        for name in [
+            "CARGO_TARGET_DIR",
+            "CARGO_BUILD_TARGET_DIR",
+            "CARGO_BUILD_BUILD_DIR",
+        ] {
+            cargo.env_remove(name);
+        }
+        self.build.run(&self.root.ctx, &mut cargo, env)
     }
 }
 

@@ -52,22 +52,27 @@ decided:
       output, a rule for scripts that watch nothing), which this replaces. A build declares the
       folders it reads: its workspace's folder, the folder of every repository package it builds,
       and the paths each such package lists in its manifest's [package.metadata.typewriter] inputs
-      for what it embeds from outside its folder (all from the one typed cargo metadata read). Its stamp lists the
-      sha256 of each artifact, of every file Git does not ignore in those folders (untracked ones
+      for what it embeds from outside its folder (all from the one typed cargo metadata read). Its
+      stamp lists the sha256 of each artifact, of every file Git does not ignore in those folders (untracked ones
       too, so a new module counts before it is added), of the generated protocol sources inside
       them, of every Cargo configuration file Cargo loads (recorded absent while missing), and of
       each variable outside CARGO and RUST a build script watches, beside a digest of the command,
       rustc -vV and every inherited CARGO and RUST variable but those Cargo sets per crate. The
-      build is reused while all of them match. A build that read a repository file outside its
-      folders fails, naming it: one the dependency file Cargo documents beside each artifact names,
-      or one a build script watches (found through the out_dir of this build's JSON messages)
-      outside its folders, or outside its own folder for a package from elsewhere. The declaration
-      lives with the crate that embeds, not with the build's caller: a caller list missed the
-      component test crate's embed of the user organization's join transaction on CI. Watched
-      variables are stamped rather than refused, since registry build scripts such as cc's watch
-      dozens (CC, CFLAGS, SDKROOT). Known issues: a variable a crate reads at compile time outside
-      CARGO and RUST is not an input unless a build script watches it, and a procedural macro that
-      reads a file no dependency file names is trusted, as Cargo trusts it. Why xtask decides at
+      build is reused while all of them match. A build that read a repository file its stamp
+      does not hash fails, naming it: the dependency file Cargo documents beside each artifact
+      names what the crates read and what the repository's build scripts watch, and each must be
+      a hashed file or a folder inside the trees a script watches, so an ignored file inside a
+      tree is refused too (review round 10: the guard and the stamp check one set). A package from
+      outside the repository may read and watch anything outside it; build script output is read
+      only for watched variables. The declaration lives with the crate that embeds, not with the
+      build's caller: a caller list missed the component test crate's embed of the user
+      organization's join transaction on CI. Not the whole backend tree for both builds: each
+      build would then rebuild for every edit anywhere in backend, the stack binary for each
+      component it never compiles. Watched variables are stamped rather than refused, since
+      registry build scripts such as cc's watch dozens (CC, CFLAGS, SDKROOT). Known issues: a
+      variable a crate reads at compile time outside CARGO and RUST is not an input unless a build
+      script watches it, a procedural macro that reads a file no dependency file names is trusted,
+      as Cargo trusts it, and an ignored file inside a folder a build script watches is not hashed. Why xtask decides at
       all: Cargo judges local crates by file times, which a fresh checkout resets, and its content
       based check (-Z checksum-freshness) is refused on the pinned 1.100 stable toolchain. When
       checksum freshness is stable, it replaces the declared folders and their checks; keep only

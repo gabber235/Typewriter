@@ -137,10 +137,58 @@ impl Environment {
     }
 }
 
+/// One thing a stamp vouches for.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Entry {
+    /// A file, relative to the root or absolute: its contents, or that it is absent.
+    File(String),
+    /// An environment variable: its value, or that it is unset.
+    Variable(String),
+}
+
+impl Entry {
+    /// The sha256 of what the entry names in `env`: a file's contents (`absent` for a missing
+    /// file), or a variable's value, told apart from an unset one.
+    fn fingerprint(&self, root: &Path, env: &Environment) -> Result<String> {
+        match self {
+            Self::Variable(name) => {
+                let value = match env.get(name) {
+                    Some(value) => [b"set ", value.as_encoded_bytes()].concat(),
+                    None => b"unset".to_vec(),
+                };
+                Ok(hex(&Sha256::digest(value)))
+            }
+            // A file that is not there yet, such as a configuration file nobody wrote, is recorded
+            // as absent, so writing it later makes the stamp stale.
+            Self::File(file) => match fs::metadata(root.join(file)) {
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                    Ok("absent".to_owned())
+                }
+                _ => sha256(&root.join(file)),
+            },
+        }
+    }
+
+    /// The entry as a stamp line holds it after its sum: its kind, a space, its name.
+    fn line(&self) -> String {
+        match self {
+            Self::File(file) => format!("file {file}"),
+            Self::Variable(name) => format!("variable {name}"),
+        }
+    }
+
+    fn parse(line: &str) -> Option<Self> {
+        match line.split_once(' ')? {
+            ("file", file) => Some(Self::File(file.to_owned())),
+            ("variable", name) => Some(Self::Variable(name.to_owned())),
+            _ => None,
+        }
+    }
+}
+
 /// What a generator or a build left last time: the digest of what it ran on and the sha256 of each
 /// entry it vouches for (a generator's outputs; a build's artifacts and the files and environment
-/// variables it read). An entry is a path, relative to the root or absolute, or `$NAME` for the
-/// environment variable `NAME`.
+/// variables it read).
 pub struct Stamp {
     pub path: PathBuf,
 }
@@ -153,11 +201,11 @@ impl Stamp {
     /// Whether the stamp records `digest` and every entry it lists still has the recorded
     /// contents in `env`, so an output that was deleted or edited by hand is stale.
     pub fn is_current(&self, root: &Path, digest: &Digest, env: &Environment) -> bool {
-        self.files(root, digest, env).is_some()
+        self.entries(root, digest, env).is_some()
     }
 
     /// The entries the stamp lists when it is current for `digest` in `env`.
-    pub fn files(&self, root: &Path, digest: &Digest, env: &Environment) -> Option<Vec<String>> {
+    pub fn entries(&self, root: &Path, digest: &Digest, env: &Environment) -> Option<Vec<Entry>> {
         let record = fs::read_to_string(&self.path).ok()?;
         let mut lines = record.lines();
         if lines.next()? != digest.hex() {
@@ -166,7 +214,8 @@ impl Stamp {
         lines
             .map(|line| {
                 let (sum, entry) = line.split_once(' ')?;
-                (fingerprint(root, entry, env).ok()? == sum).then(|| entry.to_owned())
+                let entry = Entry::parse(entry)?;
+                (entry.fingerprint(root, env).ok()? == sum).then_some(entry)
             })
             .collect()
     }
@@ -181,42 +230,26 @@ impl Stamp {
         }
     }
 
-    /// Records `digest` and the current contents of each of `outputs` in `env`.
+    /// Records `digest` and what each of `entries` names now in `env`.
     pub fn record(
         &self,
         root: &Path,
         digest: &Digest,
-        outputs: &[String],
+        entries: &[Entry],
         env: &Environment,
     ) -> Result<()> {
         let dir = self.path.parent().unwrap_or(root);
         fs::create_dir_all(dir).with_context(|| format!("cannot create {}", dir.display()))?;
         let mut record = format!("{}\n", digest.hex());
-        for output in outputs {
-            record.push_str(&format!("{} {output}\n", fingerprint(root, output, env)?));
+        for entry in entries {
+            record.push_str(&format!(
+                "{} {}\n",
+                entry.fingerprint(root, env)?,
+                entry.line()
+            ));
         }
         fs::write(&self.path, record)
             .with_context(|| format!("cannot write {}", self.path.display()))
-    }
-}
-
-/// The sha256 of a stamp entry: a file's contents (`absent` for a missing file), or for `$NAME` the
-/// variable's value in `env`, told apart from an unset one.
-fn fingerprint(root: &Path, entry: &str, env: &Environment) -> Result<String> {
-    match entry.strip_prefix('$') {
-        Some(name) => {
-            let value = match env.get(name) {
-                Some(value) => [b"set ", value.as_encoded_bytes()].concat(),
-                None => b"unset".to_vec(),
-            };
-            Ok(hex(&Sha256::digest(value)))
-        }
-        // A file that is not there yet, such as a configuration file nobody wrote, is recorded
-        // as absent, so writing it later makes the stamp stale.
-        None => match fs::metadata(root.join(entry)) {
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok("absent".to_owned()),
-            _ => sha256(&root.join(entry)),
-        },
     }
 }
 
@@ -269,6 +302,15 @@ mod tests {
         root.write(OUTPUT, "generated");
         let stamp = root.stamp("panel.stamp", &Digest::new(), &[OUTPUT]);
         root.write(OUTPUT, "edited by hand");
+        assert!(!stamp.is_current(&root.ctx.root, &Digest::new(), &Environment::EMPTY));
+    }
+
+    #[test]
+    fn a_file_whose_name_starts_with_a_dollar_is_stamped_as_a_file() {
+        let root = TempRoot::new();
+        root.write("$HOME", "generated");
+        let stamp = root.stamp("panel.stamp", &Digest::new(), &["$HOME"]);
+        root.write("$HOME", "edited by hand");
         assert!(!stamp.is_current(&root.ctx.root, &Digest::new(), &Environment::EMPTY));
     }
 

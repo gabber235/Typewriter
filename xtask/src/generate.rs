@@ -9,7 +9,7 @@ use std::fs::File;
 
 use anyhow::Result;
 
-use crate::digest::{Digest, Environment, Stamp, expand, walk};
+use crate::digest::{Digest, Entry, Environment, Stamp, expand, walk};
 use crate::lock::HeavyLock;
 use crate::{CommandExt, Context};
 
@@ -293,7 +293,11 @@ fn record(ctx: &Context, generator: &Generator, digest: &Digest) -> Result<()> {
     stamp(ctx, generator).record(
         &ctx.root,
         digest,
-        &generator.output_files(ctx)?,
+        &generator
+            .output_files(ctx)?
+            .into_iter()
+            .map(Entry::File)
+            .collect::<Vec<_>>(),
         &Environment::process(),
     )
 }
