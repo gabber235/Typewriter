@@ -21,7 +21,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use anyhow::{Context as _, Result, anyhow, bail};
 
 use super::{E2eArgs, take_turn};
-use crate::cgroup;
+use crate::cgroup::{self, Gradle};
 use crate::lock::{self, HeavyLock};
 use crate::process::{self, Group};
 use crate::results::{self, Quarantine, TestRun, Verdict};
@@ -205,16 +205,16 @@ fn gradle_run(ctx: &Context, asked: &Asked, evidence: &Path) -> Result<Ran> {
         GameSuite::Game => typewriter::game().memory_bytes(),
         GameSuite::Playtest => 0,
     };
-    let parts = cgroup::install(cgroup::Tree::delegated(&id, stack_bytes)?);
-    if parts.tree().is_none() {
+    let tree = cgroup::Tree::delegated(&id, stack_bytes)?;
+    if tree.is_none() {
         println!(
             "{}: no part's memory is held to its limit or measured, since no cgroup is delegated ({})",
             asked.suite.name(),
             cgroup::DELEGATED
         );
     }
-    let ran = suite_run(ctx, asked, evidence);
-    if let Some(tree) = parts.tree() {
+    let ran = suite_run(ctx, asked, evidence, tree.as_ref());
+    if let Some(tree) = &tree {
         // Peaks are reported, never part of the verdict: a run whose peaks cannot be added keeps
         // its verdict. A run that wrote no file has nothing to add them to.
         if let Ok(ran) = &ran
@@ -228,8 +228,14 @@ fn gradle_run(ctx: &Context, asked: &Asked, evidence: &Path) -> Result<Ran> {
     ran
 }
 
-/// Runs what was `asked` of the suite: the game suite against the stack, the playtest suite alone.
-fn suite_run(ctx: &Context, asked: &Asked, evidence: &Path) -> Result<Ran> {
+/// Runs what was `asked` of the suite in the run's `cgroups` tree, if any: the game suite against
+/// the stack, the playtest suite alone.
+fn suite_run(
+    ctx: &Context,
+    asked: &Asked,
+    evidence: &Path,
+    cgroups: Option<&cgroup::Tree>,
+) -> Result<Ran> {
     match asked.suite {
         GameSuite::Game => {
             let keep = ctx
@@ -241,8 +247,9 @@ fn suite_run(ctx: &Context, asked: &Asked, evidence: &Path) -> Result<Ran> {
                 &typewriter::game(),
                 GAME_BUDGET,
                 &keep,
+                cgroups,
                 |stack| {
-                    in_turn(ctx, asked, evidence, |command| {
+                    in_turn(ctx, asked, evidence, cgroups, |command| {
                         stack
                             .run_command(command)
                             .context("cannot run Gradle for the game suite")
@@ -254,7 +261,7 @@ fn suite_run(ctx: &Context, asked: &Asked, evidence: &Path) -> Result<Ran> {
         GameSuite::Playtest => {
             process::install_interrupt_handler();
             let deadline = Instant::now() + GAME_BUDGET;
-            in_turn(ctx, asked, evidence, |command| {
+            in_turn(ctx, asked, evidence, cgroups, |command| {
                 Group::spawn(command)
                     .context("cannot run Gradle for the playtest suite")?
                     .wait(Some(deadline))
@@ -264,11 +271,12 @@ fn suite_run(ctx: &Context, asked: &Asked, evidence: &Path) -> Result<Ran> {
 }
 
 /// Builds and runs what was `asked` under the heavy lock, writing into `evidence`, each Gradle
-/// through `gradle`, and returns how it ran.
+/// through `gradle` in its leaf of the run's `cgroups` tree, if any, and returns how it ran.
 fn in_turn(
     ctx: &Context,
     asked: &Asked,
     evidence: &Path,
+    cgroups: Option<&cgroup::Tree>,
     mut gradle: impl FnMut(&mut Command) -> Result<ExitStatus>,
 ) -> Result<Ran> {
     let turn = begin_turn(
@@ -301,12 +309,12 @@ fn in_turn(
                 // The build runs in the build's leaf with the stack's builds. The test run starts
                 // once the daemons they left are gone, in a leaf held to its limit; the pool it
                 // starts goes into the game's cgroup.
-                if let Some(tree) = cgroup::installed() {
+                if let Some(tree) = cgroups {
                     match step {
-                        Step::Build => tree.gradle_build().place(&mut command)?,
+                        Step::Build => tree.gradle(Gradle::Build).place(&mut command)?,
                         Step::Test => {
                             tree.end_build()?;
-                            tree.gradle_test().place(&mut command)?;
+                            tree.gradle(Gradle::Test).place(&mut command)?;
                             command.env(cgroup::GAME, tree.game());
                         }
                     }

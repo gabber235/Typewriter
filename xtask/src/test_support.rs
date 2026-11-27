@@ -164,7 +164,7 @@ pub fn stack_context(root: &TempRoot) -> StackContext<'_> {
         base: 20000,
         record: root.path("registry/stack.json"),
     };
-    let ctx = StackContext::new(&root.ctx, ports);
+    let ctx = StackContext::new(&root.ctx, ports, None);
     fs::create_dir_all(ctx.state()).unwrap();
     ctx
 }

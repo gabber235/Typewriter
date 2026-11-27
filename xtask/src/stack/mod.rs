@@ -27,6 +27,7 @@ use serde::{Deserialize, Serialize};
 use self::spec::{
     Built, DynService, PortLease, Probe, Published, Registry, StackContext, StackSpec,
 };
+use crate::cgroup::Tree;
 use crate::e2e::failures::StackEvidence;
 use crate::lock::{E2eSlot, HeavyLock};
 use crate::process::{self, Group, POLL, STOP_GRACE, Supervisor, interrupted, kill_group};
@@ -54,20 +55,22 @@ pub fn run<T>(
     timeout: Duration,
     inside: impl FnOnce(&mut Stack) -> Result<T>,
 ) -> Result<T> {
-    Ok(run_then(ctx, spec, timeout, inside, |_| Ok(()))?.0)
+    Ok(run_then(ctx, spec, timeout, None, inside, |_| Ok(()))?.0)
 }
 
 /// [`run`], then, once the stack has stopped and every exporter has flushed, copies every
 /// service log and the collected spans into `keep` (cleared first), before another run of this
-/// worktree can reset the stack state. The end to end suites call this for failure folders.
+/// worktree can reset the stack state. The end to end suites call this for failure folders; a game
+/// run passes its `cgroups` tree, which holds each service in a leaf of its own.
 pub fn run_keeping_evidence<T>(
     ctx: &Context,
     spec: &StackSpec,
     timeout: Duration,
     keep: &Path,
+    cgroups: Option<&Tree>,
     inside: impl FnOnce(&mut Stack) -> Result<T>,
 ) -> Result<(T, StackEvidence)> {
-    run_then(ctx, spec, timeout, inside, |state| {
+    run_then(ctx, spec, timeout, cgroups, inside, |state| {
         StackEvidence::copy(state, keep)
     })
 }
@@ -78,13 +81,18 @@ fn run_then<T, U>(
     ctx: &Context,
     spec: &StackSpec,
     timeout: Duration,
+    cgroups: Option<&Tree>,
     inside: impl FnOnce(&mut Stack) -> Result<T>,
     after: impl FnOnce(&Path) -> Result<U>,
 ) -> Result<(T, U)> {
     let order = spec.ordered()?;
     process::install_interrupt_handler();
     let _slot = E2eSlot::acquire(&ctx.root)?;
-    let stack_ctx = StackContext::new(ctx, PortLease::acquire(&Registry::machine(), &ctx.root)?);
+    let stack_ctx = StackContext::new(
+        ctx,
+        PortLease::acquire(&Registry::machine(), &ctx.root)?,
+        cgroups,
+    );
     reset_state(&stack_ctx.state(), &[Keep::BrokerKeys])?;
     let mut stack = Stack::register(&stack_ctx)?;
     let builds = spec.builds();
@@ -190,7 +198,7 @@ impl Stack {
         let id = service.id().0;
         let mut command = service.command(ctx, built)?;
         // A game run holds each service to its limit in a leaf of its own.
-        if let Some(tree) = crate::cgroup::installed() {
+        if let Some(tree) = ctx.cgroups {
             tree.stack_service(id, service.memory_bytes())?
                 .place(&mut command)?;
         }
@@ -519,7 +527,45 @@ mod tests {
     use std::os::unix::process::ExitStatusExt as _;
 
     use super::*;
-    use crate::test_support::{answering, dead_pid, stack_record};
+    use crate::test_support::{
+        TempRoot, answering, dead_pid, delegated_cgroup, fake_service, stack_record,
+    };
+
+    const MIB: u64 = 1024 * 1024;
+
+    fake_service!(Held,);
+
+    #[test]
+    fn a_stack_inside_a_game_run_s_tree_holds_each_service_in_a_leaf_of_its_own() {
+        let root = TempRoot::new();
+        let cgroups = delegated_cgroup();
+        let tree = Tree::create(cgroups.path(), "7", 16_384 * MIB, 64 * MIB).unwrap();
+        // The kernel makes a leaf's process list; a plain folder needs it written first.
+        let leaf = cgroups.path().join("run-7/stack/Held");
+        fs::create_dir_all(&leaf).unwrap();
+        fs::write(leaf.join("cgroup.procs"), "").unwrap();
+        let ports = PortLease {
+            base: 20000,
+            record: root.path("registry/stack.json"),
+        };
+        stack_record(
+            &root.dir("registry"),
+            "stack",
+            std::process::id(),
+            Vec::new(),
+        );
+        let ctx = StackContext::new(&root.ctx, ports, Some(&tree));
+        fs::create_dir_all(ctx.state().join("logs")).unwrap();
+        let mut stack = Stack::register(&ctx).unwrap();
+
+        stack.start(&Held, &ctx).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(leaf.join("memory.max")).unwrap(),
+            (64 * MIB).to_string()
+        );
+        assert_eq!(fs::read_to_string(leaf.join("cgroup.procs")).unwrap(), "0");
+    }
 
     #[test]
     fn gc_stops_what_a_killed_supervisor_left_and_keeps_live_stacks() {

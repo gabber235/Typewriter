@@ -291,7 +291,7 @@ fn scenarios<T: Target>(ctx: &Context, args: &E2eArgs, device: Device) -> Result
     let budget = args.suite.budget() * args.repeat.get();
     let keep = ctx.root.join(STACK_EVIDENCE).join(&name);
     let (mut run, stack) =
-        stack::run_keeping_evidence(ctx, &target.spec(), budget, &keep, |stack| {
+        stack::run_keeping_evidence(ctx, &target.spec(), budget, &keep, None, |stack| {
             let _lock = lock()?;
             results::attempts(args.policy(), &args.only, &quarantine, |n, ids| {
                 attempt::<T>(&evidence, n, ids, |drive, out, ids| {

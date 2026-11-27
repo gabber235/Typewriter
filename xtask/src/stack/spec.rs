@@ -18,6 +18,7 @@ use sha2::{Digest, Sha256};
 use super::client_configuration::ClientConfiguration;
 use super::{StackRecord, process_alive};
 use crate::CommandExt as _;
+use crate::cgroup::{Gradle, Tree};
 
 /// Identifies a service in a composition. Dependencies name handles, not strings, so a typo does
 /// not compile.
@@ -551,16 +552,20 @@ pub fn state_dir(ctx: &crate::Context) -> PathBuf {
 pub struct StackContext<'a> {
     pub ctx: &'a crate::Context,
     pub ports: PortLease,
+    /// The game run's cgroup tree the stack runs in, if any: each service in a leaf of its own, the
+    /// builds in the run's build leaf.
+    pub cgroups: Option<&'a Tree>,
     /// What the started services published, in start order.
     values: RefCell<BTreeMap<String, String>>,
     clients: OnceCell<ClientConfiguration>,
 }
 
 impl<'a> StackContext<'a> {
-    pub fn new(ctx: &'a crate::Context, ports: PortLease) -> Self {
+    pub fn new(ctx: &'a crate::Context, ports: PortLease, cgroups: Option<&'a Tree>) -> Self {
         Self {
             ctx,
             ports,
+            cgroups,
             values: RefCell::default(),
             clients: OnceCell::new(),
         }
@@ -648,6 +653,7 @@ impl<'a> StackContext<'a> {
     /// build that failed.
     pub fn build(&self, builds: &[&'static dyn AnyBuild]) -> Result<Built> {
         let ctx = self.ctx;
+        let cgroups = self.cgroups;
         let gradle = gradle_args(ctx, builds)?;
         let mut gradle_builds = Vec::new();
         let mut own_builds = Vec::new();
@@ -673,8 +679,8 @@ impl<'a> StackContext<'a> {
                     let mut build = ctx.tool("services", "./gradlew", &args);
                     // A game run's builds share a leaf, which ends with every daemon they left
                     // before the suite runs.
-                    if let Some(tree) = crate::cgroup::installed() {
-                        tree.gradle_build().place(&mut build)?;
+                    if let Some(tree) = cgroups {
+                        tree.gradle(Gradle::Build).place(&mut build)?;
                     }
                     build
                         .run()

@@ -14,7 +14,6 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::{Arc, Mutex};
 
 use anyhow::{Context as _, Result, bail};
 
@@ -42,6 +41,45 @@ const SYSTEM_MIB: u64 = 768;
 
 /// The most memory the Gradle that runs the suite may take with its test JVMs.
 pub const GRADLE_TEST_MIB: u64 = 2048;
+
+/// A Gradle of the run, each in a leaf of its own.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Gradle {
+    /// Every Gradle build of the run, the Kotlin daemon it starts among them. It ends whole before
+    /// the test run starts, so it may take the machine and is held to no limit of its own.
+    Build,
+    /// The Gradle that runs the suite, with its test JVMs, held to [`GRADLE_TEST_MIB`].
+    Test,
+}
+
+impl Gradle {
+    /// Both, in the order they run.
+    const ALL: [Self; 2] = [Self::Build, Self::Test];
+
+    /// Its leaf's name in the run's tree, and its part's name in the run file.
+    fn name(self) -> &'static str {
+        match self {
+            Self::Build => "gradle-build",
+            Self::Test => "gradle-test",
+        }
+    }
+
+    /// The memory its leaf is held to on a machine of `machine` bytes.
+    fn limit(self, machine: u64) -> u64 {
+        match self {
+            Self::Build => machine,
+            Self::Test => GRADLE_TEST_MIB * MIB,
+        }
+    }
+
+    /// The limit the run file lists for it: none for the build, which ends before the game starts.
+    fn recorded_limit(self, leaf: &Leaf) -> Result<i64> {
+        match self {
+            Self::Build => Ok(0),
+            Self::Test => leaf.limit(),
+        }
+    }
+}
 
 /// One run's tree under the delegated cgroup.
 pub struct Tree {
@@ -94,8 +132,9 @@ impl Tree {
             make(&parent, limit)?;
             write(&parent.join("cgroup.subtree_control"), CONTROLLERS)?;
         }
-        leaf(&tree.run.join("gradle-build"), machine)?;
-        leaf(&tree.run.join("gradle-test"), GRADLE_TEST_MIB * MIB)?;
+        for gradle in Gradle::ALL {
+            leaf(&tree.gradle(gradle).0, gradle.limit(machine))?;
+        }
         Ok(tree)
     }
 
@@ -108,20 +147,15 @@ impl Tree {
         self.run.join("stack")
     }
 
-    /// The leaf of every Gradle build of the run.
-    pub fn gradle_build(&self) -> Leaf {
-        Leaf(self.run.join("gradle-build"))
-    }
-
-    /// The leaf of the Gradle that runs the suite.
-    pub fn gradle_test(&self) -> Leaf {
-        Leaf(self.run.join("gradle-test"))
+    /// The leaf of `gradle`.
+    pub fn gradle(&self, gradle: Gradle) -> Leaf {
+        Leaf(self.run.join(gradle.name()))
     }
 
     /// Kills every process the builds left, as the Kotlin daemon, so only the test run's Gradle
     /// sits beside the game.
     pub fn end_build(&self) -> Result<()> {
-        write(&self.run.join("gradle-build/cgroup.kill"), "1")
+        write(&self.gradle(Gradle::Build).0.join("cgroup.kill"), "1")
     }
 
     /// The leaf of the stack service `id`, made on first use and held to `limit` bytes.
@@ -136,18 +170,12 @@ impl Tree {
     /// memory. The build has no limit of its own: it ends before the game starts.
     pub fn record(&self, file: &Path) -> Result<()> {
         let mut run = results::read(file)?;
-        let mut measured = vec![
-            (
-                "gradle-build".to_owned(),
-                PartKind::Gradle,
-                self.gradle_build(),
-            ),
-            (
-                "gradle-test".to_owned(),
-                PartKind::Gradle,
-                self.gradle_test(),
-            ),
-        ];
+        let mut measured = Vec::new();
+        for gradle in Gradle::ALL {
+            let leaf = self.gradle(gradle);
+            let limit = gradle.recorded_limit(&leaf)?;
+            measured.push((gradle.name().to_owned(), PartKind::Gradle, leaf, limit));
+        }
         let mut services = Vec::new();
         for entry in fs::read_dir(self.stack())
             .with_context(|| format!("cannot read {}", self.stack().display()))?
@@ -155,17 +183,14 @@ impl Tree {
             let entry = entry?;
             if entry.file_type()?.is_dir() {
                 let name = entry.file_name().to_string_lossy().into_owned();
-                services.push((name, PartKind::StackService, Leaf(entry.path())));
+                let leaf = Leaf(entry.path());
+                let limit = leaf.limit()?;
+                services.push((name, PartKind::StackService, leaf, limit));
             }
         }
         services.sort_by(|a, b| a.0.cmp(&b.0));
         measured.extend(services);
-        for (name, kind, leaf) in measured {
-            let limit_bytes = if name == "gradle-build" {
-                0
-            } else {
-                leaf.limit()?
-            };
+        for (name, kind, leaf, limit_bytes) in measured {
             let end = match leaf.kill()? {
                 Some(kill) => PartEnd::Lost(Box::new(PartLoss {
                     cause: LossCause::KilledForMemory(Box::new(kill)),
@@ -194,13 +219,12 @@ impl Tree {
                 }
             }
         }
-        for dir in [
-            self.stack(),
-            self.game(),
-            self.run.join("gradle-build"),
-            self.run.join("gradle-test"),
-            self.run.clone(),
-        ] {
+        let gradles = Gradle::ALL.map(|gradle| self.gradle(gradle).0);
+        for dir in [self.stack(), self.game()]
+            .into_iter()
+            .chain(gradles)
+            .chain([self.run.clone()])
+        {
             let _ = fs::remove_dir(dir);
         }
     }
@@ -287,43 +311,6 @@ impl Leaf {
             (_, 0) => Some(MemoryKill::MachineOutOfMemory),
             _ => Some(MemoryKill::OwnLimit),
         })
-    }
-}
-
-/// The tree of the current game run, which the stack places its services in while it starts.
-static INSTALLED: Mutex<Option<Arc<Tree>>> = Mutex::new(None);
-
-/// Makes `tree` the current run's until the returned guard drops.
-pub fn install(tree: Option<Tree>) -> Installed {
-    let tree = tree.map(Arc::new);
-    *INSTALLED
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner()) = tree.clone();
-    Installed(tree)
-}
-
-/// The current game run's tree, if it has one.
-pub fn installed() -> Option<Arc<Tree>> {
-    INSTALLED
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner())
-        .clone()
-}
-
-/// The current run's tree, installed until it drops.
-pub struct Installed(Option<Arc<Tree>>);
-
-impl Installed {
-    pub fn tree(&self) -> Option<&Tree> {
-        self.0.as_deref()
-    }
-}
-
-impl Drop for Installed {
-    fn drop(&mut self) {
-        *INSTALLED
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
     }
 }
 
