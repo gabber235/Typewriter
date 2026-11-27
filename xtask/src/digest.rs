@@ -9,6 +9,8 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context as _, Result};
 use sha2::{Digest as _, Sha256};
 
+use crate::{CommandExt as _, Context};
+
 /// FNV-1a over 64 bits: stable across Rust releases and machines, and enough to notice an edit.
 #[derive(Clone)]
 pub struct Digest(u64);
@@ -42,61 +44,44 @@ impl Digest {
     }
 }
 
-/// The existing paths `pattern` names, where a `*` component matches any one entry.
-pub fn expand(root: &Path, pattern: &str) -> Result<Vec<PathBuf>> {
-    let mut paths = vec![root.to_path_buf()];
-    for component in pattern.split('/') {
-        let mut next = Vec::new();
-        for path in paths {
-            if component == "*" {
-                let Ok(entries) = fs::read_dir(&path) else {
-                    continue;
-                };
-                for entry in entries {
-                    let entry = entry?;
-                    if entry.file_type()?.is_dir() && !skipped(&entry.file_name().to_string_lossy())
-                    {
-                        next.push(entry.path());
-                    }
-                }
-            } else {
-                let candidate = path.join(component);
-                if candidate.exists() {
-                    next.push(candidate);
-                }
-            }
-        }
-        paths = next;
-    }
-    paths.sort();
-    Ok(paths)
+/// Which of the files below some paths [`listed`] names.
+#[derive(Clone, Copy)]
+pub enum Listing {
+    /// Every file Git does not ignore, tracked or untracked: what generators and builds read,
+    /// a new module counted before it is added.
+    Inputs,
+    /// Every untracked file Git ignores: generated sources and build output.
+    Ignored,
 }
 
-/// Calls `visit` with the root relative path of every file at or below `path`.
-pub fn walk(root: &Path, path: &Path, visit: &mut dyn FnMut(&str)) -> Result<()> {
-    let Ok(metadata) = fs::metadata(path) else {
-        return Ok(());
-    };
-    if metadata.is_file() {
-        let relative = path.strip_prefix(root).unwrap_or(path);
-        visit(&relative.to_string_lossy());
-        return Ok(());
+/// The root relative files Git lists, by `listing`, at or below each of `paths`, sorted. A path is
+/// root relative and names a file or a folder (`.` the whole repository); a `*` in it matches
+/// within one path component. One listing serves generators and Cargo builds alike, so both count
+/// the same files as inputs.
+pub fn listed(ctx: &Context, paths: &[&str], listing: Listing) -> Result<Vec<String>> {
+    if paths.is_empty() {
+        return Ok(Vec::new());
     }
-    let mut entries = fs::read_dir(path)
-        .with_context(|| format!("cannot read {}", path.display()))?
-        .collect::<Result<Vec<_>, _>>()?;
-    entries.sort_by_key(|entry| entry.file_name());
-    for entry in entries {
-        if !skipped(&entry.file_name().to_string_lossy()) {
-            walk(root, &entry.path(), visit)?;
-        }
-    }
-    Ok(())
-}
-
-/// Build output, dependencies and tool state, never input.
-pub fn skipped(name: &str) -> bool {
-    name.starts_with('.') || matches!(name, "node_modules" | "build" | "target")
+    let mut args = vec!["-c", "core.quotePath=false", "ls-files", "-z", "--others"];
+    args.extend(match listing {
+        Listing::Inputs => ["--cached", "--exclude-standard"].as_slice(),
+        Listing::Ignored => ["--ignored", "--exclude-standard"].as_slice(),
+    });
+    args.push("--");
+    // A glob path names no folder's contents on its own; the `/**` form does.
+    let pathspecs: Vec<String> = paths
+        .iter()
+        .flat_map(|path| [format!(":(glob){path}"), format!(":(glob){path}/**")])
+        .collect();
+    let listing = ctx.tool(".", "git", &args).args(&pathspecs).output_text()?;
+    let mut files: Vec<String> = listing
+        .split('\0')
+        .filter(|file| !file.is_empty())
+        .map(str::to_owned)
+        .collect();
+    files.sort();
+    files.dedup();
+    Ok(files)
 }
 
 /// The environment variables a step runs with, which its caller passes in: the process's own in
@@ -146,7 +131,20 @@ pub enum Entry {
     Variable(String),
 }
 
+/// An entry with the sha256 of what it named when it was hashed, which a stamp records.
+pub struct Sum {
+    entry: Entry,
+    sum: String,
+}
+
 impl Entry {
+    /// The entry with the sha256 of what it names now in `env`. A build hashes its inputs before
+    /// it starts, so an edit while it runs differs from what its stamp records.
+    pub fn sum(self, root: &Path, env: &Environment) -> Result<Sum> {
+        let sum = self.fingerprint(root, env)?;
+        Ok(Sum { entry: self, sum })
+    }
+
     /// The sha256 of what the entry names in `env`: a file's contents (`absent` for a missing
     /// file), or a variable's value, told apart from an unset one.
     fn fingerprint(&self, root: &Path, env: &Environment) -> Result<String> {
@@ -230,23 +228,15 @@ impl Stamp {
         }
     }
 
-    /// Records `digest` and what each of `entries` names now in `env`.
-    pub fn record(
-        &self,
-        root: &Path,
-        digest: &Digest,
-        entries: &[Entry],
-        env: &Environment,
-    ) -> Result<()> {
-        let dir = self.path.parent().unwrap_or(root);
-        fs::create_dir_all(dir).with_context(|| format!("cannot create {}", dir.display()))?;
+    /// Records `digest` and the sums `sums`, each taken when its entry held what the stamp vouches
+    /// for: an input before the run, an output after it.
+    pub fn record(&self, digest: &Digest, sums: &[Sum]) -> Result<()> {
+        if let Some(dir) = self.path.parent() {
+            fs::create_dir_all(dir).with_context(|| format!("cannot create {}", dir.display()))?;
+        }
         let mut record = format!("{}\n", digest.hex());
-        for entry in entries {
-            record.push_str(&format!(
-                "{} {}\n",
-                entry.fingerprint(root, env)?,
-                entry.line()
-            ));
+        for Sum { entry, sum } in sums {
+            record.push_str(&format!("{sum} {}\n", entry.line()));
         }
         fs::write(&self.path, record)
             .with_context(|| format!("cannot write {}", self.path.display()))

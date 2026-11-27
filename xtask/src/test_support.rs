@@ -68,18 +68,15 @@ impl TempRoot {
     /// they are now.
     pub fn stamp(&self, relative: &str, digest: &Digest, outputs: &[&str]) -> Stamp {
         let stamp = Stamp::at(self.path(relative));
-        let outputs: Vec<Entry> = outputs
+        let sums: Vec<_> = outputs
             .iter()
-            .map(|output| Entry::File((*output).to_owned()))
+            .map(|output| {
+                Entry::File((*output).to_owned())
+                    .sum(&self.ctx.root, &crate::digest::Environment::EMPTY)
+                    .unwrap()
+            })
             .collect();
-        stamp
-            .record(
-                &self.ctx.root,
-                digest,
-                &outputs,
-                &crate::digest::Environment::EMPTY,
-            )
-            .unwrap();
+        stamp.record(digest, &sums).unwrap();
         stamp
     }
 
@@ -717,7 +714,8 @@ pub fn cargo_workspace() -> TempRoot {
 
 /// A stand in for Cargo in a repository root: each run is counted and writes [`Self::artifact`] in
 /// its target directory, as Cargo does beside each artifact a dependency file naming the files the
-/// build read, and on standard output the JSON messages it is handed ([`Self::messages`]).
+/// build read, and on standard output the JSON messages it is handed (its `MESSAGES` variable). A run
+/// that finds the script [`Self::during`] runs it once, in `backend`, while it builds.
 pub struct FakeCargo<'a> {
     pub ctx: &'a Context,
 }
@@ -725,6 +723,11 @@ pub struct FakeCargo<'a> {
 impl FakeCargo<'_> {
     fn path(&self, relative: &str) -> PathBuf {
         self.ctx.root.join(relative)
+    }
+
+    /// Has the next run execute the shell script `script` in `backend` while it builds.
+    pub fn during(&self, script: &str) {
+        fs::write(self.path("during.sh"), script).unwrap();
     }
 
     /// What the build produces: `target/stack`.
@@ -744,7 +747,7 @@ impl FakeCargo<'_> {
         command
             .args([
                 "-c",
-                r#"echo run >> "$RUNS" && printf %s "$CONTENTS" > "$ARTIFACT" && printf '%s: %s\n' "$ARTIFACT" "$READS" > "$DEP_INFO" && printf %s "$MESSAGES""#,
+                r#"echo run >> "$RUNS" && printf %s "$CONTENTS" > "$ARTIFACT" && printf '%s: %s\n' "$ARTIFACT" "$READS" > "$DEP_INFO" && if [ -f "$DURING" ]; then sh "$DURING" && rm "$DURING"; fi && printf %s "$MESSAGES""#,
             ])
             .env("RUNS", self.path("runs"))
             .env("CONTENTS", contents)
@@ -752,6 +755,7 @@ impl FakeCargo<'_> {
             .env("READS", reads.join(" "))
             .env("DEP_INFO", self.path("target/stack.d"))
             .env("MESSAGES", "")
+            .env("DURING", self.path("during.sh"))
             .current_dir(self.path("backend"));
         command
     }
@@ -828,8 +832,9 @@ impl<'a> RealCargo<'a> {
     }
 
     /// The build `name` of the library of the package `name` in the workspace of `manifest`, root
-    /// relative, as the root holds it now; its lock file is written first.
-    pub fn new(root: &'a TempRoot, manifest: &'static str, name: &'static str) -> Self {
+    /// relative, as the root holds it now; its lock file is written first. Fails as
+    /// [`crate::cargo_build::CargoBuild::in_workspace`] refuses a workspace.
+    pub fn new(root: &'a TempRoot, manifest: &'static str, name: &'static str) -> Result<Self> {
         root.ctx
             .tool(
                 ".",
@@ -847,13 +852,40 @@ impl<'a> RealCargo<'a> {
         let build =
             crate::cargo_build::CargoBuild::in_workspace(&root.ctx, name, manifest, |target| {
                 vec![target.join(format!("debug/lib{name}.rlib"))]
-            })
-            .unwrap();
-        Self {
+            })?;
+        Ok(Self {
             root,
             manifest,
             build,
-        }
+        })
+    }
+
+    /// Makes `crate`, a library with the build script `build_script`, the only crate of the
+    /// registry `registry`, a folder outside the root, and points the root's Cargo configuration
+    /// at it in place of crates.io, so a manifest depends on it as on any registry crate.
+    pub fn vendor(root: &TempRoot, registry: &Path, krate: &str, build_script: &str) {
+        let dir = registry.join(krate);
+        fs::create_dir_all(dir.join("src")).unwrap();
+        fs::write(
+            dir.join("Cargo.toml"),
+            format!("[package]\nname = \"{krate}\"\nversion = \"0.1.0\"\nedition = \"2024\"\n"),
+        )
+        .unwrap();
+        fs::write(dir.join("src/lib.rs"), "").unwrap();
+        fs::write(dir.join("build.rs"), build_script).unwrap();
+        fs::write(
+            dir.join(".cargo-checksum.json"),
+            r#"{"files":{},"package":null}"#,
+        )
+        .unwrap();
+        root.write(
+            ".cargo/config.toml",
+            &format!(
+                "[source.crates-io]\nreplace-with = \"vendored\"\n\n[source.vendored]\n\
+                 directory = \"{}\"\n",
+                registry.display()
+            ),
+        );
     }
 
     /// Runs the build with the variables `env` through `cargo build`.

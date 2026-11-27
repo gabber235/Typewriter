@@ -315,7 +315,7 @@ was proven on ([h-ci-runner.md](spikes/h-ci-runner.md)) took 13 to 14.
   the Nix store, Gradle's dependencies, the pub cache and Loom's downloads. The jobs that build the
   stack (the components check and the e2e suites) also keep its Cargo targets there: the release
   wasm build of the components and the component test workspace's debug target with the
-  `typewriter-stack` binary, which xtask reuses while every file in the folders each build declares,
+  `typewriter-stack` binary, which xtask reuses while every file each build declares,
   Cargo's configuration files and variables, the command and the toolchain are unchanged. Gradle's
   build cache and the AOT cache stay on the Actions cache: every job saves the whole volume and the
   last one wins. Run 44247548234 against the GitHub hosted 44203399779: job setup from 160 to 340 s
