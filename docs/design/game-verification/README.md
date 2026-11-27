@@ -130,9 +130,9 @@ Requirements are G1 windows plus the recorded timeline
 ([g-requirement-shape.md](spikes/g-requirement-shape.md)): order, gaps and motion are read from the
 attempt's timeline after a window. A window needs one positive check; `never` checks are broad
 (`anyChat()`) and keep the window open for all its ticks. A body needs one positive check too, or it
-fails as refused: a window that held, a `looksLike` whose compare matched, or a framework outcome the
-body caught (`shouldThrow<WindowMissed>`, `WorkHung`, `ClientLost`, `PaperLost`). A bare read never
-counts.
+fails as refused: a window that held, or a framework outcome the body caught
+(`shouldThrow<WindowMissed>`, `WorkHung`, `ClientLost`, `PaperLost`). A bare read never counts, and
+neither does a captured frame.
 
 State no player perceives, such as a record in a store, is checked inside a window too:
 
@@ -240,27 +240,15 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
   run: the attempts it held are interrupted, which counts neither way, the cases still waiting never
   run, and xtask fails the run once, naming the part, its cause, its log and the cases it took.
 
-## Goldens
+## Frames
 
-`player.looksLike("sidebar")` draws a real frame and compares it exactly against an approved golden
-([f-goldens.md](spikes/f-goldens.md), [p5-devenv-mesa.md](spikes/p5-devenv-mesa.md)).
+Screenshots never decide pass or fail. `player.capture("sidebar")` draws a real frame and keeps it in
+the attempt's evidence as `sidebar.png`, a `screenshot` artifact; the pull request's evidence shows
+every captured frame and clip beside its requirement, passing or failing, for a reviewer to look at.
 
-- The repository holds only the golden file (`src/gameTest/goldens/<name>.golden`): readable Skir
-  JSON of a `Golden` (`skir-src/harness/v1/golden.skir`), the frame's hash and size and the `Renderer`
-  that drew it. The image lives on the `evidence` branch as `goldens/<hash>.png`, and
-  `cargo xtask e2e game` fetches every image the machine lacks before the run, so a differing frame
-  shows golden, new frame and diff.
-- Goldens are exact on one **pinned renderer**: Vulkan through llvmpipe on Linux amd64 with the Mesa
-  devenv ships (`PLAYTEST_MESA`). There a differing frame, a golden never approved, or one another
-  renderer drew fails with the approve command. Any other machine reports "not checked".
-- Each captured frame leaves a `GoldenCandidate` beside it, listed as the attempt's `golden`
-  artifact: the golden file it is for, the image, the `Golden` it would become and whether the pinned
-  renderer drew it. `cargo xtask goldens approve` takes the candidates a run left, refuses any the
-  pinned renderer did not draw, writes the golden files and pushes the images.
-- Only a compare that matched is a positive check; a golden not checked on another machine proves
-  nothing, so a body there needs a window as well. A Mesa or Minecraft upgrade fails every
-  golden, and its pull request approves them again. The weekly prune drops images no golden on a
-  long lived branch (`develop` or `features/v1`) names once they are 30 days old.
+- A capture is not a positive check: a body that captures needs a window that holds as well.
+- The frame requirements (`FRAME-1` to `FRAME-5`) set up still scenes, a sidebar, night and rain, a lamp
+  at night, and capture them once a window saw the camera settle.
 
 ## Coverage and demo clips
 
@@ -276,8 +264,8 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
   stepped client draws 30 frames per second of game time between steps and pipes them to ffmpeg
   ([p9-frames-between-steps.md](spikes/p9-frames-between-steps.md)). It writes a run file of its own
   (`results/<suite>-demos`) and never gates: a clip is evidence of the verdict, not part of it.
-- Evidence (frames, golden candidates, clips) is staged per attempt; CI publishes it to the `evidence`
-  branch for the pull request.
+- Evidence (frames and clips) is staged per attempt, whatever its outcome; CI publishes it to the
+  `evidence` branch and the pull request shows it.
 
 ## Restarts
 
@@ -479,31 +467,19 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   touches** (2026-11-06). "Touched" comes from ordinary coverage: the lines each requirement covers,
   intersected with the diff. This needs coverage per requirement on a long lived Paper, which spike
   I measures.
-- A frame that differs from its approved golden **fails the test** and the pull request shows golden,
-  new frame and diff (2026-11-06). Goldens are exact on the pinned runner platform (spike F).
+- A frame that differs from its approved golden **fails the test** (2026-11-06). Superseded by
+  "Screenshots never decide" below, with the pinned renderer (2026-11-15), golden candidates as
+  artifacts (2026-11-18) and golden images on the evidence branch (2026-11-17) that served it.
+- **Screenshots never decide** (2026-11-28): a captured frame or clip is evidence for a human
+  reviewer, never a verdict. The golden compare, its approval command, its storage and the pinned
+  renderer are gone; every captured frame is published beside its requirement, passing or failing.
+  An exact frame compare failed on small first frame differences no player would notice (29 of 409920
+  pixels in a sidebar scene at the 50 ms pace), and what a player perceives is already checked
+  through windows.
 - **Block light glows steadily** (2026-11-27): the client keeps vanilla's block light flicker, a random
   walk every client tick, at 0, the middle of the walk, so a floor a lamp lights draws the same shade
-  every frame (GOLDEN-5). Without it the lit floor drew another frame 10 ticks later in 3 of 3 attempts.
-- The **pinned renderer** is Vulkan through llvmpipe on Linux amd64 with the Mesa devenv ships
-  (2026-11-15). devenv exports that release as `PLAYTEST_MESA`, and the game framework owns the pin
-  and its one match rule. On the pinned renderer a golden never approved, or one another renderer drew
-  (the Mesa before an upgrade), fails with the approve command; any other machine reports "not
-  checked" with its renderer. CI's game job is the pinned runner and says so (`PLAYTEST_PINNED_RUNNER=1`),
-  so there a frame from another renderer fails with the renderer it saw: a runner that drifts from the
-  pin cannot let every golden pass unchecked. Each captured frame's candidate says whether the pinned renderer drew it, and
-  `cargo xtask goldens approve` refuses any it did not. The run file lists each candidate as a
-  `golden` artifact of its attempt (2026-11-18); staging, publishing and approve read that kind
-  and never look for a `.golden` file beside a frame. `cargo xtask goldens approve --pr <n>` downloads
-  the game results of the pull request's latest CI run and approves from them; without `--pr` it reads
-  the last local run. A nixpkgs Mesa upgrade fails every golden, and the upgrade pull request approves
-  them again.
-- **Golden images live on the evidence branch** (2026-11-17): the repository holds only a golden's
-  hash, size and renderer. `cargo xtask goldens approve` also pushes the frame to the `evidence` branch
-  as `goldens/<hash>.png`, beside the pull request folders pruning empties, and `cargo xtask e2e game`
-  fetches every golden image the machine lacks before the run, so a frame that differs shows its diff
-  on CI while the framework stays offline. Approve writes `goldens/<hash>.approved-at` beside each
-  image, and the weekly prune drops an image no golden file on a long lived branch (develop,
-  features/v1) names once it is older than the retention (an image without that file counts as old).
+  every frame and two captures of a still scene look alike for a reviewer. Without it the lit floor drew
+  another frame 10 ticks later in 3 of 3 attempts.
 - **Parts name their processes** (2026-11-17): the pool writes each part's pid and start time into its
   folder at every boot (`part.running`), and tests find a client or Paper by it. Linux shows Java only
   the first page of a command line, so arguments cannot name a part; a file a crash left behind names
@@ -598,9 +574,9 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   each batch ends with `XSync` and counts as taken after the next poll); until
   that tick's record went out it handles no packet, since one queued after the tick's step ping belongs
   to the next tick. An input starts
-  only right after a tick; one that arrives while Paper is idle asks for a tick first. GOLDEN-3 is
-  watched: the visible sections update on a background thread after a move, which may make a frame
-  lag a tick, but no run showed it, so the client does not wait for them (cause unproven). The client
+  only right after a tick; one that arrives while Paper is idle asks for a tick first. The visible
+  sections update on a background thread after a move, which may make a frame lag a tick, so the client
+  does not wait for them (cause unproven). The client
   wipe also resets the break delay, which counts down only while the player keeps breaking. The
   client's other input delays (miss, use, jump and sprint double tap) count down every tick or clear
   once the button is up, and the pool runs at least 10 ticks between two attempts on a client, so no
@@ -632,14 +608,14 @@ Dated decisions, oldest first. The sections above describe what they add up to.
 - `never` checks are **broad** (`anyChat()`, `anyTitle()`), and the framework **refuses** a requirement
   whose checks are all `never` or all client state: it needs one positive check (2026-11-06). A body
   that returns without one fails as refused (2026-11-18). A positive check is a window whose checks
-  held, a `looksLike` whose compare matched (review round 2: one not checked proves nothing), an
+  held, an
   outcome the framework observed that the body caught (a missed window, hung
   work, a lost client or Paper, caught with `shouldThrow`), or the test kit's `holds`/`lacks` state
   check. The rule covers whole bodies: a body with no positive check at all fails. A bare read made
   after one check already held is not caught.
 - A requirement that needs rendered frames **declares it** (`player(frames = 60.hz)`), so the runner
   groups such requirements at a fitting server rate before it starts (2026-11-06). Superseded: stepped
-  ticks replaced server rates, and clients perceive without drawing (P11), so only `visible()`, goldens
+  ticks replaced server rates, and clients perceive without drawing (P11), so only `visible()`, captures
   and clips draw, each for its own span, and no requirement declares frames.
 - **The engine's clock is test driven** (2026-11-18, replacing the tick clock above). Answer to "How
   should step time count, so the branch can merge with features/v1?": "Clock, test driven

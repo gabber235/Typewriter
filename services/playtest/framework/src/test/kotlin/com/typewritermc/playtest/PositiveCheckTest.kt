@@ -4,16 +4,16 @@ import com.typewritermc.playtest.wire.chatLine
 import com.typewritermc.playtest.wire.perception
 import com.typewritermc.playtest.wire.text
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
-import skirout.harness.v1.golden.Renderer
+import skirout.harness.v1.test_run.Artifact
+import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.AttemptPolicy
 import skirout.harness.v1.wire.StateKind
 
 val PositiveCheckTest by testSuite {
-    val mac = Renderer(backend = "OpenGL", device = "Apple M1 Max", driver = "4.1 Metal - 89.4", os = "Mac OS X", arch = "aarch64")
-
     test("a body that only reads is refused for making no positive check, and the refusal is never retried") {
         var ran = 0
 
@@ -22,7 +22,7 @@ val PositiveCheckTest by testSuite {
                 ran++
                 StandInGame().attempt.outcome {
                     probe.chat(player, "Hello")
-                    frameOf(player, "scene")
+                    player.capture("scene")
                 }
             }
 
@@ -48,19 +48,15 @@ val PositiveCheckTest by testSuite {
         stimulusOnly.shouldBeInstanceOf<RequirementRefused>()
     }
 
-    test("a golden compare that matched is a positive check, and one another renderer left unchecked is refused") {
-        val pinned = StandInGame().apply { approve("sidebar") }
-        val elsewhere =
-            StandInGame().apply {
-                approve("sidebar")
-                renderer = mac
-            }
+    test("a captured frame is evidence, never a check: it joins the screenshots, and a body that only captures is refused") {
+        val game = StandInGame()
 
-        val matched = pinned.attempt.outcome { player.looksLike("sidebar") }
-        val notChecked = elsewhere.attempt.outcome { player.looksLike("sidebar") }
+        val captured = game.attempt.outcome { player.capture("sidebar") }
 
-        matched shouldBe null
-        notChecked.shouldBeInstanceOf<RequirementRefused>()
+        captured.shouldBeInstanceOf<RequirementRefused>()
+        val evidence = game.attempt.evidence
+        evidence.artifacts shouldBe listOf(Artifact(kind = ArtifactKind.SCREENSHOT, path = "sidebar.png"))
+        evidence.file("sidebar.png").toFile().length() shouldBeGreaterThan 0L
     }
 
     test("a holds check of the test kit is a positive check: its body passes, and a body that only marks is refused") {

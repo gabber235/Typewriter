@@ -28,7 +28,7 @@ use crate::results::{self, Quarantine, TestRun, Verdict};
 use crate::review::change::Change;
 use crate::skirout::base::harness::v1::test_run::Runner;
 use crate::stack::{self, typewriter};
-use crate::{CommandExt as _, Context, evidence, generate, goldens};
+use crate::{CommandExt as _, Context, evidence, generate};
 
 /// A game suite: whose requirements it runs, and whether their Papers need the stack.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -59,7 +59,6 @@ const PACES: &str = "5,50";
 pub(super) fn run(ctx: &Context, args: &E2eArgs, suite: GameSuite) -> Result<()> {
     // The suite compiles against the generated Skir types, and the pool writes its run with them.
     generate::protocol(ctx)?;
-    goldens::fetch_missing(ctx)?;
     let verdict_shown = Path::new(evidence::RESULTS).join(suite.name());
     let quarantine = Quarantine::load(ctx)?;
     if args.demos {

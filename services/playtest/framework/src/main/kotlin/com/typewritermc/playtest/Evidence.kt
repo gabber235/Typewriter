@@ -18,7 +18,7 @@ internal class Evidence(
 
     private val dir = runFolder.resolve(folder)
 
-    /** The frames, golden candidates and clips written so far, relative to [folder]. */
+    /** The frames and clips written so far, relative to [folder]. */
     val artifacts = mutableListOf<Artifact>()
 
     /** The file [name] in the attempt's folder. */

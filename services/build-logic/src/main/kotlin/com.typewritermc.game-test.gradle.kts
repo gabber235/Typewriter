@@ -1,4 +1,3 @@
-import com.typewritermc.buildlogic.repositoryRoot
 import com.typewritermc.buildlogic.servicesDirectory
 import com.typewritermc.playtest.launch.PoolFile
 import com.typewritermc.playtest.launch.PoolProcess
@@ -314,21 +313,6 @@ abstract class GameParts : CommandLineArgumentProvider {
     /** Whether the run is a demo: each requirement runs once, its clients recording clips. */
     @get:Internal abstract val demo: Property<String>
 
-    /** The repository root, which golden paths start from. */
-    @get:Internal abstract val root: Property<String>
-
-    /** This project's golden files, from the repository root. */
-    @get:Internal abstract val goldens: Property<String>
-
-    /** The local golden images, each named by the hash of its frame. */
-    @get:Internal abstract val goldenImages: Property<String>
-
-    /** The Mesa release devenv ships, which the pinned renderer draws with. */
-    @get:Internal abstract val mesa: Property<String>
-
-    /** Whether this machine is the pinned runner, where a frame from another renderer fails its golden. */
-    @get:Internal abstract val pinnedRunner: Property<Boolean>
-
     /** The cgroup the run's tree gives the game, where the pool runs each part in a leaf of its own. */
     @get:Internal abstract val cgroup: Property<String>
 
@@ -351,11 +335,6 @@ abstract class GameParts : CommandLineArgumentProvider {
                 "run" to runId.get(),
                 "testRun" to testRun.get(),
                 "logs" to logs.get(),
-                "root" to root.get(),
-                "goldens" to goldens.get(),
-                "goldenImages" to goldenImages.get(),
-                "mesa" to mesa.get(),
-                "pinnedRunner" to pinnedRunner.get().toString(),
             ) +
                 listOf(
                     "repeat" to repeat,
@@ -421,14 +400,6 @@ tasks.register<Test>("gameTest") {
             paces.set(providers.gradleProperty("playtest.paces"))
             pacing.set(gameRequirements.pacing)
             demo.set(providers.gradleProperty("playtest.demo"))
-            root.set(repositoryRoot.path)
-            goldens.set(projectDir.resolve("src/gameTest/goldens").relativeTo(repositoryRoot).invariantSeparatorsPath)
-            // `cargo xtask goldens approve` keeps each approved frame here; a run diffs against it.
-            goldenImages.set(servicesDirectory.resolve("build/playtest/goldens").path)
-            // devenv.nix exports the Mesa it ships, so the pin moves with nixpkgs.
-            mesa.set(providers.environmentVariable("PLAYTEST_MESA"))
-            // CI's game job runs on the pinned runner and says so; other machines only note frames they cannot check.
-            pinnedRunner.set(providers.environmentVariable("PLAYTEST_PINNED_RUNNER").map { it == "1" }.orElse(false))
             // `cargo xtask e2e` names it where the machine delegates a cgroup to the run (Linux CI).
             cgroup.set(providers.environmentVariable("PLAYTEST_CGROUP"))
         }

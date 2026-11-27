@@ -16,16 +16,6 @@ internal data class PlaytestSettings(
     val run: String,
     /** Where the pool writes the run's `TestRun`; each attempt's evidence lies in a folder beside it. */
     val testRun: Path,
-    /** The repository root, which golden paths start from. */
-    val root: Path,
-    /** This project's golden files, from the repository root. */
-    val goldens: String,
-    /** The local golden images, each named by the hash of its frame. */
-    val goldenImages: Path,
-    /** The Mesa release devenv ships, which the pinned renderer draws with. */
-    val mesa: String,
-    /** Whether this machine is the pinned runner, where every frame must come from the pinned renderer. */
-    val pinnedRunner: Boolean,
 ) {
     val poolLog: Path get() = logs.resolve("pool.log")
 
@@ -40,11 +30,6 @@ internal data class PlaytestSettings(
                 logs = Path(required("logs")),
                 run = required("run"),
                 testRun = Path(required("testRun")),
-                root = Path(required("root")),
-                goldens = required("goldens"),
-                goldenImages = Path(required("goldenImages")),
-                mesa = required("mesa"),
-                pinnedRunner = required("pinnedRunner").toBoolean(),
             )
         }
     }

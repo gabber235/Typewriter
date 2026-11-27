@@ -8,7 +8,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
-import skirout.harness.v1.golden.Renderer
 import skirout.harness.v1.test_run.Conclusion
 import skirout.harness.v1.test_run.CoveredClass
 import skirout.harness.v1.test_run.Demonstrates
@@ -72,17 +71,12 @@ class InputFailed(
     message: String,
 ) : AssertionError(message)
 
-/** The player's frame is not the golden it names, or none is approved; [message] says how and where the frame and its diff lie. */
-class GoldenDiffers(
-    message: String,
-) : AssertionError(message)
-
 /** A client could not record or write the clip of a demo; [message] says why. */
 class ClipFailed(
     message: String,
 ) : AssertionError(message)
 
-/** The client could not draw or write the frame a golden asked for; [message] says why. */
+/** The client could not draw or write the frame a capture asked for; [message] says why. */
 class FrameNotCaptured(
     message: String,
 ) : AssertionError(message)
@@ -107,9 +101,6 @@ internal class PoolSession private constructor(
     private val attempts = ConcurrentHashMap<String, Attempt>()
     private val attemptsOf = ConcurrentHashMap<String, Int>()
 
-    /** This project's goldens and the local golden images. */
-    override val goldens =
-        Goldens(settings.root, settings.goldens, settings.goldenImages, PinnedRenderer(settings.mesa, settings.pinnedRunner))
     private val ended = CompletableDeferred<Unit>()
 
     @Volatile
@@ -424,14 +415,13 @@ internal class PoolSession private constructor(
     override suspend fun stopClip(player: GamePlayer): Answer.ClipWritten =
         request<Answer.ClipWrittenWrapper>(player, ClientTask.STOP_CLIP).value
 
-    /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */
+    /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]. */
     override suspend fun capture(
         player: GamePlayer,
         png: Path,
-    ): Renderer {
+    ) {
         val captured = request<Answer.CapturedWrapper>(player, ClientTask.createCapture(path = png.toString())).value
         captured.failure?.let { throw FrameNotCaptured(it) }
-        return captured.renderer
     }
 
     /** Ends the session: once every session of the run ended, the pool marks the run file ended. */

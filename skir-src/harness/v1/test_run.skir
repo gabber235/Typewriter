@@ -1,7 +1,7 @@
 // What one run of one test runner proved. Every runner writes this one shape (the component
 // runner, the graph's own steps, the panel driver), so the change report, conformance and
 // evidence read a single type instead of each runner's own output format.
-struct TestRun(85020001) {
+struct TestRun(85010001) {
   // The run the file belongs to. `cargo xtask e2e game` names it and every test JVM and game pool of
   // the run writes it, so a file an earlier run left never passes for this one; empty for runners
   // that write their file once.
@@ -28,7 +28,7 @@ struct TestRun(85020001) {
 }
 
 // How much memory a run's game parts may take together, and where that number comes from.
-struct MemoryBudget(85020002) {
+struct MemoryBudget(85010002) {
   bytes: int64;
   // For a person to read, as "the game's cgroup" or "half the machine".
   source: string;
@@ -39,7 +39,7 @@ struct MemoryBudget(85020002) {
 
 // How a run ended. A run that could not run, or was cut short, proves less than its cases say: the
 // cases it never reached are missing from it.
-enum RunEnd(85020003) {
+enum RunEnd(85010003) {
   // It ran to the end.
   completed;
   // It stopped before it was over. Only the game pool says so: on every rewrite until the run is over,
@@ -53,20 +53,20 @@ enum RunEnd(85020003) {
 }
 
 // The run stopped because the part named `part` was lost.
-struct RunLost(85020004) {
+struct RunLost(85010004) {
   part: string;
   // The cases that were waiting and never ran, by id.
   not_run: [string];
 }
 
-enum AttemptPolicy(85020005) {
+enum AttemptPolicy(85010005) {
   // Failed cases run again until they pass, up to this many attempts in total.
   rerun_failures: int32;
   // Every case ran exactly this many times.
   exactly: int32;
 }
 
-struct TestCase(85020006) {
+struct TestCase(85010006) {
   // The test path or step name, unique within its run.
   id: string;
   // The requirement the test declares it demonstrates, for example "QUEST-1.E1".
@@ -90,7 +90,7 @@ struct TestCase(85020006) {
 }
 
 // What a runner concluded of a case's attempts and paced attempts.
-enum Conclusion(85020007) {
+enum Conclusion(85010007) {
   // Every attempt passed and every window held at one tick in every passing run.
   passed;
   // An attempt failed and a later one passed.
@@ -104,7 +104,7 @@ enum Conclusion(85020007) {
 }
 
 // What a case whose windows hold at different ticks at different paces does to the verdict.
-enum Pacing(85020008) {
+enum Pacing(85010008) {
   // It fails the case: the window depends on wall clock.
   gates;
   // It is reported and blocks nothing, while the code under test still waits on work no tick waits for.
@@ -112,14 +112,13 @@ enum Pacing(85020008) {
 }
 
 // One run of one case.
-struct Attempt(85020009) {
+struct Attempt(85010009) {
   // What this attempt observed. Quarantine and flakiness are the attempt policy's verdict.
   outcome: Outcome;
   // Where the attempt sits in the run's recording, when there is one.
   span: Span?;
   duration_millis: int64;
-  // Clips, screenshots, golden candidates, log excerpts and spans that show the outcome, relative
-  // to `folder`.
+  // Clips, screenshots, log excerpts and spans that show the outcome, relative to `folder`.
   artifacts: [Artifact];
   // Where this attempt's evidence lies, relative to the folder of the run file; empty for
   // that folder itself.
@@ -139,7 +138,7 @@ struct Attempt(85020009) {
 }
 
 // How one window of an attempt ended.
-struct WindowEnd(85020010) {
+struct WindowEnd(85010010) {
   // The requirement line that opened it, as `File.kt:42`.
   at: string;
   // How many ticks it lasted at most.
@@ -153,7 +152,7 @@ struct WindowEnd(85020010) {
 }
 
 // One class an attempt ran code of, with the lines of its source file that ran.
-struct CoveredClass(85020011) {
+struct CoveredClass(85010011) {
   // The JVM name, with slashes: "com/typewritermc/playtest/plugin/Probes".
   name: string;
   // The source file by its package path: "com/typewritermc/playtest/plugin/Probes.java".
@@ -163,7 +162,7 @@ struct CoveredClass(85020011) {
 }
 
 // One thing a scenario did or checked, in the words a reader would use.
-struct Step(85020012) {
+struct Step(85010012) {
   // Unix milliseconds, the clock of the attempt's span.
   at_millis: int64;
   // The user signed in when the step started.
@@ -174,14 +173,14 @@ struct Step(85020012) {
 }
 
 // One tap, in pixels of the recorded screen.
-struct Tap(85020013) {
+struct Tap(85010013) {
   // Unix milliseconds, the clock of the attempt's span.
   at_millis: int64;
   x: int32;
   y: int32;
 }
 
-enum Runner(85020014) {
+enum Runner(85010014) {
   components;
   schema;
   panel;
@@ -193,26 +192,26 @@ enum Runner(85020014) {
   game;
 }
 
-enum Demonstrates(85020015) {
+enum Demonstrates(85010015) {
   happy_path;
   failure;
   edge_case;
 }
 
-enum Outcome(85020016) {
+enum Outcome(85010016) {
   passed;
   failed: Failure;
   // A part the attempt depended on was lost while it ran: the attempt proves nothing either way.
   interrupted: Interruption;
 }
 
-struct Interruption(85020017) {
+struct Interruption(85010017) {
   // The lost part, by its name in the run's `parts`.
   part: string;
 }
 
 // One process a run started, such as a Paper or a Minecraft client.
-struct Part(85020018) {
+struct Part(85010018) {
   // Unique within its run: "paper" for the shared Paper, "paper-<attempt>" for an attempt's own,
   // "client-<player>" for a client (with "-<n>" for the n-th replacement).
   name: string;
@@ -227,7 +226,7 @@ struct Part(85020018) {
   peak_bytes: int64?;
 }
 
-enum PartKind(85020019) {
+enum PartKind(85010019) {
   // The Paper every attempt that does not restart Paper shares.
   shared_paper;
   // The Paper of an attempt that restarts Paper, its own.
@@ -244,21 +243,21 @@ enum PartKind(85020019) {
   gradle;
 }
 
-enum PartEnd(85020020) {
+enum PartEnd(85010020) {
   // It ran until the run stopped it.
   ran_to_end;
   // It ended before the run stopped it, other than when an attempt asked for it.
   lost: PartLoss;
 }
 
-struct PartLoss(85020021) {
+struct PartLoss(85010021) {
   cause: LossCause;
   // Unix milliseconds, when the run noticed.
   at_millis: int64;
 }
 
 // Why a part was lost, as far as the run could tell.
-enum LossCause(85020022) {
+enum LossCause(85010022) {
   // Its process exited with this status; a status over 128 means the signal `status - 128` ended it.
   exited: int32;
   // It closed its connection to the pool, for this reason.
@@ -281,7 +280,7 @@ enum LossCause(85020022) {
 }
 
 // Why the kernel killed a part for memory, as its cgroup's `memory.events` tells.
-enum MemoryKill(85020023) {
+enum MemoryKill(85010023) {
   // The machine ran out of memory, and the kernel chose a process of the part.
   machine_out_of_memory;
   // The part took all its own cgroup allows.
@@ -290,29 +289,26 @@ enum MemoryKill(85020023) {
   game_budget;
 }
 
-struct Failure(85020024) {
+struct Failure(85010024) {
   message: string;
   // The first failing step or frame, when the runner knows it.
   first_broken: string?;
 }
 
-struct Span(85020025) {
+struct Span(85010025) {
   start_millis: int64;
   end_millis: int64;
 }
 
-enum ArtifactKind(85020026) {
+enum ArtifactKind(85010026) {
   clip;
   screenshot;
   log_excerpt;
   // OTLP JSON spans of the traces an attempt started.
   spans;
-  // What `cargo xtask goldens approve` reads to make a captured frame a golden: the golden file it
-  // is for, the frame's image beside it, its hash and size, and the renderer that drew it.
-  golden;
 }
 
-struct Artifact(85020027) {
+struct Artifact(85010027) {
   kind: ArtifactKind;
   path: string;
 }

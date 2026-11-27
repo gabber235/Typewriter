@@ -49,9 +49,4 @@ internal fun launcherSettings(
         logs = poolDir.resolve("logs"),
         run = run,
         testRun = poolDir.resolve("test_run.json"),
-        root = poolDir,
-        goldens = "goldens",
-        goldenImages = poolDir.resolve("images"),
-        mesa = "",
-        pinnedRunner = false,
     )

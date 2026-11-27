@@ -1,9 +1,8 @@
 //! `cargo xtask evidence stage`: the one public projection of a results folder. Actions artifacts
 //! of this public repository are downloadable and both media stores are public, so every upload
 //! and every publish reads only what this writes to [`PUBLIC`]: each `TestRun` with only its
-//! published artifacts ([`ArtifactKind::published`]: clips, and screenshots and golden candidates
-//! of failed attempts, since a clip shows a passing one better and a passing golden needs no
-//! approval), their files with a clip's preview, the pool and Paper logs of a game run that did not
+//! published artifacts ([`ArtifactKind::published`]: clips and the frames an attempt captured,
+//! whatever its outcome, for a reviewer to see), their files with a clip's preview, the pool and Paper logs of a game run that did not
 //! pass, a demo run's included ([`results::public_log`]), the coverage files, and the widgetbook story
 //! images below [`STORIES`]. Nothing is written while any public text holds a known secret or any
 //! run lists a file missing on disk.
@@ -64,15 +63,9 @@ fn stage_into(results: &Path, public: &Path, secrets: &[String]) -> Result<()> {
             .iter_mut()
             .flat_map(|case| case.attempts.iter_mut())
         {
-            let passed = attempt.outcome == Outcome::Passed;
-            attempt.artifacts.retain(|artifact| {
-                artifact.kind.published()
-                    && !(passed
-                        && matches!(
-                            artifact.kind,
-                            ArtifactKind::Screenshot | ArtifactKind::Golden
-                        ))
-            });
+            attempt
+                .artifacts
+                .retain(|artifact| artifact.kind.published());
         }
         // Before anything is written: a run that lists a file it never wrote is a fault.
         for case in &run.cases {
@@ -209,37 +202,6 @@ mod tests {
     }
 
     #[test]
-    fn a_passed_attempt_publishes_its_clip_but_not_its_screenshots() {
-        let root = TempRoot::new();
-        root.write("results/panel/attempts/1/clips/conn.mp4", "clip");
-        root.write(
-            "results/panel/attempts/1/screenshots/CONN-1/open.png",
-            "png",
-        );
-        let mut attempt = crate::test_support::passed_attempt((0, 1));
-        attempt.folder = "attempts/1".to_owned();
-        attempt.artifacts = [
-            (ArtifactKind::Clip, "clips/conn.mp4"),
-            (ArtifactKind::Screenshot, "screenshots/CONN-1/open.png"),
-        ]
-        .map(|(kind, path)| results::Artifact {
-            kind,
-            path: path.to_owned(),
-            _unrecognized: None,
-        })
-        .to_vec();
-        let run = crate::test_support::run_of("[CONN-1] Reconnects", vec![attempt]);
-        results::write(&run, &root.path("results/panel/test_run.json")).unwrap();
-
-        staged(&root.path(""), Path::new("results"), &[]).unwrap();
-
-        assert_eq!(
-            files_below(&root.path(PUBLIC)),
-            ["panel/attempts/1/clips/conn.mp4", "panel/test_run.json"]
-        );
-    }
-
-    #[test]
     fn a_demo_run_publishes_its_clips_beside_the_run_it_demonstrates() {
         let root = TempRoot::new();
         root.write("results/game-demos/PROBE-1/demo/clips/gv-1.mp4", "clip");
@@ -271,30 +233,21 @@ mod tests {
     }
 
     #[test]
-    fn a_failed_golden_frame_publishes_its_diff_and_the_candidate_the_run_names_and_no_other_file()
-    {
+    fn a_failed_attempt_publishes_the_frames_the_run_names_and_no_other_file() {
         let root = TempRoot::new();
-        let folder = "results/game/GOLDEN-1-a-sidebar/attempt-1";
-        for file in [
-            "sidebar.png",
-            "sidebar.diff.png",
-            "sidebar.golden",
-            "hotbar.png",
-            "hotbar.golden",
-        ] {
+        let folder = "results/game/FRAME-1-a-sidebar/attempt-1";
+        for file in ["sidebar.png", "hotbar.png", "stray.png"] {
             root.write(&format!("{folder}/{file}"), "bytes");
         }
         let mut attempt = failed_attempt(
             (0, 1),
             &[
                 (ArtifactKind::Screenshot, "sidebar.png"),
-                (ArtifactKind::Screenshot, "sidebar.diff.png"),
-                (ArtifactKind::Golden, "sidebar.golden"),
                 (ArtifactKind::Screenshot, "hotbar.png"),
             ],
         );
-        attempt.folder = "GOLDEN-1-a-sidebar/attempt-1".to_owned();
-        let run = run_of("GOLDEN-1 a sidebar", vec![attempt]);
+        attempt.folder = "FRAME-1-a-sidebar/attempt-1".to_owned();
+        let run = run_of("FRAME-1 a sidebar", vec![attempt]);
         results::write(&run, &root.path("results/game/test_run.json")).unwrap();
 
         staged(&root.path(""), Path::new("results"), &[]).unwrap();
@@ -302,37 +255,35 @@ mod tests {
         assert_eq!(
             files_below(&root.path(PUBLIC)),
             [
-                "game/GOLDEN-1-a-sidebar/attempt-1/hotbar.png",
-                "game/GOLDEN-1-a-sidebar/attempt-1/sidebar.diff.png",
-                "game/GOLDEN-1-a-sidebar/attempt-1/sidebar.golden",
-                "game/GOLDEN-1-a-sidebar/attempt-1/sidebar.png",
+                "game/FRAME-1-a-sidebar/attempt-1/hotbar.png",
+                "game/FRAME-1-a-sidebar/attempt-1/sidebar.png",
                 "game/test_run.json",
             ]
         );
     }
 
     #[test]
-    fn a_passed_golden_attempt_publishes_neither_its_frame_nor_its_candidate() {
+    fn a_passed_attempt_publishes_its_captured_frames_for_a_reviewer_to_see() {
         let root = TempRoot::new();
-        let folder = "results/game/GOLDEN-1-a-sidebar/attempt-1";
-        for file in ["sidebar.png", "sidebar.golden"] {
-            root.write(&format!("{folder}/{file}"), "bytes");
-        }
-        let mut attempt = failed_attempt(
-            (0, 1),
-            &[
-                (ArtifactKind::Screenshot, "sidebar.png"),
-                (ArtifactKind::Golden, "sidebar.golden"),
-            ],
+        root.write(
+            "results/game/FRAME-1-a-sidebar/attempt-1/sidebar.png",
+            "bytes",
         );
+        let mut attempt = failed_attempt((0, 1), &[(ArtifactKind::Screenshot, "sidebar.png")]);
         attempt.outcome = Outcome::Passed;
-        attempt.folder = "GOLDEN-1-a-sidebar/attempt-1".to_owned();
-        let run = run_of("GOLDEN-1 a sidebar", vec![attempt]);
+        attempt.folder = "FRAME-1-a-sidebar/attempt-1".to_owned();
+        let run = run_of("FRAME-1 a sidebar", vec![attempt]);
         results::write(&run, &root.path("results/game/test_run.json")).unwrap();
 
         staged(&root.path(""), Path::new("results"), &[]).unwrap();
 
-        assert_eq!(files_below(&root.path(PUBLIC)), ["game/test_run.json"]);
+        assert_eq!(
+            files_below(&root.path(PUBLIC)),
+            [
+                "game/FRAME-1-a-sidebar/attempt-1/sidebar.png",
+                "game/test_run.json"
+            ]
+        );
     }
 
     /// What a game run that did not pass publishes from its logs folder, beside its run file.

@@ -266,6 +266,6 @@ internal fun bodyEnded(proved: Boolean): RequirementRefused? =
     } else {
         RequirementRefused(
             "the requirement's body made no positive check, so it could never fail: wait for what the player " +
-                "should see with `within`, or compare a still scene with `looksLike`",
+                "should see with `within`; a captured frame is evidence, not a check",
         )
     }

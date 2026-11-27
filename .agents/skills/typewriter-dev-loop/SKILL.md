@@ -48,13 +48,8 @@ description: Run Typewriter locally: builds, the agent stack, Paper, the panel, 
 - `--demos`, after a run, reruns its failed, flaky, quarantined, unsteady and touched requirements
   once each with clips into `<suite>-demos`; it never fails.
 - Results: `.xtask/results/game/` holds `test_run.json`, one evidence folder per attempt (frames,
-  golden candidates, clips) and `logs/<n>/` with `pool.log`, `paper.log` and `client-gv-<i>.log` for
+  clips) and `logs/<n>/` with `pool.log`, `paper.log` and `client-gv-<i>.log` for
   the newest 3 runs. Read them before rerunning.
-- A golden that fails with the approve command: `cargo xtask goldens approve` records the frames in
-  `.xtask/results/game` (or a folder given), and `cargo xtask goldens approve --pr <n>` the frames
-  CI captured on pull request n. Approve refuses frames the pinned renderer (Linux, Vulkan through
-  llvmpipe, devenv's Mesa) did not draw, so a Mac run reports goldens as not checked and approves
-  nothing.
 
 ## Main checkout only
 - Backend deploy: `cargo xtask deploy local`; builds, pushes, restarts on `k3d-seamlezz-local`.

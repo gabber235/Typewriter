@@ -31,7 +31,7 @@ val AwayTest by testSuite {
         val framed =
             StandInGame().attempt.outcome {
                 player.quit()
-                player.looksLike("scene")
+                player.capture("scene")
             }
 
         pressed.shouldBeInstanceOf<RequirementRefused>().message shouldContain "quit and is not on Paper"

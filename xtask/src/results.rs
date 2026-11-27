@@ -317,11 +317,10 @@ pub fn attempt_folder(attempt: &Attempt) -> Option<&Path> {
 
 impl ArtifactKind {
     /// Whether an artifact of this kind is proof for review that `cargo xtask evidence stage`
-    /// makes public; a golden candidate travels so `cargo xtask goldens approve --pr` can approve
-    /// the frame CI drew. Logs and spans stay on the machine, so no token they print can leak
-    /// through a scrub rule that missed it.
+    /// makes public. Logs and spans stay on the machine, so no token they print can leak through a
+    /// scrub rule that missed it.
     pub fn published(&self) -> bool {
-        matches!(self, Self::Clip | Self::Screenshot | Self::Golden)
+        matches!(self, Self::Clip | Self::Screenshot)
     }
 }
 

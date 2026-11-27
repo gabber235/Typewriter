@@ -88,12 +88,9 @@ expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
   `demonstrates = Demonstrates.FAILURE` or `EDGE_CASE`, and `restartsPaper = true` (then
   `restartPaper()` kills and boots that Paper).
 - Every body makes a positive check, or it fails as refused: a `within(n.ticks) { player sees ... }`
-  that holds, a `player.looksLike("name")` whose compare matched, the framework test kit's
-  `holds`/`lacks` state check, or `shouldThrow<WindowMissed>` (also `WorkHung`, `ClientLost`,
+  that holds, the framework test kit's `holds`/`lacks` state check, or `shouldThrow<WindowMissed>` (also `WorkHung`, `ClientLost`,
   `PaperLost`) for a framework outcome the requirement expects. A read after one check held is not
   caught, so assert every read.
-- When a body's only check is `looksLike`, add a window too: off the pinned renderer the golden is not
-  checked and proves nothing, so the body fails as refused there.
 - Set up the scene with `probe.*` and drive the player with its input (`typeInChat`, `press`,
   `click`, `aimAt`, `walkTo`); the window counts from the last of them.
 - When a player must leave and come back to the same Paper, call `player.quit()` and
@@ -101,10 +98,9 @@ expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
   unlisted(leaver)`), since a window, input or frame of the away player is refused.
 - When something must not happen, add a broad `player.never sees anyChat()` beside a positive check
   in the same window; a window of only `never` checks is refused.
-- When a still scene must look exact, use `looksLike`. A new or changed golden fails on the pinned
-  renderer until approved: `cargo xtask goldens approve` for a local Linux run, `cargo xtask goldens
-  approve --pr <n>` for the frames a pull request's CI run captured. A Mac reports goldens as not
-  checked.
+- When a reviewer should see how a scene looks, call `player.capture("name")` after a window that
+  held: the frame goes into the attempt's evidence and the pull request shows it. A screenshot never
+  decides pass or fail, so a capture is no positive check.
 - When a plugin keeps state per player, it resets that state on `PlayerWipeEvent`; a leak shows up as
   an unrelated requirement failing.
 - When the thing to prove is a harness flag or launch setting (a heap cap, a JVM option), write a unit

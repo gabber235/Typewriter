@@ -256,10 +256,16 @@ decided:
   - id: merge-before-cells
     what: >-
       the structural review chose owned cells with scripted time for the game harness (2026-11-27); this
-      pull request merges close to as it is, GOLDEN-2 and GOLDEN-3 are quarantined until the cells
-      work's settled frames step, and nothing more is built on what cells delete: pace and paced
-      attempts, Unsteady, the whole pool claim, memory admission, the two memory budget rules, shared
-      versus own Papers and the wipe. Review items on those go to the pull request's known issues
+      pull request merges close to as it is, and nothing more is built on what cells delete: pace and
+      paced attempts, Unsteady, the whole pool claim, memory admission, the two memory budget rules,
+      shared versus own Papers and the wipe. Review items on those go to the pull request's known issues
+  - id: screenshots-never-decide
+    what: >-
+      the maintainer chose (2026-11-28), replacing the quarantine of GOLDEN-2 and GOLDEN-3: screenshots
+      never decide pass or fail. The golden compare, its approval command, its storage and the pinned
+      renderer go; captured frames and clips are evidence the pull request shows for a reviewer. The
+      golden scenes stay as FRAME-1 to FRAME-5, each passing or failing on a window. Prompted by
+      GOLDEN-1 failing CI at the 50 ms pace with 29 of 409920 pixels off its golden
 
   - id: build-without-stack
     what: >-
@@ -267,14 +273,9 @@ decided:
       stack; values the stack publishes move from the build's inputs to the run's environment, which
       the pool fills in as each Paper boots; check builds gameTestBuild with no stack
 
-open:
-  - id: quarantine-entry
-    ask: >-
-      a quarantine entry names the issue that tracks its fix, but the repository has issues disabled;
-      what names GOLDEN-2's and GOLDEN-3's owner, date and cause hypothesis instead
+open: []
 
 slices: []
 
 next: >-
-  quarantine GOLDEN-2 and GOLDEN-3 once quarantine-entry is answered; a CI run with enforcement shows
-  every part within its limit and no kill, Gradle's test run measured against its 2048 MiB estimate
+  a CI run with enforcement shows every part within its limit and no kill, Gradle's test run measured against its 2048 MiB estimate

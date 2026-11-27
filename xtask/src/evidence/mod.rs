@@ -22,8 +22,7 @@ use crate::branch::{ATTEMPTS, BranchCheckout, REPOSITORY};
 use crate::docs::{PAGES, SITE};
 use crate::{CommandExt, Context};
 
-/// The orphan branch holding the images, one folder per pull request, and the approved golden
-/// images in `goldens/` (`cargo xtask goldens approve`).
+/// The orphan branch holding the images, one folder per pull request.
 pub(crate) const BRANCH: &str = "evidence";
 /// Where the runners write their `TestRun`s, relative to the repository root; CI downloads the
 /// other jobs' runs below it.

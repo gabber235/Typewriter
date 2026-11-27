@@ -1,7 +1,6 @@
 package com.typewritermc.playtest.client;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
 import build.skir.internal.MustNameArguments;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
-import skirout.harness.v1.golden.Renderer;
 import skirout.harness.v1.wire.Answer;
 import skirout.harness.v1.wire.ClientTask;
 import skirout.harness.v1.wire.Message;
@@ -19,7 +17,7 @@ import skirout.harness.v1.wire.Reply;
 
 /**
  * The frames a stepped client draws for real, and only these: for every watched entity a perceived
- * frame draws, the share of the frame it owns, the frame a golden asks for, and a clip's frames. For a share the client
+ * frame draws, the share of the frame it owns, a captured frame, and a clip's frames. For a share the client
  * draws once with every entity, then once without each watched entity the frame draws, and an entity
  * owns the pixels that show another colour without it. The perceive step's section compiles and
  * occlusion update run first, so every draw sees the same world. Render thread only.
@@ -81,16 +79,7 @@ final class Looks {
     private static void answerCapture(Pixels frame) {
         ClientTask.Capture asked = capture;
         capture = null;
-        var info = RenderSystem.getDevice().getDeviceInfo();
-        var renderer = new Renderer(
-                MustNameArguments.INSTANCE,
-                info.backendName(),
-                info.name(),
-                info.driverInfo(),
-                System.getProperty("os.name"),
-                System.getProperty("os.arch"),
-                null);
-        var answer = Answer.Companion.createCaptured(MustNameArguments.INSTANCE, renderer, writePng(frame, Path.of(asked.getPath())));
+        var answer = Answer.Companion.createCaptured(MustNameArguments.INSTANCE, writePng(frame, Path.of(asked.getPath())));
         PlaytestClient.send(new Message.ReplyWrapper(new Reply(MustNameArguments.INSTANCE, captureRequest, answer, null)));
     }
 

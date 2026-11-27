@@ -50,10 +50,6 @@ in
 
   env = {
     NATS_SERVER_BIN = "${pins.nats-server}/bin/nats-server";
-
-    # The Mesa release the game clients render with on Linux (the e2e profile's `pkgs.mesa`): the game
-    # framework pins goldens to it, so a nixpkgs Mesa upgrade asks for every golden again.
-    PLAYTEST_MESA = pkgs.mesa.version;
   };
 
   # The end to end suites on Linux (CI): `devenv --profile e2e shell`. The virtual display and
