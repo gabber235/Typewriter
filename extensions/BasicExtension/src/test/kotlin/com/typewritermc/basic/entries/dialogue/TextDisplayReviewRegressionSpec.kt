@@ -1,7 +1,8 @@
 package com.typewritermc.basic.entries.dialogue
 
 import com.typewritermc.basic.entries.dialogue.messengers.textdisplay.BedrockTimedTextDisplayDialogueDialogueMessenger
-import com.typewritermc.basic.entries.dialogue.messengers.textdisplay.JavaTextDisplayDialogueMessenger
+import com.typewritermc.basic.entries.dialogue.messengers.textdisplay.JavaTimedTextDisplayDialogueDialogueMessenger
+import com.typewritermc.basic.entries.dialogue.messengers.textdisplay.TextDisplayDialoguePlayback
 import com.typewritermc.basic.entries.dialogue.messengers.textdisplay.TextDisplayConfirmationInput
 import com.typewritermc.basic.entries.dialogue.messengers.textdisplay.TextDisplayDialogueDisplay
 import com.typewritermc.basic.entries.dialogue.messengers.textdisplay.TextDisplayOrientation
@@ -11,7 +12,9 @@ import com.typewritermc.core.utils.point.Position
 import com.typewritermc.engine.paper.entry.dialogue.MessengerState
 import com.typewritermc.engine.paper.entry.dialogue.TickContext
 import com.typewritermc.engine.paper.entry.entries.ConstVar
+import com.typewritermc.engine.paper.entry.entries.Var
 import com.typewritermc.engine.paper.interaction.Confirmation
+import com.typewritermc.engine.paper.snippets.SnippetDatabase
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -19,38 +22,54 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import org.bukkit.entity.Player
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 import java.time.Duration
 
 class TextDisplayReviewRegressionSpec : FunSpec({
+    beforeSpec {
+        val snippets = mockk<SnippetDatabase>(relaxed = true)
+        every { snippets.getSnippet(any(), String::class, any(), any()) } answers { thirdArg<String>() }
+        startKoin { modules(module { single<SnippetDatabase> { snippets } }) }
+    }
+
+    afterSpec { stopKoin() }
+
     test("a criteria change cannot confirm a replacement option") {
         val original = Option()
         val replacement = Option()
-        val messenger = ReviewMessenger(original)
         val display = mockk<TextDisplayDialogueDisplay>(relaxed = true)
-        every { display.invalid } returns false
-        every { display.finished } returns false
-        every { display.isClosing } returns false
+        val playback = TextDisplayDialoguePlayback(
+            mockk<Player>(), mockk<InteractionContext>(), ConstVar(Position.ORIGIN),
+            TextDisplayOrientation.BILLBOARD, "",
+        ) { display }
         val typewriter = mockk<TextDisplayTypewriter>()
         every { typewriter.render(any(), any(), any()) } returns null
-        messenger.setField("display", display)
-        messenger.setField("typewriter", typewriter)
-        messenger.setField("confirmation", mockk<Confirmation>(relaxed = true))
-        val input = messenger.getField("confirmed") as TextDisplayConfirmationInput
+        playback.setField("typewriter", typewriter)
+        playback.setField("confirmation", mockk<Confirmation>(relaxed = true))
+        val input = playback.getField("confirmed") as TextDisplayConfirmationInput
+        val tick = TickContext(Duration.ZERO, Duration.ofMillis(50))
+
         input.press(original)
-        messenger.nextSelection = replacement
-        messenger.tick(TickContext(Duration.ZERO, Duration.ofMillis(50)))
+        playback.tick(tick, target = replacement) shouldBe MessengerState.RUNNING
         verify(exactly = 0) { display.close() }
-        messenger.state shouldBe MessengerState.RUNNING
+
         input.press(replacement)
-        messenger.tick(TickContext(Duration.ZERO, Duration.ofMillis(50)))
+        playback.tick(tick, target = replacement)
         verify(exactly = 1) { display.close() }
     }
 
     test("completion immediately respects a disabled skip policy") {
-        val messenger = ReviewMessenger(Unit)
-        messenger.setField("animationDone", true)
+        val allowSkip = mockk<Var<Boolean>>()
+        val messenger = JavaTimedTextDisplayDialogueDialogueMessenger(
+            mockk<Player>(), mockk<InteractionContext>(), TimedTextDisplayDialogueEntry(allowSkip = allowSkip),
+        )
+        val playback = messenger.getField("playback") as TextDisplayDialoguePlayback
+        playback.setField("animationComplete", true)
+        every { allowSkip.get(any<Player>(), any<InteractionContext>()) } returns true
         messenger.animationComplete shouldBe true
-        messenger.allowed = false
+        every { allowSkip.get(any<Player>(), any<InteractionContext>()) } returns false
         messenger.animationComplete shouldBe false
     }
 
@@ -79,30 +98,9 @@ class TextDisplayReviewRegressionSpec : FunSpec({
     }
 })
 
-private class ReviewMessenger(override var confirmationTarget: Any?) :
-    JavaTextDisplayDialogueMessenger<SpokenTextDisplayDialogueEntry>(
-        mockk<Player>(), mockk<InteractionContext>(), SpokenTextDisplayDialogueEntry(), ConstVar(""),
-        ConstVar(Duration.ZERO), ConstVar(Position.ORIGIN), TextDisplayOrientation.BILLBOARD, "",
-    ) {
-    var nextSelection: Any? = confirmationTarget
-    var allowed = true
-    override val canConfirm: Boolean get() = allowed
-
-    override fun updateDialogue() {
-        confirmationTarget = nextSelection
-    }
-}
-
-private fun Any.getField(name: String): Any? {
-    val owner = if (this is ReviewMessenger) JavaTextDisplayDialogueMessenger::class.java else {
-        BedrockTimedTextDisplayDialogueDialogueMessenger::class.java
-    }
-    return owner.getDeclaredField(name).apply { isAccessible = true }.get(this)
-}
+private fun Any.getField(name: String): Any? =
+    javaClass.getDeclaredField(name).apply { isAccessible = true }.get(this)
 
 private fun Any.setField(name: String, value: Any) {
-    val owner = if (this is ReviewMessenger) JavaTextDisplayDialogueMessenger::class.java else {
-        BedrockTimedTextDisplayDialogueDialogueMessenger::class.java
-    }
-    owner.getDeclaredField(name).apply { isAccessible = true }.set(this, value)
+    javaClass.getDeclaredField(name).apply { isAccessible = true }.set(this, value)
 }

@@ -6,7 +6,12 @@ import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.asMiniWithResolvers
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
+import com.typewritermc.engine.paper.entry.dialogue.DialogueMessenger
+import com.typewritermc.engine.paper.entry.dialogue.TickContext
+import com.typewritermc.engine.paper.entry.dialogue.MessengerState
+import org.bukkit.event.EventHandler
 import org.bukkit.entity.Player
+import org.bukkit.event.player.PlayerRespawnEvent
 import java.time.Duration
 import kotlin.math.ceil
 
@@ -43,33 +48,48 @@ internal class JavaTimedTextDisplayDialogueDialogueMessenger(
     player: Player,
     context: InteractionContext,
     entry: TimedTextDisplayDialogueEntry,
-) : JavaTextDisplayDialogueMessenger<TimedTextDisplayDialogueEntry>(
-    player, context, entry, entry.text, entry.typingDuration, entry.origin, entry.orientation,
-    timedTextDisplayFormat,
-) {
-    override val canConfirm: Boolean get() = entry.allowSkip.get(player, context)
-    override val autoContinue: Boolean get() = true
-    override var completionTime: Duration = Duration.ZERO
-        private set
+) : DialogueMessenger<TimedTextDisplayDialogueEntry>(player, context, entry) {
+    private val playback = TextDisplayDialoguePlayback(player, context, entry.origin, entry.orientation, timedTextDisplayFormat)
+
+    override var animationComplete: Boolean
+        get() = entry.allowSkip.get(player, context) && playback.animationComplete
+        set(value) = playback.requestAnimationCompletion(value)
+
+    @EventHandler
+    private fun onPlayerRespawn(event: PlayerRespawnEvent) {
+        if (event.player.uniqueId == player.uniqueId) playback.playerRespawned()
+    }
+
+    override fun dispose() {
+        super.dispose()
+        playback.dispose()
+    }
+
+    private var completionTime: Duration = Duration.ZERO
     private var lastTypingPhase = true
     private var lastRemainingSeconds = -1
     private var lastCanSkip = false
 
-    override val animationEnd: Duration get() = typingDuration
-
-    override fun prepareDialogue(): Boolean {
-        completionTime = typingDuration + entry.waitDuration.get(player, context).coerceAtLeast(Duration.ZERO)
-        return true
+    override fun init() {
+        super.init()
+        playback.prepare(entry.text.get(player, context), entry.typingDuration.get(player, context))
+        completionTime = playback.typingDuration + entry.waitDuration.get(player, context).coerceAtLeast(Duration.ZERO)
+        val canSkip = entry.allowSkip.get(player, context)
+        refreshInstruction(canSkip)
+        state = playback.spawn(entry.id, canSkip, playback.typingDuration)
     }
 
-    override fun updateDialogue() {
-        refreshInstruction()
+    override fun tick(context: TickContext) {
+        if (state != MessengerState.RUNNING) return
+        val canSkip = entry.allowSkip.get(player, this.context)
+        state = playback.tick(context, canConfirm = canSkip, autoContinueAt = completionTime) {
+            refreshInstruction(canSkip)
+        }
     }
 
-    private fun refreshInstruction() {
-        val typingPhase = playedTime < typingDuration
+    private fun refreshInstruction(canSkip: Boolean) {
+        val typingPhase = playback.playedTime < playback.typingDuration
         val remainingSeconds = if (typingPhase) -1 else remainingSeconds()
-        val canSkip = canConfirm
         if (typingPhase == lastTypingPhase &&
             remainingSeconds == lastRemainingSeconds &&
             canSkip == lastCanSkip
@@ -80,11 +100,11 @@ internal class JavaTimedTextDisplayDialogueDialogueMessenger(
         lastTypingPhase = typingPhase
         lastRemainingSeconds = remainingSeconds
         lastCanSkip = canSkip
-        display?.setInstruction(instruction(typingPhase, remainingSeconds, canSkip))
+        playback.display.setInstruction(instruction(typingPhase, remainingSeconds, canSkip))
     }
 
     private fun remainingSeconds(): Int {
-        val remainingMillis = (completionTime - playedTime).toMillis().coerceAtLeast(0)
+        val remainingMillis = (completionTime - playback.playedTime).toMillis().coerceAtLeast(0)
         return ceil(remainingMillis / 1000.0).toInt()
     }
 

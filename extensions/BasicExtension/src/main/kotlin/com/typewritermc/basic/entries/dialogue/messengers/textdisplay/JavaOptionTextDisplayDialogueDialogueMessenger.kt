@@ -17,7 +17,10 @@ import com.typewritermc.engine.paper.utils.lineCount
 import com.typewritermc.engine.paper.utils.stripped
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
+import com.typewritermc.engine.paper.entry.dialogue.DialogueMessenger
+import com.typewritermc.engine.paper.entry.dialogue.TickContext
 import org.bukkit.entity.Player
+import org.bukkit.event.player.PlayerRespawnEvent
 import org.bukkit.event.EventHandler
 import org.bukkit.event.player.PlayerItemHeldEvent
 import com.typewritermc.engine.paper.entry.dialogue.MessengerState
@@ -56,18 +59,30 @@ internal class JavaOptionTextDisplayDialogueDialogueMessenger(
     player: Player,
     context: InteractionContext,
     entry: OptionTextDisplayDialogueEntry,
-) : JavaTextDisplayDialogueMessenger<OptionTextDisplayDialogueEntry>(
-    player, context, entry, entry.text, entry.duration, entry.origin, entry.orientation,
-    optionTextDisplayFormat,
-) {
+) : DialogueMessenger<OptionTextDisplayDialogueEntry>(player, context, entry) {
+    private val playback = TextDisplayDialoguePlayback(player, context, entry.origin, entry.orientation, optionTextDisplayFormat)
+
+    override var animationComplete: Boolean
+        get() = playback.animationComplete
+        set(value) = playback.requestAnimationCompletion(value)
+
+    @EventHandler
+    private fun onPlayerRespawn(event: PlayerRespawnEvent) {
+        if (event.player.uniqueId == player.uniqueId) playback.playerRespawned()
+    }
+
+    override fun dispose() {
+        acceptingScroll = false
+        super.dispose()
+        playback.dispose()
+    }
+
     private val scrolledSlots = AtomicInteger()
     @Volatile
     private var acceptingScroll = false
     @Volatile
-    override var confirmationTarget: Any? = null
-        private set
-    override var completionTime: Duration = Duration.ZERO
-        private set
+    private var confirmationTarget: Option? = null
+    private var completionTime: Duration = Duration.ZERO
     private var usableOptions: List<Option> = emptyList()
     private val hasOptionCriteria = entry.options.any { it.criteria.isNotEmpty() }
     private var selectedIndex = 0
@@ -86,17 +101,22 @@ internal class JavaOptionTextDisplayDialogueDialogueMessenger(
     override val modifiers: List<Modifier>
         get() = entry.modifiers + (selected?.modifiers ?: emptyList())
 
-    override fun prepareDialogue(): Boolean {
+    override fun init() {
+        super.init()
+        playback.prepare(entry.text.get(player, context), entry.duration.get(player, context))
         usableOptions = entry.options.filter { it.criteria.matches(player, context) }
         if (usableOptions.isEmpty()) {
             state = MessengerState.FINISHED
-            return false
+            return
         }
         selectedIndex = 0
         updateTotalDuration()
         updateOptionLines()
-        acceptingScroll = true
-        return true
+        playback.display.setInstruction(optionTextDisplayInstruction.asMiniWithResolvers(player))
+        refreshDisplayedOptions()
+        confirmationTarget = selected
+        state = playback.spawn(entry.id, canConfirm = true, animationEnd = completionTime) { confirmationTarget }
+        acceptingScroll = state == MessengerState.RUNNING
     }
 
     @EventHandler
@@ -106,13 +126,30 @@ internal class JavaOptionTextDisplayDialogueDialogueMessenger(
         scrolledSlots.addAndGet(loopingDistance(event.previousSlot, event.newSlot, 8))
     }
 
-    override fun prepareDisplay(display: TextDisplayDialogueDisplay) {
-        display.setInstruction(optionTextDisplayInstruction.asMiniWithResolvers(player))
+    override fun tick(context: TickContext) {
+        if (state != MessengerState.RUNNING) return
+        if (!playback.display.isClosing) {
+            refreshOptions()
+            if (state != MessengerState.RUNNING) {
+                acceptingScroll = false
+                confirmationTarget = null
+                return
+            }
+            applyScroll()
+        }
+        state = playback.tick(
+            context,
+            animationEnd = completionTime,
+            target = selected,
+            readTarget = { confirmationTarget },
+        ) {
+            refreshDisplayedOptions()
+        }
+        acceptingScroll = state == MessengerState.RUNNING && !playback.display.isClosing
+        confirmationTarget = if (acceptingScroll) selected else null
     }
 
-    override fun updateDialogue() {
-        refreshOptions()
-        if (state != MessengerState.RUNNING) return
+    private fun applyScroll() {
         val distance = scrolledSlots.getAndSet(0)
         if (distance != 0) {
             val index = (selectedIndex + distance).mod(usableOptions.size)
@@ -121,12 +158,6 @@ internal class JavaOptionTextDisplayDialogueDialogueMessenger(
                 lastShowingOptions = -1
             }
         }
-        refreshDisplayedOptions()
-        confirmationTarget = selected
-    }
-
-    override fun stopInput() {
-        acceptingScroll = false
     }
 
     private fun refreshOptions() {
@@ -149,14 +180,14 @@ internal class JavaOptionTextDisplayDialogueDialogueMessenger(
         val optionsDuration = Duration.ofMillis(
             visibleOptionCount() * textDisplayOptionDelay.coerceAtLeast(0).toLong(),
         )
-        completionTime = typingDuration + optionsDuration
+        completionTime = playback.typingDuration + optionsDuration
     }
 
     private fun refreshDisplayedOptions() {
         val showingOptions = showingOptions()
         if (showingOptions == lastShowingOptions) return
         lastShowingOptions = showingOptions
-        display?.setOptions(options(showingOptions), visibleOptionCount(), selectedSlot(), optionLines)
+        playback.display.setOptions(options(showingOptions), visibleOptionCount(), selectedSlot(), optionLines)
     }
 
     private fun selectedSlot(): Int = usableOptions.around(selectedIndex, 1, 2).indexOf(selected)
@@ -169,9 +200,9 @@ internal class JavaOptionTextDisplayDialogueDialogueMessenger(
     }
 
     private fun showingOptions(): Int {
-        if (playedTime < typingDuration) return 0
+        if (playback.playedTime < playback.typingDuration) return 0
         if (textDisplayOptionDelay <= 0) return visibleOptionCount()
-        val timeAfterTyping = (playedTime - typingDuration).toMillis().coerceAtLeast(0)
+        val timeAfterTyping = (playback.playedTime - playback.typingDuration).toMillis().coerceAtLeast(0)
         return (timeAfterTyping / textDisplayOptionDelay).toInt()
             .coerceIn(0, visibleOptionCount())
     }
