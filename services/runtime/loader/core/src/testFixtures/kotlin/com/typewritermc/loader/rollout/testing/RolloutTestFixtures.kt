@@ -19,11 +19,15 @@ import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.loader.rollout.RolloutMessenger
 import com.typewritermc.loader.rollout.commandKind
 import com.typewritermc.loader.rollout.projectionOf
+import com.typewritermc.loader.rollout.serviceIds
 import com.typewritermc.loader.rollout.toSkir
 import com.typewritermc.loader.testing.FIXTURE_VERSION
 import com.typewritermc.loader.testing.deploymentArtifact
 import com.typewritermc.loader.testing.engineManifest
 import com.typewritermc.services.libs.registrar.ServiceId
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import skirout.service.v1.rollout.ActiveProjection
 import skirout.service.v1.rollout.ApplyRolloutCommandRequest
@@ -60,7 +64,7 @@ class FakeRolloutHost(
     /** The projection the host runs, which it reports with its presence. */
     var activeProjection: ActiveProjection? = null
 
-    /** Whether the host answers discovery; a host that stopped answers nothing. */
+    /** Whether the host answers; a host that stopped (left the Realm, crashed, lost its connection) answers nothing. */
     var responding = true
 
     /** Whether the host rejects commits after applying them, as a host whose activation failed does. */
@@ -83,6 +87,10 @@ class FakeRolloutHost(
         request: ApplyRolloutCommandRequest,
         timeout: Duration,
     ): List<ApplyRolloutCommandResponse> {
+        if (!responding) {
+            delay(timeout)
+            return emptyList()
+        }
         commands += request
         delay(commandDuration)
         val phase =
@@ -128,17 +136,48 @@ class FakeRolloutHost(
         timeout: Duration,
     ): Map<ServiceId, ParticipantStatus> {
         val current = status ?: return emptyMap()
-        return if (answersStatus(current)) mapOf(id to current) else emptyMap()
+        return if (responding && answersStatus(current)) mapOf(id to current) else emptyMap()
     }
 }
 
-/** A coordinated rollout of [snapshot] for Realm `realm` whose only reachable participant is [host]. */
+/**
+ * Several hosts of one Realm behind one messenger, as the coordinator reaches them: every responding host answers
+ * presence and status, and a command reaches only the hosts it lists.
+ */
+class FakeRealmHosts(
+    private val hosts: List<FakeRolloutHost>,
+) : RolloutMessenger {
+    override suspend fun discover(
+        expected: Set<ServiceId>,
+        timeout: Duration,
+    ): List<RealmHostPresence> = hosts.flatMap { it.discover(expected, timeout) }
+
+    override suspend fun command(
+        request: ApplyRolloutCommandRequest,
+        timeout: Duration,
+    ): List<ApplyRolloutCommandResponse> {
+        val listed = hosts.filter { it.id.value in request.command.serviceIds }
+        return coroutineScope { listed.map { async { it.command(request, timeout) } }.awaitAll().flatten() }
+    }
+
+    override suspend fun statuses(
+        request: QueryParticipantStatusRequest,
+        expected: Set<ServiceId>,
+        timeout: Duration,
+    ): Map<ServiceId, ParticipantStatus> = hosts.fold(emptyMap()) { all, host -> all + host.statuses(request, expected, timeout) }
+}
+
+/**
+ * A coordinated rollout of [snapshot] for Realm `realm`, reaching its hosts through [messenger]; by default [host] is
+ * the only reachable participant.
+ */
 class RolloutFixture(
     val host: FakeRolloutHost,
     selection: RealmDeploymentSelection = RealmDeploymentSelection(host.id, setOf(host.id), mapOf(host.id to FIXTURE_VERSION)),
     participantDeadline: Duration = 1.seconds,
     healthyDuration: Duration = Duration.ZERO,
     timeSource: TimeSource = TimeSource.Monotonic,
+    messenger: RolloutMessenger = host,
 ) {
     private val root = Files.createTempDirectory("typewriter-rollout")
     val state = FileRolloutStateRepository(RealmId("realm"), root)
@@ -149,7 +188,7 @@ class RolloutFixture(
             RealmId("realm"),
             selection,
             deploymentManifests(),
-            host,
+            messenger,
             projections,
             state,
             requestTimeout = 1.seconds,

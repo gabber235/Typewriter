@@ -1,0 +1,70 @@
+# docs/drive/rollout-drops-leaving-hosts/record.yaml: the working state of one piece of work.
+goal: >
+  A host that leaves or stops answering is dropped from the running rollout and picks up the current projection when
+  it comes back; it never blocks the other hosts.
+
+pieces:
+  - id: membership
+    status: figuring-out
+    open: which signal says a host is a member of the Realm right now
+    tries:
+      - id: presence-probe
+        what: the rollout presence probe the coordinator already sends, read on every pass; absent means not a member
+        taught: >
+          it is the only live membership signal on features/v1; a false drop costs no correctness because the
+          coordinator acts on each host's observed phase, a dropped host that answers again is simply a member again
+        state: working
+        evidence: [services/runtime/loader/core/src/main/kotlin/com/typewritermc/loader/rollout/RolloutCommunication.kt:38]
+      - id: backend-service-liveness
+        what: the backend service state (online, offline, last_seen) written by heartbeat and orderly shutdown
+        taught: offline only on orderly shutdown; nothing expires a silent host; no Realm host reads it
+        state: dropped
+        why: a crashed host stays online forever
+        evidence: [backend/service/service-registration/src/shutdown.rs:23, services/sdk/service-sdk/src/main/kotlin/com/typewritermc/services/libs/registrar/RegistrarConfiguration.kt:25]
+      - id: leased-presence-rows
+        what: hosts hold a leased presence row (generic Leases of PR 585, collaboration decision 16)
+        taught: right long term form (clean leave is instant, a crash expires at the lease time), but PR 585 is unmerged and decision 16 is a later direction needing its own design check
+        state: trying
+  - id: rollout-shape
+    status: figuring-out
+    open: whether one serialized loop per Realm stays, or each member converges on its own toward the Realm target
+    tries:
+      - id: reproduce-block
+        what: two hosts, the Paper host stops answering once it runs the new projection
+        taught: >
+          stability proof waits out the participant deadline (CoordinatedRollout.kt:268), then compensation rolls the
+          healthy Realm host back too and waits out a second deadline for the gone host (CoordinatedRollout.kt:282),
+          whose timeout replaces the original failure; a joiner waits for the whole pass because rollOut and
+          reconcileCommitted run inside one serial loop (ArtifactHost.kt:376)
+        state: working
+        evidence: ["CoordinatedRolloutTest: a primary engine host that leaves while the rollout proves stability does not hold back the Realm host (fails: Timed out waiting for rollout participants.)"]
+      - id: target-and-member-convergence
+        what: >
+          the Realm keeps a target (committed, or a candidate being proved); every member that answers the probe gets
+          its own convergence toward its projection of the target; a candidate commits when every current member ran
+          it healthy for the last 30 s, and reverts the target on a member failure; join, reconcile and rollback are
+          all convergence
+        state: trying
+      - id: drop-leavers-in-serial-loop
+        what: keep the serial loop, re-probe presence on each status poll and leave absent hosts out of awaits and compensation
+        taught: small, but a joiner still waits behind the running rollout and reconcile and rollback stay separate paths
+        state: trying
+
+decided:
+  - id: leavers-dropped
+    what: >
+      A host that leaves or stops answering is dropped from the running rollout and picks up the current projection
+      when it comes back; it never blocks the other hosts. Its own PR, merged before 587.
+
+open:
+  - id: shape
+    ask: target with per member convergence, or drop leavers inside the serial loop
+  - id: joiner-target
+    ask: a host joining while a candidate is proved gets the candidate, or the committed deployment
+  - id: membership-source
+    ask: presence probe now (leased presence later replaces it), or pull leased presence forward first
+
+slices: []
+
+next: wait for the orchestrator's answers on shape, joiner target and membership source, then build test first
+

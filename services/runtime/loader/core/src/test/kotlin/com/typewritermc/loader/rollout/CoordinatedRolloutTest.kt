@@ -1,9 +1,11 @@
 package com.typewritermc.loader.rollout
 
 import com.typewritermc.loader.api.RuntimePlacement
+import com.typewritermc.loader.rollout.testing.FakeRealmHosts
 import com.typewritermc.loader.rollout.testing.FakeRolloutHost
 import com.typewritermc.loader.rollout.testing.RolloutFixture
 import com.typewritermc.loader.rollout.testing.presence
+import com.typewritermc.loader.rollout.testing.projectionFor
 import com.typewritermc.loader.rollout.testing.rollsOutTheRealmAndPanelOnly
 import com.typewritermc.loader.testing.FIXTURE_VERSION
 import com.typewritermc.loader.testing.activeProjection
@@ -21,6 +23,7 @@ import skirout.service.v1.rollout.RolloutCommand
 import skirout.service.v1.rollout.RolloutCommandKind
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
 
@@ -140,6 +143,40 @@ val CoordinatedRolloutTest by testSuite {
 
             host.commands.shouldBeEmpty()
             fixture.state.committed() shouldBe committed
+        }
+    }
+
+    test("a primary engine host that leaves while the rollout proves stability does not hold back the Realm host") {
+        runTest {
+            val realmHost = FakeRolloutHost(ServiceId("realm-service"), realmAndPanel)
+            val leaver =
+                FakeRolloutHost(ServiceId("paper"), setOf(RuntimePlacement.PRIMARY_ENGINE)).apply {
+                    // The Paper server restarts as soon as it runs the new projection.
+                    answersStatus = { status ->
+                        responding = status.phase !is ParticipantPhase.ActiveWrapper
+                        responding
+                    }
+                }
+            val hosts = FakeRealmHosts(listOf(realmHost, leaver))
+            val selection =
+                requireNotNull(
+                    listOf(presence(realmHost.id, realmAndPanel), presence(leaver.id, setOf(RuntimePlacement.PRIMARY_ENGINE)))
+                        .deploymentSelectionOrNull(),
+                )
+            val fixture =
+                RolloutFixture(
+                    realmHost,
+                    selection,
+                    participantDeadline = 5.minutes,
+                    healthyDuration = 30.seconds,
+                    timeSource = testScheduler.timeSource,
+                    messenger = hosts,
+                )
+
+            fixture.rollout.rollOut(fixture.snapshot)
+
+            fixture.state.committed()?.snapshot shouldBe fixture.snapshot
+            realmHost.activeProjection?.projection shouldBe realmHost.commands.first().projectionFor(realmHost.id)
         }
     }
 
