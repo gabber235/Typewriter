@@ -2,6 +2,7 @@ package com.typewritermc.services.libs.registrar.runtime
 
 import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.protocol.skir.fromBoundedBytes
+import com.typewritermc.services.libs.http.core.HttpLimits
 import com.typewritermc.services.libs.http.core.HttpMethod
 import com.typewritermc.services.libs.http.core.HttpOperation
 import com.typewritermc.services.libs.http.core.HttpRequest
@@ -61,12 +62,11 @@ class TypewriterSentinelProvider(
         val result =
             client.execute(
                 HttpRequest(
-                    HttpOperation("registrar.sentinel.get"),
-                    ErrorSlug.of("sentinel-get-failed"),
+                    HttpOperation("registrar.sentinel.get", ErrorSlug.of("sentinel-get-failed")),
                     HttpMethod.GET,
                     uri,
                     skirGetHeaders,
-                    maximumResponseBytes = MAXIMUM_SKIR_BODY,
+                    limits = HttpLimits(maximumResponseBytes = MAXIMUM_SKIR_BODY),
                 ),
             )
         if (result is HttpResult.Failure) return unavailable()

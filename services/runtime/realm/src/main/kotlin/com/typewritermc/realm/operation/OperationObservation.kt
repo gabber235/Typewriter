@@ -14,12 +14,19 @@ internal class StaleOperationObservation(
     val actual: String,
 ) : IllegalStateException("The saved authoring observation changed")
 
-/** Materializes one caller owned working baseline while the saved view's catalog remains leased. */
-internal fun AuthoringLease.operationObservation(
-    confirmedObservation: String,
-    upserts: Map<ResourceId, AuthoringRecord>,
-    removals: Set<ResourceId>,
-): AuthoringView {
+/**
+ * A caller's working observation: the saved observation it [confirmed], plus the unsaved [upserts] and [removals] it
+ * overlays on it.
+ */
+internal data class WorkingObservation(
+    val confirmed: String,
+    val upserts: Map<ResourceId, AuthoringRecord> = emptyMap(),
+    val removals: Set<ResourceId> = emptySet(),
+)
+
+/** Materializes the caller's [working] baseline while the saved view's catalog remains leased. */
+internal fun AuthoringLease.operationObservation(working: WorkingObservation): AuthoringView {
+    val (confirmedObservation, upserts, removals) = working
     if (confirmedObservation != root.observationId) throw StaleOperationObservation(root.observationId)
     require(upserts.size + removals.size <= 100_000) { "The operation overlay is too large" }
     require(upserts.keys.intersect(removals).isEmpty()) { "An overlay cannot replace and remove the same resource" }

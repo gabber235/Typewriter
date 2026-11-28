@@ -148,13 +148,31 @@ never waits for wall clock timers ([n-stepped-ticks.md](spikes/n-stepped-ticks.m
 
 - **Counted work.** A plugin counts work it starts for a player through `PlayerWork`. The step waits
   while it runs; work past 1 s fails its attempt as hung, is never cancelled, and keeps its player out
-  of the pool until it ends. Paper's async chat and command suggestions count as their player's work.
+  of the pool until it ends. Work that ends without its effect (an outbound operation that failed)
+  fails its attempt as `WorkFailed`, naming the work and its cause; a requirement that causes the fault
+  on purpose expects that failure where it causes it. Paper's async chat and command suggestions count
+  as their player's work. Work for no player in particular counts for every claimed player.
+- **Typewriter's work counts by construction.** Every engine task runs on its deployment's one
+  dispatcher, which counts it from its dispatch until it ran, and every outbound operation goes
+  through the host, which counts it until its result is back with its caller. The loader counts its
+  own work the same way, as the host's work of no runtime: its tasks on the host's counted scope,
+  its file operations on the host's counted io, its own messaging through counted sessions; a thread
+  blocked on an outside event (a file watch) counts nothing. The host's `InFlightWork` is a Bukkit
+  service; the test only `PlaytestTypewriter` plugin counts each item as
+  `PlayerWork` for the Minecraft players among its subjects. No call site opts in, so new engine code
+  cannot forget; a detekt rule (`config/detekt/concurrency.yml`) keeps engine and loader code off
+  other threads and makes every wall clock or callback wait name why it holds no tick.
+- **Expected facts.** An attempt about to cause a change outside Paper (content it writes) calls
+  `expectFact` first; its players' ticks wait until a plugin on Paper reports the fact through
+  `PlayerWork.factHappened`. A fact no plugin reports within 1 s is hung work named after it.
 - **Input.** An input starts right after a tick; the client's ack waits until the game took every
   event it queued, so its packets reach Paper first. Typing sends one key per tick, as a person does.
 - **Lost clients.** A client that does not ack for 5 s is lost: its attempt fails and the pool boots a
   replacement under the same name. A client that crashes or drops while its player is away is lost
   the same way; the intended leave of a quit is not.
-- **Away players.** Paper holds back no tick for a player that quit, as for any player that left.
+- **Away players.** Nothing waits for the client of a player that quit, as for any player that left,
+  but it stays claimed until its attempt releases it: work counted for it while it is away, its
+  rejoin's included, still holds the ticks.
 
 All requirements share one stepped Paper ([p1-topology.md](spikes/p1-topology.md)): a Paper per
 attempt was 41 to 777 percent slower once groups or restarts appear. The cost is that one attempt's
@@ -337,12 +355,12 @@ lives in the design doc of the layer that owns it; this list only points there.
 | The engine reads time from one clock source: the system clock in production, a clock the stepped test moves 50 ms per permitted tick (`StepPolicy`) | [interactions.md](../interactions.md#steps) |
 | The realm purges every stored value of a subject in one operation | [stored-data.md](../stored-data.md#purging-a-subject) |
 | The realm's clock is given to it, and a test can advance it past a `Due` | [stored-data.md](../stored-data.md#due) |
-| Engine and realm report, per subject, whether chains or transactions are still busy (the done hook) | [events-and-handlers.md](../events-and-handlers.md#busy-per-subject), [stored-data.md](../stored-data.md#who-waits-for-a-commit) |
+| Engine and realm report, per subject, whether chains or transactions are still busy (the done hook): the engine through its counted dispatcher and host transport, the realm by counting before it acknowledges | [events-and-handlers.md](../events-and-handlers.md#busy-per-subject), [stored-data.md](../stored-data.md#who-waits-for-a-commit) |
 | The Paper engine clears its live state and asks for the purge on `PlayerWipeEvent` | [live-data.md](../live-data.md#wiping-a-protagonist) |
 | Effects reach the player through the owner thread | [events-and-handlers.md](../events-and-handlers.md#busy-per-subject) (open against chat from the worker) |
 
-Open: whether the done signal needs a test side hook as well as Paper's `PlayerWork`, decided with
-layers 3 and 6.
+The test side hook the done signal needed is the expected fact: the attempt opens a hold before it
+causes a change outside Paper, and the engine's report of the fact closes it (2026-11-24).
 
 ## Decisions from the developer
 
@@ -566,6 +584,20 @@ Dated decisions, oldest first. The sections above describe what they add up to.
 - **Every game Paper loads Typewriter** (2026-11-20): the union of module additions reaches every
   Paper, so the framework's own requirements also run beside the stack and the loader, and run only
   through `cargo xtask e2e game`. Accepted as the cost of one shared pool.
+- **Engine work holds ticks by construction** (2026-11-24). The engine's one dispatcher and the
+  host's one transport count all in flight work; per call site counting missed session writes,
+  publication applies and the join path. The count lives in production as the host's
+  `InFlightWork`: the artifact host exports it as the gauge `typewriter.work.in_flight` and drains
+  it, for at most `TYPEWRITER_WORK_DRAIN` (10 s by default): all of it before it closes its
+  runtimes, and before a rollout activates a candidate only the work of the runtimes that leave,
+  since each runtime counts through its own view and every item names its runtime. Either drain
+  logs what still runs when the bound runs out. It costs
+  one insert into and one removal from a concurrent set per task and per outbound call; observers
+  attach any time and hear item events only while attached. A stepped Paper reports hung work with
+  one watchdog that wakes at the deadline of the oldest open work. Failed outbound work fails the attempt as `WorkFailed`. An away
+  player stays claimed for its work. A test opens an expected fact hold for a change it causes
+  outside Paper. Across processes the rule is count before ack: a receiver counts before it
+  acknowledges and the sender until the ack, built with the realm's transactions.
 
 ## The prototype search
 

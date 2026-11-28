@@ -128,17 +128,25 @@ internal class PoolSession private constructor(
     override fun nextBarrier(): Int = barriers.incrementAndGet()
 
     /**
-     * One attempt of a requirement to run: [bodies] in order on [players] players, on a Paper of its own
-     * with [restartsPaper]. A [demo] runs after the requirement's last attempt with its clients recording
+     * What an attempt claims from the pool: [players] players, and with [restartsPaper] a Paper of its own
+     * that it may restart.
+     */
+    class Claim(
+        val players: Int,
+        val restartsPaper: Boolean = false,
+    )
+
+    /**
+     * One attempt of a requirement to run, reported as case [testId] of [requirement]: [bodies] in order
+     * on what it [claim]s. A [demo] runs after the requirement's last attempt with its clients recording
      * clips, and lands in the case's demo.
      */
     class Planned(
         val testId: String,
         val requirement: String,
-        val players: Int,
         val demonstrates: Demonstrates,
+        val claim: Claim,
         val bodies: List<suspend RequirementScope.() -> Unit>,
-        val restartsPaper: Boolean = false,
         val demo: Boolean = false,
     )
 
@@ -161,7 +169,10 @@ internal class PoolSession private constructor(
      */
     suspend fun sideBySide(planned: List<Planned>): List<AttemptEnd> {
         val leasings =
-            planned.map { SubmissionId(submissions.incrementAndGet()) to Leasing(RequirementCode.of(it.bodies.first()), it.restartsPaper) }
+            planned.map {
+                SubmissionId(submissions.incrementAndGet()) to
+                    Leasing(RequirementCode.of(it.bodies.first()), it.claim.restartsPaper)
+            }
         for ((submission, leasing) in leasings) {
             leases[submission] = leasing
             broken?.let(leasing.attempt::completeExceptionally)
@@ -175,9 +186,9 @@ internal class PoolSession private constructor(
                                 submission = submission.value,
                                 testId = it.testId,
                                 requirement = it.requirement,
-                                players = it.players,
+                                players = it.claim.players,
                                 demonstrates = it.demonstrates,
-                                restartsPaper = it.restartsPaper,
+                                restartsPaper = it.claim.restartsPaper,
                                 demo = it.demo,
                             )
                         },
@@ -359,6 +370,15 @@ internal class PoolSession private constructor(
         return marks.marked
     }
 
+    /** The ticks of [players] wait from now until a plugin on Paper reports [fact]; returns at once. */
+    override suspend fun expect(
+        players: List<GamePlayer>,
+        fact: String,
+    ) {
+        val answer = request<Answer>(Ask.PaperWrapper(PaperAsk.createExpect(players = players.map { it.uuid.toString() }, fact = fact)))
+        if (answer != Answer.EXPECTING) throw GameUnavailable("the game answered an expected fact with ${answer.kind}")
+    }
+
     /** Paper runs [action] for [players]; returns, once each of their clients holds its effect, the tick after which it ran. */
     override suspend fun probe(
         players: List<GamePlayer>,
@@ -520,6 +540,13 @@ internal class PoolSession private constructor(
                     Attempt.Event.Failed(player, WorkHung(player.name, happened.value.work, happened.value.beganAfter))
                 }
 
+                is PlayerEvent.Happened.WorkFailedWrapper -> {
+                    Attempt.Event.Failed(
+                        player,
+                        WorkFailed(player.name, happened.value.work, happened.value.beganAfter, happened.value.cause),
+                    )
+                }
+
                 is PlayerEvent.Happened.ClientLostWrapper -> {
                     Attempt.Event.Failed(player, ClientLost(player.name, happened.value))
                 }
@@ -555,10 +582,12 @@ internal class PoolSession private constructor(
         val attempt =
             Attempt(
                 this,
-                SubmissionId(lease.submission),
-                lease.players.map { GamePlayer(it.name, UUID.fromString(it.uuid)) },
-                lease.region,
-                lease.paper,
+                AttemptLease(
+                    SubmissionId(lease.submission),
+                    lease.players.map { GamePlayer(it.name, UUID.fromString(it.uuid)) },
+                    lease.region,
+                    lease.paper,
+                ),
                 leasing.requirementCode,
                 leasing.restartsPaper,
             )

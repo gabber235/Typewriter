@@ -34,7 +34,7 @@ fun deliverRolloutReply(
     TransportDelivery.Message(
         InboundMessage(
             replyTo,
-            scope.rolloutCommand.responseCodec
+            scope.rolloutCommand.replies.codec
                 .encode(response)
                 .toByteArray(),
         ),

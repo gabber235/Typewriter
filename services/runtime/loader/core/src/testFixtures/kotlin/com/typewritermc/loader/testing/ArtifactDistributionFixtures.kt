@@ -11,6 +11,8 @@ import com.typewritermc.loader.api.artifact.PublishSharedArtifact
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
+import com.typewritermc.loader.artifact.ArtifactInboxReconciler
+import com.typewritermc.loader.artifact.CandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
@@ -20,6 +22,7 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.registrar.ServiceId
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.Dispatchers
 import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
 import skirout.service.v1.rollout.ActiveProjection
@@ -32,6 +35,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlin.time.Duration
 
 fun record(
     table: String,
@@ -65,6 +69,12 @@ fun status(
 fun active(reference: ProjectionReference) =
     ParticipantPhase.createActive(current = ActiveProjection(projection = reference, health = ProjectionHealth.HEALTHY), retained = null)
 
+/** An inbox reconciler over a fresh blob store at [root] that imports what it sees on its first pass. */
+fun inboxReconciler(
+    root: Path,
+    candidates: CandidateRepository,
+) = ArtifactInboxReconciler(root, FileDigestBlobStore(root, io = Dispatchers.IO), candidates, Duration.ZERO)
+
 fun realmManifest() =
     RealmManifest(
         id = ArtifactId("typewritermc:realm"),
@@ -79,7 +89,7 @@ suspend fun sharedPublication() = SharedPublicationFixture().also { it.storeCont
 
 class SharedPublicationFixture {
     private val root = Files.createTempDirectory("typewriter-shared")
-    private val blobs = FileDigestBlobStore(root)
+    private val blobs = FileDigestBlobStore(root, io = Dispatchers.IO)
     val service = SharedArtifactService("realm", blobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
     private val bytes = "road network".encodeToByteArray()
     val command =

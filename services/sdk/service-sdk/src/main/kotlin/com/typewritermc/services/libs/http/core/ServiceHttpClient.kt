@@ -32,12 +32,17 @@ class ServiceHttpClient(
                 .put("server.address", request.uri.host)
                 .put("http.request.body.size", bodySize)
                 .put("service.operation", request.operation.value)
-                .apply { request.timeout?.let { put("http.request.timeout_ms", it.inWholeMilliseconds) } }
+                .apply { request.limits.timeout?.let { put("http.request.timeout_ms", it.inWholeMilliseconds) } }
                 .build()
-        return telemetry.mainSpan(request.operation.value, request.failureSlug, SpanKind.CLIENT, attributes = attributes) { span ->
+        return telemetry.mainSpan(
+            request.operation.value,
+            request.operation.failureSlug,
+            SpanKind.CLIENT,
+            attributes = attributes,
+        ) { span ->
             try {
                 val result =
-                    request.maximumRequestBytes?.takeIf { bodySize > it }?.let {
+                    request.limits.maximumRequestBytes?.takeIf { bodySize > it }?.let {
                         HttpResult.Failure(HttpError.RequestTooLarge(it, bodySize))
                     } ?: transport.execute(propagatedRequest(request, body))
                 span.annotate {
@@ -82,14 +87,11 @@ class ServiceHttpClient(
         propagators.textMapPropagator.inject(Context.current(), setter, HeaderSetter.Setter)
         return HttpRequest(
             request.operation,
-            request.failureSlug,
             request.method,
             request.uri,
             setter.headers,
             body,
-            request.timeout,
-            request.maximumRequestBytes,
-            request.maximumResponseBytes,
+            request.limits,
         )
     }
 }

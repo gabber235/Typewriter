@@ -189,6 +189,8 @@ internal class RuntimePresentationData(
     }
 }
 
+// Authoring DSL runtime scope: it composes the build state and every author facing scope it delegates to.
+@Suppress("LongParameterList")
 internal class RuntimePresentedField<V, S : Any>(
     private val state: PresentationBuildState,
     val name: String,

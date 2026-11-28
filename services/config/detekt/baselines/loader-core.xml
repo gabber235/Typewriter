@@ -8,12 +8,13 @@
     <ID>CyclomaticComplexMethod:HostRolloutParticipant.kt:HostRolloutParticipant$private suspend fun applyCommand: ApplyRolloutCommandResponse</ID>
     <ID>SwallowedException:FilePublicationPins.kt:FilePublicationPins$cleanup: Throwable</ID>
     <ID>TooGenericExceptionCaught:ArtifactHost.kt:ArtifactHost$failure: Throwable</ID>
-    <ID>TooGenericExceptionCaught:ArtifactHost.kt:AssignmentRuntime$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ArtifactHost.kt:ArtifactHost.AssignmentRuntime$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:ArtifactInbox.kt:ArtifactInboxReconciler$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:CoordinatedRollout.kt:CoordinatedRollout$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:FilePublicationPins.kt:FilePublicationPins$caught: Throwable</ID>
     <ID>TooGenericExceptionCaught:FilePublicationPins.kt:FilePublicationPins$cleanup: Throwable</ID>
     <ID>TooGenericExceptionCaught:HostRolloutParticipant.kt:HostRolloutParticipant$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ProjectionStager.kt:ProjectionStager$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:HostRolloutParticipant.kt:HostRolloutParticipant.LocalProjection$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:HostRolloutParticipant.kt:failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:HostedRuntimeLoader.kt:HostedRuntimeLoader$failure: Throwable</ID>

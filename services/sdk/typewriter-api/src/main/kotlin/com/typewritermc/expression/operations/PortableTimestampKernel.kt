@@ -50,13 +50,8 @@ internal object PortableTimestampKernel : TimestampKernel {
         if (!valid) throw OperationFailure(KernelFailure.InvalidCalendarDate, "The fields do not name a valid date and time.")
         return portableInstant(
             localMilliseconds(
-                fields.year.toLong(),
-                fields.month,
-                fields.day,
-                fields.hour,
-                fields.minute,
-                fields.second,
-                fields.millisecond,
+                epochDay(fields.year.toLong(), fields.month, fields.day),
+                millisecondOfDay(fields.hour, fields.minute, fields.second, fields.millisecond),
             ) -
                 BigInteger.valueOf(offset.inWholeMilliseconds),
         )
@@ -84,18 +79,19 @@ private fun portableEpochMilliseconds(milliseconds: BigInteger): Long {
 /** The timestamp [milliseconds] after the epoch, or timestamp_range outside the portable range. */
 internal fun portableInstant(milliseconds: BigInteger): Instant = Instant.fromEpochMilliseconds(portableEpochMilliseconds(milliseconds))
 
-/** The milliseconds since the epoch of a local date and time read as UTC; fields must already be valid. */
+/** The milliseconds since the epoch of the local [millisecondOfDay] on [epochDay], read as UTC. */
 internal fun localMilliseconds(
-    year: Long,
-    month: Int,
-    day: Int,
+    epochDay: Long,
+    millisecondOfDay: Long,
+): BigInteger = BigInteger.valueOf(epochDay) * BigInteger.valueOf(MILLISECONDS_PER_DAY) + BigInteger.valueOf(millisecondOfDay)
+
+/** The milliseconds since midnight of a local time of day; fields must already be valid. */
+internal fun millisecondOfDay(
     hour: Int,
     minute: Int,
     second: Int,
     millisecond: Int,
-): BigInteger =
-    BigInteger.valueOf(epochDay(year, month, day)) * BigInteger.valueOf(MILLISECONDS_PER_DAY) +
-        BigInteger.valueOf(((hour * 60L + minute) * 60L + second) * 1_000L + millisecond)
+): Long = ((hour * 60L + minute) * 60L + second) * 1_000L + millisecond
 
 /** The number of days of [month] in [year] of the proleptic Gregorian calendar. */
 internal fun daysInMonth(
@@ -109,7 +105,7 @@ internal fun daysInMonth(
     }
 
 /** Days since 1970-01-01 of a proleptic Gregorian date (Howard Hinnant's days_from_civil). */
-private fun epochDay(
+internal fun epochDay(
     year: Long,
     month: Int,
     day: Int,

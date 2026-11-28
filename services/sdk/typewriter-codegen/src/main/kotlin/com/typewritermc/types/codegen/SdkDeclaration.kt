@@ -22,7 +22,12 @@ import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeTemplate
 
-/** One source declaration resolved for SDK emission. Built once by the processor; emitters only read it. */
+/**
+ * One source declaration resolved for SDK emission. Built once by the processor; emitters only read it.
+ *
+ * The SDK emission model records every resolved fact of one declaration, each read by a different emitter.
+ */
+@Suppress("LongParameterList")
 internal class SdkDeclaration(
     val source: KSClassDeclaration,
     val definition: TypeDefinition,

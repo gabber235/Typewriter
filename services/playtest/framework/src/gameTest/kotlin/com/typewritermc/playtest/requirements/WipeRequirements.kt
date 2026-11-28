@@ -3,6 +3,7 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.GameCompartment
+import com.typewritermc.playtest.Position
 import com.typewritermc.playtest.backToBack
 import com.typewritermc.playtest.block
 import com.typewritermc.playtest.camera
@@ -56,7 +57,7 @@ val WipeRequirements by testSuite(compartment = { GameCompartment }) {
         "a break right after an attempt that broke a block takes as many ticks as on a fresh client",
         first = {
             probe.fill(BlockPos(-2, 99, -2), BlockPos(2, 99, 8), "stone")
-            probe.teleport(player, 0.5, 100.0, 0.5)
+            probe.teleport(player, Position(0.5, 100.0, 0.5))
             probe.gameMode(player, GameMode.SURVIVAL)
             val leaves = probe.block(BlockPos(0, 101, 2), "oak_leaves[persistent=true]")
             player.aimAt(leaves)
@@ -65,7 +66,7 @@ val WipeRequirements by testSuite(compartment = { GameCompartment }) {
         },
         then = {
             probe.fill(BlockPos(-2, 99, -2), BlockPos(2, 99, 8), "stone")
-            probe.teleport(player, 0.5, 100.0, 0.5)
+            probe.teleport(player, Position(0.5, 100.0, 0.5))
             probe.gameMode(player, GameMode.SURVIVAL)
             val leaves = probe.block(BlockPos(0, 101, 2), "oak_leaves[persistent=true]")
             player.aimAt(leaves)
@@ -79,7 +80,7 @@ val WipeRequirements by testSuite(compartment = { GameCompartment }) {
         "WIPE-POSITION",
         "an attempt finds its player at the middle of its region, wherever the attempt before it left the player",
         first = {
-            probe.teleport(player, 8.5, 100.0, 0.5)
+            probe.teleport(player, Position(8.5, 100.0, 0.5))
             within(10.ticks) { player sees camera.near(8.5, 0.5, within = 0.5) }
         },
         then = {

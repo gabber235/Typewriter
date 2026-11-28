@@ -4,6 +4,7 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.loader.api.RuntimePlacement
+import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.deployment.PrimaryEngineTarget
 import com.typewritermc.loader.deployment.RealmLoaderIntent
 import com.typewritermc.loader.rollout.ArtifactHost
@@ -12,6 +13,7 @@ import com.typewritermc.loader.rollout.ArtifactHostAssignmentSource
 import com.typewritermc.loader.rollout.BackendArtifactHostAssignmentSource
 import com.typewritermc.loader.rollout.DesiredHostExecution
 import com.typewritermc.loader.rollout.RealmId
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.koin.serviceTelemetryModule
@@ -38,9 +40,12 @@ internal class ArtifactLoaderBootstrap(
     override suspend fun start(
         entrypoint: HostEntrypoint,
         workDirectory: Path,
+        work: InFlightWork,
         scope: CoroutineScope,
     ): RunningHost {
-        val service = serviceFactory.create(workDirectory, scope)
+        val hostWork = HostWork(work, settings.workDrain())
+        // The registrar and the blob store run as the host's own work; the host counts its own tasks itself.
+        val service = serviceFactory.create(workDirectory, hostWork.scope(scope), hostWork.io)
         val ready =
             when (val result = service.start()) {
                 is RegistrarResult.Success -> result.value
@@ -51,7 +56,8 @@ internal class ArtifactLoaderBootstrap(
                 ready.identity.serviceId,
                 workDirectory,
                 service,
-                assignments(entrypoint, service),
+                assignments(entrypoint, service, work),
+                hostWork,
                 scope,
             )
         try {
@@ -72,6 +78,7 @@ internal class ArtifactLoaderBootstrap(
     private fun assignments(
         entrypoint: HostEntrypoint,
         service: com.typewritermc.loader.LoaderService,
+        work: InFlightWork,
     ): ArtifactHostAssignmentSource {
         val panelEngine =
             ArtifactRequirement(
@@ -80,7 +87,7 @@ internal class ArtifactLoaderBootstrap(
             )
         val localRealmId = settings.getOrNull("TYPEWRITER_LOCAL_REALM_ID")
         if (entrypoint != HostEntrypoint.STANDALONE || localRealmId == null) {
-            return BackendArtifactHostAssignmentSource(service, panelEngine, entrypoint)
+            return BackendArtifactHostAssignmentSource(service, panelEngine, entrypoint, work)
         }
         return ArtifactHostAssignmentSource {
             flowOf(

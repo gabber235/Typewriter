@@ -11,7 +11,7 @@ import io.kotest.assertions.throwables.shouldThrowAny
 val SessionReadTest by testSuite {
     test("a session read the broker never answered fails instead of reading as no session") {
         shouldThrowAny {
-            unansweredKeyValueBucket().readSessionEntry(Protagonist(PrincipalId(PrincipalId.MINECRAFT, "alex")), SessionId("alex"))
+            unansweredKeyValueBucket().readSession(Protagonist(PrincipalId(PrincipalId.MINECRAFT, "alex")), SessionId("alex"))
         }
     }
 }

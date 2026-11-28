@@ -2,7 +2,9 @@ package com.typewritermc.playtest.plugin;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,35 +22,48 @@ import java.util.function.Consumer;
  * {@link #HUNG_NANOS} after it began is hung: reported once, it holds no tick from then on, and it is
  * never cancelled; once it ends, that is reported once too, so its player can come back to the pool.
  *
- * <p>Each piece of work has a deadline of its own, {@link #HUNG_NANOS} after it began, on a thread of
- * its own: the main thread may spend that moment in one long tick, and the report must reach the pool
- * while the work still runs, before anything the work does later. The deadline alone decides hung, and
- * the end of hung work is reported only after its hang.
+ * <p>Each piece of work has a deadline, {@link #HUNG_NANOS} after it began. One watchdog, on a thread
+ * of its own, wakes at the deadline of the oldest open work: the main thread may spend that moment in one
+ * long tick, and the report must reach the pool while the work still runs, before anything the work does
+ * later. Open work is kept in begin order and every deadline is as far from its begin, so the oldest is
+ * always due first; the watchdog reports every piece due, then sleeps until the next. The deadline alone
+ * decides hung, and the end of hung work is reported only after its hang.
  */
 final class WorkLedger {
     /** How long work may run before it is reported as hung. */
     static final long HUNG_NANOS = 1_000_000_000L;
 
-    /** [player]'s work [name], which began after tick [beganAfter], still ran {@link #HUNG_NANOS} later. */
-    record Hung(UUID player, String playerName, String name, int beganAfter) {}
+    /**
+     * The work [name] of [players], which began after tick [beganAfter], still ran {@link #HUNG_NANOS}
+     * later. Work for no player is the work of the players claimed at its deadline.
+     */
+    record Hung(Set<UUID> players, String name, int beganAfter) {}
+
+    /**
+     * The work [name] of [players], which began after tick [beganAfter], ended without its effect because
+     * of [cause]. Work for no player is the work of the players claimed when it failed.
+     */
+    record Failed(Set<UUID> players, String name, int beganAfter, String cause) {}
 
     /** One piece of counted work, from its begin until {@link #end()}. */
     final class Entry {
-        private final UUID player;
-        private final String playerName;
+        private final Set<UUID> players;
         private final String name;
         private final int beganAfter;
         private final int holdsFrom;
+        private final long dueNanos;
+        // Whom the hang was reported to, which its end is reported to as well.
+        private Set<UUID> reportedTo;
         // Set once the hang report went out; work that ends before then is reported ended by the deadline.
         private boolean reported;
         private boolean endedUnreported;
 
-        private Entry(UUID player, String playerName, String name, int beganAfter, int holdsFrom) {
-            this.player = player;
-            this.playerName = playerName;
+        private Entry(Set<UUID> players, String name, int beganAfter, int holdsFrom, long dueNanos) {
+            this.players = players;
             this.name = name;
             this.beganAfter = beganAfter;
             this.holdsFrom = holdsFrom;
+            this.dueNanos = dueNanos;
         }
 
         /**
@@ -58,50 +73,107 @@ final class WorkLedger {
         void end() {
             synchronized (WorkLedger.this) {
                 if (counted.remove(this)) return;
-                if (!hung.remove(this)) return;
-                if (reported) ended.add(this);
-                else endedUnreported = true;
+                endHung();
             }
         }
 
+        /**
+         * The work ended without its effect because of [cause]: reported once, now, on this thread, and it
+         * holds no tick from then on. Hung work that fails ends as hung work does; ending it again does
+         * nothing.
+         */
+        void failed(String cause) {
+            Failed report;
+            synchronized (WorkLedger.this) {
+                if (!counted.remove(this)) {
+                    endHung();
+                    return;
+                }
+                report = new Failed(players == null ? claimed : players, name, beganAfter, cause);
+            }
+            reportFailed.accept(report);
+        }
+
+        private void endHung() {
+            if (!hung.remove(this)) return;
+            if (reported) ended.add(this);
+            else endedUnreported = true;
+        }
+
+        /** Whether this is work of any of [claimed]; work for no player is everyone's. */
+        private boolean of(Collection<UUID> claimed) {
+            if (players == null) return !claimed.isEmpty();
+            for (UUID player : players) {
+                if (claimed.contains(player)) return true;
+            }
+            return false;
+        }
+
         private Hung report() {
-            return new Hung(player, playerName, name, beganAfter);
+            return new Hung(reportedTo, name, beganAfter);
         }
     }
 
-    /** Runs [task] [nanos] from now, off the main thread. */
-    @FunctionalInterface
-    interface Deadlines {
+    /** The watchdog's clock and its alarm, which tests replace with time of their own. */
+    interface Watch {
+        /** Now, in nanoseconds of a monotonic clock. */
+        long nanoTime();
+
+        /** Runs [task] once, [nanos] from now, off the main thread. */
         void after(long nanos, Runnable task);
     }
 
-    /** One daemon thread that runs every deadline. */
-    static Deadlines deadlineThread() {
+    /** The monotonic clock, and one daemon thread that runs the watchdog. */
+    static Watch watchThread() {
         ScheduledExecutorService thread = Executors.newSingleThreadScheduledExecutor(task -> {
-            var named = new Thread(task, "playtest-work-deadlines");
+            var named = new Thread(task, "playtest-work-watchdog");
             named.setDaemon(true);
             return named;
         });
-        return (nanos, task) -> thread.schedule(task, nanos, TimeUnit.NANOSECONDS);
+        return new Watch() {
+            @Override
+            public long nanoTime() {
+                return System.nanoTime();
+            }
+
+            @Override
+            public void after(long nanos, Runnable task) {
+                thread.schedule(task, nanos, TimeUnit.NANOSECONDS);
+            }
+        };
     }
 
-    private final Deadlines deadlines;
+    private final Watch watch;
     private volatile Consumer<Hung> reportHung = hung -> {};
-    // Work that is neither ended nor hung, in begin order.
-    private final List<Entry> counted = new ArrayList<>();
+    private volatile Consumer<Failed> reportFailed = failed -> {};
+    private volatile Set<UUID> claimed = Set.of();
+    // Work that is neither ended nor hung, in begin order, so the oldest deadline comes first.
+    private final Set<Entry> counted = new LinkedHashSet<>();
+    // Whether the watchdog is set to wake for the oldest open work.
+    private boolean watching;
     // Hung work that still runs, and hung work that ended since the last report.
     private final List<Entry> hung = new ArrayList<>();
     private final List<Entry> ended = new ArrayList<>();
     private int lastEnded = -1;
     private int running = -1;
 
-    WorkLedger(Deadlines deadlines) {
-        this.deadlines = deadlines;
+    WorkLedger(Watch watch) {
+        this.watch = watch;
     }
 
-    /** Hung work goes to [report], from the deadline's thread or the thread that ended the work. */
+    /** Hung work goes to [report], from the watchdog's thread or the thread that ended the work. */
     void reportHungTo(Consumer<Hung> report) {
         reportHung = report;
+    }
+
+    /** [players] are claimed now: work for no player is theirs when it hangs or fails. Main thread. */
+    void claimed(Set<UUID> players) {
+        claimed = Set.copyOf(players);
+    }
+
+    /** Failed work goes to [report], from the thread that failed it. */
+    void reportFailedTo(Consumer<Failed> report) {
+        reportFailed = report;
     }
 
     /** Paper started [tick]. Main thread. */
@@ -115,34 +187,43 @@ final class WorkLedger {
         running = -1;
     }
 
-    /** [player]'s plugin began work [name] that already runs; it holds the next tick to start. Any thread. */
-    synchronized Entry begin(UUID player, String playerName, String name) {
-        return count(player, playerName, name, nextToStart());
+    /**
+     * A plugin began work [name] for [players] (null: for every claimed player) that already runs; it
+     * holds the next tick to start. Any thread.
+     */
+    synchronized Entry begin(Set<UUID> players, String name) {
+        return count(players, name, nextToStart());
     }
 
     /**
      * [player]'s plugin handed work [name] to Bukkit's async scheduler; it lets the next tick start, whose
      * heartbeat starts it, and holds the one after. Any thread.
      */
-    synchronized Entry schedule(UUID player, String playerName, String name) {
-        return count(player, playerName, name, nextToStart() + 1);
+    synchronized Entry schedule(Set<UUID> players, String name) {
+        return count(players, name, nextToStart() + 1);
     }
 
     private int nextToStart() {
         return (running >= 0 ? running : lastEnded) + 1;
     }
 
-    private Entry count(UUID player, String playerName, String name, int holdsFrom) {
-        var entry = new Entry(player, playerName, name, lastEnded, holdsFrom);
+    private Entry count(Set<UUID> players, String name, int holdsFrom) {
+        var entry =
+                new Entry(players == null ? null : Set.copyOf(players), name, lastEnded, holdsFrom, watch.nanoTime() + HUNG_NANOS);
         counted.add(entry);
-        deadlines.after(HUNG_NANOS, () -> deadline(entry));
+        if (!watching) watchFor(entry);
         return entry;
+    }
+
+    private void watchFor(Entry oldest) {
+        watching = true;
+        watch.after(Math.max(0, oldest.dueNanos - watch.nanoTime()), this::wake);
     }
 
     /** Whether work of any of [players] holds [tick] from starting. */
     synchronized boolean holds(Collection<UUID> players, int tick) {
         for (Entry entry : counted) {
-            if (tick >= entry.holdsFrom && players.contains(entry.player)) return true;
+            if (tick >= entry.holdsFrom && entry.of(players)) return true;
         }
         return false;
     }
@@ -150,7 +231,7 @@ final class WorkLedger {
     /** Whether none of [players] has work that is neither ended nor hung. */
     synchronized boolean quiet(Collection<UUID> players) {
         for (Entry entry : counted) {
-            if (players.contains(entry.player)) return false;
+            if (entry.of(players)) return false;
         }
         return true;
     }
@@ -163,18 +244,31 @@ final class WorkLedger {
     }
 
     /**
-     * [entry]'s deadline: work still running is hung and reported now, while it runs; if it ends while the
-     * report goes out, its end is reported after it. Deadline thread.
+     * The watchdog woke: every open work whose deadline passed is hung and reported now, oldest first,
+     * while it runs; work that ends while its report goes out is reported ended after it. Then the
+     * watchdog sleeps until the deadline of the oldest work still open. Watchdog thread.
      */
-    private void deadline(Entry entry) {
+    private void wake() {
+        List<Entry> due = new ArrayList<>();
         synchronized (this) {
-            if (!counted.remove(entry)) return;
-            hung.add(entry);
+            watching = false;
+            long now = watch.nanoTime();
+            for (var open = counted.iterator(); open.hasNext(); ) {
+                Entry entry = open.next();
+                if (entry.dueNanos > now) break;
+                open.remove();
+                hung.add(entry);
+                entry.reportedTo = entry.players == null ? claimed : entry.players;
+                due.add(entry);
+            }
+            if (!counted.isEmpty()) watchFor(counted.iterator().next());
         }
-        reportHung.accept(entry.report());
-        synchronized (this) {
-            entry.reported = true;
-            if (entry.endedUnreported) ended.add(entry);
+        for (Entry entry : due) {
+            reportHung.accept(entry.report());
+            synchronized (this) {
+                entry.reported = true;
+                if (entry.endedUnreported) ended.add(entry);
+            }
         }
     }
 }

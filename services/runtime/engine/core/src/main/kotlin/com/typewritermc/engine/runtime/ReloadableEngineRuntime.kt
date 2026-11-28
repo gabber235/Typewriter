@@ -5,23 +5,27 @@ import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.StagedHostedRuntime
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.job
 
 /**
  * Owns the activation scope of a staged discovery deployment and orders compiled content application.
  *
  * Activation runs registrars in list order and starts delivery. Quiescing stops delivery and releases activation
  * resources while retaining discovery and the last content for resume. Final closure also closes discovery.
- * Lifecycle methods and external content application require serialized access.
+ * Lifecycle methods and external content application require serialized access. Content must target
+ * [requiredImplementation] when one is set; a runtime without one applies content of any implementation. When
+ * [parentScope], the deployment's scope, fails because work in it threw, the runtime reports itself unhealthy with
+ * that cause, so the host's rollout replaces it as it would a crashed engine.
  */
 class ReloadableEngineRuntime(
     deployment: GeneratedProviderDeployment,
     private val registrars: List<RuntimeRegistrar>,
     private val parentScope: CoroutineScope,
-    private val implementationToken: String,
-    private val enforceImplementationCompatibility: Boolean = true,
+    private val requiredImplementation: String?,
     private val contentGateway: EngineContentGateway? = null,
     private val contentDelivery: EngineContentDelivery? = null,
 ) : StagedHostedRuntime {
@@ -30,6 +34,14 @@ class ReloadableEngineRuntime(
     private var deployment: GeneratedProviderDeployment? = deployment
     private var scope: ManagedRuntimeScope? = null
     private var lastContent: LoadedPublishedContent? = null
+
+    init {
+        parentScope.coroutineContext.job.invokeOnCompletion { cause ->
+            if (cause != null && cause !is CancellationException) {
+                mutableHealth.value = RuntimeHealth.Unhealthy("Engine deployment scope failed: $cause")
+            }
+        }
+    }
 
     override suspend fun activate() {
         val currentDeployment = checkNotNull(deployment) { "Engine deployment is stopped." }
@@ -53,8 +65,8 @@ class ReloadableEngineRuntime(
     /** Applies a current descriptor delivered by the serialized content worker. */
     suspend fun applyContent(content: LoadedPublishedContent): ContentApplicationResult {
         check(scope != null) { "Engine deployment is not active." }
-        if (enforceImplementationCompatibility) {
-            require(content.descriptor.implementationToken == implementationToken) {
+        if (requiredImplementation != null) {
+            require(content.descriptor.implementationToken == requiredImplementation) {
                 "Compiled content targets a different engine implementation."
             }
         }

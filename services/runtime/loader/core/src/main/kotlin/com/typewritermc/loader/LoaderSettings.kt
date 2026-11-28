@@ -1,11 +1,14 @@
 package com.typewritermc.loader
 
+import com.typewritermc.services.libs.registrar.OAuthClient
 import com.typewritermc.services.libs.registrar.RegistrarConfiguration
 import com.typewritermc.services.libs.registrar.ServiceRole
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Loader configuration snapshot with precedence: nonblank JVM property, environment variable, then configuration
@@ -76,9 +79,12 @@ internal fun LoaderSettings.registrarConfiguration(): RegistrarConfiguration {
     return RegistrarConfiguration(
         identityIssueUri = apiBase.resolve("/service/identity/issue"),
         sentinelCredentialsUri = apiBase.resolve("/auth/sentinel"),
-        oauthTokenUri = authBase.resolve("/application/o/token/"),
-        oauthClientId = get("JWT_CLIENT_ID", "typewriter-services"),
-        oauthScopes = get("JWT_SCOPES", "openid profile entitlements").split(' ').filter(String::isNotBlank).toSet(),
+        oauth =
+            OAuthClient(
+                tokenUri = authBase.resolve("/application/o/token/"),
+                clientId = get("JWT_CLIENT_ID", "typewriter-services"),
+                scopes = get("JWT_SCOPES", "openid profile entitlements").split(' ').filter(String::isNotBlank).toSet(),
+            ),
         natsServerUri = URI(get("NATS_URL", "nats://nats.seamlezz.com:4222")),
         role = ServiceRole.Host(LOADER_VERSION),
     )
@@ -89,6 +95,17 @@ internal fun LoaderSettings.registrarConfiguration(): RegistrarConfiguration {
  * Only automation such as the worktree stack sets it; production hosts show the token on the console only.
  */
 internal fun LoaderSettings.registrationTokenFile(): Path? = getOrNull("TYPEWRITER_REGISTRATION_TOKEN_FILE")?.let(Path::of)
+
+/**
+ * How long a host waits for its work in flight before it stops or rolls out: TYPEWRITER_WORK_DRAIN as a duration such
+ * as `10s` or `PT10S`, 10 seconds when unset. A value that is no duration fails startup.
+ */
+internal fun LoaderSettings.workDrain(): Duration {
+    val configured = getOrNull(WORK_DRAIN_SETTING) ?: return DEFAULT_WORK_DRAIN
+    return requireNotNull(Duration.parseOrNull(configured)?.takeUnless { it.isNegative() }) {
+        "$WORK_DRAIN_SETTING must be a duration such as 10s, not \"$configured\"."
+    }
+}
 
 private fun readConfiguration(path: Path): Map<String, String> {
     require(Files.isRegularFile(path)) { "Loader configuration file does not exist: $path" }
@@ -108,3 +125,7 @@ private fun LoaderSettings.samplerConfiguration(): LoaderSamplerConfiguration {
 }
 
 private const val CONFIGURATION_FILE_SETTING = "TYPEWRITER_CONFIG_FILE"
+
+private const val WORK_DRAIN_SETTING = "TYPEWRITER_WORK_DRAIN"
+
+private val DEFAULT_WORK_DRAIN = 10.seconds

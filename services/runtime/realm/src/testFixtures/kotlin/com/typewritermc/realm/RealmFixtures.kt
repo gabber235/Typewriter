@@ -79,6 +79,8 @@ import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.api.artifact.SharedArtifactRevision
 import com.typewritermc.loader.api.artifact.SharedCatalogRevision
+import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.of
@@ -756,6 +758,7 @@ internal class RealmLifecycleFixture(
                     .TestPublicationRetention()
             override val messaging = this@RealmLifecycleFixture.messaging
             override val openTelemetry = telemetry.openTelemetry
+            override val work = InFlightWork().of(WorkRuntime("realm"))
             override val sharedArtifacts = this@RealmLifecycleFixture.sharedArtifacts
         }
     private val realm =

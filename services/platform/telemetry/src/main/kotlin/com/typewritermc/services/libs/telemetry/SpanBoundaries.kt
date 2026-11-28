@@ -96,7 +96,10 @@ private fun recordFailure(
  *
  * The scope records lifecycle outcome and closes in finally. Ordinary failures receive the fallback slug when
  * needed; cancellation and fatal failures propagate. Use the suspending boundary when work can suspend.
+ *
+ * A span boundary takes the name, failure slug and block, plus each OpenTelemetry span option callers name when they need it.
  */
+@Suppress("LongParameterList")
 fun <T> ServiceTelemetry.mainSpanBlocking(
     name: String,
     unhandledFailureSlug: ErrorSlug,
@@ -133,7 +136,10 @@ fun <T> ServiceTelemetry.mainSpanBlocking(
  * The span closes on success, failure, or cancellation. Ordinary failures are recorded and classified, while
  * cancellation remains cancellation. Receivers are valid only during the block; structured child work must finish
  * before it returns.
+ *
+ * A span boundary takes the name, failure slug and block, plus each OpenTelemetry span option callers name when they need it.
  */
+@Suppress("LongParameterList")
 suspend fun <T> ServiceTelemetry.mainSpan(
     name: String,
     unhandledFailureSlug: ErrorSlug,

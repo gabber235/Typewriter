@@ -33,8 +33,7 @@ val HttpTypesTest by testSuite {
         listOf("connection", "Content-Length", "EXPECT", "Host", "upgrade").forEach { name ->
             shouldThrow<IllegalArgumentException> {
                 HttpRequest(
-                    HttpOperation("test"),
-                    ErrorSlug.of("test"),
+                    HttpOperation("test", ErrorSlug.of("test")),
                     HttpMethod.GET,
                     URI("https://example.test"),
                     HttpHeaders.of(name to "value"),
@@ -59,8 +58,7 @@ val HttpTypesTest by testSuite {
     test("diagnostics redact URI query headers body and error details") {
         val request =
             HttpRequest(
-                HttpOperation("test"),
-                ErrorSlug.of("test"),
+                HttpOperation("test", ErrorSlug.of("test")),
                 HttpMethod.POST,
                 URI("https://example.test/path?token=query-secret"),
                 HttpHeaders.of("authorization" to "header-secret"),

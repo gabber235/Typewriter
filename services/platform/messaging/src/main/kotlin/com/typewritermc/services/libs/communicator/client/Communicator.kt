@@ -16,10 +16,10 @@ import com.typewritermc.services.libs.communicator.result.CommunicationError
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
+import com.typewritermc.services.libs.communicator.router.OwedReply
 import com.typewritermc.services.libs.communicator.router.RouterOptions
 import com.typewritermc.services.libs.communicator.telemetry.MessageHeadersGetter
 import com.typewritermc.services.libs.communicator.telemetry.MessageHeadersSetter
-import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
@@ -55,7 +55,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration
-import kotlin.time.TimeMark
 
 /**
  * Executes typed messaging contracts with telemetry, classification, and trace propagation.
@@ -65,9 +64,9 @@ import kotlin.time.TimeMark
  * remain typed values for caller interpretation.
  */
 class Communicator(
-    private val transport: MessageTransport,
-    private val telemetry: ServiceTelemetry,
-    private val propagators: ContextPropagators,
+    internal val transport: MessageTransport,
+    internal val telemetry: ServiceTelemetry,
+    internal val propagators: ContextPropagators,
 ) {
     /**
      * Creates a cold scatter flow whose collection owns a temporary reply channel.
@@ -89,13 +88,13 @@ class Communicator(
                 "${contract.name.value} scatter",
                 contract.failureSlug,
                 SpanKind.CLIENT,
-                attributes = attributes("scatter", contract.name.value, contract.requestAddress.template),
+                attributes = attributes("scatter", contract.name.value, contract.request.address.template),
             ) { main ->
-                val destination = contract.requestAddress.render(address)
+                val destination = contract.request.address.render(address)
                 main.annotate { attribute("messaging.destination.name", destination.value) }
                 val payload =
                     try {
-                        contract.requestCodec.encode(request)
+                        contract.request.codec.encode(request)
                     } catch (failure: Throwable) {
                         failure.rethrowExceptional()
                         main.recordDegraded(contract.failureSlug, failure)
@@ -145,7 +144,7 @@ class Communicator(
                                         is TransportDelivery.Message -> {
                                             val response =
                                                 try {
-                                                    contract.responseCodec.decode(delivery.message.payload)
+                                                    contract.replies.codec.decode(delivery.message.payload)
                                                 } catch (failure: Throwable) {
                                                     failure.rethrowExceptional()
                                                     main.recordDegraded(contract.failureSlug, failure)
@@ -156,7 +155,7 @@ class Communicator(
                                                     )
                                                     continue
                                                 }
-                                            val classification = contract.responsePolicy.classify(response)
+                                            val classification = contract.replies.policy.classify(response)
                                             main.annotate {
                                                 attribute("domain.outcome", classification.variant.value)
                                                 attribute("operation.outcome", classification.outcome.name.lowercase())
@@ -199,21 +198,18 @@ class Communicator(
             }
         }
 
+    /**
+     * A communicator with this one's telemetry and propagation whose messages go through the transport [wrap] makes
+     * from this one's, such as a transport that also counts each operation it carries.
+     */
+    fun over(wrap: (MessageTransport) -> MessageTransport): Communicator = Communicator(wrap(transport), telemetry, propagators)
+
     /** Creates a router that shares this communicator's transport and telemetry infrastructure. */
     fun createRouter(
         routes: CommunicatorRoutes,
         parentScope: CoroutineScope,
         options: RouterOptions = RouterOptions(),
-    ): CommunicatorRouter =
-        CommunicatorRouter(
-            transport = transport,
-            routes = routes,
-            communicator = this,
-            telemetry = telemetry,
-            propagators = propagators,
-            parentScope = parentScope,
-            options = options,
-        )
+    ): CommunicatorRouter = CommunicatorRouter(routes, this, parentScope, options)
 
     /**
      * Performs a typed unary request and returns either the decoded response or an infrastructure failure.
@@ -237,21 +233,21 @@ class Communicator(
             "request",
             contract.failureSlug,
             SpanKind.CLIENT,
-            contract.requestAddress.template,
+            contract.request.address.template,
         ) { annotate ->
             val payload =
                 classify(
-                    block = { contract.requestCodec.encode(request) },
+                    block = { contract.request.codec.encode(request) },
                     error = { CommunicationError.Encode(contract.failureSlug, it) },
                 )
-            val message = outbound(contract.requestAddress.render(address), payload, headers)
+            val message = outbound(contract.request.address.render(address), payload, headers)
             annotate { attribute("messaging.destination.name", message.address.value) }
             val inbound = classifyTransport(contract.failureSlug, transport.request(message, effectiveTimeout, contract.limits))
             val response =
-                classify(block = { contract.responseCodec.decode(inbound.payload) }, error = {
+                classify(block = { contract.replies.codec.decode(inbound.payload) }, error = {
                     CommunicationError.Decode(contract.failureSlug, it)
                 })
-            val classification = contract.responsePolicy.classify(response)
+            val classification = contract.replies.policy.classify(response)
             annotate {
                 attribute("domain.outcome", classification.variant.value)
                 attribute("operation.outcome", classification.outcome.name.lowercase())
@@ -321,19 +317,17 @@ class Communicator(
         update: Update,
         headers: MessageHeaders = MessageHeaders.Empty,
     ): CommunicationResult<Unit> {
-        val destination = contract.updateAddress.render(address)
+        val destination = contract.updates.address.render(address)
         return operation(
             contract.name.value,
             "publish",
             contract.failureSlug,
             SpanKind.PRODUCER,
-            contract.updateAddress.template,
+            contract.updates.address.template,
         ) { annotate ->
             publishResponse(
                 destination,
-                update,
-                contract.updateCodec,
-                UPDATE_CLASSIFICATION,
+                ClassifiedResponse(update, contract.updates.codec, UPDATE_CLASSIFICATION),
                 contract.failureSlug,
                 headers,
                 annotate,
@@ -341,40 +335,42 @@ class Communicator(
         }.responseResult()
     }
 
+    /**
+     * Sends the [reply] a request owes as [response], under the limits and arrival time the reply carries, and reports
+     * whether the transport accepted it.
+     */
     internal suspend fun <Response : Any> sendResponse(
-        name: String,
-        template: String?,
-        destination: com.typewritermc.services.libs.communicator.address.MessageAddress,
+        reply: OwedReply<Response>,
         response: Response,
-        codec: PayloadCodec<Response>,
         classification: ResponseClassification,
-        failureSlug: ErrorSlug,
-        headers: MessageHeaders = MessageHeaders.Empty,
-        limits: TransportLimits? = null,
-        received: TimeMark? = null,
     ): CommunicationResult<Unit> =
-        operation(name, "publish", failureSlug, SpanKind.PRODUCER, template) { annotate ->
-            publishResponse(destination, response, codec, classification, failureSlug, headers, annotate) {
-                transport.reply(it, limits, received)
+        operation(reply.name.value, "publish", reply.failureSlug, SpanKind.PRODUCER, reply.template) { annotate ->
+            publishResponse(
+                reply.to,
+                ClassifiedResponse(response, reply.replies.codec, classification),
+                reply.failureSlug,
+                MessageHeaders.Empty,
+                annotate,
+            ) {
+                transport.reply(it, reply.limits, reply.received)
             }
         }.responseResult()
 
     private suspend fun <Response : Any> publishResponse(
-        destination: com.typewritermc.services.libs.communicator.address.MessageAddress,
-        response: Response,
-        codec: PayloadCodec<Response>,
-        classification: ResponseClassification,
+        destination: MessageAddress,
+        published: ClassifiedResponse<Response>,
         failureSlug: ErrorSlug,
         headers: MessageHeaders,
         annotate: (TypedAttributes.() -> Unit) -> Unit,
         send: suspend (OutboundMessage) -> TransportResult<Unit> = transport::publish,
     ): OperationOutcome<Unit> {
+        val classification = published.classification
         annotate {
             attribute("messaging.destination.name", destination.value)
             attribute("domain.outcome", classification.variant.value)
             attribute("operation.outcome", classification.outcome.name.lowercase())
         }
-        val payload = classify({ codec.encode(response) }) { CommunicationError.Encode(failureSlug, it) }
+        val payload = classify({ published.encode() }) { CommunicationError.Encode(failureSlug, it) }
         classifyTransport(failureSlug, send(outbound(destination, payload, headers)))
         return classification.operationOutcome(Unit)
     }
@@ -393,14 +389,14 @@ class Communicator(
         headers: MessageHeaders = MessageHeaders.Empty,
     ): Flow<CommunicationResult<WatchMessage<Initial, Update>>> =
         flow {
-            val updateAddress = contract.updateAddress.render(address)
+            val updateAddress = contract.updates.address.render(address)
             val subscriptionResult =
                 operation(
                     contract.name.value,
                     "subscribe",
                     contract.failureSlug,
                     SpanKind.CONSUMER,
-                    contract.updateAddress.template,
+                    contract.updates.address.template,
                 ) { annotate ->
                     annotate { attribute("messaging.destination.name", updateAddress.value) }
                     classifyTransport(contract.failureSlug, transport.subscribe(AddressPattern.of(updateAddress.value)))
@@ -434,21 +430,7 @@ class Communicator(
                     var primaryFailure: Throwable? = null
                     try {
                         val initial =
-                            request(
-                                UnaryContract(
-                                    contract.name,
-                                    contract.requestAddress,
-                                    contract.requestCodec,
-                                    contract.initialCodec,
-                                    contract.initialPolicy,
-                                    contract.replyAddresses,
-                                    contract.timeout,
-                                    contract.failureSlug,
-                                ),
-                                address,
-                                request,
-                                headers,
-                            )
+                            request(contract.initial, address, request, headers)
                         when (initial) {
                             is CommunicationResult.Failure -> {
                                 emit(initial)
@@ -538,13 +520,13 @@ class Communicator(
                     "${contract.name.value} receive",
                     contract.failureSlug,
                     parent,
-                    attributes("receive", contract.name.value, contract.updateAddress.template)
+                    attributes("receive", contract.name.value, contract.updates.address.template)
                         .toBuilder()
                         .put("messaging.destination.name", message.address.value)
                         .build(),
                 ) { main ->
                     val update =
-                        classify(block = { contract.updateCodec.decode(message.payload) }, error = {
+                        classify(block = { contract.updates.codec.decode(message.payload) }, error = {
                             CommunicationError.Decode(contract.failureSlug, it)
                         })
                     main.annotate {
@@ -570,7 +552,7 @@ class Communicator(
                 "receive",
                 contract.failureSlug,
                 SpanKind.CONSUMER,
-                contract.updateAddress.template,
+                contract.updates.address.template,
             ) { annotate ->
                 annotate { attribute("messaging.destination.name", destination) }
                 val error = transportError.toCommunicationError(contract.failureSlug)
@@ -618,10 +600,10 @@ class Communicator(
         }
 
     private fun outbound(
-        address: com.typewritermc.services.libs.communicator.address.MessageAddress,
+        address: MessageAddress,
         payload: Payload,
         headers: MessageHeaders,
-        replyTo: com.typewritermc.services.libs.communicator.address.MessageAddress? = null,
+        replyTo: MessageAddress? = null,
     ): OutboundMessage {
         val propagator = propagators.textMapPropagator
         val setter = MessageHeadersSetter(headers, propagator.fields())
@@ -737,6 +719,15 @@ private fun Throwable.causes(): Sequence<Throwable> =
             current = current.cause
         }
     }
+
+/** A response to publish, with the [codec] that encodes it and the [classification] its telemetry records. */
+private class ClassifiedResponse<Response : Any>(
+    val response: Response,
+    val codec: PayloadCodec<Response>,
+    val classification: ResponseClassification,
+) {
+    fun encode(): Payload = codec.encode(response)
+}
 
 /** Watch updates carry no outcome of their own, so every delivered update records as a success. */
 private val UPDATE_CLASSIFICATION = ResponseClassification.success("update")

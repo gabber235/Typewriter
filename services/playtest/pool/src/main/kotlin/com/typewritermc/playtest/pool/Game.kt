@@ -18,6 +18,13 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.writeText
 
+/** A process to start: [line] in the folder [dir], with [environment] added to the pool's own. */
+internal class PartCommand(
+    val line: List<String>,
+    val dir: Path,
+    val environment: Map<String, String>,
+)
+
 /** One game process the pool started, and the log it writes to; [player] for a client. */
 internal class Part(
     val name: String,
@@ -27,27 +34,25 @@ internal class Part(
 ) {
     companion object {
         /**
-         * Starts [command] in [dir] as the part [name], its output into [log] (added to it when [append]),
-         * with [environment] added to the pool's own, and names its process in [dir]'s part file, in place
-         * of an earlier boot's.
+         * Starts [command] as the part [name], its output into [log] (added to it when [append]), and names
+         * its process in its folder's part file, in place of an earlier boot's.
          */
         fun launch(
             name: String,
-            command: List<String>,
-            dir: Path,
+            command: PartCommand,
             log: Path,
-            environment: Map<String, String>,
             player: String? = null,
             append: Boolean = false,
         ): Part {
+            val dir = command.dir
             val builder =
-                ProcessBuilder(command)
+                ProcessBuilder(command.line)
                     .directory(dir.toFile())
                     .redirectErrorStream(true)
                     .redirectOutput(
                         if (append) ProcessBuilder.Redirect.appendTo(log.toFile()) else ProcessBuilder.Redirect.to(log.toFile()),
                     ).redirectInput(ProcessBuilder.Redirect.from(File("/dev/null")))
-            builder.environment().putAll(environment)
+            builder.environment().putAll(command.environment)
             val process = builder.start()
             PartFile.of(process.toHandle()).write(dir.resolve(PartFile.NAME))
             return Part(name, process, log, player)
@@ -102,14 +107,14 @@ internal enum class InputPath(
  * run's logs folder as `<part>.log`. [Pool] hears from all of them over the wire once they are up.
  */
 internal class Game private constructor(
-    private val settings: PoolSettings,
-    private val poolPort: Int,
+    private val launch: PartLaunch,
     val paper: PaperFolder,
     val paperPart: Part,
     private val input: InputPath,
     private val displays: Map<String, Display>,
     started: List<Part>,
 ) {
+    private val settings = launch.settings
     private val running = started.toMutableList()
     private var lost = 0
 
@@ -136,9 +141,9 @@ internal class Game private constructor(
             it.process.waitFor(STOP_SECONDS, TimeUnit.SECONDS)
             running -= it
         }
-        val kept = settings.logs.resolve("client-$player-lost-${++lost}.log")
+        val kept = settings.run.logs.resolve("client-$player-lost-${++lost}.log")
         Files.move(logOf(settings, "client-$player"), kept)
-        val replacement = startClient(settings, poolPort, player, input, displays[player])
+        val replacement = startClient(launch, player, input, displays[player])
         running += replacement
         return Replaced(replacement, kept)
     }
@@ -167,7 +172,7 @@ internal class Game private constructor(
         startPaper(
             settings,
             folder,
-            Launches.ownPaper(settings, poolPort, folder, PaperServer.of(settings.paperDir), coverageOptions(settings, folder.dir), flags),
+            Launches.ownPaper(launch, folder, PaperServer.of(settings.launched.paperDir), coverageOptions(settings, folder.dir), flags),
             append = again,
         ).also { running += it }
 
@@ -206,7 +211,8 @@ internal class Game private constructor(
                 .use { dirs ->
                     dirs.filter { it.fileName.toString().startsWith(OWN_PAPER) }.toList()
                 }.forEach { remove(it) }
-            Files.list(settings.logs).use { logs -> logs.filter { it != settings.poolLog }.toList() }.forEach { remove(it) }
+            val launch = PartLaunch(settings, poolPort)
+            Files.list(settings.run.logs).use { logs -> logs.filter { it != settings.poolLog }.toList() }.forEach { remove(it) }
             val paper = PaperFolder("paper", settings.poolDir.resolve("paper"), freePort(), logOf(settings, "paper"), slot = 0)
             preparePaper(settings, paper.dir, paper.port)
             val paperPart =
@@ -214,10 +220,9 @@ internal class Game private constructor(
                     settings,
                     paper,
                     Launches.sharedPaper(
-                        settings,
-                        poolPort,
+                        launch,
                         paper,
-                        PaperServer.of(settings.paperDir),
+                        PaperServer.of(settings.launched.paperDir),
                         coverageOptions(settings, paper.dir),
                     ),
                     append = false,
@@ -236,10 +241,10 @@ internal class Game private constructor(
                         } else {
                             null
                         }
-                    started += startClient(settings, poolPort, player, input, display)
+                    started += startClient(launch, player, input, display)
                 }
             }.onFailure { started.forEach { it.process.destroyForcibly() } }.getOrThrow()
-            return Game(settings, poolPort, paper, paperPart, input, displays, started)
+            return Game(launch, paper, paperPart, input, displays, started)
         }
 
         /**
@@ -280,9 +285,13 @@ internal class Game private constructor(
             port: Int,
         ) {
             freshDir(dir)
-            listOf("versions", "libraries", "cache").forEach { Files.createSymbolicLink(dir.resolve(it), settings.paperDir.resolve(it)) }
+            listOf(
+                "versions",
+                "libraries",
+                "cache",
+            ).forEach { Files.createSymbolicLink(dir.resolve(it), settings.launched.paperDir.resolve(it)) }
             dir.resolve("plugins").createDirectories()
-            Files.copy(settings.pluginJar, dir.resolve("plugins/playtest-plugin.jar"))
+            Files.copy(settings.launched.pluginJar, dir.resolve("plugins/playtest-plugin.jar"))
             dir.resolve("config").createDirectories()
             dir.resolve("config/paper-global.yml").writeText(resource("paper-global.yml"))
             // The pool runs Paper only for the framework, inside its own build folder.
@@ -310,10 +319,8 @@ internal class Game private constructor(
                 } else {
                     "Paper ${folder.name}"
                 },
-                command,
-                folder.dir,
+                PartCommand(command, folder.dir, settings.paperAdditions.environment(folder.slot)),
                 folder.log,
-                settings.paperAdditions.environment(folder.slot),
                 append = append,
             )
 
@@ -324,15 +331,15 @@ internal class Game private constructor(
         ): String = Coverage.agentOptions(settings.coveredPackages, classesIn(dir))
 
         private fun startClient(
-            settings: PoolSettings,
-            poolPort: Int,
+            launch: PartLaunch,
             player: String,
             input: InputPath,
             display: Display?,
         ): Part {
+            val settings = launch.settings
             val dir = freshDir(settings.poolDir.resolve("client-$player"))
             dir.resolve("options.txt").writeText(resource("options.txt"))
-            val command = Launches.client(settings, poolPort, player, input, dir)
+            val command = Launches.client(launch, player, input, dir)
             val environment =
                 when (input) {
                     // A background app on macOS: the window never takes focus from the developer.
@@ -340,7 +347,7 @@ internal class Game private constructor(
 
                     InputPath.XTEST -> mapOf("DISPLAY" to checkNotNull(display).name)
                 }
-            return Part.launch("Client $player", command, dir, logOf(settings, "client-$player"), environment, player)
+            return Part.launch("Client $player", PartCommand(command, dir, environment), logOf(settings, "client-$player"), player)
         }
 
         // An empty world over one bedrock layer: a player waits on the ground while probes step Paper. Paper
@@ -376,7 +383,7 @@ internal class Game private constructor(
         private fun logOf(
             settings: PoolSettings,
             name: String,
-        ): Path = settings.logs.resolve("$name.log")
+        ): Path = settings.run.logs.resolve("$name.log")
 
         /** Removes [dir] and all in it. */
         @OptIn(ExperimentalPathApi::class)

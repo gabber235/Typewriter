@@ -34,16 +34,14 @@ internal class SuffixRun(
     /** The saved tag with its name replaced by [name], as the panel's working overlay sends it. */
     fun named(name: DataValue) = mapOf(tag to realm.resources.getValue(tag).with("name", name))
 
-    fun resolve(name: DataValue) = runtime.resolve(invocation, realm.generation, observation, named(name), emptySet())
+    fun resolve(name: DataValue) = runtime.resolve(invocation, realm.generation, WorkingObservation(observation, named(name)))
 
     suspend fun prepare(name: String): OperationPreparationResult =
         runtime.prepare(
             invocation,
             realm.generation,
             capability,
-            observation,
-            named(DataValue.StringValueWrapper(name)),
-            emptySet(),
+            WorkingObservation(observation, named(DataValue.StringValueWrapper(name))),
             null,
             PreparationChoices(),
         )

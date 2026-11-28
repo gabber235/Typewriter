@@ -10,10 +10,10 @@ val PartTest by testSuite {
     test("a part names its process in its folder, and the next boot in that folder names the new process") {
         val dir = Files.createTempDirectory("paper")
         val log = dir.resolve("paper.log")
-        val first = Part.launch("Paper", listOf("sleep", "30"), dir, log, mapOf())
+        val first = Part.launch("Paper", PartCommand(listOf("sleep", "30"), dir, mapOf()), log)
         first.process.destroyForcibly().waitFor()
 
-        val again = Part.launch("Paper", listOf("sleep", "30"), dir, log, mapOf(), append = true)
+        val again = Part.launch("Paper", PartCommand(listOf("sleep", "30"), dir, mapOf()), log, append = true)
 
         try {
             PartFile.read(dir.resolve(PartFile.NAME)).flatMap(PartFile::running) shouldBePresent {

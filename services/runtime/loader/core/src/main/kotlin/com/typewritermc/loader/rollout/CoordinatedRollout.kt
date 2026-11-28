@@ -78,28 +78,54 @@ interface RolloutStateRepository {
 }
 
 /**
- * Stages and activates projections across responding selected hosts, then proves a healthy stability interval.
+ * What a rollout deploys where: the [manifests] resolved for the hosts [selection] picks in [realmId]. [current] reads
+ * the selection again, so a rollout commits only while it still holds.
+ */
+class RolloutTarget(
+    val realmId: RealmId,
+    val selection: RealmDeploymentSelection,
+    val manifests: Map<ArtifactId, ImprintManifest>,
+    val current: suspend () -> RealmDeploymentSelection = { selection },
+)
+
+/**
+ * How long each step of a rollout may take, measured on [timeSource]: a discovery or status query waits
+ * [requestTimeout], a command [commandTimeout] (by default the transport reply time to live, the longest a host is
+ * permitted to reply), participants have [participantDeadline] to reach a phase, and a commit holds once every host
+ * stayed healthy for [healthyDuration].
+ */
+class RolloutTiming(
+    val requestTimeout: Duration = 5.seconds,
+    val commandTimeout: Duration = TRANSPORT_LIMITS.replyTtl,
+    val participantDeadline: Duration = 5.minutes,
+    val healthyDuration: Duration = 30.seconds,
+    val timeSource: TimeSource = TimeSource.Monotonic,
+)
+
+/**
+ * Stages and activates projections across the responding hosts of [target], then proves a healthy stability interval.
  *
  * The Realm host must answer discovery; absent engine hosts can reconcile later. Selection must remain unchanged
  * before commit. Failure triggers abort before committing or rollback afterward; compensation itself may fail and
- * is not an atomic distributed transaction. A command waits at most the transport reply time to live by default,
- * the longest a host is permitted to reply.
+ * is not an atomic distributed transaction. Each step waits as [timing] allows.
  */
 class CoordinatedRollout(
-    private val realmId: RealmId,
-    private val selection: RealmDeploymentSelection,
-    private val manifests: Map<ArtifactId, ImprintManifest>,
+    private val target: RolloutTarget,
     private val messenger: RolloutMessenger,
     private val projections: ProjectionRepository,
     private val state: RolloutStateRepository,
-    private val currentSelection: suspend () -> RealmDeploymentSelection = { selection },
-    private val requestTimeout: Duration = 5.seconds,
-    private val commandTimeout: Duration = TRANSPORT_LIMITS.replyTtl,
-    private val participantDeadline: Duration = 5.minutes,
-    private val healthyDuration: Duration = 30.seconds,
+    private val timing: RolloutTiming = RolloutTiming(),
     private val telemetry: ServiceTelemetry? = null,
-    private val timeSource: TimeSource = TimeSource.Monotonic,
 ) {
+    private val realmId get() = target.realmId
+    private val selection get() = target.selection
+    private val manifests get() = target.manifests
+    private val requestTimeout get() = timing.requestTimeout
+    private val commandTimeout get() = timing.commandTimeout
+    private val participantDeadline get() = timing.participantDeadline
+    private val healthyDuration get() = timing.healthyDuration
+    private val timeSource get() = timing.timeSource
+
     /** Starts a new attempt for [snapshot] and commits only after every participating host is stable and healthy. */
     suspend fun rollOut(snapshot: DeploymentSnapshot) =
         telemetry.artifactSpan(
@@ -169,7 +195,7 @@ class CoordinatedRollout(
             val stage = progress.request(RolloutCommand.createStage(participants = references.participants()))
             requireAccepted(messenger.command(stage, commandTimeout), references.keys)
             awaitStatuses(attempt, references.keys) { host, status -> status.stagedCandidate() == references.getValue(host) }
-            require(currentSelection() == selection) { selectionChanged }
+            require(target.current() == selection) { selectionChanged }
 
             progress.committing = true
             val commit = progress.request(RolloutCommand.createCommit(participants = references.participants()))
@@ -263,6 +289,8 @@ class CoordinatedRollout(
                 val started = healthySince ?: timeSource.markNow().also { healthySince = it }
                 if (started.elapsedNow() >= healthyDuration) return
             }
+            // Polls the rollout's health window on the wall clock: no tick caused the wait.
+            @Suppress("ForbiddenMethodCall/loaderWaits")
             delay(100)
         }
         error("Timed out while proving rollout stability.")
@@ -277,6 +305,8 @@ class CoordinatedRollout(
         while (deadline.elapsedNow() < participantDeadline) {
             val statuses = messenger.statuses(QueryParticipantStatusRequest(attempt = attempt), participants, requestTimeout)
             if (participants.all { host -> statuses[host]?.let { condition(host, it) } == true }) return
+            // Polls the participants' statuses until the deadline: no tick caused the wait.
+            @Suppress("ForbiddenMethodCall/loaderWaits")
             delay(100)
         }
         error("Timed out waiting for rollout participants.")

@@ -13,6 +13,8 @@ import com.typewritermc.loader.api.HostedRuntimeDirectories
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.loader.api.HostedRuntimeIdentity
 import com.typewritermc.loader.api.RuntimePlacement
+import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import java.nio.file.Path
@@ -54,6 +56,7 @@ fun deploymentContext(
 private object UnusedHost : HostedRuntimeHost {
     override val messaging get() = error("A refused deployment never reaches messaging.")
     override val openTelemetry get() = error("A refused deployment never reaches telemetry.")
+    override val work get() = error("A refused deployment never runs work.")
     override val sharedArtifacts get() = error("A refused deployment never reaches shared artifacts.")
 }
 
@@ -87,5 +90,6 @@ private class MessagingHost(
             ),
         )
     override val openTelemetry get() = telemetry
+    override val work = InFlightWork().of(WorkRuntime("engine"))
     override val sharedArtifacts get() = error("Wiring never reaches shared artifacts.")
 }

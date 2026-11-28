@@ -3,6 +3,7 @@ package com.typewritermc.services.libs.registrar.runtime
 import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.protocol.skir.fromBoundedBytes
 import com.typewritermc.services.libs.http.core.HttpError
+import com.typewritermc.services.libs.http.core.HttpLimits
 import com.typewritermc.services.libs.http.core.HttpMethod
 import com.typewritermc.services.libs.http.core.HttpOperation
 import com.typewritermc.services.libs.http.core.HttpRequest
@@ -42,14 +43,12 @@ class TypewriterIdentityIssuer(
         val result =
             client.execute(
                 HttpRequest(
-                    HttpOperation("registrar.identity.issue"),
-                    ErrorSlug.of("identity-issue-failed"),
+                    HttpOperation("registrar.identity.issue", ErrorSlug.of("identity-issue-failed")),
                     HttpMethod.POST,
                     uri,
                     skirRequestHeaders,
                     body,
-                    maximumRequestBytes = MAXIMUM_SKIR_BODY,
-                    maximumResponseBytes = MAXIMUM_SKIR_BODY,
+                    limits = HttpLimits(maximumRequestBytes = MAXIMUM_SKIR_BODY, maximumResponseBytes = MAXIMUM_SKIR_BODY),
                 ),
             )
         if (result is HttpResult.Failure) {

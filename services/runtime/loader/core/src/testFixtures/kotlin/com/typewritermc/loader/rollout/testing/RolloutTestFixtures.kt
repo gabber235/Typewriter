@@ -17,6 +17,8 @@ import com.typewritermc.loader.rollout.CoordinatedRollout
 import com.typewritermc.loader.rollout.FileRolloutStateRepository
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.loader.rollout.RolloutMessenger
+import com.typewritermc.loader.rollout.RolloutTarget
+import com.typewritermc.loader.rollout.RolloutTiming
 import com.typewritermc.loader.rollout.commandKind
 import com.typewritermc.loader.rollout.projectionOf
 import com.typewritermc.loader.rollout.toSkir
@@ -24,6 +26,7 @@ import com.typewritermc.loader.testing.FIXTURE_VERSION
 import com.typewritermc.loader.testing.deploymentArtifact
 import com.typewritermc.loader.testing.engineManifest
 import com.typewritermc.services.libs.registrar.ServiceId
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import skirout.service.v1.rollout.ActiveProjection
 import skirout.service.v1.rollout.ApplyRolloutCommandRequest
@@ -142,20 +145,20 @@ class RolloutFixture(
 ) {
     private val root = Files.createTempDirectory("typewriter-rollout")
     val state = FileRolloutStateRepository(RealmId("realm"), root)
-    val projections = BlobProjectionRepository(FileDigestBlobStore(root))
+    val projections = BlobProjectionRepository(FileDigestBlobStore(root, io = Dispatchers.IO))
     val snapshot = deploymentSnapshot()
     val rollout =
         CoordinatedRollout(
-            RealmId("realm"),
-            selection,
-            deploymentManifests(),
+            RolloutTarget(RealmId("realm"), selection, deploymentManifests()),
             host,
             projections,
             state,
-            requestTimeout = 1.seconds,
-            participantDeadline = participantDeadline,
-            healthyDuration = healthyDuration,
-            timeSource = timeSource,
+            RolloutTiming(
+                requestTimeout = 1.seconds,
+                participantDeadline = participantDeadline,
+                healthyDuration = healthyDuration,
+                timeSource = timeSource,
+            ),
         )
 }
 

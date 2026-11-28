@@ -106,11 +106,9 @@ internal class ResourceOperationRuntime(
     fun resolve(
         invocation: OperationInvocation,
         expectedCatalog: CatalogGeneration,
-        confirmedObservation: String,
-        upserts: Map<ResourceId, AuthoringRecord>,
-        removals: Set<ResourceId>,
+        working: WorkingObservation,
     ): ResolvedResourceOperations =
-        observe(expectedCatalog, confirmedObservation, upserts, removals) { view ->
+        observe(expectedCatalog, working) { view ->
             val operations =
                 invocation
                     .applicableIn(view, CapturedAuthoringReads(AuthoredReadView.Original(view)))
@@ -140,11 +138,9 @@ internal class ResourceOperationRuntime(
     fun resolveDropCandidates(
         invocation: OperationInvocation,
         expectedCatalog: CatalogGeneration,
-        confirmedObservation: String,
-        upserts: Map<ResourceId, AuthoringRecord>,
-        removals: Set<ResourceId>,
+        working: WorkingObservation,
     ): List<DropCandidates> =
-        observe(expectedCatalog, confirmedObservation, upserts, removals) { view ->
+        observe(expectedCatalog, working) { view ->
             invocation
                 .applicableIn(view, CapturedAuthoringReads(AuthoredReadView.Original(view)))
                 .mapNotNull { operation ->
@@ -174,15 +170,13 @@ internal class ResourceOperationRuntime(
         invocation: OperationInvocation,
         expectedCatalog: CatalogGeneration,
         capability: CapabilityId,
-        confirmedObservation: String,
-        upserts: Map<ResourceId, AuthoringRecord>,
-        removals: Set<ResourceId>,
+        working: WorkingObservation,
         input: DataValue?,
         choices: PreparationChoices,
     ): OperationPreparationResult =
         views.capture().use { lease ->
             if (lease.root.catalog.generation != expectedCatalog) throw OperationCatalogChanged(lease.root.catalog.generation)
-            val baseline = lease.operationObservation(confirmedObservation, upserts, removals)
+            val baseline = lease.operationObservation(working)
             val edit = WorkingViewEditContext(baseline, invocation.invocationId)
             val operation = baseline.catalog.operations.requireAuthoring(capability)
             if (operation !in invocation.applicableIn(baseline, edit.capturedReads)) {
@@ -236,14 +230,12 @@ internal class ResourceOperationRuntime(
     /** Runs [body] against the caller's working observation once its catalog and saved observation are confirmed. */
     private fun <T> observe(
         expectedCatalog: CatalogGeneration,
-        confirmedObservation: String,
-        upserts: Map<ResourceId, AuthoringRecord>,
-        removals: Set<ResourceId>,
+        working: WorkingObservation,
         body: (AuthoringView) -> T,
     ): T =
         views.capture().use { lease ->
             if (lease.root.catalog.generation != expectedCatalog) throw OperationCatalogChanged(lease.root.catalog.generation)
-            body(lease.operationObservation(confirmedObservation, upserts, removals))
+            body(lease.operationObservation(working))
         }
 
     /** Availability of this operation for [subjects]; a callback failure or incomplete read is a resolution failure. */

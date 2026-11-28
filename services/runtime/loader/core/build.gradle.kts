@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.opentelemetry.exporter.otlp)
     implementation(libs.opentelemetry.semconv)
     implementation(libs.kotlin.serialize.cbor)
+    testFixturesApi(testFixtures(project(":loader-api")))
     testFixturesApi(testFixtures(project(":messaging")))
     testFixturesApi(testFixtures(project(":telemetry")))
     testFixturesApi(testFixtures(project(":file-transfer")))

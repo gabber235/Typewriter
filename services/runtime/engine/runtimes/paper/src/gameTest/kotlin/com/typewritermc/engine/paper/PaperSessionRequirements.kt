@@ -22,37 +22,32 @@ val PaperSessionRequirements by testSuite(
         },
 ) {
     requirement(
-        "GAME-S1",
-        "a player who joins the game Paper has a session in the stack's Realm, held by that Paper's engine",
-    ) {
-        StackObserver.fromEnvironment().use { observer ->
-            val engine = observer.engineId(SHARED_PAPER)
-            player.quit()
-            player.rejoin()
-            within(20.ticks) {
-                state("the player's session is held by the shared Paper's engine") {
-                    observer.session(player.uuid)?.holder == engine
-                }
-            }
-        }
-    }
-
-    requirement(
         "GAME-S2",
-        "a player who quits and rejoins the game Paper keeps their session and when it began",
+        "a quit writes the session key within the window; the rejoin rewrites it, held by the engine, since kept",
+        players = 2,
     ) {
+        // The stayer steps the ticks of the windows while the leaver is away.
+        val leaver = players.first()
         StackObserver.fromEnvironment().use { observer ->
             val engine = observer.engineId(SHARED_PAPER)
-            val before = observer.session(player.uuid) ?: error("the player had no session before quitting")
+            val joined = observer.session(leaver.uuid) ?: error("the player had no session before quitting")
 
-            player.quit()
-            player.rejoin()
+            leaver.quit()
+            within(10.ticks) {
+                state("the quit wrote the session key") { (observer.session(leaver.uuid)?.revision ?: 0) > joined.revision }
+            }
+            val quit = observer.session(leaver.uuid) ?: error("the session ended before the rejoin")
+
+            leaver.rejoin()
             within(20.ticks) {
-                state("the session is held by the shared Paper's engine since it first began") {
-                    val session = observer.session(player.uuid)
-                    session != null && session.holder == engine && session.since == before.since
+                state("the rejoin wrote the session key, held by the shared Paper's engine since the session began") {
+                    val session = observer.session(leaver.uuid)
+                    session != null &&
+                        session.revision > quit.revision &&
+                        session.entry.holder == engine &&
+                        session.entry.since == joined.entry.since
                 }
-                never.state("the session is gone") { observer.session(player.uuid) == null }
+                never.state("the session is gone") { observer.session(leaver.uuid) == null }
             }
         }
     }

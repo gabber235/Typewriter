@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import java.nio.file.Path
+import kotlin.coroutines.CoroutineContext
 
 typealias LoaderServiceSnapshot = RegistrarSnapshot
 typealias LoaderServiceResult<Value> = RegistrarResult<Value>
@@ -89,10 +90,14 @@ class RegistrarLoaderService(
         }
 }
 
-/** Creates a loader owned registration and messaging lifecycle for one host process. */
+/**
+ * Creates a loader owned registration and messaging lifecycle for one host process: it runs in [scope], and its blob
+ * store reads and writes its files on [io].
+ */
 fun interface LoaderServiceFactory {
     fun create(
         workDirectory: Path,
         scope: CoroutineScope,
+        io: CoroutineContext,
     ): LoaderService
 }

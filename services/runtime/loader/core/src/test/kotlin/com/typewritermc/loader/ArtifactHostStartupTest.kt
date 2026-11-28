@@ -4,6 +4,7 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.RealmManifest
 import com.typewritermc.imprint.VersionConstraint
+import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.artifact.ArtifactInboxReconciler
 import com.typewritermc.loader.artifact.FileCandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
@@ -12,16 +13,19 @@ import com.typewritermc.loader.rollout.ArtifactHostAssignmentSource
 import com.typewritermc.loader.testing.StartupLoaderService
 import com.typewritermc.loader.testing.startupEngineManifest
 import com.typewritermc.loader.testing.writeStartupJar
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.registrar.ServiceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 val ArtifactHostStartupTest by testSuite {
     test("first assignment observes every valid inbox replacement at startup") {
@@ -47,7 +51,7 @@ val ArtifactHostStartupTest by testSuite {
                 val candidates = FileCandidateRepository(artifactsRoot)
                 ArtifactInboxReconciler(
                     artifactsRoot,
-                    FileDigestBlobStore(artifactsRoot),
+                    FileDigestBlobStore(artifactsRoot, io = Dispatchers.IO),
                     candidates,
                     Duration.ZERO,
                 ).reconcile()
@@ -70,6 +74,7 @@ val ArtifactHostStartupTest by testSuite {
                                 )
                             }
                         },
+                        HostWork(InFlightWork(), 10.seconds),
                         backgroundScope,
                     )
 

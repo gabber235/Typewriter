@@ -42,75 +42,72 @@ class PresentationBuildBinding(
     internal val ownershipEndpoints: Set<EndpointId> = emptySet(),
 )
 
+/**
+ * How a presentation template reads the catalog it was checked against: the fields, nested slots, payloads and links
+ * of its types, which descriptor applies to a type, nominal subtyping, and the [typing] of presentation expressions.
+ */
+internal interface PresentationTemplateCatalog {
+    val typing: PresentationTyping
+
+    fun field(
+        parent: TypeTemplate,
+        name: String,
+    ): TypeTemplate?
+
+    fun nested(
+        parent: TypeTemplate,
+        slot: NestedPresentationSlot,
+    ): PresentationNestedTemplate?
+
+    fun select(
+        actual: TypeTemplate,
+        descriptors: List<PresentationDescriptor>,
+    ): PresentationDescriptor?
+
+    fun payload(parent: TypeTemplate): TypeTemplate
+
+    fun link(parent: TypeTemplate): PresentationLinkTemplate?
+
+    fun isNominalSubtype(
+        actual: TypeDefinitionId,
+        expected: TypeDefinitionId,
+    ): Boolean
+}
+
+/** A presentation subject [type], read through the [catalog] it was checked against. */
 class CheckedPresentationTemplate internal constructor(
     val type: TypeTemplate,
-    private val fieldResolver: (TypeTemplate, String) -> TypeTemplate?,
-    private val nestedResolver: (TypeTemplate, NestedPresentationSlot) -> PresentationNestedTemplate?,
-    private val descriptorSelector: (TypeTemplate, List<PresentationDescriptor>) -> PresentationDescriptor?,
-    internal val typing: PresentationTyping,
-    private val payloadResolver: (TypeTemplate) -> TypeTemplate,
-    private val linkResolver: (TypeTemplate) -> PresentationLinkTemplate?,
-    private val subtypeChecker: (TypeDefinitionId, TypeDefinitionId) -> Boolean,
+    private val catalog: PresentationTemplateCatalog,
 ) {
+    internal val typing: PresentationTyping get() = catalog.typing
+
     internal fun field(name: String): CheckedPresentationTemplate =
-        CheckedPresentationTemplate(
-            type = requireNotNull(fieldResolver(type, name)) { "Field $name is not present in $type." },
-            fieldResolver = fieldResolver,
-            nestedResolver = nestedResolver,
-            descriptorSelector = descriptorSelector,
-            typing = typing,
-            payloadResolver = payloadResolver,
-            linkResolver = linkResolver,
-            subtypeChecker = subtypeChecker,
-        )
+        rebind(requireNotNull(catalog.field(type, name)) { "Field $name is not present in $type." })
 
     internal fun nested(slot: NestedPresentationSlot): CheckedPresentationNested {
-        val nested = requireNotNull(nestedResolver(type, slot)) { "Presentation slot $slot is not available for $type." }
-        return CheckedPresentationNested(
-            type =
-                CheckedPresentationTemplate(
-                    type = nested.type,
-                    fieldResolver = fieldResolver,
-                    nestedResolver = nestedResolver,
-                    descriptorSelector = descriptorSelector,
-                    typing = typing,
-                    payloadResolver = payloadResolver,
-                    linkResolver = linkResolver,
-                    subtypeChecker = subtypeChecker,
-                ),
-            collectionKind = nested.collectionKind,
-        )
+        val nested = requireNotNull(catalog.nested(type, slot)) { "Presentation slot $slot is not available for $type." }
+        return CheckedPresentationNested(type = rebind(nested.type), collectionKind = nested.collectionKind)
     }
 
-    internal fun rebind(type: TypeTemplate): CheckedPresentationTemplate =
-        CheckedPresentationTemplate(
-            type,
-            fieldResolver,
-            nestedResolver,
-            descriptorSelector,
-            typing,
-            payloadResolver,
-            linkResolver,
-            subtypeChecker,
-        )
+    internal fun rebind(type: TypeTemplate): CheckedPresentationTemplate = CheckedPresentationTemplate(type, catalog)
 
     /** The field at [name], or null when this type has no such field. */
-    internal fun fieldOrNull(name: String): CheckedPresentationTemplate? = if (fieldResolver(type, name) == null) null else field(name)
+    internal fun fieldOrNull(name: String): CheckedPresentationTemplate? = catalog.field(type, name)?.let(::rebind)
 
     /** The item type of this collection type, or null when it is not a collection. */
-    internal fun itemsOrNull(): CheckedPresentationTemplate? = nestedResolver(type, NestedPresentationSlot.Items)?.let { rebind(it.type) }
+    internal fun itemsOrNull(): CheckedPresentationTemplate? = catalog.nested(type, NestedPresentationSlot.Items)?.let { rebind(it.type) }
 
     /** The endpoint and target of this type when it is a link, otherwise null. */
-    internal fun link(): PresentationLinkTemplate? = linkResolver(type)
+    internal fun link(): PresentationLinkTemplate? = catalog.link(type)
 
     internal fun isSubtype(
         actual: TypeDefinitionId,
         expected: TypeDefinitionId,
-    ): Boolean = actual == expected || subtypeChecker(actual, expected)
+    ): Boolean = actual == expected || catalog.isNominalSubtype(actual, expected)
 
-    internal fun select(descriptors: List<PresentationDescriptor>): PresentationDescriptor? = descriptorSelector(type, descriptors)
+    internal fun select(descriptors: List<PresentationDescriptor>): PresentationDescriptor? = catalog.select(type, descriptors)
 
-    internal fun payloadType(): TypeTemplate = payloadResolver(type)
+    internal fun payloadType(): TypeTemplate = catalog.payload(type)
 }
 
 /** A link type: the endpoint of its relation on the side of the resource holding it, and the resources it may target. */
@@ -142,57 +139,85 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
         }
     }
 
+    val checkedType = this
     return CheckedPresentationTemplate(
-        type = use.toTemplate(),
-        fieldResolver = { parent, name ->
-            resolve(parent)
-                .schema.fields
-                .singleOrNull { it.key == name }
-                ?.type
-                ?.toTemplate()
-        },
-        nestedResolver = { parent, slot ->
-            val checked = resolve(parent)
-            when (slot) {
-                NestedPresentationSlot.Payload, NestedPresentationSlot.Fields -> {
-                    PresentationNestedTemplate(parent)
-                }
+        use.toTemplate(),
+        object : PresentationTemplateCatalog {
+            override val typing = PresentationTyping(checkedType::resolve, com.typewritermc.discovery.OpaqueParameters(emptyList()))
 
-                NestedPresentationSlot.Items -> {
-                    val representation = checked.schema.representation as? ResolvedRepresentation.SequenceWrapper
-                    representation?.let { PresentationNestedTemplate(it.value.item.toTemplate(), it.value.kind) }
-                }
+            override fun field(
+                parent: TypeTemplate,
+                name: String,
+            ): TypeTemplate? =
+                resolve(parent)
+                    .schema.fields
+                    .singleOrNull { it.key == name }
+                    ?.type
+                    ?.toTemplate()
 
-                NestedPresentationSlot.Keys -> {
-                    val representation = checked.schema.representation as? ResolvedRepresentation.MappingWrapper
-                    representation?.let { PresentationNestedTemplate(it.value.key.toTemplate()) }
-                }
+            override fun nested(
+                parent: TypeTemplate,
+                slot: NestedPresentationSlot,
+            ): PresentationNestedTemplate? {
+                val checked = resolve(parent)
+                return when (slot) {
+                    NestedPresentationSlot.Payload, NestedPresentationSlot.Fields -> {
+                        PresentationNestedTemplate(parent)
+                    }
 
-                NestedPresentationSlot.Values -> {
-                    when (val representation = checked.schema.representation) {
-                        is ResolvedRepresentation.MappingWrapper -> PresentationNestedTemplate(representation.value.value.toTemplate())
-                        else -> (checked.use as? TypeUse.NullableWrapper)?.let { PresentationNestedTemplate(it.value.value.toTemplate()) }
+                    NestedPresentationSlot.Items -> {
+                        val representation = checked.schema.representation as? ResolvedRepresentation.SequenceWrapper
+                        representation?.let { PresentationNestedTemplate(it.value.item.toTemplate(), it.value.kind) }
+                    }
+
+                    NestedPresentationSlot.Keys -> {
+                        val representation = checked.schema.representation as? ResolvedRepresentation.MappingWrapper
+                        representation?.let { PresentationNestedTemplate(it.value.key.toTemplate()) }
+                    }
+
+                    NestedPresentationSlot.Values -> {
+                        when (val representation = checked.schema.representation) {
+                            is ResolvedRepresentation.MappingWrapper -> {
+                                PresentationNestedTemplate(representation.value.value.toTemplate())
+                            }
+
+                            else -> {
+                                (checked.use as? TypeUse.NullableWrapper)?.let {
+                                    PresentationNestedTemplate(
+                                        it.value.value.toTemplate(),
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
-        },
-        typing = PresentationTyping(this::resolve, com.typewritermc.discovery.OpaqueParameters(emptyList())),
-        payloadResolver = { parent ->
-            val checked = resolve(parent)
-            (checked.schema.representation as? ResolvedRepresentation.ScalarWrapper)?.let { it.value.kind.template } ?: parent
-        },
-        linkResolver = { parent ->
-            (resolve(parent).schema.representation as? ResolvedRepresentation.LinkWrapper)?.let { link ->
-                PresentationLinkTemplate(link.value.endpoint, link.value.target.toTemplate())
+
+            override fun payload(parent: TypeTemplate): TypeTemplate {
+                val checked = resolve(parent)
+                return (checked.schema.representation as? ResolvedRepresentation.ScalarWrapper)?.let { it.value.kind.template } ?: parent
             }
-        },
-        subtypeChecker = { actual, expected -> isNominalSubtype(actual, expected) },
-        descriptorSelector = { template, descriptors ->
-            val actual = resolve(template)
-            selectMostSpecificDescriptors(
-                descriptors.filter { descriptor -> descriptor.target.matches(actual) },
-                actual,
-            )
+
+            override fun link(parent: TypeTemplate): PresentationLinkTemplate? =
+                (resolve(parent).schema.representation as? ResolvedRepresentation.LinkWrapper)?.let { link ->
+                    PresentationLinkTemplate(link.value.endpoint, link.value.target.toTemplate())
+                }
+
+            override fun isNominalSubtype(
+                actual: TypeDefinitionId,
+                expected: TypeDefinitionId,
+            ): Boolean = checkedType.isNominalSubtype(actual, expected)
+
+            override fun select(
+                actual: TypeTemplate,
+                descriptors: List<PresentationDescriptor>,
+            ): PresentationDescriptor? {
+                val resolved = resolve(actual)
+                return selectMostSpecificDescriptors(
+                    descriptors.filter { descriptor -> descriptor.target.matches(resolved) },
+                    resolved,
+                )
+            }
         },
     )
 }
@@ -269,7 +294,10 @@ interface Layout :
     /**
      * Constrains [body] in logical pixels. An exact [width] or [height] overrides the matching bounds; an absent
      * bound leaves the incoming constraint.
+     *
+     * Authoring DSL: each parameter is an optional layout property authors name at the call site.
      */
+    @Suppress("LongParameterList")
     fun size(
         width: Double? = null,
         height: Double? = null,
@@ -348,7 +376,10 @@ interface StackLayout : Layout {
      * Places [body] by insets and sizes in logical pixels relative to the stack. At most two of [start], [end] and
      * [width] apply horizontally, and at most two of [top], [bottom] and [height] vertically. [transition] animates
      * changes of the insets and sizes.
+     *
+     * Authoring DSL: each parameter is an optional layout property authors name at the call site.
      */
+    @Suppress("LongParameterList")
     fun positioned(
         top: PresentationNumber? = null,
         start: PresentationNumber? = null,

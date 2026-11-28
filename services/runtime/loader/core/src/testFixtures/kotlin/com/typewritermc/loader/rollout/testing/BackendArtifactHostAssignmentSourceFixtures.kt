@@ -5,6 +5,7 @@ import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.loader.HostEntrypoint
 import com.typewritermc.loader.LoaderServiceConnection
+import com.typewritermc.loader.api.work.InFlightWork
 import com.typewritermc.loader.rollout.BackendArtifactHostAssignmentSource
 import com.typewritermc.protocol.transport.ServiceRouteScope
 import com.typewritermc.protocol.transport.generated.hostExecutionWatch
@@ -51,7 +52,9 @@ class Backend(
 
     private fun answer(request: OutboundMessage): InboundMessage =
         when (request.address) {
-            HOST_SCOPE.serviceHostRegister.requestAddress.render(HOST_SCOPE) -> {
+            HOST_SCOPE.serviceHostRegister.request.address
+                .render(HOST_SCOPE),
+            -> {
                 events += "register"
                 val response =
                     if (failedRegistrations-- > 0) {
@@ -59,13 +62,23 @@ class Backend(
                     } else {
                         RegisterServiceHostResponse.SuccessWrapper(ServiceHost.partial())
                     }
-                InboundMessage(request.address, HOST_SCOPE.serviceHostRegister.responseCodec.encode(response))
+                InboundMessage(
+                    request.address,
+                    HOST_SCOPE.serviceHostRegister.replies.codec
+                        .encode(response),
+                )
             }
 
-            HOST_SCOPE.hostExecutionWatch.requestAddress.render(HOST_SCOPE) -> {
+            HOST_SCOPE.hostExecutionWatch.initial.request.address
+                .render(HOST_SCOPE),
+            -> {
                 events += "watch"
                 val initial = WatchHostExecutionResponse.createDesired(topologyRevision = 1, realm = realmInstance(), engine = null)
-                InboundMessage(request.address, HOST_SCOPE.hostExecutionWatch.initialCodec.encode(initial))
+                InboundMessage(
+                    request.address,
+                    HOST_SCOPE.hostExecutionWatch.initial.replies.codec
+                        .encode(initial),
+                )
             }
 
             else -> {
@@ -73,7 +86,11 @@ class Backend(
             }
         }
 
-    fun source(ready: Boolean): BackendArtifactHostAssignmentSource {
+    /** The host's assignment source over this backend; its own requests count in [work]. */
+    fun source(
+        ready: Boolean,
+        work: InFlightWork = InFlightWork(),
+    ): BackendArtifactHostAssignmentSource {
         val communicator = Communicator(transport, harness.telemetry, ContextPropagators.noop())
         val state =
             if (ready) {
@@ -107,6 +124,7 @@ class Backend(
             connection,
             ArtifactRequirement(ArtifactId("typewritermc:panel"), VersionConstraint("^1")),
             HostEntrypoint.STANDALONE,
+            work,
         )
     }
 

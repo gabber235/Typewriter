@@ -38,7 +38,9 @@ val BackendHostExecutionReporterTest by testSuite {
                 hostedSession(transport),
             )
 
-            val sent = scope.hostExecutionReport.requestCodec.decode(transport.requests.single().payload)
+            val sent =
+                scope.hostExecutionReport.request.codec
+                    .decode(transport.requests.single().payload)
             sent.topologyRevision shouldBe 7
             sent.realmState shouldBe
                 ChildRuntimeState(status = ChildRuntimeStatus.ABSENT, activeArtifactVersion = null, message = null, updatedAt = now)

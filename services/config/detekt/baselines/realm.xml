@@ -8,7 +8,7 @@
     <ID>CyclomaticComplexMethod:AuthoringPlanningSession.kt:AuthoringPlanningSession$fun append</ID>
     <ID>CyclomaticComplexMethod:AuthoringPlanningSession.kt:AuthoringPlanningSession$private fun connection</ID>
     <ID>CyclomaticComplexMethod:AuthoringSearchProjection.kt:private fun DataValue.collectText</ID>
-    <ID>CyclomaticComplexMethod:AuthoringSnapshotValidator.kt:private fun validateRealmStructure</ID>
+    <ID>CyclomaticComplexMethod:AuthoringSnapshotValidator.kt:StructureRules$fun realmStructure</ID>
     <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$fun discoverOccurrences: List&lt;DraftBinding&gt;</ID>
     <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$internal fun bindOccurrence: DraftBinding?</ID>
     <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$override fun &lt;D&gt; select: PartialSelection&lt;D&gt;</ID>
@@ -35,10 +35,10 @@
     <ID>CyclomaticComplexMethod:ResourceOperationRoutes.kt:ResourceOperationRoutes$internal suspend fun prepare: AuthoringActionResult</ID>
     <ID>CyclomaticComplexMethod:ResourceOperationRuntime.kt:ResourceOperationRuntime$suspend fun prepare: OperationPreparationResult</ID>
     <ID>CyclomaticComplexMethod:ResourceValueMapper.kt:ResourceValueMapper$fun project: ProjectionResult</ID>
-    <ID>CyclomaticComplexMethod:ResourceValueMapper.kt:private fun collectLinkEvidence</ID>
-    <ID>CyclomaticComplexMethod:ResourceValueMapper.kt:private fun collectLinkSlots</ID>
+    <ID>CyclomaticComplexMethod:ResourceValueMapper.kt:LinkEvidenceWalk$fun collect</ID>
+    <ID>CyclomaticComplexMethod:ResourceValueMapper.kt:LinkSlotWalk$fun collect</ID>
     <ID>CyclomaticComplexMethod:TypeArgumentOperations.kt:DefaultTypeArgumentOperations$override fun preview: PreviewTypeArgumentChangeResponse</ID>
-    <ID>CyclomaticComplexMethod:TypeArgumentOperations.kt:private fun collectRepairs</ID>
+    <ID>CyclomaticComplexMethod:TypeArgumentOperations.kt:TypeChangeRepairs$fun collect</ID>
     <ID>SwallowedException:WorkingViewEditContext.kt:WorkingViewEditContext$failure: IllegalArgumentException</ID>
     <ID>TooGenericExceptionCaught:AuthoringViewStore.kt:InMemoryAuthoringViewStore$closing: Throwable</ID>
     <ID>TooGenericExceptionCaught:AuthoringViewStore.kt:InMemoryAuthoringViewStore$failure: Throwable</ID>

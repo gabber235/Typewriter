@@ -30,7 +30,10 @@ import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
  * An explicit control and a named presentation reference are mutually exclusive. With neither selected, publication
  * requests the default presentation and preserves the field's binding, decorations, and read or write policy.
  * Nested collection editors receive their slot's binding instead of borrowing the owner's field path.
+ *
+ * Authoring DSL runtime scope: it composes the build state and every author facing scope it delegates to.
  */
+@Suppress("LongParameterList")
 internal class RuntimeControlBinding(
     private val state: PresentationBuildState,
     private val target: MutableList<PresentationNode>,

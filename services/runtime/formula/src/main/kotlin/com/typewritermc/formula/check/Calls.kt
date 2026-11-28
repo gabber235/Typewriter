@@ -65,6 +65,18 @@ internal sealed interface CallArgument {
     }
 }
 
+/**
+ * One call as checked: its [arguments], the type [expected] of it (null when nothing is), where it stands, the
+ * [scope] it reads, and whether it is [safe], written with `?.` so a null receiver makes it null.
+ */
+internal data class CallSite(
+    val arguments: List<CallArgument>,
+    val expected: TypeUse?,
+    val span: TextSpan,
+    val scope: Scope,
+    val safe: Boolean = false,
+)
+
 /** One candidate checked against a call: the argument per slot, the solved type parameters and the result. */
 internal class Trial(
     val arguments: List<CheckedExpression?>,
@@ -87,7 +99,7 @@ private class CallState(
 }
 
 /**
- * Checks a call of [signature] in a trace of its own: [receiver] fills the first context slot, named arguments their
+ * Checks [call] of [signature] in a trace of its own: [receiver] fills the first context slot, named arguments their
  * slot, extra positional arguments the context slots in order and the rest the parameters, and what is left of the
  * context fills from scope by type.
  */
@@ -95,11 +107,9 @@ internal fun Checker.attempt(
     signature: Signature,
     receiver: CheckedExpression?,
     receiverType: TypeUse?,
-    arguments: List<CallArgument>,
-    expected: TypeUse?,
-    span: TextSpan,
-    scope: Scope,
+    call: CallSite,
 ): Trial {
+    val (arguments, expected, span, scope) = call
     val state = CallState(signature)
     val trace =
         forked {
@@ -336,25 +346,22 @@ private fun Checker.fill(
 }
 
 /**
- * Calls one of [functions]: every candidate is tried, and among those that fit, the one with the most specific
- * context types wins. [operator] names the operator a call stands for, which a failure then names.
+ * Calls one of [functions] as [call]: every candidate is tried, and among those that fit, the one with the most
+ * specific context types wins. [operator] names the operator a call stands for, which a failure then names.
  */
 internal fun Checker.callFunctions(
     functions: List<FormulaFunction>,
     receiver: CheckedExpression?,
-    arguments: List<CallArgument>,
-    expected: TypeUse?,
-    safe: Boolean,
-    span: TextSpan,
-    scope: Scope,
+    call: CallSite,
     operator: String? = null,
 ): CheckedExpression {
+    val (arguments, expected, span, scope, safe) = call
     val nullRead = receiver != null && receiver.type.isNullable && !safe
     val candidates = if (nullRead) functions.filter { it.takesNullReceiver } else functions
     if (blocked(receiver, arguments, nullRead && candidates.isEmpty(), scope)) return Invalid(ERROR, span)
     val receiverType = if (nullRead) receiver?.type else receiver?.type?.nonNull()
     val wanted = if (safe) expected?.nonNull() else expected
-    val trials = candidates.map { it to attempt(it.callSignature, receiver, receiverType, arguments, wanted, span, scope) }
+    val trials = candidates.map { it to attempt(it.callSignature, receiver, receiverType, call.copy(expected = wanted)) }
     val (function, trial) = choose(trials, operator, receiverType, span) ?: return Invalid(ERROR, span)
     absorb(trial.trace)
     if (trial.trace.problems.isNotEmpty()) return Invalid(ERROR, span)
@@ -446,17 +453,14 @@ private fun Checker.mostSpecific(candidates: List<Pair<FormulaFunction, Trial>>)
     }
 }
 
-/** Calls the function value [callee] of [type]. */
+/** Calls the function value [callee] of [type] as [call]. */
 internal fun Checker.invoke(
     callee: CheckedExpression,
     type: FunctionTypeUse,
-    arguments: List<CallArgument>,
-    expected: TypeUse?,
-    safe: Boolean,
-    span: TextSpan,
-    scope: Scope,
+    call: CallSite,
 ): CheckedExpression {
-    val trial = attempt(type.callSignature, null, null, arguments, expected, span, scope)
+    val (span, safe) = call.span to call.safe
+    val trial = attempt(type.callSignature, null, null, call)
     absorb(trial.trace)
     if (trial.trace.problems.isNotEmpty()) return Invalid(ERROR, span)
     return Invoke(callee, trial.arguments.map { it ?: Invalid(ERROR, span) }, safe, if (safe) type.result.orNull() else type.result, span)

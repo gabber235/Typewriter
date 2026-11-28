@@ -19,6 +19,8 @@ internal suspend fun refusedOverlay(
 ): String? =
     RealmFixture.of(DefinitionCatalog(TEST_DEFINITIONS), seed).use { realm ->
         realm.views.capture().use { lease: AuthoringLease ->
-            shouldThrow<IllegalArgumentException> { lease.operationObservation(lease.root.observationId, upserts, removals) }.message
+            shouldThrow<IllegalArgumentException> {
+                lease.operationObservation(WorkingObservation(lease.root.observationId, upserts, removals))
+            }.message
         }
     }

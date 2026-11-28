@@ -226,9 +226,6 @@ fun TypeUse.remappingContent(copies: Map<ResourceId, ResourceId>): TypeUse =
         )
     }
 
-private fun NamedTypeUse.remappingContent(copies: Map<ResourceId, ResourceId>): NamedTypeUse =
-    (TypeUse.NamedWrapper(this).remappingContent(copies) as TypeUse.NamedWrapper).value
-
 private fun TypeTemplate.remappingContent(copies: Map<ResourceId, ResourceId>): TypeTemplate =
     mapTypes { template ->
         when (template) {

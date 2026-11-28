@@ -187,7 +187,7 @@ class CapabilityRealmPresentationSearchSource(
             )
             val invocation = context.invocation.decodeInvocation()
             val captured = context.context.decodeWorkingContext()
-            val baseline = lease.operationObservation(captured.confirmed, captured.upserts, captured.removals)
+            val baseline = lease.operationObservation(captured)
             require(invocation.targets.all { it.toSkir() in baseline.resources }) { "The operation search selection changed." }
             require(invocation.origin.occurrences.all { baseline.links[it.id] == it }) { "The operation search origin changed." }
             return CapturedOperationSearch(

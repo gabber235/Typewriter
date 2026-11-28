@@ -10,6 +10,7 @@ import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.operation.RealmOperationReads
 import com.typewritermc.realm.operation.StaleOperationObservation
+import com.typewritermc.realm.operation.WorkingObservation
 import com.typewritermc.realm.operation.applicableIn
 import com.typewritermc.realm.operation.guarded
 import com.typewritermc.realm.operation.operationObservation
@@ -58,7 +59,7 @@ internal class OperationRealmPresentationSearchSource(
                 return unavailableRealmPresentationSearchUpdate(request.subscriptionId, "This search requires an operation selection")
             }
         val baseline: AuthoringView
-        val captured: DecodedOperationContext
+        val captured: WorkingObservation
         val invocation: OperationInvocation
         val search: CandidateSearch
         val resultBinding: NativeBinding<OperationResourceOption>
@@ -69,7 +70,7 @@ internal class OperationRealmPresentationSearchSource(
             }
             captured = context.context.decodeWorkingContext()
             invocation = context.invocation.decodeInvocation()
-            baseline = lease.operationObservation(captured.confirmed, captured.upserts, captured.removals)
+            baseline = lease.operationObservation(captured)
             search =
                 requireNotNull(baseline.catalog.operations.candidateSearch(request.capabilityId)) {
                     "The operation search is unavailable."

@@ -8,6 +8,7 @@ import com.typewritermc.services.libs.filetransfer.blob.InMemoryBlobEndpoint
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
 
@@ -18,7 +19,7 @@ val VerifiedArtifactCacheTest by testSuite {
         runTest {
             val source = InMemoryBlobEndpoint()
             val digest = source.put(artifactBytes).digest
-            val cache = FileDigestBlobStore(Files.createTempDirectory("artifact-cache"))
+            val cache = FileDigestBlobStore(Files.createTempDirectory("artifact-cache"), io = Dispatchers.IO)
 
             val path = VerifiedArtifactCache(source, cache).fetch(digest)
 
@@ -31,7 +32,7 @@ val VerifiedArtifactCacheTest by testSuite {
             val source = InMemoryBlobEndpoint()
             val digest = source.put(artifactBytes).digest
             val other = ArtifactDigest.sha256("other artifact".encodeToByteArray())
-            val cache = FileDigestBlobStore(Files.createTempDirectory("artifact-cache-digest"))
+            val cache = FileDigestBlobStore(Files.createTempDirectory("artifact-cache-digest"), io = Dispatchers.IO)
 
             shouldThrow<IllegalArgumentException> {
                 VerifiedArtifactCache(source.describing(BlobMetadata(other, artifactBytes.size.toLong())), cache).fetch(digest)
@@ -45,7 +46,7 @@ val VerifiedArtifactCacheTest by testSuite {
         runTest {
             val source = InMemoryBlobEndpoint()
             val digest = source.put(artifactBytes).digest
-            val cache = FileDigestBlobStore(Files.createTempDirectory("artifact-cache-ceiling"))
+            val cache = FileDigestBlobStore(Files.createTempDirectory("artifact-cache-ceiling"), io = Dispatchers.IO)
             val oversized = source.describing(BlobMetadata(digest, TRANSFERRED_BLOB_MAX_BYTES + 1), fetchable = false)
 
             shouldThrow<IllegalArgumentException> { VerifiedArtifactCache(oversized, cache).fetch(digest) }.message shouldBe
@@ -60,7 +61,7 @@ val VerifiedArtifactCacheTest by testSuite {
             val source = InMemoryBlobEndpoint()
             val digest = source.put(artifactBytes).digest
             source.replace(digest, "damaged artifact".encodeToByteArray())
-            val cache = FileDigestBlobStore(Files.createTempDirectory("artifact-cache-damaged"))
+            val cache = FileDigestBlobStore(Files.createTempDirectory("artifact-cache-damaged"), io = Dispatchers.IO)
 
             shouldThrow<IllegalStateException> { VerifiedArtifactCache(source, cache).fetch(digest) }
 

@@ -12,6 +12,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
@@ -131,7 +132,6 @@ internal class CapabilityProviderProcessor(
         val resultUse = resultType?.let { it.completeUse(function) ?: return null }
         val ownerClass = owner.toClassName()
         val functionName = function.simpleName.asString()
-        val suffix = functionName.replaceFirstChar(Char::uppercase)
         val identity =
             listOf(sourcePart, ownerClass.canonicalName, functionName, kind.name, request.use.canonicalText, resultUse?.use?.canonicalText)
                 .joinToString("|")
@@ -142,15 +142,11 @@ internal class CapabilityProviderProcessor(
                 function,
             ) ?: return null
         return CapabilityDeclaration(
-            owner = ownerClass,
-            functionName = functionName,
-            factory = ClassName(ownerClass.packageName, "${owner.simpleName.asString()}${suffix}GeneratedCapabilityProvider"),
+            handler = MemberName(ownerClass, functionName),
             kind = kind,
             id = "cap_${identity.sha256()}",
-            requestType = requestType.toTypeName(),
-            resultType = resultType?.toTypeName(),
-            requestUse = request.use,
-            resultUse = resultUse?.use,
+            request = CapabilityPayload(requestType.toTypeName(), request.use),
+            result = resultType?.let { CapabilityPayload(it.toTypeName(), requireNotNull(resultUse).use) },
             references = references,
         )
     }
@@ -186,18 +182,27 @@ private class ConvertedUse(
     val conversion: KspTypeConversionResult.Success,
 )
 
+/** What a capability sends or answers: its Kotlin [type] and the catalog [use] it is encoded as. */
+private class CapabilityPayload(
+    val type: TypeName,
+    val use: TypeUse,
+)
+
+/** One capability function, [handler], of the class that declares it, with the [request] it takes and its [result]. */
 private class CapabilityDeclaration(
-    val owner: ClassName,
-    val functionName: String,
-    val factory: ClassName,
+    val handler: MemberName,
     val kind: CapabilityKind,
     val id: String,
-    val requestType: TypeName,
-    val resultType: TypeName?,
-    val requestUse: TypeUse,
-    val resultUse: TypeUse?,
+    val request: CapabilityPayload,
+    val result: CapabilityPayload?,
     val references: DefinitionReferences,
 ) {
+    private val owner: ClassName = requireNotNull(handler.enclosingClassName) { "A capability handler is a member function." }
+    private val functionName: String = handler.simpleName
+
+    /** The generated factory, named after the owner and the function. */
+    val factory: ClassName =
+        ClassName(owner.packageName, "${owner.simpleName}${functionName.replaceFirstChar(Char::uppercase)}GeneratedCapabilityProvider")
     private val descriptorType: ClassName = kind.descriptor.asClassName()
 
     /**
@@ -220,24 +225,24 @@ private class CapabilityDeclaration(
         val (type, value) =
             when (kind) {
                 CapabilityKind.Search -> {
-                    Api.RealmSearchCapabilityRef.parameterizedBy(requestType, resultType!!) to
-                        CodeBlock.of("%T(%L,♢%T::class,♢%T::class)", Api.RealmSearchCapabilityRef, referenceId, requestType, resultType)
+                    Api.RealmSearchCapabilityRef.parameterizedBy(request.type, result!!.type) to
+                        CodeBlock.of("%T(%L,♢%T::class,♢%T::class)", Api.RealmSearchCapabilityRef, referenceId, request.type, result.type)
                 }
 
                 CapabilityKind.Computation -> {
-                    Api.RealmComputationCapabilityRef.parameterizedBy(requestType, resultType!!) to
+                    Api.RealmComputationCapabilityRef.parameterizedBy(request.type, result!!.type) to
                         CodeBlock.of(
                             "%T(%L,♢%T::class,♢%T::class)",
                             Api.RealmComputationCapabilityRef,
                             referenceId,
-                            requestType,
-                            resultType,
+                            request.type,
+                            result.type,
                         )
                 }
 
                 CapabilityKind.Command -> {
-                    Api.RealmCommandCapabilityRef.parameterizedBy(requestType) to
-                        CodeBlock.of("%T(%L,♢%T::class)", Api.RealmCommandCapabilityRef, referenceId, requestType)
+                    Api.RealmCommandCapabilityRef.parameterizedBy(request.type) to
+                        CodeBlock.of("%T(%L,♢%T::class)", Api.RealmCommandCapabilityRef, referenceId, request.type)
                 }
             }
         return PropertySpec.builder("${functionName}Capability", type).initializer(value).build()
@@ -251,13 +256,13 @@ private class CapabilityDeclaration(
                         CodeBlock.of(
                             "%T(capabilityId = id,♢requestType = %L,♢resultType = %L)",
                             descriptorType,
-                            requestUse.kotlinCode(),
-                            requireNotNull(resultUse).kotlinCode(),
+                            request.use.kotlinCode(),
+                            requireNotNull(result).use.kotlinCode(),
                         )
                     }
 
                     CapabilityKind.Command -> {
-                        CodeBlock.of("%T(capabilityId = id,♢requestType = %L)", descriptorType, requestUse.kotlinCode())
+                        CodeBlock.of("%T(capabilityId = id,♢requestType = %L)", descriptorType, request.use.kotlinCode())
                     }
                 }
             }
@@ -294,7 +299,7 @@ private class CapabilityDeclaration(
                         .addParameter("payload", dataValue)
                         .addParameter("query", RealmSearchQuery::class)
                         .returns(Api.RealmSearch.parameterizedBy(dataValue))
-                        .addStatement("val decoded = runtime.decode<%T>(descriptor.requestType,♢payload)", requestType)
+                        .addStatement("val decoded = runtime.decode<%T>(descriptor.requestType,♢payload)", request.type)
                         .addStatement(
                             "return with(context) { handler.%N(%T(decoded,♢query)) }.%M { runtime.encode(descriptor.resultType,♢it) }",
                             functionName,
@@ -311,7 +316,7 @@ private class CapabilityDeclaration(
                         .addParameter("runtime", Api.RealmCapabilityRuntime)
                         .addParameter("payload", dataValue)
                         .returns(dataValue)
-                        .addStatement("val decoded = runtime.decode<%T>(descriptor.requestType,♢payload)", requestType)
+                        .addStatement("val decoded = runtime.decode<%T>(descriptor.requestType,♢payload)", request.type)
                         .addStatement("val result = with(context) { handler.%N(decoded) }", functionName)
                         .addStatement("return runtime.encode(descriptor.resultType, result)")
                 }
@@ -324,7 +329,7 @@ private class CapabilityDeclaration(
                         .addParameter("runtime", Api.RealmCapabilityRuntime)
                         .addParameter("payload", dataValue)
                         .returns(Api.RealmCommandOutcome)
-                        .addStatement("val decoded = runtime.decode<%T>(descriptor.requestType,♢payload)", requestType)
+                        .addStatement("val decoded = runtime.decode<%T>(descriptor.requestType,♢payload)", request.type)
                         .addStatement("return with(context) { handler.%N(decoded) }", functionName)
                 }
             }

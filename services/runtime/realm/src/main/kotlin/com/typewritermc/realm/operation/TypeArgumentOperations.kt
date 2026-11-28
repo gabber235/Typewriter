@@ -9,6 +9,7 @@ import com.typewritermc.authoring.requireValid
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.authoring.AuthoringLease
+import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.ResourceValueMapper
@@ -118,6 +119,7 @@ internal class DefaultTypeArgumentOperations(
         val cleared = mutableListOf<ValueLocation>()
         val nestedRetags = mutableListOf<EditIntent.RetagWrapper>()
         val inspected = linkedSetOf<InputIdentity>()
+        val valueRepairs = TypeChangeRepairs(root.catalog.checked, cleared, nestedRetags, inspected)
         val rootLocation = ValueLocation.of(resource)
         val oldFields = old.value.knownFields.associateBy { it.key }
         val newFields = next.value.knownFields.associateBy { it.key }
@@ -129,16 +131,7 @@ internal class DefaultTypeArgumentOperations(
                 cleared += location
                 inspected += InputIdentity.Value(location)
             } else {
-                collectRepairs(
-                    value,
-                    oldField.type,
-                    newField.type,
-                    location,
-                    root.catalog.checked,
-                    cleared,
-                    nestedRetags,
-                    inspected,
-                )
+                valueRepairs.collect(value, oldField.type, newField.type, location)
             }
         }
         (next.value as? ResourceType.Partial)?.schema?.dependentFields.orEmpty().forEach { field ->
@@ -147,15 +140,7 @@ internal class DefaultTypeArgumentOperations(
             if (record.field(field.owner.name) != DataValue.UNFILLED) cleared += location
         }
         val relationRepairs =
-            incompatibleLinks(
-                resource,
-                requested,
-                root.resources,
-                root.links.values,
-                root.catalog.relations,
-                root.catalog.checked,
-                inspected,
-            )
+            root.incompatibleLinks(resource, requested, inspected)
         val relationRepairLocations = relationRepairs.mapTo(mutableSetOf()) { it.occurrence.location }
         val evidence =
             buildSet<InputIdentity> {
@@ -292,136 +277,107 @@ internal class DefaultTypeArgumentOperations(
     }
 }
 
-private fun collectRepairs(
-    value: DataValue,
-    old: TypeUse,
-    next: TypeUse,
-    at: ValueLocation,
-    catalog: CheckedCatalog,
-    repairs: MutableList<ValueLocation>,
-    retags: MutableList<EditIntent.RetagWrapper>,
-    inspected: MutableSet<InputIdentity>,
+private class TypeChangeRepairs(
+    private val catalog: CheckedCatalog,
+    private val repairs: MutableList<ValueLocation>,
+    private val retags: MutableList<EditIntent.RetagWrapper>,
+    private val inspected: MutableSet<InputIdentity>,
 ) {
-    inspected += InputIdentity.Value(at)
-    if (value == DataValue.UNFILLED) return
-    if (value == DataValue.NULL) {
-        if (next !is TypeUse.NullableWrapper) repairs += at
-        return
-    }
+    /**
+     * Collects how [value] at [at], authored as [old], becomes readable as [next]: a retag where its definition stays
+     * and its shape matches, else a repair that clears it. Every input the decision read is added to [inspected].
+     */
+    fun collect(
+        value: DataValue,
+        old: TypeUse,
+        next: TypeUse,
+        at: ValueLocation,
+    ) {
+        inspected += InputIdentity.Value(at)
+        if (value == DataValue.UNFILLED) return
+        if (value == DataValue.NULL) {
+            if (next !is TypeUse.NullableWrapper) repairs += at
+            return
+        }
 
-    val expected = if (next is TypeUse.NullableWrapper) next.value.value else next
-    val declaredActual = if (old is TypeUse.NullableWrapper) old.value.value else old
-    val actual = (value as? DataValue.NamedWrapper)?.actualType?.use ?: declaredActual
-    if (catalog.isReadableAs(actual, next)) return
+        val expected = if (next is TypeUse.NullableWrapper) next.value.value else next
+        val declaredActual = if (old is TypeUse.NullableWrapper) old.value.value else old
+        val actual = (value as? DataValue.NamedWrapper)?.actualType?.use ?: declaredActual
+        if (catalog.isReadableAs(actual, next)) return
 
-    val namedValue = value as? DataValue.NamedWrapper
-    val actualNamed = actual as? TypeUse.NamedWrapper
-    val expectedNamed = (expected as? TypeUse.NamedWrapper)?.let { catalog.heldCase(it, actualNamed) ?: it }
-    val canRetag =
-        namedValue != null &&
-            actualNamed != null &&
-            expectedNamed != null &&
-            actualNamed.value.definition == expectedNamed.value.definition
-    if (!canRetag) {
-        repairs += at
-        return
-    }
+        val namedValue = value as? DataValue.NamedWrapper
+        val actualNamed = actual as? TypeUse.NamedWrapper
+        val expectedNamed = (expected as? TypeUse.NamedWrapper)?.let { catalog.heldCase(it, actualNamed) ?: it }
+        val canRetag =
+            namedValue != null &&
+                actualNamed != null &&
+                expectedNamed != null &&
+                actualNamed.value.definition == expectedNamed.value.definition
+        if (!canRetag) {
+            repairs += at
+            return
+        }
 
-    inspected += InputIdentity.Form(at)
-    val actualType = requireNotNull(actualNamed)
-    val expectedType = requireNotNull(expectedNamed)
-    val oldResolved = catalog.resolve(actualType) as? Resolution.Ready
-    val newResolved = catalog.resolve(expectedType) as? Resolution.Ready
-    val oldRepresentation = oldResolved?.value?.schema?.representation
-    val newRepresentation = newResolved?.value?.schema?.representation
-    if (oldRepresentation == null || newRepresentation == null || oldRepresentation::class != newRepresentation::class) {
-        repairs += at
-        return
-    }
-    retags += EditIntent.createRetag(at = at, type = expectedType.value)
-    val payload = requireNotNull(namedValue).payload
-    when {
-        payload is DataValue.RecordWrapper && oldRepresentation is ResolvedRepresentation.RecordWrapper &&
-            newRepresentation is ResolvedRepresentation.RecordWrapper -> {
-            val oldFields = oldRepresentation.value.fields.associateBy { it.key }
-            newRepresentation.value.fields.forEach { field ->
-                val child = payload.field(field.key)
-                val previous = oldFields[field.key]
-                val childLocation = at.field(field.key)
-                if (child == null || previous == null) {
-                    repairs += childLocation
-                    inspected += InputIdentity.Value(childLocation)
-                } else {
-                    collectRepairs(child, previous.type, field.type, childLocation, catalog, repairs, retags, inspected)
+        inspected += InputIdentity.Form(at)
+        val actualType = requireNotNull(actualNamed)
+        val expectedType = requireNotNull(expectedNamed)
+        val oldResolved = catalog.resolve(actualType) as? Resolution.Ready
+        val newResolved = catalog.resolve(expectedType) as? Resolution.Ready
+        val oldRepresentation = oldResolved?.value?.schema?.representation
+        val newRepresentation = newResolved?.value?.schema?.representation
+        if (oldRepresentation == null || newRepresentation == null || oldRepresentation::class != newRepresentation::class) {
+            repairs += at
+            return
+        }
+        retags += EditIntent.createRetag(at = at, type = expectedType.value)
+        val payload = requireNotNull(namedValue).payload
+        when {
+            payload is DataValue.RecordWrapper && oldRepresentation is ResolvedRepresentation.RecordWrapper &&
+                newRepresentation is ResolvedRepresentation.RecordWrapper -> {
+                val oldFields = oldRepresentation.value.fields.associateBy { it.key }
+                newRepresentation.value.fields.forEach { field ->
+                    val child = payload.field(field.key)
+                    val previous = oldFields[field.key]
+                    val childLocation = at.field(field.key)
+                    if (child == null || previous == null) {
+                        repairs += childLocation
+                        inspected += InputIdentity.Value(childLocation)
+                    } else {
+                        collect(child, previous.type, field.type, childLocation)
+                    }
                 }
             }
-        }
 
-        payload is DataValue.ListValueWrapper && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
-            newRepresentation is ResolvedRepresentation.SequenceWrapper -> {
-            inspected += InputIdentity.Membership(at)
-            inspected += InputIdentity.Order(at)
-            payload.items.forEach { item ->
-                collectRepairs(
-                    item.value,
-                    oldRepresentation.value.item,
-                    newRepresentation.value.item,
-                    at.item(item.id),
-                    catalog,
-                    repairs,
-                    retags,
-                    inspected,
-                )
+            payload is DataValue.ListValueWrapper && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
+                newRepresentation is ResolvedRepresentation.SequenceWrapper -> {
+                inspected += InputIdentity.Membership(at)
+                inspected += InputIdentity.Order(at)
+                payload.items.forEach { item ->
+                    collect(item.value, oldRepresentation.value.item, newRepresentation.value.item, at.item(item.id))
+                }
             }
-        }
 
-        payload is DataValue.SetValueWrapper && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
-            newRepresentation is ResolvedRepresentation.SequenceWrapper -> {
-            inspected += InputIdentity.Membership(at)
-            payload.items.forEach { item ->
-                collectRepairs(
-                    item.value,
-                    oldRepresentation.value.item,
-                    newRepresentation.value.item,
-                    at.item(item.id),
-                    catalog,
-                    repairs,
-                    retags,
-                    inspected,
-                )
+            payload is DataValue.SetValueWrapper && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
+                newRepresentation is ResolvedRepresentation.SequenceWrapper -> {
+                inspected += InputIdentity.Membership(at)
+                payload.items.forEach { item ->
+                    collect(item.value, oldRepresentation.value.item, newRepresentation.value.item, at.item(item.id))
+                }
             }
-        }
 
-        payload is DataValue.MapValueWrapper && oldRepresentation is ResolvedRepresentation.MappingWrapper &&
-            newRepresentation is ResolvedRepresentation.MappingWrapper -> {
-            inspected += InputIdentity.Membership(at)
-            inspected += InputIdentity.Order(at)
-            payload.rows.forEach { row ->
-                collectRepairs(
-                    row.key,
-                    oldRepresentation.value.key,
-                    newRepresentation.value.key,
-                    at.item(row.id).mapKey(),
-                    catalog,
-                    repairs,
-                    retags,
-                    inspected,
-                )
-                collectRepairs(
-                    row.value,
-                    oldRepresentation.value.value,
-                    newRepresentation.value.value,
-                    at.item(row.id).mapValue(),
-                    catalog,
-                    repairs,
-                    retags,
-                    inspected,
-                )
+            payload is DataValue.MapValueWrapper && oldRepresentation is ResolvedRepresentation.MappingWrapper &&
+                newRepresentation is ResolvedRepresentation.MappingWrapper -> {
+                inspected += InputIdentity.Membership(at)
+                inspected += InputIdentity.Order(at)
+                payload.rows.forEach { row ->
+                    collect(row.key, oldRepresentation.value.key, newRepresentation.value.key, at.item(row.id).mapKey())
+                    collect(row.value, oldRepresentation.value.value, newRepresentation.value.value, at.item(row.id).mapValue())
+                }
             }
-        }
 
-        else -> {
-            repairs += at
+            else -> {
+                repairs += at
+            }
         }
     }
 }
@@ -442,18 +398,19 @@ private fun CheckedCatalog.heldCase(
         ?.let { TypeUse.NamedWrapper(it) }
 }
 
-private fun incompatibleLinks(
+/**
+ * The links touching [resource] that no longer fit once it takes [requested]: each is cleared, or removed from its
+ * collection. Every input the decision read is added to [inspected].
+ */
+private fun AuthoringView.incompatibleLinks(
     resource: ResourceId,
     requested: TypeSelection,
-    resources: Map<ResourceId, AuthoringRecord>,
-    occurrences: Collection<LinkOccurrence>,
-    contracts: List<RelationContract>,
-    catalog: CheckedCatalog,
     inspected: MutableSet<InputIdentity>,
 ): List<LinkRepairIntent> {
+    val checked = catalog.checked
     val endpointContracts =
-        contracts.flatMap { contract -> listOf(contract.first.id to contract, contract.second.id to contract) }.toMap()
-    return occurrences
+        catalog.relations.flatMap { contract -> listOf(contract.first.id to contract, contract.second.id to contract) }.toMap()
+    return links.values
         .mapNotNull { occurrence ->
             if (occurrence.source != resource &&
                 occurrence.target.resource != resource
@@ -473,11 +430,11 @@ private fun incompatibleLinks(
             val proposedTarget = targetRecord?.proposedIf(occurrence.target.resource == resource, requested)
             val expectedTarget =
                 proposedSource?.let {
-                    ResourceValueMapper.expectedTarget(occurrence, it, catalog)
+                    ResourceValueMapper.expectedTarget(occurrence, it, checked)
                 }
-            val sourceValid = proposedSource?.matches(sourceEndpoint.resource.widest(), catalog) == true
-            val targetValid = proposedTarget?.matches(targetEndpoint.resource.widest(), catalog) == true
-            val bindingValid = expectedTarget != null && proposedTarget?.matches(expectedTarget, catalog) == true
+            val sourceValid = proposedSource?.matches(sourceEndpoint.resource.widest(), checked) == true
+            val targetValid = proposedTarget?.matches(targetEndpoint.resource.widest(), checked) == true
+            val bindingValid = expectedTarget != null && proposedTarget?.matches(expectedTarget, checked) == true
             if (sourceValid && targetValid && bindingValid) {
                 null
             } else if (occurrence.id.location.path.segments

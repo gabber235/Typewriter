@@ -25,40 +25,42 @@ data class EndpointUsageDiagnostic(
 
 class EndpointUsageValidator {
     fun validate(resource: KSClassDeclaration): List<EndpointUsageDiagnostic> {
-        val diagnostics = mutableListOf<EndpointUsageDiagnostic>()
-        val resourceType = resource.asStarProjectedType()
-        visit(
-            type = resourceType,
-            resource = resourceType,
+        val walk = ResourceWalk(resource.asStarProjectedType())
+        walk.visit(
+            type = walk.resource,
             symbol = resource,
             path = listOf(resource.simpleName.asString()),
             containsCollection = false,
             stack = emptySet(),
-            diagnostics = diagnostics,
         )
-        return diagnostics
+        return walk.diagnostics
     }
+}
 
-    private fun visit(
+/** Walks the authorable fields of [resource], collecting a diagnostic for each relation endpoint used where it does not fit. */
+private class ResourceWalk(
+    val resource: KSType,
+) {
+    val diagnostics = mutableListOf<EndpointUsageDiagnostic>()
+
+    fun visit(
         type: KSType,
-        resource: KSType,
         symbol: KSNode,
         path: List<String>,
         containsCollection: Boolean,
         stack: Set<String>,
-        diagnostics: MutableList<EndpointUsageDiagnostic>,
     ) {
         val declaration = type.declaration
         val qualified = declaration.qualifiedName?.asString() ?: return
         when {
             declaration isType Ref::class.asClassName() -> {
-                validateReference(type, resource, symbol, path, containsCollection, diagnostics)
+                validateReference(type, symbol, path, containsCollection)
             }
 
             declaration isOneOf KnownTypes.containers -> {
                 type.arguments.forEachIndexed { index, argument ->
                     argument.type?.resolve()?.let { item ->
-                        visit(item, resource, symbol, path + "argument $index", true, stack, diagnostics)
+                        visit(item, symbol, path + "argument $index", true, stack)
                     }
                 }
             }
@@ -77,15 +79,7 @@ class EndpointUsageValidator {
                 val nestedStack = stack + key
                 declaration.getAllProperties().filter(KSPropertyDeclaration::isAuthorable).forEach { property ->
                     val propertyType = runCatching { property.asMemberOf(type) }.getOrElse { property.type.resolve() }
-                    visit(
-                        propertyType,
-                        resource,
-                        property,
-                        path + property.simpleName.asString(),
-                        containsCollection,
-                        nestedStack,
-                        diagnostics,
-                    )
+                    visit(propertyType, property, path + property.simpleName.asString(), containsCollection, nestedStack)
                 }
             }
         }
@@ -93,11 +87,9 @@ class EndpointUsageValidator {
 
     private fun validateReference(
         reference: KSType,
-        resource: KSType,
         symbol: KSNode,
         path: List<String>,
         containsCollection: Boolean,
-        diagnostics: MutableList<EndpointUsageDiagnostic>,
     ) {
         val endpoint =
             reference.arguments

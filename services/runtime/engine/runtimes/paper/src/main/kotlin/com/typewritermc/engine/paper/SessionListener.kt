@@ -56,6 +56,8 @@ private val Player.session: SessionId get() = SessionId(uniqueId.toString())
 /** Runs [block] on the server's main thread and returns its result. */
 private suspend fun <T> Plugin.onMainThread(block: () -> T): T {
     if (server.isPrimaryThread) return block()
+    // The main thread delivers it: the block runs in a tick, so the wait is parked on the tick, not work.
+    @Suppress("ForbiddenMethodCall/engineWaits")
     return suspendCancellableCoroutine { continuation ->
         val task = server.scheduler.runTask(this, Runnable { continuation.resumeWith(runCatching(block)) })
         continuation.invokeOnCancellation { task.cancel() }

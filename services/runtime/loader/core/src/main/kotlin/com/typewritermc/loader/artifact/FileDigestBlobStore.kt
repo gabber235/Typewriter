@@ -10,7 +10,6 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_BLOB_SIZE
 import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -26,6 +25,7 @@ import java.security.MessageDigest
 import java.time.Clock
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.CoroutineContext
 import kotlin.io.path.createDirectories
 import kotlin.io.path.fileSize
 import kotlin.io.path.isRegularFile
@@ -38,19 +38,21 @@ import kotlin.io.path.isRegularFile
  * them; [fetch] rehashes what it reads, so corruption on disk surfaces as invalid instead of being served. Storing a
  * digest that is already present verifies the existing file: an intact one is touched so garbage collection counts
  * its grace period from this store, and a corrupt one is replaced by the supplied content once that verifies.
- * Callers coordinate collection with producers; IO dispatching does not provide mutual exclusion.
+ * Callers coordinate collection with producers; IO dispatching does not provide mutual exclusion. Every file operation
+ * runs on [io], the host's counted file dispatcher in production.
  */
 class FileDigestBlobStore(
     root: Path,
     private val clock: Clock = Clock.systemUTC(),
     private val telemetry: ServiceTelemetry? = null,
+    private val io: CoroutineContext,
 ) : BlobEndpoint {
     private val blobs = root.resolve("blobs").also(Path::createDirectories)
     private val incoming = root.resolve("incoming").also(Path::createDirectories)
 
     private val publicationGate = Mutex()
     private val requiredRealms = ConcurrentHashMap.newKeySet<String>()
-    private val pins = FilePublicationPins(root.resolve("publication-pins.cbor"))
+    private val pins = FilePublicationPins(root.resolve("publication-pins.cbor"), io)
 
     fun publicationRetention(realmId: String): PublicationBlobRetention {
         requiredRealms.add(realmId)
@@ -104,14 +106,14 @@ class FileDigestBlobStore(
     }
 
     override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> =
-        withContext(Dispatchers.IO) {
+        withContext(io) {
             val path = blobPath(digest)
             if (!path.isRegularFile()) return@withContext BlobResult.NotFound
             BlobResult.Success(BlobMetadata(digest, path.fileSize()))
         }
 
     override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> =
-        withContext(Dispatchers.IO) {
+        withContext(io) {
             val path = blobPath(digest)
             if (!path.isRegularFile()) return@withContext BlobResult.NotFound
             val content = Files.readAllBytes(path)
@@ -139,7 +141,7 @@ class FileDigestBlobStore(
                 attribute("blob.digest", expected.digest.value)
                 attribute("blob.bytes", expected.size)
             }
-            withContext(Dispatchers.IO) {
+            withContext(io) {
                 if (expected.size !in 0..MAXIMUM_BLOB_SIZE) {
                     return@withContext StoreResult.Invalid("Blob exceeds the maximum accepted size.")
                 }
@@ -197,7 +199,7 @@ class FileDigestBlobStore(
         protected: Set<ArtifactDigest>,
         gracePeriod: Duration = Duration.ofDays(7),
     ): Int =
-        withContext(Dispatchers.IO) {
+        withContext(io) {
             val protectedValues = protected.mapTo(mutableSetOf()) { it.value }
             val expiredBefore = clock.instant().minus(gracePeriod)
             // A store deletes its temporary file itself; only a process that died mid store leaves one behind.

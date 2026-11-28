@@ -3,7 +3,7 @@ package com.typewritermc.engine.session.testing
 import com.typewritermc.engine.session.SessionEntry
 import com.typewritermc.engine.session.SessionKeeper
 import com.typewritermc.engine.session.SessionTimings
-import com.typewritermc.engine.session.readSessionEntry
+import com.typewritermc.engine.session.readSession
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
 import com.typewritermc.identity.Protagonist
@@ -65,9 +65,10 @@ class SessionHarness private constructor(
         timings: SessionTimings = SHORT,
     ): HarnessEngine {
         val connection = connect()
-        val buckets = MutableStateFlow<KeyValueBuckets?>(NatsKeyValueBuckets(connection))
+        val recording = SubjectRecordingBuckets(NatsKeyValueBuckets(connection))
+        val buckets = MutableStateFlow<KeyValueBuckets?>(recording)
         val keeper = SessionKeeper(EngineId(id), buckets, SessionsBucket.name(realm), timings, scope)
-        return HarnessEngine(EngineId(id), keeper, connection).also(engines::add)
+        return HarnessEngine(EngineId(id), keeper, connection, recording).also(engines::add)
     }
 
     /** Creates the Realm's sessions bucket, as the Realm does when it starts. */
@@ -80,7 +81,7 @@ class SessionHarness private constructor(
     suspend fun entry(
         protagonist: Protagonist,
         id: SessionId,
-    ): SessionEntry? = bucket().readSessionEntry(protagonist, id)
+    ): SessionEntry? = bucket().readSession(protagonist, id)?.entry
 
     /** [engine] reports that [protagonist] connected with session [id]; returns once the bucket names it the holder. */
     suspend fun joined(
@@ -164,7 +165,11 @@ class HarnessEngine(
     val id: EngineId,
     val keeper: SessionKeeper,
     private val connection: NatsConnection,
+    private val recording: SubjectRecordingBuckets,
 ) {
+    /** Every session write of this engine so far, with the work subjects it ran for. */
+    val writes: List<SubjectWrite> get() = recording.writes
+
     /** The engine stops as a crash would: no further write, its connection gone. */
     suspend fun crash() {
         keeper.close()

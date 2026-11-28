@@ -105,6 +105,8 @@ class DefaultConfigurationCollectionScope internal constructor(
     override fun collected(): CollectedConfiguration = CollectedConfiguration(state.recipes.toList(), state.checks.toList())
 }
 
+// Authoring DSL runtime scope: it composes the build state and every author facing scope it delegates to.
+@Suppress("LongParameterList")
 internal class RuntimeConfigurationBinding(
     private val target: TypeDefinitionId,
     private val state: ConfigurationCollectionState,

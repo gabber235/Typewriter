@@ -100,6 +100,8 @@ class ReconnectingSharedArtifactAccess(
                     }
 
                     ArtifactRecovery.BACK_OFF -> {
+                        // A back off after a reported failure: the failed read already failed its work, so the wait is not work.
+                        @Suppress("ForbiddenMethodCall/loaderWaits")
                         delay(BACK_OFF_DELAYS.getOrNull(backOffs++) ?: throw failure)
                         session = sessions.filterNotNull().first()
                     }

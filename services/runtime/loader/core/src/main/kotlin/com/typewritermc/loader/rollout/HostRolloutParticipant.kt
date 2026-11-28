@@ -11,12 +11,12 @@ import com.typewritermc.loader.api.HostedArtifactPackage
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.HostedExtensionArtifact
 import com.typewritermc.loader.api.HostedRuntimeDirectories
-import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.loader.api.HostedRuntimeIdentity
 import com.typewritermc.loader.api.HostedSourcePart
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
+import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifactSpan
 import com.typewritermc.loader.deployment.HostDeploymentProjection
@@ -64,22 +64,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Retrieves and validates an exact host projection before runtime staging.
- */
-interface ProjectionSource {
-    suspend fun fetch(reference: ProjectionReference): HostDeploymentProjection
-}
-
-/**
- * Provides a local path for verified digest addressed artifact bytes.
- *
- * The file must remain available during loading; the caller does not own deletion of shared cache content.
- */
-interface VerifiedArtifactSource {
-    suspend fun fetch(digest: com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest): Path
-}
-
-/**
  * Observes every participant lifecycle transition on this host, such as the host execution report.
  *
  * The coordinator does not depend on these observations; it queries participant status directly.
@@ -91,24 +75,22 @@ fun interface ParticipantStatusListener {
 /**
  * Owns staged, active, and retained projections for one Realm and host.
  *
- * A mutex serializes commands and rejects stale or conflicting attempts. Commit quiesces the baseline before
- * activating a candidate and attempts recovery on failure. Successful replacement retains one prior projection for
+ * A mutex serializes commands and rejects stale or conflicting attempts. [stager] stages each candidate, every runtime
+ * with its own view of the host. Commit quiesces the baseline and drains the baseline runtimes' work in flight for at most
+ * the host's drain bound before activating a candidate, and attempts recovery on failure. Successful replacement retains one prior projection for
  * rollback. The assignment lifecycle must close the participant and its health monitor.
  */
 class HostRolloutParticipant(
-    internal val realmId: RealmId,
-    private val engineIdOf: (RuntimePlacement) -> String?,
-    internal val serviceId: ServiceId,
-    private val workDirectory: Path,
-    private val host: HostedRuntimeHost,
-    private val projections: ProjectionSource,
-    private val artifacts: VerifiedArtifactSource,
+    private val place: AssignmentPlace,
+    private val stager: ProjectionStager,
     private val statuses: ParticipantStatusListener,
     private val scope: CoroutineScope,
-    private val runtimeLoader: HostedRuntimeStager = HostedRuntimeLoader(),
     private val lifecycleTimeout: Duration = 30.seconds,
     private val telemetry: ServiceTelemetry? = null,
 ) {
+    private val realmId get() = place.realmId
+    private val serviceId get() = place.serviceId
+
     private val commands = Mutex()
     private var localState: LocalParticipantState = LocalParticipantState.Empty
     private var latestAttemptOrdinal = 0L
@@ -236,8 +218,7 @@ class HostRolloutParticipant(
         }
         val baseline = localState.activeOrNull()
         observe(attempt, ParticipantPhase.createStaging(candidate = reference, baseline = baseline?.activeProjection()))
-        val projection = projections.fetch(reference)
-        val replacement = stageProjection(reference, projection)
+        val replacement = LocalProjection(stager.stage(reference), scope, lifecycleTimeout)
         val previousStaged = localState as? LocalParticipantState.Staged
         try {
             previousStaged?.projection?.close()
@@ -264,6 +245,7 @@ class HostRolloutParticipant(
         val baseline = staged.baseline
         try {
             baseline?.projection?.quiesce()
+            baseline?.projection?.let { drainWork(it) }
             staged.projection.activate()
         } catch (failure: Throwable) {
             withContext(NonCancellable) {
@@ -277,6 +259,11 @@ class HostRolloutParticipant(
         localState = replacement
         monitorHealth(replacement)
         baseline?.retained?.projection?.close()
+    }
+
+    /** Waits for the work in flight of the runtimes of [leaving], once they quiesced, before others take over. */
+    private suspend fun drainWork(leaving: LocalProjection) {
+        leaving.drainWork(telemetry)
     }
 
     private suspend fun abort(
@@ -326,6 +313,7 @@ class HostRolloutParticipant(
                 val retained = requireNotNull(active.retained)
                 try {
                     active.projection.quiesce()
+                    drainWork(active.projection)
                     retained.projection.resume()
                 } catch (failure: Throwable) {
                     withContext(NonCancellable) {
@@ -347,6 +335,7 @@ class HostRolloutParticipant(
                     monitorHealth(active)
                     throw failure
                 }
+                drainWork(active.projection)
                 try {
                     active.projection.close()
                 } finally {
@@ -356,171 +345,6 @@ class HostRolloutParticipant(
                 observe(attempt, ParticipantPhase.IDLE)
             }
         }
-    }
-
-    private suspend fun stageProjection(
-        reference: ProjectionReference,
-        projection: HostDeploymentProjection,
-    ): LocalProjection =
-        telemetry.artifactSpan(
-            "artifact.projection.stage",
-            "artifact-projection-stage-failed",
-        ) { span ->
-            span?.annotate {
-                attribute("realm.id", realmId.value)
-                attribute("service.id", serviceId.value)
-                attribute("projection.digest", reference.blob.value)
-                attribute("deployment.generation", reference.generation)
-            }
-            stageProjectionContents(reference, projection)
-        }
-
-    private suspend fun stageProjectionContents(
-        reference: ProjectionReference,
-        projection: HostDeploymentProjection,
-    ): LocalProjection {
-        val runtimePaths =
-            projection.runtimes.associateWith { runtime -> artifacts.fetch(runtime.artifact.digest) }
-        val extensionPaths =
-            projection.extensions.associate { extension ->
-                extension.artifact.coordinate.id to artifacts.fetch(extension.artifact.digest)
-            }
-        val manifestByPath =
-            (runtimePaths.values + extensionPaths.values)
-                .distinct()
-                .associateWith(ImprintArchive::require)
-        runtimePaths.forEach { (runtime, path) ->
-            validateManifest(runtime.artifact, path, manifestByPath.getValue(path))
-        }
-        projection.extensions.forEach { extension ->
-            val path = extensionPaths.getValue(extension.artifact.coordinate.id)
-            validateManifest(extension.artifact, path, manifestByPath.getValue(path))
-        }
-        val loaded = mutableListOf<LoadedHostedRuntime>()
-        try {
-            projection.runtimes.forEach { runtime ->
-                val runtimePath = runtimePaths.getValue(runtime)
-                val artifactPackage =
-                    projection.artifactPackage(
-                        runtime,
-                        runtimePath,
-                        runtimePaths.values.toList(),
-                        extensionPaths,
-                        manifestByPath,
-                    )
-                val deploymentDirectory =
-                    workDirectory
-                        .resolve("runtime")
-                        .resolve(runtime.placement.name.lowercase())
-                        .resolve("deployments")
-                        .resolve(reference.blob.value)
-                        .also(Path::createDirectories)
-                val stateDirectory =
-                    workDirectory
-                        .resolve("runtime")
-                        .resolve(runtime.placement.name.lowercase())
-                        .resolve("state")
-                        .also(Path::createDirectories)
-                val context =
-                    HostedDeploymentContext(
-                        identity = HostedRuntimeIdentity(serviceId.value, realmId.value, runtime.placement, engineIdOf(runtime.placement)),
-                        directories = HostedRuntimeDirectories(stateDirectory, deploymentDirectory),
-                        artifacts = artifactPackage,
-                        publicationTarget = projection.publicationTarget,
-                        engineImplementation = runtime.implementation,
-                        facts = projection.facts,
-                        host = host,
-                    )
-                loaded += runtimeLoader.stage(context)
-            }
-            require(loaded.all { it.runtime.health.value == RuntimeHealth.Staged }) {
-                "Every local runtime must report staged before the projection is accepted."
-            }
-            return LocalProjection(loaded, scope, lifecycleTimeout)
-        } catch (failure: Throwable) {
-            withContext(NonCancellable) {
-                loaded.asReversed().forEach { runtime -> runtime.closePreserving(failure) }
-            }
-            throw failure
-        }
-    }
-
-    private fun HostDeploymentProjection.artifactPackage(
-        runtime: ProjectedRuntime,
-        runtimePath: Path,
-        catalogArtifacts: List<Path>,
-        extensionPaths: Map<com.typewritermc.imprint.ArtifactId, Path>,
-        manifestByPath: Map<Path, ImprintManifest>,
-    ): HostedArtifactPackage =
-        HostedArtifactPackage(
-            runtimeArtifact =
-                HostedArtifact(
-                    runtimePath,
-                    manifestByPath.getValue(runtimePath) as? HostedArtifactManifest
-                        ?: error("Hosted runtime ${runtime.artifact.coordinate.id} has a non hosted manifest."),
-                ),
-            catalogArtifacts =
-                catalogArtifacts
-                    .distinct()
-                    .map { path -> HostedArtifact(path, manifestByPath.getValue(path)) },
-            extensions =
-                extensions.map { extension ->
-                    val path = extensionPaths.getValue(extension.artifact.coordinate.id)
-                    HostedExtensionArtifact(
-                        id = extension.artifact.coordinate.id,
-                        path = path,
-                        manifest =
-                            manifestByPath.getValue(path) as? ExtensionManifest
-                                ?: error("Hosted extension ${extension.artifact.coordinate.id} has a non extension manifest."),
-                        sourceParts = extension.sourceParts.map { it.forRuntime(runtime.placement) },
-                    )
-                },
-        )
-
-    private fun validateManifest(
-        artifact: DeploymentArtifact,
-        path: Path,
-        manifest: ImprintManifest,
-    ) {
-        require(manifest.id == artifact.coordinate.id) {
-            "Artifact ${path.fileName} manifest id ${manifest.id} differs from ${artifact.coordinate.id}."
-        }
-        require(manifest.version == artifact.coordinate.version) {
-            "Artifact ${path.fileName} manifest version ${manifest.version} differs from ${artifact.coordinate.version}."
-        }
-        val kind =
-            when (manifest) {
-                is com.typewritermc.imprint.RealmManifest -> ArtifactKind.REALM
-                is com.typewritermc.imprint.EngineManifest -> ArtifactKind.ENGINE
-                is com.typewritermc.imprint.CapabilityManifest -> ArtifactKind.CAPABILITY
-                is com.typewritermc.imprint.ExtensionManifest -> ArtifactKind.EXTENSION
-            }
-        require(kind == artifact.kind) {
-            "Artifact ${path.fileName} manifest kind $kind differs from ${artifact.kind}."
-        }
-    }
-
-    private fun com.typewritermc.loader.deployment.ProjectedSourcePart.forRuntime(placement: RuntimePlacement): HostedSourcePart {
-        val current = disposition
-        val narrowed =
-            when {
-                placement == RuntimePlacement.REALM -> {
-                    current
-                }
-
-                current is SourcePartDisposition.Eligible && placement in current.placements -> {
-                    SourcePartDisposition.Eligible(setOf(placement))
-                }
-
-                current is SourcePartDisposition.Ineligible -> {
-                    current
-                }
-
-                else -> {
-                    SourcePartDisposition.Ineligible(listOf("Source part is not eligible for $placement."))
-                }
-            }
-        return HostedSourcePart(name, narrowed)
     }
 
     private suspend fun monitorHealth(active: LocalParticipantState.Active) {
@@ -609,10 +433,17 @@ class HostRolloutParticipant(
      * handles for retry so the containing participant can keep ownership until cleanup succeeds.
      */
     internal class LocalProjection(
-        private val runtimes: List<LoadedHostedRuntime>,
+        private val staged: StagedRuntimes,
         scope: CoroutineScope,
         private val lifecycleTimeout: Duration,
     ) {
+        private val runtimes = staged.runtimes
+
+        /** Waits for the work in flight of this projection's runtimes, for at most the host's drain bound. */
+        suspend fun drainWork(telemetry: ServiceTelemetry?) {
+            staged.work.drain("rollout", telemetry, staged.hosts.mapTo(mutableSetOf()) { it.runtime })
+        }
+
         private val mutableHealth = MutableStateFlow(runtimes.map { it.runtime.health.value }.toProjectionHealth())
         val health: StateFlow<ProjectionHealth> = mutableHealth
         private val healthMonitor =
@@ -665,6 +496,7 @@ class HostRolloutParticipant(
                 failures.drop(1).forEach(failure::addSuppressed)
                 throw failure
             }
+            staged.hosts.forEach(RuntimeHost::close)
         }
 
         private suspend fun transition(
@@ -696,6 +528,8 @@ class HostRolloutParticipant(
             operationName: String,
             operation: suspend () -> Unit,
         ) {
+            // A lifecycle deadline on the wall clock: an operation that overruns it fails the rollout, not a tick.
+            @Suppress("ForbiddenMethodCall/loaderWaits")
             val completed = withTimeoutOrNull(lifecycleTimeout) { operation() }
             currentCoroutineContext().ensureActive()
             if (completed == null) {
@@ -754,7 +588,7 @@ private suspend fun HostRolloutParticipant.LocalProjection.resumePreserving(fail
     runCatchingSuspend { resume() }.exceptionOrNull()?.let(failure::addSuppressed)
 }
 
-private suspend fun LoadedHostedRuntime.closePreserving(failure: Throwable) {
+internal suspend fun LoadedHostedRuntime.closePreserving(failure: Throwable) {
     runCatchingSuspend { close() }.exceptionOrNull()?.let(failure::addSuppressed)
 }
 

@@ -297,6 +297,14 @@ enum PaperAsk(85030011) {
   query: struct {
     player: string;
   };
+  // The attempt is about to cause a change outside Paper, such as content it writes, whose effect reaches
+  // Paper as the fact `fact`. From now on the ticks of `players` wait until a plugin on Paper reports that
+  // fact; a fact no plugin reports 1 s later is hung work. Paper answers with `expecting` at once, without
+  // a tick.
+  expect: struct {
+    players: [string];
+    fact: string;
+  };
 }
 
 // Run `action` between ticks. An action on a player runs for each of `players`; an action on the world
@@ -364,6 +372,8 @@ enum Answer(85030015) {
     marked: [StateKind];
     failure: string?;
   };
+  // Paper expects the fact; the ticks of its players wait for it from now on.
+  expecting;
   // The input's steps ran. Its first event reached the client after `tick` ended, so the input shows from
   // the next tick. `failure` is null when every step ran, or says which step could not, for example an
   // aim that left something else under the crosshair.
@@ -397,6 +407,14 @@ struct PlayerEvent(85030016) {
     work_hung: struct {
       work: string;
       began_after: int32;
+    };
+    // Paper to session: the player's work `work`, which began after tick `began_after`, ended without its
+    // effect because of `cause`, such as an outbound operation that failed. It holds no more ticks; the
+    // attempt fails.
+    work_failed: struct {
+      work: string;
+      began_after: int32;
+      cause: string;
     };
     // Pool to session: the player's client is lost; the attempt fails and the pool starts a new client for
     // the player.
@@ -617,11 +635,21 @@ enum PlayerAction(85030023) {
   mark: struct {
     kind: StateKind;
   };
-  // The player's work `name` runs off the main thread for `millis` of wall clock, counted as any plugin
-  // counts its work, then sends `chat` as a chat line. Only the framework's own test kit sends it, to
-  // prove ticks wait for counted work and hung work is reported.
+  // Work `name` runs off the main thread for `millis` of wall clock, counted as any plugin counts its
+  // work for the player of UUID `counted_for` (null: this player), who may be away, then sends `chat` to
+  // this player as a chat line. Only the framework's own test kit sends it, to prove ticks wait for
+  // counted work and hung work is reported.
   work: struct {
     name: string;
+    millis: int32;
+    chat: string;
+    counted_for: string?;
+  };
+  // Off the main thread and uncounted, `millis` of wall clock from now, Paper sends `chat` to this player
+  // as a chat line and then reports the fact `fact`, as a plugin reports a fact a change outside Paper
+  // caused. Only the framework's own test kit sends it, to prove ticks wait for an expected fact.
+  fact_later: struct {
+    fact: string;
     millis: int32;
     chat: string;
   };

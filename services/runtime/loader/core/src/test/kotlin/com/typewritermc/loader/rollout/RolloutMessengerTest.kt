@@ -43,8 +43,11 @@ val RolloutMessengerTest by testSuite {
             runCurrent()
             val published =
                 transport.publications.single()
-            published.address shouldBe scope.rolloutCommand.requestAddress.render(scope)
-            scope.rolloutCommand.requestCodec.decode(published.payload) shouldBe request
+            published.address shouldBe
+                scope.rolloutCommand.request.address
+                    .render(scope)
+            scope.rolloutCommand.request.codec
+                .decode(published.payload) shouldBe request
 
             deliverRolloutReply(transport, scope, requireNotNull(published.replyTo), failed)
             runCurrent()

@@ -21,6 +21,8 @@ import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.loader.api.StagedHostedRuntime
+import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifact.FileDigestBlobStore
@@ -31,18 +33,24 @@ import com.typewritermc.loader.deployment.ProjectedExtension
 import com.typewritermc.loader.deployment.ProjectedRuntime
 import com.typewritermc.loader.deployment.ProjectedSourcePart
 import com.typewritermc.loader.rollout.ArtifactHostAssignment
+import com.typewritermc.loader.rollout.AssignmentPlace
 import com.typewritermc.loader.rollout.HostRolloutParticipant
 import com.typewritermc.loader.rollout.ProjectionSource
+import com.typewritermc.loader.rollout.ProjectionStager
 import com.typewritermc.loader.rollout.RealmId
+import com.typewritermc.loader.rollout.RuntimeHost
+import com.typewritermc.loader.rollout.RuntimeHosts
 import com.typewritermc.loader.rollout.VerifiedArtifactSource
 import com.typewritermc.loader.rollout.toSkir
 import com.typewritermc.loader.runtime.HostedRuntimeStager
 import com.typewritermc.loader.runtime.LoadedHostedRuntime
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.registrar.ServiceId
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -68,6 +76,8 @@ import kotlin.time.Duration.Companion.seconds
 class ParticipantFixture(
     val serviceId: ServiceId,
     val realmId: RealmId,
+    /** The host's work in flight, which every runtime the participant stages counts in. */
+    val work: InFlightWork,
     val host: HostedRuntimeHost,
     val participant: HostRolloutParticipant,
     val projections: MutableMap<ProjectionReference, HostDeploymentProjection>,
@@ -115,6 +125,20 @@ class ParticipantFixture(
             participants = listOf(ParticipantRollback(serviceId = serviceId.value, projection = reference, target = target)),
         ),
     )
+
+    /** Commits a baseline projection in attempt 1, then stages a candidate over it in attempt 2. */
+    suspend fun candidateOverBaseline(): CandidateOverBaseline {
+        val baselineAttempt = attempt(1, 1)
+        val baseline = reference("baseline")
+        projections[baseline] = projection(baseline)
+        participant.apply(stage(baselineAttempt, baseline))
+        participant.apply(commit(baselineAttempt, baseline))
+        val candidateAttempt = attempt(2, 2)
+        val candidate = reference("candidate")
+        projections[candidate] = projection(candidate)
+        participant.apply(stage(candidateAttempt, candidate))
+        return CandidateOverBaseline(baseline, candidateAttempt, candidate)
+    }
 
     private fun projections(reference: ProjectionReference) =
         listOf(ParticipantProjection(serviceId = serviceId.value, projection = reference))
@@ -227,6 +251,13 @@ fun implementationTarget(
     extensions = emptyList(),
 )
 
+/** An active [baseline] projection and a [candidate] staged over it in [attempt]. */
+data class CandidateOverBaseline(
+    val baseline: ProjectionReference,
+    val attempt: RolloutAttempt,
+    val candidate: ProjectionReference,
+)
+
 fun participantFixture(scope: TestScope): ParticipantFixture {
     val root = Files.createTempDirectory("participant")
     val serviceId = ServiceId("service")
@@ -235,12 +266,14 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
     val contexts = mutableListOf<HostedDeploymentContext>()
     val runtimes = mutableListOf<RecordingRuntime>()
     val events = mutableListOf<ParticipantStatus>()
-    val blobs = FileDigestBlobStore(root)
+    val blobs = FileDigestBlobStore(root, io = Dispatchers.IO)
     val shared = SharedArtifactService(realmId.value, blobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
+    val work = InFlightWork()
     val host =
         object : HostedRuntimeHost {
             override val messaging: StateFlow<HostedMessagingSession?> = MutableStateFlow(null)
             override val openTelemetry: OpenTelemetry = OpenTelemetry.noop()
+            override val work = work.of(WorkRuntime("unstaged"))
             override val sharedArtifacts = shared
         }
     val stager =
@@ -250,13 +283,12 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
             runtimes += runtime
             LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<java.net.URL>()))
         }
-    val participant =
-        HostRolloutParticipant(
-            realmId,
-            ArtifactHostAssignment(realmId, setOf(RuntimePlacement.PRIMARY_ENGINE), engineInstance = "engine")::engineIdOf,
-            serviceId,
-            root,
-            host,
+    val place =
+        AssignmentPlace(serviceId, ArtifactHostAssignment(realmId, setOf(RuntimePlacement.PRIMARY_ENGINE), engineInstance = "engine"), root)
+    val staging =
+        ProjectionStager(
+            place,
+            host.perRuntime(work),
             object : ProjectionSource {
                 override suspend fun fetch(reference: ProjectionReference) = projections.getValue(reference)
             },
@@ -294,12 +326,10 @@ fun participantFixture(scope: TestScope): ParticipantFixture {
                         }
                     }
             },
-            { status -> events += status },
-            scope,
             stager,
-            1.seconds,
         )
-    return ParticipantFixture(serviceId, realmId, host, participant, projections, contexts, runtimes, events, root)
+    val participant = HostRolloutParticipant(place, staging, { status -> events += status }, scope, 1.seconds)
+    return ParticipantFixture(serviceId, realmId, work, host, participant, projections, contexts, runtimes, events, root)
 }
 
 fun attempt(
@@ -411,5 +441,21 @@ class RecordingRuntime : StagedHostedRuntime {
     private suspend fun failIfRequested(operation: String) {
         if (operation in suspendOn) awaitCancellation()
         if (operation in failOn) error("Fixture $operation failure")
+    }
+}
+
+/** Views of this host for each staged runtime: the same host, with each runtime's work counted as its own in [work]. */
+fun HostedRuntimeHost.perRuntime(work: InFlightWork): RuntimeHosts {
+    val shared = this
+    return object : RuntimeHosts {
+        override val work = HostWork(work, 10.seconds)
+
+        override fun open(runtime: WorkRuntime): RuntimeHost =
+            object : RuntimeHost, HostedRuntimeHost by shared {
+                override val runtime = runtime
+                override val work = work.of(runtime)
+
+                override fun close() = Unit
+            }
     }
 }

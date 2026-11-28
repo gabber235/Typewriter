@@ -178,6 +178,8 @@ class SetupList<in E : Resource> internal constructor(
     /** The id the part [key] of this list has, so content it declares can name its owner before the part is added. */
     fun idOf(key: String): ResourceId = stableId(ownerPath + "${field.text} $key")
 
+    // Generated SDK entry point: generated providers pass each fact the code generator computed for the declaration.
+    @Suppress("LongParameterList")
     @GeneratedSdkApi
     fun <T : Resource, F : SetupFields<T>, H> add(
         key: String,

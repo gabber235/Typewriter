@@ -169,7 +169,7 @@ internal fun Checker.member(
         if (function != null &&
             expected?.nonNull()?.function == null
         ) {
-            return invoke(read, function, emptyList(), expected, false, span, scope)
+            return invoke(read, function, CallSite(emptyList(), expected, span, scope))
         }
         return read
     }
@@ -178,7 +178,7 @@ internal fun Checker.member(
         report(name.span, "formula_unknown_member", "${shown(recordBehind(target.type.nonNull()))} has no member `${name.text}`")
         return Invalid(ERROR, span)
     }
-    return callFunctions(functions, target, emptyList(), expected, safe, span, scope)
+    return callFunctions(functions, target, CallSite(emptyList(), expected, span, scope, safe))
 }
 
 /** A record of [type] built from [arguments]: by field name, or positionally in field order. */

@@ -618,6 +618,8 @@ interface SequenceLayoutScope {
         cross: CrossAxisAlignment = CrossAxisAlignment.START,
     )
 
+    // Authoring DSL: each parameter is an optional layout property authors name at the call site.
+    @Suppress("LongParameterList")
     fun hierarchy(
         unaryConnector: ConnectorStyle,
         trunkConnector: ConnectorStyle,

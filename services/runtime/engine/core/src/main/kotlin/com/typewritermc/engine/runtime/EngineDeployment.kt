@@ -14,7 +14,6 @@ import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.loader.api.StagedHostedRuntime
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import org.koin.core.module.Module
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -68,7 +67,7 @@ class EngineDeployment(
                 acceptedKinds = EXECUTION_PROVIDER_KINDS,
                 parentClassLoader = requireNotNull(javaClass.classLoader),
             )
-        val deploymentScope = CoroutineScope(Dispatchers.Default)
+        val deploymentScope = engineScope(context.host.work)
         var wiring: EngineWiring? = null
         return try {
             val engine = EngineWiring(context, deploymentScope, kind).also { wiring = it }
@@ -81,9 +80,9 @@ class EngineDeployment(
                     deployment = deployment,
                     registrars = deployment.providers.registrars.map { it.registrar } + engine.registrars,
                     parentScope = deploymentScope,
-                    implementationToken = implementation.fingerprint(),
-                    enforceImplementationCompatibility =
-                        context.identity.placement == RuntimePlacement.PRIMARY_ENGINE,
+                    // Only a primary engine runs the compiled content of its own implementation.
+                    requiredImplementation =
+                        implementation.fingerprint().takeIf { context.identity.placement == RuntimePlacement.PRIMARY_ENGINE },
                     contentGateway = ResourceGraphContentGateway(assembly.checked, assembly.bindings, assembly.relations),
                     contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, deploymentScope),
                 )

@@ -98,6 +98,8 @@ class MessagingEngineContentDelivery(
                                 EngineContentDeliveryHealth.Failed(
                                     failure.message ?: "Compiled content delivery failed",
                                 )
+                            // A retry after a reported failure: the health already names it, so the wait is not work.
+                            @Suppress("ForbiddenMethodCall/engineWaits")
                             delay(CONTENT_DELIVERY_RETRY_DELAY)
                         }
                     }
@@ -138,6 +140,8 @@ class MessagingEngineContentDelivery(
                     apply(source.load(content))
                     mutableHealth.value = EngineContentDeliveryHealth.Active(content.publication)
                 }
+                // Waits for an inbound hint, with a wall clock fallback; no tick caused the wait.
+                @Suppress("ForbiddenMethodCall/engineWaits")
                 withTimeoutOrNull(30.seconds) { hints.receive() }
             }
         } catch (failure: Throwable) {

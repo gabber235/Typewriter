@@ -197,14 +197,7 @@ internal fun TypeUse.kotlinCode(): CodeBlock =
         }
 
         is TypeUse.FunctionWrapper -> {
-            functionCode(
-                value.context,
-                value.parameters,
-                value.result,
-                { name },
-                { type.kotlinCode() },
-                { kotlinCode() },
-            )
+            functionCode(FunctionParts(value.context, value.parameters, value.result), { name }, { type.kotlinCode() }, { kotlinCode() })
         }
 
         else -> {
@@ -239,7 +232,13 @@ internal fun TypeTemplate.kotlinCode(): CodeBlock =
         }
 
         is TypeTemplate.FunctionWrapper -> {
-            functionCode(value.context, value.parameters, value.result, { name }, { type.kotlinCode() }, { kotlinCode() }, template = true)
+            functionCode(
+                FunctionParts(value.context, value.parameters, value.result),
+                { name },
+                { type.kotlinCode() },
+                { kotlinCode() },
+                template = true,
+            )
         }
 
         else -> {
@@ -317,11 +316,16 @@ private fun namedUseCode(
     arguments: List<CodeBlock>,
 ): CodeBlock = CodeBlock.of("%T(definition·=·%L,♢arguments·=·%L)", NamedTypeUse::class, definition, arguments.listCode())
 
-/** `createFunction` of a function use, or of a template when [template], from its slots and result. */
+/** The parts of a function type: the [context] and [parameters] slots it takes and its [result]. */
+private class FunctionParts<S, T>(
+    val context: List<S>,
+    val parameters: List<S>,
+    val result: T,
+)
+
+/** `createFunction` of a function use, or of a template when [template], from its [parts]. */
 private fun <S, T> functionCode(
-    context: List<S>,
-    parameters: List<S>,
-    result: T,
+    parts: FunctionParts<S, T>,
     name: S.() -> String,
     slotType: S.() -> CodeBlock,
     resultCode: T.() -> CodeBlock,
@@ -334,9 +338,9 @@ private fun <S, T> functionCode(
     return CodeBlock.of(
         "%T.createFunction(context·=·%L,♢parameters·=·%L,♢result·=·%L)",
         if (template) TypeTemplate::class else TypeUse::class,
-        slots(context),
-        slots(parameters),
-        result.resultCode(),
+        slots(parts.context),
+        slots(parts.parameters),
+        parts.result.resultCode(),
     )
 }
 
@@ -361,7 +365,12 @@ private fun TypeTemplate.useCode(parameter: (ParameterKey) -> CodeBlock): CodeBl
         }
 
         is TypeTemplate.FunctionWrapper -> {
-            functionCode(value.context, value.parameters, value.result, { name }, { type.useCode(parameter) }, { useCode(parameter) })
+            functionCode(
+                FunctionParts(value.context, value.parameters, value.result),
+                { name },
+                { type.useCode(parameter) },
+                { useCode(parameter) },
+            )
         }
 
         else -> {

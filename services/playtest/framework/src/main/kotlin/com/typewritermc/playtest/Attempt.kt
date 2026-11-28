@@ -47,6 +47,12 @@ internal interface AttemptPool {
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<StateKind>
 
+    /** The ticks of [players] wait from now until a plugin on Paper reports [fact]; returns at once. */
+    suspend fun expect(
+        players: List<GamePlayer>,
+        fact: String,
+    )
+
     /** Kills and boots again the own Paper of [attempt], which runs [submission]; returns the new Paper's tick after which every player is back. */
     suspend fun restart(
         attempt: Attempt,
@@ -81,22 +87,33 @@ internal interface AttemptPool {
     suspend fun stopClip(player: GamePlayer): Answer.ClipWritten
 }
 
-/**
- * One attempt of one requirement while it holds its lease: the players' perception streams in arrival
- * order, kept whole as the attempt's timeline, and the pool it talks to. Positions
- * the requirement names count from the middle of the attempt's [region]; the attempt turns them into
- * world positions on the way out and turns what the players perceive back on the way in. It runs on
- * the Paper named [paper].
- */
-internal class Attempt(
-    private val session: AttemptPool,
-    private val submission: SubmissionId,
+/** What the pool leased to the attempt of [submission]: its [players], its [region] and the Paper named [paper] it runs on. */
+internal class AttemptLease(
+    val submission: SubmissionId,
     val players: List<GamePlayer>,
     val region: Region,
     val paper: String,
+)
+
+/**
+ * One attempt of one requirement while it holds its [lease]: the players' perception streams in arrival
+ * order, kept whole as the attempt's timeline, and the pool it talks to. Positions
+ * the requirement names count from the middle of the attempt's [region]; the attempt turns them into
+ * world positions on the way out and turns what the players perceive back on the way in. It runs on
+ * the Paper named [paper]. The requirement's code is in [requirementCode]; with [restartsPaper] it may
+ * restart its Paper.
+ */
+internal class Attempt(
+    private val session: AttemptPool,
+    private val lease: AttemptLease,
     private val requirementCode: RequirementCode,
     private val restartsPaper: Boolean,
 ) {
+    private val submission get() = lease.submission
+    val players: List<GamePlayer> get() = lease.players
+    val region: Region get() = lease.region
+    val paper: String get() = lease.paper
+
     /** One event of a leased player's stream. */
     sealed interface Event {
         val player: GamePlayer
@@ -113,7 +130,7 @@ internal class Attempt(
 
         /**
          * The attempt fails because of [player], wherever the body waits: its counted work hung
-         * ([WorkHung]), its client or Paper was lost ([ClientLost], [PaperLost]), or its lease ran out
+         * ([WorkHung]) or failed ([WorkFailed]), its client or Paper was lost ([ClientLost], [PaperLost]), or its lease ran out
          * ([LeaseExpired]).
          */
         data class Failed(
@@ -268,6 +285,9 @@ internal class Attempt(
 
     /** The kinds of state [player] carries a mark of, as Paper sees them. */
     suspend fun query(player: GamePlayer): List<StateKind> = step("query ${player.name}") { unlessLost { session.query(player) } }
+
+    /** The ticks of every player of the attempt wait from now until a plugin on Paper reports [fact]. */
+    suspend fun expect(fact: String) = step("expect $fact") { unlessLost { session.expect(players, fact) } }
 
     /**
      * Kills the attempt's own Paper and boots it again; the mark is the new Paper's tick after which every

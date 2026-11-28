@@ -108,6 +108,8 @@ class GeneratedRecordNativeBinding<T>(
     }
 }
 
+// Generated SDK entry point: generated providers pass each fact the code generator computed for the declaration.
+@Suppress("LongParameterList")
 @GeneratedSdkApi
 class GeneratedScalarNativeBinding<T>(
     override val checked: CheckedType,

@@ -106,6 +106,14 @@ class RequirementScope internal constructor(
         )
 
     /**
+     * The attempt is about to cause a change outside Paper, such as content it writes, whose effect
+     * reaches Paper as [fact]: from now on its players' ticks wait until a plugin on Paper reports that
+     * fact, so the change takes no ticks from any window. Call it before causing the change. A fact no
+     * plugin reports within 1 s of wall clock fails the attempt with [WorkHung] naming it.
+     */
+    suspend fun expectFact(fact: String) = attempt.expect(fact)
+
+    /**
      * Kills the attempt's Paper as a crash would, so it saves nothing, boots it again on the same world,
      * and returns once every player's client is back and holds what Paper sends it. Each player is where
      * Paper put it on its join, with what Paper loaded for it: what was saved survives, the rest is gone.
@@ -161,8 +169,8 @@ class RequirementScope internal constructor(
     /**
      * Passes once every check of [checks] held in a tick of the window, the [window] ticks after the
      * last stimulus. Fails with [WindowMissed] once those ticks ran and a check never held, and with
-     * [WorkHung] or [ClientLost] as soon as work a plugin counted for a player of the attempt hangs or
-     * a player's client is lost. Ticks run only while a window waits, so a pass costs no more ticks than
+     * [WorkHung], [WorkFailed] or [ClientLost] as soon as work counted for a player of the attempt hangs
+     * or fails, or a player's client is lost. Ticks run only while a window waits, so a pass costs no more ticks than
      * the truth needs. A window that checks a player away since its [quit] is refused.
      */
     suspend fun within(
@@ -183,16 +191,7 @@ class RequirementScope internal constructor(
             throw RequirementRefused("a window of state checks alone needs a player on Paper to run its ticks, and every player quit")
         }
         val rules =
-            Window(
-                mark.tick,
-                window,
-                attempt.nextBarrier(),
-                declared.checks,
-                declared.nevers,
-                declared.states,
-                declared.neverStates,
-                stepping,
-            )
+            Window(mark.tick, window, attempt.nextBarrier(), declared, stepping)
         val opened = System.currentTimeMillis()
         val ranBefore = attempt.ranUntil
         // What the players perceived since the attempt began counts too: a window opened late still
@@ -311,13 +310,18 @@ class RequirementScope internal constructor(
         }
 }
 
-/** The checks one window declares. */
-class WindowChecks internal constructor() {
-    internal val checks = mutableListOf<Check>()
-    internal val nevers = mutableListOf<Check>()
+/** The checks one window declares: [checks] and [states] must hold in it, [nevers] and [neverStates] must not. */
+class WindowChecks internal constructor(
+    checks: List<Check> = listOf(),
+    nevers: List<Check> = listOf(),
+    states: List<StateCheck> = listOf(),
+    neverStates: List<StateCheck> = listOf(),
+) {
+    internal val checks = checks.toMutableList()
+    internal val nevers = nevers.toMutableList()
 
-    internal val states = mutableListOf<StateCheck>()
-    internal val neverStates = mutableListOf<StateCheck>()
+    internal val states = states.toMutableList()
+    internal val neverStates = neverStates.toMutableList()
 
     /** The player perceives [fact] in some tick of the window. */
     infix fun GamePlayer.sees(fact: Perceivable) {
@@ -340,7 +344,7 @@ class WindowChecks internal constructor() {
      * State checks that must read false after every tick of the window: `never.state("session gone") { ... }`.
      * The window then runs all its ticks, and still needs a positive check.
      */
-    val never: NeverState = NeverState(neverStates)
+    val never: NeverState = NeverState(this.neverStates)
 
     /**
      * The player perceives a fact in no tick of the window: `outsider.never sees anyChat()`. The window

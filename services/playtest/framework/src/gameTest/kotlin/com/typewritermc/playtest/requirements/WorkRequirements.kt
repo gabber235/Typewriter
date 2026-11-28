@@ -7,6 +7,7 @@ import com.typewritermc.playtest.alongside
 import com.typewritermc.playtest.backToBack
 import com.typewritermc.playtest.chat
 import com.typewritermc.playtest.cueOnceOpen
+import com.typewritermc.playtest.factLater
 import com.typewritermc.playtest.requirement
 import com.typewritermc.playtest.ticks
 import com.typewritermc.playtest.work
@@ -29,6 +30,45 @@ val WorkRequirements by testSuite(compartment = { GameCompartment }) {
         work(player, "Ledger lookup", millis = 120, then = "Ledger ready")
 
         within(4.ticks) { player sees chat("Ledger ready") }
+    }
+
+    requirement(
+        "ASYNC-2",
+        "work counted for a player who quit holds the ticks until its attempt releases it, so the window beside it counts exactly its ticks",
+        players = 2,
+    ) {
+        val (leaver, stayer) = players
+        leaver.quit()
+
+        work(stayer, "Profile save", millis = 300, then = "Profile saved", countedFor = leaver)
+
+        within(4.ticks) { stayer sees chat("Profile saved") }
+    }
+
+    requirement(
+        "FACT-1",
+        "ticks wait for a fact the attempt expects, so a change it causes outside Paper takes no ticks from the window after it",
+    ) {
+        expectFact("Ledger synced")
+
+        factLater(player, "Ledger synced", millis = 300, then = "Ledger synced")
+
+        within(4.ticks) { player sees chat("Ledger synced") }
+    }
+
+    requirement(
+        "FACT-2",
+        "a fact the attempt expects that no plugin reports within 1 s fails the attempt as hung work naming the fact",
+        demonstrates = Demonstrates.FAILURE,
+    ) {
+        probe.chat(player, "Waiting")
+        expectFact("Ledger synced")
+
+        val hung = shouldThrow<WorkHung> { within(4.ticks) { player sees chat("Ledger synced") } }
+
+        hung.report shouldContain "\"expected fact Ledger synced\""
+        // Reporting the fact ends the hung work, so the player comes back to the pool.
+        factLater(player, "Ledger synced", millis = 0, then = "Ledger synced")
     }
 
     requirement(

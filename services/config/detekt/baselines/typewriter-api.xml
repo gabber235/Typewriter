@@ -51,7 +51,7 @@
     <ID>CyclomaticComplexMethod:PortableTextKernel.kt:PortableTextKernel$override fun parseDuration: Duration</ID>
     <ID>CyclomaticComplexMethod:PortableValueKernel.kt:internal fun portableCompare: Int</ID>
     <ID>CyclomaticComplexMethod:PresentationBuildBinding.kt:fun CheckedType.presentationTemplate: CheckedPresentationTemplate</ID>
-    <ID>CyclomaticComplexMethod:PresentationMaterialAssembly.kt:internal fun collectPresentationMaterials: PresentationMaterialCollection</ID>
+    <ID>CyclomaticComplexMethod:PresentationMaterialAssembly.kt:PresentationMaterialCollector$fun collect: PresentationMaterialCollection</ID>
     <ID>CyclomaticComplexMethod:PresentationMaterialAssembly.kt:private fun RepresentationTemplate.presentationKind: RepresentationKind</ID>
     <ID>CyclomaticComplexMethod:PresentationMaterialAssembly.kt:private fun TypeTemplate.matchesTemplate: Boolean</ID>
     <ID>CyclomaticComplexMethod:PresentationRegistry.kt:private fun TypeTemplate.matches: Boolean</ID>
@@ -63,7 +63,7 @@
     <ID>CyclomaticComplexMethod:RuntimePresentationContent.kt:private fun portableLiteral: DataValue</ID>
     <ID>CyclomaticComplexMethod:TypeContributionAssembler.kt:fun CatalogContributions.assemble: CatalogAssembly</ID>
     <ID>NestedBlockDepth:ExpressionEvaluator.kt:EvaluatorState$context(reads: AuthoredReads) private fun call: Availability&lt;DataValue&gt;</ID>
-    <ID>NestedBlockDepth:PresentationMaterialAssembly.kt:internal fun collectPresentationMaterials: PresentationMaterialCollection</ID>
+    <ID>NestedBlockDepth:PresentationMaterialAssembly.kt:PresentationMaterialCollector$fun collect: PresentationMaterialCollection</ID>
     <ID>SwallowedException:ExpressionEvaluator.kt:invalid: IllegalArgumentException</ID>
     <ID>SwallowedException:GeneratedConstructorDefaults.kt:GeneratedNativeConstructionPlan$failure: Exception</ID>
     <ID>SwallowedException:PortableRegexKernel.kt:PortableRegexKernel$failure: PortableRegexCompileFailure</ID>
@@ -74,7 +74,7 @@
     <ID>TooGenericExceptionCaught:NativeBindingRegistry.kt:FactoryNativeBindingRegistry$failure: Throwable</ID>
     <ID>TooGenericExceptionCaught:OperationCatalog.kt:failure: Exception</ID>
     <ID>TooGenericExceptionCaught:OperationDeclaration.kt:failure: Exception</ID>
-    <ID>TooGenericExceptionCaught:PresentationMaterialAssembly.kt:cause: Exception</ID>
+    <ID>TooGenericExceptionCaught:PresentationMaterialAssembly.kt:PresentationMaterialCollector$cause: Exception</ID>
     <ID>TooGenericExceptionCaught:ResourceDisplayAssembly.kt:cause: Exception</ID>
   </CurrentIssues>
 </SmellBaseline>

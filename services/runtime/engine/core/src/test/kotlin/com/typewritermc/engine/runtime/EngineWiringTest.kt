@@ -2,7 +2,7 @@ package com.typewritermc.engine.runtime
 
 import com.typewritermc.engine.runtime.testing.wiredDeploymentContext
 import com.typewritermc.engine.session.SessionTimings
-import com.typewritermc.engine.session.readSessionEntry
+import com.typewritermc.engine.session.readSession
 import com.typewritermc.engine.session.testing.SessionHarness
 import com.typewritermc.identity.EngineId
 import com.typewritermc.identity.PrincipalId
@@ -49,7 +49,10 @@ val EngineWiringTest by testSuite(testConfig = TestConfig.testScope(isEnabled = 
 
                     val observer = (buckets.open(SessionsBucket.name("realm")) as KeyValueOpen.Opened).bucket
                     eventually(10.seconds) {
-                        observer.readSessionEntry(protagonist, SessionId(uuid)).shouldNotBeNull().holder shouldBe EngineId("engine")
+                        observer
+                            .readSession(protagonist, SessionId(uuid))
+                            .shouldNotBeNull()
+                            .entry.holder shouldBe EngineId("engine")
                     }
                 } finally {
                     wiring.close()

@@ -22,6 +22,7 @@ detekt {
     config.setFrom(
         File(servicesDirectory, "config/detekt/observability.yml"),
         File(servicesDirectory, "config/detekt/structure.yml"),
+        File(servicesDirectory, "config/detekt/concurrency.yml"),
     )
     // One baseline per project: each project's baseline task rewrites its whole file.
     baseline = File(servicesDirectory, "config/detekt/baselines/${project.name}.xml")
@@ -30,10 +31,15 @@ detekt {
 // Generated sources are not reviewed and change on every generation, so no baseline can hold them.
 tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
     exclude { it.file.invariantSeparatorsPath.contains("/skirout/") }
+    exclude { it.file.invariantSeparatorsPath.contains("/generated/ksp/") }
 }
 tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
     exclude { it.file.invariantSeparatorsPath.contains("/skirout/") }
+    exclude { it.file.invariantSeparatorsPath.contains("/generated/ksp/") }
 }
+
+// Rules that need type resolution, such as LongParameterList, run only in detektMain, so check runs it.
+tasks.named("check") { dependsOn("detektMain") }
 
 ktlint {
     version.set(libs.findVersion("ktlint").get().requiredVersion)

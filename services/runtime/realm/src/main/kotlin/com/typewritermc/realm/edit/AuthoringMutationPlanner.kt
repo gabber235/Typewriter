@@ -169,7 +169,7 @@ internal class AuthoringMutationPlanner(
                 is EditIntent.SetValueWrapper -> {
                     val before = resourceLinks(resources, intent.value.at)
                     update(resources, intent.value.at, intent.value.value, problems)
-                    relations.synchronizeValueMutation(before, resources, intent.value.at, batchIdentity, index, problems)
+                    relations.synchronizeValueMutation(before, resources, intent.value.at, ItemSeed(batchIdentity, index), problems)
                 }
 
                 // An insert or a remove changes its item alone, so only the item's links are synchronized.
@@ -177,14 +177,14 @@ internal class AuthoringMutationPlanner(
                     val item = intent.value.at.item(intent.value.item.id)
                     val before = resourceLinks(resources, item)
                     insert(resources, intent, catalog, problems)
-                    relations.synchronizeValueMutation(before, resources, item, batchIdentity, index, problems)
+                    relations.synchronizeValueMutation(before, resources, item, ItemSeed(batchIdentity, index), problems)
                 }
 
                 is EditIntent.RemoveWrapper -> {
                     val item = intent.value.at.item(intent.value.item)
                     val before = resourceLinks(resources, item)
                     remove(resources, intent, problems)
-                    relations.synchronizeValueMutation(before, resources, item, batchIdentity, index, problems)
+                    relations.synchronizeValueMutation(before, resources, item, ItemSeed(batchIdentity, index), problems)
                 }
 
                 is EditIntent.MoveWrapper -> {
@@ -192,7 +192,7 @@ internal class AuthoringMutationPlanner(
                 }
 
                 is EditIntent.ConnectRelationWrapper -> {
-                    relations.connect(resources, intent, batchIdentity, index, problems)
+                    relations.connect(resources, intent, ItemSeed(batchIdentity, index), problems)
                 }
 
                 is EditIntent.DisconnectRelationWrapper -> {

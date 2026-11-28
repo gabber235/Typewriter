@@ -14,7 +14,12 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 
-/** Rebinds long lived Realm services to one messaging session without transferring service lifecycle ownership. */
+/**
+ * Rebinds long lived Realm services to one messaging session without transferring service lifecycle ownership.
+ *
+ * The route factory is a composition root: each dependency backs one family of routes it registers.
+ */
+@Suppress("LongParameterList")
 internal class RealmRouteFactory(
     private val authoring: AuthoringRepository,
     private val authoringSearch: AuthoringSearchRepository,

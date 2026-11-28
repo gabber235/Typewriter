@@ -3,6 +3,7 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.GameCompartment
+import com.typewritermc.playtest.Position
 import com.typewritermc.playtest.block
 import com.typewritermc.playtest.chat
 import com.typewritermc.playtest.requirement
@@ -26,7 +27,7 @@ val ProbeRequirements by testSuite(compartment = { GameCompartment }) {
         // Far from the middle of the region, where the claim put the player, so no chunk around it was
         // loaded or sent before this teleport.
         probe.fill(BlockPos(298, 99, 1), BlockPos(302, 99, 9), "stone")
-        probe.teleport(player, 300.5, 100.0, 2.5)
+        probe.teleport(player, Position(300.5, 100.0, 2.5))
         probe.gameMode(player, GameMode.CREATIVE)
         val target = probe.block(BlockPos(300, 101, 5), "stone")
 
@@ -47,7 +48,7 @@ val ProbeRequirements by testSuite(compartment = { GameCompartment }) {
         // teleport waits for, so the corner shows on the first tick after the teleport is done.
         probe.fill(BlockPos(298, 99, 6), BlockPos(302, 99, 10), "stone")
         val corner = probe.block(BlockPos(330, 101, 40), "stone")
-        probe.teleport(player, 300.5, 100.0, 8.5, yaw = -42.5f)
+        probe.teleport(player, Position(300.5, 100.0, 8.5, yaw = -42.5f))
         // The teleport is done once the client holds what it needs, which may take it several ticks; this
         // probe changes nothing and marks the tick it is done in.
         probe.gameMode(player, GameMode.CREATIVE)

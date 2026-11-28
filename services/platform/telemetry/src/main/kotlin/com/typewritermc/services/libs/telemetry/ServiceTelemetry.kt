@@ -64,6 +64,18 @@ class ServiceTelemetry(
         unit: String,
     ): TelemetryCounter = TelemetryCounter(meter.counterBuilder(name).setUnit(unit).build())
 
+    /** A gauge named [name] in [unit] that reports what [read] returns at each collection, until the handle closes. */
+    fun gauge(
+        name: String,
+        unit: String,
+        read: () -> Long,
+    ): AutoCloseable =
+        meter
+            .gaugeBuilder(name)
+            .setUnit(unit)
+            .ofLongs()
+            .buildWithCallback { it.record(read()) }
+
     internal val tracer: Tracer =
         openTelemetry
             .tracerBuilder(instrumentation.name)

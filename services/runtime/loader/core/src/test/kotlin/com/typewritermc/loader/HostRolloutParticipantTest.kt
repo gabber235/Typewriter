@@ -9,7 +9,10 @@ import com.typewritermc.loader.api.HostedRuntimeEntrypoint
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
+import com.typewritermc.loader.api.work.InFlightWork
+import com.typewritermc.loader.api.work.WorkRuntime
 import com.typewritermc.loader.rollout.HostRolloutParticipant
+import com.typewritermc.loader.rollout.StagedRuntimes
 import com.typewritermc.loader.runtime.HostedRuntimeLoader
 import com.typewritermc.loader.runtime.LoadedHostedRuntime
 import com.typewritermc.loader.testing.NoZeroArgumentHostedRuntimeEntrypoint
@@ -23,6 +26,7 @@ import com.typewritermc.loader.testing.activeProjection
 import com.typewritermc.loader.testing.attempt
 import com.typewritermc.loader.testing.participantFixture
 import com.typewritermc.loader.testing.writeRuntimeJar
+import com.typewritermc.loader.work.HostWork
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.rolloutCommand
 import com.typewritermc.protocol.transport.generated.rolloutProbe
@@ -51,6 +55,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
@@ -408,8 +413,10 @@ val HostRolloutParticipantTest by testSuite {
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
-                            commandContract.requestAddress.render(address),
-                            commandContract.requestCodec.encode(command).toByteArray(),
+                            commandContract.request.address.render(address),
+                            commandContract.request.codec
+                                .encode(command)
+                                .toByteArray(),
                             MessageAddress.of("$coordinatorReplyInbox.command"),
                         ),
                     ),
@@ -422,8 +429,10 @@ val HostRolloutParticipantTest by testSuite {
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
-                            statusContract.requestAddress.render(address),
-                            statusContract.requestCodec.encode(QueryParticipantStatusRequest(attempt = attempt)).toByteArray(),
+                            statusContract.request.address.render(address),
+                            statusContract.request.codec
+                                .encode(QueryParticipantStatusRequest(attempt = attempt))
+                                .toByteArray(),
                             MessageAddress.of("$coordinatorReplyInbox.status"),
                         ),
                     ),
@@ -431,8 +440,10 @@ val HostRolloutParticipantTest by testSuite {
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
-                            probeContract.requestAddress.render(address),
-                            probeContract.requestCodec.encode(ProbeRealmHostsRequest.partial()).toByteArray(),
+                            probeContract.request.address.render(address),
+                            probeContract.request.codec
+                                .encode(ProbeRealmHostsRequest.partial())
+                                .toByteArray(),
                             MessageAddress.of("$coordinatorReplyInbox.presence"),
                         ),
                     ),
@@ -482,7 +493,11 @@ val HostRolloutParticipantTest by testSuite {
                 runtime.suspendOn += operationName
                 val projection =
                     HostRolloutParticipant.LocalProjection(
-                        listOf(LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<java.net.URL>()))),
+                        StagedRuntimes(
+                            listOf(LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<java.net.URL>()))),
+                            emptyList(),
+                            HostWork(InFlightWork(), 1.seconds),
+                        ),
                         this,
                         1.seconds,
                     )
@@ -513,7 +528,13 @@ val HostRolloutParticipantTest by testSuite {
             unfinished.suspendOn += "close"
             val projection =
                 HostRolloutParticipant.LocalProjection(
-                    listOf(unfinished, finished).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
+                    StagedRuntimes(
+                        listOf(unfinished, finished).map {
+                            LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>()))
+                        },
+                        emptyList(),
+                        HostWork(InFlightWork(), 1.seconds),
+                    ),
                     this,
                     1.seconds,
                 )
@@ -537,7 +558,13 @@ val HostRolloutParticipantTest by testSuite {
             failing.failOn += "activate"
             val projection =
                 HostRolloutParticipant.LocalProjection(
-                    listOf(completed, failing).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
+                    StagedRuntimes(
+                        listOf(completed, failing).map {
+                            LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>()))
+                        },
+                        emptyList(),
+                        HostWork(InFlightWork(), 1.seconds),
+                    ),
                     this,
                     1.seconds,
                 )
@@ -578,19 +605,49 @@ val HostRolloutParticipantTest by testSuite {
         }
     }
 
+    test("a commit activates its candidate only after the leaving runtime's work in flight ended") {
+        runTest {
+            val fixture = participantFixture(this)
+            val (_, candidateAttempt, candidate) = fixture.candidateOverBaseline()
+            val item =
+                fixture.stagedContexts[0]
+                    .host.work
+                    .begin("kv update sessions alex", null)
+
+            val committed = async { fixture.participant.apply(fixture.commit(candidateAttempt, candidate)) }
+            advanceTimeBy(5.seconds)
+            runCurrent()
+            fixture.runtimes[0].operations shouldContainExactly listOf("activate", "quiesce")
+            fixture.runtimes[1].operations shouldContainExactly emptyList()
+            item.end()
+
+            committed.await() shouldBe fixture.accepted
+            fixture.runtimes[1].operations shouldContainExactly listOf("activate")
+            fixture.participant.close()
+        }
+    }
+
+    test("a busy sibling runtime does not delay a commit's drain") {
+        runTest {
+            val fixture = participantFixture(this)
+            val (_, candidateAttempt, candidate) = fixture.candidateOverBaseline()
+            fixture.work
+                .of(WorkRuntime("sibling engine"))
+                .begin("engine task chat", null)
+
+            val result = fixture.participant.apply(fixture.commit(candidateAttempt, candidate))
+
+            result shouldBe fixture.accepted
+            currentTime shouldBe 0L
+            fixture.runtimes[1].operations shouldContainExactly listOf("activate")
+            fixture.participant.close()
+        }
+    }
+
     test("failed candidate activation restores the complete baseline") {
         runTest {
             val fixture = participantFixture(this)
-            val baselineAttempt = attempt(1, 1)
-            val baseline = fixture.reference("baseline")
-            fixture.projections[baseline] = fixture.projection(baseline)
-            fixture.participant.apply(fixture.stage(baselineAttempt, baseline))
-            fixture.participant.apply(fixture.commit(baselineAttempt, baseline))
-
-            val candidateAttempt = attempt(2, 2)
-            val candidate = fixture.reference("candidate")
-            fixture.projections[candidate] = fixture.projection(candidate)
-            fixture.participant.apply(fixture.stage(candidateAttempt, candidate))
+            val (baseline, candidateAttempt, candidate) = fixture.candidateOverBaseline()
             fixture.runtimes[1].failOn += "activate"
 
             val result = fixture.participant.apply(fixture.commit(candidateAttempt, candidate))

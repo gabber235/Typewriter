@@ -50,7 +50,7 @@ fun main() {
     Files.createDirectories(settings.poolDir)
     val lockFile = FileChannel.open(settings.poolDir.resolve("pool.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
     val lock = lockFile.tryLock() ?: exitProcess(0)
-    Files.createDirectories(settings.logs)
+    Files.createDirectories(settings.run.logs)
     val poolFile = settings.poolDir.resolve(PoolFile.NAME)
     ServerSocket(0, BACKLOG, InetAddress.getLoopbackAddress()).use { server ->
         // The build appends the pool's output to its log, which the pool that holds the lock empties, so
@@ -63,7 +63,7 @@ fun main() {
             pool.couldNotRun(reason)
             exitProcess(1)
         }
-        PoolFile.of(server.localPort, settings.run).write(poolFile)
+        PoolFile.of(server.localPort, settings.run.id).write(poolFile)
         try {
             pool.run()
         } finally {
@@ -308,7 +308,7 @@ internal class Pool(
     private val hung = mutableMapOf<String, HungWork>()
 
     // The run's file is written as the pool takes up the run, naming the players hung work keeps out.
-    private val runs = RunRecords(settings.run, settings.testRun, settings.logs, settings.policy, stillOut = { stillOut() })
+    private val runs = RunRecords(settings.run.id, settings.run.file, settings.run.logs, settings.run.policy, stillOut = { stillOut() })
     private val attempts = Attempts<Attempt>()
     private val requests = Routes<Peer, Long>()
     private val barriers = Routes<Peer, Int>()
@@ -321,12 +321,13 @@ internal class Pool(
 
     // Every restart Paper of the pool boots the same JDK, class path, plugins and flags, its heap share included.
     private val aotKey by lazy {
-        val java = settings.java.toRealPath()
+        val java = settings.launched.java.toRealPath()
         val release = java.parent.parent.resolve("release")
         val jdk = "$java\n" + if (Files.isRegularFile(release)) Files.readString(release) else ""
         AotCache.key(
             jdk,
-            PaperServer.of(settings.paperDir).classPath + listOf(settings.agentJar, settings.coverageAgentJar, settings.pluginJar),
+            PaperServer.of(settings.launched.paperDir).classPath +
+                listOf(settings.launched.agentJar, settings.launched.coverageAgentJar, settings.launched.pluginJar),
             listOf(HeapShare.OWN_PAPER.flag()) + RESTART_FLAGS,
         )
     }
@@ -433,7 +434,7 @@ internal class Pool(
             Role.PAPER -> {
                 val server = papers[peer.hello.name] ?: return peer.close()
                 server.peer = peer
-                System.err.println("${server.name} is up after ${seconds(server.bootedAt)} of boot ${server.boots}")
+                PoolLog.line("${server.name} is up after ${seconds(server.bootedAt)} of boot ${server.boots}")
                 act(server, server.rules.connected())
             }
 
@@ -543,7 +544,7 @@ internal class Pool(
     ) {
         val attempt =
             attemptOf(session, restart.submission)
-                ?: return System.err.println("$session asked to restart the Paper of an attempt that no longer runs")
+                ?: return PoolLog.line("$session asked to restart the Paper of an attempt that no longer runs")
         act(attempt.server, attempt.server.rules.restart(restart.request))
     }
 
@@ -556,9 +557,9 @@ internal class Pool(
         session: Peer,
         join: Message.Join,
     ) {
-        if (join.run == settings.run) return
+        if (join.run == settings.run.id) return
         refused += session
-        session.sendLast(Message.createRefused(reason = "this pool serves the run ${settings.run}, not the run ${join.run}"))
+        session.sendLast(Message.createRefused(reason = "this pool serves the run ${settings.run.id}, not the run ${join.run}"))
     }
 
     /** [session]'s attempt ended with [result]: the run records it and its players serve the next claims. */
@@ -601,7 +602,7 @@ internal class Pool(
         message: Message,
     ) {
         val named = playersNamedBy(message)
-        if (named == null) return System.err.println("$session sent ${message.kind}, which a session never sends")
+        if (named == null) return PoolLog.line("$session sent ${message.kind}, which a session never sends")
         if (named.isEmpty() || !named.all { holds(session, it) }) return
         val paper = serverOf(session, named.first())?.peer
         when (message) {
@@ -654,6 +655,7 @@ internal class Pool(
                 when (val paper = ask.value) {
                     is PaperAsk.ProbeWrapper -> paper.value.players
                     is PaperAsk.QueryWrapper -> listOf(paper.value.player)
+                    is PaperAsk.ExpectWrapper -> paper.value.players
                     else -> null
                 }
             }
@@ -694,11 +696,11 @@ internal class Pool(
         if (attemptHeldBy(session, quit.player) ==
             null
         ) {
-            return System.err.println("$session asked ${quit.player} to quit, which none of its attempts holds")
+            return PoolLog.line("$session asked ${quit.player} to quit, which none of its attempts holds")
         }
         val client =
             clientOf(quit.player)?.takeIf { it.away == null && !it.lost }
-                ?: return System.err.println("$session asked ${quit.player} to quit, whose client is away or lost")
+                ?: return PoolLog.line("$session asked ${quit.player} to quit, whose client is away or lost")
         client.away = Away.Leaving(quit.request)
         client.peer?.send(Message.LEAVE)
     }
@@ -710,10 +712,10 @@ internal class Pool(
     ) {
         val attempt =
             attemptHeldBy(session, rejoin.player)
-                ?: return System.err.println("$session asked ${rejoin.player} to rejoin, which none of its attempts holds")
+                ?: return PoolLog.line("$session asked ${rejoin.player} to rejoin, which none of its attempts holds")
         val client =
             clientOf(rejoin.player)?.takeIf { it.away == Away.Gone && !it.lost }
-                ?: return System.err.println("$session asked ${rejoin.player} to rejoin, which is not away")
+                ?: return PoolLog.line("$session asked ${rejoin.player} to rejoin, which is not away")
         client.away = Away.Joining(rejoin.request)
         moveTo(client, attempt.server)
         connect(client)
@@ -826,7 +828,7 @@ internal class Pool(
             }
 
             else -> {
-                System.err.println("${server.name} sent ${message.kind}, which Paper never sends")
+                PoolLog.line("${server.name} sent ${message.kind}, which Paper never sends")
             }
         }
     }
@@ -837,7 +839,8 @@ internal class Pool(
     ) {
         when (event.happened) {
             is PlayerEvent.Happened.WorkHungWrapper -> workHung(event)
-            else -> System.err.println("${server.name} sent ${event.happened.kind}, which Paper never sends")
+            is PlayerEvent.Happened.WorkFailedWrapper -> attemptHolding(event.player)?.session?.send(Message.PlayerEventWrapper(event))
+            else -> PoolLog.line("${server.name} sent ${event.happened.kind}, which Paper never sends")
         }
     }
 
@@ -922,7 +925,7 @@ internal class Pool(
             }
 
             else -> {
-                System.err.println("$name sent ${message.kind}, which a client never sends")
+                PoolLog.line("$name sent ${message.kind}, which a client never sends")
             }
         }
     }
@@ -935,7 +938,7 @@ internal class Pool(
         when (val happened = message.value.happened) {
             is PlayerEvent.Happened.PerceivedWrapper -> attemptHolding(name)?.let { perceived(it, name, message) }
             is PlayerEvent.Happened.BarrierSeenWrapper -> barrierSeen(message.value.player, happened.value.barrier)
-            else -> System.err.println("$name sent ${happened.kind}, which a client never sends")
+            else -> PoolLog.line("$name sent ${happened.kind}, which a client never sends")
         }
     }
 
@@ -951,7 +954,7 @@ internal class Pool(
     ) {
         val server = client.on
         if (message.port != server.port) return
-        System.err.println("The client of ${client.player.name} dropped off ${server.name}: ${message.reason}")
+        PoolLog.line("The client of ${client.player.name} dropped off ${server.name}: ${message.reason}")
         // The client may tell before the pool hears the process exit.
         act(server, server.rules.dropped(client.player.name, message.reason, paperAlive = server.part?.process?.isAlive != false))
     }
@@ -1100,7 +1103,7 @@ internal class Pool(
         val names = players.joinToString { it.name }
         submission.timing.took("claim $names on ${server.name}")
         attempts.start(id.value, attempt, server.rules)
-        System.err.println("Attempt $id: ${submit.testId} on $names on ${server.name} in region (${attempt.region.x}, ${attempt.region.z})")
+        PoolLog.line("Attempt $id: ${submit.testId} on $names on ${server.name} in region (${attempt.region.x}, ${attempt.region.z})")
         act(server, claiming.todo)
         return attempt
     }
@@ -1204,7 +1207,7 @@ internal class Pool(
             }
 
             is Do.Note -> {
-                System.err.println("${server.name}: ${next.text}")
+                PoolLog.line("${server.name}: ${next.text}")
             }
         }
     }
@@ -1212,7 +1215,7 @@ internal class Pool(
     /** [client]'s player serves claims again: a new client in place of a lost one frees it, as does one back from a restart attempt's Paper. */
     private fun free(client: Client) {
         if (client.lost) {
-            System.err.println("The new client of ${client.player.name} steps with ${client.on.name}; its player serves claims again.")
+            PoolLog.line("The new client of ${client.player.name} steps with ${client.on.name}; its player serves claims again.")
             client.lost = false
             claims.letBack(client.player, Out.LOST_CLIENT)
         }
@@ -1262,7 +1265,7 @@ internal class Pool(
         back: Do.Restarted,
     ) {
         val attempt = running(back.attempt)
-        System.err.println("${server.name} is back ${seconds(server.killedAt)} after its kill")
+        PoolLog.line("${server.name} is back ${seconds(server.killedAt)} after its kill")
         attempt.restarting = false
         attempt.session.send(Message.createReply(request = back.request, answer = Answer.createRestarted(tick = back.tick)))
         attempt.fresh.values.forEach(attempt.session::send)
@@ -1279,7 +1282,7 @@ internal class Pool(
         server.training = boot as? AotCache.Boot.Train
         server.bootedAt = System.nanoTime()
         server.part = game.bootOwn(server.folder, RESTART_FLAGS + boot.flags, again = number > 1).also(::watch)
-        System.err.println(
+        PoolLog.line(
             "${server.name} boots (${if (boot is AotCache.Boot.Use) "from its cache" else "training its cache"}), boot $number",
         )
         bootLimit(server)
@@ -1311,7 +1314,7 @@ internal class Pool(
         }
         val loss = PaperLoss(kind = kind, detail = cause, log = server.folder.log.toString())
         val reason = "$cause; see ${loss.log}"
-        System.err.println("The Paper ${server.name} is lost: $reason")
+        PoolLog.line("The Paper ${server.name} is lost: $reason")
         val attempt = running(id)
         sendBack(attempt)
         if (attempt.started) {
@@ -1429,7 +1432,7 @@ internal class Pool(
     private fun expire(attempt: Attempt) {
         val names = attempt.players.joinToString { it.name }
         val reason = "its lease ran out after $LEASE_SECONDS s while its session still held $names; see ${settings.poolLog}"
-        System.err.println("Attempt ${attempt.id}: ${attempt.submit.testId} $reason")
+        PoolLog.line("Attempt ${attempt.id}: ${attempt.submit.testId} $reason")
         attempt.session.send(playerEvent(attempt.players.first().name, PlayerEvent.Happened.createLeaseExpired(reason = reason)))
         attempt.submission.finish(failed(attempt.submit, TimeUnit.SECONDS.toMillis(LEASE_SECONDS), reason), reason)
     }
@@ -1511,7 +1514,7 @@ internal class Pool(
         val replaced = game.replaceClient(name)
         client.part = replaced.replacement.also(::watch)
         val loss = ClientLoss(kind = kind, detail = cause, log = replaced.lostLog.toString())
-        System.err.println("The client of $name is lost: $cause; see ${loss.log}. A new one starts.")
+        PoolLog.line("The client of $name is lost: $cause; see ${loss.log}. A new one starts.")
         attemptHolding(name)?.let { attempt ->
             if (attempt.started) {
                 attempt.session.send(playerEvent(name, PlayerEvent.Happened.ClientLostWrapper(loss)))
@@ -1587,7 +1590,7 @@ internal class Pool(
     /** The game cannot serve the run, for [reason]: the pool's log and the run's file say why, also before the game started. */
     fun couldNotRun(reason: String) {
         failure = reason
-        System.err.println("The game failed: $reason")
+        PoolLog.line("The game failed: $reason")
         runs.failed(reason)
     }
 
@@ -1615,7 +1618,7 @@ internal class Pool(
         try {
             while (true) events.put(Event.Received(peer, Wire.read(input)))
         } catch (closed: IOException) {
-            System.err.println("$peer left: ${closed.message}")
+            PoolLog.line("$peer left: ${closed.message}")
             events.put(Event.Left(peer))
         }
     }

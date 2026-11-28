@@ -167,6 +167,11 @@ internal class Probes(
                 null
             }
 
+            is PlayerAction.FactLaterWrapper -> {
+                factLater(player, action.value)
+                null
+            }
+
             PlayerAction.SAVE -> {
                 player.saveData()
                 null
@@ -225,8 +230,9 @@ internal class Probes(
     }
 
     /**
-     * Runs the work on Bukkit's async scheduler as a plugin would, counted from the moment it is handed
-     * over. An interrupt would cancel it before its chat line; nothing here interrupts it.
+     * Runs the work on Bukkit's async scheduler as a plugin would, counted for the player it names, or
+     * else for [player], from the moment it is handed over. An interrupt would cancel it before its chat
+     * line; nothing here interrupts it.
      */
     private fun work(
         player: Player,
@@ -234,7 +240,7 @@ internal class Probes(
     ) {
         Bukkit.getScheduler().runTaskAsynchronously(
             plugin,
-            PlayerWork.task(player, work.name) {
+            PlayerWork.task(setOf(work.countedFor?.let(UUID::fromString) ?: player.uniqueId), work.name) {
                 try {
                     Thread.sleep(work.millis.toLong())
                 } catch (_: InterruptedException) {
@@ -244,6 +250,26 @@ internal class Probes(
                 player.sendMessage(Component.text(work.chat))
             },
         )
+    }
+
+    /**
+     * Sends the chat line and reports the fact on a thread of its own, uncounted, as a change outside
+     * Paper would: only an expected fact holds the ticks meanwhile. Bukkit's async scheduler would wait
+     * for a tick the expectation holds back.
+     */
+    private fun factLater(
+        player: Player,
+        later: PlayerAction.FactLater,
+    ) {
+        Thread
+            .ofPlatform()
+            .daemon()
+            .name("playtest-fact-later")
+            .start {
+                Thread.sleep(later.millis.toLong())
+                player.sendMessage(Component.text(later.chat))
+                PlayerWork.factHappened(later.fact)
+            }
     }
 
     private fun spawn(

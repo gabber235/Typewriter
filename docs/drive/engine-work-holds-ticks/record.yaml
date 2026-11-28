@@ -1,0 +1,150 @@
+# docs/drive/engine-work-holds-ticks/record.yaml: the working state of the holding pull request, split
+# from node 4's pull request. The design it changes is docs/design/game-verification/README.md (Ticks,
+# Obligations on Typewriter) and docs/design/events-and-handlers.md (Busy per subject).
+goal: A tick window is exact because all in flight engine work holds ticks by construction, not by opt in per call site.
+
+pieces:
+  - id: holding-model
+    status: done
+    open: none
+    tries:
+      - id: per-call-site
+        what: Count each async path by hand (SubjectWork in ChainQueue, as on node 4's pull request)
+        taught: Session writes, publication applies and the join path were missed; spikes I and D already showed invisible work gives wrong verdicts
+        state: dropped
+        why: Forgetting is silent; every new async path repeats the bug
+      - id: virtual-time
+        what: The engine dispatcher on a virtual clock the stepper advances
+        taught: NATS TTLs and refresh timers live on the server's wall clock; an idle Paper ticks once a second, so sessions would expire
+        state: dropped
+        why: Breaks real stack semantics in game tests; virtual time belongs in engine tests
+      - id: count-timers
+        what: Choke points plus counting every delay, with an idle marker for periodic loops
+        taught: Needs a marker on every ambient loop; a retry backoff then reports as hung without its cause
+        state: dropped
+        why: One more concept than choke points plus lapsed work, and a worse diagnosis
+      - id: choke-points
+        what: Count at the engine's one dispatcher and its host's one transport; the subject from the coroutine context; a failed outbound operation fails its item with the cause
+        taught: Covers every path traced on features/v1 and node 4's branch
+        state: picked
+        why: Exact by construction; attribution only affects blame and settle speed; a detekt rule makes every escape visible
+        evidence: [8021ce2b50, HostWorkTest.kt, EngineWorkTest.kt, SESSION-13]
+  - id: count-owner
+    status: done
+    open: none
+    tries:
+      - id: engine-part-meter
+        what: A WorkMeter engine part supplied only by a test only bridge extension, so production pays nothing
+        taught: The engine parts, plugin integrations and extension shipping it needs exist only on node 4's branch
+        state: dropped
+        why: Cannot be built against features/v1
+      - id: host-in-flight-work
+        what: The host owns InFlightWork in loader-api, always counting; observers attach any time; a Bukkit service; a test only Paper plugin maps items to PlayerWork
+        taught: Paper puts every plugin class loader in its global group, so a Bukkit plugin loads the Typewriter Paper plugin's classes (PaperPluginClassLoaderStorage, SpigotPluginClassLoaderGroup); the loader jar does not relocate loader-api
+        state: picked
+        why: Production jobs of its own (bounded drain before shutdown or rollout, the typewriter.work.in_flight gauge) for one concurrent set insert and removal per task and per outbound call
+        evidence: [db4a64964e, WorkPlayersTest.kt]
+  - id: proof
+    status: done
+    open: none
+    tries:
+      - id: strengthened-game-s2
+        what: GAME-S2 on the session key's revision after the quit and the rejoin as the proof that engine work holds ticks
+        taught: GAME-S2 passes with the tick hold removed (work.holds in StepPolicy), so it cannot show the hold
+        state: dropped
+        why: A proof must fail without the thing it proves
+        evidence: [cargo xtask e2e game --only ASYNC-2,FACT-1,FACT-2,GAME-S2 with the hold removed]
+      - id: work-requirements-red
+        what: ASYNC-2, FACT-1 and FACT-2 prove the hold; GAME-S2 stays a sessions requirement (a quit and a rejoin write the session key)
+        taught: With the hold removed all three fail 4 of 4 attempts; with it restored the whole game suite passes
+        state: picked
+        evidence: [c27704b937, b6906ec295, cargo xtask e2e game with the hold removed (3 of 4 failed)]
+
+decided:
+  - id: q-meter-source
+    what: "A. Named by its general job"
+    why: Later replaced by option C, the host's InFlightWork
+  - id: option-c
+    what: "C. engine-core always counts in flight work, the loader registers it as a Bukkit service, a thin test only Paper plugin turns items into PlayerWork"
+    why: The engine part route needs node 4's branch; the count has production jobs of its own
+  - id: q-lapsed
+    what: "A. Failed outbound work fails the attempt as WorkFailed naming operation and cause; a requirement that expects a fault declares it"
+    why: A failed operation never reaches its effect, so a window after it is meaningless
+  - id: q-publication-fact
+    what: "This pull request builds the general expected fact hold; the event core pull request pushes the applied publication over the pool wire"
+    why: Backend topology stays untouched; node 9b replaces the push later
+  - id: q-proof
+    what: "The three work requirements seen red (decided 2026-11-26): ASYNC-2, FACT-1 and FACT-2 each fail with the tick hold removed; GAME-S2 stays a sessions requirement and proves no hold"
+    why: GAME-S2, the earlier choice, passed with the hold removed
+  - id: detekt-concurrency
+    what: "Approved: a detekt config beside observability.yml for engine main sources"
+    why: Makes every escape from the count visible
+  - id: wiring-only-rule
+    what: "Dropped: no rule that HostedRuntimeHost.messaging and sharedArtifacts are read only in EngineWiring"
+    why: The host hands runtimes only the counted session and counted shared artifacts, so every read of them is counted; the ways to escape the count are threads and waits, which concurrency.yml flags
+  - id: production-jobs
+    what: "Build the drain and the gauge here, test first: a gauge on the count, a bounded drain in ArtifactHost before shutdown and rollout, the bound from config, logging what still ran"
+    why: The design record named them as present while neither was built; a drain must name what it left, so the count keeps its items in a concurrent set
+  - id: watchdog
+    what: "One watchdog at the oldest open entry's deadline replaces a 1 s timer per item"
+    why: Every engine task is counted now; open work is in begin order with one threshold, so the oldest is always due first
+  - id: drain-scope
+    what: "Per runtime: each item records the runtime that began it; a rollout drains only the leaving runtimes' items, shutdown drains all; the host total, the gauge and the game count stay host wide"
+    why: A busy sibling runtime made a rollout wait out the bound for work the rollout does not replace
+  - id: detekt-main-gate
+    what: "check runs detektMain. Every finding is fixed at its cause: real concepts where a long parameter list hid one, a site suppression with a one line reason where a composition root, the authoring DSL or a generated SDK entry point truly takes them, no baseline entry and no ignoreDefaultParameters; println goes through one console writer per playtest module; generated/ksp is excluded like skirout; the unused remappingContent is deleted"
+    why: LongParameterList needs type resolution, so plain detekt never ran it and no baseline could hold it
+  - id: cells-outcome
+    what: "Merge close to as it is (decided 2026-11-27): keep the tick hold while a window reads state, since it fixes a real deadlock today; build no read budget, no fault link per Paper and no pacing gate flip, since cells delete or replace them; the real product case for the hold and a Typewriter fact producer come with the crossing's release rules"
+    why: The game harness moves to owned cells with scripted time; nothing more is built on the parts cells delete
+  - id: loader-own-work
+    what: "The loader counts its own work as the host's work of no runtime: its tasks on the host's counting dispatcher, its file operations on the host's counted io, its own messaging through counted sessions; a thread blocked on an outside event waits uncounted; concurrency.yml covers loader sources"
+    why: The crossing must see every outbound call, and the loader's work ran uncounted on Dispatchers.IO
+  - id: engine-scope-failure
+    what: "Fail loud: a deployment scope whose work throws makes ReloadableEngineRuntime report unhealthy with the cause, so the rollout replaces it through the existing health path; the scope keeps its plain job"
+    why: A part failing in the offered scope otherwise died silently while the engine reported healthy
+
+open: []
+
+slices:
+  - id: count
+    what: InFlightWork, counted host views, counting dispatcher, session subjects
+    evidence: [8021ce2b50]
+  - id: framework
+    what: Away players stay claimed, work by UUID or for no player, WorkFailed
+    evidence: [c27704b937]
+  - id: bridge
+    what: PlaytestTypewriter plugin shipped in the runtimes/paper game suite
+    evidence: [db4a64964e]
+  - id: expected-fact
+    what: expectFact and PlayerWork.factHappened
+    evidence: [b6906ec295]
+  - id: game-s2
+    what: GAME-S2 checks that a quit and a rejoin write the session key, on its revision
+    evidence: [4f3007c562]
+  - id: end-order
+    what: Observers hear an item's end before the count drops, also when one throws
+    evidence: [f8e4eeeb99e, InFlightWorkTest.kt]
+  - id: production-jobs
+    what: The typewriter.work.in_flight gauge and the bounded drain before shutdown and rollout, bound from TYPEWRITER_WORK_DRAIN
+    evidence: [GaugeTest.kt, WorkDrainTest.kt, ArtifactHostWorkTest.kt, HostRolloutParticipantTest.kt, LoaderSettingsTest.kt]
+  - id: watchdog
+    what: One watchdog at the oldest open entry's deadline
+    evidence: [WorkLedgerTest.kt]
+  - id: drain-scope
+    what: Each staged runtime counts through its own view of the host; a rollout drains only the leaving projection's runtimes
+    evidence: [WorkDrainTest.kt, InFlightWorkTest.kt, HostRolloutParticipantTest.kt]
+  - id: engine-scope-failure
+    what: A part that throws in the deployment scope makes the engine deployment report unhealthy with its cause
+    evidence: [ea3283c0ed2, EngineScopeFailureTest.kt]
+  - id: reading-between-ticks
+    what: While a window reads its state checks between two ticks, no tick runs on its Paper; its due barriers still go out
+    evidence: [StepPolicyTest.kt]
+  - id: loader-own-work
+    what: The loader's tasks, file operations and own messaging count as the host's own work
+    evidence: [LoaderWorkTest.kt]
+  - id: detekt-main-gate
+    what: check runs detektMain and every project passes it without new baseline entries
+    evidence: [basic-conventions gradle script]
+
+next: merge; the game harness moves to owned cells with scripted time, where the counted dispatcher and transport become the crossing

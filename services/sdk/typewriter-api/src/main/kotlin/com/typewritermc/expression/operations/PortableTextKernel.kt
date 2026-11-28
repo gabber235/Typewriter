@@ -174,7 +174,8 @@ internal object PortableTextKernel : TextKernel {
         val valid = month in 1..12 && day in 1..daysInMonth(year, month) && hour <= 23 && minute <= 59 && second <= 59
         if (!valid) throw invalidTimestamp()
         return portableInstant(
-            localMilliseconds(year, month, day, hour, minute, second, millisecond) - BigInteger.valueOf(offsetMinutes * 60_000L),
+            localMilliseconds(epochDay(year, month, day), millisecondOfDay(hour, minute, second, millisecond)) -
+                BigInteger.valueOf(offsetMinutes * 60_000L),
         )
     }
 

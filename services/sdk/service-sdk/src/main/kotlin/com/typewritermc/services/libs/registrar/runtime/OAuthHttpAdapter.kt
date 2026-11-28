@@ -2,6 +2,7 @@ package com.typewritermc.services.libs.registrar.runtime
 
 import com.typewritermc.failures.rethrowExceptional
 import com.typewritermc.services.libs.http.core.HttpHeaders
+import com.typewritermc.services.libs.http.core.HttpLimits
 import com.typewritermc.services.libs.http.core.HttpMethod
 import com.typewritermc.services.libs.http.core.HttpOperation
 import com.typewritermc.services.libs.http.core.HttpRequest
@@ -77,14 +78,12 @@ class AuthentikTokenExchanger(
         val result =
             client.execute(
                 HttpRequest(
-                    HttpOperation("registrar.oauth.exchange"),
-                    ErrorSlug.of("oauth-exchange-failed"),
+                    HttpOperation("registrar.oauth.exchange", ErrorSlug.of("oauth-exchange-failed")),
                     HttpMethod.POST,
                     uri,
                     HttpHeaders.of("Content-Type" to "application/x-www-form-urlencoded"),
                     body,
-                    maximumRequestBytes = 64 * 1024,
-                    maximumResponseBytes = 64 * 1024,
+                    limits = HttpLimits(maximumRequestBytes = 64 * 1024, maximumResponseBytes = 64 * 1024),
                 ),
             )
         if (result is HttpResult.Failure) return unavailable()

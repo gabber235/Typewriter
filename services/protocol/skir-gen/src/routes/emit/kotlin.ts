@@ -101,6 +101,11 @@ ${arms.join("\n")}
 }`;
 }
 
+/** Indents the lines of a generated argument list one level deeper, for an argument list nested in another call. */
+function deeper(lines: string): string {
+  return lines.replaceAll("\n", "\n    ");
+}
+
 /**
  * The `limits` argument of a route whose limits differ from the manifest defaults, or nothing: a
  * contract without limits uses the transport's, which the services NATS transport is constructed
@@ -208,13 +213,15 @@ val ${scope}.${name} get() = ${contract}(
       case "watch": {
         const method = importedKotlinSymbol(symbols.method(flow.method.module, flow.method.method));
         const update = symbols.record(flow.updates.payload).reference;
-        imports.push(...method.imports);
+        imports.push(...method.imports, `import ${COMMUNICATOR}.skir.${CONTRACT_BUILDERS.unary}`);
         blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
 private val ${updateAddress} = ${kotlinString(serviceSubject(route, "updates"))}.${template}
 val ${scope}.${name} get() = ${contract}(
-    method = ${method.name}, updateSerializer = ${update}.serializer,
-    name = OperationName.of(${operation}), requestAddress = ${requestAddress}.subscribedAt(this),
-    updateAddress = ${updateAddress}, initialPolicy = ${policyOf(flow.method)},${replyAddresses(route, roles)}${routeLimits(route, defaults)}
+    initial = ${CONTRACT_BUILDERS.unary}(
+        method = ${method.name}, name = OperationName.of(${operation}),
+        address = ${requestAddress}.subscribedAt(this), responsePolicy = ${policyOf(flow.method)},${deeper(`${replyAddresses(route, roles)}${routeLimits(route, defaults)}`)}
+    ),
+    updateSerializer = ${update}.serializer, updateAddress = ${updateAddress},
 )`);
         break;
       }

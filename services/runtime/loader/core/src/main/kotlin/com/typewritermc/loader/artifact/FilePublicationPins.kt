@@ -2,7 +2,6 @@ package com.typewritermc.loader.artifact
 
 import com.typewritermc.failures.findExceptional
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -16,6 +15,7 @@ import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
+import kotlin.coroutines.CoroutineContext
 
 // Core owned storage representation, not part of loader API.
 @Serializable
@@ -37,12 +37,13 @@ internal data class RealmPublicationPins(
 @OptIn(ExperimentalSerializationApi::class)
 internal class FilePublicationPins(
     private val file: Path,
+    private val io: CoroutineContext,
 ) {
     private val codec = Cbor { encodeDefaults = true }
     private val serializer = MapSerializer(String.serializer(), RealmPublicationPins.serializer())
 
     suspend fun read(): Map<String, RealmPublicationPins> =
-        withContext(Dispatchers.IO) {
+        withContext(io) {
             val bytes =
                 try {
                     Files.readAllBytes(file)
@@ -53,7 +54,7 @@ internal class FilePublicationPins(
         }
 
     suspend fun write(value: Map<String, RealmPublicationPins>) =
-        withContext(Dispatchers.IO) {
+        withContext(io) {
             Files.createDirectories(file.parent)
             val temporary = Files.createTempFile(file.parent, "publication-pins", ".tmp")
             var failure: Throwable? = null

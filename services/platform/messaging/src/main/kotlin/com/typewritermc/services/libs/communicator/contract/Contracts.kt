@@ -136,25 +136,36 @@ fun interface ReplyAddressRule<in Address : Any> {
     ): Boolean
 }
 
+/** Where one kind of message travels, by [address], and how its payload is encoded, by [codec]. */
+class Messages<Address : Any, Value : Any>(
+    val address: AddressTemplate<Address>,
+    val codec: PayloadCodec<Value>,
+)
+
+/** How the replies to a request are encoded, by [codec], and classified, by [policy]. */
+class Replies<Response : Any>(
+    val codec: PayloadCodec<Response>,
+    val policy: ResponsePolicy<Response>,
+)
+
 /**
  * Defines a typed request with one reply, timeout, response semantics, and failure identity.
  *
  * A contract is metadata shared by caller and router; constructing it creates no subscription. Domain and internal
  * errors remain decoded responses; codec and transport failures are reported separately by the communicator.
  * [limits] bound how large its request and reply may be; null uses the transport's limits. A server answers only reply
- * addresses [replyAddresses] admits.
+ * addresses [replyAddresses] admits. Failures are reported under [OperationName.failureSlug] of [name].
  */
 class UnaryContract<Address : Any, Request : Any, Response : Any>(
     val name: OperationName,
-    val requestAddress: AddressTemplate<Address>,
-    val requestCodec: PayloadCodec<Request>,
-    val responseCodec: PayloadCodec<Response>,
-    val responsePolicy: ResponsePolicy<Response>,
+    val request: Messages<Address, Request>,
+    val replies: Replies<Response>,
     val replyAddresses: ReplyAddressRule<Address>,
     val timeout: Duration = 10.seconds,
-    val failureSlug: ErrorSlug,
     val limits: TransportLimits? = null,
 ) {
+    val failureSlug: ErrorSlug get() = name.failureSlug
+
     init {
         require(timeout.isPositive() && timeout.isFinite()) { "Unary timeout must be positive and finite" }
     }
@@ -165,71 +176,48 @@ class UnaryContract<Address : Any, Request : Any, Response : Any>(
  *
  * Collection lifetime and completion policy are supplied by the caller. Responders may deliberately decline to
  * reply, so callers must decide how missing replies are handled. Listeners answer only reply addresses
- * [replyAddresses] admits.
+ * [replyAddresses] admits. Failures are reported under [OperationName.failureSlug] of [name].
  */
 class ScatterContract<Address : Any, Request : Any, Response : Any>(
     val name: OperationName,
-    val requestAddress: AddressTemplate<Address>,
-    val requestCodec: PayloadCodec<Request>,
-    val responseCodec: PayloadCodec<Response>,
-    val responsePolicy: ResponsePolicy<Response>,
+    val request: Messages<Address, Request>,
+    val replies: Replies<Response>,
     val replyAddresses: ReplyAddressRule<Address>,
-    val failureSlug: ErrorSlug,
     val limits: TransportLimits? = null,
-)
+) {
+    val failureSlug: ErrorSlug get() = name.failureSlug
+}
 
 /**
  * Defines a typed publication with no application reply.
  *
  * Successful publication means transport acceptance, not confirmation that every consumer processed the event.
+ * Failures are reported under [OperationName.failureSlug] of [name].
  */
 class EventContract<Address : Any, Event : Any>(
     val name: OperationName,
     val address: AddressTemplate<Address>,
     val codec: PayloadCodec<Event>,
-    val failureSlug: ErrorSlug,
-)
+) {
+    val failureSlug: ErrorSlug get() = name.failureSlug
+}
 
 /**
- * Combines an initial request with a separate update subscription and optional update filtering.
+ * Combines an [initial] request with a separate subscription to [updates] and optional update filtering.
  *
  * The client subscribes before requesting initial state to reduce lost updates. Snapshot and update consistency
  * still belongs to the application protocol; this metadata provides no transactional snapshot boundary. Consumers
  * must define reconnect, duplicate, and revision handling. Updates carry no outcome of their own: every delivered
- * update is a success. A server answers only reply addresses [replyAddresses] admits.
+ * update is a success. The watch is named, bounded and answered as its initial request is.
  */
 class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
-    val name: OperationName,
-    val requestAddress: AddressTemplate<Address>,
-    val updateAddress: AddressTemplate<Address>,
-    val requestCodec: PayloadCodec<Request>,
-    val initialCodec: PayloadCodec<Initial>,
-    val updateCodec: PayloadCodec<Update>,
-    val initialPolicy: ResponsePolicy<Initial>,
-    val replyAddresses: ReplyAddressRule<Address>,
-    val timeout: Duration = 10.seconds,
-    val failureSlug: ErrorSlug,
+    val initial: UnaryContract<Address, Request, Initial>,
+    val updates: Messages<Address, Update>,
     val updateFilter: (Request, Update) -> Boolean = { _, _ -> true },
-    val limits: TransportLimits? = null,
 ) {
-    init {
-        require(timeout.isPositive() && timeout.isFinite()) { "Watch timeout must be positive and finite" }
-    }
+    val name: OperationName get() = initial.name
+    val failureSlug: ErrorSlug get() = initial.failureSlug
 }
-
-/** Uses the initial request portion of this watch without opening an update subscription. */
-fun <Address : Any, Request : Any, Initial : Any, Update : Any> WatchContract<Address, Request, Initial, Update>.initialRequest() =
-    UnaryContract(
-        name = name,
-        requestAddress = requestAddress,
-        requestCodec = requestCodec,
-        responseCodec = initialCodec,
-        responsePolicy = initialPolicy,
-        replyAddresses = replyAddresses,
-        timeout = timeout,
-        failureSlug = failureSlug,
-        limits = limits,
-    )
 
 /** A watch item that identifies whether a value is the initial snapshot or a later update. */
 sealed interface WatchMessage<out Initial : Any, out Update : Any> {

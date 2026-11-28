@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.http.jdk
 
 import com.sun.net.httpserver.HttpServer
+import com.typewritermc.services.libs.http.core.HttpLimits
 import com.typewritermc.services.libs.http.core.HttpMethod
 import com.typewritermc.services.libs.http.core.HttpOperation
 import com.typewritermc.services.libs.http.core.HttpRequest
@@ -14,12 +15,11 @@ fun echo(
     uri: URI,
     maximumResponseBytes: Long,
 ) = HttpRequest(
-    HttpOperation("jdk.echo"),
-    ErrorSlug.of("jdk-failed"),
+    HttpOperation("jdk.echo", ErrorSlug.of("jdk-failed")),
     HttpMethod.POST,
     uri,
     body = byteArrayOf(1, 2, 3),
-    maximumResponseBytes = maximumResponseBytes,
+    limits = HttpLimits(maximumResponseBytes = maximumResponseBytes),
 )
 
 /** A GET of [path] on a local test [server], with an optional [timeout]. */
@@ -28,11 +28,10 @@ fun localRequest(
     path: String,
     timeout: Duration? = null,
 ) = HttpRequest(
-    HttpOperation("jdk.local"),
-    ErrorSlug.of("jdk-failed"),
+    HttpOperation("jdk.local", ErrorSlug.of("jdk-failed")),
     HttpMethod.GET,
     URI("http://127.0.0.1:${server.address.port}$path"),
-    timeout = timeout,
+    limits = HttpLimits(timeout = timeout),
 )
 
 /** Runs [block] against a local server that echoes the request body with a 503 and two `X-Multi` headers. */

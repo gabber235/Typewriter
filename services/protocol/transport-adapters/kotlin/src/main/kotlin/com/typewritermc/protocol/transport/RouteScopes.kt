@@ -59,5 +59,4 @@ fun String.organizationActorTemplate(): AddressTemplate<OrganizationActorRouteSc
 /** This event of every member of [organizationId], as a service that receives every member's events subscribes to it. */
 fun <Event : Any> EventContract<OrganizationActorRouteScope, Event>.everyMemberOf(
     organizationId: String,
-): EventContract<OrganizationActorRouteScope, Event> =
-    EventContract(name, address.subscribedWhere("organization" to organizationId), codec, failureSlug)
+): EventContract<OrganizationActorRouteScope, Event> = EventContract(name, address.subscribedWhere("organization" to organizationId), codec)

@@ -2,6 +2,7 @@ package com.typewritermc.engine.session
 
 import com.typewritermc.engine.session.testing.SessionHarness
 import com.typewritermc.identity.EngineId
+import com.typewritermc.loader.api.work.WorkSubject
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
@@ -180,5 +181,18 @@ val SessionsOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled 
         panel.keeper.disconnected(tab)
         harness().eventually(within = SessionHarness.SHORT.ttl) { minecraft.keeper.holders(protagonist).isEmpty() }
         harness().entry(protagonist, session).shouldBeNull()
+    }
+
+    test("SESSION-13 every session write runs for its protagonist, so work it leaves in flight holds that player's ticks") {
+        harness().createBucket()
+        val engine = harness().engine("engine-a")
+        val (protagonist, session) = harness().player()
+        harness().joined(engine, protagonist, session)
+        delay(SessionHarness.SHORT.refresh * 2)
+
+        engine.keeper.disconnected(session)
+
+        harness().eventually { engine.writes.size >= 3 && harness().entry(protagonist, session)?.holder == null }
+        engine.writes.map { it.subjects }.toSet() shouldBe setOf(setOf(WorkSubject(protagonist.principal.kind, protagonist.principal.id)))
     }
 }
