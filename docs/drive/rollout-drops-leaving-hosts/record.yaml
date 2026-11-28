@@ -85,4 +85,4 @@ slices:
       - "RealmRolloutTest: a committed host that reports its projection unhealthy is staged again"
     status: done
 
-next: checks (services, docs, quality), a full game run, typewriter-review, then push and hand back
+next: full game run, then push and hand back to the orchestrator before opening a PR
