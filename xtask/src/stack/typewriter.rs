@@ -471,6 +471,17 @@ const REALM_HOST_PROJECT: &str = ":loader-standalone";
 const REALM_HOST_INSTALL: &str =
     "services/runtime/loader/standalone/build/install/loader-standalone/bin/loader-standalone";
 
+impl RealmHost {
+    /// The share of its limit the Realm's heap may take, in percent; the rest is for what the JVM
+    /// keeps beside its heap. Its heap ran its 1156 MiB peak at 800 MiB.
+    const HEAP_PERCENT: u64 = 60;
+}
+
+/// The JVM flag that caps a heap at `percent` of a `limit_mib` limit, in whole MiB.
+fn heap_flag(limit_mib: u64, percent: u64) -> String {
+    format!("-Xmx{}m", limit_mib * percent / 100)
+}
+
 impl Service for RealmHost {
     const ID: ServiceId = ServiceId("realm");
     // Peaked at 1156 MiB in CI's game runs.
@@ -493,9 +504,8 @@ impl Service for RealmHost {
                 "TYPEWRITER_CONFIG_FILE",
                 ctx.state().join("realm.properties"),
             )
-            // A fixed heap, the same everywhere, which its limit holds with room for the rest of the
-            // JVM.
-            .env("JAVA_OPTS", "-Xmx800m")
+            // A heap that is a share of its limit, as each game part's is.
+            .env("JAVA_OPTS", heap_flag(Self::MEMORY_MIB, Self::HEAP_PERCENT))
             // Opts in to the token file `ready` waits for and `bind` reads.
             .env(
                 "TYPEWRITER_REGISTRATION_TOKEN_FILE",
@@ -716,6 +726,12 @@ fn say_reused(name: &str, outcome: &Outcome) {
 mod tests {
     use super::*;
     use crate::test_support::{ci_cluster, ids, runs_build};
+
+    #[test]
+    fn a_heap_is_its_share_of_the_limit_in_whole_mib() {
+        assert_eq!(heap_flag(1_000, 60), "-Xmx600m");
+        assert_eq!(heap_flag(1_330, 60), "-Xmx798m");
+    }
 
     #[test]
     fn the_organization_is_provisioned_after_the_worktree_backend_routes() {
