@@ -3,13 +3,13 @@ package com.typewritermc.playtest.requirements
 import com.typewritermc.playtest.BlockPos
 import com.typewritermc.playtest.Button
 import com.typewritermc.playtest.GameCompartment
-import com.typewritermc.playtest.RequirementScope
 import com.typewritermc.playtest.backToBack
 import com.typewritermc.playtest.block
 import com.typewritermc.playtest.camera
 import com.typewritermc.playtest.idle
 import com.typewritermc.playtest.mark
 import com.typewritermc.playtest.requirement
+import com.typewritermc.playtest.standOnFloor
 import com.typewritermc.playtest.ticks
 import de.infix.testBalloon.framework.core.testSuite
 import skirout.harness.v1.wire.GameMode
@@ -19,7 +19,7 @@ import skirout.harness.v1.wire.StateKind
 // claims; the frame captured beside it is evidence and decides nothing.
 val FrameRequirements by testSuite(compartment = { GameCompartment }) {
     requirement("FRAME-1", "a floor under a night sky Paper keeps for the player shows, and its frame is kept for review") {
-        val floor = floor()
+        val floor = standOnFloor()
         probe.time(player, 18_000)
 
         within(10.ticks) {
@@ -34,7 +34,7 @@ val FrameRequirements by testSuite(compartment = { GameCompartment }) {
         "after an attempt that looked through a spyglass at night in the rain, the next attempt's floor shows " +
             "without the spyglass, and both frames are kept for review",
         first = {
-            floor()
+            standOnFloor()
             // Night falls and rain sets in while the player looks through a spyglass: the sky, the fog, the
             // rain fog and the field of view ease toward them tick by tick.
             probe.gameMode(player, GameMode.SURVIVAL)
@@ -50,7 +50,7 @@ val FrameRequirements by testSuite(compartment = { GameCompartment }) {
             player.capture("in-rain")
         },
         then = {
-            val floor = floor()
+            val floor = standOnFloor()
             probe.time(player, 6_000)
 
             within(10.ticks) {
@@ -62,7 +62,7 @@ val FrameRequirements by testSuite(compartment = { GameCompartment }) {
     )
 
     requirement("FRAME-3", "a lamp lighting a floor at night stays shown, and its first and later frames are kept for review") {
-        floor()
+        standOnFloor()
         // An invisible light at its full level 15: a torch would add flame particles of its own. At night
         // the sky hardly lights the floor, so every shade of the lamp's falloff shows instead of the full
         // brightness of day.
@@ -78,17 +78,3 @@ val FrameRequirements by testSuite(compartment = { GameCompartment }) {
         player.capture("later")
     }
 }
-
-/**
- * A smooth stone floor in front of a spectator standing on it, facing it, and the floor block it looks
- * at, watched. Stone turns its texture by its world position, which moves with the attempt's region;
- * smooth stone looks the same everywhere. A spectator holds no hand, whose skin would differ with the
- * pool player that runs the requirement.
- */
-private suspend fun RequirementScope.floor() =
-    probe.run {
-        fill(BlockPos(-3, 99, -3), BlockPos(3, 99, 8), "smooth_stone")
-        gameMode(player, GameMode.SPECTATOR)
-        teleport(player, 0.5, 100.0, 0.5)
-        block(BlockPos(0, 99, 4), "smooth_stone")
-    }
