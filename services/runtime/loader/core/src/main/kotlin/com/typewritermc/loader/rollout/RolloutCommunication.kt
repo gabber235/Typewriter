@@ -25,35 +25,15 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Implements rollout probes and commands through the generated rollout scatter contracts of one Realm.
+ * Implements rollout commands and status queries through the generated rollout scatter contracts of one Realm.
  *
- * Each scatter collects on its own reply inbox and the subject names the Realm, so replies need no probe or Realm
- * identity. The coordinator supplies expected hosts and timeouts, then validates replies against its attempt and
- * projections.
+ * Each scatter collects on its own reply inbox and the subject names the Realm, so replies need no Realm identity.
+ * The rollout supplies expected hosts and timeouts, then validates replies against its attempts and projections.
  */
 class CommunicatorRolloutMessenger(
     private val scope: RealmRouteScope,
     private val communicator: Communicator,
 ) : RolloutMessenger {
-    override suspend fun discover(
-        expected: Set<ServiceId>,
-        timeout: Duration,
-    ): List<RealmHostPresence> =
-        communicator
-            .scatter(
-                scope.rolloutProbe,
-                scope,
-                ProbeRealmHostsRequest.partial(),
-                ScatterPolicy(
-                    timeout = timeout,
-                    quietPeriod = if (expected.isEmpty()) 500.milliseconds else null,
-                    completeWhen = { replies ->
-                        expected.isNotEmpty() && replies.presences().map { ServiceId(it.serviceId) }.containsAll(expected)
-                    },
-                ),
-            ).successfulValues()
-            .presences()
-
     /** Stops collecting as soon as every listed participant replied; unlisted hosts never reply. */
     override suspend fun command(
         request: ApplyRolloutCommandRequest,
@@ -83,6 +63,26 @@ class CommunicatorRolloutMessenger(
             ).successfulValues()
             .statuses()
             .associateBy { ServiceId(it.serviceId) }
+}
+
+/**
+ * Probes the Realm's hosts through the generated presence scatter: every host that answers within [timeout],
+ * collecting until no further host answered for half a second. A host that answers later misses this probe.
+ */
+class CommunicatorPresenceProbe(
+    private val scope: RealmRouteScope,
+    private val communicator: Communicator,
+    private val timeout: Duration,
+) : PresenceProbe {
+    override suspend fun answering(): List<RealmHostPresence> =
+        communicator
+            .scatter(
+                scope.rolloutProbe,
+                scope,
+                ProbeRealmHostsRequest.partial(),
+                ScatterPolicy(timeout = timeout, quietPeriod = 500.milliseconds),
+            ).successfulValues()
+            .presences()
 }
 
 /**

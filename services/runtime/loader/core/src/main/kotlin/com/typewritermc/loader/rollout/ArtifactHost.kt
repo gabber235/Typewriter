@@ -1,7 +1,9 @@
 package com.typewritermc.loader.rollout
 
 import com.typewritermc.failures.rethrowExceptional
+import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactVersion
+import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.loader.LoaderService
 import com.typewritermc.loader.api.HOST_API_VERSION
 import com.typewritermc.loader.api.HostedMessagingSession
@@ -15,11 +17,10 @@ import com.typewritermc.loader.artifact.FileDigestBlobStore
 import com.typewritermc.loader.artifact.ReconnectingSharedArtifactAccess
 import com.typewritermc.loader.artifact.StableRealmArtifactRoutes
 import com.typewritermc.loader.artifact.VerifiedArtifactCache
+import com.typewritermc.loader.artifact.toApi
 import com.typewritermc.loader.artifactSpan
 import com.typewritermc.loader.deployment.CandidateIndex
-import com.typewritermc.loader.deployment.DeploymentContentCodec
-import com.typewritermc.loader.deployment.DeploymentGeneration
-import com.typewritermc.loader.deployment.DeploymentSnapshot
+import com.typewritermc.loader.deployment.DeploymentContent
 import com.typewritermc.loader.deployment.PrimaryEngineTarget
 import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.RealmLoaderIntent
@@ -354,7 +355,6 @@ internal class AssignmentRuntime(
                             serviceId = serviceId.value,
                             hostApi = HOST_API_VERSION,
                             assignedRoles = assignment.roles.map { it.toSkir() },
-                            activeProjection = participant.activeProjection,
                         )
                     },
                     participant = participant,
@@ -369,62 +369,40 @@ internal class AssignmentRuntime(
     private suspend fun coordinateDeployments(
         session: HostedMessagingSession,
         state: FileRolloutStateRepository,
-    ) {
-        val primaryEngine = requireNotNull(assignment.primaryEngine)
-        val intent = requireNotNull(assignment.intent)
-        val messenger = CommunicatorRolloutMessenger(session.realmScope(), session.communicator)
-        while (true) {
-            val selection = messenger.discover(emptySet(), 5.seconds).deploymentSelectionOrNull()
-            if (selection == null) {
-                delay(1.seconds)
-                continue
-            }
-            val resolution =
-                telemetry.artifactSpan(
-                    "artifact.deployment.resolve",
-                    "artifact-deployment-resolve-failed",
-                ) { span ->
-                    span?.annotate {
-                        attribute("realm.id", assignment.realmId.value)
-                        attribute("service.id", serviceId.value)
-                    }
-                    resolveDeployment(CandidateIndex(candidates.candidates()), selection, primaryEngine, intent)
-                }
-            if (resolution is ResolutionResult.Resolved) {
-                val digest = DeploymentContentCodec.digest(resolution.content)
-                val current = state.committed()
-                val rollout =
-                    CoordinatedRollout(
-                        assignment.realmId,
-                        selection,
-                        resolution.manifests,
-                        messenger,
-                        projections,
-                        state,
-                        telemetry = telemetry,
-                    )
-                if (current?.snapshot?.contentDigest != digest) {
-                    val snapshot =
-                        DeploymentSnapshot(
-                            DeploymentGeneration((current?.snapshot?.generation?.value ?: 0L) + 1L),
-                            digest,
-                            resolution.content,
-                        )
-                    runRollout { rollout.rollOut(snapshot) }
-                } else {
-                    runRollout { rollout.reconcileCommitted(current) }
-                }
-            }
-            delay(1.seconds)
-        }
+    ): Nothing {
+        val realmScope = session.realmScope()
+        RealmRollout(
+            assignment.realmId,
+            ProbedRealmMembership(CommunicatorPresenceProbe(realmScope, session.communicator, 5.seconds)),
+            CommunicatorRolloutMessenger(realmScope, session.communicator),
+            AcceptedDeploymentContents(),
+            projections,
+            state,
+            telemetry = telemetry,
+        ).run()
     }
 
-    private suspend fun runRollout(block: suspend () -> Unit) {
-        try {
-            block()
-        } catch (failure: Throwable) {
-            failure.rethrowExceptional()
-        }
+    /** Resolves deployment content from this Realm host's accepted candidates and its assignment. */
+    private inner class AcceptedDeploymentContents : DeploymentContents {
+        override suspend fun newest(selection: RealmDeploymentSelection): ResolutionResult.Resolved? =
+            telemetry.artifactSpan(
+                "artifact.deployment.resolve",
+                "artifact-deployment-resolve-failed",
+            ) { span ->
+                span?.annotate {
+                    attribute("realm.id", assignment.realmId.value)
+                    attribute("service.id", serviceId.value)
+                }
+                resolveDeployment(
+                    CandidateIndex(candidates.candidates()),
+                    selection,
+                    requireNotNull(assignment.primaryEngine),
+                    requireNotNull(assignment.intent),
+                ) as? ResolutionResult.Resolved
+            }
+
+        override suspend fun manifests(content: DeploymentContent): Map<ArtifactId, ImprintManifest>? =
+            CandidateIndex(candidates.candidates()).manifestsOf(content)
     }
 
     private fun HostedMessagingSession.realmScope() = RealmRouteScope(organizationId = organizationId, realmId = assignment.realmId.value)
@@ -450,8 +428,8 @@ internal class AssignmentRuntime(
             val accepted = candidates.candidates()
             val projectionDigests =
                 buildSet {
-                    current?.projections?.values?.let(::addAll)
-                    previous?.projections?.values?.let(::addAll)
+                    current?.projections?.values?.mapTo(this) { it.blob.toApi() }
+                    previous?.projections?.values?.mapTo(this) { it.blob.toApi() }
                 }
             val protection =
                 DigestProtectionState(

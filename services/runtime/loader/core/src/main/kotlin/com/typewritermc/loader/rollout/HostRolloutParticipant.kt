@@ -115,12 +115,6 @@ class HostRolloutParticipant(
     private var latestAttemptReference: ProjectionReference? = null
     private var healthMonitor: Job? = null
 
-    @Volatile
-    private var currentActiveProjection: ActiveProjection? = null
-
-    val activeProjection: ActiveProjection?
-        get() = currentActiveProjection
-
     /** Returns the local status for the queried [attempt], including the active projection health when present. */
     suspend fun status(attempt: RolloutAttempt): ParticipantStatus {
         attempt.requireValid()
@@ -351,7 +345,6 @@ class HostRolloutParticipant(
                     active.projection.close()
                 } finally {
                     localState = LocalParticipantState.Empty
-                    currentActiveProjection = null
                 }
                 observe(attempt, ParticipantPhase.IDLE)
             }
@@ -525,7 +518,6 @@ class HostRolloutParticipant(
 
     private suspend fun monitorHealth(active: LocalParticipantState.Active) {
         stopHealthMonitor()
-        currentActiveProjection = active.activeProjection()
         healthMonitor =
             scope.launch {
                 active.projection.health.collect { health ->
@@ -533,7 +525,6 @@ class HostRolloutParticipant(
                         commands.withLock {
                             (localState as? LocalParticipantState.Active)?.takeIf { it.reference == active.reference }
                         } ?: return@collect
-                    currentActiveProjection = current.activeProjection(health)
                     statuses.changed(current.toContract(health))
                 }
             }
@@ -574,7 +565,6 @@ class HostRolloutParticipant(
             stopHealthMonitor()
             localState.close()
             localState = LocalParticipantState.Empty
-            currentActiveProjection = null
         }
 
     internal sealed interface LocalParticipantState {

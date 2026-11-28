@@ -13,6 +13,7 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.requireStored
 import com.typewritermc.services.libs.filetransfer.blob.requireValue
+import com.typewritermc.services.libs.registrar.ServiceId
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
@@ -98,6 +99,12 @@ class FileRolloutStateRepository(
     /** Moves the committed deployment to previous and makes [deployment] current in one state write. */
     override suspend fun commit(deployment: CommittedDeployment) =
         update { current -> current.copy(previous = current.current, current = deployment) }
+
+    /** Adds [projections] to the committed deployment in place, keeping the previous one; nothing when none is committed. */
+    override suspend fun recordProjections(projections: Map<ServiceId, ProjectionReference>) =
+        update { current ->
+            current.copy(current = current.current?.let { it.copy(projections = it.projections + projections) })
+        }
 
     /** Returns the single deployment retained as the rollback baseline, if one exists. */
     suspend fun previous(): CommittedDeployment? = mutex.withLock { stored.previous }

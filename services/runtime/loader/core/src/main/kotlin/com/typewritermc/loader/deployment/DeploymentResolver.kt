@@ -57,6 +57,14 @@ class CandidateIndex(
     fun engines(id: ArtifactId): List<ArtifactCandidate> = accepted.filter { it.manifest is EngineManifest && it.manifest.id == id }
 
     fun extensions(): List<ArtifactCandidate> = accepted.filter { it.manifest is ExtensionManifest }
+
+    /** The manifest of every artifact [content] selects, or null when one of those exact artifacts is no longer accepted. */
+    fun manifestsOf(content: DeploymentContent): Map<ArtifactId, ImprintManifest>? {
+        val artifacts = listOf(content.realm, content.primaryEngine, content.panelEngine) + content.extensions
+        return artifacts
+            .map { artifact -> accepted.firstOrNull { it.artifact == artifact } ?: return null }
+            .associate { it.manifest.id to it.manifest }
+    }
 }
 
 /**

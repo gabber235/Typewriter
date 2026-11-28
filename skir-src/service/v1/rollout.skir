@@ -1,6 +1,6 @@
-// A Realm rollout moves every responding host of one Realm to the projections of one deployment generation.
-// The Realm coordinator asks the hosts for presence, sends lifecycle commands for one attempt and reads participant status
-// until every participant is staged, active and healthy. Hosts that are not listed in a command do not reply to it.
+// A Realm rollout keeps the hosts of one Realm on their projections of the Realm's target deployment.
+// The Realm host probes which hosts are present, sends each host lifecycle commands under that host's attempt and reads
+// participant status until each runs its projection healthy. Hosts that are not listed in a command do not reply to it.
 
 import { InternalError } from "kernel/v1/errors.skir";
 import { ArtifactDigest } from "service/v1/artifact.skir";
@@ -42,12 +42,11 @@ struct ActiveProjection(83060005) {
   health: ProjectionHealth = 1;
 }
 
-// One host's answer to a presence probe, used to select participants and their recovery baselines.
+// One host's answer to a presence probe: which host takes which roles for the Realm, under which host API.
 struct RealmHostPresence(83060006) {
   service_id: string = 0;
   host_api: string = 1;
   assigned_roles: [RuntimePlacement] = 2;
-  active_projection: ActiveProjection? = 3;
 }
 
 // Distinguishes coordinator attempts, including retries of the same generation. The positive ordinal fences stale commands;
