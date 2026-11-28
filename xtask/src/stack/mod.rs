@@ -558,7 +558,7 @@ mod tests {
         fs::create_dir_all(ctx.state().join("logs")).unwrap();
         let mut stack = Stack::register(&ctx).unwrap();
 
-        stack.start(&Held, &ctx).unwrap();
+        stack.start(&Held, &ctx, &Built::default()).unwrap();
 
         assert_eq!(
             fs::read_to_string(leaf.join("memory.max")).unwrap(),
