@@ -1668,8 +1668,8 @@ internal class Pool(
      */
     private fun fail(
         reason: String,
-        part: Part? = null,
-        loss: LossCause? = null,
+        part: Part?,
+        loss: LossCause?,
     ) {
         if (failure != null) return
         if (part != null && loss != null) runs.lost(partName(part), loss)
