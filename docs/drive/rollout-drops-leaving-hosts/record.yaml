@@ -109,4 +109,4 @@ slices:
       - "ProbedRealmMembershipTest: a host that falls silent stays a member for the grace and leaves after it"
     status: done
 
-next: checks (services, protocol, quality), full game run, typewriter-review, push, update the PR body, hand back
+next: hand back to the orchestrator with the review fixes (checks green, game run green, 106 requirements)
