@@ -7,7 +7,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import skirout.harness.v1.wire.PaperLossKind
+import skirout.harness.v1.test_run.LossCause
 
 val SharedPaperTest by testSuite {
     test("once up, the shared Paper hears the regions ahead and every client is told to join it") {
@@ -82,14 +82,20 @@ val SharedPaperTest by testSuite {
             .regions shouldNotContain second.region
     }
 
-    test("the game fails when the shared Paper misses its boot limit, exits, closes its pool connection or cannot claim") {
+    test(
+        "the game fails when the shared Paper misses its boot limit, exits, closes its pool connection or cannot claim, each loss with its cause",
+    ) {
         val paper = SharedPaper("paper", setOf("gv-1"))
 
-        paper.bootTimedOut(1) shouldContainExactly listOf(Do.Fail("the game was not ready within ${SharedPaper.BOOT_SECONDS} s"))
-        paper.exited(1) shouldContainExactly listOf(Do.Fail("paper exited with code 1"))
-        paper.closed() shouldContainExactly listOf(Do.Fail("paper closed its pool connection"))
-        paper.failed(PaperLossKind.CLAIM_FAILED, "paper could not claim gv-1: no such player") shouldContainExactly
-            listOf(Do.Fail("paper could not claim gv-1: no such player"))
+        paper.bootTimedOut(1) shouldContainExactly
+            listOf(Do.Fail("the game was not ready within ${SharedPaper.BOOT_SECONDS} s", LossCause.NEVER_READY))
+        paper.exited(137) shouldContainExactly listOf(Do.Fail("paper exited with code 137", LossCause.ExitedWrapper(137)))
+        paper.closed() shouldContainExactly
+            listOf(Do.Fail("paper closed its pool connection", LossCause.LeftWrapper("it closed its pool connection")))
+        paper.failed("paper could not claim gv-1: no such player") shouldContainExactly
+            listOf(
+                Do.Fail("paper could not claim gv-1: no such player", LossCause.BrokeWrapper("paper could not claim gv-1: no such player")),
+            )
     }
 
     test("a booted game outlives the boot limit") {

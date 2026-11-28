@@ -1,24 +1,29 @@
 package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.Wire
+import com.typewritermc.playtest.wire.paceMillis
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
-import skirout.harness.v1.golden.Renderer
+import skirout.harness.v1.test_run.Conclusion
 import skirout.harness.v1.test_run.CoveredClass
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.test_run.Pacing
 import skirout.harness.v1.test_run.Step
+import skirout.harness.v1.test_run.WindowEnd
 import skirout.harness.v1.wire.Answer
 import skirout.harness.v1.wire.Ask
+import skirout.harness.v1.wire.AttemptKind
 import skirout.harness.v1.wire.ClientTask
 import skirout.harness.v1.wire.Hello
 import skirout.harness.v1.wire.InputStep
 import skirout.harness.v1.wire.Lease
 import skirout.harness.v1.wire.Message
 import skirout.harness.v1.wire.PaperAsk
+import skirout.harness.v1.wire.PlayerClaim
 import skirout.harness.v1.wire.PlayerEvent
 import skirout.harness.v1.wire.Probe
 import skirout.harness.v1.wire.ProbeAction
@@ -66,17 +71,12 @@ class InputFailed(
     message: String,
 ) : AssertionError(message)
 
-/** The player's frame is not the golden it names, or none is approved; [message] says how and where the frame and its diff lie. */
-class GoldenDiffers(
-    message: String,
-) : AssertionError(message)
-
 /** A client could not record or write the clip of a demo; [message] says why. */
 class ClipFailed(
     message: String,
 ) : AssertionError(message)
 
-/** The client could not draw or write the frame a golden asked for; [message] says why. */
+/** The client could not draw or write the frame a capture asked for; [message] says why. */
 class FrameNotCaptured(
     message: String,
 ) : AssertionError(message)
@@ -101,9 +101,6 @@ internal class PoolSession private constructor(
     private val attempts = ConcurrentHashMap<String, Attempt>()
     private val attemptsOf = ConcurrentHashMap<String, Int>()
 
-    /** This project's goldens and the local golden images. */
-    override val goldens =
-        Goldens(settings.root, settings.goldens, settings.goldenImages, PinnedRenderer(settings.mesa, settings.pinnedRunner))
     private val ended = CompletableDeferred<Unit>()
 
     @Volatile
@@ -129,24 +126,40 @@ internal class PoolSession private constructor(
 
     /**
      * One attempt of a requirement to run: [bodies] in order on [players] players, on a Paper of its own
-     * with [restartsPaper]. A [demo] runs after the requirement's last attempt with its clients recording
-     * clips, and lands in the case's demo.
+     * with [restartsPaper], for what its [kind] says.
      */
     class Planned(
         val testId: String,
         val requirement: String,
-        val players: Int,
+        val players: PlayerClaim,
         val demonstrates: Demonstrates,
         val bodies: List<suspend RequirementScope.() -> Unit>,
         val restartsPaper: Boolean = false,
-        val demo: Boolean = false,
+        val kind: AttemptKind = AttemptKind.VERDICT,
     )
 
-    /** How one attempt ended: why it failed, or null, and the plugin code it covered by its last settle. */
+    /**
+     * How one attempt ended: why it failed, or null, the plugin code it covered by its last settle, every
+     * window its bodies waited in, and the pace its Paper granted ticks at.
+     */
     class AttemptEnd(
         val failure: Throwable?,
         val covered: List<CoveredClass> = listOf(),
+        val windows: List<WindowEnd> = listOf(),
+        val paceMillis: Int = 0,
     )
+
+    /**
+     * The case [testId] made its last attempt: the pool notes in its entry whether the change [touched]
+     * it, what a window held at another tick at another pace does, its [pacing], and what this session
+     * concluded of it, its [conclusion].
+     */
+    fun concluded(
+        testId: String,
+        touched: Boolean,
+        pacing: Pacing,
+        conclusion: Conclusion,
+    ) = send(Message.createConcluded(testId = testId, touched = touched, pacing = pacing, conclusion = conclusion))
 
     /**
      * Runs one attempt of a requirement: waits for its lease and runs its bodies in order, then reports
@@ -178,7 +191,7 @@ internal class PoolSession private constructor(
                                 players = it.players,
                                 demonstrates = it.demonstrates,
                                 restartsPaper = it.restartsPaper,
-                                demo = it.demo,
+                                kind = it.kind,
                             )
                         },
                 ),
@@ -213,11 +226,16 @@ internal class PoolSession private constructor(
         var failure: Throwable? = null
         var covered = listOf<CoveredClass>()
         val steps = mutableListOf<Step>()
+        val windows = mutableListOf<WindowEnd>()
         val evidence =
             Evidence(
                 settings.testRun.toAbsolutePath().parent,
                 planned.testId,
-                if (planned.demo) "demo" else "attempt-${attemptsOf.merge(planned.testId, 1, Int::plus)}",
+                when (val kind = planned.kind) {
+                    AttemptKind.DEMO -> "demo"
+                    is AttemptKind.PacedWrapper -> "paced-${kind.value}ms"
+                    else -> "attempt-${attemptsOf.merge(planned.testId, 1, Int::plus)}"
+                },
             )
         for ((index, body) in planned.bodies.withIndex()) {
             if (index > 0) {
@@ -225,15 +243,20 @@ internal class PoolSession private constructor(
                 attempt = lease(submission, leasing) { send(Message.createReclaim(submission = submission.value)) }
             }
             attempt.evidence = evidence
-            val ended = runBody(submission, attempt, body, if (planned.demo) clipSuffix(planned, index) else null)
+            val ended = runBody(submission, attempt, body, if (planned.kind == AttemptKind.DEMO) clipSuffix(planned, index) else null)
             failure = ended.failure
             covered = ended.covered
             steps += attempt.steps
+            windows += attempt.windows
             if (failure != null) break
         }
         attempt.players.forEach { attempts.remove(it.name) }
-        send(Message.ResultWrapper(result(submission, attempt, failure, (System.nanoTime() - started) / 1_000_000, steps, evidence)))
-        return AttemptEnd(failure, covered)
+        send(
+            Message.ResultWrapper(
+                result(submission, attempt, failure, (System.nanoTime() - started) / 1_000_000, steps, windows, evidence),
+            ),
+        )
+        return AttemptEnd(failure, covered, windows, planned.kind.paceMillis)
     }
 
     /** What [submission]'s attempt reports to the pool once it ended with [failure] after [millis]. */
@@ -243,6 +266,7 @@ internal class PoolSession private constructor(
         failure: Throwable?,
         millis: Long,
         steps: List<Step>,
+        windows: List<WindowEnd>,
         evidence: Evidence,
     ): Result =
         Result(
@@ -253,6 +277,7 @@ internal class PoolSession private constructor(
             steps = steps,
             folder = if (evidence.artifacts.isEmpty()) "" else evidence.folder,
             artifacts = evidence.artifacts,
+            windows = windows,
         )
 
     /**
@@ -390,14 +415,13 @@ internal class PoolSession private constructor(
     override suspend fun stopClip(player: GamePlayer): Answer.ClipWritten =
         request<Answer.ClipWrittenWrapper>(player, ClientTask.STOP_CLIP).value
 
-    /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */
+    /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]. */
     override suspend fun capture(
         player: GamePlayer,
         png: Path,
-    ): Renderer {
+    ) {
         val captured = request<Answer.CapturedWrapper>(player, ClientTask.createCapture(path = png.toString())).value
         captured.failure?.let { throw FrameNotCaptured(it) }
-        return captured.renderer
     }
 
     /** Ends the session: once every session of the run ended, the pool marks the run file ended. */

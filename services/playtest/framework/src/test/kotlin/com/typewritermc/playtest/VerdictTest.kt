@@ -6,8 +6,11 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import skirout.harness.v1.test_run.AttemptPolicy
+import skirout.harness.v1.test_run.Conclusion
+import skirout.harness.v1.test_run.LossCause
+import skirout.harness.v1.test_run.Pacing
+import skirout.harness.v1.test_run.WindowEnd
 import skirout.harness.v1.wire.ClientLoss
-import skirout.harness.v1.wire.ClientLossKind
 
 val VerdictTest by testSuite {
     val retries = AttemptPolicy.RerunFailuresWrapper(4)
@@ -16,7 +19,7 @@ val VerdictTest by testSuite {
     val lost =
         ClientLost(
             "gv-1",
-            ClientLoss(kind = ClientLossKind.EXITED, detail = "its process exited with code 137", log = "client-gv-1/lost-1.log"),
+            ClientLoss(cause = LossCause.ExitedWrapper(137), detail = "its process exited with code 137", log = "client-gv-1/lost-1.log"),
         )
     val declined = RequirementDeclined("GROUP-1 cannot run here: a requirement claims 3 players, but the pool holds 1")
     val refused = RequirementRefused("a window needs a positive check: without one it could never fail")
@@ -78,14 +81,73 @@ val VerdictTest by testSuite {
         Verdict.Passed.conclude(RequirementCode.of {})
     }
 
-    test("a demo that ends otherwise than the requirement's last attempt fails it, and one that ends the same way does not") {
-        demoDiffers(last = null, demo = null) shouldBe null
-        demoDiffers(last = missed, demo = AssertionError("gv-1 did not see chat \"Hello\" within 5 ticks, in the demo")) shouldBe null
+    test("every window holds at the same tick in every passing run of a requirement, or it is unsteady") {
+        fun held(
+            tick: Int?,
+            afterWallClock: Boolean = false,
+        ) = WindowEnd(at = "ToastRequirements.kt:42", length = 20, heldAt = tick, afterWallClock = afterWallClock)
 
-        val failedDemo = demoDiffers(last = null, demo = missed)
-        failedDemo?.message shouldBe "the demo failed where the last attempt passed: ${missed.message}"
-        failedDemo?.cause shouldBeSameInstanceAs missed
-        demoDiffers(last = missed, demo = null)?.message shouldBe
-            "the demo passed where the last attempt failed: ${missed.message}"
+        fun ran(
+            pace: Int,
+            failure: Throwable?,
+            vararg windows: WindowEnd,
+        ) = PoolSession.AttemptEnd(failure, windows = windows.toList(), paceMillis = pace)
+        // The attempts, the paced attempts, and whether the requirement is unsteady.
+        val table =
+            listOf(
+                Triple(listOf(ran(0, null, held(3))), listOf(), false),
+                Triple(listOf(ran(0, null, held(3))), listOf(ran(5, null, held(3)), ran(50, null, held(3))), false),
+                Triple(listOf(ran(0, null, held(3))), listOf(ran(5, null, held(3)), ran(50, null, held(4))), true),
+                Triple(listOf(ran(0, missed, held(9)), ran(0, null, held(3))), listOf(), false),
+                Triple(listOf(ran(0, null, held(3)), ran(0, null, held(4))), listOf(), true),
+                Triple(listOf(ran(0, null, held(3))), listOf(ran(50, missed, held(null))), true),
+                Triple(listOf(ran(0, null, held(3), held(2, afterWallClock = true))), listOf(ran(50, null, held(3), held(7))), false),
+                Triple(listOf(ran(0, null, held(3), held(2))), listOf(ran(50, null, held(3))), true),
+            )
+        for ((row, case) in table.withIndex()) {
+            val (attempts, paced, unsteady) = case
+
+            val verdict = Verdict.Passed.steadied(attempts, paced, Pacing.GATES)
+
+            withClue("row $row") { (verdict is Verdict.Unsteady) shouldBe unsteady }
+        }
+    }
+
+    test("an unsteady requirement names the tick of each window in each run, and fails its test only when its pacing gates") {
+        fun ran(
+            pace: Int,
+            tick: Int?,
+            failure: Throwable? = null,
+        ) = PoolSession.AttemptEnd(
+            failure,
+            windows = listOf(WindowEnd(at = "ToastRequirements.kt:42", length = 20, heldAt = tick, afterWallClock = false)),
+            paceMillis = pace,
+        )
+        val attempts = listOf(ran(0, 10))
+        val paced = listOf(ran(5, 10), ran(50, null, missed))
+
+        val unsteady =
+            shouldThrow<RequirementUnsteady> {
+                Verdict.Passed.steadied(attempts, paced, Pacing.GATES).conclude(RequirementCode.of {})
+            }
+
+        unsteady.message shouldBe
+            "unsteady: a window holds at another tick at another pace; attempt 1 at 0 ms held ToastRequirements.kt:42 at tick 10; " +
+            "at 5 ms held ToastRequirements.kt:42 at tick 10; at 50 ms missed ToastRequirements.kt:42 (failed: ${missed.message})"
+        Verdict.Passed.steadied(attempts, paced, Pacing.REPORTS).conclude(RequirementCode.of {})
+        Verdict.Flaky(listOf(missed), 2).steadied(attempts, paced, Pacing.GATES) shouldBe Verdict.Flaky(listOf(missed), 2)
+    }
+
+    test("the run file carries what the session concluded of each requirement, an unsteady one with the tick of each window in each run") {
+        val ticks = "attempt 1 at 0 ms held ToastRequirements.kt:42 at tick 10; at 50 ms held ToastRequirements.kt:42 at tick 11"
+
+        listOf(
+            Verdict.Passed,
+            Verdict.Flaky(listOf(missed), 2),
+            Verdict.Failed(listOf(missed), 1),
+            Verdict.Quarantined(listOf(missed), 1),
+            Verdict.Unsteady(ticks, gates = false),
+        ).map { it.conclusion } shouldBe
+            listOf(Conclusion.PASSED, Conclusion.FLAKY, Conclusion.FAILED, Conclusion.QUARANTINED, Conclusion.UnsteadyWrapper(ticks))
     }
 }

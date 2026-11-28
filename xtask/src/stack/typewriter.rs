@@ -106,6 +106,8 @@ pub struct Toxiproxy;
 
 impl Service for Toxiproxy {
     const ID: ServiceId = ServiceId("toxiproxy");
+    // Peaked at 23 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 64;
     fn command(&self, ctx: &StackContext, _: &Built) -> Result<Command> {
         let mut command = Command::new("toxiproxy-server");
         command
@@ -124,6 +126,8 @@ pub struct Faults;
 
 impl Service for Faults {
     const ID: ServiceId = ServiceId("faults");
+    // Peaked at 22 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 64;
     fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         const { &[&STACK_BINARY] }
     }
@@ -149,6 +153,8 @@ pub struct Collector;
 
 impl Service for Collector {
     const ID: ServiceId = ServiceId("collector");
+    // Peaked at 199 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 229;
     fn command(&self, ctx: &StackContext, _: &Built) -> Result<Command> {
         let telemetry = ctx.state().join("telemetry");
         fs::create_dir_all(&telemetry)
@@ -218,6 +224,8 @@ pub struct Broker;
 
 impl Service for Broker {
     const ID: ServiceId = ServiceId("broker");
+    // Peaked at 47 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 64;
     fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         const { &[&STACK_BINARY] }
     }
@@ -239,6 +247,8 @@ pub struct Identity;
 
 impl Service for Identity {
     const ID: ServiceId = ServiceId("identity");
+    // Peaked at 12 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 64;
     fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         const { &[&STACK_BINARY] }
     }
@@ -263,6 +273,8 @@ pub struct Backend;
 
 impl Service for Backend {
     const ID: ServiceId = ServiceId("backend");
+    // Peaked at 307 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 354;
     fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         const { &[&STACK_BINARY, &COMPONENTS] }
     }
@@ -311,6 +323,8 @@ pub struct BackendRoutes;
 
 impl Service for BackendRoutes {
     const ID: ServiceId = ServiceId("backend-routes");
+    // Peaked at 12 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 64;
     fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         const { &[&STACK_BINARY] }
     }
@@ -354,6 +368,8 @@ const CI_USERS: &str = "users.json";
 
 impl Service for CiClusterBackend {
     const ID: ServiceId = ServiceId("ci-cluster");
+    // A command that waits on the cluster; never measured.
+    const MEMORY_MIB: u64 = 64;
     /// The organization and the Realm host start after it, as after the worktree's routes.
     fn provides(&self) -> &'static [Role] {
         &[BACKEND]
@@ -418,6 +434,8 @@ pub struct Provision;
 
 impl Service for Provision {
     const ID: ServiceId = ServiceId("provision");
+    // Peaked at 12 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 64;
     fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         const { &[&STACK_BINARY] }
     }
@@ -453,8 +471,21 @@ const REALM_HOST_PROJECT: &str = ":loader-standalone";
 const REALM_HOST_INSTALL: &str =
     "services/runtime/loader/standalone/build/install/loader-standalone/bin/loader-standalone";
 
+impl RealmHost {
+    /// The share of its limit the Realm's heap may take, in percent; the rest is for what the JVM
+    /// keeps beside its heap. Its heap ran its 1156 MiB peak at 800 MiB.
+    const HEAP_PERCENT: u64 = 60;
+}
+
+/// The JVM flag that caps a heap at `percent` of a `limit_mib` limit, in whole MiB.
+fn heap_flag(limit_mib: u64, percent: u64) -> String {
+    format!("-Xmx{}m", limit_mib * percent / 100)
+}
+
 impl Service for RealmHost {
     const ID: ServiceId = ServiceId("realm");
+    // Peaked at 1156 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 1_330;
     fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         const { &[&REALM_HOST_BUILD] }
     }
@@ -473,6 +504,8 @@ impl Service for RealmHost {
                 "TYPEWRITER_CONFIG_FILE",
                 ctx.state().join("realm.properties"),
             )
+            // A heap that is a share of its limit, as each game part's is.
+            .env("JAVA_OPTS", heap_flag(Self::MEMORY_MIB, Self::HEAP_PERCENT))
             // Opts in to the token file `ready` waits for and `bind` reads.
             .env(
                 "TYPEWRITER_REGISTRATION_TOKEN_FILE",
@@ -495,6 +528,8 @@ pub struct BindRealmHost;
 
 impl Service for BindRealmHost {
     const ID: ServiceId = ServiceId("bind-realm-host");
+    // Peaked at 19 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 64;
     fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         const { &[&STACK_BINARY] }
     }
@@ -539,6 +574,8 @@ pub struct BindEngines;
 
 impl Service for BindEngines {
     const ID: ServiceId = ServiceId("bind-engines");
+    // Peaked at 14 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 64;
     fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         const { &[&STACK_BINARY] }
     }
@@ -581,6 +618,8 @@ pub struct Observer;
 
 impl Service for Observer {
     const ID: ServiceId = ServiceId("observer");
+    // Peaked at 11 MiB in CI's game runs.
+    const MEMORY_MIB: u64 = 64;
     fn builds(&self) -> &'static [&'static dyn AnyBuild] {
         const { &[&STACK_BINARY] }
     }
@@ -687,6 +726,12 @@ fn say_reused(name: &str, outcome: &Outcome) {
 mod tests {
     use super::*;
     use crate::test_support::{ci_cluster, ids, runs_build};
+
+    #[test]
+    fn a_heap_is_its_share_of_the_limit_in_whole_mib() {
+        assert_eq!(heap_flag(1_000, 60), "-Xmx600m");
+        assert_eq!(heap_flag(1_330, 60), "-Xmx798m");
+    }
 
     #[test]
     fn the_organization_is_provisioned_after_the_worktree_backend_routes() {

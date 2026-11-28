@@ -47,9 +47,15 @@ final class ReportedRun {
             steps: const [],
             taps: const [],
             covered: const [],
+            paceMillis: 0,
+            windows: const [],
           ),
         ],
-        demo: null,
+        touched: false,
+        paced: const [],
+        pacing: results.Pacing.gates,
+        // The panel runner concludes nothing: xtask judges its cases by their attempts.
+        conclusion: null,
       ),
     );
   }
@@ -83,9 +89,15 @@ final class ReportedRun {
           steps: steps,
           taps: taps,
           covered: const [],
+          paceMillis: 0,
+          windows: const [],
         ),
       ],
-      demo: null,
+      touched: false,
+      paced: const [],
+      pacing: results.Pacing.gates,
+      // The panel runner concludes nothing: xtask judges its cases by their attempts.
+      conclusion: null,
     );
     final listed = _cases.indexWhere((known) => known.id == reported.id);
     if (listed < 0) {
@@ -119,9 +131,14 @@ final class ReportedRun {
           steps: attempt.steps,
           taps: attempt.taps,
           covered: attempt.covered,
+          paceMillis: attempt.paceMillis,
+          windows: attempt.windows,
         ),
       ],
-      demo: reported.demo,
+      touched: reported.touched,
+      paced: reported.paced,
+      pacing: reported.pacing,
+      conclusion: reported.conclusion,
     );
   }
 
@@ -139,6 +156,12 @@ final class ReportedRun {
     logs: "",
     // The app reports the run once it ran whole; a drive that never reports it fails on its own.
     end: results.RunEnd.completed,
+    // The panel runner starts no parts of its own.
+    parts: const [],
+    // Every panel run judges its scenarios.
+    evidenceOnly: false,
+    // Its scenarios run in the app the stack serves; it starts no game parts to budget memory for.
+    memoryBudget: null,
   );
 
   /// The run as JSON, the form the app reports it to the host driver in.

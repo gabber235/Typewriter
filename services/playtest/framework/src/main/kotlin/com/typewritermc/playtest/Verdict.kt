@@ -1,6 +1,9 @@
 package com.typewritermc.playtest
 
 import skirout.harness.v1.test_run.AttemptPolicy
+import skirout.harness.v1.test_run.Conclusion
+import skirout.harness.v1.test_run.Pacing
+import skirout.harness.v1.test_run.WindowEnd
 import java.net.URL
 
 /**
@@ -22,28 +25,14 @@ class RequirementFlaky(
 ) : AssertionError(message, cause)
 
 /**
- * The requirement's demo, its run once more with clips, ended otherwise than its last attempt: a clip
- * that shows another outcome than the verdict proves nothing. Its [cause] is the failure the one that
- * failed met.
+ * The requirement passed, but a window held at another tick in another of its passing runs: a retry, or
+ * an attempt at another pace. Ticks run only when the framework grants them, so a window that depends on
+ * how much wall clock passed between them waits on work no tick waits for; [message] names the tick of
+ * each window in each run.
  */
-class DemoDiffers(
+class RequirementUnsteady(
     message: String,
-    cause: Throwable,
-) : AssertionError(message, cause)
-
-/**
- * Why a demo that ended with [demo] after a last attempt that ended with [last], each null for a pass,
- * fails the requirement; null when both passed or both failed.
- */
-internal fun demoDiffers(
-    last: Throwable?,
-    demo: Throwable?,
-): DemoDiffers? =
-    when {
-        (last == null) == (demo == null) -> null
-        demo != null -> DemoDiffers("the demo failed where the last attempt passed: ${demo.described}", demo)
-        else -> DemoDiffers("the demo passed where the last attempt failed: ${checkNotNull(last).described}", last)
-    }
+) : AssertionError(message)
 
 /** Where a requirement's own code lives, to find its lines in a stack trace. */
 internal class RequirementCode private constructor(
@@ -96,6 +85,64 @@ internal sealed interface Verdict {
     ) : Verdict
 
     /**
+     * Every attempt passed, but a window held at another tick in another passing run; [runs] names the
+     * tick of each window in each run. It blocks when its pacing [gates], and is reported otherwise.
+     */
+    data class Unsteady(
+        val runs: String,
+        val gates: Boolean,
+    ) : Verdict
+
+    /**
+     * This verdict, once [attempts] and the [paced] attempts that ran after them were compared: a pass
+     * whose passing runs, retries and paced attempts alike, held a window at different ticks is
+     * [Unsteady], blocking as [pacing] says (a pacing this build does not know gates); every other
+     * verdict stays.
+     */
+    fun steadied(
+        attempts: List<PoolSession.AttemptEnd>,
+        paced: List<PoolSession.AttemptEnd>,
+        pacing: Pacing,
+    ): Verdict {
+        if (this != Passed) return this
+        val runs =
+            attempts.withIndex().filter { it.value.failure == null }.map { (index, it) ->
+                "attempt ${index + 1} at ${it.paceMillis} ms" to
+                    it
+            } +
+                paced.map { "at ${it.paceMillis} ms" to it }
+        val first = runs.firstOrNull()?.second ?: return this
+        if (runs.all { (_, run) -> run.failure == null && sameTicks(first.windows, run.windows) }) return this
+        val described =
+            runs.joinToString("; ") { (label, run) ->
+                val windows =
+                    run.windows.joinToString(", ") {
+                        it.heldAt?.let { tick ->
+                            "held ${it.at} at tick $tick"
+                        } ?: "missed ${it.at}"
+                    }
+                val failure = run.failure?.let { "failed: ${it.described.lineSequence().first()}" }.orEmpty()
+                when {
+                    failure.isEmpty() -> "$label $windows"
+                    windows.isEmpty() -> "$label $failure"
+                    else -> "$label $windows ($failure)"
+                }
+            }
+        return Unsteady(described, gates = pacing != Pacing.REPORTS)
+    }
+
+    /** What the run file says the session concluded: readers take it as the case's verdict. */
+    val conclusion: Conclusion
+        get() =
+            when (this) {
+                Passed -> Conclusion.PASSED
+                is Flaky -> Conclusion.FLAKY
+                is Failed -> Conclusion.FAILED
+                is Quarantined -> Conclusion.QUARANTINED
+                is Unsteady -> Conclusion.UnsteadyWrapper(runs)
+            }
+
+    /**
      * Ends the requirement's test as its verdict says: a failure or a flaky pass fails it, with the
      * stack trace starting in the requirement's [code]; a pass or a quarantined failure lets it pass.
      */
@@ -105,6 +152,12 @@ internal sealed interface Verdict {
 
             is Quarantined -> {
                 System.err.println("Quarantined, not blocking: ${failures.joinToString("\n") { it.described }}")
+            }
+
+            is Unsteady -> {
+                val unsteady = RequirementUnsteady("unsteady: $UNSTEADY; $runs")
+                if (gates) throw unsteady
+                System.err.println("Reported, not blocking: ${unsteady.message}")
             }
 
             is Failed -> {
@@ -131,6 +184,20 @@ internal sealed interface Verdict {
         }
     }
 }
+
+/** What every unsteady requirement shows, before the ticks of its runs. */
+private const val UNSTEADY = "a window holds at another tick at another pace"
+
+/**
+ * Whether [a] and [b] are the same windows, each held at the same tick, leaving out a window either side
+ * decided after it met hung work or a lost part: neither holds back a tick, so that tick measures wall clock.
+ */
+private fun sameTicks(
+    a: List<WindowEnd>,
+    b: List<WindowEnd>,
+): Boolean =
+    a.size == b.size &&
+        a.zip(b).all { (a, b) -> a.at == b.at && a.length == b.length && (a.afterWallClock || b.afterWallClock || a.heldAt == b.heldAt) }
 
 /** What [this] says to a reader: an assertion's message, anything else with its type. */
 internal val Throwable.described: String get() = if (this is AssertionError) message ?: toString() else toString()
@@ -199,6 +266,6 @@ internal fun bodyEnded(proved: Boolean): RequirementRefused? =
     } else {
         RequirementRefused(
             "the requirement's body made no positive check, so it could never fail: wait for what the player " +
-                "should see with `within`, or compare a still scene with `looksLike`",
+                "should see with `within`; a captured frame is evidence, not a check",
         )
     }

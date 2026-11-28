@@ -33,7 +33,7 @@ clients hold none.
 | Pool | one process per checkout, started and stopped by the Gradle build | 25 | Owns the warm clients and the Papers, queues and grants claims, records the run file |
 | Shared Paper | stock Paper 26.3 with the step agent and the framework plugin | 25 | Runs every requirement that does not restart Paper, each in a region of its own |
 | Own Paper | the same, booted per restart requirement (at most 2 at once) | 25 | Runs a requirement that kills and boots Paper |
-| Client | Minecraft 26.3 with the framework's Fabric mod, 4 by default | 25 | Steps one tick per step ping, perceives without drawing, sends real window input |
+| Client | Minecraft 26.3 with the framework's Fabric mod, 3 by default | 25 | Steps one tick per step ping, perceives without drawing, sends real window input |
 
 - The **step agent** is a Java agent on the stock Paper jar. Once stepping starts, Paper's main loop
   runs a tick only on a permit, and Paper's block break clock counts ticks
@@ -45,17 +45,29 @@ clients hold none.
   elsewhere) and drops every input event it did not send itself.
 - The **wire** is Skir: every message the parts exchange is declared in
   `skir-src/harness/v1/wire.skir`. The wire module only frames those messages on a socket. The
-  launch module holds what the processes share about launching each other: the heap shares, the pool
-  and part files, and the pool's command and process (`PoolProcess`). It uses the standard library
+  launch module holds what the processes share about launching each other: each part kind's memory
+  limit and heap share (`PartLimit`), the pool and part files, and the pool's command and process
+  (`PoolProcess`). It uses the standard library
   alone, as build-logic compiles it too.
 - Test JVMs share the pool, so every module and extension shares the warm clients, and a warm single
   requirement takes about 2 s ([p6-pool-process.md](spikes/p6-pool-process.md)). The pool takes turns
   between test JVMs.
 - A module adds what its requirements need to every Paper with `gamePaper { pluginJars; files { };
   environment }` in its build file: plugin jars, files at a path in Paper's folder, and Paper's
-  environment. As every module shares the pool's Papers, the pool takes the union of every module's
-  additions, for the shared Paper and each own Paper, and fails before Paper starts when two modules
-  disagree on a file or a variable. The framework itself still holds no Typewriter code.
+  environment. As every module of a suite shares the pool's Papers, the pool takes the union of the
+  additions of the modules of the suite the build runs, for the shared Paper and each own Paper, and
+  fails before Paper starts when two modules disagree on a file or a variable. The framework itself
+  still holds no Typewriter code.
+- **The game build needs no stack.** A value only the running stack knows, such as the engine's
+  config file, comes from the environment the suite runs in: `gamePaper.fromRun("NAME")` writes a
+  reference the pool fills in as each Paper boots, and a variable the run does not set fails that
+  boot naming it. `gameTestBuild` builds the same whether a stack runs or not, and `check` builds it
+  where none runs, so the game build can share one Gradle with the stack's own builds.
+- **Two suites.** A module's suite follows its path: the framework's own modules
+  (`services/playtest`) are the `playtest` suite, every other module the `game` suite. A build runs
+  one suite (`-Pplaytest.suite`, which `cargo xtask e2e <suite>` passes): only that suite's `gameTest`
+  tasks run and its Papers carry only its modules' additions, so the framework's requirements run
+  without the stack. A build that names no suite runs every module on one pool.
 - Every Paper has a slot: 0 for the shared Paper, 1 and 2 for own Papers, which take the lowest free
   slot and give it back when they end. Paper learns its slot from `PLAYTEST_PAPER_SLOT`. A module adds
   environment to one slot's Papers with `gamePaper { slot(n) { environment } }`, and keeps paths
@@ -74,7 +86,7 @@ clients hold none.
 ## How a requirement runs
 
 ```kotlin
-requirement("GROUP-1", "a line sent to the members of a group reaches each member and nobody else", players = 3) {
+requirement("GROUP-1", "a line sent to the members of a group reaches each member and nobody else", players = Players.count(3)) {
     val (member, partner, outsider) = players
     probe.chat(to = listOf(member, partner), "Bank: 1")
     within(10.ticks) {
@@ -119,9 +131,9 @@ Requirements are G1 windows plus the recorded timeline
 ([g-requirement-shape.md](spikes/g-requirement-shape.md)): order, gaps and motion are read from the
 attempt's timeline after a window. A window needs one positive check; `never` checks are broad
 (`anyChat()`) and keep the window open for all its ticks. A body needs one positive check too, or it
-fails as refused: a window that held, a `looksLike` whose compare matched, or a framework outcome the
-body caught (`shouldThrow<WindowMissed>`, `WorkHung`, `ClientLost`, `PaperLost`). A bare read never
-counts.
+fails as refused: a window that held, or a framework outcome the body caught
+(`shouldThrow<WindowMissed>`, `WorkHung`, `ClientLost`, `PaperLost`). A bare read never counts, and
+neither does a captured frame.
 
 State no player perceives, such as a record in a store, is checked inside a window too:
 
@@ -155,6 +167,11 @@ never waits for wall clock timers ([n-stepped-ticks.md](spikes/n-stepped-ticks.m
   replacement under the same name. A client that crashes or drops while its player is away is lost
   the same way; the intended leave of a quit is not.
 - **Away players.** Paper holds back no tick for a player that quit, as for any player that left.
+- **Pace.** An attempt runs at a pace: the shortest wall clock between two ticks a window, input,
+  delivery or settle waits for. The verdict's attempts run at 0, a tick as soon as nothing holds it
+  back; the idle tick stays once a second. The shared Paper runs the attempts of one pace at a time:
+  claims at its current pace go first, and the pace switches once no attempt runs on it and none
+  waits at its pace. An own Paper takes its attempt's pace.
 
 All requirements share one stepped Paper ([p1-topology.md](spikes/p1-topology.md)): a Paper per
 attempt was 41 to 777 percent slower once groups or restarts appear. The cost is that one attempt's
@@ -196,36 +213,47 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
 |---|---|---|
 | Passed | first attempt passed | no |
 | Flaky | an attempt failed and a later one passed | yes, like a failure |
-| Failed | every attempt failed, or a demo ended otherwise than the last attempt | yes |
+| Failed | every attempt failed | yes |
+| Unsteady | every attempt passed, but a window held at another tick in another passing run | yes, unless the module reports |
+| Interrupted | a part the attempt depended on was lost while it ran | the run fails once for the part |
 | Quarantined | listed in `harness/quarantine.toml`; runs once | no |
 
 - A requirement refused as written (a window without a positive check, `restartPaper()` without the
   flag, a claim the pool can never grant) and a game that cannot run never retry.
-- Kotlin decides retries and fails the mirrored testBalloon test; xtask judges every runner's run file
-  with the same rule for the gate ([p2-testballoon-runner.md](spikes/p2-testballoon-runner.md)).
+- Kotlin decides retries and the verdict and fails the mirrored testBalloon test; it writes the verdict
+  into the case's entry in the run file (`conclusion`), and xtask gates on it. xtask judges the run
+  files of the other runners by their attempts with the same retry rule
+  ([p2-testballoon-runner.md](spikes/p2-testballoon-runner.md)). Steady ticks are Kotlin's alone.
 - `--repeat N` runs exactly N attempts of each selected requirement.
+- **Steady ticks.** Every attempt records each window's end: its line, its length, and the tick
+  after its stimulus it held at. Every passing run of a requirement, retries and paced attempts
+  alike, must hold every window at the same tick; a paced attempt that misses breaks it too. A
+  window decided after the attempt met hung work or a lost part is left out, since neither holds back
+  a tick. A module sets what breaking it does with `gameRequirements { pacing }`: `gates` by default,
+  `reports` lists the requirement without blocking (Typewriter's module, until the engine holds ticks
+  for its session writes).
+- **Paced attempts.** A requirement whose attempts passed and that the change touched runs once more
+  at 5 ms and once at 50 ms between ticks (`cargo xtask e2e` passes the paces). They never count as
+  attempts; the run file keeps them as the case's `paced` attempts.
+- **Lost parts.** The run file lists every part (the shared Paper, own Papers, clients, displays)
+  with how it ended: ran to the end, or lost with a cause (exited with a status, left, stalled, never
+  ready, broke). A lost client fails its attempt, which retries. A lost shared Paper or pool stops the
+  run: the attempts it held are interrupted, which counts neither way, the cases still waiting never
+  run, and xtask fails the run once, naming the part, its cause, its log and the cases it took.
 
-## Goldens
+## Frames
 
-`player.looksLike("sidebar")` draws a real frame and compares it exactly against an approved golden
-([f-goldens.md](spikes/f-goldens.md), [p5-devenv-mesa.md](spikes/p5-devenv-mesa.md)).
+Screenshots never decide pass or fail. `player.capture("night")` draws a real frame and keeps it in
+the attempt's evidence as `night.png`, a `screenshot` artifact; the pull request's evidence shows
+every captured frame and clip beside its requirement, passing or failing, for a reviewer to look at.
 
-- The repository holds only the golden file (`src/gameTest/goldens/<name>.golden`): readable Skir
-  JSON of a `Golden` (`skir-src/harness/v1/golden.skir`), the frame's hash and size and the `Renderer`
-  that drew it. The image lives on the `evidence` branch as `goldens/<hash>.png`, and
-  `cargo xtask e2e game` fetches every image the machine lacks before the run, so a differing frame
-  shows golden, new frame and diff.
-- Goldens are exact on one **pinned renderer**: Vulkan through llvmpipe on Linux amd64 with the Mesa
-  devenv ships (`PLAYTEST_MESA`). There a differing frame, a golden never approved, or one another
-  renderer drew fails with the approve command. Any other machine reports "not checked".
-- Each captured frame leaves a `GoldenCandidate` beside it, listed as the attempt's `golden`
-  artifact: the golden file it is for, the image, the `Golden` it would become and whether the pinned
-  renderer drew it. `cargo xtask goldens approve` takes the candidates a run left, refuses any the
-  pinned renderer did not draw, writes the golden files and pushes the images.
-- Only a compare that matched is a positive check; a golden not checked on another machine proves
-  nothing, so a body there needs a window as well. A Mesa or Minecraft upgrade fails every
-  golden, and its pull request approves them again. The weekly prune drops images no golden on a
-  long lived branch (`develop` or `features/v1`) names once they are 30 days old.
+- A capture is not a positive check: a body that captures needs a window that holds as well.
+- The frame requirements (`FRAME-1` to `FRAME-3`) set up a floor under a night sky, a spyglass at night
+  in the rain followed by the next attempt's wiped scene, and a lamp at night. Each window checks what
+  its scene claims (the floor block shown, the time of day or weather Paper keeps for the player, the
+  spyglass overlay, the lamp's light block shown), and the frame is captured beside it. A scene no
+  existing check proves, such as a quest sidebar, has no frame requirement until a perceived check
+  for it exists.
 
 ## Coverage and demo clips
 
@@ -234,20 +262,22 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
   before ([i-coverage.md](spikes/i-coverage.md)). On the shared Paper overlapping attempts get each
   other's lines, so it over attributes and never loses a line.
 - **Touched requirements.** xtask writes the lines the change added since the merge base with the
-  default branch; a requirement that covered one is touched.
-- **Demo reruns.** A failed, flaky, quarantined or touched requirement runs once more as a demo with
-  clips: the stepped client draws 30 frames per second of game time between steps and pipes them to
-  ffmpeg ([p9-frames-between-steps.md](spikes/p9-frames-between-steps.md)). Windows read only the
-  records at the end of each tick, so a demo is judged as the gated run was, and it must pass or fail
-  as the last attempt did.
-- Evidence (frames, golden candidates, clips) is staged per attempt; CI publishes it to the `evidence`
-  branch for the pull request.
+  default branch. A requirement is touched when one lies in its own code (from the line that
+  registers it to the line before the next requirement of its file) or its last attempt covered one.
+- **Demo run.** After a suite's verdict run, `cargo xtask e2e <suite> --demos` reruns once with clips
+  each requirement the verdict run's file shows failed, flaky, quarantined, unsteady or touched: the
+  stepped client draws 30 frames per second of game time between steps and pipes them to ffmpeg
+  ([p9-frames-between-steps.md](spikes/p9-frames-between-steps.md)). It writes a run file of its own
+  (`results/<suite>-demos`) and never gates: a clip is evidence of the verdict, not part of it.
+- Evidence (frames and clips) is staged per attempt, whatever its outcome; CI publishes it to the
+  `evidence` branch and the pull request shows it.
 
 ## Restarts
 
 `requirement(restartsPaper = true)` runs on a fresh Paper of its own, since a kill drops every client
 on it. `restartPaper()` kills it (nothing saved) and boots it again on the same folder; its players
-come back without a wipe, and windows count from the new Paper's ticks. The boot uses Java 25's AOT
+come back without a wipe, and windows count from the new Paper's tick after which every client holds
+what it sent, however many ticks that delivery took. The boot uses Java 25's AOT
 cache trained on a restart boot in the same job, C1 only and SerialGC, with the clients quiet while
 Paper boots: about 5 s from kill to state ([p7-faster-boot.md](spikes/p7-faster-boot.md)). At most 2
 own Papers run at once.
@@ -280,31 +310,92 @@ own Papers run at once.
 
 ## Memory
 
-Every game JVM takes a share of the machine (`HeapShare`, `-XX:MaxRAMPercentage`), so the caps scale
-with the machine:
+Every kind of game part may take a fixed amount of memory (`PartLimit`, in the launch module), and a
+JVM's heap is a share of its own part's limit (`-Xmx`). Each limit is the most a part of its kind took
+on the 16 GB CI runner (runs 45575711222 and 45595894285, page cache included) plus 15 %, at least
+64 MiB; each heap keeps the size it ran those peaks with.
 
-| Part | Share | On a 16 GB runner |
-|---|---|---|
-| Shared Paper | 16 % | 2.6 GB |
-| Own Paper | 7 % | 1.1 GB |
-| Client | 4.5 % | 740 MB |
-| Pool | 2 % | 330 MB |
+| Part | Peak | Limit | Heap |
+|---|---|---|---|
+| Shared Paper | 3395 MiB | 3904 MiB | 66 % (2576 MiB) |
+| Own Paper | 2081 MiB | 2393 MiB | 46 % (1100 MiB) |
+| Client | 1543 MiB | 1775 MiB | 42 % (745 MiB) |
+| Pool | 706 MiB | 812 MiB | 40 % (324 MiB) |
+| Display (Linux) | 15 MiB | 64 MiB | none |
 
-The parts that can run at once (the shared Paper, 2 own Papers, 4 clients, the pool) hold at most half
-the machine in heap, which a unit test pins. Memory outside the heap (about 1 GB per client, mostly
-the software renderer) is not capped yet; that stays open.
+Each stack service declares its own limit the same way (`Service::MEMORY_MIB`): the Realm host 1330 MiB
+(heap fixed at 800 MiB), the backend 354, the collector 229, every other service 64; together 2489 MiB
+for the game suite's stack.
+
+- **3 clients.** A suite's pool runs 3 warm clients (`-Pplaytest.clients`). A requirement claims a
+  count (`Players.count(n)`) or the whole pool (`Players.wholePool`), which the pool resolves to every
+  client it runs, so a requirement that needs every player holds at any pool size.
+- **A cgroup per part.** Where CI delegates a cgroup (`cargo xtask cgroup delegate`, which names it in
+  `TYPEWRITER_CGROUP`), `cargo xtask e2e` makes a tree per run: `run-<id>/stack/<service>`,
+  `run-<id>/gradle-build`, `run-<id>/gradle-test` and `run-<id>/game`. Each stack service starts in its
+  leaf, held to its limit. Every Gradle build of the run, the stack's included, runs in `gradle-build`;
+  once the suite is built, xtask kills that leaf whole (`cgroup.kill`), so no Kotlin daemon outlives the
+  build. The Gradle that runs the suite starts in `gradle-test`, compiles anything left in process, and
+  holds its test JVMs to a 512 MiB heap. It passes `game` to the pool (`playtest.cgroup`). The pool moves
+  itself into `game/pool` and each part it starts into `game/<part>-<pid>`, each leaf held to its kind's
+  limit with `memory.oom.group`, so a kill takes the whole part.
+- **The game's budget** is the game cgroup's `memory.max`: the machine, less 768 MiB for the system,
+  less Gradle's test run (`GRADLE_TEST_MIB`, 2048 MiB), less the stack's limits in the game suite. xtask
+  refuses a run where nothing is left. On the 16053 MiB runner:
+
+  | | Playtest suite | Game suite |
+  |---|---|---|
+  | Machine | 16053 MiB | 16053 MiB |
+  | System, Gradle's test run | 2816 MiB | 2816 MiB |
+  | Stack | none | 2489 MiB |
+  | **Game budget** | **13237 MiB** | **10748 MiB** |
+  | Shared Paper, pool, 3 clients with displays | 10233 MiB | 10233 MiB |
+  | Left for own Papers | 3004 MiB: 1 | 515 MiB: none |
+
+- **Admission by memory.** The pool, the shared Paper and each client with its display hold their
+  limits for the whole run. A restart attempt's own Paper starts only when its limit fits in what they
+  leave; until then its claim waits, unleased, so its windows have not started. Own Papers run at once as
+  many as fit, at most one per slot the build prepares (`PartLimit.OWN_PAPER_SLOTS`, 2). An attempt
+  whose restarts need more own Papers side by side than ever fit is refused, naming the numbers.
+- **Refusal.** The pool refuses to start when the parts that run the whole run alone exceed the budget,
+  naming both and how many clients fit (`cargo xtask e2e game --clients <n>`).
+- **CI enforces.** With `PLAYTEST_ENFORCE_MEMORY=1`, which CI's game runners set, a game run fails before it builds
+  when no cgroup is delegated or the delegated cgroup lacks the memory controller.
+- **A kill for memory names why.** The kernel counts an out of memory kill (`oom_kill`) in the victim's
+  cgroup whichever killer chose it, and counts `oom` where a cgroup reached its own limit. A part whose
+  leaf counts a kill is lost to `killed_for_memory`: `own_limit` when its leaf counts `oom`,
+  `game_budget` when the game's cgroup does, `machine_out_of_memory` otherwise. That cause replaces how
+  its loss looked first, as its connection closing, and the pool reads it for every part it did not
+  see end, also when a lost part stopped the game. Stack services and Gradle's leaves are read the same
+  way.
+- **The run file lists each part's limit and its peak** (`Part.limit_bytes`, `Part.peak_bytes`), Gradle
+  and each stack service included: the most any process of the part took, a restarted Paper's boots
+  together, read once the process ended, also after the part's loss. Its budget
+  (`TestRun.memory_budget`) holds the most the planned limits of the parts that ran at once added up
+  to (`planned_at_once_bytes`); the evidence shows both as a table per run. A peak counts the page cache
+  the part's files filled, which the kernel takes back before it kills. Each run's peaks recalibrate
+  the limits.
+- Where nothing gives the pool a budget, as on a developer's machine, it takes half the machine.
 
 ## CI
 
-The game suite is the `game` entry of CI's `e2e` matrix on a Namespace runner of 4 vCPU and 16 GB,
-in devenv's `e2e` profile (Xvfb, Mesa, lavapipe), about 11 minutes warm. The free GitHub runner it
-was proven on ([h-ci-runner.md](spikes/h-ci-runner.md)) took 13 to 14.
+The game suites are the `game` and `playtest` entries of CI's `e2e` matrix, each on a Namespace
+runner of 4 vCPU and 16 GB, in devenv's `e2e` profile (Xvfb, Mesa, lavapipe), about 11 minutes warm.
+The free GitHub runner it was proven on ([h-ci-runner.md](spikes/h-ci-runner.md)) took 13 to 14.
+
+- The plan job lists the suites a change affects (`cargo xtask check --list --suites`): `game` and
+  the panel suites whenever any area is affected, `playtest` only when the framework, the build that
+  starts its game, or a path every area reads changed.
+- Each game suite runs its verdict, then its demo run whatever the verdict ended with, then stages.
+- Sharding a suite across runners was weighed and declined (2026-11-24): the requirements take about
+  4 of 20 to 22 minutes, and every runner pays the 14 minute stack setup again. Shared stack
+  artifacts come first.
 
 - `cargo xtask e2e game` first runs `gameTestBuild` in a Gradle of its own without a daemon, so no
   compile daemon sits beside the suite, then the suite.
-- The suite runs inside the stack's `game` spec, which builds and starts the services first. That
-  spec generates only the protocol, so the job restores neither the panel's generated sources nor
-  the frame vectors, which the panel suites keep.
+- The `game` suite runs inside the stack's `game` spec, which builds and starts the services first.
+  That spec generates only the protocol, so the job restores neither the panel's generated sources
+  nor the frame vectors, which the panel suites keep. The `playtest` suite starts no stack.
 - Caches: Gradle's build cache (which holds the patched Paper), Loom's caches, and the AOT cache of
   the restart Paper. The build cache and the AOT cache are kept per job kind (`cache-scope`), so the
   game job and the services check each save their own.
@@ -352,9 +443,9 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   (2026-11-06), applied 2026-11-07 as a live `StepClock` per step on each engine. See the
   engine clock decision below.
 - **Group behaviour must be testable** (group chat, shared audiences, world groups), and requirements
-  share a **pool of 4 warm clients**: a requirement claims as many as it needs and the rest keep
-  running other requirements (2026-11-06). Books scoped per player are expected to remove most
-  conflicts. Fresh identity per requirement versus a wipe of the player's state is decided from
+  share a **pool of warm clients** (4, then 3 from 2026-11-26): a requirement claims as many as it
+  needs and the rest keep running other requirements (2026-11-06). Books scoped per player are
+  expected to remove most conflicts. Fresh identity per requirement versus a wipe of the player's state is decided from
   spike K's numbers (see the K row).
 - Each requirement gets a **full wipe** of its player (2026-11-07, replacing an earlier choice of a
   fresh identity): the realm gets a general "purge all data of this subject" operation, useful beyond
@@ -381,33 +472,38 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   touches** (2026-11-06). "Touched" comes from ordinary coverage: the lines each requirement covers,
   intersected with the diff. This needs coverage per requirement on a long lived Paper, which spike
   I measures.
-- A frame that differs from its approved golden **fails the test** and the pull request shows golden,
-  new frame and diff (2026-11-06). Goldens are exact on the pinned runner platform (spike F).
-- The **pinned renderer** is Vulkan through llvmpipe on Linux amd64 with the Mesa devenv ships
-  (2026-11-15). devenv exports that release as `PLAYTEST_MESA`, and the game framework owns the pin
-  and its one match rule. On the pinned renderer a golden never approved, or one another renderer drew
-  (the Mesa before an upgrade), fails with the approve command; any other machine reports "not
-  checked" with its renderer. CI's game job is the pinned runner and says so (`PLAYTEST_PINNED_RUNNER=1`),
-  so there a frame from another renderer fails with the renderer it saw: a runner that drifts from the
-  pin cannot let every golden pass unchecked. Each captured frame's candidate says whether the pinned renderer drew it, and
-  `cargo xtask goldens approve` refuses any it did not. The run file lists each candidate as a
-  `golden` artifact of its attempt (2026-11-18); staging, publishing and approve read that kind
-  and never look for a `.golden` file beside a frame. `cargo xtask goldens approve --pr <n>` downloads
-  the game results of the pull request's latest CI run and approves from them; without `--pr` it reads
-  the last local run. A nixpkgs Mesa upgrade fails every golden, and the upgrade pull request approves
-  them again.
-- **Golden images live on the evidence branch** (2026-11-17): the repository holds only a golden's
-  hash, size and renderer. `cargo xtask goldens approve` also pushes the frame to the `evidence` branch
-  as `goldens/<hash>.png`, beside the pull request folders pruning empties, and `cargo xtask e2e game`
-  fetches every golden image the machine lacks before the run, so a frame that differs shows its diff
-  on CI while the framework stays offline. Approve writes `goldens/<hash>.approved-at` beside each
-  image, and the weekly prune drops an image no golden file on a long lived branch (develop,
-  features/v1) names once it is older than the retention (an image without that file counts as old).
+- A frame that differs from its approved golden **fails the test** (2026-11-06). Superseded by
+  "Screenshots never decide" below, with the pinned renderer (2026-11-15), golden candidates as
+  artifacts (2026-11-18) and golden images on the evidence branch (2026-11-17) that served it.
+- **Screenshots never decide** (2026-11-28): a captured frame or clip is evidence for a human
+  reviewer, never a verdict. The golden compare, its approval command, its storage and the pinned
+  renderer are gone; every captured frame is published beside its requirement, passing or failing.
+  An exact frame compare failed on small first frame differences no player would notice (29 of 409920
+  pixels in a sidebar scene at the 50 ms pace), and what a player perceives is already checked
+  through windows.
+- **Block light glows steadily** (2026-11-27): the client keeps vanilla's block light flicker, a random
+  walk every client tick, at 0, the middle of the walk, so a floor a lamp lights draws the same shade
+  every frame and two captures of a still scene look alike for a reviewer. Without it the lit floor drew
+  another frame 10 ticks later in 3 of 3 attempts.
 - **Parts name their processes** (2026-11-17): the pool writes each part's pid and start time into its
   folder at every boot (`part.running`), and tests find a client or Paper by it. Linux shows Java only
   the first page of a command line, so arguments cannot name a part; a file a crash left behind names
   no process.
-- **Every game JVM takes a share of the machine** (2026-11-17): `HeapShare` in the wire module holds
+- **Absolute limits per part kind** (2026-11-25): `PartLimit` replaces `HeapShare`, below, and the pool
+  admits own Papers while their limits fit its memory budget beside its other parts.
+- **3 clients and admission by memory** (2026-11-26): the second CI run showed the shared Paper killed
+  as the machine ran out (planned at once 18.0 GiB on a 15.7 GiB runner). The suites run 3 clients on
+  the same 16 GB runner, with no further measuring run. Each limit is its kind's measured peak plus
+  15 %; the game cgroup holds the budget the machine leaves beside the system, Gradle's test run and the
+  stack; each leaf holds its kind's limit. An own Paper starts only when its limit fits in what is left,
+  and its attempt waits unleased until then. A run that must enforce memory fails where it cannot.
+- **A claim for the whole pool** (2026-11-26): a requirement that needs every player claims the whole
+  pool instead of naming the pool's size, and the pool resolves it to every client it runs
+  (`PlayerClaim.whole_pool` on the wire), so the requirement holds at 2, 3 or more clients.
+- **Measure before enforcing** (2026-11-25, replaced 2026-11-26): the planned limits did not fit the CI
+  runner, so each part ran in a cgroup of its own held only to the machine's total, the run file
+  recorded each part's peak, and admission refused nothing, until one CI run's peaks set the limits.
+- **Every game JVM takes a share of the machine** (2026-11-17, replaced 2026-11-25): `HeapShare` in the wire module held
   each part kind's `-XX:MaxRAMPercentage` (shared Paper 16, own Paper 7, client 4.5, pool 2), so the caps
   scale with the machine; the pool starts each part with its share, and the test JVM starts the pool
   with the pool's, which is why it lives in the module both share. The parts that can run at once (the
@@ -428,7 +524,11 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   44019397538). With `gameTestBuild` in place, the suite kept at least 3785 MB free and no Kotlin daemon
   was alive during it (run 44041628191). Compiling inside Gradle frees nothing, as the
   Gradle daemon grows by what the daemons held. It never runs `--stop`, which would stop other
-  worktrees' builds.
+  worktrees' builds. A module outside the suite the run builds has a `gameTest` that takes nothing in
+  (2026-11-27): Gradle builds what a skipped task takes in all the same, so the playtest suite's test
+  run compiled the engine for `engine-paper` beside the suite, and its 2048 MiB leaf was killed for
+  memory (run 45905150872). The test run of either suite now schedules nothing its build did not,
+  apart from `gameTest` and Kover's `koverFindJar`.
 - **The pool stays attached to its starter** (2026-11-17): the test JVM starts the pool without `setsid`.
   It outlives its starter's normal exit anyway, since the system reparents an orphan, and staying in the
   starter's process tree is what lets Gradle's cancel stop it: Gradle destroys every descendant by pid.
@@ -479,9 +579,9 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   each batch ends with `XSync` and counts as taken after the next poll); until
   that tick's record went out it handles no packet, since one queued after the tick's step ping belongs
   to the next tick. An input starts
-  only right after a tick; one that arrives while Paper is idle asks for a tick first. GOLDEN-3 is
-  watched: the visible sections update on a background thread after a move, which may make a frame
-  lag a tick, but no run showed it, so the client does not wait for them (cause unproven). The client
+  only right after a tick; one that arrives while Paper is idle asks for a tick first. The visible
+  sections update on a background thread after a move, which may make a frame lag a tick, so the client
+  does not wait for them (cause unproven). The client
   wipe also resets the break delay, which counts down only while the player keeps breaking. The
   client's other input delays (miss, use, jump and sprint double tap) count down every tick or clear
   once the button is up, and the pool runs at least 10 ticks between two attempts on a client, so no
@@ -513,14 +613,14 @@ Dated decisions, oldest first. The sections above describe what they add up to.
 - `never` checks are **broad** (`anyChat()`, `anyTitle()`), and the framework **refuses** a requirement
   whose checks are all `never` or all client state: it needs one positive check (2026-11-06). A body
   that returns without one fails as refused (2026-11-18). A positive check is a window whose checks
-  held, a `looksLike` whose compare matched (review round 2: one not checked proves nothing), an
+  held, an
   outcome the framework observed that the body caught (a missed window, hung
   work, a lost client or Paper, caught with `shouldThrow`), or the test kit's `holds`/`lacks` state
   check. The rule covers whole bodies: a body with no positive check at all fails. A bare read made
   after one check already held is not caught.
 - A requirement that needs rendered frames **declares it** (`player(frames = 60.hz)`), so the runner
   groups such requirements at a fitting server rate before it starts (2026-11-06). Superseded: stepped
-  ticks replaced server rates, and clients perceive without drawing (P11), so only `visible()`, goldens
+  ticks replaced server rates, and clients perceive without drawing (P11), so only `visible()`, captures
   and clips draw, each for its own span, and no requirement declares frames.
 - **The engine's clock is test driven** (2026-11-18, replacing the tick clock above). Answer to "How
   should step time count, so the branch can merge with features/v1?": "Clock, test driven
@@ -563,9 +663,23 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   credential, and its JetStream reads of `sessions_<realm>` have no transport route to derive
   grants from; an observer role in `transport-routes.yaml` would put a test role into production
   routes.
-- **Every game Paper loads Typewriter** (2026-11-20): the union of module additions reaches every
-  Paper, so the framework's own requirements also run beside the stack and the loader, and run only
-  through `cargo xtask e2e game`. Accepted as the cost of one shared pool.
+- Superseded 2026-11-24: **Every game Paper loads Typewriter** (2026-11-20): the union of module
+  additions reaches every Paper, so the framework's own requirements also run beside the stack and
+  the loader, and run only through `cargo xtask e2e game`. Accepted as the cost of one shared pool.
+- **Two game suites, demos off the verdict** (2026-11-24): the framework's own requirements are the
+  `playtest` suite, run without the stack and only when the framework changes; the product's are the
+  `game` suite inside it. Demos left the verdict: `DemoDiffers` is gone, and a demo run after the
+  verdict reruns failed, flaky, quarantined, unsteady and touched requirements with clips, never
+  gating. Why: a demo was the only run at another pace, so it failed requirements for wall clock
+  dependence under the name of a demo mismatch, and a broken demo could fail a passing run.
+- **One verdict per lost part** (2026-11-24): the run file lists its parts with typed ends; a lost
+  shared Paper or pool stops the run with one verdict, its attempts interrupted and the rest not run,
+  instead of every running attempt failing with the same text and the queued cases missing.
+- **Steady ticks are checked** (2026-11-24): every window holds at the same tick in every passing
+  run, retries included, and touched requirements run again at 5 and 50 ms between ticks. The
+  framework suite gates; Typewriter's module reports until the engine holds ticks for its session
+  writes. Evidence: in existing run files 7 of 106 cases on PR 580 and 2 of 42 on features/v1 held a
+  window at another tick in their demo.
 
 ## The prototype search
 

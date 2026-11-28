@@ -724,7 +724,11 @@ fn risk(change: &ChangeContext, findings: &[Finding], tests: &TestChanges) -> Ri
 fn health(ctx: &Context) -> Result<RunHealth> {
     let mut health = RunHealth::default();
     let quarantine = Quarantine::load(ctx)?;
-    for (_, run) in results::read_all(&ctx.root.join(RESULTS))? {
+    // A demo run only records evidence; its cases are no verdicts.
+    for (_, run) in results::read_all(&ctx.root.join(RESULTS))?
+        .into_iter()
+        .filter(|(_, run)| !run.evidence_only)
+    {
         health.runs += 1;
         for case in &run.cases {
             match results::verdict(&run, case, &quarantine) {

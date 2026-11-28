@@ -20,10 +20,12 @@ use crate::e2e::E2eArgs;
 use crate::graph::{Area, Run, Step};
 use crate::hooks::commit_msg::Scopes;
 use crate::results::{
-    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase,
-    TestRun,
+    Artifact, ArtifactKind, Attempt, AttemptPolicy, Failure, LossCause, Outcome, PartEnd, PartKind,
+    Quarantine, RunEnd, TestCase, TestRun,
 };
-use crate::skirout::base::harness::v1::test_run::{Runner, Span, Step as ScenarioStep};
+use crate::skirout::base::harness::v1::test_run::{
+    Interruption, Part, PartLoss, Runner, Span, Step as ScenarioStep,
+};
 use crate::stack::StackRecord;
 use crate::stack::spec::{PortLease, StackContext};
 use crate::{CommandExt as _, Context};
@@ -162,7 +164,7 @@ pub fn stack_context(root: &TempRoot) -> StackContext<'_> {
         base: 20000,
         record: root.path("registry/stack.json"),
     };
-    let ctx = StackContext::new(&root.ctx, ports);
+    let ctx = StackContext::new(&root.ctx, ports, None);
     fs::create_dir_all(ctx.state()).unwrap();
     ctx
 }
@@ -260,6 +262,15 @@ pub fn report_text(run: &TestRun, quarantine: &Quarantine) -> (Result<()>, Strin
     (result, String::from_utf8(out).unwrap())
 }
 
+/// The testBalloon patterns the Gradle arguments `gradle` select tests with (`--tests <pattern>`).
+pub fn gradle_selection(gradle: &[String]) -> Vec<&str> {
+    gradle
+        .windows(2)
+        .filter(|pair| pair[0] == "--tests")
+        .map(|pair| pair[1].as_str())
+        .collect()
+}
+
 /// `cargo xtask e2e args` as the command line parses it.
 pub fn e2e_args(args: &[&str]) -> Result<E2eArgs, clap::Error> {
     #[derive(clap::Parser)]
@@ -313,6 +324,33 @@ pub fn failed(message: &str) -> Outcome {
     Outcome::Failed(Box::new(Failure {
         message: message.to_owned(),
         ..Failure::default()
+    }))
+}
+
+/// An attempt a lost `part` interrupted.
+pub fn interrupted(part: &str) -> Outcome {
+    Outcome::Interrupted(Box::new(Interruption {
+        part: part.to_owned(),
+        ..Interruption::default()
+    }))
+}
+
+/// The part `name` of `kind`, whose log is `log` in the run's logs folder, that ended with `end`.
+pub fn part(name: &str, kind: PartKind, log: &str, end: PartEnd) -> Part {
+    Part {
+        name: name.to_owned(),
+        kind,
+        log: log.to_owned(),
+        end,
+        ..Part::default()
+    }
+}
+
+/// A part's end: lost for `cause`.
+pub fn lost(cause: LossCause) -> PartEnd {
+    PartEnd::Lost(Box::new(PartLoss {
+        cause,
+        ..PartLoss::default()
     }))
 }
 
@@ -412,6 +450,25 @@ pub fn raw_failed_run(root: &TempRoot, at: &str) {
     attempt.folder = "attempts/1".to_owned();
     let mut run = run_of("[CONN-1] Reconnects", vec![attempt]);
     run.cases[0].requirement = Some("CONN-1".to_owned());
+    crate::results::write(&run, &root.path(&format!("{at}/test_run.json"))).unwrap();
+}
+
+/// Writes game `run`'s raw results under `<root>/<at>/`, as the game suite leaves them: the run
+/// file pointing at its logs folder `logs/1`, which holds every log the game pool can leave there
+/// (its own, the shared Paper's, a restart attempt's own Paper's, a client's, a lost client's and a
+/// display's).
+pub fn raw_game_run(root: &TempRoot, at: &str, mut run: TestRun) {
+    for file in [
+        "pool.log",
+        "paper.log",
+        "paper-a2.log",
+        "client-gv-1.log",
+        "client-gv-1-lost-1.log",
+        "display-gv-1.log",
+    ] {
+        root.write(&format!("{at}/logs/1/{file}"), "log");
+    }
+    run.logs = "logs/1".to_owned();
     crate::results::write(&run, &root.path(&format!("{at}/test_run.json"))).unwrap();
 }
 
@@ -570,8 +627,8 @@ pub fn scopes(scopes: &[&str]) -> Scopes {
 
 /// Declares a fake stack service `$name` that only names the services it needs, optionally
 /// followed by `; provides ROLE, ...`, `; needs_roles ROLE, ...` and `; builds BUILD, ...` (each a
-/// `static` [`crate::stack::spec::Build`]): its command does nothing and it is ready once that
-/// command exits.
+/// `static` [`crate::stack::spec::Build`]): its command does nothing, it may take 64 MiB and it is
+/// ready once that command exits.
 macro_rules! fake_service {
     ($name:ident, $($need:ident),*
         $(; provides $($provided:path),+)?
@@ -581,6 +638,7 @@ macro_rules! fake_service {
         impl $crate::stack::spec::Service for $name {
             const ID: $crate::stack::spec::ServiceId =
                 $crate::stack::spec::ServiceId(stringify!($name));
+            const MEMORY_MIB: u64 = 64;
             fn needs(&self) -> &'static [$crate::stack::spec::ServiceId] {
                 &[$(<$need as $crate::stack::spec::Service>::ID),*]
             }
@@ -952,25 +1010,6 @@ pub fn drive_attempts<T: crate::e2e::Target>(
     Ok((folded, drove.into_inner()))
 }
 
-/// A frame a game run captured as `<frame>.png` in `run`, beside the `<frame>.golden` candidate
-/// file that names its golden, hash, size and renderer, recorded as a golden artifact of a new
-/// attempt in the folder of `<frame>` in the run file `test_run.json` of `run`.
-pub fn captured_golden(run: &TempRoot, frame: &str, candidate: &str, png: &str) {
-    run.write(&format!("{frame}.golden"), candidate);
-    run.write(&format!("{frame}.png"), png);
-    let file = run.path("test_run.json");
-    let mut test_run = if file.exists() {
-        crate::results::read(&file).unwrap()
-    } else {
-        run_of("GOLDEN-1 a sidebar", vec![])
-    };
-    let (folder, name) = frame.rsplit_once('/').unwrap();
-    let mut attempt = failed_attempt((0, 1), &[(ArtifactKind::Golden, &format!("{name}.golden"))]);
-    attempt.folder = folder.to_owned();
-    test_run.cases[0].attempts.push(attempt);
-    crate::results::write(&test_run, &file).unwrap();
-}
-
 /// The working tree file `path`, modified with `added` lines added or rewritten.
 pub fn changed(path: &str, added: &[u32]) -> crate::review::change::FileChange {
     crate::review::change::FileChange {
@@ -979,4 +1018,17 @@ pub fn changed(path: &str, added: &[u32]) -> crate::review::change::FileChange {
         status: crate::review::change::Status::Modified,
         added: added.to_vec(),
     }
+}
+
+/// A folder that stands in for the cgroup the machine delegates, offering the memory controller. The
+/// kernel makes a cgroup's control files as the cgroup is made and counts into `memory.peak` and
+/// `memory.events`; a test writes those itself.
+pub(crate) fn delegated_cgroup() -> tempfile::TempDir {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(
+        root.path().join("cgroup.controllers"),
+        "cpuset cpu io memory pids\n",
+    )
+    .unwrap();
+    root
 }

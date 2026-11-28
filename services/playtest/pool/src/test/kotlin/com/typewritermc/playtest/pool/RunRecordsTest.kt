@@ -1,16 +1,27 @@
 package com.typewritermc.playtest.pool
 
+import com.typewritermc.playtest.launch.PartLimit
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.AttemptPolicy
+import skirout.harness.v1.test_run.Conclusion
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.test_run.LossCause
+import skirout.harness.v1.test_run.MemoryBudget
+import skirout.harness.v1.test_run.MemoryKill
 import skirout.harness.v1.test_run.Outcome
+import skirout.harness.v1.test_run.Pacing
+import skirout.harness.v1.test_run.Part
+import skirout.harness.v1.test_run.PartEnd
+import skirout.harness.v1.test_run.PartKind
 import skirout.harness.v1.test_run.RunEnd
 import skirout.harness.v1.test_run.Runner
 import skirout.harness.v1.test_run.Step
 import skirout.harness.v1.test_run.TestRun
+import skirout.harness.v1.test_run.WindowEnd
+import skirout.harness.v1.wire.AttemptKind
 import skirout.harness.v1.wire.Result
 import java.nio.file.Files
 
@@ -47,21 +58,20 @@ val RunRecordsTest by testSuite {
             listOf(Outcome.createFailed(message = "gv-1 did not see chat \"Goodbye\"", firstBroken = "WindowRequirements.kt:17"))
     }
 
-    test("the frames and golden candidates an attempt wrote land in the run file as its artifacts in its folder") {
+    test("the frames and clips an attempt wrote land in the run file as its artifacts in its folder") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         records.record(
-            submitted(1, "GOLDEN-1 a sidebar matches its golden"),
+            submitted(1, "FRAME-1 a quest sidebar shows"),
             Result.partial(
                 submission = 1,
                 durationMillis = 120,
-                failure = "the frame differs from golden sidebar",
-                folder = "GOLDEN-1/attempt-1",
+                failure = "gv-1 did not see the sidebar",
+                folder = "FRAME-1/attempt-1",
                 artifacts =
                     listOf(
                         Artifact(kind = ArtifactKind.SCREENSHOT, path = "sidebar.png"),
-                        Artifact(kind = ArtifactKind.GOLDEN, path = "sidebar.golden"),
-                        Artifact(kind = ArtifactKind.SCREENSHOT, path = "sidebar.diff.png"),
+                        Artifact(kind = ArtifactKind.CLIP, path = "clips/gv-1.mp4"),
                     ),
             ),
         )
@@ -75,31 +85,23 @@ val RunRecordsTest by testSuite {
                 .single()
                 .attempts
                 .single()
-        attempt.folder shouldBe "GOLDEN-1/attempt-1"
+        attempt.folder shouldBe "FRAME-1/attempt-1"
         attempt.artifacts shouldBe
             listOf(
                 Artifact(kind = ArtifactKind.SCREENSHOT, path = "sidebar.png"),
-                Artifact(kind = ArtifactKind.GOLDEN, path = "sidebar.golden"),
-                Artifact(kind = ArtifactKind.SCREENSHOT, path = "sidebar.diff.png"),
+                Artifact(kind = ArtifactKind.CLIP, path = "clips/gv-1.mp4"),
             )
     }
 
-    test("a demo lands in its case's demo with its clips, and never counts as an attempt") {
+    test("a paced attempt lands among its case's paced attempts with its pace and windows, and never counts as an attempt") {
         val file = Files.createTempDirectory("run-records").resolve("test_run.json")
         val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
         val probe = "PROBE-1 a chat line reaches the player"
+        val held = WindowEnd(at = "ProbeRequirements.kt:20", length = 10, heldAt = 1, afterWallClock = false)
+        records.record(submitted(1, probe), Result.partial(submission = 1, durationMillis = 420, windows = listOf(held)))
         records.record(
-            submitted(1, probe),
-            Result.partial(submission = 1, durationMillis = 420),
-        )
-        records.record(
-            submitted(2, probe, demo = true),
-            Result.partial(
-                submission = 2,
-                durationMillis = 640,
-                folder = "PROBE-1-a-chat-line-reaches-the-player/demo",
-                artifacts = listOf(Artifact(kind = ArtifactKind.CLIP, path = "clips/gv-1.mp4")),
-            ),
+            submitted(2, probe, kind = AttemptKind.PacedWrapper(50)),
+            Result.partial(submission = 2, durationMillis = 640, windows = listOf(held.copy(heldAt = 3))),
         )
 
         records.finished()
@@ -109,11 +111,172 @@ val RunRecordsTest by testSuite {
                 .fromJsonCode(Files.readString(file))
                 .cases
                 .single()
-        case.attempts.map { it.durationMillis } shouldBe listOf(420L)
-        case.demo?.durationMillis shouldBe 640L
-        case.demo?.outcome shouldBe Outcome.PASSED
-        case.demo?.folder shouldBe "PROBE-1-a-chat-line-reaches-the-player/demo"
-        case.demo?.artifacts shouldBe listOf(Artifact(kind = ArtifactKind.CLIP, path = "clips/gv-1.mp4"))
+        case.attempts.map { Triple(it.durationMillis, it.paceMillis, it.windows) } shouldBe listOf(Triple(420L, 0, listOf(held)))
+        case.paced.map { Triple(it.durationMillis, it.paceMillis, it.windows) } shouldBe
+            listOf(Triple(640L, 50, listOf(held.copy(heldAt = 3))))
+    }
+
+    test("a concluded case says whether the change touched it, what its pacing does to the verdict, and what the session concluded") {
+        val file = Files.createTempDirectory("run-records").resolve("test_run.json")
+        val records = RunRecords("run-1", file, file.resolveSibling("logs/1"), retries, clock = { 1_000 })
+        val probe = "PROBE-1 a chat line reaches the player"
+        val session = "GAME-S1 a joined player's session is listed"
+        records.record(submitted(1, probe), Result.partial(submission = 1, durationMillis = 420))
+        records.record(submitted(2, session), Result.partial(submission = 2, durationMillis = 420))
+
+        val ticks = "attempt 1 at 0 ms held ProbeRequirements.kt:12 at tick 2; at 50 ms held ProbeRequirements.kt:12 at tick 3"
+        records.concluded(probe, touched = true, pacing = Pacing.GATES, conclusion = Conclusion.UnsteadyWrapper(ticks))
+        records.concluded(session, touched = false, pacing = Pacing.REPORTS, conclusion = Conclusion.PASSED)
+        records.finished()
+
+        TestRun.serializer
+            .fromJsonCode(Files.readString(file))
+            .cases
+            .map { listOf(it.id, it.touched, it.pacing, it.conclusion) } shouldBe
+            listOf(
+                listOf(probe, true, Pacing.GATES, Conclusion.UnsteadyWrapper(ticks)),
+                listOf(session, false, Pacing.REPORTS, Conclusion.PASSED),
+            )
+    }
+
+    test(
+        "every part the run started is listed with its log, its kind's memory limit and how it ended; a lost client keeps its kept log's name",
+    ) {
+        val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
+        val logs = file.resolveSibling("logs/1")
+        val records = RunRecords("run-1", file, logs, retries, clock = { 7_000 })
+        records.started("paper", PartKind.SHARED_PAPER, logs.resolve("paper.log"))
+        records.started("client-gv-1", PartKind.CLIENT, logs.resolve("client-gv-1.log"))
+        records.started("display-gv-1", PartKind.DISPLAY, logs.resolve("display-gv-1.log"))
+
+        records.lost("client-gv-1", LossCause.ExitedWrapper(137), kept = logs.resolve("client-gv-1-lost-1.log"))
+        records.started("client-gv-1", PartKind.CLIENT, logs.resolve("client-gv-1.log"))
+        records.finished()
+
+        TestRun.serializer.fromJsonCode(Files.readString(file)).parts shouldBe
+            listOf(
+                Part(
+                    name = "paper",
+                    kind = PartKind.SHARED_PAPER,
+                    log = "paper.log",
+                    end = PartEnd.RAN_TO_END,
+                    limitBytes = PartLimit.SHARED_PAPER.limitBytes,
+                    peakBytes = null,
+                ),
+                Part(
+                    name = "client-gv-1-lost-1",
+                    kind = PartKind.CLIENT,
+                    log = "client-gv-1-lost-1.log",
+                    end = PartEnd.createLost(cause = LossCause.ExitedWrapper(137), atMillis = 7_000),
+                    limitBytes = PartLimit.CLIENT.limitBytes,
+                    peakBytes = null,
+                ),
+                Part(
+                    name = "display-gv-1",
+                    kind = PartKind.DISPLAY,
+                    log = "display-gv-1.log",
+                    end = PartEnd.RAN_TO_END,
+                    limitBytes = PartLimit.DISPLAY.limitBytes,
+                    peakBytes = null,
+                ),
+                Part(
+                    name = "client-gv-1",
+                    kind = PartKind.CLIENT,
+                    log = "client-gv-1.log",
+                    end = PartEnd.RAN_TO_END,
+                    limitBytes = PartLimit.CLIENT.limitBytes,
+                    peakBytes = null,
+                ),
+            )
+    }
+
+    test("the run file says the game's memory budget and the most the planned limits of the parts that ran at once added up to") {
+        val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
+        val logs = file.resolveSibling("logs/1")
+        val records = RunRecords("run-1", file, logs, retries)
+        val gib = 1024L * 1024 * 1024
+        records.budget(16 * gib, "the game's cgroup")
+
+        records.planned(10 * gib)
+        records.planned(17 * gib)
+        records.planned(12 * gib)
+        records.finished()
+
+        TestRun.serializer.fromJsonCode(Files.readString(file)).memoryBudget shouldBe
+            MemoryBudget(bytes = 16 * gib, source = "the game's cgroup", plannedAtOnceBytes = 17 * gib)
+    }
+
+    test("a part's peak is the most any of its processes took, also when it is read after the part was lost") {
+        val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
+        val logs = file.resolveSibling("logs/1")
+        val records = RunRecords("run-1", file, logs, retries, clock = { 8_000 })
+        records.started("paper", PartKind.SHARED_PAPER, logs.resolve("paper.log"))
+        records.started("paper-a29", PartKind.OWN_PAPER, logs.resolve("paper-a29.log"))
+
+        // The shared Paper's loss is heard before its process ends and its peak is read.
+        records.lost("paper", LossCause.LeftWrapper("it closed its pool connection"))
+        records.peak("paper", 3_100_000_000)
+        // An own Paper's first boot took more than the boot killed while it started.
+        records.peak("paper-a29", 800_000_000)
+        records.lost("paper-a29", LossCause.ExitedWrapper(137))
+        records.peak("paper-a29", 0)
+        records.finished()
+
+        TestRun.serializer
+            .fromJsonCode(Files.readString(file))
+            .parts
+            .map { it.name to it.peakBytes } shouldBe
+            listOf("paper" to 3_100_000_000L, "paper-a29" to 800_000_000L)
+    }
+
+    test("a part the kernel killed for memory reads as killed for memory, whatever its loss looked like first") {
+        val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
+        val logs = file.resolveSibling("logs/1")
+        var now = 8_000L
+        val records = RunRecords("run-1", file, logs, retries, clock = { now })
+        records.started("paper", PartKind.SHARED_PAPER, logs.resolve("paper.log"))
+        records.started("client-gv-1", PartKind.CLIENT, logs.resolve("client-gv-1.log"))
+
+        records.lost("paper", LossCause.LeftWrapper("it closed its pool connection"))
+        now = 8_400
+        records.killedForMemory("paper", MemoryKill.MACHINE_OUT_OF_MEMORY)
+        records.killedForMemory("client-gv-1", MemoryKill.OWN_LIMIT)
+        records.finished()
+
+        TestRun.serializer
+            .fromJsonCode(Files.readString(file))
+            .parts
+            .map { it.name to it.end } shouldBe
+            listOf(
+                "paper" to PartEnd.createLost(cause = LossCause.KilledForMemoryWrapper(MemoryKill.MACHINE_OUT_OF_MEMORY), atMillis = 8_000),
+                "client-gv-1" to PartEnd.createLost(cause = LossCause.KilledForMemoryWrapper(MemoryKill.OWN_LIMIT), atMillis = 8_400),
+            )
+    }
+
+    test(
+        "a run a lost part stopped interrupts the attempts that ran, lists the cases still waiting as never run, and ignores their later results",
+    ) {
+        val file = Files.createTempDirectory("run-records").resolve("results/test_run.json")
+        val logs = file.resolveSibling("logs/1")
+        val records = RunRecords("run-1", file, logs, retries, clock = { 9_000 })
+        val read = { TestRun.serializer.fromJsonCode(Files.readString(file)) }
+        val ran = submitted(1, "PROBE-1 a chat line reaches the player")
+        val running = submitted(2, "MOVE-1 a player walks to a block")
+        val waiting = submitted(3, "GROUP-1 a line sent to a group reaches each member")
+        records.started("paper", PartKind.SHARED_PAPER, logs.resolve("paper.log"))
+        records.record(ran, Result.partial(submission = 1, durationMillis = 420))
+
+        records.lost("paper", LossCause.ExitedWrapper(137))
+        records.stopped("paper", interrupted = listOf(running), notRun = listOf(waiting))
+        records.record(running, Result.partial(submission = 2, durationMillis = 30, failure = "the game cannot run: paper exited"))
+        records.finished()
+
+        read().end shouldBe RunEnd.createLost(part = "paper", notRun = listOf("GROUP-1 a line sent to a group reaches each member"))
+        read().cases.map { case -> case.id to case.attempts.map { it.outcome } } shouldBe
+            listOf(
+                "PROBE-1 a chat line reaches the player" to listOf(Outcome.PASSED),
+                "MOVE-1 a player walks to a block" to listOf(Outcome.createInterrupted(part = "paper")),
+            )
     }
 
     test("every attempt of one case lands in that case, in the order the attempts ended") {

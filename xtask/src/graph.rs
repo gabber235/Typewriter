@@ -20,6 +20,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use anyhow::{Context as _, Result, anyhow, bail};
 use clap::ValueEnum;
 
+use crate::e2e::Suite;
 use crate::junit;
 use crate::lock::HeavyLock;
 use crate::process::{self, Group};
@@ -565,6 +566,119 @@ pub fn affected<'a>(steps: Vec<&'a Step>, paths: &[std::path::PathBuf]) -> Vec<&
         .collect()
 }
 
+/// An end to end suite CI runs on a runner of its own (`cargo xtask e2e <suite>`).
+pub struct E2eSuite {
+    suite: Suite,
+    /// The path prefixes beyond [`EVERY_AREA`] whose changes it proves; `None` runs it whenever a
+    /// change affects any area.
+    paths: Option<&'static [&'static str]>,
+    /// The caches its runner restores and saves.
+    caches: &'static [&'static str],
+    /// The CI job whose Gradle outputs its runner restores instead of building them itself.
+    gradle_outputs_from: Option<&'static str>,
+}
+
+impl E2eSuite {
+    /// Its name on the command line, `cargo xtask e2e <name>`.
+    pub fn name(&self) -> &'static str {
+        self.suite.name()
+    }
+}
+
+/// The caches a panel runner keeps: its stack generates every source, frame vectors included, and
+/// restores the services check's Gradle outputs for the SDK fixtures and the Realm host.
+const PANEL_CACHES: &[&str] = &["gradle", "flutter", "frame-vectors", "gradle-outputs"];
+
+/// The caches a game runner keeps: Gradle's outputs (the patched Paper among them) and the game
+/// downloads. It generates only the protocol's sources, so it needs no Flutter or frame vectors.
+const GAME_CACHES: &[&str] = &["gradle", "gradle-outputs", "game"];
+
+/// The end to end suites CI runs, in the order the plan lists them.
+const SUITES: &[E2eSuite] = &[
+    E2eSuite {
+        suite: Suite::Panel,
+        paths: None,
+        caches: PANEL_CACHES,
+        gradle_outputs_from: Some("check-services"),
+    },
+    E2eSuite {
+        suite: Suite::PanelWeb,
+        paths: None,
+        caches: PANEL_CACHES,
+        gradle_outputs_from: Some("check-services"),
+    },
+    // The game suite runs Minecraft clients against Paper inside the stack's game spec.
+    E2eSuite {
+        suite: Suite::Game,
+        paths: None,
+        caches: GAME_CACHES,
+        gradle_outputs_from: None,
+    },
+    // The framework's own requirements run without the stack, so only the framework and the build
+    // that starts its game reach them.
+    E2eSuite {
+        suite: Suite::Playtest,
+        paths: Some(&[
+            "services/playtest/",
+            "services/build-logic/",
+            "services/gradle/",
+            "services/gradlew",
+            "services/build.gradle.kts",
+            "services/settings.gradle.kts",
+            "services/gradle.properties",
+            "services/libs.versions.toml",
+        ]),
+        caches: GAME_CACHES,
+        gradle_outputs_from: None,
+    },
+];
+
+/// The end to end suites a change to `paths` affects, in [`SUITES`] order: every suite without
+/// paths of its own once any area is affected, and every other one whose paths, or [`EVERY_AREA`],
+/// the change touches.
+pub fn affected_suites(paths: &[std::path::PathBuf]) -> Vec<&'static E2eSuite> {
+    let any_area = !affected(select(None), paths).is_empty();
+    SUITES
+        .iter()
+        .filter(|suite| match suite.paths {
+            None => any_area,
+            Some(own) => paths.iter().any(|path| {
+                EVERY_AREA
+                    .iter()
+                    .chain(own.iter())
+                    .any(|prefix| path.starts_with(prefix))
+            }),
+        })
+        .collect()
+}
+
+/// Every end to end suite, in [`SUITES`] order.
+pub fn suites() -> Vec<&'static E2eSuite> {
+    SUITES.iter().collect()
+}
+
+/// `suites` as the CI matrix of the end to end jobs reads them: each one's name, whether its runner
+/// runs the game (and so delegates a cgroup and runs the demo run), the caches it keeps and the job
+/// whose Gradle outputs it restores, if any.
+fn suites_json(suites: &[&E2eSuite]) -> serde_json::Value {
+    suites
+        .iter()
+        .map(|suite| {
+            serde_json::json!({
+                "suite": suite.name(),
+                "game": suite.suite.runs_game(),
+                "caches": suite.caches.join(" "),
+                "gradle-outputs-from": suite.gradle_outputs_from,
+            })
+        })
+        .collect()
+}
+
+/// Prints `suites` as JSON (the CI matrix of the end to end jobs).
+pub fn list_suites(suites: &[&E2eSuite]) {
+    println!("{}", suites_json(suites));
+}
+
 /// Whether any of `steps` reads generated sources.
 fn needs_generate(steps: &[&Step]) -> bool {
     steps.iter().any(|step| step.needs_generate)
@@ -801,6 +915,68 @@ mod tests {
 
     use super::*;
     use crate::test_support::{TempRoot, area_names, failure_message, shell};
+
+    #[test]
+    fn the_framework_suite_runs_only_when_the_framework_or_what_every_area_reads_changed() {
+        let suites = |paths: &[&str]| {
+            affected_suites(&paths.iter().map(PathBuf::from).collect::<Vec<_>>())
+                .into_iter()
+                .map(E2eSuite::name)
+                .collect::<Vec<_>>()
+        };
+
+        assert_eq!(
+            suites(&["services/runtime/engine/core/src/main/kotlin/Engine.kt"]),
+            ["panel", "panel-web", "game"]
+        );
+        assert_eq!(
+            suites(&["services/playtest/plugin/src/main/java/StepPolicy.java"]),
+            ["panel", "panel-web", "game", "playtest"]
+        );
+        assert_eq!(
+            suites(&["services/build-logic/src/main/kotlin/game-test.gradle.kts"]),
+            ["panel", "panel-web", "game", "playtest"]
+        );
+        assert_eq!(
+            suites(&["xtask/src/main.rs"]),
+            ["panel", "panel-web", "game", "playtest"]
+        );
+        assert_eq!(
+            suites(&["panel/lib/main.dart"]),
+            ["panel", "panel-web", "game"]
+        );
+        assert!(suites(&["docs/design/game-verification/README.md"]).is_empty());
+    }
+
+    #[test]
+    fn the_ci_plan_lists_each_suite_with_its_game_its_caches_and_the_job_whose_outputs_it_restores()
+    {
+        let panel = |suite: &str| {
+            serde_json::json!({
+                "suite": suite,
+                "game": false,
+                "caches": "gradle flutter frame-vectors gradle-outputs",
+                "gradle-outputs-from": "check-services",
+            })
+        };
+        let game = |suite: &str| {
+            serde_json::json!({
+                "suite": suite,
+                "game": true,
+                "caches": "gradle gradle-outputs game",
+                "gradle-outputs-from": null,
+            })
+        };
+        assert_eq!(
+            suites_json(&suites()),
+            serde_json::json!([
+                panel("panel"),
+                panel("panel-web"),
+                game("game"),
+                game("playtest")
+            ])
+        );
+    }
 
     #[test]
     fn a_panel_change_runs_the_panel_and_the_project_rules_only() {

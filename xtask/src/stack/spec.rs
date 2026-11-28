@@ -18,6 +18,7 @@ use sha2::{Digest, Sha256};
 use super::client_configuration::ClientConfiguration;
 use super::{StackRecord, process_alive};
 use crate::CommandExt as _;
+use crate::cgroup::{Gradle, Tree};
 
 /// Identifies a service in a composition. Dependencies name handles, not strings, so a typo does
 /// not compile.
@@ -36,6 +37,9 @@ pub const BACKEND: Role = Role("backend");
 /// One process in a stack.
 pub trait Service {
     const ID: ServiceId;
+    /// The most memory the process may take, in MiB: its measured peak plus 15%, at least 64. A
+    /// game run holds it to this in a cgroup of its own and keeps it out of the game's budget.
+    const MEMORY_MIB: u64;
     /// Services that must be ready before this one starts.
     fn needs(&self) -> &'static [ServiceId] {
         &[]
@@ -71,6 +75,7 @@ pub trait Service {
 /// The object safe face of [`Service`], so a spec can hold different services.
 pub trait DynService {
     fn id(&self) -> ServiceId;
+    fn memory_bytes(&self) -> u64;
     fn needs(&self) -> &'static [ServiceId];
     fn provides(&self) -> &'static [Role];
     fn needs_roles(&self) -> &'static [Role];
@@ -84,6 +89,9 @@ pub trait DynService {
 impl<S: Service> DynService for S {
     fn id(&self) -> ServiceId {
         S::ID
+    }
+    fn memory_bytes(&self) -> u64 {
+        S::MEMORY_MIB * 1024 * 1024
     }
     fn needs(&self) -> &'static [ServiceId] {
         Service::needs(self)
@@ -319,6 +327,11 @@ impl StackSpec {
         builds
     }
 
+    /// The most memory the stack's services may take together, in bytes.
+    pub fn memory_bytes(&self) -> u64 {
+        self.0.iter().map(|service| service.memory_bytes()).sum()
+    }
+
     /// Dependencies and role providers before their dependents, otherwise in declaration order.
     /// A missing dependency, a role with no provider or two, or a cycle is an error naming the
     /// services involved.
@@ -539,16 +552,20 @@ pub fn state_dir(ctx: &crate::Context) -> PathBuf {
 pub struct StackContext<'a> {
     pub ctx: &'a crate::Context,
     pub ports: PortLease,
+    /// The game run's cgroup tree the stack runs in, if any: each service in a leaf of its own, the
+    /// builds in the run's build leaf.
+    pub cgroups: Option<&'a Tree>,
     /// What the started services published, in start order.
     values: RefCell<BTreeMap<String, String>>,
     clients: OnceCell<ClientConfiguration>,
 }
 
 impl<'a> StackContext<'a> {
-    pub fn new(ctx: &'a crate::Context, ports: PortLease) -> Self {
+    pub fn new(ctx: &'a crate::Context, ports: PortLease, cgroups: Option<&'a Tree>) -> Self {
         Self {
             ctx,
             ports,
+            cgroups,
             values: RefCell::default(),
             clients: OnceCell::new(),
         }
@@ -636,6 +653,7 @@ impl<'a> StackContext<'a> {
     /// build that failed.
     pub fn build(&self, builds: &[&'static dyn AnyBuild]) -> Result<Built> {
         let ctx = self.ctx;
+        let cgroups = self.cgroups;
         let gradle = gradle_args(ctx, builds)?;
         let mut gradle_builds = Vec::new();
         let mut own_builds = Vec::new();
@@ -658,7 +676,13 @@ impl<'a> StackContext<'a> {
                 let names = &names;
                 scope.spawn(move || {
                     let args: Vec<&str> = args.iter().map(String::as_str).collect();
-                    ctx.tool("services", "./gradlew", &args)
+                    let mut build = ctx.tool("services", "./gradlew", &args);
+                    // A game run's builds share a leaf, which ends with every daemon they left
+                    // before the suite runs.
+                    if let Some(tree) = cgroups {
+                        tree.gradle(Gradle::Build).place(&mut build)?;
+                    }
+                    build
                         .run()
                         .with_context(|| format!("cannot build {}", names.join(", ")))
                 })
@@ -738,6 +762,13 @@ mod tests {
                 assert!(lease.port(name) < 32768, "{name} got {}", lease.port(name));
             }
         }
+    }
+
+    #[test]
+    fn a_stack_may_take_what_its_services_may_take_together() {
+        let spec = StackSpec::default().with(roles::Owner).with(roles::Routes);
+
+        assert_eq!(spec.memory_bytes(), 2 * 64 * 1024 * 1024);
     }
 
     #[test]

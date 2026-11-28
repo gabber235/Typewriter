@@ -1,0 +1,289 @@
+# docs/drive/game-harness-structure/record.yaml: the working state of the game harness split out of PR 580.
+goal: >-
+  Split PR 580 into topic PRs onto features/v1; this one is the harness PR: framework fault tests in
+  their own job without the stack, demos as evidence after the verdict, one infrastructure verdict when
+  a shared part dies, hard kernel enforced memory limits per part including the Realm host and Gradle,
+  and the pacing invariance check (report only first, then gating).
+
+pieces:
+  - id: suite-split
+    status: building
+    tries:
+      - id: split-by-module
+        what: >-
+          two game suites: playtest (services/playtest modules, no stack, runs only when the framework
+          changes) and game (product modules, inside the stack); each suite's Papers carry only the
+          additions of the modules it runs
+        taught: >-
+          framework requirements need the stack only because the union of Paper additions reaches every
+          Paper (game-test.gradle.kts:165); only GAME-S1 and GAME-S2 read the observer
+        state: working
+        evidence: [services/build-logic/src/main/kotlin/com.typewritermc.game-test.gradle.kts:165]
+      - id: out-of-suite-takes-nothing
+        what: CI run 45905150872, the first with enforced limits
+        taught: >-
+          Gradle builds what a skipped task takes in all the same: engine-paper's gameTest, skipped in the
+          playtest suite, still compiled the engine in the test run, beside the suite; the kernel killed
+          the test run's 2048 MiB leaf and all 102 cases failed. A module outside the suite now has a
+          gameTest that takes nothing in; a dry run of either suite's test run schedules nothing the build
+          did not, apart from gameTest and koverFindJar
+        state: working
+        evidence:
+          - CI run 45905150872 job 140200967451 and artifact results-e2e-playtest
+          - services/build-logic/src/main/kotlin/com.typewritermc.game-test.gradle.kts (gameTest)
+  - id: demos-as-evidence
+    status: building
+    tries:
+      - id: demo-step-after-verdict
+        what: >-
+          delete DemoDiffers; `cargo xtask e2e <suite> --demos` reruns failed, flaky, quarantined and
+          touched cases from the verdict run file as a separate run that never gates
+        state: working
+  - id: part-model
+    status: building
+    tries:
+      - id: cgroup-probe-1
+        what: temporary workflow on the game job's runner labels (CI run 45289618353, deleted with its branch)
+        taught: >-
+          the job runs in a container inside the microVM: PID 1 is the runner's entry.sh, the job sits at
+          its cgroup namespace root (0::/), /sys/fs/cgroup is cgroup2 mounted read only (memory, pids,
+          cpu, io, cpuset, hugetlb available), kernel 7.1.4, passwordless sudo, systemd 255 installed
+          but offline, no swap, 16053 MB; `sudo mkdir /sys/fs/cgroup/tw-probe` fails with a read only
+          file system, so the later probe steps never ran
+        state: dropped
+        why: cgroups cannot be written as the runner is set up today
+        evidence: [scratchpad probe/probe.log (token redacted)]
+      - id: budget-tree
+        what: >-
+          every process of a run is a named part in a cgroup v2 tree (run, stack, gradle, game, and the
+          pool's parts) with an absolute hard memory.max; a JVM's heap is a percent of its own part's
+          limit; the pool admits parts while the sum of limits fits its own budget; memory.events names
+          the part the kernel killed
+        state: trying
+      - id: first-measured-run
+        what: the playtest suite on CI run 45575711222, the first with `cargo xtask cgroup delegate`
+        taught: >-
+          the delegated tree works: every part ran in its leaf and recorded a peak (clients 1.3 to
+          1.4 GiB, own Papers up to 2.1 GiB, pool 0.48 GiB, Gradle 8.35 GiB). The shared Paper died with
+          no log line while two own Papers and two replacement clients booted and the planned limits of
+          the running parts added up to 16.8 GiB of a 15.7 GiB machine with no swap; Gradle's leaf may hold a
+          Kotlin daemon (4 GiB heap ceiling), a Gradle daemon (2 GiB) and two test JVMs beside it. The pool heard the
+          connection close first, called it `left`, and stopped before it saw the process end, so it
+          never read the leaf's kill count or peak. Peaks are now read for every part the pool did not
+          see end, a kill names its cause, and a part's peak is the most any of its processes took
+        state: working
+        evidence:
+          - CI run 45575711222 artifact results-e2e-playtest (test_run.json, pool.log, paper.log)
+          - services/playtest/pool/src/main/kotlin/com/typewritermc/playtest/pool/Pool.kt (measure, measured)
+      - id: second-measured-run
+        what: CI run 45595894285, with the kill reporting
+        taught: >-
+          the shared Paper was `killed_for_memory: machine_out_of_memory`; peaks: shared Paper 3395 MiB,
+          clients up to 1543 MiB, pool 706 MiB, own Papers 0.76 to 2.03 GiB, Gradle 6.43 GiB; the
+          planned limits of the parts that ran at once added up to 18.0 GiB on a 15.7 GiB machine
+        state: working
+        evidence: [CI run 45595894285 artifacts results-e2e-playtest and results-e2e-game (test_run.json)]
+      - id: enforced-budget
+        what: >-
+          3 clients; limits from the peaks plus 15 % (at least 64 MiB) per part kind and per stack
+          service; the game cgroup holds the machine less 768 MiB, Gradle's test run (2048 MiB) and
+          the stack's limits; each leaf holds its kind's limit; Gradle builds in a leaf xtask kills whole
+          before the test run, which compiles in process with 512 MiB test JVM heaps in a leaf of its
+          own; an own Paper starts only when its limit fits, its claim waiting unleased; the pinned
+          runner fails without a delegated cgroup with the memory controller
+        state: working
+        evidence:
+          - services/playtest/launch/src/main/java/com/typewritermc/playtest/launch/PartLimit.java
+          - xtask/src/cgroup.rs (Tree::create)
+          - full local playtest runs of 2026-11-26, 104 of 104 passed
+      - id: whole-pool-claim
+        what: >-
+          a requirement claims a count of players or the whole pool (`PlayerClaim` on the wire), and the
+          pool resolves the whole pool to every player it holds; WIPE-INVENTORY and the lost client setup
+          claim it
+        state: working
+        evidence: [services/playtest/pool/src/test/kotlin/com/typewritermc/playtest/pool/ClaimsTest.kt]
+  - id: one-infrastructure-verdict
+    status: building
+    tries:
+      - id: typed-part-loss
+        what: >-
+          run file lists parts with their end (ran to the end, or lost with a cause); attempts a lost
+          shared part held are interrupted, not failed; xtask prints one verdict per lost part
+        state: working
+  - id: pacing-invariance
+    status: building
+    tries:
+      - id: demo-vs-attempt-evidence
+        what: compare the held tick of every window between passing attempts and demos in existing CI run files
+        taught: >-
+          a demo is already a slower paced rerun: 7 of 106 cases varied on PR 580 (GAME-E1, E2, E3, E5,
+          RESTART-2, HUNG-1, QUIT-2), 2 of 42 on features/v1 (TOAST-1 by one tick, HUNG-1 by design)
+        state: working
+        evidence:
+          - CI run 44908900974 (features/v1) results-e2e-game
+          - PR 580 artifacts art-48 and art-64 in the review's scratchpad
+      - id: pace-as-attempt-condition
+        what: >-
+          an attempt carries a pace (minimum wall clock between granted ticks); the pool runs one pace at
+          a time on the shared Paper; every window of a requirement must hold at the same tick in every
+          passing attempt, retries included
+        state: working
+      - id: toast-1-cause
+        what: record the tick Paper unlocks the recipe, the tick the client queues the toast, and each GUI update
+        taught: >-
+          Paper unlocks the recipe in the tick right after the give, and the client queues the toast in that
+          tick: no server delay. A toast takes two GUI updates to start its slide (queued to shown, then the
+          slide's start time), and Minecraft.renderFrame ran the GUI update in every frame, the skipped frames
+          between ticks too; so whether a frame ran between two ticks, which wall clock decides, moved the
+          slide's start and the window by a tick. The GUI update now runs once per tick while the client
+          steps, in the first frame after the tick (OncePerTick); TOAST-1 held at 12 in all 4 attempts on 2
+          clients and at 5 and 50 ms
+        state: working
+        evidence:
+          - services/playtest/client/src/main/java/com/typewritermc/playtest/client/OncePerTick.java
+          - local probe runs 2026-11-25 (paper.log recipe tick, client toast add and update ticks, logs/8 and 9)
+      - id: restart-2-cause
+        what: run RESTART-2 at 0, 5 and 50 ms, then with a 1 tick window after the restart
+        taught: >-
+          the plugin answered a resume with the tick before its delivery, and the delivery runs a wall
+          clock dependent number of ticks whose records the pool drops while the Paper restarts, so the
+          window held at tick 1, 4 or 3; at 0 ms tick 1 showed nothing in 4 of 4 attempts. A resume now
+          answers with the tick the delivery ended, as restartPaper and rejoin document
+        state: working
+        evidence:
+          - services/playtest/plugin/src/main/kotlin/com/typewritermc/playtest/plugin/PlaytestPlugin.kt
+          - services/playtest/pool/src/main/kotlin/com/typewritermc/playtest/pool/Pool.kt (perceived, restarted)
+      - id: golden-2-cause
+        what: >-
+          GOLDEN-2 and GOLDEN-3 were unsteady at 50 ms in 2 of 6 full runs: the first frame of an attempt
+          in region (-8192, 9216) differed by one colour step on about 150 pixels, the frame 10 ticks
+          later matched; logged at every capture: section meshes, light data, the lightmap, the camera,
+          the fog, the sky and the rain fog
+        taught: >-
+          every logged input was exact and the same in the odd and the settled frame, and the odd and the
+          settled frame came from the same region, so the region alone is not the cause; left: a draw
+          before the section buffers finish uploading, or a state the region adds to a transient
+        state: trying
+        evidence: [local runs logs/3 to logs/6 of 2026-11-26]
+      - id: block-light-flicker
+        what: log the block light factor at every capture
+        taught: >-
+          the client never pinned vanilla's block light flicker, a random walk every client tick, though
+          spike F names the pin a needed knob; it differed at every capture (1.33 to 1.47). GOLDEN-5, a
+          lamp lit floor at night, failed 3 of 3 without the pin and passed 3 of 3 with it
+        state: working
+        evidence:
+          - services/playtest/client/src/main/java/com/typewritermc/playtest/client/mixin/LightmapRenderStateExtractorMixin.java
+
+decided:
+  - id: carry-rejoin-listing
+    what: >-
+      68dae17a5c's plugin change is a framework fix and the bug exists on features/v1 (Attempts.java is
+      identical); carry it with QUIT-2's 1 tick bound, test first through the pacing check
+  - id: carry-log-staging
+    what: >-
+      carry the Paper log staging of bc0a7ec1ad and edfef27410 through the secret scrub, without its
+      rule that a failed demo fails the run
+  - id: drop-e5-loosening
+    what: ffd7766c57 is not carried
+
+  - id: no-sharding
+    what: >-
+      the maintainer declined sharding for now (2026-11-24): one runner per suite, the product suite
+      with the stack and the framework suite without it; sharing the stack build is a follow up
+
+  - id: second-probe
+    what: >-
+      the maintainer approved a second probe (2026-11-24): a read write remount, a fresh cgroup2 mount,
+      then the privileged container label; the push was blocked by the agent's permission classifier
+
+  - id: plan-approved
+    what: >-
+      the maintainer approved the plan with every recommendation (2026-11-24): probe the runner; a
+      fixed limit per part kind, the pool starts only what fits; a lost shared Paper or pool stops the
+      run with one verdict, attempts interrupted, the rest not run; pacing at 5 and 50 ms for new or
+      touched cases, one pace at a time on the shared Paper, the framework suite gating and
+      runtimes/paper reporting until the holding PR; demos as a separate run after the verdict
+
+  - id: build-unaffected-first
+    what: >-
+      build the parts that do not touch memory now (suite split, demos as a separate run, one verdict
+      per part loss, pacing check); hold change 4 until the second probe question is answered
+      (2026-11-24); then hold the CI job layout and pool admission too while the maintainer weighs
+      sharding across runners
+
+  - id: kotlin-owns-steady-rule
+    what: >-
+      the maintainer chose (2026-11-25): the test JVM writes each case's verdict, unsteady included, into
+      the run file through `concluded` (TestCase.conclusion); xtask gates on it and no longer compares
+      window ticks itself; other runners' cases are still judged by their attempts
+
+  - id: measure-first
+    what: >-
+      the maintainer chose measure first for change 4 (2026-11-25), resolving limits-do-not-fit-the-runner:
+      slice 1 comes onto the PR branch with admission in report mode (it records whether each part fits,
+      never refuses one); the pool's cgroup leaves, the memory_limit loss cause, each part's peak in the
+      run file, the xtask run tree and the CI delegation step are built with every memory.max at the
+      runner's total; the evidence shows peak against planned limit per part. Enforcement and failing a
+      pinned runner that cannot enforce wait for the maintainer's word after one CI run
+
+  - id: three-clients-admission-by-memory
+    what: >-
+      3 clients and admission by memory, decided 2026-11-26 by the maintainer after CI run 45595894285,
+      resolving enforce-limits with no further measuring run: the suites run 3 clients on the 16 GB
+      runner; limits are measured peaks plus 15 % per part kind; the game budget (machine less the
+      system, Gradle's test run and the stack) goes into the game cgroup's memory.max and each leaf
+      holds its kind's limit; an own Paper starts only when its limit fits in what is left, and its
+      attempt waits, not running, until its Paper is up; the pool refuses to start, naming the numbers,
+      when the parts that run the whole run alone exceed the budget; the pinned runner fails when it
+      cannot enforce
+
+  - id: whole-pool-claim
+    what: >-
+      the maintainer chose (2026-11-26): a requirement can claim every client the pool holds, whatever
+      its size; WIPE-INVENTORY and the lost client setup use it instead of 3
+
+  - id: steady-block-light
+    what: >-
+      the maintainer chose (2026-11-27): the client pins the block light flicker beside its other
+      pinned settings, test first
+
+  - id: golden-2-blocks-merge
+    what: >-
+      the maintainer chose (2026-11-27): the pull request does not merge until GOLDEN-2's cause is found
+      and fixed; no window loosened, nothing skipped. Superseded the same day by merge-before-cells
+  - id: merge-before-cells
+    what: >-
+      the structural review chose owned cells with scripted time for the game harness (2026-11-27); this
+      pull request merges close to as it is, and nothing more is built on what cells delete: pace and
+      paced attempts, Unsteady, the whole pool claim, memory admission, the two memory budget rules,
+      shared versus own Papers and the wipe. Review items on those go to the pull request's known issues
+  - id: screenshots-never-decide
+    what: >-
+      the maintainer chose (2026-11-28), replacing the quarantine of GOLDEN-2 and GOLDEN-3: screenshots
+      never decide pass or fail. The golden compare, its approval command, its storage and the pinned
+      renderer go; captured frames and clips are evidence the pull request shows for a reviewer. The
+      golden scenes stay as FRAME-1 to FRAME-5, each passing or failing on a window. Prompted by
+      GOLDEN-1 failing CI at the 50 ms pace with 29 of 409920 pixels off its golden
+  - id: frames-check-their-claim
+    what: >-
+      the maintainer chose (2026-11-28) after review: every frame requirement checks its own claim with
+      an existing perceived or state check, and the frame is captured beside it; a window that only
+      proves the camera settled after a teleport goes, since WIPE-POSITION and USE-1 prove that. The
+      sidebar scene goes until a perceived sidebar check exists (a follow up of the pull request), as
+      does the still scene whose only claim was its camera. FRAME-1 is a floor under a night sky,
+      FRAME-2 the spyglass at night in the rain and the next attempt's scene, FRAME-3 a lamp at night
+
+  - id: build-without-stack
+    what: >-
+      scope added by the maintainer (2026-11-24): the game test build must not depend on the running
+      stack; values the stack publishes move from the build's inputs to the run's environment, which
+      the pool fills in as each Paper boots; check builds gameTestBuild with no stack
+
+open: []
+
+slices: []
+
+next: >-
+  a CI run with enforcement shows every part within its limit and no kill, Gradle's test run measured against its 2048 MiB estimate

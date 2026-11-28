@@ -1,0 +1,86 @@
+package com.typewritermc.playtest.pool
+
+import com.typewritermc.playtest.launch.PartLimit
+import skirout.harness.v1.test_run.MemoryKill
+import java.nio.file.Files
+import java.nio.file.Path
+
+/**
+ * The cgroup v2 folder the run's tree gives the game ([game]), where every game part runs in a leaf of
+ * its own, the pool's own included, held to its kind's [PartLimit]. The kernel counts each leaf's
+ * memory, records the most it took, and kills the leaf's processes together once they take more than
+ * the leaf's limit, or once the game's parts together take more than the game's budget.
+ */
+internal class PartLeaves(
+    private val game: Path,
+) {
+    /** The game's limit as the pool's memory budget; null when the game's cgroup has none. */
+    fun budget(): MemoryBudget? = limitOf(game)?.let { MemoryBudget(it, "the game's cgroup") }
+
+    /** Makes the leaf [name], held to [limit], and moves the process [pid] into it. */
+    fun place(
+        name: String,
+        pid: Long,
+        limit: PartLimit,
+    ): Leaf {
+        val dir = game.resolve(name)
+        Files.createDirectories(dir)
+        Files.writeString(dir.resolve("memory.max"), limit.limitBytes.toString())
+        // The kernel kills every process of the leaf together, so a part dies whole.
+        Files.writeString(dir.resolve("memory.oom.group"), "1")
+        Files.writeString(dir.resolve("cgroup.procs"), pid.toString())
+        return Leaf(dir, game)
+    }
+
+    /** One part's leaf, in the game's cgroup [game]. */
+    class Leaf(
+        val dir: Path,
+        private val game: Path,
+    ) {
+        /**
+         * Why the kernel killed a process of the part for memory; null when it killed none. The kernel counts
+         * an out of memory kill in the victim's cgroup whichever killer chose it, and counts `oom` where a
+         * cgroup reached its own limit: the leaf's, the game's, or neither, when the machine ran out.
+         */
+        fun memoryKill(): MemoryKill? =
+            when {
+                events(dir, "oom_kill") == 0L -> null
+                events(dir, "oom") > 0 -> MemoryKill.OWN_LIMIT
+                events(game, "oom") > 0 -> MemoryKill.GAME_BUDGET
+                else -> MemoryKill.MACHINE_OUT_OF_MEMORY
+            }
+
+        /** The most memory the part took, in bytes; null when the kernel records none. */
+        fun peakBytes(): Long? = read("memory.peak")?.trim()?.toLongOrNull()
+
+        /** Removes the leaf once its processes are gone; one that still holds any stays. */
+        fun remove() {
+            runCatching { Files.deleteIfExists(dir) }
+        }
+
+        private fun read(file: String): String? = dir.resolve(file).takeIf(Files::isRegularFile)?.let(Files::readString)
+    }
+
+    companion object {
+        /** The count [key] of the cgroup folder [dir]'s `memory.events`; 0 where it names none. */
+        private fun events(
+            dir: Path,
+            key: String,
+        ): Long =
+            dir
+                .resolve("memory.events")
+                .takeIf(Files::isRegularFile)
+                ?.let(Files::readAllLines)
+                ?.firstNotNullOfOrNull { line ->
+                    line
+                        .split(' ')
+                        .takeIf { it.size == 2 && it[0] == key }
+                        ?.get(1)
+                        ?.toLong()
+                }
+                ?: 0L
+
+        /** The limit in the cgroup folder [dir]'s `memory.max`, in bytes; null for none. */
+        private fun limitOf(dir: Path): Long? = Files.readString(dir.resolve("memory.max")).trim().toLongOrNull()
+    }
+}

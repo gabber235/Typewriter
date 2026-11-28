@@ -5,6 +5,7 @@ import de.infix.testBalloon.framework.core.TestSuiteScope
 import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.wire.PlayerClaim
 import skirout.harness.v1.wire.StateKind
 
 /**
@@ -16,7 +17,7 @@ import skirout.harness.v1.wire.StateKind
 fun TestSuiteScope.backToBack(
     @TestElementName id: String,
     sentence: String,
-    players: Int = 1,
+    players: PlayerClaim = Players.count(1),
     demonstrates: Demonstrates = Demonstrates.HAPPY_PATH,
     first: suspend RequirementScope.() -> Unit,
     then: suspend RequirementScope.() -> Unit,

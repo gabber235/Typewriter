@@ -4,6 +4,7 @@ import com.mojang.renderpearl.api.device.GpuSurface;
 import com.typewritermc.playtest.client.Hooks;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.PacketProcessor;
@@ -35,6 +36,12 @@ abstract class MinecraftMixin {
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At("HEAD"))
     private void playtest$leavingWorld(Screen screen, boolean keepResourcePacks, boolean stopSound, CallbackInfo ci) {
         Hooks.leavingWorld((Minecraft) (Object) this);
+    }
+
+    /** While the client steps, the GUI's update runs once per tick, not once per frame ({@code OncePerTick}). */
+    @Redirect(method = "renderFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;update()V"))
+    private void playtest$guiUpdate(Gui gui) {
+        if (Hooks.updatesGui()) gui.update();
     }
 
     /** Without an acquired texture the frame's blit and present skip themselves, so no frame reaches the window. */

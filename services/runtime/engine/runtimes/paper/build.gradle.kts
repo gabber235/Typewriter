@@ -1,5 +1,5 @@
 import com.typewritermc.buildlogic.realmDatabaseCredentials
-import com.typewritermc.playtest.launch.HeapShare
+import com.typewritermc.playtest.launch.PartLimit
 import xyz.jpenilla.runpaper.task.RunServer
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -74,29 +74,25 @@ dependencies {
     testFixturesApi(project(":typewriter-api"))
 }
 
-/** A value of the stack `cargo xtask e2e game` runs the game suite in, which it hands Gradle. */
-fun stackValue(name: String): Provider<String> =
-    providers.environmentVariable(name).orElse(
-        provider {
-            throw GradleException("$name is not set: the game suite runs inside the stack `cargo xtask e2e game` starts")
-        },
-    )
-
-// Every game Paper runs the Typewriter loader against the stack. Each slot's loader writes its
+// Every game Paper runs the Typewriter loader against the stack `cargo xtask e2e game` runs the game
+// suite in, which publishes these values in the suite's environment. Each slot's loader writes its
 // registration token where the stack's engine binder waits for that slot, and keeps the identity it
 // was bound with, so every own Paper of a slot is the same engine host.
 gamePaper {
     pluginJars.from(loaderPlugin)
-    environment.put("TYPEWRITER_CONFIG_FILE", stackValue("TYPEWRITER_CONFIG_FILE"))
-    (0..HeapShare.OWN_PAPERS).forEach { slot ->
+    environment.put("TYPEWRITER_CONFIG_FILE", fromRun("TYPEWRITER_CONFIG_FILE"))
+    (0..PartLimit.OWN_PAPER_SLOTS).forEach { slot ->
         slot(slot) {
-            environment.put(
-                "TYPEWRITER_REGISTRATION_TOKEN_FILE",
-                stackValue("STACK_GAME_ENGINES").map { "$it/$slot/registration-token" },
-            )
+            environment.put("TYPEWRITER_REGISTRATION_TOKEN_FILE", "${fromRun("STACK_GAME_ENGINES")}/$slot/registration-token")
         }
     }
     keptPerSlot.add("plugins/Typewriter/state")
+}
+
+// The engine still waits on session writes no tick waits for, so a window that holds at another
+// tick at another pace is reported, not blocking, until the engine holds ticks for that work.
+gameRequirements {
+    pacing.set("reports")
 }
 
 runPaper {

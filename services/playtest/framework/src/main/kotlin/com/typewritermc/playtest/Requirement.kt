@@ -1,5 +1,6 @@
 package com.typewritermc.playtest
 
+import com.typewritermc.playtest.wire.paceMillis
 import de.infix.testBalloon.framework.core.TestCompartment
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.TestSuiteScope
@@ -8,6 +9,8 @@ import de.infix.testBalloon.framework.core.invocation
 import de.infix.testBalloon.framework.shared.TestElementName
 import de.infix.testBalloon.framework.shared.TestRegistering
 import skirout.harness.v1.test_run.Demonstrates
+import skirout.harness.v1.wire.AttemptKind
+import skirout.harness.v1.wire.PlayerClaim
 
 /**
  * The compartment every game requirement registers in. Its tests start at once and each waits in the
@@ -35,7 +38,7 @@ private var currentSession: Result<PoolSession>? = null
 
 /**
  * Registers one requirement as one testBalloon test named "[id] [sentence]". Its body runs in this
- * test JVM once the pool has [players] free, each wiped and standing in a region of the world that is
+ * test JVM once the pool has the [players] it claims free, each wiped and standing in a region of the world that is
  * the attempt's own. A failed attempt goes to the end of the pool's line and runs again on warm
  * clients, up to 4 attempts in total; a pass after a failure is flaky and fails the test like a
  * failure. [demonstrates] says what the case shows, in the run file. With [restartsPaper] the attempt
@@ -46,7 +49,7 @@ private var currentSession: Result<PoolSession>? = null
 fun TestSuiteScope.requirement(
     @TestElementName id: String,
     sentence: String,
-    players: Int = 1,
+    players: PlayerClaim = Players.count(1),
     demonstrates: Demonstrates = Demonstrates.HAPPY_PATH,
     restartsPaper: Boolean = false,
     body: suspend RequirementScope.() -> Unit,
@@ -61,14 +64,28 @@ fun TestSuiteScope.requirement(
 internal fun TestSuiteScope.attempts(
     @TestElementName id: String,
     sentence: String,
-    players: Int,
+    players: PlayerClaim,
     demonstrates: Demonstrates,
     bodies: List<suspend RequirementScope.() -> Unit>,
     restartsPaper: Boolean = false,
 ) {
-    require(players >= 1) { "$id claims $players players; a requirement claims at least 1" }
-    register(id, sentence, RequirementCode.of(bodies.first())) { session, demo ->
-        session.attempt(PoolSession.Planned("$id $sentence", id, players, demonstrates, bodies, restartsPaper, demo))
+    (players as? PlayerClaim.CountWrapper)?.let {
+        require(
+            it.value >= 1,
+        ) { "$id claims ${it.value} players; a requirement claims at least 1" }
+    }
+    register(id, sentence, RequirementCode.of(bodies.first())) { session, kind ->
+        session.attempt(
+            PoolSession.Planned(
+                "$id $sentence",
+                id,
+                players,
+                demonstrates,
+                bodies,
+                restartsPaper,
+                kind,
+            ),
+        )
     }
 }
 
@@ -85,64 +102,73 @@ internal fun TestSuiteScope.sideBySide(
     sentence: String,
     demonstrates: Demonstrates,
     bodies: () -> List<suspend RequirementScope.() -> Unit>,
-    afterwardPlayers: Int = 1,
+    afterwardPlayers: PlayerClaim = Players.count(1),
     afterward: (suspend RequirementScope.() -> Unit)? = null,
 ) {
-    register(id, sentence, RequirementCode.of(bodies)) { session, demo ->
+    register(id, sentence, RequirementCode.of(bodies)) { session, kind ->
         val made = bodies()
         val count = made.size + if (afterward == null) 0 else 1
-        val ended =
-            session.sideBySide(
-                made.mapIndexed { index, body ->
-                    PoolSession.Planned("$id $sentence (attempt ${index + 1} of $count)", id, 1, demonstrates, listOf(body), demo = demo)
-                },
-            )
+
+        fun planned(
+            number: Int,
+            players: PlayerClaim,
+            body: suspend RequirementScope.() -> Unit,
+        ) = PoolSession.Planned(
+            "$id $sentence (attempt $number of $count)",
+            id,
+            players,
+            demonstrates,
+            listOf(body),
+            kind = kind,
+        )
+        val ended = session.sideBySide(made.mapIndexed { index, body -> planned(index + 1, Players.count(1), body) })
         val failures = ended.mapNotNull { it.failure }
         failures.firstOrNull()?.let { first -> PoolSession.AttemptEnd(first.also { failures.drop(1).forEach(it::addSuppressed) }) }
-            ?: afterward?.let {
-                session.attempt(
-                    PoolSession.Planned(
-                        "$id $sentence (attempt $count of $count)",
-                        id,
-                        afterwardPlayers,
-                        demonstrates,
-                        listOf(it),
-                        demo = demo,
-                    ),
-                )
-            }
-            ?: PoolSession.AttemptEnd(null)
+            ?: afterward?.let { session.attempt(planned(count, afterwardPlayers, it)) }
+            ?: PoolSession.AttemptEnd(null, paceMillis = kind.paceMillis)
     }
 }
 
 /**
  * Registers the test "[id] [sentence]": it makes the requirement's attempts as the run's policy asks,
- * each with [attempt], which returns how it ended, and ends as their verdict says. When the plan
- * asks for a demo (the requirement failed, or the change touched code its last attempt covered), it
- * runs once more as a demo, its clients recording clips; a demo that ends otherwise than the last
- * attempt fails the requirement. Which tests a run runs is testBalloon's selection
- * (`cargo xtask e2e game --only`).
+ * each with [attempt], which returns how it ended. When they passed and the change under test is new
+ * to the requirement or touched it, it runs once more at each of the plan's paces; every window must
+ * hold at the same tick in every passing run, or the requirement is unsteady. It ends as the verdict
+ * says. In a demo run it makes one attempt, its clients recording clips, and ends as that attempt did.
+ * Which tests a run runs is testBalloon's selection (`cargo xtask e2e game --only`).
  */
 private fun TestSuiteScope.register(
     id: String,
     sentence: String,
     code: RequirementCode,
-    attempt: suspend (session: PoolSession, demo: Boolean) -> PoolSession.AttemptEnd,
+    attempt: suspend (session: PoolSession, kind: AttemptKind) -> PoolSession.AttemptEnd,
 ) {
     val plan = RunPlan.current
     val testId = "$id $sentence"
+    // A requirement whose code has no location (never in a built test source set) has no lines to touch.
+    val lines =
+        Throwable().stackTrace.firstOrNull(code::owns)?.let(RequirementSources.current::register)
+            ?: { RequirementLines("", IntRange.EMPTY) }
     test(testId) {
         val session = session(id)
-        var last = PoolSession.AttemptEnd(null)
-        val verdict = plan.policy.attempt(plan.quarantines(id, testId)) { attempt(session, false).also { last = it }.failure }
-        val differs = if (plan.demos(verdict, last.covered)) demoDiffers(last.failure, attempt(session, true).failure) else null
-        if (differs != null && verdict == Verdict.Passed) throw differs
-        try {
-            verdict.conclude(code)
-        } catch (failed: AssertionError) {
-            differs?.let(failed::addSuppressed)
-            throw failed
+        if (plan.demo) {
+            attempt(session, AttemptKind.DEMO).failure?.let { throw it }
+            return@test
         }
+        val ends = mutableListOf<PoolSession.AttemptEnd>()
+        val verdict = plan.policy.attempt(plan.quarantines(id, testId)) { attempt(session, AttemptKind.VERDICT).also(ends::add).failure }
+        val touched = plan.touches(lines(), ends.last().covered)
+        val paced =
+            if (verdict == Verdict.Passed &&
+                touched
+            ) {
+                plan.paces.map { attempt(session, AttemptKind.PacedWrapper(it)) }
+            } else {
+                listOf()
+            }
+        val steadied = verdict.steadied(ends, paced, plan.pacing)
+        session.concluded(testId, touched, plan.pacing, steadied.conclusion)
+        steadied.conclude(code)
     }
 }
 

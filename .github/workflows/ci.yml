@@ -41,6 +41,7 @@ jobs:
       - nscloud-cache-size-50gb
     outputs:
       areas: ${{ steps.plan.outputs.areas }}
+      suites: ${{ steps.plan.outputs.suites }}
     steps:
       # One commit: xtask fetches the history down to the merge base with BASE_SHA itself.
       - uses: actions/checkout@v6
@@ -52,7 +53,9 @@ jobs:
           volume-profiles: e2e
       # The last line only: the shell may print its own messages before the JSON.
       - id: plan
-        run: echo "areas=$(devenv shell -- cargo xtask check --list --base "$BASE_SHA" | tail -n 1)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "areas=$(devenv shell -- cargo xtask check --list --base "$BASE_SHA" | tail -n 1)" >> "$GITHUB_OUTPUT"
+          echo "suites=$(devenv shell -- cargo xtask check --list --suites --base "$BASE_SHA" | tail -n 1)" >> "$GITHUB_OUTPUT"
 
   check:
     name: check (${{ matrix.area.area }})
@@ -115,16 +118,14 @@ jobs:
       - uses: ./.github/actions/devenv
       - run: devenv shell -- cargo xtask hook commit-msg --range "$BASE_SHA..$HEAD_SHA"
 
-  # The display, Mesa, Vulkan, GTK and Chromium come from the devenv e2e profile, not apt. The
-  # game suite runs four Minecraft clients, each on a virtual display of its own, against Paper on
-  # this runner; it also keeps Gradle's outputs (the patched Paper among them) and its downloads,
-  # and generates only the protocol's sources, so it needs no Flutter or frame vector cache.
-  # The panel suites generate every source, frame vectors included, before their stack starts,
-  # and restore the services check's Gradle outputs for the SDK fixtures and the Realm host.
+  # One runner per end to end suite the change affects. The display, Mesa, Vulkan, GTK and Chromium
+  # come from the devenv e2e profile, not apt. The plan lists each suite as xtask defines it: its
+  # name, whether its runner runs the game (Minecraft clients, each on a virtual display of its own,
+  # against Paper on this runner), the caches it keeps and the job whose Gradle outputs it restores.
   e2e:
-    name: e2e (${{ matrix.suite }})
+    name: e2e (${{ matrix.suite.suite }})
     needs: plan
-    if: needs.plan.outputs.areas != '[]'
+    if: needs.plan.outputs.suites != '[]'
     runs-on:
       - nscloud-ubuntu-24.04-amd64-4x16-with-cache
       - nscloud-cache-tag-typewriter
@@ -133,35 +134,37 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - suite: panel
-            caches: gradle flutter frame-vectors gradle-outputs
-            gradle-outputs-from: check-services
-          - suite: panel-web
-            caches: gradle flutter frame-vectors gradle-outputs
-            gradle-outputs-from: check-services
-          - suite: game
-            caches: gradle gradle-outputs game
+        suite: ${{ fromJSON(needs.plan.outputs.suites) }}
+    env:
+      GAME_SUITE: ${{ matrix.suite.game && '1' || '' }}
     steps:
-      # One commit: the game suite reruns as demos the requirements that covered a line the change
-      # added since its merge base with BASE_SHA, and fetches the history down to it itself.
+      # One commit: the game suites rerun as demos the requirements that covered a line the change
+      # added since its merge base with BASE_SHA, and fetch the history down to it themselves.
       - uses: actions/checkout@v6
       - uses: ./.github/actions/devenv
         with:
-          caches: ${{ matrix.caches }}
+          caches: ${{ matrix.suite.caches }}
           profile: e2e
-          cache-scope: e2e-${{ matrix.suite }}
+          cache-scope: e2e-${{ matrix.suite.suite }}
           cargo-targets: true
-          gradle-outputs-from: ${{ matrix.gradle-outputs-from }}
-      # The game suite's demo reruns follow the lines the change added since the same base the
+          gradle-outputs-from: ${{ matrix.suite['gradle-outputs-from'] }}
+      # The game suites measure each part's memory in a cgroup of its own. The step remounts the
+      # runner's cgroup tree writable, moves the job's processes into `typewriter/job`, gives the
+      # job user `typewriter` and names it in `TYPEWRITER_CGROUP` for the steps after it.
+      - if: env.GAME_SUITE
+        run: devenv --profile e2e shell -- cargo xtask cgroup delegate
+      # The game suites' demo reruns follow the lines the change added since the same base the
       # checks compare with.
-      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }} --base "$BASE_SHA"
+      - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite.suite }} --base "$BASE_SHA"
         env:
-          # The game suite fetches approved golden images from the evidence branch through gh.
-          GH_TOKEN: ${{ github.token }}
-          # This runner is the pinned one: a golden frame from any other renderer fails instead of
-          # passing unchecked, so a runner that drifts from the pin cannot let every golden through.
-          PLAYTEST_PINNED_RUNNER: ${{ matrix.suite == 'game' && '1' || '' }}
+          # A game run here fails where no cgroup holds each part to its memory limit, instead of
+          # passing on a runner that happens to have room.
+          PLAYTEST_ENFORCE_MEMORY: ${{ env.GAME_SUITE }}
+      # Evidence after the verdict, never part of it: the demo run never gates.
+      - if: always() && env.GAME_SUITE
+        run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite.suite }} --demos --base "$BASE_SHA"
+        env:
+          PLAYTEST_ENFORCE_MEMORY: ${{ env.GAME_SUITE }}
       # Artifacts of this public repository are downloadable, so only the staged public folder
       # is uploaded.
       - if: always()
@@ -169,7 +172,7 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: results-e2e-${{ matrix.suite }}
+          name: results-e2e-${{ matrix.suite.suite }}
           path: .xtask/public/
           if-no-files-found: ignore
       # Last, and whatever happened before: a failed or timed out job still keeps its Gradle caches.
@@ -192,6 +195,9 @@ jobs:
       contents: write
       pull-requests: write
       security-events: write
+    # A change that affects no end to end suite skips the e2e job; that is not a failed job.
+    env:
+      SUITES: ${{ needs.plan.outputs.suites == '[]' && 'skipped' || 'success' }}
     steps:
       # One commit: the report fetches the history down to the merge base with BASE_SHA itself, and
       # publishing the evidence reads only the run's results and the pull request.
@@ -208,14 +214,15 @@ jobs:
           sarif_file: .xtask/review/review.sarif
           category: typewriter
       - if: github.event.pull_request.head.repo.full_name == github.repository
-        run: devenv shell -- cargo xtask evidence publish --pr ${{ github.event.number }} --sha "$HEAD_SHA" ${{ (needs.check.result != 'success' || needs.e2e.result != 'success') && '--jobs-failed' || '' }}
+        run: devenv shell -- cargo xtask evidence publish --pr ${{ github.event.number }} --sha "$HEAD_SHA" ${{ (needs.check.result != 'success' || needs.e2e.result != env.SUITES) && '--jobs-failed' || '' }}
         env:
           GH_TOKEN: ${{ github.token }}
       # Fork pull requests, pushes and dispatched runs, which have no description to write.
       - if: github.event.pull_request.head.repo.full_name != github.repository
-        run: devenv shell -- cargo xtask evidence summary --sha "$HEAD_SHA" ${{ (needs.check.result != 'success' || needs.e2e.result != 'success') && '--jobs-failed' || '' }} >> "$GITHUB_STEP_SUMMARY"
+        run: devenv shell -- cargo xtask evidence summary --sha "$HEAD_SHA" ${{ (needs.check.result != 'success' || needs.e2e.result != env.SUITES) && '--jobs-failed' || '' }} >> "$GITHUB_STEP_SUMMARY"
 
-  # Skipped jobs pass only when the plan found nothing to check, or for the commits, on a push.
+  # Skipped jobs pass only when the plan found nothing to check or no suite to run, or for the
+  # commits, on a push.
   gate:
     needs: [plan, check, commits, e2e, report]
     if: always()
@@ -225,10 +232,11 @@ jobs:
           PLAN: ${{ needs.plan.result }}
           COMMITS: ${{ needs.commits.result }}
           COMMITS_EXPECTED: ${{ github.event_name == 'push' && 'skipped' || 'success' }}
-          SUITES: ${{ needs.plan.outputs.areas == '[]' && 'skipped' || 'success' }}
+          AREAS: ${{ needs.plan.outputs.areas == '[]' && 'skipped' || 'success' }}
+          SUITES: ${{ needs.plan.outputs.suites == '[]' && 'skipped' || 'success' }}
           CHECK: ${{ needs.check.result }}
           E2E: ${{ needs.e2e.result }}
           REPORT: ${{ needs.report.result }}
         run: >-
           test "$PLAN" = success && test "$COMMITS" = "$COMMITS_EXPECTED"
-          && test "$CHECK" = "$SUITES" && test "$E2E" = "$SUITES" && test "$REPORT" = "$SUITES"
+          && test "$CHECK" = "$AREAS" && test "$E2E" = "$SUITES" && test "$REPORT" = "$AREAS"

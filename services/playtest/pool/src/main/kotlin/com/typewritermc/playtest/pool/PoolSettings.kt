@@ -31,6 +31,10 @@ internal class PoolSettings(
     val coveredPackages: List<String> = listOf("com.typewritermc"),
     /** What the build's game modules add to every Paper. */
     val paperAdditions: PaperAdditions = PaperAdditions(listOf()),
+    /** The cgroup the run's tree gives the game, where each part runs in a leaf of its own; null where there is none. */
+    val cgroup: Path? = null,
+    /** The memory the pool's parts may take together: the game cgroup's limit, or half the machine. */
+    val memoryBudget: MemoryBudget = cgroup?.let { PartLeaves(it).budget() } ?: MemoryBudget.halfTheMachine(),
 ) {
     /** Where the ahead of time caches for the restart Papers' boots stay across runs. */
     val aotDir: Path get() = poolDir.resolve("aot")
@@ -52,7 +56,7 @@ internal class PoolSettings(
                 coverageAgentJar = path("playtest.coverageAgent"),
                 pluginJar = path("playtest.plugin"),
                 clientLaunch = path("playtest.clientLaunch"),
-                clients = System.getProperty("playtest.clients", "4").toInt(),
+                clients = System.getProperty("playtest.clients", "3").toInt(),
                 coveredPackages = required("playtest.coveredPackages").split(",").filter(String::isNotEmpty),
                 paperAdditions =
                     PaperAdditions(
@@ -62,6 +66,7 @@ internal class PoolSettings(
                             .filter(String::isNotEmpty)
                             .map(Path::of),
                     ),
+                cgroup = System.getProperty("playtest.cgroup")?.takeIf(String::isNotEmpty)?.let(Path::of),
             )
 
         private fun path(name: String): Path = Path.of(required(name))

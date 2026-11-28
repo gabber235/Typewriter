@@ -4,6 +4,7 @@
 
 mod branch;
 mod cargo_build;
+mod cgroup;
 mod cluster;
 mod components;
 mod database;
@@ -15,7 +16,6 @@ mod e2e;
 mod evidence;
 mod generate;
 mod gitops;
-mod goldens;
 mod graph;
 mod heavy;
 mod hooks;
@@ -43,6 +43,14 @@ use skir_client;
 use crate::deploy::Cluster;
 use crate::graph::Area;
 
+/// What `cargo xtask cgroup` does.
+#[derive(clap::Subcommand)]
+enum CgroupCommand {
+    /// Remounts cgroup2 read write with sudo, moves the job's processes into a leaf, hands
+    /// `/sys/fs/cgroup/typewriter` to this user and names it in `TYPEWRITER_CGROUP` (Linux CI).
+    Delegate,
+}
+
 #[derive(Parser)]
 #[command(name = "xtask", about = "The Typewriter harness")]
 enum Cli {
@@ -52,6 +60,10 @@ enum Cli {
         /// Prints the areas with their time budgets as JSON (the CI matrix).
         #[arg(long, conflicts_with = "print")]
         list: bool,
+        /// With `--list`, prints the end to end suites instead of the areas, as JSON (the CI
+        /// matrix of the end to end jobs).
+        #[arg(long, requires = "list")]
+        suites: bool,
         /// Prints each step's command instead of running it.
         #[arg(long)]
         print: bool,
@@ -64,14 +76,14 @@ enum Cli {
     Components(components::ComponentTestArgs),
     /// Builds and pushes components and the database image, then restarts workloads.
     Deploy { cluster: Cluster },
+    /// Delegates a cgroup to this user for the game runs' memory per part (CI's game job).
+    #[command(subcommand)]
+    Cgroup(CgroupCommand),
     /// Creates the throwaway CI cluster the full tier deploys to.
     #[command(subcommand)]
     Cluster(cluster::ClusterCommand),
     /// Regenerates the generated sources (Git ignores them) whose inputs changed.
     Generate,
-    /// Approves the golden frames a game run captured.
-    #[command(subcommand)]
-    Goldens(goldens::GoldensCommand),
     /// Runs an end to end suite against this worktree's stack and writes its `TestRun`.
     E2e(e2e::E2eArgs),
     /// Runs a command with this worktree's stack up, or removes stacks left behind.
@@ -110,11 +122,21 @@ fn main() -> ExitCode {
         Cli::Check {
             area,
             list,
+            suites,
             print,
             base,
         } => {
             let steps = graph::select(area);
-            if list {
+            if suites {
+                match base {
+                    Some(base) => review::changed_paths(&context, &base)
+                        .map(|paths| graph::list_suites(&graph::affected_suites(&paths))),
+                    None => {
+                        graph::list_suites(&graph::suites());
+                        Ok(())
+                    }
+                }
+            } else if list {
                 match base {
                     Some(base) => review::changed_paths(&context, &base)
                         .map(|paths| graph::list(&graph::affected(steps, &paths))),
@@ -136,13 +158,13 @@ fn main() -> ExitCode {
         Cli::Cluster(command) => cluster::command(&context, command),
         Cli::Generate => generate::generate(&context, None),
         Cli::E2e(args) => e2e::run(&context, &args),
+        Cli::Cgroup(CgroupCommand::Delegate) => cgroup::delegate(),
         Cli::Stack(command) => stack::command(&context, command),
         Cli::Doctor => doctor::doctor(&context),
         Cli::Secrets(command) => secrets::command(&context, command),
         Cli::Review(args) => review::run(&context, args),
         Cli::Evidence(command) => evidence::run(&context, command),
         Cli::Docs(command) => docs::run(&context, command),
-        Cli::Goldens(command) => goldens::run(&context, &command),
         Cli::Hook(command) => hooks::run(&context, command),
         // The command's own exit code passes through.
         Cli::Heavy { command } => return heavy::run(&command).map_or_else(failed, ExitCode::from),

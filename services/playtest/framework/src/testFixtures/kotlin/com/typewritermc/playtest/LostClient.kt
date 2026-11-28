@@ -36,7 +36,7 @@ fun TestSuiteScope.clientLostAlongside(
             "${player.name} did not see chat \"Goodbye\" within 20 ticks (ticks ${hello.tick + 1} to ${hello.tick + 20})"
         within(10.ticks) { player sees chat("Hello") }
     },
-    afterwardPlayers = 4,
+    afterwardPlayers = Players.wholePool,
     afterward = {
         probe.chat(players, "Fresh")
 

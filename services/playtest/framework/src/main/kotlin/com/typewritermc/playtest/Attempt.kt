@@ -11,10 +11,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.selects.select
-import skirout.harness.v1.golden.Renderer
 import skirout.harness.v1.test_run.Artifact
 import skirout.harness.v1.test_run.ArtifactKind
 import skirout.harness.v1.test_run.Step
+import skirout.harness.v1.test_run.WindowEnd
 import skirout.harness.v1.wire.Answer
 import skirout.harness.v1.wire.InputStep
 import skirout.harness.v1.wire.Message
@@ -31,9 +31,6 @@ import java.nio.file.Path
  * the framework's own tests answer without one.
  */
 internal interface AttemptPool {
-    /** This project's goldens and the local golden images. */
-    val goldens: Goldens
-
     fun send(message: Message)
 
     fun nextBarrier(): Int
@@ -65,11 +62,11 @@ internal interface AttemptPool {
     /** [player]'s client joins its Paper again; returns, once it holds what Paper sends it, the tick after which it is back. */
     suspend fun rejoin(player: GamePlayer): Int
 
-    /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]; returns the renderer that drew it. */
+    /** [player]'s client draws the frame it holds now and writes it as a PNG to [png]. */
     suspend fun capture(
         player: GamePlayer,
         png: Path,
-    ): Renderer
+    )
 
     /** [player]'s client records a clip from the next tick on and writes it as an mp4 to [mp4]. */
     suspend fun startClip(
@@ -137,6 +134,23 @@ internal class Attempt(
     /** What the body did so far, in order, each with its wall clock start and duration. */
     val steps: List<Step> get() = taken
 
+    private val ended = mutableListOf<WindowEnd>()
+
+    /** Every window the body waited in so far, in order, each with the tick it held at. */
+    val windows: List<WindowEnd> get() = ended
+
+    /** A window of the body ended as [end] says. */
+    fun windowEnded(end: WindowEnd) {
+        ended += end
+    }
+
+    /**
+     * Whether the body met work reported hung or a lost client or Paper: neither holds back a tick, so
+     * from then on the tick a window holds at measures wall clock.
+     */
+    val metWallClock: Boolean
+        get() = received.any { it is Event.Failed && (it.failure is WorkHung || it.failure is ClientLost || it.failure is PaperLost) }
+
     /** The requirement's own frame that last called into the attempt, while it was still on the stack. */
     private var calledFrom: StackTraceElement? = null
 
@@ -156,8 +170,9 @@ internal class Attempt(
     }
 
     /**
-     * Whether the body made a positive check: a window whose checks held, a golden compare that matched,
-     * a state check of the test kit, or an outcome the framework observed and threw into it ([observed]).
+     * Whether the body made a positive check: a window whose checks held, a state check of the test kit,
+     * or an outcome the framework observed and threw into it ([observed]). A captured frame is evidence for
+     * review and never a check.
      */
     var proved = false
 
@@ -341,57 +356,20 @@ internal class Attempt(
     lateinit var evidence: Evidence
 
     /**
-     * [player]'s frame, as the client holds it now, is the golden [name]: the frame and what an approve
-     * needs go into the attempt's evidence, and on the pinned renderer it is compared with the approved
-     * golden; another renderer notes it as not checked. A frame that differs, or has no golden there,
-     * fails the attempt. Only a compare that matched is a positive check.
+     * [player]'s frame, as the client holds it now, kept in the attempt's evidence as `<name>.png` for a
+     * reviewer to see. It decides nothing.
      */
-    suspend fun golden(
+    suspend fun capture(
         player: GamePlayer,
         name: String,
     ) {
         val at = System.currentTimeMillis()
-        val (png, frame, renderer) = capture(player, name)
-        val goldens = session.goldens
-        goldens.writeCandidate(evidence.file("$name.golden"), name, png.fileName.toString(), frame, renderer)
-        evidence.artifacts += Artifact(kind = ArtifactKind.GOLDEN, path = "$name.golden")
-        val golden = goldens.golden(name)
-        val says = "golden $name of ${player.name}"
-        when (val verdict = judge(golden, golden?.let(goldens::image), frame, renderer, goldens.pinned)) {
-            GoldenVerdict.Matches -> {
-                proved = true
-                took(at, "$says matches")
-            }
-
-            is GoldenVerdict.NotChecked -> {
-                took(at, "$says not checked: ${verdict.reason}")
-            }
-
-            is GoldenVerdict.Differs -> {
-                val diff = verdict.diff?.let { marked -> evidence.file("$name.diff.png").also(marked::writePng) }
-                diff?.let { evidence.artifacts += Artifact(kind = ArtifactKind.SCREENSHOT, path = it.fileName.toString()) }
-                took(at, "$says fails: ${verdict.reason}")
-                throw GoldenDiffers(
-                    "${player.name}'s frame fails golden $name: ${verdict.reason}. The frame is $png" +
-                        (diff?.let { ", its diff $it" } ?: "") +
-                        "; when the change is meant, `cargo xtask goldens approve --pr <n>` makes the pull request's CI " +
-                        "frame the golden (`cargo xtask goldens approve` takes this machine's last run on the pinned renderer).",
-                )
-            }
-        }
-    }
-
-    /** [player]'s frame, as the client holds it now, kept in the attempt's evidence as `<name>.png`. */
-    suspend fun capture(
-        player: GamePlayer,
-        name: String,
-    ): Captured {
         called()
         onPaper(player, "its frame is captured")
         val png = evidence.file("$name.png")
-        val renderer = unlessLost { session.capture(player, png) }
+        unlessLost { session.capture(player, png) }
         evidence.artifacts += Artifact(kind = ArtifactKind.SCREENSHOT, path = png.fileName.toString())
-        return Captured(png, Frame.readPng(png), renderer)
+        took(at, "frame $name of ${player.name} captured")
     }
 
     private val clips = linkedMapOf<GamePlayer, String>()
@@ -439,13 +417,6 @@ internal class Attempt(
         clips.clear()
         return failed
     }
-
-    /** A frame a client drew: its PNG in the evidence, its pixels, and the renderer that drew it. */
-    data class Captured(
-        val png: Path,
-        val frame: Frame,
-        val renderer: Renderer,
-    )
 
     /** The answer of [call], unless a client or the Paper of the attempt is lost first: neither answers then. */
     private suspend fun <T> unlessLost(call: suspend () -> T): T =

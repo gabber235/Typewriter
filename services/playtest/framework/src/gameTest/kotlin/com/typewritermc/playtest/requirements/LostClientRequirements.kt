@@ -12,7 +12,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
-import skirout.harness.v1.wire.ClientLossKind
+import skirout.harness.v1.test_run.LossCause
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
@@ -26,7 +26,7 @@ val LostClientRequirements by testSuite(compartment = { GameCompartment }) {
         val lost = shouldThrow<ClientLost> { within(10.ticks) { player sees chat("Goodbye") } }
 
         // The crash shows first as the process's exit, the pool connection closing or Paper seeing the player leave.
-        lost.kind shouldBeIn listOf(ClientLossKind.EXITED, ClientLossKind.LEFT_POOL, ClientLossKind.LEFT_PAPER)
+        lost.loss.kind shouldBeIn listOf(LossCause.Kind.EXITED_WRAPPER, LossCause.Kind.LEFT_WRAPPER, LossCause.Kind.LEFT_PAPER_WRAPPER)
     }
 
     clientLostAlongside(
@@ -40,6 +40,6 @@ val LostClientRequirements by testSuite(compartment = { GameCompartment }) {
         // Paper's acks find the client stalled after 5 s without an ack and the pool replaces it; 15 s leaves
         // room for a loaded machine.
         frozenAt.elapsedNow() shouldBeLessThan 15.seconds
-        lost.kind shouldBe ClientLossKind.STALLED
+        lost.loss shouldBe LossCause.STALLED
     }
 }

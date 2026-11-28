@@ -1,8 +1,5 @@
 package com.typewritermc.playtest
 
-import build.skir.JsonFlavor
-import skirout.harness.v1.golden.Golden
-import skirout.harness.v1.golden.Renderer
 import skirout.harness.v1.wire.Answer
 import skirout.harness.v1.wire.InputStep
 import skirout.harness.v1.wire.Message
@@ -18,10 +15,9 @@ import java.util.UUID
  * A game standing in for the pool behind one [attempt] of one [player], so a body runs as a pool
  * session runs it, without a pool. Every probe and input runs between ticks, after the last one that
  * ran; a window's ticks run at once, and at the end of each the player perceives [shows]. A query finds
- * the player carrying [marks], and a capture draws [frame] with [renderer]. A quit runs between ticks
+ * the player carrying [marks], and a capture writes a stand in frame. A quit runs between ticks
  * too; a rejoin lets 5 ticks run first, as a client takes ticks to join, and is back after
- * [rejoinedAfter]. Its goldens, exact for [PINNED], and the attempt's evidence live in a folder of their
- * own. With [restartsPaper] the attempt may ask for a restart, which a stand in game never runs.
+ * [rejoinedAfter]. The attempt's evidence lives in a folder of its own. With [restartsPaper] the attempt may ask for a restart, which a stand in game never runs.
  */
 internal class StandInGame(
     restartsPaper: Boolean = false,
@@ -39,10 +35,6 @@ internal class StandInGame(
 
     var marks: List<StateKind> = listOf()
 
-    var frame = Frame(1, 1, intArrayOf(0x7F7F7F))
-
-    var renderer: Renderer = PINNED
-
     /** Whether a window asked Paper to step. */
     var stepped = false
         private set
@@ -51,19 +43,9 @@ internal class StandInGame(
     var rejoinedAfter = -1
         private set
 
-    override val goldens = Goldens(folder, "goldens", folder.resolve("images"), PinnedRenderer(mesa = "26.2.5"))
-
     val attempt =
         Attempt(this, SubmissionId(1), listOf(player), Region(x = 0, z = 0), "paper-1", RequirementCode.of(this), restartsPaper)
             .also { it.evidence = Evidence(folder, "stand-in", "attempt-1") }
-
-    /** [frame], as [renderer] draws it now, is the approved golden [name]. */
-    fun approve(name: String) {
-        val file = folder.resolve(goldens.file(name))
-        Files.createDirectories(file.parent)
-        val golden = Golden(sha256 = frame.sha256, width = frame.width, height = frame.height, renderer = renderer)
-        Files.writeString(file, Golden.serializer.toJsonCode(golden, JsonFlavor.READABLE))
-    }
 
     override fun send(message: Message) {
         val step = (message as? Message.StepUntilWrapper)?.value ?: return
@@ -102,7 +84,10 @@ internal class StandInGame(
     override suspend fun capture(
         player: GamePlayer,
         png: Path,
-    ): Renderer = renderer.also { frame.writePng(png) }
+    ) {
+        Files.createDirectories(png.parent)
+        Files.write(png, STAND_IN_FRAME)
+    }
 
     override suspend fun startClip(
         player: GamePlayer,
@@ -116,14 +101,7 @@ internal class StandInGame(
         /** The ticks a stand in client takes to join its Paper again. */
         private const val REJOIN_TICKS = 5
 
-        /** The renderer the stand in game's goldens are exact for. */
-        val PINNED =
-            Renderer(
-                backend = "Vulkan",
-                device = "llvmpipe (LLVM 20.1.2, 256 bits)",
-                driver = "1.4.318 llvmpipe Mesa 26.2.5 (LLVM 20.1.2)",
-                os = "Linux",
-                arch = "amd64",
-            )
+        /** What a stand in capture writes: the bytes stand for a PNG, which nothing reads back. */
+        private val STAND_IN_FRAME = "a stand in frame".toByteArray()
     }
 }

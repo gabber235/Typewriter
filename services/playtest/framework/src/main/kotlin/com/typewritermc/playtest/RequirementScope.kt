@@ -1,6 +1,7 @@
 package com.typewritermc.playtest
 
 import com.typewritermc.playtest.wire.variantName
+import skirout.harness.v1.test_run.WindowEnd
 import skirout.harness.v1.wire.InputStep
 import skirout.harness.v1.wire.KeyboardKey
 import skirout.harness.v1.wire.Message
@@ -133,13 +134,11 @@ class RequirementScope internal constructor(
     suspend fun GamePlayer.rejoin(): Mark = attempt.rejoin(this).also { anchor = it }
 
     /**
-     * The frame the player's client holds now is the golden [name], to the pixel. It is compared only
-     * on the pinned renderer, where a frame that differs, a golden never approved, or one another
-     * renderer drew fails; any other machine notes it as not checked. Ask once a window let the scene
-     * settle, of a scene where nothing moves from tick to tick. `cargo xtask goldens approve --pr <n>` approves the frames a
-     * pull request's CI run drew on the pinned renderer; without `--pr`, the last local run's.
+     * The frame the player's client holds now, kept in the attempt's evidence as `<name>.png` and shown
+     * in the pull request for a reviewer to look at. It decides nothing, so a body that captures still
+     * needs a positive check.
      */
-    suspend fun GamePlayer.looksLike(name: String) = attempt.golden(this, name)
+    suspend fun GamePlayer.capture(name: String) = attempt.capture(this, name)
 
     private suspend fun GamePlayer.input(
         says: String,
@@ -203,6 +202,14 @@ class RequirementScope internal constructor(
             if (verdict == Window.Verdict.Open) verdict = rules.stepUntilDecided(stepping)
         } finally {
             attempt.took(opened, says(window, verdict, mark, ranBefore, declared))
+            attempt.windowEnded(
+                WindowEnd(
+                    at = at.orEmpty(),
+                    length = window.count,
+                    heldAt = (verdict as? Window.Verdict.Passed)?.let { it.tick - mark.tick },
+                    afterWallClock = attempt.metWallClock,
+                ),
+            )
         }
         val missed = verdict as? Window.Verdict.Missed ?: return run { attempt.proved = true }
         throw attempt.observed(WindowMissed(missed.report, at))

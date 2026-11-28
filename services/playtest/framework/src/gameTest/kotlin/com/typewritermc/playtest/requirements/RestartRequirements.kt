@@ -13,7 +13,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import skirout.harness.v1.test_run.Demonstrates
-import skirout.harness.v1.wire.PaperLossKind
+import skirout.harness.v1.test_run.LossCause
 import kotlin.io.path.readText
 
 val RestartRequirements by testSuite(compartment = { GameCompartment }) {
@@ -45,7 +45,8 @@ val RestartRequirements by testSuite(compartment = { GameCompartment }) {
 
         restartPaper()
 
-        within(20.ticks) {
+        // A client back from a restart holds what the new Paper sent it, so the first tick shows it.
+        within(1.ticks) {
             player sees held("stick")
             player.never sees offhand("diamond")
         }
@@ -59,7 +60,8 @@ val RestartRequirements by testSuite(compartment = { GameCompartment }) {
     ) {
         val lost = shouldThrow<PaperLost> { killPaperWhileItBoots { restartPaper() } }
 
-        lost.kind shouldBe PaperLossKind.EXITED_WHILE_BOOTING
+        lost.loss.kind shouldBe LossCause.Kind.EXITED_WRAPPER
+        lost.report shouldContain "while it booted"
         lost.log.parent shouldBe runLogs
         lost.log.readText() shouldContain "Starting minecraft server"
     }

@@ -73,15 +73,21 @@ pub struct E2eArgs {
     /// Attempts per selected scenario, instead of one attempt plus a rerun of failures.
     #[arg(long, default_value_t = NonZeroU32::MIN)]
     repeat: NonZeroU32,
-    /// The commit the change starts from, whose added lines pick the game suite's demo reruns;
-    /// by default the pull request's base or the nearest branch the head descends from. CI names
-    /// it, as its checkout of a pull request is a detached merge commit `gh` cannot place.
+    /// The commit the change starts from, whose added lines pick the game requirements that run
+    /// again at other paces and in the demo run; by default the pull request's base or the nearest
+    /// branch the head descends from. CI names it, as its checkout of a pull request is a detached
+    /// merge commit `gh` cannot place.
     #[arg(long)]
     pub(crate) base: Option<String>,
-    /// How many Minecraft clients the game suite's pool runs (4 by default); fewer fit a busy
+    /// How many Minecraft clients the game suite's pool runs (3 by default); fewer fit a busy
     /// machine.
     #[arg(long)]
     pub(crate) clients: Option<NonZeroU32>,
+    /// A game suite's demo run, after its verdict run: reruns once, with clips, each requirement
+    /// the verdict run's file shows failed, flaky, quarantined or touched by the change. It writes
+    /// a run file of its own and never gates.
+    #[arg(long)]
+    pub(crate) demos: bool,
 }
 
 impl E2eArgs {
@@ -104,12 +110,32 @@ pub enum Suite {
     /// A fresh CI cluster with this commit's backend deployed, and the panel web scenarios
     /// against its real Authentik, operator mode NATS and runtime operator.
     Full,
-    /// The game requirements (`gameTest` source sets) against real Minecraft clients on a
-    /// stepped Paper, which the game pool boots on this machine.
+    /// The product's game requirements (`gameTest` source sets outside `services/playtest`)
+    /// against real Minecraft clients on a stepped Paper, which the game pool boots on this
+    /// machine inside the stack.
     Game,
+    /// The framework's own game requirements (`gameTest` source sets in `services/playtest`), on
+    /// the same pool without the stack.
+    Playtest,
 }
 
 impl Suite {
+    /// Its name on the command line, `cargo xtask e2e <name>`.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Panel => "panel",
+            Self::PanelWeb => "panel-web",
+            Self::Full => "full",
+            Self::Game => "game",
+            Self::Playtest => "playtest",
+        }
+    }
+
+    /// Whether it runs real game clients against Paper.
+    pub fn runs_game(self) -> bool {
+        matches!(self, Self::Game | Self::Playtest)
+    }
+
     /// The whole run of one attempt once the stack is up: the app build, the scenarios and
     /// one rerun.
     fn budget(self) -> Duration {
@@ -143,11 +169,17 @@ impl Device {
 
 /// Runs the selected cases of the suite and reports them.
 pub fn run(ctx: &Context, args: &E2eArgs) -> Result<()> {
+    if args.demos && !matches!(args.suite, Suite::Game | Suite::Playtest) {
+        bail!(
+            "--demos reruns a game suite's requirements; a panel suite records every scenario already"
+        );
+    }
     match args.suite {
         Suite::Panel => scenarios::<WorktreeStack>(ctx, args, Device::Desktop),
         Suite::PanelWeb => scenarios::<WorktreeStack>(ctx, args, Device::Chrome),
         Suite::Full => scenarios::<CiCluster>(ctx, args, Device::Chrome),
-        Suite::Game => game::run(ctx, args),
+        Suite::Game => game::run(ctx, args, game::GameSuite::Game),
+        Suite::Playtest => game::run(ctx, args, game::GameSuite::Playtest),
     }
 }
 
@@ -275,7 +307,7 @@ fn scenarios<T: Target>(ctx: &Context, args: &E2eArgs, device: Device) -> Result
     let budget = args.suite.budget() * args.repeat.get();
     let keep = ctx.root.join(STACK_EVIDENCE).join(&name);
     let (mut run, stack) =
-        stack::run_keeping_evidence(ctx, &target.spec(), budget, &keep, |stack| {
+        stack::run_keeping_evidence(ctx, &target.spec(), budget, &keep, None, |stack| {
             let _lock = lock()?;
             results::attempts(args.policy(), &args.only, &quarantine, |n, ids| {
                 attempt::<T>(&evidence, n, ids, |drive, out, ids| {
@@ -694,11 +726,24 @@ fn desktop_device() -> Result<&'static str> {
 
 #[cfg(test)]
 mod tests {
+    use clap::ValueEnum as _;
+
     use super::*;
     use crate::test_support::{
         Drove, drive_attempts, drove, e2e_args as parsed, exited, failed, refusal, report_text,
         requirement_run, run,
     };
+
+    #[test]
+    fn each_suite_s_name_is_the_one_its_command_line_takes() {
+        for suite in Suite::value_variants() {
+            assert!(
+                Suite::from_str(suite.name(), false).is_ok_and(|parsed| parsed == *suite),
+                "{}",
+                suite.name()
+            );
+        }
+    }
 
     #[test]
     fn a_stopped_suite_keeps_what_every_drive_left() {

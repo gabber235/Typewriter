@@ -5,7 +5,7 @@ import java.nio.file.Path
 
 /**
  * Where one attempt of a case keeps the frames and clips it writes: the folder `<case>/<attempt>`
- * beside the run file, named after the case's test id and the attempt (`attempt-2`, or `demo`), so the
+ * beside the run file, named after the case's test id and the attempt (`attempt-2`, `paced-50ms`, or `demo`), so the
  * run file and its evidence travel together.
  */
 internal class Evidence(
@@ -18,7 +18,7 @@ internal class Evidence(
 
     private val dir = runFolder.resolve(folder)
 
-    /** The frames, golden candidates and clips written so far, relative to [folder]. */
+    /** The frames and clips written so far, relative to [folder]. */
     val artifacts = mutableListOf<Artifact>()
 
     /** The file [name] in the attempt's folder. */

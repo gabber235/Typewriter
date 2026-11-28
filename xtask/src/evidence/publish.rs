@@ -19,7 +19,7 @@ use crate::results::{self, Quarantine, TestRun, Verdict as CaseVerdict, runner_n
 use crate::review::verdict::{
     COMMIT as VERDICT_COMMIT, END as VERDICT_END, START as VERDICT_START, covers,
 };
-use crate::skirout::base::harness::v1::test_run::{ArtifactKind, Demonstrates, TestCase};
+use crate::skirout::base::harness::v1::test_run::{ArtifactKind, Demonstrates, PartKind, TestCase};
 use crate::{CommandExt, Context};
 
 const START: &str = "<!-- evidence:start -->";
@@ -270,6 +270,7 @@ fn render_section(section: &Section) -> String {
     render_review(&mut out, section);
     render_recordings(&mut out, section);
     render_coverage(&mut out, &section.report.coverage);
+    render_memory(&mut out, section.runs);
     render_test_changes(&mut out, section);
     render_change_map(&mut out, section);
     out
@@ -286,10 +287,8 @@ fn troubled<'a>(section: &'a Section) -> Vec<(&'a TestRun, &'a TestCase, CaseVer
 /// Each run that could not run or was cut short, with why, so cases it never reached do not pass
 /// for proven.
 fn stopped_runs(section: &Section) -> Vec<(&'static str, String)> {
-    section
-        .runs
-        .iter()
-        .filter_map(|(_, run)| {
+    verdict_runs(section.runs)
+        .filter_map(|run| {
             results::run_trouble(run).map(|trouble| (runner_name(&run.runner), trouble))
         })
         .collect()
@@ -426,7 +425,7 @@ fn render_recordings(out: &mut String, section: &Section) {
         .collect();
     // A step's own run, one test each, counts under one name with its siblings.
     let mut per_runner: Vec<(String, usize, usize)> = Vec::new();
-    for (_, run) in section.runs {
+    for run in verdict_runs(section.runs) {
         let name = runner_name(&run.runner);
         let passed = run
             .cases
@@ -554,9 +553,109 @@ fn render_coverage(out: &mut String, coverage: &Coverage) {
     let _ = writeln!(out, "\n</details>");
 }
 
+/// The most memory each part of each run took beside the limit its kind is held to, and the most the
+/// limits of the parts that ran at once took beside the run's memory budget. The kernel enforces each
+/// limit where the run delegates cgroups; this table only reports the peaks that recalibrate them.
+fn render_memory(out: &mut String, runs: &[(PathBuf, TestRun)]) {
+    let measured: Vec<&TestRun> = runs
+        .iter()
+        .map(|(_, run)| run)
+        .filter(|run| !run.parts.is_empty())
+        .collect();
+    if measured.is_empty() {
+        return;
+    }
+    let _ = writeln!(out, "\n<details><summary>Memory per part</summary>");
+    for run in measured {
+        let budget = run.memory_budget.as_ref().map_or_else(
+            || "no budget recorded".to_owned(),
+            |budget| {
+                let fit = if budget.planned_at_once_bytes > budget.bytes {
+                    "over the budget"
+                } else {
+                    "within the budget"
+                };
+                format!(
+                    "budget {} ({}); the planned limits of the parts that ran at once took up to {}, {fit}",
+                    mib(budget.bytes),
+                    budget.source,
+                    mib(budget.planned_at_once_bytes)
+                )
+            },
+        );
+        let _ = writeln!(
+            out,
+            "\n{} run: {budget}\n\n| Part | Kind | Planned limit | Peak |\n|---|---|---|---|",
+            runner_name(&run.runner)
+        );
+        for part in &run.parts {
+            let planned = part.limit_bytes > 0;
+            let limit = if planned {
+                mib(part.limit_bytes)
+            } else {
+                "none".to_owned()
+            };
+            let peak = match part.peak_bytes {
+                Some(peak) if planned && peak > part.limit_bytes => {
+                    format!("{}, over the limit", mib(peak))
+                }
+                Some(peak) => mib(peak),
+                None => "not measured".to_owned(),
+            };
+            let _ = writeln!(
+                out,
+                "| {} | {} | {limit} | {peak} |",
+                cell(&part.name),
+                part_kind(&part.kind)
+            );
+        }
+    }
+    let _ = writeln!(out, "\n</details>");
+}
+
+/// `bytes` in whole MiB.
+fn mib(bytes: i64) -> String {
+    format!("{} MiB", bytes / (1024 * 1024))
+}
+
+/// How the memory table names a part of `kind`.
+fn part_kind(kind: &PartKind) -> &'static str {
+    match kind {
+        PartKind::SharedPaper => "shared Paper",
+        PartKind::OwnPaper => "own Paper",
+        PartKind::Client => "client",
+        PartKind::Display => "display",
+        PartKind::Pool => "pool",
+        PartKind::StackService => "stack service",
+        PartKind::Gradle => "Gradle",
+        _ => "part",
+    }
+}
+
+/// The cases of every run of `runs` that judges them; a demo run's only record evidence.
 fn cases(runs: &[(PathBuf, TestRun)]) -> impl Iterator<Item = (&TestRun, &TestCase)> {
+    verdict_runs(runs).flat_map(|run| run.cases.iter().map(move |case| (run, case)))
+}
+
+/// The runs of `runs` whose cases are verdicts: every run but those that only record evidence.
+fn verdict_runs(runs: &[(PathBuf, TestRun)]) -> impl Iterator<Item = &TestRun> {
     runs.iter()
-        .flat_map(|(_, run)| run.cases.iter().map(move |case| (run, case)))
+        .map(|(_, run)| run)
+        .filter(|run| !run.evidence_only)
+}
+
+/// The cases evidence only runs of `runs` recorded of `case` of `run`, such as its demo.
+fn evidence_of<'a>(
+    runs: &'a [(PathBuf, TestRun)],
+    run: &TestRun,
+    case: &TestCase,
+) -> impl Iterator<Item = &'a TestCase> {
+    let (runner, id) = (run.runner.clone(), case.id.clone());
+    runs.iter()
+        .map(|(_, run)| run)
+        .filter(move |evidence| evidence.evidence_only && evidence.runner == runner)
+        .flat_map(|evidence| evidence.cases.iter())
+        .filter(move |recorded| recorded.id == id)
 }
 
 fn kind(demonstrates: &Demonstrates) -> &'static str {
@@ -579,6 +678,8 @@ fn result(verdict: CaseVerdict) -> &'static str {
         CaseVerdict::Failed => "**broken**",
         CaseVerdict::Flaky => "**unreliable**",
         CaseVerdict::Quarantined => "**quarantined**",
+        CaseVerdict::Interrupted => "**interrupted**",
+        CaseVerdict::Unsteady => "**unsteady**",
     }
 }
 
@@ -587,7 +688,9 @@ fn result(verdict: CaseVerdict) -> &'static str {
 fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
     let runner = runner_name(&run.runner);
     let mut parts = Vec::new();
-    for (path, artifact) in results::artifacts(case) {
+    // A demo records with its own runner, so its files lie beside the verdict's.
+    let recorded = std::iter::once(case).chain(evidence_of(section.runs, run, case));
+    for (path, artifact) in recorded.flat_map(results::artifacts) {
         let Some(pr) = section.pr else {
             parts.push(format!(
                 "`{runner}/{}` in the run artifacts",
@@ -608,10 +711,7 @@ fn recording(section: &Section, run: &TestRun, case: &TestCase) -> String {
                 )
             }
             ArtifactKind::Screenshot => format!("![]({})", url(&path)),
-            ArtifactKind::Golden
-            | ArtifactKind::LogExcerpt
-            | ArtifactKind::Spans
-            | ArtifactKind::Unknown(_) => {
+            ArtifactKind::LogExcerpt | ArtifactKind::Spans | ArtifactKind::Unknown(_) => {
                 continue;
             }
         });
@@ -802,10 +902,10 @@ fn set_pull_body(ctx: &Context, pr: u64, body: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::results::{Outcome, RunEnd};
-    use crate::skirout::base::harness::v1::test_run::Runner;
+    use crate::results::{Outcome, Part, PartEnd, RunEnd};
+    use crate::skirout::base::harness::v1::test_run::{MemoryBudget, Runner};
     use crate::test_support::{
-        TempRoot, empty_change_report, failed, raw_failed_run, requirement_run,
+        TempRoot, empty_change_report, failed, part, raw_failed_run, requirement_run,
     };
 
     const SECRET: &str = "ghp_0123456789abcdefghij";
@@ -1010,6 +1110,87 @@ mod tests {
     }
 
     #[test]
+    fn each_part_s_peak_shows_beside_its_planned_limit_and_the_planned_limits_beside_the_budget() {
+        let mib = 1024 * 1024;
+        let mut run = requirement_run("a quest starts", "QUEST-1", Outcome::Passed);
+        run.runner = Runner::Game;
+        run.memory_budget = Some(MemoryBudget {
+            bytes: 15 * 1024 * mib,
+            source: "the game cgroup's memory.max".to_owned(),
+            planned_at_once_bytes: 16_800 * mib,
+            ..MemoryBudget::default()
+        });
+        let client = |name: &str, peak: Option<i64>| Part {
+            limit_bytes: 1946 * mib,
+            peak_bytes: peak,
+            ..part(
+                name,
+                PartKind::Client,
+                &format!("{name}.log"),
+                PartEnd::RanToEnd,
+            )
+        };
+        run.parts = vec![
+            client("client-a", Some(1200 * mib)),
+            client("client-d", Some(2100 * mib)),
+            client("client-e", None),
+            Part {
+                peak_bytes: Some(900 * mib),
+                ..part("gradle", PartKind::Gradle, "", PartEnd::RanToEnd)
+            },
+        ];
+        let runs = [(PathBuf::from("game"), run)];
+        let section = render_section(&Section {
+            sha: "1111111",
+            provenance: "Evidence from a measured run.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: None,
+            covered: false,
+            jobs_failed: false,
+        });
+
+        let memory = &section[section.find("Memory per part").expect(&section)..];
+        assert!(
+            memory.contains(
+                "game run: budget 15360 MiB (the game cgroup's memory.max); the planned limits of the parts that ran at once took up to 16800 MiB, over the budget"
+            ),
+            "{memory}"
+        );
+        for row in [
+            "| client-a | client | 1946 MiB | 1200 MiB |",
+            "| client-d | client | 1946 MiB | 2100 MiB, over the limit |",
+            "| client-e | client | 1946 MiB | not measured |",
+            "| gradle | Gradle | none | 900 MiB |",
+        ] {
+            assert!(memory.contains(row), "{row} missing from {memory}");
+        }
+    }
+
+    #[test]
+    fn a_run_without_parts_shows_no_memory_table() {
+        let runs = [(
+            PathBuf::from("panel"),
+            requirement_run("a user joins", "JOIN-1", Outcome::Passed),
+        )];
+        let section = render_section(&Section {
+            sha: "1111111",
+            provenance: "Evidence.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: None,
+            covered: false,
+            jobs_failed: false,
+        });
+
+        assert!(!section.contains("Memory per part"), "{section}");
+    }
+
+    #[test]
     fn a_broken_scenario_leads_with_not_ready_and_shows_above_every_fold() {
         let runs = [(
             PathBuf::from("panel"),
@@ -1031,6 +1212,45 @@ mod tests {
         let first_fold = section.find("<details>").unwrap();
         let message = section.find("the realm never appeared").unwrap();
         assert!(attention < message && message < first_fold);
+    }
+
+    #[test]
+    fn a_demo_run_is_never_a_verdict_and_its_clips_show_beside_the_case_it_demonstrates() {
+        let verdict = requirement_run("a toast shows", "TOAST-1", Outcome::Passed);
+        let mut demo = requirement_run(
+            "a toast shows",
+            "TOAST-1",
+            failed("the demo missed the toast"),
+        );
+        demo.evidence_only = true;
+        demo.end = RunEnd::CutShort;
+        demo.cases[0].attempts[0].folder = "TOAST-1/demo".to_owned();
+        demo.cases[0].attempts[0].artifacts = vec![results::Artifact {
+            kind: ArtifactKind::Clip,
+            path: "clips/gv-1.mp4".to_owned(),
+            _unrecognized: None,
+        }];
+        let runs = [
+            (PathBuf::from("game/test_run.json"), verdict),
+            (PathBuf::from("game-demos/test_run.json"), demo),
+        ];
+
+        let section = render_section(&Section {
+            sha: "1111111",
+            provenance: "Evidence from a run with a demo.",
+            pr: None,
+            runs: &runs,
+            quarantine: &Quarantine::default(),
+            report: &serde_json::from_value(empty_change_report()).unwrap(),
+            verdict: None,
+            covered: false,
+            jobs_failed: false,
+        });
+
+        assert!(section.contains("1 of 1 tests proven"), "{section}");
+        assert!(!section.contains("the demo missed the toast"), "{section}");
+        assert!(!section.contains("cut short"), "{section}");
+        assert!(section.contains("TOAST-1/demo/clips/gv-1.mp4"), "{section}");
     }
 
     #[test]
