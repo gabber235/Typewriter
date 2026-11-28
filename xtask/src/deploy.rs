@@ -1,16 +1,19 @@
 //! Publishes the backend to a cluster: every deployable component, the database image, then a
 //! restart so the runtime operator pulls the new images.
 
-use std::fs;
+use std::collections::BTreeMap;
+use std::fs::{self, File};
 use std::io::Write;
+use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 
 use anyhow::{Context as _, Result, bail, ensure};
 use clap::ValueEnum;
-use serde_json::Value;
 
+use crate::cargo_build::{CargoBuild, Invocation, Outcome, Packages, metadata};
 use crate::cluster::CiCluster;
+use crate::digest::Environment;
 use crate::lock::HeavyLock;
 use crate::{CommandExt, Context, Scratch, secrets};
 
@@ -75,11 +78,19 @@ impl Registry {
     }
 }
 
-/// A component the runtime deploys: a cdylib with a `deploy/` folder, the predicate the
-/// component catalog check uses.
+/// A backend component: a workspace member whose library is only a cdylib, a wasm component the
+/// runtime deploys or the component suite runs.
 pub(crate) struct Component {
     pub(crate) package: String,
+    /// Cargo's opaque id of its package, which the component suite's artifact manifest names.
+    pub(crate) package_id: String,
+    /// Its library target, which names its artifact.
+    pub(crate) target: String,
+    /// The release `.wasm` the shared components build writes.
     pub(crate) artifact: PathBuf,
+    /// Whether the runtime deploys it: it has a `deploy/` folder, the predicate the component
+    /// catalog check uses.
+    pub(crate) deployable: bool,
 }
 
 /// Pushes this commit's backend to `cluster`'s registry; the CI cluster is the one an earlier
@@ -136,20 +147,12 @@ pub fn deploy_ci(ctx: &Context, ci: &CiCluster) -> Result<()> {
 /// Builds every deployable component and pushes it and the database image to `registry`; the
 /// caller restarts the cluster's workloads so they pull them.
 fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
-    // The components compile against the generated Skir sources.
-    crate::generate::generate(ctx, None)?;
-    let components = deployable(ctx)?;
-    {
+    let (components, _) = {
         let _lock = HeavyLock::acquire("deploy")?;
-        build_components(ctx, &components)?;
-    }
-    for component in &components {
-        let reference = format!(
-            "{}/{}:{}",
-            registry.repository(),
-            component.package,
-            COMPONENT_TAG
-        );
+        build_deployable(ctx)?
+    };
+    for (package, artifact) in &components {
+        let reference = format!("{}/{package}:{COMPONENT_TAG}", registry.repository());
         // The wash fork reads registry credentials from flags only; the long form keeps the
         // password out of errors (`crate::display`), and `=` keeps a password that starts with
         // `-` from parsing as a flag.
@@ -165,7 +168,7 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
                 &reference,
             ],
         )
-        .arg(&component.artifact)
+        .arg(artifact)
         .run()
         .with_context(|| format!("cannot push {reference}"))?;
     }
@@ -187,70 +190,101 @@ fn ensure_main_checkout(ctx: &Context) -> Result<()> {
     Ok(())
 }
 
-/// Builds the release wasm artifact of every component in `components`. The caller holds the
-/// heavy lock.
-pub(crate) fn build_components(ctx: &Context, components: &[Component]) -> Result<()> {
-    let mut build = ctx.tool(
-        "backend",
-        "cargo",
-        &[
-            "build",
-            "--locked",
-            "--release",
-            "--target",
-            "wasm32-wasip2",
-        ],
-    );
-    for component in components {
-        build.args(["-p", &component.package]);
-    }
-    build.run()
+/// The target and profile every component is built for. Must match
+/// `component_test_model::{COMPONENT_TARGET, COMPONENT_PROFILE}`, which the component suite checks
+/// every run manifest against.
+pub(crate) const COMPONENT_TARGET: &str = "wasm32-wasip2";
+pub(crate) const COMPONENT_PROFILE: &str = "release";
+
+/// Builds the release `.wasm` of every backend component in one shared build, running `jobs`
+/// jobs at once when given, and returns them with whether the build was reused. The stack,
+/// `cargo xtask deploy` and the components check all build here, so one stamp covers each artifact
+/// and none undoes another's (the job count is no input). Diagnostics go to `log`, or to the
+/// terminal. The caller holds the heavy lock.
+pub(crate) fn build_components(
+    ctx: &Context,
+    jobs: Option<NonZeroUsize>,
+    log: Option<&File>,
+) -> Result<(Vec<Component>, Outcome)> {
+    let components = components(ctx)?;
+    let mut packages: Vec<&str> = components
+        .iter()
+        .map(|component| component.package.as_str())
+        .collect();
+    packages.dedup();
+    let invocation = Invocation {
+        profile: Some(COMPONENT_PROFILE),
+        target: Some(COMPONENT_TARGET),
+        jobs,
+        ..Invocation::new("backend/Cargo.toml", &packages)
+    };
+    let build = CargoBuild::in_workspace(ctx, "components", invocation, |_| {
+        components
+            .iter()
+            .map(|component| component.artifact.clone())
+            .collect()
+    })?;
+    let outcome = build.run(ctx, &Environment::process(), log)?;
+    Ok((components, outcome))
 }
 
-pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
-    let metadata: Value = serde_json::from_str(
-        &ctx.tool(
-            "backend",
-            "cargo",
-            &["metadata", "--format-version", "1", "--no-deps", "--locked"],
-        )
-        .output_text()?,
-    )?;
-    let target = metadata["target_directory"]
-        .as_str()
-        .context("cargo metadata printed no target_directory")?;
-    let release = Path::new(target).join("wasm32-wasip2/release");
-    let packages = metadata["packages"]
-        .as_array()
-        .context("cargo metadata printed no packages")?;
+/// [`build_components`], returning the artifact of each deployable component by its package.
+pub(crate) fn build_deployable(ctx: &Context) -> Result<(BTreeMap<String, PathBuf>, Outcome)> {
+    let (components, outcome) = build_components(ctx, None, None)?;
+    let artifacts: BTreeMap<String, PathBuf> = components
+        .into_iter()
+        .filter(|component| component.deployable)
+        .map(|component| (component.package, component.artifact))
+        .collect();
+    if artifacts.is_empty() {
+        bail!("no deployable components in backend");
+    }
+    Ok((artifacts, outcome))
+}
+
+/// Where the release build puts the `.wasm` of the package or lib target `name`, below the
+/// backend's Cargo target directory `target`.
+pub(crate) fn release_artifact(target: &Path, name: &str) -> PathBuf {
+    target
+        .join(COMPONENT_TARGET)
+        .join(COMPONENT_PROFILE)
+        .join(format!("{}.wasm", name.replace('-', "_")))
+}
+
+/// Every backend component, by package.
+pub(crate) fn components(ctx: &Context) -> Result<Vec<Component>> {
+    let metadata = metadata(ctx, "backend/Cargo.toml", Packages::Members)?;
     let mut components = Vec::new();
-    for package in packages {
-        let (Some(name), Some(manifest)) =
-            (package["name"].as_str(), package["manifest_path"].as_str())
+    for package in metadata.packages {
+        let Some(library) = package
+            .targets
+            .iter()
+            .find(|target| target.crate_types == ["cdylib"])
         else {
             continue;
         };
-        let cdylib = package["targets"]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .any(|target| {
-                target["crate_types"]
-                    .as_array()
-                    .into_iter()
-                    .flatten()
-                    .any(|kind| kind == "cdylib")
-            });
-        let has_deploy = Path::new(manifest)
+        let deployable = package
+            .manifest_path
             .parent()
             .is_some_and(|dir| dir.join("deploy").is_dir());
-        if cdylib && has_deploy {
-            components.push(Component {
-                package: name.to_owned(),
-                artifact: release.join(format!("{}.wasm", name.replace('-', "_"))),
-            });
-        }
+        components.push(Component {
+            artifact: release_artifact(&metadata.target_directory, &library.name),
+            target: library.name.clone(),
+            package: package.name,
+            package_id: package.id,
+            deployable,
+        });
     }
+    components.sort_by(|one, other| one.package.cmp(&other.package));
+    Ok(components)
+}
+
+/// Every deployable backend component, by package.
+pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
+    let components: Vec<Component> = components(ctx)?
+        .into_iter()
+        .filter(|component| component.deployable)
+        .collect();
     if components.is_empty() {
         bail!("no deployable components in backend");
     }
@@ -373,4 +407,81 @@ fn tar(ctx: &Context) -> std::process::Command {
     let mut tar = ctx.tool(".", "tar", &[]);
     tar.env("COPYFILE_DISABLE", "1");
     tar
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::TempRoot;
+
+    #[test]
+    fn every_member_whose_library_is_only_a_cdylib_is_a_component_and_one_with_a_deploy_folder_deploys()
+     {
+        let root = TempRoot::new();
+        root.write(
+            "backend/Cargo.toml",
+            "[workspace]\nmembers = [\"echo\", \"service/registration\", \"utils\", \"model\"]\n\
+             resolver = \"3\"\n",
+        );
+        for (dir, name, crate_types) in [
+            ("echo", "component-test-echo", Some("[\"cdylib\"]")),
+            (
+                "service/registration",
+                "service-registration",
+                Some("[\"cdylib\"]"),
+            ),
+            ("utils", "wasmcloud-utils", Some("[\"cdylib\", \"rlib\"]")),
+            ("model", "model", None),
+        ] {
+            let lib = crate_types.map_or(String::new(), |types| {
+                format!("\n[lib]\ncrate-type = {types}\n")
+            });
+            root.write(
+                &format!("backend/{dir}/Cargo.toml"),
+                &format!(
+                    "[package]\nname = \"{name}\"\nversion = \"0.1.0\"\nedition = \"2024\"\n{lib}"
+                ),
+            );
+            root.write(&format!("backend/{dir}/src/lib.rs"), "");
+        }
+        root.write(
+            "backend/service/registration/deploy/base/kustomization.yaml",
+            "",
+        );
+        root.ctx
+            .tool(
+                ".",
+                "cargo",
+                &[
+                    "generate-lockfile",
+                    "--offline",
+                    "--quiet",
+                    "--manifest-path",
+                    "backend/Cargo.toml",
+                ],
+            )
+            .run()
+            .unwrap();
+
+        let found: Vec<(String, String, bool)> = components(&root.ctx)
+            .unwrap()
+            .into_iter()
+            .map(|component| (component.package, component.target, component.deployable))
+            .collect();
+        assert_eq!(
+            found,
+            [
+                (
+                    "component-test-echo".to_owned(),
+                    "component_test_echo".to_owned(),
+                    false
+                ),
+                (
+                    "service-registration".to_owned(),
+                    "service_registration".to_owned(),
+                    true
+                ),
+            ]
+        );
+    }
 }

@@ -3,10 +3,12 @@
 //! provides the tools these commands call.
 
 mod branch;
+mod cargo_build;
 mod cluster;
 mod components;
 mod database;
 mod deploy;
+mod digest;
 mod docs;
 mod doctor;
 mod e2e;

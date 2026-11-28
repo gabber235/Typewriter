@@ -5,11 +5,11 @@
 //! Generators run in dependency order and each digest includes the one before it: the panel
 //! compiles against the Skir output, and the testkit and the widgetbook build on the panel.
 
-use std::fs::{self, File};
-use std::path::{Path, PathBuf};
+use std::fs::File;
 
-use anyhow::{Context as _, Result};
+use anyhow::Result;
 
+use crate::digest::{Digest, Entry, Environment, Listing, Stamp, listed};
 use crate::lock::HeavyLock;
 use crate::{CommandExt, Context};
 
@@ -24,11 +24,11 @@ pub const DESCRIBE: &str = "cargo xtask generate: bun services/protocol/generate
 /// One program that writes generated sources.
 struct Generator {
     name: &'static str,
-    /// Files and directories relative to the repository root; `*` matches one path component.
-    /// Directories are walked, skipping generated files, build output and hidden directories.
+    /// Files and directories relative to the repository root; `*` matches within one path
+    /// component. Their files are those Git lists and does not ignore, as for a Cargo build.
     inputs: &'static [&'static str],
-    /// Directories the generated files land in. The generated files found there after a run are
-    /// recorded, so deleting any of them reruns the generator.
+    /// Directories the generated files land in. The generated files Git ignores there after a run
+    /// are recorded, so deleting any of them reruns the generator.
     outputs: &'static [&'static str],
     /// Files written outside the generated source convention (build output, committed fixtures),
     /// recorded like generated files.
@@ -200,10 +200,23 @@ pub fn generate(ctx: &Context, log: Option<&File>) -> Result<()> {
     bring_up_to_date(ctx, log, GENERATORS, Lock::BeforeFirstRun)
 }
 
-/// Brings only the protocol's generated sources up to date: the Skir types the services compile
-/// against, all the game suite needs. Takes the heavy lock as [`generate`] does.
+/// Brings only the protocol's generated sources up to date: the Skir types the services and the
+/// backend compile against, all the game suite and a stack's builds need. Takes the heavy lock as
+/// [`generate`] does.
 pub fn protocol(ctx: &Context) -> Result<()> {
     bring_up_to_date(ctx, None, through("protocol"), Lock::BeforeFirstRun)
+}
+
+/// The protocol's generated sources, root relative, which the backend's Cargo builds compile
+/// against although Git ignores them.
+pub fn protocol_files(ctx: &Context) -> Result<Vec<String>> {
+    let protocol = through("protocol");
+    protocol[protocol.len() - 1].output_files(ctx)
+}
+
+/// [`protocol`] for a caller that already holds the heavy lock.
+pub fn protocol_holding_lock(ctx: &Context) -> Result<()> {
+    bring_up_to_date(ctx, None, through("protocol"), Lock::Held)
 }
 
 /// The graph step: [`generate`] with its output in the step's log, run as a heavy step that
@@ -245,7 +258,7 @@ fn bring_up_to_date(
     let mut held = None;
     for generator in generators {
         let before = generator.digest(ctx, &upstream)?;
-        if is_current(ctx, &stamp_path(ctx, generator), &before) {
+        if stamp(ctx, generator).is_current(&ctx.root, &before, &Environment::process()) {
             upstream = before;
             continue;
         }
@@ -267,7 +280,7 @@ fn is_up_to_date_over(ctx: &Context, generators: &[Generator]) -> Result<bool> {
     let mut upstream = Digest::new();
     for generator in generators {
         let digest = generator.digest(ctx, &upstream)?;
-        if !is_current(ctx, &stamp_path(ctx, generator), &digest) {
+        if !stamp(ctx, generator).is_current(&ctx.root, &digest, &Environment::process()) {
             return Ok(false);
         }
         upstream = digest;
@@ -277,22 +290,20 @@ fn is_up_to_date_over(ctx: &Context, generators: &[Generator]) -> Result<bool> {
 
 /// Writes `generator`'s stamp: the `digest` it ran on and the outputs it left.
 fn record(ctx: &Context, generator: &Generator, digest: &Digest) -> Result<()> {
-    let stamp = stamp_path(ctx, generator);
-    let state = stamp.parent().unwrap_or(&ctx.root);
-    fs::create_dir_all(state).with_context(|| format!("cannot create {}", state.display()))?;
-    let mut record = format!("{}\n", digest.hex());
-    for output in generator.output_files(ctx)? {
-        record.push_str(&output);
-        record.push('\n');
-    }
-    fs::write(&stamp, record).with_context(|| format!("cannot write {}", stamp.display()))
+    let env = Environment::process();
+    let sums = generator
+        .output_files(ctx)?
+        .into_iter()
+        .map(|file| Entry::File(file).sum(&ctx.root, &env))
+        .collect::<Result<Vec<_>>>()?;
+    stamp(ctx, generator).record(digest, &sums)
 }
 
-fn stamp_path(ctx: &Context, generator: &Generator) -> PathBuf {
-    ctx.root.join(format!(
+fn stamp(ctx: &Context, generator: &Generator) -> Stamp {
+    Stamp::at(ctx.root.join(format!(
         ".xtask/generate/{}.stamp",
         generator.name.replace('/', "-")
-    ))
+    )))
 }
 
 impl Generator {
@@ -370,44 +381,26 @@ impl Generator {
 
     /// The digest of `upstream`, the toolchain's version and every input file's path and contents.
     fn digest(&self, ctx: &Context, upstream: &Digest) -> Result<Digest> {
-        let mut files = Vec::new();
-        for input in self.inputs {
-            for path in expand(&ctx.root, input)? {
-                walk(&ctx.root, &path, &mut |relative| {
-                    if !is_generated(relative) && !is_generator_file(relative) {
-                        files.push(relative.to_owned());
-                    }
-                })?;
-            }
-        }
-        files.sort();
-        files.dedup();
+        let files: Vec<String> = listed(ctx, self.inputs, Listing::Inputs)?
+            .into_iter()
+            .filter(|file| !is_generator_file(file))
+            .collect();
         let mut digest = upstream.clone();
         // Output differs between toolchain versions, and switching one in place keeps its path.
         let (program, args) = self.tool.version();
         digest.update(ctx.tool(".", program, args).output_text()?.as_bytes());
         for file in files {
-            let path = ctx.root.join(&file);
-            let contents =
-                fs::read(&path).with_context(|| format!("cannot read {}", path.display()))?;
-            digest.update(file.as_bytes());
-            digest.update(&[0]);
-            digest.update(&(contents.len() as u64).to_le_bytes());
-            digest.update(&contents);
+            digest.update_file(&ctx.root, &file)?;
         }
         Ok(digest)
     }
 
     /// The generated files below the output directories, relative to the repository root.
     fn output_files(&self, ctx: &Context) -> Result<Vec<String>> {
-        let mut files = Vec::new();
-        for output in self.outputs {
-            walk(&ctx.root, &ctx.root.join(output), &mut |relative| {
-                if is_generated(relative) {
-                    files.push(relative.to_owned());
-                }
-            })?;
-        }
+        let mut files: Vec<String> = listed(ctx, self.outputs, Listing::Ignored)?
+            .into_iter()
+            .filter(|file| is_generated(file))
+            .collect();
         files.extend(
             self.files
                 .iter()
@@ -418,16 +411,6 @@ impl Generator {
         files.dedup();
         Ok(files)
     }
-}
-
-/// Whether `stamp` records `digest` and every output it lists still exists.
-fn is_current(ctx: &Context, stamp: &Path, digest: &Digest) -> bool {
-    let Ok(record) = fs::read_to_string(stamp) else {
-        return false;
-    };
-    let mut lines = record.lines();
-    lines.next() == Some(digest.hex().as_str())
-        && lines.all(|output| ctx.root.join(output).is_file())
 }
 
 /// Generator output by convention: Skir writes into `skirout` directories, build_runner writes
@@ -448,63 +431,6 @@ fn is_generator_file(relative: &str) -> bool {
         .any(|generator| generator.files.contains(&relative))
 }
 
-/// The existing paths `pattern` names, where a `*` component matches any one entry.
-fn expand(root: &Path, pattern: &str) -> Result<Vec<PathBuf>> {
-    let mut paths = vec![root.to_path_buf()];
-    for component in pattern.split('/') {
-        let mut next = Vec::new();
-        for path in paths {
-            if component == "*" {
-                let Ok(entries) = fs::read_dir(&path) else {
-                    continue;
-                };
-                for entry in entries {
-                    let entry = entry?;
-                    if entry.file_type()?.is_dir() && !skipped(&entry.file_name().to_string_lossy())
-                    {
-                        next.push(entry.path());
-                    }
-                }
-            } else {
-                let candidate = path.join(component);
-                if candidate.exists() {
-                    next.push(candidate);
-                }
-            }
-        }
-        paths = next;
-    }
-    paths.sort();
-    Ok(paths)
-}
-
-/// Calls `visit` with the root relative path of every file at or below `path`.
-fn walk(root: &Path, path: &Path, visit: &mut dyn FnMut(&str)) -> Result<()> {
-    let Ok(metadata) = fs::metadata(path) else {
-        return Ok(());
-    };
-    if metadata.is_file() {
-        let relative = path.strip_prefix(root).unwrap_or(path);
-        visit(&relative.to_string_lossy());
-        return Ok(());
-    }
-    let mut entries = fs::read_dir(path)
-        .with_context(|| format!("cannot read {}", path.display()))?
-        .collect::<Result<Vec<_>, _>>()?;
-    entries.sort_by_key(|entry| entry.file_name());
-    for entry in entries {
-        if !skipped(&entry.file_name().to_string_lossy()) {
-            walk(root, &entry.path(), visit)?;
-        }
-    }
-    Ok(())
-}
-
-/// Build output, dependencies and tool state, never generator input.
-fn skipped(name: &str) -> bool {
-    name.starts_with('.') || matches!(name, "node_modules" | "build" | "target")
-}
-
 fn say(log: Option<&File>, line: &str) -> Result<()> {
     use std::io::Write as _;
     match log {
@@ -512,27 +438,6 @@ fn say(log: Option<&File>, line: &str) -> Result<()> {
         None => eprintln!("{line}"),
     }
     Ok(())
-}
-
-/// FNV-1a over 64 bits: stable across Rust releases and machines, and enough to notice an edit.
-#[derive(Clone)]
-struct Digest(u64);
-
-impl Digest {
-    fn new() -> Self {
-        Self(0xcbf2_9ce4_8422_2325)
-    }
-
-    fn update(&mut self, bytes: &[u8]) {
-        for byte in bytes {
-            self.0 ^= u64::from(*byte);
-            self.0 = self.0.wrapping_mul(0x0000_0100_0000_01b3);
-        }
-    }
-
-    fn hex(&self) -> String {
-        format!("{:016x}", self.0)
-    }
 }
 
 #[cfg(test)]
@@ -548,65 +453,6 @@ mod tests {
 
         assert_eq!(names(through("protocol")), ["protocol"]);
         assert_eq!(names(through("frame-vectors")), names(GENERATORS));
-    }
-
-    #[test]
-    fn unchanged_inputs_with_every_output_present_are_current() {
-        let mut inputs = Digest::new();
-        inputs.update(b"inputs");
-        let root = TempRoot::new();
-        root.write("panel/lib/model.g.dart", "");
-        root.write(
-            "panel.stamp",
-            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
-        );
-        assert!(is_current(&root.ctx, &root.path("panel.stamp"), &inputs));
-    }
-
-    #[test]
-    fn changed_inputs_are_stale() {
-        let mut inputs = Digest::new();
-        inputs.update(b"inputs");
-        let root = TempRoot::new();
-        root.write("panel/lib/model.g.dart", "");
-        root.write(
-            "panel.stamp",
-            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
-        );
-        let mut edited = Digest::new();
-        edited.update(b"edited inputs");
-        assert!(!is_current(&root.ctx, &root.path("panel.stamp"), &edited));
-    }
-
-    #[test]
-    fn a_deleted_output_is_stale() {
-        let mut inputs = Digest::new();
-        inputs.update(b"inputs");
-        let root = TempRoot::new();
-        root.write("panel/lib/model.g.dart", "");
-        root.write(
-            "panel.stamp",
-            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
-        );
-        fs::remove_file(root.path("panel/lib/model.g.dart")).unwrap();
-        assert!(!is_current(&root.ctx, &root.path("panel.stamp"), &inputs));
-    }
-
-    #[test]
-    fn a_generator_that_never_ran_is_stale() {
-        let mut inputs = Digest::new();
-        inputs.update(b"inputs");
-        let root = TempRoot::new();
-        root.write("panel/lib/model.g.dart", "");
-        root.write(
-            "panel.stamp",
-            &format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
-        );
-        assert!(!is_current(
-            &root.ctx,
-            &root.path("protocol.stamp"),
-            &inputs
-        ));
     }
 
     #[test]
@@ -628,6 +474,7 @@ mod tests {
             },
         ];
         let root = TempRoot::new();
+        root.git(&["init", "--quiet"]);
         root.write("first/input.txt", "one");
         root.write("second/input.txt", "two");
         assert!(!is_up_to_date_over(&root.ctx, CHAIN).unwrap());
@@ -643,24 +490,59 @@ mod tests {
     }
 
     #[test]
+    fn a_generator_reads_its_inputs_as_git_lists_them() {
+        // The same listing as a Cargo build's: an untracked file counts, an ignored one does not.
+        const ONE: &[Generator] = &[Generator {
+            name: "one",
+            inputs: &["skir-src", "backend/*/deploy"],
+            outputs: &[],
+            files: &[],
+            tool: Tool::FrameVectors,
+        }];
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet"]);
+        root.write(".gitignore", "*.log\nnode_modules/\n");
+        root.write("skir-src/protocol.skir", "struct One {}");
+        root.write("backend/database/deploy/base.yaml", "kind: One");
+        let first = ONE[0].digest(&root.ctx, &Digest::new()).unwrap();
+        record(&root.ctx, &ONE[0], &first).unwrap();
+
+        for file in [
+            "skir-src/notes.log",
+            "skir-src/node_modules/x.js",
+            "backend/x/deploy.log",
+        ] {
+            root.write(file, "ignored");
+            assert!(
+                is_up_to_date_over(&root.ctx, ONE).unwrap(),
+                "after writing {file}"
+            );
+        }
+        for file in ["skir-src/new.skir", "backend/database/deploy/new.yaml"] {
+            root.write(file, "untracked");
+            assert!(
+                !is_up_to_date_over(&root.ctx, ONE).unwrap(),
+                "after writing {file}"
+            );
+        }
+    }
+
+    #[test]
     fn generated_outputs_and_hand_written_inputs_are_told_apart() {
-        let dir = tempfile::tempdir().unwrap();
-        let ctx = Context {
-            root: dir.path().to_owned(),
-        };
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet"]);
+        root.write(".gitignore", "*.g.dart\nskirout/\n");
         for file in [
             "panel/lib/model.dart",
             "panel/lib/model.g.dart",
             "panel/lib/skirout/types.dart",
-            "panel/build/cache.g.dart",
+            "panel/cache.g.dart",
         ] {
-            let path = dir.path().join(file);
-            fs::create_dir_all(path.parent().unwrap()).unwrap();
-            fs::write(path, "").unwrap();
+            root.write(file, "");
         }
         let generator = build_runner("panel", &["panel/lib"]);
         assert_eq!(
-            generator.output_files(&ctx).unwrap(),
+            generator.output_files(&root.ctx).unwrap(),
             ["panel/lib/model.g.dart", "panel/lib/skirout/types.dart"]
         );
     }

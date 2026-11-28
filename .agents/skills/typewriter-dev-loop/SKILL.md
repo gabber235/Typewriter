@@ -16,6 +16,8 @@ description: Run Typewriter locally: builds, the agent stack, Paper, the panel, 
 - `cargo xtask stack run -- <command>` starts this worktree's stack, runs the command and stops
   it. `--spec panel` (default) adds the provisioned organization and a bound Realm host;
   `--spec backend` stops at the backend components.
+- When the command needs the panel's or another non protocol generated source, run
+  `cargo xtask generate` first: `stack run` brings only the protocol up to date.
 - Addresses: `.xtask/state/stack/panel.json`, `realm.properties`, the command's `STACK_*`
   environment. Logs: `.xtask/state/stack/logs/`.
 - A killed run can leave processes: `cargo xtask stack gc` (doctor reports them).

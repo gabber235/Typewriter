@@ -6,6 +6,15 @@ rust-version.workspace = true
 publish.workspace = true
 repository.workspace = true
 
+# What the crate embeds from outside its folder, which xtask's Cargo builds count as their inputs:
+# the people component tests sign in as, and the join transaction it races, from the component that
+# owns it.
+[package.metadata.typewriter]
+inputs = [
+  "../../fixtures/stack-users.json",
+  "../../../../organization/user-organization/src/join_submission_transaction.surql",
+]
+
 [dependencies]
 anyhow.workspace = true
 async-nats.workspace = true

@@ -42,9 +42,8 @@ jobs:
     outputs:
       areas: ${{ steps.plan.outputs.areas }}
     steps:
+      # One commit: xtask fetches the history down to the merge base with BASE_SHA itself.
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
       # Every other job waits for this one, so the shell it pushes to the Nix cache is theirs to
       # pull, and the e2e shell it builds on the cache volume is there when the suites start.
       - uses: ./.github/actions/devenv
@@ -68,15 +67,16 @@ jobs:
       matrix:
         area: ${{ fromJSON(needs.plan.outputs.areas) }}
     steps:
+      # One commit: the quality gate fetches the history down to the merge base with BASE_SHA
+      # itself.
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
       # Generation runs Gradle and build_runner whatever the area; only the services area builds
       # enough to be worth keeping Gradle's build outputs for.
       - uses: ./.github/actions/devenv
         with:
           caches: gradle flutter frame-vectors ${{ matrix.area.area == 'services' && 'gradle-outputs' || '' }}
           cache-scope: check-${{ matrix.area.area }}
+          cargo-targets: ${{ matrix.area.area == 'components' }}
       # Untimed: the budget covers the area's steps, not the shell's first build or xtask's
       # compile.
       - run: devenv shell -- cargo xtask --help > /dev/null
@@ -117,9 +117,10 @@ jobs:
 
   # The display, Mesa, Vulkan, GTK and Chromium come from the devenv e2e profile, not apt. The
   # game suite runs four Minecraft clients, each on a virtual display of its own, against Paper on
-  # this runner; it also keeps Gradle's outputs (the patched Paper among them) and its downloads.
-  # Every suite runs inside the agent stack, whose backend build generates the panel's sources and
-  # frame vectors, so every suite keeps those caches.
+  # this runner; it also keeps Gradle's outputs (the patched Paper among them) and its downloads,
+  # and generates only the protocol's sources, so it needs no Flutter or frame vector cache.
+  # The panel suites generate every source, frame vectors included, before their stack starts,
+  # and restore the services check's Gradle outputs for the SDK fixtures and the Realm host.
   e2e:
     name: e2e (${{ matrix.suite }})
     needs: plan
@@ -134,22 +135,24 @@ jobs:
       matrix:
         include:
           - suite: panel
-            caches: gradle flutter frame-vectors
+            caches: gradle flutter frame-vectors gradle-outputs
+            gradle-outputs-from: check-services
           - suite: panel-web
-            caches: gradle flutter frame-vectors
+            caches: gradle flutter frame-vectors gradle-outputs
+            gradle-outputs-from: check-services
           - suite: game
-            caches: gradle flutter frame-vectors gradle-outputs game
+            caches: gradle gradle-outputs game
     steps:
+      # One commit: the game suite reruns as demos the requirements that covered a line the change
+      # added since its merge base with BASE_SHA, and fetches the history down to it itself.
       - uses: actions/checkout@v6
-        # The game suite reruns as demos the requirements that covered a line the change added
-        # since the merge base with the default branch.
-        with:
-          fetch-depth: ${{ matrix.suite == 'game' && '0' || '1' }}
       - uses: ./.github/actions/devenv
         with:
           caches: ${{ matrix.caches }}
           profile: e2e
           cache-scope: e2e-${{ matrix.suite }}
+          cargo-targets: true
+          gradle-outputs-from: ${{ matrix.gradle-outputs-from }}
       # The game suite's demo reruns follow the lines the change added since the same base the
       # checks compare with.
       - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite }} --base "$BASE_SHA"
@@ -190,9 +193,9 @@ jobs:
       pull-requests: write
       security-events: write
     steps:
+      # One commit: the report fetches the history down to the merge base with BASE_SHA itself, and
+      # publishing the evidence reads only the run's results and the pull request.
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
           pattern: results-*

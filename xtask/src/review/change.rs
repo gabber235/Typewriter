@@ -253,12 +253,70 @@ fn nearest_base(ctx: &Context) -> Result<String> {
 
 /// The full hash of the merge base of `HEAD` and `reference`.
 fn merge_base(ctx: &Context, reference: &str) -> Result<String> {
-    let base = git(ctx, &["merge-base", "HEAD", reference])
+    merge_base_of(ctx, "HEAD", reference)
+}
+
+/// The full hash of the merge base of `commit` and `reference`. A shallow checkout, such as CI's
+/// one commit checkout, first fetches the history it needs ([`reach_merge_base`]).
+pub fn merge_base_of(ctx: &Context, commit: &str, reference: &str) -> Result<String> {
+    let shallow = git(ctx, &["rev-parse", "--is-shallow-repository"]).output_text()?;
+    if shallow.trim() == "true" {
+        reach_merge_base(ctx, commit, reference)?;
+    }
+    let base = git(ctx, &["merge-base", commit, reference])
         .output_text()
         .with_context(|| {
-            format!("cannot find the merge base of HEAD and {reference}; pass --base")
+            format!("cannot find the merge base of {commit} and {reference}; pass --base")
         })?;
     Ok(base.trim().to_string())
+}
+
+/// Fetches history into a shallow checkout until it holds the merge base of `commit` and
+/// `reference`: first each of them the checkout lacks, then both histories deeper, doubling the
+/// depth each time, and the whole history last.
+fn reach_merge_base(ctx: &Context, commit_ref: &str, reference: &str) -> Result<()> {
+    let found = || {
+        git(ctx, &["merge-base", commit_ref, reference])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .is_ok_and(|status| status.success())
+    };
+    for wanted in [commit_ref, reference] {
+        let known = git(ctx, &["cat-file", "-e", &format!("{wanted}^{{commit}}")])
+            .stderr(Stdio::null())
+            .status()
+            .is_ok_and(|status| status.success());
+        if !known {
+            // A checkout of one branch has no other remote branches.
+            let refspec = match wanted.strip_prefix("origin/") {
+                Some(branch) => format!("+refs/heads/{branch}:refs/remotes/origin/{branch}"),
+                None => wanted.to_owned(),
+            };
+            fetch(ctx, &["--depth=1", "origin", &refspec])?;
+        }
+    }
+    let tips = [commit(ctx, commit_ref)?, commit(ctx, reference)?];
+    for depth in [32, 64, 128, 256, 512, 1024] {
+        if found() {
+            return Ok(());
+        }
+        fetch(
+            ctx,
+            &[&format!("--deepen={depth}"), "origin", &tips[0], &tips[1]],
+        )?;
+    }
+    if found() {
+        return Ok(());
+    }
+    fetch(ctx, &["--unshallow", "origin", &tips[0], &tips[1]])
+}
+
+fn fetch(ctx: &Context, args: &[&str]) -> Result<()> {
+    git(ctx, &["fetch", "--quiet", "--no-tags"])
+        .args(args)
+        .run()
+        .context("fetching the history the merge base needs")
 }
 
 /// The full hash of `reference`.
@@ -581,6 +639,33 @@ mod tests {
         // A branch stacked on this one, which already contains HEAD.
         root.git(&["update-ref", "refs/remotes/origin/features/y", "HEAD"]);
         assert_eq!(nearest_base(&root.ctx).unwrap(), "origin/features/v1");
+    }
+
+    #[test]
+    fn a_shallow_checkout_fetches_history_until_it_holds_the_merge_base() {
+        // `develop` moved three commits past `A`, where `feature` grew forty.
+        let origin = TempRoot::new();
+        origin.git(&["init", "--quiet", "--initial-branch=develop"]);
+        // GitHub serves any commit a branch reaches, as the checkout asks for its base by hash.
+        origin.git(&["config", "uploadpack.allowReachableSHA1InWant", "true"]);
+        origin.commit("before A");
+        origin.commit("A");
+        let a = origin.git(&["rev-parse", "HEAD"]).trim().to_owned();
+        origin.git(&["checkout", "--quiet", "-b", "feature"]);
+        for n in 0..40 {
+            origin.commit(&format!("feature {n}"));
+        }
+        origin.git(&["checkout", "--quiet", "develop"]);
+        for n in 0..3 {
+            origin.commit(&format!("develop {n}"));
+        }
+        let develop = origin.git(&["rev-parse", "develop"]).trim().to_owned();
+
+        let by_hash = origin.shallow_clone("feature");
+        assert_eq!(base(&by_hash.ctx, Some(&develop)).unwrap(), a);
+        // A checkout of one branch lacks the remote branch it is compared with.
+        let by_branch = origin.shallow_clone("feature");
+        assert_eq!(base(&by_branch.ctx, Some("origin/develop")).unwrap(), a);
     }
 
     #[test]

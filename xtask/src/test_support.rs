@@ -15,6 +15,7 @@ use anyhow::Result;
 use clap::ValueEnum as _;
 
 use crate::cluster::{CiClients, CiCluster};
+use crate::digest::{Digest, Entry, Stamp};
 use crate::e2e::E2eArgs;
 use crate::graph::{Area, Run, Step};
 use crate::hooks::commit_msg::Scopes;
@@ -63,6 +64,22 @@ impl TempRoot {
         fs::write(path, contents).unwrap();
     }
 
+    /// Records the stamp `relative` for the inputs `digest` and the root relative `outputs` as
+    /// they are now.
+    pub fn stamp(&self, relative: &str, digest: &Digest, outputs: &[&str]) -> Stamp {
+        let stamp = Stamp::at(self.path(relative));
+        let sums: Vec<_> = outputs
+            .iter()
+            .map(|output| {
+                Entry::File((*output).to_owned())
+                    .sum(&self.ctx.root, &crate::digest::Environment::EMPTY)
+                    .unwrap()
+            })
+            .collect();
+        stamp.record(digest, &sums).unwrap();
+        stamp
+    }
+
     /// Writes `relative` and commits it.
     pub fn save(&self, relative: &str, contents: &str) {
         self.write(relative, contents);
@@ -94,6 +111,23 @@ impl TempRoot {
     /// Records an empty commit with `message` on the checked out branch.
     pub fn commit(&self, message: &str) {
         self.git(&["commit", "--quiet", "--allow-empty", "-m", message]);
+    }
+
+    /// A new root holding a checkout of `branch` of this repository, through a `file://` remote
+    /// named `origin`, with only the branch's last commit, as CI's shallow checkout has.
+    pub fn shallow_clone(&self, branch: &str) -> TempRoot {
+        let checkout = TempRoot::new();
+        let url = format!("file://{}", self.path("").display());
+        checkout.git(&[
+            "clone",
+            "--quiet",
+            "--depth=1",
+            "--branch",
+            branch,
+            &url,
+            ".",
+        ]);
+        checkout
     }
 }
 
@@ -535,12 +569,14 @@ pub fn scopes(scopes: &[&str]) -> Scopes {
 }
 
 /// Declares a fake stack service `$name` that only names the services it needs, optionally
-/// followed by `; provides ROLE, ...` and `; needs_roles ROLE, ...`: its command does nothing and
-/// it is ready once that command exits.
+/// followed by `; provides ROLE, ...`, `; needs_roles ROLE, ...` and `; builds BUILD, ...` (each a
+/// `static` [`crate::stack::spec::Build`]): its command does nothing and it is ready once that
+/// command exits.
 macro_rules! fake_service {
     ($name:ident, $($need:ident),*
         $(; provides $($provided:path),+)?
-        $(; needs_roles $($role:path),+)?) => {
+        $(; needs_roles $($role:path),+)?
+        $(; builds $($build:path),+)?) => {
         pub struct $name;
         impl $crate::stack::spec::Service for $name {
             const ID: $crate::stack::spec::ServiceId =
@@ -554,9 +590,13 @@ macro_rules! fake_service {
             fn needs_roles(&self) -> &'static [$crate::stack::spec::Role] {
                 &[$($($role),+)?]
             }
+            fn builds(&self) -> &'static [&'static dyn $crate::stack::spec::AnyBuild] {
+                const { &[$($(&$build),+)?] }
+            }
             fn command(
                 &self,
                 _: &$crate::stack::spec::StackContext,
+                _: &$crate::stack::spec::Built,
             ) -> ::anyhow::Result<::std::process::Command> {
                 Ok(::std::process::Command::new("true"))
             }
@@ -571,6 +611,304 @@ pub(crate) use fake_service;
 /// The ids of `services`, in their order.
 pub fn ids(services: &[&dyn crate::stack::spec::DynService]) -> Vec<&'static str> {
     services.iter().map(|service| service.id().0).collect()
+}
+
+/// The names of what `spec` builds before it starts, in its order.
+pub fn build_names(spec: &crate::stack::spec::StackSpec) -> Vec<&'static str> {
+    spec.builds().iter().map(|build| build.name()).collect()
+}
+
+/// Whether `spec` runs `build`, told apart by handle as the stack tells builds apart.
+pub fn runs_build<T: ?Sized>(spec: &crate::stack::spec::StackSpec, build: &'static T) -> bool {
+    use crate::stack::spec::build_id;
+    spec.builds()
+        .iter()
+        .any(|known| build_id(*known) == build_id(build))
+}
+
+/// A build of its own that records in the stack's root that it started, waits up to ten seconds
+/// for another build of the same stack to start, takes a moment more, then records that it
+/// finished, and returns that record. What it records lives in the root, so tests that run at once
+/// never share it.
+pub const MEETS_ANOTHER: crate::stack::spec::How<std::path::PathBuf> =
+    crate::stack::spec::How::Own(|ctx| {
+        record_build_start(ctx)?;
+        let deadline = std::time::Instant::now() + Duration::from_secs(10);
+        while lines(&ctx.root.join("builds-started")) < 2 {
+            anyhow::ensure!(
+                std::time::Instant::now() < deadline,
+                "the other build never started while this one ran"
+            );
+            thread::sleep(Duration::from_millis(10));
+        }
+        thread::sleep(Duration::from_millis(200));
+        let finished = ctx.root.join("builds-finished");
+        append_line(&finished)?;
+        Ok(finished)
+    });
+
+/// A Gradle run that, like [`MEETS_ANOTHER`], records that it started, waits up to ten seconds
+/// for another build of the same stack to start, takes a moment more, records that it finished,
+/// and leaves `loader` in the root.
+pub const GRADLE_MEETS_ANOTHER: &str = r#"
+echo >> ../builds-started
+waited=0
+while [ "$(wc -l < ../builds-started | tr -d ' ')" -lt 2 ]; do
+    waited=$((waited + 1))
+    [ "$waited" -gt 1000 ] && echo "the other build never started while Gradle ran" >&2 && exit 3
+    sleep 0.01
+done
+sleep 0.2
+echo >> ../builds-finished
+touch ../loader
+"#;
+
+/// Writes `services/gradlew` into `root`: a shell script that runs `script` in `services`, as the
+/// stack's one Gradle run.
+pub fn fake_gradlew(root: &TempRoot, script: &str) {
+    use std::os::unix::fs::PermissionsExt as _;
+    root.write("services/gradlew", &format!("#!/bin/sh\n{script}"));
+    fs::set_permissions(
+        root.path("services/gradlew"),
+        fs::Permissions::from_mode(0o755),
+    )
+    .unwrap();
+}
+
+/// Records in the stack's root that a build started, as [`MEETS_ANOTHER`] waits for.
+pub fn record_build_start(ctx: &Context) -> Result<()> {
+    append_line(&ctx.root.join("builds-started"))
+}
+
+/// How many builds of the stack in `root` recorded their start ([`record_build_start`]).
+pub fn started_builds(root: &TempRoot) -> usize {
+    lines(&root.path("builds-started"))
+}
+
+/// How many [`MEETS_ANOTHER`] builds of the stack in `root` finished.
+pub fn finished_builds(root: &TempRoot) -> usize {
+    lines(&root.path("builds-finished"))
+}
+
+fn append_line(path: &Path) -> Result<()> {
+    let mut file = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)?;
+    file.write_all(b"\n")?;
+    Ok(())
+}
+
+fn lines(path: &Path) -> usize {
+    fs::read_to_string(path).map_or(0, |text| text.lines().count())
+}
+
+/// The folder [`cargo_workspace`]'s build declares as its inputs.
+pub const CARGO_TREES: &[&str] = &["backend"];
+
+/// A Git repository holding a Cargo workspace in `backend` ([`CARGO_TREES`]): its manifest, lock
+/// file and one source, `backend/src/lib.rs`, committed, with `target` ignored.
+pub fn cargo_workspace() -> TempRoot {
+    let root = TempRoot::new();
+    root.git(&["init", "--quiet"]);
+    root.write(".gitignore", "target/\nruns\n");
+    root.write("backend/Cargo.toml", "[package]");
+    root.write("backend/Cargo.lock", "version = 4");
+    root.write("backend/src/lib.rs", "fn main() {}");
+    root.git(&["add", "."]);
+    root.git(&["commit", "--quiet", "-m", "workspace"]);
+    root
+}
+
+/// A stand in for Cargo in a repository root: each run is counted and writes [`Self::artifact`] in
+/// its target directory, as Cargo does beside each artifact a dependency file naming the files the
+/// build read, and on standard output the JSON messages it is handed (its `MESSAGES` variable). A run
+/// that finds the script [`Self::during`] runs it once, in `backend`, while it builds.
+pub struct FakeCargo<'a> {
+    pub ctx: &'a Context,
+}
+
+impl FakeCargo<'_> {
+    fn path(&self, relative: &str) -> PathBuf {
+        self.ctx.root.join(relative)
+    }
+
+    /// Has the next run execute the shell script `script` in `backend` while it builds.
+    pub fn during(&self, script: &str) {
+        fs::write(self.path("during.sh"), script).unwrap();
+    }
+
+    /// What the build produces: `target/stack`.
+    pub fn artifact(&self) -> PathBuf {
+        self.path("target/stack")
+    }
+
+    /// A run in `backend` that writes `contents` into the artifact and names `reads`, root
+    /// relative or absolute, as read.
+    pub fn command(&self, contents: &str, reads: &[&str]) -> Command {
+        fs::create_dir_all(self.path("target")).unwrap();
+        let reads: Vec<String> = reads
+            .iter()
+            .map(|read| self.path(read).display().to_string())
+            .collect();
+        let mut command = Command::new("sh");
+        command
+            .args([
+                "-c",
+                r#"echo run >> "$RUNS" && printf %s "$CONTENTS" > "$ARTIFACT" && printf '%s: %s\n' "$ARTIFACT" "$READS" > "$DEP_INFO" && if [ -f "$DURING" ]; then sh "$DURING" && rm "$DURING"; fi && printf %s "$MESSAGES""#,
+            ])
+            .env("RUNS", self.path("runs"))
+            .env("CONTENTS", contents)
+            .env("ARTIFACT", self.artifact())
+            .env("READS", reads.join(" "))
+            .env("DEP_INFO", self.path("target/stack.d"))
+            .env("MESSAGES", "")
+            .env("DURING", self.path("during.sh"))
+            .current_dir(self.path("backend"));
+        command
+    }
+
+    /// The JSON message Cargo prints when the build script of `package` ran, or was replayed, with
+    /// what it printed (`printed`) where Cargo keeps it, beside its `out` folder. Real Cargo also
+    /// names the files a repository package's script watches in the dependency file beside each
+    /// artifact; this does not, so a case about watched files runs [`RealCargo`] instead.
+    pub fn build_script(&self, package: &str, printed: &str) -> String {
+        let unit = self.path(&format!("target/debug/build/{package}/0123"));
+        fs::create_dir_all(unit.join("out")).unwrap();
+        fs::create_dir_all(unit.join("run")).unwrap();
+        fs::write(unit.join("run/stdout"), printed).unwrap();
+        format!(
+            "{}\n",
+            serde_json::json!({
+                "reason": "build-script-executed",
+                "package_id": package,
+                "out_dir": unit.join("out"),
+            })
+        )
+    }
+
+    /// The build named `stack` of [`Self::artifact`] whose inputs are the root relative `trees`.
+    pub fn build(&self, trees: &[&str]) -> crate::cargo_build::CargoBuild<'static> {
+        crate::cargo_build::CargoBuild {
+            name: "stack",
+            invocation: crate::cargo_build::Invocation::new("backend/Cargo.toml", &["stack"]),
+            trees: trees.iter().map(|tree| (*tree).to_owned()).collect(),
+            artifacts: vec![self.artifact()],
+            target: self.path("target"),
+            build_directory: self.path("target"),
+        }
+    }
+
+    /// Runs `build` with no variables through a fresh [`Self::command`] that writes `one` and
+    /// reads the workspace's one source, as [`cargo_workspace`] lays it out.
+    pub fn run(&self, build: &crate::cargo_build::CargoBuild) -> crate::cargo_build::Outcome {
+        build
+            .run_with(
+                self.ctx,
+                &mut self.command("one", &["backend/src/lib.rs"]),
+                &crate::digest::Environment::EMPTY,
+            )
+            .unwrap()
+    }
+
+    /// How often it ran.
+    pub fn runs(&self) -> usize {
+        fs::read_to_string(self.path("runs")).map_or(0, |runs| runs.lines().count())
+    }
+}
+
+/// The real toolchain building one workspace of a throwaway repository, offline, for what only
+/// real Cargo shows: the dependency files it writes and where it keeps build script output.
+pub struct RealCargo<'a> {
+    root: &'a TempRoot,
+    build: crate::cargo_build::CargoBuild<'static>,
+}
+
+impl<'a> RealCargo<'a> {
+    /// A Git repository, its `target` folders ignored, holding the package `probe` with an empty
+    /// library, whose manifest is `probe/Cargo.toml`. Nothing is committed: Git lists untracked
+    /// files, which builds count.
+    pub fn workspace() -> TempRoot {
+        let root = TempRoot::new();
+        root.git(&["init", "--quiet"]);
+        root.write(".gitignore", "target/\n");
+        root.write(
+            "probe/Cargo.toml",
+            "[package]\nname = \"probe\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+        );
+        root.write("probe/src/lib.rs", "");
+        root
+    }
+
+    /// The build `name` of the library of the package `name` in the workspace of `manifest`, root
+    /// relative, as the root holds it now, which `cargo build -p name` builds; its lock file is
+    /// written first. Fails as [`crate::cargo_build::CargoBuild::in_workspace`] refuses a
+    /// workspace.
+    pub fn new(root: &'a TempRoot, manifest: &'static str, name: &'static str) -> Result<Self> {
+        root.ctx
+            .tool(
+                ".",
+                "cargo",
+                &[
+                    "generate-lockfile",
+                    "--offline",
+                    "--quiet",
+                    "--manifest-path",
+                    manifest,
+                ],
+            )
+            .run()
+            .unwrap();
+        let build = crate::cargo_build::CargoBuild::in_workspace(
+            &root.ctx,
+            name,
+            crate::cargo_build::Invocation::new(manifest, &[name]),
+            |target| vec![target.join(format!("debug/lib{name}.rlib"))],
+        )?;
+        Ok(Self { root, build })
+    }
+
+    /// Makes `crate`, a library with the build script `build_script`, the only crate of the
+    /// registry `registry`, a folder outside the root, and points the root's Cargo configuration
+    /// at it in place of crates.io, so a manifest depends on it as on any registry crate.
+    pub fn vendor(root: &TempRoot, registry: &Path, krate: &str, build_script: &str) {
+        let dir = registry.join(krate);
+        fs::create_dir_all(dir.join("src")).unwrap();
+        fs::write(
+            dir.join("Cargo.toml"),
+            format!("[package]\nname = \"{krate}\"\nversion = \"0.1.0\"\nedition = \"2024\"\n"),
+        )
+        .unwrap();
+        fs::write(dir.join("src/lib.rs"), "").unwrap();
+        fs::write(dir.join("build.rs"), build_script).unwrap();
+        fs::write(
+            dir.join(".cargo-checksum.json"),
+            r#"{"files":{},"package":null}"#,
+        )
+        .unwrap();
+        root.write(
+            ".cargo/config.toml",
+            &format!(
+                "[source.crates-io]\nreplace-with = \"vendored\"\n\n[source.vendored]\n\
+                 directory = \"{}\"\n",
+                registry.display()
+            ),
+        );
+    }
+
+    /// Runs the build with the variables `env` through the command of its invocation.
+    pub fn run(&self, env: &crate::digest::Environment) -> Result<crate::cargo_build::Outcome> {
+        let mut cargo = self.build.invocation.command(&self.root.ctx);
+        // The test's own Cargo must not move the workspace's target elsewhere.
+        for name in [
+            "CARGO_TARGET_DIR",
+            "CARGO_BUILD_TARGET_DIR",
+            "CARGO_BUILD_BUILD_DIR",
+        ] {
+            cargo.env_remove(name);
+        }
+        self.build.run_with(&self.root.ctx, &mut cargo, env)
+    }
 }
 
 /// Each drive an attempt made, in order: its folder below the suite folder and the ids it was

@@ -31,6 +31,20 @@ inputs:
       kinds build different outputs under the same commit, so with one key the first to finish took
       it and the others' saves were refused.
     default: ""
+  cargo-targets:
+    description: >-
+      `true` for the jobs that build the stack's Cargo targets and so own them on the cache volume:
+      the e2e suites (the `typewriter-stack` binary and the release components) and the components
+      check (the same components and the suite beside the binary). Other jobs do not mount them.
+    default: "false"
+  gradle-outputs-from:
+    description: >-
+      Another job kind whose Gradle build cache entries this job restores, read only, instead of
+      saving entries of its own, such as `check-services` for the panel suites, whose Gradle work
+      (the SDK fixtures and the Realm host) is part of what the services check builds. Needs
+      `gradle-outputs` in `caches`. Each job kind that saves adds an entry of over 1 GB per commit
+      to the repository's 10 GB.
+    default: ""
   volume-profiles:
     description: >-
       Further devenv profiles whose shells this job builds on a Namespace cache volume, space
@@ -57,6 +71,7 @@ runs:
         HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         REPO: ${{ github.repository }}
         HAS_TOKEN: ${{ inputs.op-service-account-token != '' }}
+        CARGO_TARGETS: ${{ inputs.cargo-targets }}
       run: |
         long_lived=false
         if [[ $REF == refs/heads/develop || $REF == refs/heads/features/v1 ]]; then
@@ -80,6 +95,16 @@ runs:
         # A Namespace runner with a cache volume (its `-with-cache` label) keeps the Nix store and
         # the caches every job shares on that volume instead of in the repository's Actions cache.
         echo "volume=$([[ -n ${NSC_CACHE_PATH:-} ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+        # The Cargo targets this job keeps on the volume, one per line; none unless it owns them.
+        {
+          echo "cargo-targets<<EOF"
+          if [[ $CARGO_TARGETS == true ]]; then
+            echo "$GITHUB_WORKSPACE/backend/target/release"
+            echo "$GITHUB_WORKSPACE/backend/target/wasm32-wasip2/release"
+            echo "$GITHUB_WORKSPACE/backend/tests/component/target/debug"
+          fi
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
         # Incremental artifacts only grow a cache that starts each job from the same state.
         echo "CARGO_INCREMENTAL=0" >> "$GITHUB_ENV"
         # A job never reuses a Gradle daemon, and an idle one held 2.4 GB that the panel's
@@ -100,7 +125,19 @@ runs:
     # cache.nixos.org is slow from Namespace's network, so a store that outlives the job is what
     # makes its runners fast. Each job starts from the volume's last saved state and saves its own
     # at the end, so the last job to finish wins: caches that differ by job (Gradle's build cache,
-    # the boot cache, the Cargo targets) stay on `actions/cache`, where every job keeps its own.
+    # the boot cache, xtask's Cargo target) stay on `actions/cache`, where every job keeps its own.
+    #
+    # The jobs that build the stack's Cargo targets (`cargo-targets`) keep them on the volume too,
+    # several GB that the repository's 10 GB of `actions/cache` has no room for: the release wasm
+    # build of the backend components (with its host build scripts and macros in `release`) and the
+    # component test workspace's debug target, which holds the `typewriter-stack` binary and the
+    # suite. Cargo keeps their dependencies. Only these jobs mount them, so no other job changes
+    # them, but every job that ends cleanly saves the whole volume, these folders included as it
+    # found them: a job that started before an owner saved puts the older targets back if it ends
+    # last. xtask stamps the stack's artifacts with the sha256 of each artifact and of every file
+    # the build declares (xtask/src/cargo_build.rs) and reuses them while all match, so a state
+    # another job's save replaced costs a rebuild, never a stale binary. The backend's debug and
+    # coverage targets, tens of GB, stay off.
     - if: steps.trust.outputs.volume == 'true'
       uses: namespacelabs/nscloud-cache-action@v1
       with:
@@ -112,6 +149,7 @@ runs:
           ~/.gradle/caches/fabric-loom
           ~/.gradle/caches/run-task-jars
           ${{ github.workspace }}/services/.gradle/loom-cache
+          ${{ steps.trust.outputs.cargo-targets }}
     - uses: cachix/install-nix-action@v31
     # Reads gabber235.cachix.org (the Rust toolchain and every other path a trusted run
     # built) and the public devenv cache. Pushing is the explicit step below, with a token only
@@ -247,26 +285,28 @@ runs:
         mkdir -p ~/.gradle
         echo "org.gradle.caching=true" >> ~/.gradle/gradle.properties
     # Each job kind (`cache-scope`) and each attempt saves its own entry, so a rerun of a failed job
-    # keeps what it adds. A job kind with no entry yet starts from another kind's newest.
+    # keeps what it adds. A job kind with no entry yet starts from another kind's newest. A job with
+    # `gradle-outputs-from` restores that kind's entries and saves none.
     - id: gradle-outputs-cache
       if: contains(inputs.caches, 'gradle-outputs')
       uses: actions/cache/restore@v4
       with:
         path: ~/.gradle/caches/build-cache-1
-        key: gradle-outputs-${{ runner.os }}-${{ inputs.cache-scope || github.job }}-${{ github.sha }}-${{ github.run_attempt }}
+        key: gradle-outputs-${{ runner.os }}-${{ inputs.gradle-outputs-from || inputs.cache-scope || github.job }}-${{ github.sha }}-${{ github.run_attempt }}
         restore-keys: |
-          gradle-outputs-${{ runner.os }}-${{ inputs.cache-scope || github.job }}-${{ github.sha }}-
-          gradle-outputs-${{ runner.os }}-${{ inputs.cache-scope || github.job }}-
+          gradle-outputs-${{ runner.os }}-${{ inputs.gradle-outputs-from || inputs.cache-scope || github.job }}-${{ github.sha }}-
+          gradle-outputs-${{ runner.os }}-${{ inputs.gradle-outputs-from || inputs.cache-scope || github.job }}-
           gradle-outputs-${{ runner.os }}-
     # What devenv-save needs at the end of the job: the keys, and whether the restore already
-    # matched them exactly, in which case there is nothing new to save under that key.
+    # matched them exactly, in which case there is nothing new to save under that key. A job that
+    # reads another kind's Gradle outputs gets no key for them, so it saves none.
     - if: contains(inputs.caches, 'gradle')
       shell: bash
       env:
         CACHES: ${{ inputs.caches }}
         GRADLE_KEY: ${{ steps.gradle-cache.outputs.cache-primary-key }}
         GRADLE_HIT: ${{ steps.gradle-cache.outputs.cache-hit }}
-        OUTPUTS_KEY: ${{ steps.gradle-outputs-cache.outputs.cache-primary-key }}
+        OUTPUTS_KEY: ${{ inputs.gradle-outputs-from == '' && steps.gradle-outputs-cache.outputs.cache-primary-key || '' }}
         OUTPUTS_HIT: ${{ steps.gradle-outputs-cache.outputs.cache-hit }}
       run: |
         {

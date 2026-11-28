@@ -24,11 +24,13 @@ use std::time::{Duration, Instant};
 use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
 
-use self::spec::{DynService, PortLease, Probe, Published, Registry, StackContext, StackSpec};
-use crate::Context;
+use self::spec::{
+    Built, DynService, PortLease, Probe, Published, Registry, StackContext, StackSpec,
+};
 use crate::e2e::failures::StackEvidence;
-use crate::lock::E2eSlot;
+use crate::lock::{E2eSlot, HeavyLock};
 use crate::process::{self, Group, POLL, STOP_GRACE, Supervisor, interrupted, kill_group};
+use crate::{Context, generate};
 
 /// Per run state a new run keeps; everything else in the state directory is cleared.
 pub enum Keep {
@@ -85,8 +87,19 @@ fn run_then<T, U>(
     let stack_ctx = StackContext::new(ctx, PortLease::acquire(&Registry::machine(), &ctx.root)?);
     reset_state(&stack_ctx.state(), &[Keep::BrokerKeys])?;
     let mut stack = Stack::register(&stack_ctx)?;
+    let builds = spec.builds();
+    let built = if builds.is_empty() {
+        Built::default()
+    } else {
+        // The Gradle build (the Realm host) compiles against the protocol's generated sources too,
+        // and starts with the Cargo builds, so they are brought up to date before any build
+        // starts; each Cargo build, which brings them up to date itself, then finds them current.
+        generate::protocol(ctx)?;
+        let _lock = HeavyLock::acquire("stack: building")?;
+        stack_ctx.build(&builds)?
+    };
     for service in order {
-        stack.start(service, &stack_ctx)?;
+        stack.start(service, &stack_ctx, &built.for_builds(service.builds()))?;
         let mut published = Published::default();
         service.publish(&stack_ctx, &mut published)?;
         // Later services read the clients before they start: typed through
@@ -173,9 +186,9 @@ impl Stack {
     }
 
     /// Starts `service` and waits until its probe passes.
-    fn start(&mut self, service: &dyn DynService, ctx: &StackContext) -> Result<()> {
+    fn start(&mut self, service: &dyn DynService, ctx: &StackContext, built: &Built) -> Result<()> {
         let id = service.id().0;
-        let mut command = service.command(ctx)?;
+        let mut command = service.command(ctx, built)?;
         let log_path = self.logs.join(format!("{id}.log"));
         let log = File::create(&log_path)
             .with_context(|| format!("cannot create {}", log_path.display()))?;

@@ -7,7 +7,6 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
-use std::io::{BufRead, BufReader};
 use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -15,9 +14,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result, bail, ensure};
 use serde::Deserialize;
-use serde_json::{Value, json};
-use sha2::{Digest, Sha256};
+use serde_json::json;
 
+use crate::digest::sha256;
 use crate::results::{
     self, Attempt, AttemptPolicy, Failure, Outcome, Quarantine, RunEnd, TestCase, TestRun,
 };
@@ -30,10 +29,8 @@ pub const DESCRIBE: &str = "cargo xtask components --results .xtask/results/comp
 /// The suite's Cargo manifest, relative to the repository root.
 const SUITE: &str = "backend/tests/component/Cargo.toml";
 const SUITE_PACKAGE: &str = "typewriter-component-tests";
-/// Must match `component_test_model::{COMPONENT_TARGET, COMPONENT_PROFILE,
-/// RUN_MANIFEST_SCHEMA_VERSION}`, which the suite checks every manifest against.
-const COMPONENT_TARGET: &str = "wasm32-wasip2";
-const COMPONENT_PROFILE: &str = "release";
+/// Must match `component_test_model::RUN_MANIFEST_SCHEMA_VERSION`, which the suite checks every
+/// manifest against.
 const RUN_MANIFEST_SCHEMA_VERSION: u32 = 1;
 
 #[derive(clap::Args, Default)]
@@ -258,10 +255,10 @@ impl Catalog {
 struct Artifact {
     package_id: String,
     path: PathBuf,
-    fresh: bool,
 }
 
-/// Builds every component the fixtures name in one Cargo invocation, keyed by package and target.
+/// The artifact of every component the fixtures name, keyed by package and target, from the
+/// shared components build the stack and `cargo xtask deploy` use too.
 fn build_components(
     ctx: &Context,
     fixtures: &[&Fixture],
@@ -273,120 +270,28 @@ fn build_components(
         .flat_map(|fixture| fixture.components())
         .map(|component| (component.package.as_str(), component.target.as_str()))
         .collect();
-    let names = package_names(ctx)?;
-    let mut command = cargo(
-        ctx,
-        &[
-            "build",
-            "--locked",
-            "--manifest-path",
-            "backend/Cargo.toml",
-            "--target",
-            COMPONENT_TARGET,
-            "--release",
-            "--message-format=json-render-diagnostics",
-        ],
-    );
-    jobs(&mut command, args);
-    let packages: BTreeSet<&str> = wanted.iter().map(|(package, _)| *package).collect();
-    for package in &packages {
-        command.args(["-p", package]);
-    }
-    let mut child = command
-        .log_stderr(log)?
-        .stdout(Stdio::piped())
-        .spawn()
-        .context("cannot start the component build")?;
-    let stdout = child
-        .stdout
-        .take()
-        .context("cargo printed no build output")?;
+    let (built, _) =
+        deploy::build_components(ctx, args.jobs, log).context("the component build failed")?;
     let mut artifacts = BTreeMap::new();
-    let mut finished = false;
-    for line in BufReader::new(stdout).lines() {
-        let message: Value = serde_json::from_str(&line?)?;
-        match message["reason"].as_str() {
-            Some("compiler-artifact") => {
-                let (Some(package_id), Some(target)) = (
-                    message["package_id"].as_str(),
-                    message["target"]["name"].as_str(),
-                ) else {
-                    continue;
-                };
-                let Some(package) = names.get(package_id).map(String::as_str) else {
-                    continue;
-                };
-                if !wanted.contains(&(package, target)) {
-                    continue;
-                }
-                let wasm: Vec<&str> = message["filenames"]
-                    .as_array()
-                    .into_iter()
-                    .flatten()
-                    .filter_map(Value::as_str)
-                    .filter(|file| file.ends_with(".wasm"))
-                    .collect();
-                ensure!(
-                    wasm.len() == 1,
-                    "package `{package}` target `{target}` built {} .wasm files, expected one",
-                    wasm.len()
-                );
-                artifacts.insert(
-                    (package.to_owned(), target.to_owned()),
-                    Artifact {
-                        package_id: package_id.to_owned(),
-                        path: PathBuf::from(wasm[0]),
-                        fresh: message["fresh"].as_bool().unwrap_or(false),
-                    },
-                );
-            }
-            Some("build-finished") => finished = message["success"].as_bool() == Some(true),
-            _ => {}
-        }
-    }
-    let status = child.wait()?;
-    ensure!(
-        status.success() && finished,
-        "the component build failed with {status}"
-    );
-    for (package, target) in &wanted {
-        ensure!(
-            artifacts.contains_key(&((*package).to_owned(), (*target).to_owned())),
-            "the build produced no artifact for package `{package}` target `{target}`"
+    for (package, target) in wanted {
+        let component = built
+            .iter()
+            .find(|component| component.package == package && component.target == target)
+            .with_context(|| {
+                format!(
+                    "a fixture names the target {target} of {package}, which is no backend \
+                     component: a workspace member whose library is only a cdylib"
+                )
+            })?;
+        artifacts.insert(
+            (package.to_owned(), target.to_owned()),
+            Artifact {
+                package_id: component.package_id.clone(),
+                path: component.artifact.clone(),
+            },
         );
     }
     Ok(artifacts)
-}
-
-/// Backend package names by package id. Cargo's package ids are opaque, so a build message's
-/// package is looked up here rather than parsed out of its id.
-fn package_names(ctx: &Context) -> Result<BTreeMap<String, String>> {
-    let metadata: Value = serde_json::from_str(
-        &cargo(
-            ctx,
-            &[
-                "metadata",
-                "--format-version",
-                "1",
-                "--no-deps",
-                "--locked",
-                "--manifest-path",
-                "backend/Cargo.toml",
-            ],
-        )
-        .output_text()?,
-    )?;
-    Ok(metadata["packages"]
-        .as_array()
-        .context("cargo metadata printed no packages")?
-        .iter()
-        .filter_map(|package| {
-            Some((
-                package["id"].as_str()?.to_owned(),
-                package["name"].as_str()?.to_owned(),
-            ))
-        })
-        .collect())
 }
 
 /// Writes the manifest that ties each fixture to the exact artifacts this run built. The suite
@@ -413,7 +318,6 @@ fn write_manifest(
                 "target_name": component.target,
                 "path": built.path,
                 "sha256": sha256(&built.path)?,
-                "fresh": built.fresh,
             }));
         }
     }
@@ -425,8 +329,8 @@ fn write_manifest(
         "test_lock_sha256": sha256(&ctx.root.join("backend/tests/component/Cargo.lock"))?,
         "rustc_version": ctx.tool(".", "rustc", &["--version"]).output_text()?.trim(),
         "cargo_version": ctx.tool(".", "cargo", &["--version"]).output_text()?.trim(),
-        "target": COMPONENT_TARGET,
-        "profile": COMPONENT_PROFILE,
+        "target": deploy::COMPONENT_TARGET,
+        "profile": deploy::COMPONENT_PROFILE,
         "fixtures": fixtures.iter().map(|fixture| &fixture.id).collect::<Vec<_>>(),
         "artifacts": records,
     });
@@ -437,14 +341,6 @@ fn write_manifest(
     fs::write(&path, serde_json::to_string_pretty(&manifest)?)
         .with_context(|| format!("cannot write {}", path.display()))?;
     Ok(path)
-}
-
-fn sha256(path: &Path) -> Result<String> {
-    let bytes = fs::read(path).with_context(|| format!("cannot read {}", path.display()))?;
-    Ok(Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect())
 }
 
 /// Runs cases of the suite against one manifest.

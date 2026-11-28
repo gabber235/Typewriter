@@ -19,9 +19,9 @@ jobs:
   covered:
     runs-on: ubuntu-latest
     steps:
+      # One commit: comparing the reviewed commit with the head fetches the commits and the
+      # history down to each one's merge base with the base itself.
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
       - uses: ./.github/actions/devenv
       - run: >-
           devenv shell -- cargo xtask review covered
