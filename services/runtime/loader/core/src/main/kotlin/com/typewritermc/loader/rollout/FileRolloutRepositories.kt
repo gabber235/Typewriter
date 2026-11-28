@@ -101,7 +101,7 @@ class FileRolloutStateRepository(
         update { current -> current.copy(previous = current.current, current = deployment) }
 
     /** Adds [projections] to the committed deployment in place, keeping the previous one; nothing when none is committed. */
-    override suspend fun recordProjections(projections: Map<ServiceId, ArtifactDigest>) =
+    override suspend fun recordProjections(projections: Map<ServiceId, ProjectionReference>) =
         update { current ->
             current.copy(current = current.current?.let { it.copy(projections = it.projections + projections) })
         }

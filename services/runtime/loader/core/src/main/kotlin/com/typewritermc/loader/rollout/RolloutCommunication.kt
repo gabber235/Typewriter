@@ -66,15 +66,15 @@ class CommunicatorRolloutMessenger(
 }
 
 /**
- * Reads the Realm's members from the presence probe: every host that answers within [timeout], collecting until no
- * further host answered for half a second. One probe is one observation; a host missing from it is not a member.
+ * Probes the Realm's hosts through the generated presence scatter: every host that answers within [timeout],
+ * collecting until no further host answered for half a second. A host that answers later misses this probe.
  */
-class ProbedRealmMembership(
+class CommunicatorPresenceProbe(
     private val scope: RealmRouteScope,
     private val communicator: Communicator,
     private val timeout: Duration,
-) : RealmMembership {
-    override suspend fun members(): List<RealmHostPresence> =
+) : PresenceProbe {
+    override suspend fun answering(): List<RealmHostPresence> =
         communicator
             .scatter(
                 scope.rolloutProbe,

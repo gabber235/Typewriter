@@ -2,11 +2,17 @@ package com.typewritermc.loader.rollout.testing
 
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
+import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.ImprintManifest
+import com.typewritermc.imprint.ImprintManifestCodec
 import com.typewritermc.imprint.RealmManifest
 import com.typewritermc.imprint.VersionConstraint
+import com.typewritermc.loader.api.HostedMessagingSession
+import com.typewritermc.loader.api.HostedRuntimeHost
+import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
-import com.typewritermc.loader.artifact.toApi
+import com.typewritermc.loader.api.StagedHostedRuntime
+import com.typewritermc.loader.artifact.FileDigestBlobStore
 import com.typewritermc.loader.deployment.DeploymentContent
 import com.typewritermc.loader.deployment.DeploymentContentCodec
 import com.typewritermc.loader.deployment.DeploymentGeneration
@@ -16,106 +22,142 @@ import com.typewritermc.loader.deployment.ResolutionResult
 import com.typewritermc.loader.rollout.BlobProjectionRepository
 import com.typewritermc.loader.rollout.DeploymentContents
 import com.typewritermc.loader.rollout.FileRolloutStateRepository
+import com.typewritermc.loader.rollout.HostRolloutParticipant
+import com.typewritermc.loader.rollout.PresenceProbe
+import com.typewritermc.loader.rollout.ProbedRealmMembership
+import com.typewritermc.loader.rollout.ProjectionSource
 import com.typewritermc.loader.rollout.RealmId
-import com.typewritermc.loader.rollout.RealmMembership
 import com.typewritermc.loader.rollout.RealmRollout
 import com.typewritermc.loader.rollout.RolloutMessenger
 import com.typewritermc.loader.rollout.RolloutTimings
+import com.typewritermc.loader.rollout.VerifiedArtifactSource
 import com.typewritermc.loader.rollout.commandKind
 import com.typewritermc.loader.rollout.projectionOf
 import com.typewritermc.loader.rollout.serviceIds
 import com.typewritermc.loader.rollout.toSkir
+import com.typewritermc.loader.runtime.HostedRuntimeStager
+import com.typewritermc.loader.runtime.LoadedHostedRuntime
+import com.typewritermc.loader.shared.FileSharedArtifactRepository
+import com.typewritermc.loader.shared.SharedArtifactService
 import com.typewritermc.loader.testing.FIXTURE_VERSION
 import com.typewritermc.loader.testing.deploymentArtifact
 import com.typewritermc.loader.testing.engineManifest
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.InMemoryBlobEndpoint
 import com.typewritermc.services.libs.registrar.ServiceId
+import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
-import skirout.service.v1.rollout.ActiveParticipant
-import skirout.service.v1.rollout.ActiveProjection
 import skirout.service.v1.rollout.ApplyRolloutCommandRequest
 import skirout.service.v1.rollout.ApplyRolloutCommandResponse
 import skirout.service.v1.rollout.ParticipantPhase
 import skirout.service.v1.rollout.ParticipantStatus
-import skirout.service.v1.rollout.ProjectionHealth
 import skirout.service.v1.rollout.ProjectionReference
 import skirout.service.v1.rollout.QueryParticipantStatusRequest
 import skirout.service.v1.rollout.RealmHostPresence
-import skirout.service.v1.rollout.RollbackTarget
 import skirout.service.v1.rollout.RolloutAttempt
-import skirout.service.v1.rollout.RolloutCommand
 import skirout.service.v1.rollout.RolloutCommandKind
+import java.net.URL
+import java.net.URLClassLoader
 import java.nio.file.Files
+import java.nio.file.Path
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
+private val REALM = RealmId("realm")
+
 /**
- * One host of a Realm as the rollout reaches it through messaging. It keeps one staged, one active and one retained
- * projection the way a rollout participant does: stage keeps the active projection as the baseline, commit activates
- * the staged one and retains the one it replaced, abort drops the staged one, and roll back restores exactly the
- * retained projection or nothing.
+ * One host of a Realm: a real [HostRolloutParticipant] that the rollout reaches through messaging. The participant
+ * stages fixture runtimes whose health and failures the test sets; [restart] replaces it with an empty one, as a new
+ * process of the host does.
  */
-class FakeRolloutHost(
+class RealmHost internal constructor(
     val id: ServiceId,
-    val roles: Set<RuntimePlacement> = RuntimePlacement.entries.toSet(),
+    val roles: Set<RuntimePlacement>,
+    private val scope: CoroutineScope,
+    private val projections: ProjectionSource,
+    private val artifacts: VerifiedArtifactSource,
 ) {
-    /** Every command the host received, in order. */
+    /** Every command that reached the host, in order. */
     val commands = mutableListOf<ApplyRolloutCommandRequest>()
 
     /** Every projection the host switched to running, in order; null when it went back to running nothing. */
     val switches = mutableListOf<ProjectionReference?>()
 
-    /** Whether the host answers; a host that stopped (left the Realm, crashed, lost its connection) answers nothing. */
+    /** Whether the host answers at all; a host that left the Realm or lost its connection answers nothing. */
     var responding = true
 
-    /** Commands the host refuses in its current state, as a host whose staging or activation fails does. */
-    var refuses: Set<RolloutCommandKind> = emptySet()
+    /** Decides per presence probe whether the host's answer arrives. */
+    var answersProbe: () -> Boolean = { true }
 
-    /** How long applying one command takes. */
-    var commandDuration: Duration = Duration.ZERO
-
-    /** The health the host reports for the projection it runs. */
-    var health: ProjectionHealth = ProjectionHealth.HEALTHY
-
-    /** Decides per status query whether the host's reply arrives; a missing reply is an incomplete snapshot. */
+    /** Decides per status query whether the host's reply arrives. */
     var answersStatus: (ParticipantStatus) -> Boolean = { true }
 
-    private var staged: ProjectionReference? = null
-    private var active: ProjectionReference? = null
-    private var retained: ProjectionReference? = null
-    private var attempt = RolloutAttempt(ordinal = 1, generation = 1)
+    /** How long a command takes to reach the participant. */
+    var commandDuration: Duration = Duration.ZERO
 
-    /** The projection the host runs and its health, which it reports with its presence. */
-    val activeProjection: ActiveProjection?
-        get() = active?.let { ActiveProjection(projection = it, health = health) }
+    /** Whether staging a runtime fails, as a host that cannot load the candidate does. */
+    var failsStaging = false
+
+    /** Whether activating a staged runtime fails, as a host whose new projection does not start does. */
+    var failsActivation = false
+
+    /** The health every running runtime of the host reports. */
+    var health: RuntimeHealth = RuntimeHealth.Healthy
+        set(value) {
+            field = value
+            runtimes.forEach(FixtureRuntime::refresh)
+        }
+
+    private val root = Files.createTempDirectory("typewriter-host")
+    private val hosted =
+        object : HostedRuntimeHost {
+            override val messaging: StateFlow<HostedMessagingSession?> = MutableStateFlow(null)
+            override val openTelemetry: OpenTelemetry = OpenTelemetry.noop()
+            override val sharedArtifacts =
+                SharedArtifactService(
+                    REALM.value,
+                    FileDigestBlobStore(root.resolve("blobs")),
+                    FileSharedArtifactRepository(root.resolve("shared.cbor")),
+                )
+        }
+    private var runtimes = mutableListOf<FixtureRuntime>()
+    private var process = 0
+    private var running: ProjectionReference? = null
+    private var participant = start()
 
     val commandKinds: List<RolloutCommandKind> get() = commands.map { it.command.commandKind }
 
+    /** The projection the host runs, or null while it runs nothing. */
+    val runningProjection: ProjectionReference? get() = running
+
     /** The deployment generation of the projection the host runs, or null while it runs nothing. */
-    val generation: Long? get() = active?.generation
+    val generation: Long? get() = running?.generation
 
-    /** Forgets every projection, as a host that restarted does. */
+    /** Whether the participant holds a staged projection, whether or not the host answers. */
+    suspend fun isStaged(): Boolean = participant.status(ANY_ATTEMPT).phase is ParticipantPhase.StagedWrapper
+
+    /** Starts a new process of the host: its participant holds nothing and its runtimes are gone. */
     fun restart() {
-        staged = null
-        active = null
-        retained = null
+        participant = start()
     }
 
-    internal fun presence(): RealmHostPresence? = if (responding) presence(id, roles, activeProjection) else null
+    internal fun presence(): RealmHostPresence? = if (responding && answersProbe()) presence(id, roles) else null
 
-    internal fun status(): ParticipantStatus? {
-        if (!responding) return null
-        val current = ParticipantStatus(serviceId = id.value, attempt = attempt, phase = phase())
-        return current.takeIf(answersStatus)
-    }
+    internal suspend fun status(attempt: RolloutAttempt): ParticipantStatus? =
+        if (responding) participant.status(attempt).takeIf(answersStatus) else null
 
     internal suspend fun apply(
         request: ApplyRolloutCommandRequest,
@@ -128,102 +170,88 @@ class FakeRolloutHost(
         commands += request
         delay(commandDuration)
         if (!responding) return null
-        attempt = request.attempt
-        val command = request.command
-        val reference = request.projectionFor(id)
-        if (command.commandKind in refuses) {
-            if (command is RolloutCommand.CommitWrapper) staged = null
-            return ApplyRolloutCommandResponse.createCommandRejectedError(serviceId = id.value, reason = "refused")
-        }
-        val accepted =
-            when (command) {
-                is RolloutCommand.StageWrapper -> {
-                    staged = reference
-                    true
-                }
+        return participant.apply(request)
+    }
 
-                is RolloutCommand.CommitWrapper -> {
-                    if (staged == reference) {
-                        retained = active
-                        switchTo(reference)
-                        staged = null
-                        true
-                    } else {
-                        active == reference
-                    }
-                }
+    private fun start(): HostRolloutParticipant {
+        val current = ++process
+        running = null
+        runtimes = mutableListOf()
+        return HostRolloutParticipant(
+            REALM,
+            { placement -> if (placement == RuntimePlacement.PRIMARY_ENGINE) id.value else null },
+            id,
+            root.resolve("process-$current"),
+            hosted,
+            projections,
+            artifacts,
+            { status -> if (current == process) observed(status) },
+            scope,
+            HostedRuntimeStager {
+                check(!failsStaging) { "Staging failed." }
+                val runtime = FixtureRuntime()
+                runtimes += runtime
+                LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<URL>()))
+            },
+        )
+    }
 
-                is RolloutCommand.AbortWrapper -> {
-                    if (staged == reference) staged = null
-                    true
-                }
-
-                is RolloutCommand.RollBackWrapper -> {
-                    rollBack(reference, requireNotNull(command.value.participants.findByKey(id.value)).target)
-                }
-
-                else -> {
-                    false
-                }
+    private fun observed(status: ParticipantStatus) {
+        val now =
+            when (val phase = status.phase) {
+                is ParticipantPhase.ActiveWrapper -> phase.value.current.projection
+                ParticipantPhase.IDLE -> null
+                else -> return
             }
-        return if (accepted) {
-            ApplyRolloutCommandResponse.createAccepted(serviceId = id.value)
-        } else {
-            ApplyRolloutCommandResponse.createCommandRejectedError(serviceId = id.value, reason = "not applicable")
+        if (now == running) return
+        running = now
+        switches += now
+    }
+
+    private inner class FixtureRuntime : StagedHostedRuntime {
+        private val state = MutableStateFlow<RuntimeHealth>(RuntimeHealth.Staged)
+        override val health: StateFlow<RuntimeHealth> = state
+        private var live = false
+
+        override suspend fun activate() {
+            check(!failsActivation) { "Activation failed." }
+            run()
+        }
+
+        override suspend fun quiesce() {
+            live = false
+        }
+
+        override suspend fun resume() = run()
+
+        override suspend fun close() {
+            live = false
+        }
+
+        fun refresh() {
+            if (live) state.value = this@RealmHost.health
+        }
+
+        private fun run() {
+            live = true
+            state.value = this@RealmHost.health
         }
     }
 
-    private fun rollBack(
-        failed: ProjectionReference,
-        target: RollbackTarget,
-    ): Boolean {
-        val restore = (target as? RollbackTarget.ProjectionWrapper)?.value
-        return when {
-            staged == failed -> {
-                staged = null
-                true
-            }
-
-            active == restore -> {
-                true
-            }
-
-            active == failed && retained == restore -> {
-                retained = null
-                switchTo(restore)
-                true
-            }
-
-            else -> {
-                false
-            }
-        }
-    }
-
-    private fun switchTo(reference: ProjectionReference?) {
-        active = reference
-        switches += reference
-    }
-
-    private fun phase(): ParticipantPhase {
-        val running = activeProjection
-        return when {
-            staged != null -> ParticipantPhase.createStaged(candidate = requireNotNull(staged), baseline = running)
-            running != null -> ParticipantPhase.ActiveWrapper(ActiveParticipant(current = running, retained = retained))
-            else -> ParticipantPhase.IDLE
-        }
+    private companion object {
+        val ANY_ATTEMPT = RolloutAttempt(ordinal = 1, generation = 1)
     }
 }
 
 /**
- * The hosts of one Realm behind its membership and messenger, as the rollout reaches them: every responding host
+ * The hosts of one Realm behind its presence probe and messenger, as the rollout reaches them: every responding host
  * answers presence and status, and a command reaches only the hosts it lists.
  */
-class FakeRealmHosts(
-    private val hosts: List<FakeRolloutHost>,
-) : RealmMembership,
+private class FixtureRealm(
+    private val hosts: List<RealmHost>,
+) : PresenceProbe,
     RolloutMessenger {
-    override suspend fun members(): List<RealmHostPresence> = hosts.mapNotNull(FakeRolloutHost::presence)
+    override suspend fun answering(): List<RealmHostPresence> = hosts.mapNotNull(RealmHost::presence)
 
     override suspend fun command(
         request: ApplyRolloutCommandRequest,
@@ -237,49 +265,113 @@ class FakeRealmHosts(
         request: QueryParticipantStatusRequest,
         expected: Set<ServiceId>,
         timeout: Duration,
-    ): Map<ServiceId, ParticipantStatus> = hosts.mapNotNull { host -> host.status()?.let { host.id to it } }.toMap()
-}
-
-/** Accepted candidates that always resolve to [content], whatever hosts the Realm has. */
-class FixtureDeploymentContents(
-    var content: DeploymentContent = deploymentContent(),
-) : DeploymentContents {
-    override suspend fun newest(selection: RealmDeploymentSelection) = ResolutionResult.Resolved(content, deploymentManifests())
-
-    override suspend fun manifests(content: DeploymentContent) = deploymentManifests()
+    ): Map<ServiceId, ParticipantStatus> = hosts.mapNotNull { host -> host.status(request.attempt)?.let { host.id to it } }.toMap()
 }
 
 /**
- * The rollout of Realm `realm` over [hosts] on the test's virtual clock, with production timings unless [timings]
- * says otherwise. [start] runs it until the test ends.
+ * Accepted candidates that resolve to [content], whatever hosts the Realm has, until their artifacts are withdrawn:
+ * a withdrawn content no longer resolves and has no manifests, as when a newer import of the same release replaced
+ * one of its artifacts.
+ */
+class FixtureDeploymentContents(
+    content: DeploymentContent = deploymentContent(),
+) : DeploymentContents {
+    /** Every content this resolved to, so the artifact store can serve all of their artifacts. */
+    internal val served = mutableListOf(content)
+    private val withdrawn = mutableSetOf<DeploymentContent>()
+
+    var content: DeploymentContent = content
+        set(value) {
+            field = value
+            served += value
+        }
+
+    /** Stops accepting an artifact of [content]. */
+    fun withdraw(content: DeploymentContent) {
+        withdrawn += content
+    }
+
+    override suspend fun newest(selection: RealmDeploymentSelection) =
+        content.takeUnless { it in withdrawn }?.let { ResolutionResult.Resolved(it, deploymentManifests()) }
+
+    override suspend fun manifests(content: DeploymentContent) = deploymentManifests().takeUnless { content in withdrawn }
+}
+
+/** Serves an archive holding the manifest of every artifact [contents] resolved to. */
+private class FixtureArtifacts(
+    private val root: Path,
+    private val contents: FixtureDeploymentContents,
+) : VerifiedArtifactSource {
+    override suspend fun fetch(digest: ArtifactDigest): Path {
+        val path = root.resolve(digest.value)
+        if (Files.exists(path)) return path
+        val artifact =
+            contents.served
+                .flatMap { listOf(it.realm, it.primaryEngine, it.panelEngine) + it.extensions }
+                .first { it.digest == digest }
+        Files.createDirectories(root)
+        ZipOutputStream(Files.newOutputStream(path)).use { archive ->
+            archive.putNextEntry(ZipEntry(IMPRINT_MANIFEST_PATH))
+            archive.write(ImprintManifestCodec.encode(deploymentManifests().getValue(artifact.coordinate.id)))
+            archive.closeEntry()
+        }
+        return path
+    }
+}
+
+/**
+ * The rollout of Realm `realm` over the hosts added with [host], on the test's virtual clock, with production timings
+ * and presence grace unless told otherwise. [start] runs it until the test ends.
  */
 class RealmRolloutFixture(
     private val test: TestScope,
-    val hosts: List<FakeRolloutHost>,
-    timings: RolloutTimings = RolloutTimings(),
+    private val timings: RolloutTimings = RolloutTimings(),
+    private val presenceGrace: Duration = ProbedRealmMembership.DEFAULT_GRACE,
 ) {
     private val root = Files.createTempDirectory("typewriter-rollout")
-    private val clockStart = test.testScheduler.timeSource.markNow()
-    val state = FileRolloutStateRepository(RealmId("realm"), root)
+    private val clock = test.testScheduler.timeSource
+    private val clockStart = clock.markNow()
+    private val hosts = mutableListOf<RealmHost>()
+    private val realm = FixtureRealm(hosts)
+    private var running: Job? = null
+    val state = FileRolloutStateRepository(REALM, root)
     val projections = BlobProjectionRepository(InMemoryBlobEndpoint())
     val contents = FixtureDeploymentContents()
-    val realm = FakeRealmHosts(hosts)
-    val rollout =
-        RealmRollout(
-            RealmId("realm"),
-            realm,
-            realm,
-            contents,
-            projections,
-            state,
-            timings,
-            timeSource = test.testScheduler.timeSource,
-        )
+    private val artifacts = FixtureArtifacts(root.resolve("artifacts"), contents)
 
     /** How long the test has run on the virtual clock. */
     val elapsed: Duration get() = clockStart.elapsedNow()
 
-    fun start(): Job = test.backgroundScope.launch { rollout.run() }
+    /** Adds a host with [roles] to the Realm. */
+    fun host(
+        id: String,
+        roles: Set<RuntimePlacement> = RuntimePlacement.entries.toSet(),
+    ): RealmHost = RealmHost(ServiceId(id), roles, test.backgroundScope, projections, artifacts).also(hosts::add)
+
+    fun start() {
+        val rollout =
+            RealmRollout(
+                REALM,
+                ProbedRealmMembership(realm, presenceGrace, clock),
+                realm,
+                contents,
+                projections,
+                state,
+                timings,
+                timeSource = clock,
+            )
+        running = test.backgroundScope.launch { rollout.run() }
+    }
+
+    /**
+     * Restarts the process of [realmHost], which runs the rollout: the rollout starts over from the state it persisted
+     * and the host's participant starts empty.
+     */
+    fun restartRealm(realmHost: RealmHost) {
+        running?.cancel()
+        realmHost.restart()
+        start()
+    }
 
     /** The generation the Realm committed last, or null before its first commit. */
     suspend fun committedGeneration(): Long? =
@@ -290,12 +382,9 @@ class RealmRolloutFixture(
             ?.value
 
     /** Whether [host] runs the projection the committed deployment recorded for it. */
-    suspend fun runsCommitted(host: FakeRolloutHost): Boolean {
+    suspend fun runsCommitted(host: RealmHost): Boolean {
         val recorded = state.committed()?.projections?.get(host.id) ?: return false
-        return host.activeProjection
-            ?.projection
-            ?.blob
-            ?.toApi() == recorded
+        return host.runningProjection == recorded
     }
 
     /**
@@ -306,7 +395,7 @@ class RealmRolloutFixture(
         limit: Duration,
         condition: suspend () -> Boolean,
     ): Duration? {
-        val deadline = test.testScheduler.timeSource.markNow() + limit
+        val deadline = clock.markNow() + limit
         while (true) {
             test.runCurrent()
             if (condition()) return elapsed
@@ -360,12 +449,10 @@ fun deploymentManifests(): Map<ArtifactId, ImprintManifest> {
 fun presence(
     host: ServiceId,
     roles: Set<RuntimePlacement>,
-    activeProjection: ActiveProjection? = null,
 ) = RealmHostPresence(
     serviceId = host.value,
     hostApi = FIXTURE_VERSION.value,
     assignedRoles = roles.map { it.toSkir() },
-    activeProjection = activeProjection,
 )
 
 fun ApplyRolloutCommandRequest.projectionFor(host: ServiceId): ProjectionReference = requireNotNull(command.projectionOf(host.value))

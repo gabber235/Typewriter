@@ -7,7 +7,6 @@ import com.typewritermc.imprint.HostedArtifactManifest
 import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.artifact.DeploymentArtifact
-import com.typewritermc.loader.artifact.toApi
 import com.typewritermc.loader.artifactSpan
 import com.typewritermc.loader.deployment.DeploymentContent
 import com.typewritermc.loader.deployment.DeploymentContentCodec
@@ -50,14 +49,6 @@ import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
 /**
- * Who belongs to the Realm right now: the hosts its rollout converges. A host that is not listed has left, crashed or
- * stopped answering; nothing waits for it, and it is converged again once it is listed.
- */
-fun interface RealmMembership {
-    suspend fun members(): List<RealmHostPresence>
-}
-
-/**
  * Sends lifecycle commands to the hosts of one Realm and reads their phase. Timeouts can produce incomplete replies;
  * the rollout reads a missing reply as no observation.
  */
@@ -93,7 +84,7 @@ interface RolloutStateRepository {
     suspend fun commit(deployment: CommittedDeployment)
 
     /** Adds host projections of the committed deployment, such as a host that joined after the commit. */
-    suspend fun recordProjections(projections: Map<ServiceId, ArtifactDigest>)
+    suspend fun recordProjections(projections: Map<ServiceId, ProjectionReference>)
 }
 
 /** The artifact content a Realm can deploy, read from the Realm host's accepted candidates. */
@@ -125,7 +116,9 @@ data class RolloutTimings(
  * [membership] and converges each member on its own toward its projection of the target, so a host that joins or
  * comes back is staged at once and a host that leaves holds nothing up. Joining, repairing and rolling back are the
  * same convergence: a member that keeps the target projection as its retained one is rolled back to it, any other is
- * staged and committed, and a staged projection the target no longer wants is aborted.
+ * staged and committed, and a staged projection the target no longer wants is aborted. A member's progress (its
+ * deadline, attempt, refusal and command in flight) lives as long as the target, not as long as its membership; an
+ * absence only restarts its healthy interval, as a missing status reply does.
  *
  * A candidate commits once every current member has run it healthy for [RolloutTimings.healthy] without a gap; a
  * member that leaves stops counting and the others keep their proof, while a member that joins runs the candidate and
@@ -135,8 +128,11 @@ data class RolloutTimings(
  * committed deployment and the members still present converge back to it. Leaving is not evidence against a candidate.
  * Once every present member is back (or failed to get back), content that is still the newest is tried again.
  *
- * A member of the committed target that refuses a command, never proves its projection within the deadline, or reports
- * the projection it proved unhealthy is staged again.
+ * The committed deployment gives each recorded host exactly its recorded projection, so reverting and repairing need
+ * no manifests; a host without a recorded projection is projected from the manifests, and left alone (with a recorded
+ * failure) when an artifact of the committed deployment is no longer accepted. A member of the committed target that
+ * refuses a command, never proves its projection within the deadline, or reports the projection it proved unhealthy is
+ * staged again.
  * Commands to different members run concurrently and one member never waits for another's command. Pass failures are
  * recorded and the next pass starts over from fresh observations.
  */
@@ -154,7 +150,7 @@ class RealmRollout(
     private var target: RealmTarget? = null
     private var commitOpen = false
     private val members = mutableMapOf<ServiceId, Member>()
-    private val renewed = mutableSetOf<ServiceId>()
+    private val leftAlone = mutableSetOf<ServiceId>()
 
     /** Runs passes until cancelled; in flight commands belong to the caller's scope and end with it. */
     suspend fun run(): Nothing = coroutineScope { passes(this) }
@@ -177,10 +173,10 @@ class RealmRollout(
         val presences = membership.members()
         val selection = presences.deploymentSelectionOrNull()
         val target = selection?.let { targetFor(it) }
-        if (selection == null || target == null) return forgetAllBut(emptySet())
+        if (selection == null || target == null) return forgetAll()
         val eligible = admit(presences, selection, target)
         val statuses = messenger.statuses(QueryParticipantStatusRequest(attempt = target.attempt), eligible, timings.request)
-        eligible.forEach { host -> members.getValue(host).observe(statuses[host]) }
+        members.forEach { (host, member) -> member.observe(statuses[host]?.takeIf { host in eligible }) }
         val settled =
             when (target) {
                 is RealmTarget.Candidate -> {
@@ -193,24 +189,35 @@ class RealmRollout(
                 }
             }
         if (settled) return
-        eligible.forEach { host -> members[host]?.let { converge(commands, target, host, it, statuses[host]) } }
+        eligible.forEach { host -> converge(commands, target, host, members.getValue(host), statuses[host]) }
     }
 
     /**
-     * The members of [target] this pass: present hosts with a selected role whose host API runs the target. Members
-     * that are gone are forgotten and hosts that arrived join.
+     * The members of [target] this pass: present hosts with a selected role that the target admits. Hosts that
+     * arrived for the first time join; members that are absent keep their progress for when they return.
      */
     private suspend fun admit(
         presences: List<RealmHostPresence>,
         selection: RealmDeploymentSelection,
         target: RealmTarget,
     ): Set<ServiceId> {
-        val eligible =
-            presences
-                .filter { ServiceId(it.serviceId) in selection.selectedServices() && target.runsOn(it) }
-                .map { ServiceId(it.serviceId) }
-                .toSet()
-        forgetAllBut(eligible)
+        val eligible = mutableSetOf<ServiceId>()
+        presences
+            .filter { ServiceId(it.serviceId) in selection.selectedServices() }
+            .forEach { presence ->
+                val host = ServiceId(presence.serviceId)
+                when (target.admission(presence)) {
+                    Admission.MEMBER -> {
+                        eligible += host
+                    }
+
+                    Admission.UNPROJECTABLE -> {
+                        leaveAlone(host, target)
+                    }
+
+                    Admission.OUTSIDE -> {}
+                }
+            }
         eligible.forEach { host -> if (host !in members) members[host] = join(target, selection, host) }
         return eligible
     }
@@ -242,14 +249,11 @@ class RealmRollout(
         committed: RealmTarget.Committed,
         eligible: Set<ServiceId>,
     ) {
-        val stuck = eligible.filter { members.getValue(it).stuck }.toSet()
+        val stuck = eligible.filter { members.getValue(it).stuck }
         if (committed.reverting && eligible.all { it in stuck || members.getValue(it).runsDesired }) {
             target = committed.copy(reverting = false)
         }
-        stuck.forEach { host ->
-            members.remove(host)?.command?.cancel()
-            renewed += host
-        }
+        stuck.forEach { host -> members.getValue(host).renew(state.nextAttempt(committed.generation)) }
         recordJoined(committed, eligible)
     }
 
@@ -265,15 +269,10 @@ class RealmRollout(
         }
         if (current is RealmTarget.Committed && current.deployment?.snapshot == committed?.snapshot) return current
         if (committed == null) return null
-        val manifests =
-            if (newestDigest == committed.snapshot.contentDigest) {
-                requireNotNull(newest).manifests
-            } else {
-                contents.manifests(committed.snapshot.content) ?: return null
-            }
+        val manifests = newest?.manifests ?: contents.manifests(committed.snapshot.content)
         return replaceTarget(
             RealmTarget.Committed(
-                TargetDeployment(committed.snapshot, manifests),
+                committed.toTarget(manifests),
                 committed.snapshot.generation,
                 state.nextAttempt(committed.snapshot.generation),
             ),
@@ -303,10 +302,10 @@ class RealmRollout(
             attribute("deployment.generation", candidate.generation.value)
             attribute("rollout.members", eligible.size.toLong())
         }
-        val projections = eligible.associateWith { host -> requireNotNull(members.getValue(host).desired).blob.toApi() }
+        val projections = eligible.associateWith { host -> requireNotNull(members.getValue(host).desired) }
         state.commit(CommittedDeployment(candidate.deployment.snapshot, projections))
         eligible.forEach { members.getValue(it).recorded = true }
-        target = RealmTarget.Committed(candidate.deployment, candidate.generation, candidate.attempt)
+        target = RealmTarget.Committed(candidate.deployment.copy(recorded = projections), candidate.generation, candidate.attempt)
     }
 
     /** Fails [candidate]: the target returns to the committed deployment, which the present members converge back to. */
@@ -332,16 +331,9 @@ class RealmRollout(
                     } else {
                         contents.manifests(current.snapshot.content)
                     }
-                manifests?.let { TargetDeployment(current.snapshot, it) }
+                current.toTarget(manifests)
             }
-        if (committed != null && deployment == null) {
-            target = null
-            forgetAllBut(emptySet())
-        } else {
-            replaceTarget(
-                RealmTarget.Committed(deployment, candidate.generation, state.nextAttempt(candidate.generation), reverting = true),
-            )
-        }
+        replaceTarget(RealmTarget.Committed(deployment, candidate.generation, state.nextAttempt(candidate.generation), reverting = true))
     }
 
     private suspend fun recordJoined(
@@ -354,8 +346,34 @@ class RealmRollout(
                 .map { it to members.getValue(it) }
                 .filter { (_, member) -> member.proven && !member.recorded }
         if (joined.isEmpty()) return
-        state.recordProjections(joined.associate { (host, member) -> host to requireNotNull(member.desired).blob.toApi() })
+        state.recordProjections(joined.associate { (host, member) -> host to requireNotNull(member.desired) })
         joined.forEach { (_, member) -> member.recorded = true }
+    }
+
+    /** Records once per target that [host] is left alone: the target can no longer be projected for it. */
+    private suspend fun leaveAlone(
+        host: ServiceId,
+        target: RealmTarget,
+    ) {
+        if (!leftAlone.add(host)) return
+        telemetry.artifactSpan(
+            "artifact.rollout.leave-alone",
+            "artifact-rollout-leave-alone-failed",
+            presentation = SpanPresentation("Leave host ${host.value} alone in Realm ${realmId.value}"),
+        ) { span ->
+            span?.annotate {
+                attribute("realm.id", realmId.value)
+                attribute("service.id", host.value)
+                attribute("deployment.generation", target.generation.value)
+            }
+            span?.recordDegraded(
+                ErrorSlug.of("artifact-rollout-host-unprojectable"),
+                IllegalStateException(
+                    "Host ${host.value} has no recorded projection of deployment ${target.generation.value}, which can no longer " +
+                        "be projected because one of its artifacts is no longer accepted.",
+                ),
+            )
+        }
     }
 
     private suspend fun join(
@@ -365,11 +383,12 @@ class RealmRollout(
     ): Member {
         val desired =
             target.deployment?.let { deployment ->
-                projections.publish(deployment.snapshot.projectFor(realmId.value, selection, host, deployment.manifests))
+                deployment.recorded[host]
+                    ?: projections.publish(
+                        deployment.snapshot.projectFor(realmId.value, selection, host, requireNotNull(deployment.manifests)),
+                    )
             }
-        val renewal = renewed.remove(host)
-        val attempt = if (renewal) state.nextAttempt(target.generation) else target.attempt
-        return Member(timeSource.markNow(), desired, attempt, reload = renewal)
+        return Member(desired, target.attempt)
     }
 
     private suspend fun converge(
@@ -381,8 +400,9 @@ class RealmRollout(
     ) {
         if (member.command?.isActive == true) return
         val step =
-            status?.phase?.step(
+            status?.step(
                 member.desired,
+                member.attemptOf(member.desired),
                 commitOpen = target is RealmTarget.Committed || commitOpen,
                 reload = member.reload,
             ) ?: return
@@ -403,27 +423,28 @@ class RealmRollout(
     private fun replaceTarget(next: RealmTarget): RealmTarget {
         target = next
         commitOpen = false
-        forgetAllBut(emptySet())
+        forgetAll()
         return next
     }
 
-    private fun forgetAllBut(keep: Set<ServiceId>) {
-        (members.keys - keep).forEach { host -> members.remove(host)?.command?.cancel() }
-        renewed.retainAll(keep)
+    private fun forgetAll() {
+        members.values.forEach { it.command?.cancel() }
+        members.clear()
+        leftAlone.clear()
     }
 
     /**
-     * One member's convergence toward its projection of one target: when it joined, what it should run (null for
-     * nothing), and the healthy interval and failure observed so far.
+     * One member's convergence toward its projection of one target: what it should run (null for nothing), the
+     * attempt its commands carry, and the deadline, healthy interval and failure observed so far.
      */
     private inner class Member(
-        val joined: TimeMark,
         val desired: ProjectionReference?,
         private var attempt: RolloutAttempt,
-        var reload: Boolean,
     ) {
+        private var joined = timeSource.markNow()
         private var anchor: ProjectionReference? = null
         private var healthySince: TimeMark? = null
+        var reload = false
         var command: Job? = null
         var recorded = false
 
@@ -448,6 +469,7 @@ class RealmRollout(
         val stuck: Boolean
             get() = failure != null || (!everProven && overdueReason() != null) || (everProven && unhealthy)
 
+        /** Observes the member's status this pass; null (no reply, or absent) restarts its healthy interval. */
         fun observe(status: ParticipantStatus?) {
             val phase = status?.phase
             val running = (phase as? ParticipantPhase.ActiveWrapper)?.value?.current
@@ -471,6 +493,9 @@ class RealmRollout(
                 else -> false
             }
 
+        /** The attempt a command for [reference] carries now, or null when that command needs a new attempt. */
+        fun attemptOf(reference: ProjectionReference?): RolloutAttempt? = attempt.takeIf { anchor == null || anchor == reference }
+
         /** The attempt a command for [reference] carries: a participant binds one projection to each attempt. */
         suspend fun attemptFor(
             reference: ProjectionReference,
@@ -480,7 +505,32 @@ class RealmRollout(
             anchor = reference
             return attempt
         }
+
+        /** Starts a new try under [next]: a fresh deadline, no failure, and a running projection staged again. */
+        fun renew(next: RolloutAttempt) {
+            command?.cancel()
+            command = null
+            joined = timeSource.markNow()
+            attempt = next
+            anchor = null
+            reload = true
+            failure = null
+            healthySince = null
+            everProven = false
+        }
     }
+}
+
+/** How a target treats a present host with a selected role. */
+private enum class Admission {
+    /** The host converges to the target. */
+    MEMBER,
+
+    /** The host's API cannot run the target's runtimes; the next content resolution includes it. */
+    OUTSIDE,
+
+    /** The host has no recorded projection and the target can no longer be projected for it; it is left alone. */
+    UNPROJECTABLE,
 }
 
 /** What the Realm wants its members to run, under the attempt and generation its commands start from. */
@@ -505,9 +555,11 @@ private sealed interface RealmTarget {
         override val generation: DeploymentGeneration get() = deployment.snapshot.generation
     }
 
-    /** Whether [presence]'s host API can run this target's runtimes for its roles; nothing runs anywhere. */
-    fun runsOn(presence: RealmHostPresence): Boolean {
-        val deployment = deployment ?: return true
+    /** How this target treats [presence]: a recorded host is a member; any other needs the manifests to run it. */
+    fun admission(presence: RealmHostPresence): Admission {
+        val deployment = deployment ?: return Admission.MEMBER
+        if (ServiceId(presence.serviceId) in deployment.recorded) return Admission.MEMBER
+        val manifests = deployment.manifests ?: return Admission.UNPROJECTABLE
         val api = ArtifactVersion(presence.hostApi)
         val content = deployment.snapshot.content
         val runtimes =
@@ -515,19 +567,26 @@ private sealed interface RealmTarget {
                 if (RuntimePlacement.REALM.toSkir() in presence.assignedRoles) addAll(listOf(content.realm, content.panelEngine))
                 if (RuntimePlacement.PRIMARY_ENGINE.toSkir() in presence.assignedRoles) add(content.primaryEngine)
             }
-        return runtimes.all { deployment.supports(it, api) }
+        return if (runtimes.all { manifests.supports(it, api) }) Admission.MEMBER else Admission.OUTSIDE
     }
 }
 
+/**
+ * One deployment as a target: its snapshot, the manifests that project it for a host (null when one of its artifacts
+ * is no longer accepted), and the exact projection each recorded host runs for it.
+ */
 private data class TargetDeployment(
     val snapshot: DeploymentSnapshot,
-    val manifests: Map<ArtifactId, ImprintManifest>,
-) {
-    fun supports(
-        artifact: DeploymentArtifact,
-        api: ArtifactVersion,
-    ): Boolean = (manifests[artifact.coordinate.id] as? HostedArtifactManifest)?.hostApi?.accepts(api) == true
-}
+    val manifests: Map<ArtifactId, ImprintManifest>?,
+    val recorded: Map<ServiceId, ProjectionReference> = emptyMap(),
+)
+
+private fun CommittedDeployment.toTarget(manifests: Map<ArtifactId, ImprintManifest>?) = TargetDeployment(snapshot, manifests, projections)
+
+private fun Map<ArtifactId, ImprintManifest>.supports(
+    artifact: DeploymentArtifact,
+    api: ArtifactVersion,
+): Boolean = (this[artifact.coordinate.id] as? HostedArtifactManifest)?.hostApi?.accepts(api) == true
 
 /** The next command that moves a participant in this phase toward [desired], or null when none is due. */
 internal sealed interface MemberStep {
@@ -584,26 +643,32 @@ internal sealed interface MemberStep {
 }
 
 /**
- * The next step toward [desired] (null for running nothing) from this phase. A staged projection is committed only
- * when [commitOpen]; a member already running [desired] is staged again only when [reload] asks to replace it.
+ * The next step toward [desired] (null for running nothing) from this status, for a member whose commands for
+ * [desired] carry [attempt] (null when they need a new one). A staged projection is committed only when [commitOpen],
+ * and only under the attempt it was staged with: staged under another attempt, it is staged again under the member's
+ * first, which moves it without reloading anything. A member already running [desired] is staged again only when
+ * [reload] asks to replace it.
  */
-internal fun ParticipantPhase.step(
+internal fun ParticipantStatus.step(
     desired: ProjectionReference?,
+    attempt: RolloutAttempt?,
     commitOpen: Boolean,
     reload: Boolean,
 ): MemberStep? =
-    when (this) {
-        is ParticipantPhase.StagedWrapper -> value.step(desired, commitOpen)
-        is ParticipantPhase.ActiveWrapper -> value.step(desired, reload)
+    when (val phase = phase) {
+        is ParticipantPhase.StagedWrapper -> phase.value.step(desired, stagedUnderMemberAttempt = this.attempt == attempt, commitOpen)
+        is ParticipantPhase.ActiveWrapper -> phase.value.step(desired, reload)
         ParticipantPhase.IDLE -> desired?.let(MemberStep::Stage)
         else -> null
     }
 
 private fun StagedCandidate.step(
     desired: ProjectionReference?,
+    stagedUnderMemberAttempt: Boolean,
     commitOpen: Boolean,
 ): MemberStep? =
     when {
+        candidate == desired && !stagedUnderMemberAttempt -> MemberStep.Stage(candidate)
         candidate == desired -> MemberStep.Commit(candidate).takeIf { commitOpen }
         desired == null || baseline?.projection == desired -> MemberStep.Abort(candidate)
         else -> MemberStep.Stage(desired)

@@ -17,6 +17,7 @@ import com.typewritermc.loader.artifact.FileDigestBlobStore
 import com.typewritermc.loader.artifact.ReconnectingSharedArtifactAccess
 import com.typewritermc.loader.artifact.StableRealmArtifactRoutes
 import com.typewritermc.loader.artifact.VerifiedArtifactCache
+import com.typewritermc.loader.artifact.toApi
 import com.typewritermc.loader.artifactSpan
 import com.typewritermc.loader.deployment.CandidateIndex
 import com.typewritermc.loader.deployment.DeploymentContent
@@ -354,7 +355,6 @@ internal class AssignmentRuntime(
                             serviceId = serviceId.value,
                             hostApi = HOST_API_VERSION,
                             assignedRoles = assignment.roles.map { it.toSkir() },
-                            activeProjection = participant.activeProjection,
                         )
                     },
                     participant = participant,
@@ -373,7 +373,7 @@ internal class AssignmentRuntime(
         val realmScope = session.realmScope()
         RealmRollout(
             assignment.realmId,
-            ProbedRealmMembership(realmScope, session.communicator, 5.seconds),
+            ProbedRealmMembership(CommunicatorPresenceProbe(realmScope, session.communicator, 5.seconds)),
             CommunicatorRolloutMessenger(realmScope, session.communicator),
             AcceptedDeploymentContents(),
             projections,
@@ -428,8 +428,8 @@ internal class AssignmentRuntime(
             val accepted = candidates.candidates()
             val projectionDigests =
                 buildSet {
-                    current?.projections?.values?.let(::addAll)
-                    previous?.projections?.values?.let(::addAll)
+                    current?.projections?.values?.mapTo(this) { it.blob.toApi() }
+                    previous?.projections?.values?.mapTo(this) { it.blob.toApi() }
                 }
             val protection =
                 DigestProtectionState(

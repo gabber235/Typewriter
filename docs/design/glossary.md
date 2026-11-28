@@ -646,7 +646,7 @@ Every type, annotation, and term used in the design set, one line each, with the
 
 **`RealmAuthoring`**: one realm seen by one principal, with catalog, scoped read, prepare, and commit; routed or in process. See [authoring-writes.md](authoring-writes.md#kotlin-api).
 
-**`RealmMembership`**: who belongs to a Realm right now, the hosts its rollout converges; read from the presence probe today, from leased presence rows later. See [realm-rollout.md](realm-rollout.md#members).
+**`RealmMembership`**: who belongs to a Realm right now, the hosts its rollout converges, with lease semantics (a host stays a member until silent for longer than a short grace); read from repeated presence probes today (`ProbedRealmMembership`), from leased presence rows later. See [realm-rollout.md](realm-rollout.md#members).
 
 **`RealmRollout`**: keeps a Realm's hosts on its target deployment, converging each member on its own; a candidate commits once every current member proved it, and a host that leaves never blocks the others. See [realm-rollout.md](realm-rollout.md).
 
