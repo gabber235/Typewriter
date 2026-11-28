@@ -157,14 +157,14 @@ jobs:
       # checks compare with.
       - run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite.suite }} --base "$BASE_SHA"
         env:
-          # This runner is the pinned one: a game run here fails where no cgroup holds each part to
-          # its memory limit, instead of passing on a runner that happens to have room.
-          PLAYTEST_PINNED_RUNNER: ${{ env.GAME_SUITE }}
+          # A game run here fails where no cgroup holds each part to its memory limit, instead of
+          # passing on a runner that happens to have room.
+          PLAYTEST_ENFORCE_MEMORY: ${{ env.GAME_SUITE }}
       # Evidence after the verdict, never part of it: the demo run never gates.
       - if: always() && env.GAME_SUITE
         run: devenv --profile e2e shell -- cargo xtask e2e ${{ matrix.suite.suite }} --demos --base "$BASE_SHA"
         env:
-          PLAYTEST_PINNED_RUNNER: ${{ env.GAME_SUITE }}
+          PLAYTEST_ENFORCE_MEMORY: ${{ env.GAME_SUITE }}
       # Artifacts of this public repository are downloadable, so only the staged public folder
       # is uploaded.
       - if: always()

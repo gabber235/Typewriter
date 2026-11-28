@@ -25,8 +25,8 @@ pub const DELEGATED: &str = "TYPEWRITER_CGROUP";
 /// The game's cgroup in the run's tree, which the build hands the pool.
 pub const GAME: &str = "PLAYTEST_CGROUP";
 
-/// Set to `1` on the pinned runner, which must enforce every limit.
-pub const PINNED_RUNNER: &str = "PLAYTEST_PINNED_RUNNER";
+/// Set to `1` where a game run must hold every part to its memory limit, as on CI's runners.
+pub const ENFORCE_MEMORY: &str = "PLAYTEST_ENFORCE_MEMORY";
 
 /// Where `cargo xtask cgroup delegate` makes the delegated cgroup.
 const DELEGATE_ROOT: &str = "/sys/fs/cgroup";
@@ -89,11 +89,11 @@ pub struct Tree {
 impl Tree {
     /// The tree of the run `id` under the cgroup the machine delegates, its game held to what the
     /// machine leaves beside a stack whose services may take `stack_bytes`; `None` where the
-    /// machine delegates none, as on macOS, which the pinned runner refuses.
+    /// machine delegates none, as on macOS, which a run that must enforce memory refuses.
     pub fn delegated(id: &str, stack_bytes: u64) -> Result<Option<Self>> {
         let root = std::env::var_os(DELEGATED).filter(|root| !root.is_empty());
-        let pinned = std::env::var_os(PINNED_RUNNER).is_some_and(|pinned| pinned == "1");
-        require_enforced(pinned, root.is_some())?;
+        let required = std::env::var_os(ENFORCE_MEMORY).is_some_and(|required| required == "1");
+        require_enforced(required, root.is_some())?;
         let Some(root) = root else {
             return Ok(None);
         };
@@ -230,12 +230,12 @@ impl Tree {
     }
 }
 
-/// Refuses a run on the `pinned` runner that is not `enforced`: there a part over its limit must
-/// be killed for it, not pass on a runner that happens to have room.
-pub fn require_enforced(pinned: bool, enforced: bool) -> Result<()> {
-    if pinned && !enforced {
+/// Refuses a run whose memory limits are `required` but not `enforced`: there a part over its limit
+/// must be killed for it, not pass on a machine that happens to have room.
+pub fn require_enforced(required: bool, enforced: bool) -> Result<()> {
+    if required && !enforced {
         bail!(
-            "this is the pinned runner ({PINNED_RUNNER}=1), but no cgroup is delegated ({DELEGATED}), so no part's memory is held to its limit; run `cargo xtask cgroup delegate` first"
+            "this run must enforce memory limits ({ENFORCE_MEMORY}=1), but no cgroup is delegated ({DELEGATED}), so no part's memory is held to its limit; run `cargo xtask cgroup delegate` first"
         );
     }
     Ok(())
@@ -519,7 +519,7 @@ mod tests {
     }
 
     #[test]
-    fn the_pinned_runner_fails_where_no_cgroup_enforces_the_limits() {
+    fn a_run_that_must_enforce_memory_fails_where_no_cgroup_enforces_the_limits() {
         let error = require_enforced(true, false).unwrap_err().to_string();
 
         assert!(error.contains(DELEGATED), "{error}");

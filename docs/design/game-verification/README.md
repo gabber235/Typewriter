@@ -359,7 +359,7 @@ for the game suite's stack.
   whose restarts need more own Papers side by side than ever fit is refused, naming the numbers.
 - **Refusal.** The pool refuses to start when the parts that run the whole run alone exceed the budget,
   naming both and how many clients fit (`cargo xtask e2e game --clients <n>`).
-- **The pinned runner enforces.** With `PLAYTEST_PINNED_RUNNER=1`, a game run fails before it builds
+- **CI enforces.** With `PLAYTEST_ENFORCE_MEMORY=1`, which CI's game runners set, a game run fails before it builds
   when no cgroup is delegated or the delegated cgroup lacks the memory controller.
 - **A kill for memory names why.** The kernel counts an out of memory kill (`oom_kill`) in the victim's
   cgroup whichever killer chose it, and counts `oom` where a cgroup reached its own limit. A part whose
@@ -496,7 +496,7 @@ Dated decisions, oldest first. The sections above describe what they add up to.
   the same 16 GB runner, with no further measuring run. Each limit is its kind's measured peak plus
   15 %; the game cgroup holds the budget the machine leaves beside the system, Gradle's test run and the
   stack; each leaf holds its kind's limit. An own Paper starts only when its limit fits in what is left,
-  and its attempt waits unleased until then. The pinned runner fails where it cannot enforce.
+  and its attempt waits unleased until then. A run that must enforce memory fails where it cannot.
 - **A claim for the whole pool** (2026-11-26): a requirement that needs every player claims the whole
   pool instead of naming the pool's size, and the pool resolves it to every client it runs
   (`PlayerClaim.whole_pool` on the wire), so the requirement holds at 2, 3 or more clients.

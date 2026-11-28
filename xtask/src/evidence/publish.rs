@@ -553,9 +553,9 @@ fn render_coverage(out: &mut String, coverage: &Coverage) {
     let _ = writeln!(out, "\n</details>");
 }
 
-/// The most memory each part of each run took beside the limit planned for its kind, and the most
-/// the planned limits of the parts that ran at once took beside the run's memory budget. Reported, never gating: the limits are not enforced
-/// until measured peaks set them.
+/// The most memory each part of each run took beside the limit its kind is held to, and the most the
+/// limits of the parts that ran at once took beside the run's memory budget. The kernel enforces each
+/// limit where the run delegates cgroups; this table only reports the peaks that recalibrate them.
 fn render_memory(out: &mut String, runs: &[(PathBuf, TestRun)]) {
     let measured: Vec<&TestRun> = runs
         .iter()
