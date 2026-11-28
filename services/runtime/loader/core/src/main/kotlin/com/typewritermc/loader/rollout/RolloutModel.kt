@@ -5,7 +5,7 @@ import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.registrar.ServiceId
 import kotlinx.serialization.Serializable
 
-/** Identifies the logical Realm coordinated by [CoordinatedRollout] and its host participants. */
+/** Identifies the logical Realm whose hosts [RealmRollout] keeps on one deployment. */
 @JvmInline
 @Serializable
 value class RealmId(

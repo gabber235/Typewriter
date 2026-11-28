@@ -24,6 +24,7 @@ Read `overview.md` first; it introduces the seven primitives. The table below li
 | [migrations.md](migrations.md) | Migration hook, pending migrations, the developer migrator, the 0.9 importer |
 | [minecraft-types.md](minecraft-types.md) | Minecraft value types: space (world, vectors, rotation, locations, positions) and items |
 | [engines.md](engines.md) | Bridges; engine communication summary |
+| [realm-rollout.md](realm-rollout.md) | How a Realm keeps its hosts on one deployment: members, the target, per member convergence, the stage barrier and health gate, and hosts that leave or join mid rollout |
 | [authoring-writes.md](authoring-writes.md) | How any client (panel, engine, MCP service) writes authored state: actor, generic SDK, generated helpers |
 | [panel-engine-communication.md](panel-engine-communication.md) | Panel and engine communication: scenarios, target choice, emit actions, engine reports, results |
 | [glossary.md](glossary.md) | Every type and term, one line each |

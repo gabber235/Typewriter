@@ -5,16 +5,16 @@ goal: >
 
 pieces:
   - id: membership
-    status: figuring-out
-    open: which signal says a host is a member of the Realm right now
+    status: done
     tries:
       - id: presence-probe
         what: the rollout presence probe the coordinator already sends, read on every pass; absent means not a member
         taught: >
           it is the only live membership signal on features/v1; a false drop costs no correctness because the
-          coordinator acts on each host's observed phase, a dropped host that answers again is simply a member again
-        state: working
-        evidence: [services/runtime/loader/core/src/main/kotlin/com/typewritermc/loader/rollout/RolloutCommunication.kt:38]
+          rollout acts on each host's observed phase, a dropped host that answers again is simply a member again
+        state: picked
+        why: maintainer chose it, behind one RealmMembership read so leased presence can replace it
+        evidence: [services/runtime/loader/core/src/main/kotlin/com/typewritermc/loader/rollout/RolloutCommunication.kt]
       - id: backend-service-liveness
         what: the backend service state (online, offline, last_seen) written by heartbeat and orderly shutdown
         taught: offline only on orderly shutdown; nothing expires a silent host; no Realm host reads it
@@ -23,48 +23,66 @@ pieces:
         evidence: [backend/service/service-registration/src/shutdown.rs:23, services/sdk/service-sdk/src/main/kotlin/com/typewritermc/services/libs/registrar/RegistrarConfiguration.kt:25]
       - id: leased-presence-rows
         what: hosts hold a leased presence row (generic Leases of PR 585, collaboration decision 16)
-        taught: right long term form (clean leave is instant, a crash expires at the lease time), but PR 585 is unmerged and decision 16 is a later direction needing its own design check
-        state: trying
+        taught: right long term form, but PR 585 is unmerged and decision 16 needs its own design check
+        state: dropped
+        why: later; RealmMembership is the seam
   - id: rollout-shape
-    status: figuring-out
-    open: whether one serialized loop per Realm stays, or each member converges on its own toward the Realm target
+    status: done
     tries:
       - id: reproduce-block
         what: two hosts, the Paper host stops answering once it runs the new projection
         taught: >
-          stability proof waits out the participant deadline (CoordinatedRollout.kt:268), then compensation rolls the
-          healthy Realm host back too and waits out a second deadline for the gone host (CoordinatedRollout.kt:282),
-          whose timeout replaces the original failure; a joiner waits for the whole pass because rollOut and
-          reconcileCommitted run inside one serial loop (ArtifactHost.kt:376)
+          the old coordinator waited out its 5 minute participant deadline, rolled the healthy Realm host back too and
+          waited 5 more minutes for the gone host; a joiner waited behind the whole serial pass
         state: working
-        evidence: ["CoordinatedRolloutTest: a primary engine host that leaves while the rollout proves stability does not hold back the Realm host (fails: Timed out waiting for rollout participants.)"]
+        evidence: ["commit 2d8f58313ec: CoordinatedRolloutTest failed with Timed out waiting for rollout participants."]
       - id: target-and-member-convergence
         what: >
-          the Realm keeps a target (committed, or a candidate being proved); every member that answers the probe gets
-          its own convergence toward its projection of the target; a candidate commits when every current member ran
-          it healthy for the last 30 s, and reverts the target on a member failure; join, reconcile and rollback are
-          all convergence
-        state: trying
+          the Realm keeps a target (committed, or a candidate being proved); every member gets its own convergence
+          toward its projection of the target; join, repair and rollback are all convergence
+        state: picked
+        why: maintainer chose it 2026-11-28; removes the serial loop that made joiners wait
+        evidence: [services/runtime/loader/core/src/test/kotlin/com/typewritermc/loader/rollout/RealmRolloutTest.kt, docs/design/realm-rollout.md]
       - id: drop-leavers-in-serial-loop
         what: keep the serial loop, re-probe presence on each status poll and leave absent hosts out of awaits and compensation
-        taught: small, but a joiner still waits behind the running rollout and reconcile and rollback stay separate paths
-        state: trying
+        state: dropped
+        why: a joiner still waits behind the running rollout and reconcile and rollback stay separate paths
+      - id: retry-next-pass
+        parent: target-and-member-convergence
+        what: try a failed candidate again on the very next pass
+        taught: the revert never ran; the next candidate replaced it at once and staged hosts were never aborted
+        state: dropped
+        why: replaced by holding the reverted target until every present member is back, which matches the old retry after compensation
 
 decided:
   - id: leavers-dropped
     what: >
       A host that leaves or stops answering is dropped from the running rollout and picks up the current projection
       when it comes back; it never blocks the other hosts. Its own PR, merged before 587.
-
-open:
   - id: shape
-    ask: target with per member convergence, or drop leavers inside the serial loop
+    what: Realm target plus per member convergence; joining, repairing and rolling back become one operation.
   - id: joiner-target
-    ask: a host joining while a candidate is proved gets the candidate, or the committed deployment
+    what: A host that joins during a candidate gets the candidate and joins the gate (one switch).
   - id: membership-source
-    ask: presence probe now (leased presence later replaces it), or pull leased presence forward first
+    what: The presence probe now, behind one members read so leased presence can replace it later.
+  - id: leave-not-evidence
+    what: A leave is not evidence against a deployment; written in the design record and the PR body.
+  - id: delete-selection-check
+    what: Delete the dead "abort if the host set changed" check rather than keeping it unused.
 
-slices: []
+open: []
 
-next: wait for the orchestrator's answers on shape, joiner target and membership source, then build test first
+slices:
+  - id: realm-rollout
+    tests:
+      - "RealmRolloutTest: a primary engine host that leaves while the rollout proves stability does not hold back the Realm host"
+      - "RealmRolloutTest: a host that joins while a candidate is proved runs the candidate and must prove it before the commit"
+      - "RealmRolloutTest: a returning host gets the committed projection while another host is still being repaired"
+      - "RealmRolloutTest: a candidate a host fails to stage is aborted without switching any running host"
+      - "RealmRolloutTest: a failed candidate is rolled back on the hosts still present and never sent to a host that left"
+      - "RealmRolloutTest: each member has five minutes from joining a candidate to run it healthy"
+      - "RealmRolloutTest: a committed host whose status replies go missing keeps running without being staged again"
+      - "RealmRolloutTest: a committed host that reports its projection unhealthy is staged again"
+    status: done
 
+next: checks (services, docs, quality), a full game run, typewriter-review, then push and hand back
