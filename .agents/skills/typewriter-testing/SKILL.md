@@ -16,17 +16,17 @@ refactor that keeps the outcome.
 2. Pick the lowest layer that observes it through a public boundary.
 3. Find the harness that already builds that state, and use it.
 
-| Layer     | Proves                                                                                          | Harness                                                                                                  |
-|-----------|-------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
-| Unit      | rules with many cases: expressions, parsing, framing, admission                                 | plain tests beside the code                                                                              |
-| Property  | an invariant over generated inputs                                                              | proptest, bolero, kotest-property                                                                        |
-| Component | one backend component's contract on a real broker and database                                  | `TestContext` in backend/tests                                                                           |
-| Realm     | authoring, commit and publication rules on a real Realm                                         | `setup(...)` with `withSetup`                                                                            |
-| Widget    | panel behaviour: keyboard, overlays, unsaved work, offline states                               | `pumpPanel(traits)` from testkit                                                                         |
-| Scenario  | a user journey through panel, backend and Realm; failures through faults                        | the `Panel` driver in integration_test                                                                   |
-| Game      | what a player perceives in a real Minecraft client: chat, text, blocks, entities, input, frames | `requirement(...)` in a module's `src/gameTest`, real clients on a stepped Paper; `cargo xtask e2e game` |
-| Harness   | CI runs the right checks, stacks clean up, evidence leaks no secret                             | tests beside the xtask module                                                                            |
-| Scale     | a realm gate at full size; never in `:realm:test`                                               | the seeded realm measurement, run by `cargo xtask check realm-scale`                                     |
+| Layer     | Proves                                                                                  | Harness                                                                                                                                 |
+|-----------|-----------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| Unit      | rules with many cases: expressions, parsing, framing, admission                         | plain tests beside the code                                                                                                             |
+| Property  | an invariant over generated inputs                                                      | proptest, bolero, kotest-property                                                                                                       |
+| Component | one backend component's contract on a real broker and database                          | `TestContext` in backend/tests                                                                                                          |
+| Realm     | authoring, commit and publication rules on a real Realm                                 | `setup(...)` with `withSetup`                                                                                                           |
+| Widget    | panel behaviour: keyboard, overlays, unsaved work, offline states                       | `pumpPanel(traits)` from testkit                                                                                                        |
+| Scenario  | a user journey through panel, backend and Realm; failures through faults                | the `Panel` driver in integration_test                                                                                                  |
+| Game      | what a player perceives in a real Minecraft client: chat, text, blocks, entities, input | `requirement(...)` in a module's `src/gameTest`, real clients on a stepped Paper; `cargo xtask e2e game` and `cargo xtask e2e playtest` |
+| Harness   | CI runs the right checks, stacks clean up, evidence leaks no secret                     | tests beside the xtask module                                                                                                           |
+| Scale     | a realm gate at full size; never in `:realm:test`                                       | the seeded realm measurement, run by `cargo xtask check realm-scale`                                                                    |
 
 ## What to assert
 
@@ -98,9 +98,10 @@ expect(world.saveActivity, isNot(MutationActivityPhase.needsAttention));
   unlisted(leaver)`), since a window, input or frame of the away player is refused.
 - When something must not happen, add a broad `player.never sees anyChat()` beside a positive check
   in the same window; a window of only `never` checks is refused.
-- When a reviewer should see how a scene looks, call `player.capture("name")` after a window that
-  held: the frame goes into the attempt's evidence and the pull request shows it. A screenshot never
-  decides pass or fail, so a capture is no positive check.
+- When a reviewer should see how a scene looks, call `player.capture("name")` after the window that
+  checks what the scene claims: the frame goes into the attempt's evidence and the pull request shows
+  it. A screenshot never decides pass or fail, so a capture is no positive check, and a scene no
+  existing check proves gets no capture requirement.
 - When a plugin keeps state per player, it resets that state on `PlayerWipeEvent`; a leak shows up as
   an unrelated requirement failing.
 - When the thing to prove is a harness flag or launch setting (a heap cap, a JVM option), write a unit

@@ -266,6 +266,14 @@ decided:
       renderer go; captured frames and clips are evidence the pull request shows for a reviewer. The
       golden scenes stay as FRAME-1 to FRAME-5, each passing or failing on a window. Prompted by
       GOLDEN-1 failing CI at the 50 ms pace with 29 of 409920 pixels off its golden
+  - id: frames-check-their-claim
+    what: >-
+      the maintainer chose (2026-11-28) after review: every frame requirement checks its own claim with
+      an existing perceived or state check, and the frame is captured beside it; a window that only
+      proves the camera settled after a teleport goes, since WIPE-POSITION and USE-1 prove that. The
+      sidebar scene goes until a perceived sidebar check exists (a follow up of the pull request), as
+      does the still scene whose only claim was its camera. FRAME-1 is a floor under a night sky,
+      FRAME-2 the spyglass at night in the rain and the next attempt's scene, FRAME-3 a lamp at night
 
   - id: build-without-stack
     what: >-

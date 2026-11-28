@@ -33,7 +33,7 @@ clients hold none.
 | Pool | one process per checkout, started and stopped by the Gradle build | 25 | Owns the warm clients and the Papers, queues and grants claims, records the run file |
 | Shared Paper | stock Paper 26.3 with the step agent and the framework plugin | 25 | Runs every requirement that does not restart Paper, each in a region of its own |
 | Own Paper | the same, booted per restart requirement (at most 2 at once) | 25 | Runs a requirement that kills and boots Paper |
-| Client | Minecraft 26.3 with the framework's Fabric mod, 4 by default | 25 | Steps one tick per step ping, perceives without drawing, sends real window input |
+| Client | Minecraft 26.3 with the framework's Fabric mod, 3 by default | 25 | Steps one tick per step ping, perceives without drawing, sends real window input |
 
 - The **step agent** is a Java agent on the stock Paper jar. Once stepping starts, Paper's main loop
   runs a tick only on a permit, and Paper's block break clock counts ticks
@@ -45,8 +45,9 @@ clients hold none.
   elsewhere) and drops every input event it did not send itself.
 - The **wire** is Skir: every message the parts exchange is declared in
   `skir-src/harness/v1/wire.skir`. The wire module only frames those messages on a socket. The
-  launch module holds what the processes share about launching each other: the heap shares, the pool
-  and part files, and the pool's command and process (`PoolProcess`). It uses the standard library
+  launch module holds what the processes share about launching each other: each part kind's memory
+  limit and heap share (`PartLimit`), the pool and part files, and the pool's command and process
+  (`PoolProcess`). It uses the standard library
   alone, as build-logic compiles it too.
 - Test JVMs share the pool, so every module and extension shares the warm clients, and a warm single
   requirement takes about 2 s ([p6-pool-process.md](spikes/p6-pool-process.md)). The pool takes turns
@@ -242,13 +243,17 @@ A failed attempt runs again at the end of the queue, up to 4 attempts. The verdi
 
 ## Frames
 
-Screenshots never decide pass or fail. `player.capture("sidebar")` draws a real frame and keeps it in
-the attempt's evidence as `sidebar.png`, a `screenshot` artifact; the pull request's evidence shows
+Screenshots never decide pass or fail. `player.capture("night")` draws a real frame and keeps it in
+the attempt's evidence as `night.png`, a `screenshot` artifact; the pull request's evidence shows
 every captured frame and clip beside its requirement, passing or failing, for a reviewer to look at.
 
 - A capture is not a positive check: a body that captures needs a window that holds as well.
-- The frame requirements (`FRAME-1` to `FRAME-5`) set up still scenes, a sidebar, night and rain, a lamp
-  at night, and capture them once a window saw the camera settle.
+- The frame requirements (`FRAME-1` to `FRAME-3`) set up a floor under a night sky, a spyglass at night
+  in the rain followed by the next attempt's wiped scene, and a lamp at night. Each window checks what
+  its scene claims (the floor block shown, the time of day or weather Paper keeps for the player, the
+  spyglass overlay, the lamp's light block shown), and the frame is captured beside it. A scene no
+  existing check proves, such as a quest sidebar, has no frame requirement until a perceived check
+  for it exists.
 
 ## Coverage and demo clips
 
